@@ -658,15 +658,15 @@ __attribute__((unused)) static wchar_t *wcsdup_fallback(const wchar_t *in) {
 
 __attribute__((unused)) static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b) {
     if (*a == 0) {
-        return (*b == 0) ? 0 : -1;
+        return *b == 0 ? 0 : -1;
     } else if (*b == 0) {
         return 1;
     }
     int diff = towlower(*a) - towlower(*b);
-    if (diff != 0)
+    if (diff != 0) {
         return diff;
-    else
-        return wcscasecmp_fallback(a + 1, b + 1);
+    }
+    return wcscasecmp_fallback(a + 1, b + 1);
 }
 
 __attribute__((unused)) static int wcsncasecmp_fallback(const wchar_t *a, const wchar_t *b,
@@ -674,15 +674,13 @@ __attribute__((unused)) static int wcsncasecmp_fallback(const wchar_t *a, const 
     if (count == 0) return 0;
 
     if (*a == 0) {
-        return (*b == 0) ? 0 : -1;
+        return *b == 0 ? 0 : -1;
     } else if (*b == 0) {
         return 1;
     }
     int diff = towlower(*a) - towlower(*b);
-    if (diff != 0)
-        return diff;
-    else
-        return wcsncasecmp_fallback(a + 1, b + 1, count - 1);
+    if (diff != 0) return diff;
+    return wcsncasecmp_fallback(a + 1, b + 1, count - 1);
 }
 
 #if __APPLE__ && __DARWIN_C_LEVEL >= 200809L
@@ -827,7 +825,7 @@ size_t wcslcat(wchar_t *dst, const wchar_t *src, size_t siz) {
     dlen = d - dst;
     n = siz - dlen;
 
-    if (n == 0) return (dlen + wcslen(s));
+    if (n == 0) return dlen + wcslen(s);
 
     while (*s != '\0') {
         if (n != 1) {
@@ -838,7 +836,7 @@ size_t wcslcat(wchar_t *dst, const wchar_t *src, size_t siz) {
     }
     *d = '\0';
 
-    return (dlen + (s - src));
+    return dlen + (s - src);
     /* count does not include NUL */
 }
 
@@ -882,7 +880,7 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
         while (*s++)
             ;
     }
-    return (s - src - 1);
+    return s - src - 1;
     // Count does not include NUL.
 }
 

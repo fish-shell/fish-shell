@@ -67,9 +67,8 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
         if (rc == 0) {  // EOF
             if (arg.empty()) {
                 return 0;
-            } else {
-                break;
             }
+            break;
         }
 
         if (ch == '\n') {
@@ -84,16 +83,15 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
 }
 
 static const wchar_t *string_get_arg_argv(int *argidx, wchar_t **argv) {
-    return (argv && argv[*argidx]) ? argv[(*argidx)++] : 0;
+    return argv && argv[*argidx] ? argv[(*argidx)++] : 0;
 }
 
 static const wchar_t *string_get_arg(int *argidx, wchar_t **argv, wcstring *storage,
                                      const io_streams_t &streams) {
     if (string_args_from_stdin(streams)) {
         return string_get_arg_stdin(storage, streams);
-    } else {
-        return string_get_arg_argv(argidx, argv);
     }
+    return string_get_arg_argv(argidx, argv);
 }
 
 static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -138,7 +136,7 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
         nesc++;
     }
 
-    return (nesc > 0) ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nesc > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
 static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -195,7 +193,7 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
         streams.out.push_back(L'\n');
     }
 
-    return (nargs > 1) ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nargs > 1 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
 static int string_length(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -245,7 +243,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
         }
     }
 
-    return (nnonempty > 0) ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nnonempty > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
 struct match_options_t {
@@ -923,7 +921,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     }
 
     // We split something if we have more split values than args.
-    return (splits.size() > arg_count) ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return splits.size() > arg_count ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
 static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -1028,7 +1026,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
         nsub++;
     }
 
-    return (nsub > 0) ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nsub > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
 static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -1118,7 +1116,7 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
         }
     }
 
-    return (ntrim > 0) ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return ntrim > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
 static const struct string_subcommand {

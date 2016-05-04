@@ -436,11 +436,10 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             current_buffer = reader_get_buffer();
             new_pos = maxi(0L, mini(new_pos, (long)wcslen(current_buffer)));
             reader_set_buffer(current_buffer, (size_t)new_pos);
-            return 0;
         } else {
             streams.out.append_format(L"%lu\n", (unsigned long)reader_get_cursor_pos());
-            return 0;
         }
+        return 0;
     }
 
     if (line_mode) {

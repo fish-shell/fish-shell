@@ -214,8 +214,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
     }
 
     // Call is_potential_path with all of these directories.
-    bool result = is_potential_path(path, directories, flags | PATH_REQUIRE_DIR);
-    return result;
+    return is_potential_path(path, directories, flags | PATH_REQUIRE_DIR);
 }
 
 // Given a plain statement node in a parse tree, get the command and return it, expanded

@@ -167,12 +167,11 @@ void tokenizer_t::read_string() {
                         TOK_CALL_ERROR(this, TOK_UNTERMINATED_ESCAPE, UNTERMINATED_ESCAPE_ERROR,
                                        error_location);
                         return;
-                    } else {
-                        // Since we are about to increment tok->buff, decrement it first so the
-                        // increment doesn't go past the end of the buffer. See issue #389.
-                        this->buff--;
-                        do_loop = 0;
                     }
+                    // Since we are about to increment tok->buff, decrement it first so the
+                    // increment doesn't go past the end of the buffer. See issue #389.
+                    this->buff--;
+                    do_loop = 0;
                 }
 
                 this->buff++;
@@ -502,17 +501,12 @@ void tokenizer_t::tok_next() {
             this->read_comment();
 
             if (this->buff[0] == L'\n' && this->continue_line_after_comment) this->buff++;
-
             return;
-        } else {
-            while (*(this->buff) != L'\n' && *(this->buff) != L'\0') this->buff++;
-
-            if (this->buff[0] == L'\n' && this->continue_line_after_comment) this->buff++;
         }
 
-        while (my_iswspace(*(this->buff))) {
-            this->buff++;
-        }
+        while (*(this->buff) != L'\n' && *(this->buff) != L'\0') this->buff++;
+        if (this->buff[0] == L'\n' && this->continue_line_after_comment) this->buff++;
+        while (my_iswspace(*(this->buff))) this->buff++;
     }
 
     this->continue_line_after_comment = false;

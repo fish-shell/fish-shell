@@ -58,9 +58,8 @@ void output_set_color_support(color_support_t val) { color_support = val; }
 unsigned char index_for_color(rgb_color_t c) {
     if (c.is_named() || !(output_get_color_support() & color_support_term256)) {
         return c.to_name_index();
-    } else {
-        return c.to_term256_index();
     }
+    return c.to_term256_index();
 }
 
 static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
@@ -95,9 +94,8 @@ static bool write_foreground_color(unsigned char idx) {
         return write_color_escape(set_a_foreground, idx, true);
     } else if (set_foreground && set_foreground[0]) {
         return write_color_escape(set_foreground, idx, true);
-    } else {
-        return false;
     }
+    return false;
 }
 
 static bool write_background_color(unsigned char idx) {
@@ -105,9 +103,8 @@ static bool write_background_color(unsigned char idx) {
         return write_color_escape(set_a_background, idx, false);
     } else if (set_background && set_background[0]) {
         return write_color_escape(set_background, idx, false);
-    } else {
-        return false;
     }
+    return false;
 }
 
 void write_color(rgb_color_t color, bool is_fg) {

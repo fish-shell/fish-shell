@@ -145,13 +145,14 @@ char *get_interpreter(const char *command, char *interpreter, size_t buff_size) 
         interpreter[idx++] = '\0';
         close(fd);
     }
+
     if (strncmp(interpreter, "#! /", 4) == 0) {
         return interpreter + 3;
     } else if (strncmp(interpreter, "#!/", 3) == 0) {
         return interpreter + 2;
-    } else {
-        return NULL;
     }
+
+    return NULL;
 }
 
 /// This function is executed by the child process created by a call to fork(). It should be called

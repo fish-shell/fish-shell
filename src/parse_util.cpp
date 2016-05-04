@@ -67,7 +67,7 @@ size_t parse_util_get_offset_from_line(const wcstring &str, int line) {
     int count = 0;
 
     if (line < 0) {
-        return (size_t)(-1);
+        return (size_t)-1;
     }
 
     if (line == 0) return 0;
@@ -779,8 +779,7 @@ bool parse_util_argument_is_help(const wchar_t *s, int min_match) {
 
     min_match = maxi(min_match, 3);
 
-    return (wcscmp(L"-h", s) == 0) ||
-           (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
+    return wcscmp(L"-h", s) == 0 || (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
 }
 
 /// Check if the first argument under the given node is --help.
@@ -1036,33 +1035,33 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                                 working_copy.c_str());
         }
         return 1;
-    } else {
-        // Check for invalid variable expansions.
-        const size_t unesc_size = unesc.size();
-        for (size_t idx = 0; idx < unesc_size; idx++) {
-            switch (unesc.at(idx)) {
-                case VARIABLE_EXPAND:
-                case VARIABLE_EXPAND_SINGLE: {
-                    wchar_t next_char = idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0';
+    }
 
-                    if (next_char != VARIABLE_EXPAND && next_char != VARIABLE_EXPAND_SINGLE &&
-                        !wcsvarchr(next_char)) {
-                        err = 1;
-                        if (out_errors) {
-                            // We have something like $$$^....  Back up until we reach the first $.
-                            size_t first_dollar = idx;
-                            while (first_dollar > 0 &&
-                                   (unesc.at(first_dollar - 1) == VARIABLE_EXPAND ||
-                                    unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
-                                first_dollar--;
-                            }
-                            parse_util_expand_variable_error(unesc, node.source_start, first_dollar,
-                                                             out_errors);
+    // Check for invalid variable expansions.
+    const size_t unesc_size = unesc.size();
+    for (size_t idx = 0; idx < unesc_size; idx++) {
+        switch (unesc.at(idx)) {
+            case VARIABLE_EXPAND:
+            case VARIABLE_EXPAND_SINGLE: {
+                wchar_t next_char = idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0';
+
+                if (next_char != VARIABLE_EXPAND && next_char != VARIABLE_EXPAND_SINGLE &&
+                    !wcsvarchr(next_char)) {
+                    err = 1;
+                    if (out_errors) {
+                        // We have something like $$$^....  Back up until we reach the first $.
+                        size_t first_dollar = idx;
+                        while (first_dollar > 0 &&
+                                (unesc.at(first_dollar - 1) == VARIABLE_EXPAND ||
+                                unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
+                            first_dollar--;
                         }
+                        parse_util_expand_variable_error(unesc, node.source_start, first_dollar,
+                                                            out_errors);
                     }
-
-                    break;
                 }
+
+                break;
             }
         }
     }

@@ -281,12 +281,10 @@ expression *test_parser::parse_unary_expression(unsigned int start, unsigned int
         expr_ref_t subject(parse_unary_expression(start + 1, end));
         if (subject.get()) {
             return new unary_operator(tok, range_t(start, subject->range.end), subject);
-        } else {
-            return NULL;
         }
-    } else {
-        return parse_primary(start, end);
+        return NULL;
     }
+    return parse_primary(start, end);
 }
 
 /// Parse a combining expression (AND, OR).
@@ -330,14 +328,12 @@ expression *test_parser::parse_combining_expression(unsigned int start, unsigned
         first = false;
     }
 
-    if (!subjects.empty()) {
-        // Our new expression takes ownership of all expressions we created. The token we pass is
-        // irrelevant.
-        return new combining_expression(test_combine_and, range_t(start, idx), subjects, combiners);
-    } else {
-        // No subjects.
-        return NULL;
+    if (subjects.empty()) {
+        return NULL;  // no subjects
     }
+    // Our new expression takes ownership of all expressions we created. The token we pass is
+    // irrelevant.
+    return new combining_expression(test_combine_and, range_t(start, idx), subjects, combiners);
 }
 
 expression *test_parser::parse_unary_primary(unsigned int start, unsigned int end) {
@@ -824,18 +820,18 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 #endif
                 streams.err.append(err);
                 return BUILTIN_TEST_FAIL;
-            } else {
-                wcstring_list_t eval_errors;
-                bool result = expr->evaluate(eval_errors);
-                if (!eval_errors.empty()) {
-                    printf("test returned eval errors:\n");
-                    for (size_t i = 0; i < eval_errors.size(); i++) {
-                        printf("\t%ls\n", eval_errors.at(i).c_str());
-                    }
-                }
-                delete expr;
-                return result ? BUILTIN_TEST_SUCCESS : BUILTIN_TEST_FAIL;
             }
+
+            wcstring_list_t eval_errors;
+            bool result = expr->evaluate(eval_errors);
+            if (!eval_errors.empty()) {
+                printf("test returned eval errors:\n");
+                for (size_t i = 0; i < eval_errors.size(); i++) {
+                    printf("\t%ls\n", eval_errors.at(i).c_str());
+                }
+            }
+            delete expr;
+            return result ? BUILTIN_TEST_SUCCESS : BUILTIN_TEST_FAIL;
         }
     }
     return 1;

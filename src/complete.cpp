@@ -71,9 +71,8 @@ void complete_set_variable_names(const wcstring_list_t *names) {
 static inline wcstring_list_t complete_get_variable_names(void) {
     if (s_override_variable_names != NULL) {
         return *s_override_variable_names;
-    } else {
-        return env_get_names(0);
     }
+    return env_get_names(0);
 }
 
 /// Struct describing a completion option entry.
@@ -161,9 +160,8 @@ struct completion_entry_set_comparer {
         // Paths always come last for no particular reason.
         if (p1.cmd_is_path != p2.cmd_is_path) {
             return p1.cmd_is_path < p2.cmd_is_path;
-        } else {
-            return p1.cmd < p2.cmd;
         }
+        return p1.cmd < p2.cmd;
     }
 };
 typedef std::set<completion_entry_t, completion_entry_set_comparer> completion_entry_set_t;
@@ -285,8 +283,7 @@ class completer_t {
     enum complete_type_t { COMPLETE_DEFAULT, COMPLETE_AUTOSUGGEST };
 
     complete_type_t type() const {
-        return (flags & COMPLETION_REQUEST_AUTOSUGGESTION) ? COMPLETE_AUTOSUGGEST
-                                                           : COMPLETE_DEFAULT;
+        return flags & COMPLETION_REQUEST_AUTOSUGGESTION ? COMPLETE_AUTOSUGGEST : COMPLETE_DEFAULT;
     }
 
     bool wants_descriptions() const { return !!(flags & COMPLETION_REQUEST_DESCRIPTIONS); }
@@ -295,8 +292,8 @@ class completer_t {
 
     fuzzy_match_type_t max_fuzzy_match_type() const {
         // If we are doing fuzzy matching, request all types; if not request only prefix matching.
-        return (flags & COMPLETION_REQUEST_FUZZY_MATCH) ? fuzzy_match_none
-                                                        : fuzzy_match_prefix_case_insensitive;
+        if (flags & COMPLETION_REQUEST_FUZZY_MATCH) return fuzzy_match_none;
+        return fuzzy_match_prefix_case_insensitive;
     }
 
    public:
@@ -1313,7 +1310,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                 tree.get_child(*plain_statement, 0, parse_token_type_string);
 
             // Get the actual command string.
-            if (cmd_node != NULL) current_command = cmd_node->get_source(cmd);
+            if (cmd_node) current_command = cmd_node->get_source(cmd);
 
             // Check the decoration.
             switch (tree.decoration_for_plain_statement(*plain_statement)) {
@@ -1341,7 +1338,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                 }
             }
 
-            if (cmd_node && cmd_node->location_in_or_at_end_of_source_range(pos)) {
+            if (cmd_node && cmd_node->location_in_or_at_end_of_source_range(pos)) { 
                 // Complete command filename.
                 completer.complete_cmd(current_token, use_function, use_builtin, use_command,
                                        use_implicit_cd);

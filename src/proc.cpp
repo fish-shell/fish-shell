@@ -175,12 +175,12 @@ job_id_t acquire_job_id(void) {
         // We found a slot. Note that slot 0 corresponds to job ID 1.
         *slot = true;
         return (job_id_t)(slot - consumed_job_ids.begin() + 1);
-    } else {
-        // We did not find a slot; create a new slot. The size of the vector is now the job ID
-        // (since it is one larger than the slot).
-        consumed_job_ids.push_back(true);
-        return (job_id_t)consumed_job_ids.size();
     }
+
+    // We did not find a slot; create a new slot. The size of the vector is now the job ID
+    // (since it is one larger than the slot).
+    consumed_job_ids.push_back(true);
+    return (job_id_t)consumed_job_ids.size();
 }
 
 void release_job_id(job_id_t jid) {
@@ -368,14 +368,14 @@ process_t::process_t()
 }
 
 process_t::~process_t() {
-    if (this->next != NULL) delete this->next;
+    delete this->next;
 }
 
 job_t::job_t(job_id_t jobid, const io_chain_t &bio)
     : block_io(bio), first_process(NULL), pgid(0), tmodes(), job_id(jobid), flags(0) {}
 
 job_t::~job_t() {
-    if (first_process != NULL) delete first_process;
+    delete first_process;
     release_job_id(job_id);
 }
 
@@ -451,10 +451,9 @@ static int process_mark_finished_children(bool wants_await) {
 
     if (got_error) {
         return -1;
-    } else {
-        s_last_processed_sigchld_generation_count = local_count;
-        return processed_count;
     }
+    s_last_processed_sigchld_generation_count = local_count;
+    return processed_count;
 }
 
 /// This is called from a signal handler. The signal is always SIGCHLD.

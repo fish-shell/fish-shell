@@ -111,7 +111,7 @@ history_t *reader_get_history(void);
 void reader_set_buffer(const wcstring &b, size_t p);
 
 /// Get the current cursor position in the command line. If interactive mode is uninitialized,
-/// return (size_t)(-1).
+/// return (size_t)-1.
 size_t reader_get_cursor_pos();
 
 /// Get the current selection range in the command line. Returns false if there is no active

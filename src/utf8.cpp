@@ -238,9 +238,8 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
         if (__wchar_forbitten(out_val) != 0) {
             if ((flags & UTF8_IGNORE_ERROR) == 0) {
                 return 0;  // forbidden character
-            } else {
-                skip = true;
             }
+            skip = true;
         } else if (out_val == _BOM && (flags & UTF8_SKIP_BOM) != 0) {
             skip = true;
         }
@@ -286,10 +285,8 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
     total = 0;
     for (; w < wlim; w++) {
         if (__wchar_forbitten(*w) != 0) {
-            if ((flags & UTF8_IGNORE_ERROR) == 0)
-                return 0;
-            else
-                continue;
+            if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
+            continue;
         }
 
         if (*w == _BOM && (flags & UTF8_SKIP_BOM) != 0) continue;
@@ -298,18 +295,13 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
         if (w_wide < 0) {
             if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             continue;
-        } else if (w_wide <= 0x0000007f)
-            n = 1;
-        else if (w_wide <= 0x000007ff)
-            n = 2;
-        else if (w_wide <= 0x0000ffff)
-            n = 3;
-        else if (w_wide <= 0x001fffff)
-            n = 4;
-        else if (w_wide <= 0x03ffffff)
-            n = 5;
-        else  /// if (w_wide <= 0x7fffffff)
-            n = 6;
+        }
+        if (w_wide <= 0x0000007f) n = 1;
+        else if (w_wide <= 0x000007ff) n = 2;
+        else if (w_wide <= 0x0000ffff) n = 3;
+        else if (w_wide <= 0x001fffff) n = 4;
+        else if (w_wide <= 0x03ffffff) n = 5;
+        else  n = 6;  /// if (w_wide <= 0x7fffffff)
 
         total += n;
 

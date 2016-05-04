@@ -150,14 +150,13 @@ static wcstring resolve_description(wcstring *completion, const wchar_t *explici
         const wcstring description = completion->substr(complete_sep_loc + 1);
         completion->resize(complete_sep_loc);
         return description;
-    } else {
-        const wcstring func_result = (desc_func ? desc_func(*completion) : wcstring());
-        if (!func_result.empty()) {
-            return func_result;
-        } else {
-            return explicit_desc ? explicit_desc : L"";
-        }
     }
+
+    const wcstring func_result = (desc_func ? desc_func(*completion) : wcstring());
+    if (!func_result.empty()) {
+        return func_result;
+    }
+    return explicit_desc ? explicit_desc : L"";
 }
 
 // A transient parameter pack needed by wildcard_complete.
@@ -240,64 +239,60 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
             // Normal match.
             return wildcard_complete_internal(str + next_wc_char_pos, wc + next_wc_char_pos, params,
                                               flags, out);
-        } else if (wcsncasecmp(str, wc, next_wc_char_pos) == 0) {
+        }
+        if (wcsncasecmp(str, wc, next_wc_char_pos) == 0) {
             // Case insensitive match.
             return wildcard_complete_internal(str + next_wc_char_pos, wc + next_wc_char_pos, params,
                                               flags | COMPLETE_REPLACES_TOKEN, out);
-        } else {
-            // No match.
-            return false;
         }
-        assert(0 && "Unreachable code reached");
-    } else {
-        // Our first character is a wildcard.
-        assert(next_wc_char_pos == 0);
-        switch (wc[0]) {
-            case ANY_CHAR: {
-                if (str[0] == L'\0') {
-                    return false;
-                } else {
-                    return wildcard_complete_internal(str + 1, wc + 1, params, flags, out);
-                }
-                break;
+        return false;  // no match
+    }
+
+    // Our first character is a wildcard.
+    assert(next_wc_char_pos == 0);
+    switch (wc[0]) {
+        case ANY_CHAR: {
+            if (str[0] == L'\0') {
+                return false;
             }
-            case ANY_STRING: {
-                // Hackish. If this is the last character of the wildcard, then just complete with
-                // the empty string. This fixes cases like "f*<tab>" -> "f*o".
-                if (wc[1] == L'\0') {
-                    return wildcard_complete_internal(L"", L"", params, flags, out);
-                }
+            return wildcard_complete_internal(str + 1, wc + 1, params, flags, out);
+        }
+        case ANY_STRING: {
+            // Hackish. If this is the last character of the wildcard, then just complete with
+            // the empty string. This fixes cases like "f*<tab>" -> "f*o".
+            if (wc[1] == L'\0') {
+                return wildcard_complete_internal(L"", L"", params, flags, out);
+            }
 
-                // Try all submatches. Issue #929: if the recursive call gives us a prefix match,
-                // just stop. This is sloppy - what we really want to do is say, once we've seen a
-                // match of a particular type, ignore all matches of that type further down the
-                // string, such that the wildcard produces the "minimal match.".
-                bool has_match = false;
-                for (size_t i = 0; str[i] != L'\0'; i++) {
-                    const size_t before_count = out ? out->size() : 0;
-                    if (wildcard_complete_internal(str + i, wc + 1, params, flags, out)) {
-                        // We found a match.
-                        has_match = true;
+            // Try all submatches. Issue #929: if the recursive call gives us a prefix match,
+            // just stop. This is sloppy - what we really want to do is say, once we've seen a
+            // match of a particular type, ignore all matches of that type further down the
+            // string, such that the wildcard produces the "minimal match.".
+            bool has_match = false;
+            for (size_t i = 0; str[i] != L'\0'; i++) {
+                const size_t before_count = out ? out->size() : 0;
+                if (wildcard_complete_internal(str + i, wc + 1, params, flags, out)) {
+                    // We found a match.
+                    has_match = true;
 
-                        // If out is NULL, we don't care about the actual matches. If out is not
-                        // NULL but we have a prefix match, stop there.
-                        if (out == NULL || has_prefix_match(out, before_count)) {
-                            break;
-                        }
+                    // If out is NULL, we don't care about the actual matches. If out is not
+                    // NULL but we have a prefix match, stop there.
+                    if (out == NULL || has_prefix_match(out, before_count)) {
+                        break;
                     }
                 }
-                return has_match;
             }
-            case ANY_STRING_RECURSIVE: {
-                // We don't even try with this one.
-                return false;
-            }
-            default: {
-                assert(0 && "Unreachable code reached");
-                return false;
-            }
+            return has_match;
+        }
+        case ANY_STRING_RECURSIVE: {
+            // We don't even try with this one.
+            return false;
+        }
+        default: {
+            assert(0 && "Unreachable code reached");
         }
     }
+
     assert(0 && "Unreachable code reached");
 }
 
@@ -333,33 +328,32 @@ static wcstring file_get_desc(const wcstring &filename, int lstat_res, const str
             if (!stat_res) {
                 if (S_ISDIR(buf.st_mode)) {
                     return COMPLETE_DIRECTORY_SYMLINK_DESC;
-                } else {
-                    if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-                        if (waccess(filename, X_OK) == 0) {
-                            // Weird group permissions and other such issues make it non-trivial to
-                            // find out if we can actually execute a file using the result from
-                            // stat. It is much safer to use the access function, since it tells us
-                            // exactly what we want to know.
-                            return COMPLETE_EXEC_LINK_DESC;
-                        }
+                }
+                if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+                    if (waccess(filename, X_OK) == 0) {
+                        // Weird group permissions and other such issues make it non-trivial to
+                        // find out if we can actually execute a file using the result from
+                        // stat. It is much safer to use the access function, since it tells us
+                        // exactly what we want to know.
+                        return COMPLETE_EXEC_LINK_DESC;
                     }
                 }
 
                 return COMPLETE_SYMLINK_DESC;
-
-            } else {
-                switch (err) {
-                    case ENOENT: {
-                        return COMPLETE_ROTTEN_SYMLINK_DESC;
-                    }
-                    case ELOOP: {
-                        return COMPLETE_LOOP_SYMLINK_DESC;
-                    }
-                }
-                // On unknown errors we do nothing. The file will be given the default 'File'
-                // description or one based on the suffix.
             }
 
+            switch (err) {
+                case ENOENT: {
+                    return COMPLETE_ROTTEN_SYMLINK_DESC;
+                }
+                case ELOOP: {
+                    return COMPLETE_LOOP_SYMLINK_DESC;
+                }
+                default: {
+                    // On unknown errors we do nothing. The file will be given the default 'File'
+                    // description or one based on the suffix.
+                }
+            }
         } else if (S_ISCHR(buf.st_mode)) {
             return COMPLETE_CHAR_DESC;
         } else if (S_ISBLK(buf.st_mode)) {
@@ -449,9 +443,8 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     if (is_directory) {
         return wildcard_complete(filename + L'/', wc, desc.c_str(), NULL, out, expand_flags,
                                  COMPLETE_NO_SPACE);
-    } else {
-        return wildcard_complete(filename, wc, desc.c_str(), NULL, out, expand_flags, 0);
     }
+    return wildcard_complete(filename, wc, desc.c_str(), NULL, out, expand_flags, 0);
 }
 
 class wildcard_expander_t {
@@ -637,9 +630,8 @@ class wildcard_expander_t {
     int status_code() const {
         if (this->did_interrupt) {
             return -1;
-        } else {
-            return this->did_add ? 1 : 0;
         }
+        return this->did_add ? 1 : 0;
     }
 };
 

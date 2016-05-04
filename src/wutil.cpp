@@ -292,24 +292,20 @@ const char *safe_strerror(int err) {
         return &_sys_errs[_sys_index[err]];
     }
 #endif  // either HAVE__SYS__ERRS or HAVE_SYS_ERRLIST
-    else
 #endif  // defined(HAVE__SYS__ERRS) || defined(HAVE_SYS_ERRLIST)
-    {
-        int saved_err = errno;
 
-        // Use a shared buffer for this case.
-        static char buff[384];
-        char errnum_buff[64];
-        format_long_safe(errnum_buff, err);
+    int saved_err = errno;
+    static char buff[384];  // use a shared buffer for this case
+    char errnum_buff[64];
+    format_long_safe(errnum_buff, err);
 
-        buff[0] = '\0';
-        safe_append(buff, "unknown error (errno was ", sizeof buff);
-        safe_append(buff, errnum_buff, sizeof buff);
-        safe_append(buff, ")", sizeof buff);
+    buff[0] = '\0';
+    safe_append(buff, "unknown error (errno was ", sizeof buff);
+    safe_append(buff, errnum_buff, sizeof buff);
+    safe_append(buff, ")", sizeof buff);
 
-        errno = saved_err;
-        return buff;
-    }
+    errno = saved_err;
+    return buff;
 }
 
 void safe_perror(const char *message) {

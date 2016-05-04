@@ -92,10 +92,9 @@ const wchar_t *kill_yank_rotate() {
     // Move the first element to the end.
     if (kill_list.empty()) {
         return NULL;
-    } else {
-        kill_list.splice(kill_list.end(), kill_list, kill_list.begin());
-        return kill_list.front().c_str();
     }
+    kill_list.splice(kill_list.end(), kill_list, kill_list.begin());
+    return kill_list.front().c_str();
 }
 
 /// Check the X clipboard. If it has been changed, add the new clipboard contents to the fish
@@ -132,9 +131,8 @@ const wchar_t *kill_yank() {
     kill_check_x_buffer();
     if (kill_list.empty()) {
         return L"";
-    } else {
-        return kill_list.front().c_str();
     }
+    return kill_list.front().c_str();
 }
 
 void kill_sanity_check() {}

@@ -283,13 +283,9 @@ color24_t rgb_color_t::to_color24() const {
 
 unsigned char rgb_color_t::to_name_index() const {
     assert(type == type_named || type == type_rgb);
-    if (type == type_named) {
-        return data.name_idx;
-    } else if (type == type_rgb) {
-        return term8_color_for_rgb(data.color.rgb);
-    } else {
-        return (unsigned char)-1;  // this is an error
-    }
+    if (type == type_named) return data.name_idx;
+    if (type == type_rgb) return term8_color_for_rgb(data.color.rgb);
+    return (unsigned char)-1;  // this is an error
 }
 
 void rgb_color_t::parse(const wcstring &str) {

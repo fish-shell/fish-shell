@@ -535,13 +535,12 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
         // m.command.c_str());
         // We matched the entire sequence.
         return true;
-    } else {
-        int k;
-        // Return the read characters.
-        input_common_next_ch(c);
-        for (k = j - 1; k >= 0; k--) {
-            input_common_next_ch(m.seq[k]);
-        }
+    }
+
+    // Return the read characters.
+    input_common_next_ch(c);
+    for (int k = j - 1; k >= 0; k--) {
+        input_common_next_ch(m.seq[k]);
     }
 
     return false;
@@ -630,12 +629,12 @@ wint_t input_readch(bool allow_commands) {
                 case R_AND: {
                     if (input_function_status) {
                         return input_readch();
-                    } else {
-                        while ((c = input_common_readch(0)) && c >= R_MIN && c <= R_MAX)
-                            ;
-                        input_common_next_ch(c);
-                        return input_readch();
                     }
+                    while ((c = input_common_readch(0)) && c >= R_MIN && c <= R_MAX) {
+                        // do nothing
+                    }
+                    input_common_next_ch(c);
+                    return input_readch();
                 }
                 default: { return c; }
             }

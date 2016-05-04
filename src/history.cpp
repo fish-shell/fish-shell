@@ -442,17 +442,17 @@ static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length
                 break;
             }
             case '\n': {
-                if (ignore_newline) {
-                    ignore_newline = false;
-                } else {
+                if (!ignore_newline) {
                     // Note: pos will be left pointing just after this newline, because of the ++ in
                     // the loop.
                     all_done = true;
                 }
+                ignore_newline = false;
                 break;
             }
         }
     }
+
     *inout_cursor = (pos - begin);
     return result;
 }
@@ -707,11 +707,11 @@ static size_t read_line(const char *base, size_t cursor, size_t len, std::string
         result.assign(start, newline - start);
         // Return the amount to advance the cursor; skip over the newline.
         return newline - start + 1;
-    } else {
-        // We ran off the end.
-        result.clear();
-        return len - cursor;
     }
+
+    // We ran off the end.
+    result.clear();
+    return len - cursor;
 }
 
 /// Trims leading spaces in the given string, returning how many there were.

@@ -1349,10 +1349,10 @@ static bool node_has_ancestor(const parse_node_tree_t &tree, const parse_node_t 
         return true;  // found it
     } else if (node.parent == NODE_OFFSET_INVALID) {
         return false;  // no more parents
-    } else {
-        // Recurse to the parent.
-        return node_has_ancestor(tree, tree.at(node.parent), proposed_ancestor);
     }
+
+    // Recurse to the parent.
+    return node_has_ancestor(tree, tree.at(node.parent), proposed_ancestor);
 }
 
 const parse_node_t *parse_node_tree_t::find_last_node_of_type(parse_token_type_t type,

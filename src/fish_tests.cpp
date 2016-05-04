@@ -3963,6 +3963,6 @@ int main(int argc, char **argv) {
     proc_destroy();
 
     if (err_count != 0) {
-        return (1);
+        return 1;
     }
 }

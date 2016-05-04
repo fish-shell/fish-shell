@@ -670,9 +670,8 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
     if (this->cancellation_requested) {
         if (!block_stack.empty()) {
             return 1;
-        } else {
-            this->cancellation_requested = false;
         }
+        this->cancellation_requested = false;
     }
 
     // Only certain blocks are allowed.

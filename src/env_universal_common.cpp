@@ -85,7 +85,10 @@ static wcstring vars_filename_in_directory(const wcstring &wdir) {
 }
 
 static const wcstring &default_vars_path() {
-    static wcstring cached_result = vars_filename_in_directory(fishd_get_config());
+    // Oclint complains about this being a "redundant local variable"; however it isn't because the
+    // assignment to a static var is needed to keep the object from being deleted when this function
+    // returns.
+    static wcstring cached_result = vars_filename_in_directory(fishd_get_config());  //!OCLINT
     return cached_result;
 }
 
@@ -1121,9 +1124,8 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         unsigned long usec_per_sec = 1000000;
         if (get_time() - last_change_time < 5LL * usec_per_sec) {
             return usec_per_sec / 10;  // 10 times a second
-        } else {
-            return usec_per_sec / 3;  // 3 times a second
         }
+        return usec_per_sec / 3;  // 3 times a second
     }
 };
 
@@ -1287,10 +1289,9 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
             // We are in polling mode because we think our fd is readable. This means that, if we
             // return it to be select()'d on, we'll be called back immediately. So don't return it.
             return -1;
-        } else {
-            // We are not in polling mode. Return the fd so it can be watched.
-            return pipe_fd;
         }
+        // We are not in polling mode. Return the fd so it can be watched.
+        return pipe_fd;
     }
 
     bool notification_fd_became_readable(int fd) {

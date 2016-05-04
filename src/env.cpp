@@ -609,9 +609,8 @@ static bool try_remove(env_node_t *n, const wchar_t *key, int var_mode) {
 
     if (n->new_scope) {
         return try_remove(global_env, key, var_mode);
-    } else {
-        return try_remove(n->next, key, var_mode);
     }
+    return try_remove(n->next, key, var_mode);
 }
 
 int env_remove(const wcstring &key, int var_mode) {
@@ -713,9 +712,8 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
             if (entry != NULL && (entry->exportv ? search_exported : search_unexported)) {
                 if (entry->val == ENV_NULL) {
                     return env_var_t::missing_var();
-                } else {
-                    return entry->val;
                 }
+                return entry->val;
             }
 
             if (has_scope) {
@@ -1074,10 +1072,9 @@ env_var_t env_vars_snapshot_t::get(const wcstring &key) const {
     // If we represent the current state, bounce to env_get_string.
     if (this->is_current()) {
         return env_get_string(key);
-    } else {
-        std::map<wcstring, wcstring>::const_iterator iter = vars.find(key);
-        return (iter == vars.end() ? env_var_t::missing_var() : env_var_t(iter->second));
     }
+    std::map<wcstring, wcstring>::const_iterator iter = vars.find(key);
+    return iter == vars.end() ? env_var_t::missing_var() : env_var_t(iter->second);
 }
 
 const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH",

@@ -22,71 +22,66 @@
 static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                                const env_var_t &bin_path_var) {
     int err = ENOENT;
-
     debug(3, L"path_get_path( '%ls' )", cmd.c_str());
 
     // If the command has a slash, it must be a full path.
     if (cmd.find(L'/') != wcstring::npos) {
-        if (waccess(cmd, X_OK) == 0) {
-            struct stat buff;
-            if (wstat(cmd, &buff)) {
-                return false;
-            }
-
-            if (S_ISREG(buff.st_mode)) {
-                if (out_path) out_path->assign(cmd);
-                return true;
-            } else {
-                errno = EACCES;
-                return false;
-            }
-        } else {
+        if (waccess(cmd, X_OK) != 0) {
             return false;
         }
 
-    } else {
-        wcstring bin_path;
-        if (!bin_path_var.missing()) {
-            bin_path = bin_path_var;
-        } else {
-            if (contains(PREFIX L"/bin", L"/bin", L"/usr/bin")) {
-                bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
-            } else {
-                bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
-            }
+        struct stat buff;
+        if (wstat(cmd, &buff)) {
+            return false;
         }
+        if (S_ISREG(buff.st_mode)) {
+            if (out_path) out_path->assign(cmd);
+            return true;
+        }
+        errno = EACCES;
+        return false;
+    }
 
-        wcstring nxt_path;
-        wcstokenizer tokenizer(bin_path, ARRAY_SEP_STR);
-        while (tokenizer.next(nxt_path)) {
-            if (nxt_path.empty()) continue;
-            append_path_component(nxt_path, cmd);
-            if (waccess(nxt_path, X_OK) == 0) {
-                struct stat buff;
-                if (wstat(nxt_path, &buff) == -1) {
-                    if (errno != EACCES) {
-                        wperror(L"stat");
-                    }
-                    continue;
-                }
-                if (S_ISREG(buff.st_mode)) {
-                    if (out_path) out_path->swap(nxt_path);
-                    return true;
-                }
-                err = EACCES;
+    wcstring bin_path;
+    if (!bin_path_var.missing()) {
+        bin_path = bin_path_var;
+    } else {
+        if (contains(PREFIX L"/bin", L"/bin", L"/usr/bin")) {
+            bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
+        } else {
+            bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
+        }
+    }
 
-            } else {
-                switch (errno) {
-                    case ENOENT:
-                    case ENAMETOOLONG:
-                    case EACCES:
-                    case ENOTDIR: {
-                        break;
-                    }
-                    default: {
-                        debug(1, MISSING_COMMAND_ERR_MSG, nxt_path.c_str());
-                        wperror(L"access");
-                    }
+    wcstring nxt_path;
+    wcstokenizer tokenizer(bin_path, ARRAY_SEP_STR);
+    while (tokenizer.next(nxt_path)) {
+        if (nxt_path.empty()) continue;
+        append_path_component(nxt_path, cmd);
+        if (waccess(nxt_path, X_OK) == 0) {
+            struct stat buff;
+            if (wstat(nxt_path, &buff) == -1) {
+                if (errno != EACCES) {
+                    wperror(L"stat");
+                }
+                continue;
+            }
+            if (S_ISREG(buff.st_mode)) {
+                if (out_path) out_path->swap(nxt_path);
+                return true;
+            }
+            err = EACCES;
+        } else {
+            switch (errno) {
+                case ENOENT:
+                case ENAMETOOLONG:
+                case EACCES:
+                case ENOTDIR: {
+                    break;
+                }
+                default: {
+                    debug(1, MISSING_COMMAND_ERR_MSG, nxt_path.c_str());
+                    wperror(L"access");
                 }
             }
         }
@@ -208,23 +203,23 @@ wcstring path_apply_working_directory(const wcstring &path, const wcstring &work
     if (!prepend_wd) {
         // No need to prepend the wd, so just return the path we were given.
         return path;
-    } else {
-        // Remove up to one "./".
-        wcstring path_component = path;
-        if (string_prefixes_string(L"./", path_component)) {
-            path_component.erase(0, 2);
-        }
-
-        // Removing leading /s.
-        while (string_prefixes_string(L"/", path_component)) {
-            path_component.erase(0, 1);
-        }
-
-        // Construct and return a new path.
-        wcstring new_path = working_directory;
-        append_path_component(new_path, path_component);
-        return new_path;
     }
+
+    // Remove up to one "./".
+    wcstring path_component = path;
+    if (string_prefixes_string(L"./", path_component)) {
+        path_component.erase(0, 2);
+    }
+
+    // Removing leading /s.
+    while (string_prefixes_string(L"/", path_component)) {
+        path_component.erase(0, 1);
+    }
+
+    // Construct and return a new path.
+    wcstring new_path = working_directory;
+    append_path_component(new_path, path_component);
+    return new_path;
 }
 
 static wcstring path_create_config() {

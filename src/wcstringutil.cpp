@@ -22,8 +22,8 @@ wcstring_range wcstring_tok(wcstring& str, const wcstring& needle, wcstring_rang
     size_type next_pos = str.find_first_of(needle, pos);
     if (next_pos == wcstring::npos) {
         return std::make_pair(pos, wcstring::npos);
-    } else {
-        str[next_pos] = L'\0';
-        return std::make_pair(pos, next_pos - pos);
     }
+
+    str[next_pos] = L'\0';
+    return std::make_pair(pos, next_pos - pos);
 }

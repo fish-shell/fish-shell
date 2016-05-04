@@ -230,9 +230,8 @@ static const function_info_t *function_get(const wcstring &name) {
     function_map_t::iterator iter = loaded_functions.find(name);
     if (iter == loaded_functions.end()) {
         return NULL;
-    } else {
-        return &iter->second;
     }
+    return &iter->second;
 }
 
 bool function_get_definition(const wcstring &name, wcstring *out_definition) {

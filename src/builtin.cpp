@@ -412,26 +412,25 @@ static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int u
         }
 
         return 0;
-    } else {
-        int res = 0;
-
-        if (mode == NULL) mode = DEFAULT_BIND_MODE;
-
-        while (*seq) {
-            if (use_terminfo) {
-                wcstring seq2;
-                if (get_terminfo_sequence(*seq++, &seq2, streams)) {
-                    input_mapping_erase(seq2, mode);
-                } else {
-                    res = 1;
-                }
-            } else {
-                input_mapping_erase(*seq++, mode);
-            }
-        }
-
-        return res;
     }
+
+    int res = 0;
+    if (mode == NULL) mode = DEFAULT_BIND_MODE;
+
+    while (*seq) {
+        if (use_terminfo) {
+            wcstring seq2;
+            if (get_terminfo_sequence(*seq++, &seq2, streams)) {
+                input_mapping_erase(seq2, mode);
+            } else {
+                res = 1;
+            }
+        } else {
+            input_mapping_erase(*seq++, mode);
+        }
+    }
+
+    return res;
 }
 
 /// The bind builtin, used for setting character sequences.
@@ -1454,11 +1453,10 @@ static int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) 
     wcstring res = wgetcwd();
     if (res.empty()) {
         return STATUS_BUILTIN_ERROR;
-    } else {
-        streams.out.append(res);
-        streams.out.push_back(L'\n');
-        return STATUS_BUILTIN_OK;
     }
+    streams.out.append(res);
+    streams.out.push_back(L'\n');
+    return STATUS_BUILTIN_OK;
 }
 
 /// Adds a function to the function set. It calls into function.cpp to perform any heavy lifting.
@@ -2638,10 +2636,10 @@ static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j, const w
             L"bg", j->job_id, j->command_wcstr());
         builtin_print_help(parser, streams, L"bg", streams.err);
         return STATUS_BUILTIN_ERROR;
-    } else {
-        streams.err.append_format(_(L"Send job %d '%ls' to background\n"), j->job_id,
-                                  j->command_wcstr());
     }
+
+    streams.err.append_format(_(L"Send job %d '%ls' to background\n"), j->job_id,
+                              j->command_wcstr());
     make_first(j);
     job_set_flag(j, JOB_FOREGROUND, 0);
     job_continue(j, job_is_stopped(j));
@@ -3087,9 +3085,8 @@ static const builtin_data_t *builtin_lookup(const wcstring &name) {
     const builtin_data_t *found = std::lower_bound(builtin_datas, array_end, name);
     if (found != array_end && name == found->name) {
         return found;
-    } else {
-        return NULL;
     }
+    return NULL;
 }
 
 void builtin_init() {
@@ -3127,14 +3124,10 @@ int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &stre
     }
 
     if (data != NULL) {
-        int status;
-
-        status = cmd(parser, streams, argv);
-        return status;
-
-    } else {
-        debug(0, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);
+        return cmd(parser, streams, argv);
     }
+
+    debug(0, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);
     return STATUS_BUILTIN_ERROR;
 }
 

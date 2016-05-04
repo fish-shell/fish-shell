@@ -194,20 +194,15 @@ char *wcs2str(const wchar_t *in) {
         if (result) {
             // It converted into the local buffer, so copy it.
             result = strdup(result);
-            if (!result) {
-                DIE_MEM();
-            }
+            if (!result) DIE_MEM();
         }
         return result;
-
-    } else {
-        // Here we probably allocate a buffer probably much larger than necessary.
-        char *out = (char *)malloc(MAX_UTF8_BYTES * wcslen(in) + 1);
-        if (!out) {
-            DIE_MEM();
-        }
-        return wcs2str_internal(in, out);
     }
+
+    // Here we probably allocate a buffer probably much larger than necessary.
+    char *out = (char *)malloc(MAX_UTF8_BYTES * wcslen(in) + 1);
+    if (!out) DIE_MEM();
+    return wcs2str_internal(in, out);
 }
 
 char *wcs2str(const wcstring &in) { return wcs2str(in.c_str()); }
@@ -411,10 +406,8 @@ wcstring wsetlocale(int category, const wchar_t *locale) {
     // U+23CE is the "return" character
     omitted_newline_char = (wcwidth(L'\x23CE') > 0) ? L'\x23CE' : L'~';
 
-    if (!res)
-        return wcstring();
-    else
-        return format_string(L"%s", res);
+    if (!res) return wcstring();
+    return format_string(L"%s", res);
 }
 
 bool contains_internal(const wchar_t *a, int vararg_handle, ...) {

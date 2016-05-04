@@ -232,9 +232,8 @@ class reader_data_t {
     editable_line_t *active_edit_line() {
         if (this->is_navigating_pager_contents() && this->pager.is_search_field_shown()) {
             return &this->pager.search_field_line;
-        } else {
-            return &this->command_line;
         }
+        return &this->command_line;
     }
 
     /// Do what we need to do whenever our command line changes.
@@ -1070,55 +1069,55 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
         size_t new_cursor_pos = (begin - buff) + move_cursor;
         *inout_cursor_pos = new_cursor_pos;
         return sb;
-    } else {
-        wchar_t quote = L'\0';
-        wcstring replaced;
-        if (do_escape) {
-            // Note that we ignore COMPLETE_DONT_ESCAPE_TILDES here. We get away with this because
-            // unexpand_tildes only operates on completions that have COMPLETE_REPLACES_TOKEN set,
-            // but we ought to respect them.
-            parse_util_get_parameter_info(command_line, cursor_pos, &quote, NULL, NULL);
-
-            // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can
-            // modify the command line, then delete the trailing quote so that we can insert within
-            // the quotes instead of after them. See issue #552.
-            if (quote == L'\0' && !append_only && cursor_pos > 0) {
-                // The entire token is reported as unquoted...see if the last character is an
-                // unescaped quote.
-                wchar_t trailing_quote = unescaped_quote(command_line, cursor_pos - 1);
-                if (trailing_quote != L'\0') {
-                    quote = trailing_quote;
-                    back_into_trailing_quote = true;
-                }
-            }
-
-            replaced = parse_util_escape_string_with_quote(val_str, quote);
-        } else {
-            replaced = val;
-        }
-
-        size_t insertion_point = cursor_pos;
-        if (back_into_trailing_quote) {
-            // Move the character back one so we enter the terminal quote.
-            assert(insertion_point > 0);
-            insertion_point--;
-        }
-
-        // Perform the insertion and compute the new location.
-        wcstring result = command_line;
-        result.insert(insertion_point, replaced);
-        size_t new_cursor_pos =
-            insertion_point + replaced.size() + (back_into_trailing_quote ? 1 : 0);
-        if (add_space) {
-            if (quote != L'\0' && unescaped_quote(command_line, insertion_point) != quote) {
-                // This is a quoted parameter, first print a quote.
-                result.insert(new_cursor_pos++, wcstring(&quote, 1));
-            }
-            result.insert(new_cursor_pos++, L" ");
-        }
-        *inout_cursor_pos = new_cursor_pos;
-        return result;
     }
+
+    wchar_t quote = L'\0';
+    wcstring replaced;
+    if (do_escape) {
+        // Note that we ignore COMPLETE_DONT_ESCAPE_TILDES here. We get away with this because
+        // unexpand_tildes only operates on completions that have COMPLETE_REPLACES_TOKEN set,
+        // but we ought to respect them.
+        parse_util_get_parameter_info(command_line, cursor_pos, &quote, NULL, NULL);
+
+        // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can
+        // modify the command line, then delete the trailing quote so that we can insert within
+        // the quotes instead of after them. See issue #552.
+        if (quote == L'\0' && !append_only && cursor_pos > 0) {
+            // The entire token is reported as unquoted...see if the last character is an
+            // unescaped quote.
+            wchar_t trailing_quote = unescaped_quote(command_line, cursor_pos - 1);
+            if (trailing_quote != L'\0') {
+                quote = trailing_quote;
+                back_into_trailing_quote = true;
+            }
+        }
+
+        replaced = parse_util_escape_string_with_quote(val_str, quote);
+    } else {
+        replaced = val;
+    }
+
+    size_t insertion_point = cursor_pos;
+    if (back_into_trailing_quote) {
+        // Move the character back one so we enter the terminal quote.
+        assert(insertion_point > 0);
+        insertion_point--;
+    }
+
+    // Perform the insertion and compute the new location.
+    wcstring result = command_line;
+    result.insert(insertion_point, replaced);
+    size_t new_cursor_pos =
+        insertion_point + replaced.size() + (back_into_trailing_quote ? 1 : 0);
+    if (add_space) {
+        if (quote != L'\0' && unescaped_quote(command_line, insertion_point) != quote) {
+            // This is a quoted parameter, first print a quote.
+            result.insert(new_cursor_pos++, wcstring(&quote, 1));
+        }
+        result.insert(new_cursor_pos++, L" ");
+    }
+    *inout_cursor_pos = new_cursor_pos;
+    return result;
 }
 
 /// Insert the string at the current cursor position. The function checks if the string is quoted or
@@ -1926,7 +1925,7 @@ void reader_set_buffer(const wcstring &b, size_t pos) {
 }
 
 size_t reader_get_cursor_pos() {
-    if (!data) return (size_t)(-1);
+    if (!data) return (size_t)-1;
 
     return data->command_line.position;
 }
@@ -2357,9 +2356,9 @@ static int can_read(int fd) {
 //
 // TODO: Actually implement the replacement as documented above.
 static int wchar_private(wchar_t c) {
-    return ((c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END) ||
-            (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END) ||
-            (c >= INPUT_COMMON_BASE && c < INPUT_COMMON_END));
+    return (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END) ||
+           (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END) ||
+           (c >= INPUT_COMMON_BASE && c < INPUT_COMMON_END);
 }
 
 /// Test if the specified character in the specified string is backslashed. pos may be at the end of

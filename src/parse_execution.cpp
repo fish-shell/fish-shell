@@ -213,16 +213,18 @@ parse_execution_context_t::execution_cancellation_reason_t
 parse_execution_context_t::cancellation_reason(const block_t *block) const {
     if (shell_is_exiting()) {
         return execution_cancellation_exit;
-    } else if (parser && parser->cancellation_requested) {
+    }
+    if (parser && parser->cancellation_requested) {
         return execution_cancellation_skip;
-    } else if (block && block->loop_status != LOOP_NORMAL) {
+    }
+    if (block && block->loop_status != LOOP_NORMAL) {
         // Nasty hack - break and continue set the 'skip' flag as well as the loop status flag.
         return execution_cancellation_loop_control;
-    } else if (block && block->skip) {
-        return execution_cancellation_skip;
-    } else {
-        return execution_cancellation_none;
     }
+    if (block && block->skip) {
+        return execution_cancellation_skip;
+    }
+    return execution_cancellation_none;
 }
 
 /// Return whether the job contains a single statement, of block type, with no redirections.
@@ -1042,10 +1044,9 @@ parse_execution_result_t parse_execution_context_t::populate_boolean_process(
 
     if (skip_job) {
         return parse_execution_skipped;
-    } else {
-        const parse_node_t &subject = *tree.get_child(bool_statement, 1, symbol_statement);
-        return this->populate_job_process(job, proc, subject);
     }
+    const parse_node_t &subject = *tree.get_child(bool_statement, 1, symbol_statement);
+    return this->populate_job_process(job, proc, subject);
 }
 
 parse_execution_result_t parse_execution_context_t::populate_block_process(

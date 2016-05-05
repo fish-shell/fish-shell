@@ -148,14 +148,12 @@ class screen_t {
 /// \param colors the colors to use for the comand line
 /// \param indent the indent to use for the command line
 /// \param cursor_pos where the cursor is
-/// \param sel_start_pos where the selections starts (inclusive)
-/// \param sel_stop_pos where the selections ends (inclusive)
 /// \param pager_data any pager data, to append to the screen
 /// \param position_is_within_pager whether the position is within the pager line (first line)
 void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
              const wcstring &commandline, size_t explicit_len, const highlight_spec_t *colors,
-             const int *indent, size_t cursor_pos, size_t sel_start_pos, size_t sel_stop_pos,
-             const page_rendering_t &pager_data, bool position_is_within_pager);
+             const int *indent, size_t cursor_pos, const page_rendering_t &pager_data,
+             bool cursor_is_within_pager);
 
 /// This function resets the screen buffers internal knowledge about the contents of the screen. Use
 /// this function when some other function than s_write has written to the screen.

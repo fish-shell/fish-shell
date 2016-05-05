@@ -429,8 +429,8 @@ static void reader_repaint() {
     size_t cursor_position = focused_on_pager ? data->pager.cursor_position() : cmd_line->position;
 
     s_write(&data->screen, data->left_prompt_buff, data->right_prompt_buff, full_line,
-            cmd_line->size(), &colors[0], &indents[0], cursor_position, data->sel_start_pos,
-            data->sel_stop_pos, data->current_page_rendering, focused_on_pager);
+            cmd_line->size(), &colors[0], &indents[0], cursor_position,
+            data->current_page_rendering, focused_on_pager);
 
     data->repaint_needed = false;
 }

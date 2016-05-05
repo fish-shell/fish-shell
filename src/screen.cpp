@@ -55,7 +55,7 @@ static void invalidate_soft_wrap(screen_t *scr);
 typedef std::vector<char> data_buffer_t;
 static data_buffer_t *s_writeb_buffer = 0;
 
-static int s_writeb(char c);
+static int s_writeb(char character);
 
 /// Class to temporarily set s_writeb_buffer and the writer function in a scoped way.
 class scoped_buffer_t {
@@ -87,20 +87,110 @@ static size_t try_sequence(const char *seq, const wchar_t *str) {
 }
 
 /// Returns the number of columns left until the next tab stop, given the current cursor postion.
-static size_t next_tab_stop(size_t in) {
+static size_t next_tab_stop(size_t current_line_width) {
     // Assume tab stops every 8 characters if undefined.
     size_t tab_width = init_tabs > 0 ? (size_t)init_tabs : 8;
-    return ((in / tab_width) + 1) * tab_width;
+    return ((current_line_width / tab_width) + 1) * tab_width;
 }
 
 /// Like fish_wcwidth, but returns 0 for control characters instead of -1.
-static int fish_wcwidth_min_0(wchar_t wc) { return maxi(0, fish_wcwidth(wc)); }
+static int fish_wcwidth_min_0(wchar_t widechar) { return maxi(0, fish_wcwidth(widechar)); }
 
 /// Whether we permit soft wrapping. If so, in some cases we don't explicitly move to the second
 /// physical line on a wrapped logical line; instead we just output it.
 static bool allow_soft_wrap(void) {
     // Should we be looking at eat_newline_glitch as well?
-    return !!auto_right_margin;
+    return auto_right_margin;
+}
+
+/// Does this look like the escape sequence for setting a screen name.
+static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_length) {
+    bool found = false;
+    if (code[1] == L'k') {
+        const env_var_t term_name = env_get_string(L"TERM");
+        if (!term_name.missing() && string_prefixes_string(L"screen", term_name)) {
+            const wchar_t *const screen_name_end_sentinel = L"\x1b\\";
+            const wchar_t *screen_name_end = wcsstr(&code[2], screen_name_end_sentinel);
+            if (screen_name_end == NULL) {
+                // Consider just <esc>k to be the code.
+                *resulting_length = 2;
+            } else {
+                const wchar_t *escape_sequence_end =
+                    screen_name_end + wcslen(screen_name_end_sentinel);
+                *resulting_length = escape_sequence_end - code;
+            }
+            found = true;
+        }
+    }
+    return found;
+}
+
+/// iTerm2 escape codes: CSI followed by ], terminated by either BEL or escape + backslash.
+/// See https://code.google.com/p/iterm2/wiki/ProprietaryEscapeCodes.
+static bool is_iterm2_escape_seq(const wchar_t *code, size_t *resulting_length) {
+    bool found = false;
+    if (code[1] == ']') {
+        // Start at 2 to skip over <esc>].
+        size_t cursor = 2;
+        for (; code[cursor] != L'\0'; cursor++) {
+            // Consume a sequence of characters up to <esc>\ or <bel>.
+            if (code[cursor] == '\x07' || (code[cursor] == '\\' && code[cursor - 1] == '\x1b')) {
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            *resulting_length = cursor + 1;
+        }
+    }
+    return found;
+}
+
+/// Generic VT100 one byte sequence: CSI followed by something in the range @ through _.
+static bool is_single_byte_escape_seq(const wchar_t *code, size_t *resulting_length) {
+    bool found = false;
+    if (code[1] == L'[' && (code[2] >= L'@' && code[2] <= L'_')) {
+        *resulting_length = 3;
+        found = true;
+    }
+    return found;
+}
+
+/// Generic VT100 two byte sequence: <esc> followed by something in the range @ through _.
+static bool is_two_byte_escape_seq(const wchar_t *code, size_t *resulting_length) {
+    bool found = false;
+    if (code[1] >= L'@' && code[1] <= L'_') {
+        *resulting_length = 2;
+        found = true;
+    }
+    return found;
+}
+
+/// Generic VT100 CSI-style sequence. <esc>, followed by zero or more ASCII characters NOT in
+/// the range [@,_], followed by one character in that range.
+static bool is_csi_style_escape_seq(const wchar_t *code, size_t *resulting_length) {
+    bool found = false;
+    if (code[1] == L'[') {
+        // Start at 2 to skip over <esc>[
+        size_t cursor = 2;
+        for (; code[cursor] != L'\0'; cursor++) {
+            // Consume a sequence of ASCII characters not in the range [@, ~].
+            wchar_t widechar = code[cursor];
+
+            // If we're not in ASCII, just stop.
+            if (widechar > 127) break;
+
+            // If we're the end character, then consume it and then stop.
+            if (widechar >= L'@' && widechar <= L'~') {
+                cursor++;
+                break;
+            }
+        }
+        // curs now indexes just beyond the end of the sequence (or at the terminating zero).
+        found = true;
+        *resulting_length = cursor;
+    }
+    return found;
 }
 
 /// Returns the number of characters in the escape code starting at 'code' (which should initially
@@ -158,85 +248,11 @@ size_t escape_code_length(const wchar_t *code) {
         }
     }
 
-    if (!found) {
-        if (code[1] == L'k') {
-            // This looks like the escape sequence for setting a screen name.
-            const env_var_t term_name = env_get_string(L"TERM");
-            if (!term_name.missing() && string_prefixes_string(L"screen", term_name)) {
-                const wchar_t *const screen_name_end_sentinel = L"\x1b\\";
-                const wchar_t *screen_name_end = wcsstr(&code[2], screen_name_end_sentinel);
-                if (screen_name_end != NULL) {
-                    const wchar_t *escape_sequence_end =
-                        screen_name_end + wcslen(screen_name_end_sentinel);
-                    resulting_length = escape_sequence_end - code;
-                } else {
-                    // Consider just <esc>k to be the code.
-                    resulting_length = 2;
-                }
-                found = true;
-            }
-        }
-    }
-
-    if (!found) {
-        // iTerm2 escape codes: CSI followed by ], terminated by either BEL or escape + backslash.
-        // See https://code.google.com/p/iterm2/wiki/ProprietaryEscapeCodes.
-        if (code[1] == ']') {
-            // Start at 2 to skip over <esc>].
-            size_t cursor = 2;
-            for (; code[cursor] != L'\0'; cursor++) {
-                // Consume a sequence of characters up to <esc>\ or <bel>.
-                if (code[cursor] == '\x07' ||
-                    (code[cursor] == '\\' && code[cursor - 1] == '\x1b')) {
-                    found = true;
-                    break;
-                }
-            }
-            if (found) {
-                resulting_length = cursor + 1;
-            }
-        }
-    }
-
-    if (!found) {
-        // Generic VT100 one byte sequence: CSI followed by something in the range @ through _.
-        if (code[1] == L'[' && (code[2] >= L'@' && code[2] <= L'_')) {
-            resulting_length = 3;
-            found = true;
-        }
-    }
-
-    if (!found) {
-        // Generic VT100 CSI-style sequence. <esc>, followed by zero or more ASCII characters NOT in
-        // the range [@,_], followed by one character in that range.
-        if (code[1] == L'[') {
-            // Start at 2 to skip over <esc>[
-            size_t cursor = 2;
-            for (; code[cursor] != L'\0'; cursor++) {
-                // Consume a sequence of ASCII characters not in the range [@, ~].
-                wchar_t c = code[cursor];
-
-                // If we're not in ASCII, just stop.
-                if (c > 127) break;
-
-                // If we're the end character, then consume it and then stop.
-                if (c >= L'@' && c <= L'~') {
-                    cursor++;
-                    break;
-                }
-            }
-            // curs now indexes just beyond the end of the sequence (or at the terminating zero).
-            found = true;
-            resulting_length = cursor;
-        }
-    }
-    if (!found) {
-        // Generic VT100 two byte sequence: <esc> followed by something in the range @ through _.
-        if (code[1] >= L'@' && code[1] <= L'_') {
-            resulting_length = 2;
-            found = true;
-        }
-    }
+    if (!found) found = is_screen_name_escape_seq(code, &resulting_length);
+    if (!found) found = is_iterm2_escape_seq(code, &resulting_length);
+    if (!found) found = is_single_byte_escape_seq(code, &resulting_length);
+    if (!found) found = is_csi_style_escape_seq(code, &resulting_length);
+    if (!found) found = is_two_byte_escape_seq(code, &resulting_length);
 
     return resulting_length;
 }
@@ -364,55 +380,48 @@ static void s_check_status(screen_t *s) {
 static void s_desired_append_char(screen_t *s, wchar_t b, int c, int indent, size_t prompt_width) {
     int line_no = s->desired.cursor.y;
 
-    switch (b) {
-        case L'\n': {
-            int i;
-            // Current line is definitely hard wrapped.
-            s->desired.create_line(s->desired.line_count());
-            s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
+    if (b == L'\n') {
+        int i;
+        // Current line is definitely hard wrapped.
+        s->desired.create_line(s->desired.line_count());
+        s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
+        s->desired.cursor.y++;
+        s->desired.cursor.x = 0;
+        for (i = 0; i < prompt_width + indent * INDENT_STEP; i++) {
+            s_desired_append_char(s, L' ', 0, indent, prompt_width);
+        }
+    } else if (b == L'\r') {
+        line_t &current = s->desired.line(line_no);
+        current.clear();
+        s->desired.cursor.x = 0;
+    } else {
+        int screen_width = common_get_width();
+        int cw = fish_wcwidth_min_0(b);
+
+        s->desired.create_line(line_no);
+
+        // Check if we are at the end of the line. If so, continue on the next line.
+        if ((s->desired.cursor.x + cw) > screen_width) {
+            // Current line is soft wrapped (assuming we support it).
+            s->desired.line(s->desired.cursor.y).is_soft_wrapped = true;
+            // fprintf(stderr, "\n\n1 Soft wrapping %d\n\n", s->desired.cursor.y);
+
+            line_no = (int)s->desired.line_count();
+            s->desired.add_line();
             s->desired.cursor.y++;
             s->desired.cursor.x = 0;
-            for (i = 0; i < prompt_width + indent * INDENT_STEP; i++) {
-                s_desired_append_char(s, L' ', 0, indent, prompt_width);
-            }
-            break;
         }
-        case L'\r': {
-            line_t &current = s->desired.line(line_no);
-            current.clear();
+
+        line_t &line = s->desired.line(line_no);
+        line.append(b, c);
+        s->desired.cursor.x += cw;
+
+        // Maybe wrap the cursor to the next line, even if the line itself did not wrap. This
+        // avoids wonkiness in the last column.
+        if (s->desired.cursor.x >= screen_width) {
+            line.is_soft_wrapped = true;
             s->desired.cursor.x = 0;
-            break;
-        }
-        default: {
-            int screen_width = common_get_width();
-            int cw = fish_wcwidth_min_0(b);
-
-            s->desired.create_line(line_no);
-
-            // Check if we are at the end of the line. If so, continue on the next line.
-            if ((s->desired.cursor.x + cw) > screen_width) {
-                // Current line is soft wrapped (assuming we support it).
-                s->desired.line(s->desired.cursor.y).is_soft_wrapped = true;
-                // fprintf(stderr, "\n\n1 Soft wrapping %d\n\n", s->desired.cursor.y);
-
-                line_no = (int)s->desired.line_count();
-                s->desired.add_line();
-                s->desired.cursor.y++;
-                s->desired.cursor.x = 0;
-            }
-
-            line_t &line = s->desired.line(line_no);
-            line.append(b, c);
-            s->desired.cursor.x += cw;
-
-            // Maybe wrap the cursor to the next line, even if the line itself did not wrap. This
-            // avoids wonkiness in the last column.
-            if (s->desired.cursor.x >= screen_width) {
-                line.is_soft_wrapped = true;
-                s->desired.cursor.x = 0;
-                s->desired.cursor.y++;
-            }
-            break;
+            s->desired.cursor.y++;
         }
     }
 }
@@ -457,7 +466,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
       s->screen_cursor[0], s->screen_cursor[1],
       new_x, new_y );
     */
-    scoped_buffer_t scoped_buffer(b);
+    scoped_buffer_t scoped_buffer(b);  //!OCLINT(has side effects)
 
     y_steps = new_y - s->actual.cursor.y;
 
@@ -513,7 +522,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
 
 /// Set the pen color for the terminal.
 static void s_set_color(screen_t *s, data_buffer_t *b, highlight_spec_t c) {
-    scoped_buffer_t scoped_buffer(b);
+    scoped_buffer_t scoped_buffer(b);  //!OCLINT(has side effects)
 
     unsigned int uc = (unsigned int)c;
     set_color(highlight_get_color(uc & 0xffff, false),
@@ -522,7 +531,7 @@ static void s_set_color(screen_t *s, data_buffer_t *b, highlight_spec_t c) {
 
 /// Convert a wide character to a multibyte string and append it to the buffer.
 static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c) {
-    scoped_buffer_t scoped_buffer(b);
+    scoped_buffer_t scoped_buffer(b);  //!OCLINT(has side effects)
     s->actual.cursor.x += fish_wcwidth_min_0(c);
     writech(c);
     if (s->actual.cursor.x == s->actual_width && allow_soft_wrap()) {
@@ -539,13 +548,13 @@ static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c) {
 
 /// Send the specified string through tputs and append the output to the specified buffer.
 static void s_write_mbs(data_buffer_t *b, char *s) {
-    scoped_buffer_t scoped_buffer(b);
+    scoped_buffer_t scoped_buffer(b);  //!OCLINT(has side effects)
     writembs(s);
 }
 
 /// Convert a wide string to a multibyte string and append it to the buffer.
 static void s_write_str(data_buffer_t *b, const wchar_t *s) {
-    scoped_buffer_t scoped_buffer(b);
+    scoped_buffer_t scoped_buffer(b);  //!OCLINT(has side effects)
     writestr(s);
 }
 
@@ -573,7 +582,7 @@ static size_t line_shared_prefix(const line_t &a, const line_t &b) {
 // we believe we are already in the target position. This lets the terminal take care of wrapping,
 // which means that if you copy and paste the text, it won't have an embedded newline.
 static bool perform_any_impending_soft_wrap(screen_t *scr, int x, int y) {
-    if (x == scr->soft_wrap_location.x && y == scr->soft_wrap_location.y) {
+    if (x == scr->soft_wrap_location.x && y == scr->soft_wrap_location.y) {  //!OCLINT
         // We can soft wrap; but do we want to?
         if (scr->desired.line(y - 1).is_soft_wrapped && allow_soft_wrap()) {
             // Yes. Just update the actual cursor; that will cause us to elide emitting the commands
@@ -684,10 +693,12 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
     // Determine how many lines have stuff on them; we need to clear lines with stuff that we don't
     // want.
     const size_t lines_with_stuff = maxi(actual_lines_before_reset, scr->actual.line_count());
+#if 0
     if (lines_with_stuff > scr->desired.line_count()) {
         // There are lines that we output to previously that will need to be cleared.
-        // need_clear_lines = true;
+        need_clear_lines = true;
     }
+#endif
 
     if (wcscmp(left_prompt, scr->actual_left_prompt.c_str())) {
         s_move(scr, &output, 0, 0);
@@ -722,13 +733,13 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
             // If we're soft wrapped, and if we're going to change the first character of the next
             // line, don't skip over the last two characters so that we maintain soft-wrapping.
             if (o_line.is_soft_wrapped && i + 1 < scr->desired.line_count()) {
-                bool first_character_of_next_line_will_change = true;
-                if (i + 1 < scr->actual.line_count()) {
+                bool next_line_will_change = true;
+                if (i + 1 < scr->actual.line_count()) {  //!OCLINT
                     if (line_shared_prefix(scr->desired.line(i + 1), scr->actual.line(i + 1)) > 0) {
-                        first_character_of_next_line_will_change = false;
+                        next_line_will_change = false;
                     }
                 }
-                if (first_character_of_next_line_will_change) {
+                if (next_line_will_change) {
                     skip_remaining = mini(skip_remaining, (size_t)(scr->actual_width - 2));
                 }
             }
@@ -933,12 +944,12 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     }
 
     // Compute the width of the autosuggestion at all possible truncation offsets.
-    std::vector<size_t> autosuggestion_truncated_widths;
-    autosuggestion_truncated_widths.reserve(1 + wcslen(autosuggestion));
-    size_t autosuggestion_total_width = 0;
+    std::vector<size_t> autosuggest_truncated_widths;
+    autosuggest_truncated_widths.reserve(1 + wcslen(autosuggestion));
+    size_t autosuggest_total_width = 0;
     for (size_t i = 0; autosuggestion[i] != L'\0'; i++) {
-        autosuggestion_truncated_widths.push_back(autosuggestion_total_width);
-        autosuggestion_total_width += fish_wcwidth_min_0(autosuggestion[i]);
+        autosuggest_truncated_widths.push_back(autosuggest_total_width);
+        autosuggest_total_width += fish_wcwidth_min_0(autosuggestion[i]);
     }
 
     // Here are the layouts we try in turn:
@@ -962,7 +973,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     // Case 1
     if (!done &&
         left_prompt_width + right_prompt_width + first_command_line_width +
-                autosuggestion_total_width <
+                autosuggest_total_width <
             screen_width) {
         result.left_prompt = left_prompt;
         result.left_prompt_space = left_prompt_width;
@@ -979,11 +990,11 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
         result.right_prompt = right_prompt;
 
         // Need at least two characters to show an autosuggestion.
-        size_t available_autosuggestion_space =
+        size_t available_autosuggest_space =
             screen_width - (left_prompt_width + right_prompt_width + first_command_line_width);
-        if (autosuggestion_total_width > 0 && available_autosuggestion_space > 2) {
-            size_t truncation_offset = truncation_offset_for_width(
-                autosuggestion_truncated_widths, available_autosuggestion_space - 2);
+        if (autosuggest_total_width > 0 && available_autosuggest_space > 2) {
+            size_t truncation_offset = truncation_offset_for_width(autosuggest_truncated_widths,
+                                                                   available_autosuggest_space - 2);
             result.autosuggestion = wcstring(autosuggestion, truncation_offset);
             result.autosuggestion.push_back(ellipsis_char);
         }
@@ -1019,8 +1030,8 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
 
 void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
              const wcstring &commandline, size_t explicit_len, const highlight_spec_t *colors,
-             const int *indent, size_t cursor_pos, size_t sel_start_pos, size_t sel_stop_pos,
-             const page_rendering_t &pager, bool cursor_position_is_within_pager) {
+             const int *indent, size_t cursor_pos, const page_rendering_t &pager,
+             bool cursor_is_within_pager) {
     screen_data_t::cursor_t cursor_arr;
 
     CHECK(s, );
@@ -1082,7 +1093,7 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
     size_t i;
     for (i = 0; i < effective_commandline.size(); i++) {
         // Grab the current cursor's x,y position if this character matches the cursor's offset.
-        if (!cursor_position_is_within_pager && i == cursor_pos) {
+        if (!cursor_is_within_pager && i == cursor_pos) {
             cursor_arr = s->desired.cursor;
         }
         s_desired_append_char(s, effective_commandline.at(i), colors[i], indent[i],
@@ -1090,7 +1101,7 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
     }
 
     // Cursor may have been at the end too.
-    if (!cursor_position_is_within_pager && i == cursor_pos) {
+    if (!cursor_is_within_pager && i == cursor_pos) {
         cursor_arr = s->desired.cursor;
     }
 
@@ -1098,7 +1109,7 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
     // above.
     s->desired.cursor = cursor_arr;
 
-    if (cursor_position_is_within_pager) {
+    if (cursor_is_within_pager) {
         s->desired.cursor.x = (int)cursor_pos;
         s->desired.cursor.y = (int)s->desired.line_count();
     }
@@ -1173,7 +1184,8 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // in common.cpp.
         int non_space_width = wcwidth(omitted_newline_char);
         if (screen_width >= non_space_width) {
-            if (output_get_color_support() & color_support_term256) {
+            bool has_256_colors = output_get_color_support() & color_support_term256;
+            if (has_256_colors) {
                 // Draw the string in term256 gray.
                 abandon_line_string.append(L"\x1b[38;5;245m");
             } else {

@@ -6,3 +6,5 @@
 BasedOnStyle: Google
 ColumnLimit: 100
 IndentWidth: 4
+# We don't want OCLint pragmas to be reformatted.
+CommentPragmas: '^!OCLINT'

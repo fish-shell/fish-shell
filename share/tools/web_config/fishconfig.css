@@ -1,6 +1,6 @@
 body {
     background-color: #292929;
-    font-family: "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+    font-family: "Source Code Pro", Menlo, "DejaVu Sans Mono", "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
     color: white;
 }
 

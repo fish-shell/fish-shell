@@ -52,9 +52,6 @@ class history_item_t {
     friend class history_tests_t;
 
    private:
-    explicit history_item_t(const wcstring &str);
-    explicit history_item_t(const wcstring &, time_t, history_identifier_t ident = 0);
-
     // Attempts to merge two compatible history items together.
     bool merge(const history_item_t &item);
 
@@ -71,6 +68,9 @@ class history_item_t {
     path_list_t required_paths;
 
    public:
+    explicit history_item_t(const wcstring &str);
+    explicit history_item_t(const wcstring &, time_t, history_identifier_t ident = 0);
+
     const wcstring &str() const { return contents; }
 
     bool empty() const { return contents.empty(); }
@@ -81,6 +81,7 @@ class history_item_t {
     time_t timestamp() const { return creation_timestamp; }
 
     const path_list_t &get_required_paths() const { return required_paths; }
+    void set_required_paths(path_list_t paths) { required_paths = paths; }
 
     bool operator==(const history_item_t &other) const {
         return contents == other.contents && creation_timestamp == other.creation_timestamp &&
@@ -190,11 +191,6 @@ class history_t {
 
     // Whether we're in maximum chaos mode, useful for testing.
     bool chaos_mode;
-
-    // Versioned decoding.
-    static history_item_t decode_item_fish_2_0(const char *base, size_t len);
-    static history_item_t decode_item_fish_1_x(const char *base, size_t len);
-    static history_item_t decode_item(const char *base, size_t len, history_file_type_t type);
 
    public:
     explicit history_t(const wcstring &);  // constructor

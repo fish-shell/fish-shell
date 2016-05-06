@@ -245,6 +245,7 @@ complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcomma
 complete -f -c git -n '__fish_git_needs_command' -a show -d 'Shows the last commit of a branch'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
+complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_tags)' --description 'Tag'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_commits)'
 # TODO options
 

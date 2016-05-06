@@ -50,6 +50,9 @@ enum {
 /// \param c2 Background color.
 void set_color(rgb_color_t c, rgb_color_t c2);
 
+/// Set the foreground and background colors to "normal".
+void reset_color();
+
 /// Write specified multibyte string.
 void writembs_check(char *mbs, const char *mbs_name, const char *file, long line);
 #define writembs(mbs) writembs_check((mbs), #mbs, __FILE__, __LINE__)

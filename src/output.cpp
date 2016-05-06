@@ -128,13 +128,25 @@ void write_color(rgb_color_t color, bool is_fg) {
     }
 }
 
+void reset_color() {
+    if (!cur_term) {
+        debug(3, "reset_color called with cur_term == NULL");
+        return;
+    }
+    set_color(rgb_color_t::reset(), rgb_color_t::reset());
+}
+
 void set_color(rgb_color_t c, rgb_color_t c2) {
-#if 0
+    ASSERT_IS_MAIN_THREAD();
+
     wcstring tmp = c.description();
     wcstring tmp2 = c2.description();
-    printf("set_color %ls : %ls\n", tmp.c_str(), tmp2.c_str());
-#endif
-    ASSERT_IS_MAIN_THREAD();
+    debug(3, L"set_color called with c=%ls, c2=%ls", tmp.c_str(), tmp2.c_str());
+
+    if (!cur_term) {
+        debug(3, "set_color called with cur_term == NULL");
+        return;
+    }
 
     const rgb_color_t normal = rgb_color_t::normal();
     static rgb_color_t last_color = rgb_color_t::normal();

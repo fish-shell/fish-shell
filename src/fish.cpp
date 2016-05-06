@@ -444,6 +444,7 @@ int main(int argc, char **argv) {
     }
 
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
+    debug(2, L"Fish pid %d, pgid %d", getpid(), getpgrp());
 
     proc_init();
     event_init();

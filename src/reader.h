@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <termios.h>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,7 @@
 class history_t;
 class env_vars_snapshot_t;
 class io_chain_t;
+class job_t;
 
 /// Helper class for storing a command line.
 class editable_line_t {
@@ -61,8 +63,17 @@ void reader_init();
 /// Destroy and free resources used by the reader.
 void reader_destroy();
 
-/// Restore the term mode at startup.
+/// Restore the tty modes to those in effect when the shell started running.
 void restore_term_mode();
+
+/// Give the tty to an external command.
+bool term_donate(job_t *j);
+
+/// Reclaim the tty from an external command.
+bool term_steal(job_t *j);
+
+/// Return the tty modes appropriate for a new external command.
+struct termios external_command_tty_modes(void);
 
 /// Returns the filename of the file currently read.
 const wchar_t *reader_current_filename();

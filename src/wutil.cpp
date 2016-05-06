@@ -266,6 +266,7 @@ int make_fd_blocking(int fd) {
     int err = 0;
     bool nonblocking = flags & O_NONBLOCK;
     if (nonblocking) {
+        debug(2, L"fd %d was non-blocking, setting to blocking", fd);
         err = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
     }
     return err == -1 ? errno : 0;

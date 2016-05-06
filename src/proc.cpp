@@ -11,7 +11,6 @@
 #include <signal.h>
 #include <stdio.h>
 #include <sys/wait.h>
-#include <termios.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
@@ -371,11 +370,30 @@ process_t::process_t()
 process_t::~process_t() { delete this->next; }
 
 job_t::job_t(job_id_t jobid, const io_chain_t &bio)
-    : block_io(bio), first_process(NULL), pgid(0), tmodes(), job_id(jobid), flags(0) {}
+    : block_io(bio),
+      first_process(NULL),
+      pgid(0),
+      tmodes(external_command_tty_modes()),
+      job_id(jobid),
+      flags(0) {}
 
 job_t::~job_t() {
     delete first_process;
     release_job_id(job_id);
+}
+
+/// Return a string representing the job flags that are set and unset.
+const char *job_flags_as_str(const job_t *j) {
+    static char job_flags[128];
+    snprintf(job_flags, 128,
+             "%cJOB_NOTIFIED %cJOB_FOREGROUND %cJOB_CONSTRUCTED %cJOB_SKIP_NOTIFICATION "
+             "%cJOB_NEGATE %cJOB_CONTROL %cJOB_TERMINAL",
+             job_get_flag(j, JOB_NOTIFIED) ? ' ' : '!', job_get_flag(j, JOB_FOREGROUND) ? ' ' : '!',
+             job_get_flag(j, JOB_CONSTRUCTED) ? ' ' : '!',
+             job_get_flag(j, JOB_SKIP_NOTIFICATION) ? ' ' : '!',
+             job_get_flag(j, JOB_NEGATE) ? ' ' : '!', job_get_flag(j, JOB_CONTROL) ? ' ' : '!',
+             job_get_flag(j, JOB_TERMINAL) ? ' ' : '!');
+    return job_flags;
 }
 
 /// Return all the IO redirections. Start with the block IO, then walk over the processes.
@@ -777,59 +795,68 @@ static void read_try(job_t *j) {
 
 /// Give ownership of the terminal to the specified job.
 ///
-/// \param j The job to give the terminal to.
-/// \param cont If this variable is set, we are giving back control to a job that has previously
-/// been stopped. In that case, we need to set the terminal attributes to those saved in the job.
-static bool terminal_give_to_job(job_t *j, int cont) {
-    if (tcsetpgrp(0, j->pgid)) {
-        debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
+/// \param j The job which gets ownership of the terminal.
+static bool terminal_give_to_job(job_t *j) {
+    if (!job_get_flag(j, JOB_FOREGROUND)) return true;
+    if (!job_get_flag(j, JOB_TERMINAL) && j->first_process->type != EXTERNAL) return true;
+    if (!isatty(STDIN_FILENO)) return true;
+    //if (getpgrp() != tcgetpgrp(STDIN_FILENO)) return true;
+    if (getpid() != tcgetpgrp(STDIN_FILENO)) return true;
+
+    bool retval = true;
+
+    signal_block();
+    // Ensure that stdin is marked as blocking (issue #176).
+    //
+    // TODO: Determine if this is still needed. As far as I can tell this is superfluous since we
+    // never set stdin to non-blocking I/O. Calling it in terminal_return_from_job() should be
+    // sufficient.
+    make_fd_blocking(STDIN_FILENO);
+
+    if (tcsetpgrp(STDIN_FILENO, j->pgid)) {
+        debug(0, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
         wperror(L"tcsetpgrp");
-        return false;
+        retval = false;
+        goto exit;
     }
 
-    if (cont) {
-        if (tcsetattr(0, TCSADRAIN, &j->tmodes)) {
-            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id,
-                  j->command_wcstr());
-            wperror(L"tcsetattr");
-            return false;
-        }
+    if (j->first_process->type == EXTERNAL) {
+        retval = term_donate(j);
     }
-    return true;
+
+exit:
+    signal_unblock();
+    return retval;
 }
 
 /// Returns control of the terminal to the shell, and saves the terminal attribute state to the job,
 /// so that we can restore the terminal ownership to the job at a later time.
-static int terminal_return_from_job(job_t *j) {
-    if (tcsetpgrp(0, getpgrp())) {
-        debug(1, _(L"Could not return shell to foreground"));
+static bool terminal_return_from_job(job_t *j) {
+    if (!job_get_flag(j, JOB_FOREGROUND)) return true;
+    if (!job_get_flag(j, JOB_TERMINAL) && j->first_process->type != EXTERNAL) return true;
+    if (tcgetpgrp(STDIN_FILENO) == -1) return true;
+
+    bool retval = true;
+
+    signal_block();
+    // Ensure that stdin is marked as blocking (issue #176). A child process might have modified the
+    // fd flags (which we share with our child processes).
+    make_fd_blocking(STDIN_FILENO);
+
+    if (tcsetpgrp(STDIN_FILENO, getpgrp())) {
+        debug(0, _(L"Could not return shell to foreground"));
         wperror(L"tcsetpgrp");
-        return 0;
+        retval = false;
+        goto exit;
     }
 
-    /*
-       Save jobs terminal modes.
-    */
-    if (tcgetattr(0, &j->tmodes)) {
-        debug(1, _(L"Could not return shell to foreground"));
-        wperror(L"tcgetattr");
-        return 0;
+    if (j->first_process->type == EXTERNAL) {
+        retval = term_steal(j);
     }
 
-// Disabling this per
-// https://github.com/adityagodbole/fish-shell/commit/9d229cd18c3e5c25a8bd37e9ddd3b67ddc2d1b72 On
-// Linux, 'cd . ; ftp' prevents you from typing into the ftp prompt. See
-// https://github.com/fish-shell/fish-shell/issues/121
-#if 0
-    // Restore the shell's terminal modes.
-    if (tcsetattr(0, TCSADRAIN, &shell_modes)) {
-        debug(1, _(L"Could not return shell to foreground"));
-        wperror(L"tcsetattr");
-        return 0;
-    }
-#endif
-
-    return 1;
+exit:
+    signal_unblock();
+    return retval;
 }
 
 void job_continue(job_t *j, bool cont) {
@@ -839,24 +866,11 @@ void job_continue(job_t *j, bool cont) {
 
     CHECK_BLOCK();
 
-    debug(4, L"Continue job %d, gid %d (%ls), %ls, %ls", j->job_id, j->pgid, j->command_wcstr(),
-          job_is_completed(j) ? L"COMPLETED" : L"UNCOMPLETED",
-          is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
+    debug(4, L"Continue job %d, pgid %d (%ls), %s", j->job_id, j->pgid, j->command_wcstr(),
+          job_flags_as_str(j));
 
     if (!job_is_completed(j)) {
-        if (job_get_flag(j, JOB_TERMINAL) && job_get_flag(j, JOB_FOREGROUND)) {
-            // Put the job into the foreground. Hack: ensure that stdin is marked as blocking first
-            // (issue #176).
-            make_fd_blocking(STDIN_FILENO);
-
-            signal_block();
-
-            bool ok = terminal_give_to_job(j, cont);
-
-            signal_unblock();
-
-            if (!ok) return;
-        }
+        if (!terminal_give_to_job(j)) return;
 
         // Send the job a continue signal, if necessary.
         if (cont) {
@@ -941,17 +955,8 @@ void job_continue(job_t *j, bool cont) {
         }
 
         // Put the shell back in the foreground.
-        if (job_get_flag(j, JOB_TERMINAL) && job_get_flag(j, JOB_FOREGROUND)) {
-            int ok;
-
-            signal_block();
-
-            ok = terminal_return_from_job(j);
-
-            signal_unblock();
-
-            if (!ok) return;
-        }
+        debug(4, L"return shell to fg after job %d flags %s", j->job_id, job_flags_as_str(j));
+        if (!terminal_return_from_job(j)) return;
     }
 }
 

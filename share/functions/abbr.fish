@@ -85,7 +85,7 @@ function abbr --description "Manage abbreviations"
 		set key $kv[1]
 		set value $kv[2]
 		# ensure the key contains at least one non-space character
-		if not string match -qr "\w" -- $key
+		if not string match -qr "[^\s]" -- $key
 			printf ( _ "%s: abbreviation must have a non-empty key\n" ) abbr >&2
 			return 1
 		end

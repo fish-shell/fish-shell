@@ -293,21 +293,6 @@ fi
 
 
 #
-# Solaris-specific flags go here
-#
-
-AC_MSG_CHECKING([if we are under Solaris])
-case $target_os in
-  solaris*)
-    AC_DEFINE( __EXTENSIONS__, 1, [Macro to enable additional prototypes under Solaris])
-    AC_MSG_RESULT(yes)
-    ;;
-  *)
-    AC_MSG_RESULT(no)
-    ;;
-esac
-
-#
 # BSD-specific flags go here
 #
 
@@ -413,10 +398,6 @@ AC_DEFINE_UNQUOTED([WCHAR_T_BITS], [$WCHAR_T_BITS], [The size of wchar_t in bits
 #
 # * This test needs to be run _before_ testing for the presense of any
 # prototypes or other language functinality.
-#
-# * This test should be (but does not need to be) run after the
-# conditional definition of __EXTENSIONS__, to avoid redundant tests.
-#
 
 XCXXFLAGS="$CXXFLAGS"
 

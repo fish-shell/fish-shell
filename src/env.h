@@ -193,9 +193,7 @@ class env_vars_snapshot_t {
     static const wchar_t *const completing_keys[];
 };
 
-extern bool g_log_forks;
 extern int g_fork_count;
-
 extern bool g_use_posix_spawn;
 
 /// A variable entry. Stores the value of a variable and whether it should be exported.

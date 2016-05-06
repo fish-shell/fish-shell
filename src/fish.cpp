@@ -440,8 +440,6 @@ int main(int argc, char **argv) {
 
     parser_t &parser = parser_t::principal_parser();
 
-    if (g_log_forks) printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
-
     const io_chain_t empty_ios;
     if (read_init(paths)) {
         // Stomp the exit status of any initialization commands (issue #635).
@@ -515,9 +513,6 @@ int main(int argc, char **argv) {
     builtin_destroy();
     reader_destroy();
     event_destroy();
-
-    if (g_log_forks) printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
-
     exit_without_destructors(exit_status);
     return EXIT_FAILURE;  // above line should always exit
 }

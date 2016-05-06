@@ -485,19 +485,17 @@ void exec_job(parser_t &parser, job_t *j) {
 
     if (needs_keepalive) {
         // Call fork. No need to wait for threads since our use is confined and simple.
-        if (g_log_forks) {
-            printf("fork #%d: Executing keepalive fork for '%ls'\n", g_fork_count,
-                   j->command_wcstr());
-        }
         keepalive.pid = execute_fork(false);
         if (keepalive.pid == 0) {
-            /* Child */
+            // Child
             keepalive.pid = getpid();
             set_child_group(j, &keepalive, 1);
             pause();
             exit_without_destructors(0);
         } else {
-            /* Parent */
+            // Parent
+            debug(2, L"Fork #%d, pid %d: keepalive fork for '%ls'", g_fork_count, keepalive.pid,
+                  j->command_wcstr());
             set_child_group(j, &keepalive, 0);
         }
     }
@@ -870,10 +868,6 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 if (block_output_io_buffer->out_buffer_size() > 0) {
                     // We don't have to drain threads here because our child process is simple.
-                    if (g_log_forks) {
-                        printf("Executing fork for internal block or function for '%ls'\n",
-                               p->argv0());
-                    }
                     pid = execute_fork(false);
                     if (pid == 0) {
                         // This is the child process. Write out the contents of the pipeline.
@@ -884,6 +878,8 @@ void exec_job(parser_t &parser, job_t *j) {
                     } else {
                         // This is the parent process. Store away information on the child, and
                         // possibly give it control over the terminal.
+                        debug(2, L"Fork #%d, pid %d: internal block or function for '%ls'",
+                              g_fork_count, pid, p->argv0());
                         p->pid = pid;
                         set_child_group(j, p, 0);
                     }
@@ -929,23 +925,15 @@ void exec_job(parser_t &parser, job_t *j) {
                         if (no_stdout_output && no_stderr_output) {
                             // The builtin produced no output and is not inside of a pipeline. No
                             // need to fork or even output anything.
-                            if (g_log_forks) {
-                                // This one is very wordy.
-                                // printf("fork #-: Skipping fork due to no output for internal
-                                // builtin for '%ls'\n", p->argv0());
-                            }
+                            debug(3, L"Skipping fork: no output for internal builtin '%ls'",
+                                  p->argv0());
                             fork_was_skipped = true;
                         } else if (no_stderr_output && stdout_is_to_buffer) {
                             // The builtin produced no stderr, and its stdout is going to an
                             // internal buffer. There is no need to fork. This helps out the
                             // performance quite a bit in complex completion code.
-                            if (g_log_forks) {
-                                printf(
-                                    "fork #-: Skipping fork due to buffered output for internal "
-                                    "builtin for '%ls'\n",
-                                    p->argv0());
-                            }
-
+                            debug(3, L"Skipping fork: buffered output for internal builtin '%ls'",
+                                  p->argv0());
                             CAST_INIT(io_buffer_t *, io_buffer, stdout_io.get());
                             const std::string res = wcs2string(builtin_io_streams->out.buffer());
                             io_buffer->out_buffer_append(res.data(), res.size());
@@ -953,12 +941,8 @@ void exec_job(parser_t &parser, job_t *j) {
                         } else if (stdout_io.get() == NULL && stderr_io.get() == NULL) {
                             // We are writing to normal stdout and stderr. Just do it - no need to
                             // fork.
-                            if (g_log_forks) {
-                                printf(
-                                    "fork #-: Skipping fork due to ordinary output for internal "
-                                    "builtin for '%ls'\n",
-                                    p->argv0());
-                            }
+                            debug(3, L"Skipping fork: ordinary output for internal builtin '%ls'",
+                                  p->argv0());
                             const std::string outbuff = wcs2string(stdout_buffer);
                             const std::string errbuff = wcs2string(stderr_buffer);
                             bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(),
@@ -997,10 +981,6 @@ void exec_job(parser_t &parser, job_t *j) {
 
                     fflush(stdout);
                     fflush(stderr);
-                    if (g_log_forks) {
-                        printf("fork #%d: Executing fork for internal builtin for '%ls'\n",
-                               g_fork_count, p->argv0());
-                    }
                     pid = execute_fork(false);
                     if (pid == 0) {
                         // This is the child process. Setup redirections, print correct output to
@@ -1012,6 +992,8 @@ void exec_job(parser_t &parser, job_t *j) {
                     } else {
                         // This is the parent process. Store away information on the child, and
                         // possibly give it control over the terminal.
+                        debug(2, L"Fork #%d, pid %d: internal builtin for '%ls'", g_fork_count, pid,
+                              p->argv0());
                         p->pid = pid;
 
                         set_child_group(j, p, 0);
@@ -1040,16 +1022,13 @@ void exec_job(parser_t &parser, job_t *j) {
                 const char *actual_cmd = actual_cmd_str.c_str();
 
                 const wchar_t *reader_current_filename(void);
-                if (g_log_forks) {
-                    const wchar_t *file = reader_current_filename();
-                    printf("fork #%d: forking for '%s' in '%ls'\n", g_fork_count, actual_cmd,
-                           file ? file : L"");
-                }
+                const wchar_t *file = reader_current_filename();
 
 #if FISH_USE_POSIX_SPAWN
                 // Prefer to use posix_spawn, since it's faster on some systems like OS X.
                 bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j, p);
                 if (use_posix_spawn) {
+                    g_fork_count++;  // spawn counts as a fork+exec
                     // Create posix spawn attributes and actions.
                     posix_spawnattr_t attr = posix_spawnattr_t();
                     posix_spawn_file_actions_t actions = posix_spawn_file_actions_t();
@@ -1079,6 +1058,8 @@ void exec_job(parser_t &parser, job_t *j) {
 
                     // A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get
                     // told when it's exited, so we have to mark the process as failed.
+                    debug(2, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'\n",
+                          g_fork_count, pid, actual_cmd, file ? file : L"<no file>");
                     if (pid == 0) {
                         job_mark_process_as_failed(j, p);
                         exec_error = true;
@@ -1094,9 +1075,13 @@ void exec_job(parser_t &parser, job_t *j) {
                         safe_launch_process(p, actual_cmd, argv, envv);
                         // safe_launch_process _never_ returns...
                         assert(0 && "safe_launch_process should not have returned");
-                    } else if (pid < 0) {
-                        job_mark_process_as_failed(j, p);
-                        exec_error = true;
+                    } else {
+                        debug(2, L"Fork #%d, pid %d: external command '%s' from '%ls'\n",
+                              g_fork_count, pid, p->argv0(), file ? file : L"<no file>");
+                        if (pid < 0) {
+                            job_mark_process_as_failed(j, p);
+                            exec_error = true;
+                        }
                     }
                 }
 

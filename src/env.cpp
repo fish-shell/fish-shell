@@ -46,7 +46,6 @@
 /// At init, we read all the environment variables from this array.
 extern char **environ;
 
-bool g_log_forks = false;
 bool g_use_posix_spawn = false;  // will usually be set to true
 
 /// Struct representing one level in the function variable stack.
@@ -391,10 +390,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     assert(s_universal_variables == NULL);
     s_universal_variables = new env_universal_t(L"");
     s_universal_variables->load();
-
-    // Set g_log_forks.
-    env_var_t log_forks = env_get_string(L"fish_log_forks");
-    g_log_forks = !log_forks.missing_or_empty() && from_string<bool>(log_forks);
 
     // Set g_use_posix_spawn. Default to true.
     env_var_t use_posix_spawn = env_get_string(L"fish_use_posix_spawn");

@@ -18,7 +18,7 @@ Requires:		python
 Requires:		which
 Requires:		man
 
-%if 0%{?rhel_version} >= 700 || 0%{?centos_version} >= 700 || 0%{?fedora}
+%if 0%{?rhel_version} >= 700 || 0%{?centos_version} >= 700 || 0%{?fedora} || 0%{?is_opensuse}
 Requires:		hostname
 %else
 Requires:		net-tools

@@ -231,49 +231,6 @@ LDFLAGS="$prev_LDFLAGS"
 
 
 #
-# If we are compiling against glibc, set some flags to work around
-# some rather stupid attempts to hide prototypes for *wprintf
-# functions, as well as prototypes of various gnu extensions.
-#
-
-AC_MSG_CHECKING([if we are compiling against glibc])
-AC_RUN_IFELSE(
-  [
-    AC_LANG_PROGRAM(
-      [
-        #include <stdlib.h>
-        #ifdef __GLIBC__
-        #define STATUS 0
-        #else
-        #define STATUS 1
-        #endif
-      ],
-      [
-        return STATUS;
-      ]
-    )
-  ],
-  [glibc=yes],
-  [glibc=no]
-)
-
-if test "$glibc" = yes; then
-  AC_MSG_RESULT(yes)
-
-  #
-  # This gives us access to prototypes for gnu extensions and C99
-  # functions if we are compiling agains glibc. All GNU extensions
-  # that are used must have a fallback implementation available in
-  # fallback.h, in order to keep fish working on non-gnu platforms.
-  #
-
-  CXXFLAGS="$CXXFLAGS -D_GNU_SOURCE=1 -D_ISO99_SOURCE=1"
-else
-  AC_MSG_RESULT(no)
-fi
-
-
-#
 # Test cpu for special handling of ppc
 #
 # This is used to skip use of tputs on ppc systems, since it seemed to

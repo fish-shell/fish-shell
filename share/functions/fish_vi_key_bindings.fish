@@ -60,7 +60,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind G end-of-buffer
 
     for key in $eol_keys
-        bind $key end-of-line
+        bind $key end-of-line backward-char
     end
     for key in $bol_keys
         bind $key beginning-of-line

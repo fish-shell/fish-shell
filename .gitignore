@@ -21,6 +21,7 @@ doc_src/commands.hdr
 doc_src/index.hdr
 po/*.gmo
 fish
+fish_key_reader
 fish_indent
 fish_tests
 fish.pc

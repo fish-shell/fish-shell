@@ -5,7 +5,6 @@ Implementation file for the low level input library
 */
 #include "config.h"
 
-
 #include <string.h>
 #include <errno.h>
 #include <sys/time.h>
@@ -18,19 +17,27 @@ Implementation file for the low level input library
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
-
-#include "fallback.h" // IWYU pragma: keep
-#include "util.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <wchar.h>
+#include <wctype.h>
+#include <cwctype>
+#include <memory>
 
 #include "common.h"
+#include "fallback.h" // IWYU pragma: keep
 #include "input_common.h"
 #include "env_universal_common.h"
 #include "env.h"
 #include "iothread.h"
+#include "util.h"
 
-// Time in milliseconds to wait for another byte to be available for reading
-// after \x1b is read before assuming that escape key was pressed, and not an
-// escape sequence.
+/// Time in milliseconds to wait for another byte to be available for reading
+/// after \x1b is read before assuming that escape key was pressed, and not an
+/// escape sequence.
 #define WAIT_ON_ESCAPE_DEFAULT 300
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
@@ -212,10 +219,12 @@ static wint_t readb()
     return arr[0];
 }
 
-// Update the wait_on_escape_ms value in response to the fish_escape_delay_ms
-// user variable being set.
-void update_wait_on_escape_ms()
-{
+// Directly set the input timeout.
+void set_wait_on_escape_ms(int ms) { wait_on_escape_ms = ms; }
+
+// Update the wait_on_escape_ms value in response to the fish_escape_delay_ms user variable being
+// set.
+void update_wait_on_escape_ms() {
     env_var_t escape_time_ms = env_get_string(L"fish_escape_delay_ms");
     if (escape_time_ms.missing_or_empty())
     {

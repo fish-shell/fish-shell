@@ -129,7 +129,7 @@ FISH_TESTS_OBJS := $(FISH_OBJS) obj/fish_tests.o
 # (that is, are not themselves #included in other source files)
 #
 FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) \
-                   obj/fish.o obj/key_reader.o)
+                   obj/fish.o obj/fish_key_reader.o)
 
 
 #
@@ -189,8 +189,7 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 #
 # Programs to install
 #
-
-PROGRAMS := fish fish_indent
+PROGRAMS := fish fish_indent fish_key_reader
 
 #
 # Manual pages to install
@@ -836,9 +835,11 @@ fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 #
-# Neat little program to show output from terminal
+# Build the fish_key_reader program to show input from the terminal. Note that
+# fish_key_reader doesn't need all of the object files that fish does but it
+# does need a significant number so it's easier to just use the same list.
 #
-key_reader: $(FISH_OBJS) $(EXTRA_PCRE2) obj/key_reader.o
+fish_key_reader: $(FISH_OBJS) $(EXTRA_PCRE2) obj/fish_key_reader.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
 
@@ -909,7 +910,7 @@ clean:
 	rm -f obj/*.o *.o doc.h doc.tmp
 	rm -f doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
-	rm -f $(PROGRAMS) fish_tests key_reader
+	rm -f $(PROGRAMS) fish_tests fish_key_reader
 	rm -f command_list.txt command_list_toc.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
 	rm -f lexicon_filter lexicon.txt lexicon.log
@@ -1025,11 +1026,11 @@ obj/input.o: src/event.h src/output.h
 obj/intern.o: config.h src/fallback.h src/signal.h src/common.h src/intern.h
 obj/io.o: config.h src/fallback.h src/signal.h src/wutil.h src/common.h
 obj/io.o: src/exec.h src/io.h
-obj/iothread.o: config.h src/iothread.h src/common.h src/fallback.h
-obj/iothread.o: src/signal.h
-obj/key_reader.o: config.h src/common.h src/fallback.h src/signal.h
-obj/key_reader.o: src/input_common.h
-obj/kill.o: config.h src/fallback.h src/signal.h src/kill.h src/common.h
+obj/iothread.o: src/signal.h src/iothread.h src/common.h config.h
+obj/iothread.o: src/fallback.h
+obj/fish_key_reader.o: src/common.h config.h src/fallback.h src/signal.h
+obj/fish_key_reader.o: src/input_common.h
+obj/kill.o: src/fallback.h config.h src/signal.h src/kill.h src/common.h
 obj/kill.o: src/env.h src/exec.h src/path.h
 obj/output.o: config.h src/fallback.h src/signal.h src/wutil.h src/common.h
 obj/output.o: src/output.h src/color.h

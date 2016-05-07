@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <wchar.h>
 #include <wctype.h>
@@ -28,9 +29,9 @@
 #include "iothread.h"
 #include "util.h"
 
-// Time in milliseconds to wait for another byte to be available for reading
-// after \x1b is read before assuming that escape key was pressed, and not an
-// escape sequence.
+/// Time in milliseconds to wait for another byte to be available for reading
+/// after \x1b is read before assuming that escape key was pressed, and not an
+/// escape sequence.
 #define WAIT_ON_ESCAPE_DEFAULT 300
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
@@ -168,6 +169,9 @@ static wint_t readb() {
 
     return arr[0];
 }
+
+// Directly set the input timeout.
+void set_wait_on_escape_ms(int ms) { wait_on_escape_ms = ms; }
 
 // Update the wait_on_escape_ms value in response to the fish_escape_delay_ms user variable being
 // set.

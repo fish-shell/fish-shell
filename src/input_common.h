@@ -85,6 +85,9 @@ void input_common_destroy();
 /// Adjust the escape timeout.
 void update_wait_on_escape_ms();
 
+/// Set the escape timeout directly.
+void set_wait_on_escape_ms(int ms);
+
 /// Function used by input_readch to read bytes from stdin until enough bytes have been read to
 /// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously been
 /// read and then 'unread' using \c input_common_unreadch, that character is returned. If timed is

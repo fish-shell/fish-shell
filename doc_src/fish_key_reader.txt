@@ -1,0 +1,40 @@
+\section fish_key_reader fish_key_reader - explore what characters keyboard keys send
+
+\subsection fish_key_reader-synopsis Synopsis
+\fish{synopsis}
+fish_key_reader [-c | --continuous]
+\endfish
+
+\subsection fish_key_reader-description Description
+
+`fish_key_reader` is used to show in a human friendly manner the sequence of characters each key on a keyboard sends. If the sequence of characters matches a key name recognized by the `bind` command that is also displayed. It shows each characters decimal, hexadecimal and symbolic values. It also shows the delay in microseconds since the previous character was received. The timing data is useful for detecting when an intermediary such as ssh or tmux has altered the timing of the characters sent by the keyboard. If at least 0.2 seconds has passed since the previous character the program will insert a blank line in the output. This makes it visually easier to distinguish the sequence of chars sent by a single key press.
+
+By default the program exits after displaying a single key sequence. Specifially, it exits after 0.5 seconds has elapsed without seeing another character after the first character is seen. You can force it to run in a continuous mode by passing the `--continuous` or `-c` flag.
+
+Here is an example of the program in action that also shows how to exit from continuous mode:
+
+```
+$ ./fish_key_reader --continuous
+
+Type 'exit' or 'quit' to terminate this program.
+
+Characters such as [ctrl-D] (EOF) and [ctrl-C] (interrupt)
+have no special meaning and will not terminate this program.
+
+Type 'exit' or 'quit' to terminate this program.
+
+999999 usec  dec:  27  hex: 1b  char: \e (aka \c[)
+   450 usec  dec:  91  hex: 5b  char: [
+   409 usec  dec:  49  hex: 31  char: 1
+   424 usec  dec: 126  hex: 7e  char: ~
+FYI: Found sequence for bind key name "home"
+
+Type 'exit' or 'quit' to terminate this program.
+
+999999 usec  dec: 113  hex: 71  char: q
+111562 usec  dec: 117  hex: 75  char: u
+ 55820 usec  dec: 105  hex: 69  char: i
+128021 usec  dec: 116  hex: 74  char: t
+
+Exiting at your request.
+```

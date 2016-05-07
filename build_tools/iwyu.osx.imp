@@ -83,6 +83,7 @@
     { symbol: ["pid_t", "private", "<sys/types.h>", "public"] },
     { symbol: ["uid_t", "private", "<sys/types.h>", "public"] },
     { symbol: ["gid_t", "private", "<sys/types.h>", "public"] },
+    { symbol: ["timeval", "private", "<sys/time.h>", "public"] },
     { symbol: ["uint32_t", "private", "<sys/types.h>", "public"] },
     { symbol: ["uint32_t", "private", "<stdint.h>", "public"] },
     { symbol: ["intptr_t", "private", "<stdint.h>", "public"] },

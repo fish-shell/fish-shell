@@ -1,10 +1,7 @@
-/*
-    A small utility to print the resulting key codes from pressing a
-  key. Servers the same function as hitting ^V in bash, but I prefer
-  the way key_reader works.
-
-  Type ^C to exit the program.
-*/
+// A small utility to print the resulting key codes from pressing a key. Servers the same function
+// as hitting ^V in bash, but I prefer the way key_reader works.
+//
+// Type ^C to exit the program.
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,19 +45,19 @@ int main(int argc, char **argv) {
         char scratch[1024];
         unsigned int c;
 
-        struct termios modes, /* so we can change the modes */
-            savemodes;        /* so we can reset the modes when we're done */
+        struct termios modes,  // so we can change the modes
+            savemodes;         // so we can reset the modes when we're done
 
         input_common_init(0);
 
-        tcgetattr(0, &modes); /* get the current terminal modes */
-        savemodes = modes;    /* save a copy so we can reset them */
+        tcgetattr(0, &modes);  // get the current terminal modes
+        savemodes = modes;     // save a copy so we can reset them
 
-        modes.c_lflag &= ~ICANON; /* turn off canonical mode */
-        modes.c_lflag &= ~ECHO;   /* turn off echo mode */
+        modes.c_lflag &= ~ICANON;  // turn off canonical mode
+        modes.c_lflag &= ~ECHO;    // turn off echo mode
         modes.c_cc[VMIN] = 1;
         modes.c_cc[VTIME] = 0;
-        tcsetattr(0, TCSANOW, &modes); /* set the new modes */
+        tcsetattr(0, TCSANOW, &modes);  // set the new modes
         while (1) {
             if ((c = input_common_readch(0)) == EOF) break;
             if ((c > 31) && (c != 127))
@@ -69,9 +66,7 @@ int main(int argc, char **argv) {
                 sprintf(scratch, "dec: %u hex: %x\n", c, c);
             writestr(scratch);
         }
-        /* reset the terminal to the saved mode */
-        tcsetattr(0, TCSANOW, &savemodes);
-
+        tcsetattr(0, TCSANOW, &savemodes);  // reset the terminal to the saved mode
         input_common_destroy();
     }
 

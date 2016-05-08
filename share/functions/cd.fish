@@ -15,7 +15,7 @@ function cd --description "Change directory"
         return $status
     end
 
-    # Avoid set completions
+    # Avoid set completions.
     set -l previous $PWD
 
     if test "$argv" = "-"
@@ -31,7 +31,8 @@ function cd --description "Change directory"
     set -l cd_status $status
 
     if test $cd_status -eq 0 -a "$PWD" != "$previous"
-        set -q dirprev[$MAX_DIR_HIST]; and set -e dirprev[1]
+        set -q dirprev[$MAX_DIR_HIST]
+        and set -e dirprev[1]
         set -g dirprev $dirprev $previous
         set -e dirnext
         set -g __fish_cd_direction prev

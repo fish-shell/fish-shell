@@ -4,9 +4,7 @@
 # This function is called by the __fish_on_interactive function, which is defined in config.fish.
 #
 function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"
-
-
-    # Make sure this function is only run once
+    # Make sure this function is only run once.
     if set -q __fish_config_interactive_done
         return
     end
@@ -27,7 +25,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
     #
     # If we are starting up for the first time, set various defaults
     #
-
     if not set -q __fish_init_1_50_0
         if not set -q fish_greeting
             set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell') )
@@ -97,25 +94,22 @@ function __fish_config_interactive -d "Initializations that should be performed 
         #
         # Directory history colors
         #
-
         set -q fish_color_history_current
         or set -U fish_color_history_current cyan
     end
 
     #
-    # Generate man page completions if not present
+    # Generate man page completions if not present.
     #
-
     if not test -d $userdatadir/fish/generated_completions
         #fish_update_completions is a function, so it can not be directly run in background.
         eval "$__fish_bin_dir/fish -c 'fish_update_completions > /dev/null ^/dev/null' &"
     end
 
     #
-    # Print a greeting
-    # fish_greeting can be a function (preferred) or a variable
+    # Print a greeting.
+    # fish_greeting can be a function (preferred) or a variable.
     #
-
     if functions -q fish_greeting
         fish_greeting
     else
@@ -130,7 +124,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # fish_color_cwd changes value. Like all event handlers, it can't be
     # autoloaded.
     #
-
     function __fish_repaint --on-variable fish_color_cwd --description "Event handler, repaints the prompt when fish_color_cwd changes"
         if status --is-interactive
             set -e __fish_prompt_cwd
@@ -149,7 +142,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Completions for SysV startup scripts. These aren't bound to any
     # specific command, so they can't be autoloaded.
     #
-
     complete -x -p "/etc/init.d/*" -a start --description 'Start service'
     complete -x -p "/etc/init.d/*" -a stop --description 'Stop service'
     complete -x -p "/etc/init.d/*" -a status --description 'Print service status'
@@ -293,7 +285,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
         # Don't allow setting color other than what linux offers (see #2001)
         functions -e set_color
-        function set_color
+        function set_color --shadow-builtin
             set -l term_colors black red green yellow blue magenta cyan white normal
             for a in $argv
                 if not contains -- $a $term_colors

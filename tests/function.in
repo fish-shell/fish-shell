@@ -44,3 +44,16 @@ for i in (seq 4)
         echo "Function name$i not found, but should have been"
     end
 end
+
+# Test that we can't define a function that shadows a builtin by accident.
+function pwd; end
+or echo 'yes, it failed as expected' >&2
+
+# Test that we can define a function that shadows a builtin if we use the
+# right flag.
+function pwd --shadow-builtin; end
+and echo '"function pwd --shadow-builtin" worked'
+
+# Using --shadow-builtin for a non-builtin function name also fails.
+function not_builtin --shadow-builtin; end
+or echo 'yes, it failed as expected' >&2

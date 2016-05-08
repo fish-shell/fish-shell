@@ -1,7 +1,7 @@
 #
 # Wrap the builtin cd command to maintain directory history.
 #
-function cd --description "Change directory"
+function cd --shadow-builtin --description "Change directory"
     set -l MAX_DIR_HIST 25
 
     if test (count $argv) -gt 1

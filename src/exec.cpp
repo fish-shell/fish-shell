@@ -636,7 +636,7 @@ void exec_job(parser_t &parser, job_t *j) {
                 wcstring def;
                 bool function_exists = function_get_definition(func_name, &def);
 
-                bool shadows = function_get_shadows(func_name);
+                bool shadow_scope = function_get_shadow_scope(func_name);
                 const std::map<wcstring, env_var_t> inherit_vars =
                     function_get_inherit_vars(func_name);
 
@@ -646,7 +646,7 @@ void exec_job(parser_t &parser, job_t *j) {
                     debug(0, _(L"Unknown function '%ls'"), p->argv0());
                     break;
                 }
-                function_block_t *newv = new function_block_t(p, func_name, shadows);
+                function_block_t *newv = new function_block_t(p, func_name, shadow_scope);
                 parser.push_block(newv);
 
                 // Setting variables might trigger an event handler, hence we need to unblock

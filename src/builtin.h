@@ -93,10 +93,10 @@ class builtin_commandline_scoped_transient_t {
 // Run the __fish_print_help function to obtain the help information for the specified command.
 wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
 
-// Defines a function, like builtin_function. Returns 0 on success. args should NOT contain
-// 'function' as the first argument.
-int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
-                    const wcstring &contents, int definition_line_offset, wcstring *out_err);
+// Defines a function. Returns 0 on success. args should NOT contain 'function' as the first
+// argument as the parser treats it as a keyword.
+int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
+                     const wcstring &contents, int definition_line_offset, wcstring *out_err);
 
 // Print help for the specified builtin. If \c b is sb_err, also print the line information.
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,

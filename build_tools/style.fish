@@ -42,8 +42,11 @@ else
         set files (git show --name-only --pretty=oneline | tail --lines=+2)
     end
 
-    # Extract just the C/C++ files.
-    set c_files (string match -r '^.*\.(?:c|cpp|h)$' -- $files)
+    # Extract just the C/C++ files that exist.
+    set c_files
+    for file in (string match -r '^.*\.(?:c|cpp|h)$' -- $files)
+        test -f $file; and set c_files $c_files $file
+    end
     # Extract just the fish files.
     set f_files (string match -r '^.*\.fish$' -- $files)
 end

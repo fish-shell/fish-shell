@@ -54,8 +54,11 @@ else
         set files (git show --word-diff=porcelain --name-only --pretty=oneline)[2..-1]
     end
 
-    # Extract just the C/C++ files.
-    set c_files (string match -r '.*\.c(?:pp)?$' -- $files)
+    # Extract just the C/C++ files that exist.
+    set c_files
+    for file in (string match -r '.*\.c(?:pp)?$' -- $files)
+        test -f $file; and set c_files $c_files $file
+    end
 end
 
 # We now have a list of files to check so run the linters.

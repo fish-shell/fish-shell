@@ -889,6 +889,7 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
             }
         }
     }
+
     return STATUS_BUILTIN_ERROR;
 }
 
@@ -919,7 +920,11 @@ static wcstring functions_def(const wcstring &name) {
         out.append(esc_desc);
     }
 
-    if (!function_get_shadows(name)) {
+    if (function_get_shadow_builtin(name)) {
+        out.append(L" --shadow-builtin");
+    }
+
+    if (!function_get_shadow_scope(name)) {
         out.append(L" --no-scope-shadowing");
     }
 
@@ -1460,8 +1465,8 @@ static int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) 
 }
 
 /// Adds a function to the function set. It calls into function.cpp to perform any heavy lifting.
-int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
-                    const wcstring &contents, int definition_line_offset, wcstring *out_err) {
+int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
+                     const wcstring &contents, int definition_line_offset, wcstring *out_err) {
     wgetopter_t w;
     assert(out_err != NULL);
 
@@ -1484,7 +1489,8 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
     wcstring_list_t named_arguments;
     wcstring_list_t inherit_vars;
 
-    bool shadows = true;
+    bool shadow_builtin = false;
+    bool shadow_scope = true;
 
     wcstring_list_t wrap_targets;
 
@@ -1504,17 +1510,17 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
                                            {L"wraps", required_argument, 0, 'w'},
                                            {L"help", no_argument, 0, 'h'},
                                            {L"argument-names", no_argument, 0, 'a'},
+                                           {L"shadow-builtin", no_argument, 0, 'B'},
                                            {L"no-scope-shadowing", no_argument, 0, 'S'},
                                            {L"inherit-variable", required_argument, 0, 'V'},
                                            {0, 0, 0, 0}};
 
-    while (1 && (!res)) {
+    while (1 && !res) {
         int opt_index = 0;
 
         // The leading - here specifies RETURN_IN_ORDER.
-        int opt = w.wgetopt_long(argc, argv, L"-d:s:j:p:v:e:w:haSV:", long_options, &opt_index);
+        int opt = w.wgetopt_long(argc, argv, L"-d:s:j:p:v:e:w:haBSV:", long_options, &opt_index);
         if (opt == -1) break;
-
         switch (opt) {
             case 0: {
                 if (long_options[opt_index].flag != 0) break;
@@ -1536,7 +1542,6 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
                 events.push_back(event_t::signal_event(sig));
                 break;
             }
-
             case 'v': {
                 if (wcsvarname(w.woptarg)) {
                     append_format(*out_err, _(L"%ls: Invalid variable name '%ls'"), argv[0],
@@ -1586,7 +1591,6 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
                         e.type = EVENT_JOB_ID;
                         e.param1.job_id = job_id;
                     }
-
                 } else {
                     errno = 0;
                     pid = fish_wcstoi(w.woptarg, &end, 10);
@@ -1611,8 +1615,12 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
                 name_is_first_positional = !positionals.empty();
                 break;
             }
+            case 'B': {
+                shadow_builtin = true;
+                break;
+            }
             case 'S': {
-                shadows = 0;
+                shadow_scope = false;
                 break;
             }
             case 'w': {
@@ -1700,13 +1708,38 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
         }
 
         if (!res) {
+            bool function_name_shadows_builtin = false;
+            wcstring_list_t builtin_names = builtin_get_names();
+            for (size_t i = 0; i < builtin_names.size(); i++) {
+                const wchar_t *el = builtin_names.at(i).c_str();
+                if (el == function_name) {
+                    function_name_shadows_builtin = true;
+                    break;
+                }
+            }
+            if (function_name_shadows_builtin && !shadow_builtin) {
+                append_format(
+                    *out_err,
+                    _(L"%ls: function name shadows a builtin so you must use '--shadow-builtin'"),
+                    argv[0]);
+                res = STATUS_BUILTIN_ERROR;
+            } else if (!function_name_shadows_builtin && shadow_builtin) {
+                append_format(*out_err, _(L"%ls: function name does not shadow a builtin so you "
+                                          L"must not use '--shadow-builtin'"),
+                              argv[0]);
+                res = STATUS_BUILTIN_ERROR;
+            }
+        }
+
+        if (!res) {
             // Here we actually define the function!
             function_data_t d;
 
             d.name = function_name;
             if (desc) d.description = desc;
             d.events.swap(events);
-            d.shadows = shadows;
+            d.shadow_builtin = shadow_builtin;
+            d.shadow_scope = shadow_scope;
             d.named_arguments.swap(named_arguments);
             d.inherit_vars.swap(inherit_vars);
 

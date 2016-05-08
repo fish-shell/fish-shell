@@ -22,3 +22,4 @@ Function name1 found
 Function name2 found
 Function name3 found
 Function name4 found
+"function pwd --shadow-builtin" worked

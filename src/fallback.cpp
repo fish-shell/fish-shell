@@ -42,14 +42,6 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "util.h"      // IWYU pragma: keep
 
-#ifdef TPUTS_KLUDGE
-int tputs(const char *str, int affcnt, int (*fish_putc)(tputs_arg_t)) {
-    while (*str) {
-        fish_putc(*str++);
-    }
-}
-#endif
-
 #ifdef TPARM_SOLARIS_KLUDGE
 #undef tparm
 

@@ -94,6 +94,8 @@ AC_PROG_SED
 AC_LANG(C++)
 AC_USE_SYSTEM_EXTENSIONS
 
+AC_CANONICAL_TARGET
+
 echo "CXXFLAGS: $CXXFLAGS"
 
 #
@@ -229,42 +231,6 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],[[]])],
                ])
 LDFLAGS="$prev_LDFLAGS"
 
-
-#
-# Test cpu for special handling of ppc
-#
-# This is used to skip use of tputs on ppc systems, since it seemed to
-# be broken, at least on older debin-based systems. This is obviously
-# not the right way to to detect whether this workaround should be
-# used, since it catches far to many systems, but I do not have the
-# hardware available to narrow this problem down, and in practice, it
-# seems that tputs is never really needed.
-#
-
-AC_CANONICAL_TARGET
-
-if test $target_cpu = powerpc; then
-  AC_DEFINE([TPUTS_KLUDGE],[1],[Evil kludge to get Power based machines to work])
-fi
-
-
-#
-# BSD-specific flags go here
-#
-
-AC_MSG_CHECKING([if we are under BSD])
-case $target_os in
-  *bsd*)
-    AC_DEFINE( __BSD_VISIBLE, 1, [Macro to enable additional prototypes under BSD])
-    AC_DEFINE( _NETBSD_SOURCE, 1, [Macro to enable additional prototypes under BSD])
-    AC_MSG_RESULT(yes)
-    ;;
-  *)
-    AC_MSG_RESULT(no)
-    ;;
-esac
-
-
 #
 # See if Linux procfs is present. This is used to get extra
 # information about running processes.
@@ -328,121 +294,6 @@ fi
 AC_CHECK_SIZEOF(wchar_t)
 WCHAR_T_BITS=`expr 8 \* $ac_cv_sizeof_wchar_t`
 AC_DEFINE_UNQUOTED([WCHAR_T_BITS], [$WCHAR_T_BITS], [The size of wchar_t in bits.])
-
-
-#
-# On some platforms (Solaris 10) adding -std=c99 in turn requires that
-# _POSIX_C_SOURCE be defined to 200112L otherwise several
-# POSIX-specific, non-ISO-C99 types/prototypes are made unavailable
-# e.g. siginfo_t. Defining _XOPEN_SOURCE to 600 is compatible with
-# the _POSIX_C_SOURCE value and provides a little assurance that
-# extension functions' prototypes are available, e.g. killpg().
-#
-# Some other platforms (OS X), will remove types/prototypes/macros
-# e.g. SIGWINCH if either _POSIX_C_SOURCE or _XOPEN_SOURCE is defined.
-#
-# This test adds these macros only if they enable a program that uses
-# both Posix and non-standard features to compile, and that program
-# does not compile without these macros.
-#
-# We try to make everyone happy.
-#
-# The ordering of the various autoconf tests is very critical as well:
-#
-# * This test needs to be run _after_ header detection tests, so that
-# the proper headers are included.
-#
-# * This test needs to be run _before_ testing for the presense of any
-# prototypes or other language functinality.
-
-XCXXFLAGS="$CXXFLAGS"
-
-echo checking how to use -D_XOPEN_SOURCE=600 and -D_POSIX_C_SOURCE=200112L...
-local_found_posix_switch=no
-
-for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200112L"; do
-
-  AC_MSG_CHECKING( if switches \"$i\" works)
-  CXXFLAGS="$XCXXFLAGS $i"
-
-  #
-  # Try to run this program, which should test various extensions
-  # and Posix functionality. If this program works, then everything
-  # should work. Hopefully.
-  #
-
-  AC_TRY_LINK(
-    [
-      #include <stdlib.h>
-      #include <stdio.h>
-      #include <sys/types.h>
-
-      /* POSIX, C89 and C99: POSIX extends this header.
-       * For: kill(), killpg(), siginfo_t, sigset_t,
-       * struct sigaction, sigemptyset(), sigaction(),
-       * SIGIO and SIGWINCH.  */
-      #include <signal.h>
-
-      #ifdef HAVE_SIGINFO_H
-      /* Neither POSIX, C89 nor C99: Solaris-specific (others?).
-       * For: siginfo_t (also defined by signal.h when in
-       * POSIX/extensions mode). */
-      #include <siginfo.h>
-      #endif
-
-      #ifdef HAVE_SYS_IOCTL_H
-      /* As above (under at least Linux and FreeBSD). */
-      #include <sys/ioctl.h>
-      #endif
-
-      #ifdef HAVE_TERMIOS_H
-      #include <termios.h>
-      #endif
-    ],
-    [
-      /* Avert high-level optimisation, by making the program's
-       * return value depend on all tested identifiers. */
-      long ret = 0;
-      /* POSIX only: might be unhidden by _POSIX_C_SOURCE. */
-      struct sigaction sa;
-      sigset_t ss;
-      siginfo_t info;
-      ret += (long)(void *)&info + kill( 0, 0 ) +
-        sigaction( 0, &sa, 0 ) + sigemptyset( &ss );
-      /* Extended-POSIX: might be unhidden by _XOPEN_SOURCE. */
-      ret += killpg( 0, 0 );
-      /* Non-standard: might be hidden by the macros. */
-      {
-        struct winsize termsize;
-        ret += (long)(void *)&termsize;
-        ret += SIGWINCH + TIOCGWINSZ + SIGIO;
-      }
-      return ret;
-
-    ],
-    local_cv_use__posix_c_source=yes,
-    local_cv_use__posix_c_source=no,
-  )
-
-  if test x$local_cv_use__posix_c_source = xyes; then
-    AC_MSG_RESULT( yes )
-    local_found_posix_switch=yes
-    break;
-  else
-    AC_MSG_RESULT( no )
-  fi
-
-done
-
-#
-# We didn't find any combination of switches that worked - revert to
-# no switches and hope that the fallbacks work.  A warning will be
-# printed at the end of the configure script.
-#
-
-if test ! x$local_found_posix_switch = xyes; then
-  CXXFLAGS="$XCXXFLAGS"
-fi
 
 #
 # Detect nanoseconds fields in struct stat
@@ -825,11 +676,6 @@ AC_ARG_WITH([extra-confdir],
 # Tell the world what we know.
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
-
-if test ! x$local_found_posix_switch = xyes; then
-  echo "Can't find a combination of switches to enable common extensions like detecting window size."
-  echo "Some fish features may be disabled."
-fi
 
 echo "fish is now configured."
 echo "Use 'make' and 'make install' to build and install fish."

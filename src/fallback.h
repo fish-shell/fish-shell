@@ -57,14 +57,6 @@ struct winsize {
 
 #endif
 
-#ifdef TPUTS_KLUDGE
-
-/// Linux on PPC seems to have a tputs implementation that sometimes behaves strangely. This
-/// fallback seems to fix things.
-int tputs(const char *str, int affcnt, int (*fish_putc)(tputs_arg_t));
-
-#endif
-
 #ifdef TPARM_SOLARIS_KLUDGE
 /// Solaris tparm has a set fixed of paramters in it's curses implementation, work around this here.
 #define tparm tparm_solaris_kludge

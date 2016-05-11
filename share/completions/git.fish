@@ -178,6 +178,16 @@ function __fish_git_branch_for_remote
 	__fish_git_branches | string match -- "$remote/*" | string replace -- "$remote/" ''
 end
 
+# Return 0 if the current token is a possible commit-hash with at least 3 characters
+function __fish_git_possible_commithash
+    set -q argv[1]; and set -l token $argv[1]
+    or set -l token (commandline -ct)
+    if string match -qr '^[0-9a-fA-F]{3,}$' -- $token
+        return 0
+    end
+    return 1
+end
+
 # general options
 complete -f -c git -l help -d 'Display the manual of a git command'
 complete -f -c git -n '__fish_git_using_command log show diff-tree rev-list' -l pretty -a 'oneline short medium full fuller email raw format:'
@@ -305,6 +315,8 @@ complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List br
 complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches --no-merged)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_unique_remote_branches --no-merged)' -d 'Remote branch'
+# TODO: Filter further
+complete -f -c git -n '__fish_git_using_command cherry-pick; and __fish_git_possible_commithash' -a '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s e -l edit -d 'Edit the commit message prior to committing'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s x -d 'Append info in generated commit on the origin of the cherry-picked change'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s n -l no-commit -d 'Apply changes without making any commit'

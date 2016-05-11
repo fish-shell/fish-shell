@@ -893,7 +893,7 @@ fish_bin_path = None
 if not fish_bin_dir:
     print('The __fish_bin_dir environment variable is not set. Looking in $PATH...')
     # distutils.spawn is terribly broken, because it looks in wd before PATH,
-    # and doesn't actually validate that the file is even executabl
+    # and doesn't actually validate that the file is even executable
     for p in os.environ['PATH'].split(os.pathsep):
         proposed_path = os.path.join(p, 'fish')
         if os.access(proposed_path, os.X_OK):

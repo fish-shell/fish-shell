@@ -133,18 +133,13 @@ function __fish_git_stash_not_using_subcommand
 end
 
 function __fish_git_complete_stashes
-    set -l IFS ':'
-    command git stash list --format=%gd:%gs ^/dev/null | while read -l name desc
-        echo $name\t$desc
-    end
+    command git stash list --format=%gd:%gs ^/dev/null | string replace ":" \t
 end
 
 function __fish_git_aliases
-    set -l IFS \n
     command git config -z --get-regexp '^alias\.' ^/dev/null | while read -lz key value
         begin
-            set -l IFS "."
-            echo -n $key | read -l _ name
+            set -l name (string replace -r '^.*\.' '' -- $key)
             printf "%s\t%s\n" $name "Alias for $value"
         end
     end

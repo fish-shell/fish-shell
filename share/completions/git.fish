@@ -94,6 +94,7 @@ function __fish_git_needs_command
 				  return 1
 			  # We assume that any other token that's not an argument to a general option is a command
 			  case "*"
+				  echo $c
 				  return 1
 		  end
 	  end
@@ -103,19 +104,14 @@ function __fish_git_needs_command
 end
 
 function __fish_git_using_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
-    end
+    set -l cmd (__fish_git_needs_command)
+    test -z "$cmd"; and return 1
+    contains -- $cmd $argv; and return 0
 
     # aliased command
-    set -l aliased (command git config --get "alias.$cmd[2]" ^ /dev/null | string split " ")
-    if [ $argv[1] = "$aliased[1]" ]
-      return 0
-    end
-  end
-  return 1
+    set -l aliased (command git config --get "alias.$cmd" ^/dev/null | string split " ")
+    contains -- "$aliased[1]" $argv; and return 0
+    return 1
 end
 
 function __fish_git_stash_using_command

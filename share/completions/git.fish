@@ -335,6 +335,8 @@ complete -f -c git -n '__fish_git_using_command clone' -l recursive -d 'Initiali
 complete -c git -n '__fish_git_needs_command'    -a commit -d 'Record changes to the repository'
 complete -c git -n '__fish_git_using_command commit' -l amend -d 'Amend the log message of the last commit'
 complete -f -c git -n '__fish_git_using_command commit' -a '(__fish_git_modified_files)'
+complete -f -c git -n '__fish_git_using_command commit' -l fixup -d 'Fixup commit to be used with rebase --autosquash'
+complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup' -a '(__fish_git_commits)'
 # TODO options
 
 ### diff

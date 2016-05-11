@@ -17,16 +17,21 @@ function __fish_complete_proc --description 'Complete by list of running process
 		set sed_cmds $sed_cmds 's/ .*//'
 		
 		# Erases weird stuff Linux gives like kworker/0:0
-		set sed_cmds $sed_cmds 's|/[0-9]:[0-9]]$||g'
+		set sed_cmds $sed_cmds '/.:./d'
 		
 		# Retain the last path component only
-		set sed_cmds $sed_cmds 's|.*/||g'
+		set sed_cmds $sed_cmds 's/.*\///'
 		
-		# Strip off square brackets. Cute, huh?
-		set sed_cmds $sed_cmds 's/[][]//g'
+		# Strip off  brackets. Cute, huh?
+		set sed_cmds $sed_cmds '/^\[/d'
+        set sed_cmds $sed_cmds '/\]$/d'
+        set sed_cmds $sed_cmds '/^(/d'
 		
 		# Erase things that are just numbers
 		set sed_cmds $sed_cmds 's/^[0-9]*$//'
+
+        # Remove : from end of process
+        set sed_cmds $sed_cmds 's/:$//'
 	else
 		# OS X, BSD. Preserve leading spaces.
 		set ps_cmd 'ps axc -o comm'

@@ -115,21 +115,22 @@ function __fish_git_using_command
 end
 
 function __fish_git_stash_using_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 2 ]
-    if [ $cmd[2] = 'stash' -a $argv[1] = $cmd[3] ]
-      return 0
-    end
-  end
-  return 1
+    set cmd (commandline -opc)
+    __fish_git_using_command stash; or return 2
+    # The word after the stash command _must_ be the subcommand
+    set cmd $cmd[(contains -i -- "stash" $cmd)..-1]
+    set -e cmd[1]
+    set -q cmd[1]; or return 1
+    contains -- $cmd[1] $argv; and return 0
+    return 1
 end
 
 function __fish_git_stash_not_using_subcommand
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 2 -a $cmd[2] = 'stash' ]
-    return 1
-  end
-  return 0
+    set cmd (commandline -opc)
+    __fish_git_using_command stash; or return 2
+    set cmd $cmd[(contains -i -- "stash" $cmd)..-1]
+    set -q cmd[2]; and return 1
+    return 0
 end
 
 function __fish_git_complete_stashes

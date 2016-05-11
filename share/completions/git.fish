@@ -2,134 +2,143 @@
 # Use 'command git' to avoid interactions for aliases from git to (e.g.) hub
 
 function __fish_git_commits
-	# Complete commits with their subject line as the description
-	# This allows filtering by subject with the new pager!
-	# Because even subject lines can be quite long,
-	# trim them (abbrev'd hash+tab+subject) to 70 characters
-	command git log --pretty=tformat:"%h"\t"%s" --all \
-	| string replace -r '(.{70}).+' '$1...'
+    # Complete commits with their subject line as the description
+    # This allows filtering by subject with the new pager!
+    # Because even subject lines can be quite long,
+    # trim them (abbrev'd hash+tab+subject) to 70 characters
+    command git log --pretty=tformat:"%h"\t"%s" --all | string replace -r '(.{70}).+' '$1...'
 end
 
 function __fish_git_branches
-	command git branch --no-color -a $argv ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
+    command git branch --no-color -a $argv ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
 end
 
 function __fish_git_unique_remote_branches
-	# Allow all remote branches with one remote without the remote part
-	# This is useful for `git checkout` to automatically create a remote-tracking branch
-	command git branch --no-color -a $argv ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
+    # Allow all remote branches with one remote without the remote part
+    # This is useful for `git checkout` to automatically create a remote-tracking branch
+    command git branch --no-color -a $argv ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
 end
 
 function __fish_git_tags
-  command git tag ^/dev/null
+    command git tag ^/dev/null
 end
 
 function __fish_git_heads
-  __fish_git_branches
-  __fish_git_tags
+    __fish_git_branches
+    __fish_git_tags
 end
 
 function __fish_git_remotes
-  command git remote ^/dev/null
+    command git remote ^/dev/null
 end
 
 function __fish_git_modified_files
-	# git diff --name-only hands us filenames relative to the git toplevel
-	set -l root (command git rev-parse --show-toplevel)
-	# Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
-	# This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
-	string replace -- "$PWD/" "" "$root/"(command git diff --name-only ^/dev/null) | string replace "$root/" ":/"
+    # git diff --name-only hands us filenames relative to the git toplevel
+    set -l root (command git rev-parse --show-toplevel)
+    # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
+    # This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
+    string replace -- "$PWD/" "" "$root/"(command git diff --name-only ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_staged_files
-	set -l root (command git rev-parse --show-toplevel)
-	string replace -- "$PWD/" "" "$root/"(command git diff --staged --name-only ^/dev/null) | string replace "$root/" ":/"
+    set -l root (command git rev-parse --show-toplevel)
+    string replace -- "$PWD/" "" "$root/"(command git diff --staged --name-only ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_add_files
-	set -l root (command git rev-parse --show-toplevel)
-	string replace -- "$PWD/" "" "$root/"(command git -C $root ls-files -mo --exclude-standard ^/dev/null) | string replace "$root/" ":/"
+    set -l root (command git rev-parse --show-toplevel)
+    string replace -- "$PWD/" "" "$root/"(command git -C $root ls-files -mo --exclude-standard ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_ranges
-	set -l both (commandline -ot | string split "..")
-	set -l from $both[1]
-	# If we didn't need to split (or there's nothing _to_ split), complete only the first part
-	# Note that status here is from `string split` because `set` doesn't alter it
-	if test -z "$from" -o $status -gt 0
-		__fish_git_heads
-		return 0
-	end
+    set -l both (commandline -ot | string split "..")
+    set -l from $both[1]
+    # If we didn't need to split (or there's nothing _to_ split), complete only the first part
+    # Note that status here is from `string split` because `set` doesn't alter it
+    if test -z "$from" -o $status -gt 0
+        __fish_git_heads
+        return 0
+    end
 
-	set -l to (set -q both[2]; and echo $both[2])
-	for from_ref in (__fish_git_heads | string match "$from")
-		for to_ref in (__fish_git_heads | string match "*$to*") # if $to is empty, this correctly matches everything
-			printf "%s..%s\n" $from_ref $to_ref
-		end
-	end
+    set -l to (set -q both[2]; and echo $both[2])
+    for from_ref in (__fish_git_heads | string match "$from")
+        for to_ref in (__fish_git_heads | string match "*$to*") # if $to is empty, this correctly matches everything
+            printf "%s..%s\n" $from_ref $to_ref
+        end
+    end
 end
 
 function __fish_git_needs_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 ]
-	  return 0
-  else
-	  set -l skip_next 1
-	  # Skip first word because it's "git" or a wrapper
-	  for c in $cmd[2..-1]
-		  test $skip_next -eq 0; and set skip_next 1; and continue
-		  # git can only take a few options before a command, these are the ones mentioned in the "git" man page
-		  # e.g. `git --follow log` is wrong, `git --help log` is okay (and `git --help log $branch` is superfluous but works)
-		  # In case any other option is used before a command, we'll fail, but that's okay since it's invalid anyway
-		  switch $c
-			  # General options that can still take a command
-			  case "--help" "-p" "--paginate" "--no-pager" "--bare" "--no-replace-objects" --{literal,glob,noglob,icase}-pathspecs  --{exec-path,git-dir,work-tree,namespace}"=*"
-				  continue
-			  # General options with an argument we need to skip. The option=value versions have already been handled above
-			  case --{exec-path,git-dir,work-tree,namespace}
-				  set skip_next 0
-				  continue
-			  # General options that cause git to do something and exit - these behave like commands and everything after them is ignored
-			  case "--version" --{html,man,info}-path
-				  return 1
-			  # We assume that any other token that's not an argument to a general option is a command
-			  case "*"
-				  echo $c
-				  return 1
-		  end
-	  end
-	  return 0
-  end
-  return 1
+    set cmd (commandline -opc)
+    if [ (count $cmd) -eq 1 ]
+        return 0
+    else
+        set -l skip_next 1
+        # Skip first word because it's "git" or a wrapper
+        for c in $cmd[2..-1]
+            test $skip_next -eq 0
+            and set skip_next 1
+            and continue
+            # git can only take a few options before a command, these are the ones mentioned in the "git" man page
+            # e.g. `git --follow log` is wrong, `git --help log` is okay (and `git --help log $branch` is superfluous but works)
+            # In case any other option is used before a command, we'll fail, but that's okay since it's invalid anyway
+            switch $c
+                # General options that can still take a command
+                case "--help" "-p" "--paginate" "--no-pager" "--bare" "--no-replace-objects" --{literal,glob,noglob,icase}-pathspecs --{exec-path,git-dir,work-tree,namespace}"=*"
+                    continue
+                    # General options with an argument we need to skip. The option=value versions have already been handled above
+                case --{exec-path,git-dir,work-tree,namespace}
+                    set skip_next 0
+                    continue
+                    # General options that cause git to do something and exit - these behave like commands and everything after them is ignored
+                case "--version" --{html,man,info}-path
+                    return 1
+                    # We assume that any other token that's not an argument to a general option is a command
+                case "*"
+                    echo $c
+                    return 1
+            end
+        end
+        return 0
+    end
+    return 1
 end
 
 function __fish_git_using_command
     set -l cmd (__fish_git_needs_command)
-    test -z "$cmd"; and return 1
-    contains -- $cmd $argv; and return 0
+    test -z "$cmd"
+    and return 1
+    contains -- $cmd $argv
+    and return 0
 
     # aliased command
     set -l aliased (command git config --get "alias.$cmd" ^/dev/null | string split " ")
-    contains -- "$aliased[1]" $argv; and return 0
+    contains -- "$aliased[1]" $argv
+    and return 0
     return 1
 end
 
 function __fish_git_stash_using_command
     set cmd (commandline -opc)
-    __fish_git_using_command stash; or return 2
+    __fish_git_using_command stash
+    or return 2
     # The word after the stash command _must_ be the subcommand
     set cmd $cmd[(contains -i -- "stash" $cmd)..-1]
     set -e cmd[1]
-    set -q cmd[1]; or return 1
-    contains -- $cmd[1] $argv; and return 0
+    set -q cmd[1]
+    or return 1
+    contains -- $cmd[1] $argv
+    and return 0
     return 1
 end
 
 function __fish_git_stash_not_using_subcommand
     set cmd (commandline -opc)
-    __fish_git_using_command stash; or return 2
+    __fish_git_using_command stash
+    or return 2
     set cmd $cmd[(contains -i -- "stash" $cmd)..-1]
-    set -q cmd[2]; and return 1
+    set -q cmd[2]
+    and return 1
     return 0
 end
 
@@ -153,7 +162,7 @@ function __fish_git_custom_commands
     # if any of these completion results match the name of the builtin git commands,
     # but it's simpler just to blacklist these names. They're unlikely to change,
     # and the failure mode is we accidentally complete a plumbing command.
-	for name in (string replace -r "^.*/git-([^/]*)" '$1' $PATH/git-*)
+    for name in (string replace -r "^.*/git-([^/]*)" '$1' $PATH/git-*)
         switch $name
             case cvsserver receive-pack shell upload-archive upload-pack
                 # skip these
@@ -165,22 +174,24 @@ end
 
 # Suggest branches for the specified remote - returns 1 if no known remote is specified
 function __fish_git_branch_for_remote
-	set -l remotes (__fish_git_remotes)
-	set -l remote
-	set -l cmd (commandline -opc)
-	for r in $remotes
-		if contains -- $r $cmd
-			set remote $r
-			break
-		end
-	end
-	set -q remote[1]; or return 1
-	__fish_git_branches | string match -- "$remote/*" | string replace -- "$remote/" ''
+    set -l remotes (__fish_git_remotes)
+    set -l remote
+    set -l cmd (commandline -opc)
+    for r in $remotes
+        if contains -- $r $cmd
+            set remote $r
+            break
+        end
+    end
+    set -q remote[1]
+    or return 1
+    __fish_git_branches | string match -- "$remote/*" | string replace -- "$remote/" ''
 end
 
 # Return 0 if the current token is a possible commit-hash with at least 3 characters
 function __fish_git_possible_commithash
-    set -q argv[1]; and set -l token $argv[1]
+    set -q argv[1]
+    and set -l token $argv[1]
     or set -l token (commandline -ct)
     if string match -qr '^[0-9a-fA-F]{3,}$' -- $token
         return 0
@@ -258,7 +269,7 @@ complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_hea
 # TODO options
 
 ### add
-complete -c git -n '__fish_git_needs_command'    -a add -d 'Add file contents to the index'
+complete -c git -n '__fish_git_needs_command' -a add -d 'Add file contents to the index'
 complete -c git -n '__fish_git_using_command add' -s n -l dry-run -d "Don't actually add the file(s)"
 complete -c git -n '__fish_git_using_command add' -s v -l verbose -d 'Be verbose'
 complete -c git -n '__fish_git_using_command add' -s f -l force -d 'Allow adding otherwise ignored files'
@@ -276,10 +287,10 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_add_files)'
 # TODO options
 
 ### checkout
-complete -f -c git -n '__fish_git_needs_command'    -a checkout -d 'Checkout and switch to a branch'
-complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_branches)' --description 'Branch'
-complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
-complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_tags)' --description 'Tag'
+complete -f -c git -n '__fish_git_needs_command' -a checkout -d 'Checkout and switch to a branch'
+complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_branches)' --description 'Branch'
+complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
+complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' --description 'Tag'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
@@ -326,7 +337,7 @@ complete -f -c git -n '__fish_git_using_command cherry-pick' -l ff -d 'Fast-forw
 ### clone
 complete -f -c git -n '__fish_git_needs_command' -a clone -d 'Clone a repository into a new directory'
 complete -f -c git -n '__fish_git_using_command clone' -l no-hardlinks -d 'Copy files instead of using hardlinks'
-complete -f -c git -n '__fish_git_using_command clone' -s q -l quiet  -d 'Operate quietly and do not report progress'
+complete -f -c git -n '__fish_git_using_command clone' -s q -l quiet -d 'Operate quietly and do not report progress'
 complete -f -c git -n '__fish_git_using_command clone' -s v -l verbose -d 'Provide more information on what is going on'
 complete -f -c git -n '__fish_git_using_command clone' -s n -l no-checkout -d 'No checkout of HEAD is performed after the clone is complete'
 complete -f -c git -n '__fish_git_using_command clone' -l bare -d 'Make a bare Git repository'
@@ -337,7 +348,7 @@ complete -f -c git -n '__fish_git_using_command clone' -l depth -d 'Truncate the
 complete -f -c git -n '__fish_git_using_command clone' -l recursive -d 'Initialize all submodules within the cloned repository'
 
 ### commit
-complete -c git -n '__fish_git_needs_command'    -a commit -d 'Record changes to the repository'
+complete -c git -n '__fish_git_needs_command' -a commit -d 'Record changes to the repository'
 complete -c git -n '__fish_git_using_command commit' -l amend -d 'Amend the log message of the last commit'
 complete -f -c git -n '__fish_git_using_command commit' -a '(__fish_git_modified_files)'
 complete -f -c git -n '__fish_git_using_command commit' -l fixup -d 'Fixup commit to be used with rebase --autosquash'
@@ -345,21 +356,21 @@ complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt 
 # TODO options
 
 ### diff
-complete -c git -n '__fish_git_needs_command'    -a diff -d 'Show changes between commits, commit and working tree, etc'
+complete -c git -n '__fish_git_needs_command' -a diff -d 'Show changes between commits, commit and working tree, etc'
 complete -c git -n '__fish_git_using_command diff' -a '(__fish_git_ranges)' -d 'Branch'
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
 # TODO options
 
 ### difftool
-complete -c git -n '__fish_git_needs_command'    -a difftool -d 'Open diffs in a visual tool'
+complete -c git -n '__fish_git_needs_command' -a difftool -d 'Open diffs in a visual tool'
 complete -c git -n '__fish_git_using_command difftool' -a '(__fish_git_ranges)' -d 'Branch'
 complete -c git -n '__fish_git_using_command difftool' -l cached -d 'Visually show diff of changes in the index'
 # TODO options
 
 
 ### grep
-complete -c git -n '__fish_git_needs_command'    -a grep -d 'Print lines matching a pattern'
+complete -c git -n '__fish_git_needs_command' -a grep -d 'Print lines matching a pattern'
 # TODO options
 
 ### init
@@ -367,7 +378,7 @@ complete -f -c git -n '__fish_git_needs_command' -a init -d 'Create an empty git
 # TODO options
 
 ### log
-complete -c git -n '__fish_git_needs_command'    -a log -d 'Show commit logs'
+complete -c git -n '__fish_git_needs_command' -a log -d 'Show commit logs'
 complete -c git -n '__fish_git_using_command log' -a '(__fish_git_heads) (__fish_git_ranges)' -d 'Branch'
 # TODO options
 
@@ -398,7 +409,7 @@ complete -f -c git -n '__fish_git_using_command merge' -l abort -d 'Abort the cu
 # TODO options
 
 ### mv
-complete -c git -n '__fish_git_needs_command'    -a mv -d 'Move or rename a file, a directory, or a symlink'
+complete -c git -n '__fish_git_needs_command' -a mv -d 'Move or rename a file, a directory, or a symlink'
 # TODO options
 
 ### prune
@@ -466,7 +477,7 @@ complete -f -c git -n '__fish_git_using_command rebase' -l no-autosquash -d 'No 
 complete -f -c git -n '__fish_git_using_command rebase' -l no-ff -d 'No fast-forward'
 
 ### reset
-complete -c git -n '__fish_git_needs_command'    -a reset -d 'Reset current HEAD to the specified state'
+complete -c git -n '__fish_git_needs_command' -a reset -d 'Reset current HEAD to the specified state'
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
 complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_staged_files)' -d 'File'
@@ -478,7 +489,7 @@ complete -f -c git -n '__fish_git_using_command revert' -a '(__fish_git_commits)
 # TODO options
 
 ### rm
-complete -c git -n '__fish_git_needs_command'    -a rm     -d 'Remove files from the working tree and from the index'
+complete -c git -n '__fish_git_needs_command' -a rm -d 'Remove files from the working tree and from the index'
 complete -c git -n '__fish_git_using_command rm' -f
 complete -c git -n '__fish_git_using_command rm' -l cached -d 'Keep local copies'
 complete -c git -n '__fish_git_using_command rm' -l ignore-unmatch -d 'Exit with a zero status even if no files matched'
@@ -492,7 +503,7 @@ complete -c git -n '__fish_git_using_command rm' -s n -l dry-run -d 'Dry run'
 complete -f -c git -n '__fish_git_needs_command' -a status -d 'Show the working tree status'
 complete -f -c git -n '__fish_git_using_command status' -s s -l short -d 'Give the output in the short-format'
 complete -f -c git -n '__fish_git_using_command status' -s b -l branch -d 'Show the branch and tracking info even in short-format'
-complete -f -c git -n '__fish_git_using_command status'      -l porcelain -d 'Give the output in a stable, easy-to-parse format'
+complete -f -c git -n '__fish_git_using_command status' -l porcelain -d 'Give the output in a stable, easy-to-parse format'
 complete -f -c git -n '__fish_git_using_command status' -s z -d 'Terminate entries with null character'
 complete -f -c git -n '__fish_git_using_command status' -s u -l untracked-files -x -a 'no normal all' -d 'The untracked files handling mode'
 complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x -a 'none untracked dirty all' -d 'Ignore changes to submodules'

@@ -184,6 +184,7 @@ end
 
 # general options
 complete -f -c git -l help -d 'Display the manual of a git command'
+complete -f -c git -n '__fish_git_using_command log show diff-tree rev-list' -l pretty -a 'oneline short medium full fuller email raw format:'
 
 #### fetch
 complete -f -c git -n '__fish_git_needs_command' -a fetch -d 'Download objects and refs from another repository'
@@ -360,7 +361,6 @@ complete -f -c git -n '__fish_git_needs_command' -a init -d 'Create an empty git
 ### log
 complete -c git -n '__fish_git_needs_command'    -a log -d 'Show commit logs'
 complete -c git -n '__fish_git_using_command log' -a '(__fish_git_heads) (__fish_git_ranges)' -d 'Branch'
-complete -f -c git -n '__fish_git_using_command log' -l pretty -a 'oneline short medium full fuller email raw format:'
 # TODO options
 
 ### merge

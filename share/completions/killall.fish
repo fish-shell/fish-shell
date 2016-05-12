@@ -22,10 +22,10 @@ if test (uname) != 'SunOS'
 		end
 	end
 
-    if test $USER = root
+    if test "$USER" = root
         complete -c killall -xa '(__fish_complete_proc)'
     else
-       complete -c killall -xa "(ps ua | awk '{print \$11}' | sed '1d;s/.*\///;/^(/d')"
+       complete -c killall -xa "(ps u | awk '{print \$11}' | sed '1d;s/.*\///;/^(/d')"
     end
 
 	if killall --version > /dev/null ^ /dev/null

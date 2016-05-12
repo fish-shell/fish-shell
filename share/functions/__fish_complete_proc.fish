@@ -24,14 +24,14 @@ function __fish_complete_proc --description 'Complete by list of running process
 		
 		# Strip off  brackets. Cute, huh?
 		set sed_cmds $sed_cmds '/^\[/d'
-        set sed_cmds $sed_cmds '/\]$/d'
-        set sed_cmds $sed_cmds '/^(/d'
+		set sed_cmds $sed_cmds '/\]$/d'
+		set sed_cmds $sed_cmds '/^(/d'
 		
 		# Erase things that are just numbers
 		set sed_cmds $sed_cmds 's/^[0-9]*$//'
 
-        # Remove : from end of process
-        set sed_cmds $sed_cmds 's/:$//'
+		# Remove : from end of process
+		set sed_cmds $sed_cmds 's/:$//'
 	else
 		# OS X, BSD. Preserve leading spaces.
 		set ps_cmd 'ps axc -o comm'

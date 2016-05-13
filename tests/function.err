@@ -1,0 +1,8 @@
+function: function name shadows a builtin so you must use '--shadow-builtin'
+fish: function pwd; end
+      ^
+yes, it failed as expected
+function: function name does not shadow a builtin so you must not use '--shadow-builtin'
+fish: function not_builtin --shadow-builtin; end
+      ^
+yes, it failed as expected

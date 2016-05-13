@@ -1,16 +1,12 @@
 #
-#Deletes an item from history
+# Wrap the builtin history command to provide additional functionality.
 #
-function history --description "Deletes an item from history"
-
+function history --shadow-builtin --description "Deletes an item from history"
     set -l argc (count $argv)
     set -l prefix_args ""
     set -l contains_args ""
-
     set -l cmd print
-
     set -l search_mode none
-
     set -l pager less
     if set -q PAGER
         set pager $PAGER
@@ -46,7 +42,7 @@ function history --description "Deletes an item from history"
             end
         end
     else
-        #Execute history builtin without any argument
+        # Execute history builtin without any argument.
         if status --is-interactive
             builtin history | eval $pager
         else
@@ -57,9 +53,8 @@ function history --description "Deletes an item from history"
 
     switch $cmd
         case print
-            # Print matching items
-            # Note this may end up passing --search twice to the builtin,
-            # but that's harmless
+            # Print matching items. Note this may end up passing --search twice to the builtin,
+            # but that's harmless.
             builtin history --search $argv
 
         case delete
@@ -72,8 +67,7 @@ function history --description "Deletes an item from history"
                     set found_items (builtin history --search --contains $contains_args)
                 case none
                     builtin history $argv
-
-                    #Save changes after deleting item
+                    # Save changes after deleting item.
                     builtin history --save
                     return 0
             end
@@ -98,7 +92,8 @@ function history --description "Deletes an item from history"
                         continue
                     end
 
-                    #Following two validations could be embedded with "and" but I find the syntax kind of weird.
+                    # Following two validations could be embedded with "and" but I find the syntax
+                    # kind of weird.
                     if not string match -qr '^[0-9]+$' $i
                         printf "Invalid input: %s\n" $i
                         continue
@@ -124,18 +119,18 @@ function history --description "Deletes an item from history"
 
                     end
                 end
-                #Save changes after deleting item(s)
+                # Save changes after deleting item(s).
                 builtin history --save
             end
         case save
-            #Save changes to history file
+            # Save changes to history file.
             builtin history $argv
         case merge
             builtin history --merge
         case help
             builtin history --help
         case clear
-            # Erase the entire history
+            # Erase the entire history.
             echo "Are you sure you want to clear history ? (y/n)"
             read ch
             if test $ch = "y"

@@ -31,12 +31,34 @@ struct function_data_t {
     /// List of all variables that are inherited from the function definition scope. The variable
     /// values are snapshotted when function_add() is called.
     wcstring_list_t inherit_vars;
-    /// Set to non-zero if invoking this function shadows the variables of the underlying function.
-    int shadows;
+    /// Set to true if invoking this function shadows the variables of the underlying function.
+    bool shadow_scope;
+    /// Set to true if this function shadows a builtin.
+    bool shadow_builtin;
 };
 
 class function_info_t {
    public:
+    /// Function definition.
+    const wcstring definition;
+    /// Function description. Only the description may be changed after the function is created.
+    wcstring description;
+    /// File where this function was defined (intern'd string).
+    const wchar_t *const definition_file;
+    /// Line where definition started.
+    const int definition_offset;
+    /// List of all named arguments for this function.
+    const wcstring_list_t named_arguments;
+    /// Mapping of all variables that were inherited from the function definition scope to their
+    /// values.
+    const std::map<wcstring, env_var_t> inherit_vars;
+    /// Flag for specifying that this function was automatically loaded.
+    const bool is_autoload;
+    /// Set to true if this function shadows a builtin.
+    const bool shadow_builtin;
+    /// Set to true if invoking this function shadows the variables of the underlying function.
+    const bool shadow_scope;
+
     /// Constructs relevant information from the function_data.
     function_info_t(const function_data_t &data, const wchar_t *filename, int def_offset,
                     bool autoload);
@@ -44,31 +66,6 @@ class function_info_t {
     /// Used by function_copy.
     function_info_t(const function_info_t &data, const wchar_t *filename, int def_offset,
                     bool autoload);
-
-    /// Function definition.
-    const wcstring definition;
-
-    /// Function description. Only the description may be changed after the function is created.
-    wcstring description;
-
-    /// File where this function was defined (intern'd string).
-    const wchar_t *const definition_file;
-
-    /// Line where definition started.
-    const int definition_offset;
-
-    /// List of all named arguments for this function.
-    const wcstring_list_t named_arguments;
-
-    /// Mapping of all variables that were inherited from the function definition scope to their
-    /// values.
-    const std::map<wcstring, env_var_t> inherit_vars;
-
-    /// Flag for specifying that this function was automatically loaded.
-    const bool is_autoload;
-
-    /// Set to true if invoking this function shadows the variables of the underlying function.
-    const bool shadows;
 };
 
 /// Initialize function data.
@@ -133,8 +130,11 @@ std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name);
 /// is successful.
 bool function_copy(const wcstring &name, const wcstring &new_name);
 
+/// Returns whether this function shadows a builtin of the same name.
+int function_get_shadow_builtin(const wcstring &name);
+
 /// Returns whether this function shadows variables of the underlying function.
-int function_get_shadows(const wcstring &name);
+int function_get_shadow_scope(const wcstring &name);
 
 /// Prepares the environment for executing a function.
 void function_prepare_environment(const wcstring &name, const wchar_t *const *argv,

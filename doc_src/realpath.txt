@@ -1,0 +1,18 @@
+\section realpath realpath - print the resolved path
+
+\subsection command-synopsis Synopsis
+\fish{synopsis}
+realpath [OPTIONS] PATH
+\endfish
+
+\subsection command-description Description
+
+`realpath` converts relative paths to absolute paths, resolves any symlinks, and prints the result. If the path is already a absolute path without symlinks then it is printed as is.
+
+This is a fish function that simply passes the arguments through to the external command if it is available. Otherwise it ignores any options and falls back to alternative implementations such as using the `readlink` command.
+
+\subsection command-example Examples
+
+`realpath ../user2/file` will write `/home/user2/file` assuming the PWD is `/home/some-dir` and neither component of that relative path are symlinks.
+
+`realpath bin/prog` will write `/usr/local/bin/prog` assuming `bin/prog` is a symlink to `/usr/local/bin/prog`.

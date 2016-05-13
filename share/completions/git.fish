@@ -199,6 +199,10 @@ function __fish_git_possible_commithash
     return 1
 end
 
+function __fish_git_reflog
+	command git reflog | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
+end
+
 # general options
 complete -f -c git -l help -d 'Display the manual of a git command'
 complete -f -c git -n '__fish_git_using_command log show diff-tree rev-list' -l pretty -a 'oneline short medium full fuller email raw format:'
@@ -481,6 +485,7 @@ complete -c git -n '__fish_git_needs_command' -a reset -d 'Reset current HEAD to
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
 complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_staged_files)' -d 'File'
+complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_reflog)' -d 'Reflog'
 # TODO options
 
 ### revert

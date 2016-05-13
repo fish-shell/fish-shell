@@ -1062,9 +1062,6 @@ Command mode is also known as normal mode.
 
 `fish` uses an Emacs style kill ring for copy and paste functionality. Use @key{Control,K} to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed) is inserted into a linked list of kills, called the kill ring. To paste the latest value from the kill ring use @key{Control,Y}. After pasting, use @key{Alt,Y} to rotate to the previous kill.
 
-If the environment variable `DISPLAY` is set and the `xsel` program is installed, `fish` will try to connect to the X Windows server specified by this variable, and use the clipboard on the X server for copying and pasting.
-
-
 \subsection history-search Searchable history
 
 After a command has been entered, it is inserted at the end of a history list. Any duplicate history items are automatically removed. By pressing the up and down keys, the user can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.

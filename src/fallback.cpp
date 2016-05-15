@@ -90,135 +90,6 @@ char *tparm_solaris_kludge(char *str, ...) {
 
 #endif
 
-#ifndef HAVE_FGETWC
-wint_t fgetwc(FILE *stream) {
-    wchar_t res;
-    mbstate_t state = {};
-
-    while (1) {
-        int b = fgetc(stream);
-        if (b == EOF) {
-            return WEOF;
-        }
-
-        if (MB_CUR_MAX == 1)  // single-byte locale, all values are legal
-        {
-            return b;
-        }
-
-        char bb = b;
-        size_t sz = mbrtowc(&res, &bb, 1, &state);
-        switch (sz) {
-            case -1: {
-                return WEOF;
-            }
-            case -2: {
-                break;
-            }
-            case 0: {
-                return 0;
-            }
-            default: { return res; }
-        }
-    }
-}
-#endif
-
-#ifndef HAVE_FPUTWC
-wint_t fputwc(wchar_t wc, FILE *stream) {
-    int res = 0;
-    mbstate_t state = {};
-    char s[MB_CUR_MAX + 1] = {};
-
-    if (MB_CUR_MAX == 1)  // single-byte locale (C/POSIX/ISO-8859)
-    {
-        // If `wc` contains a wide character we emit a question-mark.
-        if (wc & ~0xFF) {
-            wc = '?';
-        }
-        s[0] = (char)wc;
-        res = fputs(s, stream);
-    } else {
-        size_t len = wcrtomb(s, wc, &state);
-        if (len == (size_t)-1) {
-            debug(1, L"Wide character %d has no narrow representation", wc);
-        } else {
-            res = fputs(s, stream);
-        }
-    }
-
-    return res == EOF ? WEOF : wc;
-}
-#endif
-
-#ifndef HAVE_WCSTOK
-
-/// Used by fallback wcstok. Borrowed from glibc.
-static size_t fish_wcsspn(const wchar_t *wcs, const wchar_t *accept) {
-    register const wchar_t *p;
-    register const wchar_t *a;
-    register size_t count = 0;
-
-    for (p = wcs; *p != L'\0'; ++p) {
-        for (a = accept; *a != L'\0'; ++a)
-            if (*p == *a) break;
-
-        if (*a == L'\0')
-            return count;
-        else
-            ++count;
-    }
-    return count;
-}
-
-/// Used by fallback wcstok. Borrowed from glibc.
-static wchar_t *fish_wcspbrk(const wchar_t *wcs, const wchar_t *accept) {
-    while (*wcs != L'\0')
-        if (wcschr(accept, *wcs) == NULL)
-            ++wcs;
-        else
-            return (wchar_t *)wcs;
-    return NULL;
-}
-
-/// Fallback wcstok implementation. Borrowed from glibc.
-wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **save_ptr) {
-    wchar_t *result;
-
-    if (wcs == NULL) {
-        if (*save_ptr == NULL) {
-            errno = EINVAL;
-            return NULL;
-        } else
-            wcs = *save_ptr;
-    }
-
-    // Scan leading delimiters.
-    wcs += fish_wcsspn(wcs, delim);
-
-    if (*wcs == L'\0') {
-        *save_ptr = NULL;
-        return NULL;
-    }
-
-    // Find the end of the token.
-    result = wcs;
-
-    wcs = fish_wcspbrk(result, delim);
-
-    if (wcs == NULL) {
-        // This token finishes the string.
-        *save_ptr = NULL;
-    } else {
-        // Terminate the token and make *SAVE_PTR point past it.
-        *wcs = L'\0';
-        *save_ptr = wcs + 1;
-    }
-    return result;
-}
-
-#endif
-
 /// Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g.
 /// building on Linux) these should end up just being stripped, as they are static functions that
 /// are not referenced in this file.
@@ -277,38 +148,7 @@ int wcsncasecmp_use_weak(const wchar_t *s1, const wchar_t *s2, size_t n) {
     return wcsncasecmp_fallback(s1, s2, n);
 }
 
-#else  //__APPLE__
-
-#ifndef HAVE_WCSDUP
-wchar_t *wcsdup(const wchar_t *in) { return wcsdup_fallback(in); }
-#endif
-
-#ifndef HAVE_WCSCASECMP
-int wcscasecmp(const wchar_t *a, const wchar_t *b) { return wcscasecmp_fallback(a, b); }
-#endif
 #endif  //__APPLE__
-
-#ifndef HAVE_WCSLEN
-size_t wcslen(const wchar_t *in) {
-    const wchar_t *end = in;
-    while (*end) end++;
-    return end - in;
-}
-#endif
-
-#ifndef HAVE_WCSNCASECMP
-int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t count) {
-    return wcsncasecmp_fallback(a, b, count);
-}
-#endif
-
-#ifndef HAVE_WCWIDTH
-int wcwidth(wchar_t c) {
-    if (c < 32) return 0;
-    if (c == 127) return 0;
-    return 1;
-}
-#endif
 
 #ifndef HAVE_WCSNDUP
 wchar_t *wcsndup(const wchar_t *in, size_t c) {
@@ -337,39 +177,6 @@ long convert_digit(wchar_t d, int base) {
     return res;
 }
 
-#ifndef HAVE_WCSTOL
-long wcstol(const wchar_t *nptr, wchar_t **endptr, int base) {
-    long long res = 0;
-    int is_set = 0;
-    if (base > 36) {
-        errno = EINVAL;
-        return 0;
-    }
-
-    while (1) {
-        long nxt = convert_digit(*nptr, base);
-        if (endptr != 0) *endptr = (wchar_t *)nptr;
-        if (nxt < 0) {
-            if (!is_set) {
-                errno = EINVAL;
-            }
-            return res;
-        }
-        res = (res * base) + nxt;
-        is_set = 1;
-        if (res > LONG_MAX) {
-            errno = ERANGE;
-            return LONG_MAX;
-        }
-        if (res < LONG_MIN) {
-            errno = ERANGE;
-            return LONG_MIN;
-        }
-        nptr++;
-    }
-}
-
-#endif
 #ifndef HAVE_WCSLCAT
 
 /*$OpenBSD: strlcat.c,v 1.11 2003/06/17 21:56:24 millert Exp $*/
@@ -548,7 +355,8 @@ char **backtrace_symbols_fd(void *const *buffer, int size, int fd) { return 0; }
 double nan(char *tagp) { return 0.0 / 0.0; }
 #endif
 
-// Big hack to use our versions of wcswidth where we know them to be broken, like on OS X.
+// Big hack to use our versions of wcswidth where we know them to be broken, which is
+// EVERYWHERE (https://github.com/fish-shell/fish-shell/issues/2199)
 #ifndef HAVE_BROKEN_WCWIDTH
 #define HAVE_BROKEN_WCWIDTH 1
 #endif

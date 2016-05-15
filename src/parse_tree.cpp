@@ -139,7 +139,7 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
 }
 
 wcstring parse_error_t::describe(const wcstring &src) const {
-    return this->describe_with_prefix(src, wcstring(), get_is_interactive(), false);
+    return this->describe_with_prefix(src, wcstring(), shell_is_interactive(), false);
 }
 
 void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt) {

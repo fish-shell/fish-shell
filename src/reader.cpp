@@ -1686,7 +1686,7 @@ static void reader_interactive_destroy() {
 
 void reader_sanity_check() {
     // Note: 'data' is non-null if we are interactive, except in the testing environment.
-    if (get_is_interactive() && data != NULL) {
+    if (shell_is_interactive() && data != NULL) {
         if (data->command_line.position > data->command_line.size()) sanity_lose();
         if (data->colors.size() != data->command_line.size()) sanity_lose();
         if (data->indents.size() != data->command_line.size()) sanity_lose();
@@ -2217,7 +2217,7 @@ static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust, boo
 }
 
 bool shell_is_exiting() {
-    if (get_is_interactive())
+    if (shell_is_interactive())
         return job_list_is_empty() && data != NULL && data->end_loop;
     else
         return end_loop;
@@ -3412,7 +3412,7 @@ int reader_read(int fd, const io_chain_t &io) {
     int inter = ((fd == STDIN_FILENO) && isatty(STDIN_FILENO));
     proc_push_interactive(inter);
 
-    res = get_is_interactive() ? read_i() : read_ni(fd, io);
+    res = shell_is_interactive() ? read_i() : read_ni(fd, io);
 
     // If the exit command was called in a script, only exit the script, not the program.
     if (data) data->end_loop = 0;

@@ -249,8 +249,6 @@ void signal_reset_handlers() {
 void signal_set_handlers() {
     struct sigaction act;
 
-    if (get_is_interactive() == -1) return;
-
     sigemptyset(&act.sa_mask);
     act.sa_flags = SA_SIGINFO;
     act.sa_sigaction = &default_handler;
@@ -267,9 +265,9 @@ void signal_set_handlers() {
     // Ignore sigpipe, which we may get from the universal variable notifier.
     sigaction(SIGPIPE, &act, 0);
 
-    if (get_is_interactive()) {
-        // Interactive mode. Ignore interactive signals.  We are a shell, we know whats best for the
-        // user.
+    if (shell_is_interactive()) {
+        // Interactive mode. Ignore interactive signals.  We are a shell, we know what is best for
+        // the user.
         act.sa_handler = SIG_IGN;
 
         sigaction(SIGINT, &act, 0);

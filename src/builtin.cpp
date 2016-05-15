@@ -181,7 +181,7 @@ void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *
 
             screen_height = common_get_height();
             lines = count_char(str, L'\n');
-            if (!get_is_interactive() || (lines > 2 * screen_height / 3)) {
+            if (!shell_is_interactive() || (lines > 2 * screen_height / 3)) {
                 wchar_t *pos;
                 int cut = 0;
                 int i;
@@ -2368,7 +2368,7 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                       argv[0], dir_in.c_str());
         }
 
-        if (!get_is_interactive()) {
+        if (!shell_is_interactive()) {
             streams.err.append(parser.current_line());
         }
 
@@ -2385,7 +2385,7 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), argv[0], dir.c_str());
         }
 
-        if (!get_is_interactive()) {
+        if (!shell_is_interactive()) {
             streams.err.append(parser.current_line());
         }
 

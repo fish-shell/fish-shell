@@ -101,10 +101,11 @@ static int is_interactive = -1;
 
 static bool proc_had_barrier = false;
 
-int get_is_interactive(void) {
+bool shell_is_interactive(void) {
     ASSERT_IS_MAIN_THREAD();
-    // is_interactive is initialized to -1; ensure someone has popped/pushed it before then.
-    assert(is_interactive >= 0);
+    // is_interactive is statically initialized to -1. Ensure it has been dynamically set
+    // before we're called.
+    assert(is_interactive != -1);
     return is_interactive > 0;
 }
 

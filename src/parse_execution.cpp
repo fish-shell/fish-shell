@@ -1183,7 +1183,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
     // Get terminal modes.
     struct termios tmodes = {};
-    if (get_is_interactive()) {
+    if (shell_is_interactive()) {
         if (tcgetattr(STDIN_FILENO, &tmodes)) {
             // Need real error handling here.
             wperror(L"tcgetattr");
@@ -1254,14 +1254,14 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     j->tmodes = tmodes;
     job_set_flag(j, JOB_CONTROL,
                  (job_control_mode == JOB_CONTROL_ALL) ||
-                     ((job_control_mode == JOB_CONTROL_INTERACTIVE) && (get_is_interactive())));
+                     ((job_control_mode == JOB_CONTROL_INTERACTIVE) && (shell_is_interactive())));
 
     job_set_flag(j, JOB_FOREGROUND, !tree.job_should_be_backgrounded(job_node));
 
     job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) && !is_subshell && !is_event);
 
     job_set_flag(j, JOB_SKIP_NOTIFICATION,
-                 is_subshell || is_block || is_event || !get_is_interactive());
+                 is_subshell || is_block || is_event || !shell_is_interactive());
 
     // Tell the current block what its job is. This has to happen before we populate it (#1394).
     parser->current_block()->job = j;

@@ -522,7 +522,7 @@ wcstring parser_t::current_line() {
     wcstring prefix;
 
     // If we are not going to print a stack trace, at least print the line number and filename.
-    if (!get_is_interactive() || is_function()) {
+    if (!shell_is_interactive() || is_function()) {
         if (file) {
             append_format(prefix, _(L"%ls (line %d): "), user_presentable_path(file).c_str(),
                           lineno);
@@ -533,7 +533,7 @@ wcstring parser_t::current_line() {
         }
     }
 
-    bool is_interactive = get_is_interactive();
+    bool is_interactive = shell_is_interactive();
     bool skip_caret = is_interactive && !is_function();
 
     // Use an error with empty text.
@@ -756,7 +756,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
     if (!errors.empty()) {
         const parse_error_t &err = errors.at(0);
 
-        const bool is_interactive = get_is_interactive();
+        const bool is_interactive = shell_is_interactive();
 
         // Determine if we want to try to print a caret to point at the source error. The
         // err.source_start <= src.size() check is due to the nasty way that slices work, which is

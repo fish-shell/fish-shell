@@ -955,19 +955,6 @@ int backtrace(void **buffer, int size) { return 0; }
 char **backtrace_symbols_fd(void *const *buffer, int size, int fd) { return 0; }
 #endif
 
-#ifndef HAVE_SYSCONF
-
-long sysconf(int name) {
-    if (name == _SC_ARG_MAX) {
-#ifdef ARG_MAX
-        return ARG_MAX;
-#endif
-    }
-
-    return -1;
-}
-#endif
-
 #ifndef HAVE_NAN
 double nan(char *tagp) { return 0.0 / 0.0; }
 #endif

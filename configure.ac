@@ -313,7 +313,7 @@ AC_STRUCT_DIRENT_D_TYPE
 AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
 AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg )
-AC_CHECK_FUNCS( backtrace backtrace_symbols_fd sysconf getifaddrs )
+AC_CHECK_FUNCS( backtrace backtrace_symbols_fd getifaddrs )
 AC_CHECK_FUNCS( futimens clock_gettime )
 
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )

@@ -94,10 +94,6 @@ char *tparm_solaris_kludge(char *str, ...) {
 #define INTERNAL_FWPRINTF 1
 #endif
 
-#ifdef HAVE_BROKEN_FWPRINTF
-#define INTERNAL_FWPRINTF 1
-#endif
-
 #ifdef INTERNAL_FWPRINTF
 
 /// Internal function for the wprintf fallbacks. USed to write the specified number of spaces.

@@ -253,11 +253,6 @@ extern int _nl_msg_cat_cntr;
 int killpg(int pgr, int sig);
 #endif
 
-#ifndef HAVE_SYSCONF
-#define _SC_ARG_MAX 1
-long sysconf(int name);
-#endif
-
 #ifndef HAVE_NAN
 double nan(char *tagp);
 #endif

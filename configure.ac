@@ -307,12 +307,12 @@ AC_CHECK_MEMBERS([struct stat.st_mtim.tv_nsec])
 AC_STRUCT_DIRENT_D_TYPE
 
 #
-# Check for presense of various functions used by fish
+# Check for presence of various functions used by fish
 #
 
-AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp )
-AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
-AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg )
+AC_CHECK_FUNCS( wcsndup )
+AC_CHECK_FUNCS( futimes )
+AC_CHECK_FUNCS( wcslcat wcslcpy lrand48_r killpg )
 AC_CHECK_FUNCS( backtrace backtrace_symbols_fd getifaddrs )
 AC_CHECK_FUNCS( futimens clock_gettime )
 

@@ -405,41 +405,6 @@ AC_LINK_IFELSE(
 )
 
 
-#
-# If we have a fwprintf in libc, test that it actually works. As of
-# March 2006, it is broken under DragonFly BSD.
-#
-
-if test "$ac_cv_func_fwprintf" = yes; then
-
-  AC_MSG_CHECKING([if fwprintf is broken])
-  AC_RUN_IFELSE(
-    [
-      AC_LANG_PROGRAM(
-        [
-          #include <stdlib.h>
-          #include <stdio.h>
-          #include <locale.h>
-          #include <wchar.h>
-        ],
-        [
-          setlocale( LC_ALL, "" );
-          fwprintf( stderr, L"%ls%ls", L"", L"fish:" );
-        ]
-      )
-    ],
-    [
-      AC_MSG_RESULT(no)
-    ],
-    [
-      AC_MSG_RESULT([yes])
-      AC_DEFINE([HAVE_BROKEN_FWPRINTF], [1], [Define to 1 one if the implemented fwprintf is broken])
-    ]
-  )
-
-fi
-
-
 # Check for _nl_msg_cat_cntr symbol
 AC_MSG_CHECKING([for _nl_msg_cat_cntr symbol])
 AC_TRY_LINK(

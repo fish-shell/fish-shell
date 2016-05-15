@@ -310,7 +310,7 @@ AC_STRUCT_DIRENT_D_TYPE
 # Check for presense of various functions used by fish
 #
 
-AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
+AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
 AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg )
 AC_CHECK_FUNCS( backtrace backtrace_symbols_fd getifaddrs )

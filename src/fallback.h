@@ -63,38 +63,6 @@ struct winsize {
 char *tparm_solaris_kludge(char *str, ...);
 #endif
 
-#ifndef HAVE_FWPRINTF
-/// Print formated string. Some operating systems (Like NetBSD) do not have wide string formating
-/// functions.  Therefore we implement our own. Not at all complete. Supports wide and narrow
-/// characters, strings and decimal numbers, position (%n), field width and precision.
-int fwprintf(FILE *f, const wchar_t *format, ...);
-
-/// Print formated string. Some operating systems (Like NetBSD) do not have wide string formating
-/// functions.  Therefore we define our own. Not at all complete. Supports wide and narrow
-/// characters, strings and decimal numbers, position (%n), field width and precision.
-int swprintf(wchar_t *str, size_t l, const wchar_t *format, ...);
-
-/// Print formated string. Some operating systems (Like NetBSD) do not have wide string formating
-/// functions.  Therefore we define our own. Not at all complete. Supports wide and narrow
-/// characters, strings and decimal numbers, position (%n), field width and precision.
-int wprintf(const wchar_t *format, ...);
-
-/// Print formated string. Some operating systems (Like NetBSD) do not have wide string formating
-/// functions.  Therefore we define our own. Not at all complete. Supports wide and narrow
-/// characters, strings and decimal numbers, position (%n), field width and precision.
-int vwprintf(const wchar_t *filter, va_list va);
-
-/// Print formated string. Some operating systems (Like NetBSD) do not have wide string formating
-/// functions.  Therefore we define our own. Not at all complete. Supports wide and narrow
-/// characters, strings and decimal numbers, position (%n), field width and precision.
-int vfwprintf(FILE *f, const wchar_t *filter, va_list va);
-
-/// Print formated string. Some operating systems (Like NetBSD) do not have wide string formating
-/// functions.  Therefore we define our own. Not at all complete. Supports wide and narrow
-/// characters, strings and decimal numbers, position (%n), field width and precision.
-int vswprintf(wchar_t *out, size_t n, const wchar_t *filter, va_list va);
-#endif
-
 #ifndef HAVE_FGETWC
 // Fallback implementation of fgetwc.
 wint_t fgetwc(FILE *stream);

@@ -76,11 +76,6 @@ int wcsncasecmp_use_weak(const wchar_t *s1, const wchar_t *s2, size_t n);
 wchar_t *wcsndup(const wchar_t *in, size_t c);
 #endif
 
-/// Converts from wide char to digit in the specified base. If d is not a valid digit in the
-/// specified base, return -1. This is a helper function for wcstol, but it is useful itself, so it
-/// is exported.
-long convert_digit(wchar_t d, int base);
-
 #ifndef HAVE_WCSLCAT
 /// Appends src to string dst of size siz (unlike wcsncat, siz is the full size of dst, not space
 /// left).  At most siz-1 characters will be copied.  Always NUL terminates (unless siz <=

@@ -765,4 +765,8 @@ extern "C" {
 __attribute__((noinline)) void debug_thread_error(void);
 }
 
+/// Converts from wide char to digit in the specified base. If d is not a valid digit in the
+/// specified base, return -1.
+long convert_digit(wchar_t d, int base);
+
 #endif

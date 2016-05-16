@@ -1919,3 +1919,19 @@ wchar_t **make_null_terminated_array(const wcstring_list_t &lst) {
 char **make_null_terminated_array(const std::vector<std::string> &lst) {
     return make_null_terminated_array_helper(lst);
 }
+
+long convert_digit(wchar_t d, int base) {
+    long res = -1;
+    if ((d <= L'9') && (d >= L'0')) {
+        res = d - L'0';
+    } else if ((d <= L'z') && (d >= L'a')) {
+        res = d + 10 - L'a';
+    } else if ((d <= L'Z') && (d >= L'A')) {
+        res = d + 10 - L'A';
+    }
+    if (res >= base) {
+        res = -1;
+    }
+
+    return res;
+}

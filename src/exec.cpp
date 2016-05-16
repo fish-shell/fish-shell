@@ -948,7 +948,7 @@ void exec_job(parser_t &parser, job_t *j) {
                             bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(),
                                                                  errbuff.data(), errbuff.size());
                             if (!builtin_io_done && errno != EPIPE) {
-                                show_stackframe();
+                                show_stackframe(L'E');
                             }
                             fork_was_skipped = true;
                         }

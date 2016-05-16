@@ -309,11 +309,12 @@ static int read_init(const struct config_paths_t &paths) {
     return 1;
 }
 
-/// Parse the argument list, return the index of the first non-switch arguments.
+/// Parse the argument list, return the index of the first non-flag arguments.
 static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds) {
-    const char *short_opts = "+hilnvc:p:d:";
+    const char *short_opts = "+hilnvc:p:d:D:";
     const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
                                        {"debug-level", required_argument, NULL, 'd'},
+                                       {"debug-stack-frames", required_argument, NULL, 'D'},
                                        {"interactive", no_argument, NULL, 'i'},
                                        {"login", no_argument, NULL, 'l'},
                                        {"no-execute", no_argument, NULL, 'n'},
@@ -343,7 +344,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
                 if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
                     debug_level = (int)tmp;
                 } else {
-                    fwprintf(stderr, _(L"Invalid value '%s' for debug level switch"), optarg);
+                    fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
                     exit(1);
                 }
                 break;
@@ -372,6 +373,21 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
             case 'v': {
                 fwprintf(stdout, _(L"%s, version %s\n"), PACKAGE_NAME, get_fish_version());
                 exit(0);
+            }
+            case 'D': {
+                char *end;
+                long tmp;
+
+                errno = 0;
+                tmp = strtol(optarg, &end, 10);
+
+                if (tmp > 0 && tmp <= 128 && !*end && !errno) {
+                    debug_stack_frames = (int)tmp;
+                } else {
+                    fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
+                    exit(1);
+                }
+                break;
             }
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.

@@ -2,6 +2,8 @@
 #include "config.h"
 
 #include <assert.h>
+#include <cxxabi.h>
+#include <dlfcn.h>
 #include <errno.h>
 #include <limits.h>
 #include <locale.h>
@@ -49,12 +51,16 @@ static bool thread_assertions_configured_for_testing = false;
 
 wchar_t ellipsis_char;
 wchar_t omitted_newline_char;
-
 bool g_profiling_active = false;
-
 const wchar_t *program_name;
+int debug_level = 1;         // default maximum debug output level (errors and warnings)
+int debug_stack_frames = 0;  // default number of stack frames to show on debug() calls
 
-int debug_level = 1;
+/// This allows us to notice when we've forked.
+static pid_t initial_pid = 0;
+
+/// Be able to restore the term's foreground process group.
+static pid_t initial_foreground_process_group = -1;
 
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
@@ -65,18 +71,53 @@ static rwlock_t termsize_rwlock;
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
 
-void show_stackframe() {
+// This function produces a stack backtrace with demangled function & method names. It is based on
+// https://gist.github.com/fmela/591333 but adapted to the style of the fish project.
+static const wcstring_list_t __attribute__((noinline))
+demangled_backtrace(int max_frames, int skip_levels) {
+    void *callstack[128];
+    const int n_max_frames = sizeof(callstack) / sizeof(callstack[0]);
+    int n_frames = backtrace(callstack, n_max_frames);
+    char **symbols = backtrace_symbols(callstack, n_frames);
+    wchar_t text[1024];
+    std::vector<wcstring> backtrace_text;
+
+    if (skip_levels + max_frames < n_frames) n_frames = skip_levels + max_frames;
+
+    for (int i = skip_levels; i < n_frames; i++) {
+        Dl_info info;
+        if (dladdr(callstack[i], &info) && info.dli_sname) {
+            char *demangled = NULL;
+            int status = -1;
+            if (info.dli_sname[0] == '_')
+                demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+            swprintf(text, sizeof(text) / sizeof(wchar_t), L"%-3d %s + %td", i - skip_levels,
+                     status == 0 ? demangled : info.dli_sname == 0 ? symbols[i] : info.dli_sname,
+                     (char *)callstack[i] - (char *)info.dli_saddr);
+            free(demangled);
+        } else {
+            swprintf(text, sizeof(text) / sizeof(wchar_t), L"%-3d %s", i - skip_levels, symbols[i]);
+        }
+        backtrace_text.push_back(text);
+    }
+    free(symbols);
+    return backtrace_text;
+}
+
+static void debug_shared(const wchar_t msg_level, const wcstring &msg);
+void __attribute__((noinline)) show_stackframe(const wchar_t msg_level, int frame_count,
+                                               int skip_levels) {
     ASSERT_IS_NOT_FORKED_CHILD();
 
     // Hack to avoid showing backtraces in the tester.
     if (program_name && !wcscmp(program_name, L"(ignore)")) return;
 
-    void *trace[32];
-    int trace_size = 0;
-
-    trace_size = backtrace(trace, 32);
-    debug(0, L"Backtrace:");
-    backtrace_symbols_fd(trace, trace_size, STDERR_FILENO);
+    if (frame_count < 1) frame_count = 999;
+    debug_shared(msg_level, L"Backtrace:");
+    std::vector<wcstring> bt = demangled_backtrace(frame_count, skip_levels + 2);
+    for (int i = 0; i < bt.size(); i++) {
+        debug_shared(msg_level, bt[i]);
+    }
 }
 
 int fgetws2(wcstring *s, FILE *f) {
@@ -493,23 +534,34 @@ static bool should_debug(int level) {
     return true;
 }
 
-static void debug_shared(const wcstring &msg) {
-    const wcstring sb = wcstring(program_name) + L": " + msg;
-    fwprintf(stderr, L"%ls", reformat_for_screen(sb).c_str());
+static void debug_shared(const wchar_t level, const wcstring &msg) {
+    pid_t current_pid = getpid();
+
+    if (current_pid == initial_pid) {
+        fwprintf(stderr, L"<%lc> %ls: %ls\n", (unsigned long)level, program_name, msg.c_str());
+    } else {
+        fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", (unsigned long)level, program_name, current_pid,
+                 msg.c_str());
+    }
 }
 
-void debug(int level, const wchar_t *msg, ...) {
+static wchar_t level_char[] = {L'E', L'W', L'2', L'3', L'4', L'5'};
+void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...) {
     if (!should_debug(level)) return;
     int errno_old = errno;
     va_list va;
     va_start(va, msg);
     wcstring local_msg = vformat_string(msg, va);
     va_end(va);
-    debug_shared(local_msg);
+    const wchar_t msg_level = level <= 5 ? level_char[level] : L'9';
+    debug_shared(msg_level, local_msg);
+    if (debug_stack_frames > 0) {
+        show_stackframe(msg_level, debug_stack_frames, 1);
+    }
     errno = errno_old;
 }
 
-void debug(int level, const char *msg, ...) {
+void __attribute__((noinline)) debug(int level, const char *msg, ...) {
     if (!should_debug(level)) return;
     int errno_old = errno;
     char local_msg[512];
@@ -517,7 +569,11 @@ void debug(int level, const char *msg, ...) {
     va_start(va, msg);
     vsnprintf(local_msg, sizeof local_msg, msg, va);
     va_end(va);
-    debug_shared(str2wcstring(local_msg));
+    const wchar_t msg_level = level <= 5 ? level_char[level] : L'9';
+    debug_shared(msg_level, str2wcstring(local_msg));
+    if (debug_stack_frames > 0) {
+        show_stackframe(msg_level, debug_stack_frames, 1);
+    }
     errno = errno_old;
 }
 
@@ -1470,7 +1526,7 @@ int create_directory(const wcstring &d) {
 }
 
 __attribute__((noinline)) void bugreport() {
-    debug(1, _(L"This is a bug. Break on bugreport to debug."
+    debug(1, _(L"This is a bug. Break on bugreport to debug. "
                L"If you can reproduce it, please send a bug report to %s."),
           PACKAGE_BUGREPORT);
 }
@@ -1630,12 +1686,6 @@ void configure_thread_assertions_for_testing(void) {
     thread_assertions_configured_for_testing = true;
 }
 
-/// Notice when we've forked.
-static pid_t initial_pid = 0;
-
-/// Be able to restore the term's foreground process group.
-static pid_t initial_foreground_process_group = -1;
-
 bool is_forked_child(void) {
     // Just bail if nobody's called setup_fork_guards, e.g. some of our tools.
     if (!initial_pid) return false;
@@ -1712,14 +1762,14 @@ void assert_is_locked(void *vmutex, const char *who, const char *caller) {
 
 void scoped_lock::lock(void) {
     assert(!locked);
-    assert(!is_forked_child());
+    ASSERT_IS_NOT_FORKED_CHILD();
     VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_lock(lock_obj));
     locked = true;
 }
 
 void scoped_lock::unlock(void) {
     assert(locked);
-    assert(!is_forked_child());
+    ASSERT_IS_NOT_FORKED_CHILD();
     VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_unlock(lock_obj));
     locked = false;
 }
@@ -1736,35 +1786,35 @@ scoped_lock::~scoped_lock() {
 
 void scoped_rwlock::lock(void) {
     assert(!(locked || locked_shared));
-    assert(!is_forked_child());
+    ASSERT_IS_NOT_FORKED_CHILD();
     VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_rdlock(rwlock_obj));
     locked = true;
 }
 
 void scoped_rwlock::unlock(void) {
     assert(locked);
-    assert(!is_forked_child());
+    ASSERT_IS_NOT_FORKED_CHILD();
     VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
     locked = false;
 }
 
 void scoped_rwlock::lock_shared(void) {
     assert(!(locked || locked_shared));
-    assert(!is_forked_child());
+    ASSERT_IS_NOT_FORKED_CHILD();
     VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_wrlock(rwlock_obj));
     locked_shared = true;
 }
 
 void scoped_rwlock::unlock_shared(void) {
     assert(locked_shared);
-    assert(!is_forked_child());
+    ASSERT_IS_NOT_FORKED_CHILD();
     VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
     locked_shared = false;
 }
 
 void scoped_rwlock::upgrade(void) {
     assert(locked_shared);
-    assert(!is_forked_child());
+    ASSERT_IS_NOT_FORKED_CHILD();
     VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
     locked = false;
     VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_wrlock(rwlock_obj));

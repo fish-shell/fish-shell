@@ -161,22 +161,6 @@ wchar_t *wcsndup(const wchar_t *in, size_t c) {
 }
 #endif
 
-long convert_digit(wchar_t d, int base) {
-    long res = -1;
-    if ((d <= L'9') && (d >= L'0')) {
-        res = d - L'0';
-    } else if ((d <= L'z') && (d >= L'a')) {
-        res = d + 10 - L'a';
-    } else if ((d <= L'Z') && (d >= L'A')) {
-        res = d + 10 - L'A';
-    }
-    if (res >= base) {
-        res = -1;
-    }
-
-    return res;
-}
-
 #ifndef HAVE_WCSLCAT
 
 /*$OpenBSD: strlcat.c,v 1.11 2003/06/17 21:56:24 millert Exp $*/

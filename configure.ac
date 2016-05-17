@@ -412,6 +412,7 @@ AC_TRY_LINK(
     #if HAVE_LIBINTL_H
     #include <libintl.h>
     #endif
+    #include <stdlib.h>
   ],
   [
     extern int  _nl_msg_cat_cntr;

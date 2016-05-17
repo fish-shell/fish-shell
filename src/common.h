@@ -175,6 +175,9 @@ extern wchar_t omitted_newline_char;
 /// it will not be printed.
 extern int debug_level;
 
+/// How many stack frames to show when a debug() call is made.
+extern int debug_stack_frames;
+
 /// Profiling flag. True if commands should be profiled.
 extern bool g_profiling_active;
 
@@ -192,7 +195,7 @@ void write_ignore(int fd, const void *buff, size_t count);
     if (!(arg)) {                                                                         \
         debug(0, "function %s called with null value for argument %s. ", __func__, #arg); \
         bugreport();                                                                      \
-        show_stackframe();                                                                \
+        show_stackframe(L'E');                                                            \
         return retval;                                                                    \
     }
 
@@ -200,7 +203,7 @@ void write_ignore(int fd, const void *buff, size_t count);
 #define FATAL_EXIT()                        \
     {                                       \
         char exit_read_buff;                \
-        show_stackframe();                  \
+        show_stackframe(L'E');              \
         read_ignore(0, &exit_read_buff, 1); \
         exit_without_destructors(1);        \
     }
@@ -219,7 +222,7 @@ void write_ignore(int fd, const void *buff, size_t count);
     if (signal_is_blocked()) {                                             \
         debug(0, "function %s called while blocking signals. ", __func__); \
         bugreport();                                                       \
-        show_stackframe();                                                 \
+        show_stackframe(L'E');                                             \
         return retval;                                                     \
     }
 
@@ -234,7 +237,7 @@ void write_ignore(int fd, const void *buff, size_t count);
 #define contains(str, ...) contains_internal(str, 0, __VA_ARGS__, NULL)
 
 /// Print a stack trace to stderr.
-void show_stackframe();
+void show_stackframe(const wchar_t msg_level, int frame_count = -1, int skip_levels = 0);
 
 /// Read a line from the stream f into the string. Returns the number of bytes read or -1 on
 /// failure.
@@ -485,8 +488,6 @@ class null_terminated_array_t {
 void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr,
                                   null_terminated_array_t<char> *output);
 
-bool is_forked_child();
-
 class mutex_lock_t {
    public:
     pthread_mutex_t mutex;
@@ -668,8 +669,8 @@ ssize_t read_loop(int fd, void *buff, size_t count);
 ///
 /// will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that
 /// program_name is 'fish'.
-void debug(int level, const char *msg, ...);
-void debug(int level, const wchar_t *msg, ...);
+void __attribute__((noinline)) debug(int level, const char *msg, ...);
+void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...);
 
 /// Replace special characters with backslash escape sequences. Newline is replaced with \n, etc.
 ///

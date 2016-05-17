@@ -25,4 +25,6 @@ The following options are available:
 
 - `-v` or `--version` display version and exit
 
+- `-D` or `--debug-stack-frames=DEBUG_LEVEL` specify how many stack frames to display when debug messages are written. The default is zero. A value of 3 or 4 is usually sufficient to gain insight into how a given debug call was reached but you can specify a value up to 128.
+
 The fish exit status is generally the exit status of the last foreground command. If fish is exiting because of a parse error, the exit status is 127.

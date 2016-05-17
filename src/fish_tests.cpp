@@ -3527,7 +3527,7 @@ static void test_highlighting(void) {
         do_test(expected_colors.size() == text.size());
 
         std::vector<highlight_spec_t> colors(text.size());
-        highlight_shell(text, colors, 20, NULL, env_vars_snapshot_t());
+        highlight_shell(text, colors, 20, NULL, env_vars_snapshot_t::current());
 
         if (expected_colors.size() != colors.size()) {
             err(L"Color vector has wrong size! Expected %lu, actual %lu", expected_colors.size(),

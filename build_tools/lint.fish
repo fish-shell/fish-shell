@@ -48,10 +48,11 @@ if test $all = yes
 else
     # We haven't been asked to lint all the source. If there are uncommitted
     # changes lint those, else lint the files in the most recent commit.
-    set files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
+    # Select (cached files) (modified but not cached, and untracked files)
+    set files (git diff-index --cached HEAD --name-only) (git ls-files --exclude-standard --others --modified)
     if not set -q files[1]
         # No pending changes so lint the files in the most recent commit.
-        set files (git show --word-diff=porcelain --name-only --pretty=oneline)[2..-1]
+        set files (git diff-tree --no-commit-id --name-only -r HEAD)
     end
 
     # Extract just the C/C++ files that exist.

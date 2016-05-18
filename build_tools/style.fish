@@ -34,12 +34,13 @@ if test $all = yes
 else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
     # those using `git clang-format`. Else reformat the files in the most recent commit.
-    set files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
+    # Select (cached files) (modified but not cached, and untracked files)
+    set files (git diff-index --cached HEAD --name-only) (git ls-files --exclude-standard --others --modified)
     if set -q files[1]
         set git_clang_format yes
     else
         # No pending changes so lint the files in the most recent commit.
-        set files (git show --name-only --pretty=oneline | tail --lines=+2)
+        set files (git diff-tree --no-commit-id --name-only -r HEAD)
     end
 
     # Extract just the C/C++ files that exist.

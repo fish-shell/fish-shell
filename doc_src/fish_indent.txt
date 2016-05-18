@@ -7,11 +7,13 @@ fish_indent [OPTIONS]
 
 \subsection fish_indent-description Description
 
-`fish_indent` is used to indent a piece of fish code. `fish_indent` reads commands from standard input and outputs them to standard output.
+`fish_indent` is used to indent a piece of fish code. `fish_indent` reads commands from standard input and outputs them to standard output or a specified file.
 
 The following options are available:
 
 - `-d` or `--dump` dumps information about the parsed fish commands to stderr
+
+- `-w` or `--write` indents a specified file and immediately writes to that file
 
 - `-i` or `--no-indent` do not indent commands; only reformat to one job per line
 

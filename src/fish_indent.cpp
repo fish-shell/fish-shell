@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <memory>
 #include <string>
 #include <vector>
+#include <poll.h>
 
 #include "color.h"
 #include "common.h"
@@ -342,11 +343,12 @@ int main(int argc, char *argv[]) {
     } output_type = output_type_plain_text;
     bool do_indent = true;
 
-    const char *short_opts = "+dhvi";
+    const char *short_opts = "+dhvwi";
     const struct option long_opts[] = {{"dump", no_argument, NULL, 'd'},
                                        {"no-indent", no_argument, NULL, 'i'},
                                        {"help", no_argument, NULL, 'h'},
                                        {"version", no_argument, NULL, 'v'},
+                                       {"write", no_argument, NULL, 'w'},
                                        {"html", no_argument, NULL, 1},
                                        {"ansi", no_argument, NULL, 2},
                                        {NULL, 0, NULL, 0}};
@@ -372,6 +374,10 @@ int main(int argc, char *argv[]) {
                 assert(0 && "Unreachable code reached");
                 break;
             }
+            case 'w': {
+                // write to argv or specified file here
+                break;
+            }
             case 'i': {
                 do_indent = false;
                 break;
@@ -391,7 +397,17 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    const wcstring src = read_file(stdin);
+    wcstring src;
+    struct pollfd fds;
+    int ret;
+    fds.fd = 0;
+    fds.events = POLLIN;
+    ret = poll(&fds, 1, 0);
+    if (ret == 0)
+        src = read_file(argv);
+    else
+        src = read_file(stdin);
+
     const wcstring output_wtext = prettify(src, do_indent);
 
     // Maybe colorize.

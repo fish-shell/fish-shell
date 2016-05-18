@@ -3,6 +3,8 @@
   These functions are used for storing and retrieving tab-completion data, as well as for performing
   tab-completion.
 */
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <pthread.h>
 #include <pwd.h>

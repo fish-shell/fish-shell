@@ -1,4 +1,6 @@
 // Library for pooling common strings.
+#include "config.h"  // IWYU pragma: keep
+
 #include <pthread.h>
 #include <stdbool.h>
 #include <stddef.h>

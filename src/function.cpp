@@ -2,6 +2,8 @@
 // autoloading functions in the $fish_function_path. Actual function evaluation is taken care of by
 // the parser and to some degree the builtin handling library.
 //
+#include "config.h"  // IWYU pragma: keep
+
 // IWYU pragma: no_include <type_traits>
 #include <dirent.h>
 #include <pthread.h>

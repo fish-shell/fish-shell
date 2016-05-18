@@ -1,6 +1,8 @@
 // Directory utilities. This library contains functions for locating configuration directories, for
 // testing if a command with a given name can be found in the PATH, and various other path-related
 // issues.
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <errno.h>
 #include <sys/stat.h>

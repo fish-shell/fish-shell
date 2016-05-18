@@ -1,4 +1,6 @@
 // Functions used for implementing the ulimit builtin.
+#include "config.h"  // IWYU pragma: keep
+
 #include <errno.h>
 #include <sys/resource.h>
 #include <wchar.h>

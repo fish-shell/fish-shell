@@ -1,3 +1,5 @@
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <fcntl.h>
 #include <limits.h>

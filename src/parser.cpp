@@ -1,4 +1,6 @@
 // The fish parser. Contains functions for parsing and evaluating code.
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>

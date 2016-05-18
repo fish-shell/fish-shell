@@ -6,6 +6,8 @@
 // carriage-return (\cM) and newline (\cJ).
 //
 // Type "exit" or "quit" to terminate the program.
+#include "config.h"  // IWYU pragma: keep
+
 #include <getopt.h>
 #include <locale.h>
 #include <signal.h>

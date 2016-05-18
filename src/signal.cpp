@@ -1,4 +1,6 @@
 // The library for various signal related issues.
+#include "config.h"  // IWYU pragma: keep
+
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>

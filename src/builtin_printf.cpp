@@ -48,6 +48,7 @@
 // David MacKenzie <djm@gnu.ai.mit.edu>
 
 // This file has been imported from source code of printf command in GNU Coreutils version 6.9.
+#include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
 #include <limits.h>

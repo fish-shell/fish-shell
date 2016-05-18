@@ -1,4 +1,5 @@
 // Various bug and feature tests. Compiled and run by make test.
+#include "config.h"  // IWYU pragma: keep
 
 // IWYU pragma: no_include <cstring>
 // IWYU pragma: no_include <cstddef>

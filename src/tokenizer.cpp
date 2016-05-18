@@ -1,5 +1,7 @@
 // A specialized tokenizer for tokenizing the fish language. In the future, the tokenizer should be
 // extended to support marks, tokenizing multiple strings and disposing of unused string segments.
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <fcntl.h>
 #include <limits.h>

@@ -2,6 +2,8 @@
 //
 // This library can be seen as a 'toolbox' for functions that are used in many places in fish and
 // that are somehow related to parsing the code.
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>

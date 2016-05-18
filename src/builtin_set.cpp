@@ -1,4 +1,6 @@
 // Functions used for implementing the set builtin.
+#include "config.h"  // IWYU pragma: keep
+
 #include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>

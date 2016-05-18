@@ -1,4 +1,6 @@
 // Functions having to do with parser keywords, like testing if a function is a block command.
+#include "config.h"  // IWYU pragma: keep
+
 #include "parser_keywords.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep

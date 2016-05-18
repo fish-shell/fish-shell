@@ -6,6 +6,8 @@
 //
 // Non-fatal errors are printed as soon as they are encountered; otherwise you would have to wait
 // for the execution to finish to see them.
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <errno.h>
 #include <stdarg.h>

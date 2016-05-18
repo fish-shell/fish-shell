@@ -1,4 +1,6 @@
 // Functions for setting and getting environment variables.
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <errno.h>
 #include <locale.h>

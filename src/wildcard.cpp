@@ -1,5 +1,7 @@
 // Fish needs it's own globbing implementation to support tab-expansion of globbed parameters. Also
 // provides recursive wildcards using **.
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>

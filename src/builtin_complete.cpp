@@ -1,4 +1,6 @@
 // Functions used for implementing the complete builtin.
+#include "config.h"  // IWYU pragma: keep
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <wchar.h>

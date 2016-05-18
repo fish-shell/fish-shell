@@ -1,4 +1,6 @@
 // Functions that we may safely call after fork().
+#include "config.h"  // IWYU pragma: keep
+
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>

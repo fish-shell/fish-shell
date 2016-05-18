@@ -2,6 +2,8 @@
 //
 // Works like the killring in emacs and readline. The killring is cut and paste with a memory of
 // previous cuts. It supports integration with the X clipboard.
+#include "config.h"  // IWYU pragma: keep
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <algorithm>

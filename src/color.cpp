@@ -1,4 +1,6 @@
 // Color class implementation.
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>

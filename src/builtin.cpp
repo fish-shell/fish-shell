@@ -15,6 +15,7 @@
 // Check the other builtin manuals for proper syntax.
 //
 // 4). Use 'git add doc_src/NAME.txt' to start tracking changes to the documentation file.
+#include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>
 #include <errno.h>

@@ -1,4 +1,6 @@
 // Functions for syntax highlighting.
+#include "config.h"  // IWYU pragma: keep
+
 // IWYU pragma: no_include <cstddef>
 #include <dirent.h>
 #include <errno.h>

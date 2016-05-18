@@ -1,4 +1,6 @@
 // Functions for performing sanity checks on the program state.
+#include "config.h"  // IWYU pragma: keep
+
 #include <unistd.h>
 
 #include "common.h"

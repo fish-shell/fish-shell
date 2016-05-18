@@ -1,4 +1,6 @@
 // Utilities for io redirection.
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <errno.h>
 #include <stddef.h>

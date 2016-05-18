@@ -1,3 +1,5 @@
+#include "config.h"  // IWYU pragma: keep
+
 // IWYU pragma: no_include <cstddef>
 #include <assert.h>
 #include <stddef.h>

@@ -1,4 +1,6 @@
 // Programmatic representation of fish code.
+#include "config.h"  // IWYU pragma: keep
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>

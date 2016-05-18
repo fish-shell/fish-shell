@@ -1,4 +1,6 @@
 // Helper functions for working with wcstring.
+#include "config.h"  // IWYU pragma: keep
+
 #include "wcstringutil.h"
 #include "common.h"
 

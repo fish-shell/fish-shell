@@ -13,6 +13,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#include "config.h"  // IWYU pragma: keep
+
 #include <stdint.h>  // IWYU pragma: keep
 #include <sys/types.h>
 #include <limits>

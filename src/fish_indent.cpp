@@ -27,7 +27,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <memory>
 #include <string>
 #include <vector>
-#include <poll.h>
 
 #include "color.h"
 #include "common.h"

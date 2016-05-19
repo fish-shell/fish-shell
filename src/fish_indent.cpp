@@ -344,12 +344,13 @@ int main(int argc, char *argv[]) {
     const char* output_location;
     bool do_indent = true;
 
-    const char *short_opts = "+dhvw:i";
+    const char *short_opts = "+dhvwW:i";
     const struct option long_opts[] = {{"dump", no_argument, NULL, 'd'},
                                        {"no-indent", no_argument, NULL, 'i'},
                                        {"help", no_argument, NULL, 'h'},
                                        {"version", no_argument, NULL, 'v'},
-                                       {"write", required_argument, NULL, 'w'},
+                                       {"write", no_argument, NULL, 'w'},
+                                       {"write-to", required_argument, NULL, 'W'},
                                        {"html", no_argument, NULL, 1},
                                        {"ansi", no_argument, NULL, 2},
                                        {NULL, 0, NULL, 0}};
@@ -376,6 +377,10 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 'w': {
+                output_type = output_type_file;
+                break;
+            }
+            case 'W': {
                 output_type = output_type_file;
                 output_location = optarg;
                 break;
@@ -410,6 +415,9 @@ int main(int argc, char *argv[]) {
         if (fh) {
             src = read_file(fh);
             fclose(fh);
+            if (output_location) {
+                output_location = *argv;
+            }
         } else {
             fwprintf(stderr, _(L"File could not be opened\n"), *argv);
             exit(1);
@@ -437,7 +445,7 @@ int main(int argc, char *argv[]) {
         case output_type_file: {
             FILE *fh = fopen(output_location, "w");
             if (fh) {
-                fputs(output_wtext, fh);
+                fputs(wcs2str(output_wtext), fh);
                 fclose(fh);
                 exit(0);
             } else {

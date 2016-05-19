@@ -116,13 +116,14 @@ function abbr --description "Manage abbreviations"
 
 	case 'show'
 		for i in $fish_user_abbreviations
+			set -l opt_double_dash
 			set -l kv (string split " " -m 1 -- $i)
 			set -l key $kv[1]
 			set -l value $kv[2]
 			
 			# Check to see if either key or value has a leading dash
 			# If so, we need to write --
-			string match -q -- '-*' $key $value; and set -l opt_double_dash '--'
+			string match -q -- '-*' $key $value; and set opt_double_dash '--'
 			echo abbr $opt_double_dash (string escape -- $key $value)
 		end
 		return 0

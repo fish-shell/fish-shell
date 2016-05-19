@@ -338,17 +338,19 @@ int main(int argc, char *argv[]) {
     // Types of output we support.
     enum {
         output_type_plain_text,
+        output_type_file,
         output_type_ansi,
         output_type_html
     } output_type = output_type_plain_text;
+    const char* output_location;
     bool do_indent = true;
 
-    const char *short_opts = "+dhvwi";
+    const char *short_opts = "+dhvw:i";
     const struct option long_opts[] = {{"dump", no_argument, NULL, 'd'},
                                        {"no-indent", no_argument, NULL, 'i'},
                                        {"help", no_argument, NULL, 'h'},
                                        {"version", no_argument, NULL, 'v'},
-                                       {"write", no_argument, NULL, 'w'},
+                                       {"write", required_argument, NULL, 'w'},
                                        {"html", no_argument, NULL, 1},
                                        {"ansi", no_argument, NULL, 2},
                                        {NULL, 0, NULL, 0}};
@@ -375,7 +377,8 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 'w': {
-                // write to argv or specified file here
+                output_type = output_type_file;
+                output_location = optarg;
                 break;
             }
             case 'i': {
@@ -397,16 +400,25 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    argc -= optind;
+    argv += optind;
+
     wcstring src;
-    struct pollfd fds;
-    int ret;
-    fds.fd = 0;
-    fds.events = POLLIN;
-    ret = poll(&fds, 1, 0);
-    if (ret == 0)
-        src = read_file(argv);
-    else
+    if (argc == 0) {
         src = read_file(stdin);
+    } else if (argc == 1) {
+        FILE *fh = fopen(*argv, "r");
+        if (fh) {
+            src = read_file(fh);
+            fclose(fh);
+        } else {
+            fwprintf(stderr, _(L"File could not be opened\n"), *argv);
+            exit(1);
+        }
+    } else {
+        fwprintf(stderr, _(L"Too many arguments\n"));
+        exit(1);
+    }
 
     const wcstring output_wtext = prettify(src, do_indent);
 
@@ -421,6 +433,18 @@ int main(int argc, char *argv[]) {
     switch (output_type) {
         case output_type_plain_text: {
             colored_output = no_colorize(output_wtext);
+            break;
+        }
+        case output_type_file: {
+            FILE *fh = fopen(output_location, "w");
+            if (fh) {
+                fputs(output_wtext, fh);
+                fclose(fh);
+                exit(0);
+            } else {
+                fwprintf(stderr, _(L"Could not write output\n"));
+                exit(1);
+            }
             break;
         }
         case output_type_ansi: {

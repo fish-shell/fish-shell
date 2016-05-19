@@ -39,6 +39,17 @@ function abbr --description "Manage abbreviations"
 		set -e argv[1]
 	end
 
+	# If run with no options, treat it like --add if we have an argument, or
+	# --show if we do not have an argument
+	if not set -q mode[1]
+		if set -q argv[1]
+			set mode add
+			set needs_arg multi
+		else
+			set mode show
+		end
+	end
+
 	if test $needs_arg = single
 		set mode_arg $argv[1]
 		set needs_arg no
@@ -53,18 +64,6 @@ function abbr --description "Manage abbreviations"
 		return 1
 	end
 	
-	# If run with no options, treat it like --add if we have an argument, or
-	# --show if we do not have an argument
-	if test -z "$mode"
-		if set -q argv[1]
-			set mode 'add'
-			set mode_arg $argv
-			set -e argv
-		else
-			set mode 'show'
-		end
-	end
-
 	# none of our modes want any excess arguments
 	if set -q argv[1]
 		printf ( _ "%s: Unexpected argument -- %s\n" ) abbr $argv[1] >&2

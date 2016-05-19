@@ -8,8 +8,8 @@ function abbr --description "Manage abbreviations"
 		if test $needs_arg = single
 			set mode_arg $argv[1]
 			set needs_arg no
-		else if test $needs_arg = coalesce
-			set mode_arg "$argv"
+		else if test $needs_arg = multi
+			set mode_arg $argv
 			set needs_arg no
 			set -e argv
 		else
@@ -20,7 +20,7 @@ function abbr --description "Manage abbreviations"
 				return 0
 			case '-a' '--add'
 				set new_mode add
-				set needs_arg coalesce
+				set needs_arg multi
 			case '-e' '--erase'
 				set new_mode erase
 				set needs_arg single
@@ -57,7 +57,7 @@ function abbr --description "Manage abbreviations"
 	if test -z "$mode"
 		if set -q argv[1]
 			set mode 'add'
-			set mode_arg "$argv"
+			set mode_arg $argv
 			set -e argv
 		else
 			set mode 'show'
@@ -72,24 +72,23 @@ function abbr --description "Manage abbreviations"
 
 	switch $mode
 	case 'add'
-		# Convert from old "key=value" to new "key value" syntax
-		if string match -qr '^[^ ]+=' -- $mode_arg
-			set mode_arg (string replace "=" " " -- $mode_arg)
+		# Convert from old "key=value" syntax
+		# TODO: This should be removed later
+		if not set -q mode_arg[2]; and string match -qr '^[^ ]+=' -- $mode_arg
+			set mode_arg (string split "=" -- $mode_arg)
 		end
 
 		# Bail out early if the exact abbr is already in
-		contains -- $mode_arg $fish_user_abbreviations; and return 0
-		set -l key
-		set -l value
-		set -l kv (__fish_abbr_split $mode_arg)
-		set key $kv[1]
-		set value $kv[2]
-		# ensure the key contains at least one non-space character
-		if not string match -qr "[^\s]" -- $key
-			printf ( _ "%s: abbreviation must have a non-empty key\n" ) abbr >&2
+		contains -- "$mode_arg" $fish_user_abbreviations; and return 0
+		set -l key $mode_arg[1]
+		set -e mode_arg[1]
+		set -l value "$mode_arg"
+		# Because we later store "$key $value", there can't be any spaces in the key
+		if string match -q "* *" -- $key
+			printf ( _ "%s: abbreviation cannot have spaces in the key\n" ) abbr >&2
 			return 1
 		end
-		if not string match -qr "\w" -- $value
+		if test -z "$value"
 			printf ( _ "%s: abbreviation must have a value\n" ) abbr >&2
 			return 1
 		end
@@ -102,22 +101,21 @@ function abbr --description "Manage abbreviations"
 			# and therefore work properly if someone sets this as a global variable
 			set -U fish_user_abbreviations
 		end
-		set fish_user_abbreviations $fish_user_abbreviations $mode_arg
+		set fish_user_abbreviations $fish_user_abbreviations "$key $value"
 		return 0
 
 	case 'erase'
-		set -l key (__fish_abbr_split $mode_arg)[1]
-		if set -l idx (__fish_abbr_get_by_key $key)
+		if set -l idx (__fish_abbr_get_by_key $mode_arg)
 			set -e fish_user_abbreviations[$idx]
 			return 0
 		else
-			printf ( _ "%s: no such abbreviation '%s'\n" ) abbr $key >&2
+			printf ( _ "%s: no such abbreviation '%s'\n" ) abbr $mode_arg >&2
 			return 2
 		end
 
 	case 'show'
 		for i in $fish_user_abbreviations
-			set -l kv (__fish_abbr_split $i)
+			set -l kv (string split " " -m 1 -- $i)
 			set -l key $kv[1]
 			set -l value $kv[2]
 			
@@ -130,7 +128,7 @@ function abbr --description "Manage abbreviations"
 
 	case 'list'
 		for i in $fish_user_abbreviations
-			set -l key (__fish_abbr_split $i)[1]
+			set -l key (string split " " -m 1 -- $i)[1]
 			printf "%s\n" $key
 		end
 		return 0
@@ -153,9 +151,4 @@ function __fish_abbr_get_by_key
 		return 0
 	end
 	return 1
-end
-
-function __fish_abbr_split -a input
-	# Because we always save space-separated, we can be certain that this will match
-	string split " " -m 1 -- $input
 end

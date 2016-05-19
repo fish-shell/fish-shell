@@ -35,3 +35,5 @@ abbr -e '--__abbr3'
 # Ensure we are not recognizing later "=" as separators
 abbr d2 env a=b banana
 abbr -l | string match -q d2; or echo "= test failed"
+
+abbr "a b c" "d e f"; or true

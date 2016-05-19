@@ -141,8 +141,8 @@ complete -f -c busctl -n "__fish_seen_subcommand_from list" -l show-machine -d '
 complete -x -c busctl -n "__fish_seen_subcommand_from list status" -l augment-creds -a "yes no"
 complete -f -c busctl -l user
 complete -f -c busctl -l system
-complete -f -c busctl -s H -l host= -a "(__fish_print_hostnames)"
-complete -f -c busctl -s M -l machine= -a "(__fish_systemd_machines)"
+complete -f -c busctl -s H -l host -a "(__fish_print_hostnames)"
+complete -f -c busctl -s M -l machine -a "(__fish_systemd_machines)"
 complete -f -c busctl -l no-pager
 complete -f -c busctl -l no-legend
 complete -f -c busctl -s h -l help

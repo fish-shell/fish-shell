@@ -258,6 +258,18 @@ static void test_format(void) {
     do_test(!strcmp(buff1, buff2));
 }
 
+/// Helper to convert a narrow string to a sequence of hex digits.
+static char *str2hex(const char *input) {
+    char *output = (char *)malloc(5 * strlen(input) + 1);
+    char *p = output;
+    for (; *input; input++) {
+        sprintf(p, "0x%02X ", (int)*input & 0xFF);
+        p += 5;
+    }
+    *p = '\0';
+    return output;
+}
+
 /// Test wide/narrow conversion by creating random strings and verifying that the original string
 /// comes back thorugh double conversion.
 static void test_convert() {
@@ -318,8 +330,13 @@ static void test_convert() {
         }
 
         if (strcmp(o, n)) {
-            err(L"Line %d - %d: Conversion cycle of string %s produced different string %s",
-                __LINE__, i, o, n);
+            char *o2 = str2hex(o);
+            char *n2 = str2hex(n);
+            err(L"Line %d - %d: Conversion cycle of string:\n%4d chars: %s\n"
+                L"produced different string:\n%4d chars: %s",
+                __LINE__, i, strlen(o), o2, strlen(n), n2);
+            free(o2);
+            free(n2);
         }
         free((void *)n);
     }
@@ -3882,8 +3899,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    setlocale(LC_ALL, "");
-    // srand(time(0));
+    srand(time(0));
     configure_thread_assertions_for_testing();
 
     program_name = L"(ignore)";

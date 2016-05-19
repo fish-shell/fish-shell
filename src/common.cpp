@@ -109,8 +109,12 @@ void __attribute__((noinline)) show_stackframe(const wchar_t msg_level, int fram
                                                int skip_levels) {
     ASSERT_IS_NOT_FORKED_CHILD();
 
+    // TODO: Decide if this is still needed. I'm commenting it out because it caused me some grief
+    // while trying to debug a test failure. And the tests run just fine without spurious failures
+    // if this check is not done.
+    //
     // Hack to avoid showing backtraces in the tester.
-    if (program_name && !wcscmp(program_name, L"(ignore)")) return;
+    // if (program_name && !wcscmp(program_name, L"(ignore)")) return;
 
     if (frame_count < 1) frame_count = 999;
     debug_shared(msg_level, L"Backtrace:");
@@ -177,24 +181,32 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
 
     mbstate_t state = {};
     while (in_pos < in_len) {
-        wchar_t wc = 0;
-        size_t ret = mbrtowc(&wc, &in[in_pos], in_len - in_pos, &state);
-
-        // Determine whether to encode this characters with our crazy scheme.
         bool use_encode_direct = false;
-        if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
+        size_t ret;
+        wchar_t wc = 0;
+
+        if ((in[in_pos] & 0xF8) == 0xF8) {
+            // Protect against broken mbrtowc() implementations which attempt to encode UTF-8
+            // sequences longer than four bytes (e.g., OS X Snow Leopard).
             use_encode_direct = true;
-        } else if (wc == INTERNAL_SEPARATOR) {
-            use_encode_direct = true;
-        } else if (ret == (size_t)-2) {
-            // Incomplete sequence.
-            use_encode_direct = true;
-        } else if (ret == (size_t)-1) {
-            // Invalid data.
-            use_encode_direct = true;
-        } else if (ret > in_len - in_pos) {
-            // Other error codes? Terrifying, should never happen.
-            use_encode_direct = true;
+        } else {
+            ret = mbrtowc(&wc, &in[in_pos], in_len - in_pos, &state);
+
+            // Determine whether to encode this characters with our crazy scheme.
+            if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
+                use_encode_direct = true;
+            } else if (wc == INTERNAL_SEPARATOR) {
+                use_encode_direct = true;
+            } else if (ret == (size_t)-2) {
+                // Incomplete sequence.
+                use_encode_direct = true;
+            } else if (ret == (size_t)-1) {
+                // Invalid data.
+                use_encode_direct = true;
+            } else if (ret > in_len - in_pos) {
+                // Other error codes? Terrifying, should never happen.
+                use_encode_direct = true;
+            }
         }
 
         if (use_encode_direct) {
@@ -221,7 +233,7 @@ wcstring str2wcstring(const char *in, size_t len) { return str2wcs_internal(in, 
 wcstring str2wcstring(const char *in) { return str2wcs_internal(in, strlen(in)); }
 
 wcstring str2wcstring(const std::string &in) {
-    /* Handles embedded nulls! */
+    // Handles embedded nulls!
     return str2wcs_internal(in.data(), in.size());
 }
 

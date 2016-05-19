@@ -62,13 +62,20 @@ char *tparm_solaris_kludge(char *str, ...);
 /// these functions only exist on 10.7+.
 ///
 /// On other platforms, use what's detected at build time.
-#if __APPLE__ && __DARWIN_C_LEVEL >= 200809L
+#if __APPLE__
+#if __DARWIN_C_LEVEL >= 200809L
 wchar_t *wcsdup_use_weak(const wchar_t *);
 int wcscasecmp_use_weak(const wchar_t *, const wchar_t *);
 int wcsncasecmp_use_weak(const wchar_t *s1, const wchar_t *s2, size_t n);
 #define wcsdup(a) wcsdup_use_weak((a))
 #define wcscasecmp(a, b) wcscasecmp_use_weak((a), (b))
 #define wcsncasecmp(a, b, c) wcsncasecmp_use_weak((a), (b), (c))
+#else
+wchar_t *wcsdup(const wchar_t *in);
+int wcscasecmp(const wchar_t *a, const wchar_t *b);
+int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
+wchar_t *wcsndup(const wchar_t *in, size_t c);
+#endif
 #endif  //__APPLE__
 
 #ifndef HAVE_WCSNDUP

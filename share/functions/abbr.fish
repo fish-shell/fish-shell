@@ -5,16 +5,8 @@ function abbr --description "Manage abbreviations"
 	set -l mode_arg
 	set -l needs_arg no
 	while set -q argv[1]
-		if test $needs_arg = single
-			set mode_arg $argv[1]
-			set needs_arg no
-		else if test $needs_arg = multi
-			set mode_arg $argv
-			set needs_arg no
-			set -e argv
-		else
-			set -l new_mode
-			switch $argv[1]
+		set -l new_mode
+		switch $argv[1]
 			case '-h' '--help'
 				__fish_print_help abbr
 				return 0
@@ -36,16 +28,25 @@ function abbr --description "Manage abbreviations"
 				return 1
 			case '*'
 				break
-			end
-			if test -n "$mode" -a -n "$new_mode"
-				# we're trying to set two different modes
-				printf ( _ "%s: %s cannot be specified along with %s\n" ) abbr $argv[1] $mode_flag >&2
-				return 1
-			end
-			set mode $new_mode
-			set mode_flag $argv[1]
 		end
+		if test -n "$mode" -a -n "$new_mode"
+			# we're trying to set two different modes
+			printf ( _ "%s: %s cannot be specified along with %s\n" ) abbr $argv[1] $mode_flag >&2
+			return 1
+		end
+		set mode $new_mode
+		set mode_flag $argv[1]
 		set -e argv[1]
+	end
+
+	if test $needs_arg = single
+		set mode_arg $argv[1]
+		set needs_arg no
+		set -e argv[1]
+	else if test $needs_arg = multi
+		set mode_arg $argv
+		set needs_arg no
+		set -e argv
 	end
 	if test $needs_arg != no
 		printf ( _ "%s: option requires an argument -- %s\n" ) abbr $mode_flag >&2

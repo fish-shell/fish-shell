@@ -70,7 +70,9 @@ static volatile bool termsize_valid;
 static rwlock_t termsize_rwlock;
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
+static void debug_shared(const wchar_t msg_level, const wcstring &msg);
 
+#ifdef HAVE_BACKTRACE_SYMBOLS
 // This function produces a stack backtrace with demangled function & method names. It is based on
 // https://gist.github.com/fmela/591333 but adapted to the style of the fish project.
 static const wcstring_list_t __attribute__((noinline))
@@ -104,7 +106,6 @@ demangled_backtrace(int max_frames, int skip_levels) {
     return backtrace_text;
 }
 
-static void debug_shared(const wchar_t msg_level, const wcstring &msg);
 void __attribute__((noinline)) show_stackframe(const wchar_t msg_level, int frame_count,
                                                int skip_levels) {
     ASSERT_IS_NOT_FORKED_CHILD();
@@ -123,6 +124,14 @@ void __attribute__((noinline)) show_stackframe(const wchar_t msg_level, int fram
         debug_shared(msg_level, bt[i]);
     }
 }
+
+#else // HAVE_BACKTRACE_SYMBOLS
+
+void __attribute__((noinline)) show_stackframe(const wchar_t msg_level, int frame_count,
+                                               int skip_levels) {
+    debug_shared(msg_level, L"Sorry, but your system does not support backtraces");
+}
+#endif // HAVE_BACKTRACE_SYMBOLS
 
 int fgetws2(wcstring *s, FILE *f) {
     int i = 0;

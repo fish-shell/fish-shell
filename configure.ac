@@ -217,7 +217,6 @@ CXXFLAGS="$CXXFLAGS -Wall -Wno-sign-compare"
 #
 # This is needed in order to get the really cool backtraces on Linux
 #
-
 AC_MSG_CHECKING([for -rdynamic linker flag])
 prev_LDFLAGS="$LDFLAGS"
 LDFLAGS="$LDFLAGS -rdynamic"
@@ -268,7 +267,6 @@ AC_SEARCH_LIBS( shm_open, rt, , [AC_MSG_ERROR([Cannot find the rt library, neede
 AC_SEARCH_LIBS( pthread_create, pthread, , [AC_MSG_ERROR([Cannot find the pthread library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses tinfo curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
 AC_SEARCH_LIBS( [nan], [m], [AC_DEFINE( [HAVE_NAN], [1], [Define to 1 if you have the nan function])] )
-AC_SEARCH_LIBS( [backtrace_symbols_fd], [execinfo] )
 AC_SEARCH_LIBS( [dladdr], [dl] )
 
 if test x$local_gettext != xno; then
@@ -313,7 +311,7 @@ AC_STRUCT_DIRENT_D_TYPE
 AC_CHECK_FUNCS( wcsndup )
 AC_CHECK_FUNCS( futimes )
 AC_CHECK_FUNCS( wcslcat wcslcpy lrand48_r killpg )
-AC_CHECK_FUNCS( backtrace backtrace_symbols_fd getifaddrs )
+AC_CHECK_FUNCS( backtrace_symbols getifaddrs )
 AC_CHECK_FUNCS( futimens clock_gettime )
 
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )

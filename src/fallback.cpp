@@ -332,14 +332,6 @@ int killpg(int pgr, int sig) {
 }
 #endif
 
-#ifndef HAVE_BACKTRACE
-int backtrace(void **buffer, int size) { return 0; }
-#endif
-
-#ifndef HAVE_BACKTRACE_SYMBOLS_FD
-char **backtrace_symbols_fd(void *const *buffer, int size, int fd) { return 0; }
-#endif
-
 #ifndef HAVE_NAN
 double nan(char *tagp) { return 0.0 / 0.0; }
 #endif

@@ -1058,7 +1058,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
                     // A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get
                     // told when it's exited, so we have to mark the process as failed.
-                    debug(2, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'\n",
+                    debug(2, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'",
                           g_fork_count, pid, actual_cmd, file ? file : L"<no file>");
                     if (pid == 0) {
                         job_mark_process_as_failed(j, p);

@@ -15,8 +15,6 @@ The following options are available:
 
 - `-w` or `--write` indents a specified file and immediately writes to that file
 
-- `-W` or `--write-to` does the same as `-w` or `--write`, however, it requires an argument what file to write to
-
 - `-i` or `--no-indent` do not indent commands; only reformat to one job per line
 
 - `-v` or `--version` displays the current fish version and then exits

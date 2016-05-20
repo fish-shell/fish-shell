@@ -344,13 +344,12 @@ int main(int argc, char *argv[]) {
     const char* output_location;
     bool do_indent = true;
 
-    const char *short_opts = "+dhvwW:i";
+    const char *short_opts = "+dhvwi";
     const struct option long_opts[] = {{"dump", no_argument, NULL, 'd'},
                                        {"no-indent", no_argument, NULL, 'i'},
                                        {"help", no_argument, NULL, 'h'},
                                        {"version", no_argument, NULL, 'v'},
                                        {"write", no_argument, NULL, 'w'},
-                                       {"write-to", required_argument, NULL, 'W'},
                                        {"html", no_argument, NULL, 1},
                                        {"ansi", no_argument, NULL, 2},
                                        {NULL, 0, NULL, 0}};
@@ -378,11 +377,6 @@ int main(int argc, char *argv[]) {
             }
             case 'w': {
                 output_type = output_type_file;
-                break;
-            }
-            case 'W': {
-                output_type = output_type_file;
-                output_location = optarg;
                 break;
             }
             case 'i': {
@@ -415,9 +409,7 @@ int main(int argc, char *argv[]) {
         if (fh) {
             src = read_file(fh);
             fclose(fh);
-            if (output_location) {
-                output_location = *argv;
-            }
+            output_location = *argv;
         } else {
             fwprintf(stderr, _(L"%s\n"), strerror(errno));
             exit(1);

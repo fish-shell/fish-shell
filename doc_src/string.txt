@@ -121,6 +121,12 @@ The following subcommands are available:
 >_ echo 'ok?' | string match '*\\?'
 >_ \outp{ok?}
 
+\subsection string-example-match-regex Match Regex Examples
+
+\fish{cli-dark}
+>_ string match -r 'cat|dog|fish' 'nice dog'
+\outp{dog}
+
 >_ string match -r -v "c.*[12]" {cat,dog}(seq 1 4)
 \outp{dog1}
 \outp{dog2}
@@ -129,12 +135,6 @@ The following subcommands are available:
 \outp{cat4}
 \outp{dog4}
 \endfish
-
-\subsection string-example-match-regex Match Regex Examples
-
-\fish{cli-dark}
->_ string match -r 'cat|dog|fish' 'nice dog'
-\outp{dog}
 
 >_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' \asis{2:34:56}
 \outp{2:34:56}

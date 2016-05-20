@@ -1,3 +1,21 @@
+# fish 2.3.0 (released May 20, 2016)
+
+There are no significant changes between 2.3.0 and 2.3b2.
+
+## Other notable fixes and improvements
+
+- `abbr` now allows non-letter keys (#2996).
+- Define a few extra colours on first start (#2987).
+- Multiple documentation updates.
+- Added completions for rmmod (#3007).
+- Improved completions for git (#2998).
+
+## Known issues
+
+- Interactive commands started from fish configuration files or from the `-c` option may, under certain circumstances, be started with incorrect terminal modes and fail to behave as expected. A fix is planned but requires further testing (#2619).
+
+---
+
 # fish 2.3b2 (released May 5, 2016)
 
 ## Significant changes
@@ -11,6 +29,8 @@
 - Fix the build on Cygwin (#2952) and RedHat Enterprise Linux/CentOS 5 (#2955).
 - Avoid confusing the terminal line driver with non-printing characters in `fish_title` (#2453).
 - Improved completions for busctl, git (#2585, #2879, #2984), and netctl.
+
+---
 
 # fish 2.3b1 (released April 19, 2016)
 
@@ -66,6 +86,8 @@
 - A few fixes to the Sorin theme
 - PWD shortening in the prompt can now be configured via the `fish_prompt_pwd_dir_length` variable, set to the length per path component (#2473)
 - fish no longer requires `/etc/fish/config.fish` to correctly start, and now ships a skeleton file that only contains some documentation (#2799)
+
+---
 
 # fish 2.2.0 (released July 12, 2015)
 

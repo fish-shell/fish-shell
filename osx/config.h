@@ -219,7 +219,7 @@
 #define PACKAGE_NAME "fish"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "fish 2.3b2-git"
+#define PACKAGE_STRING "fish 2.3.0-git"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "fish"
@@ -228,7 +228,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.3b2-git"
+#define PACKAGE_VERSION "2.3.0-git"
 
 /* The size of `wchar_t', as computed by sizeof. */
 #define SIZEOF_WCHAR_T 4
@@ -245,17 +245,49 @@
 /* Perform string translations with gettext */
 /* #undef USE_GETTEXT */
 
+/* Enable extensions on AIX 3, Interix.  */
+#ifndef _ALL_SOURCE
+# define _ALL_SOURCE 1
+#endif
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE 1
+#endif
+/* Enable threading extensions on Solaris.  */
+#ifndef _POSIX_PTHREAD_SEMANTICS
+# define _POSIX_PTHREAD_SEMANTICS 1
+#endif
+/* Enable extensions on HP NonStop.  */
+#ifndef _TANDEM_SOURCE
+# define _TANDEM_SOURCE 1
+#endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# define __EXTENSIONS__ 1
+#endif
+
+
 /* The size of wchar_t in bits. */
 #define WCHAR_T_BITS 32
 
+/* Define to 1 if on MINIX. */
+/* #undef _MINIX */
+
 /* Macro to enable additional prototypes under BSD */
 /* #undef _NETBSD_SOURCE */
+
+/* Define to 2 if the system does not provide POSIX.1 features except with
+   this defined. */
+/* #undef _POSIX_1_SOURCE */
+
+/* Define to 1 if you need to in order for `stat' and other things to work. */
+/* #undef _POSIX_SOURCE */
 
 /* Macro to enable additional prototypes under BSD */
 /* #undef __BSD_VISIBLE */
 
 /* Macro to enable additional prototypes under Solaris */
-/* #undef __EXTENSIONS__ */
+#define __EXTENSIONS__ 1
 
 #if __GNUC__ >= 3
 #ifndef __warn_unused

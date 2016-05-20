@@ -13,7 +13,7 @@ The following options are available:
 
 - `-d` or `--dump` dumps information about the parsed fish commands to stderr
 
-- `-w` or `--write` indents a specified file and immediatly writes to that file
+- `-w` or `--write` indents a specified file and immediately writes to that file
 
 - `-W` or `--write-to` does the same as `-w` or `--write`, however, it requires an argument what file to write to
 

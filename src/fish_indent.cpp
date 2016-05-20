@@ -419,7 +419,7 @@ int main(int argc, char *argv[]) {
                 output_location = *argv;
             }
         } else {
-            fwprintf(stderr, _(L"File could not be opened\n"), *argv);
+            fwprintf(stderr, _(L"%s\n"), strerror(errno));
             exit(1);
         }
     } else {
@@ -449,7 +449,7 @@ int main(int argc, char *argv[]) {
                 fclose(fh);
                 exit(0);
             } else {
-                fwprintf(stderr, _(L"Could not write output\n"));
+                fwprintf(stderr, _(L"%s\n"), strerror(errno));
                 exit(1);
             }
             break;

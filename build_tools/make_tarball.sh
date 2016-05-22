@@ -55,4 +55,4 @@ gzip "$path"
 
 # Output what we did, and the sha1 hash
 echo "Tarball written to $path".gz
-openssl sha1 "$path".gz
+openssl dgst -sha256 "$path".gz

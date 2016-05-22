@@ -158,25 +158,41 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # do nothing if the key bindings didn't actually change
         # This could be because the variable was set to the existing value
         # or because it was a local variable
-        if test "$fish_key_bindings" = "$__fish_active_key_bindings"
+        # If fish_key_bindings is empty on the first run, we still need to set the defaults
+        if test "$fish_key_bindings" = "$__fish_active_key_bindings" -a -n "$fish_key_bindings"
             return
+        end
+        # Check if fish_key_bindings is a valid function
+        # If not, either keep the previous bindings (if any) or revert to default
+        # Also print an error so the user knows
+        if not functions -q "$fish_key_bindings"
+            echo "There is no fish_key_bindings function called: '$fish_key_bindings'" >&2
+            if set -q __fish_active_key_bindings
+                echo "Keeping $__fish_active_key_bindings" >&2
+                return 1
+            else
+                echo "Reverting to default bindings" >&2
+                set fish_key_bindings fish_default_key_bindings
+                # Return because we are called again
+                return 0
+            end
         end
         set -g __fish_active_key_bindings "$fish_key_bindings"
         set -g fish_bind_mode default
         if test "$fish_key_bindings" = fish_default_key_bindings
-            fish_default_key_bindings
+            # Redirect stderr per #1155
+            fish_default_key_bindings ^/dev/null
         else
             eval $fish_key_bindings ^/dev/null
         end
         # Load user key bindings if they are defined
         if functions --query fish_user_key_bindings >/dev/null
-            fish_user_key_bindings
+            fish_user_key_bindings ^/dev/null
         end
     end
 
-    # Load key bindings. Redirect stderr per #1155
-    set -g __fish_active_key_bindings
-    __fish_reload_key_bindings ^/dev/null
+    # Load key bindings
+    __fish_reload_key_bindings
 
     # Repaint screen when window changes size
     function __fish_winch_handler --on-signal WINCH

@@ -33,6 +33,4 @@ bool wchar_to_utf8_string(const std::wstring &input, std::string *result);
 size_t utf8_to_wchar(const char *in, size_t insize, std::wstring *out, int flags);
 size_t wchar_to_utf8(const wchar_t *in, size_t insize, char *out, size_t outsize, int flags);
 
-bool is_wchar_ucs2();
-
 #endif /* !_UTF8_H_ */

@@ -26,8 +26,6 @@
 #define _SEQ2 0xc0
 #define _SEQ3 0xe0
 #define _SEQ4 0xf0
-#define _SEQ5 0xf8
-#define _SEQ6 0xfc
 
 #define _BOM 0xfeff
 
@@ -36,8 +34,6 @@ typedef wchar_t utf8_wchar_t;
 #define UTF8_WCHAR_MAX ((size_t)std::numeric_limits<utf8_wchar_t>::max())
 
 typedef std::basic_string<utf8_wchar_t> utf8_wstring_t;
-
-bool is_wchar_ucs2() { return UTF8_WCHAR_MAX <= 0xFFFF; }
 
 static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring_t *result,
                                      int flags);
@@ -195,12 +191,6 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
         } else if ((*p & 0xf8) == _SEQ4) {
             n = 4;
             high = (utf8_wchar_t)(*p & 0x07);
-        } else if ((*p & 0xfc) == _SEQ5) {
-            n = 5;
-            high = (utf8_wchar_t)(*p & 0x03);
-        } else if ((*p & 0xfe) == _SEQ6) {
-            n = 6;
-            high = (utf8_wchar_t)(*p & 0x01);
         } else {
             if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             continue;
@@ -298,12 +288,18 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
             if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             continue;
         }
-        if (w_wide <= 0x0000007f) n = 1;
-        else if (w_wide <= 0x000007ff) n = 2;
-        else if (w_wide <= 0x0000ffff) n = 3;
-        else if (w_wide <= 0x001fffff) n = 4;
-        else if (w_wide <= 0x03ffffff) n = 5;
-        else  n = 6;  /// if (w_wide <= 0x7fffffff)
+        if (w_wide <= 0x0000007f)
+            n = 1;
+        else if (w_wide <= 0x000007ff)
+            n = 2;
+        else if (w_wide <= 0x0000ffff)
+            n = 3;
+        else if (w_wide <= 0x001fffff)
+            n = 4;
+        else if (w_wide <= 0x03ffffff)
+            n = 5;
+        else
+            n = 6;  /// if (w_wide <= 0x7fffffff)
 
         total += n;
 
@@ -343,23 +339,6 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
                 p[2] = _NXT | (oc[3] >> 6) | ((oc[2] & 0x0f) << 2);
                 p[1] = _NXT | ((oc[2] & 0xf0) >> 4) | ((oc[1] & 0x03) << 4);
                 p[0] = _SEQ4 | ((oc[1] & 0x1f) >> 2);
-                break;
-            }
-            case 5: {
-                p[4] = _NXT | (oc[3] & 0x3f);
-                p[3] = _NXT | (oc[3] >> 6) | ((oc[2] & 0x0f) << 2);
-                p[2] = _NXT | ((oc[2] & 0xf0) >> 4) | ((oc[1] & 0x03) << 4);
-                p[1] = _NXT | (oc[1] >> 2);
-                p[0] = _SEQ5 | (oc[0] & 0x03);
-                break;
-            }
-            case 6: {
-                p[5] = _NXT | (oc[3] & 0x3f);
-                p[4] = _NXT | (oc[3] >> 6) | ((oc[2] & 0x0f) << 2);
-                p[3] = _NXT | (oc[2] >> 4) | ((oc[1] & 0x03) << 4);
-                p[2] = _NXT | (oc[1] >> 2);
-                p[1] = _NXT | (oc[0] & 0x3f);
-                p[0] = _SEQ6 | ((oc[0] & 0x40) >> 6);
                 break;
             }
         }

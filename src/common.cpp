@@ -106,8 +106,8 @@ demangled_backtrace(int max_frames, int skip_levels) {
     return backtrace_text;
 }
 
-void __attribute__((noinline)) show_stackframe(const wchar_t msg_level, int frame_count,
-                                               int skip_levels) {
+void __attribute__((noinline))
+show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
     ASSERT_IS_NOT_FORKED_CHILD();
 
     // TODO: Decide if this is still needed. I'm commenting it out because it caused me some grief
@@ -125,13 +125,13 @@ void __attribute__((noinline)) show_stackframe(const wchar_t msg_level, int fram
     }
 }
 
-#else // HAVE_BACKTRACE_SYMBOLS
+#else   // HAVE_BACKTRACE_SYMBOLS
 
-void __attribute__((noinline)) show_stackframe(const wchar_t msg_level, int frame_count,
-                                               int skip_levels) {
+void __attribute__((noinline))
+show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
     debug_shared(msg_level, L"Sorry, but your system does not support backtraces");
 }
-#endif // HAVE_BACKTRACE_SYMBOLS
+#endif  // HAVE_BACKTRACE_SYMBOLS
 
 int fgetws2(wcstring *s, FILE *f) {
     int i = 0;
@@ -179,8 +179,8 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
     result.reserve(in_len);
     size_t in_pos = 0;
 
-    if (MB_CUR_MAX == 1)  // single-byte locale, all values are legal
-    {
+    if (MB_CUR_MAX == 1) {
+        // Single-byte locale, all values are legal.
         while (in_pos < in_len) {
             result.push_back((unsigned char)in[in_pos]);
             in_pos++;
@@ -198,10 +198,16 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
             // Protect against broken mbrtowc() implementations which attempt to encode UTF-8
             // sequences longer than four bytes (e.g., OS X Snow Leopard).
             use_encode_direct = true;
+        } else if (sizeof(wchar_t) == 2 && (in[in_pos] & 0xF8) == 0xF0) {
+            // Assume we are in a UTF-16 environment (e.g., Cygwin) using a UTF-8 encoding.
+            // The bits set check will be true for a four byte UTF-8 sequence that requires
+            // two UTF-16 chars. Something that doesn't work with our simple use of mbrtowc().
+            use_encode_direct = true;
         } else {
             ret = mbrtowc(&wc, &in[in_pos], in_len - in_pos, &state);
+            // fprintf(stderr, "WTF in_pos %d  ret %d\n", in_pos, ret);
 
-            // Determine whether to encode this characters with our crazy scheme.
+            // Determine whether to encode this character with our crazy scheme.
             if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
                 use_encode_direct = true;
             } else if (wc == INTERNAL_SEPARATOR) {
@@ -215,20 +221,27 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
             } else if (ret > in_len - in_pos) {
                 // Other error codes? Terrifying, should never happen.
                 use_encode_direct = true;
+            } else if (sizeof(wchar_t) == 2 && wc >= 0xD800 && wc <= 0xDFFF) {
+                // If we get a surrogate pair char on a UTF-16 system (e.g., Cygwin) then
+                // it's guaranteed the UTF-8 decoding is wrong so use direct encoding.
+                use_encode_direct = true;
             }
         }
 
         if (use_encode_direct) {
+            // fprintf(stderr, "WTF use_encode_direct\n");
             wc = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
             result.push_back(wc);
             in_pos++;
             memset(&state, 0, sizeof state);
         } else if (ret == 0) {
+            // fprintf(stderr, "WTF null byte\n");
             // Embedded null byte!
             result.push_back(L'\0');
             in_pos++;
             memset(&state, 0, sizeof state);
         } else {
+            // fprintf(stderr, "WTF null byte\n");
             // Normal case.
             result.push_back(wc);
             in_pos += ret;

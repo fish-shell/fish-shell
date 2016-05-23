@@ -69,7 +69,7 @@ function __fish_apm_list_packages
     apm list -b
 end
 
-if apm -h ^| string match -q "Atom Package Manager*"
+if apm -h ^| string match -q "*Atom Package Manager*"
     # Completions for Atom Package Manager
 
     ##################

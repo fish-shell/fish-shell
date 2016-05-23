@@ -17,6 +17,8 @@ The following options are available:
 
 - `-i` or `--no-indent` do not indent commands; only reformat to one job per line
 
+- `-t` or `--use-tabs` use tabs instead of spaces for indentation
+
 - `-v` or `--version` displays the current fish version and then exits
 
 - `--ansi` colorizes the output using ANSI escape sequences, appropriate for the current $TERM, using the colors defined in the environment (such as `$fish_color_command`).

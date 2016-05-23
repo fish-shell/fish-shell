@@ -146,6 +146,8 @@ An example of a file redirection is `echo hello > output.txt`, which directs the
 - To append standard output to a file, write `>>DESTINATION_FILE`
 - To append standard error to a file, write `^^DESTINATION_FILE`
 
+- To not overwrite ("clobber") an existing file, write '>?DESTINATION' or '^?DESTINATION'
+
 `DESTINATION` can be one of the following:
 
 - A filename. The output will be written to the specified file.

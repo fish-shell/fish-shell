@@ -36,3 +36,8 @@ disable-rules:
     # a lot of really annoying warnings, we're going to disable this rule.
     #
     - ShortVariableName
+    #
+    # This rule flags perfectly reasonable conditions like `if (!some_condition)`
+    # and is therefore just noise. Disable this rule.
+    #
+    - InvertedLogic

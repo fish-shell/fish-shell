@@ -11,7 +11,7 @@ while CONDITION; COMMANDS...; end
 
 If the exit status of `CONDITION` is non-zero on the first iteration, `COMMANDS` will not be executed at all.
 
-You can use <a href="#and">`and`</a> or <a href="#and">`or`</a> for complex conditions. Even more complex control can be achieved with `while true` containing a <a href="#break">break</a>.
+You can use <a href="#and">`and`</a> or <a href="#or">`or`</a> for complex conditions. Even more complex control can be achieved with `while true` containing a <a href="#break">break</a>.
 
 \subsection while-example Example
 

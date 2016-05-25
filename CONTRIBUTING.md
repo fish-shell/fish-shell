@@ -160,6 +160,43 @@ You'll receive an email when the tests are complete telling you whether or not a
 
 You'll find the configuration used to control Travis in the `.travis.yml` file.
 
+### Git hooks
+
+Since developers sometimes forget to run the tests, it can be helpful to use git hooks (see githooks(5)) to automate it.
+
+One possibility is a pre-push hook script like this one:
+
+```sh
+#!/bin/sh
+#### A pre-push hook for the fish-shell project
+# This will run the tests when a push to master is detected, and will stop that if the tests fail
+# Save this as .git/hooks/pre-push and make it executable
+
+protected_branch='master'
+
+# Git gives us lines like "refs/heads/frombranch SOMESHA1 refs/heads/tobranch SOMESHA1"
+# We're only interested in the branches
+while read from _ to _; do
+    if [ "x$to" = "xrefs/heads/$protected_branch" ]; then
+        isprotected=1
+    fi
+done
+if [ "x$isprotected" = x1 ]; then
+    echo "Running tests before push to master"
+    make test
+    RESULT=$?
+    if [ $RESULT -ne 0 ]; then
+        echo "Tests failed for a push to master, we can't let you do that" >&2
+        exit 1
+    fi
+fi
+exit 0
+```
+
+This will check if the push is to the master branch and, if it is, will run `make test` and only allow the push if that succeeds. In some circumstances it might be advisable to circumvent it with `git push --no-verify`, but usually that should not be necessary.
+
+To install the hook, put it in .git/hooks/pre-push and make it executable.
+
 ## Installing the Required Tools
 
 ### Installing the Linting Tools

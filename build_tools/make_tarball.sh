@@ -14,6 +14,21 @@ set -e
 # but to get the documentation in, we need to make a symlink called "fish-VERSION"
 # and tar from that, so that the documentation gets the right prefix
 
+# We need GNU tar as that supports the --mtime option
+# BSD tar supports --mtree but keeping them in sync sounds too hard
+TAR=notfound
+for try in tar gtar gnutar; do
+  if $try -Pcf /dev/null --mtime now /dev/null >/dev/null 2>&1; then
+    TAR=$try
+    break
+  fi
+done
+
+if [ "$TAR" = "notfound" ]; then
+  echo 'No suitable tar (supporting --mtime) found as tar/gtar/gnutar in PATH'
+  exit 1
+fi
+
 # Get the current directory, which we'll use for symlinks
 wd="$PWD"
 
@@ -43,7 +58,7 @@ echo $VERSION > version
 cd /tmp
 rm -f "$prefix"
 ln -s "$wd" "$prefix"
-TAR_APPEND="gnutar --append --file=$path --mtime=now --owner=0 --group=0 --mode=g+w,a+rX"
+TAR_APPEND="$TAR --append --file=$path --mtime=now --owner=0 --group=0 --mode=g+w,a+rX"
 $TAR_APPEND --no-recursion "$prefix"/user_doc
 $TAR_APPEND "$prefix"/user_doc/html "$prefix"/share/man
 $TAR_APPEND "$prefix"/version

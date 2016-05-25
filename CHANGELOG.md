@@ -1,3 +1,9 @@
+# fish $nextversion (unreleased)
+
+## Significant changes
+
+- The clipboard integration has been removed in favor of explicit bindings (#3061)
+
 # fish 2.3.0 (released May 20, 2016)
 
 There are no significant changes between 2.3.0 and 2.3b2.

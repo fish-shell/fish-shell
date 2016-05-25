@@ -4,6 +4,7 @@
 # We use git to output a tree. But we also want to build the user documentation
 # and put that in the tarball, so that nobody needs to have doxygen installed
 # to build it.
+# Outputs to $FISH_ARTEFACT_PATH or ~/fish_built by default
 
 # Exit on error
 set -e
@@ -23,7 +24,8 @@ VERSION=`git describe --dirty 2>/dev/null`
 prefix="fish-$VERSION"
 
 # The path where we will output the tar file
-path=~/fish_built/$prefix.tar
+# Defaults to ~/fish_built
+path=${FISH_ARTEFACT_PATH:-~/fish_built}/$prefix.tar
 
 # Clean up stuff we've written before
 rm -f "$path" "$path".gz

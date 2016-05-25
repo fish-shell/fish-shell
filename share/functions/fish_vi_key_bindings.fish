@@ -1,10 +1,17 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
-	if test "$fish_key_bindings" != "fish_vi_key_bindings"
-		# Allow the user to set the variable universally
-		set -q fish_key_bindings; or set -g fish_key_bindings
-		set fish_key_bindings fish_vi_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
-		return
-	end
+    # Allow any argument to skip setting the variable.
+    if not set -q argv[1]
+        # Allow just calling this function to correctly set the bindings.
+        # Because it's a rather discoverable name, users will execute it
+        # and without this would then have subtly broken bindings.
+        if test "$fish_key_bindings" != "fish_vi_key_bindings"
+            # Allow the user to set the variable universally
+            set -q fish_key_bindings
+            or set -g fish_key_bindings
+            set fish_key_bindings fish_vi_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
+            return
+        end
+    end
     # The default escape timeout is 300ms. But for users of Vi bindings that can be slightly
     # annoying when trying to switch to Vi "normal" mode. So set a shorter timeout in this case
     # unless the user has explicitly set the delay.
@@ -17,14 +24,18 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         set init_mode $argv[1]
     end
 
-    # Inherit default key bindings.
+    # Inherit shared key bindings.
     # Do this first so vi-bindings win over default.
     bind --erase --all
-    fish_default_key_bindings -M insert
-    fish_default_key_bindings -M default
+    for mode in insert default visual
+        __fish_shared_key_bindings -M $mode
+    end
 
-    # Remove the default self-insert bindings in default mode
-    bind -e "" -M default
+    bind -M insert \r execute
+    bind -M insert \n execute
+    
+    bind -M insert "" self-insert
+
     # Add way to kill current command line while in insert mode.
     bind -M insert \cc __fish_cancel_commandline
     # Add a way to switch from insert to normal (command) mode.
@@ -34,17 +45,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind :q exit
     bind \cd exit
     bind -m insert \cc __fish_cancel_commandline
-    bind h backward-char
-    bind l forward-char
-    bind \e\[C forward-char
-    bind \e\[D backward-char
-
-    # Some terminals output these when they're in in keypad mode.
-    bind \eOC forward-char
-    bind \eOD backward-char
-
-    bind -k right forward-char
-    bind -k left backward-char
+    bind -M default h backward-char
+    bind -M default l forward-char
     bind -m insert \n execute
     bind -m insert \r execute
     bind -m insert i force-repaint
@@ -169,10 +171,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind P backward-char yank
     bind gp yank-pop
 
-    ### Overrides
-    # This is complete in vim
-    bind -M insert \cx end-of-line
-
     bind '"*p' "commandline -i ( xsel -p; echo )[1]"
     bind '"*P' backward-char "commandline -i ( xsel -p; echo )[1]"
 
@@ -186,12 +184,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     #
     # visual mode
     #
-    bind -M visual \e\[C forward-char
-    bind -M visual \e\[D backward-char
-    bind -M visual -k right forward-char
-    bind -M visual -k left backward-char
-    bind -M insert \eOC forward-char
-    bind -M insert \eOD backward-char
     bind -M visual h backward-char
     bind -M visual l forward-char
 
@@ -231,7 +223,4 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # the commenting chars so the command can be further edited then executed.
     bind -M default \# __fish_toggle_comment_commandline
     bind -M visual \# __fish_toggle_comment_commandline
-    bind -M default \e\# __fish_toggle_comment_commandline
-    bind -M insert \e\# __fish_toggle_comment_commandline
-    bind -M visual \e\# __fish_toggle_comment_commandline
 end

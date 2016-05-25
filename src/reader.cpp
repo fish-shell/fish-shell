@@ -1127,9 +1127,6 @@ static void completion_insert(const wchar_t *val, complete_flags_t flags) {
     wcstring new_command_line = completion_apply_to_command_line(val, flags, el->text, &cursor,
                                                                  false /* not append only */);
     reader_set_buffer_maintaining_pager(new_command_line, cursor);
-
-    // Since we just inserted a completion, don't immediately do a new autosuggestion.
-    data->suppress_autosuggestion = true;
 }
 
 struct autosuggestion_context_t {
@@ -2775,14 +2772,14 @@ const wchar_t *reader_readline(int nchars) {
             // Evaluate. If the current command is unfinished, or if the charater is escaped using a
             // backslash, insert a newline.
             case R_EXECUTE: {
-                // Delete any autosuggestion.
-                data->autosuggestion.clear();
-
                 // If the user hits return while navigating the pager, it only clears the pager.
                 if (data->is_navigating_pager_contents()) {
                     clear_pager();
                     break;
                 }
+
+                // Delete any autosuggestion.
+                data->autosuggestion.clear();
 
                 // The user may have hit return with pager contents, but while not navigating them.
                 // Clear the pager in that event.

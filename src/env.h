@@ -74,6 +74,16 @@ void env_init(const struct config_paths_t *paths = NULL);
 /// * ENV_INVALID, the variable value was invalid. This applies only to special variables.
 int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t mode);
 
+///  Reflect the state of the variable whose name matches key in this process environment.
+///
+///  The return values reflect the ones returned by (un)setenv.
+///  See setenv man pages for details.
+///
+///  \param key The name of the variable to sync
+///
+///  \returns 0 on success, -1 on failure; sets errno to indicate error cause.
+int env_sync_env(const wcstring &key);
+
 class env_var_t : public wcstring {
    private:
     bool is_missing;

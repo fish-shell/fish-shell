@@ -583,6 +583,21 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
     return 0;
 }
 
+int env_sync_env(const wcstring &key)
+{
+    const env_var_t var = env_get_string(key, ENV_GLOBAL | ENV_EXPORT);
+    const std::string &name = wcs2string(key);
+    if (var.missing())
+    {
+        return unsetenv(name.c_str());
+    }
+    else
+    {
+        const std::string &value = wcs2string(var);
+        return setenv(name.c_str(), value.c_str(), 1);
+    }
+}
+
 /// Attempt to remove/free the specified key/value pair from the specified map.
 ///
 /// \return zero if the variable was not found, non-zero otherwise

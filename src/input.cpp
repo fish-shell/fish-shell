@@ -377,18 +377,22 @@ int input_init() {
 
     input_common_init(&interrupt_handler);
 
-    const env_var_t term = env_get_string(L"TERM");
+    // Export variables used by curses into our own environment.
+    env_sync_env(L"TERM");
+    env_sync_env(L"TERMINFO");
+    env_sync_env(L"TERMINFO_DIRS");
+
+    const env_var_t term = env_get_string(L"TERM", ENV_GLOBAL | ENV_EXPORT);
     int errret;
-    if (setupterm(const_cast<char *>(wcs2string(term).c_str()), STDOUT_FILENO, &errret) == ERR) {
+    if (setupterm(NULL, STDOUT_FILENO, &errret) == ERR) {
         debug(0, _(L"Could not set up terminal"));
         if (errret == 0) {
             debug(0, _(L"Check that your terminal type, '%ls', is supported on this system"),
                   term.c_str());
             debug(0, _(L"Attempting to use '%ls' instead"), DEFAULT_TERM);
             env_set(L"TERM", DEFAULT_TERM, ENV_GLOBAL | ENV_EXPORT);
-            const std::string default_term = wcs2string(DEFAULT_TERM);
-            if (setupterm(const_cast<char *>(default_term.c_str()), STDOUT_FILENO, &errret) ==
-                ERR) {
+            env_sync_env(L"TERM");
+            if (setupterm(NULL, STDOUT_FILENO, &errret) == ERR) {
                 debug(0, _(L"Could not set up terminal"));
                 exit_without_destructors(1);
             }

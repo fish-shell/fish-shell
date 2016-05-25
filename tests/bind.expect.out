@@ -13,3 +13,5 @@ default-mode custom timeout set correctly
 emacs transpose words, 100ms timeout: no delay
 emacs transpose words, 100ms timeout: short delay
 emacs transpose words, 100ms timeout: long delay
+ctrl-v seen
+ctrl-o seen

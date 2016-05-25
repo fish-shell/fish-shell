@@ -16,7 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include <termios.h>
 #include <wctype.h>
 #include <string>
 
@@ -25,15 +24,16 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "input.h"
 #include "input_common.h"
+#include "proc.h"
+#include "reader.h"
 
 struct config_paths_t determine_config_directory_paths(const char *argv0);
 
-static struct termios saved_modes;  // so we can reset the modes when we're done
 static long long int prev_tstamp = 0;
 static const char *ctrl_equivalents[] = {NULL,  NULL,  NULL,  NULL,  NULL,  NULL,  NULL, "\\a",
-    "\\b", "\\t", "\\n", "\\v", "\\f", "\\r", NULL, NULL,
-    NULL,  NULL,  NULL,  NULL,  NULL,  NULL,  NULL, NULL,
-    NULL,  NULL,  NULL,  "\\e", NULL,  NULL,  NULL, NULL};
+                                         "\\b", "\\t", "\\n", "\\v", "\\f", "\\r", NULL, NULL,
+                                         NULL,  NULL,  NULL,  NULL,  NULL,  NULL,  NULL, NULL,
+                                         NULL,  NULL,  NULL,  "\\e", NULL,  NULL,  NULL, NULL};
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
 bool should_exit(unsigned char c) {
@@ -47,7 +47,7 @@ bool should_exit(unsigned char c) {
 }
 
 /// Return the key name if the recent sequence of characters matches a known terminfo sequence.
-char * const key_name(unsigned char c) {
+char *const key_name(unsigned char c) {
     static char recent_chars[8] = {0};
 
     recent_chars[0] = recent_chars[1];
@@ -121,7 +121,7 @@ void process_input(bool continuous_mode) {
             printf("%6lld usec  dec: %3u  hex: %2x  char: %c\n", delta_tstamp, c, c, c);
         }
 
-        char * const name = key_name(c);
+        char *const name = key_name(c);
         if (name) {
             printf("FYI: Saw sequence for bind key name \"%s\"\n", name);
             free(name);
@@ -136,48 +136,22 @@ void process_input(bool continuous_mode) {
     }
 }
 
-/// Set the tty modes to not interpret any characters. We want every character to be passed thru to
-/// this program. Including characters such as [ctrl-C] and [ctrl-D] that might normally have
-/// special significance (e.g., terminate the program).
-bool set_tty_modes(void) {
-    struct termios modes;
-
-    tcgetattr(0, &modes);  // get the current tty modes
-    saved_modes = modes;   // save a copy so we can reset them on exit
-
-    modes.c_lflag &= ~ICANON;  // turn off canonical mode
-    modes.c_lflag &= ~ECHO;    // turn off echo mode
-    modes.c_lflag &= ~ISIG;    // turn off recognizing signal generating characters
-    modes.c_iflag &= ~ICRNL;   // turn off mapping CR to NL
-    modes.c_iflag &= ~INLCR;   // turn off mapping NL to CR
-    modes.c_cc[VMIN] = 1;      // return each character as they arrive
-    modes.c_cc[VTIME] = 0;     // wait forever for the next character
-
-    if (tcsetattr(0, TCSANOW, &modes) != 0) {  // set the new modes
-        return false;
-    }
-    return true;
-}
-
-/// Restore the tty modes to what they were before this program was run. This shouldn't be required
-/// but we do it just in case the program that ran us doesn't handle tty modes for external programs
-/// in a sensible manner.
-void reset_tty_modes() { tcsetattr(0, TCSANOW, &saved_modes); }
-
 /// Make sure we cleanup before exiting if we're signaled.
 void signal_handler(int signo) {
     printf("\nExiting on receipt of signal #%d\n", signo);
-    reset_tty_modes();
+    restore_term_mode();
     exit(1);
 }
 
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
 void setup_and_process_keys(bool continuous_mode) {
+    is_interactive_session = 1;  // by definition this is interactive
     set_main_thread();
     setup_fork_guards();
     wsetlocale(LC_ALL, L"POSIX");
     program_name = L"fish_key_reader";
     env_init();
+    reader_init();
     input_init();
 
     // Installing our handler for every signal (e.g., SIGSEGV) is dubious because it means that
@@ -198,13 +172,9 @@ void setup_and_process_keys(bool continuous_mode) {
         set_wait_on_escape_ms(500);
     }
 
-    if (!set_tty_modes()) {
-        printf("Could not set the tty modes. Refusing to continue running.\n");
-        exit(1);
-    }
     // TODO: We really should enable keypad mode but see issue #838.
     process_input(continuous_mode);
-    reset_tty_modes();
+    restore_term_mode();
 }
 
 int main(int argc, char **argv) {

@@ -199,3 +199,23 @@ expect_prompt -re {\r\nmno pqrt\r\n} {
 } unmatched {
     puts stderr "emacs transpose words fail, 100ms timeout: long delay"
 }
+
+# Verify special characters, such as \cV, are not intercepted by the kernel
+# tty driver. Rather, they can be bound and handled by fish.
+send "bind \\cV 'echo ctrl-v seen'\r"
+expect_prompt
+send "\026\r"
+expect_prompt -re {ctrl-v seen} {
+    puts "ctrl-v seen"
+} unmatched {
+    puts stderr "ctrl-v not seen"
+}
+
+send "bind \\cO 'echo ctrl-o seen'\r"
+expect_prompt
+send "\017\r"
+expect_prompt -re {ctrl-o seen} {
+    puts "ctrl-o seen"
+} unmatched {
+    puts stderr "ctrl-o not seen"
+}

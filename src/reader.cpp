@@ -784,22 +784,18 @@ void reader_init() {
 
     // Set the mode used for the terminal, initialized to the current mode.
     memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);
-    shell_modes.c_iflag &= ~ICRNL;   // turn off mapping CR (\cM) to NL (\cJ)
-    shell_modes.c_iflag &= ~INLCR;   // turn off mapping NL (\cJ) to CR (\cM)
+
+    shell_modes.c_iflag &= ~ICRNL;  // disable mapping CR (\cM) to NL (\cJ)
+    shell_modes.c_iflag &= ~INLCR;  // disable mapping NL (\cJ) to CR (\cM)
+    shell_modes.c_iflag &= ~IXON;   // disable flow control
+    shell_modes.c_iflag &= ~IXOFF;  // disable flow control
+
     shell_modes.c_lflag &= ~ICANON;  // turn off canonical mode
     shell_modes.c_lflag &= ~ECHO;    // turn off echo mode
-    shell_modes.c_iflag &= ~IXON;    // disable flow control
-    shell_modes.c_iflag &= ~IXOFF;   // disable flow control
+    shell_modes.c_lflag &= ~IEXTEN;  // turn off handling of discard and lnext characters
+
     shell_modes.c_cc[VMIN] = 1;
     shell_modes.c_cc[VTIME] = 0;
-
-#if defined(_POSIX_VDISABLE)
-// PCA disable VDSUSP (typically control-Y), which is a funny job control. function available only
-// on OS X and BSD systems. This lets us use control-Y for yank instead.
-#ifdef VDSUSP
-    shell_modes.c_cc[VDSUSP] = _POSIX_VDISABLE;
-#endif
-#endif
 
     // We don't use term_steal because this can fail if fd 0 isn't associated with a tty and this
     // function is run regardless of whether stdin is tied to a tty. This is harmless in that case.
@@ -1107,8 +1103,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
     // Perform the insertion and compute the new location.
     wcstring result = command_line;
     result.insert(insertion_point, replaced);
-    size_t new_cursor_pos =
-        insertion_point + replaced.size() + (back_into_trailing_quote ? 1 : 0);
+    size_t new_cursor_pos = insertion_point + replaced.size() + (back_into_trailing_quote ? 1 : 0);
     if (add_space) {
         if (quote != L'\0' && unescaped_quote(command_line, insertion_point) != quote) {
             // This is a quoted parameter, first print a quote.

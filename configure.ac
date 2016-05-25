@@ -544,7 +544,7 @@ if test "x$included_pcre2" != "xyes"; then
     XLIBS="$LIBS"
     LIBS="$LIBS "`$PCRE2_CONFIG --libs$WCHAR_T_BITS 2>/dev/null`
     XCXXFLAGS="$CXXFLAGS"
-    CXXFLAGS="$CXXFLAGS" `$PCRE2_CONFIG --cflags`
+    CXXFLAGS="$CXXFLAGS "`$PCRE2_CONFIG --cflags`
 
     # cheat a bit here. the exact library is determined by $WCHAR_T_BITS,
     # and so AC_CHECK_LIB won't work (can't use a variable as library name)

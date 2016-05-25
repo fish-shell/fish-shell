@@ -530,9 +530,6 @@ void reader_data_t::pager_selection_changed() {
     }
     reader_set_buffer_maintaining_pager(new_cmd_line, cursor_pos);
 
-    // Since we just inserted a completion, don't immediately do a new autosuggestion.
-    this->suppress_autosuggestion = true;
-
     // Trigger repaint (see issue #765).
     reader_repaint_needed();
 }

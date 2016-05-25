@@ -55,16 +55,21 @@ autoconf
 ./configure --with-doxygen
 make doc share/man
 echo $VERSION > version
-cd /tmp
-rm -f "$prefix"
+
+PREFIX_TMPDIR=`mktemp -d`
+cd $PREFIX_TMPDIR
+
 ln -s "$wd" "$prefix"
 TAR_APPEND="$TAR --append --file=$path --mtime=now --owner=0 --group=0 --mode=g+w,a+rX"
 $TAR_APPEND --no-recursion "$prefix"/user_doc
 $TAR_APPEND "$prefix"/user_doc/html "$prefix"/share/man
 $TAR_APPEND "$prefix"/version
 $TAR_APPEND "$prefix"/configure "$prefix"/config.h.in
-rm -f "$prefix"/version
-rm -f "$prefix"
+rm "$prefix"/version
+unlink "$prefix"
+
+cd -
+rmdir $PREFIX_TMPDIR
 
 # gzip it
 gzip "$path"

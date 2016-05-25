@@ -17,14 +17,13 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         set init_mode $argv[1]
     end
 
-    # Inherit default key bindings.
+    # Inherit shared key bindings.
     # Do this first so vi-bindings win over default.
     bind --erase --all
-    fish_default_key_bindings -M insert
-    fish_default_key_bindings -M default
+    for mode in insert default visual
+        __fish_shared_key_bindings -M $mode
+    end
 
-    # Remove the default self-insert bindings in default mode
-    bind -e "" -M default
     # Add way to kill current command line while in insert mode.
     bind -M insert \cc __fish_cancel_commandline
     # Add a way to switch from insert to normal (command) mode.
@@ -231,7 +230,4 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # the commenting chars so the command can be further edited then executed.
     bind -M default \# __fish_toggle_comment_commandline
     bind -M visual \# __fish_toggle_comment_commandline
-    bind -M default \e\# __fish_toggle_comment_commandline
-    bind -M insert \e\# __fish_toggle_comment_commandline
-    bind -M visual \e\# __fish_toggle_comment_commandline
 end

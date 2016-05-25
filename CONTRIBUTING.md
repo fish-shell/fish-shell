@@ -94,7 +94,12 @@ If you use Emacs: TBD
 
 If you use ViM: TBD
 
-If you use Emacs: TBD
+If you use Emacs: Install [fish-mode](https://github.com/wwwjfy/emacs-fish) (also available in melpa and melpa-stable) and `(setq-default indent-tabs-mode nil)` for it (via a hook or in `use-package`s ":init" block). It can also be made to run fish_indent via e.g.
+
+```elisp
+(add-hook 'fish-mode-hook (lambda ()
+    (add-hook 'before-save-hook 'fish_indent-before-save)))
+```
 
 ### Suppressing Reformatting of C++ Code
 

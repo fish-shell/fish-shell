@@ -8,20 +8,19 @@
 # Exit on error
 set -e
 
-# We wil generate a tarball with a prefix "fish"
+# We wil generate a tarball with a prefix "fish-VERSION"
 # git can do that automatically for us via git-archive
-# but to get the documentation in, we need to make a symlink called "fish"
+# but to get the documentation in, we need to make a symlink called "fish-VERSION"
 # and tar from that, so that the documentation gets the right prefix
 
 # Get the current directory, which we'll use for symlinks
 wd="$PWD"
 
-# The name of the prefix, which is the directory that you get when you untar
-prefix="fish"
-
 # Get the version from git-describe
 VERSION=`git describe --dirty 2>/dev/null`
-prefix="$prefix-$VERSION"
+
+# The name of the prefix, which is the directory that you get when you untar
+prefix="fish-$VERSION"
 
 # The path where we will output the tar file
 path=~/fish_built/$prefix.tar

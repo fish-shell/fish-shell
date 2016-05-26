@@ -843,6 +843,14 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `CMD_DURATION`, the runtime of the last command in milliseconds.
 
+- `FISH_VERSION`, the version of the currently running fish
+
+- `COLUMNS`, the current width of the terminal
+
+- `LINES`, the current height of the terminal
+
+- `SHLVL`, the level of nesting of shells
+
 The names of these variables are mostly derived from the csh family of shells and differ from the ones used by Bourne style shells such as bash.
 
 Variables whose name are in uppercase are exported to the commands started by fish, while those in lowercase are not exported. This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables. `fish` also uses several variables internally. Such variables are prefixed with the string `__FISH` or `__fish.` These should never be used by the user. Changing their value may break fish.

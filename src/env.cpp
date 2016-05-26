@@ -286,7 +286,7 @@ static bool variable_is_colon_delimited_array(const wcstring &str) {
 void env_init(const struct config_paths_t *paths /* or NULL */) {
     // env_read_only variables can not be altered directly by the user.
     const wchar_t *const ro_keys[] = {
-        L"status", L"history", L"version", L"_", L"LINES", L"COLUMNS", L"PWD",
+        L"status", L"history", L"_", L"LINES", L"COLUMNS", L"PWD",
         // L"SHLVL", // will be inserted a bit lower down
         L"FISH_VERSION",
     };
@@ -354,9 +354,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         }
     }
 
-    // Set up the version variables.
+    // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
-    env_set(L"version", version.c_str(), ENV_GLOBAL);
     env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 
     // Set up SHLVL variable.

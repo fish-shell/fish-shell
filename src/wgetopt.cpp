@@ -307,8 +307,8 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
         int option_index;
 
         for (nameend = nextchar; *nameend && *nameend != '='; nameend++) {
-           // Do nothing.
-	}
+            // Do nothing.
+        }
 
         // Test all long options for either exact match or abbreviated matches.
         for (p = longopts, option_index = 0; p->name; p++, option_index++)

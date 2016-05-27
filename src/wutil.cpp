@@ -344,9 +344,9 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
     }
 
 #if __APPLE__ && __DARWIN_C_LEVEL < 200809L
-    // OS X Snow Leopard is broken with respect to the dynamically allocated buffer returned by
-    // realpath(). It's not dynamically allocated so attempting to free that buffer triggers a
-    // malloc/free error. Thus we don't attempt the free in this case.
+// OS X Snow Leopard is broken with respect to the dynamically allocated buffer returned by
+// realpath(). It's not dynamically allocated so attempting to free that buffer triggers a
+// malloc/free error. Thus we don't attempt the free in this case.
 #else
     free(narrow_res);
 #endif

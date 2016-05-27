@@ -669,8 +669,7 @@ static size_t offset_of_next_item(const char *begin, size_t mmap_length,
             break;
         }
         case history_type_fish_1_x: {
-            result =
-                offset_of_next_item_fish_1_x(begin, mmap_length, inout_cursor);
+            result = offset_of_next_item_fish_1_x(begin, mmap_length, inout_cursor);
             break;
         }
         case history_type_unknown: {
@@ -755,7 +754,8 @@ void history_t::save_internal_unless_disabled() {
     }
 
     // This might be a good candidate for moving to a background thread.
-    time_profiler_t profiler(vacuum ? "save_internal vacuum" : "save_internal no vacuum");  //!OCLINT(side-effect)
+    time_profiler_t profiler(vacuum ? "save_internal vacuum"
+                                    : "save_internal no vacuum");  //!OCLINT(side-effect)
     this->save_internal(vacuum);
 
     // Update our countdown.
@@ -1414,7 +1414,7 @@ void history_t::disable_automatic_saving() {
 }
 
 void history_t::enable_automatic_saving() {
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);                    //!OCLINT(side-effect)
     assert(disable_automatic_save_counter > 0);  // underflow
     disable_automatic_save_counter--;
     save_internal_unless_disabled();
@@ -1614,7 +1614,8 @@ static int threaded_perform_file_detection(file_detection_context_t *ctx) {
     return ctx->perform_file_detection(true /* test all */);
 }
 
-static void perform_file_detection_done(file_detection_context_t *ctx, int success) { //!OCLINT(success is ignored)
+static void perform_file_detection_done(file_detection_context_t *ctx,
+                                        int success) {  //!OCLINT(success is ignored)
     ASSERT_IS_MAIN_THREAD();
 
     // Now that file detection is done, update the history item with the valid file paths.

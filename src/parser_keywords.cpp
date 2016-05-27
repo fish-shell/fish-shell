@@ -1,9 +1,9 @@
 // Functions having to do with parser keywords, like testing if a function is a block command.
 #include "config.h"  // IWYU pragma: keep
 
-#include "parser_keywords.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "parser_keywords.h"
 
 bool parser_keywords_skip_arguments(const wcstring &cmd) {
     return contains(cmd, L"else", L"begin");

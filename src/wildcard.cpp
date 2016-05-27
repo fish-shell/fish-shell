@@ -290,9 +290,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
             // We don't even try with this one.
             return false;
         }
-        default: {
-            assert(0 && "Unreachable code reached");
-        }
+        default: { assert(0 && "Unreachable code reached"); }
     }
 
     assert(0 && "Unreachable code reached");

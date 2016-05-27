@@ -148,11 +148,13 @@ int wcsncasecmp_use_weak(const wchar_t *s1, const wchar_t *s2, size_t n) {
     if (&wcsncasecmp != NULL) return (wcsncasecmp)(s1, s2, n);
     return wcsncasecmp_fallback(s1, s2, n);
 }
-#else // __DARWIN_C_LEVEL >= 200809L
+#else   // __DARWIN_C_LEVEL >= 200809L
 wchar_t *wcsdup(const wchar_t *in) { return wcsdup_fallback(in); }
 int wcscasecmp(const wchar_t *a, const wchar_t *b) { return wcscasecmp_fallback(a, b); }
-int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) { return wcsncasecmp_fallback(a, b, n); }
-#endif // __DARWIN_C_LEVEL >= 200809L
+int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
+    return wcsncasecmp_fallback(a, b, n);
+}
+#endif  // __DARWIN_C_LEVEL >= 200809L
 #endif  // __APPLE__
 
 #ifndef HAVE_WCSNDUP

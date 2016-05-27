@@ -368,9 +368,7 @@ process_t::process_t()
 {
 }
 
-process_t::~process_t() {
-    delete this->next;
-}
+process_t::~process_t() { delete this->next; }
 
 job_t::job_t(job_id_t jobid, const io_chain_t &bio)
     : block_io(bio), first_process(NULL), pgid(0), tmodes(), job_id(jobid), flags(0) {}

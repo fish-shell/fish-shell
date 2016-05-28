@@ -124,8 +124,7 @@ function funced --description 'Edit function definition'
                 break
         end
     set -l stat $status
-    # Only forcibly delete files to limit possible damage is tmpdir is set to something weird
-    rm -f $tmpname >/dev/null
-    rm -r $tmpdir >/dev/null
+    rm $tmpname >/dev/null
+    and rmdir $tmpdir >/dev/null
     return $stat
 end

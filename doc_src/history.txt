@@ -17,18 +17,13 @@ The following options are available:
 
 - `--clear` clears the history file. A prompt is displayed before the history is erased.
 
-- `--search` returns history items in keeping with the `--prefix` or `--contains` options.
+- `--search` returns history items in keeping with the `--prefix` or `--contains` options. Without either, `--contains` will be assumed.
 
-- `--delete` deletes history items.
+- `--delete` deletes history items. Without the `--prefix` or `--contains` options, the exact match will be deleted. With either of these options, a prompt will be displayed before any items are deleted.
 
 - `--prefix` searches or deletes items in the history that begin with the specified text string.
 
 - `--contains` searches or deletes items in the history that contain the specified text string.
-
-If `--search` is specified without `--contains` or `--prefix`, `--contains` will be assumed.
-
-If `--delete` is specified without `--contains` or `--prefix`, only a history item which exactly matches the parameter will be erased. No prompt will be given. If `--delete` is specified with either of these parameters, an interactive prompt will be displayed before any items are deleted.
-
 
 \subsection history-examples Example
 

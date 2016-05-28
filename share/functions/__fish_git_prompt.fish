@@ -592,9 +592,10 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 							command git describe --tags --exact-match HEAD
 						end ^/dev/null; set os $status)
 			if test $os -ne 0
-				set -q sha; and set -l short_sha (command git rev-parse --short $sha)
-				if test -n "$short_sha"
-					set branch $short_sha...
+				# Shorten the sha ourselves to 8 characters - this should be good for most repositories,
+				# and even for large ones it should be good for most commits
+				if set -q sha
+					set branch (string match -r '^.{8}' -- $sha)...
 				else
 					set branch unknown
 				end

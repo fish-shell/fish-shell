@@ -351,17 +351,14 @@ function __fish_git_prompt --description "Prompt function for Git"
 	if not command -s git >/dev/null
 		return 1
 	end
-	set -l repo_info (command git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree --short HEAD ^/dev/null)
+	set -l repo_info (command git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree HEAD ^/dev/null)
 	test -n "$repo_info"; or return
 
 	set -l git_dir         $repo_info[1]
 	set -l inside_gitdir   $repo_info[2]
 	set -l bare_repo       $repo_info[3]
 	set -l inside_worktree $repo_info[4]
-	set -l short_sha
-	if test (count $repo_info) = 5
-		set short_sha $repo_info[5]
-	end
+	set -q repo_info[5]; and set -l sha $repo_info[5]
 
 	set -l rbc (__fish_git_prompt_operation_branch_bare $repo_info)
 	set -l r $rbc[1] # current operation
@@ -388,7 +385,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 				set -l config (command git config --bool bash.showDirtyState)
 				if test "$config" != "false"
 					set w (__fish_git_prompt_dirty)
-					set i (__fish_git_prompt_staged $short_sha)
+					set i (__fish_git_prompt_staged $sha)
 				end
 			end
 
@@ -462,11 +459,11 @@ end
 ### helper functions
 
 function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells whether or not the current branch has staged files"
-	set -l short_sha $argv[1]
+	set -l sha $argv[1]
 
 	set -l staged
 
-	if test -n "$short_sha"
+	if test -n "$sha"
 		command git diff-index --cached --quiet HEAD --; or set staged $___fish_git_prompt_char_stagedstate
 	else
 		set staged $___fish_git_prompt_char_invalidstate
@@ -534,10 +531,7 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 	set -l git_dir         $argv[1]
 	set -l inside_gitdir   $argv[2]
 	set -l bare_repo       $argv[3]
-	set -l short_sha
-	if test (count $argv) = 5
-		set short_sha $argv[5]
-	end
+	set -q argv[5]; and set -l sha $argv[5]
 
 	set -l branch
 	set -l operation
@@ -598,6 +592,7 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 							command git describe --tags --exact-match HEAD
 						end ^/dev/null; set os $status)
 			if test $os -ne 0
+				set -q sha; and set -l short_sha (command git rev-parse --short $sha)
 				if test -n "$short_sha"
 					set branch $short_sha...
 				else

@@ -6,7 +6,7 @@ function __fish_complete_man
 	set section ""
 	set prev (commandline -poc)
 	set -e prev[1]
-	while count $prev
+	while set -q prev[1]
 		switch $prev[1]
 			case '-**'
 

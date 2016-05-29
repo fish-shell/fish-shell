@@ -1,20 +1,21 @@
 
 complete -xc man -a "(__fish_complete_man)"
 
-complete -xc man -a 1 --description "Program section"
-complete -xc man -a 2 --description "Syscall section"
-complete -xc man -a 3 --description "Library section"
-complete -xc man -a 4 --description "Device section"
-complete -xc man -a 5 --description "File format section"
-complete -xc man -a 6 --description "Games section"
-complete -xc man -a 7 --description "Misc section"
-complete -xc man -a 8 --description "Admin section"
-complete -xc man -a 9 --description "Kernel section"
-complete -xc man -a tcl --description "Tcl section"
-complete -xc man -a n --description "New section"
-complete -xc man -a l --description "Local section"
-complete -xc man -a p
-complete -xc man -a o --description "Old section"
+complete -xc man -n 'not __fish_complete_man' -a 1 -d 'Program section'
+complete -xc man -n 'not __fish_complete_man' -a 2 -d 'Syscall section'
+complete -xc man -n 'not __fish_complete_man' -a 3 -d 'Library section'
+complete -xc man -n 'not __fish_complete_man' -a 4 -d 'Device section'
+complete -xc man -n 'not __fish_complete_man' -a 5 -d 'File format section'
+complete -xc man -n 'not __fish_complete_man' -a 6 -d 'Games section'
+complete -xc man -n 'not __fish_complete_man' -a 7 -d 'Misc section'
+complete -xc man -n 'not __fish_complete_man' -a 8 -d 'Admin section'
+complete -xc man -n 'not __fish_complete_man' -a 9 -d 'Kernel section'
+complete -xc man -n 'not __fish_complete_man' -a tcl -d 'Tcl section'
+complete -xc man -n 'not __fish_complete_man' -a n -d 'New section'
+complete -xc man -n 'not __fish_complete_man' -a l -d 'Local section'
+complete -xc man -n 'not __fish_complete_man' -a p
+complete -xc man -n 'not __fish_complete_man' -a o -d 'Old section'
+
 complete -rc man -s C --description "Configuration file"
 complete -xc man -s M -a "(__fish_complete_directories (commandline -ct))" --description "Manpath"
 complete -rc man -s P --description "Pager"

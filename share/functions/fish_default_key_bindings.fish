@@ -11,7 +11,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 		bind --erase --all
 	end
 
-    # These are shelly bindings that we share with vi mode
+    # These are shell-specific bindings that we share with vi mode.
     __fish_shared_key_bindings
 
 	# This is the default binding, i.e. the one used if no other binding matches

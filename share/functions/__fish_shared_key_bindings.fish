@@ -1,13 +1,13 @@
 function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mode"
-    # These are some bindings that are supposed to be shared between vi mode and default/emacs mode
-    # They are supposed to be unrelated to text-editing
-    # This takes $argv so the vi-bindings can pass the mode they are valid in
+    # These are some bindings that are supposed to be shared between vi mode and default mode.
+    # They are supposed to be unrelated to text-editing (or movement).
+    # This takes $argv so the vi-bindings can pass the mode they are valid in.
 
     bind $argv \cy yank
 	bind $argv \ey yank-pop
 
     bind $argv \t complete
-    # shift-tab does a tab complete followed by a search
+    # shift-tab does a tab complete followed by a search.
     bind $argv --key btab complete-and-search
 
 
@@ -61,12 +61,12 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind $argv \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
     bind $argv \cd delete-or-exit
 
-    # Allow reading manpages by pressing F1 (many GUI applications) or Alt+h (like in zsh)
+    # Allow reading manpages by pressing F1 (many GUI applications) or Alt+h (like in zsh).
     bind $argv -k f1 __fish_man_page
     bind $argv \eh __fish_man_page
 
-    # This will make sure the output of the current command is paged using the default pager when you press Meta-p
-    # If none is set, less will be used
+    # This will make sure the output of the current command is paged using the default pager when you press Meta-p.
+    # If none is set, less will be used.
     bind $argv \ep '__fish_paginate'
     
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also,

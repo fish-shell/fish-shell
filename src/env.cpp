@@ -699,7 +699,7 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
 
     if (search_local || search_global) {
         /* Lock around a local region */
-        scoped_lock lock(env_lock);
+        scoped_lock lock(env_lock);  //!OCLINT(has side effects)
 
         env_node_t *env = search_local ? top : global_env;
 
@@ -869,7 +869,7 @@ static void add_key_to_string_set(const var_table_t &envs, std::set<wcstring> *s
 }
 
 wcstring_list_t env_get_names(int flags) {
-    scoped_lock lock(env_lock);
+    scoped_lock lock(env_lock);  //!OCLINT(has side effects)
 
     wcstring_list_t result;
     std::set<wcstring> names;

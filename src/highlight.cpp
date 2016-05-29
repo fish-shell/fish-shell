@@ -1039,6 +1039,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
     std::fill(this->color_array.begin(), this->color_array.end(), 0);
 
 #if 0
+    // Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
     const wcstring dump = parse_dump_tree(parse_tree, buff);
     fprintf(stderr, "%ls\n", dump.c_str());
 #endif

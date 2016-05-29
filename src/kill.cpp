@@ -4,7 +4,6 @@
 // previous cuts.
 #include "config.h"  // IWYU pragma: keep
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <algorithm>
 #include <list>
@@ -13,8 +12,6 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "kill.h"
-#include "path.h"
 
 /** Kill ring */
 typedef std::list<wcstring> kill_list_t;

@@ -433,17 +433,6 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid) {
 
 #endif
 
-std::vector<wcstring> expand_get_all_process_names(void) {
-    wcstring name;
-    pid_t pid;
-    process_iterator_t iterator;
-    std::vector<wcstring> result;
-    while (iterator.next_process(&name, &pid)) {
-        result.push_back(name);
-    }
-    return result;
-}
-
 // Helper function to do a job search.
 struct find_job_data_t {
     const wchar_t *proc;  // the process to search for - possibly numeric, possibly a name

@@ -31,7 +31,7 @@
 static int writeb_internal(char c);
 
 /// The function used for output.
-static int (*out)(char c) = &writeb_internal;
+static int (*out)(char c) = writeb_internal;
 
 /// Name of terminal.
 static wcstring current_term;
@@ -119,7 +119,7 @@ void write_color(rgb_color_t color, bool is_fg) {
         // Background: ^[48;2;<r>;<g>;<b>m
         color24_t rgb = color.to_color24();
         char buff[128];
-        snprintf(buff, sizeof buff, "\x1b[%u;2;%u;%u;%um", is_fg ? 38 : 48, rgb.rgb[0], rgb.rgb[1],
+        snprintf(buff, sizeof buff, "\x1b[%d;2;%u;%u;%um", is_fg ? 38 : 48, rgb.rgb[0], rgb.rgb[1],
                  rgb.rgb[2]);
         int (*writer)(char) = output_get_writer();
         if (writer) {
@@ -263,7 +263,7 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 }
 
 /// Default output method, simply calls write() on stdout.
-static int writeb_internal(char c) {
+static int writeb_internal(char c) {  // cppcheck
     write_loop(1, &c, 1);
     return 0;
 }

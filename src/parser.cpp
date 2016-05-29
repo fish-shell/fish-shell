@@ -75,7 +75,7 @@ class io_chain_t;
 /// Unknown block description.
 #define UNKNOWN_BLOCK N_(L"unknown/invalid block")
 
-/// Datastructure to describe a block type, like while blocks, command substitution blocks, etc.
+/// Data structure to describe a block type, like while blocks, command substitution blocks, etc.
 struct block_lookup_entry {
     // The block type id. The legal values are defined in parser.h.
     block_type_t type;
@@ -225,6 +225,8 @@ const wchar_t *parser_t::get_block_desc(int block) const {
     return _(UNKNOWN_BLOCK);
 }
 
+#if 0
+// TODO: Lint says this isn't used (which is true). Should this be removed?
 wcstring parser_t::block_stack_description() const {
     wcstring result;
     size_t idx = this->block_count();
@@ -241,6 +243,7 @@ wcstring parser_t::block_stack_description() const {
     }
     return result;
 }
+#endif
 
 const block_t *parser_t::block_at_index(size_t idx) const {
     // Zero corresponds to the last element in our vector.
@@ -253,11 +256,7 @@ block_t *parser_t::block_at_index(size_t idx) {
     return idx < count ? block_stack.at(count - idx - 1) : NULL;
 }
 
-const block_t *parser_t::current_block() const {
-    return block_stack.empty() ? NULL : block_stack.back();
-}
-
-block_t *parser_t::current_block() { return block_stack.empty() ? NULL : block_stack.back(); }
+block_t *const parser_t::current_block() { return block_stack.empty() ? NULL : block_stack.back(); }
 
 void parser_t::forbid_function(const wcstring &function) { forbidden_function.push_back(function); }
 

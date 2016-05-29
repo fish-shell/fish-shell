@@ -81,7 +81,7 @@
 // The send stuff to foreground message.
 #define FG_MSG _(L"Send job %d, '%ls' to foreground\n")
 
-/// Datastructure to describe a builtin.
+/// Data structure to describe a builtin.
 struct builtin_data_t {
     // Name of the builtin.
     const wchar_t *name;
@@ -1807,9 +1807,7 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
                 srand48_r(time(0), &seed_buffer);
             }
             lrand48_r(&seed_buffer, &res);
-            // The labs() shouldn't be necessary since lrand48 is supposed to
-            // return only positive integers but we're going to play it safe.
-            streams.out.append_format(L"%ld\n", labs(res % 32768));
+            streams.out.append_format(L"%ld\n", res % 32768);
             break;
         }
         case 1: {

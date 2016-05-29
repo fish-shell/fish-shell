@@ -38,8 +38,8 @@ static pthread_mutex_t intern_lock = PTHREAD_MUTEX_INITIALIZER;
 static const wchar_t *intern_with_dup(const wchar_t *in, bool dup) {
     if (!in) return NULL;
 
-    // debug( 0, L"intern %ls", in );
-    scoped_lock lock(intern_lock);
+    debug(5, L"intern %ls", in);
+    scoped_lock lock(intern_lock);  //!OCLINT(has side effects)
     const wchar_t *result;
 
 #if USE_SET

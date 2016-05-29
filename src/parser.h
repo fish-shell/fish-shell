@@ -193,8 +193,11 @@ class parser_t {
     /// The list of blocks, allocated with new. It's our responsibility to delete these.
     std::vector<block_t *> block_stack;
 
+#if 0
+// TODO: Lint says this isn't used (which is true). Should this be removed?
     /// Gets a description of the block stack, for debugging.
     wcstring block_stack_description() const;
+#endif
 
     /// List of profile items, allocated with new.
     std::vector<profile_item_t *> profile_items;
@@ -269,8 +272,7 @@ class parser_t {
     block_t *block_at_index(size_t idx);
 
     /// Returns the current (innermost) block.
-    const block_t *current_block() const;
-    block_t *current_block();
+    block_t *const current_block();
 
     /// Count of blocks.
     size_t block_count() const { return block_stack.size(); }

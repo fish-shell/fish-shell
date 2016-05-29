@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <sys/select.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <queue>
@@ -107,7 +108,7 @@ static SpawnRequest_t *dequeue_spawn_request(void) {
 }
 
 static void enqueue_thread_result(SpawnRequest_t *req) {
-    scoped_lock lock(s_result_queue_lock);
+    scoped_lock lock(s_result_queue_lock);  //!OCLINT(has side effects)
     s_result_queue.push(req);
 }
 
@@ -195,7 +196,7 @@ int iothread_perform_base(int (*handler)(void *), void (*completionCallback)(voi
     {
         // Lock around a local region. Note that we can only access s_active_thread_count under the
         // lock.
-        scoped_lock lock(s_spawn_queue_lock);
+        scoped_lock lock(s_spawn_queue_lock);  //!OCLINT(has side effects)
         add_to_queue(req);
         if (s_active_thread_count < IO_MAX_THREADS) {
             s_active_thread_count++;
@@ -293,7 +294,7 @@ static void iothread_service_main_thread_requests(void) {
     // Move the queue to a local variable.
     std::queue<MainThreadRequest_t *> request_queue;
     {
-        scoped_lock queue_lock(s_main_thread_request_queue_lock);
+        scoped_lock queue_lock(s_main_thread_request_queue_lock);  //!OCLINT(has side effects)
         std::swap(request_queue, s_main_thread_request_queue);
     }
 
@@ -316,7 +317,7 @@ static void iothread_service_main_thread_requests(void) {
         //
         // Because the waiting thread performs step 1 under the lock, if we take the lock, we avoid
         // posting before the waiting thread is waiting.
-        scoped_lock broadcast_lock(s_main_thread_performer_lock);
+        scoped_lock broadcast_lock(s_main_thread_performer_lock);  //!OCLINT(has side effects)
         VOMIT_ON_FAILURE(pthread_cond_broadcast(&s_main_thread_performer_condition));
     }
 }
@@ -326,7 +327,7 @@ static void iothread_service_result_queue() {
     // Move the queue to a local variable.
     std::queue<SpawnRequest_t *> result_queue;
     {
-        scoped_lock queue_lock(s_result_queue_lock);
+        scoped_lock queue_lock(s_result_queue_lock);  //!OCLINT(has side effects)
         std::swap(result_queue, s_result_queue);
     }
 
@@ -357,7 +358,7 @@ int iothread_perform_on_main_base(int (*handler)(void *), void *context) {
     // Append it. Do not delete the nested scope as it is crucial to the proper functioning of this
     // code by virtue of the lock management.
     {
-        scoped_lock queue_lock(s_main_thread_request_queue_lock);
+        scoped_lock queue_lock(s_main_thread_request_queue_lock);  //!OCLINT(has side effects)
         s_main_thread_request_queue.push(&req);
     }
 
@@ -366,7 +367,7 @@ int iothread_perform_on_main_base(int (*handler)(void *), void *context) {
     VOMIT_ON_FAILURE(!write_loop(s_write_pipe, &wakeup_byte, sizeof wakeup_byte));
 
     // Wait on the condition, until we're done.
-    scoped_lock perform_lock(s_main_thread_performer_lock);
+    scoped_lock perform_lock(s_main_thread_performer_lock);  //!OCLINT(has side effects)
     while (!req.done) {
         // It would be nice to support checking for cancellation here, but the clients need a
         // deterministic way to clean up to avoid leaks

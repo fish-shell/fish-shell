@@ -7,7 +7,6 @@
 // compiling several modules that include this header because they use symbols which are defined as
 // macros in <term.h>.
 // IWYU pragma: no_include <term.h>
-#include <signal.h>
 #include <stdint.h>
 #include <unistd.h>
 // The following include must be kept despite what IWYU says. That's because of the interaction
@@ -83,16 +82,6 @@ wchar_t *wcsndup(const wchar_t *in, size_t c);
 wchar_t *wcsndup(const wchar_t *in, size_t c);
 #endif
 
-#ifndef HAVE_WCSLCAT
-/// Appends src to string dst of size siz (unlike wcsncat, siz is the full size of dst, not space
-/// left).  At most siz-1 characters will be copied.  Always NUL terminates (unless siz <=
-/// wcslen(dst)).  Returns wcslen(src) + MIN(siz, wcslen(initial dst)).  If retval >= siz,
-/// truncation occurred.
-///
-/// This is the OpenBSD strlcat function, modified for wide characters, and renamed to reflect this
-/// change.
-size_t wcslcat(wchar_t *dst, const wchar_t *src, size_t siz);
-#endif
 #ifndef HAVE_WCSLCPY
 /// Copy src to string dst of size siz.  At most siz-1 characters will be copied.  Always NUL
 /// terminates (unless siz == 0).  Returns wcslen(src); if retval >= siz, truncation occurred.
@@ -103,7 +92,7 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz);
 #endif
 
 #ifndef HAVE_LRAND48_R
-/// Datastructure for the lrand48_r fallback implementation.
+/// Data structure for the lrand48_r fallback implementation.
 struct drand48_data {
     unsigned int seed;
 };

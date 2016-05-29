@@ -198,11 +198,13 @@ static void default_handler(int signal, siginfo_t *info, void *context) {
     }
 }
 
+#ifdef SIGWINCH
 /// Respond to a winch signal by checking the terminal size.
 static void handle_winch(int sig, siginfo_t *info, void *context) {
     common_handle_winch(sig);
     default_handler(sig, 0, 0);
 }
+#endif
 
 /// Respond to a hup signal by exiting, unless it is caught by a shellscript function, in which case
 /// we do nothing.

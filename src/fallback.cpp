@@ -90,6 +90,7 @@ char *tparm_solaris_kludge(char *str, ...) {
 
 #endif
 
+#if __APPLE__
 /// Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g.
 /// building on Linux) these should end up just being stripped, as they are static functions that
 /// are not referenced in this file.
@@ -103,6 +104,7 @@ __attribute__((unused)) static wchar_t *wcsdup_fallback(const wchar_t *in) {
     memcpy(out, in, sizeof(wchar_t) * (len + 1));
     return out;
 }
+#endif
 
 __attribute__((unused)) static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b) {
     if (*a == 0) {
@@ -168,54 +170,6 @@ wchar_t *wcsndup(const wchar_t *in, size_t c) {
 }
 #endif
 
-#ifndef HAVE_WCSLCAT
-
-/*$OpenBSD: strlcat.c,v 1.11 2003/06/17 21:56:24 millert Exp $*/
-
-/*
- * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
-
-size_t wcslcat(wchar_t *dst, const wchar_t *src, size_t siz) {
-    register wchar_t *d = dst;
-    register const wchar_t *s = src;
-    register size_t n = siz;
-    size_t dlen;
-
-    // Find the end of dst and adjust bytes left but don't go past end.
-    while (n-- != 0 && *d != '\0') d++;
-
-    dlen = d - dst;
-    n = siz - dlen;
-
-    if (n == 0) return dlen + wcslen(s);
-
-    while (*s != '\0') {
-        if (n != 1) {
-            *d++ = *s;
-            n--;
-        }
-        s++;
-    }
-    *d = '\0';
-
-    return dlen + (s - src);
-    /* count does not include NUL */
-}
-
-#endif
 #ifndef HAVE_WCSLCPY
 
 /*$OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $*/

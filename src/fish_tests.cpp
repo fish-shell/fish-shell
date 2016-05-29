@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
@@ -60,7 +61,6 @@
 #include "signal.h"
 #include "tokenizer.h"
 #include "utf8.h"
-#include "util.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -2194,62 +2194,6 @@ static void test_autosuggestion_combining() {
     do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHA") == L"alpha");
 }
 
-/// Test speed of completion calculations.
-void perf_complete() {
-    wchar_t c;
-    std::vector<completion_t> out;
-    long long t1, t2;
-    int matches = 0;
-    double t;
-    wchar_t str[3] = {0, 0, 0};
-    int i;
-
-    say(L"Testing completion performance");
-
-    reader_push(L"");
-    say(L"Here we go");
-
-    t1 = get_time();
-
-    for (c = L'a'; c <= L'z'; c++) {
-        str[0] = c;
-        reader_set_buffer(str, 0);
-
-        complete(str, &out, COMPLETION_REQUEST_DEFAULT, env_vars_snapshot_t::current());
-
-        matches += out.size();
-        out.clear();
-    }
-    t2 = get_time();
-
-    t = (double)(t2 - t1) / (1000000 * 26);
-
-    say(L"One letter command completion took %f seconds per completion, %f microseconds/match", t,
-        (double)(t2 - t1) / matches);
-
-    matches = 0;
-    t1 = get_time();
-    for (i = 0; i < LAPS; i++) {
-        str[0] = 'a' + (rand() % 26);
-        str[1] = 'a' + (rand() % 26);
-
-        reader_set_buffer(str, 0);
-
-        complete(str, &out, COMPLETION_REQUEST_DEFAULT, env_vars_snapshot_t::current());
-
-        matches += out.size();
-        out.clear();
-    }
-    t2 = get_time();
-
-    t = (double)(t2 - t1) / (1000000 * LAPS);
-
-    say(L"Two letter command completion took %f seconds per completion, %f microseconds/match", t,
-        (double)(t2 - t1) / matches);
-
-    reader_pop();
-}
-
 static void test_history_matches(history_search_t &search, size_t matches) {
     size_t i;
     for (i = 0; i < matches; i++) {
@@ -3936,11 +3880,6 @@ int main(int argc, char **argv) {
 
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");
-
-    // Skip performance tests for now, since they seem to hang when running from inside make.
-
-    //  say( L"Testing performance" );
-    //  perf_complete();
 
     reader_destroy();
     builtin_destroy();

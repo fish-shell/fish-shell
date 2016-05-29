@@ -310,7 +310,7 @@ AC_STRUCT_DIRENT_D_TYPE
 
 AC_CHECK_FUNCS( wcsndup )
 AC_CHECK_FUNCS( futimes )
-AC_CHECK_FUNCS( wcslcat wcslcpy lrand48_r killpg )
+AC_CHECK_FUNCS( wcslcpy lrand48_r killpg )
 AC_CHECK_FUNCS( backtrace_symbols getifaddrs )
 AC_CHECK_FUNCS( futimens clock_gettime )
 

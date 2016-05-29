@@ -86,7 +86,7 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
         this->last_path_tokenized.clear();
         tokenize_variable_array(this->last_path, this->last_path_tokenized);
 
-        scoped_lock locker(lock);
+        scoped_lock locker(lock);  //!OCLINT(side-effect)
         this->evict_all_nodes();
     }
 

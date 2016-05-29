@@ -167,7 +167,7 @@ static pthread_mutex_t job_id_lock = PTHREAD_MUTEX_INITIALIZER;
 static std::vector<bool> consumed_job_ids;
 
 job_id_t acquire_job_id(void) {
-    scoped_lock lock(job_id_lock);
+    scoped_lock lock(job_id_lock);  //!OCLINT(has side effects)
 
     // Find the index of the first 0 slot.
     std::vector<bool>::iterator slot =
@@ -186,7 +186,7 @@ job_id_t acquire_job_id(void) {
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
-    scoped_lock lock(job_id_lock);
+    scoped_lock lock(job_id_lock);  //!OCLINT(has side effects)
     size_t slot = (size_t)(jid - 1), count = consumed_job_ids.size();
 
     // Make sure this slot is within our vector and is currently set to consumed.
@@ -649,61 +649,35 @@ int job_reap(bool interactive) {
 
 /// Get the CPU time for the specified process.
 unsigned long proc_get_jiffies(process_t *p) {
-    wchar_t fn[FN_SIZE];
+    if (p->pid <= 0) return 0;
 
+    wchar_t fn[FN_SIZE];
     char state;
     int pid, ppid, pgrp, session, tty_nr, tpgid, exit_signal, processor;
-
     long int cutime, cstime, priority, nice, placeholder, itrealvalue, rss;
     unsigned long int flags, minflt, cminflt, majflt, cmajflt, utime, stime, starttime, vsize, rlim,
         startcode, endcode, startstack, kstkesp, kstkeip, signal, blocked, sigignore, sigcatch,
         wchan, nswap, cnswap;
     char comm[1024];
 
-    if (p->pid <= 0) return 0;
-
     swprintf(fn, FN_SIZE, L"/proc/%d/stat", p->pid);
-
     FILE *f = wfopen(fn, "r");
     if (!f) return 0;
 
-    int count = fscanf(
-        f,
-        "%d %s %c "
-        "%d %d %d "
-        "%d %d %lu "
-
-        "%lu %lu %lu "
-        "%lu %lu %lu "
-        "%ld %ld %ld "
-
-        "%ld %ld %ld "
-        "%lu %lu %ld "
-        "%lu %lu %lu "
-
-        "%lu %lu %lu "
-        "%lu %lu %lu "
-        "%lu %lu %lu "
-
-        "%lu %d %d ",
-
-        &pid, comm, &state, &ppid, &pgrp, &session, &tty_nr, &tpgid, &flags,
-
-        &minflt, &cminflt, &majflt, &cmajflt, &utime, &stime, &cutime, &cstime, &priority,
-
-        &nice, &placeholder, &itrealvalue, &starttime, &vsize, &rss, &rlim, &startcode, &endcode,
-
-        &startstack, &kstkesp, &kstkeip, &signal, &blocked, &sigignore, &sigcatch, &wchan, &nswap,
-
-        &cnswap, &exit_signal, &processor);
-
-    // Don't need to check exit status of fclose on read-only streams.
+    // TODO: replace the use of fscanf() as it is brittle and should never be used.
+    int count = fscanf(f,
+                       "%9d %1023s %c %9d %9d %9d %9d %9d %9lu "
+                       "%9lu %9lu %9lu %9lu %9lu %9lu %9ld %9ld %9ld "
+                       "%9ld %9ld %9ld %9lu %9lu %9ld %9lu %9lu %9lu "
+                       "%9lu %9lu %9lu %9lu %9lu %9lu %9lu %9lu %9lu "
+                       "%9lu %9d %9d ",
+                       &pid, comm, &state, &ppid, &pgrp, &session, &tty_nr, &tpgid, &flags, &minflt,
+                       &cminflt, &majflt, &cmajflt, &utime, &stime, &cutime, &cstime, &priority,
+                       &nice, &placeholder, &itrealvalue, &starttime, &vsize, &rss, &rlim,
+                       &startcode, &endcode, &startstack, &kstkesp, &kstkeip, &signal, &blocked,
+                       &sigignore, &sigcatch, &wchan, &nswap, &cnswap, &exit_signal, &processor);
     fclose(f);
-
-    if (count < 17) {
-        return 0;
-    }
-
+    if (count < 17) return 0;
     return utime + stime + cutime + cstime;
 }
 

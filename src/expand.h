@@ -144,9 +144,6 @@ void expand_tilde(wcstring &input);
 /// Perform the opposite of tilde expansion on the string, which is modified in place.
 wcstring replace_home_directory_with_tilde(const wcstring &str);
 
-/// Testing function for getting all process names.
-std::vector<wcstring> expand_get_all_process_names(void);
-
 /// Abbreviation support. Expand src as an abbreviation, returning true if one was found, false if
 /// not. If result is not-null, returns the abbreviation by reference.
 #define USER_ABBREVIATIONS_VARIABLE_NAME L"fish_user_abbreviations"

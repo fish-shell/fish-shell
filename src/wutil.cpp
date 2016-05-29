@@ -415,7 +415,7 @@ const wchar_t *wgettext(const wchar_t *in) {
     wgettext_init_if_necessary();
 
     wcstring key = in;
-    scoped_lock lock(wgettext_lock);
+    scoped_lock lock(wgettext_lock);  //!OCLINT(has side effects)
 
     wcstring &val = wgettext_map[key];
     if (val.empty()) {

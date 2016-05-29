@@ -6,7 +6,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <sys/types.h>
 #include <wchar.h>
 #include <wctype.h>
 

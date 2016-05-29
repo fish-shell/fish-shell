@@ -661,22 +661,11 @@ static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length
 static size_t offset_of_next_item(const char *begin, size_t mmap_length,
                                   history_file_type_t mmap_type, size_t *inout_cursor,
                                   time_t cutoff_timestamp) {
-    size_t result;
-    switch (mmap_type) {
-        case history_type_fish_2_0: {
-            result =
-                offset_of_next_item_fish_2_0(begin, mmap_length, inout_cursor, cutoff_timestamp);
-            break;
-        }
-        case history_type_fish_1_x: {
-            result = offset_of_next_item_fish_1_x(begin, mmap_length, inout_cursor);
-            break;
-        }
-        case history_type_unknown: {
-            // Oh well.
-            result = (size_t)-1;
-            break;
-        }
+    size_t result = (size_t)-1;
+    if (mmap_type == history_type_fish_2_0) {
+        result = offset_of_next_item_fish_2_0(begin, mmap_length, inout_cursor, cutoff_timestamp);
+    } else if (mmap_type == history_type_fish_1_x) {
+        result = offset_of_next_item_fish_1_x(begin, mmap_length, inout_cursor);
     }
     return result;
 }

@@ -9,6 +9,6 @@
 #    ...
 # end
 # To include configuration only for interactive shells, use
-# if status --is-interactiv
+# if status --is-interactive
 #   ...
 # end

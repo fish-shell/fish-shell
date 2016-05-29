@@ -189,7 +189,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 
 	set -l svn_remote
 	# get some config options from git-config
-	command git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showupstream)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
+	command git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showupstream)$' ^/dev/null | while read -lz key value
 		switch $key
 		case bash.showupstream
 			set show_upstream $value
@@ -198,14 +198,14 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 			set svn_remote $svn_remote $value
 			# Avoid adding \| to the beginning to avoid needing #?? later
 			if test -n "$svn_url_pattern"
-				set svn_url_pattern $svn_url_pattern"\\|$value"
+				set svn_url_pattern $svn_url_pattern"|$value"
 			else
 				set svn_url_pattern $value
 			end
 			set upstream svn+git # default upstream is SVN if available, else git
 
 			# Save the config key (without .url) for later use
-			set -l remote_prefix (echo $key | sed 's/\.url$//')
+			set -l remote_prefix (string replace -r '\.url$' '' -- $key)
 			set svn_prefix $svn_prefix $remote_prefix
 		end
 	end
@@ -242,11 +242,11 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		set -l svn_upstream (git log --first-parent -1 --grep="^git-svn-id: \($svn_url_pattern\)" ^/dev/null)
 		if test (count $svn_upstream) -ne 0
 			echo $svn_upstream[-1] | read -l __ svn_upstream __
-			set svn_upstream (echo $svn_upstream | sed 's/@.*//')
+			set svn_upstream (string replace -r '@.*' '' -- $svn_upstream)
 			set -l cur_prefix
 			for i in (seq (count $svn_remote))
 				set -l remote $svn_remote[$i]
-				set -l mod_upstream (echo $svn_upstream | sed "s|$remote||")
+				set -l mod_upstream (string replace "$remote" "" -- $svn_upstream)
 				if test "$svn_upstream" != "$mod_upstream"
 					# we found a valid remote
 					set svn_upstream $mod_upstream
@@ -263,14 +263,14 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 					set upstream git-svn
 				end
 			else
-				set upstream (echo $svn_upstream | sed 's|/branches||; s|/||g')
+				set upstream (string replace '/branches' '' -- $svn_upstream | string replace -a '/' '')
 
 				# Use fetch config to fix upstream
 				set -l fetch_val (command git config "$cur_prefix".fetch)
 				if test -n "$fetch_val"
 					set -l IFS :
 					echo "$fetch_val" | read -l trunk pattern
-					set upstream (echo $pattern | sed -e "s|/$trunk\$||") /$upstream
+					set upstream (string replace -r -- "/$trunk\$" '' $pattern) /$upstream
 				end
 			end
 		else if test $upstream = svn+git
@@ -429,7 +429,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 	if test -n "$u"
 		set u "$___fish_git_prompt_color_untrackedfiles$u$___fish_git_prompt_color_untrackedfiles_done"
 	end
-	set b (echo $b | sed 's|refs/heads/||')
+	set b (string replace refs/heads/ '' -- $b)
 	if test -n "$b"
 		set b "$branch_color$b$branch_done"
 	end

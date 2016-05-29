@@ -53,8 +53,6 @@
 #     verbose        show number of commits ahead/behind (+/-) upstream
 #     name           if verbose, then also show the upstream abbrev name
 #     informative    similar to verbose, but shows nothing when equal (fish only)
-#     legacy         don't use the '--count' option available in recent versions
-#                    of git-rev-list
 #     git            always compare HEAD to @{upstream}
 #     svn            always compare HEAD to your SVN upstream
 #     none           disables (fish only, useful with show_informative_status)
@@ -178,7 +176,6 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	set -l svn_url_pattern
 	set -l count
 	set -l upstream git
-	set -l legacy
 	set -l verbose
 	set -l name
 
@@ -222,9 +219,6 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 			set -e informative
 		case informative
 			set informative 1
-		case legacy
-			set legacy 1
-			set -e informative
 		case name
 			set name 1
 		case none
@@ -279,20 +273,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	end
 
 	# Find how many commits we are ahead/behind our upstream
-	if test -z "$legacy"
-		set count (command git rev-list --count --left-right $upstream...HEAD ^/dev/null)
-	else
-		# produce equivalent output to --count for older versions of git
-		set -l os
-		set -l commits (command git rev-list --left-right $upstream...HEAD ^/dev/null; set os $status)
-		if test $os -eq 0
-			set -l behind (count (for arg in $commits; echo $arg; end | string match -r '^<'))
-			set -l ahead (count (for arg in $commits; echo $arg; end | string match -r -v '^<'))
-			set count "$behind	$ahead"
-		else
-			set count
-		end
-	end
+	set count (command git rev-list --count --left-right $upstream...HEAD ^/dev/null)
 
 	# calculate the result
 	if test -n "$verbose"

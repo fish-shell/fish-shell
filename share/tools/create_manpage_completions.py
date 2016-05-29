@@ -664,7 +664,7 @@ class TypeDeroffManParser(ManParser):
 # Raises IOError if it cannot be opened
 def file_is_overwritable(path):
     result = False
-    file = open(path, 'r')
+    file = codecs.open(path, "r", encoding="utf-8")
     for line in file:
         # Skip leading empty lines
         line = line.strip()

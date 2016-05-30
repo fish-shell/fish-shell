@@ -1433,53 +1433,56 @@ static bool handle_completions(const std::vector<completion_t> &comp,
             surviving_completions.push_back(el);
         }
 
-        // Try to find a common prefix to insert among the surviving completions.
-        wcstring common_prefix;
-        complete_flags_t flags = 0;
-        bool prefix_is_partial_completion = false;
-        for (size_t i = 0; i < surviving_completions.size(); i++) {
-            const completion_t &el = surviving_completions.at(i);
-            if (i == 0) {
-                // First entry, use the whole string.
-                common_prefix = el.completion;
-                flags = el.flags;
-            } else {
-                // Determine the shared prefix length.
-                size_t idx, max = mini(common_prefix.size(), el.completion.size());
-                for (idx = 0; idx < max; idx++) {
-                    wchar_t ac = common_prefix.at(idx), bc = el.completion.at(idx);
-                    bool matches = (ac == bc);
-                    // If we are replacing the token, allow case to vary.
-                    if (will_replace_token && !matches) {
-                        // Hackish way to compare two strings in a case insensitive way, hopefully
-                        // better than towlower().
-                        matches = (wcsncasecmp(&ac, &bc, 1) == 0);
+        bool use_prefix = false;
+        if (match_type_shares_prefix(best_match_type)) {
+            // Try to find a common prefix to insert among the surviving completions.
+            wcstring common_prefix;
+            complete_flags_t flags = 0;
+            bool prefix_is_partial_completion = false;
+            for (size_t i = 0; i < surviving_completions.size(); i++) {
+                const completion_t &el = surviving_completions.at(i);
+                if (i == 0) {
+                    // First entry, use the whole string.
+                    common_prefix = el.completion;
+                    flags = el.flags;
+                } else {
+                    // Determine the shared prefix length.
+                    size_t idx, max = mini(common_prefix.size(), el.completion.size());
+                    for (idx = 0; idx < max; idx++) {
+                        wchar_t ac = common_prefix.at(idx), bc = el.completion.at(idx);
+                        bool matches = (ac == bc);
+                        // If we are replacing the token, allow case to vary.
+                        if (will_replace_token && !matches) {
+                            // Hackish way to compare two strings in a case insensitive way,
+                            // hopefully better than towlower().
+                            matches = (wcsncasecmp(&ac, &bc, 1) == 0);
+                        }
+                        if (!matches) break;
                     }
-                    if (!matches) break;
+
+                    // idx is now the length of the new common prefix.
+                    common_prefix.resize(idx);
+                    prefix_is_partial_completion = true;
+
+                    // Early out if we decide there's no common prefix.
+                    if (idx == 0) break;
                 }
-
-                // idx is now the length of the new common prefix.
-                common_prefix.resize(idx);
-                prefix_is_partial_completion = true;
-
-                // Early out if we decide there's no common prefix.
-                if (idx == 0) break;
             }
-        }
 
-        // Determine if we use the prefix. We use it if it's non-empty and it will actually make the
-        // command line longer. It may make the command line longer by virtue of not using
-        // REPLACE_TOKEN (so it always appends to the command line), or by virtue of replacing the
-        // token but being longer than it.
-        bool use_prefix = common_prefix.size() > (will_replace_token ? tok.size() : 0);
-        assert(!use_prefix || !common_prefix.empty());
+            // Determine if we use the prefix. We use it if it's non-empty and it will actually make
+            // the command line longer. It may make the command line longer by virtue of not using
+            // REPLACE_TOKEN (so it always appends to the command line), or by virtue of replacing
+            // the token but being longer than it.
+            use_prefix = common_prefix.size() > (will_replace_token ? tok.size() : 0);
+            assert(!use_prefix || !common_prefix.empty());
 
-        if (use_prefix) {
-            // We got something. If more than one completion contributed, then it means we have a
-            // prefix; don't insert a space after it.
-            if (prefix_is_partial_completion) flags |= COMPLETE_NO_SPACE;
-            completion_insert(common_prefix.c_str(), flags);
-            success = true;
+            if (use_prefix) {
+                // We got something. If more than one completion contributed, then it means we have
+                // a prefix; don't insert a space after it.
+                if (prefix_is_partial_completion) flags |= COMPLETE_NO_SPACE;
+                completion_insert(common_prefix.c_str(), flags);
+                success = true;
+            }
         }
 
         if (continue_after_prefix_insertion || !use_prefix) {

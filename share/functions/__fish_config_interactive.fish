@@ -37,9 +37,9 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -q fish_color_normal
         or set -U fish_color_normal normal
         set -q fish_color_command
-        or set -U fish_color_command 005fd7 purple
+        or set -U fish_color_command brblue
         set -q fish_color_param
-        or set -U fish_color_param 00afff cyan
+        or set -U fish_color_param cyan
         set -q fish_color_redirection
         or set -U fish_color_redirection normal
         set -q fish_color_comment
@@ -55,7 +55,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -q fish_color_quote
         or set -U fish_color_quote brown
         set -q fish_color_autosuggestion
-        or set -U fish_color_autosuggestion 555 yellow
+        or set -U fish_color_autosuggestion brgrey
         set -q fish_color_user
         or set -U fish_color_user green
 
@@ -86,8 +86,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
         or set -U fish_pager_color_prefix cyan
         set -q fish_pager_color_completion
         or set -U fish_pager_color_completion normal
-        set -q fish_pager_color_description 555
-        or set -U fish_pager_color_description 555 yellow
+        set -q fish_pager_color_description
+        or set -U fish_pager_color_description brgrey
         set -q fish_pager_color_progress
         or set -U fish_pager_color_progress cyan
 

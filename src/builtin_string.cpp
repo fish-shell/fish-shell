@@ -376,8 +376,12 @@ class pcre2_matcher_t : public string_matcher_t {
         // Return values: -1 = error, 0 = no match, 1 = match.
         if (pcre2_rc == PCRE2_ERROR_NOMATCH) {
             if (opts.invert_match && !opts.quiet) {
-                streams.out.append(arg);
-                streams.out.push_back(L'\n');
+                if (opts.index) {
+                    streams.out.append_format(L"1 %lu\n", wcslen(arg));
+                } else {
+                    streams.out.append(arg);
+                    streams.out.push_back(L'\n');
+                }
             }
 
             return opts.invert_match ? 1 : 0;

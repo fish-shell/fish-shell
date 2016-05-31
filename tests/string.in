@@ -88,3 +88,5 @@ string length 2>/dev/null; or echo "missing argument returns 0"
 string match -r -v "[dcantg].*" dog can cat diz; or echo "no regexp invert match"
 
 string match -v "???" dog can cat diz; or echo "no glob invert match"
+
+string match -rvn a bbb

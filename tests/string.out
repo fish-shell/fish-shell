@@ -62,3 +62,4 @@ invalid argument error
 missing argument returns 0
 no regexp invert match
 no glob invert match
+1 3

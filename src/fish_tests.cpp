@@ -845,35 +845,25 @@ static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, si
         }
     }
 
-    if (dst != NULL) {
+    if (!dst) {
+        size = utf8_to_wchar(src, slen, NULL, flags);
+    } else {
         mem = (wchar_t *)malloc(dlen * sizeof(*mem));
         if (mem == NULL) {
             err(L"u2w: %s: MALLOC FAILED\n", descr);
             return;
         }
+
+        std::wstring buff;
+        size = utf8_to_wchar(src, slen, &buff, flags);
+        std::copy(buff.begin(), buff.begin() + std::min(dlen, buff.size()), mem);
     }
 
-    do {
-        if (mem == NULL) {
-            size = utf8_to_wchar(src, slen, NULL, flags);
-        } else {
-            std::wstring buff;
-            size = utf8_to_wchar(src, slen, &buff, flags);
-            std::copy(buff.begin(), buff.begin() + std::min(dlen, buff.size()), mem);
-        }
-        if (res != size) {
-            err(L"u2w: %s: FAILED (rv: %lu, must be %lu)", descr, size, res);
-            break;
-        }
-
-        if (mem == NULL) break; /* OK */
-
-        if (memcmp(mem, dst, size * sizeof(*mem)) != 0) {
-            err(L"u2w: %s: BROKEN", descr);
-            break;
-        }
-
-    } while (0);
+    if (res != size) {
+        err(L"u2w: %s: FAILED (rv: %lu, must be %lu)", descr, size, res);
+    } else if (mem && memcmp(mem, dst, size * sizeof(*mem)) != 0) {
+        err(L"u2w: %s: BROKEN", descr);
+    }
 
     free(mem);
 }
@@ -903,7 +893,7 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
         }
     }
 
-    if (dst != NULL) {
+    if (dst) {
         mem = (char *)malloc(dlen);
         if (mem == NULL) {
             err(L"w2u: %s: MALLOC FAILED", descr);
@@ -914,17 +904,10 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
     size = wchar_to_utf8(src, slen, mem, dlen, flags);
     if (res != size) {
         err(L"w2u: %s: FAILED (rv: %lu, must be %lu)", descr, size, res);
-        goto finish;
-    }
-
-    if (mem == NULL) goto finish; /* OK */
-
-    if (memcmp(mem, dst, size) != 0) {
+    } else if (dst && memcmp(mem, dst, size) != 0) {
         err(L"w2u: %s: BROKEN", descr);
-        goto finish;
     }
 
-finish:
     free(mem);
 }
 

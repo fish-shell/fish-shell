@@ -87,7 +87,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -q fish_pager_color_completion
         or set -U fish_pager_color_completion normal
         set -q fish_pager_color_description
-        or set -U fish_pager_color_description grey yellow
+        or set -U fish_pager_color_description brgrey
         set -q fish_pager_color_progress
         or set -U fish_pager_color_progress cyan
 

@@ -645,5 +645,31 @@ complete -f -c git -n '__fish_git_using_command clean' -s x -d 'Remove ignored f
 complete -f -c git -n '__fish_git_using_command clean' -s X -d 'Remove only ignored files'
 # TODO -e option
 
+### git blame
+complete -f -c git -n '__fish_git_needs_command' -a blame -d 'Show what revision and author last modified each line of a file'
+complete -f -c git -n '__fish_git_using_command blame' -s b -d 'Show blank SHA-1 for boundary commits'
+complete -f -c git -n '__fish_git_using_command blame' -l root -d 'Do not treat root commits as boundaries'
+complete -f -c git -n '__fish_git_using_command blame' -l show-stats -d 'Include additional statistics'
+complete -f -c git -n '__fish_git_using_command blame' -s L -d 'Annotate only the given line range'
+complete -f -c git -n '__fish_git_using_command blame' -s l -d 'Show long rev'
+complete -f -c git -n '__fish_git_using_command blame' -s t -d 'Show raw timestamp'
+complete -r -c git -n '__fish_git_using_command blame' -s S -d 'Use revisions from named file instead of calling rev-list'
+complete -f -c git -n '__fish_git_using_command blame' -l reverse -d 'Walk history forward instead of backward'
+complete -f -c git -n '__fish_git_using_command blame' -s p -l porcelain -d 'Show in a format designed for machine consumption'
+complete -f -c git -n '__fish_git_using_command blame' -l line-porcelain -d 'Show the porcelain format'
+complete -f -c git -n '__fish_git_using_command blame' -l incremental -d 'Show the result incrementally'
+complete -r -c git -n '__fish_git_using_command blame' -l contents -d 'Instead of working tree, use the contents of the named file'
+complete -x -c git -n '__fish_git_using_command blame' -l date -d 'Specifies the format used to output dates'
+complete -f -c git -n '__fish_git_using_command blame' -s M -d 'Detect moved or copied lines within a file'
+complete -f -c git -n '__fish_git_using_command blame' -s C -d 'Detect lines moved or copied from other files that were modified in the same commit'
+complete -f -c git -n '__fish_git_using_command blame' -s h -d 'Show help message'
+complete -f -c git -n '__fish_git_using_command blame' -s c -d 'Use the same output mode as git-annotate'
+complete -f -c git -n '__fish_git_using_command blame' -s f -l show-name -d 'Show the filename in the original commit'
+complete -f -c git -n '__fish_git_using_command blame' -s n -l show-number -d 'Show the line number in the original commit'
+complete -f -c git -n '__fish_git_using_command blame' -s s -d 'Suppress the author name and timestamp from the output'
+complete -f -c git -n '__fish_git_using_command blame' -s e -l show-email -d 'Show the author email instead of author name'
+complete -f -c git -n '__fish_git_using_command blame' -s w -d 'Ignore whitespace changes'
+
+
 ## Custom commands (git-* commands installed in the PATH)
 complete -c git -n '__fish_git_needs_command' -a '(__fish_git_custom_commands)' -d 'Custom command'

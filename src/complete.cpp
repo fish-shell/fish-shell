@@ -56,7 +56,9 @@
 /// since it can occur, and should not be translated. (Gettext returns the version information as
 /// the response).
 #ifdef USE_GETTEXT
-static const wchar_t *C_(const wcstring &s) { return s.empty() ? L"" : wgettext(s.c_str()); }
+static const wchar_t *C_(const wcstring &s) {
+    return s.empty() ? L"" : wgettext(s.c_str()).c_str();
+}
 #else
 static const wcstring &C_(const wcstring &s) { return s; }
 #endif
@@ -193,12 +195,13 @@ completion_t::~completion_t() {}
 // Clear the COMPLETE_AUTO_SPACE flag, and set COMPLETE_NO_SPACE appropriately depending on the
 // suffix of the string.
 static complete_flags_t resolve_auto_space(const wcstring &comp, complete_flags_t flags) {
+    complete_flags_t new_flags = flags;
     if (flags & COMPLETE_AUTO_SPACE) {
-        flags = flags & ~COMPLETE_AUTO_SPACE;
+        new_flags &= ~COMPLETE_AUTO_SPACE;
         size_t len = comp.size();
-        if (len > 0 && (wcschr(L"/=@:", comp.at(len - 1)) != 0)) flags |= COMPLETE_NO_SPACE;
+        if (len > 0 && (wcschr(L"/=@:", comp.at(len - 1)) != 0)) new_flags |= COMPLETE_NO_SPACE;
     }
-    return flags;
+    return new_flags;
 }
 
 // completion_t functions. Note that the constructor resolves flags!

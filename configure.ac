@@ -237,18 +237,6 @@ LDFLAGS="$prev_LDFLAGS"
 
 AC_CHECK_FILES([/proc/self/stat])
 
-
-#
-# This is ued to tell the wgetopt library to translate strings. This
-# way wgetopt can be dropped into any project without requiring i18n.
-#
-
-AC_DEFINE(
-  [HAVE_TRANSLATE_H],
-  [1],
-  [Define to 1 if the wgettext function should be used for translating strings.]
-)
-
 # Disable curses macros that conflict with the STL
 AC_DEFINE([NCURSES_NOMACROS], [1], [Define to 1 to disable ncurses macros that conflict with the STL])
 AC_DEFINE([NOMACROS], [1], [Define to 1 to disable curses macros that conflict with the STL])

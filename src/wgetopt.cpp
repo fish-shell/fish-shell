@@ -36,7 +36,7 @@
 // You should have received a copy of the GNU Library General Public License along with the GNU C
 // Library; see the file COPYING.LIB.  If not, write to the Free Software Foundation, Inc., 675 Mass
 // Ave, Cambridge, MA 02139, USA.
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 
 #include <stdio.h>
 #include <wchar.h>
@@ -61,21 +61,6 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-// Use translation functions if available.
-#ifdef _
-#undef _
-#endif
-
-#ifdef HAVE_TRANSLATE_H
-#ifdef USE_GETTEXT
-#define _(string) wgettext(string)
-#else
-#define _(string) (string)
-#endif
-#else
-#define _(wstr) wstr
-#endif
 
 #ifdef __GNU_LIBRARY__
 // We want to avoid inclusion of string.h with non-GNU libraries because there are many ways it can
@@ -306,9 +291,8 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
         int indfound = 0;  // set to zero by Anton
         int option_index;
 
-        for (nameend = nextchar; *nameend && *nameend != '='; nameend++) {
-            // Do nothing.
-        }
+        for (nameend = nextchar; *nameend && *nameend != '='; nameend++)
+            ;  //!OCLINT(empty body)
 
         // Test all long options for either exact match or abbreviated matches.
         for (p = longopts, option_index = 0; p->name; p++, option_index++)

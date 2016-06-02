@@ -166,7 +166,6 @@ FILE *wfopen(const wcstring &path, const char *mode) {
         default: {
             errno = EINVAL;
             return NULL;
-            break;
         }
     }
     // Skip binary.
@@ -196,18 +195,22 @@ bool set_cloexec(int fd) {
 static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool cloexec) {
     ASSERT_IS_NOT_FORKED_CHILD();
     cstring tmp = wcs2string(pathname);
-// Prefer to use O_CLOEXEC. It has to both be defined and nonzero.
+    int fd;
+
 #ifdef O_CLOEXEC
-    if (cloexec && (O_CLOEXEC != 0)) {
-        flags |= O_CLOEXEC;
-        cloexec = false;
+    // Prefer to use O_CLOEXEC. It has to both be defined and nonzero.
+    if (cloexec) {
+        fd = open(tmp.c_str(), flags | O_CLOEXEC, mode);
+    } else {
+        fd = open(tmp.c_str(), flags, mode);
     }
-#endif
-    int fd = ::open(tmp.c_str(), flags, mode);
-    if (cloexec && fd >= 0 && !set_cloexec(fd)) {
+#else
+    fd = open(tmp.c_str(), flags, mode);
+    if (fd >= 0 && !set_cloexec(fd)) {
         close(fd);
         fd = -1;
     }
+#endif
     return fd;
 }
 
@@ -251,7 +254,8 @@ void wperror(const wchar_t *s) {
 int make_fd_nonblocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     int err = 0;
-    if (!(flags & O_NONBLOCK)) {
+    bool nonblocking = flags & O_NONBLOCK;
+    if (!nonblocking) {
         err = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
     }
     return err == -1 ? errno : 0;
@@ -260,7 +264,8 @@ int make_fd_nonblocking(int fd) {
 int make_fd_blocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     int err = 0;
-    if (flags & O_NONBLOCK) {
+    bool nonblocking = flags & O_NONBLOCK;
+    if (nonblocking) {
         err = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
     }
     return err == -1 ? errno : 0;
@@ -406,17 +411,13 @@ static void wgettext_init_if_necessary() {
     pthread_once(&once, wgettext_really_init);
 }
 
-const wchar_t *wgettext(const wchar_t *in) {
-    if (!in) return in;
-
+const wcstring &wgettext(const wchar_t *in) {
     // Preserve errno across this since this is often used in printing error messages.
     int err = errno;
+    wcstring key = in;
 
     wgettext_init_if_necessary();
-
-    wcstring key = in;
     scoped_lock lock(wgettext_lock);  //!OCLINT(has side effects)
-
     wcstring &val = wgettext_map[key];
     if (val.empty()) {
         cstring mbs_in = wcs2string(key);
@@ -427,7 +428,7 @@ const wchar_t *wgettext(const wchar_t *in) {
 
     // The returned string is stored in the map.
     // TODO: If we want to shrink the map, this would be a problem.
-    return val.c_str();
+    return val;
 }
 
 int wmkdir(const wcstring &name, int mode) {

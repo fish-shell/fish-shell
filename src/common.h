@@ -226,8 +226,8 @@ void write_ignore(int fd, const void *buff, size_t count);
         return retval;                                                     \
     }
 
-/// Shorthand for wgettext call.
-#define _(wstr) wgettext(wstr)
+/// Shorthand for wgettext call in situations where a C-style string is needed (e.g., fwprintf()).
+#define _(wstr) wgettext(wstr).c_str()
 
 /// Noop, used to tell xgettext that a string should be translated, even though it is not directly
 /// sent to wgettext.

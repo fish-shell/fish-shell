@@ -124,10 +124,15 @@ static null_terminated_array_t<char> export_array;
 static bool has_changed_exported = true;
 static void mark_changed_exported() { has_changed_exported = true; }
 
-/// List of all locale variable names.
-static const wchar_t *const locale_variable[] = {L"LANG",       L"LC_ALL",      L"LC_COLLATE",
-                                                 L"LC_CTYPE",   L"LC_MESSAGES", L"LC_MONETARY",
-                                                 L"LC_NUMERIC", L"LC_TIME",     NULL};
+/// List of all locale environment variable names.
+static const wchar_t *const locale_variable[] = {
+    L"LANG",     L"LANGUAGE",          L"LC_ALL",         L"LC_ADDRESS",   L"LC_COLLATE",
+    L"LC_CTYPE", L"LC_IDENTIFICATION", L"LC_MEASUREMENT", L"LC_MESSAGES",  L"LC_MONETARY",
+    L"LC_NAME",  L"LC_NUMERIC",        L"LC_PAPER",       L"LC_TELEPHONE", L"LC_TIME",
+    NULL};
+
+/// List of all curses environment variable names.
+static const wchar_t *const curses_variable[] = {L"TERM", L"TERMINFO", L"TERMINFO_DIRS", NULL};
 
 const var_entry_t *env_node_t::find_entry(const wcstring &key) {
     const var_entry_t *result = NULL;
@@ -200,10 +205,40 @@ static void handle_locale() {
     }
 }
 
+/// Check if the specified variable is a locale variable.
+static bool var_is_curses(const wcstring &key) {
+    for (size_t i = 0; curses_variable[i]; i++) {
+        if (key == curses_variable[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/// Push all curses/terminfo env vars into the global environment where they can be found by those
+/// libraries.
+static void handle_curses() {
+    for (size_t i = 0; curses_variable[i]; i++) {
+        const wchar_t *key = curses_variable[i];
+        const env_var_t var = env_get_string(key);
+        if (!var.empty()) {
+            const std::string &name = wcs2string(key);
+            const std::string &value = wcs2string(var);
+            setenv(name.c_str(), value.c_str(), 1);
+        }
+    }
+    // TODO: Modify input_init() to allow calling it when the terminfo env vars are dynamically
+    // changed. At the present time it can be called just once. Also, we should really only do this
+    // if the TERM var is set.
+    // input_init();
+}
+
 /// React to modifying the given variable.
 static void react_to_variable_change(const wcstring &key) {
     if (var_is_locale(key)) {
         handle_locale();
+    } else if (var_is_curses(key)) {
+        handle_curses();
     } else if (key == L"fish_term256" || key == L"fish_term24bit") {
         update_fish_color_support();
         reader_react_to_color_change();

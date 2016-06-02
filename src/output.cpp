@@ -24,6 +24,7 @@
 
 #include "color.h"
 #include "common.h"
+#include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "output.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -32,9 +33,6 @@ static int writeb_internal(char c);
 
 /// The function used for output.
 static int (*out)(char c) = writeb_internal;
-
-/// Name of terminal.
-static wcstring current_term;
 
 /// Whether term256 and term24bit are supported.
 static color_support_t color_support = 0;
@@ -416,18 +414,13 @@ rgb_color_t parse_color(const wcstring &val, bool is_background) {
     return result;
 }
 
-void output_set_term(const wcstring &term) { current_term.assign(term); }
-
-const wchar_t *output_get_term() {
-    return current_term.empty() ? L"<unknown>" : current_term.c_str();
-}
-
 void writembs_check(char *mbs, const char *mbs_name, const char *file, long line) {
     if (mbs != NULL) {
         tputs(mbs, 1, &writeb);
     } else {
+        env_var_t term = env_get_string(L"TERM");
         debug(0, _(L"Tried to use terminfo string %s on line %ld of %s, which is undefined in "
                    L"terminal of type \"%ls\". Please report this error to %s"),
-              mbs_name, line, file, output_get_term(), PACKAGE_BUGREPORT);
+              mbs_name, line, file, term.c_str(), PACKAGE_BUGREPORT);
     }
 }

@@ -13,24 +13,26 @@ matrix:
             - gettext
             - libncurses5-dev
 
-    - os: linux
-      compiler: clang
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-precise-3.8
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-3.8
-            - llvm-3.8 # for llvm-symbolizer
-            - bc
-            - expect
-            - gettext
-            - libncurses5-dev
-      env:
-        - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address"
-        - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
-      before_install: export CXX=clang++-3.8
+    # Disable for now until
+    # https://github.com/travis-ci/travis-ci/issues/6120 fixed
+    #- os: linux
+    #  compiler: clang
+    #  addons:
+    #    apt:
+    #      sources:
+    #        - llvm-toolchain-precise-3.8
+    #        - ubuntu-toolchain-r-test
+    #      packages:
+    #        - clang-3.8
+    #        - llvm-3.8 # for llvm-symbolizer
+    #        - bc
+    #        - expect
+    #        - gettext
+    #        - libncurses5-dev
+    #  env:
+    #    - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address"
+    #    - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
+    #  before_install: export CXX=clang++-3.8
 
     - os: osx
       before_install:

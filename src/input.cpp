@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <unistd.h>
 #include <wchar.h>
@@ -457,43 +456,27 @@ void update_fish_color_support(void)
     output_set_color_support(support);
 }
 
-int input_init()
-{
-    if (is_init)
-        return 1;
-
+int input_init() {
+    if (is_init) return 1;
     is_init = true;
-
     input_common_init(&interrupt_handler);
 
-    const env_var_t term = env_get_string(L"TERM");
-    int errret;
-    if (setupterm(const_cast<char *>(wcs2string(term).c_str()), STDOUT_FILENO, &errret) == ERR)
-    {
-        debug(0, _(L"Could not set up terminal"));
-        if (errret == 0)
-        {
-            debug(0, _(L"Check that your terminal type, '%ls', is supported on this system"),
-                  term.c_str());
-            debug(0, _(L"Attempting to use '%ls' instead"), DEFAULT_TERM);
-            env_set(L"TERM", DEFAULT_TERM, ENV_GLOBAL | ENV_EXPORT);
-            const std::string default_term = wcs2string(DEFAULT_TERM);
-            if (setupterm(const_cast<char *>(default_term.c_str()), STDOUT_FILENO, &errret) == ERR)
-            {
-                debug(0, _(L"Could not set up terminal"));
-                exit_without_destructors(1);
-            }
-        }
-        else
-        {
+    int err_ret;
+    if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
+        env_var_t term = env_get_string(L"TERM");
+        debug(0, _(L"Your TERM value of '%ls' is not valid"), term.c_str());
+        debug(0, _(L"Check that your terminal type is supported on this system"));
+        env_set(L"TERM", DEFAULT_TERM, ENV_GLOBAL | ENV_EXPORT);
+        if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
+            debug(0, _(L"Unable to setup terminal using your TERM or the '%ls' fallback"),
+                  DEFAULT_TERM);
             exit_without_destructors(1);
+        } else {
+            debug(0, _(L"Using fallback terminal type '%ls' instead"), DEFAULT_TERM);
         }
     }
-    assert(! term.missing());
-    output_set_term(term);
 
     input_terminfo_init();
-
     update_fish_color_support();
 
     /* If we have no keybindings, add a few simple defaults */

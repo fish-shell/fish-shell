@@ -315,11 +315,11 @@ test_high_level: test_fishscript test_interactive
 .PHONY: test_high_level
 
 test_fishscript: $(call filter_up_to,test_fishscript,$(active_test_goals))
-	cd tests; ../test/root/bin/fish test.fish
+	cd tests; XDG_CONFIG_HOME=../test/home XDG_DATA_HOME=../test/data ../test/root/bin/fish test.fish
 .PHONY: test_fishscript
 
 test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
-	cd tests; ../test/root/bin/fish interactive.fish
+	cd tests; XDG_CONFIG_HOME=../test/home XDG_DATA_HOME=../test/data ../test/root/bin/fish interactive.fish
 .PHONY: test_interactive
 
 #

@@ -380,6 +380,11 @@ static int get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq, io_strea
 static int builtin_bind_add(const wchar_t *seq, const wchar_t *const *cmds, size_t cmds_len,
                             const wchar_t *mode, const wchar_t *sets_mode, int terminfo,
                             io_streams_t &streams) {
+    if (!is_interactive_session) {
+        debug(2, L"ignoring bind --add command since not interactive");
+        return 0;
+    }
+
     if (terminfo) {
         wcstring seq2;
         if (get_terminfo_sequence(seq, &seq2, streams)) {

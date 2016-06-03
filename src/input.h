@@ -19,7 +19,7 @@ wcstring describe_char(wint_t c);
 /// sequences for special keys.
 ///
 /// Before calling input_init, terminfo is not initialized and MUST not be used.
-int input_init();
+void input_init();
 
 /// free up memory used by terminal functions.
 void input_destroy();

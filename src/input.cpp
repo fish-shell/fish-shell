@@ -199,7 +199,7 @@ static std::vector<terminfo_mapping_t> terminfo_mappings;
 static std::vector<terminfo_mapping_t> mappings;
 
 /// Set to one when the input subsytem has been initialized.
-static bool is_init = false;
+static bool input_subsystem_initialized = false;
 
 /// Initialize terminfo.
 static void input_terminfo_init();
@@ -337,10 +337,10 @@ void update_fish_color_support(void) {
     output_set_color_support(support);
 }
 
-int input_init() {
-    if (is_init) return 1;
-
-    is_init = true;
+void input_init() {
+    if (!is_interactive_session) return;
+    if (input_subsystem_initialized) return;
+    input_subsystem_initialized = true;
 
     input_common_init(&interrupt_handler);
 
@@ -381,12 +381,13 @@ int input_init() {
         input_mapping_add(L"\x5", L"bind");
     }
 
-    return 1;
+    return;
 }
 
 void input_destroy() {
-    if (!is_init) return;
-    is_init = false;
+    if (!is_interactive_session) return;
+    if (!input_subsystem_initialized) return;
+    input_subsystem_initialized = false;
     input_common_destroy();
 
     if (del_curterm(cur_term) == ERR) {

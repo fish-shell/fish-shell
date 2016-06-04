@@ -6,7 +6,24 @@ parts of fish.
 
 #include "config.h"
 
-
+#include <assert.h>
+#include <cxxabi.h>
+#include <dlfcn.h>
+#include <errno.h>
+#include <limits.h>
+#include <math.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <termios.h>
 #include <unistd.h>
 
 #ifdef HAVE_SIGINFO_H
@@ -533,26 +550,12 @@ wchar_t *quote_end(const wchar_t *pos)
 
 }
 
-
-wcstring wsetlocale(int category, const wchar_t *locale)
-{
-
-    char *lang = locale ? wcs2str(locale) : NULL;
-    char *res = setlocale(category, lang);
-    free(lang);
-
-    /*
-      Use ellipsis if on known unicode system, otherwise use $
-    */
+void fish_setlocale() {
+    // Use ellipsis if on known unicode system, otherwise use $.
     ellipsis_char = (wcwidth(L'\x2026') > 0) ? L'\x2026' : L'$';
 
     // U+23CE is the "return" character
     omitted_newline_char = (wcwidth(L'\x23CE') > 0) ? L'\x23CE' : L'~';
-
-    if (!res)
-        return wcstring();
-    else
-        return format_string(L"%s", res);
 }
 
 bool contains_internal(const wchar_t *a, int vararg_handle, ...)

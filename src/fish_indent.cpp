@@ -319,12 +319,16 @@ static std::string no_colorize(const wcstring &text)
 
 int main(int argc, char *argv[])
 {
+    program_name = L"fish_indent";
     set_main_thread();
     setup_fork_guards();
-
-    wsetlocale(LC_ALL, L"");
-    program_name=L"fish_indent";
-
+    // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
+    // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.
+    //
+    // TODO: Auto-detect the encoding of the script. We should look for a vim style comment
+    // (e.g., "# vim: set fileencoding=<encoding-name>:") or an emacs style comment
+    // (e.g., "# -*- coding: <encoding-name> -*-").
+    setlocale(LC_ALL, "");
     env_init();
     input_init();
 

@@ -172,35 +172,9 @@ static int octal_to_bin(wchar_t c)
     }
 }
 
-/* This message appears in N_() here rather than just in _() below because
-   the sole use would have been in a #define.  */
-static wchar_t const *const cfcc_msg =
-    N_(L"warning: %ls: character(s) following character constant have been ignored");
-
-double C_STRTOD(wchar_t const *nptr, wchar_t **endptr)
-{
-    double r;
-
-    const wcstring saved_locale = wsetlocale(LC_NUMERIC, NULL);
-
-    if (!saved_locale.empty())
-    {
-        wsetlocale(LC_NUMERIC, L"C");
-    }
-
-    r = wcstod(nptr, endptr);
-
-    if (!saved_locale.empty())
-    {
-        wsetlocale(LC_NUMERIC, saved_locale.c_str());
-    }
-
-    return r;
-}
-
 void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...)
 {
-    // Don't error twice
+    // Don't error twice.
     if (early_exit)
         return;
 
@@ -279,10 +253,14 @@ uintmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end)
     return wcstoull(s, end, 0);
 }
 
-template<>
-long double raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end)
-{
-    return C_STRTOD(s, end);
+template <>
+long double raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
+    // Forcing the locale to C is questionable but it's what the old C_STRTOD() that I inlined here
+    // as part of changing how locale management is done by fish.
+    char * old_locale = setlocale(LC_NUMERIC, "C");
+    double val = wcstod(s, end);
+    setlocale(LC_NUMERIC, old_locale);
+    return val;
 }
 
 template<typename T>

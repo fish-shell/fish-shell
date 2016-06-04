@@ -511,11 +511,12 @@ int main(int argc, char **argv)
     assert(R_SENTINAL >= INPUT_COMMON_BASE &&
            R_SENTINAL <= INPUT_COMMON_END);
 
+    program_name = L"fish";
     set_main_thread();
     setup_fork_guards();
 
-    wsetlocale(LC_ALL, L"");
-    program_name=L"fish";
+    setlocale(LC_ALL, "");
+    fish_setlocale();
 
     //struct stat tmp;
     //stat("----------FISH_HIT_MAIN----------", &tmp);

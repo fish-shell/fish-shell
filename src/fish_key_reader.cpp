@@ -146,8 +146,7 @@ void setup_and_process_keys(bool continuous_mode) {
     is_interactive_session = 1;  // by definition this is interactive
     set_main_thread();
     setup_fork_guards();
-    wsetlocale(LC_ALL, L"POSIX");
-    program_name = L"fish_key_reader";
+    setlocale(LC_ALL, "POSIX");
     env_init();
     reader_init();
     input_init();
@@ -176,6 +175,7 @@ void setup_and_process_keys(bool continuous_mode) {
 }
 
 int main(int argc, char **argv) {
+    program_name = L"fish_key_reader";
     bool continuous_mode = false;
     const char *short_opts = "+c";
     const struct option long_opts[] = {{"continuous", no_argument, NULL, 'd'}, {NULL, 0, NULL, 0}};

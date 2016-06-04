@@ -763,13 +763,9 @@ wchar_t *quote_end(const wchar_t *in);
 */
 void error_reset();
 
-/**
-   This function behaves exactly like a wide character equivalent of
-   the C function setlocale, except that it will also try to detect if
-   the user is using a Unicode character set, and if so, use the
-   unicode ellipsis character as ellipsis, instead of '$'.
-*/
-wcstring wsetlocale(int category, const wchar_t *locale);
+/// This function should be called after calling `setlocale()` to perform fish specific locale
+/// initialization.
+void fish_setlocale();
 
 /**
    Checks if \c needle is included in the list of strings specified. A warning is printed if needle is zero.

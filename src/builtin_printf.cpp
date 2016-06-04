@@ -52,7 +52,6 @@
 
 #include <errno.h>
 #include <limits.h>
-#include <locale.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -197,24 +196,6 @@ static int octal_to_bin(wchar_t c) {
     }
 }
 
-double C_STRTOD(wchar_t const *nptr, wchar_t **endptr) {
-    double r;
-
-    const wcstring saved_locale = wsetlocale(LC_NUMERIC, NULL);
-
-    if (!saved_locale.empty()) {
-        wsetlocale(LC_NUMERIC, L"C");
-    }
-
-    r = wcstod(nptr, endptr);
-
-    if (!saved_locale.empty()) {
-        wsetlocale(LC_NUMERIC, saved_locale.c_str());
-    }
-
-    return r;
-}
-
 void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...) {
     // Don't error twice.
     if (early_exit) return;
@@ -283,7 +264,7 @@ uintmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
 
 template <>
 long double raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
-    return C_STRTOD(s, end);
+    return wcstod(s, end);
 }
 
 template <typename T>

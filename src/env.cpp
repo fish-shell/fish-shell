@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -169,36 +170,25 @@ static bool var_is_locale(const wcstring &key) {
 
 /// Properly sets all locale information.
 static void handle_locale() {
-    const env_var_t lc_all = env_get_string(L"LC_ALL");
-    const wcstring old_locale = wsetlocale(LC_MESSAGES, NULL);
-
-    // Array of locale constants corresponding to the local variable names defined in
-    // locale_variable.
-    static const int cat[] = {0,           LC_ALL,      LC_COLLATE, LC_CTYPE,
-                              LC_MESSAGES, LC_MONETARY, LC_NUMERIC, LC_TIME};
-
-    if (!lc_all.missing()) {
-        wsetlocale(LC_ALL, lc_all.c_str());
-    } else {
-        const env_var_t lang = env_get_string(L"LANG");
-        if (!lang.missing()) {
-            wsetlocale(LC_ALL, lang.c_str());
-        }
-
-        for (int i = 2; locale_variable[i]; i++) {
-            const env_var_t val = env_get_string(locale_variable[i]);
-
-            if (!val.missing()) {
-                wsetlocale(cat[i], val.c_str());
-            }
+    for (size_t i = 0; locale_variable[i]; i++) {
+        const wchar_t *key = locale_variable[i];
+        const env_var_t var = env_get_string(key);
+        if (!var.empty()) {
+            const std::string &name = wcs2string(key);
+            const std::string &value = wcs2string(var);
+            setenv(name.c_str(), value.c_str(), 1);
         }
     }
 
-    const wcstring new_locale = wsetlocale(LC_MESSAGES, NULL);
-    if (old_locale != new_locale) {
+    const char *old_msg_locale = setlocale(LC_MESSAGES, NULL);
+    setlocale(LC_ALL, "");
+    fish_setlocale();
+    const char *new_msg_locale = setlocale(LC_MESSAGES, NULL);
+    if (strcmp(old_msg_locale, new_msg_locale)) {
         // Try to make change known to gettext. Both changing _nl_msg_cat_cntr and calling dcgettext
         // might potentially tell some gettext implementation that the translation strings should be
         // reloaded. We do both and hope for the best.
+        debug(3, _(L"Changing message locale from '%s' to '%s'"), old_msg_locale, new_msg_locale);
         extern int _nl_msg_cat_cntr;
         _nl_msg_cat_cntr++;
         fish_dcgettext("fish", "Changing language to English", LC_MESSAGES);

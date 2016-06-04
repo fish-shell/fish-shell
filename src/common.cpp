@@ -6,7 +6,6 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <limits.h>
-#include <locale.h>
 #include <math.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -470,19 +469,12 @@ wchar_t *quote_end(const wchar_t *pos) {
     return 0;
 }
 
-wcstring wsetlocale(int category, const wchar_t *locale) {
-    char *lang = locale ? wcs2str(locale) : NULL;
-    char *res = setlocale(category, lang);
-    free(lang);
-
+void fish_setlocale() {
     // Use ellipsis if on known unicode system, otherwise use $.
     ellipsis_char = (wcwidth(L'\x2026') > 0) ? L'\x2026' : L'$';
 
     // U+23CE is the "return" character
     omitted_newline_char = (wcwidth(L'\x23CE') > 0) ? L'\x23CE' : L'~';
-
-    if (!res) return wcstring();
-    return format_string(L"%s", res);
 }
 
 bool contains_internal(const wchar_t *a, int vararg_handle, ...) {

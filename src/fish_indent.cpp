@@ -331,7 +331,9 @@ int main(int argc, char *argv[]) {
     set_main_thread();
     setup_fork_guards();
 
-    wsetlocale(LC_ALL, L"");
+    // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
+    // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.
+    setlocale(LC_ALL, "");
     program_name = L"fish_indent";
 
     env_init();

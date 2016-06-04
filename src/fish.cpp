@@ -421,7 +421,8 @@ int main(int argc, char **argv) {
     set_main_thread();
     setup_fork_guards();
 
-    wsetlocale(LC_ALL, L"");
+    setlocale(LC_ALL, "");
+    fish_setlocale();
     program_name = L"fish";
 
     // struct stat tmp;

@@ -6,7 +6,8 @@ function __fish_git_commits
     # This allows filtering by subject with the new pager!
     # Because even subject lines can be quite long,
     # trim them (abbrev'd hash+tab+subject) to 70 characters
-    command git log --pretty=tformat:"%h"\t"%s" --all | string replace -r '(.{70}).+' '$1...'
+    command git log --pretty=tformat:"%h"\t"%s" --all ^/dev/null \
+    | string replace -r '(.{70}).+' '$1...'
 end
 
 function __fish_git_branches
@@ -34,19 +35,19 @@ end
 
 function __fish_git_modified_files
     # git diff --name-only hands us filenames relative to the git toplevel
-    set -l root (command git rev-parse --show-toplevel)
+    set -l root (command git rev-parse --show-toplevel ^/dev/null)
     # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
     # This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
     string replace -- "$PWD/" "" "$root/"(command git diff --name-only ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_staged_files
-    set -l root (command git rev-parse --show-toplevel)
+    set -l root (command git rev-parse --show-toplevel ^/dev/null)
     string replace -- "$PWD/" "" "$root/"(command git diff --staged --name-only ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_add_files
-    set -l root (command git rev-parse --show-toplevel)
+    set -l root (command git rev-parse --show-toplevel ^/dev/null)
     string replace -- "$PWD/" "" "$root/"(command git -C $root ls-files -mo --exclude-standard ^/dev/null) | string replace "$root/" ":/"
 end
 
@@ -200,7 +201,7 @@ function __fish_git_possible_commithash
 end
 
 function __fish_git_reflog
-	command git reflog | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
+	command git reflog ^/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
 end
 
 # general options

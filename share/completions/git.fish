@@ -2,12 +2,12 @@
 # Use 'command git' to avoid interactions for aliases from git to (e.g.) hub
 
 function __fish_git_commits
-	# Complete commits with their subject line as the description
-	# This allows filtering by subject with the new pager!
-	# Because even subject lines can be quite long,
-	# trim them (abbrev'd hash+tab+subject) to 70 characters
-	command git log --pretty=tformat:"%h"\t"%s" --all \
-	| string replace -r '(.{70}).+' '$1...'
+    # Complete commits with their subject line as the description
+    # This allows filtering by subject with the new pager!
+    # Because even subject lines can be quite long,
+    # trim them (abbrev'd hash+tab+subject) to 70 characters
+    command git log --pretty=tformat:"%h"\t"%s" --all ^/dev/null \
+    | string replace -r '(.{70}).+' '$1...'
 end
 
 function __fish_git_branches
@@ -34,21 +34,21 @@ function __fish_git_remotes
 end
 
 function __fish_git_modified_files
-	# git diff --name-only hands us filenames relative to the git toplevel
-	set -l root (command git rev-parse --show-toplevel)
-	# Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
-	# This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
-	string replace -- "$PWD/" "" "$root/"(command git diff --name-only ^/dev/null) | string replace "$root/" ":/"
+    # git diff --name-only hands us filenames relative to the git toplevel
+    set -l root (command git rev-parse --show-toplevel ^/dev/null)
+    # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
+    # This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
+    string replace -- "$PWD/" "" "$root/"(command git diff --name-only ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_staged_files
-	set -l root (command git rev-parse --show-toplevel)
-	string replace -- "$PWD/" "" "$root/"(command git diff --staged --name-only ^/dev/null) | string replace "$root/" ":/"
+    set -l root (command git rev-parse --show-toplevel ^/dev/null)
+    string replace -- "$PWD/" "" "$root/"(command git diff --staged --name-only ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_add_files
-	set -l root (command git rev-parse --show-toplevel)
-	string replace -- "$PWD/" "" "$root/"(command git -C $root ls-files -mo --exclude-standard ^/dev/null) | string replace "$root/" ":/"
+    set -l root (command git rev-parse --show-toplevel ^/dev/null)
+    string replace -- "$PWD/" "" "$root/"(command git -C $root ls-files -mo --exclude-standard ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_ranges
@@ -173,17 +173,33 @@ end
 
 # Suggest branches for the specified remote - returns 1 if no known remote is specified
 function __fish_git_branch_for_remote
-	set -l remotes (__fish_git_remotes)
-	set -l remote
-	set -l cmd (commandline -opc)
-	for r in $remotes
-		if contains -- $r $cmd
-			set remote $r
-			break
-		end
-	end
-	set -q remote[1]; or return 1
-	__fish_git_branches | string match -- "$remote/*" | string replace -- "$remote/" ''
+    set -l remotes (__fish_git_remotes)
+    set -l remote
+    set -l cmd (commandline -opc)
+    for r in $remotes
+        if contains -- $r $cmd
+            set remote $r
+            break
+        end
+    end
+    set -q remote[1]
+    or return 1
+    __fish_git_branches | string match -- "$remote/*" | string replace -- "$remote/" ''
+end
+
+# Return 0 if the current token is a possible commit-hash with at least 3 characters
+function __fish_git_possible_commithash
+    set -q argv[1]
+    and set -l token $argv[1]
+    or set -l token (commandline -ct)
+    if string match -qr '^[0-9a-fA-F]{3,}$' -- $token
+        return 0
+    end
+    return 1
+end
+
+function __fish_git_reflog
+	command git reflog ^/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
 end
 
 # general options

@@ -35,8 +35,11 @@ if not set -q __fish_is_running_tests
         # path is relative, make it absolute
         set script $PWD/$script
     end
-    set -l IFS # clear IFS so cmd substitution doesn't split
-    cd (dirname $script); or die
+
+    begin
+        set -l IFS # clear IFS so cmd substitution doesn't split
+        cd (dirname $script); or die
+    end
 
     set -lx XDG_DATA_HOME ../test/data
     rm -rf $XDG_DATA_HOME/fish
@@ -52,13 +55,20 @@ if not set -q __fish_is_running_tests
     printf 'set fish_function_path \'%s/functions\' \'%s/share/functions\'\n' $escaped_config $escaped_parent > $XDG_CONFIG_HOME/fish/config.fish; or die
     set -xl __fish_is_running_tests $XDG_CONFIG_HOME
 
-    # set locale information to be consistent
-    set -lx LANG C
-    set -lx LC_ALL ''
-    for var in ALL COLLATE MESSAGES MONETARY NUMERIC TIME
-        set -lx LC_$var ''
+    # Set locale information for consistent tests. Fish should work with a lot of locales but the
+    # tests assume an english UTF-8 locale unless they explicitly override this default.
+    #
+    # TODO: set LANG to en_US.UTF-8 so we test the locale message conversions (i.e., gettext).
+    set -e LANGUAGE
+    set -x LANG C
+    # Remove "LC_" env vars from the test environment.
+    for var in (set -xn)
+        if string match -q 'LC_*' $var
+            set -e $var
+        end
     end
-    set -lx LC_CTYPE en_US.UTF-8
+    set -x LC_CTYPE en_US.UTF-8
+
     exec ../test/root/bin/fish $script $args_for_test_script
     die 'exec failed'
 else if test "$__fish_is_running_tests" != "$XDG_CONFIG_HOME"

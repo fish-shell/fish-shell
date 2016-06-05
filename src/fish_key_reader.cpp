@@ -148,7 +148,7 @@ void setup_and_process_keys(bool continuous_mode) {
     is_interactive_session = 1;  // by definition this is interactive
     set_main_thread();
     setup_fork_guards();
-    wsetlocale(LC_ALL, L"POSIX");
+    setlocale(LC_ALL, "POSIX");
     program_name = L"fish_key_reader";
     env_init();
     reader_init();

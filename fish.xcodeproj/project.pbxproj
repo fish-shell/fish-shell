@@ -569,7 +569,6 @@
 		D0A0854B13B3ACEE0099B651 /* intern.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = intern.cpp; sourceTree = "<group>"; };
 		D0A0854C13B3ACEE0099B651 /* io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = io.cpp; sourceTree = "<group>"; };
 		D0A0854D13B3ACEE0099B651 /* iothread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = iothread.cpp; sourceTree = "<group>"; };
-		D0A0854E13B3ACEE0099B651 /* key_reader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = key_reader.cpp; sourceTree = "<group>"; };
 		D0A0854F13B3ACEE0099B651 /* kill.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = kill.cpp; sourceTree = "<group>"; };
 		D0A0855113B3ACEE0099B651 /* output.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = output.cpp; sourceTree = "<group>"; };
 		D0A0855213B3ACEE0099B651 /* parse_util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parse_util.cpp; sourceTree = "<group>"; };
@@ -805,7 +804,6 @@
 				D0A0854D13B3ACEE0099B651 /* iothread.cpp */,
 				D0A0851813B3ACEE0099B651 /* kill.h */,
 				D0A0854F13B3ACEE0099B651 /* kill.cpp */,
-				D0A0854E13B3ACEE0099B651 /* key_reader.cpp */,
 				D03EE83814DF88B200FC7150 /* lru.h */,
 				D0A0851A13B3ACEE0099B651 /* output.h */,
 				D0A0855113B3ACEE0099B651 /* output.cpp */,

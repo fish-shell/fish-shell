@@ -652,8 +652,7 @@ static wcstring complete_function_desc(const wcstring &fn) {
 /// Complete the specified command name. Search for executables in the path, executables defined
 /// using an absolute path, functions, builtins and directories for implicit cd commands.
 ///
-/// \param cmd the command string to find completions for
-/// \param comp the list to add all completions to
+/// \param str_cmd the command string to find completions for
 void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool use_builtin,
                                bool use_command, bool use_implicit_cd) {
     if (str_cmd.empty()) return;
@@ -704,7 +703,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
 /// \param str The string to complete.
 /// \param args The list of option arguments to be evaluated.
 /// \param desc Description of the completion
-/// \param comp_out The list into which the results will be inserted
+/// \param flags The list into which the results will be inserted
 void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
                                      const wcstring &desc, complete_flags_t flags) {
     bool is_autosuggest = (this->type() == COMPLETE_AUTOSUGGEST);

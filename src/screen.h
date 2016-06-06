@@ -149,7 +149,7 @@ class screen_t {
 /// \param indent the indent to use for the command line
 /// \param cursor_pos where the cursor is
 /// \param pager_data any pager data, to append to the screen
-/// \param position_is_within_pager whether the position is within the pager line (first line)
+/// \param cursor_is_within_pager whether the position is within the pager line (first line)
 void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
              const wcstring &commandline, size_t explicit_len, const highlight_spec_t *colors,
              const int *indent, size_t cursor_pos, const page_rendering_t &pager_data,

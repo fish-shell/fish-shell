@@ -99,6 +99,13 @@ enum {
 };
 typedef uint32_t completion_request_flags_t;
 
+enum complete_option_type_t {
+    option_type_args_only,    // no option
+    option_type_short,        // -x
+    option_type_single_long,  // -foo
+    option_type_double_long   // --foo
+};
+
 /// Add a completion.
 ///
 /// All supplied values are copied, they should be freed by or otherwise disposed by the caller.
@@ -117,14 +124,12 @@ typedef uint32_t completion_request_flags_t;
 /// complete -c grep -s d -x -a "read skip recurse"
 ///
 /// \param cmd Command to complete.
-/// \param cmd_type If cmd_type is PATH, cmd will be interpreted as the absolute
+/// \param cmd_is_path If cmd_is_path is true, cmd will be interpreted as the absolute
 ///   path of the program (optionally containing wildcards), otherwise it
 ///   will be interpreted as the command name.
-/// \param short_opt The single character name of an option. (-a is a short option,
-///   --all and  -funroll are long options)
-/// \param long_opt The multi character name of an option. (-a is a short option, --all and
-///   -funroll are long options)
-/// \param long_mode Whether to use old style, single dash long options.
+/// \param option The name of an option.
+/// \param option_type The type of option: can be option_type_short (-x),
+///        option_type_single_long (-foo), option_type_double_long (--bar).
 /// \param result_mode Whether to search further completions when this completion has been
 /// succesfully matched. If result_mode is SHARED, any other completions may also be used. If
 /// result_mode is NO_FILES, file completion should not be used, but other completions may be used.
@@ -135,15 +140,11 @@ typedef uint32_t completion_request_flags_t;
 /// \param condition a command to be run to check it this completion should be used. If \c condition
 /// is empty, the completion is always used.
 /// \param flags A set of completion flags
-enum complete_option_type_t {
-    option_type_args_only,    // no option
-    option_type_short,        // -x
-    option_type_single_long,  // -foo
-    option_type_double_long   // --foo
-};
 void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
                   complete_option_type_t option_type, int result_mode, const wchar_t *condition,
                   const wchar_t *comp, const wchar_t *desc, int flags);
+
+
 
 /// Sets whether the completion list for this command is complete. If true, any options not matching
 /// one of the provided options will be flagged as an error by syntax highlighting.

@@ -312,15 +312,6 @@ class parser_t {
     /// parser_t will clean it up.
     profile_item_t *create_profile_item();
 
-    /// Test if the specified string can be parsed, or if more bytes need to be read first. The
-    /// result will have the PARSER_TEST_ERROR bit set if there is a syntax error in the code, and
-    /// the PARSER_TEST_INCOMPLETE bit set if the code contains unclosed blocks.
-    ///
-    /// \param buff the text buffer to test
-    /// \param block_level if non-null, the block nesting level will be filled out into this array
-    /// \param out if non-null, any errors in the command will be filled out into this buffer
-    /// \param prefix the prefix string to prepend to each error message written to the \c out
-    /// buffer.
     void get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                        wcstring *output) const;
 

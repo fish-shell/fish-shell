@@ -9,7 +9,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#ifdef HAVE__NL_MSG_CAT_CNTR
 #include <string.h>
+#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -191,15 +193,13 @@ static void handle_locale(const wchar_t *env_var_name) {
     const char *new_msg_locale = setlocale(LC_MESSAGES, NULL);
     debug(3, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
     debug(3, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
+#ifdef HAVE__NL_MSG_CAT_CNTR
     if (strcmp(old_msg_locale, new_msg_locale)) {
-        // Try to make change known to gettext. Both changing _nl_msg_cat_cntr and calling dcgettext
-        // might potentially tell some gettext implementation that the translation strings should be
-        // reloaded. We do both and hope for the best.
-        debug(2, L"changing message locale from '%s' to '%s'", old_msg_locale, new_msg_locale);
+        // Make change known to GNU gettext.
         extern int _nl_msg_cat_cntr;
         _nl_msg_cat_cntr++;
-        fish_dcgettext("fish", "Changing language to English", LC_MESSAGES);
     }
+#endif
 }
 
 /// Check if the specified variable is a locale variable.

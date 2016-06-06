@@ -120,15 +120,6 @@ char *fish_bindtextdomain(const char *domainname, const char *dirname);
 /// Cover for textdomain().
 char *fish_textdomain(const char *domainname);
 
-/// Cover for dcgettext.
-char *fish_dcgettext(const char *domainname, const char *msgid, int category);
-
-#ifndef HAVE__NL_MSG_CAT_CNTR
-/// Some gettext implementation use have this variable, and by increasing it, one can tell the
-/// system that the translations need to be reloaded.
-extern int _nl_msg_cat_cntr;
-#endif
-
 #ifndef HAVE_KILLPG
 /// Send specified signal to specified process group.
 int killpg(int pgr, int sig);

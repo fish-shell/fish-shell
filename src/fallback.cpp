@@ -171,7 +171,6 @@ wchar_t *wcsndup(const wchar_t *in, size_t c) {
 #endif
 
 #ifndef HAVE_WCSLCPY
-
 /*$OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $*/
 
 /*
@@ -189,7 +188,6 @@ wchar_t *wcsndup(const wchar_t *in, size_t c) {
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-
 size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
     register wchar_t *d = dst;
     register const wchar_t *s = src;
@@ -212,11 +210,9 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
     return s - src - 1;
     // Count does not include NUL.
 }
-
 #endif
 
 #ifndef HAVE_LRAND48_R
-
 int lrand48_r(struct drand48_data *buffer, long int *result) {
     *result = rand_r(&buffer->seed);
     return 0;
@@ -226,20 +222,16 @@ int srand48_r(long int seedval, struct drand48_data *buffer) {
     buffer->seed = (unsigned int)seedval;
     return 0;
 }
-
 #endif
 
 #ifndef HAVE_FUTIMES
-
 int futimes(int fd, const struct timeval *times) {
     errno = ENOSYS;
     return -1;
 }
-
 #endif
 
 #if HAVE_GETTEXT
-
 char *fish_gettext(const char *msgid) {
     return gettext(msgid);
     ;
@@ -250,35 +242,10 @@ char *fish_bindtextdomain(const char *domainname, const char *dirname) {
 }
 
 char *fish_textdomain(const char *domainname) { return textdomain(domainname); }
-
 #else
-
 char *fish_gettext(const char *msgid) { return (char *)msgid; }
-
 char *fish_bindtextdomain(const char *domainname, const char *dirname) { return NULL; }
-
 char *fish_textdomain(const char *domainname) { return NULL; }
-
-#endif
-
-#if HAVE_DCGETTEXT
-
-char *fish_dcgettext(const char *domainname, const char *msgid, int category) {
-    return dcgettext(domainname, msgid, category);
-}
-
-#else
-
-char *fish_dcgettext(const char *domainname, const char *msgid, int category) {
-    return (char *)msgid;
-}
-
-#endif
-
-#ifndef HAVE__NL_MSG_CAT_CNTR
-
-int _nl_msg_cat_cntr = 0;
-
 #endif
 
 #ifndef HAVE_KILLPG
@@ -299,18 +266,12 @@ double nan(char *tagp) { return 0.0 / 0.0; }
 #endif
 
 #if !HAVE_BROKEN_WCWIDTH
-
 int fish_wcwidth(wchar_t wc) { return wcwidth(wc); }
-
 int fish_wcswidth(const wchar_t *str, size_t n) { return wcswidth(str, n); }
-
 #else
-
 static int mk_wcwidth(wchar_t wc);
 static int mk_wcswidth(const wchar_t *pwcs, size_t n);
-
 int fish_wcwidth(wchar_t wc) { return mk_wcwidth(wc); }
-
 int fish_wcswidth(const wchar_t *str, size_t n) { return mk_wcswidth(str, n); }
 
 /*
@@ -373,7 +334,6 @@ int fish_wcswidth(const wchar_t *str, size_t n) { return mk_wcswidth(str, n); }
  *
  * Latest version: http://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c
  */
-
 struct interval {
     int first;
     int last;
@@ -502,5 +462,4 @@ static int mk_wcswidth(const wchar_t *pwcs, size_t n) {
     }
     return width;
 }
-
 #endif  // HAVE_BROKEN_WCWIDTH

@@ -305,7 +305,7 @@ AC_CHECK_FUNCS( futimens clock_gettime )
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )
 
 if test x$local_gettext != xno; then
-  AC_CHECK_FUNCS( gettext dcgettext )
+  AC_CHECK_FUNCS( gettext )
 
 #
 # The Makefile also needs to know if we have gettext, so it knows if

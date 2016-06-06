@@ -33,7 +33,7 @@ enum {
     /// Don't generate descriptions.
     EXPAND_NO_DESCRIPTIONS = 1 << 6,
     /// Don't expand jobs (but you can still expand processes). This is because
-    // job expansion is not thread safe.
+    /// job expansion is not thread safe.
     EXPAND_SKIP_JOBS = 1 << 7,
     /// Don't expand home directories.
     EXPAND_SKIP_HOME_DIRECTORIES = 1 << 8,
@@ -46,7 +46,7 @@ enum {
     /// working directories.
     EXPAND_SPECIAL_FOR_CD = 1 << 11,
     /// Do expansions specifically to support external command completions. This means using PATH as
-    // a list of potential working directories.
+    /// a list of potential working directories.
     EXPAND_SPECIAL_FOR_COMMAND = 1 << 12
 };
 typedef int expand_flags_t;
@@ -109,7 +109,7 @@ enum expand_error_t {
 ///
 /// \param input The parameter to expand
 /// \param output The list to which the result will be appended.
-/// \param flag Specifies if any expansion pass should be skipped. Legal values are any combination
+/// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
 /// of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
 /// \param errors Resulting errors, or NULL to ignore
 ///
@@ -123,7 +123,7 @@ __warn_unused expand_error_t expand_string(const wcstring &input, std::vector<co
 /// string. This is used for expanding command names.
 ///
 /// \param inout_str The parameter to expand in-place
-/// \param flag Specifies if any expansion pass should be skipped. Legal values are any combination
+/// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
 /// of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
 /// \param errors Resulting errors, or NULL to ignore
 ///

@@ -1827,14 +1827,15 @@ static void handle_token_history(int forward, int reset) {
     }
 }
 
+
+enum move_word_dir_t { MOVE_DIR_LEFT, MOVE_DIR_RIGHT };
+
 /// Move buffer position one word or erase one word. This function updates both the internal buffer
 /// and the screen. It is used by M-left, M-right and ^W to do block movement or block erase.
 ///
-/// \param dir Direction to move/erase. 0 means move left, 1 means move right.
+/// \param move_right true if moving right
 /// \param erase Whether to erase the characters along the way or only move past them.
-/// \param new if the new kill item should be appended to the previous kill item or not.
-enum move_word_dir_t { MOVE_DIR_LEFT, MOVE_DIR_RIGHT };
-
+/// \param newv if the new kill item should be appended to the previous kill item or not.
 static void move_word(editable_line_t *el, bool move_right, bool erase,
                       enum move_word_style_t style, bool newv) {
     // Return if we are already at the edge.
@@ -2171,11 +2172,9 @@ static int threaded_highlight(background_highlight_context_t *ctx) {
 /// highlighting maykes characters under the sursor unreadable.
 ///
 /// \param match_highlight_pos_adjust the adjustment to the position to use for bracket matching.
-/// This is added to the current cursor position and may be negative.
-/// \param error if non-null, any possible errors in the buffer are further descibed by the strings
-/// inserted into the specified arraylist
+///        This is added to the current cursor position and may be negative.
 /// \param no_io if true, do a highlight that does not perform I/O, synchronously. If false, perform
-/// an asynchronous highlight in the background, which may perform disk I/O.
+///        an asynchronous highlight in the background, which may perform disk I/O.
 static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io) {
     const editable_line_t *el = &data->command_line;
     long match_highlight_pos = (long)el->position + match_highlight_pos_adjust;

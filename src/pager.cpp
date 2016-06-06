@@ -143,12 +143,12 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
 /// Print the specified part of the completion list, using the specified column offsets and quoting
 /// style.
 ///
-/// \param l The list of completions to print
 /// \param cols number of columns to print in
-/// \param width An array specifying the width of each column
+/// \param width_per_column An array specifying the width of each column
 /// \param row_start The first row to print
 /// \param row_stop the row after the last row to print
 /// \param prefix The string to print before each completion
+/// \param lst The list of completions to print
 void pager_t::completion_print(size_t cols, int *width_per_column, size_t row_start,
                                size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst,
                                page_rendering_t *rendering) const {

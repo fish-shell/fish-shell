@@ -22,7 +22,7 @@
 #include "exec.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-// The time before we'll recheck an autoloaded file.
+/// The time before we'll recheck an autoloaded file.
 static const int kAutoloadStalenessInterval = 15;
 
 file_access_attempt_t access_file(const wcstring &path, int mode) {
@@ -135,8 +135,9 @@ bool autoload_t::has_tried_loading(const wcstring &cmd) {
     return func != NULL;
 }
 
+/// @return Whether this function is stale.
+/// Internalized functions can never be stale.
 static bool is_stale(const autoload_function_t *func) {
-    // Return whether this function is stale. Internalized functions can never be stale.
     return !func->is_internalized &&
            time(NULL) - func->access.last_checked > kAutoloadStalenessInterval;
 }
@@ -159,14 +160,12 @@ autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcs
 /// This internal helper function does all the real work. By using two functions, the internal
 /// function can return on various places in the code, and the caller can take care of various
 /// cleanup work.
-///
-///   cmd: the command name ('grep')
-///   really_load: whether to actually parse it as a function, or just check it it exists
-///   reload: whether to reload it if it's already loaded
-///   path_list: the set of paths to check
-///
-/// Result: if really_load is true, returns whether the function was loaded. Otherwise returns
-/// whether the function existed.
+/// @param cmd the command name ('grep')
+/// @param really_load Whether to actually parse it as a function, or just check it it exists
+/// @param reload Whether to reload it if it's already loaded
+/// @param path_list The set of paths to check
+/// @return If really_load is true, returns whether the function was loaded. Otherwise returns
+///         whether the function existed.
 bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_load, bool reload,
                                                const wcstring_list_t &path_list) {
     // Note that we are NOT locked in this function!

@@ -69,7 +69,7 @@ struct file_detection_context_t;
 /// Perform syntax highlighting for the shell commands in buff. The result is stored in the color
 /// array as a color_code from the HIGHLIGHT_ enum for each character in buff.
 ///
-/// \param buff The buffer on which to perform syntax highlighting
+/// \param buffstr The buffer on which to perform syntax highlighting
 /// \param color The array in wchich to store the color codes. The first 8 bits are used for fg
 /// color, the next 8 bits for bg color.
 /// \param pos the cursor position. Used for quote matching, etc.
@@ -87,7 +87,7 @@ void highlight_shell_no_io(const wcstring &buffstr, std::vector<highlight_spec_t
 /// highlighted. The result is stored in the color array as a color_code from the HIGHLIGHT_ enum
 /// for each character in buff.
 ///
-/// \param buff The buffer on which to perform syntax highlighting
+/// \param buffstr The buffer on which to perform syntax highlighting
 /// \param color The array in wchich to store the color codes. The first 8 bits are used for fg
 /// color, the next 8 bits for bg color.
 /// \param pos the cursor position. Used for quote matching, etc.

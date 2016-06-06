@@ -11,15 +11,19 @@
 #include "common.h"
 #include "lru.h"
 
-// A struct responsible for recording an attempt to access a file.
+/// Recording an attempt to access a file.
 struct file_access_attempt_t {
-    time_t mod_time;      // modification time of the file
-    time_t last_checked;  // when we last checked the file
-    bool accessible;      // whether we believe we could access this file
-    bool stale;           // whether the access attempt is stale
-    int error;            // if we could not access the file, the error code
+    /// modification time of the file
+    time_t mod_time;
+    /// when we last checked the file
+    time_t last_checked;
+    /// whether we believe we could access this file
+    bool accessible;
+    /// whether the access attempt is stale
+    bool stale;
+    /// if we could not access the file, the error code
+    int error;
 };
-
 file_access_attempt_t access_file(const wcstring &path, int mode);
 
 struct autoload_function_t : public lru_node_t {
@@ -29,12 +33,14 @@ struct autoload_function_t : public lru_node_t {
           is_loaded(false),
           is_placeholder(false),
           is_internalized(false) {}
-    file_access_attempt_t access;  // the last access attempt
-    bool is_loaded;                // whether we have actually loaded this function
-    // Whether we are a placeholder that stands in for "no such function". If this is true, then
-    // is_loaded must be false.
+    /// the last access attempt
+    file_access_attempt_t access;
+    /// whether we have actually loaded this function
+    bool is_loaded;
+    /// Whether we are a placeholder that stands in for "no such function". If this is true, then
+    /// is_loaded must be false.
     bool is_placeholder;
-    // Whether this function came from a builtin "internalized" script.
+    /// Whether this function came from a builtin "internalized" script.
     bool is_internalized;
 };
 
@@ -45,7 +51,7 @@ struct builtin_script_t {
 
 class env_vars_snapshot_t;
 
-// A class that represents a path from which we can autoload, and the autoloaded contents.
+/// A class that represents a path from which we can autoload, and the autoloaded contents.
 class autoload_t : private lru_cache_t<autoload_function_t> {
    private:
     // Lock for thread safety.

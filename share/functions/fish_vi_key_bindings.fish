@@ -32,6 +32,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     end
 
     bind \e cancel
+    bind -M insert \r execute
+    bind -M insert \n execute
     
     bind -M insert "" self-insert
 

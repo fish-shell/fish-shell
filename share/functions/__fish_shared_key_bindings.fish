@@ -5,6 +5,15 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     bind $argv \e cancel
 
+    # Left/Right arrow
+    bind $argv -k right forward-char
+    bind $argv -k left backward-char
+    bind $argv \e\[C forward-char
+    bind $argv \e\[D backward-char
+    # Some terminals output these when they're in in keypad mode.
+    bind $argv \eOC forward-char
+    bind $argv \eOD backward-char
+
     # Interaction with the system clipboard.
     bind $argv \cy fish_clipboard_copy
     bind $argv \cv fish_clipboard_paste

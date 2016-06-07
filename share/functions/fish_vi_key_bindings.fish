@@ -31,7 +31,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         __fish_shared_key_bindings -M $mode
     end
 
-    bind \e cancel
     bind -M insert \r execute
     bind -M insert \n execute
     
@@ -46,17 +45,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind :q exit
     bind \cd exit
     bind -m insert \cc __fish_cancel_commandline
-    bind h backward-char
-    bind l forward-char
-    bind \e\[C forward-char
-    bind \e\[D backward-char
-
-    # Some terminals output these when they're in in keypad mode.
-    bind \eOC forward-char
-    bind \eOD backward-char
-
-    bind -k right forward-char
-    bind -k left backward-char
+    bind -M default h backward-char
+    bind -M default l forward-char
     bind -m insert \n execute
     bind -m insert \r execute
     bind -m insert i force-repaint
@@ -198,12 +188,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     #
     # visual mode
     #
-    bind -M visual \e\[C forward-char
-    bind -M visual \e\[D backward-char
-    bind -M visual -k right forward-char
-    bind -M visual -k left backward-char
-    bind -M insert \eOC forward-char
-    bind -M insert \eOD backward-char
     bind -M visual h backward-char
     bind -M visual l forward-char
 

@@ -31,6 +31,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         __fish_shared_key_bindings -M $mode
     end
 
+    bind -M insert "" self-insert
+
     # Add way to kill current command line while in insert mode.
     bind -M insert \cc __fish_cancel_commandline
     # Add a way to switch from insert to normal (command) mode.

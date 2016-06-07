@@ -3,8 +3,10 @@ set -l cmds list store restore stop-all start stop restart switch-to status enab
 function __fish_print_netctl-auto_profile
     for line in (netctl-auto list)
         set -l profile (string sub -s 3 $line)
-        if [ (string sub -l 1 $line) = "*" ]
+        if string match -q '\**' -- $line
             printf "%s\t%s\n" $profile "Active profile"
+	else if string match -q "!*" -- $line
+	    printf "%s\t%s\n" $profile "Disabled profile"
         else
             printf "%s\t%s\n" $profile "Profile"
         end

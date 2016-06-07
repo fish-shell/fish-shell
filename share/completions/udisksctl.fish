@@ -2,20 +2,9 @@ set -l cmds help info dump status monitor mount unmount unlock lock loop-setup l
 
 set __fish_mount_opts async\tUse\ asynchronous\ I/O atime\tUpdate\ time\ on\ each\ access auto\tMounted\ with\ -a defaults\tUse\ default\ options dev\tInterpret\ character/block\ special\ devices exec\tPermit\ executables _netdev\tFilesystem\ uses\ network noatime\tDo\ not\ update\ time\ on\ each\ access noauto\tNot\ mounted\ by\ -a nodev\tDo\ not\ interpret\ character/block\ special\ devices noexec\tDo\ not\ permit\ executables nosuid\tIgnore\ suid\ bits nouser\tOnly\ root\ may\ mount remount\tRemount\ read-only\ filesystem ro\tMount\ read-only rw\tMount\ read-write suid\tAllow\ suid\ bits sync\tUse\ synchronous\ I/O dirsync\tUse\ synchronous\ directory\ operations user\tAny\ user\ may\ mount users\tAny\ user\ may\ mount\ and\ unmount
 
-function __fish_complete_blockdevice
-    set -l cmd (commandline -ct)
-    [ "" = "$cmd" ]
-    and return
-    for f in $cmd*
-        [ -b $f ]
-        and printf "%s\t%s\n" $f "Block device"
-        [ -d $f ]
-        and printf "%s\n" $f/
-    end
-end
 
 function __fish_print_mounted_blockdevice
-    cat /proc/mounts | grep "^/.*" | cut -d " " -f 1
+    grep "^/.*" /proc/mounts | cut -d " " -f 1
 end
 
 complete -f -c udisksctl -n "__fish_seen_subcommand_from $cmds" -l help -d "Shows help"

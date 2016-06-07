@@ -3,8 +3,13 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # They are supposed to be unrelated to text-editing (or movement).
     # This takes $argv so the vi-bindings can pass the mode they are valid in.
 
-    bind $argv \cy yank
-	bind $argv \ey yank-pop
+    bind $argv \e cancel
+
+    # Interaction with the system clipboard.
+    bind $argv \cy fish_clipboard_copy
+    bind $argv \cv fish_clipboard_paste
+
+    bind $argv \ey yank-pop
 
     bind $argv \t complete
     # shift-tab does a tab complete followed by a search.

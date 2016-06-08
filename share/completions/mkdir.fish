@@ -15,6 +15,5 @@ end
 
 # Checks if SELinux is installed
 if command -s sestatus > /dev/null ^ /dev/null
-    complete -c mkdir -s Z --description 'Set SELinux security context of each created directory to the default type'
-    complete -c mkdir -l context --description 'Like -Z' -f
+    complete -c mkdir -l context -s Z --description 'Set SELinux security context of each created directory to the default type'
 end

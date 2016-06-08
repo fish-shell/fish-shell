@@ -7,4 +7,4 @@ complete -c gorename -l offset -o offset -d "File and byte offset of identifier 
 complete -c gorename -l tags -o tags -d "Build tag"
 complete -c gorename -l to -o to -d "New name for identifier" -r
 complete -c gorename -s v -d "Print verbose information"
-
+complete -c gorename -l help -o help -s h -d "Show help"

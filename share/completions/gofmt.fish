@@ -5,4 +5,4 @@ complete -c gofmt -s l -d "List files whose formatting differs from gofmt's"
 complete -c gofmt -s r -d "Rewrite rule (e.g., 'a[b:len(a)] -> a[b:]')"
 complete -c gofmt -s s -d "Simplify code"
 complete -c gofmt -s w -d "Write result to (source) file instead of stdout"
-
+complete -c gofmt -l help -o help -s h -d "Show help"

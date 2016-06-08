@@ -22,4 +22,4 @@ complete -r -c godoc -l url -o url -d "Print HTML for named URL"
 complete -c godoc -s v -d "Verbose mode"
 complete -r -c godoc -l write_index -o write_index -d "Write index to a file"
 complete -r -c godoc -l zip -o zip -d "Zip file providing the file system to serve"
-
+complete -c godoc -l help -o help -s h -d "Show help"

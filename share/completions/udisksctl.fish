@@ -4,7 +4,9 @@ set __fish_mount_opts async\tUse\ asynchronous\ I/O atime\tUpdate\ time\ on\ eac
 
 
 function __fish_print_mounted_blockdevice
-    grep "^/.*" /proc/mounts | cut -d " " -f 1
+    if test -r /proc/mounts
+        string match -r "^/[^ ]*" < /proc/mounts
+    end
 end
 
 complete -f -c udisksctl -n "__fish_seen_subcommand_from $cmds" -l help -d "Shows help"

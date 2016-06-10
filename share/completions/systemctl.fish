@@ -93,8 +93,8 @@ complete -f -c systemctl -l runtime -d 'Make changes only temporarily'
 complete -f -r -c systemctl -s n -l lines -d 'Number of journal lines to show' -a "(seq 1 1000)"
 complete -f -c systemctl -s o -l output -d 'Control journal formatting' -xa 'short short-monotonic verbose export json json-pretty json-sse cat'
 complete -f -c systemctl -l plain -d 'list-dependencies flat, not as tree'
-complete -f -c systemctl -s H -l host= -d 'Execute the operation on a remote host' -a "(__fish_print_hostnames)"
-complete -x -c systemctl -s M -l machine= -d 'Execute operation on a VM or container' -a "(__fish_systemd_machines)"
+complete -f -c systemctl -s H -l host -d 'Execute the operation on a remote host' -a "(__fish_print_hostnames)"
+complete -x -c systemctl -s M -l machine -d 'Execute operation on a VM or container' -a "(__fish_systemd_machines)"
 complete -f -c systemctl -s h -l help -d 'Print a short help and exit'
 complete -f -c systemctl -l version -d 'Print a short version and exit'
 complete -f -c systemctl -l no-pager -d 'Do not pipe output into a pager'

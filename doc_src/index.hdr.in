@@ -70,7 +70,7 @@ rm "cumbersome filename.txt"
 Will remove the file 'cumbersome filename.txt', while
 
 \fish
-rm <asis>cumbersome filename.txt</asis>
+rm \asis{cumbersome filename.txt}
 \endfish
 
 would remove the two files 'cumbersome' and 'filename.txt'.
@@ -145,6 +145,8 @@ An example of a file redirection is `echo hello > output.txt`, which directs the
 - To write standard error to a file, write `^DESTINATION`
 - To append standard output to a file, write `>>DESTINATION_FILE`
 - To append standard error to a file, write `^^DESTINATION_FILE`
+
+- To not overwrite ("clobber") an existing file, write '>?DESTINATION' or '^?DESTINATION'
 
 `DESTINATION` can be one of the following:
 
@@ -247,11 +249,21 @@ Functions can be defined on the commandline or in a configuration file, but they
 
 Fish automatically searches through any directories in the array variable `$fish_function_path`, and any functions defined are automatically loaded when needed. A function definition file must have a filename consisting of the name of the function plus the suffix '`.fish`'.
 
-The default value for `$fish_function_path` is `~/.config/fish/functions` `/etc/fish/functions` `/usr/share/fish/functions`. The exact path to the last two of these may be slightly different depending on what install path prefix was chosen at configuration time. The rationale behind having three different directories is that the first one is for user specific functions, the second one is for system-wide additional functions and the last one is for default fish functions. The path list is searched in order, meaning that by default, the system administrator can override default fish functions, and the user can override functions defined by the system administrator.
+By default, Fish searches the following for functions, using the first available file that it finds:
+- A directory for end-users to keep their own functions, usually `~/.config/fish/functions` (controlled by the `XDG_CONFIG_HOME` environment variable).
+- A directory for systems administrators to install functions for all users on the system, usually `/etc/fish/functions`.
+- A directory for third-party software vendors to ship their own functions for their software, usually `/usr/share/fish/vendor_functions.d`.
+- The functions shipped with fish, usually installed in `/usr/share/fish/functions`.
+
+These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
+
+This wide search may be confusing. If you are unsure, your functions probably belong in `~/.config/fish/functions`.
 
 It is very important that function definition files only contain the definition for the specified function and nothing else. Otherwise, it is possible that autoloading a function files requires that the function already be loaded, which creates a circular dependency.
 
-Autoloading also won't work for <a href=#event>event handlers</a>, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See there for details.
+Autoloading also won't work for <a href=#event>event handlers</a>, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the <a href=#event>event handlers</a> section for more information.
+
+If you are developing another program, you may wish to install functions which are available for all users of the fish shell on a system. They can be installed to the "vendor" functions directory. As this path may vary from system to system, the `pkgconfig` framework should be used to discover this path with the output of `pkg-config --variable functionsdir fish`.
 
 
 \subsubsection syntax-conditional Conditional execution of code and flow control
@@ -295,7 +307,7 @@ Help on a specific builtin can also be obtained with the `-h` parameter. For ins
 
 \section autosuggestions Autosuggestions
 
-fish suggests commands as you type, based on command history, completions, and valid file paths. As you type commands, you will see a completion offered after the cursor, in a muted gray color (which can be changed with the `fish_color_autosuggestion` variable).
+fish suggests commands as you type, based on command history, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the `fish_color_autosuggestion` variable).
 
 To accept the autosuggestion (replacing the command line contents), press right arrow or @key{Control,F}. To accept the first suggested word, press @key{Alt,&rarr;,Right} or @key{Alt,F}. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
 
@@ -304,7 +316,7 @@ Autosuggestions are a powerful way to quickly summon frequently entered commands
 
 \section completion Tab completion
 
-Tab completion is one of the most time saving features of any modern shell. By tapping the tab key, the user asks `fish` to guess the rest of the command or parameter that the user is currently typing. If  `fish` can only find one possible completion, `fish` will write it out. If there is more than one completion, `fish` will write out the longest prefix that all completions have in common. If the completions differ on the first character, a list of all possible completions is printed. The list features descriptions of the completions and if the list doesn't fit the screen, it is scrollable by using the arrow keys, the page up/page down keys, the tab key or the space bar. Pressing any other key will exit the list and insert the pressed key into the command line.
+Tab completion is one of the most time saving features of any modern shell. By tapping the tab key, the user asks `fish` to guess the rest of the command or parameter that the user is currently typing. If  `fish` can only find one possible completion, `fish` will write it out. If there is more than one completion, `fish` will write out the longest prefix that all completions have in common. If the completions differ on the first character, a list of all possible completions is printed. The list features descriptions of the completions and if the list doesn't fit the screen, it is scrollable by using the arrow keys, the page up/page down keys, the tab key or the space bar. Once the list has been entered, pressing any other key will start a search. If the list has not been entered, pressing any other key will exit the list and insert the pressed key into the command line.
 
 These are the general purpose tab completions that `fish` provides:
 
@@ -381,9 +393,20 @@ Functions beginning with the string `__fish_print_` print a newline separated li
 
 Completions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. Fish automatically searches through any directories in the array variable `$fish_complete_path`, and any completions defined are automatically loaded when needed. A completion file must have a filename consisting of the name of the command to complete and the suffix '`.fish`'.
 
-The default value for `$fish_complete_path` is `~/.config/fish/completions` `/etc/fish/completions` `/usr/share/fish/vendor_completions.d` `/usr/share/fish/completions` `~/.local/share/generated_completions`. (Some paths may be slightly different depending on where fish is installed). If a suitable file is found in one of these directories, it will be automatically loaded and the search will be stopped. The large number of directories searched may be confusing. It is to allow, respectively, user-specific completions, system-wide completions, completions installed by other packages, default completions that ship with fish, and finally, completions generated from manual pages. If you are unsure, put your completions in `~/.config/fish/completions`.
+By default, Fish searches the following for completions, using the first available file that it finds:
+- A directory for end-users to keep their own completions, usually `~/.config/fish/completions` (controlled by the `XDG_CONFIG_HOME` environment variable);
+- A directory for systems administrators to install completions for all users on the system, usually `/etc/fish/completions`;
+- A directory for third-party software vendors to ship their own completions for their software, usually `/usr/share/fish/vendor_completions.d`;
+- The completions shipped with fish, usually installed in `/usr/share/fish/completions`; and
+- Completions automatically generated from the operating system's manual, usually stored in `~/.local/share/fish/generated_completions`.
 
-If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in <a href="#more-help">Further help and development</a>. If you are developing another program and would like to ship completions with your program, install them to `/usr/share/fish/vendor_completions.d` or similar directory. Systems using the `pkgconfig` framework can discover this path from the output of `pkg-config --variable completionsdir fish`.
+These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
+
+This wide search may be confusing. If you are unsure, your completions probably belong in `~/.config/fish/completions`.
+
+If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in <a href="#more-help">Further help and development</a>.
+
+If you are developing another program and would like to ship completions with your program, install them to the "vendor" completions directory. As this path may vary from system to system, the `pkgconfig` framework should be used to discover this path with the output of `pkg-config --variable completionsdir fish`.
 
 
 \section expand Parameter expansion (Globbing)
@@ -399,7 +422,19 @@ If a star (`*`) or a question mark (`?`) is present in the parameter, `fish` att
 
 - `*` can match any string of characters not containing '/'. This includes matching an empty string.
 
-- `**` matches any string of characters. This includes matching an empty string. The string may include the `/` character but does not need to.
+- `**` matches any string of characters. This includes matching an empty string. The matched string may include the `/` character; that is, it recurses into subdirectories. Note that augmenting this wildcard with other strings will not match files in the current working directory (`$PWD`) if you separate the strings with a slash ("/"). This is unlike other shells such as zsh. For example, `**\/*.fish` in zsh will match `.fish` files in the PWD but in fish will only match such files in a subdirectory. In fish you should type `***.fish` to match files in the PWD as well as subdirectories.
+
+Other shells, such as zsh, provide a rich glob syntax for restricting the files matched by globs. For example, `**(.)`, to only match regular files. Fish prefers to defer such features to programs, such as `find`, rather than reinventing the wheel. Thus, if you want to limit the wildcard expansion to just regular files the fish approach is to define and use a function. For example,
+
+\fish{cli-dark}
+function ff --description 'Like ** but only returns plain files.'
+    # This also ignores .git directories.
+    find . \( -name .git -type d -prune \) -o -type f | \
+        sed -n -e '/^\.\/\.git$/n' -e 's/^\.\///p'
+end
+\endfish
+
+You would then use it in place of `**` like this, `my_prog (ff)`, to pass only regular files in or below $PWD to `my_prog`.
 
 Wildcard matches are sorted case insensitively. When sorting matches containing numbers, consecutive digits are considered to be one element, so that the strings '1' '5' and '12' would be sorted in the order given.
 
@@ -489,7 +524,7 @@ echo The plural of $WORD is {$WORD}s
 
 Note that without the quotes or braces, fish will try to expand a variable called `$WORDs`, which may not exist.
 
-The latter syntax `{$WORD}` works by exploiting <a href="#expand-brace">brace expansion</a>; care should be taken with array variables and undefined variables, as these behave very differently to POSIX shells.
+The latter syntax `{$WORD}` works by exploiting <a href="#expand-brace">brace expansion</a>; care should be taken with array variables and undefined variables, as these expand as a <a href="#cartesian-product">cartesian product</a>, so undefined variables eliminate the string.
 
 Variable expansion is the only type of expansion performed on double quoted strings. There is, however, an important difference in how variables are expanded when quoted and when unquoted. An unquoted variable expansion will result in a variable number of arguments. For example, if the variable `$foo` has zero elements or is undefined, the argument `$foo` will expand to zero elements. If the variable $foo is an array of five elements, the argument `$foo` will expand to five elements. When quoted, like `"$foo"`, a variable expansion will always result in exactly one argument. Undefined variables will expand to the empty string, and array variables will be concatenated using the space character.
 
@@ -516,22 +551,24 @@ The above code demonstrates how to use multiple '`$`' symbols to expand the valu
 Lists adjacent to other lists or strings are expanded as cartesian products:
 
 Examples:
-\fish
-echo {good,bad}" apples"
-# Outputs 'good apples bad apples'
+\fish{cli-dark}
+>_ echo {good,bad}" apples"
+\outp{good apples bad apples}
 
-set -l a x y z
-set -l b 1 2 3
-echo $a$b
-# Outputs 'x1 y1 z1 x2 y2 z2 x3 y3 z3'
-echo $a"-"$b
-# Outputs 'x-1 y-1 z-1 x-2 y-2 z-2 x-3 y-3 z-3'
+>_ set -l a x y z
+>_ set -l b 1 2 3
 
-echo {x,y,z}$b
-# Outputs 'x1 y1 z1 x2 y2 z2 x3 y3 z3'
+>_ echo $a$b
+\outp{x1 y1 z1 x2 y2 z2 x3 y3 z3}
 
-echo {$b}word
-# Outputs '1word 2word 3word'
+>_ echo $a"-"$b
+\outp{x-1 y-1 z-1 x-2 y-2 z-2 x-3 y-3 z-3}
+
+>_ echo {x,y,z}$b
+\outp{x1 y1 z1 x2 y2 z2 x3 y3 z3}
+
+>_ echo {$b}word
+\outp{1word 2word 3word}
 \endfish
 
 Be careful when you try to use braces to separate variable names from text. The dangers noted in the last example above can be avoided by wrapping the variable in double quotes instead of braces (`echo "$b"word`).
@@ -806,6 +843,14 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `CMD_DURATION`, the runtime of the last command in milliseconds.
 
+- `FISH_VERSION`, the version of the currently running fish
+
+- `COLUMNS`, the current width of the terminal
+
+- `LINES`, the current height of the terminal
+
+- `SHLVL`, the level of nesting of shells
+
 The names of these variables are mostly derived from the csh family of shells and differ from the ones used by Bourne style shells such as bash.
 
 Variables whose name are in uppercase are exported to the commands started by fish, while those in lowercase are not exported. This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables. `fish` also uses several variables internally. Such variables are prefixed with the string `__FISH` or `__fish.` These should never be used by the user. Changing their value may break fish.
@@ -865,6 +910,10 @@ The following variables are available to change the highlighting colors in fish:
 
 - `fish_color_autosuggestion`, the color used for autosuggestions
 
+- `fish_color_user`, the color used to print the current username in some of fish default prompts
+
+- `fish_color_host`, the color used to print the current host system in some of fish default prompts
+
 Additionally, the following variables are available to change the highlighting in the completion pager:
 
 - `fish_pager_color_prefix`, the color of the prefix string, i.e. the string that is to be completed
@@ -909,7 +958,7 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
 
 \subsection emacs-mode Emacs mode commands
 
-- @key{Tab} <a href="#completion">completes</a> the current token.
+- @key{Tab} <a href="#completion">completes</a> the current token. @key{Shift, Tab} completes the current token and starts the pager's search mode.
 
 - @key{Home} or @key{Control,A} moves the cursor to the beginning of the line.
 
@@ -935,7 +984,7 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
 
 - @key{Control,L} clears and repaints the screen.
 
-- @key{Control,W} moves the previous word to the <a href="#killring">killring</a>.
+- @key{Control,W} moves the previous path component (everything up to the previous "/") to the <a href="#killring">killring</a>.
 
 - @key{Alt,D} moves the next word to the <a href="#killring">killring</a>.
 
@@ -950,6 +999,11 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
 - @key{Alt,U} makes the current word uppercase.
 
 - @key{Alt,H} (or @key{F1}) shows the manual page for the current command, if one exists.
+
+- @key{Control, t} transposes the last two characters
+
+- @key{Alt,t} transposes the last two words
+
 
 You can change these key bindings using the <a href="commands.html#bind">bind</a> builtin command.
 
@@ -1016,9 +1070,6 @@ Command mode is also known as normal mode.
 
 `fish` uses an Emacs style kill ring for copy and paste functionality. Use @key{Control,K} to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed) is inserted into a linked list of kills, called the kill ring. To paste the latest value from the kill ring use @key{Control,Y}. After pasting, use @key{Alt,Y} to rotate to the previous kill.
 
-If the environment variable `DISPLAY` is set and the `xsel` program is installed, `fish` will try to connect to the X Windows server specified by this variable, and use the clipboard on the X server for copying and pasting.
-
-
 \subsection history-search Searchable history
 
 After a command has been entered, it is inserted at the end of a history list. Any duplicate history items are automatically removed. By pressing the up and down keys, the user can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
@@ -1066,9 +1117,27 @@ Note that functions cannot be started in the background. Functions that are stop
 
 \section initialization Initialization files
 
-On startup, `fish` evaluates the files `/usr/share/fish/config.fish` (Or `/usr/local/fish...` if you installed fish in `/usr/local`), `/etc/fish/config.fish` (Or `~/etc/fish/...` if you installed fish in your home directory) and `~/.config/fish/config.fish` (Or any other directory specified by the `$XDG_CONFIG_HOME` variable), in that order.
+On startup, Fish evaluates a number of configuration files, which can be used to control the behavior of the shell.
 
-The first file should not be directly edited, the second one is meant for systemwide configuration and the last one is meant for user configuration. If you want to run a command only on starting an interactive shell, use the exit status of the command `status --is-interactive` to determine if the shell is interactive. If you want to run a command only when using a login shell, use `status --is-login` instead.
+Configuration files are evaluated in the following order:
+- Configuration shipped with fish, which should not be edited, usually `/usr/share/fish/config.fish`.
+- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - usually `/etc/fish/config.fish`;
+- Configuration snippets in files ending in `.fish`, in the directories:
+  - `~/.config/fish/conf.d/`
+  - `/etc/fish/conf.d`
+  - `/usr/share/fish/vendor_conf.d`
+
+  If there are multiple files with the same name in these directories, only the first will be executed.
+
+- User initialization, usually in `~/.config/fish/config.fish` (controlled by the `XDG_CONFIG_HOME` environment variable).
+
+These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
+
+This wide search may be confusing. If you are unsure, use `~/.config/fish/config.fish`.
+
+These files are all executed on the startup of every shell. If you want to run a command only on starting an interactive shell, use the exit status of the command `status --is-interactive` to determine if the shell is interactive. If you want to run a command only when using a login shell, use `status --is-login` instead. This will speed up the starting of non-interactive or non-login shells.
+
+If you are developing another program, you may wish to install configuration which is run for all users of the fish shell on a system. This is discouraged; if not carefully written, they may have side-effects or slow the startup of the shell. Additionally, users of other shells will not benefit from the Fish-specific configuration. However, if they are absolutely required, you may install them to the "vendor" configuration directory. As this path may vary from system to system, the `pkgconfig` framework should be used to discover this path with the output of `pkg-config --variable confdir fish`.
 
 Examples:
 
@@ -1088,7 +1157,6 @@ function on_exit --on-process %self
 end
 \endfish
 
-Right after reading /usr/share/fish/config.fish and before reading /etc/fish/config.fish, fish will also read files in ~/.config/fish/conf.d/, /etc/fish/conf.d and /usr/share/fish/vendor_conf.d (the exact values depend on $XDG_CONFIG_HOME, $__fish_sysconfdir and $__fish_datadir). If there are files with the same name in two or all of these, fish will only attempt to read the first (skipping all files with that name if it is unreadable). ~/.config takes precedence over /etc/ which takes precedence over /usr. The path to the latter can also be gotten via `pkg-config` as "confdir", and is meant for third-party applications to integrate with fish.
 
 \section other Other features
 

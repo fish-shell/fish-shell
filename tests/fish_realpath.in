@@ -1,0 +1,39 @@
+# $XDG_DATA_HOME can itself be a relative path. So force it to an absolute
+# path so we can remove it from any resolved paths below. This is needed
+# because the contents of the fish_realpath.out file can't include any $PWD
+# data since $PWD isn't under our control.
+set -l data_home_realpath (fish_realpath $XDG_DATA_HOME)
+
+# A bogus absolute path is handled correctly and sets a failure status.
+if not fish_realpath /this/better/be/an/invalid/path
+    echo first invalid path handled okay
+end
+
+# A non-existent file relative to $PWD fails.
+fish_realpath nonexistent-file
+
+# The simplest absolute path should undergo no transformation.
+fish_realpath /
+
+# A single symlink to a directory is correctly resolved.
+ln -s fish $XDG_DATA_HOME/fish-symlink
+set -l real_path (fish_realpath $XDG_DATA_HOME/fish-symlink)
+string replace "$data_home_realpath/" "" $real_path
+
+# A nonexistent file relative to a valid symlink to a directory fails.
+# This depends on the symlink created by the previous test.
+set -l real_path (fish_realpath $XDG_DATA_HOME/fish-symlink/nonexistent-file-relative-to-a-symlink)
+
+# A path with two symlinks, first to a directory, second to a file, is correctly resolved.
+ln -s fish $XDG_DATA_HOME/fish-symlink2
+touch $XDG_DATA_HOME/fish/real_file
+ln -s real_file $XDG_DATA_HOME/fish/symlink_file
+set -l real_path (fish_realpath $XDG_DATA_HOME/fish-symlink/symlink_file)
+string replace "$data_home_realpath/" "" $real_path
+
+# The $PWD should undergo no further transformations because it should already
+# be a "realpath".
+set -l real_path (fish_realpath $PWD)
+string replace $PWD "pwd-resolved-to-itself" $real_path
+
+exit 0

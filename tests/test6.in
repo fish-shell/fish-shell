@@ -72,3 +72,37 @@ if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end
 else
     echo "error: could not create temp environment" >&2
 end
+
+# Test command expansion with parened PATHs (#952)
+begin
+  set -l parened_path $PWD/'test6.tmp2.(paren).dir'
+  set -l parened_subpath $parened_path/subdir
+  if not begin
+        rm -rf $parened_path
+	    and mkdir $parened_path
+		and mkdir $parened_subpath
+	    and ln -s /bin/ls $parened_path/'__test6_(paren)_command'
+	    and ln -s /bin/ls $parened_subpath/'__test6_subdir_(paren)_command'
+      end
+    echo "error: could not create command expansion temp environment" >&2
+  end
+  
+  # Verify that we can expand commands when PATH has parens
+  set -l PATH $parened_path $PATH
+  set -l completed (complete -C__test6_ | cut -f 1 -d \t)
+  if test "$completed" = '__test6_(paren)_command'
+    echo "Command completion with parened PATHs test passed"
+  else
+    echo "Command completion with parened PATHs test failed. Expected __test6_(paren)_command, got $completed" >&2
+  end
+  
+  # Verify that commands with intermediate slashes do NOT expand with respect to PATH
+  set -l completed (complete -Csubdir/__test6_subdir)
+  if test -z "$completed"
+    echo "Command completion with intermediate slashes passed"
+  else
+    echo "Command completion with intermediate slashes: should output nothing, instead got $completed" >&2
+  end
+  
+  rm -rf $parened_path
+end

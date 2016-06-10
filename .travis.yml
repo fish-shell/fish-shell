@@ -21,8 +21,6 @@ matrix:
           build_command_prepend: "autoreconf; ./configure; make clean"
           build_command:   "make -j 4"
           branch_pattern: coverity_scan_master
-
-
   fast_finish: true
 
 script:

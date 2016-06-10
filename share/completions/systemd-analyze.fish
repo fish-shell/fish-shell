@@ -1,6 +1,6 @@
 complete -c systemd-analyze -x
-complete -f -c systemd-analzye -s H -l host= -d 'Execute the operation on a remote host' -a "(__fish_print_hostnames)"
-complete -x -c systemd-analzye -s M -l machine= -d 'Execute operation on a VM or container' -a "(__fish_systemd_machines)"
+complete -f -c systemd-analzye -s H -l host -d 'Execute the operation on a remote host' -a "(__fish_print_hostnames)"
+complete -x -c systemd-analzye -s M -l machine -d 'Execute operation on a VM or container' -a "(__fish_systemd_machines)"
 complete -f -c systemd-analzye -s h -l help -d 'Print a short help and exit'
 complete -f -c systemd-analzye -l version -d 'Print a short version and exit'
 complete -f -c systemd-analzye -l no-pager -d 'Do not pipe output into a pager'

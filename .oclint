@@ -1,0 +1,43 @@
+rules:
+rule-configurations:
+    #
+    # This is the default value (as of the time I wrote this) but I'm making
+    # it explicit since it needs to agree with the value used by clang-format.
+    # Thus, if we ever change the fish style to allow longer or shorter lines
+    # this should be changed (as well as the corresponding .clang-format file).
+    #
+    - key: LONG_LINE
+      value: 100
+    #
+    # The default limit for the length of variable names is 20. Long names are
+    # problematic but twenty chars results in way too many errors. So increase
+    # the limit to something more reasonable.
+    #
+    - key: LONG_VARIABLE_NAME
+      value: 30
+
+disable-rules:
+    #
+    # A few instances of "useless parentheses" errors are meaningful. Mostly
+    # in the context of the `return` statement. Unfortunately the vast
+    # majority would result in removing parentheses that decreases
+    # readability. So we're going to ignore this warning and rely on humans to
+    # notice when the parentheses are truly not needed.
+    #
+    # Also, some macro expansions, such as FD_SET(), trigger this warning and
+    # we don't want to suppress each of those individually.
+    #
+    - UselessParentheses
+    #
+    # OCLint wants variable names to be at least three characters in length.
+    # Which would be fine if it supported a reasonable set of exceptions
+    # (e.g., "i", "j", "k") and allowed adding additional exceptions to match
+    # conventions employed by a project. Since it doesn't, and thus generates
+    # a lot of really annoying warnings, we're going to disable this rule.
+    #
+    - ShortVariableName
+    #
+    # This rule flags perfectly reasonable conditions like `if (!some_condition)`
+    # and is therefore just noise. Disable this rule.
+    #
+    - InvertedLogic

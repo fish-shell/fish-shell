@@ -13,9 +13,9 @@ Detailed user documentation is available by running `help` within fish, and also
 
 ## Building
 
-fish is written in a sane subset of C++98, with a few components from C++TR1. It builds successfully with g++ 4.2 or later, and with clang. It also will build as C++11.
+Fish can be built using a C++11 environment but only requires C++03. It builds successfully with g++ 4.2 or later, and with clang. This allows fish to run on older systems such as OS X Snow Leopard (released in 2009).
 
-fish can be built using autotools or Xcode. autoconf 2.60 or later is required to build from git versions, but is not required for releases.
+Fish can be built using autotools or Xcode. autoconf 2.60 or later is required to build from git versions, but is not required for releases.
 
 fish depends on a curses implementation, such as ncurses. The headers and libraries are required for building.
 
@@ -54,32 +54,6 @@ On RedHat, CentOS, or Amazon EC2:
 
     sudo yum install ncurses-devel
 
-## Testing
-
-The source code for fish includes a large collection of tests. If you are making any changes to fish, running these tests is highly recommended to make sure the behaviour remains consistent.
-
-### Local testing
-
-The tests can be run on your local computer on all operating systems.
-
-Running the tests is only supported from the Autotools build. On OS X, you will require an installation of autoconf; we suggest using [Homebrew](http://brew.sh/) to install these tools.
-
-    autoconf
-    ./configure
-    make test [gmake on BSD]
-
-### Travis CI Build and Test
-
-The Travis Continuous Integration services can be used to test your changes across multiple platforms. You will need to [fork the fish-shell repository on GitHub](https://help.github.com/articles/fork-a-repo/), or push a copy of the code to your GitHub account.
-
- 1. [Sign in to Travis CI](https://travis-ci.org/auth) with your GitHub account, accepting the GitHub access permissions confirmation.
- 2. Once you're signed in, and your repositories are synchronised, go to your [profile page](https://travis-ci.org/profile) and enable the fish-shell repository.
- 3. Push your changes to GitHub.
-
-You'll receive an email when the tests are complete telling you whether or not any tests failed.
-
-You'll find the configuration used to control Travis in the `.travis.yml` file.
-
 ## Runtime Dependencies
 
 fish requires a curses implementation, such as ncurses, to run.
@@ -106,11 +80,19 @@ If you wish to use fish as your default shell, use the following command:
 
 chsh will prompt you for your password, and change your default shell. Substitute "/usr/local/bin/fish" with whatever path to fish is in your /etc/shells file.
 
+Use the following command if you didn't already add your fish path to /etc/shells.
+
+        echo /usr/local/bin/fish | sudo tee -a /etc/shells
+
 To switch your default shell back, you can run:
 
 	chsh -s /bin/bash
 
 Substitute /bin/bash with /bin/tcsh or /bin/zsh as appropriate.
+
+## Contributing Changes to the Code
+
+See the [Guide for Developers](CONTRIBUTING.md).
 
 ## Contact Us
 

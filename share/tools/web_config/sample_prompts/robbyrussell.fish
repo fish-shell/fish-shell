@@ -14,6 +14,7 @@ function fish_prompt
     end
 
     function _is_git_repo
+      type -q git; or return 1
       git status -s >/dev/null ^/dev/null
     end
 
@@ -26,6 +27,7 @@ function fish_prompt
     end
 
     function _is_hg_repo
+      type -q hg; or return 1
       hg summary >/dev/null ^/dev/null
     end
 

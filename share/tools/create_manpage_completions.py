@@ -664,7 +664,7 @@ class TypeDeroffManParser(ManParser):
 # Raises IOError if it cannot be opened
 def file_is_overwritable(path):
     result = False
-    file = open(path, 'r')
+    file = codecs.open(path, "r", encoding="utf-8")
     for line in file:
         # Skip leading empty lines
         line = line.strip()
@@ -903,7 +903,7 @@ def usage(script_name):
      -h, --help\t\tShow this help message
      -v, --verbose [0, 1, 2]\tShow debugging output to stderr. Larger is more verbose.
      -s, --stdout\tWrite all completions to stdout (trumps the --directory option)
-     -d, --directory [dir]\tWrite all completions to the given directory, instead of to ~/.config/fish/generated_completions
+     -d, --directory [dir]\tWrite all completions to the given directory, instead of to ~/.local/share/fish/generated_completions
      -m, --manpath\tProcess all man1 and man8 files available in the manpath (as determined by manpath)
      -p, --progress\tShow progress
     """)

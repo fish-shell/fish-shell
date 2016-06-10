@@ -1,9 +1,8 @@
-
 \section math math - Perform mathematics calculations
 
 \subsection math-synopsis Synopsis
 \fish{synopsis}
-math EXPRESSION
+math [-sN] EXPRESSION
 \endfish
 
 \subsection math-description Description
@@ -12,9 +11,26 @@ math EXPRESSION
 
 For a description of the syntax supported by math, see the manual for the bc program. Keep in mind that parameter expansion takes place on any expressions before they are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis have to be escaped.
 
+The following options are available:
+
+- `-sN` Sets the scale of the result. `N` must be an integer and defaults to zero. This simply sets bc's `scale` variable to the provided value. Note that you cannot put a space between `-s` and `N`.
+
+\subsection return-values Return Values
+
+If invalid options or no expression is provided the return `status` is two. If the expression is invalid the  return `status` is three. If bc returns a result of `0` (literally, not `0.0` or similar variants) the return `status` is one otherwise it's zero.
 
 \subsection math-example Examples
 
 `math 1+1` outputs 2.
 
 `math $status-128` outputs the numerical exit status of the last command minus 128.
+
+`math 10 / 6` outputs `1`.
+
+`math -s0 10.0 / 6.0` outputs `1`.
+
+`math -s3 10 / 6` outputs `1.666`.
+
+\subsection math-cautions Cautions
+
+Note that the modulo operator (`x % y`) is not well defined for floating point arithmetic. The `bc` command produces a nonsensical result rather than emit an error and fail in that case. It doesn't matter if the arguments are integers; e.g., `10 % 4`. You'll still get an incorrect result. Do not use the `-sN` flag with N greater than zero if you want sensible answers when using the modulo operator.

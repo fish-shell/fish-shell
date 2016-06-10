@@ -1,4 +1,4 @@
-# vim: set ts=4 sw=4 et:
+# vim: set ts=4 sw=4 tw=100 et:
 # Utilities for the test runners
 
 if test "$argv[1]" = (status -f)
@@ -19,14 +19,12 @@ function die
     exit 1
 end
 
-# Check if we're running in the test environment.
-# If not, set it up and rerun fish with exec.
-# The test is whether the special var __fish_is_running_tests
-# exists and contains the same value as XDG_CONFIG_HOME. It checks
-# the value and not just the presence because we're going to delete
-# the config directory later if we're exiting successfully.
+# Check if we're running in the test environment.  If not, set it up and rerun fish with exec.  The
+# test is whether the special var __fish_is_running_tests exists and contains the same value as
+# XDG_CONFIG_HOME. It checks the value and not just the presence because we're going to delete the
+# config directory later if we're exiting successfully.
 if not set -q __fish_is_running_tests
-    # set up our test environment and re-run the original script
+    # Set up our test environment and re-run the original script.
     set -l script $argv[1]
     switch $script
     case '/*'
@@ -35,8 +33,11 @@ if not set -q __fish_is_running_tests
         # path is relative, make it absolute
         set script $PWD/$script
     end
-    set -l IFS # clear IFS so cmd substitution doesn't split
-    cd (dirname $script); or die
+
+    begin
+        set -l IFS  # clear IFS so cmd substitution doesn't split
+        cd (dirname $script); or die
+    end
 
     set -lx XDG_DATA_HOME ../test/data
     rm -rf $XDG_DATA_HOME/fish
@@ -52,13 +53,21 @@ if not set -q __fish_is_running_tests
     printf 'set fish_function_path \'%s/functions\' \'%s/share/functions\'\n' $escaped_config $escaped_parent > $XDG_CONFIG_HOME/fish/config.fish; or die
     set -xl __fish_is_running_tests $XDG_CONFIG_HOME
 
-    # set locale information to be consistent
-    set -lx LANG C
-    set -lx LC_ALL ''
-    for var in ALL COLLATE MESSAGES MONETARY NUMERIC TIME
-        set -lx LC_$var ''
+    # Set locale information for consistent tests. Fish should work with a lot of locales but the
+    # tests assume an english UTF-8 locale unless they explicitly override this default. We do not
+    # want the users locale to affect the tests since they might, for example, change the wording of
+    # logged messages.
+    #
+    # TODO: set LANG to en_US.UTF-8 so we test the locale message conversions (i.e., gettext).
+    set -e LANGUAGE
+    set -x LANG C
+    # Remove "LC_" env vars from the test environment.
+    for var in (set -xn)
+        string match -q 'LC_*' $var
+        and set -e $var
     end
-    set -lx LC_CTYPE en_US.UTF-8
+    set -x LC_CTYPE en_US.UTF-8
+
     exec ../test/root/bin/fish $script $args_for_test_script
     die 'exec failed'
 else if test "$__fish_is_running_tests" != "$XDG_CONFIG_HOME"

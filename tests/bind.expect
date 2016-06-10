@@ -60,7 +60,7 @@ expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
 
 # Verify the default timeout has been set to the expected value.
 send "echo fish_escape_delay_ms=\$fish_escape_delay_ms\r"
-expect_prompt -re {\r\nfish_escape_delay_ms=10\r\n} {
+expect_prompt -re {\r\nfish_escape_delay_ms=100\r\n} {
     puts "vi-mode default timeout set correctly"
 } unmatched {
     puts stderr "vi-mode default timeout not set correctly"
@@ -71,7 +71,7 @@ send "\033"
 # Delay needed to allow fish to transition to vi "normal" mode. The delay is
 # longer than strictly necessary to let fish catch up as it may be slow due to
 # ASAN.
-sleep 0.100
+sleep 0.150
 send "ddi"
 send "echo success: default escape timeout\r"
 expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
@@ -84,7 +84,7 @@ expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
 # binding but should be valid while in vi insert or normal mode).
 send "echo abc def"
 send "\033"
-sleep 0.005
+sleep 0.010
 send "t\r"
 expect_prompt -re {\r\ndef abc\r\n} {
     puts "vi transpose words, default timeout: short delay"
@@ -96,7 +96,7 @@ expect_prompt -re {\r\ndef abc\r\n} {
 send "echo TEXT"
 send "\033"
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep 0.100
+sleep 0.150
 send "hhrAi\r"
 expect_prompt -re {\r\nTAXT\r\n} {
     puts "vi mode replace char, default timeout: long delay"
@@ -105,7 +105,7 @@ expect_prompt -re {\r\nTAXT\r\n} {
 }
 
 # Verify that changing the escape timeout has an effect.
-send "set -g fish_escape_delay_ms 100\r"
+send "set -g fish_escape_delay_ms 200\r"
 expect_prompt
 
 send "echo fail: lengthened escape timeout"
@@ -123,7 +123,7 @@ expect_prompt -re {\r\nsuccess: lengthened escape timeout\r\n} {
 # after sending escape.
 send "echo fail: no normal mode"
 send "\033"
-sleep 0.050
+sleep 0.100
 send "ddi"
 send "inserted\r"
 expect_prompt -re {\r\nfail: no normal modediinserted\r\n} {
@@ -151,13 +151,17 @@ expect_prompt -re {\r\nTENT\r\n} {
 send "set -g fish_key_bindings fish_default_key_bindings\r"
 expect_prompt
 
-# Verify the custom escape timeout of 100ms set earlier is still in effect.
+# Verify the custom escape timeout of 200ms set earlier is still in effect.
 send "echo fish_escape_delay_ms=\$fish_escape_delay_ms\r"
-expect_prompt -re {\r\nfish_escape_delay_ms=100\r\n} {
+expect_prompt -re {\r\nfish_escape_delay_ms=200\r\n} {
     puts "default-mode custom timeout set correctly"
 } unmatched {
     puts stderr "default-mode custom timeout not set correctly"
 }
+
+# Reset it to 100ms.
+send "set -g fish_escape_delay_ms 100\r"
+expect_prompt
 
 # Verify the emacs transpose word (\et) behavior using various delays,
 # including none, after the escape character.
@@ -194,4 +198,24 @@ expect_prompt -re {\r\nmno pqrt\r\n} {
     puts "emacs transpose words, 100ms timeout: long delay"
 } unmatched {
     puts stderr "emacs transpose words fail, 100ms timeout: long delay"
+}
+
+# Verify special characters, such as \cV, are not intercepted by the kernel
+# tty driver. Rather, they can be bound and handled by fish.
+send "bind \\cV 'echo ctrl-v seen'\r"
+expect_prompt
+send "\026\r"
+expect_prompt -re {ctrl-v seen} {
+    puts "ctrl-v seen"
+} unmatched {
+    puts stderr "ctrl-v not seen"
+}
+
+send "bind \\cO 'echo ctrl-o seen'\r"
+expect_prompt
+send "\017\r"
+expect_prompt -re {ctrl-o seen} {
+    puts "ctrl-o seen"
+} unmatched {
+    puts stderr "ctrl-o not seen"
 }

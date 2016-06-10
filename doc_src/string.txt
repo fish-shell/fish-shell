@@ -3,16 +3,16 @@
 \subsection string-synopsis Synopsis
 \fish{synopsis}
 string length [(-q | --quiet)] [STRING...]
-string sub [(-s | --start) START] [(-l | --length) LENGTH]
-           [(-q | --quiet)] [STRING...]
-string split [(-m | --max) MAX] [(-r | --right)] [(-q | --quiet)]
-             SEP [STRING...]
+string sub [(-s | --start) START] [(-l | --length) LENGTH] [(-q | --quiet)]
+           [STRING...]
+string split [(-m | --max) MAX] [(-r | --right)] [(-q | --quiet)] SEP
+             [STRING...]
 string join [(-q | --quiet)] SEP [STRING...]
 string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)]
             [(-q | --quiet)] [STRING...]
 string escape [(-n | --no-quoted)] [STRING...]
 string match [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
-             [(-n | --index)] [(-q | --quiet)] PATTERN [STRING...]
+             [(-n | --index)] [(-q | --quiet)] [(-v | --invert)] PATTERN [STRING...]
 string replace [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
                [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
 \endfish
@@ -44,157 +44,149 @@ The following subcommands are available:
 
 - `escape` escapes each STRING such that it can be passed back to `eval` to produce the original argument again. By default, all special characters are escaped, and quotes are used to simplify the output when possible. If `-n` or `--no-quote` is given, the simplifying quoted format is not used. Exit status: 0 if at least one string was escaped, or 1 otherwise.
 
-- `match` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported. Matching can be made case-insensitive with `-i` or `--ignore-case`. If `-n` or `--index` is given, each match is reported as a 1-based start position and a length. By default, PATTERN is interpreted as a glob pattern matched against each entire STRING argument. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group. Exit status: 0 if at least one match was found, or 1 otherwise.
+- `match` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported. Matching can be made case-insensitive with `-i` or `--ignore-case`. If `-n` or `--index` is given, each match is reported as a 1-based start position and a length. By default, PATTERN is interpreted as a glob pattern matched against each entire STRING argument. A glob pattern is only considered a valid match if it matches the entire STRING. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression, which does not have to match the entire STRING. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group. If --invert or -v is used the selected lines will be only those which do not match the given glob pattern or regular expression.  Exit status: 0 if at least one match was found, or 1 otherwise.
 
 - `replace` is similar to `match` but replaces non-overlapping matching substrings with a replacement string and prints the result. By default, PATTERN is treated as a literal substring to be matched. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression, and REPLACEMENT can contain C-style escape sequences like `\t` as well as references to capturing groups by number or name as `$n` or `${n}`. Exit status: 0 if at least one replacement was performed, or 1 otherwise.
 
+\subsection regular-expressions Regular Expressions
+
+Both the `match` and `replace` subcommand support regular expressions when used with the `-r` or `--regex` option. The dialect is that of PCRE2.
+
+In general, special characters are special by default, so `a+` matches one or more "a"s, while `a\+` matches an "a" and then a "+". `(a+)` matches one or more "a"s in a capturing group (`(?:XXXX)` denotes a non-capturing group). For the replacement parameter of `replace`, `$n` refers to the n-th group of the match. In the match parameter, `\n` (e.g. `\1`) refers back to groups.
 
 \subsection string-example Examples
 
-\fish
-string length 'hello, world'
-# Output:
-# 12
+\fish{cli-dark}
+>_ string length 'hello, world'
+\outp{12}
 
-string length -q $str
+>_ set str foo
+>_ string length -q $str; echo $status
+0
 # Equivalent to test -n $str
 \endfish
 
-\fish
-string sub --length 2 abcde
-# Output:
-# ab
+\fish{cli-dark}
+>_ string sub --length 2 abcde
+\outp{ab}
 
-string sub -s 2 -l 2 abcde
-# Output:
-# bc
+>_ string sub -s 2 -l 2 abcde
+\outp{bc}
 
-string sub --start=-2 abcde
-# Output:
-# de
+>_ string sub --start=-2 abcde
+\outp{de}
 \endfish
 
-\fish
-string split . example.com
-# Output:
-# example
-# com
+\fish{cli-dark}
+>_ string split . example.com
+\outp{example}
+\outp{com}
 
-string split -r -m1 / /usr/local/bin/fish
-# Output:
-# /usr/local/bin
-# fish
+>_ string split -r -m1 / /usr/local/bin/fish
+\outp{/usr/local/bin}
+\outp{fish}
 
-string split '' abc
-# Output:
-# a
-# b
-# c
+>_ string split '' abc
+\outp{a}
+\outp{b}
+\outp{c}
 \endfish
 
-\fish
-seq 3 | string join ...
-# Output:
-# 1...2...3
+\fish{cli-dark}
+>_ seq 3 | string join ...
+\outp{1...2...3}
 \endfish
 
-\fish
-string trim ' abc  '
-# Output:
-# abc
+\fish{cli-dark}
+>_ string trim ' abc  '
+\outp{abc}
 
-string trim --right --chars=yz xyzzy zany
-# Output:
-# x
-# zan
+>_ string trim --right --chars=yz xyzzy zany
+\outp{x}
+\outp{zan}
 \endfish
 
-\fish
-echo \x07 | string escape
-# Output:
-# \\cg
+\fish{cli-dark}
+>_ echo \\x07 | string escape
+\bksl{cg}
 \endfish
 
-\fish
-# string match glob examples
+\subsection string-example-match-glob Match Glob Examples
 
-string match '?' a
-# Output:
-# a
+\fish{cli-dark}
+>_ string match '?' a
+\outp{a}
 
-string match 'a*b' axxb
-# Output:
-# axxb
+>_ string match 'a*b' axxb
+\outp{axxb}
 
-string match -i 'a??B' Axxb
-# Output:
-# Axxb
+>_ string match -i 'a??B' Axxb
+\outp{Axxb}
 
-echo 'ok?' | string match '*\\?'
-# Output:
-# ok?
+>_ echo 'ok?' | string match '*\\?'
+>_ \outp{ok?}
 
-# string match regex examples
+\subsection string-example-match-regex Match Regex Examples
 
-string match -r 'cat|dog|fish' 'nice dog'
-# Output:
-# dog
+\fish{cli-dark}
+>_ string match -r 'cat|dog|fish' 'nice dog'
+\outp{dog}
 
-string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' 2:34:56
-# Output:
-# 2:34:56
-# 2
-# 34
-# 56
-
-string match -r '^(\\w{2,4})\\g1$' papa mud murmur
-# Output:
-# papa
-# pa
-# murmur
-# mur
-
-string match -r -a -n at ratatat
-# Output:
-# 2 2
-# 4 2
-# 6 2
-
-string match -r -i '0x[0-9a-f]{1,8}' 'int magic = 0xBadC0de;'
-# Output:
-# 0xBadC0de
+>_ string match -r -v "c.*[12]" {cat,dog}(seq 1 4)
+\outp{dog1}
+\outp{dog2}
+\outp{cat3}
+\outp{dog3}
+\outp{cat4}
+\outp{dog4}
 \endfish
 
-\fish
+>_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' \asis{2:34:56}
+\outp{2:34:56}
+\outp{2}
+\outp{34}
+\outp{56}
 
-# string replace literal examples
+>_ string match -r '^(\\w{{2,4}})\\g1$' papa mud murmur
+\outp{papa}
+\outp{pa}
+\outp{murmur}
+\outp{mur}
 
-string replace is was 'blue is my favorite'
-# Output:
-# blue was my favorite
+>_ string match -r -a -n at ratatat
+\outp{2 2}
+\outp{4 2}
+\outp{6 2}
 
-string replace 3rd last 1st 2nd 3rd
-# Output:
-# 1st
-# 2nd
-# last
+>_ string match -r -i '0x[0-9a-f]{{1,8}}' 'int magic = 0xBadC0de;'
+\outp{0xBadC0de}
+\endfish
 
-string replace -a ' ' _ 'spaces to underscores'
-# Output:
-# spaces_to_underscores
+\subsection string-example-replace-literal Replace Literal Examples
 
-# string replace regex examples
+\fish{cli-dark}
+>_ string replace is was 'blue is my favorite'
+\outp{blue was my favorite}
 
-string replace -r -a '[^\\d.]+' ' ' '0 one two 3.14 four 5x'
-# Output:
-# 0 3.14 5
+>_ string replace 3rd last 1st 2nd 3rd
+\outp{1st}
+\outp{2nd}
+\outp{last}
 
-string replace -r '(\\w+)\\s+(\\w+)' '$2 $1 $$' 'left right'
-# Output:
-# right left $
+>_ string replace -a ' ' _ 'spaces to underscores'
+\outp{spaces_to_underscores}
+\endfish
 
-string replace -r '\\s*newline\\s*' '\n' 'put a newline here'
-# Output:
-# put a
-# here
+\subsection string-example-replace-Regex Replace Regex Examples
+
+\fish{cli-dark}
+>_ string replace -r -a '[^\\d.]+' ' ' '0 one two 3.14 four 5x'
+\outp{0 3.14 5}
+
+>_ string replace -r '(\\w+)\\s+(\\w+)' '$2 $1 $$' 'left right'
+\outp{right left $}
+
+>_ string replace -r '\\s*newline\\s*' '\\n' 'put a newline here'
+\outp{put a}
+\outp{here}
 \endfish

@@ -29,6 +29,8 @@ The following options are available:
 
 - `-s` or `--on-signal SIGSPEC` tells fish to run this function when the signal SIGSPEC is delivered. SIGSPEC can be a signal number, or the signal name, such as SIGHUP (or just HUP).
 
+- `-B` or `--shadow-builtin` must be specified if the function name is the same as a builtin. Specifying this flag indicates your acknowledgement that you are wrapping or replacing the builtin command. This is a safety feature to make it harder for people to inadvertently break the shell by doing things like `function test; return 0; end`. If the function name is not currently a builtin using this flag will produce an error. If you want to write a function that provides a builtin to an older version of fish you need to add something like `builtin --names | grep -q '^cmd$'; and return` to the top of the function script (where `cmd` is the name of the builtin/function). That will keep your script from replacing the builtin with your function on the newer fish version while allowing your function to provide similar functionality on older versions of fish.
+
 - `-S` or `--no-scope-shadowing` allows the function to access the variables of calling functions. Normally, any variables inside the function that have the same name as variables from the calling function are "shadowed", and their contents is independent of the calling function.
 
 - `-V` or `--inherit-variable NAME` snapshots the value of the variable `NAME` and defines a local variable with that same name and value when the function is executed.

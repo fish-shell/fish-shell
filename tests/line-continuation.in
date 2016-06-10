@@ -1,0 +1,25 @@
+ech\
+o echo
+
+buil\
+tin echo builtin echo
+
+true; an\
+d echo true
+
+\i\
+\U00000066\
+ true
+	echo if true
+\
+\145n\
+d\
+;
+
+'if'\
+ true
+	echo if true
+"\
+en\
+d\
+";

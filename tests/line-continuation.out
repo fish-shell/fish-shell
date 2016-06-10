@@ -1,0 +1,5 @@
+echo
+builtin echo
+true
+if true
+if true

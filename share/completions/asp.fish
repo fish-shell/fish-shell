@@ -17,6 +17,10 @@ complete -c asp -n "not __fish_seen_subcommand_from $commands" -a show -d "Show 
 complete -c asp -n "not __fish_seen_subcommand_from $commands" -a update -d "Update given targets" -f
 complete -c asp -n "not __fish_seen_subcommand_from $commands" -a untrack -d "Remove target from local repository" -f
 
-# This isn't perfect as we need a pkgbase, not a pkgname,
-# but getting those is non-trivial as built packages don't carry the information anymore
-complete -c asp -n "__fish_seen_subcommand_from $commands" -a "(__fish_print_packages)" -f
+# Remove pointless "packages/" or "community/" before package names
+# Don't show foreign packages for untrack, and show no packages at all for gc, help, disk-usage, list-{all,local}
+# This will run into the description race.
+complete -c asp -n "__fish_seen_subcommand_from checkout {diff,short,}log export list-{arches,repos} show update" -a "(asp list-all | string replace -r '.*/' '')" -f
+complete -c asp -n "__fish_seen_subcommand_from checkout {diff,short,}log export list-{arches,repos} show update untrack" -a "(asp list-local | string replace -r '.*/' '')" -f \
+-d "Locally tracked package"
+

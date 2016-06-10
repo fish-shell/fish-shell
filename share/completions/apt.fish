@@ -2,7 +2,7 @@
 
 function __fish_apt_no_subcommand --description 'Test if apt has yet to be given the subcommand'
 	for i in (commandline -opc)
-		if contains -- $i update upgrade full-upgrade search list install show remove edit-sources
+		if contains -- $i update upgrade full-upgrade search list install show remove edit-sources purge
 			return 1
 		end
 	end
@@ -11,7 +11,7 @@ end
 
 function __fish_apt_use_package --description 'Test if apt command should have packages as potential completion'
 	for i in (commandline -opc)
-		if contains -- $i contains install remove upgrade full-upgrade show search
+		if contains -- $i install remove upgrade full-upgrade show search purge
 			return 0
 		end
 	end
@@ -63,3 +63,6 @@ __fish_apt_subcommand upgrade -r       --description 'Upgrade packages'
 
 # Full Upgrade
 __fish_apt_subcommand full-upgrade -r  --description 'Upgrade packages, removing others when needed'
+
+# Purge
+__fish_apt_subcommand purge -x         --description 'Remove packages and delete their config files'

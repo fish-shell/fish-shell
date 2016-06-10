@@ -274,6 +274,8 @@ ALIASES += "span{2}=<span style=\"\1\">\2</span>"
 ALIASES += "spcl{2}=<span class=\"\1\">\2</span>"
 
 ALIASES += "bksl{1}=<span>\</span>\1"
+ALIASES += "pcnt{1}=<span>%</span>\1"
+ALIASES += "atat{1}=<span>@</span>"
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding "class=itcl::class"

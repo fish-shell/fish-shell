@@ -1,0 +1,88 @@
+News about PCRE2 releases
+-------------------------
+
+Version 10.21 12-January-2016
+-----------------------------
+
+1. Many bugs have been fixed. A large number of them were provoked only by very
+strange pattern input, and were discovered by fuzzers. Some others were
+discovered by code auditing. See ChangeLog for details.
+
+2. The Unicode tables have been updated to Unicode version 8.0.0.
+
+3. For Perl compatibility in EBCDIC environments, ranges such as a-z in a
+class, where both values are literal letters in the same case, omit the
+non-letter EBCDIC code points within the range.
+
+4. There have been a number of enhancements to the pcre2_substitute() function,
+giving more flexibility to replacement facilities. It is now also possible to
+cause the function to return the needed buffer size if the one given is too
+small.
+
+5. The PCRE2_ALT_VERBNAMES option causes the "name" parts of special verbs such
+as (*THEN:name) to be processed for backslashes and to take note of
+PCRE2_EXTENDED.
+
+6. PCRE2_INFO_HASBACKSLASHC makes it possible for a client to find out if a
+pattern uses \C, and --never-backslash-C makes it possible to compile a version
+PCRE2 in which the use of \C is always forbidden.
+
+7. A limit to the length of pattern that can be handled can now be set by
+calling pcre2_set_max_pattern_length().
+
+8. When matching an unanchored pattern, a match can be required to begin within
+a given number of code units after the start of the subject by calling
+pcre2_set_offset_limit().
+
+9. The pcre2test program has been extended to test new facilities, and it can
+now run the tests when LF on its own is not a valid newline sequence.
+
+10. The RunTest script has also been updated to enable more tests to be run.
+
+11. There have been some minor performance enhancements.
+
+
+Version 10.20 30-June-2015
+--------------------------
+
+1. Callouts with string arguments and the pcre2_callout_enumerate() function
+have been implemented.
+
+2. The PCRE2_NEVER_BACKSLASH_C option, which locks out the use of \C, is added.
+
+3. The PCRE2_ALT_CIRCUMFLEX option lets ^ match after a newline at the end of a
+subject in multiline mode.
+
+4. The way named subpatterns are handled has been refactored. The previous
+approach had several bugs.
+
+5. The handling of \c in EBCDIC environments has been changed to conform to the
+perlebcdic document. This is an incompatible change.
+
+6. Bugs have been mended, many of them discovered by fuzzers.
+
+
+Version 10.10 06-March-2015
+---------------------------
+
+1. Serialization and de-serialization functions have been added to the API,
+making it possible to save and restore sets of compiled patterns, though
+restoration must be done in the same environment that was used for compilation.
+
+2. The (*NO_JIT) feature has been added; this makes it possible for a pattern
+creator to specify that JIT is not to be used.
+
+3. A number of bugs have been fixed. In particular, bugs that caused building
+on Windows using CMake to fail have been mended.
+
+
+Version 10.00 05-January-2015
+-----------------------------
+
+Version 10.00 is the first release of PCRE2, a revised API for the PCRE
+library. Changes prior to 10.00 are logged in the ChangeLog file for the old
+API, up to item 20 for release 8.36. New programs are recommended to use the
+new library. Programs that use the original (PCRE1) API will need changing
+before linking with the new library.
+
+****

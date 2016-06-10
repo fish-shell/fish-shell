@@ -1,8 +1,6 @@
 function fish_vi_mode
-  # Set the __fish_vi_mode variable
-  # This triggers fish_mode_prompt to output the mode indicator
-  set -g __fish_vi_mode 1
-  
-  # Turn on vi keybindings
-  set -g fish_key_bindings fish_vi_key_bindings
+	echo 'The `fish_vi_mode` function is deprecated.' >&2
+        echo 'Please switch to calling `fish_vi_key_bindings`.' >&2
+	# Turn on vi keybindings
+	set -g fish_key_bindings fish_vi_key_bindings
 end

@@ -12,10 +12,9 @@ end
 
 `if` will execute the command `CONDITION`. If the condition's exit status is 0, the commands `COMMANDS_TRUE` will execute.  If the exit status is not 0 and `else` is given, `COMMANDS_FALSE` will be executed.
 
-In order to use the exit status of multiple commands as the condition of an if block, use <a href="#begin">`begin; ...; end`</a> and the short circuit commands <a href="commands.html#and">`and`</a> and <a href="commands.html#or">`or`</a>.
+You can use <a href="#and">`and`</a> or <a href="#or">`or`</a> in the condition. See the second example below.
 
 The exit status of the last foreground command to exit can always be accessed using the <a href="index.html#variables-status">$status</a> variable.
-
 
 \subsection if-example Example
 
@@ -33,9 +32,8 @@ end
 
 The following code will print "foo.txt exists and is readable" if foo.txt is a regular file and readable
 \fish
-if begin test -f foo.txt
-   		 and test -r foo.txt
-		 end
+if test -f foo.txt
+   and test -r foo.txt
    echo "foo.txt exists and is readable"
 end
 \endfish

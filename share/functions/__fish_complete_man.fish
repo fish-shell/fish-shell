@@ -1,27 +1,33 @@
 
 function __fish_complete_man
-	if test (commandline -ct)
+	# Try to guess what section to search in. If we don't know, we
+	# use [^)]*, which should match any section
 
-		# Try to guess what section to search in. If we don't know, we
-		# use [^)]*, which should match any section
-
-		set section ""
-		set prev (commandline -poc)
-		set -e prev[1]
-		while count $prev
-			switch $prev[1]
+	set section ""
+	set prev (commandline -poc)
+	set -e prev[1]
+	while set -q prev[1]
+		switch $prev[1]
 			case '-**'
 
 			case '*'
 				set section $prev[1]
-			end
-			set -e prev[1]
 		end
+		set -e prev[1]
+	end
 
-		set section $section"[^)]*"
+    set section $section"[^)]*"
 
+    set -l token (commandline -ct)
+    # If we don't have a token but a section, list all pages for that section.
+    # Don't do it for all sections because that would be overwhelming.
+    if test -z "$token" -a "$section" != "[^)]*"
+        set token "."
+    end
+
+	if test -n "$token"
 		# Do the actual search
-		apropos (commandline -ct) ^/dev/null | awk '
+		apropos $token ^/dev/null | awk '
 		BEGIN { FS="[\t ]- "; OFS="\t"; }
 		# BSD/Darwin
 		/^[^( \t]+\('$section'\)/ {
@@ -58,6 +64,9 @@ function __fish_complete_man
 		  print name, sect
 		}
 		'
+    else
+        return 1
 	end
+    return 0
 end
 

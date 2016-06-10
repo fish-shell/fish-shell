@@ -3,7 +3,7 @@
 
 function fish_prompt
     and set retc green; or set retc red
-    tty|grep -q tty; and set tty tty; or set tty pts
+    tty|string match -q -r tty; and set tty tty; or set tty pts
 
     set_color $retc
     if [ $tty = tty ]
@@ -47,17 +47,8 @@ function fish_prompt
     set_color -o green
     echo -n ]
     
-    # Check if acpi exists
-    if not set -q __fish_nim_prompt_has_acpi
-    	if type acpi > /dev/null
-    		set -g __fish_nim_prompt_has_acpi ''
-    	else
-    		set -g __fish_nim_prompt_has_acpi '' # empty string
-    	end
-    end
-    	
-    if test "$__fish_nim_prompt_has_acpi"
-		if [ (acpi -a 2> /dev/null | grep off) ]
+    if type -q acpi
+		if [ (acpi -a 2> /dev/null | string match -r off) ]
 			echo -n '─['
 			set_color -o red
 			echo -n (acpi -b|cut -d' ' -f 4-)

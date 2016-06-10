@@ -1,0 +1,28 @@
+# Map file for the include-what-you-use tool on Linux.
+[
+    { include: ["<bits/fcntl-linux.h>", "private", "<fcntl.h>", "public"] },
+    { include: ["<bits/mman-linux.h>", "private", "<sys/mman.h>", "public"] },
+    { include: ["<bits/socket-linux.h>", "private", "<sys/socket.h>", "public"] },
+    { include: ["<bits/socket_type.h>", "private", "<sys/socket.h>", "public"] },
+    { include: ["<bits/local_lim.h>", "private", "<limits.h>", "public"] },
+    { include: ["<tr1/memory>", "public", "<memory>", "public"] },
+    { include: ["<features.h>", "public", "<stdio.h>", "public"] },
+    { include: ["<features.h>", "public", "<stddef.h>", "public"] },
+    { include: ["<features.h>", "public", "<unistd.h>", "public"] },
+
+    { symbol: ["size_t", "private", "<unistd.h>", "public"] },
+    { symbol: ["size_t", "private", "<stddef.h>", "public"] },
+    { symbol: ["size_t", "private", "<stdlib.h>", "public"] },
+    { symbol: ["intmax_t", "private", "<sys/stdint.h>", "public"] },
+    { symbol: ["intmax_t", "private", "<sys/types.h>", "public"] },
+    { symbol: ["uint32_t", "private", "<sys/stdint.h>", "public"] },
+    { symbol: ["uint32_t", "private", "<sys/types.h>", "public"] },
+    { symbol: ["uint64_t", "private", "<sys/stdint.h>", "public"] },
+    { symbol: ["uint64_t", "private", "<sys/types.h>", "public"] },
+    { symbol: ["uintmax_t", "private", "<sys/stdint.h>", "public"] },
+    { symbol: ["uintmax_t", "private", "<sys/types.h>", "public"] },
+    { symbol: ["clock_gettime", "private", "<sys/time.h>", "public"] },
+    { symbol: ["timespec", "private", "<sys/time.h>", "public"] },
+    { symbol: ["memset", "private", "<string.h>", "public"] },
+    { symbol: ["strerror", "private", "<string.h>", "public"] },
+]

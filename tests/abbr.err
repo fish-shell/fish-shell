@@ -1,1 +1,2 @@
 abbr: no such abbreviation 'NOT_AN_ABBR'
+abbr: abbreviation cannot have spaces in the key

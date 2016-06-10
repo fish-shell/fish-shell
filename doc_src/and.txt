@@ -7,12 +7,11 @@ COMMAND1; and COMMAND2
 
 \subsection and-description Description
 
-`and` is used to execute a command if the current exit status (as set by the last previous command) is 0.
+`and` is used to execute a command if the current exit status (as set by the previous command) is 0.
 
-`and` does not change the current exit status.
+`and` statements may be used as part of the condition in an <a href="#if">`if`</a> or <a href="#while">`while`</a> block. See the documentation for <a href="#if">`if`</a> and <a href="#while">`while`</a> for examples.
 
-The exit status of the last foreground command to exit can always be accessed using the <a href="index.html#variables-status">$status</a> variable.
-
+`and` does not change the current exit status. The exit status of the last foreground command to exit can always be accessed using the <a href="index.html#variables-status">$status</a> variable.
 
 \subsection and-example Example
 

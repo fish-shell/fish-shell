@@ -5,11 +5,11 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 	# Print all hosts from /etc/hosts
 	if type -q getent
 		# Ignore zero ips
-		getent hosts | grep -v '^0.0.0.0' \
+		getent hosts | string match -r -v '^0.0.0.0' \
 		| string replace -r '[0-9.]*\s*' '' | string split " "
 	else if test -r /etc/hosts
 		# Ignore commented lines and functionally empty lines
-		grep -v '^\s*0.0.0.0\|^\s*#\|^\s*$' /etc/hosts \
+		string match -r -v '^\s*0.0.0.0|^\s*#|^\s*$' < /etc/hosts \
 		# Strip comments
 		| string replace -ra '#.*$' '' \
 		| string replace -r '[0-9.]*\s*' '' | string trim | string replace -ra '\s+' '\n'
@@ -26,9 +26,9 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 		if test -r $file
 			# Print hosts from system wide ssh configuration file
 			# Note the non-capturing group to avoid printing "name"
-			string match -r '\s*Host(?:name)? \w.*' < $file | string replace -r '^\s*Host(?:name)?\s*(\S+)' '$1'
-			set known_hosts $known_hosts (string match -r '^\s*UserKnownHostsFile|^\s*GlobalKnownHostsFile' <$file \
-			| string replace -r '.*KnownHostsFile\s*' '')
+			string match -ri '\s*Host(?:name)? \w.*' < $file | string replace -ri '^\s*Host(?:name)?\s*(\S+)' '$1'
+			set known_hosts $known_hosts (string match -ri '^\s*UserKnownHostsFile|^\s*GlobalKnownHostsFile' <$file \
+			| string replace -ri '.*KnownHostsFile\s*' '')
 		end
 	end
 	for file in $known_hosts

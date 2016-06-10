@@ -136,10 +136,10 @@ The `open` command uses the MIME type database and the `.desktop` files used by 
 <hr>
 \section faq-default How do I make fish my default shell?
 
-If you installed fish manually (e.g. by compiling it, not by using a package manager), you first need to add fish to the list of shells by executing the following command (assuming you installed fish in /usr/local) as root:
+If you installed fish manually (e.g. by compiling it, not by using a package manager), you first need to add fish to the list of shells by executing the following command (assuming you installed fish in /usr/local):
 
 \fish{cli-dark}
-echo /usr/local/bin/fish >>/etc/shells
+echo /usr/local/bin/fish | sudo tee -a /etc/shells
 \endfish
 
 If you installed a prepackaged version of fish, the package manager should have already done this for you.

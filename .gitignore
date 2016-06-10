@@ -21,16 +21,19 @@ doc_src/commands.hdr
 doc_src/index.hdr
 po/*.gmo
 fish
+fish_key_reader
 fish_indent
 fish_tests
 fish.pc
 seq
 set_color
+share/__fish_build_paths.fish
 share/man/
 toc.txt
 user_doc/
 xcuserdata
 test/
+tests/*.tmp.*
 FISH-BUILD-VERSION-FILE
 version
 messages.pot
@@ -38,3 +41,5 @@ lexicon.txt
 lexicon_filter
 lexicon.log
 DerivedData/
+compile_commands.json
+xcodebuild.log

@@ -1,0 +1,13 @@
+\section fish_realpath fish_realpath - Convert a path to an absolute path without symlinks
+
+\subsection fish_realpath-synopsis Synopsis
+\fish{synopsis}
+fish_realpath path
+\endfish
+
+\subsection fish_realpath-description Description
+
+This is an implementation of the external realpath command that doesn't support any options. It's meant to be used only by scripts which need to be portable. In general scripts shouldn't invoke this directly. They should just use `realpath` which will fallback to this builtin if an external command cannot be found.
+
+If the path is invalid no translated path will be written to stdout and an error will be reported.
+This implementation behaves like the GNU command being invoked with `--canonicalize-existing`.

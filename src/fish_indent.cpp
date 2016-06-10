@@ -348,7 +348,7 @@ int main(int argc, char *argv[]) {
         output_type_ansi,
         output_type_html
     } output_type = output_type_plain_text;
-    const char *output_location;
+    const char *output_location = "";
     bool do_indent = true;
 
     const char *short_opts = "+dhvwi";
@@ -410,6 +410,10 @@ int main(int argc, char *argv[]) {
     wcstring src;
     if (argc == 0) {
         src = read_file(stdin);
+        if (output_type == output_type_file) {
+            fwprintf(stderr, _(L"You cannot use -w without providing the path to read from and write to."));
+            exit(1);
+        }
     } else if (argc == 1) {
         FILE *fh = fopen(*argv, "r");
         if (fh) {

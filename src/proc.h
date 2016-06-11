@@ -298,6 +298,9 @@ void job_set_flag(job_t *j, unsigned int flag, int set);
 /// Returns one if the specified flag is set in the specified job, 0 otherwise.
 int job_get_flag(const job_t *j, unsigned int flag);
 
+/// Returns a string showing which job flags are set and unset.
+const char *job_flags_as_str(const job_t *j);
+
 /// Sets the status of the last process to exit.
 void proc_set_last_status(int s);
 

@@ -390,13 +390,14 @@ void exec_job(parser_t &parser, job_t *j) {
 
     // If fish was invoked with -n or --no-execute, then no_exec will be set and we do nothing.
     if (no_exec) {
+        debug(4, L"No exec job %d: '%ls'", j->job_id, j->command_wcstr());
         return;
     }
 
     sigemptyset(&chldset);
     sigaddset(&chldset, SIGCHLD);
 
-    debug(4, L"Exec job '%ls' with id %d", j->command_wcstr(), j->job_id);
+    debug(4, L"Exec job %d: '%ls'", j->job_id, j->command_wcstr());
 
     // Verify that all IO_BUFFERs are output. We used to support a (single, hacked-in) magical input
     // IO_BUFFER used by fish_pager, but now the claim is that there are no more clients and it is
@@ -443,7 +444,7 @@ void exec_job(parser_t &parser, job_t *j) {
             j->first_process->completed = 1;
             return;
         }
-        assert(0 && "This should be unreachable");
+        assert("This should be unreachable");
     }
 
     // We may have block IOs that conflict with fd redirections. For example, we may have a command
@@ -948,6 +949,7 @@ void exec_job(parser_t &parser, job_t *j) {
                             bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(),
                                                                  errbuff.data(), errbuff.size());
                             if (!builtin_io_done && errno != EPIPE) {
+                                debug(0, L"!builtin_io_done && errno == %d", errno);
                                 show_stackframe(L'E');
                             }
                             fork_was_skipped = true;
@@ -1058,11 +1060,13 @@ void exec_job(parser_t &parser, job_t *j) {
 
                     // A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get
                     // told when it's exited, so we have to mark the process as failed.
-                    debug(2, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'",
-                          g_fork_count, pid, actual_cmd, file ? file : L"<no file>");
+                    debug(2, L"Fork #%d, job %d, pid %d: spawn external command '%ls' from '%ls'",
+                          g_fork_count, j->job_id, pid, p->actual_cmd.c_str(),
+                          file ? file : L"<no file>");
                     if (pid == 0) {
                         job_mark_process_as_failed(j, p);
                         exec_error = true;
+                        term_steal(j);
                     }
                 } else
 #endif
@@ -1076,8 +1080,9 @@ void exec_job(parser_t &parser, job_t *j) {
                         // safe_launch_process _never_ returns...
                         assert(0 && "safe_launch_process should not have returned");
                     } else {
-                        debug(2, L"Fork #%d, pid %d: external command '%s' from '%ls'\n",
-                              g_fork_count, pid, p->argv0(), file ? file : L"<no file>");
+                        debug(2, L"Fork #%d, job %d, pid %d: external command '%ls' from '%ls'",
+                              g_fork_count, j->job_id, pid, p->actual_cmd.c_str(),
+                              file ? file : L"<no file>");
                         if (pid < 0) {
                             job_mark_process_as_failed(j, p);
                             exec_error = true;

@@ -369,11 +369,24 @@ void signal_block() {
 
     if (!block_count) {
         sigfillset(&chldset);
+        // We don't block signals that generate core dumps. The important one being SIGSEGV since we
+        // want to die if we access an invalid address when signals are otherwise blocked.
+        sigdelset(&chldset, SIGABRT);
+        sigdelset(&chldset, SIGBUS);
+        sigdelset(&chldset, SIGFPE);
+        sigdelset(&chldset, SIGILL);
+        sigdelset(&chldset, SIGQUIT);
+        sigdelset(&chldset, SIGSEGV);
+        sigdelset(&chldset, SIGSYS);
+        sigdelset(&chldset, SIGTRAP);
+        // These signals are excluded from the mask by the kernel but better to be explicit.
+        sigdelset(&chldset, SIGKILL);
+        sigdelset(&chldset, SIGSTOP);
         VOMIT_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &chldset, NULL));
     }
 
     block_count++;
-    //	debug( 0, L"signal block level increased to %d", block_count );
+    debug(4, L"signal block level increased to %d", block_count);
 }
 
 void signal_unblock() {
@@ -381,7 +394,6 @@ void signal_unblock() {
     sigset_t chldset;
 
     block_count--;
-
     if (block_count < 0) {
         debug(0, _(L"Signal block mismatch"));
         bugreport();
@@ -392,7 +404,7 @@ void signal_unblock() {
         sigfillset(&chldset);
         VOMIT_ON_FAILURE(pthread_sigmask(SIG_UNBLOCK, &chldset, 0));
     }
-    //	debug( 0, L"signal block level decreased to %d", block_count );
+    debug(4, L"signal block level decreased to %d", block_count);
 }
 
 bool signal_is_blocked() { return !!block_count; }

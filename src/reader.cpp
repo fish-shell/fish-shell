@@ -307,20 +307,42 @@ static void reader_super_highlight_me_plenty(int highlight_pos_adjust = 0, bool 
 /// Variable to keep track of forced exits - see \c reader_exit_forced();
 static int exit_forced;
 
-/// Give up control of terminal.
-static void term_donate() {
-    set_color(rgb_color_t::normal(), rgb_color_t::normal());
+/// Return the tty modes appropriate for a new external command.
+struct termios external_command_tty_modes() {
+    return terminal_mode_for_executing_programs;
+}
 
-    while (1) {
-        if (tcsetattr(0, TCSANOW, &terminal_mode_for_executing_programs)) {
-            if (errno != EINTR) {
-                debug(1, _(L"Could not set terminal mode for new job"));
-                wperror(L"tcsetattr");
-                break;
-            }
-        } else
-            break;
+/// Give the tty to an external command.
+bool term_donate(job_t *j) {
+    debug(4, L"term_donate(), signals blocked == %d", signal_is_blocked());
+    reset_color();
+
+    if (tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes) != 0) {
+        debug(0, _(L"Could not set tty modes for new job %d ('%ls')"), j->job_id, j->command_wcstr());
+        wperror(L"tcsetattr");
+        return false;
     }
+
+    return true;
+}
+
+/// Reclaim the tty from an external command.
+bool term_steal(job_t *j) {
+    debug(4, L"term_steal(), signals blocked == %d", signal_is_blocked());
+    if (tcgetattr(STDIN_FILENO, &j->tmodes)) {
+        debug(1, _(L"Could not save tty modes for job %d ('%ls')"), j->job_id, j->command_wcstr());
+        wperror(L"tcgetattr");
+        return false;
+    }
+
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) != 0) {
+        debug(0, _(L"Could not set tty modes for shell"));
+        wperror(L"tcsetattr");
+        return false;
+    }
+
+    common_handle_winch(0);
+    return true;
 }
 
 /// Update the cursor position.
@@ -335,22 +357,6 @@ static void update_buff_pos(editable_line_t *el, size_t buff_pos) {
             data->sel_stop_pos = data->sel_begin_pos;
         }
     }
-}
-
-/// Grab control of terminal.
-static void term_steal() {
-    while (1) {
-        if (tcsetattr(0, TCSANOW, &shell_modes)) {
-            if (errno != EINTR) {
-                debug(1, _(L"Could not set terminal mode for shell"));
-                wperror(L"tcsetattr");
-                break;
-            }
-        } else
-            break;
-    }
-
-    common_handle_winch(0);
 }
 
 int reader_exit_forced() { return exit_forced; }
@@ -809,11 +815,14 @@ void reader_init() {
 
 void reader_destroy() { pthread_key_delete(generation_count_key); }
 
+/// Restore the term mode if we own the terminal. It's important we do this before
+/// restore_foreground_process_group, otherwise we won't think we own the terminal.
 void restore_term_mode() {
-    // Restore the term mode if we own the terminal. It's important we do this before
-    // restore_foreground_process_group, otherwise we won't think we own the terminal.
     if (getpid() == tcgetpgrp(STDIN_FILENO)) {
         tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup);
+    } else {
+        debug(4, L"restore_term_mode() not restoring tty modes pid %d != term pgrp %d", getpid(),
+              tcgetpgrp(STDIN_FILENO));
     }
 }
 
@@ -1958,8 +1967,6 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     reader_write_title(cmd);
 
-    term_donate();
-
     gettimeofday(&time_before, NULL);
 
     parser.eval(cmd, io_chain_t(), TOP);
@@ -1967,8 +1974,6 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     gettimeofday(&time_after, NULL);
     set_env_cmd_duration(&time_after, &time_before);
-
-    term_steal();
 
     env_set(L"_", program_name, ENV_GLOBAL);
 

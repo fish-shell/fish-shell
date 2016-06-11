@@ -105,6 +105,8 @@ demangled_backtrace(int max_frames, int skip_levels) {
     return backtrace_text;
 }
 
+static void debug_shared(const wchar_t msg_level, const wcstring &msg);
+
 void __attribute__((noinline))
 show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
     ASSERT_IS_NOT_FORKED_CHILD();
@@ -1716,9 +1718,10 @@ bool is_forked_child(void) {
     // Just bail if nobody's called setup_fork_guards, e.g. some of our tools.
     if (!initial_pid) return false;
 
-    bool is_child_of_fork = (getpid() != initial_pid);
+    bool is_child_of_fork = getpid() != initial_pid;
     if (is_child_of_fork) {
-        printf("Uh-oh: %d\n", getpid());
+        debug(0, "current process (pid %d) is not the top-level shell (pid %d)\n", getpid(),
+              initial_pid);
         while (1) sleep(10000);
     }
     return is_child_of_fork;

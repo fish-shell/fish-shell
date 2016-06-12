@@ -25,6 +25,7 @@ errput
 output
 errput
 output
+caret_no_redirect 12345^
 is_stdout
 abc\ndef
 abc

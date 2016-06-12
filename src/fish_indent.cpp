@@ -409,11 +409,11 @@ int main(int argc, char *argv[]) {
 
     wcstring src;
     if (argc == 0) {
-        src = read_file(stdin);
         if (output_type == output_type_file) {
             fwprintf(stderr, _(L"You cannot use -w without providing the path to read from and write to."));
             exit(1);
         }
+        src = read_file(stdin);
     } else if (argc == 1) {
         FILE *fh = fopen(*argv, "r");
         if (fh) {

@@ -383,7 +383,7 @@ static size_t read_redirection_or_fd_pipe(const wchar_t *buff,
             }
         }
     }
-    
+
     // Either way we should have ended on the redirection character itself like '>'.
     // Don't allow an fd with a caret redirection - see #1873
     wchar_t redirect_char = buff[idx++];  // note increment of idx

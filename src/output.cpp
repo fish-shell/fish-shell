@@ -45,9 +45,7 @@ void output_set_writer(int (*writer)(char)) {
 int (*output_get_writer())(char) { return out; }
 
 // Returns true if we think the term256 support is "native" as opposed to forced.
-static bool term256_support_is_native(void) {
-    return max_colors >= 256;
-}
+static bool term256_support_is_native(void) { return max_colors >= 256; }
 
 color_support_t output_get_color_support(void) { return color_support; }
 

@@ -11,7 +11,8 @@
 //       4. #include wgetopt.h in your program
 //       5. Make use of all the regular getopt functions, prefixing every function, global variable
 //          and d structure with a 'w', and use only wide character strings.
-// There are no other functional changes in this version of getopt besides using wide character strings.
+// There are no other functional changes in this version of getopt besides using wide character
+// strings.
 //
 // For examples of how to use wgetopt, see the fish builtin functions, which are defined in
 // src/builtin_*.cpp

@@ -267,7 +267,7 @@ template <>
 long double raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
     // Forcing the locale to C is questionable but it's what the old C_STRTOD() that I inlined here
     // as part of changing how locale management is done by fish.
-    char * old_locale = setlocale(LC_NUMERIC, "C");
+    char *old_locale = setlocale(LC_NUMERIC, "C");
     double val = wcstod(s, end);
     setlocale(LC_NUMERIC, old_locale);
     return val;

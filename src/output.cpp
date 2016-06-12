@@ -44,8 +44,8 @@ void output_set_writer(int (*writer)(char)) {
 
 int (*output_get_writer())(char) { return out; }
 
+// Returns true if we think the term256 support is "native" as opposed to forced.
 static bool term256_support_is_native(void) {
-    // Return YES if we think the term256 support is "native" as opposed to forced.
     return max_colors >= 256;
 }
 
@@ -63,17 +63,13 @@ unsigned char index_for_color(rgb_color_t c) {
 static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
     bool result = false;
     if (idx < 16 || term256_support_is_native()) {
-        // Use tparm.
+        // Use tparm to emit color escape.
         writembs(tparm(todo, idx));
         result = true;
     } else {
         // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
-        char stridx[128];
-        format_long_safe(stridx, idx);
-        char buff[128] = "\x1b[";
-        strcat(buff, is_fg ? "38;5;" : "48;5;");
-        strcat(buff, stridx);
-        strcat(buff, "m");
+        char buff[128] = "";
+        snprintf(buff, sizeof buff, "\x1b[%d;5;%dm", is_fg ? 38 : 48, idx);
 
         int (*writer)(char) = output_get_writer();
         if (writer) {

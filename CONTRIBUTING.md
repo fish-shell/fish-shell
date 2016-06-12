@@ -202,6 +202,14 @@ This will check if the push is to the master branch and, if it is, will run `mak
 
 To install the hook, put it in .git/hooks/pre-push and make it executable.
 
+### Coverity Scan
+
+We use Coverity's static analysis tool which offers free access to open source projects. While access to the tool itself is
+restricted, fish-shell organization members should know that they can login
+[here with their GitHub account](https://scan.coverity.com/projects/fish-shell-fish-shell?tab=overview).
+Currently, tests are triggered upon merging the `master` branch into `coverity_scan_master`.
+Even if you are not a fish developer, you can keep an eye on our statistics there.
+
 ## Installing the Required Tools
 
 ### Installing the Linting Tools

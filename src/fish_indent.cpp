@@ -410,7 +410,8 @@ int main(int argc, char *argv[]) {
     wcstring src;
     if (argc == 0) {
         if (output_type == output_type_file) {
-            fwprintf(stderr, _(L"You cannot use -w without providing the path to read from and write to."));
+            fwprintf(stderr, _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"),
+                     program_name);
             exit(1);
         }
         src = read_file(stdin);

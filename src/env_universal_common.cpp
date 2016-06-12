@@ -1175,9 +1175,9 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
             report_error(err, L"Unable to open shared memory with path '%s'", path);
             errored = true;
         }
-
+		
         /* Get the size */
-        size_t size = 0;
+        off_t size = 0;
         if (! errored)
         {
             struct stat buf = {};

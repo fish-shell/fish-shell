@@ -1551,7 +1551,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
         // Now return the smaller of the two values
         // If we get ULONG_MAX, it means there's no more need to poll; in that case return 0
         unsigned long result = mini(readback_delay, polling_delay);
-        if (result == ULLONG_MAX)
+        if (result == ULONG_MAX)
         {
             result = 0;
         }

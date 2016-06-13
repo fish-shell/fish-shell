@@ -497,7 +497,9 @@ void exec_job(parser_t &parser, job_t *j) {
             // Parent
             debug(2, L"Fork #%d, pid %d: keepalive fork for '%ls'", g_fork_count, keepalive.pid,
                   j->command_wcstr());
-            set_child_group(j, &keepalive, 0);
+            // TODO: Why is this being done? It makes no sense to do it in the parent and the child
+            // process.
+            // set_child_group(j, &keepalive, 0);
         }
     }
 

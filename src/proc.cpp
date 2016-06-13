@@ -800,8 +800,6 @@ static bool terminal_give_to_job(job_t *j) {
     if (!job_get_flag(j, JOB_FOREGROUND)) return true;
     if (!job_get_flag(j, JOB_TERMINAL) && j->first_process->type != EXTERNAL) return true;
     if (!isatty(STDIN_FILENO)) return true;
-    //if (getpgrp() != tcgetpgrp(STDIN_FILENO)) return true;
-    if (getpid() != tcgetpgrp(STDIN_FILENO)) return true;
 
     bool retval = true;
 
@@ -813,12 +811,15 @@ static bool terminal_give_to_job(job_t *j) {
     // sufficient.
     make_fd_blocking(STDIN_FILENO);
 
+#if 0
+    // TODO: Remove this block of code once we're certain it isn't needed.
     if (tcsetpgrp(STDIN_FILENO, j->pgid)) {
         debug(0, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
         wperror(L"tcsetpgrp");
         retval = false;
         goto exit;
     }
+#endif
 
     if (j->first_process->type == EXTERNAL) {
         retval = term_donate(j);

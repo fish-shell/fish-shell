@@ -1620,7 +1620,7 @@ static void reader_interactive_init() {
             if (owner < 0 && errno == ENOTTY) {
                 // No TTY, cannot be interactive?
                 debug(1, _(L"No TTY for interactive shell (tcgetpgrp failed)"));
-                wperror(L"setpgid");
+                wperror(L"tcgetpgrp");
                 exit_without_destructors(1);
             }
             if (owner == shell_pgid) {

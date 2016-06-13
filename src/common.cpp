@@ -109,7 +109,8 @@ static void debug_shared(const wchar_t msg_level, const wcstring &msg);
 
 void __attribute__((noinline))
 show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
-    ASSERT_IS_NOT_FORKED_CHILD();
+    // If we're running in a forked child we might deadlock allocating memory if we run.
+    if (is_forked_child()) return;
 
     // TODO: Decide if this is still needed. I'm commenting it out because it caused me some grief
     // while trying to debug a test failure. And the tests run just fine without spurious failures
@@ -1719,11 +1720,6 @@ bool is_forked_child(void) {
     if (!initial_pid) return false;
 
     bool is_child_of_fork = getpid() != initial_pid;
-    if (is_child_of_fork) {
-        debug(0, "current process (pid %d) is not the top-level shell (pid %d)\n", getpid(),
-              initial_pid);
-        while (1) sleep(10000);
-    }
     return is_child_of_fork;
 }
 

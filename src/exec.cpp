@@ -874,7 +874,6 @@ void exec_job(parser_t &parser, job_t *j) {
                         // This is the child process. Write out the contents of the pipeline.
                         p->pid = getpid();
                         setup_child_process(j, p, process_net_io_chain);
-
                         exec_write_and_exit(block_output_io_buffer->fd, buffer, count, status);
                     } else {
                         // This is the parent process. Store away information on the child, and
@@ -882,7 +881,11 @@ void exec_job(parser_t &parser, job_t *j) {
                         debug(2, L"Fork #%d, pid %d: internal block or function for '%ls'",
                               g_fork_count, pid, p->argv0());
                         p->pid = pid;
-                        set_child_group(j, p, 0);
+                        // TODO: Remove this. I'm leaving it for the moment until certain it isn't
+                        // needed for some side-effect. It shouldn't be necessary as the right place
+                        // to do this is in the childe process where it's called via
+                        // setup_child_process().
+                        // set_child_group(j, p, 0);
                     }
 
                 } else {
@@ -997,8 +1000,11 @@ void exec_job(parser_t &parser, job_t *j) {
                         debug(2, L"Fork #%d, pid %d: internal builtin for '%ls'", g_fork_count, pid,
                               p->argv0());
                         p->pid = pid;
-
-                        set_child_group(j, p, 0);
+                        // TODO: Remove this. I'm leaving it for the moment until certain it isn't
+                        // needed for some side-effect. It shouldn't be necessary as the right place
+                        // to do this is in the childe process where it's called via
+                        // setup_child_process().
+                        // set_child_group(j, p, 0);
                     }
                 }
 
@@ -1091,10 +1097,14 @@ void exec_job(parser_t &parser, job_t *j) {
                 }
 
                 // This is the parent process. Store away information on the child, and possibly
-                // fice it control over the terminal.
+                // give it control over the terminal.
                 p->pid = pid;
 
-                set_child_group(j, p, 0);
+                // TODO: Remove this. I'm leaving it for the moment until certain it isn't
+                // needed for some side-effect. It shouldn't be necessary as the right place
+                // to do this is in the childe process where it's called via
+                // setup_child_process().
+                // set_child_group(j, p, 0);
 
                 break;
             }

@@ -58,11 +58,13 @@ static void debug_safe_int(int level, const char *format, int val) {
     debug_safe(level, format, buff);
 }
 
+// TODO: Remove the print_errors arg after we've confirmed the calls from the parent process that
+// are commented should be removed.
 int set_child_group(job_t *j, process_t *p, int print_errors) {
     int res = 0;
 
     if (job_get_flag(j, JOB_CONTROL)) {
-        if (!j->pgid) {
+        if (j->pgid == 0) {
             j->pgid = p->pid;
         }
 
@@ -95,7 +97,7 @@ int set_child_group(job_t *j, process_t *p, int print_errors) {
     }
 
     if (job_get_flag(j, JOB_TERMINAL) && job_get_flag(j, JOB_FOREGROUND)) {
-        if (tcsetpgrp(0, j->pgid) && print_errors) {
+        if (tcsetpgrp(STDIN_FILENO, j->pgid) && print_errors) {
             char job_id_buff[64];
             char command_buff[64];
             format_long_safe(job_id_buff, j->job_id);

@@ -841,7 +841,7 @@ style:
 	build_tools/style.fish
 style-all:
 	build_tools/style.fish --all
-.PHONY: lint lint-all
+.PHONY: style style-all
 
 #
 # Cleanup targets

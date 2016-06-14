@@ -174,20 +174,14 @@ static bool var_is_locale(const wcstring &key) {
 static void handle_locale(const wchar_t *env_var_name) {
     debug(2, L"handle_locale() called in response to '%ls' changing", env_var_name);
     const char *old_msg_locale = setlocale(LC_MESSAGES, NULL);
-
-    for (size_t i = 0; locale_variable[i]; i++) {
-        const wchar_t *key = locale_variable[i];
-        if (key != env_var_name) continue;
-
-        const env_var_t val = env_get_string(key);
-        const std::string &value = wcs2string(val);
-        const std::string &name = wcs2string(key);
-        debug(3, L"locale var %s='%s'", name.c_str(), value.c_str());
-        if (val.empty()) {
-            unsetenv(name.c_str());
-        } else {
-            setenv(name.c_str(), value.c_str(), 1);
-        }
+    const env_var_t val = env_get_string(env_var_name);
+    const std::string &value = wcs2string(val);
+    const std::string &name = wcs2string(env_var_name);
+    debug(3, L"locale var %s='%s'", name.c_str(), value.c_str());
+    if (val.empty()) {
+        unsetenv(name.c_str());
+    } else {
+        setenv(name.c_str(), value.c_str(), 1);
     }
 
     char *locale = setlocale(LC_ALL, "");
@@ -220,19 +214,14 @@ static bool var_is_curses(const wcstring &key) {
 /// libraries.
 static void handle_curses(const wchar_t *env_var_name) {
     debug(2, L"handle_curses() called in response to '%ls' changing", env_var_name);
-    for (size_t i = 0; curses_variable[i]; i++) {
-        const wchar_t *key = curses_variable[i];
-        if (key != env_var_name) continue;
-        
-        const std::string &name = wcs2string(key);
-        const env_var_t val = env_get_string(key);
-        const std::string &value = wcs2string(val);
-        debug(3, L"curses var %s='%s'", name.c_str(), value.c_str());
-        if (val.empty()) {
-            unsetenv(name.c_str());
-        } else {
-            setenv(name.c_str(), value.c_str(), 1);
-        }
+    const env_var_t val = env_get_string(env_var_name);
+    const std::string &name = wcs2string(env_var_name);
+    const std::string &value = wcs2string(val);
+    debug(3, L"curses var %s='%s'", name.c_str(), value.c_str());
+    if (val.empty()) {
+        unsetenv(name.c_str());
+    } else {
+        setenv(name.c_str(), value.c_str(), 1);
     }
     // TODO: Modify input_init() to allow calling it when the terminfo env vars are dynamically
     // changed. At the present time it can be called just once. Also, we should really only do this

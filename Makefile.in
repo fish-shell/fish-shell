@@ -515,36 +515,6 @@ share/man: $(HELP_SRC) lexicon_filter
 # The build rules for installing/uninstalling fish
 #
 
-#
-# Check for an incompatible installed fish version, and fail with an
-# error if found
-#
-check-uninstall:
-	if test -f $(DESTDIR)$(sysconfdir)/fish.d/fish_function.fish -o -f $(DESTDIR)$(sysconfdir)/fish.d/fish_complete.fish; then \
-		echo;\
-		echo ERROR;\
-		echo;\
-		echo An older fish installation using an incompatible filesystem hierarchy was detected;\
-		echo You must uninstall this fish version before proceeding;\
-		echo type \'$(MAKE) uninstall-legacy\' to uninstall these files,;\
-		echo or type \'$(MAKE) force-install\' to force installation.;\
-		echo The latter may result in a broken installation.;\
-		echo;\
-		false;\
-	fi;
-	if test -f $(DESTDIR)$(sysconfdir)/fish; then \
-		echo;\
-		echo ERROR;\
-		echo;\
-		echo An older fish installation using an incompatible filesystem hierarchy was detected;\
-		echo You must remove the file $(DESTDIR)$(sysconfdir)/fish before proceeding;\
-		echo type \'$(MAKE) uninstall-legacy\' to uninstall this file,;\
-		echo or remove it manually using \'rm $(DESTDIR)$(sysconfdir)/fish\'.;\
-		echo;\
-		false;\
-	fi;
-.PHONY: check-uninstall
-
 check-legacy-binaries:
 	@SEQLOC=$(prefix)/bin/seq;\
 	if test -f "$$SEQLOC" && grep -q '\(^#!/.*/fish\|^#!/usr/bin/env fish\)' "$$SEQLOC"; then\
@@ -569,19 +539,7 @@ check-legacy-binaries:
 	@true;
 .PHONY: check-legacy-binaries
 
-#
-# This check makes sure that the install-sh script is executable. The
-# darcs repo doesn't preserve the executable bit, so this needs to be
-# run after checkout.
-#
-install-sh:
-	if test -x $@; then true; else chmod 755 $@; fi
-.PHONY: install-sh
-
-#
-# Try to install after checking for incompatible installed versions.
-#
-install: all install-sh check-uninstall install-force check-legacy-binaries
+install: all install-force check-legacy-binaries
 	@echo fish is now installed on your system.
 	@echo To run fish, type \'fish\' in your terminal.
 	@echo
@@ -613,9 +571,8 @@ xcode-install:
 .PHONY: xcode-install
 
 #
-# Force installation, even in presense of incompatible previous version. This
-# may fail. These 'true' lines are to prevent installs from failing for (e.g.)
-# missing man pages.
+# Actually do the installation. These 'true' lines are to prevent installs
+# from failing for (e.g.) missing man pages.
 #
 install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
@@ -713,32 +670,6 @@ uninstall: uninstall-translations
 		rm -rf $(DESTDIR)$(mandir)/man1/`basename $$i`*; \
 	done;
 .PHONY: uninstall
-
-
-#
-# Uninstall an older fish release. This is not the default uninstall
-# since there is a slight chance that it removes a file put in place by
-# the sysadmin. But if 'make install' detects a file confligt, it
-# suggests using this target.
-#
-uninstall-legacy: uninstall
-	-rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_interactive.fish
-	-rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_complete.fish
-	-rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_function.fish
-	-rm -f $(DESTDIR)$(sysconfdir)/fish/fish_inputrc
-	-if test -d $(DESTDIR)$(sysconfdir)/fish.d/completions; then \
-		for i in $(COMPLETIONS_DIR_FILES); do \
-			basename=`basename $$i`; \
-			if test -f $(DESTDIR)$(sysconfdir)/fish.d/completions/$$basename; then \
-				rm $(DESTDIR)$(sysconfdir)/fish.d/completions/$$basename; \
-			fi; \
-		done; \
-	fi;
-	-rmdir $(DESTDIR)$(sysconfdir)/fish.d/completions
-	-rmdir $(DESTDIR)$(sysconfdir)/fish.d
-	-rm $(DESTDIR)$(sysconfdir)/fish
-	@echo The previous fish installation has been removed.
-.PHONY: uninstall-legacy
 
 install-translations: $(TRANSLATIONS)
 ifdef HAVE_GETTEXT

@@ -5,6 +5,12 @@ function prompt_pwd --description "Print the current working directory, shortene
 			return 0
 	end
 
+	# If we don't have a string builtin, we have no hope of maniuplating $PWD - just output it as-is.
+	if not type -q string
+		echo $PWD
+		return 0
+	end
+
 	# This allows overriding fish_prompt_pwd_dir_length from the outside (global or universal) without leaking it
 	set -q fish_prompt_pwd_dir_length; or set -l fish_prompt_pwd_dir_length 1
 

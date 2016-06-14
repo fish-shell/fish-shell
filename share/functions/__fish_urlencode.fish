@@ -1,4 +1,8 @@
 function __fish_urlencode --description "URL-encode stdin"
+	if not type -q string
+		return 1
+	end
+	
 	set -l join ''
 	set -l chars
 	# Set locale to C and IFS to "" in order to split a line into bytes.

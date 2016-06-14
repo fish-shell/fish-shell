@@ -23,7 +23,7 @@ echo X\u00fcX | env LC_ALL=C ../test/root/bin/fish -c 'read foo; echo -n $foo' |
 # with an umlaut) the fact the locale is C/POSIX will cause the \xfc byte to
 # be emitted rather than the usual UTF-8 sequence \xc3\xbc. That's because the
 # few single-byte unicode chars (that are not ASCII) are generally in the
-# ISO-8859-1 char set which is encompased by the C locale. The output should
+# ISO 8859-x char sets which are encompassed by the C locale. The output should
 # be "59fc59".
 env LC_ALL=C ../test/root/bin/fish -c 'echo -n Y\u00fcY' | \
   xxd --plain

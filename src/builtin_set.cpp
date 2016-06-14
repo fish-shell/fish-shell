@@ -321,7 +321,7 @@ static void print_variables(int include_values, int esc, bool shorten_ok, int sc
     }
 }
 
-/// The set builtin. Creates, updates and erases environment variables and environemnt variable
+/// The set builtin. Creates, updates and erases environment variables and environment variable
 /// arrays.
 int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;

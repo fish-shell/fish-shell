@@ -1,3 +1,27 @@
+# Test behavior related to the locale.
+
+# Verify that our UTF-8 locale produces the expected output.
+echo -n A\u00FCA | xxd --plain
+
+# Verify that exporting a change to the C locale produces the expected output.
+# The output should include the literal byte \xFC rather than the UTF-8 sequence for \u00FC.
+begin
+	set -lx LC_ALL C
+	echo -n B\u00FCB | xxd --plain
+end
+
+# Since the previous change was localized to a block it should no
+# longer be in effect and we should be back to a UTF-8 locale.
+echo -n C\u00FCC | xxd --plain
+
+# Verify that setting a non-exported locale var doesn't affect the behavior.
+# The output should include the UTF-8 sequence for \u00FC rather than that literal byte.
+# Just like the previous test.
+begin
+	set -l LC_ALL C
+	echo -n D\u00FCD | xxd --plain
+end
+
 # Verify that fish can pass through non-ASCII characters in the C/POSIX
 # locale. This is to prevent regression of
 # https://github.com/fish-shell/fish-shell/issues/2802.
@@ -14,22 +38,24 @@
 # echo output directly to the `xxd` program then via a fish instance. The
 # output should be "58c3bb58" for the first statement and "58c3bc58" for the
 # second.
-echo -n X\u00fbX | \
+echo -n X\u00FBX | \
   xxd --plain
-echo X\u00fcX | env LC_ALL=C ../test/root/bin/fish -c 'read foo; echo -n $foo' | \
+echo X\u00FCX | env LC_ALL=C ../test/root/bin/fish -c 'read foo; echo -n $foo' | \
   xxd --plain
+
+# The next tests deliberately spawn another fish instance to test inheritence of env vars.
 
 # This test is subtle. Despite the presence of the \u00fc unicode char (a "u"
 # with an umlaut) the fact the locale is C/POSIX will cause the \xfc byte to
 # be emitted rather than the usual UTF-8 sequence \xc3\xbc. That's because the
 # few single-byte unicode chars (that are not ASCII) are generally in the
-# ISO-8859-1 char set which is encompased by the C locale. The output should
+# ISO 8859-x char sets which are encompassed by the C locale. The output should
 # be "59fc59".
-env LC_ALL=C ../test/root/bin/fish -c 'echo -n Y\u00fcY' | \
+env LC_ALL=C ../test/root/bin/fish -c 'echo -n Y\u00FCY' | \
   xxd --plain
 
 # The user can specify a wide unicode character (one requiring more than a
 # single byte). In the C/POSIX locales we substitute a question-mark for the
 # unencodable wide char. The output should be "543f54".
-env LC_ALL=C ../test/root/bin/fish -c 'echo -n T\u01fdT' | \
+env LC_ALL=C ../test/root/bin/fish -c 'echo -n T\u01FDT' | \
   xxd --plain

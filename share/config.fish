@@ -18,16 +18,28 @@ function __fish_default_command_not_found_handler
 end
 
 if status --is-interactive
+	# Existance of string is a good pre-2.3.0 check. Could also check $FISH_VERSION in the future.
+
+	if not contains "string" (builtin -n)
+		set_color red;
+		echo You appear to be trying to run an old fish binary
+		echo with newer scripts installed into $__fish_datadir
+		echo This is an unsupported configuration.
+		set_color --bold
+		echo THINGS WILL NOT WORK.
+		set_color normal
+		echo You may need to uninstall and reinstall fish.
+		sleep 10
+	end
+
 	# Enable truecolor/24-bit support for select terminals
 	if not set -q NVIM_LISTEN_ADDRESS # (Neovim will swallow the 24bit sequences, rendering text white)
 		and begin
-			if contains "string" (builtin -n)
-				set -q KONSOLE_PROFILE_NAME # KDE's konsole
-				or string match -q -- "*:*" $ITERM_SESSION_ID # Supporting versions of iTerm2 will include a colon here
-				or string match -q -- "st-*" $TERM # suckless' st
-				or test "$VTE_VERSION" -ge 3600 # Should be all gtk3-vte-based terms after version 3.6.0.0
-				or test "$COLORTERM" = truecolor -o "$COLORTERM" = 24bit # slang expects this
-			end
+			set -q KONSOLE_PROFILE_NAME # KDE's konsole
+			or string match -q -- "*:*" $ITERM_SESSION_ID # Supporting versions of iTerm2 will include a colon here
+			or string match -q -- "st-*" $TERM # suckless' st
+			or test "$VTE_VERSION" -ge 3600 # Should be all gtk3-vte-based terms after version 3.6.0.0
+			or test "$COLORTERM" = truecolor -o "$COLORTERM" = 24bit # slang expects this
 		end
 		# Only set it if it isn't to allow override by setting to 0
 		set -q fish_term24bit; or set -g fish_term24bit 1

@@ -6,7 +6,7 @@ function prompt_pwd --description "Print the current working directory, shortene
 	end
 
 	# If we don't have a string builtin, we have no hope of maniuplating $PWD - just output it as-is.
-	if not contains "string" (builtin -n)
+	if not type -q string
 		echo $PWD
 		return 0
 	end

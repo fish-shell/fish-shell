@@ -1,4 +1,8 @@
 function __fish_urlencode --description "URL-encode stdin"
+	if not type -q string
+		return 1
+	end
+	
 	set -l join ''
 	set -l chars
 	# Set locale to C and IFS to "" in order to split a line into bytes.
@@ -12,7 +16,7 @@ function __fish_urlencode --description "URL-encode stdin"
 			set join '%00'
 		end
 		for c in $chars
-			if contains "string" (builtin -n) and string match -q -r '[/._~A-Za-z0-9-]' $c
+			if string match -q -r '[/._~A-Za-z0-9-]' $c
 				printf '%s' $c
 			else
 				printf '%%%02X' "'$c"

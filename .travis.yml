@@ -1,6 +1,6 @@
 language: cpp
 dist: trusty
-sudo: false
+sudo: required
 
 matrix:
   include:

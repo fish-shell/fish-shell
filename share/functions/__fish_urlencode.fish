@@ -12,7 +12,7 @@ function __fish_urlencode --description "URL-encode stdin"
 			set join '%00'
 		end
 		for c in $chars
-			if string match -q -r '[/._~A-Za-z0-9-]' $c
+			if contains "string" (builtin -n) and string match -q -r '[/._~A-Za-z0-9-]' $c
 				printf '%s' $c
 			else
 				printf '%%%02X' "'$c"

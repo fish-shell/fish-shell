@@ -1,4 +1,5 @@
 language: cpp
+dist: trusty
 sudo: false
 
 matrix:
@@ -12,33 +13,28 @@ matrix:
             - expect
             - gettext
             - libncurses5-dev
-
-    # Disable for now until
-    # https://github.com/travis-ci/travis-ci/issues/6120 fixed
-    #- os: linux
-    #  compiler: clang
-    #  addons:
-    #    apt:
-    #      sources:
-    #        - llvm-toolchain-precise-3.8
-    #        - ubuntu-toolchain-r-test
-    #      packages:
-    #        - clang-3.8
-    #        - llvm-3.8 # for llvm-symbolizer
-    #        - bc
-    #        - expect
-    #        - gettext
-    #        - libncurses5-dev
-    #  env:
-    #    - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address"
-    #    - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
-    #  before_install: export CXX=clang++-3.8
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          packages:
+            - bc
+            - expect
+            - gettext
+            - libncurses5-dev
+        env:
+          - CXXFLAGS="-g -fno-omit-frame-pointer"
 
     - os: osx
+      osx_image: xcode8
       before_install:
         - brew update
-        - brew install pcre2 # use system PCRE2
-
+        - brew outdated pcre2 || brew upgrade pcre2 # use system PCRE2
+        - brew outdated xctool || brew upgrade xctool # for xcode... soon.
+      addons:
+        env:
+          - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address -lstdc++"
+          - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
   fast_finish: true
 
 script:
@@ -47,7 +43,7 @@ script:
   - make -j2
   - make install
   - make test DESTDIR=$HOME/prefix/ SHOW_INTERACTIVE_LOG=1
-
+  
 notifications:
   # Some items are encrypted so that notifications from other repositories
   # don't flood the official repositories.
@@ -61,5 +57,5 @@ notifications:
     skip_join: true
   webhooks:
     urls:
-        #- https://webhooks.gitter.im/e/61821cec3015bf0f8bb1
-        secure: fPfOmxnC3MCsfR1oocVFeWLawGcRZkn+8fNHlSOeZ+SqqoZfcCHgQTvQ22TqmVl1yvkXbNlaXjo6dbVzTOAh7r7H0bRMEKBVh3dQS7wqjB1sKivpXd8PAS3BTj5MQpGeJzdHnDuwVlwDktGtfHfhGeq1Go/4IosOq8u+6RTe28g=
+      #- https://webhooks.gitter.im/e/61821cec3015bf0f8bb1
+      secure: fPfOmxnC3MCsfR1oocVFeWLawGcRZkn+8fNHlSOeZ+SqqoZfcCHgQTvQ22TqmVl1yvkXbNlaXjo6dbVzTOAh7r7H0bRMEKBVh3dQS7wqjB1sKivpXd8PAS3BTj5MQpGeJzdHnDuwVlwDktGtfHfhGeq1Go/4IosOq8u+6RTe28g=

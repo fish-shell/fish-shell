@@ -247,12 +247,12 @@ size_t escape_code_length(const wchar_t *code) {
             }
         }
     }
-
+    
     if (!found) found = is_screen_name_escape_seq(code, &resulting_length);
     if (!found) found = is_iterm2_escape_seq(code, &resulting_length);
     if (!found) found = is_single_byte_escape_seq(code, &resulting_length);
     if (!found) found = is_csi_style_escape_seq(code, &resulting_length);
-    if (!found) found = is_two_byte_escape_seq(code, &resulting_length);
+    if (!found) is_two_byte_escape_seq(code, &resulting_length);
 
     return resulting_length;
 }

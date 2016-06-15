@@ -749,7 +749,7 @@ wcstring reformat_for_screen(const wcstring &msg) {
 
             // If token is zero character long, we don't do anything.
             if (pos == start) {
-                start = pos = pos + 1;
+                pos = pos + 1;
             } else if (overflow) {
                 // In case of overflow, we print a newline, except if we already are at position 0.
                 wchar_t *token = wcsndup(start, pos - start);

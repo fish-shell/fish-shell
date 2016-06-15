@@ -185,8 +185,6 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
         paths.sysconf = L"" SYSCONFDIR "/fish";
         paths.doc = L"" DOCDIR;
         paths.bin = L"" BINDIR;
-
-        done = true;
     }
 
     return paths;

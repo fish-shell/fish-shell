@@ -1387,7 +1387,7 @@ void history_t::save_internal(bool vacuum) {
     }
     if (!ok) {
         // We did not or could not append; rewrite the file ("vacuum" it).
-        ok = this->save_internal_via_rewrite();
+        this->save_internal_via_rewrite();
     }
 }
 

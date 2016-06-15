@@ -229,8 +229,10 @@ void write_ignore(int fd, const void *buff, size_t count);
 /// Shorthand for wgettext call in situations where a C-style string is needed (e.g., fwprintf()).
 #define _(wstr) wgettext(wstr).c_str()
 
-/// Noop, used to tell xgettext that a string should be translated, even though it is not directly
-/// sent to wgettext.
+/// Noop, used to tell xgettext that a string should be translated. Use this when a string cannot be
+/// passed through wgettext() at the point where it is used. For example, when initializing a
+/// static array or structure. You must pass the string through wgettext() when it is used.
+/// See https://developer.gnome.org/glib/stable/glib-I18N.html#N-:CAPS
 #define N_(wstr) wstr
 
 /// Check if the specified string element is a part of the specified string list.

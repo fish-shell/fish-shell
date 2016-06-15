@@ -1063,8 +1063,8 @@ msgid "'for' block"
 msgstr "bloco “for”"
 
 #: parser.cpp:77 parse_constants.h:265
-msgid "Block created by breakpoint"
-msgstr "Bloco criado por breakpoint"
+msgid "block created by breakpoint"
+msgstr "bloco criado por breakpoint"
 
 #: parser.cpp:82 parse_constants.h:272
 msgid "'if' conditional block"
@@ -1104,8 +1104,8 @@ msgid "'begin' unconditional block"
 msgstr "bloco não condicional “begin”"
 
 #: parser.cpp:127 parse_constants.h:325
-msgid "Block created by the . builtin"
-msgstr "Bloco criado pelo builtin ."
+msgid "block created by the . builtin"
+msgstr "bloco criado pelo builtin ."
 
 #: parser.cpp:132 parse_constants.h:330
 #, fuzzy

@@ -1069,7 +1069,7 @@ msgstr "bloc 'for'"
 
 #: parser.cpp:77 parse_constants.h:265
 #, fuzzy
-msgid "Block created by breakpoint"
+msgid "block created by breakpoint"
 msgstr "bloc créé par la commande interne '.'"
 
 #: parser.cpp:82 parse_constants.h:272
@@ -1110,7 +1110,7 @@ msgid "'begin' unconditional block"
 msgstr "bloc inconditionnel 'begin'"
 
 #: parser.cpp:127 parse_constants.h:325
-msgid "Block created by the . builtin"
+msgid "block created by the . builtin"
 msgstr "bloc créé par la commande interne '.'"
 
 #: parser.cpp:132 parse_constants.h:330

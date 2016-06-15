@@ -1050,8 +1050,8 @@ msgid "'for' block"
 msgstr "“for” block"
 
 #: parser.cpp:77 parse_constants.h:265
-msgid "Block created by breakpoint"
-msgstr "Block created by breakpoint"
+msgid "block created by breakpoint"
+msgstr "block created by breakpoint"
 
 #: parser.cpp:82 parse_constants.h:272
 msgid "'if' conditional block"
@@ -1090,8 +1090,8 @@ msgid "'begin' unconditional block"
 msgstr "“begin” unconditional block"
 
 #: parser.cpp:127 parse_constants.h:325
-msgid "Block created by the . builtin"
-msgstr "Block created by the . builtin"
+msgid "block created by the . builtin"
+msgstr "block created by the . builtin"
 
 #: parser.cpp:132 parse_constants.h:330
 msgid "event handler block"

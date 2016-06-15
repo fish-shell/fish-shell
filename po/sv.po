@@ -1061,8 +1061,8 @@ msgid "'for' block"
 msgstr "'for' block"
 
 #: parser.cpp:77 parse_constants.h:265
-msgid "Block created by breakpoint"
-msgstr "Block skapat av det inbuggde kommandot breakpoint"
+msgid "block created by breakpoint"
+msgstr "block skapat av det inbuggde kommandot breakpoint"
 
 #: parser.cpp:82 parse_constants.h:272
 msgid "'if' conditional block"
@@ -1101,8 +1101,8 @@ msgid "'begin' unconditional block"
 msgstr "'begin' ovillkorligen exekverat block"
 
 #: parser.cpp:127 parse_constants.h:325
-msgid "Block created by the . builtin"
-msgstr "Block skapat av det inbyggda kommandot '.'"
+msgid "block created by the . builtin"
+msgstr "block skapat av det inbyggda kommandot '.'"
 
 #: parser.cpp:132 parse_constants.h:330
 msgid "event handler block"

@@ -26,9 +26,10 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 		if test -r $file
 			# Print hosts from system wide ssh configuration file
 			# Note the non-capturing group to avoid printing "name"
-			string match -ri '\s*Host(?:name)? \w.*' < $file | string replace -ri '^\s*Host(?:name)?\s*(\S+)' '$1'
-			set known_hosts $known_hosts (string match -ri '^\s*UserKnownHostsFile|^\s*GlobalKnownHostsFile' <$file \
-			| string replace -ri '.*KnownHostsFile\s*' '')
+			string match -ri '\s*Host(?:name)?(?:\s+|\s*=\s*)\w.*' < $file | string replace -ri '^\s*Host(?:name)?\s*(\S+)' '$1' \
+				| string replace -r '\s+' ' ' | string split ' '
+			set known_hosts $known_hosts (string match -ri '^\s*UserKnownHostsFile|^\s*GlobalKnownHostsFile' < $file \
+				| string replace -ri '.*KnownHostsFile\s*' '')
 		end
 	end
 	for file in $known_hosts

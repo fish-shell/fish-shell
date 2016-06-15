@@ -471,10 +471,10 @@ wchar_t *quote_end(const wchar_t *pos) {
 
 void fish_setlocale() {
     // Use ellipsis if on known unicode system, otherwise use $.
-    ellipsis_char = (wcwidth(L'\x2026') > 0) ? L'\x2026' : L'$';
+    ellipsis_char = (fish_wcwidth(L'\x2026') > 0) ? L'\x2026' : L'$';
 
     // U+23CE is the "return" character
-    omitted_newline_char = (wcwidth(L'\x23CE') > 0) ? L'\x23CE' : L'~';
+    omitted_newline_char = (fish_wcwidth(L'\x23CE') > 0) ? L'\x23CE' : L'~';
 }
 
 bool contains_internal(const wchar_t *a, int vararg_handle, ...) {

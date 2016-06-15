@@ -1180,9 +1180,9 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         wcstring abandon_line_string;
         abandon_line_string.reserve(screen_width + 32);  // should be enough
 
-        // Don't need to check for wcwidth errors; this is done when setting up omitted_newline_char
-        // in common.cpp.
-        int non_space_width = wcwidth(omitted_newline_char);
+        // Don't need to check for fish_wcwidth errors; this is done when setting up
+        // omitted_newline_char in common.cpp.
+        int non_space_width = fish_wcwidth(omitted_newline_char);
         if (screen_width >= non_space_width) {
             bool has_256_colors = output_get_color_support() & color_support_term256;
             if (has_256_colors) {

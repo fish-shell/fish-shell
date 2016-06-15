@@ -67,15 +67,15 @@ static int print_max(const wcstring &str, highlight_spec_t color, int max, bool 
     for (size_t i = 0; i < str.size(); i++) {
         wchar_t c = str.at(i);
 
-        if (written + wcwidth(c) > max) break;
-        if ((written + wcwidth(c) == max) && (has_more || i + 1 < str.size())) {
+        if (written + fish_wcwidth(c) > max) break;
+        if ((written + fish_wcwidth(c) == max) && (has_more || i + 1 < str.size())) {
             line->append(ellipsis_char, color);
-            written += wcwidth(ellipsis_char);
+            written += fish_wcwidth(ellipsis_char);
             break;
         }
 
         line->append(c, color);
-        written += wcwidth(c);
+        written += fish_wcwidth(c);
     }
     return written;
 }

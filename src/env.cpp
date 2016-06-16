@@ -174,10 +174,10 @@ static bool var_is_locale(const wcstring &key) {
 static void handle_locale(const wchar_t *env_var_name) {
     debug(2, L"handle_locale() called in response to '%ls' changing", env_var_name);
     const char *old_msg_locale = setlocale(LC_MESSAGES, NULL);
-    const env_var_t val = env_get_string(env_var_name);
+    const env_var_t val = env_get_string(env_var_name, ENV_EXPORT);
     const std::string &value = wcs2string(val);
     const std::string &name = wcs2string(env_var_name);
-    debug(3, L"locale var %s='%s'", name.c_str(), value.c_str());
+    debug(2, L"locale var %s='%s'", name.c_str(), value.c_str());
     if (val.empty()) {
         unsetenv(name.c_str());
     } else {
@@ -214,10 +214,10 @@ static bool var_is_curses(const wcstring &key) {
 /// libraries.
 static void handle_curses(const wchar_t *env_var_name) {
     debug(2, L"handle_curses() called in response to '%ls' changing", env_var_name);
-    const env_var_t val = env_get_string(env_var_name);
+    const env_var_t val = env_get_string(env_var_name, ENV_EXPORT);
     const std::string &name = wcs2string(env_var_name);
     const std::string &value = wcs2string(val);
-    debug(3, L"curses var %s='%s'", name.c_str(), value.c_str());
+    debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
     if (val.empty()) {
         unsetenv(name.c_str());
     } else {

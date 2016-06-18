@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<rule version="1">
+    <pattern> wcwidth \(</pattern>
+    <message>
+        <id>wcwidthForbidden</id>
+        <severity>warning</severity>
+        <summary>Always use fish_wcwidth rather than wcwidth.</summary>
+    </message>
+</rule>
+
+<rule version="1">
+    <pattern> wcswidth \(</pattern>
+    <message>
+        <id>wcswidthForbidden</id>
+        <severity>warning</severity>
+        <summary>Always use fish_wcswidth rather than wcswidth.</summary>
+    </message>
+</rule>

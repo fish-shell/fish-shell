@@ -92,7 +92,7 @@ if set -q c_files[1]
         # The stderr to stdout redirection is because cppcheck, incorrectly IMHO, writes its
         # diagnostic messages to stderr. Anyone running this who wants to capture its output will
         # expect those messages to be written to stdout.
-        cppcheck -q --verbose --std=posix --std=c11 --language=c++ --template "[{file}:{line}]: {severity} ({id}): {message}" --suppress=missingIncludeSystem --inline-suppr --enable=$cppchecks $cppcheck_args $c_files 2>&1
+        cppcheck -q --verbose --std=posix --std=c11 --language=c++ --template "[{file}:{line}]: {severity} ({id}): {message}" --suppress=missingIncludeSystem --inline-suppr --enable=$cppchecks --rule-file=.cppcheck.rule $cppcheck_args $c_files 2>&1
     end
 
     if type -q oclint

@@ -30,6 +30,8 @@ Ultimately we want lint free code. However, at the moment a lot of cleanup is re
 
 To make linting the code easy there are two make targets: `lint` and `lint-all`. The latter does just what the name implies. The former will lint any modified but not committed `*.cpp` files. If there is no uncommitted work it will lint the files in the most recent commit.
 
+Fish has custom cppcheck rules in the file `.cppcheck.rule`. These help catch mistakes such as using `wcwidth()` rather than `fish_wcwidth()`. Please add a new rule if you find similar mistakes being made.
+
 ### Dealing With Lint Warnings
 
 You are strongly encouraged to address a lint warning by refactoring the code, changing variable names, or whatever action is implied by the warning.

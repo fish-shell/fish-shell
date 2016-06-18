@@ -2604,7 +2604,6 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(_(L"%ls: Ambiguous job\n"), argv[0]);
         } else {
             streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), argv[0], argv[1]);
-
         }
 
         builtin_print_help(parser, streams, argv[0], streams.err);
@@ -2624,13 +2623,11 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             j = job_get_from_pid(pid);
             if (!j || !job_get_flag(j, JOB_CONSTRUCTED) || job_is_completed(j)) {
                 streams.err.append_format(_(L"%ls: No suitable job: %d\n"), argv[0], pid);
-                builtin_print_help(parser, streams, argv[0], streams.err);
                 j = 0;
             } else if (!job_get_flag(j, JOB_CONTROL)) {
                 streams.err.append_format(_(L"%ls: Can't put job %d, '%ls' to foreground because "
                                             L"it is not under job control\n"),
                                           argv[0], pid, j->command_wcstr());
-                builtin_print_help(parser, streams, argv[0], streams.err);
                 j = 0;
             }
         }
@@ -2694,7 +2691,7 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         if (!j) {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), argv[0]);
-            res = 1;
+            res = STATUS_BUILTIN_ERROR;
         } else {
             res = send_to_bg(parser, streams, j, _(L"(default)"));
         }
@@ -2702,23 +2699,15 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         wchar_t *end;
         int i;
         int pid;
-        int err = 0;
 
         for (i = 1; argv[i]; i++) {
             errno = 0;
             pid = fish_wcstoi(argv[i], &end, 10);
             if (errno || pid < 0 || *end || !job_get_from_pid(pid)) {
                 streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), argv[0], argv[i]);
-                err = 1;
-                break;
+                return STATUS_BUILTIN_ERROR;
             }
-        }
-
-        if (!err) {
-            for (i = 1; !res && argv[i]; i++) {
-                pid = fish_wcstoi(argv[i], 0, 10);
-                res |= send_to_bg(parser, streams, job_get_from_pid(pid), *argv);
-            }
+            res |= send_to_bg(parser, streams, job_get_from_pid(pid), *argv);
         }
     }
 

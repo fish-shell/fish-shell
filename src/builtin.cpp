@@ -2586,7 +2586,7 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), argv[0]);
         }
     } else if (argv[2] != 0) {
-        // Specifying what more than one job to put to the foreground is a syntax error, we still
+        // Specifying more than one job to put to the foreground is a syntax error, we still
         // try to locate the job argv[1], since we want to know if this is an ambigous job
         // specification or if this is an malformed job id.
         wchar_t *endptr;
@@ -2604,6 +2604,7 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(_(L"%ls: Ambiguous job\n"), argv[0]);
         } else {
             streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), argv[0], argv[1]);
+
         }
 
         builtin_print_help(parser, streams, argv[0], streams.err);
@@ -2653,7 +2654,7 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         job_continue(j, job_is_stopped(j));
     }
-    return j != 0;
+    return j ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
 /// Helper function for builtin_bg().

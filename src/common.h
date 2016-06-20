@@ -25,6 +25,13 @@
 #include "config.h"
 #include "fallback.h"
 
+// Define a symbol we can use elsewhere in our code to determine if we're being built on MS Windows
+// under Cygwin.
+#if defined(_WIN32) || defined(_WIN64) || defined(WIN32) || defined(__CYGWIN__) || \
+    defined(__WIN32__)
+#define OS_IS_CYGWIN
+#endif
+
 /**
    Avoid writing the type name twice in a common "static_cast-initialization".
    Caveat: This doesn't work with type names containing commas!
@@ -195,6 +202,10 @@ extern const wchar_t *program_name;
 /* Variants of read() and write() that ignores return values, defeating a warning */
 void read_ignore(int fd, void *buff, size_t count);
 void write_ignore(int fd, const void *buff, size_t count);
+
+/// Set to false at run-time if it's been determined we can't trust the last modified timestamp on
+/// the tty.
+extern bool has_working_tty_timestamps;
 
 /**
    This macro is used to check that an input argument is not null. It

@@ -459,12 +459,18 @@ static void s_check_status(screen_t *s)
 {
     fflush(stdout);
     fflush(stderr);
+    if (!has_working_tty_timestamps) {
+        // We can't reliably determine if the terminal has been written to behind our back so we
+        // just assume that hasn't happened and hope for the best. This is important for multi-line
+        // prompts to work correctly.
+        return;
+    }
 
     fstat(1, &s->post_buff_1);
     fstat(2, &s->post_buff_2);
 
-    int changed = (s->prev_buff_1.st_mtime != s->post_buff_1.st_mtime) ||
-                  (s->prev_buff_2.st_mtime != s->post_buff_2.st_mtime);
+    bool changed = (s->prev_buff_1.st_mtime != s->post_buff_1.st_mtime) ||
+                   (s->prev_buff_2.st_mtime != s->post_buff_2.st_mtime);
 
     #if defined HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC
         changed = changed || s->prev_buff_1.st_mtimespec.tv_nsec != s->post_buff_1.st_mtimespec.tv_nsec ||

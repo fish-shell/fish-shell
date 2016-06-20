@@ -67,6 +67,7 @@ bool g_profiling_active = false;
 const wchar_t *program_name;
 
 int debug_level=1;
+bool has_working_tty_timestamps = true;
 
 /**
    This struct maintains the current state of the terminal size. It is updated on demand after receiving a SIGWINCH.

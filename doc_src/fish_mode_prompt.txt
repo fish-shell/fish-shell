@@ -1,0 +1,11 @@
+\section fish_mode_prompt fish_mode_prompt - define the appearance of the mode indicator
+
+\subsection fish_mode_prompt-synopsis Synopsis
+
+fish_mode_prompt will output the mode indicator for use in vi-mode.
+
+\subsection fish_mode_prompt-description Description
+
+The output of `fish_mode_prompt` will be displayed in the mode indicator position to the left of the regular prompt.
+
+Multiple lines are not supported in `fish_mode_prompt`.

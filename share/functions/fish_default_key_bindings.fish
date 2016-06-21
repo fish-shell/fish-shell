@@ -19,7 +19,8 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     bind $argv \r execute
 
     bind $argv \ck kill-line
-    bind $argv \cy fish_clipboard_copy
+    bind $argv \cy yank
+    bind $argv \cx fish_clipboard_copy
     bind $argv \cv fish_clipboard_paste
     bind $argv \t complete
 

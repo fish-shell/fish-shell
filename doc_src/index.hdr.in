@@ -524,7 +524,7 @@ echo The plural of $WORD is {$WORD}s
 
 Note that without the quotes or braces, fish will try to expand a variable called `$WORDs`, which may not exist.
 
-The latter syntax `{$WORD}` works by exploiting <a href="#expand-brace">brace expansion</a>; care should be taken with array variables and undefined variables, as these expand as a <a href="#cartesian-product">cartesian product</a>, so undefined variables eliminate the string.
+The latter syntax `{$WORD}` works by exploiting <a href="#expand-brace">brace expansion</a>; care should be taken with zero-element array variables and undefined variables, as these expand as a <a href="#cartesian-product">cartesian product</a>, so they eliminate the string.
 
 Variable expansion is the only type of expansion performed on double quoted strings. There is, however, an important difference in how variables are expanded when quoted and when unquoted. An unquoted variable expansion will result in a variable number of arguments. For example, if the variable `$foo` has zero elements or is undefined, the argument `$foo` will expand to zero elements. If the variable $foo is an array of five elements, the argument `$foo` will expand to five elements. When quoted, like `"$foo"`, a variable expansion will always result in exactly one argument. Undefined variables will expand to the empty string, and array variables will be concatenated using the space character.
 

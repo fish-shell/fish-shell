@@ -1030,7 +1030,6 @@ Command mode is also known as normal mode.
 
 - @key{[} and @key{]} search the command history for the previous/next token containing the token under the cursor before the search was started. See the <a href='#history'>history</a> section for more information on history searching.
 
-- @key{Control, X} copies the current buffer to the system's clipboard, @key{Control, V} inserts the clipboard contents.
 - @key{Control,C} deletes the entire line.
 
 \subsubsection vi-mode-insert Insert mode

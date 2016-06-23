@@ -9,15 +9,14 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <getopt.h>
-#include <locale.h>
 #include <signal.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
 #include <wctype.h>
 #include <string>
+#include <limits>
+#include <cmath>
 
 #include "common.h"
 #include "env.h"
@@ -29,11 +28,12 @@
 
 struct config_paths_t determine_config_directory_paths(const char *argv0);
 
-static long long int prev_tstamp = 0;
-static const char *ctrl_equivalents[] = {NULL,  NULL,  NULL,  NULL,  NULL,  NULL,  NULL, "\\a",
-                                         "\\b", "\\t", "\\n", "\\v", "\\f", "\\r", NULL, NULL,
-                                         NULL,  NULL,  NULL,  NULL,  NULL,  NULL,  NULL, NULL,
-                                         NULL,  NULL,  NULL,  "\\e", NULL,  NULL,  NULL, NULL};
+long double prev_tstamp = std::numeric_limits<long double>::quiet_NaN();
+
+static const char *ctrl_equivalents[] = {"\\000",  "\\001",  "\\002",  "\\003",  "\\004",  "\\005",  "\\006", "\\a",
+                                         "\\b", "\\t", "\\n", "\\v", "\\f", "\\r", "\\014", "\\015",
+                                         "\\016",  "\\017",  "\\018",  "\\019",  "\\020",  "\\021",  "\\022", "\\023",
+                                         "\\024",  "\\025",  "",  "\\e", "\\028",  "\\029",  "\\030", "\\031"};
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
 bool should_exit(unsigned char c) {
@@ -78,53 +78,56 @@ void process_input(bool continuous_mode) {
         wchar_t wc = input_common_readch(first_char_seen && !continuous_mode);
         if (wc == WEOF) {
             return;
-        }
-        if (wc > 255) {
+        } else if (wc > 255) {
             printf("\nUnexpected wide character from input_common_readch(): %lld / 0x%llx\n",
                    (long long)wc, (long long)wc);
             return;
         }
 
-        long long int curr_tstamp, delta_tstamp;
-        timeval char_tstamp;
-        gettimeofday(&char_tstamp, NULL);
-        curr_tstamp = char_tstamp.tv_sec * 1000000 + char_tstamp.tv_usec;
-        delta_tstamp = curr_tstamp - prev_tstamp;
-        if (delta_tstamp >= 1000000) delta_tstamp = 999999;
-        if (delta_tstamp >= 200000 && continuous_mode) {
+
+        long double delta_tstamp = (timef() - prev_tstamp) * 100;
+
+        prev_tstamp = timef();
+
+        if (delta_tstamp > 20000) {
             printf("\n");
             printf("Type 'exit' or 'quit' to terminate this program.\n");
             printf("\n");
         }
-        prev_tstamp = curr_tstamp;
 
         unsigned char c = wc;
         if (c < 32) {
             // Control characters.
             if (ctrl_equivalents[c]) {
-                printf("%6lld usec  dec: %3u  hex: %2x  char: %s (aka \\c%c)\n", delta_tstamp, c, c,
+                printf("dec: %3u  hex: %2x  char: %s (aka \\c%c)", c, c,
                        ctrl_equivalents[c], c + 64);
             } else {
-                printf("%6lld usec  dec: %3u  hex: %2x  char: \\c%c\n", delta_tstamp, c, c, c + 64);
+                printf("dec: %3u  hex: %2x  char: \\c%c", c, c, c + 64);
             }
         } else if (c == 32) {
             // The space character.
-            printf("%6lld usec  dec: %3u  hex: %2x  char: <space>\n", delta_tstamp, c, c);
+            printf("dec: %3u  hex: %2x  char: <space>", c, c);
         } else if (c == 127) {
             // The "del" character.
-            printf("%6lld usec  dec: %3u  hex: %2x  char: \\x7f (aka del)\n", delta_tstamp, c, c);
+            printf("dec: %3u  hex: %2x  char: \\x7f (aka del)", c, c);
         } else if (c >= 128) {
             // Non-ASCII characters (i.e., those with bit 7 set).
-            printf("%6lld usec  dec: %3u  hex: %2x  char: non-ASCII\n", delta_tstamp, c, c);
+            printf("dec: %3u  hex: %2x  char: non-ASCII", c, c);
         } else {
             // ASCII characters that are not control characters.
-            printf("%6lld usec  dec: %3u  hex: %2x  char: %c\n", delta_tstamp, c, c, c);
+            printf("dec: %3u  hex: %2x  char: %c", c, c, c);
+        }
+
+        if (!isnan(delta_tstamp)) {
+            printf(" (%.2Lf ms)", delta_tstamp);
         }
 
         char *const name = key_name(c);
         if (name) {
-            printf("FYI: Saw sequence for bind key name \"%s\"\n", name);
+            printf("Sequence matches bind key name \"%s\"\n", name);
             free(name);
+        } else{
+            printf("\n");
         }
 
         if (should_exit(c)) {
@@ -146,9 +149,11 @@ void signal_handler(int signo) {
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
 void setup_and_process_keys(bool continuous_mode) {
     is_interactive_session = 1;  // by definition this is interactive
+    setlocale(LC_ALL, "POSIX");
     set_main_thread();
     setup_fork_guards();
-    setlocale(LC_ALL, "POSIX");
+
+    proc_init();
     env_init();
     reader_init();
     input_init();
@@ -161,12 +166,7 @@ void setup_and_process_keys(bool continuous_mode) {
     }
 
     if (continuous_mode) {
-        printf("\n");
-        printf("Type 'exit' or 'quit' to terminate this program.\n");
-        printf("\n");
-        printf("Characters such as [ctrl-D] (EOF) and [ctrl-C] (interrupt)\n");
-        printf("have no special meaning and will not terminate this program.\n");
-        printf("\n");
+        printf("<ctrl-C> ('\\Cc') or type 'exit' or 'quit' followed by enter to terminate this program.\n");
     } else {
         set_wait_on_escape_ms(500);
     }
@@ -174,6 +174,12 @@ void setup_and_process_keys(bool continuous_mode) {
     // TODO: We really should enable keypad mode but see issue #838.
     process_input(continuous_mode);
     restore_term_mode();
+    restore_term_foreground_process_group();
+    input_destroy();
+    proc_destroy();
+    reader_destroy();
+    input_destroy();
+
 }
 
 int main(int argc, char **argv) {

@@ -10,7 +10,6 @@
 #define FISH_SCREEN_H
 
 #include <assert.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <sys/stat.h>
 #include <memory>

@@ -9,7 +9,6 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -2256,7 +2255,8 @@ static int test_universal_helper(int *x) {
 
 static void test_universal() {
     say(L"Testing universal variables");
-    if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
+
+    if (system("mkdir -p " "/tmp/fish_uvars_test/")) err(L"mkdir failed");
 
     const int threads = 16;
     static int ctx[threads];
@@ -2293,7 +2293,7 @@ static void test_universal() {
         }
     }
 
-    if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rm failed");
+    if (system("rm -d /tmp/fish_uvars_test")) err(L"rm failed");
     putc('\n', stderr);
 }
 
@@ -3807,8 +3807,9 @@ int main(int argc, char **argv) {
     event_init();
     function_init();
     builtin_init();
-    reader_init();
     env_init();
+
+    reader_init();
 
     // Set default signal handlers, so we can ctrl-C out of this.
     signal_reset_handlers();

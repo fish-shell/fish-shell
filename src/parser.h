@@ -2,7 +2,6 @@
 #ifndef FISH_PARSER_H
 #define FISH_PARSER_H
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <list>
 #include <vector>

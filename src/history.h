@@ -4,7 +4,6 @@
 
 // IWYU pragma: no_include <cstddef>
 #include <pthread.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>

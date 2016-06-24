@@ -6,7 +6,6 @@
 #include <locale.h>
 #include <pthread.h>
 #include <pwd.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #ifdef HAVE__NL_MSG_CAT_CNTR

@@ -7,7 +7,6 @@
 
 #include <assert.h>
 #include <signal.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <sys/time.h>  // IWYU pragma: keep
 #include <termios.h>

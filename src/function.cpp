@@ -6,6 +6,7 @@
 
 // IWYU pragma: no_include <type_traits>
 #include <dirent.h>
+#include <errno.h>
 #include <pthread.h>
 #include <stddef.h>
 #include <wchar.h>

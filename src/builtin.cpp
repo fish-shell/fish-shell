@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +31,7 @@
 #include <wctype.h>
 #include <algorithm>
 #include <map>
-#include <memory>  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include <utility>
 

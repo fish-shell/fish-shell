@@ -4,7 +4,6 @@
 #ifndef FISH_READER_H
 #define FISH_READER_H
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <string>
 #include <vector>

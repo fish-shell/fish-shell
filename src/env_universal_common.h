@@ -2,7 +2,6 @@
 #define FISH_ENV_UNIVERSAL_COMMON_H
 
 #include <pthread.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <memory>
 #include <set>

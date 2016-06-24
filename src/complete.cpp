@@ -8,7 +8,6 @@
 #include <assert.h>
 #include <pthread.h>
 #include <pwd.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <wchar.h>
 #include <wctype.h>
@@ -19,6 +18,7 @@
 #include <set>
 #include <string>
 #include <utility>
+
 
 #include "autoload.h"
 #include "builtin.h"

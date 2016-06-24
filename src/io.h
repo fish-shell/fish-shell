@@ -17,7 +17,6 @@ using std::shared_ptr;
 #include <tr1/memory>
 using std::tr1::shared_ptr;
 #endif
-#include <stdbool.h>
 
 #include "common.h"
 

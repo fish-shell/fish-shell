@@ -10,6 +10,7 @@
 
 #include "common.h"
 #include "complete.h"
+#include "fallback.h" 
 #include "highlight.h"
 #include "pager.h"
 #include "reader.h"

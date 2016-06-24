@@ -4,7 +4,6 @@
 #ifndef FISH_PATH_H
 #define FISH_PATH_H
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #include "common.h"

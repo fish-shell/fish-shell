@@ -2,7 +2,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <pthread.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <wchar.h>
 #include <algorithm>

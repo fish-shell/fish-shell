@@ -3,7 +3,6 @@
 #define FISH_PARSE_PRODUCTIONS_H
 
 #include <assert.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <sys/types.h>
 #include <memory>

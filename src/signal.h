@@ -3,7 +3,6 @@
 #define FISH_SIGNALH
 
 #include <signal.h>
-#include <stdbool.h>
 
 /// Get the integer signal value representing the specified signal, or -1 of no signal was found.
 int wcs2sig(const wchar_t *str);

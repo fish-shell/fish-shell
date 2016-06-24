@@ -2,8 +2,6 @@
 #ifndef FISH_PARSER_KEYWORD_H
 #define FISH_PARSER_KEYWORD_H
 
-#include <stdbool.h>
-
 #include "common.h"
 
 /// Tests if the specified commands parameters should be interpreted as another command, which will

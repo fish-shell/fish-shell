@@ -2,7 +2,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <algorithm>

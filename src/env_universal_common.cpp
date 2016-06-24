@@ -8,7 +8,6 @@
 #include <limits.h>
 #include <pwd.h>
 #include <stdarg.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>

@@ -5,7 +5,6 @@
 #ifndef FISH_COMPLETE_H
 #define FISH_COMPLETE_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <vector>
 

@@ -1,11 +1,11 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <pthread.h>
 #include <signal.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <sys/select.h>
 #include <sys/time.h>

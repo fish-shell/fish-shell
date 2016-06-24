@@ -2,7 +2,6 @@
 #ifndef FISH_PARSE_TREE_CONSTRUCTION_H
 #define FISH_PARSE_TREE_CONSTRUCTION_H
 
-#include <stdbool.h>
 #include <sys/types.h>
 
 #include "parse_constants.h"

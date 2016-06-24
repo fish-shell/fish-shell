@@ -12,13 +12,13 @@
 #include <vector>
 
 #include "common.h"
-#include "fallback.h"  // IWYU pragma: keep
+#include "fallback.h" 
 #include "parse_constants.h"
 #include "parse_productions.h"
 #include "parse_tree.h"
 #include "proc.h"
 #include "tokenizer.h"
-#include "wutil.h"  // IWYU pragma: keep
+#include "wutil.h" // IWYU pragma: keep
 
 // This array provides strings for each symbol in enum parse_token_type_t in parse_constants.h.
 const wchar_t *const token_type_map[] = {

@@ -6,7 +6,6 @@
 #ifndef FISH_EVENT_H
 #define FISH_EVENT_H
 
-#include <stdbool.h>
 #include <unistd.h>
 #include <vector>
 

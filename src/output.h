@@ -5,7 +5,6 @@
 #ifndef FISH_OUTPUT_H
 #define FISH_OUTPUT_H
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <vector>
 

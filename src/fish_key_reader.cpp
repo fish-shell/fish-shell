@@ -118,7 +118,7 @@ void process_input(bool continuous_mode) {
             printf("dec: %3u  hex: %2x  char: %c", c, c, c);
         }
 
-        if (!isnan(delta_tstamp)) {
+        if (!std::isnan(delta_tstamp)) {
             printf(" (%.2Lf ms)\n", delta_tstamp);
         } else {
             printf("\n");

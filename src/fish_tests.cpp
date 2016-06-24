@@ -2721,6 +2721,17 @@ void history_tests_t::test_history_merge(void) {
     for (size_t i = 0; i < count; i++) {
         hists[i]->incorporate_external_changes();
     }
+
+    // Everyone should also have items in the same order (#2312)
+    wcstring string_rep;
+    hists[0]->get_string_representation(&string_rep, L"\n");
+    for (size_t i = 0; i < count; i++) {
+        wcstring string_rep2;
+        hists[i]->get_string_representation(&string_rep2, L"\n");
+        do_test(string_rep == string_rep2);
+    }
+
+
     // Add some more per-history items.
     for (size_t i = 0; i < count; i++) {
         hists[i]->add(alt_texts[i]);

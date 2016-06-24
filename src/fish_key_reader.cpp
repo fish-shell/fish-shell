@@ -10,12 +10,12 @@
 
 #include <getopt.h>
 #include <locale.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wctype.h>
-#include <string>
+#include <sys/signal.h>
+#include <iosfwd>   
 #include <limits>
 #include <cmath>
 
@@ -91,7 +91,6 @@ void process_input(bool continuous_mode) {
         prev_tstamp = timef();
 
         if (delta_tstamp > 20000) {
-            printf("\n");
             printf("Type 'exit' or 'quit' to terminate this program.\n");
             printf("\n");
         }
@@ -120,15 +119,15 @@ void process_input(bool continuous_mode) {
         }
 
         if (!isnan(delta_tstamp)) {
-            printf(" (%.2Lf ms)", delta_tstamp);
+            printf(" (%.2Lf ms)\n", delta_tstamp);
+        } else {
+            printf("\n");
         }
 
         char *const name = key_name(c);
         if (name) {
             printf("Sequence matches bind key name \"%s\"\n", name);
             free(name);
-        } else{
-            printf("\n");
         }
 
         if (should_exit(c)) {
@@ -154,7 +153,6 @@ void setup_and_process_keys(bool continuous_mode) {
     set_main_thread();
     setup_fork_guards();
 
-    proc_init();
     env_init();
     reader_init();
     input_init();
@@ -177,10 +175,7 @@ void setup_and_process_keys(bool continuous_mode) {
     restore_term_mode();
     restore_term_foreground_process_group();
     input_destroy();
-    proc_destroy();
     reader_destroy();
-    input_destroy();
-
 }
 
 int main(int argc, char **argv) {
@@ -208,7 +203,7 @@ int main(int argc, char **argv) {
 
     argc -= optind;
     if (argc != 0) {
-        fprintf(stderr, "Expected no CLI arguments, got %d\n", argc);
+        fprintf(stderr, "Expected no arguments, got %d\n", argc);
         return 1;
     }
 

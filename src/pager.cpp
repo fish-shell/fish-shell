@@ -10,7 +10,7 @@
 
 #include "common.h"
 #include "complete.h"
-#include "fallback.h" 
+#include "fallback.h"
 #include "highlight.h"
 #include "pager.h"
 #include "reader.h"
@@ -506,7 +506,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
             int search_field_written = print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal,
                                                  term_width - 1, false, search_field);
             print_max(search_field_text, highlight_modifier_force_underline,
-                          term_width - search_field_written - 1, false, search_field);
+                      term_width - search_field_written - 1, false, search_field);
         }
     }
     return print;

@@ -13,11 +13,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wctype.h>
 #include <sys/signal.h>
-#include <iosfwd>   
-#include <limits>
+#include <wctype.h>
 #include <cmath>
+#include <iosfwd>
+#include <limits>
 
 #include "common.h"
 #include "env.h"
@@ -31,10 +31,11 @@ struct config_paths_t determine_config_directory_paths(const char *argv0);
 
 double prev_tstamp = std::numeric_limits<double>::quiet_NaN();
 
-static const char *ctrl_equivalents[] = {"\\000",  "\\001",  "\\002",  "\\003",  "\\004",  "\\005",  "\\006", "\\a",
-                                         "\\b", "\\t", "\\n", "\\v", "\\f", "\\r", "\\014", "\\015",
-                                         "\\016",  "\\017",  "\\018",  "\\019",  "\\020",  "\\021",  "\\022", "\\023",
-                                         "\\024",  "\\025",  "",  "\\e", "\\028",  "\\029",  "\\030", "\\031"};
+static const char *ctrl_equivalents[] = {
+    "\\000", "\\001", "\\002", "\\003", "\\004", "\\005", "\\006", "\\a",
+    "\\b",   "\\t",   "\\n",   "\\v",   "\\f",   "\\r",   "\\014", "\\015",
+    "\\016", "\\017", "\\018", "\\019", "\\020", "\\021", "\\022", "\\023",
+    "\\024", "\\025", "",      "\\e",   "\\028", "\\029", "\\030", "\\031"};
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
 bool should_exit(unsigned char c) {
@@ -98,8 +99,8 @@ void process_input(bool continuous_mode) {
         if (c < 32) {
             // Control characters.
             if (ctrl_equivalents[c]) {
-                printf("dec: %3u  hex: %2x  char: %s (aka \\c%c)", c, c,
-                       ctrl_equivalents[c], c + 64);
+                printf("dec: %3u  hex: %2x  char: %s (aka \\c%c)", c, c, ctrl_equivalents[c],
+                       c + 64);
             } else {
                 printf("dec: %3u  hex: %2x  char: \\c%c\t", c, c, c + 64);
             }
@@ -164,7 +165,7 @@ void setup_and_process_keys(bool continuous_mode) {
     }
 
     if (continuous_mode) {
-        printf("<ctrl-C> ('\\Cc') or type 'exit' or 'quit' followed by enter to terminate this program.\n");
+        printf("ctrl-C or type 'exit' or 'quit' to terminate this program.\n");
     } else {
         set_wait_on_escape_ms(500);
     }

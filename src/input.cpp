@@ -350,7 +350,7 @@ int input_init() {
             debug(0, _(L"Your TERM value of '%ls' is not valid"), term.c_str());
             debug(0, _(L"Check that your terminal type is supported on this system"));
         }
-        
+
         env_set(L"TERM", DEFAULT_TERM, ENV_GLOBAL | ENV_EXPORT);
         if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
             debug(0, _(L"Unable to setup terminal using your TERM or the '%ls' fallback"),

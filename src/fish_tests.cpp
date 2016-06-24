@@ -2255,7 +2255,6 @@ static int test_universal_helper(int *x) {
 
 static void test_universal() {
     say(L"Testing universal variables");
-
     if (system("mkdir -p " "/tmp/fish_uvars_test/")) err(L"mkdir failed");
 
     const int threads = 16;
@@ -2293,7 +2292,7 @@ static void test_universal() {
         }
     }
 
-    if (system("rm -d /tmp/fish_uvars_test")) err(L"rm failed");
+    if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rm failed");
     putc('\n', stderr);
 }
 

@@ -29,7 +29,7 @@
 
 struct config_paths_t determine_config_directory_paths(const char *argv0);
 
-long double prev_tstamp = std::numeric_limits<long double>::quiet_NaN();
+double prev_tstamp = std::numeric_limits<double>::quiet_NaN();
 
 static const char *ctrl_equivalents[] = {"\\000",  "\\001",  "\\002",  "\\003",  "\\004",  "\\005",  "\\006", "\\a",
                                          "\\b", "\\t", "\\n", "\\v", "\\f", "\\r", "\\014", "\\015",
@@ -85,12 +85,11 @@ void process_input(bool continuous_mode) {
             return;
         }
 
-
-        long double delta_tstamp = (timef() - prev_tstamp) * 100;
-
+        double delta_tstamp = (timef() - prev_tstamp);
+        // double timef() is time in seconds since unix epoch with ~microsecondish precision
         prev_tstamp = timef();
 
-        if (delta_tstamp > 20000) {
+        if (delta_tstamp > 20) {
             printf("Type 'exit' or 'quit' to terminate this program.\n");
             printf("\n");
         }
@@ -102,7 +101,7 @@ void process_input(bool continuous_mode) {
                 printf("dec: %3u  hex: %2x  char: %s (aka \\c%c)", c, c,
                        ctrl_equivalents[c], c + 64);
             } else {
-                printf("dec: %3u  hex: %2x  char: \\c%c", c, c, c + 64);
+                printf("dec: %3u  hex: %2x  char: \\c%c\t", c, c, c + 64);
             }
         } else if (c == 32) {
             // The space character.
@@ -115,11 +114,11 @@ void process_input(bool continuous_mode) {
             printf("dec: %3u  hex: %2x  char: non-ASCII", c, c);
         } else {
             // ASCII characters that are not control characters.
-            printf("dec: %3u  hex: %2x  char: %c", c, c, c);
+            printf("dec: %3u  hex: %2x  char: %c\t", c, c, c);
         }
 
         if (!std::isnan(delta_tstamp)) {
-            printf(" (%.2Lf ms)\n", delta_tstamp);
+            printf("\t(%6.lf ms)\n", delta_tstamp * 1000);
         } else {
             printf("\n");
         }

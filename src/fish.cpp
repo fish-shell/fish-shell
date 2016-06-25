@@ -410,29 +410,23 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
 /// routines.
 static void misc_init() {
 #ifdef OS_IS_CYGWIN
-    // MS Windows tty devices do not have either a read or write timestamp. Those respective fields
+    if (cmdfile) fclose(cmdfile)
+    // MS Windows tty devices do not currently have either a read or write timestamp. Those respective fields
     // of `struct stat` are always the current time. Which means we can't use them. So we assume no
     // external program has written to the terminal behind our back. This makes multiline prompts
-    // usable. See issue #2859.
+    // usable. See issue #2859 and https://github.com/Microsoft/BashOnWindows/issues/545
     has_working_tty_timestamps = false;
 #else
-    // This covers Windows Subsystem for Linux (WSL).
-    int fd = open("/proc/sys/kernel/osrelease", O_RDONLY);
-    if (fd != -1) {
-        const char *magic_suffix = "Microsoft";
-        int len_magic_suffix = strlen(magic_suffix);
-        char osrelease[128] = {0};
-        int len_osrelease = read(fd, osrelease, sizeof(osrelease) - 1);
-        if (osrelease[len_osrelease - 1] == '\n') {
-            osrelease[len_osrelease - 1] = '\0';
-            len_osrelease--;
-        }
-        if (len_osrelease >= len_magic_suffix &&
-            strcmp(magic_suffix, osrelease + len_osrelease - len_magic_suffix) == 0) {
+    // This covers preview builds of Windows Subsystem for Linux (WSL).
+    FILE *procsyskosrel;
+    if ((procsyskosrel = wfopen(L"/proc/sys/kernel/osrelease", "r"))) {
+        wcstring osrelease;
+        fgetws2(&osrelease, procsyskosrel);
+        if (osrelease.find(L"3.4.0-Microsoft") != wcstring::npos) {
             has_working_tty_timestamps = false;
         }
-        close(fd);
     }
+    if (procsyskosrel) { fclose(procsyskosrel); }
 #endif  // OS_IS_MS_WINDOWS
 }
 

@@ -410,11 +410,11 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
 /// routines.
 static void misc_init() {
 #ifdef OS_IS_CYGWIN
-    if (cmdfile) fclose(cmdfile)
-    // MS Windows tty devices do not currently have either a read or write timestamp. Those respective fields
-    // of `struct stat` are always the current time. Which means we can't use them. So we assume no
-    // external program has written to the terminal behind our back. This makes multiline prompts
-    // usable. See issue #2859 and https://github.com/Microsoft/BashOnWindows/issues/545
+    // MS Windows tty devices do not currently have either a read or write timestamp. Those
+    // respective fields of `struct stat` are always the current time. Which means we can't
+    // use them. So we assume no external program has written to the terminal behind our
+    // back. This makes multiline promptusable. See issue #2859 and
+    // https://github.com/Microsoft/BashOnWindows/issues/545
     has_working_tty_timestamps = false;
 #else
     // This covers preview builds of Windows Subsystem for Linux (WSL).
@@ -426,7 +426,9 @@ static void misc_init() {
             has_working_tty_timestamps = false;
         }
     }
-    if (procsyskosrel) { fclose(procsyskosrel); }
+    if (procsyskosrel) {
+        fclose(procsyskosrel);
+    }
 #endif  // OS_IS_MS_WINDOWS
 }
 

@@ -2255,8 +2255,7 @@ static int test_universal_helper(int *x) {
 
 static void test_universal() {
     say(L"Testing universal variables");
-    if (system("mkdir -p /tmp/fish_uvars_test/"))
-        err(L"mkdir failed");
+    if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
 
     const int threads = 16;
     static int ctx[threads];
@@ -2731,7 +2730,6 @@ void history_tests_t::test_history_merge(void) {
         hists[i]->get_string_representation(&string_rep2, L"\n");
         do_test(string_rep == string_rep2);
     }
-
 
     // Add some more per-history items.
     for (size_t i = 0; i < count; i++) {

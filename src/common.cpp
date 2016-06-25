@@ -1648,19 +1648,13 @@ void format_size_safe(char buff[128], unsigned long long sz) {
     }
 }
 
+/// Return the number of seconds from the UNIX epoch, with subsecond precision. This function uses
+/// the gettimeofday function and will have the same precision as that function.
 double timef() {
     struct timeval tv;
-    int time_res = gettimeofday(&tv, 0);
-
-    if (time_res) {
-        // Fixme: What on earth is the correct parameter value for NaN? The man pages and the
-        // standard helpfully state that this parameter is implementation defined. Gcc gives a
-        // warning if a null pointer is used. But not even all mighty Google gives a hint to what
-        // value should actually be returned.
-        return nan("");
-    }
-
-    return (double)tv.tv_sec + 0.000001 * tv.tv_usec;
+    VOMIT_ON_FAILURE(gettimeofday(&tv, 0));
+    // return (double)tv.tv_sec + 0.000001 * tv.tv_usec;
+    return (double)tv.tv_sec + 1e-6 * tv.tv_usec;
 }
 
 void exit_without_destructors(int code) { _exit(code); }

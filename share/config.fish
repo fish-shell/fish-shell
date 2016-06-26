@@ -24,14 +24,14 @@ if status --is-interactive
 		# the string.fish message to `exec` will probably not help here, so this will that.
 		set -g __is_launched_without_string 1
 
-		set_color --bold
-		echo "You appear to be trying to launch an old fish binary with newer scripts "
-		echo "installed into" (set_color --underline)"$__fish_datadir"
-		set_color normal
-		echo -e "\nThis is an unsupported configuration.\n"
-		set_color yellow
-		echo "You may need to uninstall and reinstall fish!"
-		set_color normal
+		set_color --bold >&2
+		echo "You appear to be trying to launch an old fish binary with newer scripts " >&2
+		echo "installed into" (set_color --underline)"$__fish_datadir" >&2
+		set_color normal >&2
+		echo -e "\nThis is an unsupported configuration.\n" >&2
+		set_color yellow >&2
+		echo "You may need to uninstall and reinstall fish!" >&2
+		set_color normal >&2
 	else 
 		# Enable truecolor/24-bit support for select terminals
 		if not set -q NVIM_LISTEN_ADDRESS # (Neovim will swallow the 24bit sequences, rendering text white)

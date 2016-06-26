@@ -463,21 +463,22 @@ int input_init() {
 
     int err_ret;
     if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
+	debug(0, _(L"Could not set up terminal"));
         env_var_t term = env_get_string(L"TERM");
         if (term.missing_or_empty()) {
-            debug(0, _(L"Your TERM is unset or empty."));
+            debug(0, _(L"TERM environment variable not set"));
         } else {
-            debug(0, _(L"Your TERM value of '%ls' is not valid"), term.c_str());
-            debug(0, _(L"Check that your terminal type is supported on this system"));
+            debug(0, _(L"TERM environment variable set to '%ls'"), term.c_str());
+            debug(0, _(L"Check that this terminal type is supported on this system"));
         }
         
         env_set(L"TERM", DEFAULT_TERM, ENV_GLOBAL | ENV_EXPORT);
         if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
-            debug(0, _(L"Unable to setup terminal using your TERM or the '%ls' fallback"),
+            debug(0, _(L"Could not set up terminal using the fallback terminal type '%ls' - exiting"),
                   DEFAULT_TERM);
             exit_without_destructors(1);
         } else {
-            debug(0, _(L"Using fallback terminal type '%ls' instead"), DEFAULT_TERM);
+            debug(0, _(L"Using fallback terminal type '%ls'"), DEFAULT_TERM);
         }
     }
 

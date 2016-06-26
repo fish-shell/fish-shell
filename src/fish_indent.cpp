@@ -21,7 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <errno.h>
 #include <getopt.h>
 #include <locale.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -348,7 +347,7 @@ int main(int argc, char *argv[]) {
         output_type_ansi,
         output_type_html
     } output_type = output_type_plain_text;
-    const char *output_location;
+    const char *output_location = "";
     bool do_indent = true;
 
     const char *short_opts = "+dhvwi";
@@ -409,6 +408,11 @@ int main(int argc, char *argv[]) {
 
     wcstring src;
     if (argc == 0) {
+        if (output_type == output_type_file) {
+            fwprintf(stderr, _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"),
+                     program_name);
+            exit(1);
+        }
         src = read_file(stdin);
     } else if (argc == 1) {
         FILE *fh = fopen(*argv, "r");

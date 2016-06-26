@@ -2,7 +2,6 @@
 #ifndef FISH_EXEC_H
 #define FISH_EXEC_H
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <vector>
 

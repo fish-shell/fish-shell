@@ -2,7 +2,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
-#include <stdbool.h>
 #ifdef HAVE__PROC_SELF_STAT
 #include <sys/time.h>
 #endif

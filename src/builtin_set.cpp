@@ -2,7 +2,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <wchar.h>
@@ -321,8 +320,7 @@ static void print_variables(int include_values, int esc, bool shorten_ok, int sc
     }
 }
 
-/// The set builtin. Creates, updates and erases environment variables and environemnt variable
-/// arrays.
+/// The set builtin creates, updates, and erases (removes, deletes) variables.
 int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     // Variables used for parsing the argument list.

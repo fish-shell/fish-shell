@@ -28,7 +28,6 @@
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
-#include <stdbool.h>
 #include <sys/time.h>  // IWYU pragma: keep
 #include <sys/types.h>
 #include <algorithm>  // IWYU pragma: keep

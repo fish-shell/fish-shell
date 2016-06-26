@@ -6,20 +6,26 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdarg.h>  // IWYU pragma: keep
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <termios.h>
 #include <wchar.h>
-#include <memory>  // IWYU pragma: keep
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "fallback.h"  // IWYU pragma: keep
 #include "signal.h"    // IWYU pragma: keep
+
+// Define a symbol we can use elsewhere in our code to determine if we're being built on MS Windows
+// under Cygwin.
+#if defined(_WIN32) || defined(_WIN64) || defined(WIN32) || defined(__CYGWIN__) || \
+    defined(__WIN32__)
+#define OS_IS_CYGWIN
+#endif
 
 /// Avoid writing the type name twice in a common "static_cast-initialization". Caveat: This doesn't
 /// work with type names containing commas!
@@ -188,6 +194,10 @@ extern const wchar_t *program_name;
 void read_ignore(int fd, void *buff, size_t count);
 void write_ignore(int fd, const void *buff, size_t count);
 
+/// Set to false at run-time if it's been determined we can't trust the last modified timestamp on
+/// the tty.
+extern bool has_working_tty_timestamps;
+
 /// This macro is used to check that an input argument is not null. It is a bit lika a non-fatal
 /// form of assert. Instead of exit-ing on failure, the current function is ended at once. The
 /// second parameter is the return value of the current function on failure.
@@ -229,8 +239,10 @@ void write_ignore(int fd, const void *buff, size_t count);
 /// Shorthand for wgettext call in situations where a C-style string is needed (e.g., fwprintf()).
 #define _(wstr) wgettext(wstr).c_str()
 
-/// Noop, used to tell xgettext that a string should be translated, even though it is not directly
-/// sent to wgettext.
+/// Noop, used to tell xgettext that a string should be translated. Use this when a string cannot be
+/// passed through wgettext() at the point where it is used. For example, when initializing a
+/// static array or structure. You must pass the string through wgettext() when it is used.
+/// See https://developer.gnome.org/glib/stable/glib-I18N.html#N-:CAPS
 #define N_(wstr) wstr
 
 /// Check if the specified string element is a part of the specified string list.
@@ -732,8 +744,7 @@ int create_directory(const wcstring &d);
 void bugreport();
 
 /// Return the number of seconds from the UNIX epoch, with subsecond precision. This function uses
-/// the gettimeofday function, and will have the same precision as that function. If an error
-/// occurs, NAN is returned.
+/// the gettimeofday function and will have the same precision as that function.
 double timef();
 
 /// Call the following function early in main to set the main thread. This is our replacement for

@@ -30,6 +30,8 @@ Ultimately we want lint free code. However, at the moment a lot of cleanup is re
 
 To make linting the code easy there are two make targets: `lint` and `lint-all`. The latter does just what the name implies. The former will lint any modified but not committed `*.cpp` files. If there is no uncommitted work it will lint the files in the most recent commit.
 
+Fish has custom cppcheck rules in the file `.cppcheck.rule`. These help catch mistakes such as using `wcwidth()` rather than `fish_wcwidth()`. Please add a new rule if you find similar mistakes being made.
+
 ### Dealing With Lint Warnings
 
 You are strongly encouraged to address a lint warning by refactoring the code, changing variable names, or whatever action is implied by the warning.
@@ -201,6 +203,14 @@ exit 0
 This will check if the push is to the master branch and, if it is, will run `make test` and only allow the push if that succeeds. In some circumstances it might be advisable to circumvent it with `git push --no-verify`, but usually that should not be necessary.
 
 To install the hook, put it in .git/hooks/pre-push and make it executable.
+
+### Coverity Scan
+
+We use Coverity's static analysis tool which offers free access to open source projects. While access to the tool itself is
+restricted, fish-shell organization members should know that they can login
+[here with their GitHub account](https://scan.coverity.com/projects/fish-shell-fish-shell?tab=overview).
+Currently, tests are triggered upon merging the `master` branch into `coverity_scan_master`.
+Even if you are not a fish developer, you can keep an eye on our statistics there.
 
 ## Installing the Required Tools
 

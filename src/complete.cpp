@@ -8,7 +8,6 @@
 #include <assert.h>
 #include <pthread.h>
 #include <pwd.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <wchar.h>
 #include <wctype.h>

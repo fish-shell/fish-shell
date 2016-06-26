@@ -5,51 +5,62 @@
 # https://github.com/fish-shell/fish-shell/tree/master/share/completions
 
 function __fish_npm_needs_command
-  set cmd (commandline -opc)
+    set cmd (commandline -opc)
 
-  if [ (count $cmd) -eq 1 ]
-    return 0
-  end
+    if [ (count $cmd) -eq 1 ]
+        return 0
+    end
 
-  return 1
+    return 1
 end
 
 function __fish_npm_using_command
-  set cmd (commandline -opc)
+    set cmd (commandline -opc)
 
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
+    if [ (count $cmd) -gt 1 ]
+        if [ $argv[1] = $cmd[2] ]
+            return 0
+        end
     end
-  end
 
-  return 1
+    return 1
 end
 
 function __fish_npm_needs_option
-  switch (commandline -ct)
-    case "-*"
-      return 0
-  end
-  return 1
+    switch (commandline -ct)
+        case "-*"
+            return 0
+    end
+    return 1
 end
 
 function __fish_complete_npm --description "Complete the commandline using npm's 'completion' tool"
-  # npm completion is bash-centric, so we need to translate fish's "commandline" stuff to bash's $COMP_* stuff
-  # COMP_LINE is an array with the words in the commandline
-  set -lx COMP_LINE (commandline -o)
-  # COMP_CWORD is the index of the current word in COMP_LINE
-  # bash starts arrays with 0, so subtract 1
-  set -lx COMP_CWORD (math (count $COMP_LINE) - 1)
-  # COMP_POINT is the index of point/cursor when the commandline is viewed as a string
-  set -lx COMP_POINT (commandline -C)
-  # If the cursor is after the last word, the empty token will disappear in the expansion
-  # Readd it
-  if test (commandline -ct) = ""
-    set COMP_CWORD (math $COMP_CWORD + 1)
-    set COMP_LINE $COMP_LINE ""
-  end
-  npm completion -- $COMP_LINE ^/dev/null
+    # Note that this function will generate undescribed completion options, and current fish
+    # will sometimes pick these over versions with descriptions.
+    # However, this seems worth it because it means automatically getting _some_ completions if npm updates.
+
+    # Defining an npm alias that automatically calls nvm if necessary is a popular convenience measure.
+    # Because that is a function, these local variables won't be inherited and the completion would fail
+    # with weird output on stdout (!). But before the function is called, no npm command is defined,
+    # so calling the command would fail.
+    # So we'll only try if we have an npm command.
+    if command -s npm >/dev/null
+        # npm completion is bash-centric, so we need to translate fish's "commandline" stuff to bash's $COMP_* stuff
+        # COMP_LINE is an array with the words in the commandline
+        set -lx COMP_LINE (commandline -o)
+        # COMP_CWORD is the index of the current word in COMP_LINE
+        # bash starts arrays with 0, so subtract 1
+        set -lx COMP_CWORD (math (count $COMP_LINE) - 1)
+        # COMP_POINT is the index of point/cursor when the commandline is viewed as a string
+        set -lx COMP_POINT (commandline -C)
+        # If the cursor is after the last word, the empty token will disappear in the expansion
+        # Readd it
+        if test (commandline -ct) = ""
+            set COMP_CWORD (math $COMP_CWORD + 1)
+            set COMP_LINE $COMP_LINE ""
+        end
+        command npm completion -- $COMP_LINE ^/dev/null
+    end
 end
 
 # use npm completion for most of the things,
@@ -60,12 +71,15 @@ complete -f -c npm -n 'not __fish_npm_needs_option' -a "(__fish_complete_npm)"
 
 # list available npm scripts and their parial content
 function __fish_npm_run
-  command npm run | string match -r -v '^[^ ]|^$' | string trim | while read -l name
-    set -l trim 20
-    read -l value
-    echo "$value" | cut -c1-$trim | read -l value
-    printf "%s\t%s\n" $name $value
-  end
+    # Like above, only try to call npm if there's a command by that name to facilitate aliases that call nvm.
+    if command -s npm >/dev/null
+        command npm run | string match -r -v '^[^ ]|^$' | string trim | while read -l name
+            set -l trim 20
+            read -l value
+            echo "$value" | cut -c1-$trim | read -l value
+            printf "%s\t%s\n" $name $value
+        end
+    end
 end
 
 # run

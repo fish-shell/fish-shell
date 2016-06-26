@@ -2,7 +2,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <algorithm>
@@ -37,7 +36,7 @@ class io_chain_t;
 #define FOR_BLOCK N_(L"'for' block")
 
 /// Breakpoint block.
-#define BREAKPOINT_BLOCK N_(L"Block created by breakpoint")
+#define BREAKPOINT_BLOCK N_(L"block created by breakpoint")
 
 /// If block description.
 #define IF_BLOCK N_(L"'if' conditional block")
@@ -67,7 +66,7 @@ class io_chain_t;
 #define BEGIN_BLOCK N_(L"'begin' unconditional block")
 
 /// Source block description.
-#define SOURCE_BLOCK N_(L"Block created by the . builtin")
+#define SOURCE_BLOCK N_(L"block created by the . builtin")
 
 /// Source block description.
 #define EVENT_BLOCK N_(L"event handler block")

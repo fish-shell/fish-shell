@@ -5,7 +5,6 @@
 #ifndef FISH_COMPLETE_H
 #define FISH_COMPLETE_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <vector>
 
@@ -143,8 +142,6 @@ enum complete_option_type_t {
 void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
                   complete_option_type_t option_type, int result_mode, const wchar_t *condition,
                   const wchar_t *comp, const wchar_t *desc, int flags);
-
-
 
 /// Sets whether the completion list for this command is complete. If true, any options not matching
 /// one of the provided options will be flagged as an error by syntax highlighting.

@@ -3,7 +3,6 @@
 
 #include <assert.h>
 #include <signal.h>
-#include <stdbool.h>
 #include <unistd.h>
 #include <algorithm>
 #include <memory>

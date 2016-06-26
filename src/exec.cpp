@@ -25,7 +25,6 @@
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
-#include <stdbool.h>
 
 #include "builtin.h"
 #include "common.h"

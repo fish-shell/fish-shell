@@ -4,15 +4,18 @@
 // is not usually useful since the argv array is always defined to be of type char**, but in fish,
 // all internal commands use wide characters and hence this library is useful.
 //
-// If you want to use this version of getopt in your program, download the fish sourcecode,
-// available at <a href='http://fishshell.com'>the fish homepage</a>. Extract the sourcode, copy
-// wgetopt.c and wgetopt.h into your program directory, include wgetopt.h in your program, and use
-// all the regular getopt functions, prefixing every function, global variable and structure with a
-// 'w', and use only wide character strings. There are no other functional changes in this version
-// of getopt besides using wide character strings.
+// If you want to use this version of getopt in your program,
+//       1. Download the fish sourcecode, available at http://fishshell.com
+//       2. Extract the sourcode
+//       3. Copy wgetopt.cpp and wgetopt.h into your program directory,
+//       4. #include wgetopt.h in your program
+//       5. Make use of all the regular getopt functions, prefixing every function, global variable
+//          and d structure with a 'w', and use only wide character strings.
+// There are no other functional changes in this version of getopt besides using wide character
+// strings.
 //
-// For examples of how to use wgetopt, see the fish builtin functions, many of which are defined in
-// builtin.c.
+// For examples of how to use wgetopt, see the fish builtin functions, which are defined in
+// src/builtin_*.cpp
 
 /* Declarations for getopt.
    Copyright (C) 1989, 90, 91, 92, 93, 94 Free Software Foundation, Inc.

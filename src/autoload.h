@@ -3,7 +3,6 @@
 #define FISH_AUTOLOAD_H
 
 #include <pthread.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <time.h>
 #include <set>

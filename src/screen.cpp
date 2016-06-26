@@ -252,7 +252,7 @@ size_t escape_code_length(const wchar_t *code) {
     if (!found) found = is_iterm2_escape_seq(code, &resulting_length);
     if (!found) found = is_single_byte_escape_seq(code, &resulting_length);
     if (!found) found = is_csi_style_escape_seq(code, &resulting_length);
-    if (!found) found = is_two_byte_escape_seq(code, &resulting_length);
+    if (!found) is_two_byte_escape_seq(code, &resulting_length);
 
     return resulting_length;
 }
@@ -347,12 +347,18 @@ static void s_save_status(screen_t *s) {
 static void s_check_status(screen_t *s) {
     fflush(stdout);
     fflush(stderr);
+    if (!has_working_tty_timestamps) {
+        // We can't reliably determine if the terminal has been written to behind our back so we
+        // just assume that hasn't happened and hope for the best. This is important for multi-line
+        // prompts to work correctly.
+        return;
+    }
 
     fstat(1, &s->post_buff_1);
     fstat(2, &s->post_buff_2);
 
-    int changed = (s->prev_buff_1.st_mtime != s->post_buff_1.st_mtime) ||
-                  (s->prev_buff_2.st_mtime != s->post_buff_2.st_mtime);
+    bool changed = (s->prev_buff_1.st_mtime != s->post_buff_1.st_mtime) ||
+                   (s->prev_buff_2.st_mtime != s->post_buff_2.st_mtime);
 
 #if defined HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC
     changed = changed ||
@@ -1180,9 +1186,9 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         wcstring abandon_line_string;
         abandon_line_string.reserve(screen_width + 32);  // should be enough
 
-        // Don't need to check for wcwidth errors; this is done when setting up omitted_newline_char
-        // in common.cpp.
-        int non_space_width = wcwidth(omitted_newline_char);
+        // Don't need to check for fish_wcwidth errors; this is done when setting up
+        // omitted_newline_char in common.cpp.
+        int non_space_width = fish_wcwidth(omitted_newline_char);
         if (screen_width >= non_space_width) {
             bool has_256_colors = output_get_color_support() & color_support_term256;
             if (has_256_colors) {

@@ -4,7 +4,6 @@
 #ifndef FISH_FUNCTION_H
 #define FISH_FUNCTION_H
 
-#include <stdbool.h>
 #include <map>
 #include <vector>
 

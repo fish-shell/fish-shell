@@ -3,7 +3,6 @@
 #ifndef FISH_WILDCARD_H
 #define FISH_WILDCARD_H
 
-#include <stdbool.h>
 #include <vector>
 
 #include "common.h"

@@ -9,7 +9,6 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -2722,6 +2721,16 @@ void history_tests_t::test_history_merge(void) {
     for (size_t i = 0; i < count; i++) {
         hists[i]->incorporate_external_changes();
     }
+
+    // Everyone should also have items in the same order (#2312)
+    wcstring string_rep;
+    hists[0]->get_string_representation(&string_rep, L"\n");
+    for (size_t i = 0; i < count; i++) {
+        wcstring string_rep2;
+        hists[i]->get_string_representation(&string_rep2, L"\n");
+        do_test(string_rep == string_rep2);
+    }
+
     // Add some more per-history items.
     for (size_t i = 0; i < count; i++) {
         hists[i]->add(alt_texts[i]);
@@ -3807,8 +3816,9 @@ int main(int argc, char **argv) {
     event_init();
     function_init();
     builtin_init();
-    reader_init();
     env_init();
+
+    reader_init();
 
     // Set default signal handlers, so we can ctrl-C out of this.
     signal_reset_handlers();

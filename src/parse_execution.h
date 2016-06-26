@@ -4,7 +4,6 @@
 
 #include <stddef.h>
 
-#include <stdbool.h>
 #include "common.h"
 #include "io.h"
 #include "parse_constants.h"

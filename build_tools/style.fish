@@ -73,13 +73,13 @@ if set -q c_files[1]
         echo Running clang-format
         echo ========================================
         for file in $c_files
+            cp $file $file.new # preserves mode bits
             clang-format $file >$file.new
             if cmp --quiet $file $file.new
                 echo $file was correctly formatted
                 rm $file.new
             else
                 echo $file was NOT correctly formatted
-                chmod --reference=$file $file.new
                 mv $file.new $file
             end
         end
@@ -101,13 +101,13 @@ if set -q f_files[1]
     echo Running fish_indent
     echo ========================================
     for file in $f_files
+        cp $file $file.new # preserves mode bits
         fish_indent <$file >$file.new
         if cmp --quiet $file $file.new
             echo $file was correctly formatted
             rm $file.new
         else
             echo $file was NOT correctly formatted
-            chmod --reference=$file $file.new
             mv $file.new $file
         end
     end

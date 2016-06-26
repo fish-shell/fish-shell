@@ -23,6 +23,15 @@ function __fish_systemd_properties
 	end
 end
 
+function __fish_systemctl_failed
+    if __fish_contains_opt user
+        # Without arguments, no "--type=" will be passed
+        systemctl --user list-units --state=failed --no-legend --type=$argv ^/dev/null | cut -f 1 -d ' '
+    else
+        systemctl list-units --state=failed --no-legend --type=$argv ^/dev/null | cut -f 1 -d ' '
+    end
+end
+
 complete -f -e -c systemctl
 # All systemctl commands
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
@@ -41,6 +50,9 @@ for command in start stop restart try-restart reload-or-restart reload-or-try-re
 		complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
 	end
 end
+
+# Handle reset-failed specially because it doesn't apply to unit-files (only units that have been tried can have failed) and a second "--state=" argument doesn't override the earlier one.
+complete -f -c systemctl -n "__fish_seen_subcommand_from reset-failed" -a "(__fish_systemctl_failed)"
 
 # Enable/Disable: Only show units with matching state
 for t in services sockets timers service_paths

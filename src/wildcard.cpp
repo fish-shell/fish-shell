@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
-#include <stdbool.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>

@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "common.h"
-#include "fallback.h"  // IWYU pragma: keep
+#include "fallback.h"
 #include "parse_constants.h"
 #include "parse_productions.h"
 #include "parse_tree.h"
@@ -1042,7 +1042,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
             if (logit) {
                 fprintf(stderr, "Consumed token %ls\n", token1.describe().c_str());
             }
-            consumed = true;
+            // consumed = true;
             break;
         }
 

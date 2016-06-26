@@ -1387,7 +1387,7 @@ void history_t::save_internal(bool vacuum) {
     }
     if (!ok) {
         // We did not or could not append; rewrite the file ("vacuum" it).
-        ok = this->save_internal_via_rewrite();
+        this->save_internal_via_rewrite();
     }
 }
 
@@ -1548,6 +1548,12 @@ void history_t::incorporate_external_changes() {
     if (new_timestamp > this->boundary_timestamp) {
         this->boundary_timestamp = new_timestamp;
         this->clear_file_state();
+
+        // We also need to erase new_items, since we go through those first, and that means we
+        // will not properly interleave them with items from other instances.
+        // We'll pick them up from the file (#2312)
+        this->save_internal(false);
+        this->new_items.clear();
     }
 }
 

@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +31,7 @@
 #include <wctype.h>
 #include <algorithm>
 #include <map>
-#include <memory>  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -2586,7 +2585,7 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), argv[0]);
         }
     } else if (argv[2] != 0) {
-        // Specifying what more than one job to put to the foreground is a syntax error, we still
+        // Specifying more than one job to put to the foreground is a syntax error, we still
         // try to locate the job argv[1], since we want to know if this is an ambigous job
         // specification or if this is an malformed job id.
         wchar_t *endptr;
@@ -2623,13 +2622,11 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             j = job_get_from_pid(pid);
             if (!j || !job_get_flag(j, JOB_CONSTRUCTED) || job_is_completed(j)) {
                 streams.err.append_format(_(L"%ls: No suitable job: %d\n"), argv[0], pid);
-                builtin_print_help(parser, streams, argv[0], streams.err);
                 j = 0;
             } else if (!job_get_flag(j, JOB_CONTROL)) {
                 streams.err.append_format(_(L"%ls: Can't put job %d, '%ls' to foreground because "
                                             L"it is not under job control\n"),
                                           argv[0], pid, j->command_wcstr());
-                builtin_print_help(parser, streams, argv[0], streams.err);
                 j = 0;
             }
         }
@@ -2653,7 +2650,7 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         job_continue(j, job_is_stopped(j));
     }
-    return j != 0;
+    return j ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
 /// Helper function for builtin_bg().
@@ -2693,7 +2690,7 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         if (!j) {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), argv[0]);
-            res = 1;
+            res = STATUS_BUILTIN_ERROR;
         } else {
             res = send_to_bg(parser, streams, j, _(L"(default)"));
         }
@@ -2701,23 +2698,15 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         wchar_t *end;
         int i;
         int pid;
-        int err = 0;
 
         for (i = 1; argv[i]; i++) {
             errno = 0;
             pid = fish_wcstoi(argv[i], &end, 10);
             if (errno || pid < 0 || *end || !job_get_from_pid(pid)) {
                 streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), argv[0], argv[i]);
-                err = 1;
-                break;
+                return STATUS_BUILTIN_ERROR;
             }
-        }
-
-        if (!err) {
-            for (i = 1; !res && argv[i]; i++) {
-                pid = fish_wcstoi(argv[i], 0, 10);
-                res |= send_to_bg(parser, streams, job_get_from_pid(pid), *argv);
-            }
+            res |= send_to_bg(parser, streams, job_get_from_pid(pid), *argv);
         }
     }
 

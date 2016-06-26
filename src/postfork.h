@@ -12,7 +12,6 @@
 #ifndef FISH_USE_POSIX_SPAWN
 #define FISH_USE_POSIX_SPAWN HAVE_SPAWN_H
 #endif
-#include <stdbool.h>
 
 class io_chain_t;
 class job_t;

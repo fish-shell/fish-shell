@@ -14,7 +14,6 @@
 #include <ncurses/term.h>
 #endif
 #include <assert.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <memory>

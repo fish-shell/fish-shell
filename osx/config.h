@@ -1,23 +1,14 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to 1 if you have the `backtrace' function. */
-#define HAVE_BACKTRACE 1
-
-/* Define to 1 if you have the `backtrace_symbols_fd' function. */
-#define HAVE_BACKTRACE_SYMBOLS_FD 1
-
-/* Define to 1 one if the implemented fwprintf is broken */
-/* #undef HAVE_BROKEN_FWPRINTF */
+/* Define to 1 if you have the `backtrace_symbols' function. */
+#define HAVE_BACKTRACE_SYMBOLS 1
 
 /* Define to 1 if you have the `clock_gettime' function. */
 /* #undef HAVE_CLOCK_GETTIME */
 
 /* Define to 1 if you have the <curses.h> header file. */
 #define HAVE_CURSES_H 1
-
-/* Define to 1 if you have the `dcgettext' function. */
-/* #undef HAVE_DCGETTEXT */
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
@@ -26,20 +17,11 @@
 /* Define to 1 if you have the <execinfo.h> header file. */
 #define HAVE_EXECINFO_H 1
 
-/* Define to 1 if you have the `fgetwc' function. */
-#define HAVE_FGETWC 1
-
-/* Define to 1 if you have the `fputwc' function. */
-#define HAVE_FPUTWC 1
-
 /* Define to 1 if you have the `futimens' function. */
 /* #undef HAVE_FUTIMENS */
 
 /* Define to 1 if you have the `futimes' function. */
 #define HAVE_FUTIMES 1
-
-/* Define to 1 if you have the `fwprintf' function. */
-#define HAVE_FWPRINTF 1
 
 /* Define to 1 if you have the `getifaddrs' function. */
 #define HAVE_GETIFADDRS 1
@@ -116,9 +98,6 @@
 /* Define to 1 if `st_mtim.tv_nsec' is a member of `struct stat'. */
 /* #undef HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC */
 
-/* Define to 1 if you have the `sysconf' function. */
-#define HAVE_SYSCONF 1
-
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
 /* #undef HAVE_SYS_DIR_H */
@@ -154,45 +133,14 @@
 /* Define to 1 if you have the <term.h> header file. */
 #define HAVE_TERM_H 1
 
-/* Define to 1 if the wgettext function should be used for translating
-   strings. */
-#define HAVE_TRANSLATE_H 1
-
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
-
-/* Define to 1 if you have the `wcscasecmp' function. */
-#define HAVE_WCSCASECMP 1
-
-/* Define to 1 if you have the `wcsdup' function. */
-#define HAVE_WCSDUP 1
-
-/* Define to 1 if you have the `wcslcat' function. */
-#define HAVE_WCSLCAT 1
 
 /* Define to 1 if you have the `wcslcpy' function. */
 #define HAVE_WCSLCPY 1
 
-/* Define to 1 if you have the `wcslen' function. */
-#define HAVE_WCSLEN 1
-
-/* Define to 1 if you have the `wcsncasecmp' function. */
-#define HAVE_WCSNCASECMP 1
-
 /* Define to 1 if you have the `wcsndup' function. */
 /* #undef HAVE_WCSNDUP */
-
-/* Define to 1 if you have the `wcstok' function. */
-#define HAVE_WCSTOK 1
-
-/* Define to 1 if you have the `wcstol' function. */
-#define HAVE_WCSTOL 1
-
-/* Define to 1 if you have the `wcswidth' function. */
-#define HAVE_WCSWIDTH 1
-
-/* Define to 1 if you have the `wcwidth' function. */
-#define HAVE_WCWIDTH 1
 
 /* Define to 1 if the winsize struct and TIOCGWINSZ macro exist */
 #define HAVE_WINSIZE 1
@@ -239,9 +187,6 @@
 /* Define to 1 if tparm accepts a fixed amount of paramters. */
 /* #undef TPARM_SOLARIS_KLUDGE */
 
-/* Evil kludge to get Power based machines to work */
-/* #undef TPUTS_KLUDGE */
-
 /* Perform string translations with gettext */
 /* #undef USE_GETTEXT */
 
@@ -270,11 +215,19 @@
 /* The size of wchar_t in bits. */
 #define WCHAR_T_BITS 32
 
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#ifndef _DARWIN_USE_64_BIT_INODE
+# define _DARWIN_USE_64_BIT_INODE 1
+#endif
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+/* #undef _FILE_OFFSET_BITS */
+
+/* Define for large files, on AIX-style hosts. */
+/* #undef _LARGE_FILES */
+
 /* Define to 1 if on MINIX. */
 /* #undef _MINIX */
-
-/* Macro to enable additional prototypes under BSD */
-/* #undef _NETBSD_SOURCE */
 
 /* Define to 2 if the system does not provide POSIX.1 features except with
    this defined. */
@@ -282,12 +235,6 @@
 
 /* Define to 1 if you need to in order for `stat' and other things to work. */
 /* #undef _POSIX_SOURCE */
-
-/* Macro to enable additional prototypes under BSD */
-/* #undef __BSD_VISIBLE */
-
-/* Macro to enable additional prototypes under Solaris */
-#define __EXTENSIONS__ 1
 
 #if __GNUC__ >= 3
 #ifndef __warn_unused

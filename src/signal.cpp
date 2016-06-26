@@ -8,7 +8,6 @@
 #include <siginfo.h>
 #endif
 #include <pthread.h>
-#include <stdbool.h>
 
 #include "common.h"
 #include "event.h"

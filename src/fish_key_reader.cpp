@@ -26,19 +26,18 @@
 #include "input_common.h"
 #include "proc.h"
 #include "reader.h"
+#include "wutil.h"
 
 struct config_paths_t determine_config_directory_paths(const char *argv0);
 
-double prev_tstamp = std::numeric_limits<double>::quiet_NaN();
-
-static const char *ctrl_equivalents[] = {
-    "\\000", "\\001", "\\002", "\\003", "\\004", "\\005", "\\006", "\\a",
-    "\\b",   "\\t",   "\\n",   "\\v",   "\\f",   "\\r",   "\\014", "\\015",
-    "\\016", "\\017", "\\018", "\\019", "\\020", "\\021", "\\022", "\\023",
-    "\\024", "\\025", "",      "\\e",   "\\028", "\\029", "\\030", "\\031"};
+static const char *ctrl_symbolic_names[] = {NULL,  NULL,  NULL,  NULL,  NULL,  NULL,  NULL, "\\a",
+                                            "\\b", "\\t", "\\n", "\\v", "\\f", "\\r", NULL, NULL,
+                                            NULL,  NULL,  NULL,  NULL,  NULL,  NULL,  NULL, NULL,
+                                            NULL,  NULL,  NULL,  "\\e", NULL,  NULL,  NULL, NULL};
+static bool keep_running = true;
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
-bool should_exit(unsigned char c) {
+static bool should_exit(unsigned char c) {
     static unsigned char recent_chars[4] = {0};
 
     recent_chars[0] = recent_chars[1];
@@ -49,7 +48,7 @@ bool should_exit(unsigned char c) {
 }
 
 /// Return the key name if the recent sequence of characters matches a known terminfo sequence.
-char *const key_name(unsigned char c) {
+static char *const key_name(unsigned char c) {
     static char recent_chars[8] = {0};
 
     recent_chars[0] = recent_chars[1];
@@ -73,10 +72,57 @@ char *const key_name(unsigned char c) {
     return NULL;
 }
 
+static void output_info_about_char(unsigned char c) {
+    printf("dec: %3u  oct: %03o  hex: %02X  char: ", c, c, c);
+    if (c < 32) {
+        // Control characters.
+        printf("\\c%c", c + 64);
+        if (ctrl_symbolic_names[c]) printf("   (or %s)", ctrl_symbolic_names[c]);
+    } else if (c == 32) {
+        // The "space" character.
+        printf("\\%03o  (aka \"space\")", c);
+    } else if (c == 0x7F) {
+        // The "del" character.
+        printf("\\%03o  (aka \"del\")", c);
+    } else if (c >= 128) {
+        // Non-ASCII characters (i.e., those with bit 7 set).
+        printf("\\%03o  (aka non-ASCII)", c);
+    } else {
+        // ASCII characters that are not control characters.
+        printf("%c", c);
+    }
+    putchar('\n');
+}
+
+static void output_matching_key_name(unsigned char c) {
+    char *name = key_name(c);
+    if (name) {
+        printf("Sequence matches bind key name \"%s\"\n", name);
+        free(name);
+    }
+}
+
+static double output_elapsed_time(double prev_tstamp, bool first_char_seen) {
+    // How much time has passed since the previous char was received in microseconds.
+    double now = timef();
+    long long int delta_tstamp_us = 1000000 * (now - prev_tstamp);
+
+    if (delta_tstamp_us >= 200000 && first_char_seen) putchar('\n');
+    if (delta_tstamp_us >= 1000000) {
+        printf("              ");
+    } else {
+        printf("(%3lld.%03lld ms)  ", delta_tstamp_us / 1000, delta_tstamp_us % 1000);
+    }
+    return now;
+}
+
 /// Process the characters we receive as the user presses keys.
-void process_input(bool continuous_mode) {
+static void process_input(bool continuous_mode) {
     bool first_char_seen = false;
-    while (true) {
+    double prev_tstamp = 0.0;
+
+    printf("Press a key\n\n");
+    while (keep_running) {
         wchar_t wc = input_common_readch(first_char_seen && !continuous_mode);
         if (wc == WEOF) {
             return;
@@ -86,49 +132,10 @@ void process_input(bool continuous_mode) {
             return;
         }
 
-        double delta_tstamp = (timef() - prev_tstamp);
-        // double timef() is time in seconds since unix epoch with ~microsecondish precision
-        prev_tstamp = timef();
-
-        if (delta_tstamp > 20) {
-            printf("Type 'exit' or 'quit' to terminate this program.\n");
-            printf("\n");
-        }
-
         unsigned char c = wc;
-        if (c < 32) {
-            // Control characters.
-            if (ctrl_equivalents[c]) {
-                printf("dec: %3u  hex: %2x  char: %s (aka \\c%c)", c, c, ctrl_equivalents[c],
-                       c + 64);
-            } else {
-                printf("dec: %3u  hex: %2x  char: \\c%c\t", c, c, c + 64);
-            }
-        } else if (c == 32) {
-            // The space character.
-            printf("dec: %3u  hex: %2x  char: <space>", c, c);
-        } else if (c == 127) {
-            // The "del" character.
-            printf("dec: %3u  hex: %2x  char: \\x7f (aka del)", c, c);
-        } else if (c >= 128) {
-            // Non-ASCII characters (i.e., those with bit 7 set).
-            printf("dec: %3u  hex: %2x  char: non-ASCII", c, c);
-        } else {
-            // ASCII characters that are not control characters.
-            printf("dec: %3u  hex: %2x  char: %c\t", c, c, c);
-        }
-
-        if (!std::isnan(delta_tstamp)) {
-            printf("\t(%6.lf ms)\n", delta_tstamp * 1000);
-        } else {
-            printf("\n");
-        }
-
-        char *const name = key_name(c);
-        if (name) {
-            printf("Sequence matches bind key name \"%s\"\n", name);
-            free(name);
-        }
+        prev_tstamp = output_elapsed_time(prev_tstamp, first_char_seen);
+        output_info_about_char(c);
+        output_matching_key_name(c);
 
         if (should_exit(c)) {
             printf("\nExiting at your request.\n");
@@ -139,38 +146,42 @@ void process_input(bool continuous_mode) {
     }
 }
 
-/// Make sure we cleanup before exiting if we're signaled.
-void signal_handler(int signo) {
-    printf("\nExiting on receipt of signal #%d\n", signo);
-    restore_term_mode();
-    exit(1);
+/// Make sure we cleanup before exiting if we receive a signal that should cause us to exit.
+/// Otherwise just report receipt of the signal.
+static void signal_handler(int signo) {
+    printf("\nSignal #%d (%ls) received\n\n", signo, sig2wcs(signo));
+    if (signo == SIGINT || signo == SIGTERM || signo == SIGABRT || signo == SIGSEGV) {
+        keep_running = false;
+    }
 }
 
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
-void setup_and_process_keys(bool continuous_mode) {
-    is_interactive_session = 1;  // by definition this is interactive
-    setlocale(LC_ALL, "POSIX");
+static void setup_and_process_keys(bool continuous_mode) {
+    is_interactive_session = 1;    // by definition this program is interactive
+    setenv("LC_ALL", "POSIX", 1);  // ensure we're in a single-byte locale
     set_main_thread();
     setup_fork_guards();
 
-    env_init();
-    reader_init();
-    input_init();
-
-    // Installing our handler for every signal (e.g., SIGSEGV) is dubious because it means that
-    // signals that might generate a core dump will not do so. On the other hand this allows us
-    // to restore the tty modes so the terminal is still usable when we die.
+    // Install a handler for every signal. This allows us to restore the tty modes so the terminal
+    // is still usable when we die. We do this only to ensure any signal not handled by
+    // signal_set_handlers() gets handled for a clean exit.
     for (int signo = 1; signo < 32; signo++) {
         signal(signo, signal_handler);
     }
 
+    env_init();
+    reader_init();
+    input_init();
+    proc_push_interactive(1);
+    signal_set_handlers();
+
     if (continuous_mode) {
-        printf("ctrl-C or type 'exit' or 'quit' to terminate this program.\n");
-    } else {
-        set_wait_on_escape_ms(500);
+        printf("\n");
+        printf("To terminate this program type \"exit\" or \"quit\" in this window\n");
+        printf("or \"kill %d\" in another window\n", getpid());
+        printf("\n");
     }
 
-    // TODO: We really should enable keypad mode but see issue #838.
     process_input(continuous_mode);
     restore_term_mode();
     restore_term_foreground_process_group();
@@ -181,8 +192,11 @@ void setup_and_process_keys(bool continuous_mode) {
 int main(int argc, char **argv) {
     program_name = L"fish_key_reader";
     bool continuous_mode = false;
-    const char *short_opts = "+c";
-    const struct option long_opts[] = {{"continuous", no_argument, NULL, 'd'}, {NULL, 0, NULL, 0}};
+    const char *short_opts = "+cd:D:";
+    const struct option long_opts[] = {{"continuous", no_argument, NULL, 'c'},
+                                       {"debug-level", required_argument, NULL, 'd'},
+                                       {"debug-stack-frames", required_argument, NULL, 'D'},
+                                       {NULL, 0, NULL, 0}};
     int opt;
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
         switch (opt) {
@@ -192,6 +206,36 @@ int main(int argc, char **argv) {
             }
             case 'c': {
                 continuous_mode = true;
+                break;
+            }
+            case 'd': {
+                char *end;
+                long tmp;
+
+                errno = 0;
+                tmp = strtol(optarg, &end, 10);
+
+                if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
+                    debug_level = (int)tmp;
+                } else {
+                    fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
+                    exit(1);
+                }
+                break;
+            }
+            case 'D': {
+                char *end;
+                long tmp;
+
+                errno = 0;
+                tmp = strtol(optarg, &end, 10);
+
+                if (tmp > 0 && tmp <= 128 && !*end && !errno) {
+                    debug_stack_frames = (int)tmp;
+                } else {
+                    fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
+                    exit(1);
+                }
                 break;
             }
             default: {

@@ -26,7 +26,7 @@ if status --is-interactive
 
 		set_color --bold
 		echo "You appear to be trying to launch an old fish binary with newer scripts "
-		echo "installed into" (set_color --underline)"$__fish_datadir"
+		echo "installed into" (set_color --underline)"$__fish_datadir" 
 		set_color normal
 		echo -e "\nThis is an unsupported configuration.\n"
 		set_color yellow

@@ -13,6 +13,7 @@ count (echo one\ntwo\n)
 echo [(echo -n one\ntwo\n)]
 count (echo one\ntwo\n\n)
 echo [(echo -n one\ntwo\n\n)]
+count (echo -e one'\x00'two)
 set -le IFS
 
 function print_vars --no-scope-shadowing

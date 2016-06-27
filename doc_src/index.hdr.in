@@ -464,7 +464,7 @@ end
 
 \subsection expand-command-substitution Command substitution
 
-The output of a series of commands can be used as the parameters to another command. If a parameter contains a set of parenthesis, the text enclosed by the parenthesis will be interpreted as a list of commands. On expansion, this list is executed, and substituted by the output. If the output is more than one line long, each line will be expanded to a new parameter. Setting `IFS` to the empty string will disable line splitting.
+The output of a series of commands can be used as the parameters to another command. If a parameter contains a set of parenthesis, the text enclosed by the parenthesis will be interpreted as a list of commands. On expansion, this list is executed, and substituted by the output. If `IFS` is set to a non-empty string (the contents don't matter) or unset, the output is split at each newline character into multiple parameters. If `IFS` is set to the empty string, the splitting is done at each NUL character (\0) instead of newlines.
 
 The exit status of the last run command substitution is available in the <a href='#variables-status'>status</a> variable.
 
@@ -833,7 +833,7 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `HOME`, the user's home directory. This variable can be changed by the user.
 
-- `IFS`, the internal field separator that is used for word splitting with the <a href="commands.html#read">read builtin</a>. Setting this to the empty string will also disable line splitting in <a href="#expand-command-substitution">command substitution</a>. This variable can be changed by the user.
+- `IFS`, the internal field separator that is used for word splitting with the <a href="commands.html#read">read builtin</a>. Setting this to the empty string will also change line splitting in <a href="#expand-command-substitution">command substitution</a> to split on \0 instead of newlines. This variable can be changed by the user.
 
 - `PWD`, the current working directory.
 

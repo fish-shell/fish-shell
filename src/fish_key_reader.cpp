@@ -188,10 +188,6 @@ static void install_our_signal_handlers() {
                 debug(2, L"signal #%d (%ls) handler had flags 0x%X", signo, sig2wcs(signo),
                       old_sa.sa_flags);
             }
-            if (old_sa.sa_mask != new_sa.sa_mask) {
-                debug(2, L"signal #%d (%ls) handler had mask 0x%X", signo, sig2wcs(signo),
-                      old_sa.sa_mask);
-            }
         }
     }
 }

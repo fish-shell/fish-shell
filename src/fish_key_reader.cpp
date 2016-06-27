@@ -10,10 +10,10 @@
 
 #include <getopt.h>
 #include <locale.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/signal.h>
 #include <wctype.h>
 #include <cmath>
 #include <iosfwd>
@@ -44,7 +44,9 @@ static bool should_exit(unsigned char c) {
     recent_chars[1] = recent_chars[2];
     recent_chars[2] = recent_chars[3];
     recent_chars[3] = c;
-    return memcmp(recent_chars, "exit", 4) == 0 || memcmp(recent_chars, "quit", 4) == 0;
+    return (memcmp(recent_chars, "exit", 4) == 0 || memcmp(recent_chars, "quit", 4) == 0 ||
+            memcmp(recent_chars + 2, "\x3\x3", 2) == 0 ||  // ctrl-C, ctrl-C
+            memcmp(recent_chars + 2, "\x4\x4", 2) == 0);   // ctrl-D, ctrl-D
 }
 
 /// Return the key name if the recent sequence of characters matches a known terminfo sequence.
@@ -148,10 +150,45 @@ static void process_input(bool continuous_mode) {
 
 /// Make sure we cleanup before exiting if we receive a signal that should cause us to exit.
 /// Otherwise just report receipt of the signal.
-static void signal_handler(int signo) {
-    printf("\nSignal #%d (%ls) received\n\n", signo, sig2wcs(signo));
-    if (signo == SIGINT || signo == SIGTERM || signo == SIGABRT || signo == SIGSEGV) {
+static struct sigaction old_sigactions[32];
+static void signal_handler(int signo, siginfo_t *siginfo, void *siginfo_arg) {
+    debug(2, L"signal #%d (%ls) received", signo, sig2wcs(signo));
+    // SIGINT isn't included in the following conditional because it is handled specially by fish;
+    // i.e., it causes \cC to be reinserted into the tty input stream.
+    if (signo == SIGHUP || signo == SIGTERM || signo == SIGABRT || signo == SIGSEGV) {
         keep_running = false;
+    }
+    if (old_sigactions[signo].sa_handler != SIG_IGN &&
+        old_sigactions[signo].sa_handler != SIG_DFL) {
+        int needs_siginfo = old_sigactions[signo].sa_flags & SA_SIGINFO;
+        if (needs_siginfo) {
+            old_sigactions[signo].sa_sigaction(signo, siginfo, siginfo_arg);
+        } else {
+            old_sigactions[signo].sa_handler(signo);
+        }
+    }
+}
+
+/// Install a handler for every signal.  This allows us to restore the tty modes so the terminal is
+/// still usable when we die.  If the signal already has a handler arrange to invoke it from within
+/// our handler.
+static void install_our_signal_handlers() {
+    struct sigaction new_sa, old_sa;
+    sigemptyset(&new_sa.sa_mask);
+    new_sa.sa_flags = SA_SIGINFO;
+    new_sa.sa_sigaction = signal_handler;
+
+    for (int signo = 1; signo < 32; signo++) {
+        if (sigaction(signo, &new_sa, &old_sa) != -1) {
+            memcpy(&old_sigactions[signo], &old_sa, sizeof(old_sa));
+            if (old_sa.sa_handler == SIG_IGN) {
+                debug(2, "signal #%d (%ls) was being ignored", signo, sig2wcs(signo));
+            }
+            if (old_sa.sa_flags && ~SA_SIGINFO != 0) {
+                debug(2, L"signal #%d (%ls) handler had flags 0x%X", signo, sig2wcs(signo),
+                      old_sa.sa_flags);
+            }
+        }
     }
 }
 
@@ -161,24 +198,17 @@ static void setup_and_process_keys(bool continuous_mode) {
     setenv("LC_ALL", "POSIX", 1);  // ensure we're in a single-byte locale
     set_main_thread();
     setup_fork_guards();
-
-    // Install a handler for every signal. This allows us to restore the tty modes so the terminal
-    // is still usable when we die. We do this only to ensure any signal not handled by
-    // signal_set_handlers() gets handled for a clean exit.
-    for (int signo = 1; signo < 32; signo++) {
-        signal(signo, signal_handler);
-    }
-
     env_init();
     reader_init();
     input_init();
     proc_push_interactive(1);
     signal_set_handlers();
+    install_our_signal_handlers();
 
     if (continuous_mode) {
         printf("\n");
-        printf("To terminate this program type \"exit\" or \"quit\" in this window\n");
-        printf("or \"kill %d\" in another window\n", getpid());
+        printf("To terminate this program type \"exit\" or \"quit\" in this window,\n");
+        printf("or press [ctrl-C] or [ctrl-D] twice in a row.\n");
         printf("\n");
     }
 
@@ -248,6 +278,11 @@ int main(int argc, char **argv) {
     argc -= optind;
     if (argc != 0) {
         fprintf(stderr, "Expected no arguments, got %d\n", argc);
+        return 1;
+    }
+
+    if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
+        fprintf(stderr, "Stdin and stdout must be attached to a tty, redirection not allowed.\n");
         return 1;
     }
 

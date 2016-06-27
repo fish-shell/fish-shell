@@ -1,4 +1,5 @@
 if not contains string (builtin -n)
+	# XXX nostring
 	function string
 		if not set -q __is_launched_without_string
 			if status --is-interactive

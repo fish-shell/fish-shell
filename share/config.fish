@@ -18,11 +18,17 @@ function __fish_default_command_not_found_handler
 end
 
 if status --is-interactive
-	# Existance of string is a good pre-2.3.0 check. Could also check $FISH_VERSION in the future.
-	# This is a "launch", not an issue caused by autoloading during upgrades.
+	# The user has seemingly explicitly launched an old fish with
+	# too-new scripts installed. a
 	if not contains "string" (builtin -n)
-		# the string.fish message to `exec` will probably not help here, so this will that.
 		set -g __is_launched_without_string 1
+
+		# XXX nostring - fix old fish binaries with no `string' builtin.
+		# When executed on fish 2.2.0, the `else' block after this would
+		# force on 24-bit mode due to changes to in test behavior 
+		# Let's show a public serivec announcement. 
+	
+		# Remove this code when it's safe to upgrade fish and we've solved fish-script conflicts. 
 
 		set_color --bold
 		echo "You appear to be trying to launch an old fish binary with newer scripts "
@@ -205,7 +211,7 @@ for file in $configdir/fish/conf.d/*.fish $__fish_sysconfdir/conf.d/*.fish $__ex
 end
 
 # Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax
-# This needs to be in share/config.fish because __fish_config_interactive is called after sourcing config.fish, which might contain abbr calls
+# This needs to be in share/config.fish because __fish_config_interactive is called after 2sourcing config.fish, which might contain abbr calls
 if not set -q __fish_init_2_3_0
 	set -l fab
 	for abb in $fish_user_abbreviations

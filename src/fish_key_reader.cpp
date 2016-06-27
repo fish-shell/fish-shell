@@ -281,6 +281,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
+        fprintf(stderr, "Stdin and stdout must be attached to a tty, redirection not allowed.\n");
+        return 1;
+    }
+
     setup_and_process_keys(continuous_mode);
     return 0;
 }

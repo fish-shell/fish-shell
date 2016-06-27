@@ -1,0 +1,8 @@
+saw expected startup prompt
+ctrl-a handled
+\xE9, first byte, handled
+\xE9, second byte, handled
+\c@ handled
+invalid terminate sequence handled
+valid terminate sequence handled
+exited on seeing valid terminate

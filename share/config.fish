@@ -21,8 +21,14 @@ if status --is-interactive
 	# Existance of string is a good pre-2.3.0 check. Could also check $FISH_VERSION in the future.
 	# This is a "launch", not an issue caused by autoloading during upgrades.
 	if not contains "string" (builtin -n)
-		# the string.fish message to `exec` will probably not help here, so this will that.
 		set -g __is_launched_without_string 1
+
+		# XXX nostring - fix old fish binaries with no string builtin.
+		# With fish 2.2.0, these newer scritps are going to later force on 24-bit color due
+		# to changes to in behavior with conditionals. Let's show a public serivec announcement
+		# before skipping the 24bit opportunity. The user has seemingly explicitly launched an old
+		# fish with too-new scripts installed.
+		# Remove this when it's safe to upgrade fish and we've solved fish-script conflicts. 
 
 		set_color --bold
 		echo "You appear to be trying to launch an old fish binary with newer scripts "

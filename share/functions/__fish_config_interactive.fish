@@ -167,7 +167,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		commandline -f repaint
 	end
 
-
 	# Notify vte-based terminals when $PWD changes (issue #906)
 	if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
 		function __update_vte_cwd --on-variable PWD --description 'Notify VTE of change to $PWD'

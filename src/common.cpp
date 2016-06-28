@@ -6,7 +6,6 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <limits.h>
-#include <math.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stddef.h>

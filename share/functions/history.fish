@@ -1,61 +1,61 @@
 #
 # Wrap the builtin history command to provide additional functionality.
 #
-function history --shadow-builtin --description "Deletes an item from history"
-    set -l argc (count $argv)
-    set -l prefix_args ""
-    set -l contains_args ""
-    set -l cmd print
-    set -l search_mode none
-    set -l pager less
-    if set -q PAGER
-        set pager $PAGER
-    end
-
-    if test $argc -gt 0
-        for i in (seq $argc)
-            switch $argv[$i]
-                case --delete
-                    set cmd delete
-                case --prefix
-                    set search_mode prefix
-                    set prefix_args $argv[(math $i + 1)]
-                case --contains
-                    set search_mode contains
-                    set contains_args $argv[(math $i + 1)]
-                case --save
-                    set cmd save
-                case --clear
-                    set cmd clear
-                case --search
-                    set cmd print
-                case --merge
-                    set cmd merge
-                case --help
-                    set cmd help
-                case --
-                    set -e argv[$i]
-                    break
-                case "-*" "--*"
-                    printf ( _ "%s: invalid option -- %s\n" ) history $argv[1] >&2
-                    return 1
-            end
-        end
-    else
-        # Execute history builtin without any argument.
+function history --shadow-builtin --description "display or manipulate interactive command history"
+    if not set -q argv[1]
+        # No arguments so execute history builtin using it's default behavior to display the entire
+        # history.
         if status --is-interactive
-            builtin history | eval $pager
+	    set -l pager less
+	    set -q PAGER
+	    and set pager $PAGER
+            builtin history --with-time | eval $pager
         else
             builtin history
         end
         return
     end
 
+    set -l cmd search
+    set -l prefix_args ""
+    set -l contains_args ""
+    set -l search_mode none
+    set -l time_args
+
+    for i in (seq (count $argv))
+	switch $argv[$i]
+	    case -d --delete
+		set cmd delete
+	    case -v --save
+		set cmd save
+	    case -l --clear
+		set cmd clear
+	    case -s --search
+		set cmd search
+	    case -m --merge
+		set cmd merge
+	    case -h --help
+		set cmd help
+	    case -t --with-time
+		set time_args --with-time
+	    case -p --prefix
+		set search_mode prefix
+		set prefix_args $argv[(math $i + 1)]
+	    case -c --contains
+		set search_mode contains
+		set contains_args $argv[(math $i + 1)]
+	    case --
+		set -e argv[1..$i]
+		break
+	    case "-*" "--*"
+		printf ( _ "%s: invalid option -- %s\n" ) history $argv[$i] >&2
+		return 1
+	end
+    end
+
     switch $cmd
-        case print
-            # Print matching items. Note this may end up passing --search twice to the builtin,
-            # but that's harmless.
-            builtin history --search $argv
+        case search
+            builtin history $time_args --search $argv
 
         case delete
             # Interactively delete history

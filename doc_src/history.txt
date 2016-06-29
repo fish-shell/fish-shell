@@ -5,8 +5,8 @@
 history ( -m | --merge )
 history ( -s | --save )
 history ( -l | --clear )
-history ( -s | --search ) [ -t | --with-time ] [ -p "prefix string" | --prefix "prefix string" | -c "serach string | --contains "search string" ]
-history ( -d | --delete ) [ -t | --with-time ] [ -p "prefix string" | --prefix "prefix string" | -c "serach string | --contains "search string" ]
+history ( -s | --search ) [ -t | --with-time ] [ -p "prefix string" | --prefix "prefix string" | -c "search string | --contains "search string" ]
+history ( -d | --delete ) [ -t | --with-time ] [ -p "prefix string" | --prefix "prefix string" | -c "search string | --contains "search string" ]
 history ( -t | --with-time )
 history ( -h | --help )
 \endfish

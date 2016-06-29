@@ -3780,6 +3780,42 @@ static void test_string(void) {
     }
 }
 
+/// Helper for test_timezone_env_vars().
+long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
+    struct tm ltime;
+    char ltime_str[3];
+    char *str_ptr;
+    int n;
+
+    env_set(L"TZ", timezone, ENV_EXPORT);
+    localtime_r(&tstamp, &ltime);
+    n = strftime(ltime_str, 3, "%H", &ltime);
+    if (n != 2) {
+        err(L"strftime() returned %d, expected 2", n);
+        return 0;
+    }
+    return strtol(ltime_str, &str_ptr, 10);
+}
+
+/// Verify that setting special env vars have the expected effect on the current shell process.
+static void test_timezone_env_vars(void) {
+    // Confirm changing the timezone affects fish's idea of the local time.
+    time_t tstamp = time(NULL);
+
+    long first_tstamp = return_timezone_hour(tstamp, L"UTC-1");
+    long second_tstamp = return_timezone_hour(tstamp, L"UTC-2");
+    long delta = second_tstamp - first_tstamp;
+    if (delta != 1 && delta != -23) {
+        err(L"expected a one hour timezone delta got %ld", delta);
+    }
+}
+
+/// Verify that setting special env vars have the expected effect on the current shell process.
+static void test_env_vars(void) {
+    test_timezone_env_vars();
+    // TODO: Add tests for the locale and ncurses vars.
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     // Look for the file tests/test.fish. We expect to run in a directory containing that file.
@@ -3869,6 +3905,7 @@ int main(int argc, char **argv) {
     if (should_test_function("history_races")) history_tests_t::test_history_races();
     if (should_test_function("history_formats")) history_tests_t::test_history_formats();
     if (should_test_function("string")) test_string();
+    if (should_test_function("env_vars")) test_env_vars();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

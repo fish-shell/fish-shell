@@ -160,10 +160,10 @@ static mode_t get_umask() {
     return res;
 }
 
-/// Check if the specified variable is a locale variable.
+/// Check if the specified variable is a timezone variable.
 static bool var_is_timezone(const wcstring &key) { return key == L"TZ"; }
 
-/// Properly sets all locale information.
+/// Properly sets all timezone information.
 static void handle_timezone(const wchar_t *env_var_name) {
     debug(2, L"handle_timezone() called in response to '%ls' changing", env_var_name);
     const env_var_t val = env_get_string(env_var_name, ENV_EXPORT);

@@ -1,5 +1,6 @@
 # vim: set filetype=expect:
 
+set ::env(fish_escape_delay_ms) 10
 spawn $fish_key_reader -c
 
 # Do we get the expected startup prompt?
@@ -11,30 +12,26 @@ expect -ex "Press a key" {
 
 # Is a single control char echoed correctly?
 send "\x01"
-expect -ex "char: \\cA\r\n" {
+expect -ex "char: \\cA\r\nbind \\cA 'do something'\r\n" {
     puts "ctrl-a handled"
 } unmatched {
     puts stderr "ctrl-a not handled"
 }
 
-# Is a non-ASCII char echoed correctly? This looks a bit odd but \xE9
-# when using UTF-8 encoding becomes the two byte sequence \xC3\xA9 (or
-# \303\251).
-send "\xE9"
-expect -ex "char: \\303  (aka non-ASCII)\r\n" {
-    puts "\\xE9, first byte, handled"
+# Is a non-ASCII UTF-8 sequence prefaced by an escape char handled correctly?
+sleep 0.020
+# send "\x1B\xE1\x88\xB4"
+send "\x1B\u1234"
+expect -ex "char: \\u1234\r\nbind \\e\\u1234 'do something'\r\n" {
+    puts "unicode char, handled"
 } unmatched {
-    puts stderr "\\xE9, first byte, not handled"
-}
-expect -ex "char: \\251  (aka non-ASCII)\r\n" {
-    puts "\\xE9, second byte, handled"
-} unmatched {
-    puts stderr "\\xE9, second byte, not handled"
+    puts stderr "unicode char, not handled"
 }
 
 # Is a NULL char echoed correctly?
+sleep 0.020
 send -null
-expect -ex "char: \\c@\r\n" {
+expect -ex "char: \\c@\r\nbind \\c@ 'do something'\r\n" {
     puts "\\c@ handled"
 } unmatched {
     puts stderr "\\c@ not handled"

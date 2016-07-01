@@ -126,7 +126,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
         // link CF, use this lame approach to test it: see if the resolved path ends with
         // /Contents/MacOS/fish, case insensitive since HFS+ usually is.
         if (!done) {
-            const char *suffix = "/Contents/Resoruces/base/bin/fish";
+            const char *suffix = "/Contents/Resources/base/bin/fish";
             const size_t suffixlen = strlen(suffix);
             if (has_suffix(exec_path, suffix, true)) {
                 // Looks like we're a bundle. Cut the string at the / prefixing /Contents... and

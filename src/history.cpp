@@ -791,14 +791,14 @@ static size_t read_line(const char *base, size_t cursor, size_t len, std::string
     /* Locate the newline */
     assert(cursor <= len);
     const char *start = base + cursor;
-    const char *newline = (char *)memchr(start, '\n', len - cursor);
-    if (newline != NULL)
+    const char *a_newline = (char *)memchr(start, '\n', len - cursor);
+    if (a_newline != NULL)
     {
         /* We found a newline. */
-        result.assign(start, newline - start);
+        result.assign(start, a_newline - start);
 
         /* Return the amount to advance the cursor; skip over the newline */
-        return newline - start + 1;
+        return a_newline - start + 1;
     }
     else
     {
@@ -1799,7 +1799,7 @@ void history_t::populate_from_bash(FILE *stream)
             if (success)
             {
                 /* Skip the newline */
-                char *newline = strchr(buff, '\n');
+                char *a_newline = strchr(buff, '\n');
                 if (a_newline) *a_newline = '\0';
                 has_newline = (a_newline != NULL);
                 

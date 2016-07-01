@@ -204,11 +204,11 @@ static size_t read_line(const char *base, size_t cursor, size_t len, std::string
     // Locate the newline.
     assert(cursor <= len);
     const char *start = base + cursor;
-    const char *newline = (char *)memchr(start, '\n', len - cursor);
-    if (newline != NULL) {  // we found a newline
-        result.assign(start, newline - start);
+    const char *a_newline = (char *)memchr(start, '\n', len - cursor);
+    if (a_newline != NULL) {  // we found a newline
+        result.assign(start, a_newline - start);
         // Return the amount to advance the cursor; skip over the newline.
-        return newline - start + 1;
+        return a_newline - start + 1;
     }
 
     // We ran off the end.
@@ -543,17 +543,17 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         const char *line_start = begin + cursor;
 
         // Advance the cursor to the next line.
-        const char *newline = (const char *)memchr(line_start, '\n', mmap_length - cursor);
-        if (newline == NULL) break;
+        const char *a_newline = (const char *)memchr(line_start, '\n', mmap_length - cursor);
+        if (a_newline == NULL) break;
 
         // Advance the cursor past this line. +1 is for the newline.
-        cursor = newline - begin + 1;
+        cursor = a_newline - begin + 1;
 
         // Skip lines with a leading space, since these are in the interior of one of our items.
         if (line_start[0] == ' ') continue;
 
         // Skip very short lines to make one of the checks below easier.
-        if (newline - line_start < 3) continue;
+        if (a_newline - line_start < 3) continue;
 
         // Try to be a little YAML compatible. Skip lines with leading %, ---, or ...
         if (!memcmp(line_start, "%", 1) || !memcmp(line_start, "---", 3) ||
@@ -564,7 +564,7 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         // leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:".
         const char *double_cmd = "- cmd: - cmd: ";
         const size_t double_cmd_len = strlen(double_cmd);
-        while (newline - line_start > double_cmd_len &&
+        while (a_newline - line_start > double_cmd_len &&
                !memcmp(line_start, double_cmd, double_cmd_len)) {
             // Skip over just one of the - cmd. In the end there will be just one left.
             line_start += strlen("- cmd: ");
@@ -574,7 +574,7 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         // 123456". Ignore those.
         const char *cmd_when = "- cmd:    when:";
         const size_t cmd_when_len = strlen(cmd_when);
-        if (newline - line_start >= cmd_when_len && !memcmp(line_start, cmd_when, cmd_when_len))
+        if (a_newline - line_start >= cmd_when_len && !memcmp(line_start, cmd_when, cmd_when_len))
             continue;
 
         // At this point, we know line_start is at the beginning of an item. But maybe we want to
@@ -1516,9 +1516,9 @@ void history_t::populate_from_bash(FILE *stream) {
             success = (bool)fgets(buff, sizeof buff, stream);
             if (success) {
                 // Skip the newline.
-                char *newline = strchr(buff, '\n');
-                if (newline) *newline = '\0';
-                has_newline = (newline != NULL);
+                char *a_newline = strchr(buff, '\n');
+                if (a_newline) *a_newline = '\0';
+                has_newline = (a_newline != NULL);
 
                 // Append what we've got.
                 line.append(buff);

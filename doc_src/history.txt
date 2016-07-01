@@ -2,8 +2,13 @@
 
 \subsection history-synopsis Synopsis
 \fish{synopsis}
-history ( --merge | --save | --clear )
-history ( --search | --delete ) [ --prefix "prefix string" | --contains "search string" ]
+history ( -m | --merge )
+history ( -s | --save )
+history ( -l | --clear )
+history ( -s | --search ) [ -t | --with-time ] [ -p "prefix string" | --prefix "prefix string" | -c "search string | --contains "search string" ]
+history ( -d | --delete ) [ -t | --with-time ] [ -p "prefix string" | --prefix "prefix string" | -c "search string | --contains "search string" ]
+history ( -t | --with-time )
+history ( -h | --help )
 \endfish
 
 \subsection history-description Description
@@ -11,6 +16,7 @@ history ( --search | --delete ) [ --prefix "prefix string" | --contains "search 
 `history` is used to list, search and delete the history of commands used.
 
 The following options are available:
+
 - `--merge` immediately incorporates history changes from other sessions. Ordinarily `fish` ignores history changes from sessions started after the current one. This command applies those changes immediately.
 
 - `--save` saves all changes in the history file. The shell automatically saves the history file; this option is provided for internal use.
@@ -24,6 +30,8 @@ The following options are available:
 - `--prefix` searches or deletes items in the history that begin with the specified text string.
 
 - `--contains` searches or deletes items in the history that contain the specified text string.
+
+- `--with-time` prefixes the output of each displayed history entry with the time it was recorded in the format "%Y-%m-%d %H:%M:%S" in your local timezone.
 
 \subsection history-examples Example
 

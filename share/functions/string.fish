@@ -1,5 +1,5 @@
+# XXX nostring
 if not contains string (builtin -n)
-	# XXX nostring
 	function string
 		if not set -q __is_launched_without_string
 			if status --is-interactive
@@ -14,6 +14,10 @@ if not contains string (builtin -n)
 				set -g __is_launched_without_string 1
 			end
 	    end
-	    return 127
+	    # We hope that in $__fish_bin_path is a newer fish that can do `string` for us.
+	    
+	    set fish_user_paths $__fish_bin_dir $fish_user_paths
+	    set string_cmd string \'$argv\'
+	    fish -c "$string_cmd"
 	end                                                                  
 end

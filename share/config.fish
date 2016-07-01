@@ -26,8 +26,6 @@ if status --is-interactive
 		# When executed on fish 2.2.0, the `else' block after this would
 		# force on 24-bit mode due to changes to in test behavior.
 		# These "XXX nostring" hacks were added for 2.3.1
-
-		# Let's explain to the user what's going on. 
 		set_color --bold
 		echo "You appear to be trying to launch an old fish binary with newer scripts "
 		echo "installed into" (set_color --underline)"$__fish_datadir" 
@@ -37,7 +35,7 @@ if status --is-interactive
 		echo "You may need to uninstall and reinstall fish!"
 		set_color normal
 		# Remove this code when we've made it safer to upgrade fish.
-	else 
+	else
 		# Enable truecolor/24-bit support for select terminals
 		if not set -q NVIM_LISTEN_ADDRESS # (Neovim will swallow the 24bit sequences, rendering text white)
 			and begin

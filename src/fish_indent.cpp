@@ -213,7 +213,7 @@ static std::string ansi_colorize(const wcstring &text,
         }
         writech(text.at(i));
     }
-
+    set_color(rgb_color_t::normal(), rgb_color_t::normal());
     output_set_writer(saved);
     std::string result;
     result.swap(output_receiver);

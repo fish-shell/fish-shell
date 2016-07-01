@@ -50,8 +50,8 @@ static bool should_exit(wchar_t wc) {
             memcmp(recent_chars + 2, "\x4\x4", 2) == 0);   // ctrl-D, ctrl-D
 }
 
-/// Return the key name if the recent sequence of characters matches a known terminfo sequence.
-static char *const key_name(wchar_t wc) {
+/// Return the name if the recent sequence of characters matches a known terminfo sequence.
+static char *const sequence_name(wchar_t wc) {
     unsigned char c = wc < 0x80 ? wc : 0;
     static char recent_chars[8] = {0};
 
@@ -159,7 +159,7 @@ static void output_info_about_char(wchar_t wc) {
 }
 
 static bool output_matching_key_name(wchar_t wc) {
-    char *name = key_name(wc);
+    char *name = sequence_name(wc);
     if (name) {
         printf("bind -k %s 'do something'\n", name);
         free(name);

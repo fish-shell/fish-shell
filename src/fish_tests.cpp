@@ -3005,10 +3005,10 @@ void history_tests_t::test_history_races_pound_on_history()
     /* Called in child process to modify history */
     history_t *hist = new history_t(L"race_test");
     hist->chaos_mode = true;
-    const wcstring_list_t lines = generate_history_lines(getpid());
-    for (size_t idx = 0; idx < lines.size(); idx++)
+    const wcstring_list_t hist_lines = generate_history_lines(getpid());
+    for (size_t idx = 0; idx < hist_lines.size(); idx++)
     {
-        const wcstring &line = lines.at(idx);
+        const wcstring &line = hist_lines.at(idx);
         hist->add(line);
         hist->save();
     }
@@ -3053,17 +3053,17 @@ void history_tests_t::test_history_races(void)
     }
 
     // Compute the expected lines
-    wcstring_list_t lines[RACE_COUNT];
+    wcstring_list_t expected_lines[RACE_COUNT];
     for (size_t i=0; i < RACE_COUNT; i++)
     {
-        lines[i] = generate_history_lines(children[i]);
+        expected_lines[i] = generate_history_lines(children[i]);
     }
 
     // Count total lines
     size_t line_count = 0;
-    for (size_t i=0; i < RACE_COUNT; i++)
+    for (size_t i = 0; i < RACE_COUNT; i++)
     {
-        line_count += lines[i].size();
+        line_count += expected_lines[i].size();
     }
 
     // Ensure we consider the lines that have been outputted as part of our history
@@ -3082,13 +3082,13 @@ void history_tests_t::test_history_races(void)
         // The item must be present in one of our 'lines' arrays
         // If it is present, then every item after it is assumed to be missed
         size_t i;
-        for (i=0; i < RACE_COUNT; i++)
+        for (i = 0; i < RACE_COUNT; i++)
         {
-            wcstring_list_t::iterator where = std::find(lines[i].begin(), lines[i].end(), item.str());
-            if (where != lines[i].end())
+            wcstring_list_t::iterator where = std::find(expected_lines[i].begin(), expected_lines[i].end(), item.str());
+            if (where != expected_lines[i].end())
             {
                 // Delete everything from the found location onwards
-                lines[i].resize(where - lines[i].begin());
+                expected_lines[i].resize(where - expected_lines[i].begin());
 
                 // Break because we found it
                 break;

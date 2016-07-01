@@ -712,31 +712,31 @@ public:
 void parse_ll_t::dump_stack(void) const
 {
     // Walk backwards from the top, looking for parents
-    wcstring_list_t lines;
+    wcstring_list_t stack_lines;
     if (symbol_stack.empty())
     {
-        lines.push_back(L"(empty)");
+        stack_lines.push_back(L"(empty)");
     }
     else
     {
         node_offset_t child = symbol_stack.back().node_idx;
         node_offset_t cursor = child;
-        lines.push_back(nodes.at(cursor).describe());
+        stack_lines.push_back(nodes.at(cursor).describe());
         while (cursor--)
         {
             const parse_node_t &node = nodes.at(cursor);
             if (node.child_start <= child && node.child_start + node.child_count > child)
             {
-                lines.push_back(node.describe());
+                stack_lines.push_back(node.describe());
                 child = cursor;
             }
         }
     }
 
     fprintf(stderr, "Stack dump (%zu elements):\n", symbol_stack.size());
-    for (size_t idx = 0; idx < lines.size(); idx++)
+    for (size_t idx = 0; idx < stack_lines.size(); idx++)
     {
-        fprintf(stderr, "    %ls\n", lines.at(idx).c_str());
+        fprintf(stderr, "    %ls\n", stack_lines.at(idx).c_str());
     }
 }
 

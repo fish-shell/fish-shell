@@ -4,6 +4,9 @@
 # should be running it via `make test` to ensure the environment is properly
 # setup.
 
+# This is a list of flakey tests that often succeed when rerun.
+set TESTS_TO_RETRY bind.expect
+
 # Change to directory containing this script
 cd (dirname (status -f))
 
@@ -69,10 +72,19 @@ function test_file
     end
 end
 
-set -l failed
+set failed
 for i in $files_to_test
     if not test_file $i
-        set failed $failed $i
+        # Retry flakey tests once.
+        if contains $i $TESTS_TO_RETRY
+            say -o cyan "Rerunning test $i since it is known to be flakey"
+            rm -f $i.tmp.*
+            if not test_file $i
+                set failed $failed $i
+            end
+        else
+            set failed $failed $i
+        end
     end
 end
 

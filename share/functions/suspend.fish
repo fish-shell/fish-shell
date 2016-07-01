@@ -9,7 +9,7 @@ function suspend -d "Suspend the current shell."
         # XXX not sure if this echo should be necessary, but without it, it seems
         # everything printf'd above will not get pushed back to stdout before the suspend
         echo ""
-        # XXX there always causes a zombie until one fg's when we do this:
+        # XXX always causes a zombie until one fg's when we do this:
         kill -STOP %self
     else
         echo 2>&1 "Refusing to suspend login shell."

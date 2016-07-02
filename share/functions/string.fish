@@ -16,8 +16,10 @@ if not contains string (builtin -n)
 	    end
 	    # We hope that in $__fish_bin_path is a newer fish that can do `string` for us.
 	    
-	    set fish_user_paths $__fish_bin_dir $fish_user_paths
+	    set PATH $__fish_bin_dir $PATH
 	    set string_cmd string \'$argv\'
-	    fish -c "$string_cmd"
-	end                                                                  
+	   	fish -c 'contains string (builtin -n)'
+	   	and fish -c "$string_cmd"
+	   	or return 127
+	end                                                               
 end

@@ -19,6 +19,6 @@ If you are asking for help with fish, or you've found a bug:
 
 ---
 
-* fish version: *output of fish --version*
+* fish version: [output of fish --version]
 * OS: [your operating system and how you installed fish e.g. Homebrew, Ubuntu PPA, distribution package]
 * terminal: [e.g. PuTTy, iTerm2, GNOME Terminal, VT220]

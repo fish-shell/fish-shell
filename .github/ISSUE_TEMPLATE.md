@@ -1,24 +1,21 @@
-<!-- Thanks for helping to make fish better! 
-This problem might already be solved. Check that you are using the latest version of fish (2.3.0) or later. 
-Check https://github.com/fish-shell/fish-shell/issues - the problem may already be reported :)  -->
+- [ ] Did you do a [quick search](https://github.com/issues?utf8=✓&q=is%3Aissue+user%3Afish-shell)?
+- [ ] Check the [latest version](https://github.com/fish-shell/fish-shell/releases/tag/2.3.1) of fish?
 
-### Reproduction steps
+The problem is…
 
-1. [first step]
-2. [second step]...
+I'm using [`fish --version`] on [Operating System]. I have [this custom plugin installed]
 
-### Expected results
+## Reproduction steps
+1. 
 
-[...]
+## Expected results
+	~ $ math 2 + 2
+	2
+	~ $ 
 
-### Actual results
+## Actual results
 
-[...]
 
----
+## Additonal Information
 
-[any additional information here]
-
-* fish version: [output of fish --version]
-* OS: [your operating system]
-* terminal: [e.g. PuTTy, iTerm2, GNOME Terminal, VT220]
+maybe a [recording](https://asciinema.org) helps

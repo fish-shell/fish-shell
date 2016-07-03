@@ -1,9 +1,18 @@
-# fish $nextversion (unreleased)
+# fish 2.3.1 (unreleased)
 
 ## Significant changes
 
-- The clipboard integration has been removed in favor of explicit bindings (#3061)
+- The clipboard integration has been revamped with explicit bindings. OS X clipboard support provided for out of the box in addition to X11. (#3061)
+- The `key_reader` utility was renamed to `fish_key_reader` and is now built by default. (#2991)
 
+## Other notable fixes and improvements
+- `fish_config` didn't work in fish.app (OS X) if one didn't already have fish installed by some other means. (#3140)
+- `type -a` now syntax-colorizes function source output.
+- Improvements to `suspend` (#3154), 
+- New completions for: 
+
+##Known issues 
+  
 # fish 2.3.0 (released May 20, 2016)
 
 There are no significant changes between 2.3.0 and 2.3b2.

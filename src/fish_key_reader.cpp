@@ -173,7 +173,7 @@ static double output_elapsed_time(double prev_tstamp, bool first_char_seen) {
     double now = timef();
     long long int delta_tstamp_us = 1000000 * (now - prev_tstamp);
 
-    if (delta_tstamp_us >= 200000 && first_char_seen) putchar('\n');
+    if (delta_tstamp_us >= 200000 && first_char_seen) putc('\n', stderr);
     if (delta_tstamp_us >= 1000000) {
         fprintf(stderr, "              ");
     } else {

@@ -1,8 +1,12 @@
 <!--- Provide a general summary of your changes in the Title above -->
 
-## Description
+### Description
 <!--- Describe your changes in detail -->
+
+### Rationale
 <!--- Why is this change required? What problem does it solve? -->
+
+### Related Issue
 <!--- This project prefers pull requests have an *open* issue associated -->
 <!--- If fixing a bug, there should be an issue describing that bug or an adjacent issue -->
 Fixes #0000.
@@ -11,7 +15,7 @@ Fixes #0000.
 
 ----
 
-## Checklist:
+### Checklist:
 <!--- Go over all the following points, and put an `x` in all the boxes that apply. Fish developers will adjust these. -->
 <!--- Leave blank if unsure, we can help. If a change merits coverage in CHANGELOG.md, take care of it before merge! -->
 <!--- If a PR is merged but tasks remain incomplete, the PR shall remain open.  -->

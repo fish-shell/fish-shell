@@ -2,21 +2,30 @@
 ## Significant changes
 - The clipboard integration has been revamped with explicit bindings. OS X clipboard support provided for out of the box in addition to X11. (#3061)
 
-# fish 2.3.1 (unreleased)
+---
+
+# fish 2.3.1 (released July 3, 2016)
+
+This is a functionality and bugfix release. This release does not contain all the changes to fish since the last release, but fixes a number of issues directly affecting users at present and includes a small number of new features.
 
 ## Significant changes
-- The `key_reader` utility was renamed to `fish_key_reader` and is now built by default. (#2991)
+- A new `fish_key_reader` binary for decoding interactive keypresses (#2991).
+- `fish_mode_prompt` has been updated to reflect the changes in the way the Vi input mode is set up (#3067), making this more reliable.
+- `fish_config` can now properly be launched from the OS X app bundle (#3140).
 
-## Other notable fixes and improvements
-- Paper over mayhem caused with missing `string` builtin while old versions of fish are still running moments after upgrading to fish 2.3 (#3057, #3065, #3125, #3141)
-- Fish is less confused about locales now than it was when 2.3.0 was released. (#3124, )
-- `fish_config` didn't work in fish.app (OS X) if one didn't already have fish installed by some other means. (#3140)
+## Notable fixes and improvements
+
+- Extra lines were sometimes inserted into the output under Windows (Cygwin and Microsoft Windows Subsystem for Linux) due to TTY timestamps not being updated (#2859).
+- The `string` builtin's `match` mode now handles the combination of `-rnv` (match, invert and count) correctly (#3098).
+- Improvements to TTY special character handling (#3064), locale handling (#3124) and terminal environment variable handling (#3060).
+- Work towards handling the terminal modes for external commands launched from initialisation files (#2980).
+- Ease the upgrade path from fish 2.2.0 and before by warning users to restart fish if the `string` builtin is not available (#3057).
 - `type -a` now syntax-colorizes function source output.
-- Improvements to `suspend` function (#3154), 
-- New completions for: alsamixer, godoc, gofmt, goimports, golint, gorename, ip, lscpu, mkdir, modinfo, netctl-auto, networkctl, poweroff, termite, udisksctl, xz
+- Added completions for `alsamixer`, `godoc`, `gofmt`, `goimports`, `gorename`, `lscpu`, `mkdir`, `modinfo`, `netctl-auto`, `poweroff`, `termite`, `udisksctl` and `xz` (#3123).
+- Improved completions for `apt` (#3097), `aura` (#3102),`git` (#3114), `npm` (#3158), `string` and `suspend` (#3154).
 
-##Known issues 
-  
+---
+
 # fish 2.3.0 (released May 20, 2016)
 
 There are no significant changes between 2.3.0 and 2.3b2.

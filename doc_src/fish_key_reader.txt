@@ -15,6 +15,4 @@ The timing data may be useful to determine a preferred `fish_escape_delay_ms` se
 
 - `-c` or `--continuous` begins a session where mutlitple key sequences can be inspected. By default the program exits after capturing a single key sequence. Press `^D` twice or type `exit` to exit. 
 
-- `-d` or `--debug-level=DEBUG_LEVEL` enables debug output and specifies a verbosity level. Like `fish -d`. 
-
-- `-D` or `--debug-stack-frames=DEBUG_LEVEL` specifies how many stack frames to display when debug messages are written. The default is zero.
+- `-d` or `--debug-level=DEBUG_LEVEL` enables debug output and specifies a verbosity level. Like `fish -d`.

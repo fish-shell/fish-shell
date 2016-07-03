@@ -1,20 +1,19 @@
-- [ ] Did you do a [quick search](https://github.com/issues?utf8=✓&q=is%3Aissue+user%3Afish-shell)?
-- [ ] Check the [latest version](https://github.com/fish-shell/fish-shell/releases/tag/2.3.1) of fish?
+- [ ] Did you do [a quick search?](/issues?utf8=✓&q=is:issue+user:fish-shell)
+- [ ] Try [with the latest](/fish-shell/fish-shell/releases/tag/2.3.1) fish version?
 
-The problem is…
-
-I'm using [`fish --version`] on [this OS]. I have [this plugin]
+The problem is that … on `fish --version` with *this OS* and **these fish plugins** installed.
 
 ## Reproduction steps
-1. 
+1. Launch fish
+2. …
 
 ## Expected results
-	~ $ math 2 + 2
-	2
+Fish should…
 
 ## Actual results
-[...]
+	~ $ math 2 + 2
+	5
 
 ## Additonal Information
-
-[maybe a [recording](https://asciinema.org) helps]
+Further thoughts… 
+Maybe linking to [a screen recording](https://asciinema.org) helps

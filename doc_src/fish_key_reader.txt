@@ -11,7 +11,7 @@ fish_key_reader [-c | --continuous] [-d | --debug-level] [-D | --debug-stack-fra
 
 Before exiting, the tool will output an example bind command which matches the sequence captured.
 
-The timing data may be useful to determine a preferred `fish_escape_delay_ms` setting or learning the amount of lag introduced by `ssh` or `tmux`.
+The timing data may be useful to determine a preferred `fish_escape_delay_ms` setting or learn the amount of lag introduced by `ssh` or `tmux`.
 
 - `-c` or `--continuous` begins a session where mutlitple key sequences can be inspected. By default the program exits after capturing a single key sequence. Press `^D` twice or type `exit` to exit. 
 

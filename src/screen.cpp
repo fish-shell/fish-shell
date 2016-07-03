@@ -264,11 +264,11 @@ size_t escape_code_length(const wchar_t *code) {
 // Information about a prompt layout.
 struct prompt_layout_t {
     // How many lines the prompt consumes.
-    size_t line_count = 0;
+    size_t line_count;
     // Width of the longest line.
-    size_t max_line_width = 0;
+    size_t max_line_width;
     // Width of the last line.
-    size_t last_line_width = 0;
+    size_t last_line_width;
 };
 
 /// Calculate layout information for the given prompt. Does some clever magic to detect common
@@ -276,7 +276,7 @@ struct prompt_layout_t {
 static prompt_layout_t calc_prompt_layout(const wchar_t *prompt) {
     prompt_layout_t prompt_layout = {};
 
-    if (prompt == nullptr || !prompt[0]) {
+    if (prompt == 0 || !prompt[0]) {
         return prompt_layout;
     }
 
@@ -309,10 +309,6 @@ static prompt_layout_t calc_prompt_layout(const wchar_t *prompt) {
     }
     prompt_layout.last_line_width = current_line_width;
     return prompt_layout;
-}
-
-static size_t calc_prompt_lines(const wcstring &prompt) {
-    return calc_prompt_layout(prompt.c_str()).line_count;
 }
 
 /// Stat stdout and stderr and save result. This should be done before calling a function that may
@@ -1183,8 +1179,8 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // by lying to ourselves and claiming that we're really below what we consider "line 0"
         // (which is the last line of the prompt). This will cause us to move up to try to get back
         // to line 0, but really we're getting back to the initial line of the prompt.
-        const auto prompt_layout = calc_prompt_layout(s->actual_left_prompt.c_str());
-        const auto current_width = static_cast<unsigned int>(common_get_width());
+        const prompt_layout_t prompt_layout = calc_prompt_layout(s->actual_left_prompt.c_str());
+        const unsigned int current_width = static_cast<unsigned int>(common_get_width());
         assert(prompt_layout.line_count >= 1);
 
         if (prompt_layout.line_count > 1) {

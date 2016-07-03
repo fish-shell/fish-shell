@@ -7,9 +7,9 @@ fish_key_reader [-c | --continuous] [-d | --debug-level] [-D | --debug-stack-fra
 
 \subsection fish_key_reader-description Description
 
-`fish_key_reader` can be used to interrogate the characters received by `fish` and figure out key binds. If the sequence of characters matches a key name recognized by the `bind` command, `bind`'s representation will be shown. Also output are decimal, hexadecimal and symbolic values of the character and the delay in milliseconds since the previous character was received.
+`fish_key_reader` can be used to interrogate the characters received by `fish` and figure out key binds. If the sequence of characters matches a key name recognized by the `bind` command, `bind`'s representation will be shown. The delay in milliseconds since the previous character was received is also shown.
 
-Before exiting, the tool will output an example bind command which matches the sequence captured.
+The tool will output an example bind command matching the sequence captured which can be fed back into fish after being given.
 
 The timing data may be useful to determine a preferred `fish_escape_delay_ms` setting or learn the amount of lag introduced by `ssh` or `tmux`.
 

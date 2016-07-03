@@ -1,6 +1,6 @@
 # fish 2.3.1 (released July 3, 2016)
 
-This is a functionality and bugfix release. This release does not contain all the changes to the fish source code but fixes a number of features directly affecting users at present.
+This is a functionality and bugfix release. This release does not contain all the changes to fish since the last release, but fixes a number of issues directly affecting users at present and includes a small number of new features.
 
 ## Significant changes
 - A new `fish_key_reader` binary for decoding interactive keypresses (#2991).
@@ -17,7 +17,6 @@ This is a functionality and bugfix release. This release does not contain all th
 - `type -a` now syntax-colorizes function source output.
 - Added completions for `alsamixer`, `godoc`, `gofmt`, `goimports`, `gorename`, `lscpu`, `mkdir`, `modinfo`, `netctl-auto`, `poweroff`, `termite`, `udisksctl` and `xz` (#3123).
 - Improved completions for `apt` (#3097), `aura` (#3102),`git` (#3114), `npm` (#3158), `string` and `suspend` (#3154).
-
 
 ---
 

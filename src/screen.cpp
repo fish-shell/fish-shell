@@ -274,14 +274,8 @@ struct prompt_layout_t {
 /// Calculate layout information for the given prompt. Does some clever magic to detect common
 /// escape sequences that may be embeded in a prompt, such as color codes.
 static prompt_layout_t calc_prompt_layout(const wchar_t *prompt) {
-    prompt_layout_t prompt_layout = {};
-
-    if (prompt == 0 || !prompt[0]) {
-        return prompt_layout;
-    }
-
+    prompt_layout_t prompt_layout = {1, 0, 0};
     size_t current_line_width = 0;
-    prompt_layout.line_count = 1;
 
     for (size_t j = 0; prompt[j]; j++) {
         if (prompt[j] == L'\x1b') {

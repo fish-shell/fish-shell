@@ -24,6 +24,7 @@
 #include "input.h"
 #include "input_common.h"
 #include "proc.h"
+#include "print_help.h"
 #include "reader.h"
 #include "signal.h"
 #include "wutil.h" // IWYU pragma: keep
@@ -289,10 +290,11 @@ static void setup_and_process_keys(bool continuous_mode) {
 int main(int argc, char **argv) {
     program_name = L"fish_key_reader";
     bool continuous_mode = false;
-    const char *short_opts = "+cd:D:";
+    const char *short_opts = "+cd:D:h";
     const struct option long_opts[] = {{"continuous", no_argument, NULL, 'c'},
                                        {"debug-level", required_argument, NULL, 'd'},
                                        {"debug-stack-frames", required_argument, NULL, 'D'},
+                                       {"help", no_argument, NULL, 'h'},
                                        {NULL, 0, NULL, 0}};
     int opt;
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
@@ -304,6 +306,10 @@ int main(int argc, char **argv) {
             case 'c': {
                 continuous_mode = true;
                 break;
+            }
+            case 'h': {
+                print_help("fish_key_reader", 0);
+                exit(0);
             }
             case 'd': {
                 char *end;

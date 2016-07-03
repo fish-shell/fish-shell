@@ -9,9 +9,10 @@
 
 ## Other notable fixes and improvements
 - Paper over mayhem caused with missing `string` builtin while old versions of fish are still running moments after upgrading to fish 2.3 (#3057, #3065, #3125, #3141)
+- Fish is less confused about locales now than it was when 2.3.0 was released. (#3124, )
 - `fish_config` didn't work in fish.app (OS X) if one didn't already have fish installed by some other means. (#3140)
 - `type -a` now syntax-colorizes function source output.
-- Improvements to `suspend` (#3154), 
+- Improvements to `suspend` function (#3154), 
 - New completions for: 
 
 ##Known issues 

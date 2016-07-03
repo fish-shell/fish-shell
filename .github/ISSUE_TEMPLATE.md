@@ -3,7 +3,7 @@
 
 The problem is…
 
-I'm using [`fish --version`] on [Operating System]. I have [this custom plugin installed]
+I'm using [`fish --version`] on [this OS]. I have [this plugin]
 
 ## Reproduction steps
 1. 
@@ -11,11 +11,10 @@ I'm using [`fish --version`] on [Operating System]. I have [this custom plugin i
 ## Expected results
 	~ $ math 2 + 2
 	2
-	~ $ 
 
 ## Actual results
-
+[...]
 
 ## Additonal Information
 
-maybe a [recording](https://asciinema.org) helps
+[maybe a [recording](https://asciinema.org) helps]

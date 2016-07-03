@@ -13,7 +13,7 @@
 - `fish_config` didn't work in fish.app (OS X) if one didn't already have fish installed by some other means. (#3140)
 - `type -a` now syntax-colorizes function source output.
 - Improvements to `suspend` function (#3154), 
-- New completions for: 
+- New completions for: alsamixer, godoc, gofmt, goimports, golint, gorename, ip, lscpu, mkdir, modinfo, netctl-auto, networkctl, poweroff, termite, udisksctl, xz
 
 ##Known issues 
   

@@ -7,17 +7,17 @@ fish_key_reader [-c] [-d LEVEL]
 
 \subsection fish_key_reader-description Description
 
-`fish_key_reader` is used to study input `fish` receives from the terminal and can help with key binds. The program is interactive and works on standard input. Individual characters themselves and their hexadecimal values are displayed. 
+`fish_key_reader` is used to study input received from the terminal and can help with key binds. The program is interactive and works on standard input. Individual characters themselves and their hexadecimal values are displayed. 
 
-The tool will output an example `bind` command matching the character sequence captured. If a character sequence is read that matches a key name recognized by the `bind` command (see `bind --key-names`), additionally a bind command will also be shown for `bind -k` usage.
+The tool will output an example `bind` command matching the character sequence captured. If the character sequence matches a special key name (see `bind --key-names`),  both `bind CHARS ...` and `bind -k KEYNAME ...` usage will be shown.
 
 The following parameters are available:
 
 - `-c` or `--continuous` begins a session where multiple key sequences can be inspected. By default the program exits after capturing a single key sequence. 
 
-- `-d` or `--debug-level=DEBUG_LEVEL` enables debug output and specifies a verbosity level. Like `fish -d`.
+- `-d` or `--debug-level=DEBUG_LEVEL` enables debug output and specifies a verbosity level (like `fish -d`). Defaults to 0.
 
-If using `-c`, the delay in milliseconds since the previous character was received is also shown. This timing data may be useful to determine a preferred `fish_escape_delay_ms` setting or learn the amount of lag introduced by `ssh` or `tmux`.
+In continuous mode (`-c`), the delay in milliseconds since the previous character was received is also shown. This information may be useful to determine a preferred `fish_escape_delay_ms` setting or learn the amount of lag introduced by `ssh` or `tmux`.
 
 `fish_key_reader` intentionally disables handling of many signals. To terminate `fish_key_reader` in a `--continuous` run:
 - press `Ctrl-C` twice, or

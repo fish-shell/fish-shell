@@ -155,7 +155,7 @@ static void output_bind_command(std::vector<wchar_t> &bind_chars) {
 }
 
 static void output_info_about_char(wchar_t wc) {
-    printf("hex: %4X  char: %s\n", wc, char_to_symbol(wc, false));
+   fprintf(stderr, "hex: %4X  char: %s\n", wc, char_to_symbol(wc, false));
 }
 
 static bool output_matching_key_name(wchar_t wc) {
@@ -175,9 +175,9 @@ static double output_elapsed_time(double prev_tstamp, bool first_char_seen) {
 
     if (delta_tstamp_us >= 200000 && first_char_seen) putchar('\n');
     if (delta_tstamp_us >= 1000000) {
-        printf("              ");
+        fprintf(stderr, "              ");
     } else {
-        printf("(%3lld.%03lld ms)  ", delta_tstamp_us / 1000, delta_tstamp_us % 1000);
+        fprintf(stderr, "(%3lld.%03lld ms)  ", delta_tstamp_us / 1000, delta_tstamp_us % 1000);
     }
     return now;
 }
@@ -188,7 +188,7 @@ static void process_input(bool continuous_mode) {
     double prev_tstamp = 0.0;
     std::vector<wchar_t> bind_chars;
 
-    printf("Press a key\n\n");
+    fprintf(stderr, "Press a key\n\n");
     while (keep_running) {
         wchar_t wc = input_common_readch(true);
         if (wc == WEOF) {
@@ -208,7 +208,7 @@ static void process_input(bool continuous_mode) {
         }
 
         if (should_exit(wc)) {
-            printf("\nExiting at your request.\n");
+            fprintf(stderr, "\nExiting at your request.\n");
             break;
         }
 
@@ -273,10 +273,10 @@ static void setup_and_process_keys(bool continuous_mode) {
     install_our_signal_handlers();
 
     if (continuous_mode) {
-        printf("\n");
-        printf("To terminate this program type \"exit\" or \"quit\" in this window,\n");
-        printf("or press [ctrl-C] or [ctrl-D] twice in a row.\n");
-        printf("\n");
+        fprintf(stderr, "\n");
+        fprintf(stderr, "To terminate this program type \"exit\" or \"quit\" in this window,\n");
+        fprintf(stderr, "or press [ctrl-C] or [ctrl-D] twice in a row.\n");
+        fprintf(stderr, "\n");
     }
 
     process_input(continuous_mode);
@@ -348,8 +348,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
-        fprintf(stderr, "Stdin and stdout must be attached to a tty, redirection not allowed.\n");
+    if (!isatty(STDIN_FILENO)) {
+        fprintf(stderr, "Stdin must be attached to a tty.\n");
         return 1;
     }
 

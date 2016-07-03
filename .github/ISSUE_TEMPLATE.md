@@ -1,12 +1,6 @@
 <!-- Thanks for helping to make fish better! 
 This problem might already be solved. Check that you are using the latest version of fish (2.3.0) or later. 
-Check https://github.com/fish-shell/fish-shell/issues - the problem may already be reported :)
-
-Don't skip these: -->
-
-* fish version: [output of fish --version]
-* OS: [your operating system]
-* terminal: [e.g. PuTTy, iTerm2, GNOME Terminal, VT220]
+Check https://github.com/fish-shell/fish-shell/issues - the problem may already be reported :)  -->
 
 ### Reproduction steps
 
@@ -24,3 +18,7 @@ Don't skip these: -->
 ---
 
 [any additional information here]
+
+* fish version: [output of fish --version]
+* OS: [your operating system]
+* terminal: [e.g. PuTTy, iTerm2, GNOME Terminal, VT220]

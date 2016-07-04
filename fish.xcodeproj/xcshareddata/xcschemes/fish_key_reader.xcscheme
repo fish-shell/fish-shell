@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0730"
+   LastUpgradeVersion = "0800"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D00769101990137800CA4627"
-               BuildableName = "fish_tests"
-               BlueprintName = "fish_tests"
+               BlueprintIdentifier = "9CB9CDE31D2A78E000E057F0"
+               BuildableName = "fish_key_reader"
+               BlueprintName = "fish_key_reader"
                ReferencedContainer = "container:fish.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D00769101990137800CA4627"
-            BuildableName = "fish_tests"
-            BlueprintName = "fish_tests"
+            BlueprintIdentifier = "9CB9CDE31D2A78E000E057F0"
+            BuildableName = "fish_key_reader"
+            BlueprintName = "fish_key_reader"
             ReferencedContainer = "container:fish.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -55,19 +55,12 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D00769101990137800CA4627"
-            BuildableName = "fish_tests"
-            BlueprintName = "fish_tests"
+            BlueprintIdentifier = "9CB9CDE31D2A78E000E057F0"
+            BuildableName = "fish_key_reader"
+            BlueprintName = "fish_key_reader"
             ReferencedContainer = "container:fish.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "RUNNING_IN_XCODE"
-            value = "1"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -81,9 +74,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D00769101990137800CA4627"
-            BuildableName = "fish_tests"
-            BlueprintName = "fish_tests"
+            BlueprintIdentifier = "9CB9CDE31D2A78E000E057F0"
+            BuildableName = "fish_key_reader"
+            BlueprintName = "fish_key_reader"
             ReferencedContainer = "container:fish.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

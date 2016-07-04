@@ -108,7 +108,7 @@ In general, special characters are special by default, so `a+` matches one or mo
 
 \fish{cli-dark}
 >_ echo \\x07 | string escape
-\bksl{cg}
+<bs>cg</bs>
 \endfish
 
 \subsection string-example-match-glob Match Glob Examples
@@ -141,7 +141,13 @@ In general, special characters are special by default, so `a+` matches one or mo
 \outp{dog4}
 \endfish
 
->_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' \asis{2:34:56}
+\subsection string-example-match-regex Match Regex Examples
+
+\fish{cli-dark}
+>_ string match -r 'cat|dog|fish' 'nice dog'
+\outp{dog}
+
+>_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' <asis>2:34:56</asis>
 \outp{2:34:56}
 \outp{2}
 \outp{34}

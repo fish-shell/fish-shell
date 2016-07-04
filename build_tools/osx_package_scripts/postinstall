@@ -1,3 +1,7 @@
 #!/bin/sh -x
 
-./add-shell /usr/local/bin/fish > /tmp/fish_postinstall_output.log
+logger -t postinstall $1 installed into $2 on $3. setting shell to /usr/local/bin/fish. 
+# $1: full path to package
+# $2: full path to install dir
+# $3: Mountpoint of installation disk: / or /Volumes/...
+./add-shell /usr/local/bin/fish | logger -s -t add-shell

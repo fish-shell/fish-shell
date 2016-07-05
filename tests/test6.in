@@ -1,5 +1,12 @@
 # vim: set filetype=fish:
 
+# Regression test for issue #3129. In previous versions these statements would
+# cause an `assert()` to fire thus killing the shell.
+complete -c pkill -o ''
+complete -c pkill -d ''
+complete -c pkill -l ''
+complete -c pkill -s ''
+
 # Test that conditions that add or remove completions don't deadlock, etc.
 # We actually encountered some case that was effectively like this (Issue 2 in github)
 

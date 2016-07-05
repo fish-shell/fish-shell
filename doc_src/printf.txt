@@ -37,21 +37,21 @@ Valid format specifiers are:
 Note that conversion may fail, e.g. "102.234" will not losslessly convert to an integer, causing printf to print an error.
 
 printf also knows a number of backslash escapes:
-- `\"` double quote
+- `\\"` double quote
 - `\\` backslash
-- `\a` alert (bell)
-- `\b` backspace
-- `\c` produce no further output
-- `\e` escape
-- `\f` form feed
-- `\n` new line
-- `\r` carriage return
-- `\t` horizontal tab
-- `\v` vertical tab
-- `\ooo` octal number (ooo is 1 to 3 digits)
-- `\xhh` hexadecimal number (hhh is 1 to 2 digits)
-- `\uhhhh` 16-bit Unicode character (hhhh is 4 digits)
-- `\Uhhhhhhhh` 32-bit Unicode character (hhhhhhhh is 8 digits)
+- `\\a` alert (bell)
+- `\\b` backspace
+- `\\c` produce no further output
+- `\\e` escape
+- `\\f` form feed
+- `\\n` new line
+- `\\r` carriage return
+- `\\t` horizontal tab
+- `\\v` vertical tab
+- `\\ooo` octal number (ooo is 1 to 3 digits)
+- `\\xhh` hexadecimal number (hhh is 1 to 2 digits)
+- `\\uhhhh` 16-bit Unicode character (hhhh is 4 digits)
+- `\\Uhhhhhhhh` 32-bit Unicode character (hhhhhhhh is 8 digits)
 
 The `format' argument is re-used as many times as necessary to convert all of the given arguments. If a format specifier is not appropriate for the given argument, an error is printed. For example, `printf '%d' "102.234"` produces an error, as "102.234" cannot be formatted as an integer.
 

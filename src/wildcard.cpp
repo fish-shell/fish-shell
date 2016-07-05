@@ -899,6 +899,22 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory
         return 0;
     }
 
+    // Fix for #3185. We'd like to assume directories are delimited by single slashes, so we
+    // make that the case by consolidating consecutive slashes.
+    wcstring effective_wc;
+    bool found_slash = false;
+    for (size_t i = 0; i < wc.size(); i++) {
+        if (wc[i] != '/') {
+            found_slash = false;
+        }
+        if (!found_slash) {
+            effective_wc.push_back(wc[i]);
+        }
+        if (wc[i] == '/') {
+            found_slash = true;
+        }
+    }
+
     // Compute the prefix and base dir. The prefix is what we prepend for filesystem operations
     // (i.e. the working directory), the base_dir is the part of the wildcard consumed thus far,
     // which we also have to append. The difference is that the base_dir is returned as part of the
@@ -907,15 +923,14 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory
     // Check for a leading slash. If we find one, we have an absolute path: the prefix is empty, the
     // base dir is /, and the wildcard is the remainder. If we don't find one, the prefix is the
     // working directory, there's base dir is empty.
-    wcstring prefix, base_dir, effective_wc;
-    if (string_prefixes_string(L"/", wc)) {
+    wcstring prefix, base_dir;
+    if (string_prefixes_string(L"/", effective_wc)) {
         prefix = L"";
         base_dir = L"/";
-        effective_wc = wc.substr(1);
+        effective_wc = effective_wc.substr(1);
     } else {
         prefix = working_directory;
         base_dir = L"";
-        effective_wc = wc;
     }
 
     wildcard_expander_t expander(prefix, base_dir, effective_wc.c_str(), flags, output);

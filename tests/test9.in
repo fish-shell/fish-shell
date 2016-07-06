@@ -145,5 +145,3 @@ end
 # Comments abutting text (#953)
 echo not#a#comment
 echo is # a # comment
-
-false

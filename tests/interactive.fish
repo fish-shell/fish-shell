@@ -33,7 +33,7 @@ function test_file
         set -lx TERM dumb
         expect -n -c 'source interactive.expect.rc' -f $file >$file.tmp.out ^$file.tmp.err
     end
-    set -l tmp_status $status
+    set -l exit_status $status
     set -l res ok
     mv -f interactive.tmp.log $file.tmp.log
 
@@ -41,9 +41,8 @@ function test_file
     set -l out_status $status
     diff $file.tmp.err $file.err >/dev/null
     set -l err_status $status
-    set -l exp_status (cat $file.status)[1]
 
-    if test $out_status -eq 0 -a $err_status -eq 0 -a $exp_status -eq $tmp_status
+    if test $out_status -eq 0 -a $err_status -eq 0 -a $exit_status -eq 0
         say green "ok"
         # clean up tmp files
         rm -f $file.tmp.{err,out,log}
@@ -58,9 +57,9 @@ function test_file
             say yellow "Error output differs for file $file. Diff follows:"
             colordiff -u $file.tmp.err $file.err
         end
-        if test $exp_status -ne $tmp_status
+        if test $exit_status -ne 0
             say yellow "Exit status differs for file $file."
-            echo "Expected $exp_status, got $tmp_status."
+            echo "Unexpected test exit status $exit_status."
         end
         if set -q SHOW_INTERACTIVE_LOG
             # dump the interactive log

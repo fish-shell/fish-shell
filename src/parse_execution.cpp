@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -711,6 +713,29 @@ parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_er
     return parse_execution_errored;
 }
 
+// Given a command string that might contain fish special tokens return a string without those
+// tokens.
+static wcstring reconstruct_orig_cmd(wcstring cmd_str) {
+    // TODO(krader1961): Figure out what VARIABLE_EXPAND means in this context. After looking at the
+    // code and doing various tests I couldn't figure out why that token would be present when this
+    // code is run. I was therefore unable to determine how to substitute its presence in the error
+    // message.
+    wcstring orig_cmd = cmd_str;
+
+    if (cmd_str.find(VARIABLE_EXPAND_SINGLE) != std::string::npos) {
+        // Variable was quoted to force expansion of multiple elements into a single element.
+        //
+        // The following isn't entirely correct. For example, $abc"$def" will become "$abc$def".
+        // However, anyone writing the former is asking for trouble so I don't feel bad about not
+        // accurately reconstructing what they typed.
+        wcstring new_cmd_str = wcstring(cmd_str);
+        std::replace(new_cmd_str.begin(), new_cmd_str.end(), (wchar_t)VARIABLE_EXPAND_SINGLE, L'$');
+        orig_cmd = L"\"" + new_cmd_str + L"\"";
+    }
+
+    return orig_cmd;
+}
+
 /// Handle the case of command not found.
 parse_execution_result_t parse_execution_context_t::handle_command_not_found(
     const wcstring &cmd_str, const parse_node_t &statement_node, int err_code) {
@@ -744,15 +769,12 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
             this->report_error(statement_node, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, name_str.c_str(),
                                val_str.c_str());
         }
-    } else if ((cmd[0] == L'$' || cmd[0] == VARIABLE_EXPAND || cmd[0] == VARIABLE_EXPAND_SINGLE) &&
-               cmd[1] != L'\0') {
+    } else if (wcschr(cmd, L'$') || wcschr(cmd, VARIABLE_EXPAND_SINGLE) ||
+               wcschr(cmd, VARIABLE_EXPAND)) {
+        wcstring eval_cmd = reconstruct_orig_cmd(cmd_str);
         this->report_error(statement_node, _(L"Variables may not be used as commands. In fish, "
                                              L"please define a function or use 'eval %ls'."),
-                           cmd);
-    } else if (wcschr(cmd, L'$')) {
-        this->report_error(
-            statement_node,
-            _(L"Commands may not contain variables. In fish, please use 'eval %ls'."), cmd);
+                           eval_cmd.c_str());
     } else if (err_code != ENOENT) {
         this->report_error(statement_node, _(L"The file '%ls' is not executable by this user"),
                            cmd ? cmd : L"UNKNOWN");

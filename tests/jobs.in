@@ -3,3 +3,4 @@ sleep 1 &
 jobs -c
 bg 3
 fg 3
+or exit 0

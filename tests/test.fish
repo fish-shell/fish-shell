@@ -25,16 +25,15 @@ function test_file
     echo -n "Testing file $file ... "
 
     ../test/root/bin/fish <$file >$base.tmp.out ^$base.tmp.err
-    set -l tmp_status $status
+    set -l exit_status $status
     set -l res ok
 
     diff $base.tmp.out $base.out >/dev/null
     set -l out_status $status
     diff $base.tmp.err $base.err >/dev/null
     set -l err_status $status
-    set -l exp_status (cat $base.status)[1]
 
-    if test $out_status -eq 0 -a $err_status -eq 0 -a $exp_status -eq $tmp_status
+    if test $out_status -eq 0 -a $err_status -eq 0 -a $exit_status -eq 0
         say green "ok"
         # clean up tmp files
         rm -f $base.tmp.{err,out}
@@ -49,9 +48,9 @@ function test_file
             say yellow "Error output differs for file $file. Diff follows:"
             colordiff -u $base.tmp.err $base.err
         end
-        if test $exp_status -ne $tmp_status
+        if test $exit_status -ne 0
             say yellow "Exit status differs for file $file."
-            echo "Expected $exp_status, got $tmp_status."
+            echo "Unexpected test exit status $exit_status."
         end
         return 1
     end

@@ -3,7 +3,7 @@
 
 Talk about the the issue here. 
 
-**fish verison installed**: `fish --version`
+**fish version installed**: `fish --version`
 **OS/terminal used**: 
 
 ## Reproduction steps

@@ -1225,6 +1225,9 @@ static void test_expand() {
     expand_test(L"/tmp/fish_expand_test/**z/xxx", 0, L"/tmp/fish_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing 3");
 
+    expand_test(L"/tmp/fish_expand_test////baz/xxx", 0, L"/tmp/fish_expand_test////baz/xxx", wnull,
+                L"Glob did the wrong thing 3");
+
     expand_test(L"/tmp/fish_expand_test/b**", 0, L"/tmp/fish_expand_test/b",
                 L"/tmp/fish_expand_test/b/x", L"/tmp/fish_expand_test/bar",
                 L"/tmp/fish_expand_test/bax", L"/tmp/fish_expand_test/bax/xxx",
@@ -1289,6 +1292,11 @@ static void test_expand() {
 
     expand_test(L"b/xx", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, L"bax/xxx", L"baz/xxx", wnull,
                 L"Wrong fuzzy matching 5");
+
+    // multiple slashes with fuzzy matching - #3185
+    expand_test(L"l///n", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
+                L"lol///nub/", wnull,
+                L"Wrong fuzzy matching 6");
 
     if (chdir_set_pwd(saved_wd)) {
         err(L"chdir failed");

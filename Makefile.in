@@ -575,7 +575,8 @@ xcode-install:
 
 #
 # Actually do the installation. These 'true' lines are to prevent installs
-# from failing for (e.g.) missing man pages.
+# from failing for (e.g.) missing man pages or extra_dirs outside the
+# writeable prefix.
 #
 install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
@@ -587,9 +588,9 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/conf.d
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
-	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir)
-	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir)
-	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir)
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir); true
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir); true
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir); true
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools

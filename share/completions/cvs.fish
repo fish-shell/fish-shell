@@ -347,7 +347,7 @@ complete -c cvs -n 'contains \'rannotate\' (commandline -poc)' -s D -x --descrip
 # Completions for the 'rdiff' subcommand
 #
 
-complete -c cvs -n 'contains \'rdiff\' (commandline -poc)' -s r -x --description 'Date [-r rev2 | -D date2] modules...'
+complete -c cvs -n 'contains \'rdiff\' (commandline -poc)' -s r -x --description 'Date [-r rev2 | -D date2] modules…'
 complete -c cvs -n 'contains \'rdiff\' (commandline -poc)' -s f --description 'Force a head revision match if tag/date not found.'
 complete -c cvs -n 'contains \'rdiff\' (commandline -poc)' -s l --description 'Local directory only, not recursive'
 complete -c cvs -n 'contains \'rdiff\' (commandline -poc)' -s R --description 'Process directories recursively.'

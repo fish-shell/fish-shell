@@ -31,6 +31,8 @@ Note 1: Setting either color to "normal" will reset both background and foregrou
 
 Note 2: Setting the background color only affects subsequently written characters. Fish provides no way to set the background color for the entire terminal window. Configuring the window background color (and other attributes such as its opacity) has to be done using whatever mechanisms the terminal provides.
 
+Note 3: `set_color` works by printing sequences of characters to its stdout. If you use it in a command substitution or pipe, these characters will also be captured (and can then later be printed to the terminal). To avoid printing these sequences (and hence not add color) if not connected to a terminal, use `isatty stdout`.
+
 \subsection set_color-example Examples
 
 \fish

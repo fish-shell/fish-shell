@@ -213,7 +213,7 @@ static std::string ansi_colorize(const wcstring &text,
         }
         writech(text.at(i));
     }
-
+    set_color(rgb_color_t::normal(), rgb_color_t::normal());
     output_set_writer(saved);
     std::string result;
     result.swap(output_receiver);
@@ -350,12 +350,17 @@ int main(int argc, char *argv[]) {
     const char *output_location = "";
     bool do_indent = true;
 
-    const char *short_opts = "+dhvwi";
-    const struct option long_opts[] = {
-        {"dump", no_argument, NULL, 'd'},  {"no-indent", no_argument, NULL, 'i'},
-        {"help", no_argument, NULL, 'h'},  {"version", no_argument, NULL, 'v'},
-        {"write", no_argument, NULL, 'w'}, {"html", no_argument, NULL, 1},
-        {"ansi", no_argument, NULL, 2},    {NULL, 0, NULL, 0}};
+    const char *short_opts = "+d:hvwiD:";
+    const struct option long_opts[] = {{"debug-level", required_argument, NULL, 'd'},
+                                       {"debug-stack-frames", required_argument, NULL, 'D'},
+                                       {"dump-parse-tree", no_argument, NULL, 'P'},
+                                       {"no-indent", no_argument, NULL, 'i'},
+                                       {"help", no_argument, NULL, 'h'},
+                                       {"version", no_argument, NULL, 'v'},
+                                       {"write", no_argument, NULL, 'w'},
+                                       {"html", no_argument, NULL, 1},
+                                       {"ansi", no_argument, NULL, 2},
+                                       {NULL, 0, NULL, 0}};
 
     int opt;
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
@@ -365,7 +370,7 @@ int main(int argc, char *argv[]) {
                 exit(127);
                 break;
             }
-            case 'd': {
+            case 'P': {
                 dump_parse_tree = true;
                 break;
             }
@@ -393,6 +398,36 @@ int main(int argc, char *argv[]) {
             }
             case 2: {
                 output_type = output_type_ansi;
+                break;
+            }
+            case 'd': {
+                char *end;
+                long tmp;
+
+                errno = 0;
+                tmp = strtol(optarg, &end, 10);
+
+                if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
+                    debug_level = (int)tmp;
+                } else {
+                    fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
+                    exit(1);
+                }
+                break;
+            }
+            case 'D': {
+                char *end;
+                long tmp;
+
+                errno = 0;
+                tmp = strtol(optarg, &end, 10);
+
+                if (tmp > 0 && tmp <= 128 && !*end && !errno) {
+                    debug_stack_frames = (int)tmp;
+                } else {
+                    fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
+                    exit(1);
+                }
                 break;
             }
             default: {

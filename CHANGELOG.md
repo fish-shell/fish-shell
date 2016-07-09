@@ -1,8 +1,30 @@
-# fish $nextversion (unreleased)
+# next-2.x
+## Significant changes
+- The clipboard integration has been revamped with explicit bindings. OS X clipboard support provided for out of the box in addition to X11. (#3061)
+
+---
+
+# fish 2.3.1 (released July 3, 2016)
+
+This is a functionality and bugfix release. This release does not contain all the changes to fish since the last release, but fixes a number of issues directly affecting users at present and includes a small number of new features.
 
 ## Significant changes
+- A new `fish_key_reader` binary for decoding interactive keypresses (#2991).
+- `fish_mode_prompt` has been updated to reflect the changes in the way the Vi input mode is set up (#3067), making this more reliable.
+- `fish_config` can now properly be launched from the OS X app bundle (#3140).
 
-- The clipboard integration has been removed in favor of explicit bindings (#3061)
+## Notable fixes and improvements
+
+- Extra lines were sometimes inserted into the output under Windows (Cygwin and Microsoft Windows Subsystem for Linux) due to TTY timestamps not being updated (#2859).
+- The `string` builtin's `match` mode now handles the combination of `-rnv` (match, invert and count) correctly (#3098).
+- Improvements to TTY special character handling (#3064), locale handling (#3124) and terminal environment variable handling (#3060).
+- Work towards handling the terminal modes for external commands launched from initialisation files (#2980).
+- Ease the upgrade path from fish 2.2.0 and before by warning users to restart fish if the `string` builtin is not available (#3057).
+- `type -a` now syntax-colorizes function source output.
+- Added completions for `alsamixer`, `godoc`, `gofmt`, `goimports`, `gorename`, `lscpu`, `mkdir`, `modinfo`, `netctl-auto`, `poweroff`, `termite`, `udisksctl` and `xz` (#3123).
+- Improved completions for `apt` (#3097), `aura` (#3102),`git` (#3114), `npm` (#3158), `string` and `suspend` (#3154).
+
+---
 
 # fish 2.3.0 (released May 20, 2016)
 

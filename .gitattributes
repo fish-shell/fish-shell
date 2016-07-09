@@ -23,3 +23,6 @@ fish.spec.in export-ignore
 /debian/* export-ignore
 /.github export-ignore
 /.github/* export-ignore
+/pcre2-* linguist-vendored
+/share/tools/web_config/js/angular.js linguist-vendored
+/doc_src/* linguist-documentation

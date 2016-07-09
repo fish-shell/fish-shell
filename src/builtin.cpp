@@ -2814,6 +2814,27 @@ static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **arg
     return status;
 }
 
+// Formats a single history record, including a trailing newline.  Returns true
+// if bytes were written to the output stream and false otherwise.
+static bool format_history_record(const history_item_t &item, const bool with_time,
+                                  output_stream_t *const out) {
+    if (with_time) {
+        const time_t seconds = item.timestamp();
+        struct tm timestamp;
+        if (!localtime_r(&seconds, &timestamp)) {
+            return false;
+        }
+        char timestamp_string[22];
+        if (strftime(timestamp_string, 22, "%Y-%m-%d %H:%M:%S  ", &timestamp) != 21) {
+            return false;
+        }
+        out->append(str2wcstring(timestamp_string));
+    }
+    out->append(item.str());
+    out->append(L"\n");
+    return true;
+}
+
 /// History of commands executed by user.
 static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
@@ -2824,16 +2845,14 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     bool save_history = false;
     bool clear_history = false;
     bool merge_history = false;
+    bool with_time = false;
 
-    static const struct woption long_options[] = {{L"prefix", no_argument, 0, 'p'},
-                                                  {L"delete", no_argument, 0, 'd'},
-                                                  {L"search", no_argument, 0, 's'},
-                                                  {L"contains", no_argument, 0, 'c'},
-                                                  {L"save", no_argument, 0, 'v'},
-                                                  {L"clear", no_argument, 0, 'l'},
-                                                  {L"merge", no_argument, 0, 'm'},
-                                                  {L"help", no_argument, 0, 'h'},
-                                                  {0, 0, 0, 0}};
+    static const struct woption long_options[] = {
+        {L"prefix", no_argument, 0, 'p'},    {L"delete", no_argument, 0, 'd'},
+        {L"search", no_argument, 0, 's'},    {L"contains", no_argument, 0, 'c'},
+        {L"save", no_argument, 0, 'v'},      {L"clear", no_argument, 0, 'l'},
+        {L"merge", no_argument, 0, 'm'},     {L"help", no_argument, 0, 'h'},
+        {L"with-time", no_argument, 0, 't'}, {0, 0, 0, 0}};
 
     int opt = 0;
     int opt_index = 0;
@@ -2845,7 +2864,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // from webconfig.py.
     if (!history) history = &history_t::history_with_name(L"fish");
 
-    while ((opt = w.wgetopt_long_only(argc, argv, L"pdscvl", long_options, &opt_index)) != EOF) {
+    while ((opt = w.wgetopt_long_only(argc, argv, L"pdscvlt", long_options, &opt_index)) != EOF) {
         switch (opt) {
             case 'p': {
                 search_prefix = true;
@@ -2874,6 +2893,10 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 merge_history = true;
                 break;
             }
+            case 't': {
+                with_time = true;
+                break;
+            }
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_BUILTIN_OK;
@@ -2894,11 +2917,13 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // Everything after is an argument.
     const wcstring_list_t args(argv + w.woptind, argv + argc);
 
-    if (argc == 1) {
-        wcstring full_history;
-        history->get_string_representation(&full_history, wcstring(L"\n"));
-        streams.out.append(full_history);
-        streams.out.push_back('\n');
+    if (args.empty()) {
+        for (int i = 1;  // 0 is the current input
+             !history->item_at_index(i).empty(); ++i) {
+            if (!format_history_record(history->item_at_index(i), with_time, &streams.out)) {
+                return STATUS_BUILTIN_ERROR;
+            }
+        }
         return STATUS_BUILTIN_OK;
     }
 
@@ -2921,8 +2946,9 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 *history, search_string,
                 search_prefix ? HISTORY_SEARCH_TYPE_PREFIX : HISTORY_SEARCH_TYPE_CONTAINS);
             while (searcher.go_backwards()) {
-                streams.out.append(searcher.current_string());
-                streams.out.append(L"\n");
+                if (!format_history_record(searcher.current_item(), with_time, &streams.out)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
                 res = STATUS_BUILTIN_OK;
             }
         }

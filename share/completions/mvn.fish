@@ -709,7 +709,7 @@ complete -c mvn -a "appengine:backends_rollback" -d "Roll back a previously in-p
 complete -c mvn -a "appengine:start_module_version" -d "Start the specified module version."
 complete -c mvn -a "appengine:migrate_traffic" -d "Change the default version, but more gently than set_default_version."
 complete -c mvn -a "appengine:update_dispatch" -d "Update application dispatch.xml."
-complete -c mvn -a "appengine:endpoints_get_client_lib" -d "App Engine endpoints get-client-lib ... command."
+complete -c mvn -a "appengine:endpoints_get_client_lib" -d "App Engine endpoints get-client-lib … command."
 complete -c mvn -a "appengine:debug" -d "Debug the specified VM Runtime instance."
 complete -c mvn -a "appengine:set_default_version" -d "Set the default serving version."
 complete -c mvn -a "appengine:enhance" -d "Runs the datanucleus enhancer."

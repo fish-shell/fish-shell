@@ -1,40 +1,22 @@
-<!--
-Thanks for helping to make fish better!
+<!-- check if this problem is already solved! github.com/issues?q=is:issue+user:fish-shell -->
+- [ ] Have you checked if problem occurs with [fish 2.3.1](/fish-shell/fish-shell/releases/tag/2.3.1)?
+- [ ] Tried fish without third-party customizations *(check `sh -c 'env HOME=$(mktemp -d) fish'`)*?
 
-If you are asking for help with fish, or you've found a bug:
- - Make sure it's not a known or solved issue, by searching https://github.com/fish-shell/fish-shell/issues
- - Fill in the following information carefully:
+**fish version installed** *(`fish --version`)*:
 
--->
+**OS/terminal used**: 
 
-[Please include a short description of the problem here]
+Talk about the the issue here. 
 
-### Reproduction Steps:
+## Reproduction steps
+Hard to explain? Link to [a screen recording](https://asciinema.org)
 
-1. [First Step]
-2. [Second Step]
-3. [Other Steps...]
+1. Launch fish
+2. …
 
-### Expected behavior:
+## Expected results
+Fish should…
 
-[Describe expected behavior here]
-
-### Observed behavior:
-
-[Describe observed behavior here]
-
-### Additional information:
-
-[ Other useful information, such as:
-  When did this problem start?
-  Does this happen all the time?
-  Has anything changed on your system recently?
-]
-  
-
----
-Fish version: [from the output of fish --version]
-
-Operating system: [your operating system and how you installed fish e.g. Homebrew, Ubuntu PPA, distribution package]
-
-Terminal or terminal emulator: [e.g. PuTTy, iTerm2, GNOME Terminal, VT220]
+## Actual results
+	~ $ math 2 + 2
+	5

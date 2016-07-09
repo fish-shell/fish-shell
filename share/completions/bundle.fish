@@ -137,7 +137,7 @@ complete -f -n '__fish_bundle_no_command' -c bundle -a 'viz' --description 'Gene
 complete -f -n '__fish_bundle_using_command viz' -c bundle -s f -l file --description 'The name to use for the generated file (see format option)'
 complete -f -n '__fish_bundle_using_command viz' -c bundle -s v -l version --description 'Show each gem version'
 complete -f -n '__fish_bundle_using_command viz' -c bundle -s r -l requirements --description 'Show the version of each required dependency'
-complete -f -n '__fish_bundle_using_command viz' -c bundle -s F -l format --description 'Output a specific format (png, jpg, svg, dot, ...)'
+complete -f -n '__fish_bundle_using_command viz' -c bundle -s F -l format --description 'Output a specific format (png, jpg, svg, dot, …)'
 
 # Init
 complete -f -n '__fish_bundle_no_command' -c bundle -a 'init' --description 'Generate a simple Gemfile, placed in the current directory'

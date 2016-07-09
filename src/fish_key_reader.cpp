@@ -8,16 +8,15 @@
 // Type "exit" or "quit" to terminate the program.
 #include "config.h"  // IWYU pragma: keep
 
+#include <errno.h>
 #include <getopt.h>
-#include <locale.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <wchar.h>
 #include <wctype.h>
-#include <cmath>
-#include <iosfwd>
-#include <limits>
 
 #include "common.h"
 #include "env.h"
@@ -25,8 +24,10 @@
 #include "input.h"
 #include "input_common.h"
 #include "proc.h"
+#include "print_help.h"
 #include "reader.h"
-#include "wutil.h"
+#include "signal.h"
+#include "wutil.h" // IWYU pragma: keep
 
 struct config_paths_t determine_config_directory_paths(const char *argv0);
 
@@ -37,7 +38,8 @@ static const char *ctrl_symbolic_names[] = {NULL,  NULL,  NULL,  NULL,  NULL,  N
 static bool keep_running = true;
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
-static bool should_exit(unsigned char c) {
+static bool should_exit(wchar_t wc) {
+    unsigned char c = wc < 0x80 ? wc : 0;
     static unsigned char recent_chars[4] = {0};
 
     recent_chars[0] = recent_chars[1];
@@ -49,8 +51,9 @@ static bool should_exit(unsigned char c) {
             memcmp(recent_chars + 2, "\x4\x4", 2) == 0);   // ctrl-D, ctrl-D
 }
 
-/// Return the key name if the recent sequence of characters matches a known terminfo sequence.
-static char *const key_name(unsigned char c) {
+/// Return the name if the recent sequence of characters matches a known terminfo sequence.
+static char *const sequence_name(wchar_t wc) {
+    unsigned char c = wc < 0x80 ? wc : 0;
     static char recent_chars[8] = {0};
 
     recent_chars[0] = recent_chars[1];
@@ -74,34 +77,96 @@ static char *const key_name(unsigned char c) {
     return NULL;
 }
 
-static void output_info_about_char(unsigned char c) {
-    printf("dec: %3u  oct: %03o  hex: %02X  char: ", c, c, c);
-    if (c < 32) {
-        // Control characters.
-        printf("\\c%c", c + 64);
-        if (ctrl_symbolic_names[c]) printf("   (or %s)", ctrl_symbolic_names[c]);
-    } else if (c == 32) {
-        // The "space" character.
-        printf("\\%03o  (aka \"space\")", c);
-    } else if (c == 0x7F) {
-        // The "del" character.
-        printf("\\%03o  (aka \"del\")", c);
-    } else if (c >= 128) {
-        // Non-ASCII characters (i.e., those with bit 7 set).
-        printf("\\%03o  (aka non-ASCII)", c);
-    } else {
-        // ASCII characters that are not control characters.
-        printf("%c", c);
+/// Return true if the character must be escaped in the sequence of chars to be bound in `bind`
+/// command.
+static bool must_escape(wchar_t wc) {
+    switch (wc) {
+        case '[':
+        case ']':
+        case '(':
+        case ')':
+        case '<':
+        case '>':
+        case '{':
+        case '}':
+        case '*':
+        case '\\':
+        case '?':
+        case '$':
+        case '#':
+        case ';':
+        case '&':
+        case '|':
+        case '\'':
+        case '"':
+            return true;
+        default:
+            return false;
     }
-    putchar('\n');
 }
 
-static void output_matching_key_name(unsigned char c) {
-    char *name = key_name(c);
-    if (name) {
-        printf("Sequence matches bind key name \"%s\"\n", name);
-        free(name);
+static char *char_to_symbol(wchar_t wc, bool bind_friendly) {
+    static char buf[128];
+
+    if (wc < ' ') {
+        // ASCII control character.
+        if (ctrl_symbolic_names[wc]) {
+            if (bind_friendly) {
+                snprintf(buf, sizeof(buf), "%s", ctrl_symbolic_names[wc]);
+            } else {
+                snprintf(buf, sizeof(buf), "\\c%c  (or %s)", wc + 64, ctrl_symbolic_names[wc]);
+            }
+        } else {
+            snprintf(buf, sizeof(buf), "\\c%c", wc + 64);
+        }
+    } else if (wc == ' ') {
+        // The "space" character.
+        snprintf(buf, sizeof(buf), "\\x%X  (aka \"space\")", wc);
+    } else if (wc == 0x7F) {
+        // The "del" character.
+        snprintf(buf, sizeof(buf), "\\x%X  (aka \"del\")", wc);
+    } else if (wc < 0x80) {
+        // ASCII characters that are not control characters.
+        if (bind_friendly && must_escape(wc)) {
+            snprintf(buf, sizeof(buf), "\\%c", wc);
+        } else {
+            snprintf(buf, sizeof(buf), "%c", wc);
+        }
+    } else if (wc <= 0xFFFF) {
+        snprintf(buf, sizeof(buf), "\\u%04X", wc);
+    } else {
+        snprintf(buf, sizeof(buf), "\\U%06X", wc);
     }
+    return buf;
+}
+
+static void add_char_to_bind_command(wchar_t wc, std::vector<wchar_t> &bind_chars) {
+    bind_chars.push_back(wc);
+}
+
+static void output_bind_command(std::vector<wchar_t> &bind_chars) {
+    if (bind_chars.size()) {
+        fputs("bind ", stdout);
+        for (int i = 0; i < bind_chars.size(); i++) {
+            fputs(char_to_symbol(bind_chars[i], true), stdout);
+        }
+        fputs(" 'do something'\n", stdout);
+        bind_chars.clear();
+    }
+}
+
+static void output_info_about_char(wchar_t wc) {
+   fprintf(stderr, "hex: %4X  char: %s\n", wc, char_to_symbol(wc, false));
+}
+
+static bool output_matching_key_name(wchar_t wc) {
+    char *name = sequence_name(wc);
+    if (name) {
+        printf("bind -k %s 'do something'\n", name);
+        free(name);
+        return true;
+    }
+    return false;
 }
 
 static double output_elapsed_time(double prev_tstamp, bool first_char_seen) {
@@ -109,11 +174,11 @@ static double output_elapsed_time(double prev_tstamp, bool first_char_seen) {
     double now = timef();
     long long int delta_tstamp_us = 1000000 * (now - prev_tstamp);
 
-    if (delta_tstamp_us >= 200000 && first_char_seen) putchar('\n');
+    if (delta_tstamp_us >= 200000 && first_char_seen) putc('\n', stderr);
     if (delta_tstamp_us >= 1000000) {
-        printf("              ");
+        fprintf(stderr, "              ");
     } else {
-        printf("(%3lld.%03lld ms)  ", delta_tstamp_us / 1000, delta_tstamp_us % 1000);
+        fprintf(stderr, "(%3lld.%03lld ms)  ", delta_tstamp_us / 1000, delta_tstamp_us % 1000);
     }
     return now;
 }
@@ -122,25 +187,29 @@ static double output_elapsed_time(double prev_tstamp, bool first_char_seen) {
 static void process_input(bool continuous_mode) {
     bool first_char_seen = false;
     double prev_tstamp = 0.0;
+    std::vector<wchar_t> bind_chars;
 
-    printf("Press a key\n\n");
+    fprintf(stderr, "Press a key\n\n");
     while (keep_running) {
-        wchar_t wc = input_common_readch(first_char_seen && !continuous_mode);
+        wchar_t wc = input_common_readch(true);
         if (wc == WEOF) {
-            return;
-        } else if (wc > 255) {
-            printf("\nUnexpected wide character from input_common_readch(): %lld / 0x%llx\n",
-                   (long long)wc, (long long)wc);
-            return;
+            output_bind_command(bind_chars);
+            if (first_char_seen && !continuous_mode) {
+                return;
+            } else {
+                continue;
+            }
         }
 
-        unsigned char c = wc;
         prev_tstamp = output_elapsed_time(prev_tstamp, first_char_seen);
-        output_info_about_char(c);
-        output_matching_key_name(c);
+        add_char_to_bind_command(wc, bind_chars);
+        output_info_about_char(wc);
+        if (output_matching_key_name(wc)) {
+            output_bind_command(bind_chars);
+        }
 
-        if (should_exit(c)) {
-            printf("\nExiting at your request.\n");
+        if (should_exit(wc)) {
+            fprintf(stderr, "\nExiting at your request.\n");
             break;
         }
 
@@ -153,8 +222,8 @@ static void process_input(bool continuous_mode) {
 static struct sigaction old_sigactions[32];
 static void signal_handler(int signo, siginfo_t *siginfo, void *siginfo_arg) {
     debug(2, L"signal #%d (%ls) received", signo, sig2wcs(signo));
-    // SIGINT isn't included in the following conditional because it is handled specially by fish;
-    // i.e., it causes \cC to be reinserted into the tty input stream.
+    // SIGINT isn't included in the following conditional because it is handled specially by fish.
+    // Specifically, it causes \cC to be reinserted into the tty input stream.
     if (signo == SIGHUP || signo == SIGTERM || signo == SIGABRT || signo == SIGSEGV) {
         keep_running = false;
     }
@@ -182,10 +251,10 @@ static void install_our_signal_handlers() {
         if (sigaction(signo, &new_sa, &old_sa) != -1) {
             memcpy(&old_sigactions[signo], &old_sa, sizeof(old_sa));
             if (old_sa.sa_handler == SIG_IGN) {
-                debug(2, "signal #%d (%ls) was being ignored", signo, sig2wcs(signo));
+                debug(3, "signal #%d (%ls) was being ignored", signo, sig2wcs(signo));
             }
             if (old_sa.sa_flags && ~SA_SIGINFO != 0) {
-                debug(2, L"signal #%d (%ls) handler had flags 0x%X", signo, sig2wcs(signo),
+                debug(3, L"signal #%d (%ls) handler had flags 0x%X", signo, sig2wcs(signo),
                       old_sa.sa_flags);
             }
         }
@@ -195,7 +264,6 @@ static void install_our_signal_handlers() {
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
 static void setup_and_process_keys(bool continuous_mode) {
     is_interactive_session = 1;    // by definition this program is interactive
-    setenv("LC_ALL", "POSIX", 1);  // ensure we're in a single-byte locale
     set_main_thread();
     setup_fork_guards();
     env_init();
@@ -206,10 +274,10 @@ static void setup_and_process_keys(bool continuous_mode) {
     install_our_signal_handlers();
 
     if (continuous_mode) {
-        printf("\n");
-        printf("To terminate this program type \"exit\" or \"quit\" in this window,\n");
-        printf("or press [ctrl-C] or [ctrl-D] twice in a row.\n");
-        printf("\n");
+        fprintf(stderr, "\n");
+        fprintf(stderr, "To terminate this program type \"exit\" or \"quit\" in this window,\n");
+        fprintf(stderr, "or press [ctrl-C] or [ctrl-D] twice in a row.\n");
+        fprintf(stderr, "\n");
     }
 
     process_input(continuous_mode);
@@ -222,10 +290,11 @@ static void setup_and_process_keys(bool continuous_mode) {
 int main(int argc, char **argv) {
     program_name = L"fish_key_reader";
     bool continuous_mode = false;
-    const char *short_opts = "+cd:D:";
+    const char *short_opts = "+cd:D:h";
     const struct option long_opts[] = {{"continuous", no_argument, NULL, 'c'},
                                        {"debug-level", required_argument, NULL, 'd'},
                                        {"debug-stack-frames", required_argument, NULL, 'D'},
+                                       {"help", no_argument, NULL, 'h'},
                                        {NULL, 0, NULL, 0}};
     int opt;
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
@@ -237,6 +306,10 @@ int main(int argc, char **argv) {
             case 'c': {
                 continuous_mode = true;
                 break;
+            }
+            case 'h': {
+                print_help("fish_key_reader", 0);
+                exit(0);
             }
             case 'd': {
                 char *end;
@@ -281,8 +354,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
-        fprintf(stderr, "Stdin and stdout must be attached to a tty, redirection not allowed.\n");
+    if (!isatty(STDIN_FILENO)) {
+        fprintf(stderr, "Stdin must be attached to a tty.\n");
         return 1;
     }
 

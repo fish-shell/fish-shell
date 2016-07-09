@@ -6,7 +6,7 @@ function __fish_move_last -d "Move the last element of a directory history from 
 
 	if test $size_src = 0
 		# Cannot make this step
-		printf (_ "Hit end of history...\n")
+		printf (_ "Hit end of history…\n")
 		return 1
 	end
 

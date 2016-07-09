@@ -1,5 +1,5 @@
 
-function popd --description "Pop dir from stack"
+function popd --description "Pop directory from the stack and cd to it"
 	if count $argv >/dev/null
 		switch $argv[1]
 			case -h --h --he --hel --help
@@ -11,10 +11,9 @@ function popd --description "Pop dir from stack"
 	if test $dirstack[1]
 		cd $dirstack[1]
 	else
-		printf (_ "%s: Directory stack is empty...\n") popd
+		printf (_ "%s: Directory stack is empty…\n") popd 1>&2
 		return 1
 	end
 
 	set -e dirstack[1]
-
 end

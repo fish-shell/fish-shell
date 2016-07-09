@@ -179,7 +179,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
     set -l verbose
     set -l name
 
-    # Default to informative if show_informative_status is set
+    # Default to informative if __fish_git_prompt_show_informative_status is set
     if test -n "$__fish_git_prompt_show_informative_status"
         set informative 1
     end
@@ -232,7 +232,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
         case git
             set upstream '@{upstream}'
         case svn\*
-            # get the upstream from the 'git-svn-id: ...' in a commit message
+            # get the upstream from the 'git-svn-id: …' in a commit message
             # (git-svn uses essentially the same procedure internally)
             set -l svn_upstream (git log --first-parent -1 --grep="^git-svn-id: \($svn_url_pattern\)" ^/dev/null)
             if test (count $svn_upstream) -ne 0
@@ -581,7 +581,7 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
                 # Shorten the sha ourselves to 8 characters - this should be good for most repositories,
                 # and even for large ones it should be good for most commits
                 if set -q sha
-                    set branch (string match -r '^.{8}' -- $sha)...
+                    set branch (string match -r '^.{8}' -- $sha)…
                 else
                     set branch unknown
                 end

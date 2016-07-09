@@ -9,7 +9,7 @@ complete -c scanimage -l color -d 'Sets the picture\'s color [0..255]: 133'
 complete -c scanimage -l contrast -d 'Controls the contrast of the acquired image [0..255]: 128'
 complete -c scanimage -l white-level -d 'Selects what radiance level should be considered "white" [0..255]: 124'
 complete -c scanimage -l custom-gamma -d 'Use custom gamma gable'
-complete -c scanimage -l gamma-table -r -d 'Gamma-correction table [0..255,...]'
+complete -c scanimage -l gamma-table -r -d 'Gamma-correction table [0..255, …]'
 complete -c scanimage -l mode -xa 'Lineart Gray Color' -d 'Scan mode'
 
 complete -c scanimage -s d -l device-name -d 'Device name to use' -xa '(scanimage -f "%d%n")'

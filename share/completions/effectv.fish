@@ -37,7 +37,7 @@ complete -c effectv -f -a "BrokenTV" -d "Simulates broken TV"
 complete -c effectv -f -a "WarholTV" -d "Homage to Andy Warhol"
 complete -c effectv -f -a "MatrixTV" -d "A Matrix like effect"
 complete -c effectv -f -a "PUPTV" -d "Comes from \"Partial UPdate\", certain part of image is updated at a frame"
-complete -c effectv -f -a "ChameleonTV" -d "Vanishing into the wall..."
+complete -c effectv -f -a "ChameleonTV" -d "Vanishing into the wall…"
 
 complete -c effectv -o help -d "show usage information"
 complete -c effectv -o device -r -d "[FILE] use device FILE for video4linux (default is /dev/video0)"

@@ -9,7 +9,7 @@ complete -c patch -s B -l prefix -r -f --description "Prefix pref to a file name
 complete -c patch -l binary --description "Read and write all files in binary mode"
 complete -c patch -s c -l context --description "Interpret the patch file as a ordinary context diff"
 complete -c patch -s d -l directory -r -f --description "Change to the directory dir immediately"
-complete -c patch -s D -l ifdef -r -f --description "Use the #ifdef ... #endif construct to mark changes"
+complete -c patch -s D -l ifdef -r -f --description "Use the #ifdef…#endif construct to mark changes"
 complete -c patch -l dry-run --description "Print the results of applying the patches without actually changing any files"
 complete -c patch -s e -l ed --description "Interpret the patch file as an ed script"
 complete -c patch -s E -l remove-empty-files --description "Remove output files that are empty after the patches have been applied"

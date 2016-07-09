@@ -3,6 +3,7 @@
 - [ ] Tried fish without third-party customizations *(check `sh -c 'env HOME=$(mktemp -d) fish'`)*?
 
 **fish version installed** *(`fish --version`)*:
+
 **OS/terminal used**: 
 
 Talk about the the issue here. 

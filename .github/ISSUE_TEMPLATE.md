@@ -1,5 +1,4 @@
 <!-- check if this problem is already solved! github.com/issues?q=is:issue+user:fish-shell -->
-Have you..
 - [ ] Have you checked if problem occurs with [fish 2.3.1](/fish-shell/fish-shell/releases/tag/2.3.1)?
 - [ ] Tried fish without third-party customizations *(check `sh -c 'env HOME=$(mktemp -d) fish'`)*?
 

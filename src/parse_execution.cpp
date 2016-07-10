@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>

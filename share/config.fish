@@ -1,4 +1,3 @@
-#
 # Main file for fish command completions. This file contains various
 # common helper functions for the command completions. All actual
 # completions are located in the completions subdirectory.
@@ -7,7 +6,6 @@
 #
 # Set default field separators
 #
-
 set -g IFS \n\ \t
 
 #
@@ -18,8 +16,7 @@ function __fish_default_command_not_found_handler
 end
 
 if status --is-interactive
-	# The user has seemingly explicitly launched an old fish with
-	# too-new scripts installed. 
+        # The user has seemingly explicitly launched an old fish with too-new scripts installed.
 	if not contains "string" (builtin -n)
 		set -g __is_launched_without_string 1
 		# XXX nostring - fix old fish binaries with no `string' builtin.
@@ -28,7 +25,7 @@ if status --is-interactive
 		# These "XXX nostring" hacks were added for 2.3.1
 		set_color --bold
 		echo "You appear to be trying to launch an old fish binary with newer scripts "
-		echo "installed into" (set_color --underline)"$__fish_datadir" 
+		echo "installed into" (set_color --underline)"$__fish_datadir"
 		set_color normal
 		echo -e "\nThis is an unsupported configuration.\n"
 		set_color yellow
@@ -124,7 +121,7 @@ set -g __fish_tmp_path $PATH
 function __fish_load_path_helper_paths
 	# We want to rearrange the path to reflect this order. Delete that path component if it exists and then prepend it.
 	# Since we are prepending but want to preserve the order of the input file, we reverse the array, append, and then reverse it again
-	set __fish_tmp_path $__fish_tmp_path[-1..1] 
+	set __fish_tmp_path $__fish_tmp_path[-1..1]
 	while read -l new_path_comp
 		if test -d $new_path_comp
 			set -l where (contains -i $new_path_comp $__fish_tmp_path)
@@ -134,7 +131,7 @@ function __fish_load_path_helper_paths
 	end
 	set __fish_tmp_path $__fish_tmp_path[-1..1]
 end
-test -r /etc/paths ; and __fish_load_path_helper_paths < /etc/paths 
+test -r /etc/paths ; and __fish_load_path_helper_paths < /etc/paths
 for pathfile in /etc/paths.d/* ; __fish_load_path_helper_paths < $pathfile ; end
 set -xg PATH $__fish_tmp_path
 set -e __fish_tmp_path
@@ -195,6 +192,11 @@ function . --description 'Evaluate contents of file (deprecated, see "source")' 
 	end
 end
 
+# Set the locale if it isn't explicitly set. Allowing the lack of locale env vars to imply the
+# C/POSIX locale causes too many problems. Do this before reading the snippets because they might be
+# in UTF-8 (with non-ASCII characters).
+__fish_set_locale
+
 # As last part of initialization, source the conf directories
 # Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename"
 set -l sourcelist
@@ -224,15 +226,6 @@ end
 #
 
 if status --is-login
-
-	# Check for i18n information in
-	# /etc/sysconfig/i18n
-
-	if test -f /etc/sysconfig/i18n
-		string match -r '^[a-zA-Z]*=.*' < /etc/sysconfig/i18n | while read -l line
-			set -gx (string split '=' -m 1 -- $line | string replace -ra '"([^"]+)"' '$1' | string replace -ra "'([^']+)'" '$1')
-		end
-	end
 
 	#
 	# Put linux consoles in unicode mode.

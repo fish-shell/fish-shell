@@ -1,0 +1,6 @@
+Variables may not be used as commands. In fish, please define a function or use 'eval $test'.
+fish: exec $test
+           ^
+Variables may not be used as commands. In fish, please define a function or use 'eval "$test"'.
+fish: exec "$test"
+           ^

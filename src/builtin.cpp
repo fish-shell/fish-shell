@@ -461,7 +461,7 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
     while (1) {
         int opt_index = 0;
-        int opt = w.wgetopt_long(argc, argv, L"aehkKfM:m:", long_options, &opt_index);
+        int opt = w.wgetopt_long_only(argc, argv, L"aehkKfM:m:", long_options, &opt_index);
 
         if (opt == -1) break;
 
@@ -2824,12 +2824,14 @@ static bool format_history_record(const history_item_t &item, const bool with_ti
         if (!localtime_r(&seconds, &timestamp)) {
             return false;
         }
-        char timestamp_string[22];
-        // TODO: this should probably be formatted appropriately per the users' locale.
-        if (strftime(timestamp_string, 22, "%Y-%m-%d %H:%M:%S  ", &timestamp) != 21) {
+        char timestamp_string[32];
+        if (strftime(timestamp_string, 32, "%c ", &timestamp) != 31) {
+            out->append(str2wcstring(timestamp_string));
+        }
+        else {
             return false;
         }
-        out->append(str2wcstring(timestamp_string));
+
     }
     out->append(item.str());
     out->append(L"\n");
@@ -2849,11 +2851,11 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     bool with_time = false;
 
     static const struct woption long_options[] = {
-        {L"prefix", no_argument, 0, 'p'},    {L"delete", no_argument, 0, 'd'},
-        {L"search", no_argument, 0, 's'},    {L"contains", no_argument, 0, 'c'},
-        {L"save", no_argument, 0, 'v'},      {L"clear", no_argument, 0, 'l'},
-        {L"merge", no_argument, 0, 'm'},     {L"help", no_argument, 0, 'h'},
-        {L"with-time", no_argument, 0, 't'}, {0, 0, 0, 0}};
+        {L"delete", no_argument, 0, 'd'},        {L"search", no_argument, 0, 's'}, 
+        {L"prefix", no_argument, 0, 'p'},        {L"contains", no_argument, 0, 'c'},
+        {L"save", no_argument, 0, 'v'},          {L"clear", no_argument, 0, 'l'},
+        {L"merge", no_argument, 0, 'm'},         {L"help", no_argument, 0, 'h'},
+        {L"with-time", no_argument, 0, 't'},     {0, 0, 0, 0}};
 
     int opt = 0;
     int opt_index = 0;
@@ -2865,9 +2867,10 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // from webconfig.py.
     if (!history) history = &history_t::history_with_name(L"fish");
 
-    while ((opt = w.wgetopt_long(argc, argv, L"pdscvlmht", long_options, &opt_index)) != EOF) {
+    while ((opt = w.wgetopt_long(argc, argv, L"dspcvlmht", long_options, &opt_index)) != EOF) {
         switch (opt) {
             case 'p': {
+                search_history = true;
                 search_prefix = true;
                 break;
             }
@@ -2880,6 +2883,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 break;
             }
             case 'c': {
+                search_history = true;
                 break;
             }
             case 'v': {
@@ -2917,23 +2921,13 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
 
     // Everything after is an argument.
     const wcstring_list_t args(argv + w.woptind, argv + argc);
-
-    if (argc == 1 || with_time) {
-        for (int i = 1;  // 0 is the current input
-             !history->item_at_index(i).empty(); ++i) {
-            if (!format_history_record(history->item_at_index(i), with_time, &streams.out)) {
-                return STATUS_BUILTIN_ERROR;
-            }
-        }
-        return STATUS_BUILTIN_OK;
-    }
-
+    
     if (merge_history) {
         history->incorporate_external_changes();
         return STATUS_BUILTIN_OK;
     }
 
-    if (search_history) {
+    else if (search_history) {
         int res = STATUS_BUILTIN_ERROR;
         for (wcstring_list_t::const_iterator iter = args.begin(); iter != args.end(); ++iter) {
             const wcstring &search_string = *iter;
@@ -2956,7 +2950,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
         return res;
     }
 
-    if (delete_item) {
+    else if (delete_item) {
         for (wcstring_list_t::const_iterator iter = args.begin(); iter != args.end(); ++iter) {
             wcstring delete_string = *iter;
             if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"')
@@ -2967,14 +2961,23 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
         return STATUS_BUILTIN_OK;
     }
 
-    if (save_history) {
+    else if (save_history) {
         history->save();
         return STATUS_BUILTIN_OK;
     }
 
-    if (clear_history) {
+    else if (clear_history) {
         history->clear();
         history->save();
+        return STATUS_BUILTIN_OK;
+    }
+
+    else if (argc - w.woptind == 0) {
+        for (int i = 1; !history->item_at_index(i).empty(); ++i) {
+            if (!format_history_record(history->item_at_index(i), with_time, &streams.out)) {
+                return STATUS_BUILTIN_ERROR;
+            }
+        }
         return STATUS_BUILTIN_OK;
     }
 

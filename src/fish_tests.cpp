@@ -1818,6 +1818,7 @@ static void test_complete(void) {
 
     if (system("mkdir -p '/tmp/complete_test/'")) err(L"mkdir failed");
     if (system("touch '/tmp/complete_test/testfile'")) err(L"touch failed");
+    if (system("touch '/tmp/complete_test/has space'")) err(L"touch failed");
     if (system("chmod 700 '/tmp/complete_test/testfile'")) err(L"chmod failed");
 
     completions.clear();
@@ -1836,6 +1837,14 @@ static void test_complete(void) {
              COMPLETION_REQUEST_DEFAULT, vars);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
+
+    // Completing after spaces - see #2447
+    completions.clear();
+    complete(L"echo (ls /tmp/complete_test/has\\ ", &completions, COMPLETION_REQUEST_DEFAULT,
+             vars);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"space");
+
 
     // Add a function and test completing it in various ways.
     struct function_data_t func_data = {};

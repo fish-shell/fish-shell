@@ -1265,16 +1265,16 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                                         parse_flag_include_comments,
                                &tree, NULL);
 
-        // Find any plain statement that contains the position. We have to backtrack past spaces
-        // (issue #1261). So this will be at either the last space character, or after the end of
-        // the string.
-        size_t adjusted_pos = pos;
-        while (adjusted_pos > 0 && cmd.at(adjusted_pos - 1) == L' ') {
-            adjusted_pos--;
+        // Find the plain statement to operate on. The cursor may be past it (#1261), so backtrack until
+        // we know we're no longer in a space. But the space may actually be part of the argument (#2477)
+        // so
+        size_t position_in_statement = pos;
+        while (position_in_statement > 0 && cmd.at(position_in_statement - 1) == L' ') {
+            position_in_statement--;
         }
-
         const parse_node_t *plain_statement =
-            tree.find_node_matching_source_location(symbol_plain_statement, adjusted_pos, NULL);
+            tree.find_node_matching_source_location(symbol_plain_statement, position_in_statement, NULL);
+
         if (plain_statement == NULL) {
             // Not part of a plain statement. This could be e.g. a for loop header, case expression,
             // etc. Do generic file completions (issue #1309). If we had to backtrack, it means
@@ -1287,7 +1287,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
             // tree).
             bool do_file = true;
             if (flags & COMPLETION_REQUEST_AUTOSUGGESTION) {
-                if (adjusted_pos < pos) {
+                if (position_in_statement < pos) {
                     do_file = false;
                 } else if (pos > 0) {
                     // If the previous character is in one of these types, we don't do file
@@ -1356,7 +1356,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                 size_t matching_arg_index = -1;
                 for (size_t i = 0; i < all_arguments.size(); i++) {
                     const parse_node_t *node = all_arguments.at(i);
-                    if (node->location_in_or_at_end_of_source_range(adjusted_pos)) {
+                    if (node->location_in_or_at_end_of_source_range(position_in_statement)) {
                         matching_arg_index = i;
                         break;
                     }
@@ -1372,7 +1372,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                     // previous argument is the matching one. But if the cursor was in or at the end
                     // of the argument, then the current argument is the matching one, and the
                     // previous argument is the one before it.
-                    bool cursor_in_whitespace = (adjusted_pos < pos);
+                    bool cursor_in_whitespace = ! plain_statement->location_in_or_at_end_of_source_range(pos);
                     if (cursor_in_whitespace) {
                         current_argument = L"";
                         previous_argument = matching_arg;
@@ -1397,7 +1397,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                 bool in_redirection = false;
                 if (matching_arg_index == (size_t)(-1)) {
                     const parse_node_t *redirection = tree.find_node_matching_source_location(
-                        symbol_redirection, adjusted_pos, plain_statement);
+                        symbol_redirection, position_in_statement, plain_statement);
                     in_redirection = (redirection != NULL);
                 }
 

@@ -1762,7 +1762,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     return res;
 }
 
-// The random builtin. For generating random numbers.
+/// The random builtin generates random numbers.
 static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     static int seeded = 0;
     static struct drand48_data seed_buffer;
@@ -2864,7 +2864,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // from webconfig.py.
     if (!history) history = &history_t::history_with_name(L"fish");
 
-    while ((opt = w.wgetopt_long_only(argc, argv, L"pdscvlt", long_options, &opt_index)) != EOF) {
+    while ((opt = w.wgetopt_long_only(argc, argv, L"pdscvlmht", long_options, &opt_index)) != EOF) {
         switch (opt) {
             case 'p': {
                 search_prefix = true;
@@ -2917,7 +2917,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // Everything after is an argument.
     const wcstring_list_t args(argv + w.woptind, argv + argc);
 
-    if (args.empty()) {
+    if (argc == 1) {
         for (int i = 1;  // 0 is the current input
              !history->item_at_index(i).empty(); ++i) {
             if (!format_history_record(history->item_at_index(i), with_time, &streams.out)) {

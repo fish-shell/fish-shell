@@ -2825,6 +2825,7 @@ static bool format_history_record(const history_item_t &item, const bool with_ti
             return false;
         }
         char timestamp_string[22];
+        // TODO: this should probably be formatted appropriately per the users' locale.
         if (strftime(timestamp_string, 22, "%Y-%m-%d %H:%M:%S  ", &timestamp) != 21) {
             return false;
         }
@@ -2864,7 +2865,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // from webconfig.py.
     if (!history) history = &history_t::history_with_name(L"fish");
 
-    while ((opt = w.wgetopt_long_only(argc, argv, L"pdscvlmht", long_options, &opt_index)) != EOF) {
+    while ((opt = w.wgetopt_long(argc, argv, L"pdscvlmht", long_options, &opt_index)) != EOF) {
         switch (opt) {
             case 'p': {
                 search_prefix = true;
@@ -2917,7 +2918,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // Everything after is an argument.
     const wcstring_list_t args(argv + w.woptind, argv + argc);
 
-    if (argc == 1) {
+    if (argc == 1 || with_time) {
         for (int i = 1;  // 0 is the current input
              !history->item_at_index(i).empty(); ++i) {
             if (!format_history_record(history->item_at_index(i), with_time, &streams.out)) {

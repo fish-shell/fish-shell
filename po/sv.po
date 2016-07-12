@@ -1295,8 +1295,8 @@ msgstr ""
 
 #: reader.cpp:4115
 #, c-format
-msgid "Unknown keybinding %d"
-msgstr "Okänd tangentbordsbindning %d"
+msgid "Unknown key binding 0x%X"
+msgstr "Okänd tangentbords binding 0x%X"
 
 #: reader.cpp:4226
 msgid "Error while reading from file descriptor"

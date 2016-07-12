@@ -419,7 +419,7 @@ void input_function_push_args(int code) {
         wchar_t arg;
 
         // Skip and queue up any function codes. See issue #2357.
-        while (((arg = input_common_readch(0)) >= R_MIN) && (arg <= R_MAX)) {
+        while ((arg = input_common_readch(0)) >= R_MIN && arg <= R_MAX) {
             skipped.push_back(arg);
         }
 
@@ -497,7 +497,7 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
     wint_t c = 0;
     int j;
 
-    // debug(0, L"trying mapping %ls\n", escape(m.seq.c_str(), ESCAPE_ALL).c_str());
+    debug(2, L"trying to match mapping %ls", escape(m.seq.c_str(), ESCAPE_ALL).c_str());
     const wchar_t *str = m.seq.c_str();
     for (j = 0; str[j] != L'\0'; j++) {
         bool timed = (j > 0 && iswcntrl(str[0]));
@@ -515,7 +515,8 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
         return true;
     }
 
-    // Return the read characters.
+    // Reinsert the chars we read to be read again since we didn't match the bind sequence (i.e.,
+    // the input mapping).
     input_common_next_ch(c);
     for (int k = j - 1; k >= 0; k--) {
         input_common_next_ch(m.seq[k]);
@@ -554,9 +555,11 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands) {
     if (generic) {
         input_mapping_execute(*generic, allow_commands);
     } else {
-        // debug(0, L"no generic found, ignoring...");
+        debug(2, L"no generic found, ignoring char...");
         wchar_t c = input_common_readch(0);
-        if (c == R_EOF) input_common_next_ch(c);
+        if (c == R_EOF) {
+            input_common_next_ch(c);
+        }
     }
 }
 

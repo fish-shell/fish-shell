@@ -1291,8 +1291,8 @@ msgstr ""
 
 #: reader.cpp:4115
 #, c-format
-msgid "Unknown keybinding %d"
-msgstr "Unbekannte Tastenkombination %d"
+msgid "Unknown key binding 0x%X"
+msgstr "Unbekannte Tastenkombination 0x%X"
 
 #: reader.cpp:4226
 #, fuzzy

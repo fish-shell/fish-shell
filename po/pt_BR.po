@@ -1306,8 +1306,8 @@ msgstr ""
 
 #: reader.cpp:4115
 #, c-format
-msgid "Unknown keybinding %d"
-msgstr "Atalho desconhecido %d"
+msgid "Unknown key binding 0x%X"
+msgstr "Atalho desconhecido 0x%X"
 
 #: reader.cpp:4226
 msgid "Error while reading from file descriptor"

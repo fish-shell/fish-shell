@@ -16,7 +16,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <wchar.h>
-#include <wctype.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -203,7 +202,7 @@ static void process_input(bool continuous_mode) {
     fprintf(stderr, "Press a key\n\n");
     while (keep_running) {
         wchar_t wc = input_common_readch(true);
-        if (wc == WEOF) {
+        if (wc == R_TIMEOUT || wc == R_EOF) {
             output_bind_command(bind_chars);
             if (first_char_seen && !continuous_mode) {
                 return;

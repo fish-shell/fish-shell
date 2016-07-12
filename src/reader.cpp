@@ -3250,7 +3250,7 @@ const wchar_t *reader_readline(int nchars) {
             }
             default: {
                 // Other, if a normal character, we add it to the command.
-                if ((!wchar_private(c)) && (((c > 31) || (c == L'\n')) && (c != 127))) {
+                if (!wchar_private(c) && (c >= L' ' || c == L'\n' || c == L'\r') && c != 0x7F) {
                     bool allow_expand_abbreviations = false;
                     if (data->is_navigating_pager_contents()) {
                         data->pager.set_search_field_shown(true);
@@ -3266,11 +3266,10 @@ const wchar_t *reader_readline(int nchars) {
                     if (el == &data->command_line) {
                         clear_pager();
                     }
-
                 } else {
-                    // Low priority debug message. These can happen if the user presses an unefined
-                    // control sequnece. No reason to report.
-                    debug(2, _(L"Unknown keybinding %d"), c);
+                    // This can happen if the user presses a control char we don't recognize. No
+                    // reason to report this to the user unless they've enabled debugging output.
+                    debug(2, _(L"Unknown key binding 0x%X"), c);
                 }
                 break;
             }

@@ -24,9 +24,23 @@ function __fish_git_tags
     command git tag ^/dev/null
 end
 
+function __fish_git_dir
+    command git rev-parse --git-dir ^/dev/null
+end
+
+function __fish_git_heads
+    set -l gitdir (__fish_git_dir)
+    for head in HEAD FETCH_HEAD ORIG_HEAD MERGE_HEAD
+        if test -f $gitdir/$head
+            echo $head
+        end
+    end
+end
+
 function __fish_git_refs
     __fish_git_branches
     __fish_git_tags
+    __fish_git_heads
 end
 
 function __fish_git_remotes
@@ -290,7 +304,7 @@ complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_commits)'
 
 ### show-branch
 complete -f -c git -n '__fish_git_needs_command' -a show-branch -d 'Shows the commits on branches'
-complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_refs)' --description 'Branch'
+complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_refs)' --description 'Rev'
 # TODO options
 
 ### add
@@ -314,6 +328,7 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_add_files)'
 ### checkout
 complete -f -c git -n '__fish_git_needs_command' -a checkout -d 'Checkout and switch to a branch'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_branches)' --description 'Branch'
+complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' --description 'Head'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' --description 'Tag'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'
@@ -484,6 +499,8 @@ complete -f -c git -n '__fish_git_using_command push' -l progress -d 'Force prog
 complete -f -c git -n '__fish_git_needs_command' -a rebase -d 'Forward-port local commits to the updated upstream head'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_remotes)' -d 'Remote alias'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_heads)' -d 'Head'
+complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_tags)' -d 'Tag'
 complete -f -c git -n '__fish_git_using_command rebase' -l continue -d 'Restart the rebasing process'
 complete -f -c git -n '__fish_git_using_command rebase' -l abort -d 'Abort the rebase operation'
 complete -f -c git -n '__fish_git_using_command rebase' -l keep-empty -d "Keep the commits that don't cahnge anything"

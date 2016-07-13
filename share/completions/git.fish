@@ -24,7 +24,7 @@ function __fish_git_tags
     command git tag ^/dev/null
 end
 
-function __fish_git_heads
+function __fish_git_refs
     __fish_git_branches
     __fish_git_tags
 end
@@ -57,13 +57,13 @@ function __fish_git_ranges
     # If we didn't need to split (or there's nothing _to_ split), complete only the first part
     # Note that status here is from `string split` because `set` doesn't alter it
     if test -z "$from" -o $status -gt 0
-        __fish_git_heads
+        __fish_git_refs
         return 0
     end
 
     set -l to (set -q both[2]; and echo $both[2])
-    for from_ref in (__fish_git_heads | string match "$from")
-        for to_ref in (__fish_git_heads | string match "*$to*") # if $to is empty, this correctly matches everything
+    for from_ref in (__fish_git_refs | string match "$from")
+        for to_ref in (__fish_git_refs | string match "*$to*") # if $to is empty, this correctly matches everything
             printf "%s..%s\n" $from_ref $to_ref
         end
     end
@@ -290,7 +290,7 @@ complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_commits)'
 
 ### show-branch
 complete -f -c git -n '__fish_git_needs_command' -a show-branch -d 'Shows the commits on branches'
-complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_heads)' --description 'Branch'
+complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_refs)' --description 'Branch'
 # TODO options
 
 ### add
@@ -404,7 +404,7 @@ complete -f -c git -n '__fish_git_needs_command' -a init -d 'Create an empty git
 
 ### log
 complete -c git -n '__fish_git_needs_command' -a log -d 'Show commit logs'
-complete -c git -n '__fish_git_using_command log' -a '(__fish_git_heads) (__fish_git_ranges)' -d 'Branch'
+complete -c git -n '__fish_git_using_command log' -a '(__fish_git_refs) (__fish_git_ranges)' -d 'Branch'
 # TODO options
 
 ### merge

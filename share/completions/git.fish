@@ -24,9 +24,23 @@ function __fish_git_tags
     command git tag ^/dev/null
 end
 
+function __fish_git_dir
+    command git rev-parse --git-dir ^/dev/null
+end
+
+function __fish_git_heads
+    set -l gitdir (__fish_git_dir)
+    for head in HEAD FETCH_HEAD ORIG_HEAD MERGE_HEAD
+        if test -f $gitdir/$head
+            echo $head
+        end
+    end
+end
+
 function __fish_git_refs
     __fish_git_branches
     __fish_git_tags
+    __fish_git_heads
 end
 
 function __fish_git_remotes

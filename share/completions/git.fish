@@ -459,8 +459,18 @@ function __fish_git_mergetools
     end
 end
 
+# returns list of files with status:
+# "UU"=unmerged "\?\?"=untracked "M "=staged " M"=changed, not staged "MM"=staged and changed locally
+function __fish_git_status --argument-names "statusmarker"
+    for line in (git status -s)
+        set -l filename (string replace -r "^$statusmarker\s+" "" $line)
+        and echo $filename
+    end
+end
+
 complete -f -c git -n '__fish_git_needs_command' -a mergetool -d 'Run merge conflict resolution tools to resolve merge conflicts'
 complete -f -c git -n '__fish_git_using_command mergetool' -s t -l tool -d "Use specific merge resolution program" -a "(__fish_git_mergetools)"
+complete -f -c git -n '__fish_git_using_command mergetool' -a "(__fish_git_status 'UU')" -d "File"
 
 
 ### mv

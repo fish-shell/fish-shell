@@ -328,6 +328,7 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_add_files)'
 ### checkout
 complete -f -c git -n '__fish_git_needs_command' -a checkout -d 'Checkout and switch to a branch'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_branches)' --description 'Branch'
+complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' --description 'Head'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' --description 'Tag'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'

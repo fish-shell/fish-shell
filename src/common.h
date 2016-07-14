@@ -218,6 +218,14 @@ extern bool has_working_tty_timestamps;
         exit_without_destructors(1);        \
     }
 
+/// Exit program at once after emitting an error message.
+#define DIE(msg)                                                                      \
+    {                                                                                 \
+        fprintf(stderr, "fish: %s on line %ld of file %s, shutting down fish\n", msg, \
+                (long)__LINE__, __FILE__);                                            \
+        FATAL_EXIT();                                                                 \
+    }
+
 /// Exit program at once, leaving an error message about running out of memory.
 #define DIE_MEM()                                                                             \
     {                                                                                         \

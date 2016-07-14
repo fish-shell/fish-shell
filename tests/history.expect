@@ -1,0 +1,85 @@
+# vim: set filetype=expect:
+#
+# This is a very fragile test. Sorry about that. But interactively entering
+# commands and verifying they are recorded correctly in the interactive
+# history and that history can be manipulated is inherently difficult.
+#
+# This is meant to verify just a few of the most basic behaviors of the
+# interactive history to hopefully keep regressions from happening. It is not
+# meant to be a comprehensive test of the history subsystem. Those types of
+# tests belong in the src/fish_tests.cpp module.
+#
+
+# The history function might pipe output through the user's pager. We don't
+# want something like `less` to complicate matters so force the use of `cat`.
+set ::env(PAGER) cat
+spawn $fish
+expect_prompt
+
+# ==========
+# Start by ensuring we're not affected by earlier tests. Clear the history.
+send "builtin history --clear\r"
+expect_prompt
+
+# ==========
+# The following tests verify the behavior of the history builtin.
+# ==========
+
+# ==========
+# List our history which should be empty after just clearing it.
+send "echo start1; builtin history; echo end1\r"
+expect_prompt -re {start1\r\nend1\r\n} {
+    puts "empty history detected as expected"
+} unmatched {
+    puts stderr "empty history not detected as expected"
+}
+
+# ==========
+# Our history should now contain the previous command and nothing else.
+send "echo start2; builtin history; echo end2\r"
+expect_prompt -re {start2\r\necho start1; builtin history; echo end1\r\nend2\r\n} {
+    puts "first history command detected as expected"
+} unmatched {
+    puts stderr "first history command not detected as expected"
+}
+
+# ==========
+# Verify asking for two different actions produces an error.
+send "builtin history --search --merge\r"
+expect_prompt -re {\r\nYou cannot do both 'search' and 'merge' in the same 'history' invocation\r\n} {
+    puts "invalid attempt at multiple history commands detected"
+} unmatched {
+    puts stderr "invalid attempt at multiple history commands not detected"
+}
+
+# ==========
+# The following tests verify the behavior of the history function.
+# ==========
+
+# ==========
+# Verify explicit searching for the first two commands in the previous tests
+# returns the expected results.
+send "history --search echo start\r"
+expect_prompt -re {\r\necho start1.*\r\necho start2} {
+    puts "history function explicit search succeeded"
+} unmatched {
+    puts stderr "history function explicit search failed"
+}
+
+# ==========
+# Verify searching is the implicit action.
+send "history echo start\r"
+expect_prompt -re {\r\necho start1.*\r\necho start2} {
+    puts "history function implicit search succeeded"
+} unmatched {
+    puts stderr "history function implicit search failed"
+}
+
+# ==========
+# Verify implicit searching with a request for timestamps includes the timestamps.
+send "history -t echo start\r"
+expect_prompt -re {\r\n\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d  echo start1; builtin history;.*\r\n\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d  echo start2; builtin history} {
+    puts "history function implicit search with timestamps succeeded"
+} unmatched {
+    puts stderr "history function implicit search with timestamps failed"
+}

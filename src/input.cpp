@@ -52,6 +52,8 @@ struct input_mapping_t {
     /// New mode that should be switched to after command evaluation.
     wcstring sets_mode;
 
+    input_mapping_t(){}
+
     input_mapping_t(const wcstring &s, const std::vector<wcstring> &c,
                     const wcstring &m = DEFAULT_BIND_MODE, const wcstring &sm = DEFAULT_BIND_MODE)
         : seq(s), commands(c), mode(m), sets_mode(sm) {
@@ -187,6 +189,9 @@ static const wchar_t code_arr[] = {R_BEGINNING_OF_LINE,
 
 /// Mappings for the current input mode.
 static std::vector<input_mapping_t> mapping_list;
+
+/// Mapping used when no pattern matched (self-inserts)
+static input_mapping_t default_selfinsert_mapping;
 
 /// Terminfo map list.
 static std::vector<terminfo_mapping_t> terminfo_mappings;
@@ -365,9 +370,13 @@ int input_init() {
     input_terminfo_init();
     update_fish_color_support();
 
+    // Initialize fallback self-insert mapping
+    wcstring command = L"self-insert";
+    const wcstring_list_t commands_vector(&command, &command + 1);
+    default_selfinsert_mapping = input_mapping_t(L"", commands_vector, DEFAULT_BIND_MODE, DEFAULT_BIND_MODE);
+
     // If we have no keybindings, add a few simple defaults.
     if (mapping_list.empty()) {
-        input_mapping_add(L"", L"self-insert");
         input_mapping_add(L"\n", L"execute");
         input_mapping_add(L"\r", L"execute");
         input_mapping_add(L"\t", L"complete");
@@ -478,21 +487,26 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 
 /// Try reading the specified function mapping.
 static bool input_mapping_is_match(const input_mapping_t &m) {
-    wint_t c = 0;
-    int j;
+    wint_t c = -1;
+    int j = 0;
+    bool atLeastOneMatch = false;
 
     // debug(0, L"trying mapping %ls\n", escape(m.seq.c_str(), ESCAPE_ALL).c_str());
     const wchar_t *str = m.seq.c_str();
-    for (j = 0; str[j] != L'\0'; j++) {
+    do {
         bool timed = (j > 0 && iswcntrl(str[0]));
 
         c = input_common_readch(timed);
         if (str[j] != c) {
             break;
+        } else {
+          atLeastOneMatch = true;
         }
-    }
+        j++;
+    } while (str[j] != L'\0');
 
-    if (str[j] == L'\0') {
+    //Ensure that a pattern of \0 only matches an input of \0
+    if (str[j] == L'\0' && atLeastOneMatch) {
         // debug(0, L"matched mapping %ls (%ls)\n", escape(m.seq.c_str(), ESCAPE_ALL).c_str(),
         // m.command.c_str());
         // We matched the entire sequence.
@@ -511,8 +525,6 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
 void input_queue_ch(wint_t ch) { input_common_queue_ch(ch); }
 
 static void input_mapping_execute_matching_or_generic(bool allow_commands) {
-    const input_mapping_t *generic = NULL;
-
     const wcstring bind_mode = input_get_bind_mode();
 
     for (int i = 0; i < mapping_list.size(); i++) {
@@ -527,16 +539,14 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands) {
             continue;
         }
 
-        if (m.seq.length() == 0) {
-            generic = &m;
-        } else if (input_mapping_is_match(m)) {
+        if (input_mapping_is_match(m)) {
             input_mapping_execute(m, allow_commands);
             return;
         }
     }
 
-    if (generic) {
-        input_mapping_execute(*generic, allow_commands);
+    if (&default_selfinsert_mapping) {
+        input_mapping_execute(default_selfinsert_mapping, allow_commands);
     } else {
         // debug(0, L"no generic found, ignoring...");
         wchar_t c = input_common_readch(0);

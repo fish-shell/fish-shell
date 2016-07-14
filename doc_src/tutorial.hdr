@@ -399,6 +399,8 @@ Unlike other shells, `fish` does not have special syntax like &amp;&amp; or || t
 \outp{Backup failed}
 \endfish
 
+If you need to handle &amp;&amp; or || (for example in pasted snippets), add the contents of /usr/share/fish/examples/fish_user_key_bindings_handle_combiners.fish to ~/.config/fish/functions/fish_user_key_bindings.fish.
+
 
 \section tut_conditionals Conditionals (If, Else, Switch)
 

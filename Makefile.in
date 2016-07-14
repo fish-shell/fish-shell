@@ -310,8 +310,11 @@ test_high_level_test_deps = test_fishscript test_interactive
 active_test_goals = $(filter $(test_goals),$(foreach a,$(or $(MAKECMDGOALS),$(.DEFAULT_GOAL)),$(a) $($(a)_test_deps)))
 filter_up_to = $(eval b:=1)$(foreach a,$(2),$(and $(b),$(if $(subst $(1),,$(a)),$(a),$(eval b:=))))
 
+# The values for XDG_DATA_HOME and XDG_CONFIG_HOME mimic those from tests/test_util.fish.
 test_low_level: fish_tests $(call filter_up_to,test_low_level,$(active_test_goals))
-	./fish_tests
+	rm -rf test/data test/home
+	mkdir -p test/data test/home
+	env XDG_DATA_HOME=test/data XDG_CONFIG_HOME=test/home ./fish_tests
 .PHONY: test_low_level
 
 test_high_level: test_fishscript test_interactive

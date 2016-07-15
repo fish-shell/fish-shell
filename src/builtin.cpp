@@ -2831,7 +2831,7 @@ static const wcstring hist_cmd_to_string(hist_cmd_t hist_cmd) {
         case HIST_SAVE:
             return L"save";
         default:
-            return L"unknown";
+            DIE("Unhandled history command");
     }
 }
 
@@ -2950,7 +2950,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     int status = STATUS_BUILTIN_OK;
     switch (hist_cmd) {
         case HIST_SEARCH: {
-            if (!history->search(cmd, search_type, args, with_time, streams)) {
+            if (!history->search(search_type, args, with_time, streams)) {
                 status = STATUS_BUILTIN_ERROR;
             }
             break;

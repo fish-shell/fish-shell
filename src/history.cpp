@@ -1414,8 +1414,7 @@ static bool format_history_record(const history_item_t &item, const bool with_ti
     return true;
 }
 
-bool history_t::search(wchar_t *hist_cmd, history_search_type_t search_type,
-                       wcstring_list_t search_args, bool with_time, io_streams_t &streams) {
+bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args, bool with_time, io_streams_t &streams) {
     // scoped_lock locker(lock);  //!OCLINT(side-effect)
     if (search_args.empty()) {
         // Start at one because zero is the current command.
@@ -1431,12 +1430,11 @@ bool history_t::search(wchar_t *hist_cmd, history_search_type_t search_type,
         if (search_string.empty()) {
             streams.err.append_format(L"Searching for the empty string isn't allowed");
             return false;
-        } else {
-            history_search_t searcher = history_search_t(*this, search_string, search_type);
-            while (searcher.go_backwards()) {
-                if (!format_history_record(searcher.current_item(), with_time, streams)) {
-                    return false;
-                }
+        }
+        history_search_t searcher = history_search_t(*this, search_string, search_type);
+        while (searcher.go_backwards()) {
+            if (!format_history_record(searcher.current_item(), with_time, streams)) {
+                return false;
             }
         }
     }

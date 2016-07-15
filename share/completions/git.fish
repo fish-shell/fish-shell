@@ -300,6 +300,7 @@ complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_tags)' --description 'Tag'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command show' -l stat -d 'Generate a diffstat, showing the number of changed lines of each file'
 # TODO options
 
 ### show-branch

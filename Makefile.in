@@ -23,6 +23,9 @@
 # applications, install them, and recalculate dependencies.
 #
 
+# This makes things rather quiet.
+MAKEFLAGS += --silent
+
 #
 # This is the default value for SHELL but I like to be explicit about such
 # things. Especially in a project like fish where someone might otherwise
@@ -178,8 +181,7 @@ PROGRAMS := fish fish_indent fish_key_reader
 #
 # Manual pages to install
 #
-MANUALS := $(addsuffix .1, $(addprefix share/man/man1/,	\
-	$(PROGRAMS)))
+MANUALS := $(addsuffix .1, $(addprefix share/man/man1/, $(PROGRAMS)))
 
 #
 # All translation message catalogs
@@ -203,18 +205,56 @@ else
 endif
 
 #
+# Functions for status output
+#
+TERM_COLORS := $(shell tput colors 2> /dev/null)
+
+define echo_bold
+	@tput bold 2> /dev/null ||:
+	echo $1
+	@tput sgr0 2> /dev/null ||:
+endef
+
+# Assume if someone has a 256-color terminal, italic escapes won't break anything - maybe even works.
+# Almost nobody has their termcaps set properly for them.
+define echo_italic
+	@if [ ${TERM_COLORS} -ge 256 ] ; then \
+		echo \\033[3m$1; \
+		tput sgr0 2> /dev/null;\
+	else \
+		echo $1; \
+	fi
+endef
+
+define showvar
+	@$(call echo_bold,"$1 = \c")
+	@$(call echo_italic,"'$2'\c")
+	@echo $3
+endef
+
+#
 # Make everything needed for installing fish
 #
-all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
-	@echo fish has now been built.
-	@echo Use \'$(MAKE) install\' to install fish.
+all: SHOW-VARS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
+	@echo "\nfish has now been built."
+	@$(call echo_bold, "Use \`$(notdir $(MAKE)) install' to install fish.")
 .PHONY: all
+
+SHOW-VARS: FORCE
+	@${call showvar, "prefix",$(prefix),"\t\c"}
+	@${call showvar, "HAVE_DOXYGEN",$(HAVE_DOXYGEN),"\t\c"}
+	@${call showvar, "CXX",$(CXX)}
+	@${call showvar, "CXXFLAGS",$(CXXFLAGS)}
+.PHONY: FORCE
 
 #
 # Pull version information
 #
 FISH-BUILD-VERSION-FILE: FORCE
-	@./build_tools/git_version_gen.sh
+	@-tput setaf 3 2> /dev/null
+	@echo " \c"
+	@build_tools/git_version_gen.sh
+	@-tput sgr0 2> /dev/null
 -include FISH-BUILD-VERSION-FILE
 CXXFLAGS += -DFISH_BUILD_VERSION=\"$(FISH_BUILD_VERSION)\"
 .PHONY: FORCE
@@ -225,10 +265,10 @@ obj/fish_version.o: FISH-BUILD-VERSION-FILE
 # when the source code for the build configuration has changed.
 #
 configure: configure.ac
-	./config.status --recheck
+	./config.status -q --recheck
 
 Makefile: Makefile.in configure
-	./config.status
+	./config.status -q
 
 #
 # Build fish with some debug flags specified. This is GCC specific,
@@ -249,6 +289,7 @@ prof: all
 #
 doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h \
     $(HDR_FILES) lexicon_filter
+	echo "  doxygen  user_doc/html"
 	(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
 	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | \
 		doxygen - && touch user_doc; \
@@ -263,7 +304,7 @@ doc/refman.pdf: doc
 	cd doc/latex && \
 	make &&  \
 	mv refman.pdf ..;
-	rm -r doc/latex;
+	rm -rf doc/latex;
 
 #
 # Prep the environment for running the unit tests. When specifying DESTDIR on
@@ -333,7 +374,7 @@ test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
 # builtins
 #
 doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in
-	-rm command_list.tmp command_list_toc.tmp $@
+	rm -f command_list.tmp command_list_toc.tmp $@
 	for i in `printf "%s\n" $(HELP_SRC)|sort`; do \
 		echo "<hr>" >>command_list.tmp; \
 		cat $$i >>command_list.tmp; \
@@ -348,12 +389,12 @@ doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in
 	cat $@.in | awk '{if ($$0 ~ /@command_list_toc@/) { system("cat command_list_toc.txt"); } else if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
 
 toc.txt: $(HDR_FILES:index.hdr=index.hdr.in)
-	-rm toc.tmp $@
-	# Ugly hack to set the toc initial title for the main page
+	rm -f toc.tmp $@
+# Ugly hack to set the toc initial title for the main page
 	echo '- <a href="index.html" id="toc-index">Documentation</a>' > toc.tmp
-	# The first sed command captures the page name, followed by the description
-	# The second sed command captures the command name \1 and the description \2, but only up to a dash
-	# This is to reduce the size of the TOC in the command listing on the main page
+# The first sed command captures the page name, followed by the description
+# The second sed command captures the command name \1 and the description \2, but only up to a dash
+# This is to reduce the size of the TOC in the command listing on the main page
 	for i in $(HDR_FILES:index.hdr=index.hdr.in); do\
 		NAME=`basename $$i .hdr`; \
 		NAME=`basename $$NAME .hdr.in`; \
@@ -376,8 +417,9 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in
 # used in a 'cli' style context.
 #
 lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish
-	-rm lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
-	# Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
+	rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
+# Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
+	echo "  SED\t   "$@
 	$(SED) <command_list_toc.txt >>lexicon.tmp -n \
 		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
 		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt; \
@@ -389,7 +431,7 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | fgrep -vx -f lexicon_catalog.txt | $(SED) >>lexicon.tmp -n \
 		-e 'w lexicon_catalog.tmp' \
 		-e "s|'\(.*\)'|func \1|p"; \
-	$(SED) <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n \
+	$(SED) <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n  \
 		-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p'; \
 	$(SED) <lexicon_filter.in >>lexicon.tmp -n \
 		-e '/^#.!#/s/^#.!# \(.... [a-z][a-z_]*\)/\1/p'; \
@@ -406,10 +448,11 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 # providing suitable CSS in user_doc.css.in
 #
 lexicon_filter: lexicon.txt lexicon_filter.in
-	-rm $@.tmp $@
-	# Set the shebang as sed can reside in multiple places.
+	rm -f $@.tmp $@
+	echo "  SED\t   "$@
+# Set the shebang as sed can reside in multiple places.
 	$(SED) <$@.in >$@.tmp -e 's|@sed@|'$(SED)'|'
-	# Scan through the lexicon, transforming each line to something useful to Doxygen.
+# Scan through the lexicon, transforming each line to something useful to Doxygen.
 	if echo x | $(SED) "/[[:<:]]x/d" 2>/dev/null; then \
 		WORDBL='[[:<:]]'; WORDBR='[[:>:]]'; \
 	else \
@@ -512,6 +555,7 @@ endif
 #
 share/man: $(HELP_SRC) lexicon_filter
 	-mkdir share/man
+	echo "  doxygen\t   "$@
 	touch share/man
 	-rm -Rf share/man/man1
 	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| $(SED) "s/-.*//"` INPUT_FILTER=./lexicon_filter \
@@ -591,9 +635,9 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/conf.d
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
-	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir); true
-	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir); true
-	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir); true
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir) || true
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir) || true
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir) || true
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
@@ -700,6 +744,7 @@ uninstall-translations:
 # How basic files get compiled
 #
 obj/%.o: src/%.cpp | obj
+	echo "  CXX\t   "$@
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 #
@@ -712,6 +757,7 @@ obj:
 # Build the fish program.
 #
 fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2)
+	echo "  CXXLD\t   "$@
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
 $(PCRE2_LIB): $(PCRE2_H)
@@ -724,18 +770,21 @@ $(PCRE2_H):
 # Build the fish_tests program.
 #
 fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2)
+	echo "  CXXLD\t   "$@
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_indent program.
 #
 fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
+	echo "  CXXLD\t   "$@
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_key_reader program to show input from the terminal. 
 #
 fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
+	echo "  CXXLD\t   "$@
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
 #
@@ -800,6 +849,7 @@ distclean: clean
 # them.
 #
 clean:
+	$(call echo_bold, "Removing everything built by the Makefile")
 	$(MAKE) -C $(PCRE2_DIR) clean || true
 	rm -f obj/*.o *.o doc.h doc.tmp
 	rm -f doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
@@ -816,7 +866,6 @@ clean:
 	rm -f po/*.gmo
 	rm -rf obj build test
 .PHONY: clean
-
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

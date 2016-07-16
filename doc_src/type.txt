@@ -19,7 +19,7 @@ The following options are available:
 
 - `-p` or `--path` returns the name of the disk file that would be executed, or nothing if `type  -t  name` would not return `file`.
 
-- `-P` or `--force-path` returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
+- `-P` or `--force-path` returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the `$PATH`.
 
 - `-q` or `--quiet` suppresses all output; this is useful when testing the exit status.
 
@@ -28,5 +28,5 @@ The following options are available:
 
 \fish{cli-dark}
 >_ type fg
-\outp{fg is a builtin}
+<outp>fg is a builtin</outp>
 \endfish

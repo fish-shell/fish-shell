@@ -6,7 +6,7 @@
 # art text processor from the 70's. Who's sed? sed's dead, baby, sed's dead.*
 # by Mark Griffiths <mark@thebespokepixel.com>             *but quite portable
 #.
-# Finds /fish../endfish blocks in documentation source files and enhances
+# Finds \fish..\endfish blocks in documentation source files and enhances
 # markup. Requires that the four character word 'classes' declared here are
 # added to Doxyfiles as aliases i.e.:
 #.
@@ -71,17 +71,6 @@
         /<[^>]*>/ {
             b html
         }
-        # Preprocess specially recognized commands.
-        s/\\asis/@asis/g
-        s/\\bksl/@bksl/g
-        s/\\bold/@bold/g
-        s/\\emph/@emph/g
-        s/\\eror/@eror/g
-        s/\\mtch/@mtch/g
-        s/\\outp/@outp/g
-        s/\\sgst/@sgst/g
-        s/\\smtc/@smtc/g
-        s/\\undr/@undr/g
         # Process the rest
         b process
     }
@@ -105,7 +94,7 @@ s|<b>|@bold{|
 s|<b [^>]*>|@bold{|
 s|</b>|}|
 #.
-# Strong (synonymous with emphasis)
+# Strong (synonimous with emphasis)
 s|<strong>|@bold{|
 s|<strong [^>]*>|@bold{|
 s|</strong>|}|
@@ -124,7 +113,39 @@ s|</i>|}|
 s|<u>|@undr{|
 s|<u [^>]*>|@undr{|
 s|</u>|}|
+# Backslash (when escaping output)
+s|<bs>|@bksl{|
+s|</bs>|}|
+t html
 #.
+# Some handy non-standard extensions
+# autoSuGgeSTion
+s|<s>|@sgst{|
+s|<s [^>]*>|@sgst{|
+s|</s>|}|
+#.
+# MaTCH
+s|<m>|@mtch{|
+s|<m [^>]*>|@mtch{|
+s|</m>|}|
+#.
+# SearchMaTCh
+s|<sm>|@smtc{|
+s|<sm [^>]*>|@smtc{|
+s|</sm>|}|
+#.
+# ERrOR
+s|<error>|@eror{|
+s|<error [^>]*>|@eror{|
+s|</error>|}|
+#.
+# AsIs - protect from auto-formatting
+s|<asis>|@asis{|
+s|</asis>|}|
+#.
+# OUTPut - protect from auto-formatting
+s|<outp>|@outp{|
+s|</outp>|}|
 t html
 #.
 # Clean other unhandled html

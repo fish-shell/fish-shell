@@ -1,6 +1,6 @@
 # Formatting guide for fish docs
 
-The fish documentation has been updated to support Doxygen 1.8.7+, and while the main benefit of this change is extensive Markdown support, the addition of a fish lexicon and syntax filter, combined with semantic markup rules allows for automatic formatting enhancements across the HTML user_docs, the developer docs and the man pages.
+The fish documentation has been updated to support Doxygen 1.8.7+, and while the main benefit of this change is extensive Markdown support, the addition of a fish lexicon and syntax filter, combined with semantic markup rules allows for automatic formatting enhancements across the HTML user_docs and man pages.
 
 Initially my motivation was to fix a problem with long options ([Issue #1557](https://github.com/fish-shell/fish-shell/issues/1557) on GitHub), but as I worked on fixing the issue I realised there was an opportunity to simplify, reinforce and clarify the current documentation, hopefully making further contribution easier and cleaner, while allowing the documentation examples to presented more clearly with less author effort.
 
@@ -60,13 +60,9 @@ which is then transformed by Doxygen into an HTML version (`make doc`):
 
 `<span class="command">echo</span> <span class="argument">hello</span> <span class="argument">world</span>`
 
-A man page version (`make share/man`):
+And a man page version (`make share/man`):
 
 __echo__ hello world
-
-And a simple HTML version for the developer docs (`make doc`) and the LATEX/PDF manual  (`make doc/refman.pdf`):
-
-`echo hello world`
 
 ### Fonts
 
@@ -154,22 +150,25 @@ The following can be used in \\fish blocks to render some fish scenarios. These 
 
 ### Custom formatting tags
 
-- `{{` and `}}`: Required when wanting curly braces in regular expression example.
-- `\\asis`: \\asis\{This text will not be parsed for fish markup.\}
-- `\\bksl`: \\bksl\{Render the contents with a preceding backslash. Useful when presenting output.}
-- `\\eror`: \\eror\{This would be shown as an error.\}
-- `\\mtch`: \\mtch\{Matched\} items, such as tab completions.
-- `\\outp`: \\outp\{This would be rendered as command/script output.\}
-- `\\sgst`: auto\\sgst\{suggestion\}.
-- `\\smtc`: Matched items \\smtc\{searched\} for, like grep results.
-- `\\undr`: \\undr\{These words are underlined\}.
+```html
+<u>: <u>These words are underlined.</u>
+<s>: auto<s>suggestion</s>.
+<m>: <m>Matched</m> items, such as tab completions.
+<sm>: Matched items <sm>searched</sm> for, like grep results.
+<bs>: Render the contents with a preceding backslash. Useful when presenting output.
+<error>: <error>This would be shown as an error.</error>
+<asis>: <asis>This text will not be parsed for fish markup.</asis>
+<outp>: <outp>This would be rendered as command/script output.</outp>
+{{ and }}: Required when wanting curly braces in regular expression example.
+```
 
 ### Prompts and cursors
 
-- `>_`: Display a basic prompt.
-- `~>_`: Display a prompt with a the home directory as the current working directory.
-- `___` (3 underscores): Display a cursor.
-
+```html
+>_: Display a basic prompt.
+~>_: Display a prompt with a the home directory as the current working directory.
+___ (3 underscores): Display a cursor.
+```
 
 ### Keyboard shortcuts: @key{} and @cursor_key{}
 
@@ -250,16 +249,5 @@ end
 # Assumes 'most' is the default system pager.
 # NOT PORTABLE! Paths would be need to be updated on other systems.
 ```
-
-### Developer docs and LATEX/PDF output
-
-- HTML developer docs tested on Ubuntu 14.04, CentOS 6.5 and Mac OS X 10.9.
-- LATEX/PDF reference manual tested on Mac OS X 10.9 using MacTEX. PDF production returns an error (due to Doxygen's use of an outdated 'float' package), but manual PDF output is ok.
-
-### Future changes
-
-1. The documentation creation process would be better if it could be modularised further and moved out of the makefile into a number of supporting scripts. This would allow both the automake and Xcode build processes to use the documentation scripts directly. 
-2. Remove the Doxygen dependency entirely for the user documentation. This would be very acheivable now that the bulk of the documentation is in Markdown.
-3. It would be useful to gauge what parts of the documentation are actually used by users. Judging by the amount of 'missing comment' errors during the developer docs build phase, this aspect of the docs has been rather neglected. If it is not longer used or useful, then this could change the future direction of the documentation and significantly streamline the process.
 
 #### Author: Mark Griffiths [@GitHub](https://github.com/MarkGriffiths)

@@ -1071,7 +1071,7 @@ size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_i
             const wchar_t sequence_char = input[in_pos++];
             if (sequence_char >= L'a' && sequence_char <= (L'a' + 32)) {
                 result_char_or_none = sequence_char - L'a' + 1;
-            } else if (sequence_char >= L'A' && sequence_char <= (L'A' + 32)) {
+            } else if (sequence_char >= L'@' && sequence_char <= (L'A' + 32)) {
                 result_char_or_none = sequence_char - L'A' + 1;
             } else {
                 errored = true;

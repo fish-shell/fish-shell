@@ -367,7 +367,7 @@ int input_init() {
 
     // If we have no keybindings, add a few simple defaults.
     if (mapping_list.empty()) {
-        input_mapping_add(L"", L"self-insert");
+        input_mapping_add(L"\xE000", L"self-insert");
         input_mapping_add(L"\n", L"execute");
         input_mapping_add(L"\r", L"execute");
         input_mapping_add(L"\t", L"complete");
@@ -478,21 +478,27 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 
 /// Try reading the specified function mapping.
 static bool input_mapping_is_match(const input_mapping_t &m) {
-    wint_t c = 0;
-    int j;
+    wint_t c = -1;
+    int j = 0;
+    bool atLeastOneMatch = false;
 
     // debug(0, L"trying mapping %ls\n", escape(m.seq.c_str(), ESCAPE_ALL).c_str());
     const wchar_t *str = m.seq.c_str();
-    for (j = 0; str[j] != L'\0'; j++) {
+
+    do {
         bool timed = (j > 0 && iswcntrl(str[0]));
 
         c = input_common_readch(timed);
         if (str[j] != c) {
             break;
+        } else {
+          atLeastOneMatch = true;
         }
-    }
+        j++;
+    } while (str[j] != L'\0');
 
-    if (str[j] == L'\0') {
+    //Ensure that a pattern of \0 only matches an input of \0
+    if (str[j] == L'\0' && atLeastOneMatch) {
         // debug(0, L"matched mapping %ls (%ls)\n", escape(m.seq.c_str(), ESCAPE_ALL).c_str(),
         // m.command.c_str());
         // We matched the entire sequence.
@@ -527,8 +533,8 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands) {
             continue;
         }
 
-        if (m.seq.length() == 0) {
-            generic = &m;
+        if (m.seq == L"\xE000") {
+          generic = &m;
         } else if (input_mapping_is_match(m)) {
             input_mapping_execute(m, allow_commands);
             return;

@@ -13,7 +13,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     end
 
     # This is the default binding, i.e. the one used if no other binding matches
-    bind $argv "" self-insert
+    bind $argv \uE000 self-insert
 
     bind $argv \n execute
     bind $argv \r execute

@@ -24,7 +24,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     fish_default_key_bindings -M default
 
     # Remove the default self-insert bindings in default mode
-    bind -e "" -M default
+    bind -e \uE000 -M default
     # Add way to kill current command line while in insert mode.
     bind -M insert \cc __fish_cancel_commandline
     # Add a way to switch from insert to normal (command) mode.
@@ -180,7 +180,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Lowercase r, enters replace-one mode
     #
     bind -m replace-one r force-repaint
-    bind -M replace-one -m default '' delete-char self-insert backward-char force-repaint
+    bind -M replace-one -m default \uE000 delete-char self-insert backward-char force-repaint
     bind -M replace-one -m default \e cancel force-repaint
 
     #

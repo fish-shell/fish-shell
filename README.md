@@ -82,13 +82,15 @@ chsh will prompt you for your password, and change your default shell. Substitut
 
 Use the following command if you didn't already add your fish path to /etc/shells.
 
-        echo /usr/local/bin/fish | sudo tee -a /etc/shells
+    echo /usr/local/bin/fish | sudo tee -a /etc/shells
 
 To switch your default shell back, you can run:
 
 	chsh -s /bin/bash
 
 Substitute /bin/bash with /bin/tcsh or /bin/zsh as appropriate.
+
+You may need to logout/login for the change (chsh) to take effect.
 
 ## Contributing Changes to the Code
 

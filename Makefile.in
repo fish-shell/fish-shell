@@ -644,7 +644,7 @@ install-force: all install-translations
 	done;
 
 	$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
-	for i in user_doc/html/* ChangeLog; do \
+	for i in user_doc/html/* CHANGELOG.md; do \
 		if test -f $$i; then \
 			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
 		fi; \

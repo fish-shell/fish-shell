@@ -17,7 +17,7 @@ history ( -h | --help )
 
 The following commands are available:
 
-- `-s` or `--search` returns history items matching the search string. If no search string is provided it returns all history items. This is the default operation if no other operation is specified.
+- `-s` or `--search` returns history items matching the search string. If no search string is provided it returns all history items. This is the default operation if no other operation is specified. Entries are ordered newest to oldest.
 
 - `-d` or `--delete` deletes history items. Without the `--prefix` or `--contains` options, the exact match will be deleted. With either of these options, a prompt will be displayed before any items are deleted.
 
@@ -46,4 +46,9 @@ history --search --contains "foo"
 
 history --delete --prefix "foo"
 # Interactively deletes the record of previous commands which start with "foo".
+
+\subsection history-notes Notes
+
+If you specify both `--prefix` and `--contains` the last flag seen is used.
+
 \endfish

@@ -8,6 +8,9 @@
 // Type "exit" or "quit" to terminate the program.
 #include "config.h"  // IWYU pragma: keep
 
+#include <memory>
+#include <string>
+#include <vector>
 #include <errno.h>
 #include <getopt.h>
 #include <signal.h>

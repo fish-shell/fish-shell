@@ -299,9 +299,11 @@ static int interrupt_handler() {
 }
 
 void update_fish_color_support(void) {
-    // Infer term256 support. If fish_term256 is set, we respect it; otherwise try to detect it from
-    // the TERM variable.
+    // Detect or infer term256 support. If fish_term256 is set, we respect it;
+    // otherwise try to detect terminfo else infer it from the TERM variable.
     env_var_t fish_term256 = env_get_string(L"fish_term256");
+    int err_ret;
+
     bool support_term256;
     if (!fish_term256.missing_or_empty()) {
         support_term256 = from_string<bool>(fish_term256);
@@ -309,6 +311,8 @@ void update_fish_color_support(void) {
         env_var_t term = env_get_string(L"TERM");
         if (term.missing()) {
             support_term256 = false;
+        } else if (setupterm(NULL, STDOUT_FILENO, &err_ret) != ERR) {
+            support_term256 = (max_colors >= 256);
         } else if (term.find(L"256color") != wcstring::npos) {
             // Explicitly supported.
             support_term256 = true;

@@ -16,6 +16,7 @@
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
+#include <stdlib.h>
 #include <wctype.h>
 #include <algorithm>
 #include <memory>
@@ -302,8 +303,6 @@ void update_fish_color_support(void) {
     // Detect or infer term256 support. If fish_term256 is set, we respect it;
     // otherwise try to detect terminfo else infer it from the TERM variable.
     env_var_t fish_term256 = env_get_string(L"fish_term256");
-    int err_ret;
-
     bool support_term256;
     if (!fish_term256.missing_or_empty()) {
         support_term256 = from_string<bool>(fish_term256);
@@ -311,17 +310,23 @@ void update_fish_color_support(void) {
         env_var_t term = env_get_string(L"TERM");
         if (term.missing()) {
             support_term256 = false;
-        } else if (setupterm(NULL, STDOUT_FILENO, &err_ret) != ERR) {
-            support_term256 = (max_colors >= 256);
         } else if (term.find(L"256color") != wcstring::npos) {
             // Explicitly supported.
             support_term256 = true;
         } else if (term.find(L"xterm") != wcstring::npos) {
-            // Assume that all xterms are 256, except for OS X SnowLeopard.
-            env_var_t prog = env_get_string(L"TERM_PROGRAM");
-            support_term256 = (prog != L"Apple_Terminal");
+            // Assume that all xterms are 256, except for OS X SnowLeopard
+            const env_var_t prog = env_get_string(L"TERM_PROGRAM");
+            const env_var_t progver = env_get_string(L"TERM_PROGRAM_VERSION");
+            if (progver.missing_or_empty()) {
+                support_term256 = true;
+            } else {  // OS X Lion is 300+
+                support_term256 =
+                    (prog != L"Apple_Terminal" || strtod(wcs2str(progver), NULL) > 300);
+            }
+            // See if terminfo happens to identify 256 colors, else default to false.
+        } else if (setupterm(NULL, STDOUT_FILENO, NULL) != ERR) {
+            support_term256 = (max_colors >= 256);
         } else {
-            // Don't know, default to false.
             support_term256 = false;
         }
     }

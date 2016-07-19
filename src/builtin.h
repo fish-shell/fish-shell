@@ -33,6 +33,9 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 // Error message for unknown switch.
 #define BUILTIN_ERR_UNKNOWN _(L"%ls: Unknown option '%ls'\n")
 
+// Error message for unexpected args.
+#define BUILTIN_ERR_ARG_COUNT _(L"%ls: %ls command expected %d args, got %d\n")
+
 // Error message for invalid character in variable name.
 #define BUILTIN_ERR_VARCHAR                                                                 \
     _(L"%ls: Invalid character '%lc' in variable name. Only alphanumerical characters and " \

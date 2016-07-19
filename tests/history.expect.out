@@ -1,0 +1,6 @@
+empty history detected as expected
+first history command detected as expected
+invalid attempt at multiple history commands detected
+history function explicit search succeeded
+history function implicit search succeeded
+history function implicit search with timestamps succeeded

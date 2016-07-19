@@ -23,6 +23,7 @@
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "history.h"
+#include "io.h"
 #include "iothread.h"
 #include "lru.h"
 #include "parse_constants.h"
@@ -1394,6 +1395,51 @@ void history_t::save_internal(bool vacuum) {
 void history_t::save(void) {
     scoped_lock locker(lock);  //!OCLINT(side-effect)
     this->save_internal(false);
+}
+
+// Formats a single history record, including a trailing newline.  Returns true
+// if bytes were written to the output stream and false otherwise.
+static bool format_history_record(const history_item_t &item, const bool with_time,
+                                  io_streams_t &streams) {
+    if (with_time) {
+        const time_t seconds = item.timestamp();
+        struct tm timestamp;
+        if (!localtime_r(&seconds, &timestamp)) return false;
+        char timestamp_string[22];
+        if (strftime(timestamp_string, 22, "%Y-%m-%d %H:%M:%S  ", &timestamp) != 21) return false;
+        streams.out.append(str2wcstring(timestamp_string));
+    }
+    streams.out.append(item.str());
+    streams.out.append(L"\n");
+    return true;
+}
+
+bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args, bool with_time, io_streams_t &streams) {
+    // scoped_lock locker(lock);  //!OCLINT(side-effect)
+    if (search_args.empty()) {
+        // Start at one because zero is the current command.
+        for (int i = 1; !this->item_at_index(i).empty(); ++i) {
+            if (!format_history_record(this->item_at_index(i), with_time, streams)) return false;
+        }
+        return true;
+    }
+
+    for (wcstring_list_t::const_iterator iter = search_args.begin(); iter != search_args.end();
+         ++iter) {
+        const wcstring &search_string = *iter;
+        if (search_string.empty()) {
+            streams.err.append_format(L"Searching for the empty string isn't allowed");
+            return false;
+        }
+        history_search_t searcher = history_search_t(*this, search_string, search_type);
+        while (searcher.go_backwards()) {
+            if (!format_history_record(searcher.current_item(), with_time, streams)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 void history_t::disable_automatic_saving() {

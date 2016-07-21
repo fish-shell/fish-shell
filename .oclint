@@ -24,7 +24,7 @@ rule-configurations:
     # RAII behavior so the local vars are actually used.
     #
     - key: RAII_CUSTOM_CLASSES
-      value: scoped_lock
+      value: scoped_lock scoped_buffer_t
 
 disable-rules:
     #

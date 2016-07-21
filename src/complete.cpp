@@ -1,8 +1,8 @@
-/** \file complete.c Functions related to tab-completion.
-
-  These functions are used for storing and retrieving tab-completion data, as well as for performing
-  tab-completion.
-*/
+/// Functions related to tab-completion.
+///
+/// These functions are used for storing and retrieving tab-completion data, as well as for
+/// performing tab-completion.
+///
 #include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>
@@ -427,7 +427,7 @@ static completion_entry_t &complete_get_exact_entry(const wcstring &cmd, bool cm
 
 void complete_set_authoritative(const wchar_t *cmd, bool cmd_is_path, bool authoritative) {
     CHECK(cmd, );
-    scoped_lock lock(completion_lock);  //!OCLINT(has side effects)
+    scoped_lock lock(completion_lock);
 
     completion_entry_t &c = complete_get_exact_entry(cmd, cmd_is_path);
     c.authoritative = authoritative;
@@ -441,7 +441,7 @@ void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
     assert(option.empty() == (option_type == option_type_args_only));
 
     // Lock the lock that allows us to edit the completion entry list.
-    scoped_lock lock(completion_lock);  //!OCLINT(has side effects)
+    scoped_lock lock(completion_lock);
 
     completion_entry_t &c = complete_get_exact_entry(cmd, cmd_is_path);
 
@@ -478,7 +478,7 @@ bool completion_entry_t::remove_option(const wcstring &option, complete_option_t
 
 void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
                      complete_option_type_t type) {
-    scoped_lock lock(completion_lock);  //!OCLINT(has side effects)
+    scoped_lock lock(completion_lock);
 
     completion_entry_t tmp_entry(cmd, cmd_is_path, false);
     completion_entry_set_t::iterator iter = completion_set.find(tmp_entry);
@@ -495,7 +495,7 @@ void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &opti
 }
 
 void complete_remove_all(const wcstring &cmd, bool cmd_is_path) {
-    scoped_lock lock(completion_lock);  //!OCLINT(has side effects)
+    scoped_lock lock(completion_lock);
 
     completion_entry_t tmp_entry(cmd, cmd_is_path, false);
     completion_set.erase(tmp_entry);
@@ -1480,7 +1480,7 @@ static void append_switch(wcstring &out, const wcstring &opt, const wcstring &ar
 
 wcstring complete_print() {
     wcstring out;
-    scoped_lock locker(completion_lock);  //!OCLINT(side-effect)
+    scoped_lock locker(completion_lock);
 
     // Get a list of all completions in a vector, then sort it by order.
     std::vector<const completion_entry_t *> all_completions;
@@ -1597,7 +1597,7 @@ wcstring_list_t complete_get_wrap_chain(const wcstring &command) {
     if (command.empty()) {
         return wcstring_list_t();
     }
-    scoped_lock locker(wrapper_lock);  //!OCLINT(side-effect)
+    scoped_lock locker(wrapper_lock);
     const wrapper_map_t &wraps = wrap_map();
 
     wcstring_list_t result;
@@ -1633,7 +1633,7 @@ wcstring_list_t complete_get_wrap_chain(const wcstring &command) {
 
 wcstring_list_t complete_get_wrap_pairs() {
     wcstring_list_t result;
-    scoped_lock locker(wrapper_lock);  //!OCLINT(side-effect)
+    scoped_lock locker(wrapper_lock);
     const wrapper_map_t &wraps = wrap_map();
     for (wrapper_map_t::const_iterator outer = wraps.begin(); outer != wraps.end(); ++outer) {
         const wcstring &cmd = outer->first;

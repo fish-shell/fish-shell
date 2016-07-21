@@ -64,7 +64,7 @@ static bool is_autoload = false;
 /// loaded.
 static int load(const wcstring &name) {
     ASSERT_IS_MAIN_THREAD();
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
     bool was_autoload = is_autoload;
     int res;
 
@@ -164,7 +164,7 @@ void function_add(const function_data_t &data, const parser_t &parser, int defin
 
     CHECK(!data.name.empty(), );
     CHECK(data.definition, );
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
 
     // Remove the old function.
     function_remove(data.name);
@@ -185,28 +185,28 @@ void function_add(const function_data_t &data, const parser_t &parser, int defin
 
 int function_exists(const wcstring &cmd) {
     if (parser_keywords_is_reserved(cmd)) return 0;
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
     load(cmd);
     return loaded_functions.find(cmd) != loaded_functions.end();
 }
 
 void function_load(const wcstring &cmd) {
     if (!parser_keywords_is_reserved(cmd)) {
-        scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+        scoped_lock locker(functions_lock);
         load(cmd);
     }
 }
 
 int function_exists_no_autoload(const wcstring &cmd, const env_vars_snapshot_t &vars) {
     if (parser_keywords_is_reserved(cmd)) return 0;
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
     return loaded_functions.find(cmd) != loaded_functions.end() ||
            function_autoloader.can_load(cmd, vars);
 }
 
 static bool function_remove_ignore_autoload(const wcstring &name, bool tombstone) {
     // Note: the lock may be held at this point, but is recursive.
-    scoped_lock lock(functions_lock);
+    scoped_lock locker(functions_lock);
 
     function_map_t::iterator iter = loaded_functions.find(name);
 
@@ -240,7 +240,7 @@ static const function_info_t *function_get(const wcstring &name) {
 }
 
 bool function_get_definition(const wcstring &name, wcstring *out_definition) {
-    scoped_lock lock(functions_lock);
+    scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     if (func && out_definition) {
         out_definition->assign(func->definition);
@@ -249,32 +249,32 @@ bool function_get_definition(const wcstring &name, wcstring *out_definition) {
 }
 
 wcstring_list_t function_get_named_arguments(const wcstring &name) {
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->named_arguments : wcstring_list_t();
 }
 
 std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name) {
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->inherit_vars : std::map<wcstring, env_var_t>();
 }
 
 int function_get_shadow_builtin(const wcstring &name) {
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->shadow_builtin : false;
 }
 
 int function_get_shadow_scope(const wcstring &name) {
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->shadow_scope : false;
 }
 
 bool function_get_desc(const wcstring &name, wcstring *out_desc) {
     // Empty length string goes to NULL.
-    scoped_lock lock(functions_lock);
+    scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     if (out_desc && func && !func->description.empty()) {
         out_desc->assign(_(func->description.c_str()));
@@ -286,7 +286,7 @@ bool function_get_desc(const wcstring &name, wcstring *out_desc) {
 
 void function_set_desc(const wcstring &name, const wcstring &desc) {
     load(name);
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
     function_map_t::iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end()) {
         iter->second.description = desc;
@@ -295,7 +295,7 @@ void function_set_desc(const wcstring &name, const wcstring &desc) {
 
 bool function_copy(const wcstring &name, const wcstring &new_name) {
     bool result = false;
-    scoped_lock lock(functions_lock);
+    scoped_lock locker(functions_lock);
     function_map_t::const_iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end()) {
         // This new instance of the function shouldn't be tied to the definition file of the
@@ -310,7 +310,7 @@ bool function_copy(const wcstring &name, const wcstring &new_name) {
 
 wcstring_list_t function_get_names(int get_hidden) {
     std::set<wcstring> names;
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
     autoload_names(names, get_hidden);
 
     function_map_t::const_iterator iter;
@@ -327,13 +327,13 @@ wcstring_list_t function_get_names(int get_hidden) {
 }
 
 const wchar_t *function_get_definition_file(const wcstring &name) {
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->definition_file : NULL;
 }
 
 int function_get_definition_offset(const wcstring &name) {
-    scoped_lock lock(functions_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->definition_offset : -1;
 }

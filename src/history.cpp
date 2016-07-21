@@ -674,7 +674,7 @@ static size_t offset_of_next_item(const char *begin, size_t mmap_length,
 history_t &history_collection_t::alloc(const wcstring &name) {
     // Note that histories are currently never deleted, so we can return a reference to them without
     // using something like shared_ptr.
-    scoped_lock locker(m_lock);  //!OCLINT(side-effect)
+    scoped_lock locker(m_lock);
     history_t *&current = m_histories[name];
     if (current == NULL) current = new history_t(name);
     return *current;
@@ -701,7 +701,7 @@ history_t::history_t(const wcstring &pname)
 history_t::~history_t() { pthread_mutex_destroy(&lock); }
 
 void history_t::add(const history_item_t &item, bool pending) {
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
 
     // Try merging with the last item.
     if (!new_items.empty() && new_items.back().merge(item)) {
@@ -794,7 +794,7 @@ void history_t::set_valid_file_paths(const wcstring_list_t &valid_file_paths,
         return;
     }
 
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
 
     // Look for an item with the given identifier. It is likely to be at the end of new_items.
     for (history_item_list_t::reverse_iterator iter = new_items.rbegin(); iter != new_items.rend();
@@ -807,7 +807,7 @@ void history_t::set_valid_file_paths(const wcstring_list_t &valid_file_paths,
 }
 
 void history_t::get_string_representation(wcstring *result, const wcstring &separator) {
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
 
     bool first = true;
 
@@ -853,7 +853,7 @@ void history_t::get_string_representation(wcstring *result, const wcstring &sepa
 }
 
 history_item_t history_t::item_at_index(size_t idx) {
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
 
     // 0 is considered an invalid index.
     assert(idx > 0);
@@ -1393,7 +1393,7 @@ void history_t::save_internal(bool vacuum) {
 }
 
 void history_t::save(void) {
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
     this->save_internal(false);
 }
 
@@ -1415,7 +1415,7 @@ static bool format_history_record(const history_item_t &item, const bool with_ti
 }
 
 bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args, bool with_time, io_streams_t &streams) {
-    // scoped_lock locker(lock);  //!OCLINT(side-effect)
+    // scoped_lock locker(lock);
     if (search_args.empty()) {
         // Start at one because zero is the current command.
         for (int i = 1; !this->item_at_index(i).empty(); ++i) {
@@ -1443,20 +1443,20 @@ bool history_t::search(history_search_type_t search_type, wcstring_list_t search
 }
 
 void history_t::disable_automatic_saving() {
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
     disable_automatic_save_counter++;
     assert(disable_automatic_save_counter != 0);  // overflow!
 }
 
 void history_t::enable_automatic_saving() {
-    scoped_lock locker(lock);                    //!OCLINT(side-effect)
+    scoped_lock locker(lock);
     assert(disable_automatic_save_counter > 0);  // underflow
     disable_automatic_save_counter--;
     save_internal_unless_disabled();
 }
 
 void history_t::clear(void) {
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
     new_items.clear();
     deleted_items.clear();
     first_unwritten_new_item_index = 0;
@@ -1467,7 +1467,7 @@ void history_t::clear(void) {
 }
 
 bool history_t::is_empty(void) {
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
 
     // If we have new items, we're not empty.
     if (!new_items.empty()) return false;
@@ -1587,7 +1587,7 @@ void history_t::incorporate_external_changes() {
     // to preserve old_item_offsets so that they don't have to be recomputed. (However, then items
     // *deleted* in other instances would not show up here).
     time_t new_timestamp = time(NULL);
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
 
     // If for some reason the clock went backwards, we don't want to start dropping items; therefore
     // we only do work if time has progressed. This also makes multiple calls cheap.
@@ -1747,6 +1747,6 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
 
 /// Very simple, just mark that we have no more pending items.
 void history_t::resolve_pending() {
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
     this->has_pending_item = false;
 }

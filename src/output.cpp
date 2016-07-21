@@ -37,15 +37,19 @@ static int (*out)(char c) = writeb_internal;
 /// Whether term256 and term24bit are supported.
 static color_support_t color_support = 0;
 
+/// Set the function used for writing in move_cursor, writespace and set_color and all other output
+/// functions in this library. By default, the write call is used to give completely unbuffered
+/// output to stdout.
 void output_set_writer(int (*writer)(char)) {
     CHECK(writer, );
     out = writer;
 }
 
+/// Return the current output writer.
 int (*output_get_writer())(char) { return out; }
 
-// Returns true if we think the term256 support is "native" as opposed to forced.
-static bool term256_support_is_native(void) { return max_colors >= 256; }
+/// Returns true if we think tparm can handle outputting a color index 
+static bool term_supports_color_natively(unsigned int c) { return max_colors >= c; }
 
 color_support_t output_get_color_support(void) { return color_support; }
 
@@ -59,15 +63,18 @@ unsigned char index_for_color(rgb_color_t c) {
 }
 
 static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
-    bool result = false;
-    if (idx < 16 || term256_support_is_native()) {
+    if (term_supports_color_natively(idx)) {
         // Use tparm to emit color escape.
         writembs(tparm(todo, idx));
-        result = true;
+        return true;
     } else {
         // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
-        char buff[128] = "";
-        snprintf(buff, sizeof buff, "\x1b[%d;5;%dm", is_fg ? 38 : 48, idx);
+        char buff[16] = "";
+        if (idx < 16) {
+            snprintf(buff, sizeof buff, "\x1b[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
+        } else {
+            snprintf(buff, sizeof buff, "\x1b[%d;5;%dm", is_fg ? 38 : 48, idx);
+        }
 
         int (*writer)(char) = output_get_writer();
         if (writer) {
@@ -76,9 +83,8 @@ static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
             }
         }
 
-        result = true;
+        return true;
     }
-    return result;
 }
 
 static bool write_foreground_color(unsigned char idx) {
@@ -99,6 +105,7 @@ static bool write_background_color(unsigned char idx) {
     return false;
 }
 
+// Exported for builtin_set_color's usage only.
 void write_color(rgb_color_t color, bool is_fg) {
     bool supports_term24bit = !!(output_get_color_support() & color_support_term24bit);
     if (!supports_term24bit || !color.is_rgb()) {
@@ -122,6 +129,27 @@ void write_color(rgb_color_t color, bool is_fg) {
     }
 }
 
+/// Sets the fg and bg color. May be called as often as you like, since if the new color is the same
+/// as the previous, nothing will be written. Negative values for set_color will also be ignored.
+/// Since the terminfo string this function emits can potentially cause the screen to flicker, the
+/// function takes care to write as little as possible.
+///
+/// Possible values for color are any form the FISH_COLOR_* enum and FISH_COLOR_RESET.
+/// FISH_COLOR_RESET will perform an exit_attribute_mode, even if set_color thinks it is already in
+/// FISH_COLOR_NORMAL mode.
+///
+/// In order to set the color to normal, three terminfo strings may have to be written.
+///
+/// - First a string to set the color, such as set_a_foreground. This is needed because otherwise
+/// the previous strings colors might be removed as well.
+///
+/// - After that we write the exit_attribute_mode string to reset all color attributes.
+///
+/// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
+/// color pair to what it should be.
+///
+/// \param c Foreground color.
+/// \param c2 Background color.
 void set_color(rgb_color_t c, rgb_color_t c2) {
 #if 0
     wcstring tmp = c.description();
@@ -260,11 +288,15 @@ static int writeb_internal(char c) {  // cppcheck
     return 0;
 }
 
+/// This is for writing process notification messages. Has to write to stdout, so clr_eol and such
+/// functions will work correctly. Not an issue since this function is only used in interactive mode
+/// anyway.
 int writeb(tputs_arg_t b) {
     out(b);
     return 0;
 }
 
+/// Write a wide character using the output method specified using output_set_writer().
 int writech(wint_t ch) {
     char buff[MB_LEN_MAX + 1];
     size_t len;
@@ -294,6 +326,7 @@ int writech(wint_t ch) {
     return 0;
 }
 
+/// Write a wide character string to FD 1.
 void writestr(const wchar_t *str) {
     CHECK(str, );
 
@@ -329,6 +362,8 @@ void writestr(const wchar_t *str) {
     if (buffer != static_buffer) delete[] buffer;
 }
 
+/// Given a list of rgb_color_t, pick the "best" one, as determined by the color support. Returns
+/// rgb_color_t::none() if empty.
 rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support_t support) {
     if (candidates.empty()) {
         return rgb_color_t::none();
@@ -358,7 +393,8 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
     return result;
 }
 
-// This code should be refactored to enable sharing with builtin_set_color.
+/// Return the internal color code representing the specified color.
+/// XXX This code should be refactored to enable sharing with builtin_set_color.
 rgb_color_t parse_color(const wcstring &val, bool is_background) {
     int is_bold = 0;
     int is_underline = 0;
@@ -408,6 +444,7 @@ rgb_color_t parse_color(const wcstring &val, bool is_background) {
     return result;
 }
 
+/// Write specified multibyte string.
 void writembs_check(char *mbs, const char *mbs_name, const char *file, long line) {
     if (mbs != NULL) {
         tputs(mbs, 1, &writeb);

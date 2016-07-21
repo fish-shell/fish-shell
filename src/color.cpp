@@ -149,29 +149,32 @@ struct named_color_t {
     const wchar_t *name;
     unsigned char idx;
     unsigned char rgb[3];
+    bool hidden;
 };
 
 static const named_color_t named_colors[] = {
-    {L"black", 0, {0, 0, 0}},
-    {L"red", 1, {0xFF, 0, 0}},
-    {L"green", 2, {0, 0xFF, 0}},
-    {L"brown", 3, {0x72, 0x50, 0}},
-    {L"yellow", 3, {0xFF, 0xFF, 0}},
-    {L"blue", 4, {0, 0, 0xFF}},
-    {L"magenta", 5, {0xFF, 0, 0xFF}},
-    {L"purple", 5, {0xFF, 0, 0xFF}},
-    {L"cyan", 6, {0, 0xFF, 0xFF}},
-    {L"grey", 7, {0xE5, 0xE5, 0xE5}},
-    {L"brgrey", 8, {0x55, 0x55, 0x55}},
-    {L"brred", 9, {0xFF, 0x55, 0x55}},
-    {L"brgreen", 10, {0x55, 0xFF, 0x55}},
-    {L"brbrown", 11, {0xFF, 0xFF, 0x55}},
-    {L"bryellow", 11, {0xFF, 0xFF, 0x55}},
-    {L"brblue", 12, {0x55, 0x55, 0xFF}},
-    {L"brmagenta", 13, {0xFF, 0x55, 0xFF}},
-    {L"brpurple", 13, {0xFF, 0x55, 0xFF}},
-    {L"brcyan", 14, {0x55, 0xFF, 0xFF}},
-    {L"white", 15, {0xFF, 0xFF, 0xFF}},
+    {L"black", 0, {0, 0, 0}, false},
+    {L"red", 1, {0x80, 0, 0}, false},
+    {L"green", 2, {0, 0x80, 0}, false},
+    {L"brown", 3, {0x72, 0x50, 0}, true},
+    {L"yellow", 3, {0x80, 0x80, 0}, false},
+    {L"blue", 4, {0, 0, 0x80}, false},
+    {L"magenta", 5, {0x80, 0, 0x80}, false},
+    {L"purple", 5, {0x80, 0, 0x80}, true},
+    {L"cyan", 6, {0, 0x80, 0x80}, false},
+    {L"white", 7, {0xC0, 0xC0, 0xC0}, false},
+    {L"grey", 7, {0xe5, 0xe5, 0xe5}, true},
+    {L"brblack", 8, {0x80, 0x80, 0x80}, false},
+    {L"brgrey", 8, {0055, 0x55, 0x55}, true},
+    {L"brred", 9, {0xFF, 0x00, 0x00}, false},
+    {L"brgreen", 10, {0x00, 0xFF, 0x00}, false},
+    {L"brbrown", 11, {0xFF, 0xFF, 0x00}, true},
+    {L"bryellow", 11, {0xFF, 0xFF, 0x00}, false},
+    {L"brblue", 12, {0x00, 0, 0xFF}, false},
+    {L"brmagenta", 13, {0xFF, 0, 0xFF}, false},
+    {L"brpurple", 13, {0xFF, 0, 0xFF}, true},
+    {L"brcyan", 14, {0x00, 0xFF, 0xFF}, false},
+    {L"brwhite", 15, {0xFF, 0xFF, 0xFF}, false},
 };
 
 wcstring_list_t rgb_color_t::named_color_names(void) {
@@ -179,7 +182,9 @@ wcstring_list_t rgb_color_t::named_color_names(void) {
     wcstring_list_t result;
     result.reserve(1 + count);
     for (size_t i = 0; i < count; i++) {
-        result.push_back(named_colors[i].name);
+        if (named_colors[i].hidden == false) {
+            result.push_back(named_colors[i].name);
+        }
     }
     // "normal" isn't really a color and does not have a color palette index or
     // RGB value. Therefore, it does not appear in the named_colors table.
@@ -227,16 +232,24 @@ rgb_color_t rgb_color_t::white() { return rgb_color_t(type_named, 7); }
 
 rgb_color_t rgb_color_t::black() { return rgb_color_t(type_named, 0); }
 
-static unsigned char term8_color_for_rgb(const unsigned char rgb[3]) {
+static unsigned char term16_color_for_rgb(const unsigned char rgb[3]) {
     const uint32_t kColors[] = {
         0x000000,  // Black
-        0xFF0000,  // Red
-        0x00FF00,  // Green
-        0xFFFF00,  // Yellow
-        0x0000FF,  // Blue
-        0xFF00FF,  // Magenta
-        0x00FFFF,  // Cyan
-        0xFFFFFF,  // White
+        0x800000,  // Red
+        0x008000,  // Green
+        0x808000,  // Yellow
+        0x000080,  // Blue
+        0x800080,  // Magenta
+        0x008080,  // Cyan
+        0xc0c0c0,  // White
+        0x808080,  // Bright Black
+        0xFF0000,  // Bright Red
+        0x00FF00,  // Bright Green
+        0xFFFF00,  // Bright Yellow
+        0x0000FF,  // Bright Blue
+        0xFF00FF,  // Bright Magenta
+        0x00FFFF,  // Bright Cyan
+        0xFFFFFF   // Bright White
     };
     return convert_color(rgb, kColors, sizeof kColors / sizeof *kColors);
 }
@@ -284,9 +297,10 @@ color24_t rgb_color_t::to_color24() const {
 }
 
 unsigned char rgb_color_t::to_name_index() const {
+    // XXX this should look for the nearest color
     assert(type == type_named || type == type_rgb);
     if (type == type_named) return data.name_idx;
-    if (type == type_rgb) return term8_color_for_rgb(data.color.rgb);
+    if (type == type_rgb) return term16_color_for_rgb(data.color.rgb);
     return (unsigned char)-1;  // this is an error
 }
 

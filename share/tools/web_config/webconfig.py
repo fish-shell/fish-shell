@@ -65,23 +65,27 @@ def escape_fish_cmd(text):
 
 named_colors = {
     'black'     : '000000',
-    'red'       : 'FF0000',
-    'green'     : '00FF00',
+    'red'       : '800000',
+    'green'     : '008000',
     'brown'     : '725000',
-    'yellow'    : 'FFFF00',
-    'blue'      : '0000FF',
-    'magenta'   : 'FF00FF',
-    'purple'    : 'FF00FF',
-    'cyan'      : '00FFFF',
-    'grey'      : 'E5E5E5',
+    'yellow'    : '808000',
+    'blue'      : '000080',
+    'magenta'   : '800080',
+    'purple'    : '800080',
+    'cyan'      : '008080',
+    'grey'      : 'e5e5e5',
     'brgrey'    : '555555',
-    'brbrown'   : 'FFFF55',
-    'bryellow'  : 'FFFF55',
-    'brblue'    : '5555FF',
-    'brmagenta' : 'FF55FF',
-    'brpurple'  : 'FF55FF',
-    'brcyan'    : '55FFFF',
-    'white'     : 'FFFFFF'
+    'white'     : 'c0c0c0',
+    'brblack'   : '808080',
+    'brred'     : 'ff0000',
+    'brgreen'   : '00ff00',
+    'brbrown'   : 'ffff00',
+    'bryellow'  : 'ffff00',
+    'brblue'    : '0000ff',
+    'brmagenta' : 'ff00ff',
+    'brpurple'  : 'ff00ff',
+    'brcyan'    : '00ffff',
+    'brwhite'   : 'ffffff'
 }
 
 def parse_one_color(comp):

@@ -301,40 +301,43 @@ static int interrupt_handler() {
 
 void update_fish_color_support(void) {
     // Detect or infer term256 support. If fish_term256 is set, we respect it;
-    // otherwise try to detect terminfo else infer it from the TERM variable.
+    // otherwise infer it from the TERM variable or use terminfo.
     env_var_t fish_term256 = env_get_string(L"fish_term256");
-    bool support_term256;
+    env_var_t term = env_get_string(L"TERM");
+    bool support_term256 = false; // default to no support
     if (!fish_term256.missing_or_empty()) {
         support_term256 = from_string<bool>(fish_term256);
-    } else {
-        env_var_t term = env_get_string(L"TERM");
-        if (term.missing()) {
-            support_term256 = false;
-        } else if (term.find(L"256color") != wcstring::npos) {
-            // Explicitly supported.
-            support_term256 = true;
-        } else if (term.find(L"xterm") != wcstring::npos) {
-            // Assume that all xterms are 256, except for OS X SnowLeopard
-            const env_var_t prog = env_get_string(L"TERM_PROGRAM");
-            const env_var_t progver = env_get_string(L"TERM_PROGRAM_VERSION");
-            if (progver.missing_or_empty()) {
+    } else if (term.find(L"256color") != wcstring::npos) {
+        // *256color*: Explicitly supported.
+        support_term256 = true;
+    } else if (term.find(L"xterm") != wcstring::npos) {
+        // Assume that all xterms are 256, except for OS X SnowLeopard
+        const env_var_t prog = env_get_string(L"TERM_PROGRAM");
+        const env_var_t progver = env_get_string(L"TERM_PROGRAM_VERSION");
+        if (prog == L"Apple_Terminal" && !progver.missing_or_empty()) {
+            // SL and earlier don't getOS X Lion is 300+
+            if (strtod(wcs2str(progver), NULL) > 300) {
                 support_term256 = true;
-            } else {  // OS X Lion is 300+
-                support_term256 =
-                    (prog != L"Apple_Terminal" || strtod(wcs2str(progver), NULL) > 300);
+                debug(2, L"modern Terminal.app with TERM=xterm - assuming term256 support");
             }
-            // See if terminfo happens to identify 256 colors, else default to false.
-        } else if (setupterm(NULL, STDOUT_FILENO, NULL) != ERR) {
-            support_term256 = (max_colors >= 256);
         } else {
-            support_term256 = false;
+            support_term256 = true;
+            debug(2, "TERM=xterm - assuming term256 support");
         }
+    } else if (cur_term != NULL) {
+        // See if terminfo happens to identify 256 colors
+        support_term256 = (max_colors >= 256);
+        debug(2, "term256 check: using %d colors per terminfo", max_colors);
+    } else {
+        debug(2, "term256 check not turning on (yet)");
     }
 
     env_var_t fish_term24bit = env_get_string(L"fish_term24bit");
     bool support_term24bit;
     if (!fish_term24bit.missing_or_empty()) {
         support_term24bit = from_string<bool>(fish_term24bit);
+        debug(2, "'fish_term24bit' preference: 24-bit color %s",
+              support_term24bit ? "enabled" : "disabled");
     } else {
         // We don't attempt to infer term24 bit support yet.
         support_term24bit = false;
@@ -369,6 +372,7 @@ int input_init() {
         } else {
             debug(0, _(L"Using fallback terminal type '%ls'"), DEFAULT_TERM);
         }
+    } else {
     }
 
     input_terminfo_init();

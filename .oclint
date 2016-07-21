@@ -24,7 +24,7 @@ rule-configurations:
     # RAII behavior so the local vars are actually used.
     #
     - key: RAII_CUSTOM_CLASSES
-      value: scoped_lock scoped_buffer_t
+      value: scoped_lock scoped_buffer_t builtin_commandline_scoped_transient_t scoped_push
 
 disable-rules:
     #

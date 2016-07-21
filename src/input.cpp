@@ -307,37 +307,39 @@ void update_fish_color_support(void) {
     bool support_term256 = false; // default to no support
     if (!fish_term256.missing_or_empty()) {
         support_term256 = from_string<bool>(fish_term256);
+        debug(2, L"256 color support determined by 'fish_term256'");
     } else if (term.find(L"256color") != wcstring::npos) {
-        // *256color*: Explicitly supported.
+        // TERM=*256color*: Explicitly supported.
         support_term256 = true;
+        debug(2, L"256 color support enabled for '256color' in TERM");
     } else if (term.find(L"xterm") != wcstring::npos) {
         // Assume that all xterms are 256, except for OS X SnowLeopard
         const env_var_t prog = env_get_string(L"TERM_PROGRAM");
         const env_var_t progver = env_get_string(L"TERM_PROGRAM_VERSION");
         if (prog == L"Apple_Terminal" && !progver.missing_or_empty()) {
-            // SL and earlier don't getOS X Lion is 300+
+            // OS X Lion is version 300+, it has 256 color support
             if (strtod(wcs2str(progver), NULL) > 300) {
                 support_term256 = true;
-                debug(2, L"modern Terminal.app with TERM=xterm - assuming term256 support");
+                debug(2, L"256 color support enabled for TERM=xterm + modern Terminal.app");
             }
         } else {
             support_term256 = true;
-            debug(2, "TERM=xterm - assuming term256 support");
+            debug(2, L"256 color support enabled for TERM=xterm");
         }
     } else if (cur_term != NULL) {
         // See if terminfo happens to identify 256 colors
         support_term256 = (max_colors >= 256);
-        debug(2, "term256 check: using %d colors per terminfo", max_colors);
+        debug(2, L"256 color support: using %d colors per terminfo", max_colors);
     } else {
-        debug(2, "term256 check not turning on (yet)");
+        debug(2, L"256 color support not enabled (yet)");
     }
 
     env_var_t fish_term24bit = env_get_string(L"fish_term24bit");
     bool support_term24bit;
     if (!fish_term24bit.missing_or_empty()) {
         support_term24bit = from_string<bool>(fish_term24bit);
-        debug(2, "'fish_term24bit' preference: 24-bit color %s",
-              support_term24bit ? "enabled" : "disabled");
+        debug(2, L"'fish_term24bit' preference: 24-bit color %s",
+              support_term24bit ? L"enabled" : L"disabled");
     } else {
         // We don't attempt to infer term24 bit support yet.
         support_term24bit = false;

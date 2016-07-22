@@ -3,6 +3,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 	# HACK: This only deals with ipv4
 
 	# Print all hosts from /etc/hosts
+	# use 'getent hosts' on OSes that support it (OpenBSD and Cygwin do not)
 	if type -q getent; and getent hosts > /dev/null 2>&1 # test if 'getent hosts' works and redirect output so errors don't print
 		# Ignore zero ips
 		getent hosts | string match -r -v '^0.0.0.0' \

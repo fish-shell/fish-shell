@@ -304,7 +304,7 @@ void update_fish_color_support(void) {
     // otherwise infer it from the TERM variable or use terminfo.
     env_var_t fish_term256 = env_get_string(L"fish_term256");
     env_var_t term = env_get_string(L"TERM");
-    bool support_term256 = false; // default to no support
+    bool support_term256 = false;  // default to no support
     if (!fish_term256.missing_or_empty()) {
         support_term256 = from_string<bool>(fish_term256);
         debug(2, L"256 color support determined by 'fish_term256'");
@@ -357,7 +357,7 @@ int input_init() {
 
     int err_ret;
     if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
-	debug(0, _(L"Could not set up terminal"));
+        debug(0, _(L"Could not set up terminal"));
         env_var_t term = env_get_string(L"TERM");
         if (term.missing_or_empty()) {
             debug(0, _(L"TERM environment variable not set"));
@@ -368,7 +368,8 @@ int input_init() {
 
         env_set(L"TERM", DEFAULT_TERM, ENV_GLOBAL | ENV_EXPORT);
         if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
-            debug(0, _(L"Could not set up terminal using the fallback terminal type '%ls' - exiting"),
+            debug(0,
+                  _(L"Could not set up terminal using the fallback terminal type '%ls' - exiting"),
                   DEFAULT_TERM);
             exit_without_destructors(1);
         } else {

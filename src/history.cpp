@@ -1414,7 +1414,8 @@ static bool format_history_record(const history_item_t &item, const bool with_ti
     return true;
 }
 
-bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args, bool with_time, io_streams_t &streams) {
+bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args,
+                       bool with_time, io_streams_t &streams) {
     // scoped_lock locker(lock);
     if (search_args.empty()) {
         // Start at one because zero is the current command.

@@ -8,9 +8,6 @@
 // Type "exit" or "quit" to terminate the program.
 #include "config.h"  // IWYU pragma: keep
 
-#include <memory>
-#include <string>
-#include <vector>
 #include <errno.h>
 #include <getopt.h>
 #include <signal.h>
@@ -20,17 +17,20 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "input.h"
 #include "input_common.h"
-#include "proc.h"
 #include "print_help.h"
+#include "proc.h"
 #include "reader.h"
 #include "signal.h"
-#include "wutil.h" // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 
 struct config_paths_t determine_config_directory_paths(const char *argv0);
 
@@ -159,7 +159,7 @@ static void output_bind_command(std::vector<wchar_t> &bind_chars) {
 }
 
 static void output_info_about_char(wchar_t wc) {
-   fprintf(stderr, "hex: %4X  char: %s\n", wc, char_to_symbol(wc, false));
+    fprintf(stderr, "hex: %4X  char: %s\n", wc, char_to_symbol(wc, false));
 }
 
 static bool output_matching_key_name(wchar_t wc) {
@@ -266,7 +266,7 @@ static void install_our_signal_handlers() {
 
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
 static void setup_and_process_keys(bool continuous_mode) {
-    is_interactive_session = 1;    // by definition this program is interactive
+    is_interactive_session = 1;  // by definition this program is interactive
     set_main_thread();
     setup_fork_guards();
     env_init();

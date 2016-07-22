@@ -1265,15 +1265,15 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                                         parse_flag_include_comments,
                                &tree, NULL);
 
-        // Find the plain statement to operate on. The cursor may be past it (#1261), so backtrack until
-        // we know we're no longer in a space. But the space may actually be part of the argument (#2477)
-        // so
+        // Find the plain statement to operate on. The cursor may be past it (#1261), so backtrack
+        // until we know we're no longer in a space. But the space may actually be part of the
+        // argument (#2477).
         size_t position_in_statement = pos;
         while (position_in_statement > 0 && cmd.at(position_in_statement - 1) == L' ') {
             position_in_statement--;
         }
-        const parse_node_t *plain_statement =
-            tree.find_node_matching_source_location(symbol_plain_statement, position_in_statement, NULL);
+        const parse_node_t *plain_statement = tree.find_node_matching_source_location(
+            symbol_plain_statement, position_in_statement, NULL);
 
         if (plain_statement == NULL) {
             // Not part of a plain statement. This could be e.g. a for loop header, case expression,
@@ -1372,7 +1372,8 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                     // previous argument is the matching one. But if the cursor was in or at the end
                     // of the argument, then the current argument is the matching one, and the
                     // previous argument is the one before it.
-                    bool cursor_in_whitespace = ! plain_statement->location_in_or_at_end_of_source_range(pos);
+                    bool cursor_in_whitespace =
+                        !plain_statement->location_in_or_at_end_of_source_range(pos);
                     if (cursor_in_whitespace) {
                         current_argument = L"";
                         previous_argument = matching_arg;

@@ -1294,8 +1294,7 @@ static void test_expand() {
                 L"Wrong fuzzy matching 5");
 
     // multiple slashes with fuzzy matching - #3185
-    expand_test(L"l///n", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
-                L"lol///nub/", wnull,
+    expand_test(L"l///n", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, L"lol///nub/", wnull,
                 L"Wrong fuzzy matching 6");
 
     if (chdir_set_pwd(saved_wd)) {
@@ -1840,11 +1839,9 @@ static void test_complete(void) {
 
     // Completing after spaces - see #2447
     completions.clear();
-    complete(L"echo (ls /tmp/complete_test/has\\ ", &completions, COMPLETION_REQUEST_DEFAULT,
-             vars);
+    complete(L"echo (ls /tmp/complete_test/has\\ ", &completions, COMPLETION_REQUEST_DEFAULT, vars);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"space");
-
 
     // Add a function and test completing it in various ways.
     struct function_data_t func_data = {};

@@ -224,8 +224,8 @@ class history_t {
     void save();
 
     // Searches history.
-    bool search(history_search_type_t search_type, wcstring_list_t search_args,
-                bool with_time, io_streams_t &streams);
+    bool search(history_search_type_t search_type, wcstring_list_t search_args, bool with_time,
+                io_streams_t &streams);
 
     // Enable / disable automatic saving. Main thread only!
     void disable_automatic_saving();

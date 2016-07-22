@@ -486,9 +486,10 @@ class wildcard_expander_t {
 
     /// Given a directory base_dir, which is opened as base_dir_fp, expand the last segment of the
     /// wildcard. Treat ANY_STRING_RECURSIVE as ANY_STRING. wc is the wildcard segment to use for
-    /// matching, wc_remainder is the wildcard for subdirectories, prefix is the prefix for completions.
-    void expand_last_segment(const wcstring &base_dir, DIR *base_dir_fp,
-                             const wcstring &wc, const wcstring &prefix);
+    /// matching, wc_remainder is the wildcard for subdirectories, prefix is the prefix for
+    /// completions.
+    void expand_last_segment(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc,
+                             const wcstring &prefix);
 
     /// Indicate whether we should cancel wildcard expansion. This latches 'interrupt'.
     bool interrupted() {
@@ -696,9 +697,11 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir, 
     }
 }
 
-void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(
-    const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc_segment,
-    const wchar_t *wc_remainder, const wcstring &prefix) {
+void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wcstring &base_dir,
+                                                                        DIR *base_dir_fp,
+                                                                        const wcstring &wc_segment,
+                                                                        const wchar_t *wc_remainder,
+                                                                        const wcstring &prefix) {
     // This only works with tab completions. Ordinary wildcard expansion should never go fuzzy.
     wcstring name_str;
 
@@ -727,8 +730,10 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(
         }
 
         // Determine the effective prefix for our children
-        // Normally this would be the wildcard segment, but here we know our segment doesn't have wildcards
-        // ("literal") and we are doing fuzzy expansion, which means we replace the segment with files found
+        // Normally this would be the wildcard segment, but here we know our segment doesn't have
+        // wildcards
+        // ("literal") and we are doing fuzzy expansion, which means we replace the segment with
+        // files found
         // through fuzzy matching
         const wcstring child_prefix = prefix + name_str + L'/';
 
@@ -785,8 +790,10 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
 /// prefix: the string that should be prepended for completions that replace their token.
 //    This is usually the same thing as the original wildcard, but for fuzzy matching, we
 //    expand intermediate segments. effective_prefix is always either empty, or ends with a slash
-//    Note: this is only used when doing completions (EXPAND_FOR_COMPLETIONS is true), not expansions
-void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc, const wcstring &effective_prefix) {
+//    Note: this is only used when doing completions (EXPAND_FOR_COMPLETIONS is true), not
+//    expansions
+void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
+                                 const wcstring &effective_prefix) {
     assert(wc != NULL);
 
     if (interrupted()) {
@@ -801,7 +808,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc, co
     const wcstring wc_segment = wcstring(wc, wc_segment_len);
     const bool segment_has_wildcards =
         wildcard_has(wc_segment, true /* internal, i.e. look for ANY_CHAR instead of ? */);
-    const wchar_t * const wc_remainder = next_slash ? next_slash + 1 : NULL;
+    const wchar_t *const wc_remainder = next_slash ? next_slash + 1 : NULL;
 
     if (wc_segment.empty()) {
         // Handle empty segment.
@@ -819,7 +826,8 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc, co
 
         // This just trumps everything.
         size_t before = this->resolved_completions->size();
-        this->expand(base_dir + wc_segment + L'/', wc_remainder, effective_prefix + wc_segment + L'/');
+        this->expand(base_dir + wc_segment + L'/', wc_remainder,
+                     effective_prefix + wc_segment + L'/');
 
         // Maybe try a fuzzy match (#94) if nothing was found with the literal match. Respect
         // EXPAND_NO_DIRECTORY_ABBREVIATIONS (issue #2413).
@@ -829,9 +837,8 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc, co
             assert(this->flags & EXPAND_FOR_COMPLETIONS);
             DIR *base_dir_fd = open_dir(base_dir);
             if (base_dir_fd != NULL) {
-                this->expand_literal_intermediate_segment_with_fuzz(base_dir, base_dir_fd,
-                                                                    wc_segment, wc_remainder,
-                                                                    effective_prefix);
+                this->expand_literal_intermediate_segment_with_fuzz(
+                    base_dir, base_dir_fd, wc_segment, wc_remainder, effective_prefix);
                 closedir(base_dir_fd);
             }
         }
@@ -846,8 +853,8 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc, co
                 // Not the last segment, nonempty wildcard.
                 assert(next_slash != NULL);
                 wcstring child_effective_prefix = effective_prefix + wc_segment;
-                this->expand_intermediate_segment(base_dir, dir, wc_segment,
-                                                  wc_remainder, effective_prefix + wc_segment + L'/');
+                this->expand_intermediate_segment(base_dir, dir, wc_segment, wc_remainder,
+                                                  effective_prefix + wc_segment + L'/');
             }
 
             // Recursive wildcards require special handling.
@@ -862,7 +869,8 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc, co
                 assert(any_tail[0] == ANY_STRING_RECURSIVE);
 
                 rewinddir(dir);
-                this->expand_intermediate_segment(base_dir, dir, head_any, any_tail, effective_prefix);
+                this->expand_intermediate_segment(base_dir, dir, head_any, any_tail,
+                                                  effective_prefix);
             }
             closedir(dir);
         }

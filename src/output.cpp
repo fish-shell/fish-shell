@@ -106,12 +106,12 @@ static bool write_background_color(unsigned char idx) {
 }
 
 // Exported for builtin_set_color's usage only.
-void write_color(rgb_color_t color, bool is_fg) {
+bool write_color(rgb_color_t color, bool is_fg) {
     bool supports_term24bit = !!(output_get_color_support() & color_support_term24bit);
     if (!supports_term24bit || !color.is_rgb()) {
         // Indexed or non-24 bit color.
         unsigned char idx = index_for_color(color);
-        (is_fg ? write_foreground_color : write_background_color)(idx);
+        return (is_fg ? write_foreground_color : write_background_color)(idx);
     } else {
         // 24 bit! No tparm here, just ANSI escape sequences.
         // Foreground: ^[38;2;<r>;<g>;<b>m
@@ -127,6 +127,7 @@ void write_color(rgb_color_t color, bool is_fg) {
             }
         }
     }
+    return true;
 }
 
 /// Sets the fg and bg color. May be called as often as you like, since if the new color is the same

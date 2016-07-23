@@ -51,7 +51,7 @@ void output_set_color_support(color_support_t support);
 
 rgb_color_t best_color(const std::vector<rgb_color_t> &colors, color_support_t support);
 
-void write_color(rgb_color_t color, bool is_fg);
+bool write_color(rgb_color_t color, bool is_fg);
 unsigned char index_for_color(rgb_color_t c);
 
 #endif

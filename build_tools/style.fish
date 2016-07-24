@@ -101,7 +101,7 @@ if set -q f_files[1]
             echo $file
             rm $file.new
         else
-            echo (set_color --underline)$file(set_color normal)is being reformatted
+            echo (set_color --underline)$file(set_color normal) is being reformatted
             mv $file.new $file
         end
     end

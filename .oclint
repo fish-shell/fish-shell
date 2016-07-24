@@ -15,6 +15,16 @@ rule-configurations:
     #
     - key: LONG_VARIABLE_NAME
       value: 30
+    #
+    # This allows us to avoid peppering our code with inline comments such as
+    #
+    #   scoped_lock locker(m_lock);  //!OCLINT(side-effect)
+    #
+    # Specifically, this config key tells oclint that the named classes have
+    # RAII behavior so the local vars are actually used.
+    #
+    - key: RAII_CUSTOM_CLASSES
+      value: scoped_lock scoped_buffer_t builtin_commandline_scoped_transient_t scoped_push
 
 disable-rules:
     #

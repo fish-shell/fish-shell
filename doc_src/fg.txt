@@ -9,7 +9,7 @@ fg [PID]
 
 `fg` brings the specified <a href="index.html#syntax-job-control">job</a> to the foreground, resuming it if it is stopped. While a foreground job is executed, fish is suspended. If no job is specified, the last job to be used is put in the foreground. If PID is specified, the job with the specified group ID is put in the foreground.
 
-The PID of the desired process is usually found by using <a href="index.html#expand-process">process expansion</a>.
+The PID of the desired process is usually found by using <a href="index.html#expand-process">process expansion</a>. Fish is capable of expanding far more than just the numeric PID, including referencing itself and finding PIDs by name.
 
 
 \subsection fg-example Example

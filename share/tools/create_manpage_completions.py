@@ -155,12 +155,12 @@ def built_command(options, description):
     if not fish_options: return
 
     # Here's what we'll use to truncate if necessary
-    max_description_width = 63
+    max_description_width = 78
     if IS_PY3:
-        truncation_suffix = '… [See Man Page]'
+        truncation_suffix = '…'
     else:
         ELLIPSIS_CODE_POINT = 0x2026
-        truncation_suffix = unichr(ELLIPSIS_CODE_POINT) + unicode(' [See Man Page]')
+        truncation_suffix = unichr(ELLIPSIS_CODE_POINT)
     
     # Try to include as many whole sentences as will fit
     # Clean up some probably bogus escapes in the process
@@ -221,15 +221,12 @@ def remove_groff_formatting(data):
     data = data.replace("\f","")
     return data
 
-class ManParser:
+class ManParser(object):
     def is_my_type(self, manpage):
         return False
 
     def parse_man_page(self, manpage):
         return False
-
-    def name(self):
-        return "no-name"
 
 class Type1ManParser(ManParser):
     def is_my_type(self, manpage):
@@ -250,7 +247,7 @@ class Type1ManParser(ManParser):
         options_parts_regex = re.compile("\.PP(.*?)\.RE", re.DOTALL)
         options_matched = re.search(options_parts_regex, options_section)
         #   print options_matched
-        add_diagnostic('Command is ' + CMDNAME)
+        add_diagnostic("Command is %r" % CMDNAME)
 
         if options_matched == None:
             add_diagnostic('Unable to find options')
@@ -272,7 +269,7 @@ class Type1ManParser(ManParser):
                 optionName = data[0].strip()
 
                 if ( optionName.find("-") == -1):
-                    add_diagnostic(optionName + " doesn't contain - ")
+                    add_diagnostic("%r doesn't contain '-' " % optionName)
                 else:
                     optionName = unquote_double_quotes(optionName)
                     optionName = unquote_single_quotes(optionName)
@@ -287,7 +284,7 @@ class Type1ManParser(ManParser):
             options_matched = re.search(options_parts_regex, options_section)
 
     def fallback(self, options_section):
-        add_diagnostic('Falling Back')
+        add_diagnostic('Trying fallback')
         options_parts_regex = re.compile("\.TP( \d+)?(.*?)\.TP", re.DOTALL)
         options_matched = re.search(options_parts_regex, options_section)
         if options_matched == None:
@@ -301,7 +298,7 @@ class Type1ManParser(ManParser):
             if (len(data)>1 and len(data[1].strip())>0): # and len(data[1])<400):
                 optionName = data[0].strip()
                 if ( optionName.find("-") == -1):
-                    add_diagnostic(optionName + "doesn't contains -")
+                    add_diagnostic("%r doesn't contain '-'" % optionName)
                 else:
                     optionName = unquote_double_quotes(optionName)
                     optionName = unquote_single_quotes(optionName)
@@ -316,7 +313,7 @@ class Type1ManParser(ManParser):
         return True
 
     def fallback2(self, options_section):
-        add_diagnostic('Falling Back2')
+        add_diagnostic('Trying last chance fallback')
         ix_remover_regex = re.compile("\.IX.*")
         trailing_num_regex = re.compile('\\d+$')
         options_parts_regex = re.compile("\.IP (.*?)\.IP", re.DOTALL)
@@ -324,7 +321,7 @@ class Type1ManParser(ManParser):
         options_section = re.sub(ix_remover_regex, "", options_section)
         options_matched = re.search(options_parts_regex, options_section)
         if options_matched == None:
-            add_diagnostic('Still not found2')
+            add_diagnostic('Still (still!) not found')
             return False
         while options_matched != None:
             data = options_matched.group(1)
@@ -336,7 +333,7 @@ class Type1ManParser(ManParser):
                 optionName = re.sub(trailing_num_regex, "", data[0].strip())
 
                 if ('-' not in optionName):
-                    add_diagnostic(optionName + " doesn't contain -")
+                    add_diagnostic("%r doesn't contain '-'" % optionName)
                 else:
                     optionName = optionName.strip()
                     optionName = unquote_double_quotes(optionName)
@@ -350,10 +347,6 @@ class Type1ManParser(ManParser):
             options_section = options_section[options_matched.end()-3:]
             options_matched = re.search(options_parts_regex, options_section)
         return True
-
-    def name(self):
-        return "Type1"
-
 
 class Type2ManParser(ManParser):
     def is_my_type(self, manpage):
@@ -370,12 +363,12 @@ class Type2ManParser(ManParser):
 
         options_section = options_section_matched.group(1)
 
-        options_parts_regex = re.compile("\.[I|T]P( \d+(\.\d)?i?)?(.*?)\.[I|T]P", re.DOTALL)
+        options_parts_regex = re.compile("\.[I|T]P( \d+(\.\d)?i?)?(.*?)\.([I|T]P|UNINDENT)", re.DOTALL)
         options_matched = re.search(options_parts_regex, options_section)
-        add_diagnostic('Command is ' + CMDNAME)
+        add_diagnostic('Command is %r' % CMDNAME)
 
         if options_matched == None:
-            add_diagnostic(self.name() + ': Unable to find options')
+            add_diagnostic("%r: Unable to find options" % self)
             return False
 
         while (options_matched != None):
@@ -389,7 +382,7 @@ class Type2ManParser(ManParser):
             if (len(data)>1 and len(data[1].strip())>0): # and len(data[1])<400):
                 optionName = data[0].strip()
                 if '-' not in optionName:
-                    add_diagnostic(optionName + " doesn't contain -")
+                    add_diagnostic("%r doesn't contain '-'" % optionName)
                 else:
                     optionName = unquote_double_quotes(optionName)
                     optionName = unquote_single_quotes(optionName)
@@ -400,9 +393,6 @@ class Type2ManParser(ManParser):
 
             options_section = options_section[options_matched.end()-3:]
             options_matched = re.search(options_parts_regex, options_section)
-
-    def name(self):
-        return "Type2"
 
 
 class Type3ManParser(ManParser):
@@ -421,7 +411,7 @@ class Type3ManParser(ManParser):
         options_section = options_section_matched.group(1)
         options_parts_regex = re.compile("\.TP(.*?)\.TP", re.DOTALL)
         options_matched = re.search(options_parts_regex, options_section)
-        add_diagnostic('Command is ' + CMDNAME)
+        add_diagnostic("Command is %r" % CMDNAME)
 
         if options_matched == None:
             add_diagnostic('Unable to find options section')
@@ -437,7 +427,7 @@ class Type3ManParser(ManParser):
             if (len(data)>1): # and len(data[1])<400):
                 optionName = data[0].strip()
                 if ( optionName.find("-") == -1):
-                    add_diagnostic(optionName + "doesn't contain -")
+                    add_diagnostic("%r doesn't contain '-'" % optionName)
                 else:
                     optionName = unquote_double_quotes(optionName)
                     optionName = unquote_single_quotes(optionName)
@@ -450,10 +440,6 @@ class Type3ManParser(ManParser):
 
             options_section = options_section[options_matched.end()-3:]
             options_matched = re.search(options_parts_regex, options_section)
-
-
-    def name(self):
-        return "Type3"
 
 
 class Type4ManParser(ManParser):
@@ -472,7 +458,7 @@ class Type4ManParser(ManParser):
         options_section = options_section_matched.group(1)
         options_parts_regex = re.compile("\.TP(.*?)\.TP", re.DOTALL)
         options_matched = re.search(options_parts_regex, options_section)
-        add_diagnostic('Command is ' + CMDNAME)
+        add_diagnostic("Command is %r" % CMDNAME)
 
         if options_matched == None:
             print >> sys.stderr, "Unable to find options section"
@@ -488,7 +474,7 @@ class Type4ManParser(ManParser):
             if (len(data)>1): # and len(data[1])<400):
                 optionName = data[0].strip()
                 if ( optionName.find("-") == -1):
-                    add_diagnostic(optionName + " doesn't contain - ")
+                    add_diagnostic("%r doesn't contain '-' " % optionName)
                 else:
                     optionName = unquote_double_quotes(optionName)
                     optionName = unquote_single_quotes(optionName)
@@ -503,9 +489,6 @@ class Type4ManParser(ManParser):
             options_matched = re.search(options_parts_regex, options_section)
 
         return True
-
-    def name(self):
-        return "Type4"
 
 class TypeDarwinManParser(ManParser):
     def is_my_type(self, manpage):
@@ -602,9 +585,6 @@ class TypeDarwinManParser(ManParser):
 
         return got_something
 
-    def name(self):
-        return "Darwin man parser"
-
 
 class TypeDeroffManParser(ManParser):
     def is_my_type(self, manpage):
@@ -656,9 +636,6 @@ class TypeDeroffManParser(ManParser):
             got_something = True
 
         return got_something
-
-    def name(self):
-        return "Deroffing man parser"
 
 # Return whether the file at the given path is overwritable
 # Raises IOError if it cannot be opened
@@ -771,8 +748,7 @@ def parse_manpage_at_path(manpage_path, output_directory):
         add_diagnostic(manpage_path + ": Not supported")
     else:
         for parser in parsersToTry:
-            parser_name = parser.name()
-            add_diagnostic('Trying parser ' + parser_name)
+            add_diagnostic('Trying %s' % parser.__class__.__name__)
             diagnostic_indent += 1
             success = parser.parse_man_page(manpage)
             diagnostic_indent -= 1
@@ -780,7 +756,7 @@ def parse_manpage_at_path(manpage_path, output_directory):
             if not built_command_output:
                 success = False
             if success:
-                PARSER_INFO.setdefault(parser_name, []).append(CMDNAME)
+                PARSER_INFO.setdefault(parser.__class__.__name__, []).append(CMDNAME)
                 break
 
         if success:
@@ -798,7 +774,8 @@ def parse_manpage_at_path(manpage_path, output_directory):
 
             # Output the magic word Autogenerated so we can tell if we can overwrite this
             built_command_output.insert(1, "# Autogenerated from man page " + manpage_path)
-            built_command_output.insert(2, "# using " + parser_name)
+            # built_command_output.insert(2, "# using " + parser.__class__.__name__) # XXX MISATTRIBUTES THE CULPABILE PARSER! Was really using Type2 but reporting TypeDeroffManParser
+
             for line in built_command_output:
                 output_file.write(line)
                 output_file.write('\n')
@@ -807,7 +784,7 @@ def parse_manpage_at_path(manpage_path, output_directory):
             if output_file != sys.stdout:
                 output_file.close()
         else:
-            parser_names =  ', '.join(p.name() for p in parsersToTry)
+            parser_names =  ', '.join(p.__class__.__name__ for p in parsersToTry)
             #add_diagnostic('%s contains no options or is unparsable' % manpage_path, BRIEF_VERBOSE)
             add_diagnostic('%s contains no options or is unparsable (tried parser %s)' % (manpage_path, parser_names), BRIEF_VERBOSE)
 

@@ -10,7 +10,8 @@ function __fish_make_completion_signals --description 'Make list of kill signals
     #
     # The procps `kill -L` produces a more compact table. We can distinguish the two cases by
     # testing whether it supports `kill -t`; in which case it is the coreutils `kill` command.
-    if kill -t ^/dev/null >/dev/null
+    # Darwin doesn't have kill -t or kill -L
+    if kill -t ^/dev/null >/dev/null; or not kill -L ^/dev/null >/dev/null
         # Posix systems print out the name of a signal using 'kill -l SIGNUM'.
         complete -c kill -s l --description "List names of available signals"
         for i in (seq 31)

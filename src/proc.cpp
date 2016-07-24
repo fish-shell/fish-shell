@@ -166,7 +166,7 @@ static pthread_mutex_t job_id_lock = PTHREAD_MUTEX_INITIALIZER;
 static std::vector<bool> consumed_job_ids;
 
 job_id_t acquire_job_id(void) {
-    scoped_lock lock(job_id_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(job_id_lock);
 
     // Find the index of the first 0 slot.
     std::vector<bool>::iterator slot =
@@ -185,7 +185,7 @@ job_id_t acquire_job_id(void) {
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
-    scoped_lock lock(job_id_lock);  //!OCLINT(has side effects)
+    scoped_lock locker(job_id_lock);
     size_t slot = (size_t)(jid - 1), count = consumed_job_ids.size();
 
     // Make sure this slot is within our vector and is currently set to consumed.

@@ -79,9 +79,15 @@ static void append_whitespace(indent_t node_indent, bool do_indent, bool has_new
 
 // Dump a parse tree node in a form helpful to someone debugging the behavior of this program.
 static void dump_node(indent_t node_indent, const parse_node_t &node, const wcstring &source) {
-    int nextc_idx = node.source_start + node.source_length;
-    wchar_t prevc = node.source_start > 0 ? source[node.source_start - 1] : L' ';
-    wchar_t nextc = nextc_idx < source.size() ? source[nextc_idx] : L' ';
+    wchar_t nextc = L' ';
+    wchar_t prevc = L' ';
+    wcstring source_txt = L"";
+    if (node.source_start != SOURCE_OFFSET_INVALID && node.source_length != SOURCE_OFFSET_INVALID) {
+        int nextc_idx = node.source_start + node.source_length;
+        if (nextc_idx < source.size()) nextc = source[node.source_start + node.source_length];
+        if (node.source_start > 0) prevc = source[node.source_start - 1];
+        source_txt = source.substr(node.source_start, node.source_length);
+    }
     wchar_t prevc_str[4] = {prevc, 0, 0, 0};
     wchar_t nextc_str[4] = {nextc, 0, 0, 0};
     if (prevc < L' ') {
@@ -96,8 +102,7 @@ static void dump_node(indent_t node_indent, const parse_node_t &node, const wcst
     }
     fwprintf(stderr, L"{off %4d, len %4d, indent %2u, kw %ls, %ls} [%ls|%ls|%ls]\n",
              node.source_start, node.source_length, node_indent, keyword_description(node.keyword),
-             token_type_description(node.type), prevc_str,
-             source.substr(node.source_start, node.source_length).c_str(), nextc_str);
+             token_type_description(node.type), prevc_str, source_txt.c_str(), nextc_str);
 }
 
 static void prettify_node_recursive(const wcstring &source, const parse_node_tree_t &tree,
@@ -156,7 +161,9 @@ static void prettify_node_recursive(const wcstring &source, const parse_node_tre
 
     // Recurse to all our children.
     for (node_offset_t idx = 0; idx < node.child_count; idx++) {
-        // Note we pass our type to our child, which becomes its parent node type.
+        // Note: We pass our type to our child, which becomes its parent node type.
+        // Note: While node.child_start could be -1 (NODE_OFFSET_INVALID) the addition is safe
+        // because we won't execute this call in that case since node.child_count should be zero.
         prettify_node_recursive(source, tree, node.child_start + idx, node_indent, node_type,
                                 has_new_line, out_result, do_indent);
     }

@@ -17,6 +17,8 @@
 #include "common.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+struct io_streams_t;
+
 // Fish supports multiple shells writing to history at once. Here is its strategy:
 //
 // 1. All history files are append-only. Data, once written, is never modified.
@@ -193,7 +195,7 @@ class history_t {
 
    public:
     explicit history_t(const wcstring &);  // constructor
-    ~history_t();                          // desctructor
+    ~history_t();                          // destructor
 
     // Returns history with the given name, creating it if necessary.
     static history_t &history_with_name(const wcstring &name);
@@ -220,6 +222,10 @@ class history_t {
 
     // Saves history.
     void save();
+
+    // Searches history.
+    bool search(history_search_type_t search_type, wcstring_list_t search_args, bool with_time,
+                io_streams_t &streams);
 
     // Enable / disable automatic saving. Main thread only!
     void disable_automatic_saving();
@@ -250,6 +256,7 @@ class history_t {
 };
 
 class history_search_t {
+   private:
     // The history in which we are searching.
     history_t *history;
 

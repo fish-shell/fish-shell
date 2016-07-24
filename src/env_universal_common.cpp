@@ -311,7 +311,7 @@ void env_universal_t::set_internal(const wcstring &key, const wcstring &val, boo
 }
 
 void env_universal_t::set(const wcstring &key, const wcstring &val, bool exportv) {
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
     this->set_internal(key, val, exportv, true /* overwrite */);
 }
 
@@ -331,7 +331,7 @@ bool env_universal_t::remove(const wcstring &key) {
 
 wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexported) const {
     wcstring_list_t result;
-    scoped_lock locker(lock);  //!OCLINT(side-effect)
+    scoped_lock locker(lock);
     var_table_t::const_iterator iter;
     for (iter = vars.begin(); iter != vars.end(); ++iter) {
         const wcstring &key = iter->first;

@@ -2,12 +2,11 @@
 
 \subsection history-synopsis Synopsis
 \fish{synopsis}
+history ( -s | --search ) [ -t | --with-time ] [ -p | --prefix | -c | --contains ] [ "search string"... ]
+history ( -d | --delete ) [ -t | --with-time ] [ -p | --prefix | -c | --contains ] "search string"...
 history ( -m | --merge )
 history ( -s | --save )
 history ( -l | --clear )
-history ( -s | --search ) [ -t | --with-time ] [ -p "prefix string" | --prefix "prefix string" | -c "search string | --contains "search string" ]
-history ( -d | --delete ) [ -t | --with-time ] [ -p "prefix string" | --prefix "prefix string" | -c "search string | --contains "search string" ]
-history ( -t | --with-time )
 history ( -h | --help )
 \endfish
 
@@ -15,23 +14,25 @@ history ( -h | --help )
 
 `history` is used to list, search and delete the history of commands used.
 
+The following commands are available:
+
+- `-s` or `--search` returns history items matching the search string. If no search string is provided it returns all history items. This is the default operation if no other operation is specified. The `--contains` search option will be used if you don't specify a different search option. Entries are ordered newest to oldest. If stdout is attached to a tty the output will be piped through your pager by the history function. The history builtin simply writes the results to stdout.
+
+- `-d` or `--delete` deletes history items. Without the `--prefix` or `--contains` options, the exact match will be deleted. With either of these options, a prompt will be displayed before any items are deleted asking you which entries are to be deleted. You can enter the word "all" to delete all matching entries. You can enter a single ID (the number in square brackets) to delete just that single entry. You can enter more than one ID separated by a space to delete multiple entries. Just press [enter] to not delete anything. Note that the interactive delete behavior is a feature of the history function. The history builtin only supports bulk deletion.
+
+- `-m` or `--merge` immediately incorporates history changes from other sessions. Ordinarily `fish` ignores history changes from sessions started after the current one. This command applies those changes immediately.
+
+- `-v` or `--save` saves all changes in the history file. The shell automatically saves the history file; this option is provided for internal use.
+
+- `-l` or `--clear` clears the history file. A prompt is displayed before the history is erased asking you to confirm you really want to clear all history.
+
 The following options are available:
 
-- `--merge` immediately incorporates history changes from other sessions. Ordinarily `fish` ignores history changes from sessions started after the current one. This command applies those changes immediately.
+- `-p` or `--prefix` searches or deletes items in the history that begin with the specified text string.
 
-- `--save` saves all changes in the history file. The shell automatically saves the history file; this option is provided for internal use.
+- `-c` or `--contains` searches or deletes items in the history that contain the specified text string. This is the default.
 
-- `--clear` clears the history file. A prompt is displayed before the history is erased.
-
-- `--search` returns history items in keeping with the `--prefix` or `--contains` options. Without either, `--contains` will be assumed.
-
-- `--delete` deletes history items. Without the `--prefix` or `--contains` options, the exact match will be deleted. With either of these options, a prompt will be displayed before any items are deleted.
-
-- `--prefix` searches or deletes items in the history that begin with the specified text string.
-
-- `--contains` searches or deletes items in the history that contain the specified text string.
-
-- `--with-time` prefixes the output of each displayed history entry with the time it was recorded in the format "%Y-%m-%d %H:%M:%S" in your local timezone.
+- `-t` or `--with-time` prefixes the output of each displayed history entry with the time it was recorded in the format "%Y-%m-%d %H:%M:%S" in your local timezone.
 
 \subsection history-examples Example
 
@@ -43,5 +44,11 @@ history --search --contains "foo"
 # Outputs a list of all previous commands containing the string "foo".
 
 history --delete --prefix "foo"
-# Interactively deletes the record of previous commands which start with "foo".
+# Interactively deletes commands which start with "foo" from the history.
+# You can select more than one entry by entering their IDs seperated by a space.
+
+\subsection history-notes Notes
+
+If you specify both `--prefix` and `--contains` the last flag seen is used.
+
 \endfish

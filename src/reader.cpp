@@ -2122,6 +2122,9 @@ class background_highlight_context_t {
             // The gen count has changed, so don't do anything.
             return 0;
         }
+        VOMIT_ON_FAILURE(
+            pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
+
         if (!string_to_highlight.empty()) {
             highlight_function(string_to_highlight, colors, match_highlight_pos, NULL /* error */,
                                vars);

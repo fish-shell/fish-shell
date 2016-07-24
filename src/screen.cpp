@@ -472,7 +472,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
       s->screen_cursor[0], s->screen_cursor[1],
       new_x, new_y );
     */
-    scoped_buffer_t scoped_buffer(b);  //!OCLINT(has side effects)
+    scoped_buffer_t scoped_buffer(b);
 
     y_steps = new_y - s->actual.cursor.y;
 
@@ -528,7 +528,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
 
 /// Set the pen color for the terminal.
 static void s_set_color(screen_t *s, data_buffer_t *b, highlight_spec_t c) {
-    scoped_buffer_t scoped_buffer(b);  //!OCLINT(has side effects)
+    scoped_buffer_t scoped_buffer(b);
 
     unsigned int uc = (unsigned int)c;
     set_color(highlight_get_color(uc & 0xffff, false),
@@ -537,7 +537,7 @@ static void s_set_color(screen_t *s, data_buffer_t *b, highlight_spec_t c) {
 
 /// Convert a wide character to a multibyte string and append it to the buffer.
 static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c) {
-    scoped_buffer_t scoped_buffer(b);  //!OCLINT(has side effects)
+    scoped_buffer_t scoped_buffer(b);
     s->actual.cursor.x += fish_wcwidth_min_0(c);
     writech(c);
     if (s->actual.cursor.x == s->actual_width && allow_soft_wrap()) {
@@ -554,13 +554,13 @@ static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c) {
 
 /// Send the specified string through tputs and append the output to the specified buffer.
 static void s_write_mbs(data_buffer_t *b, char *s) {
-    scoped_buffer_t scoped_buffer(b);  //!OCLINT(has side effects)
+    scoped_buffer_t scoped_buffer(b);
     writembs(s);
 }
 
 /// Convert a wide string to a multibyte string and append it to the buffer.
 static void s_write_str(data_buffer_t *b, const wchar_t *s) {
-    scoped_buffer_t scoped_buffer(b);  //!OCLINT(has side effects)
+    scoped_buffer_t scoped_buffer(b);
     writestr(s);
 }
 

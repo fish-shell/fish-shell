@@ -24,9 +24,23 @@ function __fish_git_tags
     command git tag ^/dev/null
 end
 
+function __fish_git_dir
+    command git rev-parse --git-dir ^/dev/null
+end
+
 function __fish_git_heads
+    set -l gitdir (__fish_git_dir)
+    for head in HEAD FETCH_HEAD ORIG_HEAD MERGE_HEAD
+        if test -f $gitdir/$head
+            echo $head
+        end
+    end
+end
+
+function __fish_git_refs
     __fish_git_branches
     __fish_git_tags
+    __fish_git_heads
 end
 
 function __fish_git_remotes
@@ -57,13 +71,13 @@ function __fish_git_ranges
     # If we didn't need to split (or there's nothing _to_ split), complete only the first part
     # Note that status here is from `string split` because `set` doesn't alter it
     if test -z "$from" -o $status -gt 0
-        __fish_git_heads
+        __fish_git_refs
         return 0
     end
 
     set -l to (set -q both[2]; and echo $both[2])
-    for from_ref in (__fish_git_heads | string match "$from")
-        for to_ref in (__fish_git_heads | string match "*$to*") # if $to is empty, this correctly matches everything
+    for from_ref in (__fish_git_refs | string match "$from")
+        for to_ref in (__fish_git_refs | string match "*$to*") # if $to is empty, this correctly matches everything
             printf "%s..%s\n" $from_ref $to_ref
         end
     end
@@ -286,11 +300,12 @@ complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_tags)' --description 'Tag'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command show' -l stat -d 'Generate a diffstat, showing the number of changed lines of each file'
 # TODO options
 
 ### show-branch
 complete -f -c git -n '__fish_git_needs_command' -a show-branch -d 'Shows the commits on branches'
-complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_heads)' --description 'Branch'
+complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_refs)' --description 'Rev'
 # TODO options
 
 ### add
@@ -314,6 +329,7 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_add_files)'
 ### checkout
 complete -f -c git -n '__fish_git_needs_command' -a checkout -d 'Checkout and switch to a branch'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_branches)' --description 'Branch'
+complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' --description 'Head'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' --description 'Tag'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'
@@ -404,7 +420,7 @@ complete -f -c git -n '__fish_git_needs_command' -a init -d 'Create an empty git
 
 ### log
 complete -c git -n '__fish_git_needs_command' -a log -d 'Show commit logs'
-complete -c git -n '__fish_git_using_command log' -a '(__fish_git_heads) (__fish_git_ranges)' -d 'Branch'
+complete -c git -n '__fish_git_using_command log' -a '(__fish_git_refs) (__fish_git_ranges)' -d 'Branch'
 # TODO options
 
 ### merge
@@ -432,6 +448,31 @@ complete -f -c git -n '__fish_git_using_command merge' -s m -d 'Set the commit m
 complete -f -c git -n '__fish_git_using_command merge' -l abort -d 'Abort the current conflict resolution process'
 
 # TODO options
+
+### mergetool
+
+function __fish_git_mergetools
+    set -l tools diffuse diffmerge ecmerge emerge kdiff3 meld opendiff tkdiff vimdiff gvimdiff xxdiff araxis p4merge bc codecompare
+    for tool in $tools
+        if command --search $tool >/dev/null
+            echo "$tool"
+        end
+    end
+end
+
+# returns list of files with status:
+# "UU"=unmerged "\?\?"=untracked "M "=staged " M"=changed, not staged "MM"=staged and changed locally
+function __fish_git_status --argument-names "statusmarker"
+    for line in (git status -s)
+        set -l filename (string replace -r "^$statusmarker\s+" "" $line)
+        and echo $filename
+    end
+end
+
+complete -f -c git -n '__fish_git_needs_command' -a mergetool -d 'Run merge conflict resolution tools to resolve merge conflicts'
+complete -f -c git -n '__fish_git_using_command mergetool' -s t -l tool -d "Use specific merge resolution program" -a "(__fish_git_mergetools)"
+complete -f -c git -n '__fish_git_using_command mergetool' -a "(__fish_git_status 'UU')" -d "File"
+
 
 ### mv
 complete -c git -n '__fish_git_needs_command' -a mv -d 'Move or rename a file, a directory, or a symlink'
@@ -484,6 +525,8 @@ complete -f -c git -n '__fish_git_using_command push' -l progress -d 'Force prog
 complete -f -c git -n '__fish_git_needs_command' -a rebase -d 'Forward-port local commits to the updated upstream head'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_remotes)' -d 'Remote alias'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_heads)' -d 'Head'
+complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_tags)' -d 'Tag'
 complete -f -c git -n '__fish_git_using_command rebase' -l continue -d 'Restart the rebasing process'
 complete -f -c git -n '__fish_git_using_command rebase' -l abort -d 'Abort the rebase operation'
 complete -f -c git -n '__fish_git_using_command rebase' -l keep-empty -d "Keep the commits that don't cahnge anything"

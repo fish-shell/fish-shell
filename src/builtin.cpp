@@ -461,7 +461,7 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
     while (1) {
         int opt_index = 0;
-        int opt = w.wgetopt_long(argc, argv, L"aehkKfM:m:", long_options, &opt_index);
+        int opt = w.wgetopt_long_only(argc, argv, L"aehkKfM:m:", long_options, &opt_index);
 
         if (opt == -1) break;
 
@@ -1762,7 +1762,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     return res;
 }
 
-// The random builtin. For generating random numbers.
+/// The random builtin generates random numbers.
 static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     static int seeded = 0;
     static struct drand48_data seed_buffer;
@@ -2814,83 +2814,113 @@ static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **arg
     return status;
 }
 
-// Formats a single history record, including a trailing newline.  Returns true
-// if bytes were written to the output stream and false otherwise.
-static bool format_history_record(const history_item_t &item, const bool with_time,
-                                  output_stream_t *const out) {
-    if (with_time) {
-        const time_t seconds = item.timestamp();
-        struct tm timestamp;
-        if (!localtime_r(&seconds, &timestamp)) {
-            return false;
-        }
-        char timestamp_string[22];
-        if (strftime(timestamp_string, 22, "%Y-%m-%d %H:%M:%S  ", &timestamp) != 21) {
-            return false;
-        }
-        out->append(str2wcstring(timestamp_string));
+enum hist_cmd_t { HIST_NOOP, HIST_SEARCH, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAVE };
+
+static const wcstring hist_cmd_to_string(hist_cmd_t hist_cmd) {
+    switch (hist_cmd) {
+        case HIST_NOOP:
+            return L"no-op";
+        case HIST_SEARCH:
+            return L"search";
+        case HIST_DELETE:
+            return L"delete";
+        case HIST_CLEAR:
+            return L"clear";
+        case HIST_MERGE:
+            return L"merge";
+        case HIST_SAVE:
+            return L"save";
+        default:
+            DIE("Unhandled history command");
     }
-    out->append(item.str());
-    out->append(L"\n");
+}
+
+/// Remember the history subcommand and disallow selecting more than one history subcommand.
+static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t sub_cmd,
+                         io_streams_t &streams) {
+    if (*hist_cmd != HIST_NOOP) {
+        wchar_t err_text[1024];
+        swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
+                 _(L"You cannot do both '%ls' and '%ls' in the same '%ls' invocation\n"),
+                 hist_cmd_to_string(*hist_cmd).c_str(), hist_cmd_to_string(sub_cmd).c_str(), cmd);
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, err_text);
+        return false;
+    }
+
+    *hist_cmd = sub_cmd;
     return true;
 }
 
-/// History of commands executed by user.
-static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int argc = builtin_count_args(argv);
+#define CHECK_FOR_UNEXPECTED_HIST_ARGS()                                                 \
+    if (args.size() != 0) {                                                              \
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT, cmd,                            \
+                                  hist_cmd_to_string(hist_cmd).c_str(), 0, args.size()); \
+        status = STATUS_BUILTIN_ERROR;                                                   \
+        break;                                                                           \
+    }
 
-    bool search_history = false;
-    bool delete_item = false;
-    bool search_prefix = false;
-    bool save_history = false;
-    bool clear_history = false;
-    bool merge_history = false;
+/// Manipulate history of interactive commands executed by the user.
+static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
+    ;
+    int argc = builtin_count_args(argv);
+    hist_cmd_t hist_cmd = HIST_NOOP;
+    history_search_type_t search_type = HISTORY_SEARCH_TYPE_CONTAINS;
     bool with_time = false;
 
     static const struct woption long_options[] = {
-        {L"prefix", no_argument, 0, 'p'},    {L"delete", no_argument, 0, 'd'},
-        {L"search", no_argument, 0, 's'},    {L"contains", no_argument, 0, 'c'},
+        {L"delete", no_argument, 0, 'd'},    {L"search", no_argument, 0, 's'},
+        {L"prefix", no_argument, 0, 'p'},    {L"contains", no_argument, 0, 'c'},
         {L"save", no_argument, 0, 'v'},      {L"clear", no_argument, 0, 'l'},
         {L"merge", no_argument, 0, 'm'},     {L"help", no_argument, 0, 'h'},
         {L"with-time", no_argument, 0, 't'}, {0, 0, 0, 0}};
 
-    int opt = 0;
-    int opt_index = 0;
-
-    wgetopter_t w;
     history_t *history = reader_get_history();
-
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
     // from webconfig.py.
     if (!history) history = &history_t::history_with_name(L"fish");
 
-    while ((opt = w.wgetopt_long_only(argc, argv, L"pdscvlt", long_options, &opt_index)) != EOF) {
+    int opt = 0;
+    int opt_index = 0;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, L"+dspcvlmht", long_options, &opt_index)) != EOF) {
         switch (opt) {
-            case 'p': {
-                search_prefix = true;
-                break;
-            }
-            case 'd': {
-                delete_item = true;
-                break;
-            }
             case 's': {
-                search_history = true;
-                break;
-            }
-            case 'c': {
-                break;
-            }
-            case 'v': {
-                save_history = true;
-                break;
-            }
-            case 'l': {
-                clear_history = true;
+                if (!set_hist_cmd(cmd, &hist_cmd, HIST_SEARCH, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
                 break;
             }
             case 'm': {
-                merge_history = true;
+                if (!set_hist_cmd(cmd, &hist_cmd, HIST_MERGE, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
+            case 'v': {
+                if (!set_hist_cmd(cmd, &hist_cmd, HIST_SAVE, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
+            case 'd': {
+                if (!set_hist_cmd(cmd, &hist_cmd, HIST_DELETE, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
+            case 'l': {
+                if (!set_hist_cmd(cmd, &hist_cmd, HIST_CLEAR, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
+            case 'p': {
+                search_type = HISTORY_SEARCH_TYPE_PREFIX;
+                break;
+            }
+            case 'c': {
+                search_type = HISTORY_SEARCH_TYPE_CONTAINS;
                 break;
             }
             case 't': {
@@ -2898,86 +2928,66 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 break;
             }
             case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
+                builtin_print_help(parser, streams, cmd, streams.out);
                 return STATUS_BUILTIN_OK;
-                break;
             }
             case '?': {
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0], argv[w.woptind - 1]);
+                streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
-                break;
             }
             default: {
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0], argv[w.woptind - 1]);
+                streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
             }
         }
     }
 
-    // Everything after is an argument.
+    // Everything after the flags is an argument for a subcommand (e.g., a search term).
     const wcstring_list_t args(argv + w.woptind, argv + argc);
 
-    if (args.empty()) {
-        for (int i = 1;  // 0 is the current input
-             !history->item_at_index(i).empty(); ++i) {
-            if (!format_history_record(history->item_at_index(i), with_time, &streams.out)) {
-                return STATUS_BUILTIN_ERROR;
+    if (hist_cmd == HIST_NOOP) hist_cmd = HIST_SEARCH;
+
+    int status = STATUS_BUILTIN_OK;
+    switch (hist_cmd) {
+        case HIST_SEARCH: {
+            if (!history->search(search_type, args, with_time, streams)) {
+                status = STATUS_BUILTIN_ERROR;
             }
+            break;
         }
-        return STATUS_BUILTIN_OK;
-    }
+        case HIST_DELETE: {
+            for (wcstring_list_t::const_iterator iter = args.begin(); iter != args.end(); ++iter) {
+                wcstring delete_string = *iter;
+                if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"')
+                    delete_string = delete_string.substr(1, delete_string.length() - 2);
 
-    if (merge_history) {
-        history->incorporate_external_changes();
-        return STATUS_BUILTIN_OK;
-    }
-
-    if (search_history) {
-        int res = STATUS_BUILTIN_ERROR;
-        for (wcstring_list_t::const_iterator iter = args.begin(); iter != args.end(); ++iter) {
-            const wcstring &search_string = *iter;
-            if (search_string.empty()) {
-                streams.err.append_format(BUILTIN_ERR_COMBO2, argv[0],
-                                          L"Use --search with either --contains or --prefix");
-                return res;
+                history->remove(delete_string);
             }
-
-            history_search_t searcher = history_search_t(
-                *history, search_string,
-                search_prefix ? HISTORY_SEARCH_TYPE_PREFIX : HISTORY_SEARCH_TYPE_CONTAINS);
-            while (searcher.go_backwards()) {
-                if (!format_history_record(searcher.current_item(), with_time, &streams.out)) {
-                    return STATUS_BUILTIN_ERROR;
-                }
-                res = STATUS_BUILTIN_OK;
-            }
+            break;
         }
-        return res;
-    }
-
-    if (delete_item) {
-        for (wcstring_list_t::const_iterator iter = args.begin(); iter != args.end(); ++iter) {
-            wcstring delete_string = *iter;
-            if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"')
-                delete_string = delete_string.substr(1, delete_string.length() - 2);
-
-            history->remove(delete_string);
+        case HIST_CLEAR: {
+            CHECK_FOR_UNEXPECTED_HIST_ARGS();
+            history->clear();
+            history->save();
+            break;
         }
-        return STATUS_BUILTIN_OK;
+        case HIST_MERGE: {
+            CHECK_FOR_UNEXPECTED_HIST_ARGS();
+            history->incorporate_external_changes();
+            break;
+        }
+        case HIST_SAVE: {
+            CHECK_FOR_UNEXPECTED_HIST_ARGS();
+            history->save();
+            break;
+        }
+        default: {
+            DIE("Unhandled history command");
+            break;
+        }
     }
 
-    if (save_history) {
-        history->save();
-        return STATUS_BUILTIN_OK;
-    }
-
-    if (clear_history) {
-        history->clear();
-        history->save();
-        return STATUS_BUILTIN_OK;
-    }
-
-    return STATUS_BUILTIN_ERROR;
+    return status;
 }
 
 #if 0

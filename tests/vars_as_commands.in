@@ -1,0 +1,8 @@
+# Test that using variables as command names work correctly.
+
+# Both of these should generate errors about using variables as command names.
+# Verify that the expected errors are written to stderr.
+exec $test
+exec "$test"
+
+exit 0

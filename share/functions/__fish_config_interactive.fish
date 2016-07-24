@@ -110,13 +110,14 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Print a greeting.
     # fish_greeting can be a function (preferred) or a variable.
     #
-    if functions -q fish_greeting
-        fish_greeting
-    else
-        # The greeting used to be skipped when fish_greeting was empty (not just undefined)
-        # Keep it that way to not print superfluous newlines on old configuration
-        test -n "$fish_greeting"
-        and echo $fish_greeting
+    if status --is-interactive and status --is-login
+        if functions -q fish_greeting
+                fish_greeting
+        else
+            # The greeting used to be skipped when fish_greeting was empty (not just undefined)
+            # Keep it that way to not print superfluous newlines on old configuration
+            test -n "$fish_greeting" echo $fish_greeting
+        end
     end
 
     #
@@ -298,26 +299,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -g fish_pager_color_completion normal
         set -g fish_pager_color_description yellow
         set -g fish_pager_color_progress cyan
-
-        # Don't allow setting color other than what linux offers (see #2001)
-        functions -e set_color
-        function set_color --shadow-builtin
-            set -l term_colors black red green yellow blue magenta cyan white normal
-            for a in $argv
-                if not contains -- $a $term_colors
-                    switch $a
-                        # Also allow options
-                        case "-*"
-                            continue
-                        case "*"
-                            echo "Color not valid in TERM = linux: $a"
-                            return 1
-                    end
-                end
-            end
-            builtin set_color $argv
-            return $status
-        end
 
         # Set fish_prompt to a VT-friendly version
         # without color or unicode

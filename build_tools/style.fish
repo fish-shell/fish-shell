@@ -24,13 +24,13 @@ end
 if test $all = yes
     set files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
     if set -q files[1]
-        set_color --bold
-        echo "Will not proceed with style.fish --all as there are uncommited or untracked files."
-        set_color normal
-        echo "hint: git-clang-format can be ran directly"
-        exit 2
+        echo
+        echo You have uncommited changes. Cowardly refusing to restyle the entire code base.
+        echo
+        exit 1
     end
-    set c_files {src,osx,build_tools,share}/{***.h,***.cpp,***.m,***.js}
+    set c_files src/*.h src/*.cpp
+    set f_files share/***.fish
 else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
     # those using `git clang-format`. Else reformat the files in the most recent commit.
@@ -43,45 +43,50 @@ else
         set files (git diff-tree --no-commit-id --name-only -r HEAD)
     end
 
-    # Extract just the C/C++/ObjC/js files that exist.
+    # Extract just the C/C++ files that exist.
     set c_files
-    for file in (string match -ri '^.*\.(?:c|cpp|h|m|js)$' -- $files)
-        test -f $file
-        and set c_files $c_files $file
+    for file in (string match -r '^.*\.(?:c|cpp|h)$' -- $files)
+        test -f $file; and set c_files $c_files $file
     end
     # Extract just the fish files.
     set f_files (string match -r '^.*\.fish$' -- $files)
 end
 
-# Run the git-clang-format if we have any C++ files.
+# Run the C++ reformatter if we have any C++ files.
 if set -q c_files[1]
     if test $git_clang_format = yes
         if type -q git-clang-format
             echo
+            echo ========================================
             echo Running git-clang-format
-            echo ========================
+            echo ========================================
             git add $c_files
             git-clang-format
         else
-            echo (set_color bold)'Warning: git-clang-format not installed or in $PATH'(set_color normal)
+            echo
+            echo 'WARNING: Cannot find git-clang-format command'
+            echo
         end
     else if type -q clang-format
         echo
+        echo ========================================
         echo Running clang-format
-        echo ====================
+        echo ========================================
         for file in $c_files
             cp $file $file.new # preserves mode bits
             clang-format $file >$file.new
             if cmp --quiet $file $file.new
-                echo $file
+                echo $file was correctly formatted
                 rm $file.new
             else
-                echo (set_color --underline)$file(set_color normal) is being reformatted
+                echo $file was NOT correctly formatted
                 mv $file.new $file
             end
         end
     else
+        echo
         echo 'WARNING: Cannot find clang-format command'
+        echo
     end
 end
 
@@ -92,16 +97,17 @@ if set -q f_files[1]
         set PATH . $PATH
     end
     echo
+    echo ========================================
     echo Running fish_indent
-    echo ===================
+    echo ========================================
     for file in $f_files
         cp $file $file.new # preserves mode bits
         fish_indent <$file >$file.new
         if cmp --quiet $file $file.new
-            echo $file
+            echo $file was correctly formatted
             rm $file.new
         else
-            echo (set_color --underline)$file(set_color normal)is being reformatted
+            echo $file was NOT correctly formatted
             mv $file.new $file
         end
     end

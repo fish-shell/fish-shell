@@ -39,7 +39,7 @@ Note 3: `set_color` works by printing sequences of characters to its stdout. If 
 set_color red; echo "Roses are red"
 set_color blue; echo "Violets are blue"
 set_color 62A; echo "Eggplants are dark purple"
-set_color normal; echo "Normal is nice" # This will reset background, too
+set_color normal; echo "Normal is nice" # Resets the background too
 \endfish
 
 \subsection set_color-detection Terminal Capability Detection

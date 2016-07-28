@@ -1,5 +1,5 @@
 function __fish_complete_screen --description "Print a list of running screen sessions"
-	screen -list | __fish_sgrep \^\t.\*\(.\*\)|sed -e 's/'\t'\(.*\)(\(.*\))/\1 Screen: \2/'
+    screen -list | __fish_sgrep \^\t.\*\(.\*\)| string replace -r '\t(.*)\s+\((.*)\)' '$1\tScreen:$2'
 end
 
 complete -c screen -x

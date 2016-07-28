@@ -195,6 +195,9 @@ function . --description 'Evaluate contents of file (deprecated, see "source")' 
 	end
 end
 
+# Set the locale if none is inherited
+__fish_read_locale
+
 # As last part of initialization, source the conf directories
 # Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename"
 set -l sourcelist
@@ -224,15 +227,6 @@ end
 #
 
 if status --is-login
-
-	# Check for i18n information in
-	# /etc/sysconfig/i18n
-
-	if test -f /etc/sysconfig/i18n
-		string match -r '^[a-zA-Z]*=.*' < /etc/sysconfig/i18n | while read -l line
-			set -gx (string split '=' -m 1 -- $line | string replace -ra '"([^"]+)"' '$1' | string replace -ra "'([^']+)'" '$1')
-		end
-	end
 
 	#
 	# Put linux consoles in unicode mode.

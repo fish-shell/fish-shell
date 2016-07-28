@@ -455,7 +455,6 @@ int main(int argc, char **argv) {
         static const char *dummy_argv[2] = {"fish", NULL};
         argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
         argc = 1;                    //!OCLINT(parameter reassignment)
-        debug(0, _(L"I don't know my program name (no argv), using \"%s\""), argv[0]);
     }
     std::vector<std::string> cmds;
     my_optind = fish_parse_opt(argc, argv, &cmds);

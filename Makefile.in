@@ -171,6 +171,11 @@ COMPLETIONS_DIR_FILES := $(wildcard share/completions/*.fish) share/completions/
 FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 
 #
+# Files in ./share/examples/
+#
+EXAMPLES_DIR_FILES := $(wildcard share/examples/*.fish)
+
+#
 # Programs to install
 #
 PROGRAMS := fish fish_indent fish_key_reader
@@ -595,6 +600,7 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir); true
 	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir); true
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
+	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/examples
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config
@@ -612,6 +618,10 @@ install-force: all install-translations
 	done;
 	for i in $(FUNCTIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
+		true; \
+	done;
+	for i in $(EXAMPLES_DIR_FILES:%='%'); do \
+		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/examples/; \
 		true; \
 	done;
 	for i in share/man/man1/*.1; do \

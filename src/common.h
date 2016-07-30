@@ -27,10 +27,6 @@
 #define OS_IS_CYGWIN
 #endif
 
-/// Avoid writing the type name twice in a common "static_cast-initialization". Caveat: This doesn't
-/// work with type names containing commas!
-#define CAST_INIT(type, dst, src) type dst = static_cast<type>(src)
-
 // Common string type.
 typedef std::wstring wcstring;
 typedef std::vector<wcstring> wcstring_list_t;

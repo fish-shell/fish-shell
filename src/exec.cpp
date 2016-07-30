@@ -105,7 +105,7 @@ static bool redirection_is_to_real_file(const io_data_t *io) {
     bool result = false;
     if (io != NULL && io->io_mode == IO_FILE) {
         // It's a file redirection. Compare the path to /dev/null.
-        CAST_INIT(const io_file_t *, io_file, io);
+        const io_file_t *io_file = static_cast<const io_file_t *>(io);
         const char *path = io_file->filename_cstr;
         if (strcmp(path, "/dev/null") != 0) {
             // It's not /dev/null.
@@ -268,7 +268,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
             case IO_FILE: {
                 // Transmogrify file redirections.
                 int fd;
-                CAST_INIT(io_file_t *, in_file, in.get());
+                io_file_t *in_file = static_cast<io_file_t *>(in.get());
                 if ((fd = open(in_file->filename_cstr, in_file->flags, OPEN_MASK)) == -1) {
                     debug(1, FILE_ERROR, in_file->filename_cstr);
 
@@ -404,7 +404,7 @@ void exec_job(parser_t &parser, job_t *j) {
         const shared_ptr<io_data_t> &io = all_ios.at(idx);
 
         if ((io->io_mode == IO_BUFFER)) {
-            CAST_INIT(io_buffer_t *, io_buffer, io.get());
+            io_buffer_t *io_buffer = static_cast<io_buffer_t *>(io.get());
             assert(!io_buffer->is_input);
         }
     }
@@ -450,7 +450,7 @@ void exec_job(parser_t &parser, job_t *j) {
     for (size_t i = 0; i < all_ios.size(); i++) {
         io_data_t *io = all_ios.at(i).get();
         if (io->io_mode == IO_BUFFER) {
-            CAST_INIT(io_buffer_t *, io_buffer, io);
+            io_buffer_t *io_buffer = static_cast<io_buffer_t *>(io);
             if (!io_buffer->avoid_conflicts_with_io_chain(all_ios)) {
                 // We could not avoid conflicts, probably due to fd exhaustion. Mark an error.
                 exec_error = true;
@@ -715,7 +715,7 @@ void exec_job(parser_t &parser, job_t *j) {
                     if (in) {
                         switch (in->io_mode) {
                             case IO_FD: {
-                                CAST_INIT(const io_fd_t *, in_fd, in.get());
+                                const io_fd_t *in_fd = static_cast<const io_fd_t *>(in.get());
                                 // Ignore user-supplied fd redirections from an fd other than the
                                 // standard ones. e.g. in source <&3 don't actually read from fd 3,
                                 // which is internal to fish. We still respect this redirection in
@@ -730,13 +730,13 @@ void exec_job(parser_t &parser, job_t *j) {
                                 break;
                             }
                             case IO_PIPE: {
-                                CAST_INIT(const io_pipe_t *, in_pipe, in.get());
+                                const io_pipe_t *in_pipe = static_cast<const io_pipe_t *>(in.get());
                                 local_builtin_stdin = in_pipe->pipe_fd[0];
                                 break;
                             }
                             case IO_FILE: {
                                 // Do not set CLO_EXEC because child needs access.
-                                CAST_INIT(const io_file_t *, in_file, in.get());
+                                const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
                                 local_builtin_stdin =
                                     open(in_file->filename_cstr, in_file->flags, OPEN_MASK);
                                 if (local_builtin_stdin == -1) {
@@ -932,8 +932,10 @@ void exec_job(parser_t &parser, job_t *j) {
                             // performance quite a bit in complex completion code.
                             debug(3, L"Skipping fork: buffered output for internal builtin '%ls'",
                                   p->argv0());
-                            CAST_INIT(io_buffer_t *, io_buffer, stdout_io.get());
+
+                            io_buffer_t *io_buffer = static_cast<io_buffer_t *>(stdout_io.get());
                             const std::string res = wcs2string(builtin_io_streams->out.buffer());
+
                             io_buffer->out_buffer_append(res.data(), res.size());
                             fork_was_skipped = true;
                         } else if (stdout_io.get() == NULL && stderr_io.get() == NULL) {

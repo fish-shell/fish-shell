@@ -935,7 +935,7 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
             if (p->ifa_addr->sa_family == AF_LINK) {
                 if (p->ifa_name && p->ifa_name[0] &&
                     !strcmp((const char *)p->ifa_name, interface)) {
-                    const sockaddr_dl &sdl = *(sockaddr_dl *)p->ifa_addr;
+                    const sockaddr_dl &sdl = *reinterpret_cast<sockaddr_dl *>(p->ifa_addr);
 
                     size_t alen = sdl.sdl_alen;
                     if (alen > MAC_ADDRESS_MAX_LEN) alen = MAC_ADDRESS_MAX_LEN;

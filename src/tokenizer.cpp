@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
@@ -759,7 +760,7 @@ bool move_word_state_machine_t::consume_char(wchar_t c) {
         case move_word_style_whitespace: {
             return consume_char_whitespace(c);
         }
-        default: { return false; }
+        default: { abort(); }
     }
 }
 

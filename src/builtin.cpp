@@ -2831,7 +2831,8 @@ static const wcstring hist_cmd_to_string(hist_cmd_t hist_cmd) {
         case HIST_SAVE:
             return L"save";
         default:
-            DIE("Unhandled history command");
+            assert(0 && "Unhandled hist_cmd_t constant!");
+            abort();
     }
 }
 

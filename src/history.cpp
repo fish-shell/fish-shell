@@ -449,7 +449,7 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
         }
         default: {
             sanity_lose();
-            return false;
+            abort();
         }
     }
 }

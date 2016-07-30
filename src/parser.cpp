@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <wchar.h>
 #include <algorithm>
 #include <memory>
@@ -255,7 +256,7 @@ block_t *parser_t::block_at_index(size_t idx) {
     return idx < count ? block_stack.at(count - idx - 1) : NULL;
 }
 
-block_t *const parser_t::current_block() { return block_stack.empty() ? NULL : block_stack.back(); }
+block_t *parser_t::current_block() { return block_stack.empty() ? NULL : block_stack.back(); }
 
 void parser_t::forbid_function(const wcstring &function) { forbidden_function.push_back(function); }
 
@@ -869,8 +870,8 @@ wcstring block_t::description() const {
             break;
         }
         default: {
-            append_format(result, L"unknown type %ld", (long)this->type());
-            break;
+            assert(0 && "Unhandled block_type_t constant");
+            abort();
         }
     }
 

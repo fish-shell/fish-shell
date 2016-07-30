@@ -131,14 +131,19 @@ enum selection_direction_t {
 inline bool selection_direction_is_cardinal(selection_direction_t dir) {
     switch (dir) {
         case direction_north:
-        case direction_page_north:
         case direction_east:
-        case direction_page_south:
         case direction_south:
-        case direction_west: {
+        case direction_west:
+        case direction_page_north:
+        case direction_page_south: {
             return true;
         }
-        default: { return false; }
+        case direction_next:
+        case direction_prev:
+        case direction_deselect: {
+            return false;
+        }
+        default: { abort(); }
     }
 }
 

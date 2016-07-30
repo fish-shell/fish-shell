@@ -283,9 +283,8 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
             }
             default: {
                 // Unknown type, should never happen.
-                fprintf(stderr, "Unknown io_mode %ld\n", (long)in->io_mode);
+                assert(0 && "Unhandled io_mode constant");
                 abort();
-                break;
             }
         }
 

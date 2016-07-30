@@ -570,7 +570,6 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
     assert(!string_suffixes_string(L"/", directory));
 
     bool success = false;
-    int saved_errno;
     const wcstring tmp_name_template = directory + L"/fishd.tmp.XXXXXX";
     wcstring tmp_name;
 
@@ -587,15 +586,15 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
         }
 #endif
 
-        saved_errno = errno;
         success = result_fd != -1;
         *out_fd = result_fd;
+
+        if (!success && attempt == 9) {
+            report_error(errno, L"Unable to open temporary file '%s'", narrow_str);
+        }
+
         *out_path = str2wcstring(narrow_str);
         free(narrow_str);
-    }
-
-    if (!success) {
-        report_error(saved_errno, L"Unable to open file '%ls'", out_path->c_str());
     }
     return success;
 }

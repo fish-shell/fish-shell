@@ -189,7 +189,7 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
     mbstate_t state = {};
     while (in_pos < in_len) {
         bool use_encode_direct = false;
-        size_t ret;
+        size_t ret = 0;
         wchar_t wc = 0;
 
         if ((in[in_pos] & 0xF8) == 0xF8) {

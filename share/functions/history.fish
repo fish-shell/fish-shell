@@ -3,7 +3,7 @@
 #
 function history --shadow-builtin --description "display or manipulate interactive command history"
     set -l cmd
-    set -l search_mode --contains
+    set -l search_mode
     set -l with_time
 
     # The "set cmd $cmd xyz" lines are to make it easy to detect if the user specifies more than one
@@ -28,6 +28,8 @@ function history --shadow-builtin --description "display or manipulate interacti
                 set search_mode --prefix
             case -c --contains
                 set search_mode --contains
+            case -e --exact
+                set search_mode --exact
             case --
                 set -e argv[1]
                 break
@@ -46,6 +48,9 @@ function history --shadow-builtin --description "display or manipulate interacti
 
     switch $cmd
         case search
+            test -z "$search_mode"
+            and set search_mode "--contains"
+
             if isatty stdout
                 set -l pager less
                 set -q PAGER
@@ -58,8 +63,16 @@ function history --shadow-builtin --description "display or manipulate interacti
         case delete  # Interactively delete history
             # TODO: Fix this to deal with history entries that have multiple lines.
             if not set -q argv[1]
-                printf "You have to specify at least one search term to find entries to delete" >&2
+                printf (_ "You must specify at least one search term when deleting entries") >&2
                 return 1
+            end
+
+            test -z "$search_mode"
+            and set search_mode "--exact"
+
+            if test $search_mode = "--exact"
+                builtin history --delete $search_mode $argv
+                return
             end
 
             # TODO: Fix this so that requesting history entries with a timestamp works:

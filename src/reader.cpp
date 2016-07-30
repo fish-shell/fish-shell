@@ -2873,11 +2873,15 @@ const wchar_t *reader_readline(int nchars) {
                     data->history_search = history_search_t(*data->history, data->search_buff,
                                                             HISTORY_SEARCH_TYPE_CONTAINS);
 
-                    // Skip the autosuggestion as history unless it was truncated.
+                    // Always skip history entries that exactly match what has been typed so far.
+                    wcstring_list_t skip_list;
+                    skip_list.push_back(data->command_line.text);
                     const wcstring &suggest = data->autosuggestion;
                     if (!suggest.empty() && !data->screen.autosuggestion_is_truncated) {
-                        data->history_search.skip_matches(wcstring_list_t(&suggest, 1 + &suggest));
+                        // Also skip the autosuggestion in the history unless it was truncated.
+                        skip_list.push_back(suggest);
                     }
+                    data->history_search.skip_matches(skip_list);
                 }
 
                 switch (data->search_mode) {

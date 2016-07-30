@@ -4,3 +4,10 @@ invalid attempt at multiple history commands detected
 history function explicit search succeeded
 history function implicit search succeeded
 history function implicit search with timestamps succeeded
+history function explicit exact search 'echo goodbye' succeeded
+history function explicit exact search 'echo hello' succeeded
+history function explicit exact search 'echo hell' succeeded
+history function explicit exact delete 'echo hello' succeeded
+history function explicit prefix delete 'echo hello' succeeded
+history function explicit exact search 'echo hello again' succeeded
+history function explicit exact search 'echo hello AGAIN' failed to find the entry

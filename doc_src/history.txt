@@ -2,8 +2,8 @@
 
 \subsection history-synopsis Synopsis
 \fish{synopsis}
-history ( -s | --search ) [ -t | --with-time ] [ -p | --prefix | -c | --contains ] [ "search string"... ]
-history ( -d | --delete ) [ -t | --with-time ] [ -p | --prefix | -c | --contains ] "search string"...
+history ( -s | --search ) [ -t | --with-time ] [ -e | --exact | -p | --prefix | -c | --contains ] [ "search string"... ]
+history ( -d | --delete ) [ -t | --with-time ] [ -e | --exact | -p | --prefix | -c | --contains ] "search string"...
 history ( -m | --merge )
 history ( -s | --save )
 history ( -l | --clear )
@@ -24,13 +24,15 @@ The following commands are available:
 
 - `-v` or `--save` saves all changes in the history file. The shell automatically saves the history file; this option is provided for internal use.
 
-- `-l` or `--clear` clears the history file. A prompt is displayed before the history is erased asking you to confirm you really want to clear all history.
+- `-l` or `--clear` clears the history file. A prompt is displayed before the history is erased asking you to confirm you really want to clear all history unless `builtin history` is used.
 
 The following options are available:
 
-- `-p` or `--prefix` searches or deletes items in the history that begin with the specified text string.
+- `-c` or `--contains` searches or deletes items in the history that contain the specified text string. This is the default for the `--search` flag. This is not currently supported by the `--delete` flag.
 
-- `-c` or `--contains` searches or deletes items in the history that contain the specified text string. This is the default.
+- `-e` or `--exact` searches or deletes items in the history that exactly match the specified text string. This is the default for the `--delete` flag.
+
+- `-p` or `--prefix` searches or deletes items in the history that begin with the specified text string. This is not currently supported by the `--delete` flag.
 
 - `-t` or `--with-time` prefixes the output of each displayed history entry with the time it was recorded in the format "%Y-%m-%d %H:%M:%S" in your local timezone.
 

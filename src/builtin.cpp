@@ -2866,15 +2866,21 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     ;
     int argc = builtin_count_args(argv);
     hist_cmd_t hist_cmd = HIST_NOOP;
-    history_search_type_t search_type = HISTORY_SEARCH_TYPE_CONTAINS;
+    history_search_type_t search_type = (history_search_type_t)-1;
+    bool history_search_type_defined = false;
     bool with_time = false;
 
-    static const struct woption long_options[] = {
-        {L"delete", no_argument, 0, 'd'},    {L"search", no_argument, 0, 's'},
-        {L"prefix", no_argument, 0, 'p'},    {L"contains", no_argument, 0, 'c'},
-        {L"save", no_argument, 0, 'v'},      {L"clear", no_argument, 0, 'l'},
-        {L"merge", no_argument, 0, 'm'},     {L"help", no_argument, 0, 'h'},
-        {L"with-time", no_argument, 0, 't'}, {0, 0, 0, 0}};
+    static const struct woption long_options[] = {{L"delete", no_argument, 0, 'd'},
+                                                  {L"search", no_argument, 0, 's'},
+                                                  {L"prefix", no_argument, 0, 'p'},
+                                                  {L"contains", no_argument, 0, 'c'},
+                                                  {L"save", no_argument, 0, 'v'},
+                                                  {L"clear", no_argument, 0, 'l'},
+                                                  {L"merge", no_argument, 0, 'm'},
+                                                  {L"help", no_argument, 0, 'h'},
+                                                  {L"with-time", no_argument, 0, 't'},
+                                                  {L"exact", no_argument, 0, 'e'},
+                                                  {0, 0, 0, 0}};
 
     history_t *history = reader_get_history();
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
@@ -2884,7 +2890,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     int opt = 0;
     int opt_index = 0;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, L"+dspcvlmht", long_options, &opt_index)) != EOF) {
+    while ((opt = w.wgetopt_long(argc, argv, L"+despcvlmht", long_options, &opt_index)) != EOF) {
         switch (opt) {
             case 's': {
                 if (!set_hist_cmd(cmd, &hist_cmd, HIST_SEARCH, streams)) {
@@ -2918,10 +2924,17 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             }
             case 'p': {
                 search_type = HISTORY_SEARCH_TYPE_PREFIX;
+                history_search_type_defined = true;
                 break;
             }
             case 'c': {
                 search_type = HISTORY_SEARCH_TYPE_CONTAINS;
+                history_search_type_defined = true;
+                break;
+            }
+            case 'e': {
+                search_type = HISTORY_SEARCH_TYPE_EXACT;
+                history_search_type_defined = true;
                 break;
             }
             case 't': {
@@ -2946,7 +2959,12 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // Everything after the flags is an argument for a subcommand (e.g., a search term).
     const wcstring_list_t args(argv + w.woptind, argv + argc);
 
+    // Establish appropriate defaults for unspecified options.
     if (hist_cmd == HIST_NOOP) hist_cmd = HIST_SEARCH;
+    if (!history_search_type_defined) {
+        if (hist_cmd == HIST_SEARCH) search_type = HISTORY_SEARCH_TYPE_CONTAINS;
+        if (hist_cmd == HIST_DELETE) search_type = HISTORY_SEARCH_TYPE_EXACT;
+    }
 
     int status = STATUS_BUILTIN_OK;
     switch (hist_cmd) {
@@ -2957,11 +2975,19 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             break;
         }
         case HIST_DELETE: {
+            // TODO: Move this code to the history module and support the other search types. At
+            // this time we expect the non-exact deletions to be handled only by the history
+            // function's interactive delete feature.
+            if (search_type != HISTORY_SEARCH_TYPE_EXACT) {
+                streams.err.append_format(_(L"builtin history --delete only supports --exact\n"));
+                status = STATUS_BUILTIN_ERROR;
+                break;
+            }
             for (wcstring_list_t::const_iterator iter = args.begin(); iter != args.end(); ++iter) {
                 wcstring delete_string = *iter;
-                if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"')
+                if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"') {
                     delete_string = delete_string.substr(1, delete_string.length() - 2);
-
+                }
                 history->remove(delete_string);
             }
             break;

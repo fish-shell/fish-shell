@@ -83,3 +83,80 @@ expect_prompt -re {\r\n\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d  echo start1; builtin h
 } unmatched {
     puts stderr "history function implicit search with timestamps failed"
 }
+
+# ==========
+# Verify explicit searching for an exact command returns just that command.
+# returns the expected results.
+send "echo hello\r"
+expect_prompt
+send "echo goodbye\r"
+expect_prompt
+send "echo hello again\r"
+expect_prompt
+send "echo hello AGAIN\r"
+expect_prompt
+
+send "history --search --exact 'echo goodbye'\r"
+expect_prompt -re {\r\necho goodbye\r\n} {
+    puts "history function explicit exact search 'echo goodbye' succeeded"
+} unmatched {
+    puts stderr "history function explicit exact search 'echo goodbye' failed"
+}
+
+send "history --search --exact 'echo hello'\r"
+expect_prompt -re {\r\necho hello\r\n} {
+    puts "history function explicit exact search 'echo hello' succeeded"
+} unmatched {
+    puts stderr "history function explicit exact search 'echo hello' failed"
+}
+
+# This is slightly subtle in that it shouldn't actually match anything between
+# the command we sent and the next prompt.
+send "history --search --exact 'echo hell'\r"
+expect_prompt -re {history --search --exact 'echo hell'\r\n} {
+    puts "history function explicit exact search 'echo hell' succeeded"
+} unmatched {
+    puts stderr "history function explicit exact search 'echo hell' failed"
+}
+
+# ==========
+# Delete a single command we recently ran.
+send "history --delete 'echo hello'\r"
+expect_prompt -re {history --delete 'echo hello'\r\n} {
+    puts "history function explicit exact delete 'echo hello' succeeded"
+} unmatched {
+    puts stderr "history function explicit exact delete 'echo hello' failed"
+}
+
+# ==========
+# Interactively delete one of multiple matched commands. This verifies that we
+# delete the first entry matched by the prefix search (the most recent command
+# sent above that matches).
+send "history --delete -p 'echo hello'\r"
+expect -re {history --delete -p 'echo hello'\r\n}
+expect -re {\[1\] echo hello AGAIN\r\n}
+expect -re {\[2\] echo hello again\r\n\r\n}
+expect -re {Enter nothing to cancel.*\r\nEnter "all" to delete all the matching entries\.\r\n}
+expect -re {Delete which entries\? >}
+send "1\r"
+expect_prompt -re {Deleting history entry 1: "echo hello AGAIN"\r\n} {
+    puts "history function explicit prefix delete 'echo hello' succeeded"
+} unmatched {
+    puts stderr "history function explicit prefix delete 'echo hello' failed"
+}
+
+# Verify that the deleted history entry is gone and the other one that matched
+# the prefix search above is still there.
+send "history --search --exact 'echo hello again'\r"
+expect_prompt -re {\r\necho hello again\r\n} {
+    puts "history function explicit exact search 'echo hello again' succeeded"
+} unmatched {
+    puts stderr "history function explicit exact search 'echo hello again' failed"
+}
+
+send "history --search --exact 'echo hello AGAIN'\r"
+expect_prompt -re {\r\necho hello AGAIN\r\n} {
+    puts stderr "history function explicit exact search 'echo hello AGAIN' found the entry"
+} unmatched {
+    puts "history function explicit exact search 'echo hello AGAIN' failed to find the entry"
+}

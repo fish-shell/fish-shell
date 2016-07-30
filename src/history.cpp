@@ -30,7 +30,6 @@
 #include "parse_tree.h"
 #include "path.h"
 #include "reader.h"
-#include "sanity.h"
 #include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -438,19 +437,17 @@ history_item_t::history_item_t(const wcstring &str, time_t when, history_identif
 bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type) const {
     switch (type) {
         case HISTORY_SEARCH_TYPE_CONTAINS: {
-            // We consider equal strings to NOT match a contains search (so that you don't have to
-            // see history equal to what you typed). The length check ensures that.
-            return contents.size() > term.size() && contents.find(term) != wcstring::npos;
+            return contents.find(term) != wcstring::npos;
         }
         case HISTORY_SEARCH_TYPE_PREFIX: {
             // We consider equal strings to match a prefix search, so that autosuggest will allow
             // suggesting what you've typed.
             return string_prefixes_string(term, contents);
         }
-        default: {
-            sanity_lose();
-            abort();
+        case HISTORY_SEARCH_TYPE_EXACT: {
+            return term == contents;
         }
+        default: { DIE("unexpected history_search_type_t value"); }
     }
 }
 

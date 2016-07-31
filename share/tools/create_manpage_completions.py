@@ -129,8 +129,10 @@ def built_command(options, description):
 #    print "Options are: ", options
     man_optionlist = re.split(" |,|\"|=|[|]", options)
     fish_options = []
-    for option in man_optionlist:
-        option = option.strip()
+    for optionstr in man_optionlist:
+        option = re.sub(r"(\[.*\])", "", optionstr)
+        option = option.strip(" \t\n[]()")
+
 
         # Skip some problematic cases
         if option in ['-', '--']: continue

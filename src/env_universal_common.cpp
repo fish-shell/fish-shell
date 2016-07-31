@@ -593,7 +593,7 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
     }
 
     if (!success) {
-        report_error(saved_errno, L"Unable to open temporary file '%s'", out_path->c_str());
+        report_error(saved_errno, L"Unable to open temporary file '%ls'", out_path->c_str());
     }
     return success;
 }

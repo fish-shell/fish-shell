@@ -570,31 +570,30 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
     assert(!string_suffixes_string(L"/", directory));
 
     bool success = false;
+    int saved_errno = 0;
     const wcstring tmp_name_template = directory + L"/fishd.tmp.XXXXXX";
     wcstring tmp_name;
 
     for (size_t attempt = 0; attempt < 10 && !success; attempt++) {
-        int result_fd = -1;
         char *narrow_str = wcs2str(tmp_name_template.c_str());
 #if HAVE_MKOSTEMP
-        result_fd = mkostemp(narrow_str, O_CLOEXEC);
+        int result_fd = mkostemp(narrow_str, O_CLOEXEC);
 #else
-        // cppcheck-suppress redundantAssignment
-        result_fd = mkstemp(narrow_str);
+        int result_fd = mkstemp(narrow_str);
         if (result_fd != -1) {
             fcntl(result_fd, F_SETFD, FD_CLOEXEC);
         }
 #endif
 
+        saved_errno = errno;
         success = result_fd != -1;
         *out_fd = result_fd;
-
-        if (!success && attempt == 9) {
-            report_error(errno, L"Unable to open temporary file '%s'", narrow_str);
-        }
-
         *out_path = str2wcstring(narrow_str);
         free(narrow_str);
+    }
+
+    if (!success) {
+        report_error(saved_errno, L"Unable to open temporary file '%s'", out_path->c_str());
     }
     return success;
 }

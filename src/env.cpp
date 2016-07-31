@@ -280,7 +280,10 @@ static void universal_callback(fish_message_type_t type, const wchar_t *name, co
             str = L"ERASE";
             break;
         }
-        default: { break; }
+        default: {
+            assert(0 && "Unhandled fish_message_type_t constant!");
+            abort();
+        }
     }
 
     if (str) {

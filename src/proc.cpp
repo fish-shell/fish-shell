@@ -711,7 +711,7 @@ static int select_try(job_t *j) {
     for (size_t idx = 0; idx < chain.size(); idx++) {
         const io_data_t *io = chain.at(idx).get();
         if (io->io_mode == IO_BUFFER) {
-            CAST_INIT(const io_pipe_t *, io_pipe, io);
+            const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io);
             int fd = io_pipe->pipe_fd[0];
             // fwprintf( stderr, L"fd %d on job %ls\n", fd, j->command );
             FD_SET(fd, &fds);

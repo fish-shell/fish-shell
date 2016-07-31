@@ -137,7 +137,7 @@ static int handle_child_io(const io_chain_t &io_chain) {
 
             case IO_FILE: {
                 // Here we definitely do not want to set CLO_EXEC because our child needs access.
-                CAST_INIT(const io_file_t *, io_file, io);
+                const io_file_t *io_file = static_cast<const io_file_t *>(io);
                 int tmp = open(io_file->filename_cstr, io_file->flags, OPEN_MASK);
                 if (tmp < 0) {
                     if ((io_file->flags & O_EXCL) && (errno == EEXIST)) {
@@ -181,7 +181,7 @@ static int handle_child_io(const io_chain_t &io_chain) {
 
             case IO_BUFFER:
             case IO_PIPE: {
-                CAST_INIT(const io_pipe_t *, io_pipe, io);
+                const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io);
                 // If write_pipe_idx is 0, it means we're connecting to the read end (first pipe
                 // fd). If it's 1, we're connecting to the write end (second pipe fd).
                 unsigned int write_pipe_idx = (io_pipe->is_input ? 0 : 1);
@@ -340,7 +340,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
         const shared_ptr<const io_data_t> io = io_chain.at(idx);
 
         if (io->io_mode == IO_FD) {
-            CAST_INIT(const io_fd_t *, io_fd, io.get());
+            const io_fd_t *io_fd = static_cast<const io_fd_t *>(io.get());
             if (io->fd == io_fd->old_fd) continue;
         }
 
@@ -351,7 +351,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
             }
 
             case IO_FILE: {
-                CAST_INIT(const io_file_t *, io_file, io.get());
+                const io_file_t *io_file = static_cast<const io_file_t *>(io.get());
                 if (!err)
                     err = posix_spawn_file_actions_addopen(actions, io->fd, io_file->filename_cstr,
                                                            io_file->flags /* mode */, OPEN_MASK);
@@ -359,7 +359,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
             }
 
             case IO_FD: {
-                CAST_INIT(const io_fd_t *, io_fd, io.get());
+                const io_fd_t *io_fd = static_cast<const io_fd_t *>(io.get());
                 if (!err)
                     err = posix_spawn_file_actions_adddup2(actions, io_fd->old_fd /* from */,
                                                            io->fd /* to */);
@@ -368,7 +368,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
 
             case IO_BUFFER:
             case IO_PIPE: {
-                CAST_INIT(const io_pipe_t *, io_pipe, io.get());
+                const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io.get());
                 unsigned int write_pipe_idx = (io_pipe->is_input ? 0 : 1);
                 int from_fd = io_pipe->pipe_fd[write_pipe_idx];
                 int to_fd = io->fd;

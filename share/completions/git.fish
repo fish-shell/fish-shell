@@ -11,13 +11,16 @@ function __fish_git_commits
 end
 
 function __fish_git_branches
-    command git branch --no-color -a $argv ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
+    # In some cases, git can end up on no branch - e.g. with a detached head
+    # This will result in output like `* (no branch)` or a localized `* (HEAD detached at SHA)`
+    # The first `string match -v` filters it out because it's not useful as a branch argument
+    command git branch --no-color -a $argv ^/dev/null | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
 end
 
 function __fish_git_unique_remote_branches
     # Allow all remote branches with one remote without the remote part
     # This is useful for `git checkout` to automatically create a remote-tracking branch
-    command git branch --no-color -a $argv ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
+    command git branch --no-color -a $argv ^/dev/null | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
 end
 
 function __fish_git_tags

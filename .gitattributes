@@ -1,34 +1,41 @@
+# normalize newlines
 * text=auto
+*.fish text
+*.bat eol=crlf
+
+# let git show off diff hunk headers, help git diff -L:
+# https://git-scm.com/docs/gitattributes
+*.cpp diff=cpp
+*.py diff=py
+# add a [diff "fish"] to git config with pattern
+*.fish diff=fish
+
+# omit from git archive
 .gitattributes export-ignore
 .gitignore export-ignore
 .travis.yml export-ignore
 fish.spec.in export-ignore
 /build_tools/make_svn_completions.fish export-ignore
-/build_tools/description-pak export-ignore
 /build_tools/make_hg_completions.fish export-ignore
 /build_tools/make_vcs_completions.fish export-ignore
 /build_tools/make_vcs_completions_generic.fish export-ignore
 /build_tools/osx_package_resources export-ignore
-/build_tools/osx_package_resources/terminal_logo.png export-ignore
-/build_tools/osx_package_resources/welcome.rtf export-ignore
+/build_tools/osx_package_resources/* export-ignore
 /build_tools/make_csv_completions.fish export-ignore
 /build_tools/osx_distribution.xml export-ignore
 /build_tools/make_tarball.sh export-ignore
-/build_tools/make_deb.sh export-ignore
 /build_tools/osx_package_scripts export-ignore
-/build_tools/osx_package_scripts/add-shell export-ignore
-/build_tools/osx_package_scripts/postinstall export-ignore
+/build_tools/osx_package_scripts/* export-ignore
 /build_tools/make_pkg.sh export-ignore
 /build_tools/make_darcs_completions.fish export-ignore
 /debian export-ignore
 /debian/* export-ignore
 /.github export-ignore
 /.github/* export-ignore
-/pcre2-10.21/* linguist-vendored
-/pcre2-10.21 linguist-vendored
-/share/tools/web_config/js/angular.js linguist-vendored
-/doc_src linguist-documentation
+
+# for linguist; let github identify our project as C++ instead of C due to pcre2
+/pcre2* linguist-vendored
+angular.js linguist-vendored
 /doc_src/* linguist-documentation
-*.md linguist-documentation
-COPYING linguist-documentation
-*.sh            eol=lf
+*.fish linguist-language=fish
+tests/*.in linguist-language=fish

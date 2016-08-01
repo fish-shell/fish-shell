@@ -1,5 +1,9 @@
 function __fish_complete_screen --description "Print a list of running screen sessions"
-    screen -list | __fish_sgrep \^\t.\*\(.\*\)| string replace -r '\t(.*)\s+\((.*)\)' '$1\tScreen:$2'
+    screen -list | string match -r '^\t.*\(.*\)\s*$'| string replace -r '\t(.*)\s+\((.*)\)' '$1\tScreen:$2'
+end
+
+function __fish_complete_screen_attached --description "Print a list of attached screen sessions"
+    screen -list | string match -r '^\t.*\(Attached\)\s*$'| string replace -r '\t(.*)\s+\((.*)\)' '$1\tScreen:$2'
 end
 
 complete -c screen -x
@@ -32,6 +36,6 @@ complete -c screen -s t -x -d 'Session title'
 complete -c screen -s U -d 'UTF-8 mode'
 complete -c screen -s v -d 'Display version and exit'
 complete -c screen -o wipe -d 'Wipe dead sessions'
-complete -c screen -s x -d 'Multi attach'
+complete -c screen -s x -d 'Multi attach' -a '(__fish_complete_screen_attached)'
 complete -c screen -s X -r -d 'Send command'
 

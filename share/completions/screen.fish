@@ -6,12 +6,18 @@ function __fish_detect_screen_socket_dir --description "Detect which folder scre
 end
 
 function __fish_complete_screen_general_list_mac --description "Get the socket list on mac"
-    switch $argv
-        case "Detached"
-            stat -f "%Lp %Sm %N" -t "%D %T" $__fish_screen_socket_dir/* | string match -r '^6\d{2} .*$' | string replace -r '^6\d{2} (\S* \S*) \S*/(\S+)' '$2\t$1 Detached'
-        case "Attached"
-            stat -f "%Lp %Sm %N" -t "%D %T" $__fish_screen_socket_dir/* | string match -r '^7\d{2} .*$' | string replace -r '^7\d{2} (\S* \S*) \S*/(\S+)' '$2\t$1 Attached'
+    pushd $__fish_screen_socket_dir > /dev/null
+    ls
+    set sockets (ls)
+    if test (count $socket) -ne 0
+        switch $argv
+            case "Detached"
+                stat -f "%Lp %Sm %N" -t "%D %T" $sockets | string match -r '^6\d{2} .*$' | string replace -r '^6\d{2} (\S* \S*) \S*/(\S+)' '$2\t$1 Detached'
+            case "Attached"
+                stat -f "%Lp %Sm %N" -t "%D %T" $sockets | string match -r '^7\d{2} .*$' | string replace -r '^7\d{2} (\S* \S*) \S*/(\S+)' '$2\t$1 Attached'
+        end
     end
+    popd > /dev/null
 end
 
 function __fish_complete_screen_detached --description "Print a list of detached screen sessions"

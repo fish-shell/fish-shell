@@ -424,6 +424,7 @@ complete -f -c git -n '__fish_git_needs_command' -a init -d 'Create an empty git
 ### log
 complete -c git -n '__fish_git_needs_command' -a log -d 'Show commit logs'
 complete -c git -n '__fish_git_using_command log' -a '(__fish_git_refs) (__fish_git_ranges)' -d 'Branch'
+complete -c git -n '__fish_git_needs_command'    -a shortlog -d 'Show commit shortlog'
 # TODO options
 
 ### merge

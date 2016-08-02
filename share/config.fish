@@ -35,6 +35,12 @@ if status --is-interactive
 	else
 		# Enable truecolor/24-bit support for select terminals
 		if not set -q NVIM_LISTEN_ADDRESS # (Neovim will swallow the 24bit sequences, rendering text white)
+            # Still check $TERM because these other variables are exported, and will also be set in e.g. emacs ansi-term.
+            # We could blacklist just "eterm*" here, but it might be changed to support it in the future,
+            # and there might be other terminal-in-a-terminal programs with issues.
+            # We could also call `tput colors`, but that requires an additional fork.
+            and string match -q "*-256color" $TERM # If 256 colors aren't supported, 24bit isn't going to be either
+            and not set -q STY # This is set in GNU screen, which doesn't support 24bit
 			and begin
 				set -q KONSOLE_PROFILE_NAME # KDE's konsole
 				or string match -q -- "*:*" $ITERM_SESSION_ID # Supporting versions of iTerm2 will include a colon here

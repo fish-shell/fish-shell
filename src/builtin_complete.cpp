@@ -142,6 +142,8 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     static int recursion_level = 0;
 
+    bool dont_sort = false;
+
     argc = builtin_count_args(argv);
 
     w.woptind = 0;
@@ -157,6 +159,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                                       {L"old-option", required_argument, 0, 'o'},
                                                       {L"description", required_argument, 0, 'd'},
                                                       {L"arguments", required_argument, 0, 'a'},
+                                                      {L"sorted_arguments", required_argument, 0, 'S'},
                                                       {L"erase", no_argument, 0, 'e'},
                                                       {L"unauthoritative", no_argument, 0, 'u'},
                                                       {L"authoritative", no_argument, 0, 'A'},
@@ -168,7 +171,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         int opt_index = 0;
         int opt =
-            w.wgetopt_long(argc, argv, L"a:c:p:s:l:o:d:frxeuAn:C::w:h", long_options, &opt_index);
+            w.wgetopt_long(argc, argv, L"a:S:c:p:s:l:o:d:frxeuAn:C::w:h", long_options, &opt_index);
         if (opt == -1) break;
 
         switch (opt) {
@@ -248,6 +251,11 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case 'a': {
                 comp = w.woptarg;
+                break;
+            }
+            case 'S': {
+                comp = w.woptarg;
+                dont_sort = true;
                 break;
             }
             case 'e': {
@@ -386,6 +394,8 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.out.append(complete_print());
         } else {
             int flags = COMPLETE_AUTO_SPACE;
+            if (dont_sort)
+                flags |= COMPLETE_DONT_SORT;
 
             if (remove) {
                 builtin_complete_remove(cmd, path, short_opt.c_str(), gnu_opt, old_opt);

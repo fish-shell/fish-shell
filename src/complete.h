@@ -40,7 +40,9 @@ enum {
     /// This completion should be inserted as-is, without escaping.
     COMPLETE_DONT_ESCAPE = 1 << 4,
     /// If you do escape, don't escape tildes.
-    COMPLETE_DONT_ESCAPE_TILDES = 1 << 5
+    COMPLETE_DONT_ESCAPE_TILDES = 1 << 5,
+    /// Do not sort this result.
+    COMPLETE_DONT_SORT = 1 << 6
 };
 typedef int complete_flags_t;
 

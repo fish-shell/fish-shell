@@ -409,6 +409,8 @@ class BindingParser:
                             self.unget_char()
                             self.unget_char()
                             alt = True
+                    elif d=='\0':
+                        result += 'ESC'
                     else:
                         alt = True
                         self.unget_char()

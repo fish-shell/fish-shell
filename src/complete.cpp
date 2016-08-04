@@ -225,6 +225,8 @@ completion_t &completion_t::operator=(const completion_t &him) {
 }
 
 bool completion_t::is_naturally_less_than(const completion_t &a, const completion_t &b) {
+    if (a.flags & COMPLETE_DONT_SORT || b.flags & COMPLETE_DONT_SORT)
+        return false;
     return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;
 }
 
@@ -262,8 +264,9 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps) {
         }
     }
 
-    // Remove duplicates.
+    // Sort.
     sort(comps->begin(), comps->end(), completion_t::is_naturally_less_than);
+    // Remove duplicates.
     comps->erase(
         std::unique(comps->begin(), comps->end(), completion_t::is_alphabetically_equal_to),
         comps->end());

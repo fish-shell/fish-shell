@@ -1058,11 +1058,15 @@ Command mode is also known as normal mode.
 - @key{Control, X} copies the current buffer to the system's clipboard, @key{Control, V} inserts the clipboard contents.
 - @key{Control,C} deletes the entire line.
 
+- @key{Backspace} moves the cursor left.
+
 \subsubsection vi-mode-insert Insert mode
 
 - @key{Escape} or @key{Control,C} enters <a href="#vi-mode-command">command mode</a>.
 
 - @key{Control,x} moves the cursor to the end of the line. If an autosuggestion is available, it will be accepted completely.
+
+- @key{Backspace} removes one character to the left.
 
 \subsubsection vi-mode-visual Visual mode
 

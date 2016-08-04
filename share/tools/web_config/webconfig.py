@@ -409,6 +409,8 @@ class BindingParser:
                             self.unget_char()
                             self.unget_char()
                             alt = True
+                    elif d == '\0':
+                        result += 'ESC'
                     else:
                         alt = True
                         self.unget_char()
@@ -730,7 +732,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         for x,y in zip(haystack, needle):
             bits |= ord(x) ^ ord(y)
         return bits == 0
-        
+
     def font_size_for_ansi_prompt(self, prompt_demo_ansi):
         width = ansi_prompt_line_width(prompt_demo_ansi)
         # Pick a font size

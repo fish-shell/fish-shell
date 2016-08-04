@@ -1,7 +1,7 @@
 # next-2.x
 ## Significant changes
 - The clipboard integration has been revamped with explicit bindings. OS X clipboard support provided for out of the box in addition to X11. (#3061)
-
+- Vi-style bindings no longer build upon the default emacs-style bindings, instead they share some definitions (#3068).
 ---
 
 # fish 2.3.1 (released July 3, 2016)

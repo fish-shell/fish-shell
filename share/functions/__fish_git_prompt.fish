@@ -367,7 +367,7 @@ function __fish_git_prompt --description "Prompt function for Git"
         else
             if test -n "$__fish_git_prompt_showdirtystate"
                 set -l config (command git config --bool bash.showDirtyState)
-                if test "$config" != false
+                if test "$config" != "false"
                     set w (__fish_git_prompt_dirty)
                     set i (__fish_git_prompt_staged $sha)
                 end

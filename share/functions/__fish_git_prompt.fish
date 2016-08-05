@@ -367,7 +367,7 @@ function __fish_git_prompt --description "Prompt function for Git"
         else
             if test -n "$__fish_git_prompt_showdirtystate"
                 set -l config (command git config --bool bash.showDirtyState)
-                if test "$config" != "false"
+                if test "$config" != false
                     set w (__fish_git_prompt_dirty)
                     set i (__fish_git_prompt_staged $sha)
                 end
@@ -471,14 +471,20 @@ end
 set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
 
 function __fish_git_prompt_informative_status
-
     set -l changedFiles (command git diff --name-status | cut -c 1-2)
     set -l stagedFiles (command git diff --staged --name-status | cut -c 1-2)
+    set -l untrackedfiles 0
 
     set -l dirtystate (math (count $changedFiles) - (count (echo $changedFiles | grep "U")))
     set -l invalidstate (count (echo $stagedFiles | grep "U"))
     set -l stagedstate (math (count $stagedFiles) - $invalidstate)
-    set -l untrackedfiles (count (command git ls-files --others --exclude-standard))
+
+    # Untracked files may cause slow prompt generation.
+    # For this reason, it should be possible to avoid counting the files
+    # by setting __fish_git_prompt_showuntrackedfiles explicitly to "false".
+    if test "$__fish_git_prompt_showuntrackedfiles" != false
+        set untrackedfiles (count (command git ls-files --others --exclude-standard))
+    end
 
     set -l info
 

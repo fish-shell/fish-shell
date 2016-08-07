@@ -2,7 +2,7 @@
 # Alias for gettext (or a fallback if gettext isn't installed)
 #
 set -l gettext_path (command -v gettext)
-if test -e (echo -n $gettext_path)
+if test -x (echo $gettext_path)
 	function _ --description "Alias for the gettext command"
 		command gettext fish $argv
 	end

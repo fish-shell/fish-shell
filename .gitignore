@@ -1,45 +1,53 @@
-*.o
-*~
+# File extensions that should never be checked in regardless of which project
+# directory they reside in.
 *.exe
+*.o
 *.xccheckout
+*~
 
-.DS_Store
-Makefile
+# Directories that only contain transitory files from building and testing.
+DerivedData/
 autom4te.cache/
 build/
+doc/
+obj/
+share/man/
+test/
+user_doc/
+
+# File names that can appear in the project root that represent project
+# artifacts from building and testing.
+.DS_Store
+FISH-BUILD-VERSION-FILE
+Makefile
 command_list.txt
 command_list_toc.txt
+compile_commands.json
 confdefs.h
 config.h
 config.h.in
 config.log
 config.status
 configure
-doc/
 doc.h
+fish
+fish.pc
+fish_indent
+fish_key_reader
+fish_tests
+lexicon.log
+lexicon.txt
+lexicon_filter
+messages.pot
+toc.txt
+version
+xcodebuild.log
+xcuserdata
+
+# File names that can appear below the project root that represent project
+# artifacts from building and testing.
 doc_src/commands.hdr
 doc_src/index.hdr
 po/*.gmo
-fish
-fish_key_reader
-fish_indent
-fish_tests
-fish.pc
-seq
-set_color
 share/__fish_build_paths.fish
-share/man/
-toc.txt
-user_doc/
-xcuserdata
-test/
 tests/*.tmp.*
-FISH-BUILD-VERSION-FILE
-version
-messages.pot
-lexicon.txt
-lexicon_filter
-lexicon.log
-DerivedData/
-compile_commands.json
-xcodebuild.log

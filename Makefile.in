@@ -210,8 +210,7 @@ endif
 #
 T_COLORS := $(shell tput colors 2> /dev/null)
 T_GREEN  := $(shell tput setaf 2 2> /dev/null)
-T_WHITE  := $(shell tput setaf 15 2> /dev/null)
-T_YELLOW := $(shell tput setaf 3 2> /dev/null)
+T_YELLOWB := $(shell tput setaf 3 2> /dev/null; tput setab 0 2> /dev/null)
 T_RED := $(shell tput setaf 1 2> /dev/null)
 T_BOLD := $(shell tput bold 2> /dev/null)
 # Dim: Doesn't work everywhere, so don't rely on the effect, but handy:
@@ -230,7 +229,7 @@ T_RESET := $(shell tput sgr0 2> /dev/null)
 # Cool trick: `make show-$var` (e.g. make show-HAVE_DOXYGEN) to quickly see what $var is.
 #
 show-%:
-	@echo " $(T_DIM)$(T_BOLD) \$$$*$(T_RESET)$(T_DIM) = $(T_BOLD)$(T_YELLOW)$(T_ITALIC)'$(subst ',''',$($*))'$(T_RESET)" ||:
+	@echo " $(T_DIM) \$$$*$ = $(T_BOLD)$(T_ITALIC)'$(subst ',''',$($*))'$(T_RESET)" ||:
 
 #
 # Make everything needed for installing fish
@@ -238,7 +237,7 @@ show-%:
 all: show-CXX show-CXXFLAGS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
 	@echo $(MAKECMDGOALS) | grep -q install || \
 	echo "\n$(T_GREEN)fish has now been built.$(T_RESET)"; \
-	echo "$(T_BOLD)Run $(T_YELLOW)$(notdir $(MAKE)) install$(T_RESET)$(T_BOLD) to install fish.$(T_RESET)"; true
+	echo "$(T_BOLD)Run $(T_RESET)$(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET)$(T_BOLD) to install fish.$(T_RESET)"; true
 .PHONY: all
 
 #
@@ -551,7 +550,7 @@ share/man: $(HELP_SRC) lexicon_filter | show-FISH_BUILD_VERSION show-SED
 	@echo "  doxygen  "$@
 	$(v)touch share/man
 	-$(v)rm -Rf share/man/man1
-	$(v)echo "$(T_DIM)$(T_BOLD)" && \
+	$(v)echo "$(T_DIM)" && \
 	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| $(SED) "s/-.*//"` INPUT_FILTER=./lexicon_filter \
 	build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share; echo "$(T_RESET)";
 
@@ -560,7 +559,7 @@ share/man: $(HELP_SRC) lexicon_filter | show-FISH_BUILD_VERSION show-SED
 #
 
 check-legacy-binaries:
-	@echo "$(T_WHITE)Checking for legacy binaries...$(T_RESET)"
+	@echo "Checking for legacy binaries..."
 	$(v)KR_LOC=$(prefix)/bin/key_reader;\
 	if test -x "$$KR_LOC" && env TERM=dumb "$$KR_LOC" cr | grep -q 26; then\
 		echo "A key_reader binary was found. You might want to remove this, and use 'fish_key_reader':";\
@@ -598,7 +597,7 @@ install: all install-force | check-legacy-binaries
 	@if type chsh >/dev/null 2>&1; then \
 		echo To use fish as your login shell:; \
 		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo  \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'; \
-		echo "  * run $(T_GREEN)chsh -s $(DESTDIR)$(bindir)/fish$(T_RESET)"; \
+		echo "  * run $(T_YELLOWB)chsh -s $(DESTDIR)$(bindir)/fish$(T_RESET)"; \
 		echo; \
 	fi;
 	@if type chcon >/dev/null 2>&1; then \
@@ -608,7 +607,7 @@ install: all install-force | check-legacy-binaries
 	fi;
 	@echo "To set your colors, run $(T_GREEN)$(T_BOLD)fish_config$(T_RESET)"
 	@echo "To scan your man pages for completions, run $(T_GREEN)$(T_BOLD)fish_update_completions$(T_RESET)"
-	@echo "To accept autosuggestions (in $(T_WHITE)$(T_DIM)grey$(T_RESET)) as you type, hit $(T_BOLD)ctrl-F$(T_RESET) or right arrow key."
+	@echo "To accept autosuggestions (in $(T_BOLD)$(T_DIM)grey$(T_RESET)) as you type, hit $(T_BOLD)ctrl-F$(T_RESET) or right arrow key."
 	@echo
 	@echo "$(T_BOLD)Have fun! <><$(T_RESET)"
 .PHONY: install
@@ -631,7 +630,7 @@ install-force: all install-translations
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 	$(v)for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir);\
-		echo "$(T_BOLD)Installing $$i$(T_RESET)";\
+		echo "Installing $(T_BOLD)$$i$(T_RESET)";\
 		true ;\
 	done;
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
@@ -653,22 +652,22 @@ install-force: all install-translations
 	$(v)$(INSTALL) -m 644 share/__fish_build_paths.fish    $(DESTDIR)$(datadir)/fish/
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/pkgconfig
 	$(v)$(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
-	@echo "$(T_WHITE)Installing completions...$(T_RESET)";
+	@echo "Installing completions...";
 	$(v)for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 		true; \
 	done;
-	@echo "$(T_WHITE)Installing functions...$(T_RESET)";
+	@echo "Installing functions...";
 	$(v)for i in $(FUNCTIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
 		true; \
 	done;
-	@echo "$(T_WHITE)Installing man pages...$(T_RESET)";
+	@echo "Installing man pages...";
 	$(v)for i in share/man/man1/*.1; do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
 		true; \
 	done;
-	@echo "$(T_WHITE)Installing tools...$(T_RESET)";
+	@echo "Installing tools...";
 	$(v)for i in share/tools/*.py; do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/; \
 		true; \
@@ -693,14 +692,14 @@ install-force: all install-translations
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
 		true; \
 	done;
-	@echo "$(T_WHITE)Installing user documentation...$(T_RESET)";
+	@echo "Installing user documentation...";
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	$(v) for i in user_doc/html/* CHANGELOG.md; do \
 		if test -f $$i; then \
 			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
 		fi; \
 	done;
-	@echo "$(T_WHITE)Installing main man pages...$(T_RESET)";
+	@echo "Installing main man pages...";
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;
 	$(v) for i in $(MANUALS); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
@@ -712,7 +711,7 @@ install-force: all install-translations
 # Uninstall this fish version
 #
 uninstall: uninstall-translations
-	@echo "$(T_BOLD)Uninstalling translations...$(T_RESET)"
+	@echo "Uninstalling translations..."
 	-$(v) for i in $(PROGRAMS); do \
 		rm -f $(DESTDIR)$(bindir)/$$i; \
 	done;
@@ -733,7 +732,7 @@ uninstall: uninstall-translations
 
 install-translations: $(TRANSLATIONS)
 ifdef HAVE_GETTEXT
-	@echo "$(T_WHITE)Installing translations...$(T_RESET)"
+	@echo "Installing translations..."
 	$(v)for i in $(TRANSLATIONS); do \
 		$(INSTALL) -m 755 -d $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES; \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES/fish.mo; \

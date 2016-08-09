@@ -236,8 +236,8 @@ show-%:
 #
 all: show-CXX show-CXXFLAGS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
 	@echo $(MAKECMDGOALS) | grep -q install || \
-	echo "\n$(T_GREEN)fish has now been built.$(T_RESET)"; \
-	echo "$(T_BOLD)Run $(T_RESET)$(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET)$(T_BOLD) to install fish.$(T_RESET)"; true
+	echo "\n $(T_GREEN)fish has now been built.$(T_RESET)\n" \
+	"$(T_BOLD)Run $(T_RESET)$(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET)$(T_BOLD) to install fish.$(T_RESET)"; true
 .PHONY: all
 
 #

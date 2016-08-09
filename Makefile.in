@@ -25,9 +25,9 @@
 
 # Verbosity
 # make V=1 causes a noisy make, V=0 is silent/quiet. If one uses (lower case v)
-# $(v) as a substitute for @, it will get swapped out in the default (V=1) case
-# and replced with @ in the V=0 case. You can use a bare @ for things that should
-# (really) almost never print.
+# $(v) as a substitute for @, it will be replaced with an empty string for the
+# default (V=1) case and replaced with @ in the V=0 case. You can use a bare @
+# for things that should almost never print.
 V := 0
 
 #
@@ -45,10 +45,9 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 #
 # Programs
 #
-CXX = ${v}@CXX@
-INSTALL:=@INSTALL@
+CXX = @CXX@
+INSTALL := @INSTALL@
 SED := @SED@
-
 
 #
 # Installation directories
@@ -79,9 +78,8 @@ EXTRA_PCRE2 = @EXTRA_PCRE2@
 #
 # Various flags
 #
-MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\" -DDOCDIR=L\"$(docdir)\"
-CXXFLAGS = @CXXFLAGS@ -iquote. -iquote./src/ $(MACROS) $(EXTRA_CXXFLAGS)
-CPPFLAGS = @CPPFLAGS@
+CXXFLAGS = @CXXFLAGS@ $(EXTRA_CXXFLAGS)
+CPPFLAGS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\" -DDOCDIR=L\"$(docdir)\" -iquote. -iquote./src/
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 LDFLAGS_FISH = ${LDFLAGS} @LDFLAGS_FISH@
@@ -141,7 +139,6 @@ FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) $(FI
 #
 HDR_FILES_SRC := doc_src/index.hdr.in doc_src/tutorial.hdr doc_src/design.hdr \
 	doc_src/license.hdr doc_src/commands.hdr.in doc_src/faq.hdr
-
 
 #
 # These are the generated result files
@@ -211,55 +208,46 @@ endif
 #
 # Functions for status output
 #
-TERM_COLORS := $(shell tput colors 2> /dev/null)
+T_COLORS := $(shell tput colors 2> /dev/null)
+T_GREEN  := $(shell tput setaf 2 2> /dev/null)
+T_WHITE  := $(shell tput setaf 15 2> /dev/null)
+T_YELLOW := $(shell tput setaf 3 2> /dev/null)
+T_RED := $(shell tput setaf 1 2> /dev/null)
+T_BOLD := $(shell tput bold 2> /dev/null)
+# Dim: Doesn't work everywhere, so don't rely on the effect, but handy:
+T_DIM := $(shell tput dim 2> /dev/null)
+# Italic: Also doesn't work everywhere. It's quite common for it to work despite terminfo however.
+# There aren't any 256 color terminals (or 16..) it should outright break to assume the escapes.
+ifeq ($(T_COLORS), 256)
+	T_ITALIC := "\\033[3m"
+else
+	T_ITALIC := ""
+endif
+T_RESET := $(shell tput sgr0 2> /dev/null)
 
-define echo_bold
-	@tput bold 2> /dev/null ||:
-	$(v)echo $1
-	@tput sgr0 2> /dev/null ||:
-endef
-
-# Assume if someone has a 256-color terminal, italic escapes won't break anything - maybe even works.
-# Almost nobody has their termcaps set properly for them.
-define echo_italic
-	@if [ ${TERM_COLORS} -ge 256 ] ; then \
-		echo \\033[3m$1; \
-		tput sgr0 2> /dev/null;\
-	else \
-		echo $1; \
-	fi
-endef
-
-define showvar
-	$(v)$(call echo_bold,"$1 = \c")
-	$(v)$(call echo_italic,"'$2'\c")
-	$(v)echo $3
-endef
+#
+# A target that prettily shows VAR='$(VAR)' (properly escaped)
+# Cool trick: `make show-$var` (e.g. make show-HAVE_DOXYGEN) to quickly see what $var is.
+#
+show-%:
+	@echo " $(T_DIM)$(T_BOLD) \$$$*$(T_RESET)$(T_DIM) = $(T_BOLD)$(T_YELLOW)$(T_ITALIC)'$(subst ',''',$($*))'$(T_RESET)" ||:
 
 #
 # Make everything needed for installing fish
 #
-all: SHOW-VARS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
-	@echo "\nfish has now been built."
-	$(v)$(call echo_bold, "Use \`$(notdir $(MAKE)) install' to install fish.")
+all: show-CXX show-CXXFLAGS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
+	@echo $(MAKECMDGOALS) | grep -q install || \
+	echo "\n$(T_GREEN)fish has now been built.$(T_RESET)"; \
+	echo "$(T_BOLD)Run $(T_YELLOW)$(notdir $(MAKE)) install$(T_RESET)$(T_BOLD) to install fish.$(T_RESET)"; true
 .PHONY: all
-
-SHOW-VARS: FORCE
-	@${call showvar, "prefix",$(prefix),"\t\c"}
-	@${call showvar, "HAVE_DOXYGEN",$(HAVE_DOXYGEN),"\t\c"}
-	@${call showvar, "CXX",@CXX@}
-	@${call showvar, "CXXFLAGS",$(CXXFLAGS)}
-.PHONY: FORCE
 
 #
 # Pull version information
 #
-FISH-BUILD-VERSION-FILE: FORCE
-	-$(v)tput setaf 3 2> /dev/null
-	$(v)build_tools/git_version_gen.sh
-	-$(v)tput sgr0 2> /dev/null
+FISH-BUILD-VERSION-FILE: FORCE |
+	$(v)build_tools/git_version_gen.sh 2> /dev/null
 -include FISH-BUILD-VERSION-FILE
-CXXFLAGS += -DFISH_BUILD_VERSION=\"$(FISH_BUILD_VERSION)\"
+CPPFLAGS += -DFISH_BUILD_VERSION=\"$(FISH_BUILD_VERSION)\"
 .PHONY: FORCE
 obj/fish_version.o: FISH-BUILD-VERSION-FILE
 
@@ -268,14 +256,16 @@ obj/fish_version.o: FISH-BUILD-VERSION-FILE
 # when the source code for the build configuration has changed.
 #
 configure: configure.ac
-	$(v)./config.status -q --recheck
+	@echo "$(T_BOLD)Rehecking config.status; rerunning ./configure if necessary...$(T_RESET)"
+	$(v) ./config.status --recheck
 
 Makefile: Makefile.in configure
-	$(v)./config.status -q
+	@echo "$(T_WHITE)Checking config.status...$(T_RESET)"
+	$(v) ./config.status
 
 #
 # Build fish with some debug flags specified. This is GCC specific,
-# and should only be used when debuging fish.
+# and should only be used when debugging fish.
 #
 prof: EXTRA_CXXFLAGS += -pg
 prof: LDFLAGS += -pg
@@ -290,13 +280,12 @@ prof: all
 # after the first -, for simpler version numbers. Cleans up the user_doc/html
 # directory once Doxygen is done.
 #
-doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h \
-    $(HDR_FILES) lexicon_filter
-	@echo "  doxygen  user_doc/html"
+doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter | show-SED
+	@echo "  doxygen  user_doc"
 	$(v)(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
 	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | \
-		doxygen - && touch user_doc; \
-	cd user_doc/html && rm -f arrow*.png bc_s.png bdwn.png closed.png \
+		doxygen - && touch user_doc
+	$(v)cd user_doc/html && rm -f arrow*.png bc_s.png bdwn.png closed.png \
 		doc.png folder*.png ftv2*.png nav*.png open.png splitbar.png \
 		sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html
 
@@ -304,10 +293,8 @@ doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h \
 # PDF version of the source code documentation.
 #
 doc/refman.pdf: doc
-	$(v)cd doc/latex && \
-	$(v)$(MAKE) V=$(V) &&  \
-	$(v)mv refman.pdf ..;
-	$(v)rm -rf doc/latex;
+	$(v)cd doc/latex && $(MAKE) V=$(V) && mv refman.pdf ..
+	$(v)rm -rf doc/latex
 
 #
 # Prep the environment for running the unit tests. When specifying DESTDIR on
@@ -419,7 +406,7 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in
 # colour defaults from __fish_config_interactive to set the docs colours when
 # used in a 'cli' style context.
 #
-lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish
+lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED
 	$(v)rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
 # Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
 	@echo "  SED      "$@
@@ -450,7 +437,7 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 # HTML, a style context can be applied through the /fish{style} block and
 # providing suitable CSS in user_doc.css.in
 #
-lexicon_filter: lexicon.txt lexicon_filter.in
+lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 	$(v)rm -f $@.tmp $@
 	@echo "  SED      "$@
 # Set the shebang as sed can reside in multiple places.
@@ -490,7 +477,7 @@ doc.h: $(HDR_FILES)
 # Depend on Makefile because I don't see a better way of rebuilding
 # if any of the paths change.
 #
-%: %.in Makefile FISH-BUILD-VERSION-FILE
+%: %.in Makefile FISH-BUILD-VERSION-FILE | show-prefix show-sysconfdir show-docdir show-extra_completionsdir show-extra_functionsdir show-extra_confdir show-prefix show-FISH_BUILD_VERSION
 	$(v)$(SED) <$< >$@ \
 		-e "s,@sysconfdir\@,$(sysconfdir),g" \
 		-e "s,@datadir\@,$(datadir),g" \
@@ -507,12 +494,14 @@ doc.h: $(HDR_FILES)
 # Compile translation files to binary format
 #
 %.gmo:
-	msgfmt -o $@ $*.po
+	@echo "  msgfmt   "$@
+	$(v)msgfmt -o $@ $*.po
 
 #
 # Update existing po file or copy messages.pot
 #
 %.po:messages.pot
+	@echo "  msgmerge "$@
 	$(v)if test -f $*.po; then \
 		msgmerge -U --backup=existing $*.po messages.pot;\
 	else \
@@ -523,8 +512,9 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 messages.pot: src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish
-	xgettext -k_ -kN_ src/*.cpp src/*.h -o messages.pot
-	xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot
+	@echo " xgettext "$@
+	$(v)xgettext -k_ -kN_ src/*.cpp src/*.h -o messages.pot
+	$(v)xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot
 
 ifdef EXTRA_PCRE2
 src/builtin_string.cpp: $(PCRE2_H)
@@ -556,19 +546,26 @@ endif
 #
 # There ought to be something simpler.
 #
-share/man: $(HELP_SRC) lexicon_filter
+share/man: $(HELP_SRC) lexicon_filter | show-FISH_BUILD_VERSION show-SED
 	-$(v)mkdir -p share/man
 	@echo "  doxygen  "$@
 	$(v)touch share/man
 	-$(v)rm -Rf share/man/man1
+	$(v)echo "$(T_DIM)$(T_BOLD)" && \
 	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| $(SED) "s/-.*//"` INPUT_FILTER=./lexicon_filter \
-	build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
+	build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share; echo "$(T_RESET)";
 
 #
 # The build rules for installing/uninstalling fish
 #
 
 check-legacy-binaries:
+	@echo "$(T_WHITE)Checking for legacy binaries...$(T_RESET)"
+	$(v)KR_LOC=$(prefix)/bin/key_reader;\
+	if test -x "$$KR_LOC" && env TERM=dumb "$$KR_LOC" cr | grep -q 26; then\
+		echo "A key_reader binary was found. You might want to remove this, and use 'fish_key_reader':";\
+		echo "    '$$KR_LOC'";\
+	fi;
 	$(v)SEQLOC=$(prefix)/bin/seq;\
 	if test -f "$$SEQLOC" && grep -q '\(^#!/.*/fish\|^#!/usr/bin/env fish\)' "$$SEQLOC"; then\
 		echo "An outdated seq from a previous fish install was found. You should remove it with:";\
@@ -592,15 +589,16 @@ check-legacy-binaries:
 	$(v)true;
 .PHONY: check-legacy-binaries
 
-install: all install-force check-legacy-binaries
+install: all install-force | check-legacy-binaries
 	@echo 
-	@echo fish is now installed on your system.
-	@echo To run fish, type \'fish\' in your terminal.
+	@echo "$(T_BOLD)fish is now installed on your system.$(T_RESET)"
+	@echo "To run fish, type $(T_BOLD)$(T_GREEN)fish$(T_RESET) in your terminal."
+	@echo "$(T_YELLOW)Even if you are already in fish, you should now start a new fish session.$(T_RESET)"
 	@echo
 	@if type chsh >/dev/null 2>&1; then \
 		echo To use fish as your login shell:; \
-		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'.; \
-		echo \* use the command \'chsh -s $(DESTDIR)$(bindir)/fish\'.; \
+		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo  \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'; \
+		echo "  * run $(T_GREEN)chsh -s $(DESTDIR)$(bindir)/fish$(T_RESET)"; \
 		echo; \
 	fi;
 	@if type chcon >/dev/null 2>&1; then \
@@ -608,31 +606,32 @@ install: all install-force check-legacy-binaries
 		echo \* use the command \'chcon -t shell_exec_t $(DESTDIR)$(bindir)/fish\'.; \
 		echo; \
 	fi;
-	@echo To set your colors, run \'fish_config\'
-	@echo To scan your man pages for completions, run \'fish_update_completions\'
-	@echo To autocomplete command suggestions press Ctrl + F or right arrow key.
+	@echo "To set your colors, run $(T_GREEN)$(T_BOLD)fish_config$(T_RESET)"
+	@echo "To scan your man pages for completions, run $(T_GREEN)$(T_BOLD)fish_update_completions$(T_RESET)"
+	@echo "To accept autosuggestions (in $(T_WHITE)$(T_DIM)grey$(T_RESET)) as you type, hit $(T_BOLD)ctrl-F$(T_RESET) or right arrow key."
 	@echo
-	@echo Have fun!
+	@echo "$(T_BOLD)Have fun! <><$(T_RESET)"
 .PHONY: install
 
 #
 # Xcode install
 #
 xcode-install:
-	$(v)rm -Rf /tmp/fish_build;\
-	xcodebuild install DSTROOT=/tmp/fish_build;\
-	ditto /tmp/fish_build /
+	rm -Rf /tmp/fish_build
+	xcodebuild install DSTROOT=/tmp/fish_build
+	ditto /tmp/fish_build
 .PHONY: xcode-install
 
 #
-# Actually do the installation. These 'true', ||: (OR noop) lines are to prevent installs
+# Actually do the installation. These '||true', '||:' lines are to prevent installs
 # from failing for (e.g.) missing man pages or extra_dirs outside the
 # writeable prefix.
 #
 install-force: all install-translations
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 	$(v)for i in $(PROGRAMS); do\
-		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir) ; \
+		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir);\
+		echo "$(T_BOLD)Installing $$i$(T_RESET)";\
 		true ;\
 	done;
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
@@ -654,18 +653,22 @@ install-force: all install-translations
 	$(v)$(INSTALL) -m 644 share/__fish_build_paths.fish    $(DESTDIR)$(datadir)/fish/
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/pkgconfig
 	$(v)$(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
+	@echo "$(T_WHITE)Installing completions...$(T_RESET)";
 	$(v)for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 		true; \
 	done;
+	@echo "$(T_WHITE)Installing functions...$(T_RESET)";
 	$(v)for i in $(FUNCTIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
 		true; \
 	done;
+	@echo "$(T_WHITE)Installing man pages...$(T_RESET)";
 	$(v)for i in share/man/man1/*.1; do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
 		true; \
 	done;
+	@echo "$(T_WHITE)Installing tools...$(T_RESET)";
 	$(v)for i in share/tools/*.py; do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/; \
 		true; \
@@ -690,13 +693,14 @@ install-force: all install-translations
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
 		true; \
 	done;
-
+	@echo "$(T_WHITE)Installing user documentation...$(T_RESET)";
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	$(v) for i in user_doc/html/* CHANGELOG.md; do \
 		if test -f $$i; then \
 			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
 		fi; \
 	done;
+	@echo "$(T_WHITE)Installing main man pages...$(T_RESET)";
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;
 	$(v) for i in $(MANUALS); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
@@ -708,6 +712,7 @@ install-force: all install-translations
 # Uninstall this fish version
 #
 uninstall: uninstall-translations
+	@echo "$(T_BOLD)Uninstalling translations...$(T_RESET)"
 	-$(v) for i in $(PROGRAMS); do \
 		rm -f $(DESTDIR)$(bindir)/$$i; \
 	done;
@@ -728,10 +733,10 @@ uninstall: uninstall-translations
 
 install-translations: $(TRANSLATIONS)
 ifdef HAVE_GETTEXT
+	@echo "$(T_WHITE)Installing translations...$(T_RESET)"
 	$(v)for i in $(TRANSLATIONS); do \
 		$(INSTALL) -m 755 -d $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES; \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES/fish.mo; \
-		echo $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES/fish.mo;\
 	done
 endif
 .PHONY: install-translations
@@ -749,7 +754,7 @@ uninstall-translations:
 #
 obj/%.o: src/%.cpp | obj
 	@echo "  CXX      "$@
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 #
 # obj directory
@@ -762,7 +767,7 @@ obj:
 #
 fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2)
 	@echo "  CXXLD    "$@
-	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
+	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
 $(PCRE2_LIB): $(PCRE2_H)
 	$(v)$(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
@@ -775,21 +780,21 @@ $(PCRE2_H):
 #
 fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2)
 	@echo "  CXXLD    "$@
-	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
+	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_indent program.
 #
 fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
 	@echo "  CXXLD    "$@
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
+	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_key_reader program to show input from the terminal. 
 #
 fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
 	@echo "  CXXLD    "$@
-	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
+	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
 #
 # Update dependencies
@@ -803,13 +808,12 @@ fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
 # behind.
 #
 depend:
-	@echo "Running makedepend..."
+	@echo "$(T_BOLD)Running makedepend...$(T_RESET)"
 	$(v)mkdir -p /tmp/fish_make_depend/src
 	$(v)cp src/*.cpp src/*.h /tmp/fish_make_depend/src
 	$(v)cp config.h /tmp/fish_make_depend/
 	$(v)mv $(subst obj/,/tmp/fish_make_depend/src/,$(FISH_ALL_OBJS:.o=.cpp)) /tmp/fish_make_depend/
-	$(v)cd /tmp/fish_make_depend && \
-		makedepend -f$(CURDIR)/Makefile.in -pobj/ -Y -Isrc *.cpp
+	$(v)cd /tmp/fish_make_depend && makedepend -f$(CURDIR)/Makefile.in -pobj/ -Y -Isrc *.cpp
 	$(v)rm -Rf /tmp/fish_make_depend
 	$(v)./config.status
 .PHONY: depend
@@ -818,9 +822,9 @@ depend:
 # Lint the code. This only deals with C++ files.
 #
 lint:
-	$(v)build_tools/lint.fish $(CXX) $(CXXFLAGS)
+	$(v)build_tools/lint.fish $(CXX) $(CXXFLAGS) $(CPPFLAGS)
 lint-all:
-	$(v)build_tools/lint.fish $(CXX) --all $(CXXFLAGS)
+	$(v)build_tools/lint.fish $(CXX) --all $(CXXFLAGS) $(CPPFLAGS)
 .PHONY: lint lint-all
 
 #
@@ -834,14 +838,10 @@ style-all:
 .PHONY: style style-all
 
 #
-# Cleanup targets
-#
-
-#
 # Restore the source tree to the state right after extracting a tarball.
 #
 distclean: clean
-	$(v)$(MAKE) -C $(PCRE2_DIR) distclean ||:
+	$(v)$(MAKE) V=$(V) -C $(PCRE2_DIR) distclean ||:
 	$(v)rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 
@@ -854,8 +854,14 @@ distclean: clean
 # them.
 #
 clean:
-	$(v)$(call echo_bold, "Removing everything built by the Makefile")
-	$(v)$(MAKE) -s -C $(PCRE2_DIR) clean ||:
+	@echo "$(T_BOLD)Removing everything built by the Makefile...$(T_RESET)"
+# PCRE's make clean has a few slightly annoying exceptions to the V= rule. If V=0
+# send all output to /dev/null - unless there's an error, in which case run it again not silenced.
+ifeq ($(V), 0 )
+	$(MAKE) -C $(PCRE2_DIR) clean ||:
+else
+	@$(MAKE) -s -C $(PCRE2_DIR) clean > /dev/null || $(MAKE) -s -C $(PCRE2_DIR) clean ||:
+endif
 	$(v)rm -f obj/*.o *.o doc.h doc.tmp
 	$(v)rm -f doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
 	$(v)rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
@@ -872,14 +878,15 @@ clean:
 	$(v)rm -rf obj build test
 .PHONY: clean
 
-# Veto'd Verbose
-# $(v)cmd = @cmd if V=0,
-#            cmd if V=1
-# @cmd    = @cmd always
-V1 :=
+# For silent build
+# These rules need to stay at the end - $(v) won't work after this.
+# if V=0:
+#   $(v)cmd ⇒ @cmd
 V0 := @
+# if V=1
+#   $(v)cmd ⇒ cmd
+V1 :=
 v = $(V$(V))
-
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

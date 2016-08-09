@@ -46,6 +46,9 @@ echo "      input filter: $INPUTFILTER"
 echo "  output directory: $OUTPUTDIR"
 echo "          skipping: $CONDEMNED_PAGES"
 
+#Until now the makefile likely has been affecting our output, reset for upcoming warnings
+tput sgr0
+
 # Make sure INPUTDIR is found
 if test ! -d "$INPUTDIR"; then
 	echo >&2 "Could not find input directory '${INPUTDIR}'"

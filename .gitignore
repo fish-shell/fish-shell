@@ -1,3 +1,8 @@
+# Note that some of the patterns below should be in an individual's
+# ~/.config/git/ignore file. For example, ".DS_Store" for people working on
+# macOS (aka OS X). They're included here to minimize the likelihood of such
+# artifacts inadvertently getting added to the project.
+
 # File extensions that should never be checked in regardless of which project
 # directory they reside in.
 *.exe
@@ -5,49 +10,54 @@
 *.xccheckout
 *~
 
-# Directories that only contain transitory files from building and testing.
-DerivedData/
-autom4te.cache/
-build/
-doc/
-obj/
-share/man/
-test/
-user_doc/
-
-# File names that can appear in the project root that represent project
-# artifacts from building and testing.
+# These file names can appear anywhere in the hierarchy. They tend to be OS
+# or build system artifacts.
 .DS_Store
-FISH-BUILD-VERSION-FILE
-Makefile
-command_list.txt
-command_list_toc.txt
-compile_commands.json
-confdefs.h
-config.h
-config.h.in
-config.log
-config.status
-configure
-doc.h
-fish
-fish.pc
-fish_indent
-fish_key_reader
-fish_tests
-lexicon.log
-lexicon.txt
-lexicon_filter
-messages.pot
-toc.txt
-version
-xcodebuild.log
-xcuserdata
+autom4te.cache
 
-# File names that can appear below the project root that represent project
-# artifacts from building and testing.
-doc_src/commands.hdr
-doc_src/index.hdr
-po/*.gmo
-share/__fish_build_paths.fish
-tests/*.tmp.*
+# Directories that only contain transitory files from building and testing.
+# They are all at the top level of the project; hence the leading slash.
+/DerivedData/
+/build/
+/doc/
+/fish.xcodeproj/
+/obj/
+/share/man/
+/test/
+/user_doc/
+
+# File names that can appear in the project root that represent artifacts from
+# building and testing.
+/FISH-BUILD-VERSION-FILE
+/Makefile
+/command_list.txt
+/command_list_toc.txt
+/compile_commands.json
+/confdefs.h
+/config.h
+/config.h.in
+/config.log
+/config.status
+/configure
+/doc.h
+/fish
+/fish.pc
+/fish_indent
+/fish_key_reader
+/fish_tests
+/lexicon.log
+/lexicon.txt
+/lexicon_filter
+/messages.pot
+/toc.txt
+/version
+/xcodebuild.log
+/xcuserdata
+
+# File names that can appear below the project root that represent artifacts
+# from building and testing.
+/doc_src/commands.hdr
+/doc_src/index.hdr
+/po/*.gmo
+/share/__fish_build_paths.fish
+/tests/*.tmp.*

@@ -2866,7 +2866,8 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     ;
     int argc = builtin_count_args(argv);
     hist_cmd_t hist_cmd = HIST_NOOP;
-    history_search_type_t search_type = HISTORY_SEARCH_TYPE_UNKNOWN;
+    history_search_type_t search_type;
+    bool history_search_type_defined = false;
     bool with_time = false;
 
     static const struct woption long_options[] = {{L"delete", no_argument, 0, 'd'},
@@ -2923,14 +2924,17 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             }
             case 'p': {
                 search_type = HISTORY_SEARCH_TYPE_PREFIX;
+                history_search_type_defined = true;
                 break;
             }
             case 'c': {
                 search_type = HISTORY_SEARCH_TYPE_CONTAINS;
+                history_search_type_defined = true;
                 break;
             }
             case 'e': {
                 search_type = HISTORY_SEARCH_TYPE_EXACT;
+                history_search_type_defined = true;
                 break;
             }
             case 't': {
@@ -2957,7 +2961,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
 
     // Establish appropriate defaults for unspecified options.
     if (hist_cmd == HIST_NOOP) hist_cmd = HIST_SEARCH;
-    if (search_type == HISTORY_SEARCH_TYPE_UNKNOWN) {
+    if (!history_search_type_defined) {
         if (hist_cmd == HIST_SEARCH) search_type = HISTORY_SEARCH_TYPE_CONTAINS;
         if (hist_cmd == HIST_DELETE) search_type = HISTORY_SEARCH_TYPE_EXACT;
     }

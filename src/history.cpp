@@ -436,9 +436,6 @@ history_item_t::history_item_t(const wcstring &str, time_t when, history_identif
 
 bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type) const {
     switch (type) {
-        case HISTORY_SEARCH_TYPE_UNKNOWN: {
-            DIE("search type unknown");
-        }
         case HISTORY_SEARCH_TYPE_CONTAINS: {
             return contents.find(term) != wcstring::npos;
         }

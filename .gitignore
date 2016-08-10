@@ -1,58 +1,82 @@
 # Note that some of the patterns below should be in an individual's
-# ~/.config/git/ignore file. For example, ".DS_Store" for people working on
-# macOS (aka OS X). They're included here to minimize the likelihood of such
-# artifacts inadvertently getting added to the project.
+# ~/.config/git/ignore file. For example, ".DS_Store" from people working on
+# MacOS.
 
 # File extensions that should never be checked in regardless of which project
 # directory they reside in.
 *.exe
+*.app
+*.out
+*.so
+*.dylib
+*.dll
+*.lai
+*.la
+*.a
+*.lib
 *.o
+*.obj
+*.lo
+*.slo
+*.d
+*.gch
+*.pch
 *.xccheckout
 *~
+*~HEAD
+*bak
+*.new
+*.orig
+*.log
+.Trash-*
+*.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
 
 # These file names can appear anywhere in the hierarchy. They tend to be OS
 # or build system artifacts.
-.DS_Store
 autom4te.cache
+Makefile
+config.h
+config.cache
+config.h.in
+config.status
+configure
+messages.pot
+.directory
+.fuse_hidden*
+
 
 # Directories that only contain transitory files from building and testing.
-# They are all at the top level of the project; hence the leading slash.
-/DerivedData/
-/build/
 /doc/
-/fish.xcodeproj/
 /obj/
 /share/man/
+/share/doc/
 /test/
 /user_doc/
 
 # File names that can appear in the project root that represent artifacts from
 # building and testing.
 /FISH-BUILD-VERSION-FILE
-/Makefile
 /command_list.txt
 /command_list_toc.txt
 /compile_commands.json
 /confdefs.h
-/config.h
-/config.h.in
-/config.log
-/config.status
-/configure
 /doc.h
 /fish
 /fish.pc
 /fish_indent
 /fish_key_reader
 /fish_tests
-/lexicon.log
 /lexicon.txt
 /lexicon_filter
-/messages.pot
 /toc.txt
 /version
-/xcodebuild.log
-/xcuserdata
 
 # File names that can appear below the project root that represent artifacts
 # from building and testing.
@@ -61,3 +85,14 @@ autom4te.cache
 /po/*.gmo
 /share/__fish_build_paths.fish
 /tests/*.tmp.*
+/share/pkgconfig
+
+# xcode 
+## Build generated
+build/
+DerivedData/
+xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprin
+

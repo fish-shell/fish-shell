@@ -24,7 +24,7 @@ The following commands are available:
 
 - `-v` or `--save` saves all changes in the history file. The shell automatically saves the history file; this option is provided for internal use.
 
-- `-l` or `--clear` clears the history file. A prompt is displayed before the history is erased asking you to confirm you really want to clear all history unless you use the `builtin` prefix.
+- `-l` or `--clear` clears the history file. A prompt is displayed before the history is erased asking you to confirm you really want to clear all history unless `builtin history` is used.
 
 The following options are available:
 

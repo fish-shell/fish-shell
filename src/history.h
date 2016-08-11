@@ -40,9 +40,11 @@ struct io_streams_t;
 typedef std::vector<wcstring> path_list_t;
 
 enum history_search_type_t {
-    // The history searches for strings containing the given string.
+    // Search for commands exactly matching the given string.
+    HISTORY_SEARCH_TYPE_EXACT = 1,
+    // Search for commands containing the given string.
     HISTORY_SEARCH_TYPE_CONTAINS,
-    // The history searches for strings starting with the given string.
+    // Search for commands starting with the given string.
     HISTORY_SEARCH_TYPE_PREFIX
 };
 

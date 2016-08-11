@@ -124,10 +124,18 @@ static char *char_to_symbol(wchar_t wc, bool bind_friendly) {
         }
     } else if (wc == ' ') {
         // The "space" character.
-        snprintf(buf, sizeof(buf), "\\x%X  (aka \"space\")", wc);
+        if (bind_friendly) {
+            snprintf(buf, sizeof(buf), "\\x%X", wc);
+        } else {
+            snprintf(buf, sizeof(buf), "\\x%X  (aka \"space\")", wc);
+        }
     } else if (wc == 0x7F) {
         // The "del" character.
-        snprintf(buf, sizeof(buf), "\\x%X  (aka \"del\")", wc);
+        if (bind_friendly) {
+            snprintf(buf, sizeof(buf), "\\x%X", wc);
+        } else {
+            snprintf(buf, sizeof(buf), "\\x%X  (aka \"del\")", wc);
+        }
     } else if (wc < 0x80) {
         // ASCII characters that are not control characters.
         if (bind_friendly && must_escape(wc)) {

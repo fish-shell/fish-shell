@@ -172,10 +172,17 @@ function __fish_config_interactive -d "Initializations that should be performed 
             if set -q __fish_active_key_bindings
                 echo "Keeping $__fish_active_key_bindings" >&2
                 return 1
-            else
+            else if functions -q fish_default_key_bindings
                 echo "Reverting to default bindings" >&2
                 set fish_key_bindings fish_default_key_bindings
                 # Return because we are called again
+                return 0
+            else
+                # If we can't even find the default bindings, something is broken.
+                # Without it, we would eventually run into the stack size limit, but that'd print hundreds of duplicate lines
+                # so we should give up earlier.
+                echo "Cannot find fish_default_key_bindings, falling back to very simple bindings." >&2
+                echo "Most likely something is wrong with your installation." >&2
                 return 0
             end
         end

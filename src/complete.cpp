@@ -123,7 +123,6 @@ typedef struct complete_entry_opt {
     }
 
 } complete_entry_opt_t;
-
 // Last value used in the order field of completion_entry_t.
 static unsigned int kCompleteOrder = 0;
 
@@ -375,7 +374,6 @@ void append_completion(std::vector<completion_t> *completions, const wcstring &c
     // Nasty hack for #1241 - since the constructor needs the completion string to resolve
     // AUTO_SPACE, and we aren't providing it with the completion, we have to do the resolution
     // ourselves. We should get this resolving out of the constructor.
-    assert(completions != NULL);
     const wcstring empty;
     completions->push_back(completion_t(empty, empty, match, resolve_auto_space(comp, flags)));
     completion_t *last = &completions->back();
@@ -821,7 +819,7 @@ static bool short_ok(const wcstring &arg, const complete_entry_opt_t *entry,
     return result;
 }
 
-// Load command-specific completions for the specified command.
+/// Load command-specific completions for the specified command.
 static void complete_load(const wcstring &name, bool reload) {
     // We have to load this as a function, since it may define a --wraps or signature.
     // See issue #2466.
@@ -829,9 +827,8 @@ static void complete_load(const wcstring &name, bool reload) {
     completion_autoloader.load(name, reload);
 }
 
-// Performed on main thread, from background thread. Return type is ignored.
+/// Performed on main thread, from background thread. Return type is ignored.
 static int complete_load_no_reload(wcstring *name) {
-    assert(name != NULL);
     ASSERT_IS_MAIN_THREAD();
     complete_load(*name, false);
     return 0;

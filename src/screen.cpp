@@ -223,9 +223,7 @@ size_t escape_code_length(const wchar_t *code) {
                 }
             }
         }
-    }
 
-    if (cur_term != NULL) {
         // Detect these semi-common terminfo escapes without any parameter values, all of which
         // don't move the cursor.
         char *const esc2[] = {enter_bold_mode,        exit_attribute_mode,   enter_underline_mode,
@@ -1039,7 +1037,6 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
              const int *indent, size_t cursor_pos, const page_rendering_t &pager,
              bool cursor_is_within_pager) {
     screen_data_t::cursor_t cursor_arr;
-
     CHECK(s, );
     CHECK(indent, );
 
@@ -1126,7 +1123,6 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
     s_update(s, layout.left_prompt.c_str(), layout.right_prompt.c_str());
     s_save_status(s);
 }
-
 void s_reset(screen_t *s, screen_reset_mode_t mode) {
     CHECK(s, );
 

@@ -71,28 +71,6 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-// The default prompt for the read command.
-#define DEFAULT_READ_PROMPT L"set_color green; echo -n read; set_color normal; echo -n \"> \""
-
-// The mode name to pass to history and input.
-#define READ_MODE_NAME L"fish_read"
-
-// The send stuff to foreground message.
-#define FG_MSG _(L"Send job %d, '%ls' to foreground\n")
-
-/// Data structure to describe a builtin.
-struct builtin_data_t {
-    // Name of the builtin.
-    const wchar_t *name;
-    // Function pointer tothe builtin implementation.
-    int (*func)(parser_t &parser, io_streams_t &streams, wchar_t **argv);
-    // Description of what the builtin does.
-    const wchar_t *desc;
-
-    bool operator<(const wcstring &) const;
-    bool operator<(const builtin_data_t *) const;
-};
-
 bool builtin_data_t::operator<(const wcstring &other) const {
     return wcscmp(this->name, other.c_str()) < 0;
 }
@@ -101,12 +79,18 @@ bool builtin_data_t::operator<(const builtin_data_t *other) const {
     return wcscmp(this->name, other->name) < 0;
 }
 
-/// Counts the number of non null pointers in the specified array.
+/// Counts the number of arguments in the specified null-terminated array
+///
+/// @param argv[]: argument list
+///
+/// @return
+///     The numer of non-NULL elements in @param *argv before the first NULL.
+///
 int builtin_count_args(const wchar_t *const *argv) {
-    int argc = 1;
-    while (argv[argc] != NULL) {
-        argc++;
-    }
+    int argc;
+    for (argc = 1; argv[argc] != NULL; argc++);
+
+    assert(argv[argc] == NULL);
     return argc;
 }
 
@@ -134,6 +118,14 @@ static int count_char(const wchar_t *str, wchar_t c) {
     return res;
 }
 
+/// Obtain help/usage information for the specified builtin from manpage in subshell
+///
+/// @param  name
+///    builtin name to get up help for
+///
+/// @return
+///    A wcstring with a formatted manpage.
+///
 wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t *name) {
     // This won't ever work if no_exec is set.
     if (no_exec) return wcstring();
@@ -157,10 +149,12 @@ wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t
     return out;
 }
 
-/// Print help for the specified builtin. If \c b is sb_err, also print the line information.
+/// Process and print for the specified builtin. If @c b is `sb_err`, also print the line
+/// information.
 ///
-/// If \c b is the buffer representing standard error, and the help message is about to be printed
+/// If @c b is the buffer representing standard error, and the help message is about to be printed
 /// to an interactive screen, it may be shortened to fit the screen.
+///
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                         output_stream_t &b) {
     bool is_stderr = &b == &streams.err;
@@ -396,10 +390,16 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t *const *cmds, size
 
 /// Erase specified key bindings
 ///
-/// \param seq an array of all key bindings to erase
-/// \param all if specified, _all_ key bindings will be erased
-/// \param mode if specified, only bindings from that mode will be erased. If not given and \c all
-/// is \c false, \c DEFAULT_BIND_MODE will be used.
+/// @param  seq
+///    an array of all key bindings to erase
+/// @param  all
+///    if specified, _all_ key bindings will be erased
+/// @param  mode
+///    if specified, only bindings from that mode will be erased. If not given
+///    and @c all is @c false, @c DEFAULT_BIND_MODE will be used.
+/// @param  use_terminfo
+///    Whether to look use terminfo -k name
+///
 static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int use_terminfo,
                               io_streams_t &streams) {
     if (all) {
@@ -1303,7 +1303,7 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
 /// Bash only respects -n if it's the first argument. We'll do the same. We also support a new
 /// option -s to mean "no spaces"
 static int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    /* Skip first arg */
+    // Skip first arg
     if (!*argv++) return STATUS_BUILTIN_ERROR;
 
     // Process options. Options must come at the beginning - the first non-option kicks us out.
@@ -1464,7 +1464,20 @@ static int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) 
     return STATUS_BUILTIN_OK;
 }
 
-/// Adds a function to the function set. It calls into function.cpp to perform any heavy lifting.
+/// Defines and adds a function to the function set. Calls into `function.cpp`
+/// to perform all heavy lifting.
+///
+/// @param  c_args
+///    The arguments. Should NOT contain 'function' as the first argument as the
+///    parser treats it as a keyword.
+/// @param  contents
+///    The function definition string
+/// @param  definition_line_offset
+///    The definition line offset
+///
+/// @return
+///    Returns 0 on success.
+///
 int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
                      const wcstring &contents, int definition_line_offset, wcstring *out_err) {
     wgetopter_t w;
@@ -2097,7 +2110,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
 
         if (buff.empty() && eof) {
-            exit_res = 1;
+            exit_res = STATUS_BUILTIN_ERROR;
         }
     }
 
@@ -2119,7 +2132,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 } else {
                     env_set(argv[i], NULL, place);
                 }
-            } else {
+            } else {  // not array
                 size_t j = 0;
                 for (; i + 1 < argc; ++i) {
                     if (j < bufflen) {
@@ -2143,14 +2156,13 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 empty = false;
             }
             env_set(argv[i], empty ? NULL : tokens.c_str(), place);
-        } else {
+        } else {  // not array
             wcstring_range loc = wcstring_range(0, 0);
 
             while (i < argc) {
                 loc = wcstring_tok(buff, (i + 1 < argc) ? ifs : wcstring(), loc);
                 env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first],
                         place);
-
                 ++i;
             }
         }
@@ -2367,7 +2379,6 @@ static int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     env_var_t dir_in;
     wcstring dir;
-    int res = STATUS_BUILTIN_OK;
 
     if (argv[1] == NULL) {
         dir_in = env_get_string(L"HOME");
@@ -2403,15 +2414,16 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append(parser.current_line());
         }
 
-        res = 1;
-    } else if (wchdir(dir) != 0) {
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    if (wchdir(dir) != 0) {
         struct stat buffer;
         int status;
 
         status = wstat(dir, &buffer);
         if (!status && S_ISDIR(buffer.st_mode)) {
             streams.err.append_format(_(L"%ls: Permission denied: '%ls'\n"), argv[0], dir.c_str());
-
         } else {
             streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), argv[0], dir.c_str());
         }
@@ -2420,13 +2432,14 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append(parser.current_line());
         }
 
-        res = 1;
-    } else if (!env_set_pwd()) {
-        res = 1;
-        streams.err.append_format(_(L"%ls: Could not set PWD variable\n"), argv[0]);
+        return STATUS_BUILTIN_ERROR;
     }
 
-    return res;
+    if (!env_set_pwd()) {
+        streams.err.append_format(_(L"%ls: Could not set PWD variable\n"), argv[0]);
+        return STATUS_BUILTIN_ERROR;
+    } else
+        return STATUS_BUILTIN_OK;
 }
 
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.
@@ -3079,7 +3092,7 @@ int builtin_fish_realpath(parser_t &parser, io_streams_t &streams, wchar_t **arg
     int argc = builtin_count_args(argv);
 
     if (argc != 2) {
-        streams.err.append_format(_(L"%ls: Expected one argument, got %d\n"), argv[0], argc - 1);
+        builtin_print_help(parser, streams, argv[0], streams.out);
         return STATUS_BUILTIN_ERROR;
     }
 
@@ -3089,7 +3102,7 @@ int builtin_fish_realpath(parser_t &parser, io_streams_t &streams, wchar_t **arg
         streams.out.append(real_path);
         free((void *)real_path);
     } else {
-        // The path isn't a simple filename and couldn't be resolved to an absolute path.
+        // We don't actually know why it failed. We should check errno
         streams.err.append_format(_(L"%ls: Invalid path: %ls\n"), argv[0], argv[1]);
         return STATUS_BUILTIN_ERROR;
     }
@@ -3164,6 +3177,14 @@ static const builtin_data_t builtin_datas[] = {
 
 #define BUILTIN_COUNT (sizeof builtin_datas / sizeof *builtin_datas)
 
+/// Look up a builtin_data_t for a specified builtin
+///
+/// @param  name
+///    Name of the builtin
+///
+/// @return
+///    Pointer to a builtin_data_t
+///
 static const builtin_data_t *builtin_lookup(const wcstring &name) {
     const builtin_data_t *array_end = builtin_datas + BUILTIN_COUNT;
     const builtin_data_t *found = std::lower_bound(builtin_datas, array_end, name);
@@ -3173,35 +3194,37 @@ static const builtin_data_t *builtin_lookup(const wcstring &name) {
     return NULL;
 }
 
+/// Initialize builtin data.
 void builtin_init() {
     for (size_t i = 0; i < BUILTIN_COUNT; i++) {
         intern_static(builtin_datas[i].name);
     }
 }
 
+/// Destroy builtin data.
 void builtin_destroy() {}
 
-int builtin_exists(const wcstring &cmd) { return !!builtin_lookup(cmd); }
+/// Is there a builtin command with the given name?
+bool builtin_exists(const wcstring &cmd) { return !!builtin_lookup(cmd); }
 
-/// Return true if the specified builtin should handle it's own help, false otherwise.
-static int internal_help(const wchar_t *cmd) {
+/// If builtin takes care of printing help itself
+static bool builtin_handles_help(const wchar_t *cmd) {
     CHECK(cmd, 0);
     return contains(cmd, L"for", L"while", L"function", L"if", L"end", L"switch", L"case", L"count",
                     L"printf");
 }
 
+/// Execute a builtin command
 int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &streams) {
     int (*cmd)(parser_t & parser, io_streams_t & streams, const wchar_t *const *argv) = NULL;
-
-    CHECK(argv, STATUS_BUILTIN_ERROR);
-    CHECK(argv[0], STATUS_BUILTIN_ERROR);
+    if (argv == NULL || argv[0] == NULL) return STATUS_BUILTIN_ERROR;
 
     const builtin_data_t *data = builtin_lookup(argv[0]);
     cmd = (int (*)(parser_t & parser, io_streams_t & streams, const wchar_t *const *))(
         data ? data->func : NULL);
 
-    if (argv[1] != 0 && !internal_help(argv[0])) {
-        if (argv[2] == 0 && (parse_util_argument_is_help(argv[1], 0))) {
+    if (argv[1] != NULL && !builtin_handles_help(argv[0])) {
+        if (argv[2] == NULL && (parse_util_argument_is_help(argv[1], 0))) {
             builtin_print_help(parser, streams, argv[0], streams.out);
             return STATUS_BUILTIN_OK;
         }
@@ -3215,6 +3238,7 @@ int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &stre
     return STATUS_BUILTIN_ERROR;
 }
 
+/// Returns a list of all builtin names.
 wcstring_list_t builtin_get_names(void) {
     wcstring_list_t result;
     result.reserve(BUILTIN_COUNT);
@@ -3224,6 +3248,7 @@ wcstring_list_t builtin_get_names(void) {
     return result;
 }
 
+/// Insert all builtin names into list.
 void builtin_get_names(std::vector<completion_t> *list) {
     assert(list != NULL);
     list->reserve(list->size() + BUILTIN_COUNT);
@@ -3232,6 +3257,7 @@ void builtin_get_names(std::vector<completion_t> *list) {
     }
 }
 
+/// Return a one-line description of the specified builtin.
 wcstring builtin_get_desc(const wcstring &name) {
     wcstring result;
     const builtin_data_t *builtin = builtin_lookup(name);

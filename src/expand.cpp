@@ -1603,7 +1603,7 @@ bool expand_abbreviation(const wcstring &src, wcstring *output) {
 
         // See if this command matches.
         if (line.compare(0, cmd_end, src) == 0) {
-            // Success. Set output to everythign past the end of the string.
+            // Success. Set output to everything past the end of the string.
             if (output != NULL) output->assign(line, separator + 1, wcstring::npos);
 
             result = true;

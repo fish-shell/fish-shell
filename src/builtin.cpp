@@ -2379,6 +2379,7 @@ static int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     env_var_t dir_in;
     wcstring dir;
+    int res = STATUS_BUILTIN_OK;
 
     if (argv[1] == NULL) {
         dir_in = env_get_string(L"HOME");
@@ -2414,16 +2415,15 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append(parser.current_line());
         }
 
-        return STATUS_BUILTIN_ERROR;
-    }
-
-    if (wchdir(dir) != 0) {
+        res = 1;
+    } else if (wchdir(dir) != 0) {
         struct stat buffer;
         int status;
 
         status = wstat(dir, &buffer);
         if (!status && S_ISDIR(buffer.st_mode)) {
             streams.err.append_format(_(L"%ls: Permission denied: '%ls'\n"), argv[0], dir.c_str());
+
         } else {
             streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), argv[0], dir.c_str());
         }
@@ -2432,14 +2432,13 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append(parser.current_line());
         }
 
-        return STATUS_BUILTIN_ERROR;
+        res = 1;
+    } else if (!env_set_pwd()) {
+        res = 1;
+        streams.err.append_format(_(L"%ls: Could not set PWD variable\n"), argv[0]);
     }
 
-    if (!env_set_pwd()) {
-        streams.err.append_format(_(L"%ls: Could not set PWD variable\n"), argv[0]);
-        return STATUS_BUILTIN_ERROR;
-    } else
-        return STATUS_BUILTIN_OK;
+    return res;
 }
 
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.
@@ -3121,7 +3120,7 @@ static const builtin_data_t builtin_datas[] = {
     {L"[", &builtin_test, N_(L"Test a condition")},
 #if 0
     // Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
-    { 		L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
+    {       L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
 #endif
     {L"and", &builtin_generic, N_(L"Execute command if previous command suceeded")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},

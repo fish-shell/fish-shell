@@ -64,7 +64,7 @@ static const wcstring &C_(const wcstring &s) { return s; }
 
 static void complete_load(const wcstring &name, bool reload);
 
-// Testing apparatus.
+/// Testing apparatus.
 const wcstring_list_t *s_override_variable_names = NULL;
 
 void complete_set_variable_names(const wcstring_list_t *names) {
@@ -123,7 +123,7 @@ typedef struct complete_entry_opt {
     }
 
 } complete_entry_opt_t;
-// Last value used in the order field of completion_entry_t.
+/// Last value used in the order field of completion_entry_t.
 static unsigned int kCompleteOrder = 0;
 
 /// Struct describing a command completion.
@@ -169,7 +169,7 @@ struct completion_entry_set_comparer {
 typedef std::set<completion_entry_t, completion_entry_set_comparer> completion_entry_set_t;
 static completion_entry_set_t completion_set;
 
-// Comparison function to sort completions by their order field.
+/// Comparison function to sort completions by their order field.
 static bool compare_completions_by_order(const completion_entry_t *p1,
                                          const completion_entry_t *p2) {
     return p1->order < p2->order;
@@ -190,8 +190,8 @@ const option_list_t &completion_entry_t::get_options() const {
 
 completion_t::~completion_t() {}
 
-// Clear the COMPLETE_AUTO_SPACE flag, and set COMPLETE_NO_SPACE appropriately depending on the
-// suffix of the string.
+/// Clear the COMPLETE_AUTO_SPACE flag, and set COMPLETE_NO_SPACE appropriately depending on the
+/// suffix of the string.
 static complete_flags_t resolve_auto_space(const wcstring &comp, complete_flags_t flags) {
     complete_flags_t new_flags = flags;
     if (flags & COMPLETE_AUTO_SPACE) {
@@ -374,6 +374,8 @@ void append_completion(std::vector<completion_t> *completions, const wcstring &c
     // Nasty hack for #1241 - since the constructor needs the completion string to resolve
     // AUTO_SPACE, and we aren't providing it with the completion, we have to do the resolution
     // ourselves. We should get this resolving out of the constructor.
+
+    assert(completions != NULL);
     const wcstring empty;
     completions->push_back(completion_t(empty, empty, match, resolve_auto_space(comp, flags)));
     completion_t *last = &completions->back();
@@ -692,15 +694,21 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     }
 }
 
-/// Evaluate the argument list (as supplied by complete -a) and insert any return matching
-/// completions. Matching is done using \c copy_strings_with_prefix, meaning the completion may
-/// contain wildcards. Logically, this is not always the right thing to do, but I have yet to come
+/// Evaluate the argument list (as supplied by complete -a) and insert any
+/// return matching completions. Matching is done using @c
+/// copy_strings_with_prefix, meaning the completion may contain wildcards.
+/// Logically, this is not always the right thing to do, but I have yet to come
 /// up with a case where this matters.
 ///
-/// \param str The string to complete.
-/// \param args The list of option arguments to be evaluated.
-/// \param desc Description of the completion
-/// \param flags The list into which the results will be inserted
+/// @param  str
+///    The string to complete.
+/// @param  args
+///    The list of option arguments to be evaluated.
+/// @param  desc
+///    Description of the completion
+/// @param  flags
+///    The list into which the results will be inserted
+///
 void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
                                      const wcstring &desc, complete_flags_t flags) {
     bool is_autosuggest = (this->type() == COMPLETE_AUTOSUGGEST);
@@ -829,6 +837,7 @@ static void complete_load(const wcstring &name, bool reload) {
 
 /// Performed on main thread, from background thread. Return type is ignored.
 static int complete_load_no_reload(wcstring *name) {
+    assert(name != NULL);
     ASSERT_IS_MAIN_THREAD();
     complete_load(*name, false);
     return 0;
@@ -1540,7 +1549,7 @@ wcstring complete_print() {
     return out;
 }
 
-// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
+/// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 static pthread_mutex_t wrapper_lock = PTHREAD_MUTEX_INITIALIZER;
 typedef std::map<wcstring, wcstring_list_t> wrapper_map_t;
 static wrapper_map_t &wrap_map() {
@@ -1554,7 +1563,7 @@ static wrapper_map_t &wrap_map() {
     return *wrapper_map;
 }
 
-// Add a new target that is wrapped by command. Example: __fish_sgrep (command) wraps grep (target).
+/// Add a new target that is wrapped by command. Example: __fish_sgrep (command) wraps grep (target).
 bool complete_add_wrapper(const wcstring &command, const wcstring &new_target) {
     if (command.empty() || new_target.empty()) {
         return false;

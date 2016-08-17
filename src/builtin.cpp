@@ -3020,8 +3020,8 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             history->save();
             break;
         }
-        default: {
-            DIE("Unhandled history command");
+        case HIST_NOOP: {
+            DIE("Unexpected HIST_NOOP seen");
             break;
         }
     }

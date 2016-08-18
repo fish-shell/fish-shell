@@ -17,9 +17,9 @@ function __fish_brew_using_command
 end
 
 function __fish_brew_formulae
-    set -l formuladir (brew --repository)/Library/Formula/
+    set -l formuladir (brew --repository)/Library/Formula/ (brew --repository)/Library/Taps/homebrew/homebrew-core/Formula
     # __fish_complete_suffix .rb
-    ls $formuladir/*.rb | sed 's/.rb$//' | sed "s|^$formuladir||"
+    find $formuladir -name "*.rb" -type f 2> /dev/null | sed 's/.rb$//' | sed 's|^/\([^/]*/\)*||'
 end
 
 function __fish_brew_installed_formulas

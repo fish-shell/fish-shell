@@ -64,7 +64,7 @@ fish requires a number of utilities to operate, which should be present on any U
 
 Translation support requires the gettext program.
 
-Usage output for out builtins is generated on-demand from our installed manpages using `nroff` and `ul`.
+Usage output for builtin functions is generated on-demand from the installed manpages using `nroff` and `ul`.
 
 Some optional features of fish, such as the manual page completion parser and the web configuration tool, require Python.
 

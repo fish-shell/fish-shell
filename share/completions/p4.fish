@@ -9,10 +9,10 @@
 
 function __fish_print_p4_client_name
     set -l p4info (p4 info -s 2> /dev/null)
-    if test -e "$p4info"
+    if test -z "$p4info"
         return
     end
-    if string match -qr '^Client unknown'
+    if string match -qr '^Client unknown' $p4info
         return
     end
     string match -r '^Client name: .+' $p4info | string replace 'Client name: ' ''
@@ -22,7 +22,7 @@ end
 
 function __fish_print_p4_user_name
     set -l p4info (p4 info 2> /dev/null)
-    if test -e "$p4info"
+    if test -z "$p4info"
         return
     end
     string match -r '^User name: .+' $p4info | string replace 'User name: ' ''
@@ -38,14 +38,20 @@ function __fish_print_p4_changelists -d "Used 'detailed!' as first argument to u
         set -e argv[1]
     end
 
+    # The format of `p4 changes -L` is as follows, for each changelist:
+    # Change 1234 on YYYY/MM/DD by user@workspace *status*\n
+    # \n
+    #   \t  Description text line\n
+    #   \t  Description text another line\n
+    # \n
     set -l changes (p4 changes -L $argv)
 
     set -l result
-    for line in $changes
-        set line (string trim $line)
-        if test (string length $line) = 0
+    for line in (string trim -- $changes)
+        if test -z "$line"
             continue
         end
+        # see output format ^^^
         set -l change_match (string match -ar '^Change ([0-9]+) on [0-9/]+ by (\S+).*$' $line)
         if test -n "$change_match"
             if test -n "$result"
@@ -53,7 +59,7 @@ function __fish_print_p4_changelists -d "Used 'detailed!' as first argument to u
                 set result
             end
             set result $change_match[2]\t
-            if test "$detailed"
+            if test -n "$detailed"
                 set result $result $change_match[3]:
             end
         else
@@ -79,6 +85,7 @@ end
 function __fish_print_p4_branches
     set -l branches (p4 branches)
     for branch in $branches
+        # "Branch branch-name YYYY/MM/DD 'description text'"
         set -l matches (string match -ar '^Branch\s+(\S+)[^\']+\'(.+)\'$' $branch)
         set -l cnt (count $matches)
         if test (count $matches) -lt 2
@@ -103,7 +110,22 @@ end
 #########################################################
 
 function __fish_print_p4_users
+    # `p4 users` output format:
+    #   "username <email@address> (Full Name) accessed YYYY/MM/DD"
+    # function will output it as:
+    #   username[TAB]Full Name <email@address>
     string replace -ar '(^\S+) <([^>]+)> \(([^\)]+)\).*$' '$1'\t'$3 <$2>' (p4 users)
+end
+
+#########################################################
+
+function __fish_print_p4_workspaces
+    set -l user (__fish_print_p4_user_name)
+    if test -z "$user"
+        return
+    end
+    # "Client clientname YYYY/MM/DD root /home/user/workspace/path 'description text'"
+    string replace -ar '^Client (\S+) \S+ root (\S+) \'(.+)\'$' '$1'\t'$3' (p4 clients -u $user)
 end
 
 #########################################################
@@ -151,14 +173,8 @@ end
 
 function __fish_print_p4_file_types
     set -l base_types text binary symlink apple resource unicode utf16
-    set -l modifiers +m +w +x +k +ko +l +C +D +F +S +X
-    set -l mod_desc 'always set modtime' 'always writeable' 'exec bit set' '$Keyword$ expansion of Id, Header, Author, Date, DateUTC, DateTime, DateTimeUTC, DateTimeTZ, Change, File, Revision' '$Keyword$ expansion of Id, Header only' 'exclusive open: disallow multiple opens' 'server stores compressed file per revision' 'server stores deltas in RCS format' 'server stores full file per revision' 'server stores only single head rev., or specify number to <n> of revisions' 'server runs archive trigger to access files'
-    for i in $base_types
-        set -l idx 1
-        for j in $modifiers
-            echo $i$j\t$i, $mod_desc[$idx]
-            set idx (math $idx + 1)
-        end
+    for type in $base_types
+        printf '%s\t%s\n' $type+m 'always set modtime' $type+w 'always writeable' $type+x 'exec bit set' $type+k '$Keyword$ expansion of Id, Header, Author, Date, DateUTC, DateTime, DateTimeUTC, DateTimeTZ, Change, File, Revision' $type+ko '$Keyword$ expansion of Id, Header only' $type+l 'exclusive open: disallow multiple opens' $type+C 'server stores compressed file per revision' $type+D 'server stores deltas in RCS format' $type+F 'server stores full file per revision' $type+S 'server stores only single head rev., or specify number to <n> of revisions' $type+X 'server runs archive trigger to access files'
     end
 end
 
@@ -457,10 +473,11 @@ __fish_p4_register_subcommand_option clean -s n -d "Preview the results of the o
 
 # client, workspace @TODO: -Fs (only in -f), -c (only in -S stream)
 for a in 'client' 'workspace'
-    __fish_p4_register_subcommand_option $a -x -a '(__fish_print_p4_client_name)'
+    __fish_p4_register_subcommand_option $a -x -a '(__fish_print_p4_workspaces)'
     __fish_p4_register_subcommand_option $a -s f -d "Allows the last modification date, which is normally read-only, to be set"
-    __fish_p4_register_subcommand_option $a -s d -f -a '(__fish_print_p4_client_name)' -d "Delete the specified client workspace whether or not the workspace is owned by the user"
-    __fish_p4_register_subcommand_option $a -a '-Fs' -d 'Deletes client with shelves (must follow -f)' # must follow -f
+    __fish_p4_register_subcommand_option $a -s d -f -a '(__fish_print_p4_workspaces)' -d "Delete the specified client workspace whether or not the workspace is owned by the user"
+    # __fish_p4_register_subcommand_option $a -a '-Fs' -d 'Deletes client with shelves (must follow -f)'
+    __fish_p4_register_subcommand_option $a -s F -a 's' -d 'Deletes client with shelves (must follow -f)'
     __fish_p4_register_subcommand_option $a -s o -d "Write the client workspace spec to standard output"
     __fish_p4_register_subcommand_option $a -s i -d "Read the client workspace spec from standard input"
     __fish_p4_register_subcommand_option $a -s c -x -a '(__fish_print_p4_workspace_changelists)' -d "When used with -S stream, displays the workspace spec that would have been created for a stream at the moment the change was submitted"
@@ -480,7 +497,6 @@ for a in 'clients' 'workspaces'
     __fish_p4_register_subcommand_option $a -s S -x -a '(__fish_print_p4_streams)' -d "List client workspaces associated with the specified stream"
     __fish_p4_register_subcommand_option $a -s t -d "Display the time as well as the date of the last update to the workspace"
     __fish_p4_register_subcommand_option $a -s u -x -a '(__fish_print_p4_users)' -d "List only client workspaces owned by user"
-    __fish_p4_register_subcommand_option $a -l me -d "Equivalent to -u \$P4USER"
     __fish_p4_register_subcommand_option $a -s U -d "List only client workspaces unloaded with p4 unload"
 end
 
@@ -503,7 +519,6 @@ __fish_p4_register_subcommand_option sync -s s -d "Safe sync: Compare the conten
 
 # update @TODO
 # where @TODO
-
 
 #-----------------------------------------------------
 #--> Files
@@ -561,8 +576,19 @@ for a in 'change' 'changelist'
     __fish_p4_register_subcommand_option $a -s U -x -a '(__fish_print_p4_users)' -d "Changes the 'User' of the change"
 end
 
-# changes @TODO
-# changelists @TODO
+# changes, changelists
+for a in 'changes' 'changelists'
+    __fish_p4_register_subcommand_option $a -s i -d "Include changelists that affected files that were integrated with the specified files"
+    __fish_p4_register_subcommand_option $a -s t -d "Display the time as well as the date of each change"
+    __fish_p4_register_subcommand_option $a -s l -d "List long output, with the full text of each changelist description"
+    __fish_p4_register_subcommand_option $a -s L -d "List long output, with the full text of each changelist description truncated at 250 characters"
+    __fish_p4_register_subcommand_option $a -s f -d "View restricted changes (requires admin permission)"
+    __fish_p4_register_subcommand_option $a -c c -x -a '(__fish_print_p4_workspace_changelists)' -d "List only changes made from the named client workspace"
+    __fish_p4_register_subcommand_option $a -c m -x -d "List only the highest numbered max changes"
+    __fish_p4_register_subcommand_option $a -c s -x -a 'pending submitted shelved' -d "Limit the list to the changelists with the given status"
+    __fish_p4_register_subcommand_option $a -c u -x -a '(__fish_print_p4_users)' -d "List only changes made from the named user"
+
+end
 
 # describe @TODO: -dc<n>, -du<n>
 __fish_p4_register_subcommand_option describe -x -a '(__fish_print_p4_workspace_changelists)'

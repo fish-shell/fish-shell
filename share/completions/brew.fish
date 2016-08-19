@@ -17,9 +17,16 @@ function __fish_brew_using_command
 end
 
 function __fish_brew_formulae
-    set -l formuladir (brew --repository)/Library/Formula/
-    # __fish_complete_suffix .rb
-    ls $formuladir/*.rb | sed 's/.rb$//' | sed "s|^$formuladir||"
+    # list all local formula, do not use `brew search some_text` against searching online
+    # TODO fix the problem with `tap-pin`, tap-pin will modify the priority
+    # If you pin your custom tap for VIM, you should
+    # `brew install homebrew/core/vim` to install VIM from `core` repo
+    # `brew install vim` to install VIM from more prior repo
+    # but `brew search` won't change display for custom VIM and core VIM
+    # 'vim' for core VIM
+    # 'custUser/custRepo/vim' for more prior VIM
+    # more info: https://github.com/Homebrew/brew/blob/master/share/doc/homebrew/brew-tap.md#formula-duplicate-names
+    brew search
 end
 
 function __fish_brew_installed_formulas

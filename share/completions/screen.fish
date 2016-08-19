@@ -7,17 +7,20 @@ end
 
 function __fish_complete_screen_general_list_mac --description "Get the socket list on mac"
     pushd $__fish_screen_socket_dir > /dev/null
-    ls
-    set sockets (ls)
-    if test (count $socket) -ne 0
+    set -l sockets (ls)
+    if test (count $sockets) -ne 0
         switch $argv
             case "Detached"
-                stat -f "%Lp %Sm %N" -t "%D %T" $sockets | string match -r '^6\d{2} .*$' | string replace -r '^6\d{2} (\S* \S*) \S*/(\S+)' '$2\t$1 Detached'
+                stat -f "%Lp %SB %N" -t "%D %T" $sockets | string match -r '^6\d{2} .*$' | string replace -r '^6\d{2} (\S+ \S+) (\S+)' '$2\t$1 Detached'
             case "Attached"
-                stat -f "%Lp %Sm %N" -t "%D %T" $sockets | string match -r '^7\d{2} .*$' | string replace -r '^7\d{2} (\S* \S*) \S*/(\S+)' '$2\t$1 Attached'
+                stat -f "%Lp %SB %N" -t "%D %T" $sockets | string match -r '^7\d{2} .*$' | string replace -r '^7\d{2} (\S+ \S+) (\S+)' '$2\t$1 Attached'
         end
     end
     popd > /dev/null
+end
+
+function __fish_complete_screen_general_list --description "Get the socket list"
+    screen -list | string match -r '^\t.*\(.*\)\s*\('$argv'\)\s*$'| string replace -r '\t(.*)\s+\((.*)\)\s*\((.*)\)' '$1\t$2 $3'
 end
 
 function __fish_complete_screen_detached --description "Print a list of detached screen sessions"
@@ -25,7 +28,7 @@ function __fish_complete_screen_detached --description "Print a list of detached
         case Darwin
             __fish_complete_screen_general_list_mac Detached
         case '*'
-            screen -list | string match -r '^\t.*\(.*\)\s*\(Detached\)\s*$'| string replace -r '\t(.*)\s+\((.*)\)\s*\((.*)\)' '$1\t$2 $3'
+            __fish_complete_screen_general_list Detached
     end
 end
 
@@ -34,7 +37,7 @@ function __fish_complete_screen_attached --description "Print a list of attached
         case Darwin
             __fish_complete_screen_general_list_mac Attached
         case '*'
-            screen -list | string match -r '^\t.*\(.*\)\s*\(Attached\)\s*$'| string replace -r '\t(.*)\s+\((.*)\)\s*\((.*)\)' '$1\t$2 $3'
+            __fish_complete_screen_general_list Attached
     end
 end
 

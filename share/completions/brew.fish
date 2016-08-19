@@ -17,7 +17,7 @@ function __fish_brew_using_command
 end
 
 function __fish_brew_formulae
-    set -l formuladir (brew --repository)/Library/Formula/ (brew --repository)/Library/Taps/homebrew/homebrew-core/Formula
+    set -l formuladir (brew --repository)/Library/Formula/ (brew --repository homebrew/core)
     # __fish_complete_suffix .rb
     find $formuladir -name "*.rb" -type f 2> /dev/null | string replace -r '^/(?:[^/]*/)*([^/]*)\.rb' '$1'
 end

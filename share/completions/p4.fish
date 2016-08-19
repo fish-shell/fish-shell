@@ -161,6 +161,9 @@ end
 
 function __fish_print_p4_pending_changelists
     __fish_print_p4_workspace_changelists -s pending
+    if test -n "$argv"; and test $argv[1] = "default"
+        echo default\tDefault changelist
+    end
 end
 
 #########################################################
@@ -269,6 +272,22 @@ function __fish_print_p4_noretransfer_options
     echo 1\t"server avoids re-transferring files that have already been archived after a failed submit operation"
     echo 0\t"server re-transfers all files after a failed submit operation"
 end
+
+#########################################################
+
+function __fish_print_p4_integrate_output_options
+    echo b\t"outputs the base revision for the merge (if any)"
+    echo r\t"outputs the resolves that are being scheduled"
+end
+
+#########################################################
+
+function __fish_print_p4_integrate_resolve_options
+    echo b\t"schedules a branch resolve instead of branching the target files automatically"
+    echo d\t"schedules a delete resolve instead of deleting the target files automatically"
+    echo s\t"skips cherry-picked revisions that have already been integrated"
+end
+
 
 #########################################################
 
@@ -525,7 +544,7 @@ __fish_p4_register_subcommand_option sync -s s -d "Safe sync: Compare the conten
 #-----------------------------------------------------
 
 # add
-__fish_p4_register_subcommand_option add -s c -x -a '(__fish_print_p4_pending_changelists)' -d "Changelist number"
+__fish_p4_register_subcommand_option add -s c -x -a '(__fish_print_p4_pending_changelists default)' -d "Changelist number"
 __fish_p4_register_subcommand_option add -s d -d "Revert and re-add"
 __fish_p4_register_subcommand_option add -s f -d "Use wildcard characters for files"
 __fish_p4_register_subcommand_option add -s I -d "Do not use P4IGNORE"
@@ -540,7 +559,7 @@ __fish_p4_register_subcommand_option add -s t -x -a '(__fish_print_p4_file_types
 # dirs @TODO
 
 # edit
-__fish_p4_register_subcommand_option edit -s c -x -a '(__fish_print_p4_pending_changelists)' -d "Changelist number"
+__fish_p4_register_subcommand_option edit -s c -x -a '(__fish_print_p4_pending_changelists default)' -d "Changelist number"
 __fish_p4_register_subcommand_option edit -s k -d "Keep existing workspace files; mark the file as open for edit even if the file is not in the client view"
 __fish_p4_register_subcommand_option edit -s n -d "Preview operation, don't change files"
 __fish_p4_register_subcommand_option edit -s t -x -a '(__fish_print_p4_file_types)' -d "File type"
@@ -599,8 +618,20 @@ __fish_p4_register_subcommand_option describe -s S -d 'Display shelved files wit
 __fish_p4_register_subcommand_option describe -s d -x -a '(__fish_print_p4_diff_options)' -d 'Diff'
 
 # filelog @TODO
-# opened @TODO
-# reopen @TODO
+
+# opened
+__fish_p4_register_subcommand_option opened -s a -d "List opened files in all client workspaces"
+__fish_p4_register_subcommand_option opened -s c -x -a '(__fish_print_p4_pending_changelists default)' -d "List the files in a pending changelist"
+__fish_p4_register_subcommand_option opened -s C -x -a '(__fish_print_p4_workspaces)' -d "List only files that are open in the specified client workspace"
+__fish_p4_register_subcommand_option opened -s m -x -d "List only the first max open files"
+__fish_p4_register_subcommand_option opened -s s -d "Short output; do not output the revision number or file type"
+__fish_p4_register_subcommand_option opened -s u -x -a '(__fish_print_p4_users)' -d "List only those files that were opened by user"
+__fish_p4_register_subcommand_option opened -s x -d "List all files that have the +l filetype over all servers"
+
+# reopen
+__fish_p4_register_subcommand_option reopen -s c -x -a '(__fish_print_p4_pending_changelists default)' -d "Move files to changelist"
+__fish_p4_register_subcommand_option reopen -s t -x -a '(__fish_print_p4_file_types)' -d "Change file type"
+
 # review @TODO
 
 # shelve
@@ -651,7 +682,26 @@ __fish_p4_register_subcommand_option unshelve -s S -x -a '(__fish_print_p4_strea
 # branches @TODO
 # copy @TODO
 # cstat @TODO
-# integ, integrate @TODO
+
+# integ, integrate @TODO -s fromFile is based on -b branchname, try resolving
+for a in 'integ' 'integrate'
+    __fish_p4_register_subcommand_option $a -s b -x -a '(__fish_print_p4_branches)' -d "Integrate the files using the sourceFile/targetFile mappings included in the branch view of branchname. If the toFiles argument is included, include only those target files in the branch view that match the pattern specified by toFiles"
+    __fish_p4_register_subcommand_option $a -s n -d "Display the integrations this command would perform without actually performing them"
+    __fish_p4_register_subcommand_option $a -s v -d "Open files for branching without copying toFiles into the client workspace"
+    __fish_p4_register_subcommand_option $a -s c -x -a '(__fish_print_p4_pending_changelists)' -d "Open the toFiles for branch, integrate, or delete in the specified pending changelist"
+    __fish_p4_register_subcommand_option $a -s q -d "Quiet mode"
+    __fish_p4_register_subcommand_option $a -a '-Di' -d "f the source file has been deleted and re-added, revisions that precede the deletion will be considered to be part of the same source file"
+    __fish_p4_register_subcommand_option $a -s f -d "Force the integration on all revisions of fromFile and toFile, even if some revisions have been integrated in the past"
+    __fish_p4_register_subcommand_option $a -s h -d "Use the have revision"
+    __fish_p4_register_subcommand_option $a -s O -x -a '(__fish_print_p4_integrate_output_options)' -d "Specify output options"
+    __fish_p4_register_subcommand_option $a -s m -x -d "Limit the command to integrating only the first N files"
+    __fish_p4_register_subcommand_option $a -s R -x -a '(__fish_print_p4_integrate_resolve_options)' -d "Specify resolve options"
+    __fish_p4_register_subcommand_option $a -s s -r -d "Source file and revision"
+    __fish_p4_register_subcommand_option $a -s r -r -d "Reverse the mappings in the branch view, integrating from the target files to the source files"
+    __fish_p4_register_subcommand_option $a -s S -x -a '(__fish_print_p4_streams)' -d "Source stream"
+    __fish_p4_register_subcommand_option $a -s P -x -a '(__fish_print_p4_streams)' -d "Custom parent stream"
+end
+
 # integrated @TODO
 # interchanges @TODO
 # istat @TODO

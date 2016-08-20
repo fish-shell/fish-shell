@@ -1,4 +1,4 @@
-# Fish completions for Perforce (p4) RCS
+# Fish completions for Perforce (p4) SCM
 # Based on the list of commands from
 # https://www.perforce.com/perforce/r16.1/manuals/cmdref/
 # Author: Boris Aranovich https://github.com/nomaed

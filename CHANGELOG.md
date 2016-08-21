@@ -5,6 +5,8 @@
 - Fish will now try to set the locale when it doesn't inherit one by reading system configuration (#277)
 
 ## Notable fixes and improvements
+- Completions that don't match the prefix will no longer expand to a common prefix (#3090)
+- Suggestions will be offered more often, like after removing characters (#3069)
 - The argument handling for the `history` function has been revamped (#3293, #3224, #3220, #3182)
 - `history --merge` now correctly interleaves items in chronological order (#2312)
 - `history` gained a new "--with-time" ("-t") option to show timestamps (#3175)

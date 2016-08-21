@@ -2,6 +2,17 @@
 ## Significant changes
 - The clipboard integration has been revamped with explicit bindings. OS X clipboard support provided for out of the box in addition to X11. (#3061)
 - Vi-style bindings no longer build upon the default emacs-style bindings, instead they share some definitions (#3068).
+- Fish will now try to set the locale when it doesn't inherit one by reading system configuration (#277)
+
+## Notable fixes and improvements
+- The argument handling for the `history` function has been revamped (#3293, #3224, #3220, #3182)
+- `history --merge` now correctly interleaves items in chronological order (#2312)
+- `history` gained a new "--with-time" ("-t") option to show timestamps (#3175)
+- The "-d" option to `fish_indent` was removed (#3191)
+- A bug where fish would sometimes hang using 100% CPU in the C locale (#3214)
+- Fish now uses the $TZ variable for its idea of localtime (#3181)
+- Some performance improvments to the git prompt (#3294, 3083)
+- Some additions or fixes to the completions for `brew` (#3309), `git` (#3274, #3226, #3225, #3094, #3087, #3035, #3021, #2982), `aura` (#3297)
 ---
 
 # fish 2.3.1 (released July 3, 2016)

@@ -629,6 +629,7 @@ __fish_p4_register_subcommand_option opened -s u -x -a '(__fish_print_p4_users)'
 __fish_p4_register_subcommand_option opened -s x -d "List all files that have the +l filetype over all servers"
 
 # reopen
+__fish_p4_register_subcommand_option reopen -x -a '(__fish_print_p4_opened_files)' -d "Select opened files"
 __fish_p4_register_subcommand_option reopen -s c -x -a '(__fish_print_p4_pending_changelists default)' -d "Move files to changelist"
 __fish_p4_register_subcommand_option reopen -s t -x -a '(__fish_print_p4_file_types)' -d "Change file type"
 

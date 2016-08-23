@@ -312,7 +312,8 @@ class BindingParser:
                     "sdc": "Shift Delete", "shome": "Shift Home",
                     "left": "Left Arrow", "right": "Right Arrow",
                     "up": "Up Arrow", "down": "Down Arrow",
-                    "sleft": "Shift Left", "sright": "Shift Right"
+                    "sleft": "Shift Left", "sright": "Shift Right",
+                    "btab": "Shift Tab"
                     }
 
     def set_buffer(self, buffer):

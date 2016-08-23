@@ -620,6 +620,7 @@ __fish_p4_register_command_option shelve -s p -d "Promote a shelved change from 
 __fish_p4_register_command_option shelve -s r -d 'Replace all shelved files in the changelist with the files that are opened in your workspace'
 
 # submit @TODO: parallel syntax
+__fish_p4_register_command_option submit -a '(__fish_print_p4_opened_files)'
 __fish_p4_register_command_option submit -s c -x -a '(__fish_print_p4_pending_changelists)' -d "Submit specific changelist"
 __fish_p4_register_command_option submit -s d -x -d "Immediately submit the changelist with supplied description and bypass the interactive form"
 __fish_p4_register_command_option submit -s e -x -a '(__fish_print_p4_shelved_changelists)' -d "Submit specific shelved changelist"

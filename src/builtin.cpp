@@ -1733,13 +1733,13 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
             if (function_name_shadows_builtin && !shadow_builtin) {
                 append_format(
                     *out_err,
-                    _(L"%ls: function name shadows a builtin so you must use '--shadow-builtin'"),
-                    argv[0]);
-                res = STATUS_BUILTIN_ERROR;
+                    _(L"%ls: \"%ls\" shadows a builtin so you should use '--shadow-builtin' "
+                        "to suppress this warning"),
+                    argv[0], function_name.c_str());
             } else if (!function_name_shadows_builtin && shadow_builtin) {
-                append_format(*out_err, _(L"%ls: function name does not shadow a builtin so you "
+                append_format(*out_err, _(L"%ls: \"%ls\" does not shadow a builtin so you "
                                           L"must not use '--shadow-builtin'"),
-                              argv[0]);
+                              argv[0], function_name.c_str());
                 res = STATUS_BUILTIN_ERROR;
             }
         }

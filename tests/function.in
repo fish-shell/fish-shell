@@ -45,12 +45,14 @@ for i in (seq 4)
     end
 end
 
-# Test that we can't define a function that shadows a builtin by accident.
+# Test that we can define a function that shadows a builtin but there should
+# be a warning written to stderr (in addition to the echo below).
 function pwd; end
-or echo 'yes, it failed as expected' >&2
+and echo 'was able to define function pwd'
+or echo 'was not able to define function pwd' >&2
 
 # Test that we can define a function that shadows a builtin if we use the
-# right flag.
+# right flag without any diagnostic written to stderr.
 function pwd --shadow-builtin; end
 and echo '"function pwd --shadow-builtin" worked'
 

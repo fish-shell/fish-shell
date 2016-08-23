@@ -84,6 +84,8 @@ named_colors = {
     'white'     : 'FFFFFF'
 }
 
+bindings_blacklist = set(["self-insert", "'begin;end'"])
+
 def parse_one_color(comp):
     """ A basic function to parse a single color value like 'FFA000' """
     if comp in named_colors:
@@ -586,6 +588,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 key_name = None
                 command = comps[2]
                 binding_parser.set_buffer(comps[1])
+
+            if command in bindings_blacklist:
+                continue
 
             readable_binding = binding_parser.get_readable_binding()
             if command in command_to_binding:

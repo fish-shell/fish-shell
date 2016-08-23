@@ -398,7 +398,7 @@ class BindingParser:
         """ Gets a readable representation of binding """
 
         try:
-            result = BindingParser.readable_keys[self.buffer]
+            result = BindingParser.readable_keys[self.buffer.lower()]
         except KeyError:
             result = self.parse_binding()
 
@@ -599,7 +599,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             if comps[1] == '-k':
                 key_name, command = comps[2].split(' ', 1)
-                binding_parser.set_buffer(key_name)
+                binding_parser.set_buffer(key_name.capitalize())
             else:
                 key_name = None
                 command = comps[2]

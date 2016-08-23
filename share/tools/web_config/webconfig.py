@@ -351,14 +351,22 @@ class BindingParser:
 
         # \[1\; is start of control sequence
         if c == '1':
-            self.get_char();c = self.get_char()
-            if c == ";":
+            b = self.get_char(); c = self.get_char()
+            if b == '\\' and c == '~':
+                result += "Home"
+            elif c == ";":
                 c = self.get_char()
 
         # 3 is Alt
         if c == '3':
             result += "ALT - "
             c = self.get_char()
+
+        # \[4\~ is End
+        if c == '4':
+            b = self.get_char(); c = self.get_char()
+            if b == '\\' and c == '~':
+                result += "End"
 
         # 5 is Ctrl
         if c == '5':
@@ -430,14 +438,21 @@ class BindingParser:
                     result += 'Tab'
                 elif c == 'b':
                     result += 'Backspace'
+                elif c.isalpha():
+                    result += '\\' + c
                 else:
                     result += c
+            elif c == '\x7f':
+                result += 'Backspace'
             else:
                 result += c
         if ctrl:
             readable_command += 'CTRL - '
         if alt:
             readable_command += 'ALT - '
+        
+        if result == '':
+            return 'unknown-control-sequence'
 
         return readable_command + result
 

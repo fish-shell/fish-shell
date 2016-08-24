@@ -1132,12 +1132,12 @@ Note that functions cannot be started in the background. Functions that are stop
 On startup, Fish evaluates a number of configuration files, which can be used to control the behavior of the shell.
 
 Configuration files are evaluated in the following order:
-- Configuration shipped with fish, which should not be edited, usually `/usr/share/fish/config.fish`.
-- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - usually `/etc/fish/config.fish`;
+- Configuration shipped with fish, which should not be edited in `$__fish_datadir/config.fish`, usually `/usr/share/fish/config.fish`.
+- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - in `$__fish_sysconfdir` usually `/etc/fish/config.fish`;
 - Configuration snippets in files ending in `.fish`, in the directories:
-  - `~/.config/fish/conf.d/`
-  - `/etc/fish/conf.d`
-  - `/usr/share/fish/vendor_conf.d`
+  - `$XDG_CONFIG_HOME/fish/conf.d` (by default `~/.config/fish/conf.d/`)
+  - `$__fish_sysconfdir/conf.d` (by default `/etc/fish/conf.d`)
+  - `/usr/share/fish/vendor_conf.d` (controlled via the "--confdir" switch, defaulting to `$__fish_datadir/conf.d`)
 
   If there are multiple files with the same name in these directories, only the first will be executed.
 

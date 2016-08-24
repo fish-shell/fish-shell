@@ -1129,15 +1129,15 @@ Note that functions cannot be started in the background. Functions that are stop
 
 \section initialization Initialization files
 
-On startup, Fish evaluates a number of configuration files, which can be used to control the behavior of the shell.
+On startup, Fish evaluates a number of configuration files, which can be used to control the behavior of the shell. The location of these configuration variables is controlled by a number of environment variables, and their default or usual location is given below.
 
 Configuration files are evaluated in the following order:
-- Configuration shipped with fish, which should not be edited in `$__fish_datadir/config.fish`, usually `/usr/share/fish/config.fish`.
-- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - in `$__fish_sysconfdir` usually `/etc/fish/config.fish`;
+- Configuration shipped with fish, which should not be edited, in `$__fish_datadir/config.fish` (usually `/usr/share/fish/config.fish`).
+- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - in `$__fish_sysconfdir` (usually `/etc/fish/config.fish`);
 - Configuration snippets in files ending in `.fish`, in the directories:
-  - `$XDG_CONFIG_HOME/fish/conf.d` (by default `~/.config/fish/conf.d/`)
-  - `$__fish_sysconfdir/conf.d` (by default `/etc/fish/conf.d`)
-  - `/usr/share/fish/vendor_conf.d` (controlled via the "--confdir" switch, defaulting to `$__fish_datadir/conf.d`)
+  - `$XDG_CONFIG_HOME/fish/conf.d` (by default, `~/.config/fish/conf.d/`)
+  - `$__fish_sysconfdir/conf.d` (by default, `/etc/fish/conf.d`)
+  - `/usr/share/fish/vendor_conf.d` (set at compile time; by default, `$__fish_datadir/conf.d`)
 
   If there are multiple files with the same name in these directories, only the first will be executed.
 
@@ -1145,7 +1145,7 @@ Configuration files are evaluated in the following order:
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
 
-This wide search may be confusing. If you are unsure, use `~/.config/fish/config.fish`.
+This wide search may be confusing. If you are unsure where to put your own customisations, use `~/.config/fish/config.fish`.
 
 These files are all executed on the startup of every shell. If you want to run a command only on starting an interactive shell, use the exit status of the command `status --is-interactive` to determine if the shell is interactive. If you want to run a command only when using a login shell, use `status --is-login` instead. This will speed up the starting of non-interactive or non-login shells.
 

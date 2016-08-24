@@ -1,7 +1,3 @@
-function: "pwd" shadows a builtin so you should use '--shadow-builtin' to suppress this warning
-fish: function pwd; end
-      ^
-function: "not_builtin" does not shadow a builtin so you must not use '--shadow-builtin'
-fish: function not_builtin --shadow-builtin; end
-      ^
+<W> fish: function "pwd" shadows a builtin so you should use '--shadow-builtin' to suppress this warning
+<E> fish: function "not_builtin" does not shadow a builtin so you must not use '--shadow-builtin'
 yes, it failed as expected

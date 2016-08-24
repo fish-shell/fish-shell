@@ -25,8 +25,16 @@ filters.filter("filterBinding", function() {
 
         for(i=0; i<bindings.length; ++i) {
             binding = bindings[i];
-            if (binding.command.indexOf(query) != -1 || binding.readable_binding.toLowerCase().indexOf(query.toLowerCase()) != -1) {
+            if (binding.command.indexOf(query) != -1) {
                 result.push(binding);
+                continue;
+            }
+            varieties = binding.bindings;
+            for (j=0; j<varieties.length; ++j) {
+                if (varieties[j].readable_binding.toLowerCase().indexOf(query.toLowerCase()) != -1) {
+                    result.push(binding);
+                    break;
+                }
             }
         }
 

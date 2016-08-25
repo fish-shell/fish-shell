@@ -920,10 +920,6 @@ static wcstring functions_def(const wcstring &name) {
         out.append(esc_desc);
     }
 
-    if (function_get_shadow_builtin(name)) {
-        out.append(L" --shadow-builtin");
-    }
-
     if (!function_get_shadow_scope(name)) {
         out.append(L" --no-scope-shadowing");
     }
@@ -1492,17 +1488,13 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     // Hackish const_cast matches the one in builtin_run.
     const null_terminated_array_t<wchar_t> argv_array(args);
     wchar_t **argv = const_cast<wchar_t **>(argv_array.get());
-
     int argc = builtin_count_args(argv);
     int res = STATUS_BUILTIN_OK;
     wchar_t *desc = 0;
     std::vector<event_t> events;
-
     bool has_named_arguments = false;
     wcstring_list_t named_arguments;
     wcstring_list_t inherit_vars;
-
-    bool shadow_builtin = false;
     bool shadow_scope = true;
 
     wcstring_list_t wrap_targets;
@@ -1523,7 +1515,6 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                                            {L"wraps", required_argument, 0, 'w'},
                                            {L"help", no_argument, 0, 'h'},
                                            {L"argument-names", no_argument, 0, 'a'},
-                                           {L"shadow-builtin", no_argument, 0, 'B'},
                                            {L"no-scope-shadowing", no_argument, 0, 'S'},
                                            {L"inherit-variable", required_argument, 0, 'V'},
                                            {0, 0, 0, 0}};
@@ -1532,7 +1523,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
         int opt_index = 0;
 
         // The leading - here specifies RETURN_IN_ORDER.
-        int opt = w.wgetopt_long(argc, argv, L"-d:s:j:p:v:e:w:haBSV:", long_options, &opt_index);
+        int opt = w.wgetopt_long(argc, argv, L"-d:s:j:p:v:e:w:haSV:", long_options, &opt_index);
         if (opt == -1) break;
         switch (opt) {
             case 0: {
@@ -1628,10 +1619,6 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                 name_is_first_positional = !positionals.empty();
                 break;
             }
-            case 'B': {
-                shadow_builtin = true;
-                break;
-            }
             case 'S': {
                 shadow_scope = false;
                 break;
@@ -1721,37 +1708,12 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
         }
 
         if (!res) {
-            bool function_name_shadows_builtin = false;
-            wcstring_list_t builtin_names = builtin_get_names();
-            for (size_t i = 0; i < builtin_names.size(); i++) {
-                const wchar_t *el = builtin_names.at(i).c_str();
-                if (el == function_name) {
-                    function_name_shadows_builtin = true;
-                    break;
-                }
-            }
-            if (function_name_shadows_builtin && !shadow_builtin) {
-                append_format(
-                    *out_err,
-                    _(L"%ls: function name shadows a builtin so you must use '--shadow-builtin'"),
-                    argv[0]);
-                res = STATUS_BUILTIN_ERROR;
-            } else if (!function_name_shadows_builtin && shadow_builtin) {
-                append_format(*out_err, _(L"%ls: function name does not shadow a builtin so you "
-                                          L"must not use '--shadow-builtin'"),
-                              argv[0]);
-                res = STATUS_BUILTIN_ERROR;
-            }
-        }
-
-        if (!res) {
             // Here we actually define the function!
             function_data_t d;
 
             d.name = function_name;
             if (desc) d.description = desc;
             d.events.swap(events);
-            d.shadow_builtin = shadow_builtin;
             d.shadow_scope = shadow_scope;
             d.named_arguments.swap(named_arguments);
             d.inherit_vars.swap(inherit_vars);

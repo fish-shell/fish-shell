@@ -1402,9 +1402,9 @@ static bool format_history_record(const history_item_t &item, const bool with_ti
         const time_t seconds = item.timestamp();
         struct tm timestamp;
         if (!localtime_r(&seconds, &timestamp)) return false;
-        char timestamp_string[22];
-        if (strftime(timestamp_string, 22, "%Y-%m-%d %H:%M:%S  ", &timestamp) != 21) return false;
-        streams.out.append(str2wcstring(timestamp_string));
+        wchar_t timestamp_string[64];
+        if (std::wcsftime(timestamp_string, 63, L"# %c:\n", &timestamp) == 0) return false;
+        streams.out.append(timestamp_string);
     }
     streams.out.append(item.str());
     streams.out.append(L"\n");

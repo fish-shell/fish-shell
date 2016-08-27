@@ -4,7 +4,7 @@
 # +command : same as -c command
 
 # Check if vi exists at all ( needed for vi --version )
-if type vi > /dev/null ^ /dev/null
+if type -q vi
     # Check if vi is really vim
     if vi --version > /dev/null ^ /dev/null
         complete -c vi -w vim

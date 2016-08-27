@@ -18,7 +18,8 @@
 - Some performance improvments to the git prompt (#3294, 3083)
 - Working completion after an escaped space character (#2447)
 - Less output to fish's build (#3248)
-- Some additions or fixes to the completions for `brew` (#3309), `git` (#3274, #3226, #3225, #3094, #3087, #3035, #3021, #2982), `aura` (#3297)
+- Some additions or fixes to the completions for `brew` (#3309), `git` (#3274, #3226, #3225, #3094, #3087, #3035, #3021, #2982, #3230), `aura` (#3297)
+- New completions for perforce ("p4") (#3314)
 
 ---
 

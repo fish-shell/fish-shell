@@ -132,7 +132,7 @@ complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" 
     # The string match ensures we only complete remote paths (rsync will error out if given nothing, and stderr is ignored)
     # The string replace removes everything up to and including a time (since rsync will justify its output)
     # The last match removes the "." line referring to the directory
-	rsync --list-only ^/dev/null (commandline -ct | string match -r '.*:(.*/)?') | string replace -r '.*[0-9]{2}:[0-9]{2}:[0-9]{2} ' '' \
+	command rsync --list-only ^/dev/null (commandline -ct | string match -r '.*:(.*/)?') | string replace -r '.*[0-9]{2}:[0-9]{2}:[0-9]{2} ' '' \
 	| string match -r '^..+\$|^[^.]\$' | string escape -n
 )
 "

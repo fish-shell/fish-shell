@@ -1043,7 +1043,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         // Memory map the region.
         if (!errored) {
             void *addr = mmap(NULL, sizeof(universal_notifier_shmem_t), PROT_READ | PROT_WRITE,
-                              MAP_FILE | MAP_SHARED, fd, 0);
+                              MAP_SHARED, fd, 0);
             if (addr == MAP_FAILED) {
                 int err = errno;
                 report_error(err, L"Unable to memory map shared memory object with path '%s'",

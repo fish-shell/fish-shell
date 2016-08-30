@@ -264,11 +264,20 @@ uintmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
 
 template <>
 long double raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
-    // Forcing the locale to C is questionable but it's what the old C_STRTOD() that I inlined here
-    // as part of changing how locale management is done by fish.
-    char *old_locale = setlocale(LC_NUMERIC, "C");
     double val = wcstod(s, end);
-    setlocale(LC_NUMERIC, old_locale);
+    if (**end == L'\0') return val;
+
+    // The conversion using the user's locale failed. That may be due to the string not being a
+    // valid floating point value. It could also be due to the locale using different separator
+    // characters than the normal english convention. So try again by forcing the use of a locale
+    // that employs the english convention for writing floating point numbers.
+    //
+    // TODO: switch to the wcstod_l() function to avoid changing the global locale.
+    char *saved_locale = strdup(setlocale(LC_NUMERIC, NULL));
+    setlocale(LC_NUMERIC, "C");
+    val = wcstod(s, end);
+    setlocale(LC_NUMERIC, saved_locale);
+    free(saved_locale);
     return val;
 }
 

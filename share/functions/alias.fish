@@ -40,9 +40,9 @@ function alias --description 'Legacy function for creating shellscript functions
     end
 
     # Extract the first command from the body
-	# This is supposed to replace all non-escaped (i.e. preceded by an odd number of `\`) spaces with a newline
-	# so it splits on them
-	set -l tmp (string replace -ra "([^\\\ ])((\\\\\\\)*) " '$1\n' $body)
+    # This is supposed to replace all non-escaped (i.e. preceded by an odd number of `\`) spaces with a newline
+    # so it splits on them
+    set -l tmp (string replace -ra "([^\\\ ])((\\\\\\\)*) " '$1\n' $body)
     set first_word (string trim $tmp[1])
     if set -q tmp[2]
         set body $tmp[2..-1]
@@ -60,6 +60,5 @@ function alias --description 'Legacy function for creating shellscript functions
             set prefix command
         end
     end
-    eval "function $name --wraps $first_word; $prefix $first_word $body \$argv; end"
+    echo "function $name --wraps $first_word; $prefix $first_word $body \$argv; end" | source
 end
-

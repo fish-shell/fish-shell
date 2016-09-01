@@ -221,7 +221,7 @@ ifeq ($(T_COLORS), 256)
 	T_ITALIC := $(shell ( tput sitm || tput ZH || echo "\\033[3m" ) 2> /dev/null )
 	# * Half-bright/faint 'dim' mode - rarely works - rarely in terminfo when it does - but it's cool.
 	#   Use it with one of the basic colors to get a fainter version of it.
-	T_DIM := $(shell ( tput dim || tput mh || [ \'$(TERM_PROGRAM)\'' = Apple_Terminal ] && echo "\\033[2m") 2> /dev/null )
+	T_DIM := $(shell ( tput dim || tput mh || [ $(TERM_PROGRAM) = Apple_Terminal ] && echo "\\033[2m") 2> /dev/null )
 else
 	T_ITALIC := ""
 	T_DIM := $(shell ( tput dim || tput mh) 2> /dev/null )
@@ -284,7 +284,7 @@ prof: all
 # directory once Doxygen is done.
 #
 doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter | show-SED
-	@echo $(T_DIM)"  doxygen  $(T_ITALIC)user_doc$(T_RESET)"
+	@echo "$(T_DIM)  doxygen  $(T_ITALIC)user_doc$(T_RESET)"
 	$(v)(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
 	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | \
 		doxygen - && touch user_doc
@@ -412,7 +412,7 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in
 lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED
 	$(v)rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
 # Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
-	@echo $(T_DIM)"  SED      "$(T_ITALIC)$@$(T_RESET)
+	@echo "$(T_DIM)  SED      $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(SED) <command_list_toc.txt >>lexicon.tmp -n \
 		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
 		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt; \
@@ -442,7 +442,7 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 #
 lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 	$(v)rm -f $@.tmp $@
-	@echo $(T_DIM)"  SED      "$(T_ITALIC)$@$(T_RESET)
+	@echo "$(T_DIM)  SED      $(T_ITALIC)$@$(T_RESET)"
 # Set the shebang as sed can reside in multiple places.
 	$(v)$(SED) <$@.in >$@.tmp -e 's|@sed@|'$(SED)'|'
 # Scan through the lexicon, transforming each line to something useful to Doxygen.
@@ -497,14 +497,14 @@ doc.h: $(HDR_FILES)
 # Compile translation files to binary format
 #
 %.gmo:
-	@echo $(T_DIM)"  msgfmt   "$(T_ITALIC)$@$(T_RESET)
+	@echo "$(T_DIM)  msgfmt   $(T_ITALIC)$@$(T_RESET)"
 	$(v)msgfmt -o $@ $*.po
 
 #
 # Update existing po file or copy messages.pot
 #
 %.po:messages.pot
-	@echo $(T_DIM)"  msgmerge "$(T_ITALIC)$@$(T_RESET)
+	@echo "$(T_DIM)  msgmerge $(T_ITALIC)$@$(T_RESET)"
 	$(v)if test -f $*.po; then \
 		msgmerge -U --backup=existing $*.po messages.pot;\
 	else \
@@ -515,7 +515,7 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 messages.pot: src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish
-	@echo $(T_DIM)" xgettext "$(T_ITALIC)$@$(T_RESET)
+	@echo "$(T_DIM) xgettext $(T_ITALIC)$@$(T_RESET)"
 	$(v)xgettext -k_ -kN_ src/*.cpp src/*.h -o messages.pot
 	$(v)xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot
 
@@ -551,7 +551,7 @@ endif
 #
 share/man: $(HELP_SRC) lexicon_filter | show-FISH_BUILD_VERSION show-SED
 	-$(v)mkdir -p share/man
-	@echo $(T_DIM)"  doxygen  "$(T_ITALIC)$@$(T_RESET)
+	@echo "$(T_DIM)  doxygen  $(T_ITALIC)$@$(T_RESET)"
 	$(v)touch share/man
 	-$(v)rm -Rf share/man/man1
 	$(v)echo "$(T_DIM)" && \
@@ -756,7 +756,7 @@ uninstall-translations:
 # How basic files get compiled
 #
 obj/%.o: src/%.cpp | obj
-	@echo $(T_DIM)"  CXX      "$(T_ITALIC)$@$(T_RESET)
+	@echo "$(T_DIM)  CXX      $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 #
@@ -769,11 +769,11 @@ obj:
 # Build the fish program.
 #
 fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$(T_ITALIC)$@$(T_RESET)
+	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
 $(PCRE2_LIB): $(PCRE2_H)
-	@echo "  MAKE     "$(T_ITALIC)$@$(T_RESET)
+	@echo "  MAKE     $(T_ITALIC)$@$(T_RESET)"
 ifeq ($(V), 0 )
 	@$(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la > /dev/null
 else
@@ -787,21 +787,21 @@ $(PCRE2_H):
 # Build the fish_tests program.
 #
 fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$(T_ITALIC)$@$(T_RESET)
+	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_indent program.
 #
 fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$(T_ITALIC)$@$(T_RESET)
+	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_key_reader program to show input from the terminal. 
 #
 fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$(T_ITALIC)$@$(T_RESET)
+	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
 #

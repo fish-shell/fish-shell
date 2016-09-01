@@ -209,27 +209,25 @@ endif
 #
 T_COLORS := $(shell tput colors || tput Co)
 T_GREEN  := $(shell tput setaf 2 || tput AF 2)
-# * Yellow on black - gets attention in any terminal color setting and no risk of loack of contrast.
 T_YELLOWB := $(shell tput setaf 14 || tput AF 14; tput setab 0 || tput AB 0)
 T_CYAN := $(shell tput setaf 3|| tput AF 3)
-
 T_RED := $(shell tput setaf 1 || tput AF 1)
 T_BOLD := $(shell tput bold || tput md)
-# * Italic: Also rarely defined -  it's more common for it to work despite
+# * Italic: Rarely defined -  it's common for it to work despite
 # 		terminfo entries and isn't known to cause any recent > 256-color terminals
 # 		to explode. If terminfo says a terminal supports 256 colors - it's fancy enough
 # 		and won't have trouble the escape.
 ifeq ($(T_COLORS), 256)
-	T_ITALIC := $(shell tput sitm || echo "\\033[3m")
+	T_ITALIC := $(shell tput sitm || tput ZH || echo "\\033[3m")
+	# * Half-bright/faint 'dim' mode - rarely works - rarely in terminfo when it does - but it's cool.
+	#   Use it with one of the basic colors to get a fainter version of it.
+	T_DIM := $(shell tput dim || tput mh || [ ${TERM_PROGRAM} = Apple_Terminal ] && echo "\\033[2m")
 else
 	T_ITALIC := ""
+	T_DIM := $(shell tput dim || tput mh)
 endif
 
 T_RESET := $(shell tput sgr0 || tput me)
-
-# * Half-bright/faint 'dim' mode - rarely works - rarely in terminfo when it does - but it's cool.
-#   Use it with one of the basic colors to get a fainter version of it.
-T_DIM := $(shell tput dim || tput mh || [ ${TERM_PROGRAM} = Apple_Terminal ] && echo "\\033[2m")
 
 #
 # A target that prettily shows VAR='$(VAR)' (properly escaped)

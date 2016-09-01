@@ -126,7 +126,8 @@ FISH_TESTS_OBJS := $(FISH_OBJS) obj/fish_tests.o
 # All of the sources that produce object files
 # (that is, are not themselves #included in other source files)
 #
-FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) $(FISH_KEYREAD_OBJS) obj/fish.o)
+FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) $(FISH_KEYREAD_OBJS) \
+	obj/fish.o)
 
 #
 # Files containing user documentation
@@ -207,27 +208,26 @@ endif
 #
 # Functions for status output
 #
-T_COLORS := $(shell tput colors || tput Co)
-T_GREEN  := $(shell tput setaf 2 || tput AF 2)
-T_YELLOWB := $(shell tput setaf 14 || tput AF 14; tput setab 0 || tput AB 0)
-T_CYAN := $(shell tput setaf 3|| tput AF 3)
-T_RED := $(shell tput setaf 1 || tput AF 1)
-T_BOLD := $(shell tput bold || tput md)
+T_GREEN  := $(shell ( tput setaf 2 || tput AF ) 2> /dev/null )
+T_YELLOWB := $(shell ( tput setaf 11 || tput AF 11 ) 2> /dev/null; ( tput setab 0 || tput AB 0) 2> /dev/null ) 
+T_CYAN := $(shell ( tput setaf 14 || tput AF 14 ) 2> /dev/null )
+T_RED := $(shell ( tput setaf 1 || tput AF 1) 2> /dev/null )
+T_BOLD := $(shell ( tput bold || tput md) 2> /dev/null )
 # * Italic: Rarely defined -  it's common for it to work despite
 # 		terminfo entries and isn't known to cause any recent > 256-color terminals
 # 		to explode. If terminfo says a terminal supports 256 colors - it's fancy enough
 # 		and won't have trouble the escape.
 ifeq ($(T_COLORS), 256)
-	T_ITALIC := $(shell tput sitm || tput ZH || echo "\\033[3m")
+	T_ITALIC := $(shell ( tput sitm || tput ZH || echo "\\033[3m" ) 2> /dev/null )
 	# * Half-bright/faint 'dim' mode - rarely works - rarely in terminfo when it does - but it's cool.
 	#   Use it with one of the basic colors to get a fainter version of it.
-	T_DIM := $(shell tput dim || tput mh || [ ${TERM_PROGRAM} = Apple_Terminal ] && echo "\\033[2m")
+	T_DIM := $(shell ( tput dim || tput mh || [ ${TERM_PROGRAM} = Apple_Terminal ] && echo "\\033[2m") 2> /dev/null )
 else
 	T_ITALIC := ""
-	T_DIM := $(shell tput dim || tput mh)
+	T_DIM := $(shell ( tput dim || tput mh) 2> /dev/null )
 endif
 
-T_RESET := $(shell tput sgr0 || tput me)
+T_RESET := $(shell ( tput sgr0 || tput me) 2> /dev/null )
 
 #
 # A target that prettily shows VAR='$(VAR)' (properly escaped)
@@ -240,9 +240,8 @@ show-%:
 # Make everything needed for installing fish
 #
 all: show-CXX show-CXXFLAGS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
-	@echo $(MAKECMDGOALS) | grep -q install || \
-	echo "\n $(T_GREEN)fish has now been built.$(T_RESET)\n" \
-	"$(T_BOLD)Run $(T_RESET)$(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET) to install fish.$(T_RESET)"; true
+	@echo $(MAKECMDGOALS) | grep -vq install && echo "$(T_GREEN)fish has now been built.$(T_RESET)"
+	@echo "Run $(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET) to install fish.$(T_RESET)" ||: true
 .PHONY: all
 
 #
@@ -632,10 +631,11 @@ xcode-install:
 # writeable prefix.
 #
 install-force: all install-translations
+	@echo
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 	$(v)for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir);\
-		echo "Installing $(T_BOLD)$$i$(T_RESET)";\
+		echo " Installing $(T_BOLD)$$i$(T_RESET)";\
 		true ;\
 	done;
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
@@ -656,22 +656,22 @@ install-force: all install-translations
 	$(v)$(INSTALL) -m 644 share/__fish_build_paths.fish    $(DESTDIR)$(datadir)/fish/
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/pkgconfig
 	$(v)$(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
-	@echo "Installing completions...";
+	@echo " Installing completions...";
 	$(v)for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 		true; \
 	done;
-	@echo "Installing functions...";
+	@echo " Installing functions...";
 	$(v)for i in $(FUNCTIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
 		true; \
 	done;
-	@echo "Installing man pages...";
+	@echo " Installing man pages...";
 	$(v)for i in share/man/man1/*.1; do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
 		true; \
 	done;
-	@echo "Installing tools...";
+	@echo " Installing tools...";
 	$(v)for i in share/tools/*.py; do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/; \
 		true; \
@@ -696,14 +696,14 @@ install-force: all install-translations
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
 		true; \
 	done;
-	@echo "Installing user documentation...";
+	@echo " Installing user documentation...";
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	$(v) for i in user_doc/html/* CHANGELOG.md; do \
 		if test -f $$i; then \
 			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
 		fi; \
 	done;
-	@echo "Installing main man pages...";
+	@echo " Installing main man pages...";
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;
 	$(v) for i in $(MANUALS); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
@@ -756,7 +756,7 @@ uninstall-translations:
 # How basic files get compiled
 #
 obj/%.o: src/%.cpp | obj
-	@echo $(T_DIM)$(T_WHITE)"  CXX      "$(T_ITALIC)$@$(T_RESET)
+	@echo $(T_DIM)"  CXX      "$(T_ITALIC)$@$(T_RESET)
 	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 #

@@ -126,8 +126,7 @@ FISH_TESTS_OBJS := $(FISH_OBJS) obj/fish_tests.o
 # All of the sources that produce object files
 # (that is, are not themselves #included in other source files)
 #
-FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) $(FISH_KEYREAD_OBJS) \
-                   obj/fish.o)
+FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) $(FISH_KEYREAD_OBJS) obj/fish.o)
 
 #
 # Files containing user documentation
@@ -208,28 +207,36 @@ endif
 #
 # Functions for status output
 #
-T_COLORS := $(shell tput colors 2> /dev/null)
-T_GREEN  := $(shell tput setaf 2 2> /dev/null)
-T_YELLOWB := $(shell tput setaf 3 2> /dev/null; tput setab 0 2> /dev/null)
-T_RED := $(shell tput setaf 1 2> /dev/null)
-T_BOLD := $(shell tput bold 2> /dev/null)
-# Dim: Doesn't work everywhere, so don't rely on the effect, but handy:
-T_DIM := $(shell tput dim 2> /dev/null)
-# Italic: Also doesn't work everywhere. It's quite common for it to work despite terminfo however.
-# There aren't any 256 color terminals (or 16..) it should outright break to assume the escapes.
+T_COLORS := $(shell tput colors || tput Co)
+T_GREEN  := $(shell tput setaf 2 || tput AF 2)
+# * Yellow on black - gets attention in any terminal color setting and no risk of loack of contrast.
+T_YELLOWB := $(shell tput setaf 14 || tput AF 14; tput setab 0 || tput AB 0)
+T_CYAN := $(shell tput setaf 3|| tput AF 3)
+
+T_RED := $(shell tput setaf 1 || tput AF 1)
+T_BOLD := $(shell tput bold || tput md)
+# * Italic: Also rarely defined -  it's more common for it to work despite
+# 		terminfo entries and isn't known to cause any recent > 256-color terminals
+# 		to explode. If terminfo says a terminal supports 256 colors - it's fancy enough
+# 		and won't have trouble the escape.
 ifeq ($(T_COLORS), 256)
-	T_ITALIC := "\\033[3m"
+	T_ITALIC := $(shell tput sitm || echo "\\033[3m")
 else
 	T_ITALIC := ""
 endif
-T_RESET := $(shell tput sgr0 2> /dev/null)
+
+T_RESET := $(shell tput sgr0 || tput me)
+
+# * Half-bright/faint 'dim' mode - rarely works - rarely in terminfo when it does - but it's cool.
+#   Use it with one of the basic colors to get a fainter version of it.
+T_DIM := $(shell tput dim || tput mh || [ ${TERM_PROGRAM} = Apple_Terminal ] && echo "\\033[2m")
 
 #
 # A target that prettily shows VAR='$(VAR)' (properly escaped)
 # Cool trick: `make show-$var` (e.g. make show-HAVE_DOXYGEN) to quickly see what $var is.
 #
 show-%:
-	@echo " $(T_DIM) \$$$*$ = $(T_BOLD)$(T_ITALIC)'$(subst ',''',$($*))'$(T_RESET)" ||:
+	@echo "  \$$$*$ = $(T_ITALIC)$(T_CYAN)'$(subst ',''',$($*))'$(T_RESET)" ||:
 
 #
 # Make everything needed for installing fish
@@ -237,7 +244,7 @@ show-%:
 all: show-CXX show-CXXFLAGS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
 	@echo $(MAKECMDGOALS) | grep -q install || \
 	echo "\n $(T_GREEN)fish has now been built.$(T_RESET)\n" \
-	"$(T_BOLD)Run $(T_RESET)$(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET)$(T_BOLD) to install fish.$(T_RESET)"; true
+	"$(T_BOLD)Run $(T_RESET)$(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET) to install fish.$(T_RESET)"; true
 .PHONY: all
 
 #
@@ -255,11 +262,11 @@ obj/fish_version.o: FISH-BUILD-VERSION-FILE
 # when the source code for the build configuration has changed.
 #
 configure: configure.ac
-	@echo "$(T_BOLD)Rehecking config.status; rerunning ./configure if necessary...$(T_RESET)"
+	@echo "Rechecking config.status; rerunning ./configure if necessary..."
 	$(v) ./config.status --recheck
 
 Makefile: Makefile.in configure
-	@echo "$(T_WHITE)Checking config.status...$(T_RESET)"
+	@echo "Checking config.status..."
 	$(v) ./config.status
 
 #
@@ -280,7 +287,7 @@ prof: all
 # directory once Doxygen is done.
 #
 doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter | show-SED
-	@echo "  doxygen  user_doc"
+	@echo $(T_DIM)"  doxygen  $(T_ITALIC)user_doc$(T_RESET)"
 	$(v)(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
 	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | \
 		doxygen - && touch user_doc
@@ -408,7 +415,7 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in
 lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED
 	$(v)rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
 # Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
-	@echo "  SED      "$@
+	@echo $(T_DIM)"  SED      "$(T_ITALIC)$@$(T_RESET)
 	$(v)$(SED) <command_list_toc.txt >>lexicon.tmp -n \
 		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
 		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt; \
@@ -438,7 +445,7 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 #
 lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 	$(v)rm -f $@.tmp $@
-	@echo "  SED      "$@
+	@echo $(T_DIM)"  SED      "$(T_ITALIC)$@$(T_RESET)
 # Set the shebang as sed can reside in multiple places.
 	$(v)$(SED) <$@.in >$@.tmp -e 's|@sed@|'$(SED)'|'
 # Scan through the lexicon, transforming each line to something useful to Doxygen.
@@ -493,14 +500,14 @@ doc.h: $(HDR_FILES)
 # Compile translation files to binary format
 #
 %.gmo:
-	@echo "  msgfmt   "$@
+	@echo $(T_DIM)"  msgfmt   "$(T_ITALIC)$@$(T_RESET)
 	$(v)msgfmt -o $@ $*.po
 
 #
 # Update existing po file or copy messages.pot
 #
 %.po:messages.pot
-	@echo "  msgmerge "$@
+	@echo $(T_DIM)"  msgmerge "$(T_ITALIC)$@$(T_RESET)
 	$(v)if test -f $*.po; then \
 		msgmerge -U --backup=existing $*.po messages.pot;\
 	else \
@@ -511,7 +518,7 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 messages.pot: src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish
-	@echo " xgettext "$@
+	@echo $(T_DIM)" xgettext "$(T_ITALIC)$@$(T_RESET)
 	$(v)xgettext -k_ -kN_ src/*.cpp src/*.h -o messages.pot
 	$(v)xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot
 
@@ -547,7 +554,7 @@ endif
 #
 share/man: $(HELP_SRC) lexicon_filter | show-FISH_BUILD_VERSION show-SED
 	-$(v)mkdir -p share/man
-	@echo "  doxygen  "$@
+	@echo $(T_DIM)"  doxygen  "$(T_ITALIC)$@$(T_RESET)
 	$(v)touch share/man
 	-$(v)rm -Rf share/man/man1
 	$(v)echo "$(T_DIM)" && \
@@ -562,28 +569,28 @@ check-legacy-binaries:
 	@echo "Checking for legacy binaries..."
 	$(v)KR_LOC=$(prefix)/bin/key_reader;\
 	if test -x "$$KR_LOC" && env TERM=dumb "$$KR_LOC" cr | grep -q 26; then\
-		echo "A key_reader binary was found. You might want to remove this, and use 'fish_key_reader':";\
-		echo "    '$$KR_LOC'";\
+		echo "$(T_RED)A key_reader binary was found. You might want to remove this, and use 'fish_key_reader':";\
+		echo "    '$$KR_LOC'$(T_RESET)";\
 	fi;
 	$(v)SEQLOC=$(prefix)/bin/seq;\
 	if test -f "$$SEQLOC" && grep -q '\(^#!/.*/fish\|^#!/usr/bin/env fish\)' "$$SEQLOC"; then\
-		echo "An outdated seq from a previous fish install was found. You should remove it with:";\
-		echo "    rm '$$SEQLOC'";\
+		echo "$(T_RED)An outdated seq from a previous fish install was found. You should remove it with:";\
+		echo "    rm '$$SEQLOC'$(T_RESET)";\
 	fi;
 	$(v)SETCOLOR_LOC=$(prefix)/bin/set_color;\
 	if test -x "$$SETCOLOR_LOC" && $$SETCOLOR_LOC -v 2>&1 >/dev/null | grep -q "^set_color, version "; then\
-		echo "An outdated set_color from a previous fish install was found. You should remove it with:";\
-		echo "    rm '$$SETCOLOR_LOC'";\
+		echo "$(T_RED)An outdated set_color from a previous fish install was found. You should remove it with:";\
+		echo "    rm '$$SETCOLOR_LOC'$(T_RESET)";\
 	fi;
 	$(v)MIMEDB_LOC=$(prefix)/bin/mimedb;\
 	if test -x "$$MIMEDB_LOC" && $$MIMEDB_LOC --version 2>&1 | grep -q "^mimedb, version "; then\
-		echo "An outdated mimedb binary from a previous fish install was found. You should remove it with:";\
-		echo "    rm '$$MIMEDB_LOC'";\
+		echo "$(T_RED)An outdated mimedb binary from a previous fish install was found. You should remove it with:";\
+		echo "    rm '$$MIMEDB_LOC'$(T_RESET)";\
 	fi;
 	$(v)FISHD_LOC=$(prefix)/bin/fishd;\
 	if test -x "$$FISHD_LOC" && $$FISHD_LOC --version 2>&1 | grep -q "^fishd: fishd, version "; then\
-		echo "An outdated fishd binary from a previous fish install was found. You should remove it with:";\
-		echo "    rm '$$FISHD_LOC'";\
+		echo "$(T_RED)An outdated fishd binary from a previous fish install was found. You should remove it with:";\
+		echo "    rm '$$FISHD_LOC'$(T_RESET)";\
 	fi;
 	$(v)true;
 .PHONY: check-legacy-binaries
@@ -607,7 +614,7 @@ install: all install-force | check-legacy-binaries
 	fi;
 	@echo "To set your colors, run $(T_GREEN)$(T_BOLD)fish_config$(T_RESET)"
 	@echo "To scan your man pages for completions, run $(T_GREEN)$(T_BOLD)fish_update_completions$(T_RESET)"
-	@echo "To accept autosuggestions (in $(T_BOLD)$(T_DIM)grey$(T_RESET)) as you type, hit $(T_BOLD)ctrl-F$(T_RESET) or right arrow key."
+	@echo "To accept autosuggestions (in $(T_DIM)grey$(T_RESET)) as you type, hit $(T_BOLD)ctrl-F$(T_RESET) or right arrow key."
 	@echo
 	@echo "$(T_BOLD)Have fun! <><$(T_RESET)"
 .PHONY: install
@@ -634,7 +641,6 @@ install-force: all install-translations
 		true ;\
 	done;
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
-	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/conf.d
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir) ||:
@@ -752,7 +758,7 @@ uninstall-translations:
 # How basic files get compiled
 #
 obj/%.o: src/%.cpp | obj
-	@echo "  CXX      "$@
+	@echo $(T_DIM)$(T_WHITE)"  CXX      "$(T_ITALIC)$@$(T_RESET)
 	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 #
@@ -765,11 +771,16 @@ obj:
 # Build the fish program.
 #
 fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$@
+	@echo "  CXXLD    "$(T_ITALIC)$@$(T_RESET)
 	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
 $(PCRE2_LIB): $(PCRE2_H)
-	$(v)$(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
+	@echo "  MAKE     "$(T_ITALIC)$@$(T_RESET)
+ifeq ($(V), 0 )
+	@$(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la > /dev/null
+else
+	$(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
+endif
 
 $(PCRE2_H):
 	$(v)(cd $(PCRE2_DIR) && ./config.status)
@@ -778,21 +789,21 @@ $(PCRE2_H):
 # Build the fish_tests program.
 #
 fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$@
+	@echo "  CXXLD    "$(T_ITALIC)$@$(T_RESET)
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_indent program.
 #
 fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$@
+	@echo "  CXXLD    "$(T_ITALIC)$@$(T_RESET)
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_key_reader program to show input from the terminal. 
 #
 fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$@
+	@echo "  CXXLD    "$(T_ITALIC)$@$(T_RESET)
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
 #
@@ -807,7 +818,7 @@ fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
 # behind.
 #
 depend:
-	@echo "$(T_BOLD)Running makedepend...$(T_RESET)"
+	@echo $(T_ITALIC)"Running makedepend..."$(T_RESET)
 	$(v)mkdir -p /tmp/fish_make_depend/src
 	$(v)cp src/*.cpp src/*.h /tmp/fish_make_depend/src
 	$(v)cp config.h /tmp/fish_make_depend/
@@ -818,7 +829,7 @@ depend:
 .PHONY: depend
 
 #
-# Lint the code. This only deals with C++ files.
+# Lint the code. This only deals with C++
 #
 lint:
 	$(v)build_tools/lint.fish $(CXX) $(CXXFLAGS) $(CPPFLAGS)
@@ -853,7 +864,7 @@ distclean: clean
 # them.
 #
 clean:
-	@echo "$(T_BOLD)Removing everything built by the Makefile...$(T_RESET)"
+	@echo "$(T_ITALIC)Removing everything built by the Makefile...$(T_RESET)"
 # PCRE's make clean has a few slightly annoying exceptions to the V= rule. If V=0
 # send all output to /dev/null - unless there's an error, in which case run it again not silenced.
 ifeq ($(V), 0 )

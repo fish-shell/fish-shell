@@ -221,7 +221,7 @@ ifeq ($(T_COLORS), 256)
 	T_ITALIC := $(shell ( tput sitm || tput ZH || echo "\\033[3m" ) 2> /dev/null )
 	# * Half-bright/faint 'dim' mode - rarely works - rarely in terminfo when it does - but it's cool.
 	#   Use it with one of the basic colors to get a fainter version of it.
-	T_DIM := $(shell ( tput dim || tput mh || [ ${TERM_PROGRAM} = Apple_Terminal ] && echo "\\033[2m") 2> /dev/null )
+	T_DIM := $(shell ( tput dim || tput mh || [ \'$(TERM_PROGRAM)\'' = Apple_Terminal ] && echo "\\033[2m") 2> /dev/null )
 else
 	T_ITALIC := ""
 	T_DIM := $(shell ( tput dim || tput mh) 2> /dev/null )
@@ -240,8 +240,8 @@ show-%:
 # Make everything needed for installing fish
 #
 all: show-CXX show-CXXFLAGS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
-	@echo $(MAKECMDGOALS) | grep -vq install && echo "$(T_GREEN)fish has now been built.$(T_RESET)"
-	@echo "Run $(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET) to install fish.$(T_RESET)" ||: true
+	@echo $(MAKECMDGOALS) | grep -vq install && echo "$(T_GREEN)fish has now been built.$(T_RESET)" ||:
+	@echo "Run $(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET) to install fish.$(T_RESET)" ||:
 .PHONY: all
 
 #

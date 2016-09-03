@@ -74,6 +74,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind $argv \cc __fish_cancel_commandline
     bind $argv \cu backward-kill-line
     bind $argv \cw backward-kill-path-component
+    bind $argv \e\[F end-of-line
+    bind $argv \e\[H beginning-of-line
+
     bind $argv \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
     bind $argv \cd delete-or-exit
 

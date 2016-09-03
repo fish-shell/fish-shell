@@ -33,9 +33,6 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv -k backspace backward-delete-char
 	bind $argv \x7f backward-delete-char
 
-	bind $argv \e\[H beginning-of-line
-	bind $argv \e\[F end-of-line
-
 	# for PuTTY
 	# https://github.com/fish-shell/fish-shell/issues/180
 	bind $argv \e\[1~ beginning-of-line

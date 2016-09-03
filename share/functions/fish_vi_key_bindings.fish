@@ -18,8 +18,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     set -q fish_escape_delay_ms; or set -g fish_escape_delay_ms 100
 
     set -l init_mode insert
-    set -l eol_keys \$ g\$ \e\[F
-    set -l bol_keys \^ 0 g\^ \e\[H
+    # These are only the special vi-style keys
+    # not end/home, we share those.
+    set -l eol_keys \$ g\$
+    set -l bol_keys \^ 0 g\^
     if set -q argv[1]
         set init_mode $argv[1]
     end

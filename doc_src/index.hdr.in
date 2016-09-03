@@ -1025,6 +1025,19 @@ You can change these key bindings using the <a href="commands.html#bind">bind</a
 
 Vi mode allows for the use of Vi-like commands at the prompt. Initially, <a href="#vi-mode-insert">insert mode</a> is active. @key{Escape} enters <a href="#vi-mode-command">command mode</a>. The commands available in command, insert and visual mode are described below. Vi mode shares <a href="#shared-binds">some bindings</a> with <a href="#emacs-mode">Emacs mode</a>.
 
+It is also possible to add all emacs-mode bindings to vi-mode by using something like
+
+\fish
+function fish_user_key_bindings
+    # Execute this once per mode that emacs bindings should be used in
+    fish_default_key_bindings -M insert
+    # Without an argument, fish_vi_key_bindings will default to
+    # resetting all bindings.
+    # The argument specifies the initial mode (insert, "default" or visual).
+    fish_vi_key_bindings insert
+end
+\endfish
+
 When in vi-mode, the <a href="fish_mode_prompt.html">`fish_mode_prompt`</a> function will display a mode indicator to the left of the prompt. The `fish_vi_cursor` function is available to change the cursor's shape depending on the mode in supported terminals.
 
 \subsubsection vi-mode-command Command mode

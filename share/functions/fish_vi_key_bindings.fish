@@ -1,6 +1,8 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Allow any argument to skip setting the variable.
     if not set -q argv[1]
+        # Only erase the bindings if called without argument to allow hybrid bindings.
+        bind --erase --all
         # Allow just calling this function to correctly set the bindings.
         # Because it's a rather discoverable name, users will execute it
         # and without this would then have subtly broken bindings.
@@ -22,13 +24,13 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # not end/home, we share those.
     set -l eol_keys \$ g\$
     set -l bol_keys \^ 0 g\^
-    if set -q argv[1]
+    # Ignore any argument that is not a valid mode name.
+    if set -q argv[1]; and contains -- $argv[1] insert default visual
         set init_mode $argv[1]
     end
 
     # Inherit shared key bindings.
     # Do this first so vi-bindings win over default.
-    bind --erase --all
     for mode in insert default visual
         __fish_shared_key_bindings -M $mode
     end

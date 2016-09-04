@@ -80,13 +80,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     bind k up-or-search
     bind j down-or-search
-    bind \e\[A up-or-search
-    bind \e\[B down-or-search
-    bind -k down down-or-search
-    bind -k up up-or-search
-    bind \eOA up-or-search
-    bind \eOB down-or-search
-
     bind b backward-word
     bind B backward-bigword
     bind ge backward-word

@@ -71,9 +71,6 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \ed forward-kill-word
 	bind \ed kill-word
 
-	# escape cancels stuff	
-	bind \e cancel
-
 	# Ignore some known-bad control sequences
 	# https://github.com/fish-shell/fish-shell/issues/1917
 	bind \e\[I 'begin;end'

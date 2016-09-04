@@ -37,8 +37,20 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     or set -g fish_cursor_unknown block blink
 
     echo "
-          function fish_vi_cursor_handle --on-variable fish_bind_mode
+          function fish_vi_cursor_handle --on-variable fish_bind_mode --on-event fish_postexec
               set -l varname fish_cursor_\$fish_bind_mode
+              if not set -q \$varname
+                set varname fish_cursor_unknown
+              end
+              $tmux_prefix
+              $function \$\$varname
+              $tmux_postfix
+          end
+         " | source
+
+    echo "
+          function fish_vi_cursor_handle_preexec --on-event fish_preexec
+              set -l varname fish_cursor_default
               if not set -q \$varname
                 set varname fish_cursor_unknown
               end

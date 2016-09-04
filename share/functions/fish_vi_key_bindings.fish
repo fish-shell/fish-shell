@@ -1,19 +1,25 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
-    # Allow any argument to skip setting the variable.
-    if not set -q argv[1]
-        # Only erase the bindings if called without argument to allow hybrid bindings.
+    # Erase all bindings if not explicitly requested otherwise to
+    # allow for hybrid bindings.
+    # This needs to be checked here because if we are called again
+    # via the variable handler the argument will be gone.
+    if not contains -- $argv[1] --no-erase
         bind --erase --all
-        # Allow just calling this function to correctly set the bindings.
-        # Because it's a rather discoverable name, users will execute it
-        # and without this would then have subtly broken bindings.
-        if test "$fish_key_bindings" != "fish_vi_key_bindings"
-            # Allow the user to set the variable universally
-            set -q fish_key_bindings
-            or set -g fish_key_bindings
-            set fish_key_bindings fish_vi_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
-            return
-        end
+    else if set -q argv[1]
+        set -e argv[1]
     end
+
+    # Allow just calling this function to correctly set the bindings.
+    # Because it's a rather discoverable name, users will execute it
+    # and without this would then have subtly broken bindings.
+    if test "$fish_key_bindings" != "fish_vi_key_bindings"
+        # Allow the user to set the variable universally
+        set -q fish_key_bindings
+        or set -g fish_key_bindings
+        set fish_key_bindings fish_vi_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
+        return
+    end
+
     # The default escape timeout is 300ms. But for users of Vi bindings that can be slightly
     # annoying when trying to switch to Vi "normal" mode. So set a shorter timeout in this case
     # unless the user has explicitly set the delay.
@@ -24,9 +30,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # not end/home, we share those.
     set -l eol_keys \$ g\$
     set -l bol_keys \^ 0 g\^
-    # Ignore any argument that is not a valid mode name.
-    if set -q argv[1]; and contains -- $argv[1] insert default visual
+
+    if contains -- $argv[1] insert default visual
         set init_mode $argv[1]
+    else if set -q argv[1]
+        # We should still go on so the bindings still get set.
+        echo "Unknown argument $argv" >&2
     end
 
     # Inherit shared key bindings.

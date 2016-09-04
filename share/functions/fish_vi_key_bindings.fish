@@ -226,10 +226,16 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -M visual -m default \cc end-selection force-repaint
     bind -M visual -m default \e end-selection force-repaint
 
-    set fish_bind_mode $init_mode
-
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also, remove
     # the commenting chars so the command can be further edited then executed.
     bind -M default \# __fish_toggle_comment_commandline
     bind -M visual \# __fish_toggle_comment_commandline
+
+    # Set the cursor shape
+    # After executing once, this will have defined functions listening for the variable.
+    # Therefore it needs to be before setting fish_bind_mode.
+    fish_vi_cursor
+
+    set fish_bind_mode $init_mode
+
 end

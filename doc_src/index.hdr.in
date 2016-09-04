@@ -1038,7 +1038,7 @@ function fish_user_key_bindings
 end
 \endfish
 
-When in vi-mode, the <a href="fish_mode_prompt.html">`fish_mode_prompt`</a> function will display a mode indicator to the left of the prompt. The `fish_vi_cursor` function is available to change the cursor's shape depending on the mode in supported terminals.
+When in vi-mode, the <a href="fish_mode_prompt.html">`fish_mode_prompt`</a> function will display a mode indicator to the left of the prompt. The `fish_vi_cursor` function will be used to change the cursor's shape depending on the mode in supported terminals. To disable this feature, override it with an empty function.
 
 \subsubsection vi-mode-command Command mode
 

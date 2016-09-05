@@ -1,4 +1,11 @@
 function fish_vi_cursor -d 'Set cursor shape for different vi modes'
+    # Since we read exported variables (KONSOLE_PROFILE_NAME and ITERM_PROFILE)
+    # we need to check harder if we're actually in a supported terminal,
+    # because we might be in a term-in-a-term (emacs ansi-term).
+    if not contains -- $TERM xterm konsole xterm-256color konsole-256color
+        and not set -q TMUX
+        return
+    end
     set -l terminal $argv[1]
     set -q terminal[1]
     or set terminal auto

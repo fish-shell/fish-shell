@@ -205,14 +205,15 @@ else
   share_man=
 endif
 
+T_COLORS:=$(shell tput colors || echo 0 2> /dev/null)
 #
 # Functions for status output
 #
-T_GREEN  := $(shell ( tput setaf 2 || tput AF ) 2> /dev/null )
-T_YELLOWB := $(shell ( tput setaf 11 || tput AF 11 ) 2> /dev/null; ( tput setab 0 || tput AB 0) 2> /dev/null ) 
-T_CYAN := $(shell ( tput setaf 14 || tput AF 14 ) 2> /dev/null )
-T_RED := $(shell ( tput setaf 1 || tput AF 1) 2> /dev/null )
-T_BOLD := $(shell ( tput bold || tput md) 2> /dev/null )
+T_GREEN  := $(shell ( tput setaf 2 || tput AF 2 ) 2> /dev/null )
+T_YELLOWB := $(shell ( tput setaf 3 || tput AF 3 ) 2> /dev/null )
+T_CYAN := $(shell ( tput setaf 6 || tput AF 6 ) 2> /dev/null )
+T_RED := $(shell ( tput setaf 1 || tput AF 1 ) 2> /dev/null )
+T_BOLD := $(shell ( tput bold || tput md ) 2> /dev/null )
 # * Italic: Rarely defined -  it's common for it to work despite
 # 		terminfo entries and isn't known to cause any recent > 256-color terminals
 # 		to explode. If terminfo says a terminal supports 256 colors - it's fancy enough
@@ -223,7 +224,7 @@ ifeq ($(T_COLORS), 256)
 	#   Use it with one of the basic colors to get a fainter version of it.
 	T_DIM := $(shell ( tput dim || tput mh || [ $(TERM_PROGRAM) = Apple_Terminal ] && echo "\\033[2m") 2> /dev/null )
 else
-	T_ITALIC := ""
+	T_ITALIC := $(shell ( tput sitm || tput ZH ) 2> /dev/null )
 	T_DIM := $(shell ( tput dim || tput mh) 2> /dev/null )
 endif
 
@@ -234,7 +235,7 @@ T_RESET := $(shell ( tput sgr0 || tput me) 2> /dev/null )
 # Cool trick: `make show-$var` (e.g. make show-HAVE_DOXYGEN) to quickly see what $var is.
 #
 show-%:
-	@echo "  \$$$*$ = $(T_ITALIC)$(T_CYAN)'$(subst ',''',$($*))'$(T_RESET)" ||:
+	@echo "  $* = $(T_ITALIC)$(T_CYAN)'$(subst ',''',$($*))'$(T_RESET)" ||:
 
 #
 # Make everything needed for installing fish
@@ -259,12 +260,14 @@ obj/fish_version.o: FISH-BUILD-VERSION-FILE
 # when the source code for the build configuration has changed.
 #
 configure: configure.ac
-	@echo "Rechecking config.status; rerunning ./configure if necessary..."
+	@echo "Rechecking config.status; rerunning ./configure if necessary..."$(T_DIM)
 	$(v) ./config.status --recheck
+	@echo $(T_RESET)
 
 Makefile: Makefile.in configure
-	@echo "Checking config.status..."
+	@echo "Checking config.status..."$(T_DIM)
 	$(v) ./config.status
+	@echo $(T_RESET)
 
 #
 # Build fish with some debug flags specified. This is GCC specific,
@@ -284,7 +287,7 @@ prof: all
 # directory once Doxygen is done.
 #
 doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter | show-SED
-	@echo "$(T_DIM)  doxygen  $(T_ITALIC)user_doc$(T_RESET)"
+	@echo "  doxygen  $(T_ITALIC)user_doc$(T_RESET)"
 	$(v)(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
 	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | \
 		doxygen - && touch user_doc
@@ -412,7 +415,7 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in
 lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED
 	$(v)rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
 # Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
-	@echo "$(T_DIM)  SED      $(T_ITALIC)$@$(T_RESET)"
+	@echo "  SED      $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(SED) <command_list_toc.txt >>lexicon.tmp -n \
 		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
 		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt; \
@@ -442,7 +445,7 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 #
 lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 	$(v)rm -f $@.tmp $@
-	@echo "$(T_DIM)  SED      $(T_ITALIC)$@$(T_RESET)"
+	@echo "  SED      $(T_ITALIC)$@$(T_RESET)"
 # Set the shebang as sed can reside in multiple places.
 	$(v)$(SED) <$@.in >$@.tmp -e 's|@sed@|'$(SED)'|'
 # Scan through the lexicon, transforming each line to something useful to Doxygen.
@@ -497,14 +500,14 @@ doc.h: $(HDR_FILES)
 # Compile translation files to binary format
 #
 %.gmo:
-	@echo "$(T_DIM)  msgfmt   $(T_ITALIC)$@$(T_RESET)"
+	@echo "  msgfmt   $(T_ITALIC)$@$(T_RESET)"
 	$(v)msgfmt -o $@ $*.po
 
 #
 # Update existing po file or copy messages.pot
 #
 %.po:messages.pot
-	@echo "$(T_DIM)  msgmerge $(T_ITALIC)$@$(T_RESET)"
+	@echo "  msgmerge $(T_ITALIC)$@$(T_RESET)"
 	$(v)if test -f $*.po; then \
 		msgmerge -U --backup=existing $*.po messages.pot;\
 	else \
@@ -515,7 +518,7 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 messages.pot: src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish
-	@echo "$(T_DIM) xgettext $(T_ITALIC)$@$(T_RESET)"
+	@echo " xgettext $(T_ITALIC)$@$(T_RESET)"
 	$(v)xgettext -k_ -kN_ src/*.cpp src/*.h -o messages.pot
 	$(v)xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot
 
@@ -551,7 +554,7 @@ endif
 #
 share/man: $(HELP_SRC) lexicon_filter | show-FISH_BUILD_VERSION show-SED
 	-$(v)mkdir -p share/man
-	@echo "$(T_DIM)  doxygen  $(T_ITALIC)$@$(T_RESET)"
+	@echo "  doxygen  $(T_ITALIC)$@$(T_RESET)"
 	$(v)touch share/man
 	-$(v)rm -Rf share/man/man1
 	$(v)echo "$(T_DIM)" && \
@@ -756,7 +759,7 @@ uninstall-translations:
 # How basic files get compiled
 #
 obj/%.o: src/%.cpp | obj
-	@echo "$(T_DIM)  CXX      $(T_ITALIC)$@$(T_RESET)"
+	@echo "  CXX      $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 #
@@ -774,11 +777,7 @@ fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2)
 
 $(PCRE2_LIB): $(PCRE2_H)
 	@echo "  MAKE     $(T_ITALIC)$@$(T_RESET)"
-ifeq ($(V), 0 )
-	@$(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la > /dev/null
-else
-	$(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
-endif
+	@$(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
 
 $(PCRE2_H):
 	$(v)(cd $(PCRE2_DIR) && ./config.status)
@@ -862,7 +861,7 @@ distclean: clean
 # them.
 #
 clean:
-	@echo "$(T_ITALIC)Removing everything built by the Makefile...$(T_RESET)"
+	@echo "$(T_BOLD)Removing everything built by the Makefile...$(T_RESET)"
 # PCRE's make clean has a few slightly annoying exceptions to the V= rule. If V=0
 # send all output to /dev/null - unless there's an error, in which case run it again not silenced.
 ifeq ($(V), 0 )
@@ -994,9 +993,9 @@ obj/fish_indent.o: src/input.h src/output.h src/parse_constants.h
 obj/fish_indent.o: src/parse_tree.h src/tokenizer.h src/print_help.h
 obj/fish_indent.o: src/wutil.h
 obj/fish_key_reader.o: config.h src/signal.h src/common.h src/fallback.h
-obj/fish_key_reader.o: src/env.h src/input.h src/input_common.h src/proc.h
-obj/fish_key_reader.o: src/io.h src/parse_tree.h src/parse_constants.h
-obj/fish_key_reader.o: src/tokenizer.h src/print_help.h src/reader.h
+obj/fish_key_reader.o: src/env.h src/input.h src/input_common.h
+obj/fish_key_reader.o: src/print_help.h src/proc.h src/io.h src/parse_tree.h
+obj/fish_key_reader.o: src/parse_constants.h src/tokenizer.h src/reader.h
 obj/fish_key_reader.o: src/complete.h src/highlight.h src/color.h src/wutil.h
 obj/fish_tests.o: config.h src/signal.h src/builtin.h src/common.h
 obj/fish_tests.o: src/fallback.h src/color.h src/complete.h src/env.h
@@ -1020,10 +1019,10 @@ obj/highlight.o: src/highlight.h src/history.h src/wutil.h src/output.h
 obj/highlight.o: src/parse_tree.h src/tokenizer.h src/parse_util.h src/path.h
 obj/highlight.o: src/wildcard.h src/complete.h
 obj/history.o: config.h src/common.h src/fallback.h src/signal.h src/env.h
-obj/history.o: src/history.h src/wutil.h src/iothread.h src/lru.h
+obj/history.o: src/history.h src/wutil.h src/io.h src/iothread.h src/lru.h
 obj/history.o: src/parse_constants.h src/parse_tree.h src/tokenizer.h
 obj/history.o: src/path.h src/reader.h src/complete.h src/highlight.h
-obj/history.o: src/color.h src/sanity.h
+obj/history.o: src/color.h
 obj/input.o: config.h src/common.h src/fallback.h src/signal.h src/env.h
 obj/input.o: src/event.h src/input.h src/input_common.h src/io.h src/output.h
 obj/input.o: src/color.h src/parser.h src/expand.h src/parse_constants.h

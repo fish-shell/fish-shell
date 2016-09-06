@@ -9,7 +9,9 @@ function dirh --description "Print the current directory history (the prev and n
 
     set -l dirc (count $dirprev)
     set -l dirprev_rev $dirprev[-1..1]
-    for i in (seq $dirc -1 1)
+    # This can't be (seq $dirc -1 1) because of BSD.
+    set -l dirnum (seq 1 $dirc)
+    for i in $dirnum[-1..1]
         printf '%2d) %s\n' $i $dirprev_rev[$i]
     end
 

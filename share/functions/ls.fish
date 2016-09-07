@@ -21,8 +21,7 @@ if command ls --version 1>/dev/null 2>/dev/null
 					break
 				end
 			end
-			echo $colorfile
-			eval (dircolors -c $colorfile | sed 's/>&\/dev\/null$//')
+			set -gx LS_COLORS (dircolors -c $colorfile | string replace -r 'setenv LS_COLORS \'(.*)\'' '$1')
 		end
 	end
 

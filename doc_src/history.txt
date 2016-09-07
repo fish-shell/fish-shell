@@ -34,7 +34,7 @@ The following options are available:
 
 - `-p` or `--prefix` searches or deletes items in the history that begin with the specified text string. This is not currently supported by the `--delete` flag.
 
-- `-t` or `--with-time` outputs the date and time history items were recorded at before each history entry, formatted for the configured locale. See environ(7) for more information.
+- `-t` or `--with-time` outputs the date and time ("%Y-%m-%d %H:%M:%S") history items were recorded at on a line starting with "#" before each history entry. 
 
 \subsection history-examples Example
 

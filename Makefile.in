@@ -633,20 +633,20 @@ xcode-install:
 # from failing for (e.g.) missing man pages or extra_dirs outside the
 # writeable prefix.
 #
-install-force: all install-translations
-	@echo
+install-force: all install-translations | show-datadir show-sysconfdir show-extra_completionsdir show-extra_functionsdir show-extra_confdir show-mandir
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 	$(v)for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir);\
 		echo " Installing $(T_BOLD)$$i$(T_RESET)";\
 		true ;\
 	done;
+	@echo "Creating sysconfdir tree"
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
+	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/conf.d
+	$(v)$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
+	@echo "Creating datadir tree"
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
-	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir) ||:
-	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir) ||:
-	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir) ||:
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
@@ -654,27 +654,31 @@ install-force: all install-translations
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/js
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/partials
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts
-	$(v)$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
 	$(v)$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
 	$(v)$(INSTALL) -m 644 share/__fish_build_paths.fish    $(DESTDIR)$(datadir)/fish/
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/pkgconfig
+	@echo "Creating empty vendor/'extra_' directories"
+	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir) ||:
+	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir) ||:
+	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir) ||:
+	@echo "Installing pkgconfig file"
 	$(v)$(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
-	@echo " Installing completions...";
+	@echo "Installing the $(T_BOLD)fish completion libraryn$(T_RESET)...";
 	$(v)for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 		true; \
 	done;
-	@echo " Installing functions...";
+	@echo "Installing $(T_BOLD)fish functions$(T_RESET)";
 	$(v)for i in $(FUNCTIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
 		true; \
 	done;
-	@echo " Installing man pages...";
+	@echo "Installing $(T_BOLD)man pages$(T_RESET)";
 	$(v)for i in share/man/man1/*.1; do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
 		true; \
 	done;
-	@echo " Installing tools...";
+	@echo "Installing $(T_BOLD)fish tools$(T_RESET)";
 	$(v)for i in share/tools/*.py; do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/; \
 		true; \
@@ -699,14 +703,14 @@ install-force: all install-translations
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
 		true; \
 	done;
-	@echo " Installing user documentation...";
+	@echo "Installing HTML documentation";
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	$(v) for i in user_doc/html/* CHANGELOG.md; do \
 		if test -f $$i; then \
 			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
 		fi; \
 	done;
-	@echo " Installing main man pages...";
+	@echo "Installing more man pages";
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;
 	$(v) for i in $(MANUALS); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
@@ -717,24 +721,58 @@ install-force: all install-translations
 #
 # Uninstall this fish version
 #
-uninstall: uninstall-translations
-	@echo "Uninstalling translations..."
-	-$(v) for i in $(PROGRAMS); do \
+uninstall: uninstall-translations | show-prefix show-bindir show-sysconfdir show-datadir show-docdir show-mandir
+	@echo
+	@echo "$(T_BOLD)$(T_YELLOWB)Uninstalling fish$(T_RESET) from configured \$$prefix: $(T_BOLD)$(prefix)$(T_RESET)"
+	@echo
+	@echo "Deleting programs: [ $(T_BOLD)$(PROGRAMS)$(T_RESET) ] in $(T_ITALIC)$(bindir)$(T_RESET)"
+	-$(v)for i in $(PROGRAMS); do \
 		rm -f $(DESTDIR)$(bindir)/$$i; \
 	done;
-	-$(v) rm -rf $(DESTDIR)$(sysconfdir)/fish
+	@echo "Deleting configuration: $(T_BOLD)$(DESTDIR)$(sysconfdir)/fish/*$(T_RESET)"
+	-$(v)rm -rf $(DESTDIR)$(sysconfdir)/fish
+	@echo
+	@echo "In 5 seconds, $(T_RED)all data$(T_RESET) (includes functions, completions, tools) in"
+	@echo $$"\t$(T_BOLD)$(DESTDIR)$(datadir)/fish$(T_RESET) will be deleted!"
+	@echo 
+	@echo $$"If you put things there, $(T_RED)stop now!$(T_RESET) $(T_BOLD)\\c"
+	@echo $$"$(T_BOLD)5$(T_RESET) \\c"
+	@sleep 1
+	@echo $$"$(T_BOLD)4$(T_RESET) \\c"
+	@sleep 1
+	@echo $$"$(T_BOLD)3$(T_RESET) \\c"
+	@sleep 1
+	@echo $$"$(T_BOLD)2$(T_RESET) \\c"
+	@sleep 1
+	@echo $$"$(T_BOLD)1$(T_RESET) \\c"
+	@sleep 1
+	@echo ...
+	@sleep 2
+	@echo "... deleting $(T_BOLD)$(DESTDIR)$(datadir)/fish/*$(T_RESET)"
 	-$(v) if test -d $(DESTDIR)$(datadir)/fish; then \
-		rm -r $(DESTDIR)$(datadir)/fish; \
+		rm -rf $(DESTDIR)$(datadir)/fish; \
 	fi
+	@echo
+	@echo "Deleting documentation: $(T_BOLD)$(DESTDIR)$(docdir)/*$(T_RESET)"
 	-$(v) if test -d $(DESTDIR)$(docdir); then \
 		rm -rf $(DESTDIR)$(docdir);\
 	fi
+	@echo
+	@echo "Deleting pkgconfig file: $(T_BOLD)$(DESTDIR)$(datadir)/pkgconfig/fish.pc$(T_RESET)"
 	-$(v) if test -f $(DESTDIR)$(datadir)/pkgconfig/fish.pc; then \
 		rm -f $(DESTDIR)$(datadir)/pkgconfig/fish.pc;\
 	fi
+	@echo
+	@echo $$"Deleting \\c"
+	@echo "[ $(T_BOLD)"`basename $(MANUALS)`$(T_RESET) $$"] in \\c"
+	@echo "$(T_ITALIC)$(mandir)/man1$(T_RESET)"
 	-$(v) for i in $(MANUALS); do \
 		rm -rf $(DESTDIR)$(mandir)/man1/`basename $$i`*; \
 	done;
+	@echo
+	@echo "$(T_GREEN)Fish (likely) unintalled$(T_RESET)"
+	@echo
+	@echo "$(T_BOLD)./configure --prefix=$(T_RESET) to uninstall fish from a different prefix"
 .PHONY: uninstall
 
 install-translations: $(TRANSLATIONS)

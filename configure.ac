@@ -11,9 +11,7 @@
 m4_syscmd([build_tools/git_version_gen.sh 2>/dev/null])
 
 AC_PREREQ([2.68])
-AC_INIT(fish,
-        m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),
-        fish-users@lists.sourceforge.net)
+AC_INIT([fish], m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),[fish-users@lists.sourceforge.net])
 
 # fish does not use exceptions
 # Disabling exceptions saves about 20% (!) of the compiled code size

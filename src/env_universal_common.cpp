@@ -621,9 +621,10 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
                 continue;
             }
 #ifdef O_EXLOCK
-            else if (err == EOPNOTSUPP) {
+            else if (err == ENOTSUP || err == EOPNOTSUPP) {
                 // Filesystem probably does not support locking. Clear the flag and try again. Note
-                // that we try taking the lock via flock anyways.
+                // that we try taking the lock via flock anyways. Note that on Linux the two errno
+                // symbols have the same value but on BSD they're different.
                 flags &= ~O_EXLOCK;
                 needs_lock = true;
                 continue;

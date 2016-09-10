@@ -59,8 +59,6 @@ int wmkdir(const wcstring &dir, int mode);
 
 int wrename(const wcstring &oldName, const wcstring &newName);
 
-int fish_wcstoi(const wchar_t *str, wchar_t **endptr, int base);
-
 /// Class for representing a file's inode. We use this to detect and avoid symlink loops, among
 /// other things. While an inode / dev pair is sufficient to distinguish co-existing files, Linux
 /// seems to aggressively re-use inodes, so it cannot determine if a file has been deleted (ABA

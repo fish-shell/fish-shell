@@ -90,8 +90,9 @@ bool builtin_data_t::operator<(const builtin_data_t *other) const {
 ///
 int builtin_count_args(const wchar_t *const *argv) {
     int argc;
-    for (argc = 1; argv[argc] != NULL; argc++)
-        ;
+    for (argc = 1; argv[argc] != NULL;){
+        argc++;
+    }
 
     assert(argv[argc] == NULL);
     return argc;

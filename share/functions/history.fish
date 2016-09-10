@@ -63,7 +63,7 @@ function history --description "display or manipulate interactive command histor
         case delete # Interactively delete history
             # TODO: Fix this to deal with history entries that have multiple lines.
             if not set -q argv[1]
-                printf (_ "You must specify at least one search term when deleting entries") >&2
+                printf (_ "You must specify at least one search term when deleting entries\n") >&2
                 return 1
             end
 
@@ -118,9 +118,19 @@ function history --description "display or manipulate interactive command histor
             end
 
         case save
+            if test -n "$search_mode"
+                or test -n "$with_time"
+                printf (_ "history: you cannot use any options with %s command\n") save >&2
+                return 1
+            end
             builtin history --save -- $argv
 
         case merge
+            if test -n "$search_mode"
+                or test -n "$with_time"
+                printf (_ "history: you cannot use any options with %s command\n") merge >&2
+                return 1
+            end
             builtin history --merge -- $argv
 
         case help
@@ -128,11 +138,19 @@ function history --description "display or manipulate interactive command histor
 
         case clear
             # Erase the entire history.
-            read --local --prompt "echo 'Are you sure you want to clear history? (y/n) '" choice
-            if test "$choice" = "y"
-                or test "$choice" = "yes"
+            if test -n "$search_mode"
+                or test -n "$with_time"
+                printf (_ "history: you cannot use any options with %s command\n") clear >&2
+                return 1
+            end
+
+            printf (_ "If you enter 'yes' your entire interactive command history will be erased\n")
+            read --local --prompt "echo 'Are you sure you want to clear history? (yes/no) '" choice
+            if test "$choice" = "yes"
                 builtin history --clear -- $argv
-                and echo "History cleared!"
+                and printf (_ "Command history cleared!")
+            else
+                printf (_ "You did not say 'yes' so I will not clear your command history\n")
             end
     end
 end

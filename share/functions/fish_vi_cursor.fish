@@ -1,4 +1,11 @@
 function fish_vi_cursor -d 'Set cursor shape for different vi modes'
+    # Since we read exported variables (KONSOLE_PROFILE_NAME and ITERM_PROFILE)
+    # we need to check harder if we're actually in a supported terminal,
+    # because we might be in a term-in-a-term (emacs ansi-term).
+    if not contains -- $TERM xterm konsole xterm-256color konsole-256color
+        and not set -q TMUX
+        return
+    end
     set -l terminal $argv[1]
     set -q terminal[1]
     or set terminal auto
@@ -37,8 +44,20 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     or set -g fish_cursor_unknown block blink
 
     echo "
-          function fish_vi_cursor_handle --on-variable fish_bind_mode
+          function fish_vi_cursor_handle --on-variable fish_bind_mode --on-event fish_postexec
               set -l varname fish_cursor_\$fish_bind_mode
+              if not set -q \$varname
+                set varname fish_cursor_unknown
+              end
+              $tmux_prefix
+              $function \$\$varname
+              $tmux_postfix
+          end
+         " | source
+
+    echo "
+          function fish_vi_cursor_handle_preexec --on-event fish_preexec
+              set -l varname fish_cursor_default
               if not set -q \$varname
                 set varname fish_cursor_unknown
               end

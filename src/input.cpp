@@ -216,7 +216,10 @@ wcstring input_get_bind_mode() {
 
 /// Set the current bind mode.
 void input_set_bind_mode(const wcstring &bm) {
-    env_set(FISH_BIND_MODE_VAR, bm.c_str(), ENV_GLOBAL);
+    // Only set this if it differs to not execute variable handlers all the time.
+    if (input_get_bind_mode() != bm.c_str()) {
+        env_set(FISH_BIND_MODE_VAR, bm.c_str(), ENV_GLOBAL);
+    }
 }
 
 /// Returns the arity of a given input function.

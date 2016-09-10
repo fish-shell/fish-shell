@@ -1,0 +1,7 @@
+history: you cannot use any options with clear command
+history: you cannot use any options with merge command
+history: save command expected 0 args, got 1
+history: you cannot use any options with save command
+history: you cannot use any options with clear command
+history: merge command expected 0 args, got 1
+history: clear command expected 0 args, got 2

@@ -514,7 +514,7 @@ void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status) {
     event.arguments.resize(0);
 }
 
-int job_reap(bool interactive) {
+int job_reap(bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
     job_t *jnext;
     int found = 0;
@@ -526,6 +526,10 @@ int job_reap(bool interactive) {
         return 0;
     }
     locked = true;
+
+    // this may be invoked in an exit handler, after the TERM has been torn down
+    // don't try to print in that case (#3222)
+    const bool interactive = allow_interactive && cur_term != NULL;
 
     process_mark_finished_children(false);
 

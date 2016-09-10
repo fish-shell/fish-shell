@@ -1,18 +1,18 @@
 
 function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fish"
 	if not set -q argv[1]
+		# Clear earlier bindings, if any
+		bind --erase --all
 		if test "$fish_key_bindings" != "fish_default_key_bindings"
 			# Allow the user to set the variable universally
 			set -q fish_key_bindings; or set -g fish_key_bindings
 			set fish_key_bindings fish_default_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
 			return
 		end
-		# Clear earlier bindings, if any
-		bind --erase --all
 	end
 
     # These are shell-specific bindings that we share with vi mode.
-    __fish_shared_key_bindings
+    __fish_shared_key_bindings $argv
 
 	# This is the default binding, i.e. the one used if no other binding matches
 	bind $argv "" self-insert
@@ -32,9 +32,6 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv -k dc delete-char
 	bind $argv -k backspace backward-delete-char
 	bind $argv \x7f backward-delete-char
-
-	bind $argv \e\[H beginning-of-line
-	bind $argv \e\[F end-of-line
 
 	# for PuTTY
 	# https://github.com/fish-shell/fish-shell/issues/180
@@ -73,9 +70,6 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 
 	bind \ed forward-kill-word
 	bind \ed kill-word
-
-	# escape cancels stuff	
-	bind \e cancel
 
 	# Ignore some known-bad control sequences
 	# https://github.com/fish-shell/fish-shell/issues/1917

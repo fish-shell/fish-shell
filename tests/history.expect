@@ -78,7 +78,7 @@ expect_prompt -re {\r\necho start1.*\r\necho start2} {
 # ==========
 # Verify implicit searching with a request for timestamps includes the timestamps.
 send "history -t echo start\r"
-expect_prompt -re {\r\n\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d  echo start1; builtin history;.*\r\n\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d  echo start2; builtin history} {
+expect_prompt -re {\r\n# \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\r\necho start1; builtin history;.*\r\n# \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\r\necho start2; builtin history} {
     puts "history function implicit search with timestamps succeeded"
 } unmatched {
     puts stderr "history function implicit search with timestamps failed"

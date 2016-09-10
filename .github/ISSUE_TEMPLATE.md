@@ -9,14 +9,13 @@
 Talk about the the issue here. 
 
 ## Reproduction steps
-Hard to explain? Link to [a screen recording](https://asciinema.org)
-
-1. Launch fish
+1. step one
 2. …
 
-## Expected results
-Fish should…
+<!-- Hard to explain? Post a screen recording on asciinema.org then link it here -->
 
-## Actual results
-	~ $ math 2 + 2
-	5
+## Results
+```console
+~ $ math 2 + 2
+5
+```

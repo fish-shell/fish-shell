@@ -127,7 +127,7 @@ FISH_TESTS_OBJS := $(FISH_OBJS) obj/fish_tests.o
 # (that is, are not themselves #included in other source files)
 #
 FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) $(FISH_KEYREAD_OBJS) \
-                   obj/fish.o)
+	obj/fish.o)
 
 #
 # Files containing user documentation
@@ -205,39 +205,44 @@ else
   share_man=
 endif
 
+T_COLORS:=$(shell tput colors || echo 0 2> /dev/null)
 #
 # Functions for status output
 #
-T_COLORS := $(shell tput colors 2> /dev/null)
-T_GREEN  := $(shell tput setaf 2 2> /dev/null)
-T_YELLOWB := $(shell tput setaf 3 2> /dev/null; tput setab 0 2> /dev/null)
-T_RED := $(shell tput setaf 1 2> /dev/null)
-T_BOLD := $(shell tput bold 2> /dev/null)
-# Dim: Doesn't work everywhere, so don't rely on the effect, but handy:
-T_DIM := $(shell tput dim 2> /dev/null)
-# Italic: Also doesn't work everywhere. It's quite common for it to work despite terminfo however.
-# There aren't any 256 color terminals (or 16..) it should outright break to assume the escapes.
+T_GREEN  := $(shell ( tput setaf 2 || tput AF 2 ) 2> /dev/null )
+T_YELLOWB := $(shell ( tput setaf 3 || tput AF 3 ) 2> /dev/null )
+T_CYAN := $(shell ( tput setaf 6 || tput AF 6 ) 2> /dev/null )
+T_RED := $(shell ( tput setaf 1 || tput AF 1 ) 2> /dev/null )
+T_BOLD := $(shell ( tput bold || tput md ) 2> /dev/null )
+# * Italic: Rarely defined -  it's common for it to work despite
+# 		terminfo entries and isn't known to cause any recent > 256-color terminals
+# 		to explode. If terminfo says a terminal supports 256 colors - it's fancy enough
+# 		and won't have trouble the escape.
 ifeq ($(T_COLORS), 256)
-	T_ITALIC := "\\033[3m"
+	T_ITALIC := $(shell ( tput sitm || tput ZH || echo "\\033[3m" ) 2> /dev/null )
+	# * Half-bright/faint 'dim' mode - rarely works - rarely in terminfo when it does - but it's cool.
+	#   Use it with one of the basic colors to get a fainter version of it.
+	T_DIM := $(shell ( tput dim || tput mh || [ $(TERM_PROGRAM) = Apple_Terminal ] && echo "\\033[2m") 2> /dev/null )
 else
-	T_ITALIC := ""
+	T_ITALIC := $(shell ( tput sitm || tput ZH ) 2> /dev/null )
+	T_DIM := $(shell ( tput dim || tput mh) 2> /dev/null )
 endif
-T_RESET := $(shell tput sgr0 2> /dev/null)
+
+T_RESET := $(shell ( tput sgr0 || tput me) 2> /dev/null )
 
 #
 # A target that prettily shows VAR='$(VAR)' (properly escaped)
 # Cool trick: `make show-$var` (e.g. make show-HAVE_DOXYGEN) to quickly see what $var is.
 #
 show-%:
-	@echo " $(T_DIM) \$$$*$ = $(T_BOLD)$(T_ITALIC)'$(subst ',''',$($*))'$(T_RESET)" ||:
+	@echo "  $* = $(T_ITALIC)$(T_CYAN)'$(subst ',''',$($*))'$(T_RESET)" ||:
 
 #
 # Make everything needed for installing fish
 #
 all: show-CXX show-CXXFLAGS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
-	@echo $(MAKECMDGOALS) | grep -q install || \
-	echo "\n $(T_GREEN)fish has now been built.$(T_RESET)\n" \
-	"$(T_BOLD)Run $(T_RESET)$(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET)$(T_BOLD) to install fish.$(T_RESET)"; true
+	@echo $(MAKECMDGOALS) | grep -vq install && echo "$(T_GREEN)fish has now been built.$(T_RESET)" ||:
+	@echo "Run $(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET) to install fish.$(T_RESET)" ||:
 .PHONY: all
 
 #
@@ -255,12 +260,14 @@ obj/fish_version.o: FISH-BUILD-VERSION-FILE
 # when the source code for the build configuration has changed.
 #
 configure: configure.ac
-	@echo "$(T_BOLD)Rehecking config.status; rerunning ./configure if necessary...$(T_RESET)"
+	@echo "Rechecking config.status; rerunning ./configure if necessary..."$(T_DIM)
 	$(v) ./config.status --recheck
+	@echo $(T_RESET)
 
 Makefile: Makefile.in configure
-	@echo "$(T_WHITE)Checking config.status...$(T_RESET)"
+	@echo "Checking config.status..."$(T_DIM)
 	$(v) ./config.status
+	@echo $(T_RESET)
 
 #
 # Build fish with some debug flags specified. This is GCC specific,
@@ -280,7 +287,7 @@ prof: all
 # directory once Doxygen is done.
 #
 doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter | show-SED
-	@echo "  doxygen  user_doc"
+	@echo "  doxygen  $(T_ITALIC)user_doc$(T_RESET)"
 	$(v)(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
 	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | \
 		doxygen - && touch user_doc
@@ -408,7 +415,7 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in
 lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED
 	$(v)rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
 # Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
-	@echo "  SED      "$@
+	@echo "  SED      $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(SED) <command_list_toc.txt >>lexicon.tmp -n \
 		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
 		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt; \
@@ -438,7 +445,7 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 #
 lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 	$(v)rm -f $@.tmp $@
-	@echo "  SED      "$@
+	@echo "  SED      $(T_ITALIC)$@$(T_RESET)"
 # Set the shebang as sed can reside in multiple places.
 	$(v)$(SED) <$@.in >$@.tmp -e 's|@sed@|'$(SED)'|'
 # Scan through the lexicon, transforming each line to something useful to Doxygen.
@@ -493,14 +500,14 @@ doc.h: $(HDR_FILES)
 # Compile translation files to binary format
 #
 %.gmo:
-	@echo "  msgfmt   "$@
+	@echo "  msgfmt   $(T_ITALIC)$@$(T_RESET)"
 	$(v)msgfmt -o $@ $*.po
 
 #
 # Update existing po file or copy messages.pot
 #
 %.po:messages.pot
-	@echo "  msgmerge "$@
+	@echo "  msgmerge $(T_ITALIC)$@$(T_RESET)"
 	$(v)if test -f $*.po; then \
 		msgmerge -U --backup=existing $*.po messages.pot;\
 	else \
@@ -511,7 +518,7 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 messages.pot: src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish
-	@echo " xgettext "$@
+	@echo " xgettext $(T_ITALIC)$@$(T_RESET)"
 	$(v)xgettext -k_ -kN_ src/*.cpp src/*.h -o messages.pot
 	$(v)xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot
 
@@ -547,7 +554,7 @@ endif
 #
 share/man: $(HELP_SRC) lexicon_filter | show-FISH_BUILD_VERSION show-SED
 	-$(v)mkdir -p share/man
-	@echo "  doxygen  "$@
+	@echo "  doxygen  $(T_ITALIC)$@$(T_RESET)"
 	$(v)touch share/man
 	-$(v)rm -Rf share/man/man1
 	$(v)echo "$(T_DIM)" && \
@@ -562,28 +569,28 @@ check-legacy-binaries:
 	@echo "Checking for legacy binaries..."
 	$(v)KR_LOC=$(prefix)/bin/key_reader;\
 	if test -x "$$KR_LOC" && env TERM=dumb "$$KR_LOC" cr | grep -q 26; then\
-		echo "A key_reader binary was found. You might want to remove this, and use 'fish_key_reader':";\
-		echo "    '$$KR_LOC'";\
+		echo "$(T_RED)A key_reader binary was found. You might want to remove this, and use 'fish_key_reader':";\
+		echo "    '$$KR_LOC'$(T_RESET)";\
 	fi;
 	$(v)SEQLOC=$(prefix)/bin/seq;\
 	if test -f "$$SEQLOC" && grep -q '\(^#!/.*/fish\|^#!/usr/bin/env fish\)' "$$SEQLOC"; then\
-		echo "An outdated seq from a previous fish install was found. You should remove it with:";\
-		echo "    rm '$$SEQLOC'";\
+		echo "$(T_RED)An outdated seq from a previous fish install was found. You should remove it with:";\
+		echo "    rm '$$SEQLOC'$(T_RESET)";\
 	fi;
 	$(v)SETCOLOR_LOC=$(prefix)/bin/set_color;\
 	if test -x "$$SETCOLOR_LOC" && $$SETCOLOR_LOC -v 2>&1 >/dev/null | grep -q "^set_color, version "; then\
-		echo "An outdated set_color from a previous fish install was found. You should remove it with:";\
-		echo "    rm '$$SETCOLOR_LOC'";\
+		echo "$(T_RED)An outdated set_color from a previous fish install was found. You should remove it with:";\
+		echo "    rm '$$SETCOLOR_LOC'$(T_RESET)";\
 	fi;
 	$(v)MIMEDB_LOC=$(prefix)/bin/mimedb;\
 	if test -x "$$MIMEDB_LOC" && $$MIMEDB_LOC --version 2>&1 | grep -q "^mimedb, version "; then\
-		echo "An outdated mimedb binary from a previous fish install was found. You should remove it with:";\
-		echo "    rm '$$MIMEDB_LOC'";\
+		echo "$(T_RED)An outdated mimedb binary from a previous fish install was found. You should remove it with:";\
+		echo "    rm '$$MIMEDB_LOC'$(T_RESET)";\
 	fi;
 	$(v)FISHD_LOC=$(prefix)/bin/fishd;\
 	if test -x "$$FISHD_LOC" && $$FISHD_LOC --version 2>&1 | grep -q "^fishd: fishd, version "; then\
-		echo "An outdated fishd binary from a previous fish install was found. You should remove it with:";\
-		echo "    rm '$$FISHD_LOC'";\
+		echo "$(T_RED)An outdated fishd binary from a previous fish install was found. You should remove it with:";\
+		echo "    rm '$$FISHD_LOC'$(T_RESET)";\
 	fi;
 	$(v)true;
 .PHONY: check-legacy-binaries
@@ -607,7 +614,7 @@ install: all install-force | check-legacy-binaries
 	fi;
 	@echo "To set your colors, run $(T_GREEN)$(T_BOLD)fish_config$(T_RESET)"
 	@echo "To scan your man pages for completions, run $(T_GREEN)$(T_BOLD)fish_update_completions$(T_RESET)"
-	@echo "To accept autosuggestions (in $(T_BOLD)$(T_DIM)grey$(T_RESET)) as you type, hit $(T_BOLD)ctrl-F$(T_RESET) or right arrow key."
+	@echo "To accept autosuggestions (in $(T_DIM)grey$(T_RESET)) as you type, hit $(T_BOLD)ctrl-F$(T_RESET) or right arrow key."
 	@echo
 	@echo "$(T_BOLD)Have fun! <><$(T_RESET)"
 .PHONY: install
@@ -626,20 +633,20 @@ xcode-install:
 # from failing for (e.g.) missing man pages or extra_dirs outside the
 # writeable prefix.
 #
-install-force: all install-translations
+install-force: all install-translations | show-datadir show-sysconfdir show-extra_completionsdir show-extra_functionsdir show-extra_confdir show-mandir
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 	$(v)for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir);\
-		echo "Installing $(T_BOLD)$$i$(T_RESET)";\
+		echo " Installing $(T_BOLD)$$i$(T_RESET)";\
 		true ;\
 	done;
+	@echo "Creating sysconfdir tree"
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/conf.d
+	$(v)$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
+	@echo "Creating datadir tree"
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
-	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir) ||:
-	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir) ||:
-	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir) ||:
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
@@ -647,27 +654,31 @@ install-force: all install-translations
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/js
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/partials
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts
-	$(v)$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
 	$(v)$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
 	$(v)$(INSTALL) -m 644 share/__fish_build_paths.fish    $(DESTDIR)$(datadir)/fish/
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/pkgconfig
+	@echo "Creating empty vendor/'extra_' directories"
+	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir) ||:
+	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir) ||:
+	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir) ||:
+	@echo "Installing pkgconfig file"
 	$(v)$(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
-	@echo "Installing completions...";
+	@echo "Installing the $(T_BOLD)fish completion libraryn$(T_RESET)...";
 	$(v)for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 		true; \
 	done;
-	@echo "Installing functions...";
+	@echo "Installing $(T_BOLD)fish functions$(T_RESET)";
 	$(v)for i in $(FUNCTIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
 		true; \
 	done;
-	@echo "Installing man pages...";
+	@echo "Installing $(T_BOLD)man pages$(T_RESET)";
 	$(v)for i in share/man/man1/*.1; do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
 		true; \
 	done;
-	@echo "Installing tools...";
+	@echo "Installing $(T_BOLD)fish tools$(T_RESET)";
 	$(v)for i in share/tools/*.py; do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/; \
 		true; \
@@ -692,14 +703,14 @@ install-force: all install-translations
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
 		true; \
 	done;
-	@echo "Installing user documentation...";
+	@echo "Installing HTML documentation";
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	$(v) for i in user_doc/html/* CHANGELOG.md; do \
 		if test -f $$i; then \
 			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
 		fi; \
 	done;
-	@echo "Installing main man pages...";
+	@echo "Installing more man pages";
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;
 	$(v) for i in $(MANUALS); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
@@ -710,24 +721,58 @@ install-force: all install-translations
 #
 # Uninstall this fish version
 #
-uninstall: uninstall-translations
-	@echo "Uninstalling translations..."
-	-$(v) for i in $(PROGRAMS); do \
+uninstall: uninstall-translations | show-prefix show-bindir show-sysconfdir show-datadir show-docdir show-mandir
+	@echo
+	@echo "$(T_BOLD)$(T_YELLOWB)Uninstalling fish$(T_RESET) from configured \$$prefix: $(T_BOLD)$(prefix)$(T_RESET)"
+	@echo
+	@echo "Deleting programs: [ $(T_BOLD)$(PROGRAMS)$(T_RESET) ] in $(T_ITALIC)$(bindir)$(T_RESET)"
+	-$(v)for i in $(PROGRAMS); do \
 		rm -f $(DESTDIR)$(bindir)/$$i; \
 	done;
-	-$(v) rm -rf $(DESTDIR)$(sysconfdir)/fish
+	@echo "Deleting configuration: $(T_BOLD)$(DESTDIR)$(sysconfdir)/fish/*$(T_RESET)"
+	-$(v)rm -rf $(DESTDIR)$(sysconfdir)/fish
+	@echo
+	@echo "In 5 seconds, $(T_RED)all data$(T_RESET) (includes functions, completions, tools) in"
+	@echo $$"\t$(T_BOLD)$(DESTDIR)$(datadir)/fish$(T_RESET) will be deleted!"
+	@echo 
+	@echo $$"If you put things there, $(T_RED)stop now!$(T_RESET) $(T_BOLD)\\c"
+	@echo $$"$(T_BOLD)5$(T_RESET) \\c"
+	@sleep 1
+	@echo $$"$(T_BOLD)4$(T_RESET) \\c"
+	@sleep 1
+	@echo $$"$(T_BOLD)3$(T_RESET) \\c"
+	@sleep 1
+	@echo $$"$(T_BOLD)2$(T_RESET) \\c"
+	@sleep 1
+	@echo $$"$(T_BOLD)1$(T_RESET) \\c"
+	@sleep 1
+	@echo ...
+	@sleep 2
+	@echo "... deleting $(T_BOLD)$(DESTDIR)$(datadir)/fish/*$(T_RESET)"
 	-$(v) if test -d $(DESTDIR)$(datadir)/fish; then \
-		rm -r $(DESTDIR)$(datadir)/fish; \
+		rm -rf $(DESTDIR)$(datadir)/fish; \
 	fi
+	@echo
+	@echo "Deleting documentation: $(T_BOLD)$(DESTDIR)$(docdir)/*$(T_RESET)"
 	-$(v) if test -d $(DESTDIR)$(docdir); then \
 		rm -rf $(DESTDIR)$(docdir);\
 	fi
+	@echo
+	@echo "Deleting pkgconfig file: $(T_BOLD)$(DESTDIR)$(datadir)/pkgconfig/fish.pc$(T_RESET)"
 	-$(v) if test -f $(DESTDIR)$(datadir)/pkgconfig/fish.pc; then \
 		rm -f $(DESTDIR)$(datadir)/pkgconfig/fish.pc;\
 	fi
+	@echo
+	@echo $$"Deleting \\c"
+	@echo "[ $(T_BOLD)"`basename $(MANUALS)`$(T_RESET) $$"] in \\c"
+	@echo "$(T_ITALIC)$(mandir)/man1$(T_RESET)"
 	-$(v) for i in $(MANUALS); do \
 		rm -rf $(DESTDIR)$(mandir)/man1/`basename $$i`*; \
 	done;
+	@echo
+	@echo "$(T_GREEN)Fish (likely) unintalled$(T_RESET)"
+	@echo
+	@echo "$(T_BOLD)./configure --prefix=$(T_RESET) to uninstall fish from a different prefix"
 .PHONY: uninstall
 
 install-translations: $(TRANSLATIONS)
@@ -752,7 +797,7 @@ uninstall-translations:
 # How basic files get compiled
 #
 obj/%.o: src/%.cpp | obj
-	@echo "  CXX      "$@
+	@echo "  CXX      $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 #
@@ -765,11 +810,12 @@ obj:
 # Build the fish program.
 #
 fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$@
+	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
 $(PCRE2_LIB): $(PCRE2_H)
-	$(v)$(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
+	@echo "  MAKE     $(T_ITALIC)$@$(T_RESET)"
+	@$(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
 
 $(PCRE2_H):
 	$(v)(cd $(PCRE2_DIR) && ./config.status)
@@ -778,21 +824,21 @@ $(PCRE2_H):
 # Build the fish_tests program.
 #
 fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$@
+	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_indent program.
 #
 fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$@
+	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_key_reader program to show input from the terminal. 
 #
 fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    "$@
+	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
 #
@@ -807,7 +853,7 @@ fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
 # behind.
 #
 depend:
-	@echo "$(T_BOLD)Running makedepend...$(T_RESET)"
+	@echo $(T_ITALIC)"Running makedepend..."$(T_RESET)
 	$(v)mkdir -p /tmp/fish_make_depend/src
 	$(v)cp src/*.cpp src/*.h /tmp/fish_make_depend/src
 	$(v)cp config.h /tmp/fish_make_depend/
@@ -818,7 +864,7 @@ depend:
 .PHONY: depend
 
 #
-# Lint the code. This only deals with C++ files.
+# Lint the code. This only deals with C++
 #
 lint:
 	$(v)build_tools/lint.fish $(CXX) $(CXXFLAGS) $(CPPFLAGS)
@@ -985,9 +1031,9 @@ obj/fish_indent.o: src/input.h src/output.h src/parse_constants.h
 obj/fish_indent.o: src/parse_tree.h src/tokenizer.h src/print_help.h
 obj/fish_indent.o: src/wutil.h
 obj/fish_key_reader.o: config.h src/signal.h src/common.h src/fallback.h
-obj/fish_key_reader.o: src/env.h src/input.h src/input_common.h src/proc.h
-obj/fish_key_reader.o: src/io.h src/parse_tree.h src/parse_constants.h
-obj/fish_key_reader.o: src/tokenizer.h src/print_help.h src/reader.h
+obj/fish_key_reader.o: src/env.h src/input.h src/input_common.h
+obj/fish_key_reader.o: src/print_help.h src/proc.h src/io.h src/parse_tree.h
+obj/fish_key_reader.o: src/parse_constants.h src/tokenizer.h src/reader.h
 obj/fish_key_reader.o: src/complete.h src/highlight.h src/color.h src/wutil.h
 obj/fish_tests.o: config.h src/signal.h src/builtin.h src/common.h
 obj/fish_tests.o: src/fallback.h src/color.h src/complete.h src/env.h
@@ -1011,10 +1057,10 @@ obj/highlight.o: src/highlight.h src/history.h src/wutil.h src/output.h
 obj/highlight.o: src/parse_tree.h src/tokenizer.h src/parse_util.h src/path.h
 obj/highlight.o: src/wildcard.h src/complete.h
 obj/history.o: config.h src/common.h src/fallback.h src/signal.h src/env.h
-obj/history.o: src/history.h src/wutil.h src/iothread.h src/lru.h
+obj/history.o: src/history.h src/wutil.h src/io.h src/iothread.h src/lru.h
 obj/history.o: src/parse_constants.h src/parse_tree.h src/tokenizer.h
 obj/history.o: src/path.h src/reader.h src/complete.h src/highlight.h
-obj/history.o: src/color.h src/sanity.h
+obj/history.o: src/color.h
 obj/input.o: config.h src/common.h src/fallback.h src/signal.h src/env.h
 obj/input.o: src/event.h src/input.h src/input_common.h src/io.h src/output.h
 obj/input.o: src/color.h src/parser.h src/expand.h src/parse_constants.h

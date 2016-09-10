@@ -919,10 +919,6 @@ static wcstring functions_def(const wcstring &name) {
         out.append(esc_desc);
     }
 
-    if (function_get_shadow_builtin(name)) {
-        out.append(L" --shadow-builtin");
-    }
-
     if (!function_get_shadow_scope(name)) {
         out.append(L" --no-scope-shadowing");
     }
@@ -1491,17 +1487,13 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     // Hackish const_cast matches the one in builtin_run.
     const null_terminated_array_t<wchar_t> argv_array(args);
     wchar_t **argv = const_cast<wchar_t **>(argv_array.get());
-
     int argc = builtin_count_args(argv);
     int res = STATUS_BUILTIN_OK;
     wchar_t *desc = 0;
     std::vector<event_t> events;
-
     bool has_named_arguments = false;
     wcstring_list_t named_arguments;
     wcstring_list_t inherit_vars;
-
-    bool shadow_builtin = false;
     bool shadow_scope = true;
 
     wcstring_list_t wrap_targets;
@@ -1522,7 +1514,6 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                                            {L"wraps", required_argument, 0, 'w'},
                                            {L"help", no_argument, 0, 'h'},
                                            {L"argument-names", no_argument, 0, 'a'},
-                                           {L"shadow-builtin", no_argument, 0, 'B'},
                                            {L"no-scope-shadowing", no_argument, 0, 'S'},
                                            {L"inherit-variable", required_argument, 0, 'V'},
                                            {0, 0, 0, 0}};
@@ -1531,7 +1522,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
         int opt_index = 0;
 
         // The leading - here specifies RETURN_IN_ORDER.
-        int opt = w.wgetopt_long(argc, argv, L"-d:s:j:p:v:e:w:haBSV:", long_options, &opt_index);
+        int opt = w.wgetopt_long(argc, argv, L"-d:s:j:p:v:e:w:haSV:", long_options, &opt_index);
         if (opt == -1) break;
         switch (opt) {
             case 0: {
@@ -1625,10 +1616,6 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                 name_is_first_positional = !positionals.empty();
                 break;
             }
-            case 'B': {
-                shadow_builtin = true;
-                break;
-            }
             case 'S': {
                 shadow_scope = false;
                 break;
@@ -1718,37 +1705,12 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
         }
 
         if (!res) {
-            bool function_name_shadows_builtin = false;
-            wcstring_list_t builtin_names = builtin_get_names();
-            for (size_t i = 0; i < builtin_names.size(); i++) {
-                const wchar_t *el = builtin_names.at(i).c_str();
-                if (el == function_name) {
-                    function_name_shadows_builtin = true;
-                    break;
-                }
-            }
-            if (function_name_shadows_builtin && !shadow_builtin) {
-                append_format(
-                    *out_err,
-                    _(L"%ls: function name shadows a builtin so you must use '--shadow-builtin'"),
-                    argv[0]);
-                res = STATUS_BUILTIN_ERROR;
-            } else if (!function_name_shadows_builtin && shadow_builtin) {
-                append_format(*out_err, _(L"%ls: function name does not shadow a builtin so you "
-                                          L"must not use '--shadow-builtin'"),
-                              argv[0]);
-                res = STATUS_BUILTIN_ERROR;
-            }
-        }
-
-        if (!res) {
             // Here we actually define the function!
             function_data_t d;
 
             d.name = function_name;
             if (desc) d.description = desc;
             d.events.swap(events);
-            d.shadow_builtin = shadow_builtin;
             d.shadow_scope = shadow_scope;
             d.named_arguments.swap(named_arguments);
             d.inherit_vars.swap(inherit_vars);
@@ -2849,7 +2811,15 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
     return true;
 }
 
-#define CHECK_FOR_UNEXPECTED_HIST_ARGS()                                                 \
+#define CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)                                             \
+    if (history_search_type_defined || with_time) {                                             \
+        streams.err.append_format(_(L"history: you cannot use any options with %ls command\n"), \
+                                  hist_cmd_to_string(hist_cmd).c_str());                        \
+        status = STATUS_BUILTIN_ERROR;                                                          \
+        break;                                                                                  \
+    }
+
+#define CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)                                         \
     if (args.size() != 0) {                                                              \
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT, cmd,                            \
                                   hist_cmd_to_string(hist_cmd).c_str(), 0, args.size()); \
@@ -2860,7 +2830,6 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
 /// Manipulate history of interactive commands executed by the user.
 static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
-    ;
     int argc = builtin_count_args(argv);
     hist_cmd_t hist_cmd = HIST_NOOP;
     history_search_type_t search_type = (history_search_type_t)-1;
@@ -2990,23 +2959,26 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             break;
         }
         case HIST_CLEAR: {
-            CHECK_FOR_UNEXPECTED_HIST_ARGS();
+            CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)
+            CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->clear();
             history->save();
             break;
         }
         case HIST_MERGE: {
-            CHECK_FOR_UNEXPECTED_HIST_ARGS();
+            CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)
+            CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->incorporate_external_changes();
             break;
         }
         case HIST_SAVE: {
-            CHECK_FOR_UNEXPECTED_HIST_ARGS();
+            CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)
+            CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->save();
             break;
         }
-        default: {
-            DIE("Unhandled history command");
+        case HIST_NOOP: {
+            DIE("Unexpected HIST_NOOP seen");
             break;
         }
     }
@@ -3105,7 +3077,7 @@ static const builtin_data_t builtin_datas[] = {
     {L"[", &builtin_test, N_(L"Test a condition")},
 #if 0
     // Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
-    { 		L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
+    {       L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
 #endif
     {L"and", &builtin_generic, N_(L"Execute command if previous command suceeded")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},

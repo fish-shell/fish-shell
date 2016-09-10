@@ -13,7 +13,7 @@ printf "%-20d%d\n" 5 10
 
 printf "%*d\n" 10 100
 
-printf "%%\"\\\n" 
+printf "%%\"\\\n"
 printf "%s\b%s\n" x y
 printf "abc\rdef\n"
 printf "Msg1\fMsg2\n"
@@ -34,4 +34,30 @@ printf "%5" 10 ^ /dev/null
 # \376 is 0xFE
 printf '\376' | xxd -p
 
-true
+# Verify that floating point conversions and output work correctly with
+# different combinations of locales and floating point strings. See issue
+# #3334. This starts by assuming an locale using english conventions.
+printf '%e\n' "1.23"  # should succeed, output should be 1.230000e+00
+printf '%e\n' "2,34"  # should fail
+
+# Try to use one of several locales that use a comma as the decimal mark
+# rather than the period used in english speaking locales. If we don't find
+# one installed we simply don't run this test.
+set -l locales (locale -a)
+set -l acceptable_locales bg_BG de_DE es_ES fr_FR ru_RU
+set -l numeric_locale
+for locale in {$acceptable_locales}.{UTF-8,UTF8}
+    if string match -i -q $locale $locales
+        set numeric_locale $locale
+        break
+    end
+end
+
+if set -q numeric_locale[1]
+    set -x LC_NUMERIC $numeric_locale
+    printf '%e\n' "3,45"  # should succeed, output should be 3,450000e+00
+    printf '%e\n' "4.56"  # should succeed, output should be 4,560000e+00
+else
+    echo '3,450000e+00'
+    echo '4,560000e+00'
+end

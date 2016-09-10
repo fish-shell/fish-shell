@@ -6,7 +6,15 @@ function __fish_git_commits
     # This allows filtering by subject with the new pager!
     # Because even subject lines can be quite long,
     # trim them (abbrev'd hash+tab+subject) to 73 characters
-    command git log --pretty=tformat:"%h"\t"%s" --all ^/dev/null \
+    command git log --pretty=tformat:"%h"\t"%s" --all --max-count=1000 ^/dev/null \
+    | string replace -r '(.{73}).+' '$1…'
+end
+
+function __fish_git_recent_commits
+    # Like __fish_git_commits, but not on all branches and limited to
+    # the last 50 commits. Used for fixup, where only the current branch
+    # and the latest commits make sense.
+    command git log --pretty=tformat:"%h"\t"%s" --max-count=50 ^/dev/null \
     | string replace -r '(.{73}).+' '$1…'
 end
 
@@ -396,7 +404,7 @@ complete -c git -n '__fish_git_needs_command' -a commit -d 'Record changes to th
 complete -c git -n '__fish_git_using_command commit' -l amend -d 'Amend the log message of the last commit'
 complete -f -c git -n '__fish_git_using_command commit' -a '(__fish_git_modified_files)'
 complete -f -c git -n '__fish_git_using_command commit' -l fixup -d 'Fixup commit to be used with rebase --autosquash'
-complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup' -a '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup' -a '(__fish_git_recent_commits)'
 # TODO options
 
 ### diff

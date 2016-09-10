@@ -32,8 +32,6 @@ struct function_data_t {
     wcstring_list_t inherit_vars;
     /// Set to true if invoking this function shadows the variables of the underlying function.
     bool shadow_scope;
-    /// Set to true if this function shadows a builtin.
-    bool shadow_builtin;
 };
 
 class function_info_t {
@@ -53,8 +51,6 @@ class function_info_t {
     const std::map<wcstring, env_var_t> inherit_vars;
     /// Flag for specifying that this function was automatically loaded.
     const bool is_autoload;
-    /// Set to true if this function shadows a builtin.
-    const bool shadow_builtin;
     /// Set to true if invoking this function shadows the variables of the underlying function.
     const bool shadow_scope;
 
@@ -128,9 +124,6 @@ std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name);
 /// Creates a new function using the same definition as the specified function. Returns true if copy
 /// is successful.
 bool function_copy(const wcstring &name, const wcstring &new_name);
-
-/// Returns whether this function shadows a builtin of the same name.
-int function_get_shadow_builtin(const wcstring &name);
 
 /// Returns whether this function shadows variables of the underlying function.
 int function_get_shadow_scope(const wcstring &name);

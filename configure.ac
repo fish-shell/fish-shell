@@ -10,13 +10,10 @@
 
 m4_syscmd([build_tools/git_version_gen.sh 2>/dev/null])
 
-AC_PREREQ([2.68])
-AC_INIT([fish], m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),[fish-users@lists.sourceforge.net])
-
-# fish does not use exceptions
-# Disabling exceptions saves about 20% (!) of the compiled code size
-CXXFLAGS="$CXXFLAGS -fno-exceptions -Wall"
-
+AC_PREREQ([2.60])
+AC_INIT(fish,
+        m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),
+        fish-users@lists.sourceforge.net)
 
 #
 # List of output variables produced by this configure script
@@ -91,13 +88,9 @@ fi
 # So ensure this happens before we modify CXXFLAGS below
 #
 
-AC_PROG_CXX
-AC_PROG_CC
+AC_PROG_CXX([g++ c++])
 AC_PROG_INSTALL
-AC_PROG_MAKE_SET
 AC_PROG_SED
-AC_PROG_AWK
-AC_PROG_LN_S
 AC_LANG(C++)
 AC_USE_SYSTEM_EXTENSIONS
 
@@ -208,6 +201,19 @@ AS_IF([test "$use_doxygen" != "no"],
 #
 AC_SYS_LARGEFILE
 
+
+# fish does not use exceptions
+# Disabling exceptions saves about 20% (!) of the compiled code size
+CXXFLAGS="$CXXFLAGS -fno-exceptions"
+
+
+#
+# -Wall is there to keep me on my toes
+# But signed comparison warnings are way too aggressive
+#
+
+CXXFLAGS="$CXXFLAGS -Wall -Wno-sign-compare"
+
 #
 # This is needed in order to get the really cool backtraces on Linux
 #
@@ -242,12 +248,13 @@ AC_DEFINE([NOMACROS], [1], [Define to 1 to disable curses macros that conflict w
 # slower compiles when developing fish.
 #
 
-# Check for os dependant libraries
+# Check for os dependant libraries for all binaries.
 AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( shm_open, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( pthread_create, pthread, , [AC_MSG_ERROR([Cannot find the pthread library, needed to build this package.] )] )
-AC_SEARCH_LIBS( setupterm, [ncurses tinfo terminfo curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
+AC_SEARCH_LIBS( setupterm, [ncurses tinfo curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
+AC_SEARCH_LIBS( [nan], [m], [AC_DEFINE( [HAVE_NAN], [1], [Define to 1 if you have the nan function])] )
 AC_SEARCH_LIBS( [dladdr], [dl] )
 
 if test x$local_gettext != xno; then
@@ -255,28 +262,10 @@ if test x$local_gettext != xno; then
 fi
 
 #
-# Checks for typedefs, structures, and compiler characteristics.
-#
-
-AC_CHECK_HEADER_STDBOOL
-AC_C_INLINE
-AC_TYPE_INT32_T
-AC_TYPE_MODE_T
-AC_TYPE_OFF_T
-AC_TYPE_PID_T
-AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
-AC_TYPE_UID_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-AC_TYPE_UINT8_T
-AC_CHECK_TYPES([ptrdiff_t])
-
-#
 # Check presense of various header files
 #
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h libintl.h limits.h locale.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/file.h sys/ioctl.h sys/socket.h sys/time.h termios.h unistd.h wchar.h wctype.h getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h ncurses/curses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h])
+
+AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h ncurses/curses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h])
 
 if test x$local_gettext != xno; then
   AC_CHECK_HEADERS([libintl.h])
@@ -312,14 +301,6 @@ AC_CHECK_FUNCS( futimes )
 AC_CHECK_FUNCS( wcslcpy lrand48_r killpg )
 AC_CHECK_FUNCS( backtrace_symbols getifaddrs )
 AC_CHECK_FUNCS( futimens clock_gettime )
-AC_FUNC_FORK
-AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
-AC_FUNC_MALLOC
-AC_FUNC_MBRTOWC
-AC_FUNC_MMAP
-AC_FUNC_REALLOC
-AC_FUNC_STRTOD
-AC_CHECK_FUNCS([clock_gettime dup2 endpwent ftruncate getcwd gethostname gettimeofday localtime_r memchr memmove memset mkdir mkfifo munmap pathconf realpath select setenv setlocale strchr strdup strerror strstr strtol tzset uname wcwidth])
 
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )
 
@@ -412,17 +393,21 @@ AC_LINK_IFELSE(
 
 # Check for _nl_msg_cat_cntr symbol
 AC_MSG_CHECKING([for _nl_msg_cat_cntr symbol])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+AC_TRY_LINK(
+  [
     #if HAVE_LIBINTL_H
     #include <libintl.h>
     #endif
     #include <stdlib.h>
-  ]], [[
+  ],
+  [
     extern int  _nl_msg_cat_cntr;
     int tmp = _nl_msg_cat_cntr;
     exit(tmp);
-  ]])],[have__nl_msg_cat_cntr=yes],[have__nl_msg_cat_cntr=no
-])
+  ],
+  have__nl_msg_cat_cntr=yes,
+  have__nl_msg_cat_cntr=no
+)
 if test "$have__nl_msg_cat_cntr" = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(
@@ -437,13 +422,17 @@ fi
 
 # Check for sys_errlist
 AC_MSG_CHECKING([for sys_errlist array])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+AC_TRY_LINK(
+  [
    #include <stdio.h>
-  ]], [[
+  ],
+  [
     const char *p;
     p = sys_errlist[sys_nerr];
-  ]])],[have_sys_errlist=yes],[have_sys_errlist=no
-])
+  ],
+  have_sys_errlist=yes,
+  have_sys_errlist=no
+)
 if test "$have_sys_errlist" = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(
@@ -457,15 +446,19 @@ fi
 
 # Check for _sys_errs
 AC_MSG_CHECKING([for _sys_errs array])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+AC_TRY_LINK(
+  [
    #include <string>
-  ]], [[
+  ],
+  [
     std::string p;
     extern const char _sys_errs[];
     extern const int _sys_index[];
     p = _sys_errs[_sys_index[0]];
-  ]])],[have__sys__errs=yes],[have__sys__errs=no
-])
+  ],
+  have__sys__errs=yes,
+  have__sys__errs=no
+)
 if test "$have__sys__errs" = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(

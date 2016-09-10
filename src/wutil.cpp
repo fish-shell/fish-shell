@@ -23,128 +23,23 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "wutil.h"     // IWYU pragma: keep
 
-typedef std::string cstring;
-
 const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, -1, -1, -1};
 
 #ifndef PATH_MAX
 #ifdef MAXPATHLEN
 #define PATH_MAX MAXPATHLEN
 #else
-/// Fallback length of MAXPATHLEN. Hopefully a sane value.
-#define PATH_MAX 4096
+#define PATH_MAX 4096 // Fallback length of MAXPATHLEN. Hopefully a sane value.
 #endif
 #endif
-
-/// Lock to protect wgettext.
-static pthread_mutex_t wgettext_lock;
 
 /// Map used as cache by wgettext.
 typedef std::map<wcstring, wcstring> wgettext_map_t;
+/// Lock to protect wgettext.
+static pthread_mutex_t wgettext_lock;
 static wgettext_map_t wgettext_map;
 
-bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name,
-                        bool *out_is_dir) {
-    struct dirent *d = readdir(dir);
-    if (!d) return false;
-
-    out_name = str2wcstring(d->d_name);
-    if (out_is_dir) {
-        // The caller cares if this is a directory, so check.
-        bool is_dir = false;
-
-        // We may be able to skip stat, if the readdir can tell us the file type directly.
-        bool check_with_stat = true;
-#ifdef HAVE_STRUCT_DIRENT_D_TYPE
-        if (d->d_type == DT_DIR) {
-            // Known directory.
-            is_dir = true;
-            check_with_stat = false;
-        } else if (d->d_type == DT_LNK || d->d_type == DT_UNKNOWN) {
-            // We want to treat symlinks to directories as directories. Use stat to resolve it.
-            check_with_stat = true;
-        } else {
-            // Regular file.
-            is_dir = false;
-            check_with_stat = false;
-        }
-#endif  // HAVE_STRUCT_DIRENT_D_TYPE
-        if (check_with_stat) {
-            // We couldn't determine the file type from the dirent; check by stat'ing it.
-            cstring fullpath = wcs2string(dir_path);
-            fullpath.push_back('/');
-            fullpath.append(d->d_name);
-            struct stat buf;
-            if (stat(fullpath.c_str(), &buf) != 0) {
-                is_dir = false;
-            } else {
-                is_dir = !!(S_ISDIR(buf.st_mode));
-            }
-        }
-        *out_is_dir = is_dir;
-    }
-    return true;
-}
-
-bool wreaddir(DIR *dir, std::wstring &out_name) {
-    struct dirent *d = readdir(dir);
-    if (!d) return false;
-
-    out_name = str2wcstring(d->d_name);
-    return true;
-}
-
-bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
-    struct dirent *result = NULL;
-    while (result == NULL) {
-        struct dirent *d = readdir(dir);
-        if (!d) break;
-
-#if HAVE_STRUCT_DIRENT_D_TYPE
-        switch (d->d_type) {
-            case DT_DIR:
-            case DT_LNK:
-            case DT_UNKNOWN: {
-                // These may be directories.
-                result = d;
-                break;
-            }
-            default: {
-                // Nothing else can.
-                break;
-            }
-        }
-#else
-        // We can't determine if it's a directory or not, so just return it.
-        result = d;
-#endif
-    }
-    if (result && out_name) {
-        *out_name = str2wcstring(result->d_name);
-    }
-    return result != NULL;
-}
-
-const wcstring wgetcwd() {
-    wcstring retval;
-
-    char *res = getcwd(NULL, 0);
-    if (res) {
-        retval = str2wcstring(res);
-        free(res);
-    } else {
-        debug(0, _(L"getcwd() failed with errno %d/%s"), errno, strerror(errno));
-        retval = wcstring();
-    }
-
-    return retval;
-}
-
-int wchdir(const wcstring &dir) {
-    cstring tmp = wcs2string(dir);
-    return chdir(tmp.c_str());
-}
-
+/// Wide character version of fopen(). This sets CLO_EXEC.
 FILE *wfopen(const wcstring &path, const char *mode) {
     int permissions = 0, options = 0;
     size_t idx = 0;
@@ -194,7 +89,7 @@ bool set_cloexec(int fd) {
 
 static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool cloexec) {
     ASSERT_IS_NOT_FORKED_CHILD();
-    cstring tmp = wcs2string(pathname);
+    std::string tmp = wcs2string(pathname);
     int fd;
 
 #ifdef O_CLOEXEC
@@ -214,35 +109,152 @@ static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool
     return fd;
 }
 
+/// Wide character version of open() that also sets the close-on-exec flag (atomically when
+/// possible).
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode) {
     return wopen_internal(pathname, flags, mode, true);
 }
 
+
+bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, bool *out_is_dir) {
+    struct dirent *d = readdir(dir);    if (!d) return false;
+
+    out_name = str2wcstring(d->d_name);
+    if (out_is_dir) {
+        // The caller cares if this is a directory, so check.
+        bool is_dir = false;
+
+        // We may be able to skip stat, if the readdir can tell us the file type directly.
+        bool check_with_stat = true;
+#ifdef HAVE_STRUCT_DIRENT_D_TYPE
+        if (d->d_type == DT_DIR) {
+            // Known directory.
+            is_dir = true;
+            check_with_stat = false;
+        } else if (d->d_type == DT_LNK || d->d_type == DT_UNKNOWN) {
+            // We want to treat symlinks to directories as directories. Use stat to resolve it.
+            check_with_stat = true;
+        } else {
+            // Regular file.
+            is_dir = false;
+            check_with_stat = false;
+        }
+#endif  // HAVE_STRUCT_DIRENT_D_TYPE
+        if (check_with_stat) {
+            // We couldn't determine the file type from the dirent; check by stat'ing it.
+            std::string fullpath = wcs2string(dir_path);
+            fullpath.push_back('/');
+            fullpath.append(d->d_name);
+            struct stat buf;
+            if (stat(fullpath.c_str(), &buf) != 0) {
+                is_dir = false;
+            } else {
+                is_dir = !!(S_ISDIR(buf.st_mode));
+            }
+        }
+        *out_is_dir = is_dir;
+    }
+    return true;
+}
+
+/// Wide-character version of readdir()
+bool wreaddir(DIR *dir, wcstring &out_name) {       
+    struct dirent *d = readdir(dir);
+    if (!d) return false;
+
+    out_name = str2wcstring(d->d_name);
+    return true;
+}
+
+/// Like wreaddir, but skip items that are known to not be directories. If this requires a stat
+/// (i.e. the file is a symlink), then return it. Note that this does not guarantee that everything
+/// returned is a directory, it's just an optimization for cases where we would check for
+/// directories anyways.
+bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
+    struct dirent *result = NULL;
+    while (result == NULL) {
+        struct dirent *d = readdir(dir);
+        if (!d) break;
+
+#if HAVE_STRUCT_DIRENT_D_TYPE
+        switch (d->d_type) {
+            case DT_DIR:
+            case DT_LNK:
+            case DT_UNKNOWN: {
+                // These may be directories.
+                result = d;
+                break;
+            }
+            default: {
+                // Nothing else can.
+                break;
+            }
+        }
+#else
+        // We can't determine if it's a directory or not, so just return it.
+        result = d;
+#endif
+    }
+    if (result && out_name) {
+        *out_name = str2wcstring(result->d_name);
+    }
+    return result != NULL;
+}
+
+/// Wide character version of getcwd().
+const wcstring wgetcwd() {
+    wcstring retval;
+
+    char *res = getcwd(NULL, 0);
+    if (res) {
+        retval = str2wcstring(res);
+        free(res);
+    } else {
+        debug(0, _(L"getcwd() failed with errno %d/%s"), errno, strerror(errno));
+        retval = wcstring();
+    }
+
+    return retval;
+}
+
+/// Wide character version of chdir().
+int wchdir(const wcstring &dir) {
+    std::string tmp = wcs2string(dir);
+    return chdir(tmp.c_str());
+}
+
+/// Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by
+/// POSIX (hooray).
 DIR *wopendir(const wcstring &name) {
-    const cstring tmp = wcs2string(name);
+    const std::string tmp = wcs2string(name);
     return opendir(tmp.c_str());
 }
 
+/// Wide character version of stat().
 int wstat(const wcstring &file_name, struct stat *buf) {
-    const cstring tmp = wcs2string(file_name);
+    const std::string tmp = wcs2string(file_name);
     return stat(tmp.c_str(), buf);
 }
 
+/// Wide character version of lstat().
 int lwstat(const wcstring &file_name, struct stat *buf) {
-    const cstring tmp = wcs2string(file_name);
+    const std::string tmp = wcs2string(file_name);
     return lstat(tmp.c_str(), buf);
 }
 
+/// Wide character version of access().
 int waccess(const wcstring &file_name, int mode) {
-    const cstring tmp = wcs2string(file_name);
+    const std::string tmp = wcs2string(file_name);
     return access(tmp.c_str(), mode);
 }
 
+/// Wide character version of unlink().
 int wunlink(const wcstring &file_name) {
-    const cstring tmp = wcs2string(file_name);
+    const std::string tmp = wcs2string(file_name);
     return unlink(tmp.c_str());
 }
 
+/// Wide character version of perror().
 void wperror(const wchar_t *s) {
     int e = errno;
     if (s[0] != L'\0') {
@@ -251,6 +263,7 @@ void wperror(const wchar_t *s) {
     fwprintf(stderr, L"%s\n", strerror(e));
 }
 
+/// Mark an fd as nonblocking; returns errno or 0 on success.
 int make_fd_nonblocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     int err = 0;
@@ -261,6 +274,7 @@ int make_fd_nonblocking(int fd) {
     return err == -1 ? errno : 0;
 }
 
+/// Mark an fd as blocking; returns errno or 0 on success.
 int make_fd_blocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     int err = 0;
@@ -275,9 +289,11 @@ static inline void safe_append(char *buffer, const char *s, size_t buffsize) {
     strncat(buffer, s, buffsize - strlen(buffer) - 1);
 }
 
-// In general, strerror is not async-safe, and therefore we cannot use it directly. So instead we
-// have to grub through sys_nerr and sys_errlist directly On GNU toolchain, this will produce a
-// deprecation warning from the linker (!!), which appears impossible to suppress!
+/// Async-safe version of strerror().
+/// In general, strerror is not async-safe, and therefore we cannot use it directly. So instead we
+/// have to grub through sys_nerr and sys_errlist directly On GNU toolchain, this will produce a
+/// deprecation warning from the linker (!!), which appears impossible to suppress!
+/// XXX Use strerror_r instead!
 const char *safe_strerror(int err) {
 #if defined(__UCLIBC__)
     // uClibc does not have sys_errlist, however, its strerror is believed to be async-safe.
@@ -313,6 +329,7 @@ const char *safe_strerror(int err) {
     return buff;
 }
 
+/// Async-safe version of perror().
 void safe_perror(const char *message) {
     // Note we cannot use strerror, because on Linux it uses gettext, which is not safe.
     int err = errno;
@@ -333,8 +350,11 @@ void safe_perror(const char *message) {
 
 #ifdef HAVE_REALPATH_NULL
 
+/// Wide character version of realpath function. Just like the GNU version of realpath, wrealpath
+/// will accept 0 as the value for the second argument, in which case the result will be allocated
+/// using malloc, and must be free'd by the user.
 wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
-    cstring narrow_path = wcs2string(pathname);
+    std::string narrow_path = wcs2string(pathname);
     char *narrow_res = realpath(narrow_path.c_str(), NULL);
 
     if (!narrow_res) return NULL;
@@ -362,7 +382,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
 #else
 
 wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
-    cstring tmp = wcs2string(pathname);
+    std::string tmp = wcs2string(pathname);
     char narrow_buff[PATH_MAX];
     char *narrow_res = realpath(tmp.c_str(), narrow_buff);
     wchar_t *res;
@@ -381,6 +401,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
 
 #endif
 
+/// Wide character version of dirname().
 wcstring wdirname(const wcstring &path) {
     char *tmp = wcs2str(path.c_str());
     char *narrow_res = dirname(tmp);
@@ -389,6 +410,7 @@ wcstring wdirname(const wcstring &path) {
     return result;
 }
 
+/// Wide character version of basename().
 wcstring wbasename(const wcstring &path) {
     char *tmp = wcs2str(path.c_str());
     char *narrow_res = basename(tmp);
@@ -411,6 +433,10 @@ static void wgettext_init_if_necessary() {
     pthread_once(&once, wgettext_really_init);
 }
 
+/// Wide character wrapper around the gettext function. For historic reasons, unlike the real
+/// gettext function, wgettext takes care of setting the correct domain, etc. using the textdomain
+/// and bindtextdomain functions. This should probably be moved out of wgettext, so that wgettext
+/// will be nothing more than a wrapper around gettext, like all other functions in this file.
 const wcstring &wgettext(const wchar_t *in) {
     // Preserve errno across this since this is often used in printing error messages.
     int err = errno;
@@ -420,7 +446,7 @@ const wcstring &wgettext(const wchar_t *in) {
     scoped_lock locker(wgettext_lock);
     wcstring &val = wgettext_map[key];
     if (val.empty()) {
-        cstring mbs_in = wcs2string(key);
+        std::string mbs_in = wcs2string(key);
         char *out = fish_gettext(mbs_in.c_str());
         val = format_string(L"%s", out);
     }
@@ -431,27 +457,17 @@ const wcstring &wgettext(const wchar_t *in) {
     return val;
 }
 
+/// Wide character version of mkdir.
 int wmkdir(const wcstring &name, int mode) {
-    cstring name_narrow = wcs2string(name);
+    std::string name_narrow = wcs2string(name);
     return mkdir(name_narrow.c_str(), mode);
 }
 
+/// Wide character version of rename.
 int wrename(const wcstring &old, const wcstring &newv) {
-    cstring old_narrow = wcs2string(old);
-    cstring new_narrow = wcs2string(newv);
+    std::string old_narrow = wcs2string(old);
+    std::string new_narrow = wcs2string(newv);
     return rename(old_narrow.c_str(), new_narrow.c_str());
-}
-
-int fish_wcstoi(const wchar_t *str, wchar_t **endptr, int base) {
-    long ret = wcstol(str, endptr, base);
-    if (ret > INT_MAX) {
-        ret = INT_MAX;
-        errno = ERANGE;
-    } else if (ret < INT_MIN) {
-        ret = INT_MIN;
-        errno = ERANGE;
-    }
-    return (int)ret;
 }
 
 file_id_t file_id_t::file_id_from_stat(const struct stat *buf) {

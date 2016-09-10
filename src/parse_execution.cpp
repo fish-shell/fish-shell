@@ -13,6 +13,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
+#include <inttypes.h>
 #include <termios.h>
 #include <unistd.h>
 #include <wchar.h>
@@ -1000,8 +1002,8 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
                 } else {
                     wchar_t *end = NULL;
                     errno = 0;
-                    int old_fd = fish_wcstoi(target.c_str(), &end, 10);
-                    if (old_fd < 0 || errno || *end) {
+                    int old_fd = wcstoimax(target.c_str(), &end, 10);
+                    if (old_fd < 0 || errno || *end != L'\0') {
                         errored =
                             report_error(redirect_node, _(L"Requested redirection to '%ls', which "
                                                           L"is not a valid file descriptor"),

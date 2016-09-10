@@ -1,6 +1,8 @@
 // The library for various signal related issues.
 #include "config.h"  // IWYU pragma: keep
 
+#include <stddef.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
@@ -145,31 +147,28 @@ static const struct lookup_entry lookup[] = {
 
 /// Test if \c name is a string describing the signal named \c canonical.
 static int match_signal_name(const wchar_t *canonical, const wchar_t *name) {
-    if (wcsncasecmp(name, L"sig", 3) == 0) name += 3;
+    if (wcsncasecmp(name, L"sig", 3) == 0) {
+        name += 3;
+    }
 
     return wcscasecmp(canonical + 3, name) == 0;
 }
 
 int wcs2sig(const wchar_t *str) {
-    int i;
     wchar_t *end = 0;
 
-    for (i = 0; lookup[i].desc; i++) {
+    for (int i = 0; lookup[i].desc; i++) {
         if (match_signal_name(lookup[i].name, str)) {
             return lookup[i].signal;
         }
     }
-    errno = 0;
-    int res = fish_wcstoi(str, &end, 10);
-    if (!errno && res >= 0 && !*end) return res;
 
-    return -1;
+    int res = wcstoimax(str, &end, 10);
+    return (*str != L'\0' && *end == L'\0') ? res : -1;
 }
 
 const wchar_t *sig2wcs(int sig) {
-    int i;
-
-    for (i = 0; lookup[i].desc; i++) {
+    for (int i = 0; lookup[i].desc; i++) {
         if (lookup[i].signal == sig) {
             return lookup[i].name;
         }
@@ -179,9 +178,7 @@ const wchar_t *sig2wcs(int sig) {
 }
 
 const wchar_t *signal_get_desc(int sig) {
-    int i;
-
-    for (i = 0; lookup[i].desc; i++) {
+    for (int i = 0; lookup[i].desc; i++) {
         if (lookup[i].signal == sig) {
             return _(lookup[i].desc);
         }
@@ -229,21 +226,19 @@ static void handle_int(int sig, siginfo_t *info, void *context) {
     default_handler(sig, info, context);
 }
 
-/// sigchld handler. Does notification and calls the handler in proc.c.
+/// sigchld handler. Does notification and calls the handler in proc.cpp.
 static void handle_chld(int sig, siginfo_t *info, void *context) {
     job_handle_signal(sig, info, context);
     default_handler(sig, info, context);
 }
 
 void signal_reset_handlers() {
-    int i;
-
     struct sigaction act;
     sigemptyset(&act.sa_mask);
     act.sa_flags = 0;
     act.sa_handler = SIG_DFL;
 
-    for (i = 0; lookup[i].desc; i++) {
+    for (int i = 0; lookup[i].desc; i++) {
         sigaction(lookup[i].signal, &act, 0);
     }
 }

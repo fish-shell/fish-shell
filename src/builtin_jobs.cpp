@@ -1,6 +1,8 @@
 // Functions for executing the jobs builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include <inttypes.h>
+#include <stddef.h>
 #include <errno.h>
 #ifdef HAVE__PROC_SELF_STAT
 #include <sys/time.h>
@@ -175,14 +177,10 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     } else {
         if (w.woptind < argc) {
-            int i;
-
-            for (i = w.woptind; i < argc; i++) {
-                int pid;
+            for (int i = w.woptind; i < argc; i++) {
                 wchar_t *end;
-                errno = 0;
-                pid = fish_wcstoi(argv[i], &end, 10);
-                if (errno || *end) {
+                pid_t pid = wcstoimax(argv[i], &end, 10);
+                if (!(*argv[i] != L'\0' && *end == L'\0')) {
                     streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), argv[0], argv[i]);
                     return 1;
                 }

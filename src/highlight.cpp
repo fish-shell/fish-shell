@@ -5,7 +5,9 @@
 #include <dirent.h>
 #include <errno.h>
 #include <limits.h>
+#include <inttypes.h>
 #include <sys/stat.h>
+#include <stddef.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
@@ -875,12 +877,12 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node) {
                 switch (redirect_type) {
                     case TOK_REDIRECT_FD: {
                         // Target should be an fd. It must be all digits, and must not overflow.
-                        // fish_wcstoi returns INT_MAX on overflow; we could instead check errno to
+                        // wcstoimax returns INT_MAX on overflow; we could instead check errno to
                         // disambiguiate this from a real INT_MAX fd, but instead we just disallow
                         // that.
                         const wchar_t *target_cstr = target.c_str();
-                        wchar_t *end = NULL;
-                        int fd = fish_wcstoi(target_cstr, &end, 10);
+                        wchar_t *end;
+                        int fd = wcstoimax(target_cstr, &end, 10);
 
                         // The iswdigit check ensures there's no leading whitespace, the *end check
                         // ensures the entire string was consumed, and the numeric checks ensure the

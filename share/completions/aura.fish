@@ -156,7 +156,7 @@ complete -c aura -n $remove -s c -l cascade -d 'Also remove packages depending o
 complete -c aura -n $remove -s n -l nosave -d 'Ignore file backup designations'
 complete -c aura -n $remove -s s -l recursive -d 'Also remove dependencies of PACKAGE'
 complete -c aura -n $remove -s u -l unneeded -d 'Only remove targets not required by PACKAGE'
-
+complete -c aura -n "$remove; and $argument" -xa $listinstalled -d 'Installed package'
 
 # Sync options
 complete -c aura -n $sync -s c -l clean -d 'Remove [all] packages from cache'
@@ -164,7 +164,7 @@ complete -c aura -n $sync -s l -l list -xa "$listrepos" -d 'List all packages in
 complete -c aura -n $sync -s u -l sysupgrade -d 'Upgrade all packages that are out of date'
 complete -c aura -n $sync -s w -l downloadonly -d 'Only download the target packages'
 complete -c aura -n $sync -s y -l refresh -d 'Download fresh copy of the package list'
-complete -c aura -n "$argument; and $sync" -xa "$listall $listgroups"
+complete -c aura -n "$sync; and $argument" -xa "$listall $listgroups"
 
 # Upgrade options
 complete -c aura -n "$upgrade; and $argument" -xa '(__fish_complete_suffix pkg.tar.xz)' -d 'Package file'

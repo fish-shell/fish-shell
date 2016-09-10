@@ -3,6 +3,7 @@
 // IWYU pragma: no_include <cstddef>
 #include <assert.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <wchar.h>
 #include <wctype.h>
 #include <map>
@@ -602,10 +603,13 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
             case direction_page_north:
             case direction_east:
             case direction_west:
-            case direction_deselect:
-            default: {
+            case direction_deselect: {
                 // These do nothing.
                 return false;
+            }
+            default: {
+                assert(0 && "Unhandled selection_direction_t constant");
+                abort();
             }
         }
     }

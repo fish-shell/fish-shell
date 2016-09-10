@@ -88,6 +88,8 @@ named_colors = {
     'brwhite'   : 'ffffff'
 }
 
+bindings_blacklist = set(["self-insert", "'begin;end'"])
+
 def parse_one_color(comp):
     """ A basic function to parse a single color value like 'FFA000' """
     if comp in named_colors:
@@ -288,17 +290,23 @@ class FishVar:
 class FishBinding:
     """A class that represents keyboard binding """
 
-    def __init__(self, command, binding, readable_binding, description=None):
+    def __init__(self, command, raw_binding, readable_binding, description=None):
         self.command =  command
-        self.binding = binding
-        self.readable_binding = readable_binding
+        self.bindings = []
         self.description = description
+        self.add_binding(raw_binding, readable_binding)
+
+    def add_binding(self, raw_binding, readable_binding):
+        for i in self.bindings:
+            if i['readable_binding'] == readable_binding:
+                i['raw_bindings'].append(raw_binding)
+                break
+        else:
+            self.bindings.append({'readable_binding':readable_binding, 'raw_bindings':[raw_binding]})
 
     def get_json_obj(self):
-        return {"command" : self.command, "binding": self.binding, "readable_binding": self.readable_binding, "description": self.description }
+        return {"command" : self.command, "bindings": self.bindings, "description": self.description}
 
-    def get_readable_binding(command):
-        return command
 
 class BindingParser:
     """ Class to parse codes for bind command """
@@ -308,7 +316,8 @@ class BindingParser:
                     "sdc": "Shift Delete", "shome": "Shift Home",
                     "left": "Left Arrow", "right": "Right Arrow",
                     "up": "Up Arrow", "down": "Down Arrow",
-                    "sleft": "Shift Left", "sright": "Shift Right"
+                    "sleft": "Shift Left", "sright": "Shift Right",
+                    "btab": "Shift Tab"
                     }
 
     def set_buffer(self, buffer):
@@ -347,14 +356,22 @@ class BindingParser:
 
         # \[1\; is start of control sequence
         if c == '1':
-            self.get_char();c = self.get_char()
-            if c == ";":
+            b = self.get_char(); c = self.get_char()
+            if b == '\\' and c == '~':
+                result += "Home"
+            elif c == ";":
                 c = self.get_char()
 
         # 3 is Alt
         if c == '3':
             result += "ALT - "
             c = self.get_char()
+
+        # \[4\~ is End
+        if c == '4':
+            b = self.get_char(); c = self.get_char()
+            if b == '\\' and c == '~':
+                result += "End"
 
         # 5 is Ctrl
         if c == '5':
@@ -385,7 +402,7 @@ class BindingParser:
         """ Gets a readable representation of binding """
 
         try:
-            result = BindingParser.readable_keys[self.buffer]
+            result = BindingParser.readable_keys[self.buffer.lower()]
         except KeyError:
             result = self.parse_binding()
 
@@ -413,6 +430,8 @@ class BindingParser:
                             self.unget_char()
                             self.unget_char()
                             alt = True
+                    elif d == '\0':
+                        result += 'ESC'
                     else:
                         alt = True
                         self.unget_char()
@@ -424,14 +443,21 @@ class BindingParser:
                     result += 'Tab'
                 elif c == 'b':
                     result += 'Backspace'
+                elif c.isalpha():
+                    result += '\\' + c
                 else:
                     result += c
+            elif c == '\x7f':
+                result += 'Backspace'
             else:
                 result += c
         if ctrl:
             readable_command += 'CTRL - '
         if alt:
             readable_command += 'ALT - '
+        
+        if result == '':
+            return 'unknown-control-sequence'
 
         return readable_command + result
 
@@ -566,6 +592,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         # Put all the bindings into a list
         bindings = []
+        command_to_binding = {}
         binding_parser = BindingParser()
 
         for line in out.split('\n'):
@@ -576,15 +603,23 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             if comps[1] == '-k':
                 key_name, command = comps[2].split(' ', 1)
-                binding_parser.set_buffer(key_name)
+                binding_parser.set_buffer(key_name.capitalize())
             else:
                 key_name = None
                 command = comps[2]
                 binding_parser.set_buffer(comps[1])
 
+            if command in bindings_blacklist:
+                continue
+
             readable_binding = binding_parser.get_readable_binding()
-            fish_binding = FishBinding(command, key_name, readable_binding)
-            bindings.append(fish_binding)
+            if command in command_to_binding:
+                fish_binding = command_to_binding[command]
+                fish_binding.add_binding(line, readable_binding)
+            else:
+                fish_binding = FishBinding(command, line, readable_binding)
+                bindings.append(fish_binding)
+                command_to_binding[command] = fish_binding
 
         return [ binding.get_json_obj() for binding in bindings ]
 
@@ -734,7 +769,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         for x,y in zip(haystack, needle):
             bits |= ord(x) ^ ord(y)
         return bits == 0
-        
+
     def font_size_for_ansi_prompt(self, prompt_demo_ansi):
         width = ansi_prompt_line_width(prompt_demo_ansi)
         # Pick a font size

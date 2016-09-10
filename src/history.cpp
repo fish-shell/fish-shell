@@ -30,7 +30,6 @@
 #include "parse_tree.h"
 #include "path.h"
 #include "reader.h"
-#include "sanity.h"
 #include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -438,19 +437,17 @@ history_item_t::history_item_t(const wcstring &str, time_t when, history_identif
 bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type) const {
     switch (type) {
         case HISTORY_SEARCH_TYPE_CONTAINS: {
-            // We consider equal strings to NOT match a contains search (so that you don't have to
-            // see history equal to what you typed). The length check ensures that.
-            return contents.size() > term.size() && contents.find(term) != wcstring::npos;
+            return contents.find(term) != wcstring::npos;
         }
         case HISTORY_SEARCH_TYPE_PREFIX: {
             // We consider equal strings to match a prefix search, so that autosuggest will allow
             // suggesting what you've typed.
             return string_prefixes_string(term, contents);
         }
-        default: {
-            sanity_lose();
-            return false;
+        case HISTORY_SEARCH_TYPE_EXACT: {
+            return term == contents;
         }
+        default: { DIE("unexpected history_search_type_t value"); }
     }
 }
 
@@ -1405,9 +1402,9 @@ static bool format_history_record(const history_item_t &item, const bool with_ti
         const time_t seconds = item.timestamp();
         struct tm timestamp;
         if (!localtime_r(&seconds, &timestamp)) return false;
-        char timestamp_string[22];
-        if (strftime(timestamp_string, 22, "%Y-%m-%d %H:%M:%S  ", &timestamp) != 21) return false;
-        streams.out.append(str2wcstring(timestamp_string));
+        wchar_t timestamp_string[24];
+        if (std::wcsftime(timestamp_string, 23, L"# %Y-%m-%d %H:%M:%S\n", &timestamp) == 0) return false;
+        streams.out.append(timestamp_string);
     }
     streams.out.append(item.str());
     streams.out.append(L"\n");

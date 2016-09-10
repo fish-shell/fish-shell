@@ -1,0 +1,13 @@
+# Verify that specifying unexpected options or arguments results in an error.
+# First with the history function.
+history --clear --contains
+history --merge -t
+history --save xyz
+# Now with the history builtin.
+builtin history --save --prefix
+builtin history --clear --with-time
+builtin history --merge xyz
+builtin history --clear abc def
+
+# Now do a history command that should succeed.
+builtin history --merge

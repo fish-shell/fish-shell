@@ -71,28 +71,6 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-// The default prompt for the read command.
-#define DEFAULT_READ_PROMPT L"set_color green; echo -n read; set_color normal; echo -n \"> \""
-
-// The mode name to pass to history and input.
-#define READ_MODE_NAME L"fish_read"
-
-// The send stuff to foreground message.
-#define FG_MSG _(L"Send job %d, '%ls' to foreground\n")
-
-/// Data structure to describe a builtin.
-struct builtin_data_t {
-    // Name of the builtin.
-    const wchar_t *name;
-    // Function pointer tothe builtin implementation.
-    int (*func)(parser_t &parser, io_streams_t &streams, wchar_t **argv);
-    // Description of what the builtin does.
-    const wchar_t *desc;
-
-    bool operator<(const wcstring &) const;
-    bool operator<(const builtin_data_t *) const;
-};
-
 bool builtin_data_t::operator<(const wcstring &other) const {
     return wcscmp(this->name, other.c_str()) < 0;
 }
@@ -101,12 +79,18 @@ bool builtin_data_t::operator<(const builtin_data_t *other) const {
     return wcscmp(this->name, other->name) < 0;
 }
 
-/// Counts the number of non null pointers in the specified array.
+/// Counts the number of arguments in the specified null-terminated array
+///
+/// @param argv[]: argument list
+///
+/// @return
+///     The numer of non-NULL elements in @param *argv before the first NULL.
+///
 int builtin_count_args(const wchar_t *const *argv) {
-    int argc = 1;
-    while (argv[argc] != NULL) {
-        argc++;
-    }
+    int argc;
+    for (argc = 1; argv[argc] != NULL; argc++);
+
+    assert(argv[argc] == NULL);
     return argc;
 }
 
@@ -134,6 +118,14 @@ static int count_char(const wchar_t *str, wchar_t c) {
     return res;
 }
 
+/// Obtain help/usage information for the specified builtin from manpage in subshell
+///
+/// @param  name
+///    builtin name to get up help for
+///
+/// @return
+///    A wcstring with a formatted manpage.
+///
 wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t *name) {
     // This won't ever work if no_exec is set.
     if (no_exec) return wcstring();
@@ -157,10 +149,12 @@ wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t
     return out;
 }
 
-/// Print help for the specified builtin. If \c b is sb_err, also print the line information.
+/// Process and print for the specified builtin. If @c b is `sb_err`, also print the line
+/// information.
 ///
-/// If \c b is the buffer representing standard error, and the help message is about to be printed
+/// If @c b is the buffer representing standard error, and the help message is about to be printed
 /// to an interactive screen, it may be shortened to fit the screen.
+///
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                         output_stream_t &b) {
     bool is_stderr = &b == &streams.err;
@@ -396,10 +390,16 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t *const *cmds, size
 
 /// Erase specified key bindings
 ///
-/// \param seq an array of all key bindings to erase
-/// \param all if specified, _all_ key bindings will be erased
-/// \param mode if specified, only bindings from that mode will be erased. If not given and \c all
-/// is \c false, \c DEFAULT_BIND_MODE will be used.
+/// @param  seq
+///    an array of all key bindings to erase
+/// @param  all
+///    if specified, _all_ key bindings will be erased
+/// @param  mode
+///    if specified, only bindings from that mode will be erased. If not given
+///    and @c all is @c false, @c DEFAULT_BIND_MODE will be used.
+/// @param  use_terminfo
+///    Whether to look use terminfo -k name
+///
 static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int use_terminfo,
                               io_streams_t &streams) {
     if (all) {
@@ -920,10 +920,6 @@ static wcstring functions_def(const wcstring &name) {
         out.append(esc_desc);
     }
 
-    if (function_get_shadow_builtin(name)) {
-        out.append(L" --shadow-builtin");
-    }
-
     if (!function_get_shadow_scope(name)) {
         out.append(L" --no-scope-shadowing");
     }
@@ -1303,7 +1299,7 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
 /// Bash only respects -n if it's the first argument. We'll do the same. We also support a new
 /// option -s to mean "no spaces"
 static int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    /* Skip first arg */
+    // Skip first arg
     if (!*argv++) return STATUS_BUILTIN_ERROR;
 
     // Process options. Options must come at the beginning - the first non-option kicks us out.
@@ -1464,7 +1460,20 @@ static int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) 
     return STATUS_BUILTIN_OK;
 }
 
-/// Adds a function to the function set. It calls into function.cpp to perform any heavy lifting.
+/// Defines and adds a function to the function set. Calls into `function.cpp`
+/// to perform all heavy lifting.
+///
+/// @param  c_args
+///    The arguments. Should NOT contain 'function' as the first argument as the
+///    parser treats it as a keyword.
+/// @param  contents
+///    The function definition string
+/// @param  definition_line_offset
+///    The definition line offset
+///
+/// @return
+///    Returns 0 on success.
+///
 int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
                      const wcstring &contents, int definition_line_offset, wcstring *out_err) {
     wgetopter_t w;
@@ -1479,17 +1488,13 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     // Hackish const_cast matches the one in builtin_run.
     const null_terminated_array_t<wchar_t> argv_array(args);
     wchar_t **argv = const_cast<wchar_t **>(argv_array.get());
-
     int argc = builtin_count_args(argv);
     int res = STATUS_BUILTIN_OK;
     wchar_t *desc = 0;
     std::vector<event_t> events;
-
     bool has_named_arguments = false;
     wcstring_list_t named_arguments;
     wcstring_list_t inherit_vars;
-
-    bool shadow_builtin = false;
     bool shadow_scope = true;
 
     wcstring_list_t wrap_targets;
@@ -1510,7 +1515,6 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                                            {L"wraps", required_argument, 0, 'w'},
                                            {L"help", no_argument, 0, 'h'},
                                            {L"argument-names", no_argument, 0, 'a'},
-                                           {L"shadow-builtin", no_argument, 0, 'B'},
                                            {L"no-scope-shadowing", no_argument, 0, 'S'},
                                            {L"inherit-variable", required_argument, 0, 'V'},
                                            {0, 0, 0, 0}};
@@ -1519,7 +1523,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
         int opt_index = 0;
 
         // The leading - here specifies RETURN_IN_ORDER.
-        int opt = w.wgetopt_long(argc, argv, L"-d:s:j:p:v:e:w:haBSV:", long_options, &opt_index);
+        int opt = w.wgetopt_long(argc, argv, L"-d:s:j:p:v:e:w:haSV:", long_options, &opt_index);
         if (opt == -1) break;
         switch (opt) {
             case 0: {
@@ -1615,10 +1619,6 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                 name_is_first_positional = !positionals.empty();
                 break;
             }
-            case 'B': {
-                shadow_builtin = true;
-                break;
-            }
             case 'S': {
                 shadow_scope = false;
                 break;
@@ -1708,37 +1708,12 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
         }
 
         if (!res) {
-            bool function_name_shadows_builtin = false;
-            wcstring_list_t builtin_names = builtin_get_names();
-            for (size_t i = 0; i < builtin_names.size(); i++) {
-                const wchar_t *el = builtin_names.at(i).c_str();
-                if (el == function_name) {
-                    function_name_shadows_builtin = true;
-                    break;
-                }
-            }
-            if (function_name_shadows_builtin && !shadow_builtin) {
-                append_format(
-                    *out_err,
-                    _(L"%ls: function name shadows a builtin so you must use '--shadow-builtin'"),
-                    argv[0]);
-                res = STATUS_BUILTIN_ERROR;
-            } else if (!function_name_shadows_builtin && shadow_builtin) {
-                append_format(*out_err, _(L"%ls: function name does not shadow a builtin so you "
-                                          L"must not use '--shadow-builtin'"),
-                              argv[0]);
-                res = STATUS_BUILTIN_ERROR;
-            }
-        }
-
-        if (!res) {
             // Here we actually define the function!
             function_data_t d;
 
             d.name = function_name;
             if (desc) d.description = desc;
             d.events.swap(events);
-            d.shadow_builtin = shadow_builtin;
             d.shadow_scope = shadow_scope;
             d.named_arguments.swap(named_arguments);
             d.inherit_vars.swap(inherit_vars);
@@ -2097,7 +2072,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
 
         if (buff.empty() && eof) {
-            exit_res = 1;
+            exit_res = STATUS_BUILTIN_ERROR;
         }
     }
 
@@ -2119,7 +2094,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 } else {
                     env_set(argv[i], NULL, place);
                 }
-            } else {
+            } else {  // not array
                 size_t j = 0;
                 for (; i + 1 < argc; ++i) {
                     if (j < bufflen) {
@@ -2143,14 +2118,13 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 empty = false;
             }
             env_set(argv[i], empty ? NULL : tokens.c_str(), place);
-        } else {
+        } else {  // not array
             wcstring_range loc = wcstring_range(0, 0);
 
             while (i < argc) {
                 loc = wcstring_tok(buff, (i + 1 < argc) ? ifs : wcstring(), loc);
                 env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first],
                         place);
-
                 ++i;
             }
         }
@@ -2831,7 +2805,8 @@ static const wcstring hist_cmd_to_string(hist_cmd_t hist_cmd) {
         case HIST_SAVE:
             return L"save";
         default:
-            DIE("Unhandled history command");
+            assert(0 && "Unhandled hist_cmd_t constant!");
+            abort();
     }
 }
 
@@ -2851,7 +2826,15 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
     return true;
 }
 
-#define CHECK_FOR_UNEXPECTED_HIST_ARGS()                                                 \
+#define CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)                                             \
+    if (history_search_type_defined || with_time) {                                             \
+        streams.err.append_format(_(L"history: you cannot use any options with %ls command\n"), \
+                                  hist_cmd_to_string(hist_cmd).c_str());                        \
+        status = STATUS_BUILTIN_ERROR;                                                          \
+        break;                                                                                  \
+    }
+
+#define CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)                                         \
     if (args.size() != 0) {                                                              \
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT, cmd,                            \
                                   hist_cmd_to_string(hist_cmd).c_str(), 0, args.size()); \
@@ -2862,18 +2845,23 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
 /// Manipulate history of interactive commands executed by the user.
 static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
-    ;
     int argc = builtin_count_args(argv);
     hist_cmd_t hist_cmd = HIST_NOOP;
-    history_search_type_t search_type = HISTORY_SEARCH_TYPE_CONTAINS;
+    history_search_type_t search_type = (history_search_type_t)-1;
+    bool history_search_type_defined = false;
     bool with_time = false;
 
-    static const struct woption long_options[] = {
-        {L"delete", no_argument, 0, 'd'},    {L"search", no_argument, 0, 's'},
-        {L"prefix", no_argument, 0, 'p'},    {L"contains", no_argument, 0, 'c'},
-        {L"save", no_argument, 0, 'v'},      {L"clear", no_argument, 0, 'l'},
-        {L"merge", no_argument, 0, 'm'},     {L"help", no_argument, 0, 'h'},
-        {L"with-time", no_argument, 0, 't'}, {0, 0, 0, 0}};
+    static const struct woption long_options[] = {{L"delete", no_argument, 0, 'd'},
+                                                  {L"search", no_argument, 0, 's'},
+                                                  {L"prefix", no_argument, 0, 'p'},
+                                                  {L"contains", no_argument, 0, 'c'},
+                                                  {L"save", no_argument, 0, 'v'},
+                                                  {L"clear", no_argument, 0, 'l'},
+                                                  {L"merge", no_argument, 0, 'm'},
+                                                  {L"help", no_argument, 0, 'h'},
+                                                  {L"with-time", no_argument, 0, 't'},
+                                                  {L"exact", no_argument, 0, 'e'},
+                                                  {0, 0, 0, 0}};
 
     history_t *history = reader_get_history();
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
@@ -2883,7 +2871,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     int opt = 0;
     int opt_index = 0;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, L"+dspcvlmht", long_options, &opt_index)) != EOF) {
+    while ((opt = w.wgetopt_long(argc, argv, L"+despcvlmht", long_options, &opt_index)) != EOF) {
         switch (opt) {
             case 's': {
                 if (!set_hist_cmd(cmd, &hist_cmd, HIST_SEARCH, streams)) {
@@ -2917,10 +2905,17 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             }
             case 'p': {
                 search_type = HISTORY_SEARCH_TYPE_PREFIX;
+                history_search_type_defined = true;
                 break;
             }
             case 'c': {
                 search_type = HISTORY_SEARCH_TYPE_CONTAINS;
+                history_search_type_defined = true;
+                break;
+            }
+            case 'e': {
+                search_type = HISTORY_SEARCH_TYPE_EXACT;
+                history_search_type_defined = true;
                 break;
             }
             case 't': {
@@ -2945,7 +2940,12 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // Everything after the flags is an argument for a subcommand (e.g., a search term).
     const wcstring_list_t args(argv + w.woptind, argv + argc);
 
+    // Establish appropriate defaults for unspecified options.
     if (hist_cmd == HIST_NOOP) hist_cmd = HIST_SEARCH;
+    if (!history_search_type_defined) {
+        if (hist_cmd == HIST_SEARCH) search_type = HISTORY_SEARCH_TYPE_CONTAINS;
+        if (hist_cmd == HIST_DELETE) search_type = HISTORY_SEARCH_TYPE_EXACT;
+    }
 
     int status = STATUS_BUILTIN_OK;
     switch (hist_cmd) {
@@ -2956,33 +2956,44 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             break;
         }
         case HIST_DELETE: {
+            // TODO: Move this code to the history module and support the other search types. At
+            // this time we expect the non-exact deletions to be handled only by the history
+            // function's interactive delete feature.
+            if (search_type != HISTORY_SEARCH_TYPE_EXACT) {
+                streams.err.append_format(_(L"builtin history --delete only supports --exact\n"));
+                status = STATUS_BUILTIN_ERROR;
+                break;
+            }
             for (wcstring_list_t::const_iterator iter = args.begin(); iter != args.end(); ++iter) {
                 wcstring delete_string = *iter;
-                if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"')
+                if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"') {
                     delete_string = delete_string.substr(1, delete_string.length() - 2);
-
+                }
                 history->remove(delete_string);
             }
             break;
         }
         case HIST_CLEAR: {
-            CHECK_FOR_UNEXPECTED_HIST_ARGS();
+            CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)
+            CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->clear();
             history->save();
             break;
         }
         case HIST_MERGE: {
-            CHECK_FOR_UNEXPECTED_HIST_ARGS();
+            CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)
+            CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->incorporate_external_changes();
             break;
         }
         case HIST_SAVE: {
-            CHECK_FOR_UNEXPECTED_HIST_ARGS();
+            CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)
+            CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->save();
             break;
         }
-        default: {
-            DIE("Unhandled history command");
+        case HIST_NOOP: {
+            DIE("Unexpected HIST_NOOP seen");
             break;
         }
     }
@@ -3052,7 +3063,7 @@ int builtin_fish_realpath(parser_t &parser, io_streams_t &streams, wchar_t **arg
     int argc = builtin_count_args(argv);
 
     if (argc != 2) {
-        streams.err.append_format(_(L"%ls: Expected one argument, got %d\n"), argv[0], argc - 1);
+        builtin_print_help(parser, streams, argv[0], streams.out);
         return STATUS_BUILTIN_ERROR;
     }
 
@@ -3062,7 +3073,7 @@ int builtin_fish_realpath(parser_t &parser, io_streams_t &streams, wchar_t **arg
         streams.out.append(real_path);
         free((void *)real_path);
     } else {
-        // The path isn't a simple filename and couldn't be resolved to an absolute path.
+        // We don't actually know why it failed. We should check errno
         streams.err.append_format(_(L"%ls: Invalid path: %ls\n"), argv[0], argv[1]);
         return STATUS_BUILTIN_ERROR;
     }
@@ -3081,7 +3092,7 @@ static const builtin_data_t builtin_datas[] = {
     {L"[", &builtin_test, N_(L"Test a condition")},
 #if 0
     // Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
-    { 		L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
+    {       L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
 #endif
     {L"and", &builtin_generic, N_(L"Execute command if previous command suceeded")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},
@@ -3137,6 +3148,14 @@ static const builtin_data_t builtin_datas[] = {
 
 #define BUILTIN_COUNT (sizeof builtin_datas / sizeof *builtin_datas)
 
+/// Look up a builtin_data_t for a specified builtin
+///
+/// @param  name
+///    Name of the builtin
+///
+/// @return
+///    Pointer to a builtin_data_t
+///
 static const builtin_data_t *builtin_lookup(const wcstring &name) {
     const builtin_data_t *array_end = builtin_datas + BUILTIN_COUNT;
     const builtin_data_t *found = std::lower_bound(builtin_datas, array_end, name);
@@ -3146,35 +3165,37 @@ static const builtin_data_t *builtin_lookup(const wcstring &name) {
     return NULL;
 }
 
+/// Initialize builtin data.
 void builtin_init() {
     for (size_t i = 0; i < BUILTIN_COUNT; i++) {
         intern_static(builtin_datas[i].name);
     }
 }
 
+/// Destroy builtin data.
 void builtin_destroy() {}
 
-int builtin_exists(const wcstring &cmd) { return !!builtin_lookup(cmd); }
+/// Is there a builtin command with the given name?
+bool builtin_exists(const wcstring &cmd) { return !!builtin_lookup(cmd); }
 
-/// Return true if the specified builtin should handle it's own help, false otherwise.
-static int internal_help(const wchar_t *cmd) {
+/// If builtin takes care of printing help itself
+static bool builtin_handles_help(const wchar_t *cmd) {
     CHECK(cmd, 0);
     return contains(cmd, L"for", L"while", L"function", L"if", L"end", L"switch", L"case", L"count",
                     L"printf");
 }
 
+/// Execute a builtin command
 int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &streams) {
     int (*cmd)(parser_t & parser, io_streams_t & streams, const wchar_t *const *argv) = NULL;
-
-    CHECK(argv, STATUS_BUILTIN_ERROR);
-    CHECK(argv[0], STATUS_BUILTIN_ERROR);
+    if (argv == NULL || argv[0] == NULL) return STATUS_BUILTIN_ERROR;
 
     const builtin_data_t *data = builtin_lookup(argv[0]);
     cmd = (int (*)(parser_t & parser, io_streams_t & streams, const wchar_t *const *))(
         data ? data->func : NULL);
 
-    if (argv[1] != 0 && !internal_help(argv[0])) {
-        if (argv[2] == 0 && (parse_util_argument_is_help(argv[1], 0))) {
+    if (argv[1] != NULL && !builtin_handles_help(argv[0])) {
+        if (argv[2] == NULL && (parse_util_argument_is_help(argv[1], 0))) {
             builtin_print_help(parser, streams, argv[0], streams.out);
             return STATUS_BUILTIN_OK;
         }
@@ -3188,6 +3209,7 @@ int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &stre
     return STATUS_BUILTIN_ERROR;
 }
 
+/// Returns a list of all builtin names.
 wcstring_list_t builtin_get_names(void) {
     wcstring_list_t result;
     result.reserve(BUILTIN_COUNT);
@@ -3197,6 +3219,7 @@ wcstring_list_t builtin_get_names(void) {
     return result;
 }
 
+/// Insert all builtin names into list.
 void builtin_get_names(std::vector<completion_t> *list) {
     assert(list != NULL);
     list->reserve(list->size() + BUILTIN_COUNT);
@@ -3205,6 +3228,7 @@ void builtin_get_names(std::vector<completion_t> *list) {
     }
 }
 
+/// Return a one-line description of the specified builtin.
 wcstring builtin_get_desc(const wcstring &name) {
     wcstring result;
     const builtin_data_t *builtin = builtin_lookup(name);

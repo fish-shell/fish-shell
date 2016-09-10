@@ -123,8 +123,7 @@ typedef struct complete_entry_opt {
     }
 
 } complete_entry_opt_t;
-
-// Last value used in the order field of completion_entry_t.
+/// Last value used in the order field of completion_entry_t.
 static unsigned int kCompleteOrder = 0;
 
 /// Struct describing a command completion.
@@ -170,7 +169,7 @@ struct completion_entry_set_comparer {
 typedef std::set<completion_entry_t, completion_entry_set_comparer> completion_entry_set_t;
 static completion_entry_set_t completion_set;
 
-// Comparison function to sort completions by their order field.
+/// Comparison function to sort completions by their order field.
 static bool compare_completions_by_order(const completion_entry_t *p1,
                                          const completion_entry_t *p2) {
     return p1->order < p2->order;
@@ -203,7 +202,7 @@ static complete_flags_t resolve_auto_space(const wcstring &comp, complete_flags_
     return new_flags;
 }
 
-// completion_t functions. Note that the constructor resolves flags!
+/// completion_t functions. Note that the constructor resolves flags!
 completion_t::completion_t(const wcstring &comp, const wcstring &desc, string_fuzzy_match_t mat,
                            complete_flags_t flags_val)
     : completion(comp), description(desc), match(mat), flags(resolve_auto_space(comp, flags_val)) {}
@@ -517,21 +516,31 @@ static void parse_cmd_string(const wcstring &str, wcstring &path, wcstring &cmd)
     }
 }
 
-/// Copy any strings in possible_comp which have the specified prefix to the completer's completion
-/// array. The prefix may contain wildcards. The output will consist of completion_t structs.
+/// Copy any strings in possible_comp which have the specified prefix to the
+/// completer's completion array. The prefix may contain wildcards. The output
+/// will consist of completion_t structs.
 ///
-/// There are three ways to specify descriptions for each completion. Firstly, if a description has
-/// already been added to the completion, it is _not_ replaced. Secondly, if the desc_func function
-/// is specified, use it to determine a dynamic completion. Thirdly, if none of the above are
-/// available, the desc string is used as a description.
+/// There are three ways to specify descriptions for each completion. Firstly,
+/// if a description has already been added to the completion, it is _not_
+/// replaced. Secondly, if the desc_func function is specified, use it to
+/// determine a dynamic completion. Thirdly, if none of the above are available,
+/// the desc string is used as a description.
 ///
-/// \param wc_escaped the prefix, possibly containing wildcards. The wildcard should not have been
-/// unescaped, i.e. '*' should be used for any string, not the ANY_STRING character.
-/// \param desc the default description, used for completions with no embedded description. The
-/// description _may_ contain a COMPLETE_SEP character, if not, one will be prefixed to it
-/// \param desc_func the function that generates a description for those completions witout an
-/// embedded description
-/// \param possible_comp the list of possible completions to iterate over
+/// @param  wc_escaped
+///    the prefix, possibly containing wildcards. The wildcard should not have
+///    been unescaped, i.e. '*' should be used for any string, not the
+///    ANY_STRING character.
+/// @param  desc
+///    the default description, used for completions with no embedded
+///    description. The description _may_ contain a COMPLETE_SEP character, if
+///    not, one will be prefixed to it
+/// @param  desc_func
+///    the function that generates a description for those completions witout an
+///    embedded description
+/// @param  possible_comp
+///    the list of possible completions to iterate over
+/// @param  flags
+///    The flags
 void completer_t::complete_strings(const wcstring &wc_escaped, const wchar_t *desc,
                                    wcstring (*desc_func)(const wcstring &),
                                    std::vector<completion_t> &possible_comp,
@@ -821,7 +830,7 @@ static bool short_ok(const wcstring &arg, const complete_entry_opt_t *entry,
     return result;
 }
 
-// Load command-specific completions for the specified command.
+/// Load command-specific completions for the specified command.
 static void complete_load(const wcstring &name, bool reload) {
     // We have to load this as a function, since it may define a --wraps or signature.
     // See issue #2466.
@@ -829,7 +838,7 @@ static void complete_load(const wcstring &name, bool reload) {
     completion_autoloader.load(name, reload);
 }
 
-// Performed on main thread, from background thread. Return type is ignored.
+/// Performed on main thread, from background thread. Return type is ignored.
 static int complete_load_no_reload(wcstring *name) {
     assert(name != NULL);
     ASSERT_IS_MAIN_THREAD();
@@ -1543,7 +1552,7 @@ wcstring complete_print() {
     return out;
 }
 
-// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
+/// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 static pthread_mutex_t wrapper_lock = PTHREAD_MUTEX_INITIALIZER;
 typedef std::map<wcstring, wcstring_list_t> wrapper_map_t;
 static wrapper_map_t &wrap_map() {
@@ -1557,7 +1566,8 @@ static wrapper_map_t &wrap_map() {
     return *wrapper_map;
 }
 
-// Add a new target that is wrapped by command. Example: __fish_sgrep (command) wraps grep (target).
+/// Add a new target that is wrapped by command. Example: __fish_sgrep (command) wraps grep
+/// (target).
 bool complete_add_wrapper(const wcstring &command, const wcstring &new_target) {
     if (command.empty() || new_target.empty()) {
         return false;

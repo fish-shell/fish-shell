@@ -6,8 +6,13 @@
     <tbody>
     <tr class="data_table_row" ng-repeat="binding in bindings | filterBinding:query">
         <td ng-class="{ data_table_cell: true, no_overflow: !binding._is_selected }" style="text-align: right; padding-right: 30px;" ng-click="binding._is_selected = !binding._is_selected">{{ binding.command }}</td>
-        <!-- Some bindings are listed multiple times for e.g. function backward-char is bound to \e\[D as well as key left. Users may want to know why some bindings are listed twice, so the actual binding is shown in next line on a click -->
-        <td ng-class="{ data_table_cell: true, no_overflow: !binding._is_selected }" style="text-align: left; padding-right: 30px;" ng-click="binding._is_selected = !binding._is_selected">{{ binding.readable_binding }} <div ng-show="binding._is_selected"> {{ binding.binding }} </div> </td>
+        <!-- Raw binding commands are shown in next line on a click -->
+        <td ng-class="{ data_table_cell: true, no_overflow: !binding._is_selected }" style="text-align: left; padding-right: 30px;" ng-click="binding._is_selected = !binding._is_selected">
+            <div ng-repeat="variety in binding.bindings">
+                {{ variety.readable_binding }}
+                <div class="raw_binding" ng-repeat="raw in variety.raw_bindings" ng-show="binding._is_selected" > {{ raw }} </div>
+            </div>
+        </td>
     </tr>
     </tbody>
 </table>

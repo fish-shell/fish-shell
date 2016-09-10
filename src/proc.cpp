@@ -514,7 +514,7 @@ void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status) {
     event.arguments.resize(0);
 }
 
-int job_reap(bool interactive) {
+int job_reap(bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
     job_t *jnext;
     int found = 0;
@@ -526,6 +526,10 @@ int job_reap(bool interactive) {
         return 0;
     }
     locked = true;
+
+    // this may be invoked in an exit handler, after the TERM has been torn down
+    // don't try to print in that case (#3222)
+    const bool interactive = allow_interactive && cur_term != NULL;
 
     process_mark_finished_children(false);
 
@@ -711,7 +715,7 @@ static int select_try(job_t *j) {
     for (size_t idx = 0; idx < chain.size(); idx++) {
         const io_data_t *io = chain.at(idx).get();
         if (io->io_mode == IO_BUFFER) {
-            CAST_INIT(const io_pipe_t *, io_pipe, io);
+            const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io);
             int fd = io_pipe->pipe_fd[0];
             // fwprintf( stderr, L"fd %d on job %ls\n", fd, j->command );
             FD_SET(fd, &fds);

@@ -9,7 +9,6 @@ html, body {
     color: #111;
 }
 body {
-    text-rendering: optimizeLegibility;
     overflow: hidden;
 }
 .logo {
@@ -95,9 +94,6 @@ a { color: #3d5cb3; }
 }
 .fish_right_bar ul li {
     margin-bottom: 0.6rem;
-}
-.fish_right_bar p > code {
-    display: inline-block;
 }
 /* Typography */
 p { margin: 1rem 0; }
@@ -271,5 +267,3 @@ tt, code, pre, .fish {
     position: absolute;
     left: -2rem;
 }
-
-

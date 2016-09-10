@@ -953,18 +953,23 @@ For a list of all builtins, functions and commands shipped with fish, see the <a
 
 The `fish` editor features copy and paste, a searchable history and many editor functions that can be bound to special keyboard shortcuts.
 
-Similar to bash, fish has Emacs and Vi editing modes. The default editing mode is Emacs. You can switch to Vi mode with `fish_vi_key_bindings` and switch back with `fish_default_key_bindings`.
+Similar to bash, fish has Emacs and Vi editing modes. The default editing mode is Emacs. You can switch to Vi mode with `fish_vi_key_bindings` and switch back with `fish_default_key_bindings`. You can also make your own key bindings by creating a function and setting $fish_key_bindings to its name. For example:
 
+\fish
+function hybrid_bindings --description "Vi-style bindings that inherit emacs-style bindings in all modes"
+    for mode in default insert visual
+        fish_default_key_bindings -M $mode
+    end
+    fish_vi_key_bindings --no-erase
+end
+set -g fish_key_bindings hybrid_bindings
+\endfish
 
-\subsection emacs-mode Emacs mode commands
+\subsection shared-binds Shared bindings
+
+Some bindings are shared between emacs- and vi-mode because they aren't text editing bindings or because what Vi/Vim does for a particular key doesn't make sense for a shell.
 
 - @key{Tab} <a href="#completion">completes</a> the current token. @key{Shift, Tab} completes the current token and starts the pager's search mode.
-
-- @key{Home} or @key{Control,A} moves the cursor to the beginning of the line.
-
-- @key{End} or @key{Control,E} moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, @key{End} or @key{Control,E} accepts the autosuggestion.
-
-- @cursor_key{&larr;,Left} (or @key{Control,B}) and @cursor_key{&rarr;,Right} (or @key{Control,F}) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, the @cursor_key{&rarr;,Right} key and the @key{Control,F} combination accept the suggestion.
 
 - @key{Alt,&larr;,Left} and @key{Alt,&rarr;,Right} move the cursor one word left or right, or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Alt,&rarr;,Right} (or @key{Alt,F}) accepts the first word in the suggestion.
 
@@ -972,13 +977,9 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
 
 - @key{Alt,&uarr;,Up} and @key{Alt,&darr;,Down} search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the <a href='#history'>history</a> section for more information on history searching.
 
-- @key{Delete} and @key{Backspace} removes one character forwards or backwards respectively.
-
 - @key{Control,C} deletes the entire line.
 
 - @key{Control,D} delete one character to the right of the cursor. If the command line is empty, @key{Control,D} will exit fish.
-
-- @key{Control,K} moves contents from the cursor to the end of line to the <a href="#killring">killring</a>.
 
 - @key{Control,U} moves contents from the beginning of line to the cursor to the <a href="#killring">killring</a>.
 
@@ -988,17 +989,29 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
 
 - @key{Alt,D} moves the next word to the <a href="#killring">killring</a>.
 
-- @key{Alt,W} prints a short description of the command under the cursor.
+- @key{Alt,H} (or @key{F1}) shows the manual page for the current command, if one exists.
 
 - @key{Alt,L} lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 
 - @key{Alt,P} adds the string '`| less;`' to the end of the job under the cursor. The result is that the output of the command will be paged.
 
+- @key{Alt,W} prints a short description of the command under the cursor.
+
+\subsection emacs-mode Emacs mode commands
+
+- @key{Home} or @key{Control,A} moves the cursor to the beginning of the line.
+
+- @key{End} or @key{Control,E} moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, @key{End} or @key{Control,E} accepts the autosuggestion.
+
+- @cursor_key{&larr;,Left} (or @key{Control,B}) and @cursor_key{&rarr;,Right} (or @key{Control,F}) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, the @cursor_key{&rarr;,Right} key and the @key{Control,F} combination accept the suggestion.
+
+- @key{Delete} and @key{Backspace} removes one character forwards or backwards respectively.
+
+- @key{Control,K} moves contents from the cursor to the end of line to the <a href="#killring">killring</a>.
+
 - @key{Alt,C} capitalizes the current word.
 
 - @key{Alt,U} makes the current word uppercase.
-
-- @key{Alt,H} (or @key{F1}) shows the manual page for the current command, if one exists.
 
 - @key{Control, t} transposes the last two characters
 
@@ -1010,9 +1023,22 @@ You can change these key bindings using the <a href="commands.html#bind">bind</a
 
 \subsection vi-mode Vi mode commands
 
-Vi mode allows for the use of Vi-like commands at the prompt. Initially, <a href="#vi-mode-insert">insert mode</a> is active. @key{Escape} enters <a href="#vi-mode-command">command mode</a>. The commands available in command, insert and visual mode are described below. Vi mode builds on top of <a href="#emacs-mode">Emacs mode</a>, so all keybindings mentioned there that do not contradict the ones mentioned here also work.
+Vi mode allows for the use of Vi-like commands at the prompt. Initially, <a href="#vi-mode-insert">insert mode</a> is active. @key{Escape} enters <a href="#vi-mode-command">command mode</a>. The commands available in command, insert and visual mode are described below. Vi mode shares <a href="#shared-binds">some bindings</a> with <a href="#emacs-mode">Emacs mode</a>.
 
-When in vi-mode, the <a href="fish_mode_prompt.html">`fish_mode_prompt`</a> function will display a mode indicator to the left of the prompt. The `fish_vi_cursor` function is available to change the cursor's shape depending on the mode in supported terminals.
+It is also possible to add all emacs-mode bindings to vi-mode by using something like
+
+\fish
+function fish_user_key_bindings
+    # Execute this once per mode that emacs bindings should be used in
+    fish_default_key_bindings -M insert
+    # Without an argument, fish_vi_key_bindings will default to
+    # resetting all bindings.
+    # The argument specifies the initial mode (insert, "default" or visual).
+    fish_vi_key_bindings insert
+end
+\endfish
+
+When in vi-mode, the <a href="fish_mode_prompt.html">`fish_mode_prompt`</a> function will display a mode indicator to the left of the prompt. The `fish_vi_cursor` function will be used to change the cursor's shape depending on the mode in supported terminals. To disable this feature, override it with an empty function.
 
 \subsubsection vi-mode-command Command mode
 
@@ -1045,19 +1071,15 @@ Command mode is also known as normal mode.
 - @key{Control, X} copies the current buffer to the system's clipboard, @key{Control, V} inserts the clipboard contents.
 - @key{Control,C} deletes the entire line.
 
-\subsubsection vi-mode-insert Insert mode
+- @key{Backspace} moves the cursor left.
 
-- @key{Tab} <a href="#completion">completes</a> the current token.
+\subsubsection vi-mode-insert Insert mode
 
 - @key{Escape} or @key{Control,C} enters <a href="#vi-mode-command">command mode</a>.
 
-- @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} search the command history.  See the <a href='#history'>history</a> section for more information on history searching.
-
-- @key{Control,W} moves the previous word to the <a href="#killring">killring</a>.
-
-- @key{Control,U} moves contents from the beginning of line to the cursor to the <a href="#killring">killring</a>.
-
 - @key{Control,x} moves the cursor to the end of the line. If an autosuggestion is available, it will be accepted completely.
+
+- @key{Backspace} removes one character to the left.
 
 \subsubsection vi-mode-visual Visual mode
 
@@ -1120,15 +1142,15 @@ Note that functions cannot be started in the background. Functions that are stop
 
 \section initialization Initialization files
 
-On startup, Fish evaluates a number of configuration files, which can be used to control the behavior of the shell.
+On startup, Fish evaluates a number of configuration files, which can be used to control the behavior of the shell. The location of these configuration variables is controlled by a number of environment variables, and their default or usual location is given below.
 
 Configuration files are evaluated in the following order:
-- Configuration shipped with fish, which should not be edited, usually `/usr/share/fish/config.fish`.
-- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - usually `/etc/fish/config.fish`;
+- Configuration shipped with fish, which should not be edited, in `$__fish_datadir/config.fish` (usually `/usr/share/fish/config.fish`).
+- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - in `$__fish_sysconfdir` (usually `/etc/fish/config.fish`);
 - Configuration snippets in files ending in `.fish`, in the directories:
-  - `~/.config/fish/conf.d/`
-  - `/etc/fish/conf.d`
-  - `/usr/share/fish/vendor_conf.d`
+  - `$XDG_CONFIG_HOME/fish/conf.d` (by default, `~/.config/fish/conf.d/`)
+  - `$__fish_sysconfdir/conf.d` (by default, `/etc/fish/conf.d`)
+  - `/usr/share/fish/vendor_conf.d` (set at compile time; by default, `$__fish_datadir/conf.d`)
 
   If there are multiple files with the same name in these directories, only the first will be executed.
 
@@ -1136,7 +1158,7 @@ Configuration files are evaluated in the following order:
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
 
-This wide search may be confusing. If you are unsure, use `~/.config/fish/config.fish`.
+This wide search may be confusing. If you are unsure where to put your own customisations, use `~/.config/fish/config.fish`.
 
 These files are all executed on the startup of every shell. If you want to run a command only on starting an interactive shell, use the exit status of the command `status --is-interactive` to determine if the shell is interactive. If you want to run a command only when using a login shell, use `status --is-login` instead. This will speed up the starting of non-interactive or non-login shells.
 

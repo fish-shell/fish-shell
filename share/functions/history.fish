@@ -1,9 +1,9 @@
 #
 # Wrap the builtin history command to provide additional functionality.
 #
-function history --shadow-builtin --description "display or manipulate interactive command history"
+function history --description "display or manipulate interactive command history"
     set -l cmd
-    set -l search_mode --contains
+    set -l search_mode
     set -l with_time
 
     # The "set cmd $cmd xyz" lines are to make it easy to detect if the user specifies more than one
@@ -28,6 +28,8 @@ function history --shadow-builtin --description "display or manipulate interacti
                 set search_mode --prefix
             case -c --contains
                 set search_mode --contains
+            case -e --exact
+                set search_mode --exact
             case --
                 set -e argv[1]
                 break
@@ -38,7 +40,7 @@ function history --shadow-builtin --description "display or manipulate interacti
     end
 
     if not set -q cmd[1]
-        set cmd search  # default to "search" if the user didn't explicitly specify a command
+        set cmd search # default to "search" if the user didn't explicitly specify a command
     else if set -q cmd[2]
         printf (_ "You cannot specify multiple commands: %s\n") "$cmd"
         return 1
@@ -46,6 +48,9 @@ function history --shadow-builtin --description "display or manipulate interacti
 
     switch $cmd
         case search
+            test -z "$search_mode"
+            and set search_mode "--contains"
+
             if isatty stdout
                 set -l pager less
                 set -q PAGER
@@ -55,11 +60,19 @@ function history --shadow-builtin --description "display or manipulate interacti
                 builtin history --search $search_mode $with_time -- $argv
             end
 
-        case delete  # Interactively delete history
+        case delete # Interactively delete history
             # TODO: Fix this to deal with history entries that have multiple lines.
             if not set -q argv[1]
-                printf "You have to specify at least one search term to find entries to delete" >&2
+                printf (_ "You must specify at least one search term when deleting entries\n") >&2
                 return 1
+            end
+
+            test -z "$search_mode"
+            and set search_mode "--exact"
+
+            if test $search_mode = "--exact"
+                builtin history --delete $search_mode $argv
+                return
             end
 
             # TODO: Fix this so that requesting history entries with a timestamp works:
@@ -92,8 +105,8 @@ function history --shadow-builtin --description "display or manipulate interacti
 
                 for i in (string split " " -- $choice)
                     if test -z "$i"
-                    or not string match -qr '^[1-9][0-9]*$' -- $i
-                    or test $i -gt $found_items_count
+                        or not string match -qr '^[1-9][0-9]*$' -- $i
+                        or test $i -gt $found_items_count
                         printf "Ignoring invalid history entry ID \"%s\"\n" $i
                         continue
                     end
@@ -105,9 +118,19 @@ function history --shadow-builtin --description "display or manipulate interacti
             end
 
         case save
+            if test -n "$search_mode"
+                or test -n "$with_time"
+                printf (_ "history: you cannot use any options with %s command\n") save >&2
+                return 1
+            end
             builtin history --save -- $argv
 
         case merge
+            if test -n "$search_mode"
+                or test -n "$with_time"
+                printf (_ "history: you cannot use any options with %s command\n") merge >&2
+                return 1
+            end
             builtin history --merge -- $argv
 
         case help
@@ -115,11 +138,19 @@ function history --shadow-builtin --description "display or manipulate interacti
 
         case clear
             # Erase the entire history.
-            read --local --prompt "echo 'Are you sure you want to clear history? (y/n) '" choice
-            if test "$choice" = "y"
-            or test "$choice" = "yes"
+            if test -n "$search_mode"
+                or test -n "$with_time"
+                printf (_ "history: you cannot use any options with %s command\n") clear >&2
+                return 1
+            end
+
+            printf (_ "If you enter 'yes' your entire interactive command history will be erased\n")
+            read --local --prompt "echo 'Are you sure you want to clear history? (yes/no) '" choice
+            if test "$choice" = "yes"
                 builtin history --clear -- $argv
-                and echo "History cleared!"
+                and printf (_ "Command history cleared!")
+            else
+                printf (_ "You did not say 'yes' so I will not clear your command history\n")
             end
     end
 end

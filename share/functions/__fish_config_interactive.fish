@@ -111,15 +111,13 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # fish_greeting can be a function (preferred) or a variable.
     #
     if status --is-interactive
-        if status --is-login
-            if functions -q fish_greeting
-                fish_greeting
-            else
-                # The greeting used to be skipped when fish_greeting was empty (not just undefined)
-                # Keep it that way to not print superfluous newlines on old configuration
-                test -n "$fish_greeting"
-                and echo $fish_greeting
-            end
+        if functions -q fish_greeting
+            fish_greeting
+        else
+            # The greeting used to be skipped when fish_greeting was empty (not just undefined)
+            # Keep it that way to not print superfluous newlines on old configuration
+            test -n "$fish_greeting"
+            and echo $fish_greeting
         end
     end
 
@@ -176,10 +174,17 @@ function __fish_config_interactive -d "Initializations that should be performed 
             if set -q __fish_active_key_bindings
                 echo "Keeping $__fish_active_key_bindings" >&2
                 return 1
-            else
+            else if functions -q fish_default_key_bindings
                 echo "Reverting to default bindings" >&2
                 set fish_key_bindings fish_default_key_bindings
                 # Return because we are called again
+                return 0
+            else
+                # If we can't even find the default bindings, something is broken.
+                # Without it, we would eventually run into the stack size limit, but that'd print hundreds of duplicate lines
+                # so we should give up earlier.
+                echo "Cannot find fish_default_key_bindings, falling back to very simple bindings." >&2
+                echo "Most likely something is wrong with your installation." >&2
                 return 0
             end
         end

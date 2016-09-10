@@ -16,8 +16,6 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <wchar.h>
-#include <wctype.h>
-#include <cwctype>
 #include <memory>
 
 #include "common.h"
@@ -35,7 +33,7 @@
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
 /// Characters that have been read and returned by the sequence matching code.
-static std::deque<wint_t> lookahead_list;
+static std::deque<wchar_t> lookahead_list;
 
 // Queue of pairs of (function pointer, argument) to be invoked. Expected to be mostly empty.
 typedef std::pair<void (*)(void *), void *> callback_info_t;
@@ -203,7 +201,7 @@ wchar_t input_common_readch(int timed) {
             struct timeval tm = {wait_on_escape_ms / 1000, 1000 * (wait_on_escape_ms % 1000)};
             int count = select(1, &fds, 0, 0, &tm);
             if (count <= 0) {
-                return WEOF;
+                return R_TIMEOUT;
             }
         }
 
@@ -213,12 +211,12 @@ wchar_t input_common_readch(int timed) {
         while (1) {
             wint_t b = readb();
 
-            if (MB_CUR_MAX == 1)  // single-byte locale, all values are legal
-            {
-                return (unsigned char)b;
-            }
+            if (b >= R_NULL && b <= R_MAX) return b;
 
-            if ((b >= R_NULL) && (b < R_NULL + 1000)) return b;
+            if (MB_CUR_MAX == 1) {
+                // return (unsigned char)b;  // single-byte locale, all values are legal
+                return b;  // single-byte locale, all values are legal
+            }
 
             char bb = b;
             size_t sz = mbrtowc(&res, &bb, 1, &state);
@@ -240,7 +238,7 @@ wchar_t input_common_readch(int timed) {
         }
     } else {
         if (!timed) {
-            while (has_lookahead() && lookahead_front() == WEOF) lookahead_pop();
+            while (has_lookahead() && lookahead_front() == R_TIMEOUT) lookahead_pop();
             if (!has_lookahead()) return input_common_readch(0);
         }
 

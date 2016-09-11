@@ -1,10 +1,33 @@
-complete -c history -r -l prefix --description "Match items starting with prefix"
-complete -c history -r -l contains --description "Match items containing string"
-complete -c history -l search -s s --description "Prints commands from history matching query"
-complete -c history -l delete -s d --description "Deletes commands from history matching query"
-complete -c history -l clear --description "Clears history file"
-complete -c history -l merge -s m --description "Incorporate history changes from other sessions"
-complete -c history -l exact -s e --description "Match items in the history that are identicial"
+set -g __fish_history_all_commands search delete save merge clear
+
+function __fish_history_cmd_in_array
+        for i in (commandline -pco)
+                # -- is used to provide no options for contains
+                # (if $i is equal to --optname without -- will be error)
+                if contains -- $i $argv
+                        return 0
+                end
+        end
+
+        return 1
+end
+
+function __fish_history_no_subcommand
+        not __fish_history_cmd_in_array $__fish_history_all_commands
+end
+
+complete -c history -l prefix -s p --description "Match items beginning with the string"
+complete -c history -l contains -s c --description "Match items containing the string"
+complete -c history -l exact -s e --description "Match items identical to the string"
 complete -c history -l with-time -s t --description "Output with timestamps"
 
-# --save is not completed; it is for internal use
+# We don't include a completion for the "save" subcommand because it should not be used
+# interactively.
+complete -c history -f -n '__fish_history_no_subcommand' -a search \
+    --description "Prints commands from history matching the strings"
+complete -c history -f -n '__fish_history_no_subcommand' -a delete \
+    --description "Deletes commands from history matching the strings"
+complete -c history -f -n '__fish_history_no_subcommand' -a merge \
+    --description "Incorporate history changes from other sessions"
+complete -c history -f -n '__fish_history_no_subcommand' -a clear \
+    --description "Clears history file"

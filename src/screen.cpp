@@ -205,8 +205,8 @@ size_t escape_code_length(const wchar_t *code) {
     bool found = false;
 
     if (cur_term != NULL) {
-        // Detect these terminfo color escapes with parameter value 0..7, all of which don't move
-        // the cursor.
+        // Detect these terminfo color escapes with parameter value 0..16, all of which don't move
+        // the cursor. 
         char *const esc[] = {
             set_a_foreground, set_a_background, set_foreground, set_background,
         };
@@ -232,12 +232,15 @@ size_t escape_code_length(const wchar_t *code) {
                               enter_superscript_mode, exit_superscript_mode, enter_blink_mode,
                               enter_italics_mode,     exit_italics_mode,     enter_reverse_mode,
                               enter_shadow_mode,      exit_shadow_mode,      enter_standout_mode,
-                              exit_standout_mode,     enter_secure_mode};
+                              exit_standout_mode,     enter_secure_mode,     enter_dim_mode,
+                              enter_blink_mode,       enter_protected_mode,  enter_alt_charset_mode,
+                              exit_alt_charset_mode};
 
         for (size_t p = 0; p < sizeof esc2 / sizeof *esc2 && !found; p++) {
             if (!esc2[p]) continue;
             // Test both padded and unpadded version, just to be safe. Most versions of tparm don't
             // actually seem to do anything these days.
+            
             size_t len = maxi(try_sequence(tparm(esc2[p]), code), try_sequence(esc2[p], code));
             if (len) {
                 resulting_length = len;
@@ -601,9 +604,8 @@ static bool perform_any_impending_soft_wrap(screen_t *scr, int x, int y) {
 /// Make sure we don't soft wrap.
 static void invalidate_soft_wrap(screen_t *scr) { scr->soft_wrap_location = INVALID_LOCATION; }
 
-// Various code for testing term behavior.
-
 #if 0
+/// Various code for testing term behavior.
 static bool test_stuff(screen_t *scr)
 {
     data_buffer_t output;
@@ -1186,18 +1188,18 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // omitted_newline_char in common.cpp.
         int non_space_width = fish_wcwidth(omitted_newline_char);
         if (screen_width >= non_space_width) {
-            bool has_256_colors = output_get_color_support() & color_support_term256;
-            if (has_256_colors) {
-                // Draw the string in term256 gray.
-                abandon_line_string.append(L"\x1b[38;5;245m");
-            } else {
-                // Draw in "bright black" (gray).
-                abandon_line_string.append(
-                    L"\x1b[0m"       // bright
-                    L"\x1b[30;1m");  // black
+            if (enter_dim_mode) {
+                // Use dim if they have it, so the color will be based on their actual normal color and the background of the termianl.
+                abandon_line_string.append(str2wcstring(tparm(enter_dim_mode)));
             }
+            else if (set_a_foreground && max_colors >= 8) {
+                // Draw the string in gray.
+                abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 8)));
+            }
+          
             abandon_line_string.push_back(omitted_newline_char);
-            abandon_line_string.append(L"\x1b[0m");  // normal text ANSI escape sequence
+            if (exit_attribute_mode)
+                abandon_line_string.append(str2wcstring(tparm(exit_attribute_mode)));  // normal text ANSI escape sequence
             abandon_line_string.append(screen_width - non_space_width, L' ');
         }
         abandon_line_string.push_back(L'\r');

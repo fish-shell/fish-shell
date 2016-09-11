@@ -1,7 +1,24 @@
-history: you cannot use any options with clear command
-history: you cannot use any options with merge command
+history: Invalid combination of options,
+you cannot do both 'search' and 'merge' in the same invocation
+history: you cannot use any options with the clear command
+history: you cannot use any options with the merge command
 history: save command expected 0 args, got 1
-history: you cannot use any options with save command
-history: you cannot use any options with clear command
+history: you cannot use any options with the save command
+history: you cannot use any options with the clear command
 history: merge command expected 0 args, got 1
 history: clear command expected 0 args, got 2
+
+history: you cannot use any options with the clear command
+history: you cannot use any options with the merge command
+history: save command expected 0 args, got 1
+history: you cannot use any options with the clear command
+history: you cannot use any options with the merge command
+
+history: Invalid combination of options,
+you cannot do both 'search' and 'merge' in the same invocation
+history: you cannot use any options with the save command
+history: you cannot use any options with the clear command
+history: merge command expected 0 args, got 1
+history: clear command expected 0 args, got 2
+history: you cannot use any options with the save command
+history: you cannot use any options with the merge command

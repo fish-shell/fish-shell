@@ -471,7 +471,6 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
                                           long_options[opt_index].name);
                 builtin_print_help(parser, streams, argv[0], streams.err);
-
                 return STATUS_BUILTIN_ERROR;
             }
             case 'a': {
@@ -2776,6 +2775,21 @@ static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **arg
 
 enum hist_cmd_t { HIST_NOOP, HIST_SEARCH, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAVE };
 
+static hist_cmd_t hist_string_to_cmd(const wchar_t *hist_command) {
+    if (wcscmp(hist_command, L"search") == 0) {
+        return HIST_SEARCH;
+    } else if (wcscmp(hist_command, L"delete") == 0) {
+        return HIST_DELETE;
+    } else if (wcscmp(hist_command, L"merge") == 0) {
+        return HIST_MERGE;
+    } else if (wcscmp(hist_command, L"save") == 0) {
+        return HIST_SAVE;
+    } else if (wcscmp(hist_command, L"clear") == 0) {
+        return HIST_CLEAR;
+    }
+    return HIST_NOOP;
+}
+
 static const wcstring hist_cmd_to_string(hist_cmd_t hist_cmd) {
     switch (hist_cmd) {
         case HIST_NOOP:
@@ -2802,8 +2816,8 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
     if (*hist_cmd != HIST_NOOP) {
         wchar_t err_text[1024];
         swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
-                 _(L"You cannot do both '%ls' and '%ls' in the same '%ls' invocation\n"),
-                 hist_cmd_to_string(*hist_cmd).c_str(), hist_cmd_to_string(sub_cmd).c_str(), cmd);
+                 _(L"you cannot do both '%ls' and '%ls' in the same invocation"),
+                 hist_cmd_to_string(*hist_cmd).c_str(), hist_cmd_to_string(sub_cmd).c_str());
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, err_text);
         return false;
     }
@@ -2812,15 +2826,14 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
     return true;
 }
 
-#define CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)                                             \
-    if (history_search_type_defined || with_time) {                                             \
-        streams.err.append_format(_(L"history: you cannot use any options with %ls command\n"), \
-                                  hist_cmd_to_string(hist_cmd).c_str());                        \
-        status = STATUS_BUILTIN_ERROR;                                                          \
-        break;                                                                                  \
-    }
-
 #define CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)                                         \
+    if (history_search_type_defined || show_time) {                           \
+        streams.err.append_format(                                            \
+            _(L"%ls: you cannot use any options with the %ls command\n"), \
+            cmd, hist_cmd_to_string(hist_cmd).c_str());                            \
+        status = STATUS_BUILTIN_ERROR;                                        \
+        break;                                                                \
+    } \
     if (args.size() != 0) {                                                              \
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT, cmd,                            \
                                   hist_cmd_to_string(hist_cmd).c_str(), 0, args.size()); \
@@ -2835,56 +2848,59 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     hist_cmd_t hist_cmd = HIST_NOOP;
     history_search_type_t search_type = (history_search_type_t)-1;
     bool history_search_type_defined = false;
-    bool with_time = false;
+    bool show_time = false;
 
-    static const struct woption long_options[] = {{L"delete", no_argument, 0, 'd'},
-                                                  {L"search", no_argument, 0, 's'},
-                                                  {L"prefix", no_argument, 0, 'p'},
-                                                  {L"contains", no_argument, 0, 'c'},
-                                                  {L"save", no_argument, 0, 'v'},
-                                                  {L"clear", no_argument, 0, 'l'},
-                                                  {L"merge", no_argument, 0, 'm'},
-                                                  {L"help", no_argument, 0, 'h'},
-                                                  {L"with-time", no_argument, 0, 't'},
-                                                  {L"exact", no_argument, 0, 'e'},
-                                                  {0, 0, 0, 0}};
+    // TODO: Remove the long options that correspond to subcommands (e.g., '--delete') on or after
+    // 2017-10 (which will be a full year after these flags have been deprecated).
+    const wchar_t *short_options = L":mepcht";
+    const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'},
+                                           {L"contains", no_argument, NULL, 'c'},
+                                           {L"help", no_argument, NULL, 'h'},
+                                           {L"show-time", no_argument, NULL, 't'},
+                                           {L"with-time", no_argument, NULL, 't'},
+                                           {L"exact", no_argument, NULL, 'e'},
+                                           {L"delete", no_argument, NULL, 1},
+                                           {L"search", no_argument, NULL, 2},
+                                           {L"save", no_argument, NULL, 3},
+                                           {L"clear", no_argument, NULL, 4},
+                                           {L"merge", no_argument, NULL, 5},
+                                           {NULL, 0, NULL, 0}};
 
     history_t *history = reader_get_history();
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
     // from webconfig.py.
     if (!history) history = &history_t::history_with_name(L"fish");
 
-    int opt = 0;
-    int opt_index = 0;
+    int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, L"+despcvlmht", long_options, &opt_index)) != EOF) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 's': {
-                if (!set_hist_cmd(cmd, &hist_cmd, HIST_SEARCH, streams)) {
-                    return STATUS_BUILTIN_ERROR;
-                }
-                break;
-            }
-            case 'm': {
-                if (!set_hist_cmd(cmd, &hist_cmd, HIST_MERGE, streams)) {
-                    return STATUS_BUILTIN_ERROR;
-                }
-                break;
-            }
-            case 'v': {
-                if (!set_hist_cmd(cmd, &hist_cmd, HIST_SAVE, streams)) {
-                    return STATUS_BUILTIN_ERROR;
-                }
-                break;
-            }
-            case 'd': {
+            case 1: {
                 if (!set_hist_cmd(cmd, &hist_cmd, HIST_DELETE, streams)) {
                     return STATUS_BUILTIN_ERROR;
                 }
                 break;
             }
-            case 'l': {
+            case 2: {
+                if (!set_hist_cmd(cmd, &hist_cmd, HIST_SEARCH, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
+            case 3: {
+                if (!set_hist_cmd(cmd, &hist_cmd, HIST_SAVE, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
+            case 4: {
                 if (!set_hist_cmd(cmd, &hist_cmd, HIST_CLEAR, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
+            case 5: {
+                if (!set_hist_cmd(cmd, &hist_cmd, HIST_MERGE, streams)) {
                     return STATUS_BUILTIN_ERROR;
                 }
                 break;
@@ -2905,28 +2921,40 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 break;
             }
             case 't': {
-                with_time = true;
+                show_time = true;
                 break;
             }
             case 'h': {
                 builtin_print_help(parser, streams, cmd, streams.out);
                 return STATUS_BUILTIN_OK;
             }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_BUILTIN_ERROR;
+            }
             case '?': {
                 streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
             }
-            default: {
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, argv[w.woptind - 1]);
-                return STATUS_BUILTIN_ERROR;
-            }
+            default: { DIE("unexpected retval from wgetopt_long"); }
         }
     }
 
-    // Everything after the flags is an argument for a subcommand (e.g., a search term).
+    // If a history command hasn't already been specified via a flag check the first word.
+    // Note that this can be simplified after we eliminate allowing subcommands as flags.
+    // See the TODO above regarding the `long_options` array.
+    if (hist_cmd == HIST_NOOP && w.woptind < argc) {
+        hist_cmd = hist_string_to_cmd(argv[w.woptind]);
+        if (hist_cmd != HIST_NOOP) {
+            w.woptind++;
+        }
+    }
+
+    // Every argument that we haven't consumed already is an argument for a subcommand (e.g., a
+    // search term).
     const wcstring_list_t args(argv + w.woptind, argv + argc);
 
-    // Establish appropriate defaults for unspecified options.
+    // Establish appropriate defaults.
     if (hist_cmd == HIST_NOOP) hist_cmd = HIST_SEARCH;
     if (!history_search_type_defined) {
         if (hist_cmd == HIST_SEARCH) search_type = HISTORY_SEARCH_TYPE_CONTAINS;
@@ -2936,7 +2964,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     int status = STATUS_BUILTIN_OK;
     switch (hist_cmd) {
         case HIST_SEARCH: {
-            if (!history->search(search_type, args, with_time, streams)) {
+            if (!history->search(search_type, args, show_time, streams)) {
                 status = STATUS_BUILTIN_ERROR;
             }
             break;
@@ -2946,7 +2974,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             // this time we expect the non-exact deletions to be handled only by the history
             // function's interactive delete feature.
             if (search_type != HISTORY_SEARCH_TYPE_EXACT) {
-                streams.err.append_format(_(L"builtin history --delete only supports --exact\n"));
+                streams.err.append_format(_(L"builtin history delete only supports --exact\n"));
                 status = STATUS_BUILTIN_ERROR;
                 break;
             }
@@ -2960,20 +2988,17 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             break;
         }
         case HIST_CLEAR: {
-            CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)
             CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->clear();
             history->save();
             break;
         }
         case HIST_MERGE: {
-            CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)
             CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->incorporate_external_changes();
             break;
         }
         case HIST_SAVE: {
-            CHECK_FOR_UNEXPECTED_HIST_OPTIONS(hist_cmd)
             CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->save();
             break;

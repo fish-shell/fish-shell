@@ -44,15 +44,6 @@ expect_prompt -re {start2\r\necho start1; builtin history; echo end1\r\nend2\r\n
 }
 
 # ==========
-# Verify asking for two different actions produces an error.
-send "builtin history --search --merge\r"
-expect_prompt -re {\r\nYou cannot do both 'search' and 'merge' in the same 'history' invocation\r\n} {
-    puts "invalid attempt at multiple history commands detected"
-} unmatched {
-    puts stderr "invalid attempt at multiple history commands not detected"
-}
-
-# ==========
 # The following tests verify the behavior of the history function.
 # ==========
 

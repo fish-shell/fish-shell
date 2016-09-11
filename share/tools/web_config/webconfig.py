@@ -455,7 +455,7 @@ class BindingParser:
             readable_command += 'CTRL - '
         if alt:
             readable_command += 'ALT - '
-        
+
         if result == '':
             return 'unknown-control-sequence'
 
@@ -654,7 +654,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_delete_history_item(self, history_item_text):
         # It's really lame that we always return success here
-        out, err = run_fish_cmd('builtin history --save --delete -- ' + escape_fish_cmd(history_item_text))
+        cmd = ('builtin history delete --exact -- %s; builtin history save' %
+            escape_fish_cmd(history_item_text))
+        out, err = run_fish_cmd(cmd)
         return True
 
     def do_set_prompt_function(self, prompt_func):

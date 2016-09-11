@@ -2,31 +2,35 @@
 
 \subsection history-synopsis Synopsis
 \fish{synopsis}
-history ( -s | --search ) [ -t | --with-time ] [ -e | --exact | -p | --prefix | -c | --contains ] [ "search string"... ]
-history ( -d | --delete ) [ -t | --with-time ] [ -e | --exact | -p | --prefix | -c | --contains ] "search string"...
-history ( -m | --merge )
-history ( -s | --save )
-history ( -l | --clear )
+history search [ --show-time ] [ --exact | --prefix | --contains ] [ "search string"... ]
+history delete [ --show-time ] [ --exact | --prefix | --contains ] "search string"...
+history merge
+history save
+history clear
 history ( -h | --help )
 \endfish
 
 \subsection history-description Description
 
-`history` is used to list, search and delete the history of commands used.
+`history` is used to search, delete, and otherwise manipulate the history of interactive commands.
 
-The following commands are available:
+Note that for backwards compatibility each subcommand can also be specified as a long option. For example, rather than `history search` you can type `history --search`. Those long options are deprecated and will be removed in a future release.
 
-- `-s` or `--search` returns history items matching the search string. If no search string is provided it returns all history items. This is the default operation if no other operation is specified. The `--contains` search option will be used if you don't specify a different search option. Entries are ordered newest to oldest. If stdout is attached to a tty the output will be piped through your pager by the history function. The history builtin simply writes the results to stdout.
+The following operations (sub-commands) are available:
 
-- `-d` or `--delete` deletes history items. Without the `--prefix` or `--contains` options, the exact match will be deleted. With either of these options, a prompt will be displayed before any items are deleted asking you which entries are to be deleted. You can enter the word "all" to delete all matching entries. You can enter a single ID (the number in square brackets) to delete just that single entry. You can enter more than one ID separated by a space to delete multiple entries. Just press [enter] to not delete anything. Note that the interactive delete behavior is a feature of the history function. The history builtin only supports bulk deletion.
+- `search` returns history items matching the search string. If no search string is provided it returns all history items. This is the default operation if no other operation is specified. You only have to explicitly say `history search` if you wish to search for one of the subcommands. The `--contains` search option will be used if you don't specify a different search option. Entries are ordered newest to oldest. If stdout is attached to a tty the output will be piped through your pager by the history function. The history builtin simply writes the results to stdout.
 
-- `-m` or `--merge` immediately incorporates history changes from other sessions. Ordinarily `fish` ignores history changes from sessions started after the current one. This command applies those changes immediately.
+- `delete` deletes history items. Without the `--prefix` or `--contains` options, the exact match will be deleted. With either of these options, a prompt will be displayed before any items are deleted asking you which entries are to be deleted. You can enter the word "all" to delete all matching entries. You can enter a single ID (the number in square brackets) to delete just that single entry. You can enter more than one ID separated by a space to delete multiple entries. Just press [enter] to not delete anything. Note that the interactive delete behavior is a feature of the history function. The history builtin only supports bulk deletion.
 
-- `-v` or `--save` saves all changes in the history file. The shell automatically saves the history file; this option is provided for internal use.
+- `merge` immediately incorporates history changes from other sessions. Ordinarily `fish` ignores history changes from sessions started after the current one. This command applies those changes immediately.
 
-- `-l` or `--clear` clears the history file. A prompt is displayed before the history is erased asking you to confirm you really want to clear all history unless `builtin history` is used.
+- `save` immediately writes all changes to the history file. The shell automatically saves the history file; this option is provided for internal use and should not normally need to be used by the user.
+
+- `clear` clears the history file. A prompt is displayed before the history is erased asking you to confirm you really want to clear all history unless `builtin history` is used.
 
 The following options are available:
+
+These flags can appear before or immediately after on of the sub-commands listed above.
 
 - `-c` or `--contains` searches or deletes items in the history that contain the specified text string. This is the default for the `--search` flag. This is not currently supported by the `--delete` flag.
 
@@ -34,7 +38,9 @@ The following options are available:
 
 - `-p` or `--prefix` searches or deletes items in the history that begin with the specified text string. This is not currently supported by the `--delete` flag.
 
-- `-t` or `--with-time` outputs the date and time ("%Y-%m-%d %H:%M:%S") history items were recorded at on a line starting with "#" before each history entry. 
+- `-t` or `--show-time` outputs the date and time ("%Y-%m-%d %H:%M:%S") history items were recorded at on a line starting with "#" before each history entry. Note that `--with-time` is also allowed but is deprecated and will be removed at a future date.
+
+- `-h` or `--help` display help for this command.
 
 \subsection history-examples Example
 

@@ -1,29 +1,78 @@
 #
 # Wrap the builtin history command to provide additional functionality.
 #
+
+# This function is meant to mimic the `set_hist_cmd` function in *src/builtin.cpp*.
+# In particular the error message should be identical in both locations.
+function __fish_set_hist_cmd --no-scope-shadowing
+    if set -q hist_cmd[1]
+        set -l msg (printf (_ "you cannot do both '%ls' and '%ls' in the same invocation") \
+            $hist_cmd $argv[1])
+        printf (_ "%ls: Invalid combination of options,\n%ls\n") $cmd $msg >&2
+        return 1
+    end
+    set hist_cmd $argv[1]
+    return 0
+end
+
+function __fish_unexpected_hist_args --no-scope-shadowing
+    if test -n "$search_mode"
+        or test -n "$show_time"
+        printf (_ "%ls: you cannot use any options with the %ls command\n") $cmd $hist_cmd >&2
+        return 0
+    end
+    if set -q argv[1]
+        printf (_ "%ls: %ls command expected %d args, got %d\n") \
+            $cmd $hist_cmd 0 (count $argv) >&2
+        return 0
+    end
+    return 1
+end
+
 function history --description "display or manipulate interactive command history"
-    set -l cmd
+    set -l cmd $_
+    set -l cmd history
+    set -l hist_cmd
     set -l search_mode
-    set -l with_time
+    set -l show_time
+
+    # Check for a recognized subcommand as the first argument.
+    if set -q argv[1]
+        and not string match -q -- '-*' $argv[1]
+        switch $argv[1]
+            case search delete merge save clear
+                set hist_cmd $argv[1]
+                set -e argv[1]
+        end
+    end
 
     # The "set cmd $cmd xyz" lines are to make it easy to detect if the user specifies more than one
     # subcommand.
+    #
+    # TODO: Remove the long options that correspond to subcommands (e.g., '--delete') on or after
+    # 2017-10 (which will be a full year after these flags have been deprecated).
     while set -q argv[1]
         switch $argv[1]
-            case -d --delete
-                set cmd $cmd delete
-            case -v --save
-                set cmd $cmd save
-            case -l --clear
-                set cmd $cmd clear
-            case -s --search
-                set cmd $cmd search
-            case -m --merge
-                set cmd $cmd merge
+            case --delete
+                __fish_set_hist_cmd delete
+                or return
+            case --save
+                __fish_set_hist_cmd save
+                or return
+            case --clear
+                __fish_set_hist_cmd clear
+                or return
+            case --search
+                __fish_set_hist_cmd search
+                or return
+            case --merge
+                __fish_set_hist_cmd merge
+                or return
             case -h --help
-                set cmd $cmd help
-            case -t --with-time
-                set with_time -t
+                builtin history --help
+                return
+            case -t --show-time --with-time
+                set show_time -t
             case -p --prefix
                 set search_mode --prefix
             case -c --contains
@@ -39,15 +88,23 @@ function history --description "display or manipulate interactive command histor
         set -e argv[1]
     end
 
-    if not set -q cmd[1]
-        set cmd search # default to "search" if the user didn't explicitly specify a command
-    else if set -q cmd[2]
-        printf (_ "You cannot specify multiple commands: %s\n") "$cmd"
-        return 1
+    # If a history command has not already been specified check the first non-flag argument for a
+    # command. This allows the flags to appear before or after the subcommand.
+    if not set -q hist_cmd[1]
+        and set -q argv[1]
+        switch $argv[1]
+            case search delete merge save clear
+                set hist_cmd $argv[1]
+                set -e argv[1]
+        end
     end
 
-    switch $cmd
-        case search
+    if not set -q hist_cmd[1]
+        set hist_cmd search # default to "search" if the user didn't specify a subcommand
+    end
+
+    switch $hist_cmd
+        case search # search the interactive command history
             test -z "$search_mode"
             and set search_mode "--contains"
 
@@ -55,12 +112,12 @@ function history --description "display or manipulate interactive command histor
                 set -l pager less
                 set -q PAGER
                 and set pager $PAGER
-                builtin history --search $search_mode $with_time -- $argv | eval $pager
+                builtin history search $search_mode $show_time -- $argv | eval $pager
             else
-                builtin history --search $search_mode $with_time -- $argv
+                builtin history search $search_mode $show_time -- $argv
             end
 
-        case delete # Interactively delete history
+        case delete # interactively delete history
             # TODO: Fix this to deal with history entries that have multiple lines.
             if not set -q argv[1]
                 printf (_ "You must specify at least one search term when deleting entries\n") >&2
@@ -71,13 +128,13 @@ function history --description "display or manipulate interactive command histor
             and set search_mode "--exact"
 
             if test $search_mode = "--exact"
-                builtin history --delete $search_mode $argv
+                builtin history delete $search_mode $argv
                 return
             end
 
             # TODO: Fix this so that requesting history entries with a timestamp works:
-            #   set -l found_items (builtin history --search $search_mode $with_time -- $argv)
-            set -l found_items (builtin history --search $search_mode -- $argv)
+            #   set -l found_items (builtin history search $search_mode $show_time -- $argv)
+            set -l found_items (builtin history search $search_mode -- $argv)
             if set -q found_items[1]
                 set -l found_items_count (count $found_items)
                 for i in (seq $found_items_count)
@@ -98,8 +155,8 @@ function history --description "display or manipulate interactive command histor
 
                 if test "$choice" = "all"
                     printf "Deleting all matching entries!\n"
-                    builtin history --delete $search_mode -- $argv
-                    builtin history --save
+                    builtin history delete $search_mode -- $argv
+                    builtin history save
                     return
                 end
 
@@ -112,45 +169,38 @@ function history --description "display or manipulate interactive command histor
                     end
 
                     printf "Deleting history entry %s: \"%s\"\n" $i $found_items[$i]
-                    builtin history --delete "$found_items[$i]"
+                    builtin history delete "$found_items[$i]"
                 end
-                builtin history --save
+                builtin history save
             end
 
-        case save
-            if test -n "$search_mode"
-                or test -n "$with_time"
-                printf (_ "history: you cannot use any options with %s command\n") save >&2
-                return 1
-            end
-            builtin history --save -- $argv
+        case save # save our interactive command history to the persistent history
+            __fish_unexpected_hist_args $argv
+            and return 1
 
-        case merge
-            if test -n "$search_mode"
-                or test -n "$with_time"
-                printf (_ "history: you cannot use any options with %s command\n") merge >&2
-                return 1
-            end
-            builtin history --merge -- $argv
+            builtin history save -- $argv
 
-        case help
-            builtin history --help
+        case merge # merge the persistent interactive command history with our history
+            __fish_unexpected_hist_args $argv
+            and return 1
 
-        case clear
-            # Erase the entire history.
-            if test -n "$search_mode"
-                or test -n "$with_time"
-                printf (_ "history: you cannot use any options with %s command\n") clear >&2
-                return 1
-            end
+            builtin history merge -- $argv
+
+        case clear # clear the interactive command history
+            __fish_unexpected_hist_args $argv
+            and return 1
 
             printf (_ "If you enter 'yes' your entire interactive command history will be erased\n")
             read --local --prompt "echo 'Are you sure you want to clear history? (yes/no) '" choice
             if test "$choice" = "yes"
-                builtin history --clear -- $argv
+                builtin history clear -- $argv
                 and printf (_ "Command history cleared!")
             else
                 printf (_ "You did not say 'yes' so I will not clear your command history\n")
             end
+
+        case '*'
+            printf "%ls: unexpected subcommand '%ls'\n" $cmd $hist_cmd
+            return 2
     end
 end

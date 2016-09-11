@@ -1,10 +1,23 @@
-complete -c history -r -l prefix --description "Match items starting with prefix"
-complete -c history -r -l contains --description "Match items containing string"
-complete -c history -l search -s s --description "Prints commands from history matching query"
-complete -c history -l delete -s d --description "Deletes commands from history matching query"
-complete -c history -l clear --description "Clears history file"
-complete -c history -l merge -s m --description "Incorporate history changes from other sessions"
-complete -c history -l exact -s e --description "Match items in the history that are identicial"
-complete -c history -l with-time -s t --description "Output with timestamps"
+# Note that when a completion file is sourced a new block scope is created so `set -l` works.
+set -l __fish_history_all_commands search delete save merge clear
 
-# --save is not completed; it is for internal use
+# Note that these options are only valid with the "search" and "delete" subcommands.
+complete -c history -n '__fish_seen_subcommand_from search delete' \
+    -s p -l prefix -d "Match items beginning with the string"
+complete -c history -n '__fish_seen_subcommand_from search delete' \
+    -s c -l contains -d "Match items containing the string"
+complete -c history -n '__fish_seen_subcommand_from search delete' \
+    -s e -l exact -d "Match items identical to the string"
+complete -c history -n '__fish_seen_subcommand_from search delete' \
+    -s t -l show-time -d "Output with timestamps"
+
+# We don't include a completion for the "save" subcommand because it should not be used
+# interactively.
+complete -f -c history -n "not __fish_seen_subcommand_from $__fish_history_all_commands" \
+    -a search -d "Prints commands from history matching the strings"
+complete -f -c history -n "not __fish_seen_subcommand_from $__fish_history_all_commands" \
+    -a delete -d "Deletes commands from history matching the strings"
+complete -f -c history -n "not __fish_seen_subcommand_from $__fish_history_all_commands" \
+    -a merge -d "Incorporate history changes from other sessions"
+complete -f -c history -n "not __fish_seen_subcommand_from $__fish_history_all_commands" \
+    -a clear -d "Clears history file"

@@ -22,16 +22,28 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set userdatadir $XDG_DATA_HOME
     end
 
+    if not set -q fish_greeting
+        set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell' ))
+        if not set -q __fish_init_2_3_0
+            set -l line2 \n(printf (_ 'Type %shelp%s for instructions on how to use fish %s') (set_color green) (set_color normal))
+        else
+            set -l line2 ''
+        end
+        set -U fish_greeting $line1$line2
+    end
+
     #
     # If we are starting up for the first time, set various defaults
-    #
-    if not set -q __fish_init_1_50_0
-        if not set -q fish_greeting
-            set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell') )
-            set -l line2 (printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
-            set -U fish_greeting $line1\n$line2
+    #    
+    if not set -q __fish_init_2_39_8 # bump this to 2_4_0 when rolling release if anything changes after 9/10/2016
+        set -g colors_backup "$HOME/fish_previous_colors-(date).txt"
+
+        echo Backing up uvars to:\n (set_color --underline)$colors_backup(set_color normal)
+        set -U >>$colors_backup
+        for option in (set -Un | string match "fish*color_*")
+            set -eU $option
         end
-        set -U __fish_init_1_50_0
+        echo \"Normalized\" colors on upgrade.
 
         # Regular syntax highlighting colors
         set -q fish_color_normal
@@ -41,7 +53,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -q fish_color_param
         or set -U fish_color_param cyan
         set -q fish_color_redirection
-        or set -U fish_color_redirection normal
+        or set -U fish_color_redirection brblue
         set -q fish_color_comment
         or set -U fish_color_comment red
         set -q fish_color_error
@@ -49,13 +61,13 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -q fish_color_escape
         or set -U fish_color_escape bryellow
         set -q fish_color_operator
-        or set -U fish_color_operator cyan
+        or set -U fish_color_operator bryellow
         set -q fish_color_end
-        or set -U fish_color_end green
+        or set -U fish_color_end brmagenta
         set -q fish_color_quote
         or set -U fish_color_quote yellow
         set -q fish_color_autosuggestion
-        or set -U fish_color_autosuggestion 222 brblack
+        or set -U fish_color_autosuggestion 555 brblack
         set -q fish_color_user
         or set -U fish_color_user brgreen
 
@@ -71,31 +83,34 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
         # Background color for matching quotes and parenthesis
         set -q fish_color_match
-        or set -U fish_color_match brwhite
+        or set -U fish_color_match --background=blue
 
         # Background color for search matches
         set -q fish_color_search_match
-        or set -U fish_color_search_match --background=magenta
+        or set -U fish_color_search_match bryellow --background=brgrey
 
         # Background color for selections
         set -q fish_color_selection
-        or set -U fish_color_selection --background=magenta
+        or set -U fish_color_selection white --bold --background=brgrey
 
         # Pager colors
         set -q fish_pager_color_prefix
-        or set -U fish_pager_color_prefix brcyan
-        set -q fish_pager_color_completion
-        or set -U fish_pager_color_completion normal
+        or set -U fish_pager_color_prefix white --bold --underline
+        #set -q fish_pager_color_completion
+        #or set -U fish_pager_color_completion
         set -q fish_pager_color_description
-        or set -U fish_pager_color_description brblack
+        or set -U fish_pager_color_description B3A06D yellow
         set -q fish_pager_color_progress
-        or set -U fish_pager_color_progress cyan
+        or set -U fish_pager_color_progress brwhite --background=cyan
 
         #
         # Directory history colors
         #
         set -q fish_color_history_current
-        or set -U fish_color_history_current cyan
+        or set -U fish_color_history_current --bold
+
+
+        set -U __fish_init_2_39_8
     end
 
     #
@@ -210,15 +225,14 @@ function __fish_config_interactive -d "Initializations that should be performed 
         commandline -f repaint
     end
 
-
-    # Notify vte-based terminals when $PWD changes (issue #906)
+    # Notify terminals when $PWD changes (issue #906)
     if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
-        function __update_vte_cwd --on-variable PWD --description 'Notify VTE of change to $PWD'
+        function __update_cwd_osc --on-variable PWD --description 'Notify VTE of change to $PWD'
             status --is-command-substitution
             and return
-            printf '\033]7;file://%s%s\a' (hostname) (pwd | __fish_urlencode)
+            printf \e\]7\;file://\%s\%s\a (hostname) (pwd | __fish_urlencode)
         end
-        __update_vte_cwd # Run once because we might have already inherited a PWD from an old tab
+        __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end
 
     ### Command-not-found handlers

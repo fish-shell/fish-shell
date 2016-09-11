@@ -2,8 +2,6 @@
 # common helper functions for the command completions. All actual
 # completions are located in the completions subdirectory.
 #
-
-#
 # Set default field separators
 #
 set -g IFS \n\ \t
@@ -14,6 +12,8 @@ set -g IFS \n\ \t
 function __fish_default_command_not_found_handler
 	echo "fish: Unknown command '$argv'" >&2
 end
+
+set -g version $FISH_VERSION
 
 if status --is-interactive
         # The user has seemingly explicitly launched an old fish with too-new scripts installed.

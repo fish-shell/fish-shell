@@ -130,9 +130,10 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         {
             written += print_max(L" ", packed_color, 1, false, &line_data);
         }
-        print_max(L"(", packed_color, 1, false, &line_data);
+        // hack - this just works around the issue 
+        print_max(L"(", highlight_spec_pager_completion | highlight_make_background(bg_color), 1, false, &line_data);
         print_max(c->desc, packed_color, desc_width, false, &line_data);
-        print_max(L")", packed_color, 1, false, &line_data);
+        print_max(L")", highlight_spec_pager_completion | highlight_make_background(bg_color), 1, false, &line_data);
     } else {
         while (written < width) {
             written += print_max(L" ", 0, 1, false, &line_data);

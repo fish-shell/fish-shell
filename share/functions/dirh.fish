@@ -8,11 +8,13 @@ function dirh --description "Print the current directory history (the prev and n
     end
 
     set -l dirc (count $dirprev)
-    set -l dirprev_rev $dirprev[-1..1]
-    # This can't be (seq $dirc -1 1) because of BSD.
-    set -l dirnum (seq 1 $dirc)
-    for i in $dirnum[-1..1]
-        printf '%2d) %s\n' $i $dirprev_rev[$i]
+    if test $dirc -gt 0
+        set -l dirprev_rev $dirprev[-1..1]
+        # This can't be (seq $dirc -1 1) because of BSD.
+        set -l dirnum (seq 1 $dirc)
+        for i in $dirnum[-1..1]
+            printf '%2d) %s\n' $i $dirprev_rev[$i]
+        end
     end
 
     echo (set_color $fish_color_history_current)'   ' $PWD(set_color normal)

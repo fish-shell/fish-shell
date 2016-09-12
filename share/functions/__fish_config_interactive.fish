@@ -238,10 +238,19 @@ function __fish_config_interactive -d "Initializations that should be performed 
     ### Command-not-found handlers
     # This can be overridden by defining a new __fish_command_not_found_handler function
     if not type -q __fish_command_not_found_handler
+        # Read the OS/Distro from /etc/os-release.
+        # This has a "ID=" line that defines the exact distribution,
+        # and an "ID_LIKE=" line that defines what it is derived from or otherwise like.
+        # For our purposes, we use both.
+        set -l os
+        if test -r /etc/os-release
+            set os (string match -r '^ID(?:_LIKE)?\s*=.*' < /etc/os-release | \
+            string replace -r '^ID(?:_LIKE)?\s*=(.*)' '$1' | string trim -c '\'"')
+        end
+
         # First check if we are on OpenSUSE since SUSE's handler has no options
-        # and expects first argument to be a command and second database
-        # also check if there is command-not-found command.
-        if test -f /etc/SuSE-release
+        # but the same name and path as Ubuntu's.
+        if contains -- suse $os
             and type -q -p command-not-found
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 /usr/bin/command-not-found $argv[1]

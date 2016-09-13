@@ -33,11 +33,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
 
     #
-    # If we are starting up for the first time, set various defaults
-    #    
-    if not set -q __fish_init_2_39_8 # bump this to 2_4_0 when rolling release if anything changes after 9/10/2016
-        set -g colors_backup "$HOME/fish_previous_colors-(date).txt"
-
+    # If we are starting up for the first time, set various defaults.
+    #
+    # bump this to 2_4_0 when rolling release if anything changes after 9/10/2016
+    if not set -q __fish_init_2_39_8
+        set -l date (command date '+%Y-%m-%dT%H:%M:%S')
+        set -g colors_backup "$HOME/fish_previous_colors-$date.txt"
         echo Backing up uvars to:\n (set_color --underline)$colors_backup(set_color normal)
         set -U >>$colors_backup
         for option in (set -Un | string match "fish*color_*")

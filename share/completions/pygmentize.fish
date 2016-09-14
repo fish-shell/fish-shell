@@ -1,6 +1,10 @@
-function __fish_print_pygmentize --argument-names type description
-    for line in (pygmentize -L $type | sed -e "s%^\* \(.*\):%\1%;tx;d;:x" | string split ", ")
-        printf "%s\t%s\n" $line $description
+function __fish_print_pygmentize
+    set -l lines (pygmentize -L $argv[1] | string match -r '^(?:\* |    ).*(?:)$' | string replace -r '\* (.*):$' '$1' | string replace -r '^(.*).$' '$1' | string trim)
+
+    while set -q lines[2]
+        printf '%s\t%s\n' $lines[1] $lines[2]
+        set -e lines[1]
+        set -e lines[1]
     end
 end
 
@@ -19,4 +23,3 @@ complete -c pygmentize -s H -d "Print detailed help" -x -a "lexer formatter filt
 complete -c pygmentize -s v -d "Print detailed traceback on unhandled exceptions"
 complete -c pygmentize -s h -d "Print help"
 complete -c pygmentize -s V -d "Print package version"
-end

@@ -19,9 +19,4 @@ complete -c pygmentize -s H -d "Print detailed help" -x -a "lexer formatter filt
 complete -c pygmentize -s v -d "Print detailed traceback on unhandled exceptions"
 complete -c pygmentize -s h -d "Print help"
 complete -c pygmentize -s V -d "Print package version"
-
-function __test_args
-    echo ... >> /tmp/args
-    __fish_print_cmd_args >> /tmp/args
-    return 1
 end

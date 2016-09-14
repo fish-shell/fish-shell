@@ -25,6 +25,3 @@ function __test_args
     __fish_print_cmd_args >> /tmp/args
     return 1
 end
-
-complete -n "__test_args" -d Hello
-

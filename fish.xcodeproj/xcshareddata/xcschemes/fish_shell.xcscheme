@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "0800"
-   version = "2.0">
+   version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D0D02A9915985A75008E62BD"
-               BuildableName = "fish.app"
-               BlueprintName = "fish.app"
+               BlueprintIdentifier = "D0D2693B159835CA005D9B9C"
+               BuildableName = "fish"
+               BlueprintName = "fish_shell"
                ReferencedContainer = "container:fish.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0D02A9915985A75008E62BD"
-            BuildableName = "fish.app"
-            BlueprintName = "fish.app"
+            BlueprintIdentifier = "D0D2693B159835CA005D9B9C"
+            BuildableName = "fish"
+            BlueprintName = "fish_shell"
             ReferencedContainer = "container:fish.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -48,19 +48,16 @@
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
-      debugDocumentVersioning = "NO"
-      debugXPCServices = "NO"
-      stopOnEveryThreadSanitizerIssue = "YES"
+      debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
-      allowLocationSimulation = "NO"
-      consoleMode = "1">
+      allowLocationSimulation = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0D02A9915985A75008E62BD"
-            BuildableName = "fish.app"
-            BlueprintName = "fish.app"
+            BlueprintIdentifier = "D0D2693B159835CA005D9B9C"
+            BuildableName = "fish"
+            BlueprintName = "fish_shell"
             ReferencedContainer = "container:fish.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -77,15 +74,15 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0D02A9915985A75008E62BD"
-            BuildableName = "fish.app"
-            BlueprintName = "fish.app"
+            BlueprintIdentifier = "D0D2693B159835CA005D9B9C"
+            BuildableName = "fish"
+            BlueprintName = "fish_shell"
             ReferencedContainer = "container:fish.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
-      buildConfiguration = "Release">
+      buildConfiguration = "Debug">
    </AnalyzeAction>
    <ArchiveAction
       buildConfiguration = "Release"

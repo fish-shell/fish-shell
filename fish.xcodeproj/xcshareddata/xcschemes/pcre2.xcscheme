@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0730"
+   LastUpgradeVersion = "0800"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D0A084F713B3AC130099B651"
-               BuildableName = "Makefile"
-               BlueprintName = "Makefile"
+               BlueprintIdentifier = "D04F7FCF1BA4E29300B0F227"
+               BuildableName = "libpcre2.a"
+               BlueprintName = "pcre2"
                ReferencedContainer = "container:fish.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,9 +45,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0A084F713B3AC130099B651"
-            BuildableName = "Makefile"
-            BlueprintName = "Makefile"
+            BlueprintIdentifier = "D04F7FCF1BA4E29300B0F227"
+            BuildableName = "libpcre2.a"
+            BlueprintName = "pcre2"
             ReferencedContainer = "container:fish.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -60,6 +60,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "D04F7FCF1BA4E29300B0F227"
+            BuildableName = "libpcre2.a"
+            BlueprintName = "pcre2"
+            ReferencedContainer = "container:fish.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

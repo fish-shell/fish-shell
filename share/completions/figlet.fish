@@ -1,5 +1,8 @@
 function __fish_print_figlet_fonts
-    find (figlet -I2) -type f ^ /dev/null | sed -e 's$/.*/\([^/.]*\)\.[ft]lf$\1\tFont$;tx;d;:x'
+    set -l dir (figlet -I 2)
+    set -l files $dir/*.flf $dir/*.tlf
+
+    printf '%s\tFont\n' (string replace -r '.*/([^/]+)\.[ft]lf' '$1' -- $files)
 end
 
 complete -c figlet -s f -d "Select font" -x -a "(__fish_print_figlet_fonts)"

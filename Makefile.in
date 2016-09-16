@@ -31,23 +31,24 @@
 V := 0
 
 #
-# This is the default value for SHELL but I like to be explicit about such
-# things. Especially in a project like fish where someone might otherwise
-# think fish will be used to execute make recipes.
-#
-SHELL = /bin/sh
-
-#
 # Used by docdir
 #
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 
-#
+# The default: /bin/sh
+# Fish won't work.
+SHELL = @SHELL@
+
 # Programs
 #
-CXX = @CXX@
+CXX := @CXX@
 INSTALL := @INSTALL@
+LN_S := @LN_S@
 SED := @SED@
+MKDIR_P := @MKDIR_P@
+AWK := @AWK@
+GREP := @GREP@
+FGREP := @FGREP@
 
 #
 # Installation directories
@@ -126,8 +127,7 @@ FISH_TESTS_OBJS := $(FISH_OBJS) obj/fish_tests.o
 # All of the sources that produce object files
 # (that is, are not themselves #included in other source files)
 #
-FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) $(FISH_KEYREAD_OBJS) \
-	obj/fish.o)
+FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) $(FISH_KEYREAD_OBJS) obj/fish.o)
 
 #
 # Files containing user documentation
@@ -137,8 +137,7 @@ FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) $(FI
 # These files are the source files, they contain a few @FOO@-style substitutions
 # Note that this order defines the order that they appear in the documentation
 #
-HDR_FILES_SRC := doc_src/index.hdr.in doc_src/tutorial.hdr doc_src/design.hdr \
-	doc_src/license.hdr doc_src/commands.hdr.in doc_src/faq.hdr
+HDR_FILES_SRC := doc_src/index.hdr.in doc_src/tutorial.hdr doc_src/design.hdr doc_src/license.hdr doc_src/commands.hdr.in doc_src/faq.hdr
 
 #
 # These are the generated result files
@@ -156,8 +155,7 @@ HELP_SRC := $(wildcard doc_src/*.txt)
 #
 # HTML includes needed for HTML help
 #
-HTML_SRC := doc_src/user_doc.header.html doc_src/user_doc.footer.html \
-	doc_src/user_doc.css
+HTML_SRC := doc_src/user_doc.header.html doc_src/user_doc.footer.html doc_src/user_doc.css
 
 #
 # Files in the test directory
@@ -205,10 +203,8 @@ else
   share_man=
 endif
 
-T_COLORS:=$(shell tput colors || echo 0 2> /dev/null)
-#
-# Functions for status output
-#
+
+T_COLORS:=$(shell tput colors || echo '' 2> /dev/null)
 T_GREEN  := $(shell ( tput setaf 2 || tput AF 2 ) 2> /dev/null )
 T_YELLOWB := $(shell ( tput setaf 3 || tput AF 3 ) 2> /dev/null )
 T_CYAN := $(shell ( tput setaf 6 || tput AF 6 ) 2> /dev/null )
@@ -220,8 +216,8 @@ T_BOLD := $(shell ( tput bold || tput md ) 2> /dev/null )
 # 		and won't have trouble the escape.
 ifeq ($(T_COLORS), 256)
 	T_ITALIC := $(shell ( tput sitm || tput ZH || echo "\\033[3m" ) 2> /dev/null )
-	# * Half-bright/faint 'dim' mode - rarely works - rarely in terminfo when it does - but it's cool.
-	#   Use it with one of the basic colors to get a fainter version of it.
+# * Half-bright/faint 'dim' mode - rarely works - rarely in terminfo when it does - but it's cool.
+#   Use it with one of the basic colors to get a fainter version of it.
 	T_DIM := $(shell ( tput dim || tput mh || [ $(TERM_PROGRAM) = Apple_Terminal ] && echo "\\033[2m") 2> /dev/null )
 else
 	T_ITALIC := $(shell ( tput sitm || tput ZH ) 2> /dev/null )
@@ -241,8 +237,11 @@ show-%:
 # Make everything needed for installing fish
 #
 all: show-CXX show-CXXFLAGS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
-	@echo $(MAKECMDGOALS) | grep -vq install && echo "$(T_GREEN)fish has now been built.$(T_RESET)" ||:
-	@echo "Run $(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET) to install fish.$(T_RESET)" ||:
+ifneq (,$(findstring install,$(MAKECMDGOALS)))
+	# Fish has been built, but if the goal was 'install', we aren't done yet and this output isnt't desirable 
+	@echo "$(T_GREEN)fish has now been built.$(T_RESET)"
+	@echo "Run $(T_YELLOWB)$(notdir $(MAKE)) install$(T_RESET) to install fish.$(T_RESET)"
+endif
 .PHONY: all
 
 #
@@ -260,14 +259,14 @@ obj/fish_version.o: FISH-BUILD-VERSION-FILE
 # when the source code for the build configuration has changed.
 #
 configure: configure.ac
-	@echo "Rechecking config.status; rerunning ./configure if necessary..."$(T_DIM)
+	@echo "Rechecking config.status; rerunning ./configure if necessary...$(T_DIM)"
 	$(v) ./config.status --recheck
-	@echo $(T_RESET)
+	@echo "$(T_RESET)"
 
 Makefile: Makefile.in configure
-	@echo "Checking config.status..."$(T_DIM)
-	$(v) ./config.status
-	@echo $(T_RESET)
+	@echo "Checking config.status...$(T_DIM)"
+	$(v)./config.status
+	@echo "$(T_RESET)"
 
 #
 # Build fish with some debug flags specified. This is GCC specific,
@@ -287,20 +286,18 @@ prof: all
 # directory once Doxygen is done.
 #
 doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter | show-SED
-	@echo "  doxygen  $(T_ITALIC)user_doc$(T_RESET)"
-	$(v)(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
-	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | \
-		doxygen - && touch user_doc
-	$(v)cd user_doc/html && rm -f arrow*.png bc_s.png bdwn.png closed.png \
-		doc.png folder*.png ftv2*.png nav*.png open.png splitbar.png \
-		sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html
+	@echo " SED doxygen  $(T_ITALIC)user_doc$(T_RESET)"
+	$(v)(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | doxygen - && touch user_doc
+	$(v)rm -f $(wildcard $(addprefix ./user_doc/html/,arrow*.png bc_s.png bdwn.png closed.png doc.png folder*.png ftv2*.png nav*.png open.png splitbar.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html)
 
 #
 # PDF version of the source code documentation.
 #
 doc/refman.pdf: doc
-	$(v)cd doc/latex && $(MAKE) V=$(V) && mv refman.pdf ..
-	$(v)rm -rf doc/latex
+	@echo "  MAKE     $(T_ITALIC)doc/latex$(T_RESET)"
+	$(v)cd doc/latex
+	$(v)$(MAKE) V=$(V)
+	$(v)mv refman.pdf ..
 
 #
 # Prep the environment for running the unit tests. When specifying DESTDIR on
@@ -308,13 +305,13 @@ doc/refman.pdf: doc
 # installed fish using the same prefix; e.g., `./configure --prefix=/usr/local`
 # followed by `make install`.
 #
-test-prep:
-	$(v)rm -rf test
-	$(v)mkdir test test/data test/home test/temp
+test-prep: show-DESTDIR show-LN_S show
+	rm -rf test
+	$(MKDIR_P) test/data test/home test/temp
 ifdef DESTDIR
-	$(v)ln -s $(DESTDIR) test/root
+	$(LN_S) $(DESTDIR) test/root
 else
-	$(v)mkdir test/root
+	$(MKDIR_P) test/root
 endif
 .PHONY: test-prep
 
@@ -349,8 +346,8 @@ filter_up_to = $(eval b:=1)$(foreach a,$(2),$(and $(b),$(if $(subst $(1),,$(a)),
 
 # The values for XDG_DATA_HOME and XDG_CONFIG_HOME mimic those from tests/test_util.fish.
 test_low_level: fish_tests $(call filter_up_to,test_low_level,$(active_test_goals))
-	rm -rf test/data test/home
-	mkdir -p test/data test/home
+	$(v)rm -rf test/data test/home
+	$(MKDIR_P) test/data test/home
 	env XDG_DATA_HOME=test/data XDG_CONFIG_HOME=test/home ./fish_tests
 .PHONY: test_low_level
 
@@ -369,25 +366,27 @@ test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
 # commands.hdr collects documentation on all commands, functions and
 # builtins
 #
-doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in
+doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in |
+	@echo " CAT AWK   $(T_ITALIC)$@$(T_RESET)"
 	$(v)rm -f command_list.tmp command_list_toc.tmp $@
-	$(v)for i in `printf "%s\n" $(HELP_SRC)|sort`; do \
+	$(v)for i in $(sort $(HELP_SRC)); do \
 		echo "<hr>" >>command_list.tmp; \
 		cat $$i >>command_list.tmp; \
 		echo >>command_list.tmp; \
 		echo >>command_list.tmp; \
 		NAME=`basename $$i .txt`; \
 		echo '- <a href="#'$$NAME'">'$$NAME'</a>' >> command_list_toc.tmp; \
-		echo "Back to <a href='index.html#toc-commands'>index</a>". >>command_list.tmp; \
+		echo "Back to <a href='index.html#toc-commands'>command index</a>". >>command_list.tmp; \
 	done
 	$(v)mv command_list.tmp command_list.txt
 	$(v)mv command_list_toc.tmp command_list_toc.txt
-	$(v)cat $@.in | awk '{if ($$0 ~ /@command_list_toc@/) { system("cat command_list_toc.txt"); } else if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
+	$(v)cat $@.in | $(AWK) '{if ($$0 ~ /@command_list_toc@/) { system("cat command_list_toc.txt"); } else if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
 
-toc.txt: $(HDR_FILES:index.hdr=index.hdr.in)
+toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) | show-SED
+	@echo " SED       $(T_ITALIC)$@$(T_RESET)"
 	$(v)rm -f toc.tmp $@
 # Ugly hack to set the toc initial title for the main page
-	$(v)echo '- <a href="index.html" id="toc-index">Documentation</a>' > toc.tmp
+	$(v)echo '- <a href="index.html" id="toc-index">fish shell documentation - $FISH_BUILD_VERSION</a>' > toc.tmp
 # The first sed command captures the page name, followed by the description
 # The second sed command captures the command name \1 and the description \2, but only up to a dash
 # This is to reduce the size of the TOC in the command listing on the main page
@@ -400,8 +399,9 @@ toc.txt: $(HDR_FILES:index.hdr=index.hdr.in)
 	done
 	$(v)mv toc.tmp $@
 
-doc_src/index.hdr: toc.txt doc_src/index.hdr.in
-	$(v)cat $@.in | awk '{if ($$0 ~ /@toc@/){ system("cat toc.txt");} else{ print $$0;}}' >$@
+doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
+	@echo " AWK CAT      $(T_ITALIC)$@$(T_RESET)"
+	$(v)cat $@.in | $(AWK) '{if ($$0 ~ /@toc@/){ system("cat toc.txt");} else{ print $$0;}}' >$@
 
 #
 # To enable the lexicon filter, we first need to be aware of what fish
@@ -412,26 +412,26 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in
 # colour defaults from __fish_config_interactive to set the docs colours when
 # used in a 'cli' style context.
 #
-lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED
+lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED show-FGREP
 	$(v)rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
 # Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
-	@echo "  SED      $(T_ITALIC)$@$(T_RESET)"
+	@echo "SEDFGREPSE $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(SED) <command_list_toc.txt >>lexicon.tmp -n \
 		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
-		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt; \
-	printf "%s\n" $(COMPLETIONS_DIR_FILES) | $(SED) -n \
-		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | fgrep -vx -f lexicon_catalog.txt | $(SED) >>lexicon.tmp -n \
+		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt
+	$(v)printf "%s\n" $(COMPLETIONS_DIR_FILES) | $(SED) -n \
+		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | $(FGREP) -vx -f lexicon_catalog.txt | $(SED) >>lexicon.tmp -n \
 		-e 'w lexicon_catalog.tmp' \
-		-e "s|'\(.*\)'|cmnd \1|p"; cat lexicon_catalog.tmp >> lexicon_catalog.txt; \
-	printf "%s\n" $(FUNCTIONS_DIR_FILES) | $(SED) -n \
-		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | fgrep -vx -f lexicon_catalog.txt | $(SED) >>lexicon.tmp -n \
+		-e "s|'\(.*\)'|cmnd \1|p"; cat lexicon_catalog.tmp >> lexicon_catalog.txt;
+	$(v)printf "%s\n" $(FUNCTIONS_DIR_FILES) | $(SED) -n \
+		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | $(FGREP) -vx -f lexicon_catalog.txt | $(SED) >>lexicon.tmp -n \
 		-e 'w lexicon_catalog.tmp' \
-		-e "s|'\(.*\)'|func \1|p"; \
-	$(SED) <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n  \
+		-e "s|'\(.*\)'|func \1|p";
+	$(v)$(SED) <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n  \
 		-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p'; \
-	$(SED) <lexicon_filter.in >>lexicon.tmp -n \
-		-e '/^#.!#/s/^#.!# \(.... [a-z][a-z_]*\)/\1/p'; \
-	mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
+	$(v)$(SED) <lexicon_filter.in >>lexicon.tmp -n \
+		-e '/^#.!#/s/^#.!# \(.... [a-z][a-z_]*\)/\1/p';
+	$(v)mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
 
 #
 # Compile Doxygen Input Filter from the lexicon. This is an executable sed
@@ -445,7 +445,7 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 #
 lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 	$(v)rm -f $@.tmp $@
-	@echo "  SED      $(T_ITALIC)$@$(T_RESET)"
+	@echo "  SED      $(T_ITALIC)$@.tmp$(T_RESET)"
 # Set the shebang as sed can reside in multiple places.
 	$(v)$(SED) <$@.in >$@.tmp -e 's|@sed@|'$(SED)'|'
 # Scan through the lexicon, transforming each line to something useful to Doxygen.
@@ -457,7 +457,8 @@ lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 	$(SED) <lexicon.txt >>$@.tmp -n \
 		-e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" \
 		-e '$$G;s/.*\n/b tidy/p'; \
-	mv $@.tmp $@; if test -x $@; then true; else chmod a+x $@; fi
+	mv $@.tmp $@; test -x $@ || chmod a+x $@; fi
+
 
 #
 # doc.h is a compilation of the various snipptes of text used both for
@@ -466,6 +467,7 @@ lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 # documentation.
 #
 doc.h: $(HDR_FILES)
+	@echo " HDR_FILES $(T_ITALIC)$@$(T_RESET)"
 	$(v)cat $(HDR_FILES) >$@
 
 #
@@ -475,15 +477,18 @@ doc.h: $(HDR_FILES)
 # the internal help function text.
 #
 %.doxygen:%.txt
-	echo  "/** \page " `basename $*` >$@;
-	cat $*.txt >>$@;
-	echo "*/" >>$@
+	@echo " cat *      $(T_ITALIC)$@$(T_RESET)"
+	$(v)echo  "/** \page " `basename $*` >$@;
+	$(v)cat $*.txt >>$@;
+	$(v)echo "*/" >>$@
 
 #
 # Depend on Makefile because I don't see a better way of rebuilding
 # if any of the paths change.
 #
 %: %.in Makefile FISH-BUILD-VERSION-FILE | show-prefix show-sysconfdir show-docdir show-extra_completionsdir show-extra_functionsdir show-extra_confdir show-prefix show-FISH_BUILD_VERSION
+	@echo "  SED      $(T_ITALIC)$@$(T_RESET)"
+
 	$(v)$(SED) <$< >$@ \
 		-e "s,@sysconfdir\@,$(sysconfdir),g" \
 		-e "s,@datadir\@,$(datadir),g" \
@@ -517,10 +522,10 @@ doc.h: $(HDR_FILES)
 #
 # Create a template translation object
 #
-messages.pot: src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish
-	@echo " xgettext $(T_ITALIC)$@$(T_RESET)"
-	$(v)xgettext -k_ -kN_ src/*.cpp src/*.h -o messages.pot
-	$(v)xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot
+messages.pot: $(wildcard src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish)
+	@echo " xgettext  $(T_ITALIC)$@$(T_RESET)"
+	xgettext -k_ -kN_ $(wildcard src/*.cpp src/*.h) -o messages.pot
+	$(v)xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 $(wildcard share/completions/*.fish share/functions/*.fish) share/fish.config -o messages.pot
 
 ifdef EXTRA_PCRE2
 src/builtin_string.cpp: $(PCRE2_H)
@@ -553,13 +558,13 @@ endif
 # There ought to be something simpler.
 #
 share/man: $(HELP_SRC) lexicon_filter | show-FISH_BUILD_VERSION show-SED
-	-$(v)mkdir -p share/man
+	-$(v)$(MKDIR_P) share/man
 	@echo "  doxygen  $(T_ITALIC)$@$(T_RESET)"
 	$(v)touch share/man
 	-$(v)rm -Rf share/man/man1
 	$(v)echo "$(T_DIM)" && \
 	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| $(SED) "s/-.*//"` INPUT_FILTER=./lexicon_filter \
-	build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share; echo "$(T_RESET)";
+	build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share;
 
 #
 # The build rules for installing/uninstalling fish
@@ -624,7 +629,7 @@ install: all install-force | check-legacy-binaries
 #
 xcode-install:
 	rm -Rf /tmp/fish_build
-	xcodebuild install DSTROOT=/tmp/fish_build
+	xcrun xcodebuild install DSTROOT=/tmp/fish_build
 	ditto /tmp/fish_build
 .PHONY: xcode-install
 
@@ -657,7 +662,7 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 	$(v)$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
 	$(v)$(INSTALL) -m 644 share/__fish_build_paths.fish    $(DESTDIR)$(datadir)/fish/
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/pkgconfig
-	@echo "Creating empty vendor/'extra_' directories"
+	@echo "Creating placeholder vendor/'extra_' directories"
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir) ||:
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir) ||:
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir) ||:
@@ -666,22 +671,18 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 	@echo "Installing the $(T_BOLD)fish completion libraryn$(T_RESET)...";
 	$(v)for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
-		true; \
 	done;
 	@echo "Installing $(T_BOLD)fish functions$(T_RESET)";
 	$(v)for i in $(FUNCTIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
-		true; \
 	done;
 	@echo "Installing $(T_BOLD)man pages$(T_RESET)";
-	$(v)for i in share/man/man1/*.1; do \
+	$(v)for i in $(wildcard share/man/man1/*.1); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
-		true; \
 	done;
-	@echo "Installing $(T_BOLD)fish tools$(T_RESET)";
-	$(v)for i in share/tools/*.py; do\
+	@echo "Installing helper tools";
+	$(v)for i in $(wildcard share/tools/*.py); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/; \
-		true; \
 	done;
 	$(v)for i in share/tools/web_config/*.*; do\
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
@@ -703,7 +704,7 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
 		true; \
 	done;
-	@echo "Installing HTML documentation";
+	@echo "Installing online user documentation";
 	$(v)$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	$(v) for i in user_doc/html/* CHANGELOG.md; do \
 		if test -f $$i; then \
@@ -764,10 +765,10 @@ uninstall: uninstall-translations | show-prefix show-bindir show-sysconfdir show
 	fi
 	@echo
 	@echo $$"Deleting \\c"
-	@echo "[ $(T_BOLD)"`basename $(MANUALS)`$(T_RESET) $$"] in \\c"
+	@echo "[ $(T_BOLD)"$(basename $(MANUALS))$(T_RESET) $$"] in \\c"
 	@echo "$(T_ITALIC)$(mandir)/man1$(T_RESET)"
 	-$(v) for i in $(MANUALS); do \
-		rm -rf $(DESTDIR)$(mandir)/man1/`basename $$i`*; \
+		rm -rf "$(DESTDIR)$(mandir)/man1/"$$$(basename $i)$$$(wildcard .*); 
 	done;
 	@echo
 	@echo "$(T_GREEN)Fish (likely) unintalled$(T_RESET)"
@@ -775,7 +776,7 @@ uninstall: uninstall-translations | show-prefix show-bindir show-sysconfdir show
 	@echo "$(T_BOLD)./configure --prefix=$(T_RESET) to uninstall fish from a different prefix"
 .PHONY: uninstall
 
-install-translations: $(TRANSLATIONS)
+install-translations: $(TRANSLATIONS) | show-HAVE_GETTEXT
 ifdef HAVE_GETTEXT
 	@echo "Installing translations..."
 	$(v)for i in $(TRANSLATIONS); do \
@@ -785,7 +786,7 @@ ifdef HAVE_GETTEXT
 endif
 .PHONY: install-translations
 
-uninstall-translations:
+uninstall-translations: show-DESTDIR show-localedir
 	$(v)rm -f $(DESTDIR)$(localedir)/*/LC_MESSAGES/fish.mo
 .PHONY: uninstall-translations
 
@@ -796,21 +797,22 @@ uninstall-translations:
 #
 # How basic files get compiled
 #
-obj/%.o: src/%.cpp | obj
+obj/%.o: src/%.cpp | show-CXX show-CXXFLAGS show-CPPFLAGS obj 
 	@echo "  CXX      $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 #
 # obj directory
 #
-obj:
-	$(v)mkdir obj
+obj: | show-MKDIR_P
+	@echo "  mkdir    $(T_ITALIC)$@$(T_RESET)"
+	$(v)$(MKDIR_P) obj
 
 #
 # Build the fish program.
 #
 fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
+	@echo "  CXX LD   $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
 $(PCRE2_LIB): $(PCRE2_H)
@@ -818,27 +820,28 @@ $(PCRE2_LIB): $(PCRE2_H)
 	@$(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
 
 $(PCRE2_H):
+	@echo " autoconf  $(T_ITALIC)$@$(T_RESET)"
 	$(v)(cd $(PCRE2_DIR) && ./config.status)
 
 #
 # Build the fish_tests program.
 #
 fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
+	@echo "  CXX LD   $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_indent program.
 #
 fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
+	@echo "  CXX LD   $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_key_reader program to show input from the terminal. 
 #
 fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
-	@echo "  CXXLD    $(T_ITALIC)$@$(T_RESET)"
+	@echo "  CXX LD   $(T_ITALIC)$@$(T_RESET)"
 	$(v)$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
 #
@@ -853,13 +856,13 @@ fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
 # behind.
 #
 depend:
-	@echo $(T_ITALIC)"Running makedepend..."$(T_RESET)
-	$(v)mkdir -p /tmp/fish_make_depend/src
-	$(v)cp src/*.cpp src/*.h /tmp/fish_make_depend/src
-	$(v)cp config.h /tmp/fish_make_depend/
-	$(v)mv $(subst obj/,/tmp/fish_make_depend/src/,$(FISH_ALL_OBJS:.o=.cpp)) /tmp/fish_make_depend/
-	$(v)cd /tmp/fish_make_depend && makedepend -f$(CURDIR)/Makefile.in -pobj/ -Y -Isrc *.cpp
-	$(v)rm -Rf /tmp/fish_make_depend
+	
+	$(v)$(MKDIR_P) /tmp/fish_make_depend/src
+	cp $(wildcard src/*.cpp src/*.h) /tmp/fish_make_depend/src
+	cp config.h /tmp/fish_make_depend/
+	mv $(subst obj/,/tmp/fish_make_depend/src/,$(FISH_ALL_OBJS:.o=.cpp)) /tmp/fish_make_depend/
+	cd /tmp/fish_make_depend && makedepend -f$(CURDIR)/Makefile.in -pobj/ -Y -Isrc *.cpp
+	rm -Rf /tmp/fish_make_depend
 	$(v)./config.status
 .PHONY: depend
 

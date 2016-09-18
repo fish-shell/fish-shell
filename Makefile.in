@@ -288,7 +288,7 @@ prof: all
 doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter | show-HDR_FILES_SRC show-HTML_SRC show-HELP_SRC show-HDR_FILES 
 	@echo " SED doxygen  $(em)user_doc$(sgr0)"
 	$v (cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | doxygen - && touch user_doc
-	$v rm -f $(wildcard $(addprefix ./user_doc/html/,arrow*.png bc_s.png bdwn.png closed.png doc.png folder*.png ftv2*.png nav*.png open.png splitbar.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html)
+	$v rm -f $(wildcard $(addprefix ./user_doc/html/,arrow*.png bc_s.png bdwn.png closed.png doc.png folder*.png ftv2*.png nav*.png open.png splitbar.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html))
 
 #
 # PDF version of the source code documentation.
@@ -415,7 +415,7 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
 lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED show-FGREP
 	$v rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
 # Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
-	@echo "SEDFGREPSE $(em)$@$(sgr0)"
+	@echo " SEDFGREP  $(em)$@$(sgr0)"
 	$v $(SED) <command_list_toc.txt >>lexicon.tmp -n \
 		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
 		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt
@@ -429,7 +429,7 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 		-e "s|'\(.*\)'|func \1|p";
 	$v $(SED) <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n  \
 		-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p'; \
-	$v $(SED) <lexicon_filter.in >>lexicon.tmp -n \
+	    $(SED) <lexicon_filter.in >>lexicon.tmp -n \
 		-e '/^#.!#/s/^#.!# \(.... [a-z][a-z_]*\)/\1/p';
 	$v mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
 
@@ -453,11 +453,8 @@ lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 		WORDBL='[[:<:]]'; WORDBR='[[:>:]]'; \
 	else \
 		WORDBL='\\<'; WORDBR='\\>'; \
-	fi; \
-	$(SED) <lexicon.txt >>$@.tmp -n \
-		-e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" \
-		-e '$$G;s/.*\n/b tidy/p'; \
-	mv $@.tmp $@; test -x $@ || chmod a+x $@; fi
+	fi; $(SED) <lexicon.txt >>$@.tmp -n -e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" -e '$$G;s/.*\n/b tidy/p';
+	mv $@.tmp $@; test -x $@ || chmod a+x $@; 
 
 
 #

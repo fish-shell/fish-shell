@@ -14,7 +14,7 @@ AC_PREREQ([2.60])
 AC_INIT(fish,
         m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),
         fish-users@lists.sourceforge.net)
-
+ac_clean_files=a.out.dSYM
 #
 # List of output variables produced by this configure script
 #
@@ -24,7 +24,6 @@ AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
 AC_SUBST(WCHAR_T_BITS)
 AC_SUBST(EXTRA_PCRE2)
-
 
 #
 # If needed, run autoconf to regenerate the configure file
@@ -50,7 +49,7 @@ if test configure -ot configure.ac; then
     AC_MSG_ERROR(
       [cannot find the autoconf program in your path.
 This program needs to be run whenever the configure.ac file is modified.
-Please install it and try again.]
+Please install autoconf and try again.]
     )
   fi
 else
@@ -75,7 +74,7 @@ if test ! -f ./config.h.in -o config.h.in -ot configure.ac; then
     AC_MSG_ERROR(
       [cannot find the autoheader program in your path.
 This program needs to be run whenever the configure.ac file is modified.
-Please install it and try again.]
+Please install autotools and try again.]
     )
   fi
 else
@@ -86,22 +85,26 @@ fi
 # Set up various programs needed for install
 # Note AC_PROG_CXX sets CXXFLAGS if not set, which we want
 # So ensure this happens before we modify CXXFLAGS below
-#
-
-AC_PROG_CXX([g++ c++])
-AC_PROG_INSTALL
-AC_PROG_SED
+# Do CC also, because PCRE2 will use it. Prefer clang++,
+# targets like FreeBSD ship an ancient one.
+AC_PROG_CC([clang llvm-gcc gcc cc])
+AC_PROG_CC_STDC # c99
+AC_PROG_CXX([clang++ llvm-g++ g++ c++])
+AC_PROG_CXXCPP([clang++ llvm-g++ g++ c++])
 AC_LANG(C++)
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MKDIR_P
+AC_PROG_AWK
+AC_PROG_FGREP
+AC_PROG_SED
 AC_USE_SYSTEM_EXTENSIONS
-
-AC_CANONICAL_TARGET
-
-echo "CXXFLAGS: $CXXFLAGS"
 
 #
 # Tell autoconf to create config.h header
 #
 AC_CONFIG_HEADERS(config.h)
+AC_CANONICAL_TARGET
 
 
 #
@@ -212,7 +215,7 @@ CXXFLAGS="$CXXFLAGS -fno-exceptions"
 # But signed comparison warnings are way too aggressive
 #
 
-CXXFLAGS="$CXXFLAGS -Wall -Wno-sign-compare"
+CXXFLAGS="$CXXFLAGS -Wextra"
 
 #
 # This is needed in order to get the really cool backtraces on Linux
@@ -254,7 +257,6 @@ AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, need
 AC_SEARCH_LIBS( shm_open, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( pthread_create, pthread, , [AC_MSG_ERROR([Cannot find the pthread library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses tinfo curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
-AC_SEARCH_LIBS( [nan], [m], [AC_DEFINE( [HAVE_NAN], [1], [Define to 1 if you have the nan function])] )
 AC_SEARCH_LIBS( [dladdr], [dl] )
 
 if test x$local_gettext != xno; then
@@ -630,5 +632,3 @@ AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 
 echo "fish is now configured."
-echo "Use 'make' and 'make install' to build and install fish."
-

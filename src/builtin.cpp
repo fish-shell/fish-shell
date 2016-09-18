@@ -2826,16 +2826,14 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
     return true;
 }
 
-#define CHECK_FOR_UNEXPECTED_HIST_FLAGS(hist_cmd)                             \
+#define CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)                                         \
     if (history_search_type_defined || with_time) {                           \
         streams.err.append_format(                                            \
-            _(L"history: you cannot use any options with the %ls command\n"), \
-            hist_cmd_to_string(hist_cmd).c_str());                            \
+            _(L"%ls: you cannot use any options with the %ls command\n"), \
+            cmd, hist_cmd_to_string(hist_cmd).c_str());                            \
         status = STATUS_BUILTIN_ERROR;                                        \
         break;                                                                \
-    }
-
-#define CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)                                         \
+    } \
     if (args.size() != 0) {                                                              \
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT, cmd,                            \
                                   hist_cmd_to_string(hist_cmd).c_str(), 0, args.size()); \
@@ -2989,20 +2987,17 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             break;
         }
         case HIST_CLEAR: {
-            CHECK_FOR_UNEXPECTED_HIST_FLAGS(hist_cmd)
             CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->clear();
             history->save();
             break;
         }
         case HIST_MERGE: {
-            CHECK_FOR_UNEXPECTED_HIST_FLAGS(hist_cmd)
             CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->incorporate_external_changes();
             break;
         }
         case HIST_SAVE: {
-            CHECK_FOR_UNEXPECTED_HIST_FLAGS(hist_cmd)
             CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)
             history->save();
             break;

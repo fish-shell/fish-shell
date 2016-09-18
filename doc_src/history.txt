@@ -24,7 +24,7 @@ The following operations (sub-commands) are available:
 
 - `merge` immediately incorporates history changes from other sessions. Ordinarily `fish` ignores history changes from sessions started after the current one. This command applies those changes immediately.
 
-- `save` saves all changes in the history file. The shell automatically saves the history file; this option is provided for internal use.
+- `save` immediately writes all changes to the history file. The shell automatically saves the history file; this option is provided for internal use and should not normally need to be used by the user.
 
 - `clear` clears the history file. A prompt is displayed before the history is erased asking you to confirm you really want to clear all history unless `builtin history` is used.
 

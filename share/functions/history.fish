@@ -15,6 +15,20 @@ function __fish_set_hist_cmd --no-scope-shadowing
     return 0
 end
 
+function __fish_unexpected_hist_args --no-scope-shadowing
+    if test -n "$search_mode"
+        or test -n "$with_time"
+        printf (_ "%ls: you cannot use any options with the %ls command\n") $cmd $hist_cmd >&2
+        return 0
+    end
+    if set -q argv[1]
+        printf (_ "%ls: %ls command expected %d args, got %d\n") \
+            $cmd $hist_cmd 0 (count $argv) >&2
+        return 0
+    end
+    return 1
+end
+
 function history --description "display or manipulate interactive command history"
     set -l cmd $_
     set -l cmd history
@@ -161,27 +175,20 @@ function history --description "display or manipulate interactive command histor
             end
 
         case save # save our interactive command history to the persistent history
-            if test -n "$search_mode"
-                or test -n "$with_time"
-                printf (_ "history: you cannot use any options with the %ls command\n") save >&2
-                return 1
-            end
+            __fish_unexpected_hist_args $argv
+            and return 1
+
             builtin history save -- $argv
 
         case merge # merge the persistent interactive command history with our history
-            if test -n "$search_mode"
-                or test -n "$with_time"
-                printf (_ "history: you cannot use any options with the %ls command\n") merge >&2
-                return 1
-            end
+            __fish_unexpected_hist_args $argv
+            and return 1
+
             builtin history merge -- $argv
 
         case clear # clear the interactive command history
-            if test -n "$search_mode"
-                or test -n "$with_time"
-                printf (_ "history: you cannot use any options with the %ls command\n") clear >&2
-                return 1
-            end
+            __fish_unexpected_hist_args $argv
+            and return 1
 
             printf (_ "If you enter 'yes' your entire interactive command history will be erased\n")
             read --local --prompt "echo 'Are you sure you want to clear history? (yes/no) '" choice
@@ -191,5 +198,9 @@ function history --description "display or manipulate interactive command histor
             else
                 printf (_ "You did not say 'yes' so I will not clear your command history\n")
             end
+
+        case '*'
+            printf "%ls: unexpected subcommand '%ls'\n" $cmd $hist_cmd
+            return 2
     end
 end

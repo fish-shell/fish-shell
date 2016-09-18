@@ -37,16 +37,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
     #
     # bump this to 2_4_0 when rolling release if anything changes after 9/10/2016
     if not set -q __fish_init_2_39_8
-        set -l date (command date '+%Y-%m-%dT%H:%M:%S')
-        set -g colors_backup "$HOME/fish_previous_colors-$date.txt"
-        echo Backing up uvars to:\n (set_color --underline)$colors_backup(set_color normal)
-        set -U >>$colors_backup
-        for option in (set -Un | string match "fish*color_*")
-            set -eU $option
-        end
-        echo \"Normalized\" colors on upgrade.
-
         # Regular syntax highlighting colors
+        # XXX - not quite the same as default colors in web config. Sync these up. 
         set -q fish_color_normal
         or set -U fish_color_normal normal
         set -q fish_color_command
@@ -60,7 +52,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -q fish_color_error
         or set -U fish_color_error brred
         set -q fish_color_escape
-        or set -U fish_color_escape bryellow
+        or set -U fish_color_escape bryellow --bold
         set -q fish_color_operator
         or set -U fish_color_operator bryellow
         set -q fish_color_end
@@ -84,21 +76,21 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
         # Background color for matching quotes and parenthesis
         set -q fish_color_match
-        or set -U fish_color_match --background=blue
+        or set -U fish_color_match --background=brblue
 
         # Background color for search matches
         set -q fish_color_search_match
-        or set -U fish_color_search_match bryellow --background=brgrey
+        or set -U fish_color_search_match bryellow --background=brblack
 
         # Background color for selections
         set -q fish_color_selection
-        or set -U fish_color_selection white --bold --background=brgrey
+        or set -U fish_color_selection white --bold --background=brblack
 
         # Pager colors
         set -q fish_pager_color_prefix
         or set -U fish_pager_color_prefix white --bold --underline
-        #set -q fish_pager_color_completion
-        #or set -U fish_pager_color_completion
+        set -q fish_pager_color_completion
+        or set -U fish_pager_color_completion
         set -q fish_pager_color_description
         or set -U fish_pager_color_description B3A06D yellow
         set -q fish_pager_color_progress

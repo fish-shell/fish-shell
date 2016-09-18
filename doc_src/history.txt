@@ -2,8 +2,8 @@
 
 \subsection history-synopsis Synopsis
 \fish{synopsis}
-history search [ --with-time ] [ --exact | --prefix | --contains ] [ "search string"... ]
-history delete [ --with-time ] [ --exact | --prefix | --contains ] "search string"...
+history search [ --show-time ] [ --exact | --prefix | --contains ] [ "search string"... ]
+history delete [ --show-time ] [ --exact | --prefix | --contains ] "search string"...
 history merge
 history save
 history clear
@@ -38,7 +38,7 @@ These flags can appear before or immediately after on of the sub-commands listed
 
 - `-p` or `--prefix` searches or deletes items in the history that begin with the specified text string. This is not currently supported by the `--delete` flag.
 
-- `-t` or `--with-time` outputs the date and time ("%Y-%m-%d %H:%M:%S") history items were recorded at on a line starting with "#" before each history entry.
+- `-t` or `--show-time` outputs the date and time ("%Y-%m-%d %H:%M:%S") history items were recorded at on a line starting with "#" before each history entry. Note that `--with-time` is also allowed but is deprecated and will be removed at a future date.
 
 - `-h` or `--help` display help for this command.
 

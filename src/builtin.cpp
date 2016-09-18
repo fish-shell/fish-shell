@@ -2827,7 +2827,7 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
 }
 
 #define CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)                                         \
-    if (history_search_type_defined || with_time) {                           \
+    if (history_search_type_defined || show_time) {                           \
         streams.err.append_format(                                            \
             _(L"%ls: you cannot use any options with the %ls command\n"), \
             cmd, hist_cmd_to_string(hist_cmd).c_str());                            \
@@ -2848,7 +2848,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     hist_cmd_t hist_cmd = HIST_NOOP;
     history_search_type_t search_type = (history_search_type_t)-1;
     bool history_search_type_defined = false;
-    bool with_time = false;
+    bool show_time = false;
 
     // TODO: Remove the long options that correspond to subcommands (e.g., '--delete') on or after
     // 2017-10 (which will be a full year after these flags have been deprecated).
@@ -2856,6 +2856,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'},
                                            {L"contains", no_argument, NULL, 'c'},
                                            {L"help", no_argument, NULL, 'h'},
+                                           {L"show-time", no_argument, NULL, 't'},
                                            {L"with-time", no_argument, NULL, 't'},
                                            {L"exact", no_argument, NULL, 'e'},
                                            {L"delete", no_argument, NULL, 1},
@@ -2920,7 +2921,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 break;
             }
             case 't': {
-                with_time = true;
+                show_time = true;
                 break;
             }
             case 'h': {
@@ -2963,7 +2964,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     int status = STATUS_BUILTIN_OK;
     switch (hist_cmd) {
         case HIST_SEARCH: {
-            if (!history->search(search_type, args, with_time, streams)) {
+            if (!history->search(search_type, args, show_time, streams)) {
                 status = STATUS_BUILTIN_ERROR;
             }
             break;

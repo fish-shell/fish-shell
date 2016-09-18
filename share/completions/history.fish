@@ -9,7 +9,7 @@ complete -c history -n '__fish_seen_subcommand_from search delete' \
 complete -c history -n '__fish_seen_subcommand_from search delete' \
     -s e -l exact -d "Match items identical to the string"
 complete -c history -n '__fish_seen_subcommand_from search delete' \
-    -s t -l with-time -d "Output with timestamps"
+    -s t -l show-time -d "Output with timestamps"
 
 # We don't include a completion for the "save" subcommand because it should not be used
 # interactively.

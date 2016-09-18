@@ -17,7 +17,7 @@ end
 
 function __fish_unexpected_hist_args --no-scope-shadowing
     if test -n "$search_mode"
-        or test -n "$with_time"
+        or test -n "$show_time"
         printf (_ "%ls: you cannot use any options with the %ls command\n") $cmd $hist_cmd >&2
         return 0
     end
@@ -34,7 +34,7 @@ function history --description "display or manipulate interactive command histor
     set -l cmd history
     set -l hist_cmd
     set -l search_mode
-    set -l with_time
+    set -l show_time
 
     # Check for a recognized subcommand as the first argument.
     if set -q argv[1]
@@ -71,8 +71,8 @@ function history --description "display or manipulate interactive command histor
             case -h --help
                 builtin history --help
                 return
-            case -t --with-time
-                set with_time -t
+            case -t --show-time --with-time
+                set show_time -t
             case -p --prefix
                 set search_mode --prefix
             case -c --contains
@@ -112,9 +112,9 @@ function history --description "display or manipulate interactive command histor
                 set -l pager less
                 set -q PAGER
                 and set pager $PAGER
-                builtin history search $search_mode $with_time -- $argv | eval $pager
+                builtin history search $search_mode $show_time -- $argv | eval $pager
             else
-                builtin history search $search_mode $with_time -- $argv
+                builtin history search $search_mode $show_time -- $argv
             end
 
         case delete # interactively delete history
@@ -133,7 +133,7 @@ function history --description "display or manipulate interactive command histor
             end
 
             # TODO: Fix this so that requesting history entries with a timestamp works:
-            #   set -l found_items (builtin history search $search_mode $with_time -- $argv)
+            #   set -l found_items (builtin history search $search_mode $show_time -- $argv)
             set -l found_items (builtin history search $search_mode -- $argv)
             if set -q found_items[1]
                 set -l found_items_count (count $found_items)

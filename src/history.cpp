@@ -1396,14 +1396,17 @@ void history_t::save(void) {
 
 // Formats a single history record, including a trailing newline.  Returns true
 // if bytes were written to the output stream and false otherwise.
-static bool format_history_record(const history_item_t &item, const bool with_time,
+static bool format_history_record(const history_item_t &item, const wchar_t *show_time_format,
                                   io_streams_t &streams) {
-    if (with_time) {
+    if (show_time_format) {
         const time_t seconds = item.timestamp();
         struct tm timestamp;
         if (!localtime_r(&seconds, &timestamp)) return false;
-        wchar_t timestamp_string[24];
-        if (std::wcsftime(timestamp_string, 23, L"# %Y-%m-%d %H:%M:%S\n", &timestamp) == 0) return false;
+        const int max_tstamp_length = 100;
+        wchar_t timestamp_string[max_tstamp_length + 1];
+        if (std::wcsftime(timestamp_string, max_tstamp_length, show_time_format, &timestamp) == 0) {
+            return false;
+        }
         streams.out.append(timestamp_string);
     }
     streams.out.append(item.str());
@@ -1412,12 +1415,14 @@ static bool format_history_record(const history_item_t &item, const bool with_ti
 }
 
 bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args,
-                       bool with_time, io_streams_t &streams) {
+                       const wchar_t *show_time_format, io_streams_t &streams) {
     // scoped_lock locker(lock);
     if (search_args.empty()) {
         // Start at one because zero is the current command.
         for (int i = 1; !this->item_at_index(i).empty(); ++i) {
-            if (!format_history_record(this->item_at_index(i), with_time, streams)) return false;
+            if (!format_history_record(this->item_at_index(i), show_time_format, streams)) {
+                return false;
+            }
         }
         return true;
     }
@@ -1431,7 +1436,7 @@ bool history_t::search(history_search_type_t search_type, wcstring_list_t search
         }
         history_search_t searcher = history_search_t(*this, search_string, search_type);
         while (searcher.go_backwards()) {
-            if (!format_history_record(searcher.current_item(), with_time, streams)) {
+            if (!format_history_record(searcher.current_item(), show_time_format, streams)) {
                 return false;
             }
         }

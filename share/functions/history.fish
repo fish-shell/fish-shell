@@ -22,8 +22,7 @@ function __fish_unexpected_hist_args --no-scope-shadowing
         return 0
     end
     if set -q argv[1]
-        printf (_ "%ls: %ls command expected %d args, got %d\n") \
-            $cmd $hist_cmd 0 (count $argv) >&2
+        printf (_ "%ls: %ls command expected %d args, got %d\n") $cmd $hist_cmd 0 (count $argv) >&2
         return 0
     end
     return 1
@@ -71,8 +70,8 @@ function history --description "display or manipulate interactive command histor
             case -h --help
                 builtin history --help
                 return
-            case -t --show-time --with-time
-                set show_time -t
+            case -t --show-time '--show-time=*' --with-time '--with-time=*'
+                set show_time $argv[1]
             case -p --prefix
                 set search_mode --prefix
             case -c --contains

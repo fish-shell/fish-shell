@@ -664,7 +664,7 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir) ||:
 	@echo "Installing pkgconfig file"
 	$v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
-	@echo "Installing the $(bo)fish completion libraryn$(sgr0)...";
+	@echo "Installing the $(bo)fish completion library$(sgr0)...";
 	$v for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 	done;

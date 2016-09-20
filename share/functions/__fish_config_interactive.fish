@@ -213,17 +213,19 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Load key bindings
     __fish_reload_key_bindings
 
-    # Repaint screen when window changes size
-    function __fish_winch_handler --on-signal WINCH
+    function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"
         commandline -f repaint
     end
 
     # Notify terminals when $PWD changes (issue #906)
-    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
-        function __update_cwd_osc --on-variable PWD --description 'Notify VTE of change to $PWD'
+    # VTE and Terminal.app support this in practice.
+    if test "0$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
+        function fish_title; end
+        function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             status --is-command-substitution
+            or test -n "$INSIDE_EMACS"
             and return
-            printf \e\]7\;file://\%s\%s\a (hostname) (pwd | __fish_urlencode)
+            printf \e\]7\;file://\%s\%s\a (hostname) (echo -n $PWD | __fish_urlencode)
         end
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end

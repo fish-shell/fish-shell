@@ -14,6 +14,12 @@ else
     set files_to_test *.in
 end
 
+# These env vars should not be inherited from the user environment because they can affect the
+# behavior of the tests. So either remove them or set them to a known value.
+# See also tests/interactive.fish.
+set TERM xterm
+set -e ITERM_PROFILE
+
 source test_util.fish (status -f) $argv; or exit
 
 say -o cyan "Testing high level script functionality"

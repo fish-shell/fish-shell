@@ -2846,18 +2846,20 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     int argc = builtin_count_args(argv);
     hist_cmd_t hist_cmd = HIST_NOOP;
     history_search_type_t search_type = (history_search_type_t)-1;
+    long max_items = LONG_MAX;
     bool history_search_type_defined = false;
     const wchar_t *show_time_format = NULL;
 
     // TODO: Remove the long options that correspond to subcommands (e.g., '--delete') on or after
     // 2017-10 (which will be a full year after these flags have been deprecated).
-    const wchar_t *short_options = L":mepcht";
+    const wchar_t *short_options = L":mn:epcht";
     const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'},
                                            {L"contains", no_argument, NULL, 'c'},
                                            {L"help", no_argument, NULL, 'h'},
                                            {L"show-time", optional_argument, NULL, 't'},
                                            {L"with-time", optional_argument, NULL, 't'},
                                            {L"exact", no_argument, NULL, 'e'},
+                                           {L"max", required_argument, NULL, 'n'},
                                            {L"delete", no_argument, NULL, 1},
                                            {L"search", no_argument, NULL, 2},
                                            {L"save", no_argument, NULL, 3},
@@ -2923,6 +2925,17 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 show_time_format = w.woptarg ? w.woptarg : L"# %c%n";
                 break;
             }
+            case 'n': {
+                wchar_t *end = 0;
+                max_items = wcstol(w.woptarg, &end, 10);
+                if (!(*w.woptarg != L'\0' && *end == L'\0')) {
+                    streams.err.append_format(
+                        _(L"%ls: max value '%ls' is not a valid number\n"), argv[0],
+                        w.woptarg);
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
             case 'h': {
                 builtin_print_help(parser, streams, cmd, streams.out);
                 return STATUS_BUILTIN_OK;
@@ -2932,11 +2945,24 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 return STATUS_BUILTIN_ERROR;
             }
             case '?': {
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, argv[w.woptind - 1]);
-                return STATUS_BUILTIN_ERROR;
+                // Try to parse it as a number; e.g., "-123".
+                wchar_t *end = 0;
+                max_items = wcstol(argv[w.woptind - 1] + 1, &end, 10);
+                if (!(argv[w.woptind - 1][1] != L'\0' && *end == L'\0')) {
+                    streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, argv[w.woptind - 1]);
+                    return STATUS_BUILTIN_ERROR;
+                }
+                w.nextchar = NULL;
+                break;
             }
             default: { DIE("unexpected retval from wgetopt_long"); }
         }
+    }
+
+    if (max_items <= 0) {
+        streams.err.append_format(_(L"%ls: max value '%ls' is not a valid number\n"), argv[0],
+                                  w.woptarg);
+        return STATUS_BUILTIN_ERROR;
     }
 
     // If a history command hasn't already been specified via a flag check the first word.
@@ -2963,7 +2989,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     int status = STATUS_BUILTIN_OK;
     switch (hist_cmd) {
         case HIST_SEARCH: {
-            if (!history->search(search_type, args, show_time_format, streams)) {
+            if (!history->search(search_type, args, show_time_format, max_items, streams)) {
                 status = STATUS_BUILTIN_ERROR;
             }
             break;

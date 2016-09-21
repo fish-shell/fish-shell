@@ -1415,11 +1415,11 @@ static bool format_history_record(const history_item_t &item, const wchar_t *sho
 }
 
 bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args,
-                       const wchar_t *show_time_format, io_streams_t &streams) {
+                       const wchar_t *show_time_format, long max_items, io_streams_t &streams) {
     // scoped_lock locker(lock);
     if (search_args.empty()) {
         // Start at one because zero is the current command.
-        for (int i = 1; !this->item_at_index(i).empty(); ++i) {
+        for (int i = 1; !this->item_at_index(i).empty() && max_items; ++i, --max_items) {
             if (!format_history_record(this->item_at_index(i), show_time_format, streams)) {
                 return false;
             }
@@ -1439,6 +1439,7 @@ bool history_t::search(history_search_type_t search_type, wcstring_list_t search
             if (!format_history_record(searcher.current_item(), show_time_format, streams)) {
                 return false;
             }
+            if (--max_items == 0) return true;
         }
     }
 

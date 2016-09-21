@@ -34,6 +34,7 @@ function history --description "display or manipulate interactive command histor
     set -l hist_cmd
     set -l search_mode
     set -l show_time
+    set -l max_count
 
     # Check for a recognized subcommand as the first argument.
     if set -q argv[1]
@@ -78,11 +79,24 @@ function history --description "display or manipulate interactive command histor
                 set search_mode --contains
             case -e --exact
                 set search_mode --exact
+            case -n --max
+                if string match -- '-n?*' $argv[1]
+                    or string match -- '--max=*' $argv[1]
+                    set max_count $argv[1]
+                else
+                    set max_count $argv[1] $argv[2]
+                    set -e argv[1]
+                end
             case --
                 set -e argv[1]
                 break
             case '*'
-                break
+                if string match -r -- '-\d+' $argv[1]
+                    set max_count $argv[1]
+                    set -e argv[1]
+                else
+                    break
+                end
         end
         set -e argv[1]
     end
@@ -107,13 +121,14 @@ function history --description "display or manipulate interactive command histor
             test -z "$search_mode"
             and set search_mode "--contains"
 
+            echo "builtin history search $search_mode $show_time $max_count -- $argv" >>/tmp/x
             if isatty stdout
                 set -l pager less
                 set -q PAGER
                 and set pager $PAGER
-                builtin history search $search_mode $show_time -- $argv | eval $pager
+                builtin history search $search_mode $show_time $max_count -- $argv | eval $pager
             else
-                builtin history search $search_mode $show_time -- $argv
+                builtin history search $search_mode $show_time $max_count -- $argv
             end
 
         case delete # interactively delete history

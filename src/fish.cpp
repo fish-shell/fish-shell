@@ -91,6 +91,8 @@ static std::string get_executable_path(const char *argv0) {
 
 #if __APPLE__
     // On OS X use it's proprietary API to get the path to the executable.
+    // This is basically grabbing exec_path after argc, argv, envp, ...: for us
+    // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
     uint32_t buffSize = sizeof buff;
     if (_NSGetExecutablePath(buff, &buffSize) == 0) return std::string(buff);
 #else
@@ -121,6 +123,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     std::string exec_path = get_executable_path(argv0);
     if (get_realpath(exec_path)) {
 #if __APPLE__
+        debug(2, L"exec_path: '%s'", exec_path.c_str());
 
         // On OS X, maybe we're an app bundle, and should use the bundle's files. Since we don't
         // link CF, use this lame approach to test it: see if the resolved path ends with
@@ -186,6 +189,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
         paths.bin = L"" BINDIR;
     }
 
+    debug(2, "determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: %ls\npaths.doc: %ls\npaths.bin: %ls",  paths.data.c_str(), paths.sysconf.c_str(), paths.doc.c_str(), paths.bin.c_str());
     return paths;
 }
 

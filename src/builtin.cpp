@@ -1594,8 +1594,8 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                         e.param1.job_id = job_id;
                     }
                 } else {
-                    pid_t pid = wcstoimax(w.woptarg, &end, 10);
-                    if (pid < 1 || !(*w.woptarg != L'\0' && *end == L'\0')) {
+                    pid_t pid;
+                    if (!(parse_integer(w.woptarg, &pid)) || pid < 1) {
                         append_format(*out_err, _(L"%ls: Invalid process id '%ls'"), argv[0],
                                       w.woptarg);
                         res = STATUS_BUILTIN_ERROR;

@@ -122,50 +122,30 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     bool done = false;
     std::string exec_path = get_executable_path(argv0);
     if (get_realpath(exec_path)) {
-#if __APPLE__
         debug(2, L"exec_path: '%s'", exec_path.c_str());
-
-        // On OS X, maybe we're an app bundle, and should use the bundle's files. Since we don't
-        // link CF, use this lame approach to test it: see if the resolved path ends with
-        // /Contents/MacOS/fish, case insensitive since HFS+ usually is.
         if (!done) {
-            const char *suffix = "Contents/Resources/base/bin/fish";
-            const size_t suffixlen = strlen(suffix);
-            if (has_suffix(exec_path, suffix, true)) {
-                // Looks like we're a bundle. Cut the string at the / prefixing /Contents... and
-                // then the rest.
-                wcstring wide_resolved_path = str2wcstring(exec_path);
-                wide_resolved_path.resize(exec_path.size() - suffixlen);
-                wide_resolved_path.append(L"Contents/Resources/base/");
+            // The next check is that we are in a reloctable directory tree
+            const char *installed_suffix = "/bin/fish";
+            const char *just_a_fish = "/fish";
+            const char *suffix = NULL;
 
-                // Append share, etc, doc.
-                paths.data = wide_resolved_path + L"share/fish";
-                paths.sysconf = wide_resolved_path + L"etc/fish";
-                paths.doc = wide_resolved_path + L"doc/fish";
-
-                // But the bin_dir is the resolved_path, minus fish (aka the MacOS directory).
-                paths.bin = str2wcstring(exec_path);
-                paths.bin.resize(paths.bin.size() - strlen("/fish"));
-
-                done = true;
+            if (has_suffix(exec_path, installed_suffix, false)) {
+                suffix = installed_suffix;
+            } else if (has_suffix(exec_path, just_a_fish, false)) {
+                debug(2, L"'fish' not in a 'bin/', trying paths relative to source tree");
+                suffix = just_a_fish;
             }
-        }
-#endif
 
-        if (!done) {
-            // The next check is that we are in a reloctable directory tree like this:
-            //   bin/fish
-            //   etc/fish
-            //   share/fish
-            const char *suffix = "/bin/fish";
-            if (has_suffix(exec_path, suffix, false)) {
+            if (suffix) {
+                bool seems_installed = (suffix == installed_suffix);
+
                 wcstring base_path = str2wcstring(exec_path);
                 base_path.resize(base_path.size() - strlen(suffix));
 
-                paths.data = base_path + L"/share/fish";
-                paths.sysconf = base_path + L"/etc/fish";
-                paths.doc = base_path + L"/share/doc/fish";
-                paths.bin = base_path + L"/bin";
+                paths.data = base_path + (seems_installed ? L"/share/fish" : L"/share");
+                paths.sysconf = base_path + (seems_installed ? L"/etc/fish" : L"/etc");
+                paths.doc = base_path + (seems_installed ? L"/share/doc/fish" : L"/user_doc/html");
+                paths.bin = base_path + (seems_installed ? L"/bin" : L"");
 
                 // Check only that the data and sysconf directories exist. Handle the doc
                 // directories separately.
@@ -183,13 +163,14 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
 
     if (!done) {
         // Fall back to what got compiled in.
+        debug(2, L"Using compiled in paths:");
         paths.data = L"" DATADIR "/fish";
         paths.sysconf = L"" SYSCONFDIR "/fish";
         paths.doc = L"" DOCDIR;
         paths.bin = L"" BINDIR;
     }
 
-    debug(2, "determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: %ls\npaths.doc: %ls\npaths.bin: %ls",  paths.data.c_str(), paths.sysconf.c_str(), paths.doc.c_str(), paths.bin.c_str());
+    debug(2, L"determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: %ls\npaths.doc: %ls\npaths.bin: %ls",  paths.data.c_str(), paths.sysconf.c_str(), paths.doc.c_str(), paths.bin.c_str());
     return paths;
 }
 

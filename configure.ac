@@ -215,7 +215,7 @@ CXXFLAGS="$CXXFLAGS -fno-exceptions"
 # But signed comparison warnings are way too aggressive
 #
 
-CXXFLAGS="$CXXFLAGS -Wextra -Wshorten-64-to-32"
+CXXFLAGS="$CXXFLAGS -Wextra"
 
 #
 # This is needed in order to get the really cool backtraces on Linux

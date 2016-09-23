@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <stddef.h>
+#include <limits>
 #include <inttypes.h>
 #include <wchar.h>
 #include <memory>

@@ -138,14 +138,14 @@ expect_prompt -re {Deleting history entry 1: "echo hello AGAIN"\r\n} {
 
 # Verify that the deleted history entry is gone and the other one that matched
 # the prefix search above is still there.
-send "history search --exact 'echo hello again'\r"
+send "history search --case-sensitive --exact 'echo hello again'\r"
 expect_prompt -re {\r\necho hello again\r\n} {
     puts "history function explicit exact search 'echo hello again' succeeded"
 } unmatched {
     puts stderr "history function explicit exact search 'echo hello again' failed"
 }
 
-send "history search --exact 'echo hello AGAIN'\r"
+send "history search --case-sensitive --exact 'echo hello AGAIN'\r"
 expect_prompt -re {\r\necho hello AGAIN\r\n} {
     puts stderr "history function explicit exact search 'echo hello AGAIN' found the entry"
 } unmatched {

@@ -2,8 +2,8 @@
 
 \subsection history-synopsis Synopsis
 \fish{synopsis}
-history search [ --show-time ] [ --exact | --prefix | --contains ] [ --max=n ] [ "search string"... ]
-history delete [ --show-time ] [ --exact | --prefix | --contains ] "search string"...
+history search [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] [ --max=n ] [ "search string"... ]
+history delete [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] "search string"...
 history merge
 history save
 history clear
@@ -20,7 +20,7 @@ The following operations (sub-commands) are available:
 
 - `search` returns history items matching the search string. If no search string is provided it returns all history items. This is the default operation if no other operation is specified. You only have to explicitly say `history search` if you wish to search for one of the subcommands. The `--contains` search option will be used if you don't specify a different search option. Entries are ordered newest to oldest. If stdout is attached to a tty the output will be piped through your pager by the history function. The history builtin simply writes the results to stdout.
 
-- `delete` deletes history items. Without the `--prefix` or `--contains` options, the exact match will be deleted. With either of these options, a prompt will be displayed before any items are deleted asking you which entries are to be deleted. You can enter the word "all" to delete all matching entries. You can enter a single ID (the number in square brackets) to delete just that single entry. You can enter more than one ID separated by a space to delete multiple entries. Just press [enter] to not delete anything. Note that the interactive delete behavior is a feature of the history function. The history builtin only supports bulk deletion.
+- `delete` deletes history items. Without the `--prefix` or `--contains` options, the exact match of the specified text will be deleted. If you don't specify `--exact` a prompt will be displayed before any items are deleted asking you which entries are to be deleted. You can enter the word "all" to delete all matching entries. You can enter a single ID (the number in square brackets) to delete just that single entry. You can enter more than one ID separated by a space to delete multiple entries. Just press [enter] to not delete anything. Note that the interactive delete behavior is a feature of the history function. The history builtin only supports `--exact --case-sensitive` deletion.
 
 - `merge` immediately incorporates history changes from other sessions. Ordinarily `fish` ignores history changes from sessions started after the current one. This command applies those changes immediately.
 
@@ -32,9 +32,11 @@ The following options are available:
 
 These flags can appear before or immediately after one of the sub-commands listed above.
 
+- `-C` or `--case-sensitive` does a case-sensitive search. The default is case-insensitive. Note that prior to fish 2.4.0 the default was case-sensitive.
+
 - `-c` or `--contains` searches or deletes items in the history that contain the specified text string. This is the default for the `--search` flag. This is not currently supported by the `--delete` flag.
 
-- `-e` or `--exact` searches or deletes items in the history that exactly match the specified text string. This is the default for the `--delete` flag.
+- `-e` or `--exact` searches or deletes items in the history that exactly match the specified text string. This is the default for the `--delete` flag. Note that the match is case-insensitive by default. If you really want an exact match, including letter case, you must use the `-C` or `--case-sensitive` flag.
 
 - `-p` or `--prefix` searches or deletes items in the history that begin with the specified text string. This is not currently supported by the `--delete` flag.
 

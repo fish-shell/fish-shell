@@ -2875,10 +2875,11 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     long max_items = LONG_MAX;
     bool history_search_type_defined = false;
     const wchar_t *show_time_format = NULL;
+    bool case_sensitive = false;
 
     // TODO: Remove the long options that correspond to subcommands (e.g., '--delete') on or after
     // 2017-10 (which will be a full year after these flags have been deprecated).
-    const wchar_t *short_options = L":mn:epcht";
+    const wchar_t *short_options = L":Cmn:epcht";
     const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'},
                                            {L"contains", no_argument, NULL, 'c'},
                                            {L"help", no_argument, NULL, 'h'},
@@ -2886,6 +2887,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                                            {L"with-time", optional_argument, NULL, 't'},
                                            {L"exact", no_argument, NULL, 'e'},
                                            {L"max", required_argument, NULL, 'n'},
+                                           {L"case-sensitive", no_argument, 0, 'C'},
                                            {L"delete", no_argument, NULL, 1},
                                            {L"search", no_argument, NULL, 2},
                                            {L"save", no_argument, NULL, 3},
@@ -2930,6 +2932,10 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 if (!set_hist_cmd(cmd, &hist_cmd, HIST_MERGE, streams)) {
                     return STATUS_BUILTIN_ERROR;
                 }
+                break;
+            }
+            case 'C': {
+                case_sensitive = true;
                 break;
             }
             case 'p': {
@@ -3014,17 +3020,24 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     int status = STATUS_BUILTIN_OK;
     switch (hist_cmd) {
         case HIST_SEARCH: {
-            if (!history->search(search_type, args, show_time_format, max_items, streams)) {
+            if (!history->search(search_type, args, show_time_format, max_items, case_sensitive,
+                                 streams)) {
                 status = STATUS_BUILTIN_ERROR;
             }
             break;
         }
         case HIST_DELETE: {
-            // TODO: Move this code to the history module and support the other search types. At
-            // this time we expect the non-exact deletions to be handled only by the history
-            // function's interactive delete feature.
+            // TODO: Move this code to the history module and support the other search types
+            // including case-insensitive matches. At this time we expect the non-exact deletions to
+            // be handled only by the history function's interactive delete feature.
             if (search_type != HISTORY_SEARCH_TYPE_EXACT) {
                 streams.err.append_format(_(L"builtin history delete only supports --exact\n"));
+                status = STATUS_BUILTIN_ERROR;
+                break;
+            }
+            if (!case_sensitive) {
+                streams.err.append_format(
+                    _(L"builtin history delete only supports --case-sensitive\n"));
                 status = STATUS_BUILTIN_ERROR;
                 break;
             }

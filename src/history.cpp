@@ -428,27 +428,52 @@ bool history_item_t::merge(const history_item_t &item) {
     return result;
 }
 
+#if 0
 history_item_t::history_item_t(const wcstring &str)
-    : contents(str), creation_timestamp(time(NULL)), identifier(0) {}
+    : contents(str), contents_lower(L""), creation_timestamp(time(NULL)), identifier(0) {
+        for (wcstring::const_iterator it = str.begin(); it != str.end(); ++it) {
+                contents_lower.push_back(towlower(*it));
+        }
+    }
+#endif
 
 history_item_t::history_item_t(const wcstring &str, time_t when, history_identifier_t ident)
-    : contents(str), creation_timestamp(when), identifier(ident) {}
+    : contents(str), contents_lower(L""), creation_timestamp(when), identifier(ident) {
+    for (wcstring::const_iterator it = str.begin(); it != str.end(); ++it) {
+        contents_lower.push_back(towlower(*it));
+    }
+}
 
-bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type) const {
-    switch (type) {
-        case HISTORY_SEARCH_TYPE_CONTAINS: {
+bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type,
+                                    bool case_sensitive) const {
+    // We don't use a switch below because there are only three cases and if the strings are the
+    // same length we can use the faster HISTORY_SEARCH_TYPE_EXACT for the other two cases.
+    //
+    // Too, we consider equal strings to match a prefix search, so that autosuggest will allow
+    // suggesting what you've typed.
+    if (case_sensitive) {
+        if (type == HISTORY_SEARCH_TYPE_EXACT || term.size() == contents.size()) {
+            return term == contents;
+        } else if (type == HISTORY_SEARCH_TYPE_CONTAINS) {
             return contents.find(term) != wcstring::npos;
-        }
-        case HISTORY_SEARCH_TYPE_PREFIX: {
-            // We consider equal strings to match a prefix search, so that autosuggest will allow
-            // suggesting what you've typed.
+        } else if (type == HISTORY_SEARCH_TYPE_PREFIX) {
             return string_prefixes_string(term, contents);
         }
-        case HISTORY_SEARCH_TYPE_EXACT: {
-            return term == contents;
+    } else {
+        wcstring lterm(L"");
+        for (wcstring::const_iterator it = term.begin(); it != term.end(); ++it) {
+            lterm.push_back(towlower(*it));
         }
-        default: { DIE("unexpected history_search_type_t value"); }
+
+        if (type == HISTORY_SEARCH_TYPE_EXACT || lterm.size() == contents.size()) {
+            return lterm == contents_lower;
+        } else if (type == HISTORY_SEARCH_TYPE_CONTAINS) {
+            return contents_lower.find(lterm) != wcstring::npos;
+        } else if (type == HISTORY_SEARCH_TYPE_PREFIX) {
+            return string_prefixes_string(lterm, contents_lower);
+        }
     }
+    DIE("unexpected history_search_type_t value");
 }
 
 /// Append our YAML history format to the provided vector at the given offset, updating the offset.
@@ -765,16 +790,27 @@ void history_t::add(const wcstring &str, history_identifier_t ident, bool pendin
     this->add(history_item_t(str, when, ident), pending);
 }
 
-void history_t::remove(const wcstring &str) {
-    // Add to our list of deleted items.
-    deleted_items.insert(str);
+bool icompare_pred(wchar_t a, wchar_t b) { return std::tolower(a) == std::tolower(b); }
 
-    // Remove from our list of new items.
+bool icompare(wcstring const &a, wcstring const &b) {
+    if (a.length() == b.length()) {
+        return std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
+    } else {
+        return false;
+    }
+}
+
+// Remove matching history entries from our list of new items. This only supports literal,
+// case-sensitive, matches.
+void history_t::remove(const wcstring &str_to_remove) {
+    // Add to our list of deleted items.
+    deleted_items.insert(str_to_remove);
+
     size_t idx = new_items.size();
     while (idx--) {
-        if (new_items.at(idx).str() == str) {
+        bool matched = new_items.at(idx).str() == str_to_remove;
+        if (matched) {
             new_items.erase(new_items.begin() + idx);
-
             // If this index is before our first_unwritten_new_item_index, then subtract one from
             // that index so it stays pointing at the same item. If it is equal to or larger, then
             // we have not yet writen this item, so we don't have to adjust the index.
@@ -1003,7 +1039,7 @@ bool history_search_t::go_backwards() {
 
         // Look for a term that matches and that we haven't seen before.
         const wcstring &str = item.str();
-        if (item.matches_search(term, search_type) && !match_already_made(str) &&
+        if (item.matches_search(term, search_type, case_sensitive) && !match_already_made(str) &&
             !should_skip_match(str)) {
             prev_matches.push_back(prev_match_t(idx, item));
             return true;
@@ -1417,7 +1453,8 @@ static bool format_history_record(const history_item_t &item, const wchar_t *sho
 }
 
 bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args,
-                       const wchar_t *show_time_format, long max_items, io_streams_t &streams) {
+                       const wchar_t *show_time_format, long max_items, bool case_sensitive,
+                       io_streams_t &streams) {
     // scoped_lock locker(lock);
     if (search_args.empty()) {
         // Start at one because zero is the current command.
@@ -1436,7 +1473,8 @@ bool history_t::search(history_search_type_t search_type, wcstring_list_t search
             streams.err.append_format(L"Searching for the empty string isn't allowed");
             return false;
         }
-        history_search_t searcher = history_search_t(*this, search_string, search_type);
+        history_search_t searcher =
+            history_search_t(*this, search_string, search_type, case_sensitive);
         while (searcher.go_backwards()) {
             if (!format_history_record(searcher.current_item(), show_time_format, streams)) {
                 return false;

@@ -11,6 +11,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include <termios.h>
+#include <stddef.h>
+#include <limits>
+#include <inttypes.h>
 #include <wchar.h>
 #include <memory>
 #include <sstream>
@@ -691,6 +694,21 @@ ssize_t read_loop(int fd, void *buff, size_t count);
 /// program_name is 'fish'.
 void __attribute__((noinline)) debug(int level, const char *msg, ...);
 void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...);
+
+/// Parse an integer and check limits for type
+/// The only way to be safe from overflows is intmax_t.
+/// Do that, and make sure the result isn't bigger than the maximum supported for whatever type.
+template <typename T>
+bool parse_integer(const wchar_t *in, T* out) {
+  wchar_t *end;
+  intmax_t res = wcstoimax(in, &end, 0);
+
+  if (!(*in != L'\0' && *end == L'\0')) return false;
+  if (std::numeric_limits<T>::max() < res || res < std::numeric_limits<T>::min()) return false;
+
+  *out = static_cast<T>(res);
+  return true;
+}
 
 /// Replace special characters with backslash escape sequences. Newline is replaced with \n, etc.
 ///

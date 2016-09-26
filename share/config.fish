@@ -17,7 +17,7 @@ set -g version $FISH_VERSION
 
 if status --is-interactive
         # The user has seemingly explicitly launched an old fish with too-new scripts installed.
-	if not contains "string" (builtin -n)
+	if not contains  -- "string" (builtin -n)
 		set -g __is_launched_without_string 1
 		# XXX nostring - fix old fish binaries with no `string' builtin.
 		# When executed on fish 2.2.0, the `else' block after this would
@@ -93,7 +93,7 @@ if not set -q fish_function_path
 	set fish_function_path $configdir/fish/functions $__fish_sysconfdir/functions $__extra_functionsdir $__fish_datadir/functions
 end
 
-if not contains $__fish_datadir/functions $fish_function_path
+if not contains -- $__fish_datadir/functions $fish_function_path
 	set fish_function_path $fish_function_path $__fish_datadir/functions
 end
 
@@ -101,7 +101,7 @@ if not set -q fish_complete_path
 	set fish_complete_path $configdir/fish/completions $__fish_sysconfdir/completions $__extra_completionsdir $__fish_datadir/completions $userdatadir/fish/generated_completions
 end
 
-if not contains $__fish_datadir/completions $fish_complete_path
+if not contains -- $__fish_datadir/completions $fish_complete_path
 	set fish_complete_path $fish_complete_path $__fish_datadir/completions
 end
 
@@ -114,7 +114,7 @@ end
 #
 
 if test -d /usr/xpg4/bin
-	if not contains /usr/xpg4/bin $PATH
+	if not contains -- /usr/xpg4/bin $PATH
 		set PATH /usr/xpg4/bin $PATH
 	end
 end
@@ -127,7 +127,7 @@ function __fish_load_path_helper_paths
 	set __fish_tmp_path $__fish_tmp_path[-1..1]
 	while read -l new_path_comp
 		if test -d $new_path_comp
-			set -l where (contains -i $new_path_comp $__fish_tmp_path)
+			set -l where (contains -i -- $new_path_comp $__fish_tmp_path)
 			and set -e __fish_tmp_path[$where]
 			set __fish_tmp_path $new_path_comp $__fish_tmp_path
 		end
@@ -147,13 +147,13 @@ function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" -
 	set -l local_path $PATH
 	set -l x
 	for x in $__fish_added_user_paths
-		set -l idx (contains --index $x $local_path)
+		set -l idx (contains --index -- $x $local_path)
 		and set -e local_path[$idx]
 	end
 
 	set -e __fish_added_user_paths
 	for x in $fish_user_paths[-1..1]
-		if set -l idx (contains --index $x $local_path)
+		if set -l idx (contains --index -- $x $local_path)
 			set -e local_path[$idx]
 		else
 			set -g __fish_added_user_paths $__fish_added_user_paths $x

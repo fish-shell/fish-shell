@@ -31,9 +31,9 @@ if not command -s realpath >/dev/null
                         __fish_print_help fish_realpath
                         return 0
 
-                        # Service commands called with these arguments by
-                        # dropping the arguments to protext fish_realpath from them
-                        # There are no sure things here
+                        # Handle commands called with these arguments by
+                        # dropping the arguments to protect fish_realpath from them.
+                        # There are no sure things here.
                     case -e --canonicalize-existing --physical -P -q --quiet -m --canonicalize-missing
                         continue
 

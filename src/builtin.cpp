@@ -82,12 +82,6 @@ bool builtin_data_t::operator<(const builtin_data_t *other) const {
 }
 
 /// Counts the number of arguments in the specified null-terminated array
-///
-/// @param argv[]: argument list
-///
-/// @return
-///     The numer of non-NULL elements in @param *argv before the first NULL.
-///
 int builtin_count_args(const wchar_t *const *argv) {
     int argc;
     for (argc = 1; argv[argc] != NULL;){

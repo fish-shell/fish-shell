@@ -2,8 +2,9 @@ Source: fish
 Section: shells
 Priority: extra
 Maintainer: ridiculous_fish <corydoras@ridiculousfish.com>
-Uploaders: David Adam <zanchey@ucc.gu.uwa.edu.au>, Siteshwar Vashisht <siteshwar@gmail.com>
+Uploaders: David Adam <zanchey@ucc.gu.uwa.edu.au>
 Build-Depends: debhelper (>= 8.0.0), libncurses5-dev, autoconf, autotools-dev, dh-autoreconf, gettext
+# When libpcre2-dev is available on all supported Debian versions, add a dependency on that.
 Standards-Version: 3.9.4
 Homepage: http://fishshell.com/
 Vcs-Git: git://github.com/fish-shell/fish-shell.git
@@ -11,12 +12,24 @@ Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, passwd (>= 4.0.3-10), bc, gettext-base, man-db
-Recommends: python (>=2.6), xsel (>=1.2.0), xdg-utils
+Depends: ${shlibs:Depends}, ${misc:Depends}, fish-common (= ${source:Version}), passwd (>= 4.0.3-10), bc, gettext-base, man-db
+Recommends: xsel (>=1.2.0), xdg-utils
 Description: friendly interactive shell
  Fish is a command-line shell for modern systems, focusing on user-friendliness,
  sensibility and discoverability in interactive use. The syntax is simple, but
  not POSIX compliant.
+
+Package: fish-common
+Architecture: all
+Depends: ${misc:Depends}
+Recommends: fish, python (>=2.6), xdg-utils
+Replaces: fish (<= 2.1.1.dfsg-2)
+Description: friendly interactive shell (architecture-independent files)
+ Fish is a command-line shell for modern systems, focusing on user-friendliness,
+ sensibility and discoverability in interactive use. The syntax is simple, but
+ not POSIX compliant.
+ .
+ This package contains the common fish files shared by all architectures.
 
 Package: fish-dbg
 Architecture: any

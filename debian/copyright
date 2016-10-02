@@ -1,6 +1,7 @@
 This work was packaged for Debian by David Adam <zanchey@ucc.gu.uwa.edu.au>
 on Thu, 14 Jun 2012 20:33:34 +0800, based on work by James Vega
-<jamessan@jamessan.com>.
+<jamessan@jamessan.com>. Modifications from the downstream Debian maintainer,
+Tristan Seligmann <mithrandi@debian.org>, have also been included.
 
 It was downloaded from:
 
@@ -79,5 +80,6 @@ The Debian packaging is:
 
     Copyright (C) 2005 James Vega <jamessan@jamessan.com>
     Copyright (C) 2012 David Adam <zanchey@ucc.gu.uwa.edu.au>
+    Copyright (C) 2015 Tristan Seligmann <mithrandi@debian.org>
 
 and is licensed under the GPL version 2, see above.

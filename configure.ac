@@ -90,7 +90,6 @@ fi
 AC_PROG_CC([clang llvm-gcc gcc cc])
 AC_PROG_CC_STDC # c99
 AC_PROG_CXX([clang++ llvm-g++ g++ c++])
-AC_PROG_CXXCPP([clang++ llvm-g++ g++ c++])
 AC_LANG(C++)
 AC_PROG_INSTALL
 AC_PROG_LN_S

@@ -12,9 +12,6 @@ DPKG_EXPORT_BUILDFLAGS = 1
 %:
 	dh $@ --with autotools-dev,autoreconf
 
-override_dh_auto_install:
-	dh_auto_install --destdir=debian/fish
-
 override_dh_installdocs:
 	dh_installdocs --link-doc=fish
 

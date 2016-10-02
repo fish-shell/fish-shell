@@ -20,9 +20,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <inttypes.h>
 #include <limits.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -394,7 +392,7 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t *const *cmds, size
 ///    if specified, _all_ key bindings will be erased
 /// @param  mode
 ///    if specified, only bindings from that mode will be erased. If not given
-///    and all is false, @c DEFAULT_BIND_MODE will be used.
+///    and @c all is @c false, @c DEFAULT_BIND_MODE will be used.
 /// @param  use_terminfo
 ///    Whether to look use terminfo -k name
 ///
@@ -408,19 +406,23 @@ static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int u
                 input_mapping_erase(it->seq, it->mode);
             }
         }
-        return STATUS_BUILTIN_OK;
+
+        return 0;
     }
+
     int res = 0;
+    if (mode == NULL) mode = DEFAULT_BIND_MODE;
+
     while (*seq) {
         if (use_terminfo) {
             wcstring seq2;
             if (get_terminfo_sequence(*seq++, &seq2, streams)) {
-                input_mapping_erase(seq2, mode != NULL ? mode : DEFAULT_BIND_MODE);
+                input_mapping_erase(seq2, mode);
             } else {
-                res = STATUS_BUILTIN_ERROR;
+                res = 1;
             }
         } else {
-            input_mapping_erase(*seq++, mode != NULL ? mode : DEFAULT_BIND_MODE);
+            input_mapping_erase(*seq++, mode);
         }
     }
 
@@ -434,12 +436,12 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     int argc = builtin_count_args(argv);
     int mode = BIND_INSERT;
     int res = STATUS_BUILTIN_OK;
-    bool all = false;
+    int all = 0;
     const wchar_t *bind_mode = DEFAULT_BIND_MODE;
     bool bind_mode_given = false;
     const wchar_t *sets_bind_mode = DEFAULT_BIND_MODE;
     bool sets_bind_mode_given = false;
-    bool use_terminfo = false;
+    int use_terminfo = 0;
 
     w.woptind = 0;
 
@@ -468,7 +470,7 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 return STATUS_BUILTIN_ERROR;
             }
             case 'a': {
-                all = true;
+                all = 1;
                 break;
             }
             case 'e': {
@@ -480,7 +482,7 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 return STATUS_BUILTIN_OK;
             }
             case 'k': {
-                use_terminfo = true;
+                use_terminfo = 1;
                 break;
             }
             case 'K': {
@@ -931,7 +933,7 @@ static wcstring functions_def(const wcstring &name) {
             case EVENT_EXIT: {
                 if (next->param1.pid > 0)
                     append_format(out, L" --on-process-exit %d", next->param1.pid);
-                else if (next->param1.pid < 0)
+                else
                     append_format(out, L" --on-job-exit %d", -next->param1.pid);
                 break;
             }
@@ -1251,7 +1253,7 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
     bool success = false;
     unsigned int start = 0;  // the first character of the numeric part of the sequence
 
-    unsigned short base = 0, max_digits = 0;
+    unsigned int base = 0, max_digits = 0;
     if (builtin_echo_digit(str[0], 8) != UINT_MAX) {
         // Octal escape
         base = 8;
@@ -1270,7 +1272,7 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
 
     if (base != 0) {
         unsigned int idx;
-        unsigned char val = '\0';  // resulting character
+        unsigned char val = 0;  // resulting character
         for (idx = start; idx < start + max_digits; idx++) {
             unsigned int digit = builtin_echo_digit(str[idx], base);
             if (digit == UINT_MAX) break;
@@ -1556,6 +1558,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
             }
             case 'j':
             case 'p': {
+                pid_t pid;
                 wchar_t *end;
                 event_t e(EVENT_ANY);
 
@@ -1582,17 +1585,18 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                         append_format(*out_err,
                                       _(L"%ls: Cannot find calling job for event handler"),
                                       argv[0]);
-                        res = STATUS_BUILTIN_ERROR;
+                        res = 1;
                     } else {
                         e.type = EVENT_JOB_ID;
                         e.param1.job_id = job_id;
                     }
                 } else {
-                    pid_t pid = wcstoimax(w.woptarg, &end, 10);
-                    if (pid < 1 || !(*w.woptarg != L'\0' && *end == L'\0')) {
-                        append_format(*out_err, _(L"%ls: Invalid process id '%ls'"), argv[0],
+                    errno = 0;
+                    pid = fish_wcstoi(w.woptarg, &end, 10);
+                    if (errno || !end || *end) {
+                        append_format(*out_err, _(L"%ls: Invalid process id %ls"), argv[0],
                                       w.woptarg);
-                        res = STATUS_BUILTIN_ERROR;
+                        res = 1;
                         break;
                     }
 
@@ -1640,7 +1644,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
             }
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                res = STATUS_BUILTIN_ERROR;
+                res = 1;
                 break;
             }
         }
@@ -1730,7 +1734,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
 
 /// The random builtin generates random numbers.
 static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    static bool seeded = false;
+    static int seeded = 0;
     static struct drand48_data seed_buffer;
 
     int argc = builtin_count_args(argv);
@@ -1768,7 +1772,7 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
         case 0: {
             long res;
             if (!seeded) {
-                seeded = true;
+                seeded = 1;
                 srand48_r(time(0), &seed_buffer);
             }
             lrand48_r(&seed_buffer, &res);
@@ -1776,16 +1780,19 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
             break;
         }
         case 1: {
+            long foo;
             wchar_t *end = 0;
-            long seedval = wcstol(argv[w.woptind], &end, 10);
-            if (!(*argv[w.woptind] != L'\0' && *end == L'\0')) {
+
+            errno = 0;
+            foo = wcstol(argv[w.woptind], &end, 10);
+            if (errno || *end) {
                 streams.err.append_format(_(L"%ls: Seed value '%ls' is not a valid number\n"),
                                           argv[0], argv[w.woptind]);
 
                 return STATUS_BUILTIN_ERROR;
             }
-            seeded = true;
-            srand48_r(seedval, &seed_buffer);
+            seeded = 1;
+            srand48_r(foo, &seed_buffer);
             break;
         }
         default: {
@@ -1811,8 +1818,8 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     const wchar_t *mode_name = READ_MODE_NAME;
     int nchars = 0;
     wchar_t *end;
-    bool shell = false;
-    bool array = false;
+    int shell = 0;
+    int array = 0;
     bool split_null = false;
 
     while (1) {
@@ -1882,9 +1889,9 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 break;
             }
             case L'n': {
-                nchars = wcstoimax(w.woptarg, &end, 10);
-                if (!(*w.woptarg != L'\0' && *end == L'\0')) {
-                    // MUST be an error
+                errno = 0;
+                nchars = fish_wcstoi(w.woptarg, &end, 10);
+                if (errno || *end != 0) {
                     switch (errno) {
                         case ERANGE: {
                             streams.err.append_format(_(L"%ls: Argument '%ls' is out of range\n"),
@@ -1903,11 +1910,11 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 break;
             }
             case 's': {
-                shell = true;
+                shell = 1;
                 break;
             }
             case 'a': {
-                array = true;
+                array = 1;
                 break;
             }
             case L'z': {
@@ -2303,8 +2310,9 @@ static int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
         case 2: {
             wchar_t *end;
+            errno = 0;
             ec = wcstol(argv[1], &end, 10);
-            if (!(*argv[1] != L'\0' && *end == L'\0')) {
+            if (errno || *end != 0) {
                 streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), argv[0],
                                           argv[1]);
                 builtin_print_help(parser, streams, argv[0], streams.err);
@@ -2369,8 +2377,9 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         res = 1;
     } else if (wchdir(dir) != 0) {
         struct stat buffer;
-        int status = wstat(dir, &buffer);
+        int status;
 
+        status = wstat(dir, &buffer);
         if (!status && S_ISDIR(buffer.st_mode)) {
             streams.err.append_format(_(L"%ls: Permission denied: '%ls'\n"), argv[0], dir.c_str());
 
@@ -2551,12 +2560,14 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // try to locate the job argv[1], since we want to know if this is an ambigous job
         // specification or if this is an malformed job id.
         wchar_t *endptr;
-        bool found_job = false;
+        int pid;
+        int found_job = 0;
 
-        pid_t pid = wcstoimax(argv[1], &endptr, 10);
-        if (pid >= 1 || (*argv[1] != L'\0' && *endptr == L'\0')) {
+        errno = 0;
+        pid = fish_wcstoi(argv[1], &endptr, 10);
+        if (!(*endptr || errno)) {
             j = job_get_from_pid(pid);
-            if (j) found_job = true;
+            if (j) found_job = 1;
         }
 
         if (found_job) {
@@ -2567,25 +2578,27 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         builtin_print_help(parser, streams, argv[0], streams.err);
 
-        return STATUS_BUILTIN_ERROR;
+        j = 0;
 
     } else {
         wchar_t *end;
-        pid_t pid = wcstoimax(argv[1], &end, 10);
-        if (pid < 1 || !(*argv[1] != L'\0' && *end == L'\0')) {
+        int pid;
+        errno = 0;
+        pid = abs(fish_wcstoi(argv[1], &end, 10));
+
+        if (*end || errno) {
             streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, argv[0], argv[1]);
             builtin_print_help(parser, streams, argv[0], streams.err);
         } else {
             j = job_get_from_pid(pid);
             if (!j || !job_get_flag(j, JOB_CONSTRUCTED) || job_is_completed(j)) {
                 streams.err.append_format(_(L"%ls: No suitable job: %d\n"), argv[0], pid);
-                return STATUS_BUILTIN_ERROR;
-            }
-            if (!job_get_flag(j, JOB_CONTROL)) {
+                j = 0;
+            } else if (!job_get_flag(j, JOB_CONTROL)) {
                 streams.err.append_format(_(L"%ls: Can't put job %d, '%ls' to foreground because "
                                             L"it is not under job control\n"),
                                           argv[0], pid, j->command_wcstr());
-                return STATUS_BUILTIN_ERROR;
+                j = 0;
             }
         }
     }
@@ -2654,9 +2667,13 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
     } else {
         wchar_t *end;
-        for (int i = 1; argv[i]; i++) {
-            pid_t pid = wcstoimax(argv[i], &end, 10);
-            if (pid < 1 || !(*argv[i] != L'\0' && *end == L'\0') || !job_get_from_pid(pid)) {
+        int i;
+        int pid;
+
+        for (i = 1; argv[i]; i++) {
+            errno = 0;
+            pid = fish_wcstoi(argv[i], &end, 10);
+            if (errno || pid < 0 || *end || !job_get_from_pid(pid)) {
                 streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), argv[0], argv[i]);
                 return STATUS_BUILTIN_ERROR;
             }
@@ -2729,8 +2746,9 @@ static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **arg
         }
         case 2: {
             wchar_t *end;
-            status = wcstoimax(argv[1], &end, 10);
-            if (!(*argv[1] != L'\0' && *end == L'\0')) {
+            errno = 0;
+            status = fish_wcstoi(argv[1], &end, 10);
+            if (errno || *end != 0) {
                 streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), argv[0],
                                           argv[1]);
                 builtin_print_help(parser, streams, argv[0], streams.err);

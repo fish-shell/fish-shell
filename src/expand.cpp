@@ -2,8 +2,6 @@
 // IWYU pragma: no_include <cstddef>
 #include "config.h"
 
-#include <assert.h>
-#include <inttypes.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdarg.h>
@@ -17,6 +15,7 @@
 #ifdef HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>  // IWYU pragma: keep
 #endif
+#include <assert.h>
 #include <vector>
 #ifdef SunOS
 #include <procfs.h>
@@ -401,7 +400,7 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid) {
         if (buf.st_uid != getuid()) continue;
 
         // Remember the pid.
-        pid = wcstoimax(name.c_str(), NULL, 10);
+        pid = fish_wcstoi(name.c_str(), NULL, 10);
 
         // The 'cmdline' file exists, it should contain the commandline.
         FILE *cmdfile;
@@ -488,8 +487,9 @@ static int find_job(const struct find_job_data_t *info) {
             int jid;
             wchar_t *end;
 
-            jid = wcstoimax(proc, &end, 10);
-            if (jid >= 1 && (*proc != L'\0' && *end == L'\0')) {
+            errno = 0;
+            jid = fish_wcstoi(proc, &end, 10);
+            if (jid > 0 && !errno && !*end) {
                 j = job_get(jid);
                 if ((j != 0) && (j->command_wcstr() != 0) && (!j->command_is_empty())) {
                     append_completion(&completions, to_string<long>(j->pgid));

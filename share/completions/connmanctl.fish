@@ -1,3 +1,15 @@
+function __fish_print_connman_services
+    connmanctl services | string replace -r '.* (.*)' '$1'
+end
+
+function __fish_print_connman_technologies
+    connmanctl technologies | string match '*Type*' | string replace -r '  Type = (.*)' '$1'
+end
+
+function __fish_print_connman_vpnconnections
+    connmanctl vpnconnections | string replace -r '.* (.*)' '$1'
+end
+
 complete -f -c connmanctl -n "test (count (commandline -opc)) -lt 2" -a "state" -d "Shows if the system is online or offline"
 complete -f -c connmanctl -n "test (count (commandline -opc)) -lt 2" -a "technologies" -d "Display technologies"
 complete -f -c connmanctl -n "test (count (commandline -opc)) -lt 2" -a "clock" -d "Get System Clock Properties"

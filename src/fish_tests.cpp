@@ -1181,7 +1181,7 @@ static void test_expand() {
     expand_test(L"foo\\$bar", EXPAND_SKIP_VARIABLES, L"foo$bar", 0,
                 L"Failed to handle dollar sign in variable-skipping expansion");
 
-    // b
+    // bb
     //    x
     // bar
     // baz
@@ -1193,18 +1193,24 @@ static void test_expand() {
     //    nub
     //       q
     // .foo
+    // aaa
+    // aaa2
+    //    x
     if (system("mkdir -p /tmp/fish_expand_test/")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/fish_expand_test/b/")) err(L"mkdir failed");
+    if (system("mkdir -p /tmp/fish_expand_test/bb/")) err(L"mkdir failed");
     if (system("mkdir -p /tmp/fish_expand_test/baz/")) err(L"mkdir failed");
     if (system("mkdir -p /tmp/fish_expand_test/bax/")) err(L"mkdir failed");
     if (system("mkdir -p /tmp/fish_expand_test/lol/nub/")) err(L"mkdir failed");
+    if (system("mkdir -p /tmp/fish_expand_test/aaa/")) err(L"mkdir failed");
+    if (system("mkdir -p /tmp/fish_expand_test/aaa2/")) err(L"mkdir failed");
     if (system("touch /tmp/fish_expand_test/.foo")) err(L"touch failed");
-    if (system("touch /tmp/fish_expand_test/b/x")) err(L"touch failed");
+    if (system("touch /tmp/fish_expand_test/bb/x")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/bar")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/bax/xxx")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/baz/xxx")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/baz/yyy")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/lol/nub/q")) err(L"touch failed");
+    if (system("touch /tmp/fish_expand_test/aaa2/x")) err(L"touch failed");
 
     // This is checking that .* does NOT match . and ..
     // (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal
@@ -1228,18 +1234,18 @@ static void test_expand() {
     expand_test(L"/tmp/fish_expand_test////baz/xxx", 0, L"/tmp/fish_expand_test////baz/xxx", wnull,
                 L"Glob did the wrong thing 3");
 
-    expand_test(L"/tmp/fish_expand_test/b**", 0, L"/tmp/fish_expand_test/b",
-                L"/tmp/fish_expand_test/b/x", L"/tmp/fish_expand_test/bar",
+    expand_test(L"/tmp/fish_expand_test/b**", 0, L"/tmp/fish_expand_test/bb",
+                L"/tmp/fish_expand_test/bb/x", L"/tmp/fish_expand_test/bar",
                 L"/tmp/fish_expand_test/bax", L"/tmp/fish_expand_test/bax/xxx",
                 L"/tmp/fish_expand_test/baz", L"/tmp/fish_expand_test/baz/xxx",
                 L"/tmp/fish_expand_test/baz/yyy", wnull, L"Glob did the wrong thing 4");
 
     // A trailing slash should only produce directories.
-    expand_test(L"/tmp/fish_expand_test/b*/", 0, L"/tmp/fish_expand_test/b/",
+    expand_test(L"/tmp/fish_expand_test/b*/", 0, L"/tmp/fish_expand_test/bb/",
                 L"/tmp/fish_expand_test/baz/", L"/tmp/fish_expand_test/bax/", wnull,
                 L"Glob did the wrong thing 5");
 
-    expand_test(L"/tmp/fish_expand_test/b**/", 0, L"/tmp/fish_expand_test/b/",
+    expand_test(L"/tmp/fish_expand_test/b**/", 0, L"/tmp/fish_expand_test/bb/",
                 L"/tmp/fish_expand_test/baz/", L"/tmp/fish_expand_test/bax/", wnull,
                 L"Glob did the wrong thing 6");
 
@@ -1254,10 +1260,10 @@ static void test_expand() {
                 L"/tmp/fish_expand_test/bax/", L"/tmp/fish_expand_test/baz/", wnull,
                 L"Case insensitive test did the wrong thing");
 
-    expand_test(L"/tmp/fish_expand_test/b/yyy", EXPAND_FOR_COMPLETIONS,
+    expand_test(L"/tmp/fish_expand_test/bb/yyy", EXPAND_FOR_COMPLETIONS,
                 /* nothing! */ wnull, L"Wrong fuzzy matching 1");
 
-    expand_test(L"/tmp/fish_expand_test/b/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, L"",
+    expand_test(L"/tmp/fish_expand_test/bb/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, L"",
                 wnull,  // we just expect the empty string since this is an exact match
                 L"Wrong fuzzy matching 2");
 
@@ -1271,6 +1277,12 @@ static void test_expand() {
 
     expand_test(L"/tmp/fish_expand_test/b/yyy", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
                 L"/tmp/fish_expand_test/baz/yyy", wnull, L"Wrong fuzzy matching 4");
+    
+    expand_test(L"/tmp/fish_expand_test/aa/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
+                L"/tmp/fish_expand_test/aaa2/x", wnull, L"Wrong fuzzy matching 5");
+    
+    expand_test(L"/tmp/fish_expand_test/aaa/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
+                wnull, L"Wrong fuzzy matching 6 - shouldn't remove valid directory names (#3211)");
 
     if (!expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0)) {
         err(L"Expansion not correctly handling dotfiles");

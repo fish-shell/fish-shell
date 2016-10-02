@@ -824,16 +824,21 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
         // (issue #2099).
         assert(next_slash != NULL);
 
+        // Absolute path of the intermediate directory
+        const wcstring intermediate_dirpath = base_dir + wc_segment + L'/';
+
         // This just trumps everything.
         size_t before = this->resolved_completions->size();
-        this->expand(base_dir + wc_segment + L'/', wc_remainder,
-                     effective_prefix + wc_segment + L'/');
+        this->expand(intermediate_dirpath, wc_remainder, effective_prefix + wc_segment + L'/');
 
         // Maybe try a fuzzy match (#94) if nothing was found with the literal match. Respect
         // EXPAND_NO_DIRECTORY_ABBREVIATIONS (issue #2413).
+        // Don't do fuzzy matches if the literal segment was valid (#3211)
         bool allow_fuzzy = (this->flags & (EXPAND_FUZZY_MATCH | EXPAND_NO_FUZZY_DIRECTORIES)) ==
                            EXPAND_FUZZY_MATCH;
-        if (allow_fuzzy && this->resolved_completions->size() == before) {
+        if (allow_fuzzy &&
+            this->resolved_completions->size() == before &&
+            waccess(intermediate_dirpath, F_OK) != 0) {
             assert(this->flags & EXPAND_FOR_COMPLETIONS);
             DIR *base_dir_fd = open_dir(base_dir);
             if (base_dir_fd != NULL) {

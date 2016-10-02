@@ -545,12 +545,11 @@ expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err) 
     expression *result = parser.parse_expression(0, (unsigned int)args.size());
 
     // Handle errors.
-    for (size_t i = 0; i < parser.errors.size(); i++) {
+    // For now we only show the first error.
+    if (! parser.errors.empty()) {
         err.append(L"test: ");
-        err.append(parser.errors.at(i));
+        err.append(parser.errors.at(0));
         err.push_back(L'\n');
-        // For now we only show the first error.
-        break;
     }
 
     if (result) {

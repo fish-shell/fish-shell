@@ -41,7 +41,7 @@ if not command -s realpath >/dev/null
                         continue
 
                     case "*"
-                        fish_realpath $argv
+                        fish_realpath $arg
                 end
             end
         end

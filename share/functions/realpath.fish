@@ -16,7 +16,7 @@ if not command -s realpath >/dev/null
         end
     else
         function realpath -w fish_realpath -d "get an absolute path without symlinks [fish_realpath]"
-            if test -z $argv
+            if test -z "$argv"
                 printf "usage: %s%s%s %sfile%s …\n" (set_color -o) $_ (set_color normal) (set_color -u) (set_color normal)
                 echo "       resolves files as absolute paths without symlinks"
                 return 1

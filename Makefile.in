@@ -285,7 +285,7 @@ prof: all
 # after the first -, for simpler version numbers. Cleans up the user_doc/html
 # directory once Doxygen is done.
 #
-doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter | show-HDR_FILES_SRC show-HTML_SRC show-HELP_SRC show-HDR_FILES 
+doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
 	@echo " SED doxygen  $(em)user_doc$(sgr0)"
 	$v (cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | doxygen - && touch user_doc
 	$v rm -f $(wildcard $(addprefix ./user_doc/html/,arrow*.png bc_s.png bdwn.png closed.png doc.png folder*.png ftv2*.png nav*.png open.png splitbar.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html))

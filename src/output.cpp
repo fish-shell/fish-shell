@@ -49,7 +49,7 @@ void output_set_writer(int (*writer)(char)) {
 int (*output_get_writer())(char) { return out; }
 
 /// Returns true if we think tparm can handle outputting a color index 
-static bool term_supports_color_natively(unsigned int c) { return max_colors >= c; }
+static bool term_supports_color_natively(unsigned int c) { return max_colors >= (c + 1); }
 
 color_support_t output_get_color_support(void) { return color_support; }
 
@@ -71,6 +71,7 @@ static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
         // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
         char buff[16] = "";
         if (idx < 16) {
+            if 
             snprintf(buff, sizeof buff, "\x1b[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
         } else {
             snprintf(buff, sizeof buff, "\x1b[%d;5;%dm", is_fg ? 38 : 48, idx);

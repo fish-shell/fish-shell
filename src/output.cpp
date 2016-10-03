@@ -71,7 +71,6 @@ static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
         // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
         char buff[16] = "";
         if (idx < 16) {
-            if 
             snprintf(buff, sizeof buff, "\x1b[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
         } else {
             snprintf(buff, sizeof buff, "\x1b[%d;5;%dm", is_fg ? 38 : 48, idx);

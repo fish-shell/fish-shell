@@ -155,19 +155,18 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 #if 0
     wcstring tmp = c.description();
     wcstring tmp2 = c2.description();
-    printf("set_color %ls : %ls\n", tmp.c_str(), tmp2.c_str());
+    debug(3, "set_color %ls : %ls\n", tmp.c_str(), tmp2.c_str());
 #endif
     ASSERT_IS_MAIN_THREAD();
 
     const rgb_color_t normal = rgb_color_t::normal();
     static rgb_color_t last_color = rgb_color_t::normal();
     static rgb_color_t last_color2 = rgb_color_t::normal();
-    static int was_bold = 0;
-    static int was_underline = 0;
-    int bg_set = 0, last_bg_set = 0;
-
-    int is_bold = 0;
-    int is_underline = 0;
+    static bool was_bold = false;
+    static bool was_underline = false;
+    bool bg_set = false, last_bg_set = false;
+    bool is_bold = false;
+    bool is_underline = false;
 
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
     // just give up...
@@ -183,8 +182,8 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 
     if (c.is_reset() || c2.is_reset()) {
         c = c2 = normal;
-        was_bold = 0;
-        was_underline = 0;
+        was_bold = false;
+        was_underline = false;
         // If we exit attibute mode, we must first set a color, or previously coloured text might
         // lose it's color. Terminals are weird...
         write_foreground_color(0);
@@ -197,18 +196,18 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
         writembs(exit_attribute_mode);
         last_color = normal;
         last_color2 = normal;
-        was_bold = 0;
-        was_underline = 0;
+        was_bold = false;
+        was_underline = false;
     }
 
     if (!last_color2.is_normal() && !last_color2.is_reset()) {
         // Background was set.
-        last_bg_set = 1;
+        last_bg_set = true;
     }
 
     if (!c2.is_normal()) {
         // Background is set.
-        bg_set = 1;
+        bg_set = true;
         if (c == c2) c = (c2 == rgb_color_t::white()) ? rgb_color_t::black() : rgb_color_t::white();
     }
 
@@ -221,8 +220,8 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
         if (!bg_set && last_bg_set) {
             // Background color changed and is no longer set, so we exit bold mode.
             writembs(exit_attribute_mode);
-            was_bold = 0;
-            was_underline = 0;
+            was_bold = false;
+            was_underline = false;
             // We don't know if exit_attribute_mode resets colors, so we set it to something known.
             if (write_foreground_color(0)) {
                 last_color = rgb_color_t::black();
@@ -236,8 +235,8 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
             writembs(exit_attribute_mode);
 
             last_color2 = rgb_color_t::normal();
-            was_bold = 0;
-            was_underline = 0;
+            was_bold = false;
+            was_underline = false;
         } else if (!c.is_special()) {
             write_color(c, true /* foreground */);
         }
@@ -254,8 +253,8 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
                 write_color(last_color, true /* foreground */);
             }
 
-            was_bold = 0;
-            was_underline = 0;
+            was_bold = false;
+            was_underline = false;
             last_color2 = c2;
         } else if (!c2.is_special()) {
             write_color(c2, false /* not foreground */);

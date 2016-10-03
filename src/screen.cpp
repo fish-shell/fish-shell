@@ -1198,11 +1198,11 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
                     justgrey = false;
                 }
             }
-            if (justgrey && set_a_foreground && max_colors >= 235) {
+            if (justgrey && set_a_foreground && max_colors >= 237) {
                 // Draw the string in grey
-                abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 235)));
+                abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 237)));
             } else if (justgrey && set_a_foreground && max_colors >= 8) {
-                // Draw the string in white.
+                // Draw the string in bright black.
                 abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 8)));
             }
           

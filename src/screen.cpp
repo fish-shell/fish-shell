@@ -1198,15 +1198,21 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
                     justgrey = false;
                 }
             }
-            if (justgrey && set_a_foreground && max_colors >= 237) {
-                // Draw the string in grey
-                abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 237)));
-            } else if (justgrey && set_a_foreground && max_colors >= 8) {
-                // Draw the string in bright black.
-                abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 8)));
+            if (justgrey && set_a_foreground) {
+                if (max_colors >= 238) {
+                    // draw the string in a particular grey
+                    abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 237)));
+                } else if (max_colors >= 9) {
+                    // bright black (the ninth color, looks grey)
+                    abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 8)));
+                } else if (max_colors >= 2 && enter_bold_mode) {
+                    // we might still get that color by setting black and going bold for bright
+                    abandon_line_string.append(str2wcstring(tparm(enter_bold_mode)));
+                    abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 0)));
+                }
             }
-          
             abandon_line_string.push_back(omitted_newline_char);
+
             if (exit_attribute_mode) {
                 abandon_line_string.append(str2wcstring(tparm(exit_attribute_mode)));  // normal text ANSI escape sequence
             }
@@ -1218,6 +1224,7 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // spaces from the new line
         abandon_line_string.append(non_space_width, L' ');
         abandon_line_string.push_back(L'\r');
+        // clear entire line - el2
         abandon_line_string.append(L"\x1b[2K");
 
         const std::string narrow_abandon_line_string = wcs2string(abandon_line_string);

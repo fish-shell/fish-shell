@@ -1188,18 +1188,28 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // omitted_newline_char in common.cpp.
         int non_space_width = fish_wcwidth(omitted_newline_char);
         if (screen_width >= non_space_width) {
+            bool justgrey = true;
             if (enter_dim_mode) {
-                // Use dim if they have it, so the color will be based on their actual normal color and the background of the termianl.
-                abandon_line_string.append(str2wcstring(tparm(enter_dim_mode)));
+                std::string dim = tparm(enter_dim_mode);
+                if (!dim.empty()) {
+                    // Use dim if they have it, so the color will be based on their actual normal
+                    // color and the background of the termianl.
+                    abandon_line_string.append(str2wcstring(dim));
+                    justgrey = false;
+                }
             }
-            else if (set_a_foreground && max_colors >= 8) {
-                // Draw the string in gray.
+            if (justgrey && set_a_foreground && max_colors >= 235) {
+                // Draw the string in grey
+                abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 235)));
+            } else if (justgrey && set_a_foreground && max_colors >= 8) {
+                // Draw the string in white.
                 abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 8)));
             }
           
             abandon_line_string.push_back(omitted_newline_char);
-            if (exit_attribute_mode)
+            if (exit_attribute_mode) {
                 abandon_line_string.append(str2wcstring(tparm(exit_attribute_mode)));  // normal text ANSI escape sequence
+            }
             abandon_line_string.append(screen_width - non_space_width, L' ');
         }
         abandon_line_string.push_back(L'\r');

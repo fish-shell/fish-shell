@@ -9,40 +9,41 @@
 # fallback behavion through our builtin.
 
 if not command -s realpath >/dev/null
-
+    # If there is a HomeBrew installed version of GNU realpath named grealpath use that.
     if command -s grealpath >/dev/null
         function realpath -w grealpath -d "print the resolved path [grealpath]"
             grealpath $argv
         end
-    else
-        function realpath -w fish_realpath -d "get an absolute path without symlinks [fish_realpath]"
-            if test -z "$argv"
-                printf "usage: %s%s%s %sfile%s …\n" (set_color -o) $_ (set_color normal) (set_color -u) (set_color normal)
-                echo "       resolves files as absolute paths without symlinks"
-                return 1
-            end
-            
-            # loop over arguments - allow our realpath to work on more than one path per invocatgon like gnu/bsd realpath.
-            for arg in $argv
-                switch $arg
-                    # These - no can do our realpath
-                    case -s --strip --no-symlinks -z --zero --relative-base\* --relative-to\*
-                        __fish_print_help fish_realpath
-                        return 2
+        exit 0
+    end
 
-                    case -h --help --version
-                        __fish_print_help fish_realpath
-                        return 0
+    function realpath -d "return an absolute path without symlinks"
+        if test -z "$argv"
+            printf "usage: %s%s%s %sfile%s …\n" (set_color -o) $_ (set_color normal) (set_color -u) (set_color normal)
+            echo "       resolves files as absolute paths without symlinks"
+            return 1
+        end
 
-                        # Handle commands called with these arguments by
-                        # dropping the arguments to protect fish_realpath from them.
-                        # There are no sure things here.
-                    case -e --canonicalize-existing --physical -P -q --quiet -m --canonicalize-missing
-                        continue
+        # Loop over arguments - allow our realpath to work on more than one path per invocation
+        # like gnu/bsd realpath.
+        for arg in $argv
+            switch $arg
+                # These - no can do our realpath
+                case -s --strip --no-symlinks -z --zero --relative-base\* --relative-to\*
+                    __fish_print_help realpath
+                    return 2
 
-                    case "*"
-                        fish_realpath $arg
-                end
+                case -h --help --version
+                    __fish_print_help realpath
+                    return 0
+
+                # Handle commands called with these arguments by dropping the arguments to protect
+                # realpath from them. There are no sure things here.
+                case -e --canonicalize-existing --physical -P -q --quiet -m --canonicalize-missing
+                    continue
+
+                case "*"
+                    builtin realpath $arg
             end
         end
     end

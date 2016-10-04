@@ -3106,7 +3106,7 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 /// directly. They should just use `realpath` which will fallback to this builtin if an external
 /// command cannot be found. This behaves like the external `realpath --canonicalize-existing`;
 /// that is, it requires all path components, including the final, to exist.
-int builtin_fish_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
 
     if (argc != 2) {
@@ -3116,11 +3116,10 @@ int builtin_fish_realpath(parser_t &parser, io_streams_t &streams, wchar_t **arg
 
     wchar_t *real_path = wrealpath(argv[1], NULL);
     if (real_path) {
-        // Yay! We could resolve the path.
         streams.out.append(real_path);
         free((void *)real_path);
     } else {
-        // We don't actually know why it failed. We should check errno
+        // We don't actually know why it failed. We should check errno.
         streams.err.append_format(_(L"%ls: Invalid path: %ls\n"), argv[0], argv[1]);
         return STATUS_BUILTIN_ERROR;
     }
@@ -3167,8 +3166,6 @@ static const builtin_data_t builtin_datas[] = {
     {L"exit", &builtin_exit, N_(L"Exit the shell")},
     {L"false", &builtin_false, N_(L"Return an unsuccessful result")},
     {L"fg", &builtin_fg, N_(L"Send job to foreground")},
-    {L"fish_realpath", &builtin_fish_realpath,
-     N_(L"Convert path to absolute path without symlinks")},
     {L"for", &builtin_generic, N_(L"Perform a set of commands multiple times")},
     {L"function", &builtin_generic, N_(L"Define a new function")},
     {L"functions", &builtin_functions, N_(L"List or remove functions")},
@@ -3181,6 +3178,7 @@ static const builtin_data_t builtin_datas[] = {
     {L"pwd", &builtin_pwd, N_(L"Print the working directory")},
     {L"random", &builtin_random, N_(L"Generate random number")},
     {L"read", &builtin_read, N_(L"Read a line of input into variables")},
+    {L"realpath", &builtin_realpath, N_(L"Convert path to absolute path without symlinks")},
     {L"return", &builtin_return, N_(L"Stop the currently evaluated function")},
     {L"set", &builtin_set, N_(L"Handle environment variables")},
     {L"set_color", &builtin_set_color, N_(L"Set the terminal color")},

@@ -1,3 +1,0 @@
-fish_realpath: Invalid path: /this/better/be/an/invalid/path
-fish_realpath: Invalid path: nonexistent-file
-fish_realpath: Invalid path: ../test/data/fish-symlink/nonexistent-file-relative-to-a-symlink

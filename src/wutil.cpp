@@ -335,20 +335,44 @@ void safe_perror(const char *message) {
 #ifdef HAVE_REALPATH_NULL
 
 wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
+    if (pathname.size() == 0) return NULL;
+
+    cstring real_path("");
     cstring narrow_path = wcs2string(pathname);
-    char *narrow_res = realpath(narrow_path.c_str(), NULL);
 
-    if (!narrow_res) return NULL;
-
-    wchar_t *res;
-    wcstring wide_res = str2wcstring(narrow_res);
-    if (resolved_path) {
-        wcslcpy(resolved_path, wide_res.c_str(), PATH_MAX);
-        res = resolved_path;
-    } else {
-        res = wcsdup(wide_res.c_str());
+    // Strip trailing slashes. This is needed to be bug-for-bug compatible with GNU realpath which
+    // treats "/a//" as equivalent to "/a" whether or not /a exists.
+    while (narrow_path.size() > 1 && narrow_path.at(narrow_path.size() - 1) == '/') {
+        narrow_path.erase(narrow_path.size() - 1, 1);
     }
 
+    char *narrow_res = realpath(narrow_path.c_str(), NULL);
+    if (narrow_res) {
+        real_path.append(narrow_res);
+    } else {
+        int pathsep_idx = narrow_path.rfind('/');
+        if (pathsep_idx == 0) {
+            // If the only pathsep is the first character then it's an absolute path with a
+            // single path component and thus doesn't need conversion.
+            real_path = narrow_path;
+        } else {
+            if (pathsep_idx == cstring::npos) {
+                // No pathsep means a single path component relative to pwd.
+                narrow_res = realpath(".", NULL);
+                if (!narrow_res) DIE("unexpected realpath(\".\") failure");
+                pathsep_idx = 0;
+            } else {
+                // Only call realpath() on the portion up to the last component.
+                narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), NULL);
+                if (!narrow_res) return NULL;
+                pathsep_idx++;
+            }
+            real_path.append(narrow_res);
+            // This test is to deal with pathological cases such as /../../x => //x.
+            if (real_path.size() > 1) real_path.append("/");
+            real_path.append(narrow_path.substr(pathsep_idx, cstring::npos));
+        }
+    }
 #if __APPLE__ && __DARWIN_C_LEVEL < 200809L
 // OS X Snow Leopard is broken with respect to the dynamically allocated buffer returned by
 // realpath(). It's not dynamically allocated so attempting to free that buffer triggers a
@@ -357,7 +381,12 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
     free(narrow_res);
 #endif
 
-    return res;
+    wcstring wreal_path = str2wcstring(real_path);
+    if (resolved_path) {
+        wcslcpy(resolved_path, wreal_path.c_str(), PATH_MAX);
+        return resolved_path;
+    }
+    return wcsdup(wreal_path.c_str());
 }
 
 #else

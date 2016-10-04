@@ -1,5 +1,5 @@
 function __fish_print_connman_services
-    connmanctl services | string replace -r '.* (.*)' '$1'
+    connmanctl services | string replace -r '.*? +(.*) +(.*)' '$2\t$1'
 end
 
 function __fish_print_connman_technologies

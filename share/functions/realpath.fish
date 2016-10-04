@@ -24,22 +24,21 @@ if not command -s realpath >/dev/null
             return 1
         end
 
-        # loop over arguments - allow our realpath to work on more than one path per invocation
+        # Loop over arguments - allow our realpath to work on more than one path per invocation
         # like gnu/bsd realpath.
         for arg in $argv
             switch $arg
                 # These - no can do our realpath
                 case -s --strip --no-symlinks -z --zero --relative-base\* --relative-to\*
-                    __fish_print_help fish_realpath
+                    __fish_print_help realpath
                     return 2
 
                 case -h --help --version
-                    __fish_print_help fish_realpath
+                    __fish_print_help realpath
                     return 0
 
-                    # Handle commands called with these arguments by
-                    # dropping the arguments to protect fish_realpath from them.
-                    # There are no sure things here.
+                # Handle commands called with these arguments by dropping the arguments to protect
+                # realpath from them. There are no sure things here.
                 case -e --canonicalize-existing --physical -P -q --quiet -m --canonicalize-missing
                     continue
 

@@ -2,6 +2,7 @@ first invalid path handled okay
 nonexistent-file in PWD correctly converted
 /
 /this-better-not-exist
+/x
 fish-symlink handled correctly
 fish-symlink/nonexistent-file-relative-to-a-symlink correctly converted
 fish-symlink/symlink_file handled correctly

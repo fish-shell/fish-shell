@@ -360,7 +360,8 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
                 pathsep_idx++;
             }
             real_path.append(narrow_res);
-            real_path.append("/");
+            // This test is to deal with pathological cases such as /../../x => //x.
+            if (real_path.size() > 1) real_path.append("/");
             real_path.append(narrow_path.substr(pathsep_idx, cstring::npos));
         }
     }

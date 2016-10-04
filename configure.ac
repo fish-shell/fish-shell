@@ -320,45 +320,6 @@ fi
 # features that Autoconf doesn't tell us about
 #
 
-
-#
-# Check if realpath accepts null for its second argument
-#
-
-AC_MSG_CHECKING([if realpath accepts null for its second argument])
-AC_RUN_IFELSE(
-  [
-    AC_LANG_PROGRAM(
-      [
-        #include <limits.h>
-        #include <errno.h>
-        #include <stdlib.h>
-      ],
-      [
-        int status;
-        char *res;
-        res = realpath( "somefile", 0 );
-        status = !(res != 0 || errno == ENOENT);
-        exit( status );
-      ]
-    )
-  ],
-  [have_realpath_null=yes],
-  [have_realpath_null=no]
-)
-
-if test "$have_realpath_null" = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(
-    [HAVE_REALPATH_NULL],
-    [1],
-    [Define to 1 if realpath accepts null for its second argument.]
-  )
-else
-  AC_MSG_RESULT(no)
-fi
-
-
 #
 # Check if struct winsize and TIOCGWINSZ exist
 #

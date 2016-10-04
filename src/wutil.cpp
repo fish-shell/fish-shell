@@ -332,8 +332,6 @@ void safe_perror(const char *message) {
     errno = err;
 }
 
-#ifdef HAVE_REALPATH_NULL
-
 wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
     if (pathname.size() == 0) return NULL;
 
@@ -388,28 +386,6 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
     }
     return wcsdup(wreal_path.c_str());
 }
-
-#else
-
-wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
-    cstring tmp = wcs2string(pathname);
-    char narrow_buff[PATH_MAX];
-    char *narrow_res = realpath(tmp.c_str(), narrow_buff);
-    wchar_t *res;
-
-    if (!narrow_res) return 0;
-
-    const wcstring wide_res = str2wcstring(narrow_res);
-    if (resolved_path) {
-        wcslcpy(resolved_path, wide_res.c_str(), PATH_MAX);
-        res = resolved_path;
-    } else {
-        res = wcsdup(wide_res.c_str());
-    }
-    return res;
-}
-
-#endif
 
 wcstring wdirname(const wcstring &path) {
     char *tmp = wcs2str(path.c_str());

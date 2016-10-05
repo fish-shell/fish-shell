@@ -337,8 +337,14 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
 
     cstring real_path("");
     cstring narrow_path = wcs2string(pathname);
-    char *narrow_res = realpath(narrow_path.c_str(), NULL);
 
+    // Strip trailing slashes. This is needed to be bug-for-bug compatible with GNU realpath which
+    // treats "/a//" as equivalent to "/a" whether or not /a exists.
+    while (narrow_path.size() > 1 && narrow_path.at(narrow_path.size() - 1) == '/') {
+        narrow_path.erase(narrow_path.size() - 1, 1);
+    }
+
+    char *narrow_res = realpath(narrow_path.c_str(), NULL);
     if (narrow_res) {
         real_path.append(narrow_res);
     } else {

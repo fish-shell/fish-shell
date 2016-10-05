@@ -25,6 +25,13 @@ builtin realpath /this-better-not-exist
 # leading slash).
 builtin realpath /../../x
 
+# Another pathological corner case. GNU realpath first strips trailing slashes
+# so that "/a//" is converted to "/a" before performing the real path
+# conversion. So, despite appearances, it considers "a" to be the last
+# component in that case.
+builtin realpath /abc/
+builtin realpath /def///
+
 # A single symlink to a directory is correctly resolved.
 ln -s fish $XDG_DATA_HOME/fish-symlink
 set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink)

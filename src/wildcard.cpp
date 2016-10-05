@@ -836,8 +836,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
         // Don't do fuzzy matches if the literal segment was valid (#3211)
         bool allow_fuzzy = (this->flags & (EXPAND_FUZZY_MATCH | EXPAND_NO_FUZZY_DIRECTORIES)) ==
                            EXPAND_FUZZY_MATCH;
-        if (allow_fuzzy &&
-            this->resolved_completions->size() == before &&
+        if (allow_fuzzy && this->resolved_completions->size() == before &&
             waccess(intermediate_dirpath, F_OK) != 0) {
             assert(this->flags & EXPAND_FOR_COMPLETIONS);
             DIR *base_dir_fd = open_dir(base_dir);

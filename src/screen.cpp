@@ -206,7 +206,7 @@ size_t escape_code_length(const wchar_t *code) {
 
     if (cur_term != NULL) {
         // Detect these terminfo color escapes with parameter value 0..16, all of which don't move
-        // the cursor. 
+        // the cursor.
         char *const esc[] = {
             set_a_foreground, set_a_background, set_foreground, set_background,
         };
@@ -240,7 +240,7 @@ size_t escape_code_length(const wchar_t *code) {
             if (!esc2[p]) continue;
             // Test both padded and unpadded version, just to be safe. Most versions of tparm don't
             // actually seem to do anything these days.
-            
+
             size_t len = maxi(try_sequence(tparm(esc2[p]), code), try_sequence(esc2[p], code));
             if (len) {
                 resulting_length = len;
@@ -1214,7 +1214,8 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
             abandon_line_string.push_back(omitted_newline_char);
 
             if (exit_attribute_mode) {
-                abandon_line_string.append(str2wcstring(tparm(exit_attribute_mode)));  // normal text ANSI escape sequence
+                abandon_line_string.append(
+                    str2wcstring(tparm(exit_attribute_mode)));  // normal text ANSI escape sequence
             }
             abandon_line_string.append(screen_width - non_space_width, L' ');
         }

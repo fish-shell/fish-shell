@@ -1277,12 +1277,12 @@ static void test_expand() {
 
     expand_test(L"/tmp/fish_expand_test/b/yyy", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
                 L"/tmp/fish_expand_test/baz/yyy", wnull, L"Wrong fuzzy matching 4");
-    
+
     expand_test(L"/tmp/fish_expand_test/aa/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
                 L"/tmp/fish_expand_test/aaa2/x", wnull, L"Wrong fuzzy matching 5");
-    
-    expand_test(L"/tmp/fish_expand_test/aaa/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
-                wnull, L"Wrong fuzzy matching 6 - shouldn't remove valid directory names (#3211)");
+
+    expand_test(L"/tmp/fish_expand_test/aaa/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, wnull,
+                L"Wrong fuzzy matching 6 - shouldn't remove valid directory names (#3211)");
 
     if (!expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0)) {
         err(L"Expansion not correctly handling dotfiles");

@@ -546,7 +546,7 @@ expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err) 
 
     // Handle errors.
     // For now we only show the first error.
-    if (! parser.errors.empty()) {
+    if (!parser.errors.empty()) {
         err.append(L"test: ");
         err.append(parser.errors.at(0));
         err.push_back(L'\n');

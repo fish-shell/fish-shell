@@ -82,7 +82,7 @@ bool builtin_data_t::operator<(const builtin_data_t *other) const {
 /// Counts the number of arguments in the specified null-terminated array
 int builtin_count_args(const wchar_t *const *argv) {
     int argc;
-    for (argc = 1; argv[argc] != NULL;){
+    for (argc = 1; argv[argc] != NULL;) {
         argc++;
     }
 
@@ -2941,9 +2941,8 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 wchar_t *end = 0;
                 max_items = wcstol(w.woptarg, &end, 10);
                 if (!(*w.woptarg != L'\0' && *end == L'\0')) {
-                    streams.err.append_format(
-                        _(L"%ls: max value '%ls' is not a valid number\n"), argv[0],
-                        w.woptarg);
+                    streams.err.append_format(_(L"%ls: max value '%ls' is not a valid number\n"),
+                                              argv[0], w.woptarg);
                     return STATUS_BUILTIN_ERROR;
                 }
                 break;

@@ -1572,7 +1572,6 @@ static wrapper_map_t &wrap_map() {
     return *wrapper_map;
 }
 
-
 /// Add a new target that is wrapped by command. Example: __fish_sgrep (command) wraps grep
 /// (target).
 bool complete_add_wrapper(const wcstring &command, const wcstring &new_target) {

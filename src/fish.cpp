@@ -170,7 +170,10 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
         paths.bin = L"" BINDIR;
     }
 
-    debug(2, L"determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: %ls\npaths.doc: %ls\npaths.bin: %ls",  paths.data.c_str(), paths.sysconf.c_str(), paths.doc.c_str(), paths.bin.c_str());
+    debug(2,
+          L"determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: "
+          L"%ls\npaths.doc: %ls\npaths.bin: %ls",
+          paths.data.c_str(), paths.sysconf.c_str(), paths.doc.c_str(), paths.bin.c_str());
     return paths;
 }
 

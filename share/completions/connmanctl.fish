@@ -1,5 +1,10 @@
 function __fish_print_connman_services
-    connmanctl services | string replace -r '.*? +(.*) +(.*)' '$2\t$1'
+    # connmanctl services follows this pattern (to be interpreted as a regex):
+    # "[\* ][A ][ORacd ] service_name +identification_string"
+    # where [\* ] indicates whether a service is a favorite
+    # [A ] indicates whether a service is in autoconnect mode
+    # [ORacd ] indicates the current status of the service: online, ready, association, configuration, disconnect or idle
+    connmanctl services | string replace -r '.{4}(.*) +(.*)' '$2\t$1'
 end
 
 function __fish_print_connman_technologies
@@ -7,9 +12,13 @@ function __fish_print_connman_technologies
 end
 
 function __fish_print_connman_vpnconnections
+    # formatting of the vpn connections:
+    # "  [RCF ] service_name +identification_string"
+    # where [RCF ] indicates the current status which can be: ready, configuration, failure or idle
     connmanctl vpnconnections | string replace -r '.* (.*)' '$1'
 end
 
+# connmanctl does not accept options before commands, so requiring the commands to be in second position is okay
 complete -f -c connmanctl -n "test (count (commandline -opc)) -lt 2" -a "state" -d "Shows if the system is online or offline"
 complete -f -c connmanctl -n "test (count (commandline -opc)) -lt 2" -a "technologies" -d "Display technologies"
 complete -f -c connmanctl -n "test (count (commandline -opc)) -lt 2" -a "clock" -d "Get System Clock Properties"

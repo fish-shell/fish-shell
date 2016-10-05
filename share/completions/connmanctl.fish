@@ -15,7 +15,7 @@ function __fish_print_connman_vpnconnections
     # formatting of the vpn connections:
     # "  [RCF ] service_name +identification_string"
     # where [RCF ] indicates the current status which can be: ready, configuration, failure or idle
-    connmanctl vpnconnections | string replace -r '.* (.*)' '$1'
+    connmanctl vpnconnections | string replace -r '.{4}(.*) +(.*)' '$2\t$1'
 end
 
 # connmanctl does not accept options before commands, so requiring the commands to be in second position is okay

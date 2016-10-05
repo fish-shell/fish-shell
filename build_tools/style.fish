@@ -30,7 +30,12 @@ if test $all = yes
         exit 1
     end
     set c_files src/*.h src/*.cpp
-    set f_files share/***.fish
+    # For now we don't restyle all the fish scripts. That's because `fish_indent` still has some
+    # problems with its output that require manual intervention. Not to mention that very few of the
+    # fish scripts even conform to `fish_indent` output at this time. When `fish_indent` output is
+    # deemed acceptable as a default and all the fish scripts have been restyled this comment should
+    # be removed and the following statement uncommented.
+    #   set f_files share/***.fish
 else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
     # those using `git clang-format`. Else reformat the files in the most recent commit.

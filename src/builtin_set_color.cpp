@@ -148,7 +148,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
     // just give up...
-    if (!exit_attribute_mode) {
+    if (cur_term == NULL || !exit_attribute_mode) {
         return STATUS_BUILTIN_ERROR;
     }
 

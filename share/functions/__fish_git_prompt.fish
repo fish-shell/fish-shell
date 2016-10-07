@@ -448,7 +448,7 @@ function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells
     set -l staged
 
     if test -n "$sha"
-        command git diff-index --cached --quiet HEAD --
+        command git diff-index --cached --quiet HEAD -- ^/dev/null
         or set staged $___fish_git_prompt_char_stagedstate
     else
         set staged $___fish_git_prompt_char_invalidstate
@@ -460,7 +460,7 @@ function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells 
     set -l dirty
 
     set -l os
-    command git diff --no-ext-diff --quiet --exit-code
+    command git diff --no-ext-diff --quiet --exit-code ^/dev/null
     set os $status
     if test $os -ne 0
         set dirty $___fish_git_prompt_char_dirtystate

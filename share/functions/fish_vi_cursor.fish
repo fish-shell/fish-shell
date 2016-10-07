@@ -18,7 +18,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
                or set -q ITERM_PROFILE
                 set function __fish_cursor_konsole
                 set uses_echo 1
-            else if string match -q "xterm*" -- $TERM
+            else if string match -q "xterm*" -- $TERM; or test "$VTE_VERSION" -gt 1910
                 set function __fish_cursor_xterm
                 set uses_echo 1
             else

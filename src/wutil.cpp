@@ -1,4 +1,5 @@
 // Wide character equivalents of various standard unix functions.
+#define FISH_NO_ISW_WRAPPERS
 #include "config.h"
 
 #include <assert.h>
@@ -331,23 +332,45 @@ void safe_perror(const char *message) {
     errno = err;
 }
 
-#ifdef HAVE_REALPATH_NULL
-
 wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
+    if (pathname.size() == 0) return NULL;
+
+    cstring real_path("");
     cstring narrow_path = wcs2string(pathname);
-    char *narrow_res = realpath(narrow_path.c_str(), NULL);
 
-    if (!narrow_res) return NULL;
-
-    wchar_t *res;
-    wcstring wide_res = str2wcstring(narrow_res);
-    if (resolved_path) {
-        wcslcpy(resolved_path, wide_res.c_str(), PATH_MAX);
-        res = resolved_path;
-    } else {
-        res = wcsdup(wide_res.c_str());
+    // Strip trailing slashes. This is needed to be bug-for-bug compatible with GNU realpath which
+    // treats "/a//" as equivalent to "/a" whether or not /a exists.
+    while (narrow_path.size() > 1 && narrow_path.at(narrow_path.size() - 1) == '/') {
+        narrow_path.erase(narrow_path.size() - 1, 1);
     }
 
+    char *narrow_res = realpath(narrow_path.c_str(), NULL);
+    if (narrow_res) {
+        real_path.append(narrow_res);
+    } else {
+        ssize_t pathsep_idx = narrow_path.rfind('/');
+        if (pathsep_idx == 0) {
+            // If the only pathsep is the first character then it's an absolute path with a
+            // single path component and thus doesn't need conversion.
+            real_path = narrow_path;
+        } else {
+            if (pathsep_idx == cstring::npos) {
+                // No pathsep means a single path component relative to pwd.
+                narrow_res = realpath(".", NULL);
+                if (!narrow_res) DIE("unexpected realpath(\".\") failure");
+                pathsep_idx = 0;
+            } else {
+                // Only call realpath() on the portion up to the last component.
+                narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), NULL);
+                if (!narrow_res) return NULL;
+                pathsep_idx++;
+            }
+            real_path.append(narrow_res);
+            // This test is to deal with pathological cases such as /../../x => //x.
+            if (real_path.size() > 1) real_path.append("/");
+            real_path.append(narrow_path.substr(pathsep_idx, cstring::npos));
+        }
+    }
 #if __APPLE__ && __DARWIN_C_LEVEL < 200809L
 // OS X Snow Leopard is broken with respect to the dynamically allocated buffer returned by
 // realpath(). It's not dynamically allocated so attempting to free that buffer triggers a
@@ -356,30 +379,13 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
     free(narrow_res);
 #endif
 
-    return res;
-}
-
-#else
-
-wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
-    cstring tmp = wcs2string(pathname);
-    char narrow_buff[PATH_MAX];
-    char *narrow_res = realpath(tmp.c_str(), narrow_buff);
-    wchar_t *res;
-
-    if (!narrow_res) return 0;
-
-    const wcstring wide_res = str2wcstring(narrow_res);
+    wcstring wreal_path = str2wcstring(real_path);
     if (resolved_path) {
-        wcslcpy(resolved_path, wide_res.c_str(), PATH_MAX);
-        res = resolved_path;
-    } else {
-        res = wcsdup(wide_res.c_str());
+        wcslcpy(resolved_path, wreal_path.c_str(), PATH_MAX);
+        return resolved_path;
     }
-    return res;
+    return wcsdup(wreal_path.c_str());
 }
-
-#endif
 
 wcstring wdirname(const wcstring &path) {
     char *tmp = wcs2str(path.c_str());
@@ -441,6 +447,84 @@ int wrename(const wcstring &old, const wcstring &newv) {
     cstring new_narrow = wcs2string(newv);
     return rename(old_narrow.c_str(), new_narrow.c_str());
 }
+
+/// Return one if the code point is in the range we reserve for internal use.
+int fish_is_reserved_codepoint(wint_t wc) {
+    if (RESERVED_CHAR_BASE <= wc && wc < RESERVED_CHAR_END) return 1;
+    if (EXPAND_RESERVED_BASE <= wc && wc < EXPAND_RESERVED_END) return 1;
+    if (WILDCARD_RESERVED_BASE <= wc && wc < WILDCARD_RESERVED_END) return 1;
+    return 0;
+}
+
+/// Return one if the code point is in a Unicode private use area.
+int fish_is_pua(wint_t wc) {
+    if (PUA1_START <= wc && wc < PUA1_END) return 1;
+    if (PUA2_START <= wc && wc < PUA2_END) return 1;
+    if (PUA3_START <= wc && wc < PUA3_END) return 1;
+    return 0;
+}
+
+/// We need this because there are too many implementations that don't return the proper answer for
+/// some code points. See issue #3050.
+int fish_iswalnum(wint_t wc) {
+    if (fish_is_reserved_codepoint(wc)) return 0;
+    if (fish_is_pua(wc)) return 0;
+    return iswalnum(wc);
+}
+
+/// We need this because there are too many implementations that don't return the proper answer for
+/// some code points. See issue #3050.
+int fish_iswalpha(wint_t wc) {
+    if (fish_is_reserved_codepoint(wc)) return 0;
+    if (fish_is_pua(wc)) return 0;
+    return iswalpha(wc);
+}
+
+/// We need this because there are too many implementations that don't return the proper answer for
+/// some code points. See issue #3050.
+int fish_iswgraph(wint_t wc) {
+    if (fish_is_reserved_codepoint(wc)) return 0;
+    if (fish_is_pua(wc)) return 1;
+    return iswgraph(wc);
+}
+
+/// Test if the given string is a valid variable name.
+///
+/// \return null if this is a valid name, and a pointer to the first invalid character otherwise.
+const wchar_t *wcsvarname(const wchar_t *str) {
+    while (*str) {
+        if ((!fish_iswalnum(*str)) && (*str != L'_')) {
+            return str;
+        }
+        str++;
+    }
+    return NULL;
+}
+
+/// Test if the given string is a valid variable name.
+///
+/// \return null if this is a valid name, and a pointer to the first invalid character otherwise.
+const wchar_t *wcsvarname(const wcstring &str) { return wcsvarname(str.c_str()); }
+
+/// Test if the given string is a valid function name.
+///
+/// \return null if this is a valid name, and a pointer to the first invalid character otherwise.
+const wchar_t *wcsfuncname(const wcstring &str) { return wcschr(str.c_str(), L'/'); }
+
+/// Test if the given string is valid in a variable name.
+///
+/// \return true if this is a valid name, false otherwise.
+bool wcsvarchr(wchar_t chr) { return fish_iswalnum(chr) || chr == L'_'; }
+
+/// Convenience variants on fish_wcwswidth().
+///
+/// See fallback.h for the normal definitions.
+int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, wcslen(str)); }
+
+/// Convenience variants on fish_wcwswidth().
+///
+/// See fallback.h for the normal definitions.
+int fish_wcswidth(const wcstring &str) { return fish_wcswidth(str.c_str(), str.size()); }
 
 int fish_wcstoi(const wchar_t *str, wchar_t **endptr, int base) {
     long ret = wcstol(str, endptr, base);

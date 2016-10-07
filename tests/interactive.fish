@@ -10,6 +10,12 @@ set TESTS_TO_RETRY bind.expect
 # Change to directory containing this script
 cd (dirname (status -f))
 
+# These env vars should not be inherited from the user environment because they can affect the
+# behavior of the tests. So either remove them or set them to a known value.
+# See also tests/test.fish.
+set TERM xterm
+set -e ITERM_PROFILE
+
 # Test files specified on commandline, or all *.expect files
 if set -q argv[1]
     set files_to_test $argv.expect

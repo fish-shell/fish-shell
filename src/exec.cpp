@@ -633,7 +633,6 @@ void exec_job(parser_t &parser, job_t *j) {
                 const wcstring func_name = p->argv0();
                 wcstring def;
                 bool function_exists = function_get_definition(func_name, &def);
-
                 bool shadow_scope = function_get_shadow_scope(func_name);
                 const std::map<wcstring, env_var_t> inherit_vars =
                     function_get_inherit_vars(func_name);

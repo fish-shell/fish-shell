@@ -1,0 +1,4 @@
+# These directories are intentionally empty.
+fish-common: package-contains-empty-directory usr/share/fish/vendor_completions.d/
+fish-common: package-contains-empty-directory usr/share/fish/vendor_conf.d/
+fish-common: package-contains-empty-directory usr/share/fish/vendor_functions.d/

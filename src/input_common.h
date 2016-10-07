@@ -70,6 +70,7 @@ enum {
     R_BACKWARD_JUMP,
     R_AND,
     R_CANCEL,
+    R_TIMEOUT,  // we didn't get interactive input within wait_on_escape_ms
     R_MAX = R_CANCEL,
     // This is a special psuedo-char that is not used other than to mark the end of the the special
     // characters so we can sanity check the enum range.
@@ -92,7 +93,7 @@ void set_wait_on_escape_ms(int ms);
 /// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously been
 /// read and then 'unread' using \c input_common_unreadch, that character is returned. If timed is
 /// true, readch2 will wait at most WAIT_ON_ESCAPE milliseconds for a character to be available for
-/// reading before returning with the value WEOF.
+/// reading before returning with the value R_EOF.
 wchar_t input_common_readch(int timed);
 
 /// Enqueue a character or a readline function to the queue of unread characters that input_readch

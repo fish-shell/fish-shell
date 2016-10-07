@@ -1306,8 +1306,8 @@ msgstr ""
 
 #: reader.cpp:4115
 #, c-format
-msgid "Unknown keybinding %d"
-msgstr "Raccourci clavier inconnu %d"
+msgid "Unknown key binding 0x%X"
+msgstr "Raccourci clavier inconnu 0x%X"
 
 #: reader.cpp:4226
 #, fuzzy

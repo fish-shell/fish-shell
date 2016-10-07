@@ -448,7 +448,7 @@ function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells
     set -l staged
 
     if test -n "$sha"
-        command git diff-index --cached --quiet HEAD --
+        command git diff-index --cached --quiet HEAD -- ^/dev/null
         or set staged $___fish_git_prompt_char_stagedstate
     else
         set staged $___fish_git_prompt_char_invalidstate
@@ -460,7 +460,7 @@ function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells 
     set -l dirty
 
     set -l os
-    command git diff --no-ext-diff --quiet --exit-code
+    command git diff --no-ext-diff --quiet --exit-code ^/dev/null
     set os $status
     if test $os -ne 0
         set dirty $___fish_git_prompt_char_dirtystate
@@ -475,14 +475,16 @@ function __fish_git_prompt_informative_status
     set -l changedFiles (command git diff --name-status | cut -c 1-2)
     set -l stagedFiles (command git diff --staged --name-status | cut -c 1-2)
 
-    set -l dirtystate (math (count $changedFiles) - (count (echo $changedFiles | grep "U")))
+    set -l dirtystate (math (count $changedFiles) - (count (echo $changedFiles | grep "U")) ^/dev/null)
     set -l invalidstate (count (echo $stagedFiles | grep "U"))
-    set -l stagedstate (math (count $stagedFiles) - $invalidstate)
-    set -l untrackedfiles (count (command git ls-files --others --exclude-standard))
+    set -l stagedstate (math (count $stagedFiles) - $invalidstate ^/dev/null)
+    set -l untrackedfiles (command git ls-files --others --exclude-standard | wc -l | string trim)
 
     set -l info
 
-    if [ (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles) = 0 ]
+    # If `math` fails for some reason, assume the state is clean - it's the simpler path
+    set -l state (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles ^/dev/null)
+    if test -z "$state"; or test "$state" = 0
         set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
     else
         for i in $___fish_git_prompt_status_order

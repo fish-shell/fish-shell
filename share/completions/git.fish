@@ -6,18 +6,29 @@ function __fish_git_commits
     # This allows filtering by subject with the new pager!
     # Because even subject lines can be quite long,
     # trim them (abbrev'd hash+tab+subject) to 73 characters
-    command git log --pretty=tformat:"%h"\t"%s" --all ^/dev/null \
+    command git log --pretty=tformat:"%h"\t"%s" --all --max-count=1000 ^/dev/null \
+    | string replace -r '(.{73}).+' '$1…'
+end
+
+function __fish_git_recent_commits
+    # Like __fish_git_commits, but not on all branches and limited to
+    # the last 50 commits. Used for fixup, where only the current branch
+    # and the latest commits make sense.
+    command git log --pretty=tformat:"%h"\t"%s" --max-count=50 ^/dev/null \
     | string replace -r '(.{73}).+' '$1…'
 end
 
 function __fish_git_branches
-    command git branch --no-color -a $argv ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
+    # In some cases, git can end up on no branch - e.g. with a detached head
+    # This will result in output like `* (no branch)` or a localized `* (HEAD detached at SHA)`
+    # The first `string match -v` filters it out because it's not useful as a branch argument
+    command git branch --no-color -a $argv ^/dev/null | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
 end
 
 function __fish_git_unique_remote_branches
     # Allow all remote branches with one remote without the remote part
     # This is useful for `git checkout` to automatically create a remote-tracking branch
-    command git branch --no-color -a $argv ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
+    command git branch --no-color -a $argv ^/dev/null | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
 end
 
 function __fish_git_tags
@@ -393,7 +404,7 @@ complete -c git -n '__fish_git_needs_command' -a commit -d 'Record changes to th
 complete -c git -n '__fish_git_using_command commit' -l amend -d 'Amend the log message of the last commit'
 complete -f -c git -n '__fish_git_using_command commit' -a '(__fish_git_modified_files)'
 complete -f -c git -n '__fish_git_using_command commit' -l fixup -d 'Fixup commit to be used with rebase --autosquash'
-complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup' -a '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup' -a '(__fish_git_recent_commits)'
 # TODO options
 
 ### diff
@@ -421,6 +432,7 @@ complete -f -c git -n '__fish_git_needs_command' -a init -d 'Create an empty git
 ### log
 complete -c git -n '__fish_git_needs_command' -a log -d 'Show commit logs'
 complete -c git -n '__fish_git_using_command log' -a '(__fish_git_refs) (__fish_git_ranges)' -d 'Branch'
+complete -c git -n '__fish_git_needs_command'    -a shortlog -d 'Show commit shortlog'
 # TODO options
 
 ### merge

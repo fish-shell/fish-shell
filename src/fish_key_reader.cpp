@@ -16,7 +16,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <wchar.h>
-#include <wctype.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -124,10 +123,18 @@ static char *char_to_symbol(wchar_t wc, bool bind_friendly) {
         }
     } else if (wc == ' ') {
         // The "space" character.
-        snprintf(buf, sizeof(buf), "\\x%X  (aka \"space\")", wc);
+        if (bind_friendly) {
+            snprintf(buf, sizeof(buf), "\\x%X", wc);
+        } else {
+            snprintf(buf, sizeof(buf), "\\x%X  (aka \"space\")", wc);
+        }
     } else if (wc == 0x7F) {
         // The "del" character.
-        snprintf(buf, sizeof(buf), "\\x%X  (aka \"del\")", wc);
+        if (bind_friendly) {
+            snprintf(buf, sizeof(buf), "\\x%X", wc);
+        } else {
+            snprintf(buf, sizeof(buf), "\\x%X  (aka \"del\")", wc);
+        }
     } else if (wc < 0x80) {
         // ASCII characters that are not control characters.
         if (bind_friendly && must_escape(wc)) {
@@ -195,7 +202,7 @@ static void process_input(bool continuous_mode) {
     fprintf(stderr, "Press a key\n\n");
     while (keep_running) {
         wchar_t wc = input_common_readch(true);
-        if (wc == WEOF) {
+        if (wc == R_TIMEOUT || wc == R_EOF) {
             output_bind_command(bind_chars);
             if (first_char_seen && !continuous_mode) {
                 return;

@@ -1,6 +1,6 @@
 
 function __fish_complete_groups --description "Print a list of local groups, with group members as the description"
-	if test -x /usr/bin/getent
+	if command -s getent >/dev/null
 		getent group | cut -d ':' -f 1,4 | sed 's/:/\t/'
 	else
 		cut -d ':' -f 1,4 /etc/group | sed 's/:/\t/'

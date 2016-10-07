@@ -2873,11 +2873,15 @@ const wchar_t *reader_readline(int nchars) {
                     data->history_search = history_search_t(*data->history, data->search_buff,
                                                             HISTORY_SEARCH_TYPE_CONTAINS);
 
-                    // Skip the autosuggestion as history unless it was truncated.
+                    // Always skip history entries that exactly match what has been typed so far.
+                    wcstring_list_t skip_list;
+                    skip_list.push_back(data->command_line.text);
                     const wcstring &suggest = data->autosuggestion;
                     if (!suggest.empty() && !data->screen.autosuggestion_is_truncated) {
-                        data->history_search.skip_matches(wcstring_list_t(&suggest, 1 + &suggest));
+                        // Also skip the autosuggestion in the history unless it was truncated.
+                        skip_list.push_back(suggest);
                     }
+                    data->history_search.skip_matches(skip_list);
                 }
 
                 switch (data->search_mode) {
@@ -3246,7 +3250,7 @@ const wchar_t *reader_readline(int nchars) {
             }
             default: {
                 // Other, if a normal character, we add it to the command.
-                if ((!wchar_private(c)) && (((c > 31) || (c == L'\n')) && (c != 127))) {
+                if (!wchar_private(c) && (c >= L' ' || c == L'\n' || c == L'\r') && c != 0x7F) {
                     bool allow_expand_abbreviations = false;
                     if (data->is_navigating_pager_contents()) {
                         data->pager.set_search_field_shown(true);
@@ -3262,11 +3266,10 @@ const wchar_t *reader_readline(int nchars) {
                     if (el == &data->command_line) {
                         clear_pager();
                     }
-
                 } else {
-                    // Low priority debug message. These can happen if the user presses an unefined
-                    // control sequnece. No reason to report.
-                    debug(2, _(L"Unknown keybinding %d"), c);
+                    // This can happen if the user presses a control char we don't recognize. No
+                    // reason to report this to the user unless they've enabled debugging output.
+                    debug(2, _(L"Unknown key binding 0x%X"), c);
                 }
                 break;
             }

@@ -30,7 +30,6 @@
 #include "parse_tree.h"
 #include "path.h"
 #include "reader.h"
-#include "sanity.h"
 #include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -438,19 +437,17 @@ history_item_t::history_item_t(const wcstring &str, time_t when, history_identif
 bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type) const {
     switch (type) {
         case HISTORY_SEARCH_TYPE_CONTAINS: {
-            // We consider equal strings to NOT match a contains search (so that you don't have to
-            // see history equal to what you typed). The length check ensures that.
-            return contents.size() > term.size() && contents.find(term) != wcstring::npos;
+            return contents.find(term) != wcstring::npos;
         }
         case HISTORY_SEARCH_TYPE_PREFIX: {
             // We consider equal strings to match a prefix search, so that autosuggest will allow
             // suggesting what you've typed.
             return string_prefixes_string(term, contents);
         }
-        default: {
-            sanity_lose();
-            abort();
+        case HISTORY_SEARCH_TYPE_EXACT: {
+            return term == contents;
         }
+        default: { DIE("unexpected history_search_type_t value"); }
     }
 }
 
@@ -1399,15 +1396,18 @@ void history_t::save(void) {
 
 // Formats a single history record, including a trailing newline.  Returns true
 // if bytes were written to the output stream and false otherwise.
-static bool format_history_record(const history_item_t &item, const bool with_time,
+static bool format_history_record(const history_item_t &item, const wchar_t *show_time_format,
                                   io_streams_t &streams) {
-    if (with_time) {
+    if (show_time_format) {
         const time_t seconds = item.timestamp();
         struct tm timestamp;
         if (!localtime_r(&seconds, &timestamp)) return false;
-        char timestamp_string[22];
-        if (strftime(timestamp_string, 22, "%Y-%m-%d %H:%M:%S  ", &timestamp) != 21) return false;
-        streams.out.append(str2wcstring(timestamp_string));
+        const int max_tstamp_length = 100;
+        wchar_t timestamp_string[max_tstamp_length + 1];
+        if (std::wcsftime(timestamp_string, max_tstamp_length, show_time_format, &timestamp) == 0) {
+            return false;
+        }
+        streams.out.append(timestamp_string);
     }
     streams.out.append(item.str());
     streams.out.append(L"\n");
@@ -1415,12 +1415,14 @@ static bool format_history_record(const history_item_t &item, const bool with_ti
 }
 
 bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args,
-                       bool with_time, io_streams_t &streams) {
+                       const wchar_t *show_time_format, long max_items, io_streams_t &streams) {
     // scoped_lock locker(lock);
     if (search_args.empty()) {
         // Start at one because zero is the current command.
-        for (int i = 1; !this->item_at_index(i).empty(); ++i) {
-            if (!format_history_record(this->item_at_index(i), with_time, streams)) return false;
+        for (int i = 1; !this->item_at_index(i).empty() && max_items; ++i, --max_items) {
+            if (!format_history_record(this->item_at_index(i), show_time_format, streams)) {
+                return false;
+            }
         }
         return true;
     }
@@ -1434,9 +1436,10 @@ bool history_t::search(history_search_type_t search_type, wcstring_list_t search
         }
         history_search_t searcher = history_search_t(*this, search_string, search_type);
         while (searcher.go_backwards()) {
-            if (!format_history_record(searcher.current_item(), with_time, streams)) {
+            if (!format_history_record(searcher.current_item(), show_time_format, streams)) {
                 return false;
             }
+            if (--max_items == 0) return true;
         }
     }
 

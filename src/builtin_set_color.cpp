@@ -148,7 +148,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
     // just give up...
-    if (!exit_attribute_mode) {
+    if (cur_term == NULL || !exit_attribute_mode) {
         return STATUS_BUILTIN_ERROR;
     }
 
@@ -179,7 +179,12 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             write_color(rgb_color_t::black(), true /* is_fg */);
             writembs(tparm(exit_attribute_mode));
         } else {
-            write_color(fg, true /* is_fg */);
+            if (!write_color(fg, true /* is_fg */)) {
+                // We need to do *something* or the lack of any output messes up
+                // when the cartesian product here would make "foo" disappear:
+                //  $ echo (set_color foo)bar
+                set_color(rgb_color_t::reset(), rgb_color_t::none());
+            }
         }
     }
 

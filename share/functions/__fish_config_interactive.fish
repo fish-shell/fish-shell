@@ -22,42 +22,47 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set userdatadir $XDG_DATA_HOME
     end
 
-    #
-    # If we are starting up for the first time, set various defaults
-    #
-    if not set -q __fish_init_1_50_0
-        if not set -q fish_greeting
-            set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell') )
-            set -l line2 (printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
-            set -U fish_greeting $line1\n$line2
+    if not set -q fish_greeting
+        set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell' ))
+        if not set -q __fish_init_2_3_0
+            set -l line2 \n(printf (_ 'Type %shelp%s for instructions on how to use fish %s') (set_color green) (set_color normal))
+        else
+            set -l line2 ''
         end
-        set -U __fish_init_1_50_0
+        set -U fish_greeting $line1$line2
+    end
 
+    #
+    # If we are starting up for the first time, set various defaults.
+    #
+    # bump this to 2_4_0 when rolling release if anything changes after 9/10/2016
+    if not set -q __fish_init_2_39_8
         # Regular syntax highlighting colors
+        # XXX - not quite the same as default colors in web config. Sync these up. 
         set -q fish_color_normal
         or set -U fish_color_normal normal
         set -q fish_color_command
-        or set -U fish_color_command brblue
+        or set -U fish_color_command --bold
         set -q fish_color_param
         or set -U fish_color_param cyan
         set -q fish_color_redirection
-        or set -U fish_color_redirection normal
+        or set -U fish_color_redirection brblue
         set -q fish_color_comment
         or set -U fish_color_comment red
         set -q fish_color_error
-        or set -U fish_color_error red --bold
+        or set -U fish_color_error brred
         set -q fish_color_escape
-        or set -U fish_color_escape cyan
+        or set -U fish_color_escape bryellow --bold
         set -q fish_color_operator
-        or set -U fish_color_operator cyan
+        or set -U fish_color_operator bryellow
         set -q fish_color_end
-        or set -U fish_color_end green
+        or set -U fish_color_end brmagenta
         set -q fish_color_quote
-        or set -U fish_color_quote brown
+        or set -U fish_color_quote yellow
         set -q fish_color_autosuggestion
-        or set -U fish_color_autosuggestion brgrey
+        or set -U fish_color_autosuggestion 555 brblack
         set -q fish_color_user
-        or set -U fish_color_user green
+        or set -U fish_color_user brgreen
 
         set -q fish_color_host
         or set -U fish_color_host normal
@@ -71,31 +76,34 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
         # Background color for matching quotes and parenthesis
         set -q fish_color_match
-        or set -U fish_color_match cyan
+        or set -U fish_color_match --background=brblue
 
         # Background color for search matches
         set -q fish_color_search_match
-        or set -U fish_color_search_match --background=purple
+        or set -U fish_color_search_match bryellow --background=brblack
 
         # Background color for selections
         set -q fish_color_selection
-        or set -U fish_color_selection --background=purple
+        or set -U fish_color_selection white --bold --background=brblack
 
         # Pager colors
         set -q fish_pager_color_prefix
-        or set -U fish_pager_color_prefix cyan
+        or set -U fish_pager_color_prefix white --bold --underline
         set -q fish_pager_color_completion
-        or set -U fish_pager_color_completion normal
+        or set -U fish_pager_color_completion
         set -q fish_pager_color_description
-        or set -U fish_pager_color_description brgrey
+        or set -U fish_pager_color_description B3A06D yellow
         set -q fish_pager_color_progress
-        or set -U fish_pager_color_progress cyan
+        or set -U fish_pager_color_progress brwhite --background=cyan
 
         #
         # Directory history colors
         #
         set -q fish_color_history_current
-        or set -U fish_color_history_current cyan
+        or set -U fish_color_history_current --bold
+
+
+        set -U __fish_init_2_39_8
     end
 
     #
@@ -144,11 +152,13 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Completions for SysV startup scripts. These aren't bound to any
     # specific command, so they can't be autoloaded.
     #
-    complete -x -p "/etc/init.d/*" -a start --description 'Start service'
-    complete -x -p "/etc/init.d/*" -a stop --description 'Stop service'
-    complete -x -p "/etc/init.d/*" -a status --description 'Print service status'
-    complete -x -p "/etc/init.d/*" -a restart --description 'Stop and then start service'
-    complete -x -p "/etc/init.d/*" -a reload --description 'Reload service configuration'
+    if test -d /etc/init.d
+        complete -x -p "/etc/init.d/*" -a start --description 'Start service'
+        complete -x -p "/etc/init.d/*" -a stop --description 'Stop service'
+        complete -x -p "/etc/init.d/*" -a status --description 'Print service status'
+        complete -x -p "/etc/init.d/*" -a restart --description 'Stop and then start service'
+        complete -x -p "/etc/init.d/*" -a reload --description 'Reload service configuration'
+    end
 
     # Make sure some key bindings are set
     if not set -q fish_key_bindings
@@ -172,10 +182,17 @@ function __fish_config_interactive -d "Initializations that should be performed 
             if set -q __fish_active_key_bindings
                 echo "Keeping $__fish_active_key_bindings" >&2
                 return 1
-            else
+            else if functions -q fish_default_key_bindings
                 echo "Reverting to default bindings" >&2
                 set fish_key_bindings fish_default_key_bindings
                 # Return because we are called again
+                return 0
+            else
+                # If we can't even find the default bindings, something is broken.
+                # Without it, we would eventually run into the stack size limit, but that'd print hundreds of duplicate lines
+                # so we should give up earlier.
+                echo "Cannot find fish_default_key_bindings, falling back to very simple bindings." >&2
+                echo "Most likely something is wrong with your installation." >&2
                 return 0
             end
         end
@@ -196,29 +213,39 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Load key bindings
     __fish_reload_key_bindings
 
-    # Repaint screen when window changes size
-    function __fish_winch_handler --on-signal WINCH
+    function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"
         commandline -f repaint
     end
 
-
-    # Notify vte-based terminals when $PWD changes (issue #906)
-    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
-        function __update_vte_cwd --on-variable PWD --description 'Notify VTE of change to $PWD'
+    # Notify terminals when $PWD changes (issue #906)
+    # VTE and Terminal.app support this in practice.
+    if test "0$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
+        function fish_title; end
+        function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             status --is-command-substitution
+            or test -n "$INSIDE_EMACS"
             and return
-            printf '\033]7;file://%s%s\a' (hostname) (pwd | __fish_urlencode)
+            printf \e\]7\;file://\%s\%s\a (hostname) (echo -n $PWD | __fish_urlencode)
         end
-        __update_vte_cwd # Run once because we might have already inherited a PWD from an old tab
+        __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end
 
     ### Command-not-found handlers
     # This can be overridden by defining a new __fish_command_not_found_handler function
     if not type -q __fish_command_not_found_handler
+        # Read the OS/Distro from /etc/os-release.
+        # This has a "ID=" line that defines the exact distribution,
+        # and an "ID_LIKE=" line that defines what it is derived from or otherwise like.
+        # For our purposes, we use both.
+        set -l os
+        if test -r /etc/os-release
+            set os (string match -r '^ID(?:_LIKE)?\s*=.*' < /etc/os-release | \
+            string replace -r '^ID(?:_LIKE)?\s*=(.*)' '$1' | string trim -c '\'"')
+        end
+
         # First check if we are on OpenSUSE since SUSE's handler has no options
-        # and expects first argument to be a command and second database
-        # also check if there is command-not-found command.
-        if test -f /etc/SuSE-release
+        # but the same name and path as Ubuntu's.
+        if contains -- suse $os
             and type -q -p command-not-found
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 /usr/bin/command-not-found $argv[1]
@@ -260,71 +287,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 __fish_default_command_not_found_handler $argv[1]
             end
-        end
-    end
-
-    if test $TERM = "linux" # A linux in-kernel VT with 8 colors and 256/512 glyphs
-        # In a VT we have
-        # black (invisible)
-        # red
-        # green
-        # yellow
-        # blue
-        # magenta
-        # cyan
-        # white
-
-        # Pretty much just set at random
-        set -g fish_color_normal normal
-        set -g fish_color_command yellow
-        set -g fish_color_param cyan
-        set -g fish_color_redirection normal
-        set -g fish_color_comment red
-        set -g fish_color_error red
-        set -g fish_color_escape cyan
-        set -g fish_color_operator cyan
-        set -g fish_color_quote blue
-        set -g fish_color_autosuggestion yellow
-        set -g fish_color_valid_path
-        set -g fish_color_cwd green
-        set -g fish_color_cwd_root red
-        set -g fish_color_match cyan
-        set -g fish_color_history_current cyan
-        set -g fish_color_search_match cyan
-        set -g fish_color_selection blue
-        set -g fish_color_end yellow
-        set -g fish_color_host normal
-        set -g fish_color_status red
-        set -g fish_color_user green
-        set -g fish_pager_color_prefix cyan
-        set -g fish_pager_color_completion normal
-        set -g fish_pager_color_description yellow
-        set -g fish_pager_color_progress cyan
-
-        # Don't allow setting color other than what linux offers (see #2001)
-        functions -e set_color
-        function set_color --shadow-builtin
-            set -l term_colors black red green yellow blue magenta cyan white normal
-            for a in $argv
-                if not contains -- $a $term_colors
-                    switch $a
-                        # Also allow options
-                        case "-*"
-                            continue
-                        case "*"
-                            echo "Color not valid in TERM = linux: $a"
-                            return 1
-                    end
-                end
-            end
-            builtin set_color $argv
-            return $status
-        end
-
-        # Set fish_prompt to a VT-friendly version
-        # without color or unicode
-        function fish_prompt
-            fish_fallback_prompt
         end
     end
 end

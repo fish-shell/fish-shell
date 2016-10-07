@@ -1,6 +1,7 @@
 This work was packaged for Debian by David Adam <zanchey@ucc.gu.uwa.edu.au>
 on Thu, 14 Jun 2012 20:33:34 +0800, based on work by James Vega
-<jamessan@jamessan.com>.
+<jamessan@jamessan.com>. Modifications from the downstream Debian maintainer,
+Tristan Seligmann <mithrandi@debian.org>, have also been included.
 
 It was downloaded from:
 
@@ -23,12 +24,12 @@ Copyright (C) 2005-2008 Axel Liljencrantz
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
@@ -37,11 +38,41 @@ Copyright (C) 2005-2008 Axel Liljencrantz
 On Debian systems, the complete text of the GNU General
 Public License version 2 can be found in "/usr/share/common-licenses/GPL-2".
 
-Fish contains code under the BSD license, namely versions of the
-two functions strlcat and strlcpy, modified for use with wide
-character strings.
+Fish contains code from the PCRE2 library to support regular expressions. This
+code, created by Philip Hazel, is distributed under the terms of the BSD
+license. Copyright © 1997-2015 University of Cambridge.
 
-  Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions are met:
+
+    - Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    - Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+
+    - Neither the name of the University of Cambridge nor the names of any
+      contributors may be used to endorse or promote products derived from this
+      software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+
+Fish also contains small amounts of code under the OpenBSD license, namely a
+version of the function strlcpy, modified for use with wide character strings.
+This code is copyrighted by Todd C. Miller (1998). It also contains code from
+tmux, copyrighted by Nicholas Marriott <nicm@users.sourceforge.net> (2007), and
+made available under an identical license.
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -55,20 +86,6 @@ character strings.
   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-The XSel command, written and copyrighted by Conrad Parker, is
-distributed together with, and used by fish. It is released under the MIT
-license.
-
-  It is Copyright (C) 2001 Conrad Parker <conrad@vergenet.net>
-
-  Permission to use, copy, modify, distribute, and sell this software
-  and its documentation for any purpose is hereby granted without fee,
-  provided that the above copyright notice appear in all copies and that
-  both that copyright notice and this permission notice appear in
-  supporting documentation. No representations are made about the
-  suitability of this software for any purpose. It is provided "as is"
-  without express or implied warranty.
-
 Fish contains code from the glibc library, namely the wcstok function
 in fallback.c.  This code is licensed under the LGPL.
 
@@ -79,5 +96,6 @@ The Debian packaging is:
 
     Copyright (C) 2005 James Vega <jamessan@jamessan.com>
     Copyright (C) 2012 David Adam <zanchey@ucc.gu.uwa.edu.au>
+    Copyright (C) 2015 Tristan Seligmann <mithrandi@debian.org>
 
 and is licensed under the GPL version 2, see above.

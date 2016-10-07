@@ -205,7 +205,7 @@ size_t escape_code_length(const wchar_t *code) {
     bool found = false;
 
     if (cur_term != NULL) {
-        // Detect these terminfo color escapes with parameter value 0..7, all of which don't move
+        // Detect these terminfo color escapes with parameter value 0..16, all of which don't move
         // the cursor.
         char *const esc[] = {
             set_a_foreground, set_a_background, set_foreground, set_background,
@@ -223,9 +223,7 @@ size_t escape_code_length(const wchar_t *code) {
                 }
             }
         }
-    }
 
-    if (cur_term != NULL) {
         // Detect these semi-common terminfo escapes without any parameter values, all of which
         // don't move the cursor.
         char *const esc2[] = {enter_bold_mode,        exit_attribute_mode,   enter_underline_mode,
@@ -234,12 +232,15 @@ size_t escape_code_length(const wchar_t *code) {
                               enter_superscript_mode, exit_superscript_mode, enter_blink_mode,
                               enter_italics_mode,     exit_italics_mode,     enter_reverse_mode,
                               enter_shadow_mode,      exit_shadow_mode,      enter_standout_mode,
-                              exit_standout_mode,     enter_secure_mode};
+                              exit_standout_mode,     enter_secure_mode,     enter_dim_mode,
+                              enter_blink_mode,       enter_protected_mode,  enter_alt_charset_mode,
+                              exit_alt_charset_mode};
 
         for (size_t p = 0; p < sizeof esc2 / sizeof *esc2 && !found; p++) {
             if (!esc2[p]) continue;
             // Test both padded and unpadded version, just to be safe. Most versions of tparm don't
             // actually seem to do anything these days.
+
             size_t len = maxi(try_sequence(tparm(esc2[p]), code), try_sequence(esc2[p], code));
             if (len) {
                 resulting_length = len;
@@ -603,9 +604,8 @@ static bool perform_any_impending_soft_wrap(screen_t *scr, int x, int y) {
 /// Make sure we don't soft wrap.
 static void invalidate_soft_wrap(screen_t *scr) { scr->soft_wrap_location = INVALID_LOCATION; }
 
-// Various code for testing term behavior.
-
 #if 0
+/// Various code for testing term behavior.
 static bool test_stuff(screen_t *scr)
 {
     data_buffer_t output;
@@ -1039,7 +1039,6 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
              const int *indent, size_t cursor_pos, const page_rendering_t &pager,
              bool cursor_is_within_pager) {
     screen_data_t::cursor_t cursor_arr;
-
     CHECK(s, );
     CHECK(indent, );
 
@@ -1126,7 +1125,6 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
     s_update(s, layout.left_prompt.c_str(), layout.right_prompt.c_str());
     s_save_status(s);
 }
-
 void s_reset(screen_t *s, screen_reset_mode_t mode) {
     CHECK(s, );
 
@@ -1190,18 +1188,35 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // omitted_newline_char in common.cpp.
         int non_space_width = fish_wcwidth(omitted_newline_char);
         if (screen_width >= non_space_width) {
-            bool has_256_colors = output_get_color_support() & color_support_term256;
-            if (has_256_colors) {
-                // Draw the string in term256 gray.
-                abandon_line_string.append(L"\x1b[38;5;245m");
-            } else {
-                // Draw in "bright black" (gray).
-                abandon_line_string.append(
-                    L"\x1b[0m"       // bright
-                    L"\x1b[30;1m");  // black
+            bool justgrey = true;
+            if (enter_dim_mode) {
+                std::string dim = tparm(enter_dim_mode);
+                if (!dim.empty()) {
+                    // Use dim if they have it, so the color will be based on their actual normal
+                    // color and the background of the termianl.
+                    abandon_line_string.append(str2wcstring(dim));
+                    justgrey = false;
+                }
+            }
+            if (justgrey && set_a_foreground) {
+                if (max_colors >= 238) {
+                    // draw the string in a particular grey
+                    abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 237)));
+                } else if (max_colors >= 9) {
+                    // bright black (the ninth color, looks grey)
+                    abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 8)));
+                } else if (max_colors >= 2 && enter_bold_mode) {
+                    // we might still get that color by setting black and going bold for bright
+                    abandon_line_string.append(str2wcstring(tparm(enter_bold_mode)));
+                    abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 0)));
+                }
             }
             abandon_line_string.push_back(omitted_newline_char);
-            abandon_line_string.append(L"\x1b[0m");  // normal text ANSI escape sequence
+
+            if (exit_attribute_mode) {
+                abandon_line_string.append(
+                    str2wcstring(tparm(exit_attribute_mode)));  // normal text ANSI escape sequence
+            }
             abandon_line_string.append(screen_width - non_space_width, L' ');
         }
         abandon_line_string.push_back(L'\r');
@@ -1210,6 +1225,7 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // spaces from the new line
         abandon_line_string.append(non_space_width, L' ');
         abandon_line_string.push_back(L'\r');
+        // clear entire line - el2
         abandon_line_string.append(L"\x1b[2K");
 
         const std::string narrow_abandon_line_string = wcs2string(abandon_line_string);

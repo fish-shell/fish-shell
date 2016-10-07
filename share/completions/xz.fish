@@ -1,5 +1,5 @@
 complete -c xz -s z -l compress --description 'Compress'
-complete -c xz -s d -l decompress -l uncompress --description 'Decompress' -a "
+complete -c xz -s d -l decompress -l uncompress --description 'Decompress' -x -a "
 (
     __fish_complete_suffix .xz
     __fish_complete_suffix .txz

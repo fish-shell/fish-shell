@@ -64,9 +64,11 @@ fish requires a number of utilities to operate, which should be present on any U
 
 Translation support requires the gettext program.
 
+Usage output for builtin functions is generated on-demand from the installed manpages using `nroff` and `ul`.
+
 Some optional features of fish, such as the manual page completion parser and the web configuration tool, require Python.
 
-In order to generate completions from man pages compressed with either lzma or xz, you may need to install an extra Python package. Python versions prior to 2.6 are not supported.  For Python versions 2.6 to 3.2 you need to install the module `backports.lzma`.  How to install it depends on your system and how you installed Python.  Most Linux distributions should include it as a package named `backports-lzma` (or similar).  From version 3.3 onwards, Python already includes the required module.
+In order to generate completions from man pages compressed with either lzma or xz, you may need to install an extra Python package. Python versions prior to 2.6 are not supported.  To process lzma-compresed manpages, backports.lzma is needed for Python 3.2 or older. From version 3.3 onwards, Python already includes the required module.
 
 ## Packages for Linux
 

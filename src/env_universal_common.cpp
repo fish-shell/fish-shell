@@ -621,9 +621,10 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
                 continue;
             }
 #ifdef O_EXLOCK
-            else if (err == EOPNOTSUPP) {
+            else if (err == ENOTSUP || err == EOPNOTSUPP) {
                 // Filesystem probably does not support locking. Clear the flag and try again. Note
-                // that we try taking the lock via flock anyways.
+                // that we try taking the lock via flock anyways. Note that on Linux the two errno
+                // symbols have the same value but on BSD they're different.
                 flags &= ~O_EXLOCK;
                 needs_lock = true;
                 continue;
@@ -931,7 +932,7 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
 
     if (getifaddrs(&ifap) == 0) {
         for (const ifaddrs *p = ifap; p; p = p->ifa_next) {
-            if (p->ifa_addr->sa_family == AF_LINK) {
+            if (p->ifa_addr && p->ifa_addr->sa_family == AF_LINK) {
                 if (p->ifa_name && p->ifa_name[0] &&
                     !strcmp((const char *)p->ifa_name, interface)) {
                     const sockaddr_dl &sdl = *reinterpret_cast<sockaddr_dl *>(p->ifa_addr);
@@ -1043,7 +1044,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         // Memory map the region.
         if (!errored) {
             void *addr = mmap(NULL, sizeof(universal_notifier_shmem_t), PROT_READ | PROT_WRITE,
-                              MAP_FILE | MAP_SHARED, fd, 0);
+                              MAP_SHARED, fd, 0);
             if (addr == MAP_FAILED) {
                 int err = errno;
                 report_error(err, L"Unable to memory map shared memory object with path '%s'",

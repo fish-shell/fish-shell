@@ -1,15 +1,56 @@
+function __fish_brew_get_cmd
+  for c in (commandline -opc)
+    if not string match -q -- '-*' $c
+      echo $c
+    end
+  end
+end
+
+function __fish_brew_is_subcommand_services
+  if __fish_brew_using_command services
+    for action in $argv
+      if __fish_brew_using_command $action 3
+        return 0
+      end
+    end
+  end
+
+  return 1
+end
+
 function __fish_brew_needs_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 ]
+  set cmd (__fish_brew_get_cmd)
+  if not set -q cmd[2]
     return 0
   end
   return 1
 end
 
+function __fish_brew_needs_services_action
+  if __fish_brew_using_command services
+    set cmd (__fish_brew_get_cmd)
+    if not set -q cmd[3]
+      return 0
+    end
+  end
+  return 1
+end
+
+function __fish_brew_services
+  brew services list | awk '{if (NR>1) print $1}'
+end
+
 function __fish_brew_using_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
+  set index 2
+
+  if set -q argv[2]
+    set index $argv[2]
+  end
+
+  set cmd (__fish_brew_get_cmd)
+
+  if set -q cmd[$index]
+    if [ $argv[1] = $cmd[$index] ]
       return 0
     end
   end
@@ -17,9 +58,16 @@ function __fish_brew_using_command
 end
 
 function __fish_brew_formulae
-    set -l formuladir (brew --repository)/Library/Formula/
-    # __fish_complete_suffix .rb
-    ls $formuladir/*.rb | sed 's/.rb$//' | sed "s|^$formuladir||"
+    # list all local formula, do not use `brew search some_text` against searching online
+    # TODO fix the problem with `tap-pin`, tap-pin will modify the priority
+    # If you pin your custom tap for VIM, you should
+    # `brew install homebrew/core/vim` to install VIM from `core` repo
+    # `brew install vim` to install VIM from more prior repo
+    # but `brew search` won't change display for custom VIM and core VIM
+    # 'vim' for core VIM
+    # 'custUser/custRepo/vim' for more prior VIM
+    # more info: https://github.com/Homebrew/brew/blob/master/share/doc/homebrew/brew-tap.md#formula-duplicate-names
+    brew search
 end
 
 function __fish_brew_installed_formulas
@@ -200,6 +248,16 @@ complete -f -c brew -n '__fish_brew_using_command search' -l fink -d 'Search on 
 complete -f -c brew -n '__fish_brew_using_command -S' -l macports -d 'Search on MacPorts'
 complete -f -c brew -n '__fish_brew_using_command -S' -l fink -d 'Search on Fink'
 
+# services
+complete -f -c brew -n '__fish_brew_needs_command' -a services -d 'Manage Homebrew services'
+complete -f -c brew -n '__fish_brew_needs_services_action' -a cleanup -d 'Get rid of stale services and unused plist'
+complete -f -c brew -n '__fish_brew_needs_services_action' -a list -d 'List all services managed by Homebrew'
+complete -f -c brew -n '__fish_brew_needs_services_action' -a restart -d 'Gracefully restart a service'
+complete -f -c brew -n '__fish_brew_needs_services_action' -a start -d 'Start a service'
+complete -f -c brew -n '__fish_brew_needs_services_action' -a stop -d 'Stop a service'
+complete -f -c brew -n '__fish_brew_is_subcommand_services restart start stop' -a '(__fish_brew_services)' -d 'formula'
+complete -f -c brew -n '__fish_brew_is_subcommand_services restart start stop' -l all -d 'All Services'
+
 # sh
 complete -f -c brew -n '__fish_brew_needs_command' -a sh -d 'Instantiate a Homebrew build enviornment'
 complete -f -c brew -n '__fish_brew_using_command sh' -l env=std -d 'Use stdenv instead of superenv'
@@ -275,4 +333,3 @@ complete -f -c brew -n '__fish_brew_needs_command' -n '__fish_brew_using_command
 # --cellar
 complete -f -c brew -n '__fish_brew_needs_command' -l cellar -d 'Display Homebrew\'s Cellar path'
 complete -f -c brew -n '__fish_brew_using_command --cellar' -a '(__fish_brew_formulae)' -d 'Display formula\'s install path in Cellar'
-

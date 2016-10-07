@@ -144,7 +144,6 @@ function_info_t::function_info_t(const function_data_t &data, const wchar_t *fil
       named_arguments(data.named_arguments),
       inherit_vars(snapshot_vars(data.inherit_vars)),
       is_autoload(autoload),
-      shadow_builtin(data.shadow_builtin),
       shadow_scope(data.shadow_scope) {}
 
 function_info_t::function_info_t(const function_info_t &data, const wchar_t *filename,
@@ -156,7 +155,6 @@ function_info_t::function_info_t(const function_info_t &data, const wchar_t *fil
       named_arguments(data.named_arguments),
       inherit_vars(data.inherit_vars),
       is_autoload(autoload),
-      shadow_builtin(data.shadow_builtin),
       shadow_scope(data.shadow_scope) {}
 
 void function_add(const function_data_t &data, const parser_t &parser, int definition_line_offset) {
@@ -258,12 +256,6 @@ std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name) {
     scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->inherit_vars : std::map<wcstring, env_var_t>();
-}
-
-int function_get_shadow_builtin(const wcstring &name) {
-    scoped_lock locker(functions_lock);
-    const function_info_t *func = function_get(name);
-    return func ? func->shadow_builtin : false;
 }
 
 int function_get_shadow_scope(const wcstring &name) {

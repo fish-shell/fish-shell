@@ -85,8 +85,7 @@ fi
 # Set up various programs needed for install
 # Note AC_PROG_CXX sets CXXFLAGS if not set, which we want
 # So ensure this happens before we modify CXXFLAGS below
-# Do CC also, because PCRE2 will use it. Prefer clang++,
-# targets like FreeBSD ship an ancient one.
+# Do CC also, because PCRE2 will use it.
 AC_PROG_CC
 AC_PROG_CC_STDC # c99
 AC_PROG_CXX

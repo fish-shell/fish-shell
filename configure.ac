@@ -87,9 +87,9 @@ fi
 # So ensure this happens before we modify CXXFLAGS below
 # Do CC also, because PCRE2 will use it. Prefer clang++,
 # targets like FreeBSD ship an ancient one.
-AC_PROG_CC([clang llvm-gcc gcc cc])
+AC_PROG_CC
 AC_PROG_CC_STDC # c99
-AC_PROG_CXX([clang++ llvm-g++ g++ c++])
+AC_PROG_CXX
 AC_LANG(C++)
 AC_PROG_INSTALL
 AC_PROG_LN_S

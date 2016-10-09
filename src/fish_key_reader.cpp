@@ -54,7 +54,7 @@ static bool should_exit(wchar_t wc) {
 }
 
 /// Return the name if the recent sequence of characters matches a known terminfo sequence.
-static char *const sequence_name(wchar_t wc) {
+static char *sequence_name(wchar_t wc) {
     unsigned char c = wc < 0x80 ? wc : 0;
     static char recent_chars[8] = {0};
 
@@ -157,7 +157,7 @@ static void add_char_to_bind_command(wchar_t wc, std::vector<wchar_t> &bind_char
 static void output_bind_command(std::vector<wchar_t> &bind_chars) {
     if (bind_chars.size()) {
         fputs("bind ", stdout);
-        for (int i = 0; i < bind_chars.size(); i++) {
+        for (size_t i = 0; i < bind_chars.size(); i++) {
             fputs(char_to_symbol(bind_chars[i], true), stdout);
         }
         fputs(" 'do something'\n", stdout);

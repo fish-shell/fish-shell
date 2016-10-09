@@ -192,7 +192,7 @@ void reader_set_exit_on_interrupt(bool flag);
 bool shell_is_exiting();
 
 /// The readers interrupt signal handler. Cancels all currently running blocks.
-void reader_handle_int(int signal);
+void reader_handle_sigint();
 
 /// This function returns true if fish is exiting by force, i.e. because stdin died.
 int reader_exit_forced();

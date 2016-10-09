@@ -267,7 +267,7 @@ static void react_to_variable_change(const wcstring &key) {
 
 /// Universal variable callback function. This function makes sure the proper events are triggered
 /// when an event occurs.
-static void universal_callback(fish_message_type_t type, const wchar_t *name, const wchar_t *val) {
+static void universal_callback(fish_message_type_t type, const wchar_t *name) {
     const wchar_t *str = NULL;
 
     switch (type) {
@@ -1102,7 +1102,7 @@ void env_universal_barrier() {
         // Post callbacks.
         for (size_t i = 0; i < changes.size(); i++) {
             const callback_data_t &data = changes.at(i);
-            universal_callback(data.type, data.key.c_str(), data.val.c_str());
+            universal_callback(data.type, data.key.c_str());
         }
     }
 }

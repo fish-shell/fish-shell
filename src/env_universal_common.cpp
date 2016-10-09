@@ -1299,6 +1299,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         // select() on our fd for a while, and sync periodically until the fd is no longer readable.
         // However, if we are the one who posted the notification, we don't sync (until we clean
         // up!)
+        UNUSED(fd);
         bool should_sync = false;
         if (readback_time_usec == 0) {
             polling_due_to_readable_fd = true;
@@ -1494,4 +1495,7 @@ bool universal_notifier_t::poll() { return false; }
 
 unsigned long universal_notifier_t::usec_delay_between_polls() const { return 0; }
 
-bool universal_notifier_t::notification_fd_became_readable(int fd) { return false; }
+bool universal_notifier_t::notification_fd_became_readable(int fd) {
+    UNUSED(fd);
+    return false;
+}

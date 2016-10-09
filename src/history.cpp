@@ -1662,7 +1662,8 @@ static int threaded_perform_file_detection(file_detection_context_t *ctx) {
 }
 
 static void perform_file_detection_done(file_detection_context_t *ctx,
-                                        int success) {  //!OCLINT(success is ignored)
+                                        int success) {
+    UNUSED(success);
     ASSERT_IS_MAIN_THREAD();
 
     // Now that file detection is done, update the history item with the valid file paths.

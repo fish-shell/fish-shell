@@ -39,6 +39,7 @@
 #include <signal.h>  // IWYU pragma: keep
 #include <wchar.h>   // IWYU pragma: keep
 
+#include "common.h"    // IWYU pragma: keep
 #include "fallback.h"  // IWYU pragma: keep
 #include "util.h"      // IWYU pragma: keep
 
@@ -244,8 +245,15 @@ char *fish_bindtextdomain(const char *domainname, const char *dirname) {
 char *fish_textdomain(const char *domainname) { return textdomain(domainname); }
 #else
 char *fish_gettext(const char *msgid) { return (char *)msgid; }
-char *fish_bindtextdomain(const char *domainname, const char *dirname) { return NULL; }
-char *fish_textdomain(const char *domainname) { return NULL; }
+char *fish_bindtextdomain(const char *domainname, const char *dirname) {
+    UNUSED(domainname);
+    UNUSED(dirname);
+    return NULL;
+}
+char *fish_textdomain(const char *domainname) {
+    UNUSED(domainname);
+    return NULL;
+}
 #endif
 
 #ifndef HAVE_KILLPG

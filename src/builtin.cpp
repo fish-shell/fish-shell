@@ -123,6 +123,7 @@ static int count_char(const wchar_t *str, wchar_t c) {
 ///    A wcstring with a formatted manpage.
 ///
 wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t *name) {
+    UNUSED(parser);
     // This won't ever work if no_exec is set.
     if (no_exec) return wcstring();
 
@@ -1294,6 +1295,7 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
 /// Bash only respects -n if it's the first argument. We'll do the same. We also support a new
 /// option -s to mean "no spaces"
 static int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    UNUSED(parser);
     // Skip first arg
     if (!*argv++) return STATUS_BUILTIN_ERROR;
 
@@ -1446,6 +1448,12 @@ static int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 /// The pwd builtin. We don't respect -P to resolve symbolic links because we
 /// try to always resolve them.
 static int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    UNUSED(parser);
+    if (argv[1] != NULL) {
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv));
+        return STATUS_BUILTIN_ERROR;
+    }
+
     wcstring res = wgetcwd();
     if (res.empty()) {
         return STATUS_BUILTIN_ERROR;
@@ -2402,6 +2410,7 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.
 static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    UNUSED(parser);
     int argc;
     argc = builtin_count_args(argv);
     streams.out.append_format(L"%d\n", argc - 1);
@@ -2726,6 +2735,11 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
 
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
 static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    if (argv[1] != NULL) {
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv));
+        return STATUS_BUILTIN_ERROR;
+    }
+
     parser.push_block(new breakpoint_block_t());
 
     reader_read(STDIN_FILENO, streams.io_chain ? *streams.io_chain : io_chain_t());
@@ -2846,7 +2860,7 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
         break;                                                                                  \
     }                                                                                           \
     if (args.size() != 0) {                                                                     \
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT, cmd,                                   \
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd,                                   \
                                   hist_cmd_to_string(hist_cmd).c_str(), 0, args.size());        \
         status = STATUS_BUILTIN_ERROR;                                                          \
         break;                                                                                  \
@@ -3094,10 +3108,22 @@ int builtin_parse(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 #endif
 
 int builtin_true(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    UNUSED(parser);
+    UNUSED(streams);
+    if (argv[1] != NULL) {
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv));
+        return STATUS_BUILTIN_ERROR;
+    }
     return STATUS_BUILTIN_OK;
 }
 
 int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    UNUSED(parser);
+    UNUSED(streams);
+    if (argv[1] != NULL) {
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv));
+        return STATUS_BUILTIN_ERROR;
+    }
     return STATUS_BUILTIN_ERROR;
 }
 

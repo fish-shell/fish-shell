@@ -1340,6 +1340,7 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
 
 void common_handle_winch(int signal) {
     // Don't run ioctl() here, it's not safe to use in signals.
+    UNUSED(signal);
     termsize_valid = false;
 }
 

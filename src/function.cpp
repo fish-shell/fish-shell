@@ -158,6 +158,7 @@ function_info_t::function_info_t(const function_info_t &data, const wchar_t *fil
       shadow_scope(data.shadow_scope) {}
 
 void function_add(const function_data_t &data, const parser_t &parser, int definition_line_offset) {
+    UNUSED(parser);
     ASSERT_IS_MAIN_THREAD();
 
     CHECK(!data.name.empty(), );

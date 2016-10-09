@@ -528,6 +528,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
 
 /// Set the pen color for the terminal.
 static void s_set_color(screen_t *s, data_buffer_t *b, highlight_spec_t c) {
+    UNUSED(s);
     scoped_buffer_t scoped_buffer(b);
 
     unsigned int uc = (unsigned int)c;
@@ -893,6 +894,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
                                       const wcstring &left_prompt_str,
                                       const wcstring &right_prompt_str, const wcstring &commandline,
                                       const wcstring &autosuggestion_str, const int *indent) {
+    UNUSED(s);
     screen_layout_t result = {};
 
     // Start by ensuring that the prompts themselves can fit.

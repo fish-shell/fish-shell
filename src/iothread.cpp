@@ -116,6 +116,7 @@ static void *this_thread() { return (void *)(intptr_t)pthread_self(); }
 
 /// The function that does thread work.
 static void *iothread_worker(void *unused) {
+    UNUSED(unused);
     scoped_lock locker(s_spawn_queue_lock);
     struct SpawnRequest_t *req;
     while ((req = dequeue_spawn_request()) != NULL) {

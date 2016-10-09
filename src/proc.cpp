@@ -254,12 +254,12 @@ int job_signal(job_t *j, int signal) {
     int res = 0;
 
     if (j->pgid != my_pid) {
-        res = killpg(j->pgid, SIGHUP);
+        res = killpg(j->pgid, signal);
     } else {
         for (process_t *p = j->first_process; p; p = p->next) {
             if (!p->completed) {
                 if (p->pid) {
-                    if (kill(p->pid, SIGHUP)) {
+                    if (kill(p->pid, signal)) {
                         res = -1;
                         break;
                     }
@@ -272,7 +272,7 @@ int job_signal(job_t *j, int signal) {
 }
 
 /// Store the status of the process pid that was returned by waitpid.
-static void mark_process_status(const job_t *j, process_t *p, int status) {
+static void mark_process_status(process_t *p, int status) {
     // debug( 0, L"Process %ls %ls", p->argv[0], WIFSTOPPED (status)?L"stopped":(WIFEXITED( status
     // )?L"exited":(WIFSIGNALED( status )?L"signaled to exit":L"BLARGH")) );
     p->status = status;
@@ -291,6 +291,7 @@ static void mark_process_status(const job_t *j, process_t *p, int status) {
 void job_mark_process_as_failed(const job_t *job, process_t *p) {
     // The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a
     // valid pid. Mark it as dead.
+    UNUSED(job);
     for (process_t *cursor = p; cursor != NULL; cursor = cursor->next) {
         cursor->completed = 1;
     }
@@ -310,7 +311,7 @@ static void handle_child_status(pid_t pid, int status) {
         process_t *prev = 0;
         for (p = j->first_process; p; p = p->next) {
             if (pid == p->pid) {
-                mark_process_status(j, p, status);
+                mark_process_status(p, status);
                 if (p->completed && prev != 0) {
                     if (!prev->completed && prev->pid) {
                         kill(prev->pid, SIGPIPE);
@@ -455,7 +456,10 @@ static int process_mark_finished_children(bool wants_await) {
 }
 
 /// This is called from a signal handler. The signal is always SIGCHLD.
-void job_handle_signal(int signal, siginfo_t *info, void *con) {
+void job_handle_signal(int signal, siginfo_t *info, void *context) {
+    UNUSED(signal);
+    UNUSED(info);
+    UNUSED(context);
     // This is the only place that this generation count is modified. It's OK if it overflows.
     s_sigchld_generation_count += 1;
 }

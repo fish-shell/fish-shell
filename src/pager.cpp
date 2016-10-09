@@ -86,6 +86,9 @@ static int print_max(const wcstring &str, highlight_spec_t color, int max, bool 
 line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, size_t row,
                                       size_t column, size_t width, bool secondary, bool selected,
                                       page_rendering_t *rendering) const {
+    UNUSED(column);
+    UNUSED(row);
+    UNUSED(rendering);
     size_t comp_width = 0, desc_width = 0;
     size_t written = 0;
     line_t line_data;
@@ -254,8 +257,7 @@ static void join_completions(comp_info_list_t *comps) {
 }
 
 /// Generate a list of comp_t structures from a list of completions.
-static comp_info_list_t process_completions_into_infos(const completion_list_t &lst,
-                                                       const wcstring &prefix) {
+static comp_info_list_t process_completions_into_infos(const completion_list_t &lst) {
     const size_t lst_size = lst.size();
 
     // Make the list of the correct size up-front.
@@ -340,7 +342,7 @@ void pager_t::refilter_completions() {
 
 void pager_t::set_completions(const completion_list_t &raw_completions) {
     // Get completion infos out of it.
-    unfiltered_completion_infos = process_completions_into_infos(raw_completions, prefix);
+    unfiltered_completion_infos = process_completions_into_infos(raw_completions);
 
     // Maybe join them.
     if (prefix == L"-") join_completions(&unfiltered_completion_infos);

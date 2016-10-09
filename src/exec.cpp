@@ -159,6 +159,7 @@ char *get_interpreter(const char *command, char *interpreter, size_t buff_size) 
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.
 static void safe_launch_process(process_t *p, const char *actual_cmd, const char *const *cargv,
                                 const char *const *cenvv) {
+    UNUSED(p);
     int err;
     //  debug( 1, L"exec '%ls'", p->argv[0] );
 

@@ -766,4 +766,10 @@ __attribute__((noinline)) void debug_thread_error(void);
 /// specified base, return -1.
 long convert_digit(wchar_t d, int base);
 
+/// This is a macro that can be used to silence "unused parameter" warnings from the compiler for
+/// functions which need to accept parameters they do not use because they need to be compatible
+/// with an interface. It's similar to the Python idiom of doing `_ = expr` at the top of a
+/// function in the same situation.
+#define UNUSED(expr) do { (void)(expr); } while (0)
+
 #endif

@@ -1186,6 +1186,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
 
 void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
                      wcstring_list_t *error, const env_vars_snapshot_t &vars) {
+    UNUSED(error);
     // Do something sucky and get the current working directory on this background thread. This
     // should really be passed in.
     const wcstring working_directory = env_get_pwd_slash();
@@ -1197,6 +1198,7 @@ void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color,
 
 void highlight_shell_no_io(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
                            wcstring_list_t *error, const env_vars_snapshot_t &vars) {
+    UNUSED(error);
     // Do something sucky and get the current working directory on this background thread. This
     // should really be passed in.
     const wcstring working_directory = env_get_pwd_slash();
@@ -1291,6 +1293,8 @@ static void highlight_universal_internal(const wcstring &buffstr,
 
 void highlight_universal(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
                          wcstring_list_t *error, const env_vars_snapshot_t &vars) {
+    UNUSED(error);
+    UNUSED(vars);
     assert(buff.size() == color.size());
     std::fill(color.begin(), color.end(), 0);
     highlight_universal_internal(buff, color, pos);

@@ -80,6 +80,7 @@ RESOLVE(job_list) {
 RESOLVE_ONLY(job) = {symbol_statement, symbol_job_continuation, symbol_optional_background};
 
 RESOLVE(job_continuation) {
+    UNUSED(out_tag);
     P empty = {};
     P piped = {parse_token_type_pipe, symbol_statement, symbol_job_continuation};
     switch (token1.type) {
@@ -94,6 +95,7 @@ RESOLVE(job_continuation) {
 
 // A statement is a normal command, or an if / while / and etc.
 RESOLVE(statement) {
+    UNUSED(out_tag);
     P boolean = {symbol_boolean_statement};
     P block = {symbol_block_statement};
     P ifs = {symbol_if_statement};

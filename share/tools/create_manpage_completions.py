@@ -18,6 +18,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 """
 
 import string, sys, re, os.path, bz2, gzip, traceback, getopt, errno, codecs
+sys.dont_write_bytecode = True
 from deroff import Deroffer
 
 lzma_available = True

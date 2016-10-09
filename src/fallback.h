@@ -125,8 +125,4 @@ char *fish_textdomain(const char *domainname);
 int killpg(int pgr, int sig);
 #endif
 
-#ifndef HAVE_NAN
-double nan(char *tagp);
-#endif
-
 #endif

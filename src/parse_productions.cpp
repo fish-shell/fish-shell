@@ -30,6 +30,9 @@ using namespace parse_productions;
     extern const production_t sym##_only;                                                      \
     static const production_t *resolve_##sym(                                                  \
         const parse_token_t &token1, const parse_token_t &token2, parse_node_tag_t *out_tag) { \
+        UNUSED(token1);                                                                        \
+        UNUSED(token2);                                                                        \
+        UNUSED(out_tag);                                                                       \
         return &sym##_only;                                                                    \
     }                                                                                          \
     const production_t sym##_only
@@ -41,6 +44,8 @@ using namespace parse_productions;
 
 /// A job_list is a list of jobs, separated by semicolons or newlines.
 RESOLVE(job_list) {
+    UNUSED(token2);
+    UNUSED(out_tag);
     P list_end = {};
     P normal = {symbol_job, symbol_job_list};
     P empty_line = {parse_token_type_end, symbol_job_list};
@@ -80,6 +85,7 @@ RESOLVE(job_list) {
 RESOLVE_ONLY(job) = {symbol_statement, symbol_job_continuation, symbol_optional_background};
 
 RESOLVE(job_continuation) {
+    UNUSED(token2);
     UNUSED(out_tag);
     P empty = {};
     P piped = {parse_token_type_pipe, symbol_statement, symbol_job_continuation};
@@ -175,6 +181,8 @@ RESOLVE_ONLY(if_clause) = {KEYWORD(parse_keyword_if), symbol_job, parse_token_ty
                            symbol_andor_job_list, symbol_job_list};
 
 RESOLVE(else_clause) {
+    UNUSED(token2);
+    UNUSED(out_tag);
     P empty = {};
     P else_cont = {KEYWORD(parse_keyword_else), symbol_else_continuation};
     switch (token1.keyword) {
@@ -186,6 +194,8 @@ RESOLVE(else_clause) {
 }
 
 RESOLVE(else_continuation) {
+    UNUSED(token2);
+    UNUSED(out_tag);
     P elseif = {symbol_if_clause, symbol_else_clause};
     P elseonly = {parse_token_type_end, symbol_job_list};
 
@@ -202,6 +212,8 @@ RESOLVE_ONLY(switch_statement) = {
     symbol_case_item_list,         symbol_end_command, symbol_arguments_or_redirections_list};
 
 RESOLVE(case_item_list) {
+    UNUSED(token2);
+    UNUSED(out_tag);
     P empty = {};
     P case_item = {symbol_case_item, symbol_case_item_list};
     P blank_line = {parse_token_type_end, symbol_case_item_list};
@@ -217,6 +229,7 @@ RESOLVE_ONLY(case_item) = {KEYWORD(parse_keyword_case), symbol_argument_list, pa
                            symbol_job_list};
 
 RESOLVE(andor_job_list) {
+    UNUSED(out_tag);
     P list_end = {};
     P andor_job = {symbol_job, symbol_andor_job_list};
     P empty_line = {parse_token_type_end, symbol_andor_job_list};
@@ -235,6 +248,8 @@ RESOLVE(andor_job_list) {
 }
 
 RESOLVE(argument_list) {
+    UNUSED(token2);
+    UNUSED(out_tag);
     P empty = {};
     P arg = {symbol_argument, symbol_argument_list};
     switch (token1.type) {
@@ -246,6 +261,8 @@ RESOLVE(argument_list) {
 }
 
 RESOLVE(freestanding_argument_list) {
+    UNUSED(token2);
+    UNUSED(out_tag);
     P empty = {};
     P arg = {symbol_argument, symbol_freestanding_argument_list};
     P semicolon = {parse_token_type_end, symbol_freestanding_argument_list};
@@ -265,6 +282,8 @@ RESOLVE_ONLY(block_statement) = {symbol_block_header, symbol_job_list, symbol_en
                                  symbol_arguments_or_redirections_list};
 
 RESOLVE(block_header) {
+    UNUSED(token2);
+    UNUSED(out_tag);
     P forh = {symbol_for_header};
     P whileh = {symbol_while_header};
     P funch = {symbol_function_header};
@@ -297,6 +316,7 @@ RESOLVE_ONLY(function_header) = {KEYWORD(parse_keyword_function), symbol_argumen
 
 // A boolean statement is AND or OR or NOT.
 RESOLVE(boolean_statement) {
+    UNUSED(token2);
     P ands = {KEYWORD(parse_keyword_and), symbol_statement};
     P ors = {KEYWORD(parse_keyword_or), symbol_statement};
     P nots = {KEYWORD(parse_keyword_not), symbol_statement};
@@ -354,6 +374,8 @@ RESOLVE(decorated_statement) {
 RESOLVE_ONLY(plain_statement) = {parse_token_type_string, symbol_arguments_or_redirections_list};
 
 RESOLVE(arguments_or_redirections_list) {
+    UNUSED(token2);
+    UNUSED(out_tag);
     P empty = {};
     P value = {symbol_argument_or_redirection, symbol_arguments_or_redirections_list};
     switch (token1.type) {
@@ -366,6 +388,8 @@ RESOLVE(arguments_or_redirections_list) {
 }
 
 RESOLVE(argument_or_redirection) {
+    UNUSED(token2);
+    UNUSED(out_tag);
     P arg = {symbol_argument};
     P redir = {symbol_redirection};
     switch (token1.type) {
@@ -383,6 +407,7 @@ RESOLVE_ONLY(argument) = {parse_token_type_string};
 RESOLVE_ONLY(redirection) = {parse_token_type_redirection, parse_token_type_string};
 
 RESOLVE(optional_background) {
+    UNUSED(token2);
     P empty = {};
     P background = {parse_token_type_background};
     switch (token1.type) {

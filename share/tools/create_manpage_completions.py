@@ -1,4 +1,4 @@
-#!/usr/bin/env python -B
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Run me like this: ./create_manpage_completions.py /usr/share/man/man{1,8}/* > man_completions.fish
@@ -20,6 +20,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 import string, sys, re, os.path, bz2, gzip, traceback, getopt, errno, codecs
 from deroff import Deroffer
 
+sys.dont_write_bytecode = True
 lzma_available = True
 try:
     try:

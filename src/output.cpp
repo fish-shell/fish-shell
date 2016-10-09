@@ -49,7 +49,7 @@ void output_set_writer(int (*writer)(char)) {
 int (*output_get_writer())(char) { return out; }
 
 /// Returns true if we think tparm can handle outputting a color index
-static bool term_supports_color_natively(unsigned int c) { return max_colors >= (c + 1); }
+static bool term_supports_color_natively(unsigned int c) { return (unsigned)max_colors >= c + 1; }
 
 color_support_t output_get_color_support(void) { return color_support; }
 

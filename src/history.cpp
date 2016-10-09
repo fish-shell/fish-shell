@@ -562,7 +562,7 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         // leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:".
         const char *double_cmd = "- cmd: - cmd: ";
         const size_t double_cmd_len = strlen(double_cmd);
-        while (a_newline - line_start > double_cmd_len &&
+        while ((size_t)(a_newline - line_start) > double_cmd_len &&
                !memcmp(line_start, double_cmd, double_cmd_len)) {
             // Skip over just one of the - cmd. In the end there will be just one left.
             line_start += strlen("- cmd: ");
@@ -572,8 +572,10 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         // 123456". Ignore those.
         const char *cmd_when = "- cmd:    when:";
         const size_t cmd_when_len = strlen(cmd_when);
-        if (a_newline - line_start >= cmd_when_len && !memcmp(line_start, cmd_when, cmd_when_len))
+        if ((size_t)(a_newline - line_start) >= cmd_when_len &&
+                !memcmp(line_start, cmd_when, cmd_when_len)) {
             continue;
+        }
 
         // At this point, we know line_start is at the beginning of an item. But maybe we want to
         // skip this item because of timestamps. A 0 cutoff means we don't care; if we do care, then

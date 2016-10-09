@@ -52,8 +52,8 @@ typedef std::vector<wcstring> wcstring_list_t;
 // Use Unicode "noncharacters" for internal characters as much as we can. This
 // gives us 32 "characters" for internal use that we can guarantee should not
 // appear in our input stream. See http://www.unicode.org/faq/private_use.html.
-#define RESERVED_CHAR_BASE 0xFDD0u
-#define RESERVED_CHAR_END 0xFDF0u
+#define RESERVED_CHAR_BASE (wchar_t)0xFDD0
+#define RESERVED_CHAR_END (wchar_t)0xFDF0
 // Split the available noncharacter values into two ranges to ensure there are
 // no conflicts among the places we use these special characters.
 #define EXPAND_RESERVED_BASE RESERVED_CHAR_BASE
@@ -63,9 +63,9 @@ typedef std::vector<wcstring> wcstring_list_t;
 // Make sure the ranges defined above don't exceed the range for noncharacters.
 // This is to make sure we didn't do something stupid in subdividing the
 // Unicode range for our needs.
-#if WILDCARD_RESERVED_END > RESERVED_CHAR_END
-#error
-#endif
+//#if WILDCARD_RESERVED_END > RESERVED_CHAR_END
+//#error
+//#endif
 
 // These are in the Unicode private-use range. We really shouldn't use this
 // range but have little choice in the matter given how our lexer/parser works.
@@ -79,9 +79,9 @@ typedef std::vector<wcstring> wcstring_list_t;
 // Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
 // of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
 // on Mac OS X. See http://www.unicode.org/faq/private_use.html.
-#define ENCODE_DIRECT_BASE 0xF600u
+#define ENCODE_DIRECT_BASE (wchar_t)0xF600
 #define ENCODE_DIRECT_END (ENCODE_DIRECT_BASE + 256)
-#define INPUT_COMMON_BASE 0xF700u
+#define INPUT_COMMON_BASE (wchar_t)0xF700
 #define INPUT_COMMON_END (INPUT_COMMON_BASE + 64)
 
 // Flags for unescape_string functions.

@@ -2001,7 +2001,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         line = reader_readline(nchars);
         proc_pop_interactive();
         if (line) {
-            if (0 < nchars && nchars < wcslen(line)) {
+            if (0 < nchars && (size_t)nchars < wcslen(line)) {
                 // Line may be longer than nchars if a keybinding used `commandline -i`
                 // note: we're deliberately throwing away the tail of the commandline.
                 // It shouldn't be unread because it was produced with `commandline -i`,

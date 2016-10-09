@@ -388,13 +388,12 @@ static void s_desired_append_char(screen_t *s, wchar_t b, int c, int indent, siz
     int line_no = s->desired.cursor.y;
 
     if (b == L'\n') {
-        int i;
         // Current line is definitely hard wrapped.
         s->desired.create_line(s->desired.line_count());
         s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
         s->desired.cursor.y++;
         s->desired.cursor.x = 0;
-        for (i = 0; i < prompt_width + indent * INDENT_STEP; i++) {
+        for (size_t i = 0; i < prompt_width + indent * INDENT_STEP; i++) {
             s_desired_append_char(s, L' ', 0, indent, prompt_width);
         }
     } else if (b == L'\r') {
@@ -732,7 +731,7 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
             // avoid repeatedly outputting it.
             const size_t shared_prefix = line_shared_prefix(o_line, s_line);
             if (shared_prefix > 0) {
-                int prefix_width = fish_wcswidth(&o_line.text.at(0), shared_prefix);
+                size_t prefix_width = fish_wcswidth(&o_line.text.at(0), shared_prefix);
                 if (prefix_width > skip_remaining) skip_remaining = prefix_width;
             }
 
@@ -754,7 +753,7 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
         // Skip over skip_remaining width worth of characters.
         size_t j = 0;
         for (; j < o_line.size(); j++) {
-            int width = fish_wcwidth_min_0(o_line.char_at(j));
+            size_t width = fish_wcwidth_min_0(o_line.char_at(j));
             if (skip_remaining < width) break;
             skip_remaining -= width;
             current_width += width;
@@ -772,7 +771,8 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
             // the screen after we output into the last column, it can erase the last character due
             // to the sticky right cursor. If we clear the screen too early, we can defeat soft
             // wrapping.
-            if (j + 1 == screen_width && should_clear_screen_this_line && !has_cleared_screen) {
+            if (j + 1 == (size_t)screen_width && should_clear_screen_this_line &&
+                    !has_cleared_screen) {
                 s_move(scr, &output, current_width, (int)i);
                 s_write_mbs(&output, clr_eos);
                 has_cleared_screen = true;

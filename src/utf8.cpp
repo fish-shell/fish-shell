@@ -31,7 +31,7 @@
 
 // We can tweak the following typedef to allow us to simulate Windows-style 16 bit wchar's on Unix.
 typedef wchar_t utf8_wchar_t;
-#define UTF8_WCHAR_MAX ((size_t)std::numeric_limits<utf8_wchar_t>::max())
+#define UTF8_WCHAR_MAX (wchar_t)std::numeric_limits<utf8_wchar_t>::max()
 
 typedef std::basic_string<utf8_wchar_t> utf8_wstring_t;
 
@@ -197,7 +197,7 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
         }
 
         // Does the sequence header tell us truth about length?
-        if (lim - p <= n - 1) {
+        if ((size_t)(lim - p) <= n - 1) {
             if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             n = 1;
             continue;  // skip
@@ -238,7 +238,7 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
 
         if (skip) {
             total--;
-        } else if (out_val > UTF8_WCHAR_MAX) {
+        } else if (out_val > (uint32_t)UTF8_WCHAR_MAX) {
             // wchar_t is UCS-2, but the UTF-8 specified an astral character.
             return 0;
         } else {
@@ -304,8 +304,7 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
         total += n;
 
         if (out == NULL) continue;
-
-        if (lim - p <= n - 1) return 0;  // no space left
+        if (size_t(lim - p) <= n - 1) return 0;  // no space left
 
         // Extract the wchar_t as big-endian. If wchar_t is UCS-16, the first two bytes will be 0.
         unsigned char oc[4];

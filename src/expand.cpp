@@ -756,13 +756,12 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
     for (long i = last_idx - 1; (i >= 0) && is_ok && !empty; i--) {
         const wchar_t c = instr.at(i);
         if ((c == VARIABLE_EXPAND) || (c == VARIABLE_EXPAND_SINGLE)) {
-            long start_pos = i + 1;
-            long stop_pos;
+            size_t start_pos = i + 1;
+            size_t stop_pos;
             long var_len;
             int is_single = (c == VARIABLE_EXPAND_SINGLE);
 
             stop_pos = start_pos;
-
             while (stop_pos < insize) {
                 const wchar_t nc = instr.at(stop_pos);
                 if (nc == VARIABLE_EXPAND_EMPTY) {

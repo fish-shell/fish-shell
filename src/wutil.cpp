@@ -348,7 +348,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
     if (narrow_res) {
         real_path.append(narrow_res);
     } else {
-        ssize_t pathsep_idx = narrow_path.rfind('/');
+        size_t pathsep_idx = narrow_path.rfind('/');
         if (pathsep_idx == 0) {
             // If the only pathsep is the first character then it's an absolute path with a
             // single path component and thus doesn't need conversion.

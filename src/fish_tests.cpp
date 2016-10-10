@@ -2165,8 +2165,7 @@ static void test_autosuggest_suggest_special() {
     if (system("rm -Rf ~/test_autosuggest_suggest_special/")) err(L"rm failed");
 }
 
-static void perform_one_autosuggestion_should_ignore_test(const wcstring &command,
-                                                          const wcstring &wd, long line) {
+static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {
     completion_list_t comps;
     complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION, env_vars_snapshot_t::current());
     do_test(comps.empty());
@@ -2181,10 +2180,10 @@ static void test_autosuggestion_ignores() {
     say(L"Testing scenarios that should produce no autosuggestions");
     const wcstring wd = L"/tmp/autosuggest_test/";
     // Do not do file autosuggestions immediately after certain statement terminators - see #1631.
-    perform_one_autosuggestion_should_ignore_test(L"echo PIPE_TEST|", wd, __LINE__);
-    perform_one_autosuggestion_should_ignore_test(L"echo PIPE_TEST&", wd, __LINE__);
-    perform_one_autosuggestion_should_ignore_test(L"echo PIPE_TEST#comment", wd, __LINE__);
-    perform_one_autosuggestion_should_ignore_test(L"echo PIPE_TEST;", wd, __LINE__);
+    perform_one_autosuggestion_should_ignore_test(L"echo PIPE_TEST|", __LINE__);
+    perform_one_autosuggestion_should_ignore_test(L"echo PIPE_TEST&", __LINE__);
+    perform_one_autosuggestion_should_ignore_test(L"echo PIPE_TEST#comment", __LINE__);
+    perform_one_autosuggestion_should_ignore_test(L"echo PIPE_TEST;", __LINE__);
 }
 
 static void test_autosuggestion_combining() {
@@ -3844,6 +3843,7 @@ static void test_env_vars(void) {
 
 /// Main test.
 int main(int argc, char **argv) {
+    UNUSED(argc);
     // Look for the file tests/test.fish. We expect to run in a directory containing that file.
     // If we don't find it, walk up the directory hierarchy until we do, or error.
     while (access("./tests/test.fish", F_OK) != 0) {

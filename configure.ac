@@ -284,6 +284,7 @@ AC_DEFINE_UNQUOTED([WCHAR_T_BITS], [$WCHAR_T_BITS], [The size of wchar_t in bits
 #
 # Detect nanoseconds fields in struct stat
 #
+AC_CHECK_MEMBERS([struct stat.st_ctime_nsec])
 AC_CHECK_MEMBERS([struct stat.st_mtimespec.tv_nsec])
 AC_CHECK_MEMBERS([struct stat.st_mtim.tv_nsec])
 

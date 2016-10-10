@@ -131,7 +131,7 @@ The following special input functions are available:
 \subsection bind-example Examples
 
 \fish
-bind \\cd 'exit'
+bind <asis>\\cd</asis> 'exit'
 \endfish
 Causes `fish` to exit when @key{Control,D} is pressed.
 

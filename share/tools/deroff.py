@@ -3,10 +3,8 @@
 
 """ Deroff.py, ported to Python from the venerable deroff.c """
 
-
 import sys, re, string
 
-sys.dont_write_bytecode = True
 IS_PY3 = sys.version_info[0] >= 3
 
 class Deroffer:

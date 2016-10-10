@@ -548,7 +548,7 @@ file_id_t file_id_t::file_id_from_stat(const struct stat *buf) {
     result.change_seconds = buf->st_ctime;
     result.mod_seconds = buf->st_mtime;
 
-#if STAT_HAVE_NSEC
+#ifdef HAVE_STRUCT_STAT_ST_CTIME_NSEC
     result.change_nanoseconds = buf->st_ctime_nsec;
     result.mod_nanoseconds = buf->st_mtime_nsec;
 #elif defined(__APPLE__)

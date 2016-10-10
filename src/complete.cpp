@@ -1187,6 +1187,10 @@ bool completer_t::try_complete_variable(const wcstring &str) {
 ///
 /// \return 0 if unable to complete, 1 otherwise
 bool completer_t::try_complete_user(const wcstring &str) {
+#ifdef __ANDROID__
+    // The getpwent() call does not exist on Android (and user names are not interesting).
+    return 0;
+#else
     const wchar_t *cmd = str.c_str();
     const wchar_t *first_char = cmd;
     int res = 0;
@@ -1233,6 +1237,7 @@ bool completer_t::try_complete_user(const wcstring &str) {
     }
 
     return res;
+#endif
 }
 
 void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_comps,

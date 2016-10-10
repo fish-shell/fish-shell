@@ -214,7 +214,7 @@ size_t escape_code_length(const wchar_t *code) {
         for (size_t p = 0; p < sizeof esc / sizeof *esc && !found; p++) {
             if (!esc[p]) continue;
 
-            for (int k = 0; k < (max_colors - 1); k++) {
+            for (short k = 0; k < max_colors; k++) {
                 size_t len = try_sequence(tparm(esc[p], k), code);
                 if (len) {
                     resulting_length = len;

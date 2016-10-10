@@ -205,7 +205,7 @@ size_t escape_code_length(const wchar_t *code) {
     bool found = false;
 
     if (cur_term != NULL) {
-        // Detect these terminfo color escapes with parameter value 0..16, all of which don't move
+        // Detect these terminfo color escapes with parameter value up to max_colors-1, all of which don't move
         // the cursor.
         char *const esc[] = {
             set_a_foreground, set_a_background, set_foreground, set_background,
@@ -214,7 +214,7 @@ size_t escape_code_length(const wchar_t *code) {
         for (size_t p = 0; p < sizeof esc / sizeof *esc && !found; p++) {
             if (!esc[p]) continue;
 
-            for (size_t k = 0; k < std::min(16UL, static_cast<size_t>(max_colors)); k++) {
+            for (int k = 0; k < (max_colors - 1); k++) {
                 size_t len = try_sequence(tparm(esc[p], k), code);
                 if (len) {
                     resulting_length = len;

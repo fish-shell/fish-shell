@@ -185,8 +185,6 @@ class lru_cache_t {
        public:
         explicit iterator(lru_node_t *val) : node(val) {}
         void operator++() { node = lru_cache_t::get_previous(node); }
-        //WTF
-        //void operator++(int x) { node = lru_cache_t::get_previous(node); }
         bool operator==(const iterator &other) { return node == other.node; }
         bool operator!=(const iterator &other) { return !(*this == other); }
         node_type_t *operator*() { return static_cast<node_type_t *>(node); }

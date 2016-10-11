@@ -2860,7 +2860,7 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
         break;                                                                                  \
     }                                                                                           \
     if (args.size() != 0) {                                                                     \
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd,                                   \
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd,                                  \
                                   hist_cmd_to_string(hist_cmd).c_str(), 0, args.size());        \
         status = STATUS_BUILTIN_ERROR;                                                          \
         break;                                                                                  \

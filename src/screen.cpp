@@ -205,7 +205,8 @@ size_t escape_code_length(const wchar_t *code) {
     bool found = false;
 
     if (cur_term != NULL) {
-        // Detect these terminfo color escapes with parameter value up to max_colors-1, all of which don't move
+        // Detect these terminfo color escapes with parameter value up to max_colors-1, all of which
+        // don't move
         // the cursor.
         char *const esc[] = {
             set_a_foreground, set_a_background, set_foreground, set_background,
@@ -773,7 +774,7 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
             // to the sticky right cursor. If we clear the screen too early, we can defeat soft
             // wrapping.
             if (j + 1 == (size_t)screen_width && should_clear_screen_this_line &&
-                    !has_cleared_screen) {
+                !has_cleared_screen) {
                 s_move(scr, &output, current_width, (int)i);
                 s_write_mbs(&output, clr_eos);
                 has_cleared_screen = true;

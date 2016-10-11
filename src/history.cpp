@@ -573,7 +573,7 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         const char *cmd_when = "- cmd:    when:";
         const size_t cmd_when_len = strlen(cmd_when);
         if ((size_t)(a_newline - line_start) >= cmd_when_len &&
-                !memcmp(line_start, cmd_when, cmd_when_len)) {
+            !memcmp(line_start, cmd_when, cmd_when_len)) {
             continue;
         }
 
@@ -1661,8 +1661,7 @@ static int threaded_perform_file_detection(file_detection_context_t *ctx) {
     return ctx->perform_file_detection(true /* test all */);
 }
 
-static void perform_file_detection_done(file_detection_context_t *ctx,
-                                        int success) {
+static void perform_file_detection_done(file_detection_context_t *ctx, int success) {
     UNUSED(success);
     ASSERT_IS_MAIN_THREAD();
 

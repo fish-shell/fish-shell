@@ -31,7 +31,7 @@
 
 // We can tweak the following typedef to allow us to simulate Windows-style 16 bit wchar's on Unix.
 typedef wchar_t utf8_wchar_t;
-#define UTF8_WCHAR_MAX (wchar_t)std::numeric_limits<utf8_wchar_t>::max()
+#define UTF8_WCHAR_MAX (wchar_t) std::numeric_limits<utf8_wchar_t>::max()
 
 typedef std::basic_string<utf8_wchar_t> utf8_wstring_t;
 

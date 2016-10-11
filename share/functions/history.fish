@@ -35,6 +35,7 @@ function history --description "display or manipulate interactive command histor
     set -l search_mode
     set -l show_time
     set -l max_count
+    set -l case_sensitive
 
     # Check for a recognized subcommand as the first argument.
     if set -q argv[1]
@@ -68,6 +69,8 @@ function history --description "display or manipulate interactive command histor
             case --merge
                 __fish_set_hist_cmd merge
                 or return
+            case -C --case_sensitive
+                set case_sensitive --case-sensitive
             case -h --help
                 builtin history --help
                 return
@@ -126,9 +129,9 @@ function history --description "display or manipulate interactive command histor
                 set -l pager less
                 set -q PAGER
                 and set pager $PAGER
-                builtin history search $search_mode $show_time $max_count -- $argv | eval $pager
+                builtin history search $search_mode $show_time $max_count $case_sensitive -- $argv | eval $pager
             else
-                builtin history search $search_mode $show_time $max_count -- $argv
+                builtin history search $search_mode $show_time $max_count $case_sensitive -- $argv
             end
 
         case delete # interactively delete history
@@ -142,13 +145,13 @@ function history --description "display or manipulate interactive command histor
             and set search_mode "--exact"
 
             if test $search_mode = "--exact"
-                builtin history delete $search_mode $argv
+                builtin history delete $search_mode $case_sensitive $argv
                 return
             end
 
             # TODO: Fix this so that requesting history entries with a timestamp works:
             #   set -l found_items (builtin history search $search_mode $show_time -- $argv)
-            set -l found_items (builtin history search $search_mode -- $argv)
+            set -l found_items (builtin history search $search_mode $case_sensitive -- $argv)
             if set -q found_items[1]
                 set -l found_items_count (count $found_items)
                 for i in (seq $found_items_count)
@@ -169,7 +172,7 @@ function history --description "display or manipulate interactive command histor
 
                 if test "$choice" = "all"
                     printf "Deleting all matching entries!\n"
-                    builtin history delete $search_mode -- $argv
+                    builtin history delete $search_mode $case_sensitive -- $argv
                     builtin history save
                     return
                 end
@@ -183,7 +186,7 @@ function history --description "display or manipulate interactive command histor
                     end
 
                     printf "Deleting history entry %s: \"%s\"\n" $i $found_items[$i]
-                    builtin history delete "$found_items[$i]"
+                    builtin history delete --case-sensitive "$found_items[$i]"
                 end
                 builtin history save
             end

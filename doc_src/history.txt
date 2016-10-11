@@ -2,8 +2,8 @@
 
 \subsection history-synopsis Synopsis
 \fish{synopsis}
-history search [ --show-time ] [ --exact | --prefix | --contains ] [ --max=n ] [ "search string"... ]
-history delete [ --show-time ] [ --exact | --prefix | --contains ] "search string"...
+history search [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] [ --max=n ] [ "search string"... ]
+history delete [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] "search string"...
 history merge
 history save
 history clear
@@ -32,9 +32,11 @@ The following options are available:
 
 These flags can appear before or immediately after one of the sub-commands listed above.
 
+- `-C` or `--case-sensitive` does a case-sensitive search. The default is case-insensitive. Note that up to and including fish 2.4.0 the default was case-sensitive.
+
 - `-c` or `--contains` searches or deletes items in the history that contain the specified text string. This is the default for the `--search` flag. This is not currently supported by the `--delete` flag.
 
-- `-e` or `--exact` searches or deletes items in the history that exactly match the specified text string. This is the default for the `--delete` flag.
+- `-e` or `--exact` searches or deletes items in the history that exactly match the specified text string. This is the default for the `--delete` flag. Note that the match is case-insensitive by default. If you really want an exact match, including letter case, you must use the `-C` or `--case-sensitive` flag.
 
 - `-p` or `--prefix` searches or deletes items in the history that begin with the specified text string. This is not currently supported by the `--delete` flag.
 

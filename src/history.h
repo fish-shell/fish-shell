@@ -59,7 +59,8 @@ class history_item_t {
     bool merge(const history_item_t &item);
 
     // The actual contents of the entry.
-    wcstring contents;
+    wcstring contents;        // value as entered by the user
+    wcstring contents_lower;  // value normalized to all lowercase for case insensitive comparisons
 
     // Original creation time for the entry.
     time_t creation_timestamp;
@@ -71,15 +72,16 @@ class history_item_t {
     path_list_t required_paths;
 
    public:
-    explicit history_item_t(const wcstring &str);
-    explicit history_item_t(const wcstring &, time_t, history_identifier_t ident = 0);
+    //explicit history_item_t(const wcstring &str);
+    explicit history_item_t(const wcstring &str, time_t when = 0, history_identifier_t ident = 0);
 
     const wcstring &str() const { return contents; }
+    const wcstring &str_lower() const { return contents_lower; }
 
     bool empty() const { return contents.empty(); }
 
     // Whether our contents matches a search term.
-    bool matches_search(const wcstring &term, enum history_search_type_t type) const;
+    bool matches_search(const wcstring &term, enum history_search_type_t type, bool case_sensitive) const;
 
     time_t timestamp() const { return creation_timestamp; }
 
@@ -88,7 +90,7 @@ class history_item_t {
 
     bool operator==(const history_item_t &other) const {
         return contents == other.contents && creation_timestamp == other.creation_timestamp &&
-               required_paths == other.required_paths;
+            required_paths == other.required_paths;
     }
 };
 
@@ -100,7 +102,7 @@ enum history_file_type_t { history_type_unknown, history_type_fish_2_0, history_
 class history_t {
     friend class history_tests_t;
 
-   private:
+    private:
     // No copying.
     history_t(const history_t &);
     history_t &operator=(const history_t &);
@@ -190,12 +192,12 @@ class history_t {
     // Do a private, read-only map of the entirety of a history file with the given name. Returns
     // true if successful. Returns the mapped memory region by reference.
     bool map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
-                  file_id_t *file_id);
+            file_id_t *file_id);
 
     // Whether we're in maximum chaos mode, useful for testing.
     bool chaos_mode;
 
-   public:
+    public:
     explicit history_t(const wcstring &);  // constructor
     ~history_t();                          // destructor
 
@@ -213,7 +215,7 @@ class history_t {
     void add(const wcstring &str, history_identifier_t ident = 0, bool pending = false);
 
     // Remove a history item.
-    void remove(const wcstring &str);
+    void remove(const wcstring &str, bool case_sensitive);
 
     // Add a new pending history item to the end, and then begin file detection on the items to
     // determine which arguments are paths
@@ -227,7 +229,8 @@ class history_t {
 
     // Searches history.
     bool search(history_search_type_t search_type, wcstring_list_t search_args,
-                const wchar_t *show_time_format, long max_items, io_streams_t &streams);
+                const wchar_t *show_time_format, long max_items, bool case_sensitive,
+                io_streams_t &streams);
 
     // Enable / disable automatic saving. Main thread only!
     void disable_automatic_saving();
@@ -258,63 +261,72 @@ class history_t {
 };
 
 class history_search_t {
-   private:
-    // The history in which we are searching.
-    history_t *history;
+    private:
+        // The history in which we are searching.
+        history_t *history;
 
-    // Our type.
-    enum history_search_type_t search_type;
+        // Our type.
+        enum history_search_type_t search_type;
+        bool case_sensitive;
 
-    // Our list of previous matches as index, value. The end is the current match.
-    typedef std::pair<size_t, history_item_t> prev_match_t;
-    std::vector<prev_match_t> prev_matches;
+        // Our list of previous matches as index, value. The end is the current match.
+        typedef std::pair<size_t, history_item_t> prev_match_t;
+        std::vector<prev_match_t> prev_matches;
 
-    // Returns yes if a given term is in prev_matches.
-    bool match_already_made(const wcstring &match) const;
+        // Returns yes if a given term is in prev_matches.
+        bool match_already_made(const wcstring &match) const;
 
-    // The search term.
-    wcstring term;
+        // The search term.
+        wcstring term;
 
-    // Additional strings to skip (sorted).
-    wcstring_list_t external_skips;
+        // Additional strings to skip (sorted).
+        wcstring_list_t external_skips;
 
-    bool should_skip_match(const wcstring &str) const;
+        bool should_skip_match(const wcstring &str) const;
 
-   public:
-    // Gets the search term.
-    const wcstring &get_term() const { return term; }
+    public:
+        // Gets the search term.
+        const wcstring &get_term() const { return term; }
 
-    // Sets additional string matches to skip.
-    void skip_matches(const wcstring_list_t &skips);
+        // Sets additional string matches to skip.
+        void skip_matches(const wcstring_list_t &skips);
 
-    // Finds the next search term (forwards in time). Returns true if one was found.
-    bool go_forwards(void);
+        // Finds the next search term (forwards in time). Returns true if one was found.
+        bool go_forwards(void);
 
-    // Finds the previous search result (backwards in time). Returns true if one was found.
-    bool go_backwards(void);
+        // Finds the previous search result (backwards in time). Returns true if one was found.
+        bool go_backwards(void);
 
-    // Goes to the end (forwards).
-    void go_to_end(void);
+        // Goes to the end (forwards).
+        void go_to_end(void);
 
-    // Returns if we are at the end. We start out at the end.
-    bool is_at_end(void) const;
+        // Returns if we are at the end. We start out at the end.
+        bool is_at_end(void) const;
 
-    // Goes to the beginning (backwards).
-    void go_to_beginning(void);
+        // Goes to the beginning (backwards).
+        void go_to_beginning(void);
 
-    // Returns the current search result item. asserts if there is no current item.
-    history_item_t current_item(void) const;
+        // Returns the current search result item. asserts if there is no current item.
+        history_item_t current_item(void) const;
 
-    // Returns the current search result item contents. asserts if there is no current item.
-    wcstring current_string(void) const;
+        // Returns the current search result item contents. asserts if there is no current item.
+        wcstring current_string(void) const;
 
-    // Constructor.
-    history_search_t(history_t &hist, const wcstring &str,
-                     enum history_search_type_t type = HISTORY_SEARCH_TYPE_CONTAINS)
-        : history(&hist), search_type(type), term(str) {}
+        // Constructor.
+        history_search_t(history_t &hist, const wcstring &str,
+                enum history_search_type_t type = HISTORY_SEARCH_TYPE_CONTAINS,
+                bool case_sensitive = true)
+        : history(&hist), term(str), search_type(type), case_sensitive(case_sensitive) {
+		if (!case_sensitive) {
+			term = wcstring();
+			for (wcstring::const_iterator it = str.begin(); it != str.end(); ++it) {
+				term.push_back(towlower(*it));
+			}
+		}
+	}
 
     // Default constructor.
-    history_search_t() : history(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), term() {}
+    history_search_t() : history(), term() {}
 };
 
 // Init history library. The history file won't actually be loaded until the first time a history

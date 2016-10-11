@@ -2,10 +2,10 @@
 
 \subsection abbr-synopsis Synopsis
 \fish{synopsis}
-abbr -a word phrase...
-abbr -s
-abbr -l
-abbr -e word
+abbr --add word phrase...
+abbr --show
+abbr --list
+abbr --erase word
 \endfish
 
 \subsection abbr-description Description
@@ -14,11 +14,24 @@ abbr -e word
 
 Abbreviations are user-defined character sequences or words that are replaced with longer phrases after they are entered. For example, a frequently-run command such as `git checkout` can be abbreviated to `gco`. After entering `gco` and pressing @key{Space} or @key{Enter}, the full text `git checkout` will appear in the command line.
 
-Abbreviations are stored using universal variables. You can create abbreviations directly on the command line, and they will be saved automatically. Calling `abbr -a` in config.fish will lead to slightly worse startup performance.
+Abbreviations are stored in a variable named `fish_user_abbreviations`. This is automatically created as a universal variable the first time an abbreviation is created. If you want your abbreviations to be private to a particular fish session you can put the following in your *~/.config/fish/config.fish* file before you define your first abbrevation:
+
+\fish
+if status --is-interactive
+    set -g fish_user_abbreviations
+    abbr --add first 'echo my first abbreviation'
+    abbr --add second 'echo my second abbreviation'
+    # etcetera
+end
+\endfish
+
+You can create abbreviations directly on the command line and they will be saved automatically and made visible to other fish sessions if `fish_user_abbreviations` is a universal variable. If you keep the variable as universal, a`bbr --add` statements in <a href="tutorial.html#tut_startup">config.fish</a> will do nothing but slow down startup slightly.
+
+\subsection abbr-options Options
 
 The following parameters are available:
 
-- `-a WORD PHRASE` or `--add WORD PHRASE` Adds a new abbreviation, where WORD will be expanded to PHRASE.
+- `-a WORD PHRASE` or `--add WORD PHRASE` Adds a new abbreviation, causing WORD to be expanded to PHRASE.
 
 - `-s` or `--show` Show all abbreviated words and their expanded phrases in a manner suitable for export and import.
 

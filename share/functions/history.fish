@@ -169,7 +169,12 @@ function history --description "display or manipulate interactive command histor
 
                 if test "$choice" = "all"
                     printf "Deleting all matching entries!\n"
-                    builtin history delete $search_mode -- $argv
+                    # TODO: Use the following when the builtin is enhanced to support the
+                    # --prefix and --contains options (at the moment it only supports --exact).
+                    # builtin history delete $search_mode -- $argv
+                    for item in $found_items
+                        builtin history delete --exact -- $item
+                    end
                     builtin history save
                     return
                 end

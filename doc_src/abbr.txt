@@ -25,7 +25,7 @@ if status --is-interactive
 end
 \endfish
 
-You can create abbreviations directly on the command line and they will be saved automatically and made visible to other fish sessions if `fish_user_abbreviations` is a universal variable. If you keep the variable as universal, a`bbr --add` statements in <a href="tutorial.html#tut_startup">config.fish</a> will do nothing but slow down startup slightly.
+You can create abbreviations directly on the command line and they will be saved automatically and made visible to other fish sessions if `fish_user_abbreviations` is a universal variable. If you keep the variable as universal, `abbr --add` statements in <a href="tutorial.html#tut_startup">config.fish</a> will do nothing but slow down startup slightly.
 
 \subsection abbr-options Options
 

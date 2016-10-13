@@ -555,7 +555,7 @@ It is possible to directly create functions and variables in `config.fish` file,
 \fish{cli-dark}
 >_ cat ~/.config/fish/config.fish
 
-set -x PATH $PATH /sbin/
+set PATH $PATH /sbin/
 
 function ll
     ls -lh $argv

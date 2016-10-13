@@ -1170,7 +1170,7 @@ If you want to add the directory `~/linux/bin` to your PATH variable when using 
 
 \fish
 if status --is-login
-    set PATH $PATH ~/linux/bin
+    set -x PATH $PATH ~/linux/bin
 end
 \endfish
 

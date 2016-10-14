@@ -506,7 +506,7 @@ A dollar sign followed by a string of characters is expanded into the value of t
 
 Undefined and empty variables expand to nothing.
 
-To separate a variable name from text it should immediately be followed by, encase the variable within quotes.
+To separate a variable name from text encase the variable within double-quotes or braces.
 
 Examples:
 \fish

@@ -1105,7 +1105,7 @@ History searches can be aborted by pressing the escape key.
 
 Prefixing the commandline with a space will prevent the entire line from being stored in the history.
 
-The history is stored in the file `~/.config/fish/fish_history`.
+The history is stored in the file `~/.local/share/fish/fish_history` (or `$XDG_DATA_HOME/fish/fish_history` if that variable is set).
 
 Examples:
 

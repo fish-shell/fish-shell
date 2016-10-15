@@ -813,7 +813,7 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `BROWSER`, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 
-- `CDPATH`, an array of directories in which to search for the new directory for the `cd` builtin. By default, the fish configuration defines `CDPATH` to be a universal variable with the values `.` and `~`.
+- `CDPATH`, an array of directories in which to search for the new directory for the `cd` builtin.
 
 - `LANG`, `LC_ALL`, `LC_COLLATE`, `LC_CTYPE`, `LC_MESSAGES`, `LC_MONETARY`, `LC_NUMERIC` and `LC_TIME` set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
 

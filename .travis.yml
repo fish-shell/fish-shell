@@ -22,8 +22,8 @@ matrix:
             - expect
             - gettext
             - libncurses5-dev
-        env:
-          - CXXFLAGS="-g -m32"
+      env:
+        - CXXFLAGS="-g -m32"
     - os: linux
       compiler: clang
       addons:
@@ -33,19 +33,17 @@ matrix:
             - expect
             - gettext
             - libncurses5-dev
-        env:
-          - CXXFLAGS="-g -fno-omit-frame-pointer"
+      env:
+        - CXXFLAGS="-g -fno-omit-frame-pointer"
 
     - os: osx
       osx_image: xcode8
       before_install:
         - brew update
-        - brew outdated pcre2 || brew upgrade pcre2 # use system PCRE2
+        - brew install pcre2 # use system PCRE2
         - brew outdated xctool || brew upgrade xctool # for xcode... soon.
-      addons:
-        env:
-          - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address -lstdc++"
-          - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
+      env:
+        - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address -lstdc++" ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
   fast_finish: true
 
 script:

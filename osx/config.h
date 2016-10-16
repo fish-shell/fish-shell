@@ -29,6 +29,9 @@
 /* Define to 1 if you have the <getopt.h> header file. */
 #define HAVE_GETOPT_H 1
 
+/* Define to 1 if you have the `getpwent' function. */
+#define HAVE_GETPWENT 1
+
 /* Define to 1 if you have the `gettext' function. */
 /* #undef HAVE_GETTEXT */
 
@@ -85,6 +88,9 @@
 
 /* Define to 1 if `d_type' is a member of `struct dirent'. */
 #define HAVE_STRUCT_DIRENT_D_TYPE 1
+
+/* Define to 1 if `st_ctime_nsec' is a member of `struct stat'. */
+/* #undef HAVE_STRUCT_STAT_ST_CTIME_NSEC */
 
 /* Define to 1 if `st_mtimespec.tv_nsec' is a member of `struct stat'. */
 #define HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC 1

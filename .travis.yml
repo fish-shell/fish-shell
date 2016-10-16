@@ -21,9 +21,10 @@ matrix:
             - bc
             - expect
             - gettext
-            - libncurses5-dev
+            - lib32ncurses5-dev
+            - g++-multilib
       env:
-        - CXXFLAGS="-g -m32"
+        - CXXFLAGS="-g -m32" CFLAGS="-g -m32"
     - os: linux
       compiler: clang
       addons:

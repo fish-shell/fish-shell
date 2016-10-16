@@ -14,6 +14,17 @@ matrix:
             - gettext
             - libncurses5-dev
     - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - bc
+            - expect
+            - gettext
+            - libncurses5-dev
+        env:
+          - CXXFLAGS="-g -m32"
+    - os: linux
       compiler: clang
       addons:
         apt:
@@ -43,7 +54,7 @@ script:
   - make -j2
   - make install
   - make test DESTDIR=$HOME/prefix/ SHOW_INTERACTIVE_LOG=1
-  
+
 notifications:
   # Some items are encrypted so that notifications from other repositories
   # don't flood the official repositories.

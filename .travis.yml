@@ -27,16 +27,21 @@ matrix:
         - CXXFLAGS="-g -m32" CFLAGS="-g -m32"
     - os: linux
       compiler: clang
+      env:
+          - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address" ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
+      before_install: export CXX=clang++-3.8
       addons:
         apt:
+          sources:
+            - llvm-toolchain-precise-3.8
+            - ubuntu-toolchain-r-test
           packages:
+            - clang-3.8
+            - llvm-3.8 # for llvm-symbolizer
             - bc
             - expect
             - gettext
             - libncurses5-dev
-      env:
-        - CXXFLAGS="-g -fno-omit-frame-pointer"
-
     - os: osx
       osx_image: xcode8
       before_install:
@@ -44,7 +49,7 @@ matrix:
         - brew install pcre2 # use system PCRE2
         - brew outdated xctool || brew upgrade xctool # for xcode... soon.
       env:
-        - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address -lstdc++" ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
+        - CXXFLAGS="-g -lstdc++"
   fast_finish: true
 
 script:

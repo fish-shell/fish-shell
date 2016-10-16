@@ -1187,6 +1187,13 @@ bool completer_t::try_complete_variable(const wcstring &str) {
 ///
 /// \return 0 if unable to complete, 1 otherwise
 bool completer_t::try_complete_user(const wcstring &str) {
+#ifndef HAVE_GETPWENT
+    // The getpwent() function does not exist on Android. A Linux user on Android isn't
+    // really a user - each installed app gets an UID assigned. Listing all UID:s is not
+    // possible without root access, and doing a ~USER type expansion does not make sense
+    // since every app is sandboxed and can't access eachother.
+    return false;
+#else
     const wchar_t *cmd = str.c_str();
     const wchar_t *first_char = cmd;
     int res = 0;
@@ -1233,6 +1240,7 @@ bool completer_t::try_complete_user(const wcstring &str) {
     }
 
     return res;
+#endif
 }
 
 void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_comps,

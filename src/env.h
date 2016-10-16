@@ -18,6 +18,9 @@ enum {
     /// Flag for local (to the current block) variable.
     ENV_LOCAL = 1,
 
+    /// Flag for function variable.
+    ENV_FUNCTION = 64,
+
     /// Flag for exported (to commands) variable.
     ENV_EXPORT = 2,
 

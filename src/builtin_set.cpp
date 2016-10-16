@@ -326,6 +326,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Variables used for parsing the argument list.
     const struct woption long_options[] = {{L"export", no_argument, 0, 'x'},
                                            {L"global", no_argument, 0, 'g'},
+                                           {L"function", no_argument, 0, 'f'},
                                            {L"local", no_argument, 0, 'l'},
                                            {L"erase", no_argument, 0, 'e'},
                                            {L"names", no_argument, 0, 'n'},
@@ -336,14 +337,15 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                            {L"help", no_argument, 0, 'h'},
                                            {0, 0, 0, 0}};
 
-    const wchar_t *short_options = L"+xglenuULqh";
+    const wchar_t *short_options = L"+xglfenuULqh";
 
     int argc = builtin_count_args(argv);
 
     // Flags to set the work mode.
-    int local = 0, global = 0, exportv = 0;
-    int erase = 0, list = 0, unexport = 0;
-    int universal = 0, query = 0;
+    int local = 0, function = 0, global = 0;
+    int exportv = 0, unexport = 0;
+    int universal = 0;
+    int erase = 0, list = 0, query = 0;
     bool shorten_ok = true;
     bool preserve_incoming_failure_exit_status = true;
     const int incoming_exit_status = proc_get_last_status();
@@ -385,6 +387,10 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case 'l': {
                 local = 1;
+                break;
+            }
+            case 'f': {
+                function = 1;
                 break;
             }
             case 'g': {
@@ -438,7 +444,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     // Variables can only have one scope.
-    if (local + global + universal > 1) {
+    if (local + function + global + universal > 1) {
         streams.err.append_format(BUILTIN_ERR_GLOCAL, argv[0]);
         builtin_print_help(parser, streams, argv[0], streams.err);
         return 1;
@@ -452,8 +458,9 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     // Calculate the scope value for variable assignement.
-    scope = (local ? ENV_LOCAL : 0) | (global ? ENV_GLOBAL : 0) | (exportv ? ENV_EXPORT : 0) |
-            (unexport ? ENV_UNEXPORT : 0) | (universal ? ENV_UNIVERSAL : 0) | ENV_USER;
+    scope = (local ? ENV_LOCAL : 0) | (function ? ENV_FUNCTION : 0) | (global ? ENV_GLOBAL : 0) |
+            (exportv ? ENV_EXPORT : 0) | (unexport ? ENV_UNEXPORT : 0) |
+            (universal ? ENV_UNIVERSAL : 0) | ENV_USER;
 
     if (query) {
         // Query mode. Return the number of variables that do not exist out of the specified

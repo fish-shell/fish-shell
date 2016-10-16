@@ -1,0 +1,5 @@
+I say: 1, 2, 3
+Inside if: 0
+After if: 1
+Inside without setting as local 0
+After second if: 0

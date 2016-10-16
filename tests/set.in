@@ -1,0 +1,20 @@
+function test_function
+    set -l i 1
+    for v in ONE TWO THREE
+        set -f $v $i
+        set i (math "$i + 1")
+    end
+    echo "I say: $ONE, $TWO, $THREE"
+    if test $ONE = 1
+        set -l ONE 0
+        echo "Inside if: $ONE"
+    end
+    echo "After if: $ONE"
+    if test $ONE
+        set ONE 0
+        echo "Inside without setting as local $ONE"
+    end
+    echo "After second if: $ONE"
+end
+
+test_function

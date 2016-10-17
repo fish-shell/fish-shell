@@ -503,7 +503,10 @@ static void format_job_info(const job_t *j, const wchar_t *status, size_t job_co
                  truncate_command(j->command()).c_str(), status);
     }
     fflush(stdout);
-    tputs(clr_eol, 1, &writeb);
+    if (cur_term != NULL)
+        tputs(clr_eol, 1, &writeb);
+    else
+        fwprintf(stdout, L"\x1b[K");
     fwprintf(stdout, L"\n");
 }
 
@@ -605,7 +608,13 @@ int job_reap(bool allow_interactive) {
                                          sig2wcs(WTERMSIG(p->status)),
                                          signal_get_desc(WTERMSIG(p->status)));
                             }
-                            tputs(clr_eol, 1, &writeb);
+
+                            if (cur_term != NULL)
+                                tputs(clr_eol, 1, &writeb);
+                            else
+                                fwprintf(stdout,
+                                         L"\x1b[K");  // no term set up - do clr_eol manually
+
                             fwprintf(stdout, L"\n");
                         }
                         found = 1;

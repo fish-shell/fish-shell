@@ -230,7 +230,7 @@ class history_t {
     // Searches history.
     bool search(history_search_type_t search_type, wcstring_list_t search_args,
                 const wchar_t *show_time_format, long max_items, bool case_sensitive,
-                io_streams_t &streams);
+                bool null_terminate, io_streams_t &streams);
 
     // Enable / disable automatic saving. Main thread only!
     void disable_automatic_saving();

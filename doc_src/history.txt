@@ -2,7 +2,7 @@
 
 \subsection history-synopsis Synopsis
 \fish{synopsis}
-history search [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] [ --max=n ] [ "search string"... ]
+history search [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] [ --max=n ] [ --null ] [ "search string"... ]
 history delete [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] "search string"...
 history merge
 history save
@@ -41,6 +41,8 @@ These flags can appear before or immediately after one of the sub-commands liste
 - `-p` or `--prefix` searches or deletes items in the history that begin with the specified text string. This is not currently supported by the `--delete` flag.
 
 - `-t` or `--show-time` prepends each history entry with the date and time the entry was recorded . By default it uses the strftime format `# %c%n`. You can specify another format; e.g., `--show-time='%Y-%m-%d %H:%M:%S '` or `--show-time='%a%I%p'`. The short option, `-t` doesn't accept a stftime format string; it only uses the default format. Any strftime format is allowed, including `%s` to get the raw UNIX seconds since the epoch. Note that `--with-time` is also allowed but is deprecated and will be removed at a future date.
+
+- `-z` or `--null` causes history entries written by the search operations to be terminated by a NUL character rather than a newline. This allows the output to be processed by `read -z` to correctly handle multiline history entries.
 
 - `-<number>` `-n <number>` or `--max=<number>` limits the matched history items to the first "n" matching entries. This is only valid for `history search`.
 

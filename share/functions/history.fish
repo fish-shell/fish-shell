@@ -36,6 +36,7 @@ function history --description "display or manipulate interactive command histor
     set -l show_time
     set -l max_count
     set -l case_sensitive
+    set -l null
 
     # Check for a recognized subcommand as the first argument.
     if set -q argv[1]
@@ -82,6 +83,8 @@ function history --description "display or manipulate interactive command histor
                 set search_mode --contains
             case -e --exact
                 set search_mode --exact
+            case -z --null
+                set null --null
             case -n --max
                 if string match -- '-n?*' $argv[1]
                     or string match -- '--max=*' $argv[1]
@@ -128,9 +131,9 @@ function history --description "display or manipulate interactive command histor
                 set -l pager less
                 set -q PAGER
                 and set pager $PAGER
-                builtin history search $search_mode $show_time $max_count $case_sensitive -- $argv | eval $pager
+                builtin history search $search_mode $show_time $max_count $case_sensitive $null -- $argv | eval $pager
             else
-                builtin history search $search_mode $show_time $max_count $case_sensitive -- $argv
+                builtin history search $search_mode $show_time $max_count $case_sensitive $null -- $argv
             end
 
         case delete # interactively delete history
@@ -150,7 +153,10 @@ function history --description "display or manipulate interactive command histor
 
             # TODO: Fix this so that requesting history entries with a timestamp works:
             #   set -l found_items (builtin history search $search_mode $show_time -- $argv)
-            set -l found_items (builtin history search $search_mode $case_sensitive -- $argv)
+            set -l found_items
+            builtin history search $search_mode $case_sensitive --null -- $argv | while read -lz x
+                set found_items $found_items $x
+            end
             if set -q found_items[1]
                 set -l found_items_count (count $found_items)
                 for i in (seq $found_items_count)

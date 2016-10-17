@@ -776,3 +776,6 @@ long convert_digit(wchar_t d, int base);
     } while (0)
 
 #endif
+
+// Return true if the character is in a range reserved for fish's private use.
+bool fish_reserved_codepoint(wchar_t c);

@@ -448,14 +448,6 @@ int wrename(const wcstring &old, const wcstring &newv) {
     return rename(old_narrow.c_str(), new_narrow.c_str());
 }
 
-/// Return one if the code point is in the range we reserve for internal use.
-int fish_is_reserved_codepoint(wint_t wc) {
-    if (RESERVED_CHAR_BASE <= wc && wc < RESERVED_CHAR_END) return 1;
-    if (EXPAND_RESERVED_BASE <= wc && wc < EXPAND_RESERVED_END) return 1;
-    if (WILDCARD_RESERVED_BASE <= wc && wc < WILDCARD_RESERVED_END) return 1;
-    return 0;
-}
-
 /// Return one if the code point is in a Unicode private use area.
 int fish_is_pua(wint_t wc) {
     if (PUA1_START <= wc && wc < PUA1_END) return 1;
@@ -467,7 +459,7 @@ int fish_is_pua(wint_t wc) {
 /// We need this because there are too many implementations that don't return the proper answer for
 /// some code points. See issue #3050.
 int fish_iswalnum(wint_t wc) {
-    if (fish_is_reserved_codepoint(wc)) return 0;
+    if (fish_reserved_codepoint(wc)) return 0;
     if (fish_is_pua(wc)) return 0;
     return iswalnum(wc);
 }
@@ -475,7 +467,7 @@ int fish_iswalnum(wint_t wc) {
 /// We need this because there are too many implementations that don't return the proper answer for
 /// some code points. See issue #3050.
 int fish_iswalpha(wint_t wc) {
-    if (fish_is_reserved_codepoint(wc)) return 0;
+    if (fish_reserved_codepoint(wc)) return 0;
     if (fish_is_pua(wc)) return 0;
     return iswalpha(wc);
 }
@@ -483,7 +475,7 @@ int fish_iswalpha(wint_t wc) {
 /// We need this because there are too many implementations that don't return the proper answer for
 /// some code points. See issue #3050.
 int fish_iswgraph(wint_t wc) {
-    if (fish_is_reserved_codepoint(wc)) return 0;
+    if (fish_reserved_codepoint(wc)) return 0;
     if (fish_is_pua(wc)) return 1;
     return iswgraph(wc);
 }

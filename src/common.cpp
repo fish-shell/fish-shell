@@ -1935,3 +1935,17 @@ long convert_digit(wchar_t d, int base) {
 
     return res;
 }
+
+// Test if the specified character is in a range that fish uses interally to store special tokens.
+//
+// NOTE: This is used when tokenizing the input. It is also used when reading input, before
+// tokenization, to replace such chars with REPLACEMENT_WCHAR if they're not part of a quoted
+// string. We don't want external input to be able to feed reserved characters into our lexer/parser
+// or code evaluator.
+//
+// TODO: Actually implement the replacement as documented above.
+bool fish_reserved_codepoint(wchar_t c) {
+    return (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END) ||
+           (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END) ||
+           (c >= INPUT_COMMON_BASE && c < INPUT_COMMON_END);
+}

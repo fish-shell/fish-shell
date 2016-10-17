@@ -2351,20 +2351,6 @@ static int can_read(int fd) {
     return select(fd + 1, &fds, 0, 0, &can_read_timeout) == 1;
 }
 
-// Test if the specified character is in a range that fish uses interally to store special tokens.
-//
-// NOTE: This is used when tokenizing the input. It is also used when reading input, before
-// tokenization, to replace such chars with REPLACEMENT_WCHAR if they're not part of a quoted
-// string. We don't want external input to be able to feed reserved characters into our lexer/parser
-// or code evaluator.
-//
-// TODO: Actually implement the replacement as documented above.
-static int wchar_private(wchar_t c) {
-    return (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END) ||
-           (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END) ||
-           (c >= INPUT_COMMON_BASE && c < INPUT_COMMON_END);
-}
-
 /// Test if the specified character in the specified string is backslashed. pos may be at the end of
 /// the string, which indicates if there is a trailing backslash.
 static bool is_backslashed(const wcstring &str, size_t pos) {
@@ -2452,7 +2438,7 @@ const wchar_t *reader_readline(int nchars) {
             is_interactive_read = was_interactive_read;
             // fprintf(stderr, "C: %lx\n", (long)c);
 
-            if (((!wchar_private(c))) && (c > 31) && (c != 127)) {
+            if (((!fish_reserved_codepoint(c))) && (c > 31) && (c != 127)) {
                 if (can_read(0)) {
                     wchar_t arr[READAHEAD_MAX + 1];
                     size_t i;
@@ -2472,7 +2458,7 @@ const wchar_t *reader_readline(int nchars) {
                         // need to insert on the commandline that the commmand might need to be able
                         // to see.
                         c = input_readch(false);
-                        if ((!wchar_private(c)) && (c > 31) && (c != 127)) {
+                        if ((!fish_reserved_codepoint(c)) && (c > 31) && (c != 127)) {
                             arr[i] = c;
                             c = 0;
                         } else
@@ -3260,7 +3246,8 @@ const wchar_t *reader_readline(int nchars) {
             }
             default: {
                 // Other, if a normal character, we add it to the command.
-                if (!wchar_private(c) && (c >= L' ' || c == L'\n' || c == L'\r') && c != 0x7F) {
+                if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
+                    c != 0x7F) {
                     bool allow_expand_abbreviations = false;
                     if (data->is_navigating_pager_contents()) {
                         data->pager.set_search_field_shown(true);

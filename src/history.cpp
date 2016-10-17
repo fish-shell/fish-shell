@@ -1,4 +1,5 @@
 // History functions, part of the user interface.
+//
 #include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>

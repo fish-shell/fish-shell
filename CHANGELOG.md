@@ -2,7 +2,9 @@
 
 ## Significant changes
 - The clipboard integration has been revamped with explicit bindings. The killring commands no longer copy from, or paste to, the X11 clipboard - use the new copy (`C-x`) and paste (`C-v`) bindings instead. The clipboard is now available on OS X as well as systems using X11 (e.g. Linux). (#3061)
-- `history` uses subcommands (`history delete`) rather than options (`history --delete`) for its actions (#3367). New options have been added, including `--max=n` to limit the number of history entries and `--show-time` option to show timestamps (#3175, #3244).
+- `history` uses subcommands (`history delete`) rather than options (`history --delete`) for its actions (#3367). You can no longer specify multiple actions via flags (e.g., `history --delete --save something`).
+- New `history` options have been added, including `--max=n` to limit the number of history entries and `--show-time` option to show timestamps (#3175, #3244).
+- `history search` is now case-insensitive by default (which also affects `history delete`). 
 - Vi-style bindings no longer include all of the default emacs-style bindings; instead, they share some definitions (#3068).
 - If there is no locale set in the environment, various known system configuration files will be checked for a default, otherwise forcing en_US-UTF.8 (#277).
 - A number followed by a caret (e.g. `5^`) is no longer treated as a redirection (#1873).

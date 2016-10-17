@@ -265,7 +265,10 @@ class history_search_t {
     // The history in which we are searching.
     history_t *history;
 
-    // Our type.
+    // The search term.
+    wcstring term;
+
+    // Our search type.
     enum history_search_type_t search_type;
     bool case_sensitive;
 
@@ -275,9 +278,6 @@ class history_search_t {
 
     // Returns yes if a given term is in prev_matches.
     bool match_already_made(const wcstring &match) const;
-
-    // The search term.
-    wcstring term;
 
     // Additional strings to skip (sorted).
     wcstring_list_t external_skips;
@@ -326,7 +326,7 @@ class history_search_t {
     }
 
     // Default constructor.
-    history_search_t() : history(), term() {}
+    history_search_t() : history(), term(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), case_sensitive(true) {}
 };
 
 // Init history library. The history file won't actually be loaded until the first time a history

@@ -26,7 +26,7 @@
 class parser_t;
 
 // Error message for invalid path operations.
-#define BUILTIN_SET_PATH_ERROR L"%ls: Warning: $%ls entry \"%ls\": %s\n"
+#define BUILTIN_SET_PATH_ERROR L"%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n"
 
 // Hint for invalid path operation with a colon.
 #define BUILTIN_SET_PATH_HINT L"%ls: Did you mean 'set %ls $%ls %ls'?\n"

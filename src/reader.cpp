@@ -468,7 +468,7 @@ static void reader_kill(editable_line_t *el, size_t begin_idx, size_t length, in
 }
 
 // This is called from a signal handler!
-void reader_handle_int(int sig) {
+void reader_handle_sigint() {
     if (!is_interactive_read) {
         parser_t::skip_all_blocks();
     }
@@ -846,7 +846,10 @@ void reader_repaint_if_needed() {
     }
 }
 
-static void reader_repaint_if_needed_one_arg(void *unused) { reader_repaint_if_needed(); }
+static void reader_repaint_if_needed_one_arg(void *unused) {
+    UNUSED(unused);
+    reader_repaint_if_needed();
+}
 
 void reader_react_to_color_change() {
     if (!data) return;
@@ -2003,7 +2006,13 @@ parser_test_error_bits_t reader_shell_test(const wchar_t *b) {
 
 /// Test if the given string contains error. Since this is the error detection for general purpose,
 /// there are no invalid strings, so this function always returns false.
-static parser_test_error_bits_t default_test(const wchar_t *b) { return 0; }
+///
+/// TODO: Possibly remove this. It is called from only only one place: reader_push().Since it always
+/// returns a static result it's not clear why it's needed.
+static parser_test_error_bits_t default_test(const wchar_t *b) {
+    UNUSED(b);
+    return 0;
+}
 
 void reader_push(const wchar_t *name) {
     reader_data_t *n = new reader_data_t();
@@ -2149,6 +2158,7 @@ static void highlight_search(void) {
 }
 
 static void highlight_complete(background_highlight_context_t *ctx, int result) {
+    UNUSED(result);  // ignored because of the indirect invocation via iothread_perform()
     ASSERT_IS_MAIN_THREAD();
     if (ctx->string_to_highlight == data->command_line.text) {
         // The data hasn't changed, so swap in our colors. The colors may not have changed, so do
@@ -2743,7 +2753,7 @@ const wchar_t *reader_readline(int nchars) {
                 if (data->search_mode) {
                     data->search_mode = NO_SEARCH;
 
-                    if (data->token_history_pos == -1) {
+                    if (data->token_history_pos == (size_t)-1) {
                         // history_reset();
                         data->history_search.go_to_end();
                         reader_set_buffer(data->search_buff, data->search_buff.size());

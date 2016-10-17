@@ -301,7 +301,7 @@ int event_get(const event_t &criterion, std::vector<event_t *> *out) {
 bool event_is_signal_observed(int sig) {
     // We are in a signal handler! Don't allocate memory, etc.
     bool result = false;
-    if (sig >= 0 && sig < sizeof s_observed_signals / sizeof *s_observed_signals) {
+    if (sig >= 0 && (unsigned long)sig < sizeof(s_observed_signals) / sizeof(*s_observed_signals)) {
         result = s_observed_signals[sig];
     }
     return result;

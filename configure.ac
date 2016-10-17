@@ -85,11 +85,10 @@ fi
 # Set up various programs needed for install
 # Note AC_PROG_CXX sets CXXFLAGS if not set, which we want
 # So ensure this happens before we modify CXXFLAGS below
-# Do CC also, because PCRE2 will use it. Prefer clang++,
-# targets like FreeBSD ship an ancient one.
-AC_PROG_CC([clang llvm-gcc gcc cc])
+# Do CC also, because PCRE2 will use it.
+AC_PROG_CC
 AC_PROG_CC_STDC # c99
-AC_PROG_CXX([clang++ llvm-g++ g++ c++])
+AC_PROG_CXX
 AC_LANG(C++)
 AC_PROG_INSTALL
 AC_PROG_LN_S
@@ -285,6 +284,7 @@ AC_DEFINE_UNQUOTED([WCHAR_T_BITS], [$WCHAR_T_BITS], [The size of wchar_t in bits
 #
 # Detect nanoseconds fields in struct stat
 #
+AC_CHECK_MEMBERS([struct stat.st_ctime_nsec])
 AC_CHECK_MEMBERS([struct stat.st_mtimespec.tv_nsec])
 AC_CHECK_MEMBERS([struct stat.st_mtim.tv_nsec])
 
@@ -302,6 +302,7 @@ AC_CHECK_FUNCS( futimes )
 AC_CHECK_FUNCS( wcslcpy lrand48_r killpg )
 AC_CHECK_FUNCS( backtrace_symbols getifaddrs )
 AC_CHECK_FUNCS( futimens clock_gettime )
+AC_CHECK_FUNCS( getpwent )
 
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )
 

@@ -84,7 +84,9 @@ static void dump_node(indent_t node_indent, const parse_node_t &node, const wcst
     wcstring source_txt = L"";
     if (node.source_start != SOURCE_OFFSET_INVALID && node.source_length != SOURCE_OFFSET_INVALID) {
         int nextc_idx = node.source_start + node.source_length;
-        if (nextc_idx < source.size()) nextc = source[node.source_start + node.source_length];
+        if ((size_t)nextc_idx < source.size()) {
+            nextc = source[node.source_start + node.source_length];
+        }
         if (node.source_start > 0) prevc = source[node.source_start - 1];
         source_txt = source.substr(node.source_start, node.source_length);
     }

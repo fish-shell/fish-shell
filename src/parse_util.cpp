@@ -67,16 +67,11 @@ size_t parse_util_get_offset_from_line(const wcstring &str, int line) {
     size_t i;
     int count = 0;
 
-    if (line < 0) {
-        return (size_t)-1;
-    }
-
+    if (line < 0) return (size_t)-1;
     if (line == 0) return 0;
 
     for (i = 0;; i++) {
-        if (!buff[i]) {
-            return -1;
-        }
+        if (!buff[i]) return (size_t)-1;
 
         if (buff[i] == L'\n') {
             count++;
@@ -91,25 +86,18 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
     const wchar_t *buff = str.c_str();
     size_t off = parse_util_get_offset_from_line(buff, line);
     size_t off2 = parse_util_get_offset_from_line(buff, line + 1);
-    long line_offset2 = line_offset;
 
-    if (off == (size_t)(-1)) {
-        return -1;
+    if (off == (size_t)-1) return (size_t)-1;
+
+    if (off2 == (size_t)-1) off2 = wcslen(buff) + 1;
+
+    if (line_offset < 0) line_offset = 0;
+
+    if ((size_t)line_offset >= off2 - off - 1) {
+        line_offset = off2 - off - 1;
     }
 
-    if (off2 == (size_t)(-1)) {
-        off2 = wcslen(buff) + 1;
-    }
-
-    if (line_offset2 < 0) {
-        line_offset2 = 0;
-    }
-
-    if (line_offset2 >= off2 - off - 1) {
-        line_offset2 = off2 - off - 1;
-    }
-
-    return off + line_offset2;
+    return off + line_offset;
 }
 
 static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin, wchar_t **end,
@@ -305,7 +293,7 @@ static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const 
         return;
     }
 
-    assert(cursor_pos >= (begin - buff));
+    assert(cursor_pos >= (size_t)(begin - buff));
     const size_t pos = cursor_pos - (begin - buff);
 
     if (a) *a = begin;
@@ -369,7 +357,7 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
     }
 
     // pos is equivalent to cursor_pos within the range of the command substitution {begin, end}.
-    long offset_within_cmdsubst = cursor_pos - (cmdsubst_begin - buff);
+    size_t offset_within_cmdsubst = cursor_pos - (cmdsubst_begin - buff);
 
     a = cmdsubst_begin + offset_within_cmdsubst;
     b = a;

@@ -49,7 +49,7 @@ void output_set_writer(int (*writer)(char)) {
 int (*output_get_writer())(char) { return out; }
 
 /// Returns true if we think tparm can handle outputting a color index
-static bool term_supports_color_natively(unsigned int c) { return max_colors >= (c + 1); }
+static bool term_supports_color_natively(unsigned int c) { return (unsigned)max_colors >= c + 1; }
 
 color_support_t output_get_color_support(void) { return color_support; }
 
@@ -71,6 +71,14 @@ static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
         // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
         char buff[16] = "";
         if (idx < 16) {
+            // this allows the non-bright color to happen instead of no color working at all when
+            // a bright is attempted when only colors 0-7 are supported.
+            // TODO: enter bold mode in builtin_set_color in the same circumstance- doing that
+            // combined
+            // with what we do here, will make the brights actually work for virtual
+            // consoles/ancient emulators.
+            if (max_colors == 8 && idx > 8) idx -= 8;
+
             snprintf(buff, sizeof buff, "\x1b[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
         } else {
             snprintf(buff, sizeof buff, "\x1b[%d;5;%dm", is_fg ? 38 : 48, idx);

@@ -82,7 +82,7 @@ class autoload_t : private lru_cache_t<autoload_function_t> {
 
    protected:
     /// Overridable callback for when a command is removed.
-    virtual void command_removed(const wcstring &cmd) {}
+    virtual void command_removed(const wcstring &cmd) { UNUSED(cmd); }
 
    public:
     /// Create an autoload_t for the given environment variable name.

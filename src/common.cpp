@@ -118,7 +118,7 @@ show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
     if (frame_count < 1) frame_count = 999;
     debug_shared(msg_level, L"Backtrace:");
     std::vector<wcstring> bt = demangled_backtrace(frame_count, skip_levels + 2);
-    for (int i = 0; i < bt.size(); i++) {
+    for (int i = 0; (size_t)i < bt.size(); i++) {
         debug_shared(msg_level, bt[i]);
     }
 }
@@ -1340,6 +1340,7 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
 
 void common_handle_winch(int signal) {
     // Don't run ioctl() here, it's not safe to use in signals.
+    UNUSED(signal);
     termsize_valid = false;
 }
 

@@ -212,7 +212,7 @@ static int iswnumeric(const wchar_t *n) {
 }
 
 /// See if the process described by \c proc matches the commandline \c cmd.
-static bool match_pid(const wcstring &cmd, const wchar_t *proc, int flags, size_t *offset) {
+static bool match_pid(const wcstring &cmd, const wchar_t *proc, size_t *offset) {
     // Test for a direct match. If the proc string is empty (e.g. the user tries to complete against
     // %), then return an offset pointing at the base command. That ensures that you don't see a
     // bunch of dumb paths when completing against all processes.
@@ -507,7 +507,7 @@ static int find_job(const struct find_job_data_t *info) {
             if (j->command_is_empty()) continue;
 
             size_t offset;
-            if (match_pid(j->command(), proc, flags, &offset)) {
+            if (match_pid(j->command(), proc, &offset)) {
                 if (flags & EXPAND_FOR_COMPLETIONS) {
                     append_completion(&completions, j->command_wcstr() + offset + wcslen(proc),
                                       COMPLETE_JOB_DESC, 0);
@@ -527,7 +527,7 @@ static int find_job(const struct find_job_data_t *info) {
                     if (p->actual_cmd.empty()) continue;
 
                     size_t offset;
-                    if (match_pid(p->actual_cmd, proc, flags, &offset)) {
+                    if (match_pid(p->actual_cmd, proc, &offset)) {
                         if (flags & EXPAND_FOR_COMPLETIONS) {
                             append_completion(&completions,
                                               wcstring(p->actual_cmd, offset + wcslen(proc)),
@@ -570,7 +570,7 @@ static void find_process(const wchar_t *proc, expand_flags_t flags,
     process_iterator_t iterator;
     while (iterator.next_process(&process_name, &process_pid)) {
         size_t offset;
-        if (match_pid(process_name, proc, flags, &offset)) {
+        if (match_pid(process_name, proc, &offset)) {
             if (flags & EXPAND_FOR_COMPLETIONS) {
                 append_completion(out, process_name.c_str() + offset + wcslen(proc),
                                   COMPLETE_PROCESS_DESC, 0);
@@ -756,13 +756,12 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
     for (long i = last_idx - 1; (i >= 0) && is_ok && !empty; i--) {
         const wchar_t c = instr.at(i);
         if ((c == VARIABLE_EXPAND) || (c == VARIABLE_EXPAND_SINGLE)) {
-            long start_pos = i + 1;
-            long stop_pos;
+            size_t start_pos = i + 1;
+            size_t stop_pos;
             long var_len;
             int is_single = (c == VARIABLE_EXPAND_SINGLE);
 
             stop_pos = start_pos;
-
             while (stop_pos < insize) {
                 const wchar_t nc = instr.at(stop_pos);
                 if (nc == VARIABLE_EXPAND_EMPTY) {
@@ -1382,6 +1381,7 @@ static expand_error_t expand_stage_home_and_pid(const wcstring &input,
 
 static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<completion_t> *out,
                                              expand_flags_t flags, parse_error_list_t *errors) {
+    UNUSED(errors);
     expand_error_t result = EXPAND_OK;
     wcstring path_to_expand = input;
 

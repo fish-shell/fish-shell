@@ -124,7 +124,7 @@ static const wchar_t *const name_arr[] = {L"beginning-of-line",
 
 wcstring describe_char(wint_t c) {
     wint_t initial_cmd_char = R_BEGINNING_OF_LINE;
-    size_t name_count = sizeof name_arr / sizeof *name_arr;
+    long name_count = sizeof(name_arr) / sizeof(*name_arr);
     if (c >= initial_cmd_char && c < initial_cmd_char + name_count) {
         return format_string(L"%02x (%ls)", c, name_arr[c - initial_cmd_char]);
     }
@@ -535,7 +535,7 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands) {
 
     const wcstring bind_mode = input_get_bind_mode();
 
-    for (int i = 0; i < mapping_list.size(); i++) {
+    for (size_t i = 0; i < mapping_list.size(); i++) {
         const input_mapping_t &m = mapping_list.at(i);
 
         // debug(0, L"trying mapping (%ls,%ls,%ls)\n", escape(m.seq.c_str(), ESCAPE_ALL).c_str(),

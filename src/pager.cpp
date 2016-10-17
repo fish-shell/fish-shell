@@ -50,8 +50,8 @@ static size_t divide_round_up(size_t numer, size_t denom) {
 void pager_t::recalc_min_widths(comp_info_list_t *lst) const {
     for (size_t i = 0; i < lst->size(); i++) {
         comp_t *c = &lst->at(i);
-        c->min_width = mini(c->desc_width, maxi(0, available_term_width / 3 - 2)) +
-                       mini(c->desc_width, maxi(0, available_term_width / 5 - 4)) + 4;
+        c->min_width = mini(c->desc_width, maxi((size_t)0, available_term_width / 3 - 2)) +
+                       mini(c->desc_width, maxi((size_t)0, available_term_width / 5 - 4)) + 4;
     }
 }
 
@@ -84,14 +84,16 @@ static int print_max(const wcstring &str, highlight_spec_t color, int max, bool 
 
 /// Print the specified item using at the specified amount of space.
 line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, size_t row,
-                                      size_t column, int width, bool secondary, bool selected,
+                                      size_t column, size_t width, bool secondary, bool selected,
                                       page_rendering_t *rendering) const {
-    int comp_width = 0, desc_width = 0;
-    int written = 0;
-
+    UNUSED(column);
+    UNUSED(row);
+    UNUSED(rendering);
+    size_t comp_width = 0, desc_width = 0;
+    size_t written = 0;
     line_t line_data;
 
-    if (c->pref_width <= width) {
+    if (c->pref_width <= (size_t)width) {
         // The entry fits, we give it as much space as it wants.
         comp_width = c->comp_width;
         desc_width = c->desc_width;
@@ -255,8 +257,7 @@ static void join_completions(comp_info_list_t *comps) {
 }
 
 /// Generate a list of comp_t structures from a list of completions.
-static comp_info_list_t process_completions_into_infos(const completion_list_t &lst,
-                                                       const wcstring &prefix) {
+static comp_info_list_t process_completions_into_infos(const completion_list_t &lst) {
     const size_t lst_size = lst.size();
 
     // Make the list of the correct size up-front.
@@ -341,7 +342,7 @@ void pager_t::refilter_completions() {
 
 void pager_t::set_completions(const completion_list_t &raw_completions) {
     // Get completion infos out of it.
-    unfiltered_completion_infos = process_completions_into_infos(raw_completions, prefix);
+    unfiltered_completion_infos = process_completions_into_infos(raw_completions);
 
     // Maybe join them.
     if (prefix == L"-") join_completions(&unfiltered_completion_infos);
@@ -379,12 +380,12 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     bool print = false;
 
     // Compute the effective term width and term height, accounting for disclosure.
-    int term_width = this->available_term_width;
-    int term_height =
+    size_t term_width = this->available_term_width;
+    size_t term_height =
         this->available_term_height - 1 -
         (search_field_shown ? 1 : 0);  // we always subtract 1 to make room for a comment row
     if (!this->fully_disclosed) {
-        term_height = mini(term_height, PAGER_UNDISCLOSED_MAX_ROWS);
+        term_height = mini(term_height, (size_t)PAGER_UNDISCLOSED_MAX_ROWS);
     }
 
     size_t row_count = divide_round_up(lst.size(), cols);
@@ -404,15 +405,15 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         rendering->remaining_to_disclose = 0;
     }
 
-    int pref_tot_width = 0;
-    int min_tot_width = 0;
+    size_t pref_tot_width = 0;
+    size_t min_tot_width = 0;
 
     // Skip completions on tiny terminals.
     if (term_width < PAGER_MIN_WIDTH) return true;
 
     // Calculate how wide the list would be.
-    for (long col = 0; col < cols; col++) {
-        for (long row = 0; row < row_count; row++) {
+    for (size_t col = 0; col < cols; col++) {
+        for (size_t row = 0; row < row_count; row++) {
             int pref, min;
             const comp_t *c;
             if (lst.size() <= col * row_count + row) continue;
@@ -526,7 +527,7 @@ page_rendering_t pager_t::render() const {
     rendering.search_field_shown = this->search_field_shown;
     rendering.search_field_line = this->search_field_line;
 
-    for (int cols = PAGER_MAX_COLS; cols > 0; cols--) {
+    for (size_t cols = PAGER_MAX_COLS; cols > 0; cols--) {
         // Initially empty rendering.
         rendering.screen_data.resize(0);
 
@@ -641,7 +642,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
         // Cardinal directions. We have a completion index; we wish to compute its row and column.
         size_t current_row = this->get_selected_row(rendering);
         size_t current_col = this->get_selected_column(rendering);
-        size_t page_height = maxi(rendering.term_height - 1, 1);
+        size_t page_height = maxi(rendering.term_height - 1, (size_t)1);
 
         switch (direction) {
             case direction_page_north: {

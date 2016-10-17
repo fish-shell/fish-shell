@@ -112,8 +112,10 @@ expect_prompt -re {history search --exact 'echo hell'\r\n} {
 
 # ==========
 # Delete a single command we recently ran.
-send "history delete 'echo hello'\r"
-expect_prompt -re {history delete 'echo hello'\r\n} {
+send "history delete -e -C 'echo hello'\r"
+expect -re {history delete -e -C 'echo hello'\r\n}
+send "echo count hello (history search -e -C 'echo hello' | wc -l | string trim)\r"
+expect -re {\r\ncount hello 0\r\n} {
     puts "history function explicit exact delete 'echo hello' succeeded"
 } unmatched {
     puts stderr "history function explicit exact delete 'echo hello' failed"
@@ -130,24 +132,20 @@ expect -re {\[2\] echo hello again\r\n\r\n}
 expect -re {Enter nothing to cancel.*\r\nEnter "all" to delete all the matching entries\.\r\n}
 expect -re {Delete which entries\? >}
 send "1\r"
-expect_prompt -re {Deleting history entry 1: "echo hello AGAIN"\r\n} {
-    puts "history function explicit prefix delete 'echo hello' succeeded"
-} unmatched {
-    puts stderr "history function explicit prefix delete 'echo hello' failed"
-}
+expect -re {Deleting history entry 1: "echo hello AGAIN"\r\n}
 
 # Verify that the deleted history entry is gone and the other one that matched
 # the prefix search above is still there.
-send "history search --exact 'echo hello again'\r"
-expect_prompt -re {\r\necho hello again\r\n} {
+send "echo count AGAIN (history search -e -C 'echo hello AGAIN' | wc -l | string trim)\r"
+expect -re {\r\ncount AGAIN 0\r\n} {
+    puts "history function explicit prefix delete 'echo hello AGAIN' succeeded"
+} unmatched {
+    puts stderr "history function explicit prefix delete 'echo hello AGAIN' failed"
+}
+
+send "echo count again (history search -e -C 'echo hello again' | wc -l | string trim)\r"
+expect -re {\r\ncount again 1\r\n} {
     puts "history function explicit exact search 'echo hello again' succeeded"
 } unmatched {
     puts stderr "history function explicit exact search 'echo hello again' failed"
-}
-
-send "history search --exact 'echo hello AGAIN'\r"
-expect_prompt -re {\r\necho hello AGAIN\r\n} {
-    puts stderr "history function explicit exact search 'echo hello AGAIN' found the entry"
-} unmatched {
-    puts "history function explicit exact search 'echo hello AGAIN' failed to find the entry"
 }

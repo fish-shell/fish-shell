@@ -1,4 +1,5 @@
 // History functions, part of the user interface.
+//
 #include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>
@@ -428,27 +429,52 @@ bool history_item_t::merge(const history_item_t &item) {
     return result;
 }
 
+#if 0
 history_item_t::history_item_t(const wcstring &str)
-    : contents(str), creation_timestamp(time(NULL)), identifier(0) {}
+    : contents(str), contents_lower(L""), creation_timestamp(time(NULL)), identifier(0) {
+        for (wcstring::const_iterator it = str.begin(); it != str.end(); ++it) {
+                contents_lower.push_back(towlower(*it));
+        }
+    }
+#endif
 
 history_item_t::history_item_t(const wcstring &str, time_t when, history_identifier_t ident)
-    : contents(str), creation_timestamp(when), identifier(ident) {}
+    : contents(str), contents_lower(L""), creation_timestamp(when), identifier(ident) {
+    for (wcstring::const_iterator it = str.begin(); it != str.end(); ++it) {
+        contents_lower.push_back(towlower(*it));
+    }
+}
 
-bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type) const {
-    switch (type) {
-        case HISTORY_SEARCH_TYPE_CONTAINS: {
+bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type,
+                                    bool case_sensitive) const {
+    // We don't use a switch below because there are only three cases and if the strings are the
+    // same length we can use the faster HISTORY_SEARCH_TYPE_EXACT for the other two cases.
+    //
+    // Too, we consider equal strings to match a prefix search, so that autosuggest will allow
+    // suggesting what you've typed.
+    if (case_sensitive) {
+        if (type == HISTORY_SEARCH_TYPE_EXACT || term.size() == contents.size()) {
+            return term == contents;
+        } else if (type == HISTORY_SEARCH_TYPE_CONTAINS) {
             return contents.find(term) != wcstring::npos;
-        }
-        case HISTORY_SEARCH_TYPE_PREFIX: {
-            // We consider equal strings to match a prefix search, so that autosuggest will allow
-            // suggesting what you've typed.
+        } else if (type == HISTORY_SEARCH_TYPE_PREFIX) {
             return string_prefixes_string(term, contents);
         }
-        case HISTORY_SEARCH_TYPE_EXACT: {
-            return term == contents;
+    } else {
+        wcstring lterm(L"");
+        for (wcstring::const_iterator it = term.begin(); it != term.end(); ++it) {
+            lterm.push_back(towlower(*it));
         }
-        default: { DIE("unexpected history_search_type_t value"); }
+
+        if (type == HISTORY_SEARCH_TYPE_EXACT || lterm.size() == contents.size()) {
+            return lterm == contents_lower;
+        } else if (type == HISTORY_SEARCH_TYPE_CONTAINS) {
+            return contents_lower.find(lterm) != wcstring::npos;
+        } else if (type == HISTORY_SEARCH_TYPE_PREFIX) {
+            return string_prefixes_string(lterm, contents_lower);
+        }
     }
+    DIE("unexpected history_search_type_t value");
 }
 
 /// Append our YAML history format to the provided vector at the given offset, updating the offset.
@@ -562,7 +588,7 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         // leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:".
         const char *double_cmd = "- cmd: - cmd: ";
         const size_t double_cmd_len = strlen(double_cmd);
-        while (a_newline - line_start > double_cmd_len &&
+        while ((size_t)(a_newline - line_start) > double_cmd_len &&
                !memcmp(line_start, double_cmd, double_cmd_len)) {
             // Skip over just one of the - cmd. In the end there will be just one left.
             line_start += strlen("- cmd: ");
@@ -572,8 +598,10 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         // 123456". Ignore those.
         const char *cmd_when = "- cmd:    when:";
         const size_t cmd_when_len = strlen(cmd_when);
-        if (a_newline - line_start >= cmd_when_len && !memcmp(line_start, cmd_when, cmd_when_len))
+        if ((size_t)(a_newline - line_start) >= cmd_when_len &&
+            !memcmp(line_start, cmd_when, cmd_when_len)) {
             continue;
+        }
 
         // At this point, we know line_start is at the beginning of an item. But maybe we want to
         // skip this item because of timestamps. A 0 cutoff means we don't care; if we do care, then
@@ -763,16 +791,27 @@ void history_t::add(const wcstring &str, history_identifier_t ident, bool pendin
     this->add(history_item_t(str, when, ident), pending);
 }
 
-void history_t::remove(const wcstring &str) {
-    // Add to our list of deleted items.
-    deleted_items.insert(str);
+bool icompare_pred(wchar_t a, wchar_t b) { return std::tolower(a) == std::tolower(b); }
 
-    // Remove from our list of new items.
+bool icompare(wcstring const &a, wcstring const &b) {
+    if (a.length() == b.length()) {
+        return std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
+    } else {
+        return false;
+    }
+}
+
+// Remove matching history entries from our list of new items. This only supports literal,
+// case-sensitive, matches.
+void history_t::remove(const wcstring &str_to_remove) {
+    // Add to our list of deleted items.
+    deleted_items.insert(str_to_remove);
+
     size_t idx = new_items.size();
     while (idx--) {
-        if (new_items.at(idx).str() == str) {
+        bool matched = new_items.at(idx).str() == str_to_remove;
+        if (matched) {
             new_items.erase(new_items.begin() + idx);
-
             // If this index is before our first_unwritten_new_item_index, then subtract one from
             // that index so it stays pointing at the same item. If it is equal to or larger, then
             // we have not yet writen this item, so we don't have to adjust the index.
@@ -1001,7 +1040,7 @@ bool history_search_t::go_backwards() {
 
         // Look for a term that matches and that we haven't seen before.
         const wcstring &str = item.str();
-        if (item.matches_search(term, search_type) && !match_already_made(str) &&
+        if (item.matches_search(term, search_type, case_sensitive) && !match_already_made(str) &&
             !should_skip_match(str)) {
             prev_matches.push_back(prev_match_t(idx, item));
             return true;
@@ -1397,7 +1436,7 @@ void history_t::save(void) {
 // Formats a single history record, including a trailing newline.  Returns true
 // if bytes were written to the output stream and false otherwise.
 static bool format_history_record(const history_item_t &item, const wchar_t *show_time_format,
-                                  io_streams_t &streams) {
+                                  bool null_terminate, io_streams_t &streams) {
     if (show_time_format) {
         const time_t seconds = item.timestamp();
         struct tm timestamp;
@@ -1410,17 +1449,19 @@ static bool format_history_record(const history_item_t &item, const wchar_t *sho
         streams.out.append(timestamp_string);
     }
     streams.out.append(item.str());
-    streams.out.append(L"\n");
+    streams.out.append(null_terminate ? L'\0' : L'\n');
     return true;
 }
 
 bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args,
-                       const wchar_t *show_time_format, long max_items, io_streams_t &streams) {
+                       const wchar_t *show_time_format, long max_items, bool case_sensitive,
+                       bool null_terminate, io_streams_t &streams) {
     // scoped_lock locker(lock);
     if (search_args.empty()) {
         // Start at one because zero is the current command.
         for (int i = 1; !this->item_at_index(i).empty() && max_items; ++i, --max_items) {
-            if (!format_history_record(this->item_at_index(i), show_time_format, streams)) {
+            if (!format_history_record(this->item_at_index(i), show_time_format, null_terminate,
+                                       streams)) {
                 return false;
             }
         }
@@ -1434,9 +1475,11 @@ bool history_t::search(history_search_type_t search_type, wcstring_list_t search
             streams.err.append_format(L"Searching for the empty string isn't allowed");
             return false;
         }
-        history_search_t searcher = history_search_t(*this, search_string, search_type);
+        history_search_t searcher =
+            history_search_t(*this, search_string, search_type, case_sensitive);
         while (searcher.go_backwards()) {
-            if (!format_history_record(searcher.current_item(), show_time_format, streams)) {
+            if (!format_history_record(searcher.current_item(), show_time_format, null_terminate,
+                                       streams)) {
                 return false;
             }
             if (--max_items == 0) return true;
@@ -1659,8 +1702,8 @@ static int threaded_perform_file_detection(file_detection_context_t *ctx) {
     return ctx->perform_file_detection(true /* test all */);
 }
 
-static void perform_file_detection_done(file_detection_context_t *ctx,
-                                        int success) {  //!OCLINT(success is ignored)
+static void perform_file_detection_done(file_detection_context_t *ctx, int success) {
+    UNUSED(success);
     ASSERT_IS_MAIN_THREAD();
 
     // Now that file detection is done, update the history item with the valid file paths.

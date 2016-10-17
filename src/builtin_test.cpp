@@ -771,6 +771,7 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
 ///
 /// Return status is the final shell status, i.e. 0 for true, 1 for false and 2 for error.
 int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    UNUSED(parser);
     using namespace test_expressions;
 
     // The first argument should be the name of the command ('test').

@@ -93,7 +93,7 @@ class lru_cache_t {
     lru_node_t mouth;
 
     /// Overridable callback for when a node is evicted.
-    virtual void node_was_evicted(node_type_t *node) {}
+    virtual void node_was_evicted(node_type_t *node) { UNUSED(node); }
 
    public:
     /// Constructor
@@ -185,7 +185,6 @@ class lru_cache_t {
        public:
         explicit iterator(lru_node_t *val) : node(val) {}
         void operator++() { node = lru_cache_t::get_previous(node); }
-        void operator++(int x) { node = lru_cache_t::get_previous(node); }
         bool operator==(const iterator &other) { return node == other.node; }
         bool operator!=(const iterator &other) { return !(*this == other); }
         node_type_t *operator*() { return static_cast<node_type_t *>(node); }

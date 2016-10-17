@@ -26,7 +26,7 @@
 class parser_t;
 
 // Error message for invalid path operations.
-#define BUILTIN_SET_PATH_ERROR L"%ls: Warning: path component %ls may not be valid in %ls.\n"
+#define BUILTIN_SET_PATH_ERROR L"%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n"
 
 // Hint for invalid path operation with a colon.
 #define BUILTIN_SET_PATH_HINT L"%ls: Did you mean 'set %ls $%ls %ls'?\n"
@@ -72,33 +72,30 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
                 continue;
             }
 
-            bool show_perror = false;
             int show_hint = 0;
             bool error = false;
-
             struct stat buff;
-            if (wstat(dir, &buff)) {
+            if (wstat(dir, &buff) == -1) {
                 error = true;
-                show_perror = true;
             }
-
-            if (!(S_ISDIR(buff.st_mode))) {
+            else if (!S_ISDIR(buff.st_mode)) {
+                error = true;
+                errno = ENOTDIR;
+            }
+            else if (waccess(dir, X_OK) == -1) {
                 error = true;
             }
 
             if (!error) {
                 any_success = true;
             } else {
-                streams.err.append_format(_(BUILTIN_SET_PATH_ERROR), L"set", dir.c_str(), key);
+                streams.err.append_format(_(BUILTIN_SET_PATH_ERROR), L"set", key, dir.c_str(),
+                        strerror(errno));
                 const wchar_t *colon = wcschr(dir.c_str(), L':');
 
                 if (colon && *(colon + 1)) {
                     show_hint = 1;
                 }
-            }
-
-            if (show_perror) {
-                builtin_wperror(L"set", streams);
             }
 
             if (show_hint) {

@@ -191,7 +191,9 @@ static bool var_is_locale(const wcstring &key) {
 /// Properly sets all locale information.
 static void handle_locale(const wchar_t *env_var_name) {
     debug(2, L"handle_locale() called in response to '%ls' changing", env_var_name);
-    const char *old_msg_locale = setlocale(LC_MESSAGES, NULL);
+    // We have to make a copy because the subsequent setlocale() call to change the locale will
+    // invalidate the pointer from the this setlocale() call.
+    char *old_msg_locale = strdup(setlocale(LC_MESSAGES, NULL));
     const env_var_t val = env_get_string(env_var_name, ENV_EXPORT);
     const std::string &value = wcs2string(val);
     const std::string &name = wcs2string(env_var_name);
@@ -216,6 +218,7 @@ static void handle_locale(const wchar_t *env_var_name) {
         _nl_msg_cat_cntr++;
     }
 #endif
+    free(old_msg_locale);
 }
 
 /// Check if the specified variable is a locale variable.
@@ -267,7 +270,7 @@ static void react_to_variable_change(const wcstring &key) {
 
 /// Universal variable callback function. This function makes sure the proper events are triggered
 /// when an event occurs.
-static void universal_callback(fish_message_type_t type, const wchar_t *name, const wchar_t *val) {
+static void universal_callback(fish_message_type_t type, const wchar_t *name) {
     const wchar_t *str = NULL;
 
     switch (type) {
@@ -1102,7 +1105,7 @@ void env_universal_barrier() {
         // Post callbacks.
         for (size_t i = 0; i < changes.size(); i++) {
             const callback_data_t &data = changes.at(i);
-            universal_callback(data.type, data.key.c_str(), data.val.c_str());
+            universal_callback(data.type, data.key.c_str());
         }
     }
 }

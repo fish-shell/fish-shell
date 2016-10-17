@@ -17,8 +17,8 @@
 /// Represents rendering from the pager.
 class page_rendering_t {
    public:
-    int term_width;
-    int term_height;
+    size_t term_width;
+    size_t term_height;
     size_t rows;
     size_t cols;
     size_t row_start;
@@ -47,8 +47,8 @@ page_rendering_t render_completions(const completion_list_t &raw_completions,
                                     const wcstring &prefix);
 
 class pager_t {
-    int available_term_width;
-    int available_term_height;
+    size_t available_term_width;
+    size_t available_term_height;
 
     size_t selected_completion_idx;
     size_t suggested_row_start;
@@ -73,13 +73,13 @@ class pager_t {
         /// The representative completion.
         completion_t representative;
         /// On-screen width of the completion string.
-        int comp_width;
+        size_t comp_width;
         /// On-screen width of the description information.
-        int desc_width;
+        size_t desc_width;
         /// Preferred total width.
-        int pref_width;
+        size_t pref_width;
         /// Minimum acceptable width.
-        int min_width;
+        size_t min_width;
 
         comp_t()
             : comp(),
@@ -114,7 +114,7 @@ class pager_t {
                           const wcstring &prefix, const comp_info_list_t &lst,
                           page_rendering_t *rendering) const;
     line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column,
-                                 int width, bool secondary, bool selected,
+                                 size_t width, bool secondary, bool selected,
                                  page_rendering_t *rendering) const;
 
    public:

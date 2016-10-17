@@ -695,6 +695,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
 
 /// The printf builtin.
 int builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    UNUSED(parser);
     builtin_printf_state_t state(streams);
 
     wchar_t *format;

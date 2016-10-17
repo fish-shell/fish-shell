@@ -285,6 +285,7 @@ pid_t execute_fork(bool wait_for_threads_to_die) {
 bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
                                         posix_spawn_file_actions_t *actions, job_t *j, process_t *p,
                                         const io_chain_t &io_chain) {
+    UNUSED(p);
     // Initialize the output.
     if (posix_spawnattr_init(attr) != 0) {
         return false;

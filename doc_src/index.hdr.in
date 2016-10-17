@@ -506,7 +506,7 @@ A dollar sign followed by a string of characters is expanded into the value of t
 
 Undefined and empty variables expand to nothing.
 
-To separate a variable name from text it should immediately be followed by, encase the variable within quotes.
+To separate a variable name from text encase the variable within double-quotes or braces.
 
 Examples:
 \fish
@@ -813,7 +813,7 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `BROWSER`, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 
-- `CDPATH`, an array of directories in which to search for the new directory for the `cd` builtin. By default, the fish configuration defines `CDPATH` to be a universal variable with the values `.` and `~`.
+- `CDPATH`, an array of directories in which to search for the new directory for the `cd` builtin.
 
 - `LANG`, `LC_ALL`, `LC_COLLATE`, `LC_CTYPE`, `LC_MESSAGES`, `LC_MONETARY`, `LC_NUMERIC` and `LC_TIME` set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
 
@@ -1105,7 +1105,7 @@ History searches can be aborted by pressing the escape key.
 
 Prefixing the commandline with a space will prevent the entire line from being stored in the history.
 
-The history is stored in the file `~/.config/fish/fish_history`.
+The history is stored in the file `~/.local/share/fish/fish_history` (or `$XDG_DATA_HOME/fish/fish_history` if that variable is set).
 
 Examples:
 
@@ -1170,7 +1170,7 @@ If you want to add the directory `~/linux/bin` to your PATH variable when using 
 
 \fish
 if status --is-login
-    set PATH $PATH ~/linux/bin
+    set -x PATH $PATH ~/linux/bin
 end
 \endfish
 

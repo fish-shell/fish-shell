@@ -348,7 +348,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
     if (narrow_res) {
         real_path.append(narrow_res);
     } else {
-        ssize_t pathsep_idx = narrow_path.rfind('/');
+        size_t pathsep_idx = narrow_path.rfind('/');
         if (pathsep_idx == 0) {
             // If the only pathsep is the first character then it's an absolute path with a
             // single path component and thus doesn't need conversion.
@@ -548,7 +548,7 @@ file_id_t file_id_t::file_id_from_stat(const struct stat *buf) {
     result.change_seconds = buf->st_ctime;
     result.mod_seconds = buf->st_mtime;
 
-#if STAT_HAVE_NSEC
+#ifdef HAVE_STRUCT_STAT_ST_CTIME_NSEC
     result.change_nanoseconds = buf->st_ctime_nsec;
     result.mod_nanoseconds = buf->st_mtime_nsec;
 #elif defined(__APPLE__)

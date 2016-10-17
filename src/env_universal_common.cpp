@@ -826,7 +826,7 @@ var_table_t env_universal_t::read_message_internal(int fd) {
 
         // Walk over it by lines. The contents of an unterminated line will be left in 'line' for
         // the next iteration.
-        size_t line_start = 0;
+        ssize_t line_start = 0;
         while (line_start < amt) {
             // Run until we hit a newline.
             size_t cursor = line_start;
@@ -1033,7 +1033,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         }
 
         // Set the size, if it's too small.
-        if (!errored && size < sizeof(universal_notifier_shmem_t)) {
+        if (!errored && size < (off_t)sizeof(universal_notifier_shmem_t)) {
             if (ftruncate(fd, sizeof(universal_notifier_shmem_t)) < 0) {
                 int err = errno;
                 report_error(err, L"Unable to truncate shared memory object with path '%s'", path);
@@ -1120,7 +1120,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         // If it's been less than five seconds since the last change, we poll quickly Otherwise we
         // poll more slowly. Note that a poll is a very cheap shmem read. The bad part about making
         // this high is the process scheduling/wakeups it produces.
-        unsigned long usec_per_sec = 1000000;
+        long long usec_per_sec = 1000000;
         if (get_time() - last_change_time < 5LL * usec_per_sec) {
             return usec_per_sec / 10;  // 10 times a second
         }
@@ -1299,6 +1299,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         // select() on our fd for a while, and sync periodically until the fd is no longer readable.
         // However, if we are the one who posted the notification, we don't sync (until we clean
         // up!)
+        UNUSED(fd);
         bool should_sync = false;
         if (readback_time_usec == 0) {
             polling_due_to_readable_fd = true;
@@ -1494,4 +1495,7 @@ bool universal_notifier_t::poll() { return false; }
 
 unsigned long universal_notifier_t::usec_delay_between_polls() const { return 0; }
 
-bool universal_notifier_t::notification_fd_became_readable(int fd) { return false; }
+bool universal_notifier_t::notification_fd_became_readable(int fd) {
+    UNUSED(fd);
+    return false;
+}

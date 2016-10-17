@@ -59,7 +59,8 @@ class history_item_t {
     bool merge(const history_item_t &item);
 
     // The actual contents of the entry.
-    wcstring contents;
+    wcstring contents;        // value as entered by the user
+    wcstring contents_lower;  // value normalized to all lowercase for case insensitive comparisons
 
     // Original creation time for the entry.
     time_t creation_timestamp;
@@ -71,15 +72,16 @@ class history_item_t {
     path_list_t required_paths;
 
    public:
-    explicit history_item_t(const wcstring &str);
-    explicit history_item_t(const wcstring &, time_t, history_identifier_t ident = 0);
+    explicit history_item_t(const wcstring &str, time_t when = 0, history_identifier_t ident = 0);
 
     const wcstring &str() const { return contents; }
+    const wcstring &str_lower() const { return contents_lower; }
 
     bool empty() const { return contents.empty(); }
 
     // Whether our contents matches a search term.
-    bool matches_search(const wcstring &term, enum history_search_type_t type) const;
+    bool matches_search(const wcstring &term, enum history_search_type_t type,
+                        bool case_sensitive) const;
 
     time_t timestamp() const { return creation_timestamp; }
 
@@ -227,7 +229,8 @@ class history_t {
 
     // Searches history.
     bool search(history_search_type_t search_type, wcstring_list_t search_args,
-                const wchar_t *show_time_format, long max_items, io_streams_t &streams);
+                const wchar_t *show_time_format, long max_items, bool case_sensitive,
+                bool null_terminate, io_streams_t &streams);
 
     // Enable / disable automatic saving. Main thread only!
     void disable_automatic_saving();
@@ -262,8 +265,12 @@ class history_search_t {
     // The history in which we are searching.
     history_t *history;
 
-    // Our type.
+    // The search term.
+    wcstring term;
+
+    // Our search type.
     enum history_search_type_t search_type;
+    bool case_sensitive;
 
     // Our list of previous matches as index, value. The end is the current match.
     typedef std::pair<size_t, history_item_t> prev_match_t;
@@ -271,9 +278,6 @@ class history_search_t {
 
     // Returns yes if a given term is in prev_matches.
     bool match_already_made(const wcstring &match) const;
-
-    // The search term.
-    wcstring term;
 
     // Additional strings to skip (sorted).
     wcstring_list_t external_skips;
@@ -310,11 +314,19 @@ class history_search_t {
 
     // Constructor.
     history_search_t(history_t &hist, const wcstring &str,
-                     enum history_search_type_t type = HISTORY_SEARCH_TYPE_CONTAINS)
-        : history(&hist), search_type(type), term(str) {}
+                     enum history_search_type_t type = HISTORY_SEARCH_TYPE_CONTAINS,
+                     bool case_sensitive = true)
+        : history(&hist), term(str), search_type(type), case_sensitive(case_sensitive) {
+        if (!case_sensitive) {
+            term = wcstring();
+            for (wcstring::const_iterator it = str.begin(); it != str.end(); ++it) {
+                term.push_back(towlower(*it));
+            }
+        }
+    }
 
     // Default constructor.
-    history_search_t() : history(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), term() {}
+    history_search_t() : history(), term(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), case_sensitive(true) {}
 };
 
 // Init history library. The history file won't actually be loaded until the first time a history

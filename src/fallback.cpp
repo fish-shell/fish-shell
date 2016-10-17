@@ -39,6 +39,7 @@
 #include <signal.h>  // IWYU pragma: keep
 #include <wchar.h>   // IWYU pragma: keep
 
+#include "common.h"    // IWYU pragma: keep
 #include "fallback.h"  // IWYU pragma: keep
 #include "util.h"      // IWYU pragma: keep
 
@@ -244,8 +245,15 @@ char *fish_bindtextdomain(const char *domainname, const char *dirname) {
 char *fish_textdomain(const char *domainname) { return textdomain(domainname); }
 #else
 char *fish_gettext(const char *msgid) { return (char *)msgid; }
-char *fish_bindtextdomain(const char *domainname, const char *dirname) { return NULL; }
-char *fish_textdomain(const char *domainname) { return NULL; }
+char *fish_bindtextdomain(const char *domainname, const char *dirname) {
+    UNUSED(domainname);
+    UNUSED(dirname);
+    return NULL;
+}
+char *fish_textdomain(const char *domainname) {
+    UNUSED(domainname);
+    return NULL;
+}
 #endif
 
 #ifndef HAVE_KILLPG
@@ -253,10 +261,6 @@ int killpg(int pgr, int sig) {
     assert(pgr > 1);
     return kill(-pgr, sig);
 }
-#endif
-
-#ifndef HAVE_NAN
-double nan(char *tagp) { return 0.0 / 0.0; }
 #endif
 
 // Big hack to use our versions of wcswidth where we know them to be broken, which is

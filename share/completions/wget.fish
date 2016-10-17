@@ -77,6 +77,26 @@ complete -c wget -l post-data --description "Use POST as the method for all HTTP
 complete -c wget -l post-file --description "Use POST as the method for all HTTP requests and send the specified data in the request body" -r
 complete -c wget -l no-http-keep-alive --description "Turn off keep-alive for http downloads"
 
+# HTTPS options
+
+complete -c wget -f -r -l secure-protocol -a 'auto SSLv2 SSLv3 TLSv1 PFS' --description "Choose secure protocol"
+complete -c wget -f -l https-only --description "Only follow secure HTTPS links"
+complete -c wget -f -l no-check-certificate --description "Don't validate the server's certificate"
+complete -c wget -r -l certificate --description "Client certificate file"
+complete -c wget -f -r -l certificate-type --arguments 'PEM DER' --description "Client certificate type"
+complete -c wget -r -l private-key --description "Private key file"
+complete -c wget -f -r -l private-key-type --arguments 'PEM DER' --description "Private key type"
+complete -c wget -r -l ca-certificate --description "File with the bundle of CAs"
+complete -c wget -r -l ca-directory --description "Directory where hash list of CAs is stored"
+complete -c wget -r -l crl-file --description "File with bundle of CRLs"
+complete -c wget -r -l random-file --description "File with random data for seeding the SSL PRNG"
+complete -c wget -r -l egd-file --description "File naming the EGD socket with random data"
+
+# HSTS options
+
+complete -c wget -f -l no-hsts --description "Disable HSTS"
+complete -c wget -l hsts-file --description "Path of HSTS database"
+
 #FTP options
 
 complete -c wget -l no-remove-listing --description "Don't remove the temporary .listing files generated"

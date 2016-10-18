@@ -13,10 +13,10 @@
 
 ## Notable fixes and improvements
 - The `fish_realpath` builtin has been renamed to `realpath` and made compatible with GNU `realpath` when run without arguments (#3400). It is used only for systems without a `realpath` or `grealpath` utility (#3374).
+- Improved color handling on terminals/consoles with 8-16 colors. Particularly bright named color usability has improved. (#3176, #3260).
 - `fish_indent` can now read from named files, rather than just standard input (#3037).
 - Fuzzy tab completions behave in a less surprising manner (#3090, #3211).
 - `jobs` should only print its header line once (#3127).
-- Improved color handling on terminals with limited colors (#3176, #3260).
 - Wildcards in redirections are highlighted appropriately (#2789).
 - Suggestions will be offered more often, like after removing characters (#3069).
 - `history --merge` now correctly interleaves items in chronological order (#2312).

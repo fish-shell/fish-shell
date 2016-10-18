@@ -37,7 +37,7 @@
   -  `p4`, the Perforce client (#3314)
   -  `pygmentize` (#3378)
   -  `ranger` (#3378)
-- Improved completions for `aura` (#3297), `abbr` (#3267), `brew` (#3309), `chown` (#3380, #3383),`cygport` (#3392), `git` (#3274, #3226, #3225, #3094, #3087, #3035, #3021, #2982, #3230), `kill & `pkill` (#3200) `screen` (#3271), and `xz` (#3378).
+- Improved completions for `aura` (#3297), `abbr` (#3267), `brew` (#3309), `chown` (#3380, #3383),`cygport` (#3392), `git` (#3274, #3226, #3225, #3094, #3087, #3035, #3021, #2982, #3230), `kill & `pkill` (#3200), `screen` (#3271), `wget` (#3470), and `xz` (#3378).
 - Distributors, packagers and developers will notice that the build process produces more succinct output by default; use `make V=1` to get verbose output (#3248).
 - Improved compatibility with minor platforms including musl (#2988), Cygwin (#2993), Android (#3441, #3442), Haiku (#3322) and Solaris .
 

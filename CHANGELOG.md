@@ -7,14 +7,14 @@
 - `history search` is now case-insensitive by default (which also affects `history delete`) (#3236).
 - `history delete` now correctly handles multiline commands (#31).
 - Vi-style bindings no longer include all of the default emacs-style bindings; instead, they share some definitions (#3068).
-- If there is no locale set in the environment, various known system configuration files will be checked for a default, otherwise forcing en_US-UTF.8 (#277).
+- If there is no locale set in the environment, various known system configuration files will be checked for a default. If no locale can be found, `en_US-UTF.8` will be used (#277).
 - A number followed by a caret (e.g. `5^`) is no longer treated as a redirection (#1873).
 - The `$version` special variable can be overwritten, so that it can be used for other purposes if required.
 
 ## Notable fixes and improvements
 - The `fish_realpath` builtin has been renamed to `realpath` and made compatible with GNU `realpath` when run without arguments (#3400). It is used only for systems without a `realpath` or `grealpath` utility (#3374).
-- Improved color handling on terminals/consoles with 8-16 colors. Particularly bright named color usability has improved. (#3176, #3260).
-- `fish_indent` can now read from named files, rather than just standard input (#3037).
+- Improved color handling on terminals/consoles with 8-16 colors, particularly the use of bright named color (#3176, #3260).
+- `fish_indent` can now read from files given as arguments, rather than just standard input (#3037).
 - Fuzzy tab completions behave in a less surprising manner (#3090, #3211).
 - `jobs` should only print its header line once (#3127).
 - Wildcards in redirections are highlighted appropriately (#2789).

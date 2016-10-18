@@ -453,8 +453,9 @@ lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 		WORDBL='[[:<:]]'; WORDBR='[[:>:]]'; \
 	else \
 		WORDBL='\\<'; WORDBR='\\>'; \
-	fi; $(SED) <lexicon.txt >>$@.tmp -n -e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" -e '$$G;s/.*\n/b tidy/p';
-	mv $@.tmp $@; test -x $@ || chmod a+x $@; 
+	fi
+	$v $(SED) <lexicon.txt >>$@.tmp -n -e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" -e '$$G;s/.*\n/b tidy/p'
+	$v mv $@.tmp $@; test -x $@ || chmod a+x $@; 
 
 
 #

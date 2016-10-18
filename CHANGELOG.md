@@ -1,4 +1,4 @@
-# next-2.x
+# fish 2.4b1 (released October 18, 2016)
 
 ## Significant changes
 - The clipboard integration has been revamped with explicit bindings. The killring commands no longer copy from, or paste to, the X11 clipboard - use the new copy (`C-x`) and paste (`C-v`) bindings instead. The clipboard is now available on OS X as well as systems using X11 (e.g. Linux). (#3061)

@@ -1,4 +1,4 @@
-#completion for diskutil
+# completion for diskutil (macOS)
 
 function __fish_diskutil_devices
     set -l mountpoints /dev/disk*; printf '%s\n' $mountpoints
@@ -21,6 +21,10 @@ complete -f -c diskutil -n '__fish_seen_subcommand_from info' -o 'all' -d 'Proce
 
 # activity
 complete -f -c diskutil -n '__fish_use_subcommand' -a activity -d 'Continuously display system-wide disk manipulation activity'
+
+# listFilesystems
+complete -f -c diskutil -n '__fish_use_subcommand' -a listFilesystems -d 'Show the file system personalities available'
+complete -f -c diskutil -n '__fish_seen_subcommand_from listFilesystems' -o 'plist' -d 'Return a property list'
 
 # umount
 complete -f -c diskutil -n '__fish_use_subcommand' -a umount -d 'Unmount a single volume'

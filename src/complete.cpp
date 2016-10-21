@@ -289,9 +289,11 @@ class completer_t {
         return flags & COMPLETION_REQUEST_AUTOSUGGESTION ? COMPLETE_AUTOSUGGEST : COMPLETE_DEFAULT;
     }
 
-    bool wants_descriptions() const { return !!(flags & COMPLETION_REQUEST_DESCRIPTIONS); }
+    bool wants_descriptions() const {
+        return static_cast<bool>(flags & COMPLETION_REQUEST_DESCRIPTIONS);
+    }
 
-    bool fuzzy() const { return !!(flags & COMPLETION_REQUEST_FUZZY_MATCH); }
+    bool fuzzy() const { return static_cast<bool>(flags & COMPLETION_REQUEST_FUZZY_MATCH); }
 
     fuzzy_match_type_t max_fuzzy_match_type() const {
         // If we are doing fuzzy matching, request all types; if not request only prefix matching.

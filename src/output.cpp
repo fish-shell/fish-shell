@@ -115,7 +115,8 @@ static bool write_background_color(unsigned char idx) {
 
 // Exported for builtin_set_color's usage only.
 bool write_color(rgb_color_t color, bool is_fg) {
-    bool supports_term24bit = !!(output_get_color_support() & color_support_term24bit);
+    bool supports_term24bit =
+        static_cast<bool>(output_get_color_support() & color_support_term24bit);
     if (!supports_term24bit || !color.is_rgb()) {
         // Indexed or non-24 bit color.
         unsigned char idx = index_for_color(color);
@@ -386,7 +387,7 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
     }
     // If we have both RGB and named colors, then prefer rgb if term256 is supported.
     rgb_color_t result = rgb_color_t::none();
-    bool has_term256 = !!(support & color_support_term256);
+    bool has_term256 = static_cast<bool>(support & color_support_term256);
     if ((!first_rgb.is_none() && has_term256) || first_named.is_none()) {
         result = first_rgb;
     } else {

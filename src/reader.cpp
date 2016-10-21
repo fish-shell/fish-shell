@@ -1027,9 +1027,9 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
                                           const wcstring &command_line, size_t *inout_cursor_pos,
                                           bool append_only) {
     const wchar_t *val = val_str.c_str();
-    bool add_space = !(flags & COMPLETE_NO_SPACE);
-    bool do_replace = !!(flags & COMPLETE_REPLACES_TOKEN);
-    bool do_escape = !(flags & COMPLETE_DONT_ESCAPE);
+    bool add_space = !static_cast<bool>(flags & COMPLETE_NO_SPACE);
+    bool do_replace = static_cast<bool>(flags & COMPLETE_REPLACES_TOKEN);
+    bool do_escape = !static_cast<bool>(flags & COMPLETE_DONT_ESCAPE);
 
     const size_t cursor_pos = *inout_cursor_pos;
     bool back_into_trailing_quote = false;
@@ -1046,7 +1046,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
 
         if (do_escape) {
             // Respect COMPLETE_DONT_ESCAPE_TILDES.
-            bool no_tilde = !!(flags & COMPLETE_DONT_ESCAPE_TILDES);
+            bool no_tilde = static_cast<bool>(flags & COMPLETE_DONT_ESCAPE_TILDES);
             wcstring escaped =
                 escape(val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
             sb.append(escaped);
@@ -1426,7 +1426,7 @@ static bool handle_completions(const std::vector<completion_t> &comp,
             if (el.match.type > best_match_type) continue;
 
             // Only use completions that match replace_token.
-            bool completion_replace_token = !!(el.flags & COMPLETE_REPLACES_TOKEN);
+            bool completion_replace_token = static_cast<bool>(el.flags & COMPLETE_REPLACES_TOKEN);
             if (completion_replace_token != will_replace_token) continue;
 
             // Don't use completions that want to replace, if we cannot replace them.

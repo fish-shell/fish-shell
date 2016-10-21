@@ -64,10 +64,10 @@ tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags)
       continue_line_after_comment(false) {
     assert(b != NULL);
 
-    this->accept_unfinished = !!(flags & TOK_ACCEPT_UNFINISHED);
-    this->show_comments = !!(flags & TOK_SHOW_COMMENTS);
-    this->squash_errors = !!(flags & TOK_SQUASH_ERRORS);
-    this->show_blank_lines = !!(flags & TOK_SHOW_BLANK_LINES);
+    this->accept_unfinished = static_cast<bool>(flags & TOK_ACCEPT_UNFINISHED);
+    this->show_comments = static_cast<bool>(flags & TOK_SHOW_COMMENTS);
+    this->squash_errors = static_cast<bool>(flags & TOK_SQUASH_ERRORS);
+    this->show_blank_lines = static_cast<bool>(flags & TOK_SHOW_BLANK_LINES);
 
     this->has_next = (*b != L'\0');
     this->tok_next();

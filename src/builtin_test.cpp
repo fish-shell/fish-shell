@@ -595,14 +595,14 @@ bool combining_expression::evaluate(wcstring_list_t &errors) {
     switch (token) {
         case test_combine_and:
         case test_combine_or: {
+            assert(!subjects.empty());
+            assert(combiners.size() + 1 == subjects.size());
+
             // One-element case.
             if (subjects.size() == 1) return subjects.at(0)->evaluate(errors);
 
             // Evaluate our lists, remembering that AND has higher precedence than OR. We can
             // visualize this as a sequence of OR expressions of AND expressions.
-            assert(combiners.size() + 1 == subjects.size());
-            assert(!subjects.empty());
-
             size_t idx = 0, max = subjects.size();
             bool or_result = false;
             while (idx < max) {

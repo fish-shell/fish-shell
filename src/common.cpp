@@ -768,9 +768,9 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
     assert(orig_in != NULL);
 
     const wchar_t *in = orig_in;
-    bool escape_all = !!(flags & ESCAPE_ALL);
-    bool no_quoted = !!(flags & ESCAPE_NO_QUOTED);
-    bool no_tilde = !!(flags & ESCAPE_NO_TILDE);
+    bool escape_all = static_cast<bool>(flags & ESCAPE_ALL);
+    bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
+    bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
 
     int need_escape = 0;
     int need_complex_escape = 0;
@@ -1117,8 +1117,8 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
     wcstring result;
     result.reserve(input_len);
 
-    const bool unescape_special = !!(flags & UNESCAPE_SPECIAL);
-    const bool allow_incomplete = !!(flags & UNESCAPE_INCOMPLETE);
+    const bool unescape_special = static_cast<bool>(flags & UNESCAPE_SPECIAL);
+    const bool allow_incomplete = static_cast<bool>(flags & UNESCAPE_INCOMPLETE);
 
     int bracket_count = 0;
 

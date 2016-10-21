@@ -118,7 +118,9 @@ class parse_node_t {
     }
 
     /// Indicate if the node has comment nodes.
-    bool has_comments() const { return !!(this->flags & parse_node_flag_has_comments); }
+    bool has_comments() const {
+        return static_cast<bool>(this->flags & parse_node_flag_has_comments);
+    }
 
     /// Gets source for the node, or the empty string if it has no source.
     wcstring get_source(const wcstring &str) const {

@@ -51,3 +51,10 @@ disable-rules:
     # and is therefore just noise. Disable this rule.
     #
     - InvertedLogic
+    #
+    # The idea behind the "double negative" rule is sound since constructs
+    # like "!!(var & flag)" should be written as "static_cast<bool>(var &
+    # flag)". Unfortunately this rule has way too many false positives;
+    # especially in the context of assert statements. So disable this rule.
+    #
+    - DoubleNegative

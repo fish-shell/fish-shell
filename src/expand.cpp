@@ -1401,8 +1401,8 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
         // which may be CDPATH if the special flag is set.
         const wcstring working_dir = env_get_pwd_slash();
         wcstring_list_t effective_working_dirs;
-        bool for_cd = !!(flags & EXPAND_SPECIAL_FOR_CD);
-        bool for_command = !!(flags & EXPAND_SPECIAL_FOR_COMMAND);
+        bool for_cd = static_cast<bool>(flags & EXPAND_SPECIAL_FOR_CD);
+        bool for_command = static_cast<bool>(flags & EXPAND_SPECIAL_FOR_COMMAND);
         if (!for_cd && !for_command) {
             // Common case.
             effective_working_dirs.push_back(working_dir);

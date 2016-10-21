@@ -47,8 +47,8 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
 
         secondary_diff = (aend - a) - (bend - b);
 
-        a = aend - 1;
-        b = bend - 1;
+        a = aend - 1;  //!OCLINT(parameter reassignment)
+        b = bend - 1;  //!OCLINT(parameter reassignment)
     } else {
         int diff = towlower(*a) - towlower(*b);
         if (diff != 0) return diff > 0 ? 2 : -2;

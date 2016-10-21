@@ -161,8 +161,9 @@ const wchar_t *wgetopter_t::_wgetopt_initialize(const wchar_t *optstring) {
     } else if (optstring[0] == '+') {
         ordering = REQUIRE_ORDER;
         ++optstring;
-    } else
+    } else {
         ordering = PERMUTE;
+    }
 
     return optstring;
 }
@@ -211,7 +212,7 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
                                    const struct woption *longopts, int *longind, int long_only) {
     woptarg = NULL;
 
-    if (woptind == 0) optstring = _wgetopt_initialize(optstring);
+    if (woptind == 0) optstring = _wgetopt_initialize(optstring);  //!OCLINT(parameter reassignment)
 
     if (nextchar == NULL || *nextchar == '\0') {
         // Advance to the next ARGV-element.

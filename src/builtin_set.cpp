@@ -159,7 +159,6 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
 static int parse_index(std::vector<long> &indexes, const wchar_t *src, const wchar_t *name,
                        size_t var_count, io_streams_t &streams) {
     size_t len;
-
     int count = 0;
     const wchar_t *src_orig = src;
 
@@ -167,9 +166,7 @@ static int parse_index(std::vector<long> &indexes, const wchar_t *src, const wch
         return 0;
     }
 
-    while (*src != L'\0' && (iswalnum(*src) || *src == L'_')) {
-        src++;
-    }
+    while (*src != L'\0' && (iswalnum(*src) || *src == L'_')) src++;
 
     if (*src != L'[') {
         streams.err.append_format(_(BUILTIN_SET_ARG_COUNT), L"set");
@@ -177,7 +174,6 @@ static int parse_index(std::vector<long> &indexes, const wchar_t *src, const wch
     }
 
     len = src - src_orig;
-
     if ((wcsncmp(src_orig, name, len) != 0) || (wcslen(name) != (len))) {
         streams.err.append_format(
             _(L"%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"), L"set",
@@ -186,37 +182,29 @@ static int parse_index(std::vector<long> &indexes, const wchar_t *src, const wch
     }
 
     src++;
-
-    while (iswspace(*src)) {
-        src++;
-    }
+    while (iswspace(*src)) src++;
 
     while (*src != L']') {
         wchar_t *end;
-
         long l_ind;
 
         errno = 0;
-
         l_ind = wcstol(src, &end, 10);
-
         if (end == src || errno) {
             streams.err.append_format(_(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
             return 0;
         }
 
-        if (l_ind < 0) {
-            l_ind = var_count + l_ind + 1;
-        }
+        if (l_ind < 0) l_ind = var_count + l_ind + 1;
 
-        src = end;
+        src = end;  //!OCLINT(parameter reassignment)
         if (*src == L'.' && *(src + 1) == L'.') {
             src += 2;
             long l_ind2 = wcstol(src, &end, 10);
             if (end == src || errno) {
                 return 1;
             }
-            src = end;
+            src = end;  //!OCLINT(parameter reassignment)
 
             if (l_ind2 < 0) {
                 l_ind2 = var_count + l_ind2 + 1;
@@ -231,6 +219,7 @@ static int parse_index(std::vector<long> &indexes, const wchar_t *src, const wch
             indexes.push_back(l_ind);
             count++;
         }
+
         while (iswspace(*src)) src++;
     }
 

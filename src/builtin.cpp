@@ -412,7 +412,7 @@ static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int u
     }
 
     int res = 0;
-    if (mode == NULL) mode = DEFAULT_BIND_MODE;
+    if (mode == NULL) mode = DEFAULT_BIND_MODE;  //!OCLINT(parameter reassignment)
 
     while (*seq) {
         if (use_terminfo) {

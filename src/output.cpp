@@ -312,13 +312,10 @@ int writech(wint_t ch) {
     if (ch >= ENCODE_DIRECT_BASE && ch < ENCODE_DIRECT_BASE + 256) {
         buff[0] = ch - ENCODE_DIRECT_BASE;
         len = 1;
-    } else if (MB_CUR_MAX == 1)  // single-byte locale (C/POSIX/ISO-8859)
-    {
+    } else if (MB_CUR_MAX == 1) {
+        // single-byte locale (C/POSIX/ISO-8859)
         // If `wc` contains a wide character we emit a question-mark.
-        if (ch & ~0xFF) {
-            ch = '?';
-        }
-        buff[0] = ch;
+        buff[0] = ch & ~0xFF ? '?' : ch;
         len = 1;
     } else {
         mbstate_t state = {};

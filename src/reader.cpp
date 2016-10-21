@@ -135,8 +135,8 @@ static void set_command_line_and_position(editable_line_t *el, const wcstring &n
 void editable_line_t::insert_string(const wcstring &str, size_t start, size_t len) {
     // Clamp the range to something valid.
     size_t string_length = str.size();
-    start = mini(start, string_length);
-    len = mini(len, string_length - start);
+    start = mini(start, string_length);      //!OCLINT(parameter reassignment)
+    len = mini(len, string_length - start);  //!OCLINT(parameter reassignment)
     this->text.insert(this->position, str, start, len);
     this->position += len;
 }
@@ -1898,7 +1898,7 @@ static void reader_set_buffer_maintaining_pager(const wcstring &b, size_t pos) {
     data->command_line_changed(&data->command_line);
 
     // Don't set a position past the command line length.
-    if (pos > command_line_len) pos = command_line_len;
+    if (pos > command_line_len) pos = command_line_len;  //!OCLINT(parameter reassignment)
 
     update_buff_pos(&data->command_line, pos);
 

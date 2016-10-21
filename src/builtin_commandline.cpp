@@ -165,16 +165,14 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
         }
 
         streams.out.append(out);
-
         free(buff);
     } else {
         if (cut_at_cursor) {
-            end = begin + pos;
+            streams.out.append(begin, pos);
+        } else {
+            streams.out.append(begin, end - begin);
         }
-
-        // debug( 0, L"woot2 %ls -> %ls", buff, esc );
-        streams.out.append(begin, end - begin);
-        streams.out.append(L"\n");
+        streams.out.push_back(L'\n');
     }
 }
 

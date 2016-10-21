@@ -88,13 +88,11 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
     size_t off2 = parse_util_get_offset_from_line(buff, line + 1);
 
     if (off == (size_t)-1) return (size_t)-1;
-
     if (off2 == (size_t)-1) off2 = wcslen(buff) + 1;
-
-    if (line_offset < 0) line_offset = 0;
+    if (line_offset < 0) line_offset = 0;  //!OCLINT(parameter reassignment)
 
     if ((size_t)line_offset >= off2 - off - 1) {
-        line_offset = off2 - off - 1;
+        line_offset = off2 - off - 1;  //!OCLINT(parameter reassignment)
     }
 
     return off + line_offset;
@@ -763,10 +761,9 @@ static int parser_is_pipe_forbidden(const wcstring &word) {
 
 bool parse_util_argument_is_help(const wchar_t *s, int min_match) {
     CHECK(s, 0);
-
     size_t len = wcslen(s);
 
-    min_match = maxi(min_match, 3);
+    min_match = maxi(min_match, 3);  //!OCLINT(parameter reassignment)
 
     return wcscmp(L"-h", s) == 0 || (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
 }

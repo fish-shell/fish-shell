@@ -713,9 +713,7 @@ bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcst
     parse_error_list_t errors;
 
     // Use empty string for the prefix if it's NULL.
-    if (prefix == NULL) {
-        prefix = L"";
-    }
+    if (!prefix) prefix = L"";  //!OCLINT(parameter reassignment)
 
     // Parse the string as an argument list.
     parse_node_tree_t tree;

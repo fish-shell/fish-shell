@@ -1460,7 +1460,7 @@ universal_notifier_t &universal_notifier_t::default_notifier() {
 universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(
     universal_notifier_t::notifier_strategy_t strat, const wchar_t *test_path) {
     if (strat == strategy_default) {
-        strat = resolve_default_strategy();
+        strat = resolve_default_strategy();  //!OCLINT(parameter reassignment)
     }
     switch (strat) {
         case strategy_shmem_polling: {

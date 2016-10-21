@@ -258,7 +258,7 @@ extern bool has_working_tty_timestamps;
 #define contains(str, ...) contains_internal(str, 0, __VA_ARGS__, NULL)
 
 /// Print a stack trace to stderr.
-void show_stackframe(const wchar_t msg_level, int frame_count = -1, int skip_levels = 0);
+void show_stackframe(const wchar_t msg_level, int frame_count = 100, int skip_levels = 0);
 
 /// Read a line from the stream f into the string. Returns the number of bytes read or -1 on
 /// failure.

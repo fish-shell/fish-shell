@@ -471,7 +471,6 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
                                    size_t *offset, enum token_type *out_type) {
     size_t prev_pos = 0;
     wchar_t last_quote = '\0';
-    int unfinished;
 
     tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
     tok_t token;
@@ -488,30 +487,25 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     wchar_t *cmd_tmp = wcsdup(cmd.c_str());
     cmd_tmp[pos] = 0;
     size_t cmdlen = wcslen(cmd_tmp);
-    unfinished = (cmdlen == 0);
-    if (!unfinished) {
-        unfinished = (quote != 0);
-
-        if (!unfinished) {
-            if (wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1]) != 0) {
-                if ((cmdlen == 1) || (cmd_tmp[cmdlen - 2] != L'\\')) {
-                    unfinished = 1;
-                }
-            }
+    bool finished = (cmdlen != 0);
+    if (finished) {
+        finished = (quote == NULL);
+        if (finished && wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1]) == 0) {
+            finished = (cmdlen == 1) || (cmd_tmp[cmdlen - 2] != L'\\');
         }
     }
 
     if (quote) *quote = last_quote;
 
     if (offset != 0) {
-        if (!unfinished) {
+        if (finished) {
             while ((cmd_tmp[prev_pos] != 0) && (wcschr(L";|", cmd_tmp[prev_pos]) != 0)) prev_pos++;
-
             *offset = prev_pos;
         } else {
             *offset = pos;
         }
     }
+
     free(cmd_tmp);
 }
 
@@ -927,22 +921,21 @@ static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offse
                                                             parse_error_list_t *out_errors) {
     parser_test_error_bits_t result_bits = 0;
     wcstring unescaped_arg_src;
-    if (unescape_string(arg_src, &unescaped_arg_src, UNESCAPE_SPECIAL)) {
-        if (!unescaped_arg_src.empty()) {
-            wchar_t last = unescaped_arg_src.at(unescaped_arg_src.size() - 1);
-            if (last == VARIABLE_EXPAND) {
-                result_bits |= PARSER_TEST_ERROR;
-                if (out_errors != NULL) {
-                    wcstring subcommand_first_token = tok_first(cmdsubst_src);
-                    if (subcommand_first_token.empty()) {
-                        // e.g. $(). Report somthing.
-                        subcommand_first_token = L"...";
-                    }
-                    append_syntax_error(
-                        out_errors,
-                        arg_src_offset + arg_src.size() - 1,  // global position of the dollar
-                        ERROR_BAD_VAR_SUBCOMMAND1, truncate_string(subcommand_first_token).c_str());
+    if (unescape_string(arg_src, &unescaped_arg_src, UNESCAPE_SPECIAL) &&
+        !unescaped_arg_src.empty()) {
+        wchar_t last = unescaped_arg_src.at(unescaped_arg_src.size() - 1);
+        if (last == VARIABLE_EXPAND) {
+            result_bits |= PARSER_TEST_ERROR;
+            if (out_errors != NULL) {
+                wcstring subcommand_first_token = tok_first(cmdsubst_src);
+                if (subcommand_first_token.empty()) {
+                    // e.g. $(). Report somthing.
+                    subcommand_first_token = L"...";
                 }
+                append_syntax_error(
+                    out_errors,
+                    arg_src_offset + arg_src.size() - 1,  // global position of the dollar
+                    ERROR_BAD_VAR_SUBCOMMAND1, truncate_string(subcommand_first_token).c_str());
             }
         }
     }

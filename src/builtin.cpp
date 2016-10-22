@@ -3284,11 +3284,10 @@ int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &stre
     cmd = (int (*)(parser_t & parser, io_streams_t & streams, const wchar_t *const *))(
         data ? data->func : NULL);
 
-    if (argv[1] != NULL && !builtin_handles_help(argv[0])) {
-        if (argv[2] == NULL && (parse_util_argument_is_help(argv[1], 0))) {
-            builtin_print_help(parser, streams, argv[0], streams.out);
-            return STATUS_BUILTIN_OK;
-        }
+    if (argv[1] != NULL && !builtin_handles_help(argv[0]) && argv[2] == NULL &&
+        parse_util_argument_is_help(argv[1], 0)) {
+        builtin_print_help(parser, streams, argv[0], streams.out);
+        return STATUS_BUILTIN_OK;
     }
 
     if (data != NULL) {

@@ -225,10 +225,8 @@ static bool match_pid(const wcstring &cmd, const wchar_t *proc, size_t *offset) 
     const wcstring base_cmd = wbasename(cmd);
 
     bool result = string_prefixes_string(proc, base_cmd);
-    if (result) {
-        // It's a match. Return the offset within the full command.
-        if (offset) *offset = cmd.size() - base_cmd.size();
-    }
+    // It's a match. Return the offset within the full command.
+    if (result && offset) *offset = cmd.size() - base_cmd.size();
     return result;
 }
 
@@ -632,13 +630,11 @@ static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags,
     const size_t prev_count = out->size();
     find_process(in + 1, flags, out);
 
-    if (prev_count == out->size()) {
-        if (!(flags & EXPAND_FOR_COMPLETIONS)) {
-            // We failed to find anything.
-            append_syntax_error(errors, 1, FAILED_EXPANSION_PROCESS_ERR_MSG,
-                                escape(in + 1, ESCAPE_NO_QUOTED).c_str());
-            return false;
-        }
+    if (prev_count == out->size() && !(flags & EXPAND_FOR_COMPLETIONS)) {
+        // We failed to find anything.
+        append_syntax_error(errors, 1, FAILED_EXPANSION_PROCESS_ERR_MSG,
+                            escape(in + 1, ESCAPE_NO_QUOTED).c_str());
+        return false;
     }
 
     return true;
@@ -1025,21 +1021,19 @@ static expand_error_t expand_brackets(const wcstring &instr, expand_flags_t flag
     tot_len = length_preceding_brackets + length_following_brackets;
     item_begin = bracket_begin + 1;
     for (const wchar_t *pos = (bracket_begin + 1); true; pos++) {
-        if (bracket_count == 0) {
-            if ((*pos == BRACKET_SEP) || (pos == bracket_end)) {
-                assert(pos >= item_begin);
-                size_t item_len = pos - item_begin;
+        if (bracket_count == 0 && ((*pos == BRACKET_SEP) || (pos == bracket_end))) {
+            assert(pos >= item_begin);
+            size_t item_len = pos - item_begin;
 
-                wcstring whole_item;
-                whole_item.reserve(tot_len + item_len + 2);
-                whole_item.append(in, length_preceding_brackets);
-                whole_item.append(item_begin, item_len);
-                whole_item.append(bracket_end + 1);
-                expand_brackets(whole_item, flags, out, errors);
+            wcstring whole_item;
+            whole_item.reserve(tot_len + item_len + 2);
+            whole_item.append(in, length_preceding_brackets);
+            whole_item.append(item_begin, item_len);
+            whole_item.append(bracket_end + 1);
+            expand_brackets(whole_item, flags, out, errors);
 
-                item_begin = pos + 1;
-                if (pos == bracket_end) break;
-            }
+            item_begin = pos + 1;
+            if (pos == bracket_end) break;
         }
 
         if (*pos == BRACKET_BEGIN) {
@@ -1517,19 +1511,17 @@ expand_error_t expand_string(const wcstring &input, std::vector<completion_t> *o
 
 bool expand_one(wcstring &string, expand_flags_t flags, parse_error_list_t *errors) {
     std::vector<completion_t> completions;
-    bool result = false;
 
-    if ((!(flags & EXPAND_FOR_COMPLETIONS)) && expand_is_clean(string)) {
+    if (!(flags & EXPAND_FOR_COMPLETIONS) && expand_is_clean(string)) {
         return true;
     }
 
-    if (expand_string(string, &completions, flags | EXPAND_NO_DESCRIPTIONS, errors)) {
-        if (completions.size() == 1) {
-            string = completions.at(0).completion;
-            result = true;
-        }
+    if (expand_string(string, &completions, flags | EXPAND_NO_DESCRIPTIONS, errors) &&
+        completions.size() == 1) {
+        string = completions.at(0).completion;
+        return true;
     }
-    return result;
+    return false;
 }
 
 // https://github.com/fish-shell/fish-shell/issues/367

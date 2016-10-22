@@ -311,8 +311,8 @@ wcstring_list_t function_get_names(int get_hidden) {
         const wcstring &name = iter->first;
 
         // Maybe skip hidden.
-        if (!get_hidden) {
-            if (name.empty() || name.at(0) == L'_') continue;
+        if (!get_hidden && (name.empty() || name.at(0) == L'_')) {
+            continue;
         }
         names.insert(name);
     }

@@ -865,9 +865,7 @@ void env_push(bool new_scope) {
     node->next = top;
     node->new_scope = new_scope;
 
-    if (new_scope) {
-        if (local_scope_exports(top)) mark_changed_exported();
-    }
+    if (new_scope && local_scope_exports(top)) mark_changed_exported();
     top = node;
 }
 
@@ -885,7 +883,7 @@ void env_pop() {
             }
         }
 
-        if (killme->new_scope) {
+        if (killme->new_scope) {  //!OCLINT(collapsible if statements)
             if (killme->exportv || local_scope_exports(killme->next)) mark_changed_exported();
         }
 

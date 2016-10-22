@@ -932,17 +932,16 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
 
     if (getifaddrs(&ifap) == 0) {
         for (const ifaddrs *p = ifap; p; p = p->ifa_next) {
-            if (p->ifa_addr && p->ifa_addr->sa_family == AF_LINK) {
-                if (p->ifa_name && p->ifa_name[0] &&
-                    !strcmp((const char *)p->ifa_name, interface)) {
-                    const sockaddr_dl &sdl = *reinterpret_cast<sockaddr_dl *>(p->ifa_addr);
+            bool is_af_link = p->ifa_addr && p->ifa_addr->sa_family == AF_LINK;
+            if (is_af_link && p->ifa_name && p->ifa_name[0] &&
+                !strcmp((const char *)p->ifa_name, interface)) {
+                const sockaddr_dl &sdl = *reinterpret_cast<sockaddr_dl *>(p->ifa_addr);
 
-                    size_t alen = sdl.sdl_alen;
-                    if (alen > MAC_ADDRESS_MAX_LEN) alen = MAC_ADDRESS_MAX_LEN;
-                    memcpy(macaddr, sdl.sdl_data + sdl.sdl_nlen, alen);
-                    ok = true;
-                    break;
-                }
+                size_t alen = sdl.sdl_alen;
+                if (alen > MAC_ADDRESS_MAX_LEN) alen = MAC_ADDRESS_MAX_LEN;
+                memcpy(macaddr, sdl.sdl_data + sdl.sdl_nlen, alen);
+                ok = true;
+                break;
             }
         }
         freeifaddrs(ifap);
@@ -1033,12 +1032,11 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         }
 
         // Set the size, if it's too small.
-        if (!errored && size < (off_t)sizeof(universal_notifier_shmem_t)) {
-            if (ftruncate(fd, sizeof(universal_notifier_shmem_t)) < 0) {
-                int err = errno;
-                report_error(err, L"Unable to truncate shared memory object with path '%s'", path);
-                errored = true;
-            }
+        bool set_size = !errored && size < (off_t)sizeof(universal_notifier_shmem_t);
+        if (set_size && ftruncate(fd, sizeof(universal_notifier_shmem_t)) < 0) {
+            int err = errno;
+            report_error(err, L"Unable to truncate shared memory object with path '%s'", path);
+            errored = true;
         }
 
         // Memory map the region.
@@ -1237,10 +1235,12 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         int fd = wopen_cloexec(vars_path, O_RDWR | O_NONBLOCK, 0600);
         if (fd < 0 && errno == ENOENT) {
             // File doesn't exist, try creating it.
-            if (mkfifo(narrow_path.c_str(), 0600) >= 0) {
+            int mkfifo_status = mkfifo(narrow_path.c_str(), 0600);
+            if (mkfifo_status != -1) {
                 fd = wopen_cloexec(vars_path, O_RDWR | O_NONBLOCK, 0600);
             }
         }
+
         if (fd < 0) {
             // Maybe open failed, maybe mkfifo failed.
             int err = errno;
@@ -1316,11 +1316,9 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
             // it back. Nobody is expected to read it except us.
             int pid_nbo = htonl(getpid());
             ssize_t amt_written = write(this->pipe_fd, &pid_nbo, sizeof pid_nbo);
-            if (amt_written < 0) {
-                if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                    // Very unsual: the pipe is full!
-                    drain_excessive_data();
-                }
+            if (amt_written < 0 && errno == EWOULDBLOCK || errno == EAGAIN) {
+                // Very unsual: the pipe is full!
+                drain_excessive_data();
             }
 
             // Now schedule a read for some time in the future.

@@ -1505,7 +1505,7 @@ bool list_contains_string(const wcstring_list_t &list, const wcstring &str) {
 }
 
 int create_directory(const wcstring &d) {
-    int ok = 0;
+    bool ok = false;
     struct stat buf;
     int stat_res = 0;
 
@@ -1514,18 +1514,10 @@ int create_directory(const wcstring &d) {
     }
 
     if (stat_res == 0) {
-        if (S_ISDIR(buf.st_mode)) {
-            ok = 1;
-        }
-    } else {
-        if (errno == ENOENT) {
-            wcstring dir = wdirname(d);
-            if (!create_directory(dir)) {
-                if (!wmkdir(d, 0700)) {
-                    ok = 1;
-                }
-            }
-        }
+        if (S_ISDIR(buf.st_mode)) ok = true;
+    } else if (errno == ENOENT) {
+        wcstring dir = wdirname(d);
+        if (!create_directory(dir) && !wmkdir(d, 0700)) ok = true;
     }
 
     return ok ? 0 : -1;

@@ -286,39 +286,35 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
     }
 
-    if (!res) {
-        if (condition && wcslen(condition)) {
-            const wcstring condition_string = condition;
-            parse_error_list_t errors;
-            if (parse_util_detect_errors(condition_string, &errors,
-                                         false /* do not accept incomplete */)) {
-                streams.err.append_format(L"%ls: Condition '%ls' contained a syntax error", argv[0],
-                                          condition);
-                for (size_t i = 0; i < errors.size(); i++) {
-                    streams.err.append_format(L"\n%s: ", argv[0]);
-                    streams.err.append(errors.at(i).describe(condition_string));
-                }
-                res = true;
+    if (!res && condition && wcslen(condition)) {
+        const wcstring condition_string = condition;
+        parse_error_list_t errors;
+        if (parse_util_detect_errors(condition_string, &errors,
+                                     false /* do not accept incomplete */)) {
+            streams.err.append_format(L"%ls: Condition '%ls' contained a syntax error", argv[0],
+                                      condition);
+            for (size_t i = 0; i < errors.size(); i++) {
+                streams.err.append_format(L"\n%s: ", argv[0]);
+                streams.err.append(errors.at(i).describe(condition_string));
             }
+            res = true;
         }
     }
 
-    if (!res) {
-        if (comp && wcslen(comp)) {
-            wcstring prefix;
-            if (argv[0]) {
-                prefix.append(argv[0]);
-                prefix.append(L": ");
-            }
+    if (!res && comp && wcslen(comp)) {
+        wcstring prefix;
+        if (argv[0]) {
+            prefix.append(argv[0]);
+            prefix.append(L": ");
+        }
 
-            wcstring err_text;
-            if (parser.detect_errors_in_argument_list(comp, &err_text, prefix.c_str())) {
-                streams.err.append_format(L"%ls: Completion '%ls' contained a syntax error\n",
-                                          argv[0], comp);
-                streams.err.append(err_text);
-                streams.err.push_back(L'\n');
-                res = true;
-            }
+        wcstring err_text;
+        if (parser.detect_errors_in_argument_list(comp, &err_text, prefix.c_str())) {
+            streams.err.append_format(L"%ls: Completion '%ls' contained a syntax error\n", argv[0],
+                                      comp);
+            streams.err.append(err_text);
+            streams.err.push_back(L'\n');
+            res = true;
         }
     }
 

@@ -697,14 +697,13 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
     wcstring_list_t lst;
 
     proc_push_interactive(0);
-    if (exec_subshell(fish_title_command, lst, false /* do not apply exit status */) != -1) {
-        if (!lst.empty()) {
-            writestr(L"\x1b]0;");
-            for (size_t i = 0; i < lst.size(); i++) {
-                writestr(lst.at(i).c_str());
-            }
-            writestr(L"\7");
+    if (exec_subshell(fish_title_command, lst, false /* ignore exit status */) != -1 &&
+        !lst.empty()) {
+        writestr(L"\x1b]0;");
+        for (size_t i = 0; i < lst.size(); i++) {
+            writestr(lst.at(i).c_str());
         }
+        writestr(L"\7");
     }
     proc_pop_interactive();
     set_color(rgb_color_t::reset(), rgb_color_t::reset());
@@ -1531,10 +1530,8 @@ static bool check_for_orphaned_process(unsigned long loop_count, pid_t shell_pgi
     // Try kill-0'ing the process whose pid corresponds to our process group ID. It's possible this
     // will fail because we don't have permission to signal it. But more likely it will fail because
     // it no longer exists, and we are orphaned.
-    if (loop_count % 64 == 0) {
-        if (kill(shell_pgid, 0) < 0 && errno == ESRCH) {
-            we_think_we_are_orphaned = true;
-        }
+    if (loop_count % 64 == 0 && kill(shell_pgid, 0) < 0 && errno == ESRCH) {
+        we_think_we_are_orphaned = true;
     }
 
     if (!we_think_we_are_orphaned && loop_count % 128 == 0) {
@@ -1646,12 +1643,10 @@ static void reader_interactive_init() {
 
     // Put ourselves in our own process group.
     shell_pgid = getpid();
-    if (getpgrp() != shell_pgid) {
-        if (setpgid(shell_pgid, shell_pgid) < 0) {
-            debug(1, _(L"Couldn't put the shell in its own process group"));
-            wperror(L"setpgid");
-            exit_without_destructors(1);
-        }
+    if (getpgrp() != shell_pgid && setpgid(shell_pgid, shell_pgid) < 0) {
+        debug(1, _(L"Couldn't put the shell in its own process group"));
+        wperror(L"setpgid");
+        exit_without_destructors(1);
     }
 
     // Grab control of the terminal.
@@ -2438,42 +2433,40 @@ const wchar_t *reader_readline(int nchars) {
             is_interactive_read = was_interactive_read;
             // fprintf(stderr, "C: %lx\n", (long)c);
 
-            if (((!fish_reserved_codepoint(c))) && (c > 31) && (c != 127)) {
-                if (can_read(0)) {
-                    wchar_t arr[READAHEAD_MAX + 1];
-                    size_t i;
-                    size_t limit = 0 < nchars ? std::min((size_t)nchars - data->command_line.size(),
-                                                         (size_t)READAHEAD_MAX)
-                                              : READAHEAD_MAX;
+            if (((!fish_reserved_codepoint(c))) && (c > 31) && (c != 127) && can_read(0)) {
+                wchar_t arr[READAHEAD_MAX + 1];
+                size_t i;
+                size_t limit = 0 < nchars ? std::min((size_t)nchars - data->command_line.size(),
+                                                     (size_t)READAHEAD_MAX)
+                                          : READAHEAD_MAX;
 
-                    memset(arr, 0, sizeof(arr));
-                    arr[0] = c;
+                memset(arr, 0, sizeof(arr));
+                arr[0] = c;
 
-                    for (i = 1; i < limit; ++i) {
-                        if (!can_read(0)) {
-                            c = 0;
-                            break;
-                        }
-                        // Only allow commands on the first key; otherwise, we might have data we
-                        // need to insert on the commandline that the commmand might need to be able
-                        // to see.
-                        c = input_readch(false);
-                        if ((!fish_reserved_codepoint(c)) && (c > 31) && (c != 127)) {
-                            arr[i] = c;
-                            c = 0;
-                        } else
-                            break;
+                for (i = 1; i < limit; ++i) {
+                    if (!can_read(0)) {
+                        c = 0;
+                        break;
                     }
-
-                    editable_line_t *el = data->active_edit_line();
-                    insert_string(el, arr, true);
-
-                    // End paging upon inserting into the normal command line.
-                    if (el == &data->command_line) {
-                        clear_pager();
-                    }
-                    last_char = c;
+                    // Only allow commands on the first key; otherwise, we might have data we
+                    // need to insert on the commandline that the commmand might need to be able
+                    // to see.
+                    c = input_readch(false);
+                    if (!fish_reserved_codepoint(c) && c > 31 && c != 127) {
+                        arr[i] = c;
+                        c = 0;
+                    } else
+                        break;
                 }
+
+                editable_line_t *el = data->active_edit_line();
+                insert_string(el, arr, true);
+
+                // End paging upon inserting into the normal command line.
+                if (el == &data->command_line) {
+                    clear_pager();
+                }
+                last_char = c;
             }
 
             if (c != 0) break;

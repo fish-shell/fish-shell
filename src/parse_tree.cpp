@@ -1370,13 +1370,11 @@ const parse_node_t *parse_node_tree_t::find_last_node_of_type(parse_token_type_t
     size_t idx = this->size();
     while (idx--) {
         const parse_node_t &node = this->at(idx);
-        if (node.type == type) {
-            // Types match. Check if it has the right parent.
-            if (parent == NULL || node_has_ancestor(*this, node, *parent)) {
-                // Success
-                result = &node;
-                break;
-            }
+        bool expected_type = (node.type == type);
+        if (expected_type && (parent == NULL || node_has_ancestor(*this, node, *parent))) {
+            // The types match and it has the right parent.
+            result = &node;
+            break;
         }
     }
     return result;

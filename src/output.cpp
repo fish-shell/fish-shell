@@ -272,12 +272,8 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
     }
 
     // Lastly, we set bold mode and underline mode correctly.
-    if ((enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0) && !bg_set) {
-        if (is_bold && !was_bold) {
-            if (enter_bold_mode) {
-                writembs(tparm(enter_bold_mode));
-            }
-        }
+    if (is_bold && !was_bold && enter_bold_mode && strlen(enter_bold_mode) > 0 && !bg_set) {
+        writembs(tparm(enter_bold_mode));
         was_bold = is_bold;
     }
 

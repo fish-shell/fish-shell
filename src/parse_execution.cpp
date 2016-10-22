@@ -1208,12 +1208,10 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
     // Get terminal modes.
     struct termios tmodes = {};
-    if (shell_is_interactive()) {
-        if (tcgetattr(STDIN_FILENO, &tmodes)) {
-            // Need real error handling here.
-            wperror(L"tcgetattr");
-            return parse_execution_errored;
-        }
+    if (shell_is_interactive() && tcgetattr(STDIN_FILENO, &tmodes)) {
+        // Need real error handling here.
+        wperror(L"tcgetattr");
+        return parse_execution_errored;
     }
 
     // Increment the eval_level for the duration of this command.

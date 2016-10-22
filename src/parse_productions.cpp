@@ -500,11 +500,9 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
     PARSE_ASSERT(resolver != NULL);
 
     const production_t *result = resolver(input1, input2, out_tag);
-    if (result == NULL) {
-        if (log_it) {
-            fprintf(stderr, "Node type '%ls' has no production for input '%ls' (in %s)\n",
-                    token_type_description(node_type), input1.describe().c_str(), __FUNCTION__);
-        }
+    if (result == NULL && log_it) {
+        fprintf(stderr, "Node type '%ls' has no production for input '%ls' (in %s)\n",
+                token_type_description(node_type), input1.describe().c_str(), __FUNCTION__);
     }
 
     return result;

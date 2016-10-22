@@ -58,12 +58,10 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
 
     int res = wcsfilecmp(a + 1, b + 1);
 
-    if (abs(res) < 2) {
-        // No primary difference in rest of string. Use secondary difference on this element if
-        // found.
-        if (secondary_diff) {
-            return secondary_diff > 0 ? 1 : -1;
-        }
+    // If no primary difference in rest of string use secondary difference on this element if
+    // found.
+    if (abs(res) < 2 && secondary_diff) {
+        return secondary_diff > 0 ? 1 : -1;
     }
 
     return res;

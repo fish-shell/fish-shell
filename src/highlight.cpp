@@ -224,19 +224,16 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
 bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_tree_t &tree,
                                           const parse_node_t &plain_statement, wcstring *out_cmd) {
     assert(plain_statement.type == symbol_plain_statement);
-    bool result = false;
 
-    // Get the command.
+    // Get the command. Try expanding it. If we cannot, it's an error.
     wcstring cmd;
-    if (tree.command_for_plain_statement(plain_statement, src, &cmd)) {
-        // Try expanding it. If we cannot, it's an error.
-        if (expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS)) {
-            // Success, return the expanded string by reference.
-            out_cmd->swap(cmd);
-            result = true;
-        }
+    if (tree.command_for_plain_statement(plain_statement, src, &cmd) &&
+        expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS)) {
+        // Success, return the expanded string by reference.
+        out_cmd->swap(cmd);
+        return true;
     }
-    return result;
+    return false;
 }
 
 rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) {
@@ -297,8 +294,6 @@ static bool has_expand_reserved(const wcstring &str) {
 // (as a copied node), if any. This is used by autosuggestions.
 static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expanded_command,
                                       parse_node_t *out_last_arg) {
-    bool result = false;
-
     // Parse the buffer.
     parse_node_tree_t parse_tree;
     parse_tree_from_string(buff,
@@ -308,21 +303,17 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
     // Find the last statement.
     const parse_node_t *last_statement =
         parse_tree.find_last_node_of_type(symbol_plain_statement, NULL);
-    if (last_statement != NULL) {
-        if (plain_statement_get_expanded_command(buff, parse_tree, *last_statement,
-                                                 out_expanded_command)) {
-            // We got it.
-            result = true;
-
-            // Find the last argument. If we don't get one, return an invalid node.
-            const parse_node_t *last_arg =
-                parse_tree.find_last_node_of_type(symbol_argument, last_statement);
-            if (last_arg != NULL) {
-                *out_last_arg = *last_arg;
-            }
+    if (last_statement != NULL && plain_statement_get_expanded_command(
+                                      buff, parse_tree, *last_statement, out_expanded_command)) {
+        // Find the last argument. If we don't get one, return an invalid node.
+        const parse_node_t *last_arg =
+            parse_tree.find_last_node_of_type(symbol_argument, last_statement);
+        if (last_arg != NULL) {
+            *out_last_arg = *last_arg;
         }
+        return true;
     }
-    return result;
+    return false;
 }
 
 bool autosuggest_validate_from_history(const history_item_t &item,
@@ -1163,18 +1154,15 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
             // backspacing (and the cursor is just beyond the last token), we may still underline
             // it.
             if (this->cursor_pos >= node.source_start &&
-                this->cursor_pos - node.source_start <= node.source_length) {
-                // See if this is a valid path.
-                if (node_is_potential_path(buff, node, working_directory)) {
-                    // It is, underline it.
-                    for (size_t i = node.source_start; i < node.source_start + node.source_length;
-                         i++) {
-                        // Don't color highlight_spec_error because it looks dorky. For example,
-                        // trying to cd into a non-directory would show an underline and also red.
-                        if (highlight_get_primary(this->color_array.at(i)) !=
-                            highlight_spec_error) {
-                            this->color_array.at(i) |= highlight_modifier_valid_path;
-                        }
+                this->cursor_pos - node.source_start <= node.source_length &&
+                node_is_potential_path(buff, node, working_directory)) {
+                // It is, underline it.
+                for (size_t i = node.source_start; i < node.source_start + node.source_length;
+                     i++) {
+                    // Don't color highlight_spec_error because it looks dorky. For example,
+                    // trying to cd into a non-directory would show an underline and also red.
+                    if (highlight_get_primary(this->color_array.at(i)) != highlight_spec_error) {
+                        this->color_array.at(i) |= highlight_modifier_valid_path;
                     }
                 }
             }

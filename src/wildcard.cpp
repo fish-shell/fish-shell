@@ -328,14 +328,12 @@ static wcstring file_get_desc(const wcstring &filename, int lstat_res, const str
                 if (S_ISDIR(buf.st_mode)) {
                     return COMPLETE_DIRECTORY_SYMLINK_DESC;
                 }
-                if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-                    if (waccess(filename, X_OK) == 0) {
-                        // Weird group permissions and other such issues make it non-trivial to
-                        // find out if we can actually execute a file using the result from
-                        // stat. It is much safer to use the access function, since it tells us
-                        // exactly what we want to know.
-                        return COMPLETE_EXEC_LINK_DESC;
-                    }
+                if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0) {
+                    // Weird group permissions and other such issues make it non-trivial to
+                    // find out if we can actually execute a file using the result from
+                    // stat. It is much safer to use the access function, since it tells us
+                    // exactly what we want to know.
+                    return COMPLETE_EXEC_LINK_DESC;
                 }
 
                 return COMPLETE_SYMLINK_DESC;
@@ -364,14 +362,12 @@ static wcstring file_get_desc(const wcstring &filename, int lstat_res, const str
         } else if (S_ISDIR(buf.st_mode)) {
             return COMPLETE_DIRECTORY_DESC;
         } else {
-            if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXGRP)) {
-                if (waccess(filename, X_OK) == 0) {
-                    // Weird group permissions and other such issues make it non-trivial to find out
-                    // if we can actually execute a file using the result from stat. It is much
-                    // safer to use the access function, since it tells us exactly what we want to
-                    // know.
-                    return COMPLETE_EXEC_DESC;
-                }
+            if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXGRP) && waccess(filename, X_OK) == 0) {
+                // Weird group permissions and other such issues make it non-trivial to find out
+                // if we can actually execute a file using the result from stat. It is much
+                // safer to use the access function, since it tells us exactly what we want to
+                // know.
+                return COMPLETE_EXEC_DESC;
             }
         }
     }
@@ -415,15 +411,14 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     const bool is_directory = stat_res == 0 && S_ISDIR(stat_buf.st_mode);
     const bool is_executable = stat_res == 0 && S_ISREG(stat_buf.st_mode);
 
-    if (expand_flags & DIRECTORIES_ONLY) {
-        if (!is_directory) {
-            return false;
-        }
+    const bool need_directory = expand_flags & DIRECTORIES_ONLY;
+    if (need_directory && !is_directory) {
+        return false;
     }
-    if (expand_flags & EXECUTABLES_ONLY) {
-        if (!is_executable || waccess(filepath, X_OK) != 0) {
-            return false;
-        }
+
+    const bool executables_only = expand_flags & EXECUTABLES_ONLY;
+    if (executables_only && (!is_executable || waccess(filepath, X_OK) != 0)) {
+        return false;
     }
 
     // Compute the description.

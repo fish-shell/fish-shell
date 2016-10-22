@@ -670,22 +670,22 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     std::vector<completion_t> possible_comp;
 
     if (use_command) {
-        if (expand_string(str_cmd, &this->completions,
-                          EXPAND_SPECIAL_FOR_COMMAND | EXPAND_FOR_COMPLETIONS | EXECUTABLES_ONLY |
-                              this->expand_flags(),
-                          NULL) != EXPAND_ERROR) {
-            if (this->wants_descriptions()) {
-                this->complete_cmd_desc(str_cmd);
+        expand_error_t result = expand_string(str_cmd, &this->completions,
+                                              EXPAND_SPECIAL_FOR_COMMAND | EXPAND_FOR_COMPLETIONS |
+                                                  EXECUTABLES_ONLY | this->expand_flags(),
+                                              NULL);
+        if (result != EXPAND_ERROR && this->wants_descriptions()) {
+            this->complete_cmd_desc(str_cmd);
             }
-        }
     }
-    if (use_implicit_cd) {
-        if (!expand_string(str_cmd, &this->completions,
-                           EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(),
-                           NULL)) {
-            // Not valid as implicit cd.
-        }
+
+    // WTF? This seems to be a noop.
+    if (use_implicit_cd &&
+        !expand_string(str_cmd, &this->completions,
+                       EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(), NULL)) {
+        // Not valid as implicit cd.
     }
+
     if (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~') {
         if (use_function) {
             wcstring_list_t names = function_get_names(str_cmd.at(0) == L'_');
@@ -877,11 +877,10 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     if (this->type() == COMPLETE_DEFAULT) {
         ASSERT_IS_MAIN_THREAD();
         complete_load(cmd, true);
-    } else if (this->type() == COMPLETE_AUTOSUGGEST) {
-        // Maybe load this command (on the main thread).
-        if (!completion_autoloader.has_tried_loading(cmd)) {
-            iothread_perform_on_main(complete_load_no_reload, &cmd);
-        }
+    } else if (this->type() == COMPLETE_AUTOSUGGEST &&
+               !completion_autoloader.has_tried_loading(cmd)) {
+        // Load this command (on the main thread).
+        iothread_perform_on_main(complete_load_no_reload, &cmd);
     }
 
     // Make a list of lists of all options that we care about.
@@ -927,13 +926,12 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                 for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end();
                      ++oiter) {
                     const complete_entry_opt_t *o = &*oiter;
-                    if (o->type == option_type_single_long) {
-                        if (param_match(o, popt) && this->condition_test(o->condition)) {
-                            old_style_match = true;
-                            if (o->result_mode & NO_COMMON) use_common = false;
-                            if (o->result_mode & NO_FILES) use_files = false;
-                            complete_from_args(str, o->comp, o->localized_desc(), o->flags);
-                        }
+                    if (o->type == option_type_single_long && param_match(o, popt) &&
+                        this->condition_test(o->condition)) {
+                        old_style_match = true;
+                        if (o->result_mode & NO_COMMON) use_common = false;
+                        if (o->result_mode & NO_FILES) use_files = false;
+                        complete_from_args(str, o->comp, o->localized_desc(), o->flags);
                     }
                 }
 

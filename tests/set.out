@@ -1,5 +1,9 @@
-I say: 1, 2, 3
-Inside if: 0
-After if: 1
-Inside without setting as local 0
-After second if: 0
+I say 1, 2, 3
+Inside if (0) and after (1)
+Inside if without setting as local (0) and after (0)
+
+func_var local scoped
+func_var function scoped
+local_var local scoped
+local_var function scoped
+global_var global scoped

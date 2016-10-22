@@ -4,17 +4,34 @@ function test_function
         set -f $v $i
         set i (math "$i + 1")
     end
-    echo "I say: $ONE, $TWO, $THREE"
+    echo "I say $ONE, $TWO, $THREE"
     if test $ONE = 1
         set -l ONE 0
-        echo "Inside if: $ONE"
+        echo -n "Inside if ($ONE) "
     end
-    echo "After if: $ONE"
+    echo "and after ($ONE)"
     if test $ONE
         set ONE 0
-        echo "Inside without setting as local $ONE"
+        echo -n "Inside if without setting as local ($ONE) "
     end
-    echo "After second if: $ONE"
+    echo "and after ($ONE)"
+end
+
+function tttt
+    set -l local_var 1
+    set -f func_var 0
+    set -g global_var 2
+    for var in func_var local_var global_var
+        for flag in local function global
+            set -q --$flag $var
+            and echo "$var $flag scoped"
+        end
+    end
+    set -eg global_var
+    set -ef func_var
+    set -el local_var
 end
 
 test_function
+echo
+tttt

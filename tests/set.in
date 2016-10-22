@@ -71,12 +71,13 @@ function local_shadow_function
     end
 end
 
-test_function
-echo
-body_scopes
-echo
-scoped_scopes
-echo
-local_function_same
-echo
-local_shadow_function
+test_function; echo
+body_scopes; echo
+scoped_scopes; echo
+local_function_same; echo
+local_shadow_function; echo
+
+set -f func_var 0
+set -ql func_var; and echo "top-level local scoped"
+set -qf func_var; and echo "top-level function scoped"
+set -qg func_var; and echo "top-level global scoped"

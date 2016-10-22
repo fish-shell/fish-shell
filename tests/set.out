@@ -19,3 +19,6 @@ var1 l scoped
 var1 f scoped
 
 10
+
+top-level local scoped
+top-level function scoped

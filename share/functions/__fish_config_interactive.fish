@@ -220,6 +220,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Notify terminals when $PWD changes (issue #906)
     # VTE and Terminal.app support this in practice.
     if test "0$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
+        echo -n \e\]0\;\a # clear existing title
         function fish_title; end
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             status --is-command-substitution

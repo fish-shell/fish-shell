@@ -292,16 +292,6 @@ bool path_get_data(wcstring &path) {
     return !result.empty();
 }
 
-__attribute__((unused)) static void replace_all(wcstring &str, const wchar_t *needle,
-                                                const wchar_t *replacement) {
-    size_t needle_len = wcslen(needle);
-    size_t offset = 0;
-    while ((offset = str.find(needle, offset)) != wcstring::npos) {
-        str.replace(offset, needle_len, replacement);
-        offset += needle_len;
-    }
-}
-
 void path_make_canonical(wcstring &path) {
     // Ignore trailing slashes, unless it's the first character.
     size_t len = path.size();

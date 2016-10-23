@@ -158,9 +158,6 @@ static wint_t readb() {
     return arr[0];
 }
 
-// Directly set the input timeout.
-void set_wait_on_escape_ms(int ms) { wait_on_escape_ms = ms; }
-
 // Update the wait_on_escape_ms value in response to the fish_escape_delay_ms user variable being
 // set.
 void update_wait_on_escape_ms() {

@@ -1316,7 +1316,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
             // it back. Nobody is expected to read it except us.
             int pid_nbo = htonl(getpid());
             ssize_t amt_written = write(this->pipe_fd, &pid_nbo, sizeof pid_nbo);
-            if (amt_written < 0 && errno == EWOULDBLOCK || errno == EAGAIN) {
+            if (amt_written < 0 && (errno == EWOULDBLOCK || errno == EAGAIN)) {
                 // Very unsual: the pipe is full!
                 drain_excessive_data();
             }

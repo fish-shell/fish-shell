@@ -12,7 +12,7 @@ function fish_prompt
    printf ' at '
 
    set_color magenta
-   printf '%s' (hostname|cut -d . -f 1)
+   echo -n (fish_prompt_hostname)
    set_color normal
    printf ' in '
 

@@ -10,11 +10,6 @@ function fish_prompt --description "Write out the prompt"
         printf "%s(%d)%s " (set_color red --bold) $last_status (set_color normal)
     end
 
-    # Just calculate this once, to save a few cycles when displaying the prompt
-    if not set -q __fish_prompt_hostname
-        set -g __fish_prompt_hostname (hostname|cut -d . -f 1)
-    end
-
     set -l color_cwd
     set -l suffix
     switch $USER
@@ -30,5 +25,5 @@ function fish_prompt --description "Write out the prompt"
         set suffix '>'
     end
 
-    echo -n -s "$USER" @ "$__fish_prompt_hostname" ' ' (set_color $color_cwd) (prompt_pwd) (set_color normal) "$suffix "
+    echo -n -s "$USER" @ (fish_prompt_hostname) ' ' (set_color $color_cwd) (prompt_pwd) (set_color normal) "$suffix "
 end

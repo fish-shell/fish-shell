@@ -190,16 +190,10 @@ wcstring path_apply_working_directory(const wcstring &path, const wcstring &work
     // We're going to make sure that if we want to prepend the wd, that the string has no leading
     // "/".
     bool prepend_wd;
-    switch (path.at(0)) {
-        case L'/':
-        case HOME_DIRECTORY: {
-            prepend_wd = false;
-            break;
-        }
-        default: {
-            prepend_wd = true;
-            break;
-        }
+    if (path.at(0) == L'/' || path.at(0) == HOME_DIRECTORY) {
+        prepend_wd = false;
+    } else {
+        prepend_wd = true;
     }
 
     if (!prepend_wd) {

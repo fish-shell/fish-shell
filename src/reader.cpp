@@ -1379,27 +1379,23 @@ static bool handle_completions(const std::vector<completion_t> &comp,
     const wcstring tok(begin, end - begin);
 
     // Check trivial cases.
-    switch (comp.size()) {
-        case 0: {
-            // No suitable completions found, flash screen and return.
-            reader_flash();
-            done = true;
-            success = false;
-            break;
-        }
-        case 1: {
-            // Exactly one suitable completion found - insert it.
-            const completion_t &c = comp.at(0);
+    int size = comp.size();
+    if (size == 0) {
+        // No suitable completions found, flash screen and return.
+        reader_flash();
+        done = true;
+        success = false;
+    } else if (size == 1) {
+        // Exactly one suitable completion found - insert it.
+        const completion_t &c = comp.at(0);
 
-            // If this is a replacement completion, check that we know how to replace it, e.g. that
-            // the token doesn't contain evil operators like {}.
-            if (!(c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(tok, c.flags)) {
-                completion_insert(c.completion.c_str(), c.flags);
-            }
-            done = true;
-            success = true;
-            break;
+        // If this is a replacement completion, check that we know how to replace it, e.g. that
+        // the token doesn't contain evil operators like {}.
+        if (!(c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(tok, c.flags)) {
+            completion_insert(c.completion.c_str(), c.flags);
         }
+        done = true;
+        success = true;
     }
 
     if (!done) {
@@ -1790,24 +1786,22 @@ static void handle_token_history(int forward, int reset) {
             tokenizer_t tok(data->token_history_buff.c_str(), TOK_ACCEPT_UNFINISHED);
             tok_t token;
             while (tok.next(&token)) {
-                switch (token.type) {
-                    case TOK_STRING: {
-                        if (token.text.find(data->search_buff) != wcstring::npos) {
-                            // debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
-                            if (token.offset >= current_pos) {
-                                break;
-                            }
-                            // debug( 3, L"ok pos" );
-
-                            if (find(data->search_prev.begin(), data->search_prev.end(),
-                                     token.text) == data->search_prev.end()) {
-                                data->token_history_pos = token.offset;
-                                str = token.text;
-                            }
+                if (token.type == TOK_STRING) {
+                    if (token.text.find(data->search_buff) != wcstring::npos) {
+                        // debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
+                        if (token.offset >= current_pos) {
+                            break;
                         }
-                        break;
+                        // debug( 3, L"ok pos" );
+
+                        if (find(data->search_prev.begin(), data->search_prev.end(), token.text) ==
+                            data->search_prev.end()) {
+                            data->token_history_pos = token.offset;
+                            str = token.text;
+                        }
                     }
-                    default: { break; }
+                } else {
+                    break;
                 }
             }
         }
@@ -2873,36 +2867,30 @@ const wchar_t *reader_readline(int nchars) {
                     data->history_search.skip_matches(skip_list);
                 }
 
-                switch (data->search_mode) {
-                    case LINE_SEARCH: {
-                        if ((c == R_HISTORY_SEARCH_BACKWARD) ||
-                            (c == R_HISTORY_TOKEN_SEARCH_BACKWARD)) {
-                            data->history_search.go_backwards();
-                        } else {
-                            if (!data->history_search.go_forwards()) {
-                                // If you try to go forwards past the end, we just go to the end.
-                                data->history_search.go_to_end();
-                            }
+                if (data->search_mode == LINE_SEARCH) {
+                    if ((c == R_HISTORY_SEARCH_BACKWARD) ||
+                        (c == R_HISTORY_TOKEN_SEARCH_BACKWARD)) {
+                        data->history_search.go_backwards();
+                    } else {
+                        if (!data->history_search.go_forwards()) {
+                            // If you try to go forwards past the end, we just go to the end.
+                            data->history_search.go_to_end();
                         }
-
-                        wcstring new_text;
-                        if (data->history_search.is_at_end()) {
-                            new_text = data->search_buff;
-                        } else {
-                            new_text = data->history_search.current_string();
-                        }
-                        set_command_line_and_position(&data->command_line, new_text,
-                                                      new_text.size());
-                        break;
                     }
-                    case TOKEN_SEARCH: {
-                        if ((c == R_HISTORY_SEARCH_BACKWARD) ||
-                            (c == R_HISTORY_TOKEN_SEARCH_BACKWARD)) {
-                            handle_token_history(SEARCH_BACKWARD, reset);
-                        } else {
-                            handle_token_history(SEARCH_FORWARD, reset);
-                        }
-                        break;
+
+                    wcstring new_text;
+                    if (data->history_search.is_at_end()) {
+                        new_text = data->search_buff;
+                    } else {
+                        new_text = data->history_search.current_string();
+                    }
+                    set_command_line_and_position(&data->command_line, new_text, new_text.size());
+                } else if (data->search_mode == TOKEN_SEARCH) {
+                    if ((c == R_HISTORY_SEARCH_BACKWARD) ||
+                        (c == R_HISTORY_TOKEN_SEARCH_BACKWARD)) {
+                        handle_token_history(SEARCH_BACKWARD, reset);
+                    } else {
+                        handle_token_history(SEARCH_FORWARD, reset);
                     }
                 }
                 break;

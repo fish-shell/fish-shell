@@ -924,18 +924,13 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token) {
         // Now see if we actually matched
         bool matched = false;
         if (stack_top.type == token.type) {
-            switch (stack_top.type) {
-                case parse_token_type_string: {
-                    // We matched if the keywords match, or no keyword was required.
-                    matched = (stack_top.keyword == parse_keyword_none ||
-                               stack_top.keyword == token.keyword);
-                    break;
-                }
-                default: {
-                    // For other types, we only require that the types match.
-                    matched = true;
-                    break;
-                }
+            if (stack_top.type == parse_token_type_string) {
+                // We matched if the keywords match, or no keyword was required.
+                matched =
+                    (stack_top.keyword == parse_keyword_none || stack_top.keyword == token.keyword);
+            } else {
+                // For other types, we only require that the types match.
+                matched = true;
             }
         }
 
@@ -1550,8 +1545,7 @@ enum parse_bool_statement_type_t parse_node_tree_t::statement_boolean_type(
 bool parse_node_tree_t::job_should_be_backgrounded(const parse_node_t &job) const {
     assert(job.type == symbol_job);
     const parse_node_t *opt_background = get_child(job, 2, symbol_optional_background);
-    bool result = opt_background != NULL && opt_background->tag == parse_background;
-    return result;
+    return opt_background != NULL && opt_background->tag == parse_background;
 }
 
 const parse_node_t *parse_node_tree_t::next_node_in_node_list(

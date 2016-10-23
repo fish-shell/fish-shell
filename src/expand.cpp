@@ -166,35 +166,30 @@ wcstring expand_escape_variable(const wcstring &in) {
 
     tokenize_variable_array(in, lst);
 
-    switch (lst.size()) {
-        case 0: {
-            buff.append(L"''");
-            break;
-        }
-        case 1: {
-            const wcstring &el = lst.at(0);
+    int size = lst.size();
+    if (size == 0) {
+        buff.append(L"''");
+    } else if (size == 1) {
+        const wcstring &el = lst.at(0);
 
-            if (el.find(L' ') != wcstring::npos && is_quotable(el)) {
+        if (el.find(L' ') != wcstring::npos && is_quotable(el)) {
+            buff.append(L"'");
+            buff.append(el);
+            buff.append(L"'");
+        } else {
+            buff.append(escape_string(el, 1));
+        }
+    } else {
+        for (size_t j = 0; j < lst.size(); j++) {
+            const wcstring &el = lst.at(j);
+            if (j) buff.append(L"  ");
+
+            if (is_quotable(el)) {
                 buff.append(L"'");
                 buff.append(el);
                 buff.append(L"'");
             } else {
                 buff.append(escape_string(el, 1));
-            }
-            break;
-        }
-        default: {
-            for (size_t j = 0; j < lst.size(); j++) {
-                const wcstring &el = lst.at(j);
-                if (j) buff.append(L"  ");
-
-                if (is_quotable(el)) {
-                    buff.append(L"'");
-                    buff.append(el);
-                    buff.append(L"'");
-                } else {
-                    buff.append(escape_string(el, 1));
-                }
             }
         }
     }

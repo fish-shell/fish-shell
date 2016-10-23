@@ -223,14 +223,8 @@ void input_set_bind_mode(const wcstring &bm) {
 }
 
 /// Returns the arity of a given input function.
-int input_function_arity(int function) {
-    switch (function) {
-        case R_FORWARD_JUMP:
-        case R_BACKWARD_JUMP: {
-            return 1;
-        }
-        default: { return 0; }
-    }
+static int input_function_arity(int function) {
+    return (function == R_FORWARD_JUMP || function == R_BACKWARD_JUMP) ? 1 : 0;
 }
 
 /// Sets the return status of the most recently executed input function.

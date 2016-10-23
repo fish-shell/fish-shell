@@ -339,18 +339,10 @@ static wcstring file_get_desc(const wcstring &filename, int lstat_res, const str
                 return COMPLETE_SYMLINK_DESC;
             }
 
-            switch (err) {
-                case ENOENT: {
-                    return COMPLETE_ROTTEN_SYMLINK_DESC;
-                }
-                case ELOOP: {
-                    return COMPLETE_LOOP_SYMLINK_DESC;
-                }
-                default: {
-                    // On unknown errors we do nothing. The file will be given the default 'File'
-                    // description or one based on the suffix.
-                }
-            }
+            if (err == ENOENT) return COMPLETE_ROTTEN_SYMLINK_DESC;
+            if (err == ELOOP) return COMPLETE_LOOP_SYMLINK_DESC;
+            // On unknown errors we do nothing. The file will be given the default 'File'
+            // description or one based on the suffix.
         } else if (S_ISCHR(buf.st_mode)) {
             return COMPLETE_CHAR_DESC;
         } else if (S_ISBLK(buf.st_mode)) {

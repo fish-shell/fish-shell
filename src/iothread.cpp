@@ -222,21 +222,15 @@ int iothread_port(void) {
 
 void iothread_service_completion(void) {
     ASSERT_IS_MAIN_THREAD();
-    char wakeup_byte = 0;
+    char wakeup_byte;
+
     VOMIT_ON_FAILURE(1 != read_loop(iothread_port(), &wakeup_byte, sizeof wakeup_byte));
-    switch (wakeup_byte) {
-        case IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE: {
-            iothread_service_main_thread_requests();
-            break;
-        }
-        case IO_SERVICE_RESULT_QUEUE: {
-            iothread_service_result_queue();
-            break;
-        }
-        default: {
-            fprintf(stderr, "Unknown wakeup byte %02x in %s\n", wakeup_byte, __FUNCTION__);
-            break;
-        }
+    if (wakeup_byte == IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE) {
+        iothread_service_main_thread_requests();
+    } else if (wakeup_byte == IO_SERVICE_RESULT_QUEUE) {
+        iothread_service_result_queue();
+    } else {
+        fprintf(stderr, "Unknown wakeup byte %02x in %s\n", wakeup_byte, __FUNCTION__);
     }
 }
 

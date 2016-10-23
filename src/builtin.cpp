@@ -345,23 +345,16 @@ static int get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq, io_strea
     if (input_terminfo_get_sequence(seq, out_seq)) {
         return 1;
     }
+
     wcstring eseq = escape_string(seq, 0);
-    switch (errno) {
-        case ENOENT: {
-            streams.err.append_format(_(L"%ls: No key with name '%ls' found\n"), L"bind",
-                                      eseq.c_str());
-            break;
-        }
-        case EILSEQ: {
-            streams.err.append_format(_(L"%ls: Key with name '%ls' does not have any mapping\n"),
-                                      L"bind", eseq.c_str());
-            break;
-        }
-        default: {
-            streams.err.append_format(_(L"%ls: Unknown error trying to bind to key named '%ls'\n"),
-                                      L"bind", eseq.c_str());
-            break;
-        }
+    if (errno == ENOENT) {
+        streams.err.append_format(_(L"%ls: No key with name '%ls' found\n"), L"bind", eseq.c_str());
+    } else if (errno == EILSEQ) {
+        streams.err.append_format(_(L"%ls: Key with name '%ls' does not have any mapping\n"),
+                                  L"bind", eseq.c_str());
+    } else {
+        streams.err.append_format(_(L"%ls: Unknown error trying to bind to key named '%ls'\n"),
+                                  L"bind", eseq.c_str());
     }
     return 0;
 }
@@ -525,43 +518,37 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             break;
         }
         case BIND_INSERT: {
-            switch (argc - w.woptind) {
-                case 0: {
-                    builtin_bind_list(bind_mode_given ? bind_mode : NULL, streams);
-                    break;
+            int arg_count = argc - w.woptind;
+            if (arg_count == 0) {
+                builtin_bind_list(bind_mode_given ? bind_mode : NULL, streams);
+            } else if (arg_count == 1) {
+                wcstring seq;
+                if (use_terminfo) {
+                    if (!get_terminfo_sequence(argv[w.woptind], &seq, streams)) {
+                        res = STATUS_BUILTIN_ERROR;
+                        // get_terminfo_sequence already printed the error.
+                        break;
+                    }
+                } else {
+                    seq = argv[w.woptind];
                 }
-                case 1: {
-                    wcstring seq;
+                if (!builtin_bind_list_one(seq, bind_mode, streams)) {
+                    res = STATUS_BUILTIN_ERROR;
+                    wcstring eseq = escape_string(argv[w.woptind], 0);
                     if (use_terminfo) {
-                        if (!get_terminfo_sequence(argv[w.woptind], &seq, streams)) {
-                            res = STATUS_BUILTIN_ERROR;
-                            // get_terminfo_sequence already printed the error.
-                            break;
-                        }
+                        streams.err.append_format(_(L"%ls: No binding found for key '%ls'\n"),
+                                                  argv[0], eseq.c_str());
                     } else {
-                        seq = argv[w.woptind];
+                        streams.err.append_format(_(L"%ls: No binding found for sequence '%ls'\n"),
+                                                  argv[0], eseq.c_str());
                     }
-                    if (!builtin_bind_list_one(seq, bind_mode, streams)) {
-                        res = STATUS_BUILTIN_ERROR;
-                        wcstring eseq = escape_string(argv[w.woptind], 0);
-                        if (use_terminfo) {
-                            streams.err.append_format(_(L"%ls: No binding found for key '%ls'\n"),
-                                                      argv[0], eseq.c_str());
-                        } else {
-                            streams.err.append_format(
-                                _(L"%ls: No binding found for sequence '%ls'\n"), argv[0],
-                                eseq.c_str());
-                        }
-                    }
-                    break;
                 }
-                default: {
-                    if (builtin_bind_add(argv[w.woptind], argv + (w.woptind + 1),
-                                         argc - (w.woptind + 1), bind_mode, sets_bind_mode,
-                                         use_terminfo, streams)) {
-                        res = STATUS_BUILTIN_ERROR;
-                    }
-                    break;
+                break;
+            } else {
+                if (builtin_bind_add(argv[w.woptind], argv + (w.woptind + 1),
+                                     argc - (w.woptind + 1), bind_mode, sets_bind_mode,
+                                     use_terminfo, streams)) {
+                    res = STATUS_BUILTIN_ERROR;
                 }
             }
             break;
@@ -1776,39 +1763,33 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
         }
     }
 
-    switch (argc - w.woptind) {
-        case 0: {
-            long res;
-            if (!seeded) {
-                seeded = 1;
-                srand48_r(time(0), &seed_buffer);
-            }
-            lrand48_r(&seed_buffer, &res);
-            streams.out.append_format(L"%ld\n", res % 32768);
-            break;
-        }
-        case 1: {
-            long foo;
-            wchar_t *end = 0;
-
-            errno = 0;
-            foo = wcstol(argv[w.woptind], &end, 10);
-            if (errno || *end) {
-                streams.err.append_format(_(L"%ls: Seed value '%ls' is not a valid number\n"),
-                                          argv[0], argv[w.woptind]);
-
-                return STATUS_BUILTIN_ERROR;
-            }
+    int arg_count = argc - w.woptind;
+    if (arg_count == 0) {
+        long res;
+        if (!seeded) {
             seeded = 1;
-            srand48_r(foo, &seed_buffer);
-            break;
+            srand48_r(time(0), &seed_buffer);
         }
-        default: {
-            streams.err.append_format(_(L"%ls: Expected zero or one argument, got %d\n"), argv[0],
-                                      argc - w.woptind);
-            builtin_print_help(parser, streams, argv[0], streams.err);
+        lrand48_r(&seed_buffer, &res);
+        streams.out.append_format(L"%ld\n", res % 32768);
+    } else if (arg_count == 1) {
+        long foo;
+        wchar_t *end = 0;
+
+        errno = 0;
+        foo = wcstol(argv[w.woptind], &end, 10);
+        if (errno || *end) {
+            streams.err.append_format(_(L"%ls: Seed value '%ls' is not a valid number\n"), argv[0],
+                                      argv[w.woptind]);
             return STATUS_BUILTIN_ERROR;
         }
+        seeded = 1;
+        srand48_r(foo, &seed_buffer);
+    } else {
+        streams.err.append_format(_(L"%ls: Expected zero or one argument, got %d\n"), argv[0],
+                                  argc - w.woptind);
+        builtin_print_help(parser, streams, argv[0], streams.err);
+        return STATUS_BUILTIN_ERROR;
     }
     return STATUS_BUILTIN_OK;
 }
@@ -1900,19 +1881,16 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 errno = 0;
                 nchars = fish_wcstoi(w.woptarg, &end, 10);
                 if (errno || *end != 0) {
-                    switch (errno) {
-                        case ERANGE: {
-                            streams.err.append_format(_(L"%ls: Argument '%ls' is out of range\n"),
-                                                      argv[0], w.woptarg);
-                            builtin_print_help(parser, streams, argv[0], streams.err);
-                            return STATUS_BUILTIN_ERROR;
-                        }
-                        default: {
-                            streams.err.append_format(
-                                _(L"%ls: Argument '%ls' must be an integer\n"), argv[0], w.woptarg);
-                            builtin_print_help(parser, streams, argv[0], streams.err);
-                            return STATUS_BUILTIN_ERROR;
-                        }
+                    if (errno == ERANGE) {
+                        streams.err.append_format(_(L"%ls: Argument '%ls' is out of range\n"),
+                                                  argv[0], w.woptarg);
+                        builtin_print_help(parser, streams, argv[0], streams.err);
+                        return STATUS_BUILTIN_ERROR;
+                    } else {
+                        streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"),
+                                                  argv[0], w.woptarg);
+                        builtin_print_help(parser, streams, argv[0], streams.err);
+                        return STATUS_BUILTIN_ERROR;
                     }
                 }
                 break;
@@ -2045,18 +2023,10 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                     finished = 1;
                 } else {
                     size_t sz = mbrtowc(&res, &b, 1, &state);
-                    switch (sz) {
-                        case (size_t)-1: {
-                            memset(&state, 0, sizeof(state));
-                            break;
-                        }
-                        case (size_t)-2: {
-                            break;
-                        }
-                        default: {
-                            finished = 1;
-                            break;
-                        }
+                    if (sz == (size_t)-1) {
+                        memset(&state, 0, sizeof(state));
+                    } else if (sz != (size_t)-2) {
+                        finished = 1;
                     }
                 }
             }
@@ -2310,27 +2280,22 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
 static int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
 
-    long ec = 0;
-    switch (argc) {
-        case 1: {
-            ec = proc_get_last_status();
-            break;
-        }
-        case 2: {
-            wchar_t *end;
-            errno = 0;
-            ec = wcstol(argv[1], &end, 10);
-            if (errno || *end != 0) {
-                streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), argv[0],
-                                          argv[1]);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_BUILTIN_ERROR;
-            }
-            break;
-        }
-        default: {
-            streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
+    if (argc > 2) {
+        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
+        builtin_print_help(parser, streams, argv[0], streams.err);
+        return STATUS_BUILTIN_ERROR;
+    }
 
+    long ec;
+    if (argc == 1) {
+        ec = proc_get_last_status();
+    } else {
+        wchar_t *end;
+        errno = 0;
+        ec = wcstol(argv[1], &end, 10);
+        if (errno || *end != 0) {
+            streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), argv[0],
+                                      argv[1]);
             builtin_print_help(parser, streams, argv[0], streams.err);
             return STATUS_BUILTIN_ERROR;
         }
@@ -2752,29 +2717,26 @@ static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t *
 /// Function for handling the \c return builtin.
 static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
-    int status = proc_get_last_status();
 
-    switch (argc) {
-        case 1: {
-            break;
-        }
-        case 2: {
-            wchar_t *end;
-            errno = 0;
-            status = fish_wcstoi(argv[1], &end, 10);
-            if (errno || *end != 0) {
-                streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), argv[0],
-                                          argv[1]);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_BUILTIN_ERROR;
-            }
-            break;
-        }
-        default: {
-            streams.err.append_format(_(L"%ls: Too many arguments\n"), argv[0]);
+    if (argc > 2) {
+        streams.err.append_format(_(L"%ls: Too many arguments\n"), argv[0]);
+        builtin_print_help(parser, streams, argv[0], streams.err);
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    int status;
+    if (argc == 2) {
+        wchar_t *end;
+        errno = 0;
+        status = fish_wcstoi(argv[1], &end, 10);
+        if (errno || *end != 0) {
+            streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), argv[0],
+                                      argv[1]);
             builtin_print_help(parser, streams, argv[0], streams.err);
             return STATUS_BUILTIN_ERROR;
         }
+    } else {
+        status = proc_get_last_status();
     }
 
     // Find the function block.

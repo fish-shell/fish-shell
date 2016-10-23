@@ -110,26 +110,17 @@ static wint_t readb() {
 
         res = select(fd_max + 1, &fdset, 0, 0, usecs_delay > 0 ? &tv : NULL);
         if (res == -1) {
-            switch (errno) {
-                case EINTR:
-                case EAGAIN: {
-                    if (interrupt_handler) {
-                        int res = interrupt_handler();
-                        if (res) {
-                            return res;
-                        }
-                        if (has_lookahead()) {
-                            return lookahead_pop();
-                        }
-                    }
+            if (errno == EINTR || errno == EAGAIN) {
+                if (interrupt_handler) {
+                    int res = interrupt_handler();
+                    if (res) return res;
+                    if (has_lookahead()) return lookahead_pop();
+                }
 
-                    do_loop = true;
-                    break;
-                }
-                default: {
-                    // The terminal has been closed. Save and exit.
-                    return R_EOF;
-                }
+                do_loop = true;
+            } else {
+                // The terminal has been closed. Save and exit.
+                return R_EOF;
             }
         } else {
             // Assume we loop unless we see a character in stdin.

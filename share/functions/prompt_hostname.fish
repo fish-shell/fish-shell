@@ -5,6 +5,6 @@ if not set -q __fish_prompt_hostname
     set -g __fish_prompt_hostname (hostname | string split '.')[1]
 end
 
-function fish_prompt_hostname
+function prompt_hostname
     echo $__fish_prompt_hostname
 end

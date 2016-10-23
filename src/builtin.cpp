@@ -3228,7 +3228,7 @@ void builtin_init() {
 void builtin_destroy() {}
 
 /// Is there a builtin command with the given name?
-bool builtin_exists(const wcstring &cmd) { return !!builtin_lookup(cmd); }
+bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_lookup(cmd)); }
 
 /// If builtin takes care of printing help itself
 static bool builtin_handles_help(const wchar_t *cmd) {

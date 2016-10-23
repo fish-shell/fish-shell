@@ -714,7 +714,7 @@ int env_remove(const wcstring &key, int var_mode) {
 }
 
 const wchar_t *env_var_t::c_str(void) const {
-    assert(!is_missing);
+    assert(!is_missing);  //!OCLINT(multiple unary operator)
     return wcstring::c_str();
 }
 

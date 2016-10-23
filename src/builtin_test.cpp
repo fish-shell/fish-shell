@@ -590,7 +590,7 @@ bool unary_operator::evaluate(wcstring_list_t &errors) {
 
 bool combining_expression::evaluate(wcstring_list_t &errors) {
     if (token == test_combine_and || token == test_combine_or) {
-        assert(!subjects.empty());
+        assert(!subjects.empty());  //!OCLINT(multiple unary operator)
         assert(combiners.size() + 1 == subjects.size());
 
         // One-element case.

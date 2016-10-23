@@ -1534,7 +1534,7 @@ wcstring complete_print() {
                     break;
                 }
                 case option_type_short: {
-                    assert(!o->option.empty());
+                    assert(!o->option.empty());  //!OCLINT(multiple unary operator)
                     append_format(out, L" --short-option '%lc'", o->option.at(0));
                     break;
                 }

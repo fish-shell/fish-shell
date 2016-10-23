@@ -3284,7 +3284,7 @@ int reader_search_mode() {
     if (!data) {
         return -1;
     }
-    return !!data->search_mode;
+    return data->search_mode == NO_SEARCH ? 0 : 1;
 }
 
 int reader_has_pager_contents() {

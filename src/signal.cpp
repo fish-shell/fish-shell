@@ -403,4 +403,4 @@ void signal_unblock() {
     //	debug( 0, L"signal block level decreased to %d", block_count );
 }
 
-bool signal_is_blocked() { return !!block_count; }
+bool signal_is_blocked() { return static_cast<bool>(block_count); }

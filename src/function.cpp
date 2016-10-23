@@ -161,7 +161,7 @@ void function_add(const function_data_t &data, const parser_t &parser, int defin
     UNUSED(parser);
     ASSERT_IS_MAIN_THREAD();
 
-    CHECK(!data.name.empty(), );
+    CHECK(!data.name.empty(), );  //!OCLINT(multiple unary operator)
     CHECK(data.definition, );
     scoped_lock locker(functions_lock);
 

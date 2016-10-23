@@ -475,7 +475,7 @@ class parse_ll_t {
 
     /// Get the node corresponding to the top element of the stack.
     parse_node_t &node_for_top_symbol() {
-        PARSE_ASSERT(!symbol_stack.empty());
+        PARSE_ASSERT(!symbol_stack.empty());  //!OCLINT(multiple unary operator)
         const parse_stack_element_t &top_symbol = symbol_stack.back();
         PARSE_ASSERT(top_symbol.node_idx != NODE_OFFSET_INVALID);
         PARSE_ASSERT(top_symbol.node_idx < nodes.size());
@@ -912,7 +912,7 @@ bool parse_ll_t::report_error_for_unclosed_block() {
 }
 
 bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token) {
-    PARSE_ASSERT(!symbol_stack.empty());
+    PARSE_ASSERT(!symbol_stack.empty());  //!OCLINT(multiple unary operator)
     PARSE_ASSERT(token.type >= FIRST_PARSE_TOKEN_TYPE);
     bool handled = false;
     parse_stack_element_t &stack_top = symbol_stack.back();
@@ -1031,7 +1031,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
     }
 
     while (!consumed && !this->fatal_errored) {
-        PARSE_ASSERT(!symbol_stack.empty());
+        PARSE_ASSERT(!symbol_stack.empty());  //!OCLINT(multiple unary operator)
 
         if (top_node_handle_terminal_types(token1)) {
             if (logit) {

@@ -1184,7 +1184,7 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
     // Return what happened.
     if (result == parse_execution_success) {
         // Link up the processes.
-        assert(!processes.empty());
+        assert(!processes.empty());  //!OCLINT(multiple unary operator)
         j->first_process = processes.at(0);
         for (size_t i = 1; i < processes.size(); i++) {
             processes.at(i - 1)->next = processes.at(i);
@@ -1368,7 +1368,7 @@ parse_execution_result_t parse_execution_context_t::run_job_list(const parse_nod
 parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
     node_offset_t offset, const block_t *associated_block, const io_chain_t &io) {
     // Don't ever expect to have an empty tree if this is called.
-    assert(!tree.empty());
+    assert(!tree.empty());  //!OCLINT(multiple unary operator)
     assert(offset < tree.size());
 
     // Apply this block IO for the duration of this function.

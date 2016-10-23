@@ -1753,7 +1753,7 @@ void assert_is_locked(void *vmutex, const char *who, const char *caller) {
 }
 
 void scoped_lock::lock(void) {
-    assert(!locked);
+    assert(!locked);  //!OCLINT(multiple unary operator)
     ASSERT_IS_NOT_FORKED_CHILD();
     VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_lock(lock_obj));
     locked = true;
@@ -1777,7 +1777,7 @@ scoped_lock::~scoped_lock() {
 }
 
 void scoped_rwlock::lock(void) {
-    assert(!(locked || locked_shared));
+    assert(!(locked || locked_shared));  //!OCLINT(multiple unary operator)
     ASSERT_IS_NOT_FORKED_CHILD();
     VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_rdlock(rwlock_obj));
     locked = true;
@@ -1791,7 +1791,7 @@ void scoped_rwlock::unlock(void) {
 }
 
 void scoped_rwlock::lock_shared(void) {
-    assert(!(locked || locked_shared));
+    assert(!(locked || locked_shared));  //!OCLINT(multiple unary operator)
     ASSERT_IS_NOT_FORKED_CHILD();
     VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_wrlock(rwlock_obj));
     locked_shared = true;

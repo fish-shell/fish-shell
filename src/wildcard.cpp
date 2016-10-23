@@ -489,7 +489,7 @@ class wildcard_expander_t {
 
     void add_expansion_result(const wcstring &result) {
         // This function is only for the non-completions case.
-        assert(!static_cast<bool>(this->flags & EXPAND_FOR_COMPLETIONS));
+        assert(!static_cast<bool>(this->flags & EXPAND_FOR_COMPLETIONS));  //!OCLINT(multiple unary operator)
         if (this->completion_set.insert(result).second) {
             append_completion(this->resolved_completions, result);
             this->did_add = true;
@@ -799,7 +799,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
 
     if (wc_segment.empty()) {
         // Handle empty segment.
-        assert(!segment_has_wildcards);
+        assert(!segment_has_wildcards);  //!OCLINT(multiple unary operator)
         if (is_last_segment) {
             this->expand_trailing_slash(base_dir, effective_prefix);
         } else {

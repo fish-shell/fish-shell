@@ -406,7 +406,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
         if ((io->io_mode == IO_BUFFER)) {
             io_buffer_t *io_buffer = static_cast<io_buffer_t *>(io.get());
-            assert(!io_buffer->is_input);
+            assert(!io_buffer->is_input);  //!OCLINT(multiple unary operator)
         }
     }
 

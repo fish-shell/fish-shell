@@ -344,7 +344,7 @@ void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t
     }
 
     // Get the root argument list.
-    assert(!tree.empty());
+    assert(!tree.empty());  //!OCLINT(multiple unary operator)
     const parse_node_t *arg_list = &tree.at(0);
     assert(arg_list->type == symbol_freestanding_argument_list);
 
@@ -725,7 +725,7 @@ bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcst
 
     if (!errored) {
         // Get the root argument list.
-        assert(!tree.empty());
+        assert(!tree.empty());  //!OCLINT(multiple unary operator)
         const parse_node_t *arg_list = &tree.at(0);
         assert(arg_list->type == symbol_freestanding_argument_list);
 

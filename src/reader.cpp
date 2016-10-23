@@ -2808,31 +2808,24 @@ const wchar_t *reader_readline(int nchars) {
                     }
                 }
 
-                switch (command_test_result) {
-                    case 0: {
-                        // Finished command, execute it. Don't add items that start with a leading
-                        // space.
-                        const editable_line_t *el = &data->command_line;
-                        if (data->history != NULL && !el->empty() && el->text.at(0) != L' ') {
-                            data->history->add_pending_with_file_detection(el->text);
-                        }
-                        finished = 1;
-                        update_buff_pos(&data->command_line, data->command_line.size());
-                        reader_repaint();
-                        break;
+                if (command_test_result == 0) {
+                    // Finished command, execute it. Don't add items that start with a leading
+                    // space.
+                    const editable_line_t *el = &data->command_line;
+                    if (data->history != NULL && !el->empty() && el->text.at(0) != L' ') {
+                        data->history->add_pending_with_file_detection(el->text);
                     }
-                    case PARSER_TEST_INCOMPLETE: {
-                        // We are incomplete, continue editing.
-                        insert_char(el, '\n');
-                        break;
-                    }
-                    default: {
-                        // Result must be some combination including an error. The error message
-                        // will already be printed, all we need to do is repaint.
-                        s_reset(&data->screen, screen_reset_abandon_line);
-                        reader_repaint_needed();
-                        break;
-                    }
+                    finished = 1;
+                    update_buff_pos(&data->command_line, data->command_line.size());
+                    reader_repaint();
+                } else if (command_test_result == PARSER_TEST_INCOMPLETE) {
+                    // We are incomplete, continue editing.
+                    insert_char(el, '\n');
+                } else {
+                    // Result must be some combination including an error. The error message will
+                    // already be printed, all we need to do is repaint.
+                    s_reset(&data->screen, screen_reset_abandon_line);
+                    reader_repaint_needed();
                 }
 
                 break;

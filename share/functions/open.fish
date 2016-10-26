@@ -3,7 +3,7 @@
 # application for the file.
 #
 
-if not test (uname) = Darwin
+if not command -s open >/dev/null
 	function open --description "Open file in default application"
 		if count $argv >/dev/null
 			switch $argv[1]

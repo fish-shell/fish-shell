@@ -84,16 +84,15 @@ static int print_max(const wcstring &str, highlight_spec_t color, int max, bool 
 
 /// Print the specified item using at the specified amount of space.
 line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, size_t row,
-                                      size_t column, size_t width, bool secondary, bool selected,
+                                      size_t column, int width, bool secondary, bool selected,
                                       page_rendering_t *rendering) const {
     UNUSED(column);
     UNUSED(row);
     UNUSED(rendering);
-    size_t comp_width = 0, desc_width = 0;
-    size_t written = 0;
+    int comp_width, desc_width;
     line_t line_data;
 
-    if (c->pref_width <= (size_t)width) {
+    if (c->pref_width <= width) {
         // The entry fits, we give it as much space as it wants.
         comp_width = c->comp_width;
         desc_width = c->desc_width;
@@ -102,8 +101,8 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         // the space to the completion, and whatever is left to the description.
         int desc_all = c->desc_width ? c->desc_width + 4 : 0;
 
-        comp_width = maxi(mini(c->comp_width, 2 * (width - 4) / 3), width - desc_all);
-        if (c->desc_width) desc_width = width - comp_width - 4;
+        comp_width = maxi(mini((int)c->comp_width, 2 * (width - 4) / 3), width - desc_all);
+        desc_width = c->desc_width ? width - 4 - comp_width : 0;
     }
 
     int bg_color = secondary ? highlight_spec_pager_secondary : highlight_spec_normal;
@@ -111,6 +110,7 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         bg_color = highlight_spec_search_match;
     }
 
+    int written = 0;
     for (size_t i = 0; i < c->comp.size(); i++) {
         const wcstring &comp = c->comp.at(i);
 

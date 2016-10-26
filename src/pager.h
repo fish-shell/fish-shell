@@ -114,7 +114,7 @@ class pager_t {
                           const wcstring &prefix, const comp_info_list_t &lst,
                           page_rendering_t *rendering) const;
     line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column,
-                                 size_t width, bool secondary, bool selected,
+                                 int width, bool secondary, bool selected,
                                  page_rendering_t *rendering) const;
 
    public:

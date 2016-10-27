@@ -6,6 +6,17 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
         and not set -q TMUX
         return
     end
+
+    # XTerm supports this sequence since version 282
+    if test -n "$XTERM_VERSION"
+        # This will fail if $XTERM_VERSION is not in the "XTerm($version)" format.
+        # In that case, we cannot determine the terminal and should stop
+        # so "[1 q" does not show up on the user's screen
+        if not test (string replace -r 'XTerm\((\d*)\)' '$1' -- $XTERM_VERSION) -ge 282
+            return
+        end
+    end
+
     set -l terminal $argv[1]
     set -q terminal[1]
     or set terminal auto

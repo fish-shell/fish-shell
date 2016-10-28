@@ -60,5 +60,5 @@ function alias --description 'Legacy function for creating shellscript functions
             set prefix command
         end
     end
-    echo "function $name --wraps $first_word; $prefix $first_word $body \$argv; end" | source
+    echo "function $name --wraps $first_word --description \"alias $argv\"; $prefix $first_word $body \$argv; end" | source
 end

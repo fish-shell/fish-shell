@@ -476,6 +476,16 @@ static env_node_t *env_get_node(const wcstring &key) {
     return env;
 }
 
+/// Search the innermost scope that is shadowing, which will be either the
+/// current function or the global scope.
+static env_node_t *get_innermost_shadowing_scope() {
+    env_node_t *node = top;
+    while (node->next && !node->new_scope) {
+        node = node->next;
+    }
+    return node;
+}
+
 int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) {
     ASSERT_IS_MAIN_THREAD();
     bool has_changed_old = has_changed_exported;
@@ -562,6 +572,8 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
         env_node_t *node = NULL;
         if (var_mode & ENV_GLOBAL) {
             node = global_env;
+        } else if (var_mode & ENV_FUNCTION) {
+            node = get_innermost_shadowing_scope();
         } else if (var_mode & ENV_LOCAL) {
             node = top;
         } else if (preexisting_node != NULL) {
@@ -594,12 +606,8 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
                 done = 1;
 
             } else {
-                // New variable with unspecified scope. The default scope is the innermost scope
-                // that is shadowing, which will be either the current function or the global scope.
-                node = top;
-                while (node->next && !node->new_scope) {
-                    node = node->next;
-                }
+                // New variable with unspecified scope.
+                node = get_innermost_shadowing_scope();
             }
         }
 

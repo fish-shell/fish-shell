@@ -1,0 +1,24 @@
+I say 1, 2, 3
+Inside if (0) and after (1)
+Inside if without setting as local (0) and after (0)
+
+local_var local scoped
+local_var function scoped
+func_var local scoped
+func_var function scoped
+global_var global scoped
+
+func_var local scoped
+func_var function scoped
+global_var global scoped
+
+11
+var0 l scoped
+var0 f scoped
+var1 l scoped
+var1 f scoped
+
+10
+
+top-level local scoped
+top-level function scoped

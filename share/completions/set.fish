@@ -59,6 +59,7 @@ complete -c set -n '__fish_is_first_token' -s e -l erase --description "Erase va
 complete -c set -n '__fish_is_first_token' -s x -l export --description "Export variable to subprocess"
 complete -c set -n '__fish_is_first_token' -s u -l unexport --description "Do not export variable to subprocess"
 complete -c set -n '__fish_is_first_token' -s g -l global --description "Make variable scope global"
+complete -c set -n '__fish_is_first_token' -s f -l function --description "Make variable scope function"
 complete -c set -n '__fish_is_first_token' -s l -l local --description "Make variable scope local"
 complete -c set -n '__fish_is_first_token' -s U -l universal --description "Share variable persistently across sessions"
 complete -c set -n '__fish_is_first_token' -s q -l query --description "Test if variable is defined"

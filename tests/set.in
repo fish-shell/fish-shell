@@ -1,0 +1,83 @@
+function test_function
+    set -l i 1
+    for v in ONE TWO THREE
+        set -f $v $i
+        set i (math "$i + 1")
+    end
+    echo "I say $ONE, $TWO, $THREE"
+    if test $ONE = 1
+        set -l ONE 0
+        echo -n "Inside if ($ONE) "
+    end
+    echo "and after ($ONE)"
+    if test $ONE
+        set ONE 0
+        echo -n "Inside if without setting as local ($ONE) "
+    end
+    echo "and after ($ONE)"
+end
+
+function body_scopes
+    set -l local_var 1
+    set -f func_var 0
+    set -g global_var 2
+    for var in local_var func_var global_var
+        for flag in local function global
+            set -q --$flag $var
+            and echo "$var $flag scoped"
+        end
+    end
+    set -eg global_var
+end
+
+function scoped_scopes
+    begin
+        set -l local_var 1
+        set -f func_var 0
+        set -g global_var 2
+    end
+    for var in local_var func_var global_var
+        for flag in local function global
+            set -q --$flag $var
+            and echo "$var $flag scoped"
+        end
+    end
+    set -eg global_var
+end
+
+function local_function_same
+    set -l var0 0
+    set -f var0 1
+
+    set -f var1 0
+    set -l var1 1
+
+    echo $var0$var1
+
+    set -ql var0; and echo "var0 l scoped"
+    set -qf var0; and echo "var0 f scoped"
+
+    set -ql var1; and echo "var1 l scoped"
+    set -qf var1; and echo "var1 f scoped"
+end
+
+function local_shadow_function
+    set -f var 0
+    begin
+        set -l var 1
+        echo -n $var
+        set -e var
+        echo $var
+    end
+end
+
+test_function; echo
+body_scopes; echo
+scoped_scopes; echo
+local_function_same; echo
+local_shadow_function; echo
+
+set -f func_var 0
+set -ql func_var; and echo "top-level local scoped"
+set -qf func_var; and echo "top-level function scoped"
+set -qg func_var; and echo "top-level global scoped"

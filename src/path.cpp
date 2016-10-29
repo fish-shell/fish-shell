@@ -370,7 +370,7 @@ bool paths_are_same_file(const wcstring &path1, const wcstring &path2) {
     struct stat s1, s2;
     if (wstat(path1, &s1) == 0 && wstat(path2, &s2) == 0) {
         return s1.st_ino == s2.st_ino && s1.st_dev == s2.st_dev;
-    } else {
-        return false;
     }
+
+    return false;
 }

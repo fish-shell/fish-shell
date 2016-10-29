@@ -272,9 +272,9 @@ bool function_get_desc(const wcstring &name, wcstring *out_desc) {
     if (out_desc && func && !func->description.empty()) {
         out_desc->assign(_(func->description.c_str()));
         return true;
-    } else {
-        return false;
     }
+
+    return false;
 }
 
 void function_set_desc(const wcstring &name, const wcstring &desc) {

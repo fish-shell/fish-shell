@@ -1886,12 +1886,12 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                                                   argv[0], w.woptarg);
                         builtin_print_help(parser, streams, argv[0], streams.err);
                         return STATUS_BUILTIN_ERROR;
-                    } else {
-                        streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"),
-                                                  argv[0], w.woptarg);
-                        builtin_print_help(parser, streams, argv[0], streams.err);
-                        return STATUS_BUILTIN_ERROR;
                     }
+
+                    streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"),
+                                              argv[0], w.woptarg);
+                    builtin_print_help(parser, streams, argv[0], streams.err);
+                    return STATUS_BUILTIN_ERROR;
                 }
                 break;
             }

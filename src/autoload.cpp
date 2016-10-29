@@ -313,7 +313,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
 
     if (really_load) {
         return reloaded;
-    } else {
-        return found_file || has_script_source;
     }
+
+    return found_file || has_script_source;
 }

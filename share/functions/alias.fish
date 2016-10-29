@@ -1,4 +1,4 @@
-function alias --description 'Legacy function for creating shellscript functions using an alias-like syntax'
+function alias --description 'Creates a function wrapping a command'
     if count $argv > /dev/null
         switch $argv[1]
             case -h --h --he --hel --help
@@ -14,8 +14,10 @@ function alias --description 'Legacy function for creating shellscript functions
     switch (count $argv)
 
         case 0
-            echo "Fish implements aliases using functions. Use 'functions' builtin to see list of functions and 'functions function_name' to see function definition, type 'help alias' for more information."
-            return 1
+            for func in (functions -n)
+                functions $func | string match -- "function * --description 'alias *" | string replace -r -- "function .* --description '" ''| string trim -c\'
+            end
+            return 0
         case 1
             set -l tmp (string replace -r "=" '\n' -- $argv) ""
             set name $tmp[1]

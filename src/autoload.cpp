@@ -157,6 +157,19 @@ autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcs
     return func;
 }
 
+static bool use_cached(autoload_function_t *func, bool really_load, bool allow_stale_functions) {
+    if (!func) {
+        return false;  // can't use a function that doesn't exist
+    }
+    if (really_load && !func->is_placeholder && !func->is_loaded) {
+        return false;  // can't use an unloaded function
+    }
+    if (!allow_stale_functions && is_stale(func)) {
+        return false;  // can't use a stale function
+    }
+    return true;  // I guess we can use it
+}
+
 /// This internal helper function does all the real work. By using two functions, the internal
 /// function can return on various places in the code, and the caller can take care of various
 /// cleanup work.
@@ -169,35 +182,21 @@ autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcs
 bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_load, bool reload,
                                                const wcstring_list_t &path_list) {
     // Note that we are NOT locked in this function!
-    bool reloaded = 0;
+    bool reloaded = false;
 
     // Try using a cached function. If we really want the function to be loaded, require that it be
     // really loaded. If we're not reloading, allow stale functions.
     {
         bool allow_stale_functions = !reload;
-
         scoped_lock locker(lock);
         autoload_function_t *func = this->get_node(cmd);  // get the function
 
-        // Determine if we can use this cached function.
-        bool use_cached;
-        if (!func) {
-            // Can't use a function that doesn't exist.
-            use_cached = false;
-        } else if (really_load && !func->is_placeholder && !func->is_loaded) {
-            use_cached = false;  // can't use an unloaded function
-        } else if (!allow_stale_functions && is_stale(func)) {
-            use_cached = false;  // can't use a stale function
-        } else {
-            use_cached = true;  // I guess we can use it
-        }
-
         // If we can use this function, return whether we were able to access it.
-        if (use_cached) {
-            assert(func != NULL);
+        if (use_cached(func, really_load, allow_stale_functions)) {
             return func->is_internalized || func->access.accessible;
         }
     }
+
     // The source of the script will end up here.
     wcstring script_source;
     bool has_script_source = false;

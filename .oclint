@@ -58,3 +58,10 @@ disable-rules:
     # especially in the context of assert statements. So disable this rule.
     #
     - DoubleNegative
+    #
+    # Avoiding bitwise operators in a conditional is a good idea with one
+    # exception: testing whether a bit flag is set. Which happens to be the
+    # only time you'll see something like `if (j->flags & JOB_CONSTRUCTED)`
+    # in fish source.
+    #
+    - BitwiseOperatorInConditional

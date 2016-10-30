@@ -270,44 +270,45 @@ static void print_profile(const std::vector<profile_item_t *> &items, FILE *out)
         int my_time;
 
         me = items.at(pos);
-        if (!me->skipped) {
-            my_time = me->parse + me->exec;
+        if (me->skipped) {
+            continue;
+        }
 
-            for (i = pos + 1; i < items.size(); i++) {
-                prev = items.at(i);
-                if (prev->skipped) {
-                    continue;
-                }
-
-                if (prev->level <= me->level) {
-                    break;
-                }
-
-                if (prev->level > me->level + 1) {
-                    continue;
-                }
-
-                my_time -= prev->parse;
-                my_time -= prev->exec;
+        my_time = me->parse + me->exec;
+        for (i = pos + 1; i < items.size(); i++) {
+            prev = items.at(i);
+            if (prev->skipped) {
+                continue;
+            }
+            if (prev->level <= me->level) {
+                break;
+            }
+            if (prev->level > me->level + 1) {
+                continue;
             }
 
-            if (me->cmd.size() > 0) {
-                if (fwprintf(out, L"%d\t%d\t", my_time, me->parse + me->exec) < 0) {
-                    wperror(L"fwprintf");
-                    return;
-                }
+            my_time -= prev->parse + prev->exec;
+        }
 
-                for (i = 0; i < me->level; i++) {
-                    if (fwprintf(out, L"-") < 0) {
-                        wperror(L"fwprintf");
-                        return;
-                    }
-                }
-                if (fwprintf(out, L"> %ls\n", me->cmd.c_str()) < 0) {
-                    wperror(L"fwprintf");
-                    return;
-                }
+        if (me->cmd.size() == 0) {
+            continue;
+        }
+
+        if (fwprintf(out, L"%d\t%d\t", my_time, me->parse + me->exec) < 0) {
+            wperror(L"fwprintf");
+            return;
+        }
+
+        for (i = 0; i < me->level; i++) {
+            if (fwprintf(out, L"-") < 0) {
+                wperror(L"fwprintf");
+                return;
             }
+        }
+
+        if (fwprintf(out, L"> %ls\n", me->cmd.c_str()) < 0) {
+            wperror(L"fwprintf");
+            return;
         }
     }
 }

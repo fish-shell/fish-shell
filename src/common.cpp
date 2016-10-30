@@ -1220,6 +1220,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
                     break;
                 }
+                default: { break; }
             }
         } else if (mode == mode_single_quotes) {
             if (c == L'\\') {
@@ -1297,6 +1298,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     }
                     break;
                 }
+                default: { break; }
             }
         }
 

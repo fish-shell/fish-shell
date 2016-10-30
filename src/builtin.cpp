@@ -452,7 +452,6 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     while (1) {
         int opt_index = 0;
         int opt = w.wgetopt_long_only(argc, argv, L"aehkKfM:m:", long_options, &opt_index);
-
         if (opt == -1) break;
 
         switch (opt) {
@@ -500,6 +499,10 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -625,6 +628,10 @@ static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
             }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
         }
     }
 
@@ -664,6 +671,10 @@ static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv
                     // Set it in function scope
                     block = parser.block_at_index(++block_idx);
                 }
+            }
+            default: {
+                DIE("unexpected scope");
+                break;
             }
         }
         if (block) {
@@ -713,6 +724,10 @@ static int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
             }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
         }
     }
 
@@ -758,6 +773,10 @@ static int builtin_emit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -811,6 +830,10 @@ static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **ar
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -869,6 +892,10 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -934,6 +961,7 @@ static wcstring functions_def(const wcstring &name) {
                 append_format(out, L" --on-event %ls", next->str_param1.c_str());
                 break;
             }
+            default: { DIE("unexpected next->type"); }
         }
     }
 
@@ -1047,6 +1075,10 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -1193,9 +1225,11 @@ static unsigned int builtin_echo_digit(wchar_t wc, unsigned int base) {
         case L'7': {
             return 7;
         }
+        default: { break; }
     }
 
-    if (base == 16) switch (wc) {
+    if (base == 16) {
+        switch (wc) {
             case L'8': {
                 return 8;
             }
@@ -1226,7 +1260,10 @@ static unsigned int builtin_echo_digit(wchar_t wc, unsigned int base) {
             case L'F': {
                 return 15;
             }
+            default: { break; }
         }
+    }
+
     return UINT_MAX;
 }
 
@@ -1642,6 +1679,10 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                 res = 1;
                 break;
             }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
         }
     }
 
@@ -1759,6 +1800,10 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -1914,6 +1959,10 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             case L'?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -2125,7 +2174,6 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
     };
 
     int mode = NORMAL;
-
     int argc = builtin_count_args(argv);
     int res = STATUS_BUILTIN_OK;
 
@@ -2213,11 +2261,18 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
             }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
         }
     }
 
     if (!res) {
         switch (mode) {
+            case DONE: {
+                break;
+            }
             case CURRENT_FILENAME: {
                 const wchar_t *fn = parser.current_filename();
 
@@ -2270,6 +2325,7 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
                 streams.out.append(parser.stack_trace());
                 break;
             }
+            default: { break; }
         }
     }
 
@@ -2424,6 +2480,10 @@ static int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **a
             }
             case 'i': {
                 should_output_index = true;
+                break;
+            }
+            default: {
+                DIE("unexpected opt");
                 break;
             }
         }

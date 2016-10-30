@@ -123,6 +123,9 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
     }
 
     switch (env_set(key, val_str, scope | ENV_USER)) {
+        case ENV_OK: {
+            break;
+        }
         case ENV_PERM: {
             streams.err.append_format(_(L"%ls: Tried to change the read-only variable '%ls'\n"),
                                       L"set", key);
@@ -141,6 +144,10 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
                 _(L"%ls: Tried to set the special variable '%ls' to an invalid value\n"), L"set",
                 key);
             retcode = 1;
+            break;
+        }
+        default: {
+            DIE("unexpected env_set() ret val");
             break;
         }
     }

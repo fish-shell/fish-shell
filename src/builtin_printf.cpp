@@ -541,6 +541,12 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
             }
             break;
         }
+        default: {
+            // TODO: Determine if this should call DIE()
+            // WTF
+            DIE("unexpected opt");
+            break;
+        }
     }
 }
 

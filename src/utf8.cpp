@@ -20,6 +20,7 @@
 #include <limits>
 #include <string>
 
+#include "common.h"
 #include "utf8.h"
 
 #define _NXT 0x80
@@ -137,9 +138,8 @@ static int __utf8_forbitten(unsigned char octet) {
         case 0xff: {
             return -1;
         }
+        default: { return 0; }
     }
-
-    return 0;
 }
 
 /// This function translates UTF-8 string into UCS-2 or UCS-4 string (all symbols will be in local
@@ -288,18 +288,17 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
             if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             continue;
         }
-        if (w_wide <= 0x0000007f)
+        if (w_wide <= 0x0000007f) {
             n = 1;
-        else if (w_wide <= 0x000007ff)
+        } else if (w_wide <= 0x000007ff) {
             n = 2;
-        else if (w_wide <= 0x0000ffff)
+        } else if (w_wide <= 0x0000ffff) {
             n = 3;
-        else if (w_wide <= 0x001fffff)
+        } else if (w_wide <= 0x001fffff) {
             n = 4;
-        else if (w_wide <= 0x03ffffff)
-            n = 5;
-        else
-            n = 6;  /// if (w_wide <= 0x7fffffff)
+        } else {
+            DIE("invalid wide char");
+        }
 
         total += n;
 
@@ -340,10 +339,14 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
                 p[0] = _SEQ4 | ((oc[1] & 0x1f) >> 2);
                 break;
             }
+            default: {
+                DIE("unexpected utff8 len");
+                break;
+            }
         }
 
-        // NOTE: do not check here for forbitten UTF-8 characters. They cannot appear here because
-        // we do proper convertion.
+        // NOTE: do not check here for forbidden UTF-8 characters. They cannot appear here because
+        // we do proper conversion.
         p += n;
     }
 

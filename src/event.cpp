@@ -88,6 +88,10 @@ static int event_match(const event_t &classv, const event_t &instance) {
         case EVENT_GENERIC: {
             return instance.str_param1 == classv.str_param1;
         }
+        default: {
+            DIE("unexpected classv.type");
+            break;
+        }
     }
 
     // This should never be reached.

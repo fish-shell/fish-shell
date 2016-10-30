@@ -127,6 +127,10 @@ static void replace_part(const wchar_t *begin, const wchar_t *end, const wchar_t
             out_pos += wcslen(insert);
             break;
         }
+        default: {
+            DIE("unexpected append_mode");
+            break;
+        }
     }
     out.append(end);
     reader_set_buffer(out, out_pos);
@@ -326,6 +330,10 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return 1;
             }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
         }
     }
 
@@ -468,6 +476,10 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
         case TOKEN_MODE: {
             parse_util_token_extent(get_buffer(), get_cursor_pos(), &begin, &end, 0, 0);
+            break;
+        }
+        default: {
+            DIE("unexpected buffer_part");
             break;
         }
     }

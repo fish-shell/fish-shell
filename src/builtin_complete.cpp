@@ -283,6 +283,10 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 res = true;
                 break;
             }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
         }
     }
 

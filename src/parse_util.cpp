@@ -1004,6 +1004,10 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 }
                 break;
             }
+            default: {
+                DIE("unexpected parse_util_locate_cmdsubst() return value");
+                break;
+            }
         }
     }
 

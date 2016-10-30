@@ -262,6 +262,10 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return 1;
             }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
         }
     }
 

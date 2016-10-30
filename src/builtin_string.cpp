@@ -100,12 +100,13 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
     escape_flags_t flags = ESCAPE_ALL;
     wgetopter_t w;
     for (;;) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
+        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
-        if (c == -1) {
+        if (opt == -1) {
             break;
         }
-        switch (c) {
+
+        switch (opt) {
             case 0: {
                 break;
             }
@@ -116,6 +117,10 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return BUILTIN_STRING_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -145,11 +150,13 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
     bool quiet = false;
     wgetopter_t w;
     for (;;) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-        if (c == -1) {
+        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
+
+        if (opt == -1) {
             break;
         }
-        switch (c) {
+
+        switch (opt) {
             case 0: {
                 break;
             }
@@ -160,6 +167,10 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return BUILTIN_STRING_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -202,12 +213,12 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
     bool quiet = false;
     wgetopter_t w;
     for (;;) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
+        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
-        if (c == -1) {
+        if (opt == -1) {
             break;
         }
-        switch (c) {
+        switch (opt) {
             case 0: {
                 break;
             }
@@ -218,6 +229,10 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return BUILTIN_STRING_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -499,12 +514,12 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     bool regex = false;
     wgetopter_t w;
     for (;;) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
+        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
-        if (c == -1) {
+        if (opt == -1) {
             break;
         }
-        switch (c) {
+        switch (opt) {
             case 0: {
                 break;
             }
@@ -535,6 +550,10 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return BUILTIN_STRING_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -731,12 +750,12 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
     bool regex = false;
     wgetopter_t w;
     for (;;) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
+        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
-        if (c == -1) {
+        if (opt == -1) {
             break;
         }
-        switch (c) {
+        switch (opt) {
             case 0: {
                 break;
             }
@@ -759,6 +778,10 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return BUILTIN_STRING_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -876,6 +899,10 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return BUILTIN_STRING_ERROR;
             }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
         }
     }
 
@@ -989,6 +1016,10 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return BUILTIN_STRING_ERROR;
             }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
         }
     }
 
@@ -1077,6 +1108,10 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return BUILTIN_STRING_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }

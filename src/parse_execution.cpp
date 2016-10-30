@@ -534,6 +534,10 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
         case EXPAND_OK: {
             break;
         }
+        default: {
+            DIE("unexpected expand_string() return value");
+            break;
+        }
     }
 
     if (result == parse_execution_success && switch_values_expanded.size() != 1) {
@@ -943,6 +947,10 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(
             }
             case EXPAND_WILDCARD_MATCH:
             case EXPAND_OK: {
+                break;
+            }
+            default: {
+                DIE("unexpected expand_string() return value");
                 break;
             }
         }

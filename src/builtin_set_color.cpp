@@ -77,13 +77,13 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Parse options to obtain the requested operation and the modifiers.
     w.woptind = 0;
     while (1) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
+        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
-        if (c == -1) {
+        if (opt == -1) {
             break;
         }
 
-        switch (c) {
+        switch (opt) {
             case 0: {
                 break;
             }
@@ -109,6 +109,10 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case '?': {
                 return STATUS_BUILTIN_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }

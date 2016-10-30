@@ -476,6 +476,25 @@ static env_node_t *env_get_node(const wcstring &key) {
     return env;
 }
 
+/// Set the value of the environment variable whose name matches key to val.
+///
+/// Memory policy: All keys and values are copied, the parameters can and should be freed by the
+/// caller afterwards
+///
+/// \param key The key
+/// \param val The value
+/// \param mode The type of the variable. Can be any combination of ENV_GLOBAL, ENV_LOCAL,
+/// ENV_EXPORT and ENV_USER. If mode is zero, the current variable space is searched and the current
+/// mode is used. If no current variable with the same name is found, ENV_LOCAL is assumed.
+///
+/// Returns:
+///
+/// * ENV_OK on success.
+/// * ENV_PERM, can only be returned when setting as a user, e.g. ENV_USER is set. This means that
+/// the user tried to change a read-only variable.
+/// * ENV_SCOPE, the variable cannot be set in the given scope. This applies to readonly/electric
+/// variables set from the local or universal scopes, or set as exported.
+/// * ENV_INVALID, the variable value was invalid. This applies only to special variables.
 int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) {
     ASSERT_IS_MAIN_THREAD();
     bool has_changed_old = has_changed_exported;
@@ -512,7 +531,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
                 umask(mask);
                 // Do not actually create a umask variable, on env_get, it will be calculated
                 // dynamically.
-                return 0;
+                return ENV_OK;
             }
         }
 
@@ -636,7 +655,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
     // debug( 1, L"env_set: return from event firing" );
 
     react_to_variable_change(key);
-    return 0;
+    return ENV_OK;
 }
 
 /// Attempt to remove/free the specified key/value pair from the specified map.

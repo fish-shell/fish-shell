@@ -435,7 +435,7 @@ struct find_job_data_t {
 
 /// The following function is invoked on the main thread, because the job list is not thread safe.
 /// It should search the job list for something matching the given proc, and then return 1 to stop
-/// the search, 0 to continue it .
+/// the search, 0 to continue it.
 static int find_job(const struct find_job_data_t *info) {
     ASSERT_IS_MAIN_THREAD();
 
@@ -494,42 +494,45 @@ static int find_job(const struct find_job_data_t *info) {
         found = 1;
     }
 
-    if (!found) {
-        job_iterator_t jobs;
-        while ((j = jobs.next())) {
-            if (j->command_is_empty()) continue;
+    if (found) {
+        return found;
+    }
 
-            size_t offset;
-            if (match_pid(j->command(), proc, &offset)) {
-                if (flags & EXPAND_FOR_COMPLETIONS) {
-                    append_completion(&completions, j->command_wcstr() + offset + wcslen(proc),
-                                      COMPLETE_JOB_DESC, 0);
-                } else {
-                    append_completion(&completions, to_string<long>(j->pgid));
-                    found = 1;
-                }
+    job_iterator_t jobs;
+    while ((j = jobs.next())) {
+        if (j->command_is_empty()) continue;
+
+        size_t offset;
+        if (match_pid(j->command(), proc, &offset)) {
+            if (flags & EXPAND_FOR_COMPLETIONS) {
+                append_completion(&completions, j->command_wcstr() + offset + wcslen(proc),
+                                  COMPLETE_JOB_DESC, 0);
+            } else {
+                append_completion(&completions, to_string<long>(j->pgid));
+                found = 1;
             }
         }
+    }
 
-        if (!found) {
-            jobs.reset();
-            while ((j = jobs.next())) {
-                process_t *p;
-                if (j->command_is_empty()) continue;
-                for (p = j->first_process; p; p = p->next) {
-                    if (p->actual_cmd.empty()) continue;
+    if (found) {
+        return found;
+    }
 
-                    size_t offset;
-                    if (match_pid(p->actual_cmd, proc, &offset)) {
-                        if (flags & EXPAND_FOR_COMPLETIONS) {
-                            append_completion(&completions,
-                                              wcstring(p->actual_cmd, offset + wcslen(proc)),
-                                              COMPLETE_CHILD_PROCESS_DESC, 0);
-                        } else {
-                            append_completion(&completions, to_string<long>(p->pid), L"", 0);
-                            found = 1;
-                        }
-                    }
+    jobs.reset();
+    while ((j = jobs.next())) {
+        process_t *p;
+        if (j->command_is_empty()) continue;
+        for (p = j->first_process; p; p = p->next) {
+            if (p->actual_cmd.empty()) continue;
+
+            size_t offset;
+            if (match_pid(p->actual_cmd, proc, &offset)) {
+                if (flags & EXPAND_FOR_COMPLETIONS) {
+                    append_completion(&completions, wcstring(p->actual_cmd, offset + wcslen(proc)),
+                                      COMPLETE_CHILD_PROCESS_DESC, 0);
+                } else {
+                    append_completion(&completions, to_string<long>(p->pid), L"", 0);
+                    found = 1;
                 }
             }
         }
@@ -746,193 +749,196 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
 
     for (long i = last_idx - 1; (i >= 0) && is_ok && !empty; i--) {
         const wchar_t c = instr.at(i);
-        if ((c == VARIABLE_EXPAND) || (c == VARIABLE_EXPAND_SINGLE)) {
-            size_t start_pos = i + 1;
-            size_t stop_pos;
-            long var_len;
-            int is_single = (c == VARIABLE_EXPAND_SINGLE);
+        if (c != VARIABLE_EXPAND && c != VARIABLE_EXPAND_SINGLE) {
+            continue;
+        }
 
-            stop_pos = start_pos;
-            while (stop_pos < insize) {
-                const wchar_t nc = instr.at(stop_pos);
-                if (nc == VARIABLE_EXPAND_EMPTY) {
-                    stop_pos++;
-                    break;
-                }
-                if (!wcsvarchr(nc)) break;
+        long var_len;
+        int is_single = (c == VARIABLE_EXPAND_SINGLE);
+        size_t start_pos = i + 1;
+        size_t stop_pos = start_pos;
 
+        while (stop_pos < insize) {
+            const wchar_t nc = instr.at(stop_pos);
+            if (nc == VARIABLE_EXPAND_EMPTY) {
                 stop_pos++;
-            }
-
-            // printf( "Stop for '%c'\n", in[stop_pos]);
-            var_len = stop_pos - start_pos;
-
-            if (var_len == 0) {
-                if (errors) {
-                    parse_util_expand_variable_error(instr, 0 /* global_token_pos */, i, errors);
-                }
-
-                is_ok = false;
                 break;
             }
+            if (!wcsvarchr(nc)) break;
 
-            var_tmp.append(instr, start_pos, var_len);
-            env_var_t var_val;
-            if (var_len == 1 && var_tmp[0] == VARIABLE_EXPAND_EMPTY) {
-                var_val = env_var_t::missing_var();
-            } else {
-                var_val = expand_var(var_tmp.c_str());
+            stop_pos++;
+        }
+
+        // printf( "Stop for '%c'\n", in[stop_pos]);
+        var_len = stop_pos - start_pos;
+
+        if (var_len == 0) {
+            if (errors) {
+                parse_util_expand_variable_error(instr, 0 /* global_token_pos */, i, errors);
             }
 
-            if (!var_val.missing()) {
-                int all_vars = 1;
-                wcstring_list_t var_item_list;
+            is_ok = false;
+            break;
+        }
 
-                if (is_ok) {
-                    tokenize_variable_array(var_val, var_item_list);
+        var_tmp.append(instr, start_pos, var_len);
+        env_var_t var_val;
+        if (var_len == 1 && var_tmp[0] == VARIABLE_EXPAND_EMPTY) {
+            var_val = env_var_t::missing_var();
+        } else {
+            var_val = expand_var(var_tmp.c_str());
+        }
 
-                    const size_t slice_start = stop_pos;
-                    if (slice_start < insize && instr.at(slice_start) == L'[') {
-                        wchar_t *slice_end;
-                        size_t bad_pos;
-                        all_vars = 0;
-                        const wchar_t *in = instr.c_str();
-                        bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list,
-                                              var_pos_list, var_item_list.size());
-                        if (bad_pos != 0) {
-                            append_syntax_error(errors, stop_pos + bad_pos, L"Invalid index value");
+        if (!var_val.missing()) {
+            int all_vars = 1;
+            wcstring_list_t var_item_list;
+
+            if (is_ok) {
+                tokenize_variable_array(var_val, var_item_list);
+
+                const size_t slice_start = stop_pos;
+                if (slice_start < insize && instr.at(slice_start) == L'[') {
+                    wchar_t *slice_end;
+                    size_t bad_pos;
+                    all_vars = 0;
+                    const wchar_t *in = instr.c_str();
+                    bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list,
+                                          var_item_list.size());
+                    if (bad_pos != 0) {
+                        append_syntax_error(errors, stop_pos + bad_pos, L"Invalid index value");
+                        is_ok = false;
+                        break;
+                    }
+                    stop_pos = (slice_end - in);
+                }
+
+                if (!all_vars) {
+                    wcstring_list_t string_values(var_idx_list.size());
+                    for (size_t j = 0; j < var_idx_list.size(); j++) {
+                        long tmp = var_idx_list.at(j);
+                        // Check that we are within array bounds. If not, truncate the list to
+                        // exit.
+                        if (tmp < 1 || (size_t)tmp > var_item_list.size()) {
+                            size_t var_src_pos = var_pos_list.at(j);
+                            // The slice was parsed starting at stop_pos, so we have to add that
+                            // to the error position.
+                            append_syntax_error(errors, slice_start + var_src_pos,
+                                                ARRAY_BOUNDS_ERR);
                             is_ok = false;
+                            var_idx_list.resize(j);
                             break;
+                        } else {
+                            // Replace each index in var_idx_list inplace with the string value
+                            // at the specified index.
+                            // al_set( var_idx_list, j, wcsdup((const wchar_t *)al_get(
+                            // &var_item_list, tmp-1 ) ) );
+                            string_values.at(j) = var_item_list.at(tmp - 1);
                         }
-                        stop_pos = (slice_end - in);
                     }
 
-                    if (!all_vars) {
-                        wcstring_list_t string_values(var_idx_list.size());
-                        for (size_t j = 0; j < var_idx_list.size(); j++) {
-                            long tmp = var_idx_list.at(j);
-                            // Check that we are within array bounds. If not, truncate the list to
-                            // exit.
-                            if (tmp < 1 || (size_t)tmp > var_item_list.size()) {
-                                size_t var_src_pos = var_pos_list.at(j);
-                                // The slice was parsed starting at stop_pos, so we have to add that
-                                // to the error position.
-                                append_syntax_error(errors, slice_start + var_src_pos,
-                                                    ARRAY_BOUNDS_ERR);
-                                is_ok = false;
-                                var_idx_list.resize(j);
-                                break;
-                            } else {
-                                // Replace each index in var_idx_list inplace with the string value
-                                // at the specified index.
-                                // al_set( var_idx_list, j, wcsdup((const wchar_t *)al_get(
-                                // &var_item_list, tmp-1 ) ) );
-                                string_values.at(j) = var_item_list.at(tmp - 1);
-                            }
-                        }
-
-                        // string_values is the new var_item_list.
-                        var_item_list.swap(string_values);
-                    }
+                    // string_values is the new var_item_list.
+                    var_item_list.swap(string_values);
                 }
+            }
 
-                if (is_ok) {
-                    if (is_single) {
-                        wcstring res(instr, 0, i);
-                        if (i > 0) {
-                            if (instr.at(i - 1) != VARIABLE_EXPAND_SINGLE) {
-                                res.push_back(INTERNAL_SEPARATOR);
-                            } else if (var_item_list.empty() || var_item_list.front().empty()) {
-                                // First expansion is empty, but we need to recursively expand.
-                                res.push_back(VARIABLE_EXPAND_EMPTY);
-                            }
-                        }
-
-                        for (size_t j = 0; j < var_item_list.size(); j++) {
-                            const wcstring &next = var_item_list.at(j);
-                            if (is_ok) {
-                                if (j != 0) res.append(L" ");
-                                res.append(next);
-                            }
-                        }
-                        assert(stop_pos <= insize);
-                        res.append(instr, stop_pos, insize - stop_pos);
-                        is_ok &= expand_variables(res, out, i, errors);
-                    } else {
-                        for (size_t j = 0; j < var_item_list.size(); j++) {
-                            const wcstring &next = var_item_list.at(j);
-                            if (is_ok && (i == 0) && stop_pos == insize) {
-                                append_completion(out, next);
-                            } else {
-                                if (is_ok) {
-                                    wcstring new_in;
-                                    new_in.append(instr, 0, i);
-
-                                    if (i > 0) {
-                                        if (instr.at(i - 1) != VARIABLE_EXPAND) {
-                                            new_in.push_back(INTERNAL_SEPARATOR);
-                                        } else if (next.empty()) {
-                                            new_in.push_back(VARIABLE_EXPAND_EMPTY);
-                                        }
-                                    }
-                                    assert(stop_pos <= insize);
-                                    new_in.append(next);
-                                    new_in.append(instr, stop_pos, insize - stop_pos);
-                                    is_ok &= expand_variables(new_in, out, i, errors);
-                                }
-                            }
-                        }
-                    }
-                }
-
+            if (!is_ok) {
                 return is_ok;
             }
 
-            // Even with no value, we still need to parse out slice syntax. Behave as though we
-            // had 1 value, so $foo[1] always works.
-            const size_t slice_start = stop_pos;
-            if (slice_start < insize && instr.at(slice_start) == L'[') {
-                const wchar_t *in = instr.c_str();
-                wchar_t *slice_end;
-                size_t bad_pos;
-
-                bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list, 1);
-                if (bad_pos != 0) {
-                    append_syntax_error(errors, stop_pos + bad_pos, L"Invalid index value");
-                    is_ok = 0;
-                    return is_ok;
-                }
-                stop_pos = (slice_end - in);
-
-                // Validate that the parsed indexes are valid.
-                for (size_t j = 0; j < var_idx_list.size(); j++) {
-                    long tmp = var_idx_list.at(j);
-                    if (tmp != 1) {
-                        size_t var_src_pos = var_pos_list.at(j);
-                        append_syntax_error(errors, slice_start + var_src_pos, ARRAY_BOUNDS_ERR);
-                        is_ok = 0;
-                        return is_ok;
+            if (is_single) {
+                wcstring res(instr, 0, i);
+                if (i > 0) {
+                    if (instr.at(i - 1) != VARIABLE_EXPAND_SINGLE) {
+                        res.push_back(INTERNAL_SEPARATOR);
+                    } else if (var_item_list.empty() || var_item_list.front().empty()) {
+                        // First expansion is empty, but we need to recursively expand.
+                        res.push_back(VARIABLE_EXPAND_EMPTY);
                     }
                 }
-            }
 
-            // Expand a non-existing variable.
-            if (c == VARIABLE_EXPAND) {
-                // Regular expansion, i.e. expand this argument to nothing.
-                empty = true;
-            } else {
-                // Expansion to single argument.
-                wcstring res;
-                res.append(instr, 0, i);
-                if (i > 0 && instr.at(i - 1) == VARIABLE_EXPAND_SINGLE) {
-                    res.push_back(VARIABLE_EXPAND_EMPTY);
+                for (size_t j = 0; j < var_item_list.size(); j++) {
+                    const wcstring &next = var_item_list.at(j);
+                    if (is_ok) {
+                        if (j != 0) res.append(L" ");
+                        res.append(next);
+                    }
                 }
                 assert(stop_pos <= insize);
                 res.append(instr, stop_pos, insize - stop_pos);
-
                 is_ok &= expand_variables(res, out, i, errors);
+            } else {
+                for (size_t j = 0; j < var_item_list.size(); j++) {
+                    const wcstring &next = var_item_list.at(j);
+                    if (is_ok && i == 0 && stop_pos == insize) {
+                        append_completion(out, next);
+                    } else {
+                        if (is_ok) {
+                            wcstring new_in;
+                            new_in.append(instr, 0, i);
+
+                            if (i > 0) {
+                                if (instr.at(i - 1) != VARIABLE_EXPAND) {
+                                    new_in.push_back(INTERNAL_SEPARATOR);
+                                } else if (next.empty()) {
+                                    new_in.push_back(VARIABLE_EXPAND_EMPTY);
+                                }
+                            }
+                            assert(stop_pos <= insize);
+                            new_in.append(next);
+                            new_in.append(instr, stop_pos, insize - stop_pos);
+                            is_ok &= expand_variables(new_in, out, i, errors);
+                        }
+                    }
+                }
+            }
+
+            return is_ok;
+        }
+
+        // Even with no value, we still need to parse out slice syntax. Behave as though we
+        // had 1 value, so $foo[1] always works.
+        const size_t slice_start = stop_pos;
+        if (slice_start < insize && instr.at(slice_start) == L'[') {
+            const wchar_t *in = instr.c_str();
+            wchar_t *slice_end;
+            size_t bad_pos;
+
+            bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list, 1);
+            if (bad_pos != 0) {
+                append_syntax_error(errors, stop_pos + bad_pos, L"Invalid index value");
+                is_ok = 0;
                 return is_ok;
             }
+            stop_pos = (slice_end - in);
+
+            // Validate that the parsed indexes are valid.
+            for (size_t j = 0; j < var_idx_list.size(); j++) {
+                long tmp = var_idx_list.at(j);
+                if (tmp != 1) {
+                    size_t var_src_pos = var_pos_list.at(j);
+                    append_syntax_error(errors, slice_start + var_src_pos, ARRAY_BOUNDS_ERR);
+                    is_ok = 0;
+                    return is_ok;
+                }
+            }
+        }
+
+        // Expand a non-existing variable.
+        if (c == VARIABLE_EXPAND) {
+            // Regular expansion, i.e. expand this argument to nothing.
+            empty = true;
+        } else {
+            // Expansion to single argument.
+            wcstring res;
+            res.append(instr, 0, i);
+            if (i > 0 && instr.at(i - 1) == VARIABLE_EXPAND_SINGLE) {
+                res.push_back(VARIABLE_EXPAND_EMPTY);
+            }
+            assert(stop_pos <= insize);
+            res.append(instr, stop_pos, insize - stop_pos);
+
+            is_ok &= expand_variables(res, out, i, errors);
+            return is_ok;
         }
     }
 
@@ -1543,24 +1549,26 @@ static std::string escape_single_quoted_hack_hack_hack_hack(const char *str) {
 
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
                                         const char *const *argv) {
-    bool result = false;
-    if (cmds && cmds->size() == 1) {
-        const std::string &cmd = cmds->at(0);
-        if (cmd == "exec \"${@}\"" || cmd == "exec \"$@\"") {
-            // We're going to construct a new command that starts with exec, and then has the
-            // remaining arguments escaped.
-            std::string new_cmd = "exec";
-            for (int i = 1; i < argc; i++) {
-                const char *arg = argv[i];
-                if (arg) {
-                    new_cmd.push_back(' ');
-                    new_cmd.append(escape_single_quoted_hack_hack_hack_hack(arg));
-                }
-            }
+    if (!cmds || cmds->size() != 1) {
+        return false;
+    }
 
-            cmds->at(0) = new_cmd;
-            result = true;
+    bool result = false;
+    const std::string &cmd = cmds->at(0);
+    if (cmd == "exec \"${@}\"" || cmd == "exec \"$@\"") {
+        // We're going to construct a new command that starts with exec, and then has the
+        // remaining arguments escaped.
+        std::string new_cmd = "exec";
+        for (int i = 1; i < argc; i++) {
+            const char *arg = argv[i];
+            if (arg) {
+                new_cmd.push_back(' ');
+                new_cmd.append(escape_single_quoted_hack_hack_hack_hack(arg));
+            }
         }
+
+        cmds->at(0) = new_cmd;
+        result = true;
     }
     return result;
 }

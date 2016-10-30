@@ -386,7 +386,7 @@ toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) | show-SED
 	@echo " SED       $(em)$@$(sgr0)"
 	$v rm -f toc.tmp $@
 # Ugly hack to set the toc initial title for the main page
-	$v echo '- <a href="index.html" id="toc-index">fish shell documentation - $FISH_BUILD_VERSION</a>' > toc.tmp
+	$v echo '- <a href="index.html" id="toc-index">fish shell documentation - $(FISH_BUILD_VERSION)</a>' > toc.tmp
 # The first sed command captures the page name, followed by the description
 # The second sed command captures the command name \1 and the description \2, but only up to a dash
 # This is to reduce the size of the TOC in the command listing on the main page

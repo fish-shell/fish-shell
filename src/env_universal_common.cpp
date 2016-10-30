@@ -930,22 +930,24 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
     struct ifaddrs *ifap;
     bool ok = false;
 
-    if (getifaddrs(&ifap) == 0) {
-        for (const ifaddrs *p = ifap; p; p = p->ifa_next) {
-            bool is_af_link = p->ifa_addr && p->ifa_addr->sa_family == AF_LINK;
-            if (is_af_link && p->ifa_name && p->ifa_name[0] &&
-                !strcmp((const char *)p->ifa_name, interface)) {
-                const sockaddr_dl &sdl = *reinterpret_cast<sockaddr_dl *>(p->ifa_addr);
-
-                size_t alen = sdl.sdl_alen;
-                if (alen > MAC_ADDRESS_MAX_LEN) alen = MAC_ADDRESS_MAX_LEN;
-                memcpy(macaddr, sdl.sdl_data + sdl.sdl_nlen, alen);
-                ok = true;
-                break;
-            }
-        }
-        freeifaddrs(ifap);
+    if (getifaddrs(&ifap) != 0) {
+        return ok;
     }
+
+    for (const ifaddrs *p = ifap; p; p = p->ifa_next) {
+        bool is_af_link = p->ifa_addr && p->ifa_addr->sa_family == AF_LINK;
+        if (is_af_link && p->ifa_name && p->ifa_name[0] &&
+            !strcmp((const char *)p->ifa_name, interface)) {
+            const sockaddr_dl &sdl = *reinterpret_cast<sockaddr_dl *>(p->ifa_addr);
+
+            size_t alen = sdl.sdl_alen;
+            if (alen > MAC_ADDRESS_MAX_LEN) alen = MAC_ADDRESS_MAX_LEN;
+            memcpy(macaddr, sdl.sdl_data + sdl.sdl_nlen, alen);
+            ok = true;
+            break;
+        }
+    }
+    freeifaddrs(ifap);
     return ok;
 }
 
@@ -1356,8 +1358,6 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
     }
 
     bool poll() {
-        bool result = false;
-
         // Check if we are past the readback time.
         if (this->readback_time_usec > 0 && get_time() >= this->readback_time_usec) {
             // Read back what we wrote. We do nothing with the value.
@@ -1372,30 +1372,29 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         }
 
         // Check to see if we are doing readability polling.
-        if (polling_due_to_readable_fd && pipe_fd >= 0) {
-            // We are polling, so we are definitely going to sync.
-            result = true;
-
-            // See if this is still readable.
-            fd_set fds;
-            FD_ZERO(&fds);
-            FD_SET(this->pipe_fd, &fds);
-            struct timeval timeout = {};
-            select(this->pipe_fd + 1, &fds, NULL, NULL, &timeout);
-            if (!FD_ISSET(this->pipe_fd, &fds)) {
-                // No longer readable, no longer polling.
-                polling_due_to_readable_fd = false;
-                drain_if_still_readable_time_usec = 0;
-            } else {
-                // Still readable. If it's been readable for a long time, there is probably
-                // lingering data on the pipe.
-                if (get_time() >= drain_if_still_readable_time_usec) {
-                    drain_excessive_data();
-                }
-            }
+        if (!polling_due_to_readable_fd || pipe_fd < 0) {
+            return false;
         }
 
-        return result;
+        // We are polling, so we are definitely going to sync.
+        // See if this is still readable.
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(this->pipe_fd, &fds);
+        struct timeval timeout = {};
+        select(this->pipe_fd + 1, &fds, NULL, NULL, &timeout);
+        if (!FD_ISSET(this->pipe_fd, &fds)) {
+            // No longer readable, no longer polling.
+            polling_due_to_readable_fd = false;
+            drain_if_still_readable_time_usec = 0;
+        } else {
+            // Still readable. If it's been readable for a long time, there is probably
+            // lingering data on the pipe.
+            if (get_time() >= drain_if_still_readable_time_usec) {
+                drain_excessive_data();
+            }
+        }
+        return true;
     }
 };
 
@@ -1414,23 +1413,25 @@ static universal_notifier_t::notifier_strategy_t fetch_default_strategy_from_env
     const size_t opt_count = sizeof options / sizeof *options;
 
     const char *var = getenv(UNIVERSAL_NOTIFIER_ENV_NAME);
-    if (var != NULL && var[0] != '\0') {
-        size_t i;
-        for (i = 0; i < opt_count; i++) {
-            if (!strcmp(var, options[i].name)) {
-                result = options[i].strat;
-                break;
-            }
+    if (var == NULL || var[0] == '\0') {
+        return result;
+    }
+
+    size_t i;
+    for (i = 0; i < opt_count; i++) {
+        if (!strcmp(var, options[i].name)) {
+            result = options[i].strat;
+            break;
         }
-        if (i >= opt_count) {
-            fprintf(stderr, "Warning: unrecognized value for %s: '%s'\n",
-                    UNIVERSAL_NOTIFIER_ENV_NAME, var);
-            fprintf(stderr, "Warning: valid values are ");
-            for (size_t j = 0; j < opt_count; j++) {
-                fprintf(stderr, "%s%s", j > 0 ? ", " : "", options[j].name);
-            }
-            fputc('\n', stderr);
+    }
+    if (i >= opt_count) {
+        fprintf(stderr, "Warning: unrecognized value for %s: '%s'\n",
+                UNIVERSAL_NOTIFIER_ENV_NAME, var);
+        fprintf(stderr, "Warning: valid values are ");
+        for (size_t j = 0; j < opt_count; j++) {
+            fprintf(stderr, "%s%s", j > 0 ? ", " : "", options[j].name);
         }
+        fputc('\n', stderr);
     }
     return result;
 }

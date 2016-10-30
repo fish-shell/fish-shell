@@ -1398,125 +1398,127 @@ static bool handle_completions(const std::vector<completion_t> &comp,
         success = true;
     }
 
-    if (!done) {
-        fuzzy_match_type_t best_match_type = get_best_match_type(comp);
+    if (done) {
+        return success;
+    }
 
-        // Determine whether we are going to replace the token or not. If any commands of the best
-        // type do not require replacement, then ignore all those that want to use replacement.
-        bool will_replace_token = true;
-        for (size_t i = 0; i < comp.size(); i++) {
-            const completion_t &el = comp.at(i);
-            if (el.match.type <= best_match_type && !(el.flags & COMPLETE_REPLACES_TOKEN)) {
-                will_replace_token = false;
-                break;
-            }
-        }
+    fuzzy_match_type_t best_match_type = get_best_match_type(comp);
 
-        // Decide which completions survived. There may be a lot of them; it would be nice if we
-        // could figure out how to avoid copying them here.
-        std::vector<completion_t> surviving_completions;
-        for (size_t i = 0; i < comp.size(); i++) {
-            const completion_t &el = comp.at(i);
-            // Ignore completions with a less suitable match type than the best.
-            if (el.match.type > best_match_type) continue;
-
-            // Only use completions that match replace_token.
-            bool completion_replace_token = static_cast<bool>(el.flags & COMPLETE_REPLACES_TOKEN);
-            if (completion_replace_token != will_replace_token) continue;
-
-            // Don't use completions that want to replace, if we cannot replace them.
-            if (completion_replace_token && !reader_can_replace(tok, el.flags)) continue;
-
-            // This completion survived.
-            surviving_completions.push_back(el);
-        }
-
-        bool use_prefix = false;
-        if (match_type_shares_prefix(best_match_type)) {
-            // Try to find a common prefix to insert among the surviving completions.
-            wcstring common_prefix;
-            complete_flags_t flags = 0;
-            bool prefix_is_partial_completion = false;
-            for (size_t i = 0; i < surviving_completions.size(); i++) {
-                const completion_t &el = surviving_completions.at(i);
-                if (i == 0) {
-                    // First entry, use the whole string.
-                    common_prefix = el.completion;
-                    flags = el.flags;
-                } else {
-                    // Determine the shared prefix length.
-                    size_t idx, max = mini(common_prefix.size(), el.completion.size());
-                    for (idx = 0; idx < max; idx++) {
-                        wchar_t ac = common_prefix.at(idx), bc = el.completion.at(idx);
-                        bool matches = (ac == bc);
-                        // If we are replacing the token, allow case to vary.
-                        if (will_replace_token && !matches) {
-                            // Hackish way to compare two strings in a case insensitive way,
-                            // hopefully better than towlower().
-                            matches = (wcsncasecmp(&ac, &bc, 1) == 0);
-                        }
-                        if (!matches) break;
-                    }
-
-                    // idx is now the length of the new common prefix.
-                    common_prefix.resize(idx);
-                    prefix_is_partial_completion = true;
-
-                    // Early out if we decide there's no common prefix.
-                    if (idx == 0) break;
-                }
-            }
-
-            // Determine if we use the prefix. We use it if it's non-empty and it will actually make
-            // the command line longer. It may make the command line longer by virtue of not using
-            // REPLACE_TOKEN (so it always appends to the command line), or by virtue of replacing
-            // the token but being longer than it.
-            use_prefix = common_prefix.size() > (will_replace_token ? tok.size() : 0);
-            assert(!use_prefix || !common_prefix.empty());
-
-            if (use_prefix) {
-                // We got something. If more than one completion contributed, then it means we have
-                // a prefix; don't insert a space after it.
-                if (prefix_is_partial_completion) flags |= COMPLETE_NO_SPACE;
-                completion_insert(common_prefix.c_str(), flags);
-                success = true;
-            }
-        }
-
-        if (continue_after_prefix_insertion || !use_prefix) {
-            // We didn't get a common prefix, or we want to print the list anyways.
-            size_t len, prefix_start = 0;
-            wcstring prefix;
-            parse_util_get_parameter_info(el->text, el->position, NULL, &prefix_start, NULL);
-
-            assert(el->position >= prefix_start);
-            len = el->position - prefix_start;
-
-            if (will_replace_token || match_type_requires_full_replacement(best_match_type)) {
-                // No prefix.
-                prefix.clear();
-            } else if (len <= PREFIX_MAX_LEN) {
-                prefix.append(el->text, prefix_start, len);
-            } else {
-                // Append just the end of the string.
-                prefix = wcstring(&ellipsis_char, 1);
-                prefix.append(el->text, prefix_start + len - PREFIX_MAX_LEN, PREFIX_MAX_LEN);
-            }
-
-            wchar_t quote;
-            parse_util_get_parameter_info(el->text, el->position, &quote, NULL, NULL);
-            // Update the pager data.
-            data->pager.set_prefix(prefix);
-            data->pager.set_completions(surviving_completions);
-            // Invalidate our rendering.
-            data->current_page_rendering = page_rendering_t();
-            // Modify the command line to reflect the new pager.
-            data->pager_selection_changed();
-            reader_repaint_needed();
-            success = false;
+    // Determine whether we are going to replace the token or not. If any commands of the best
+    // type do not require replacement, then ignore all those that want to use replacement.
+    bool will_replace_token = true;
+    for (size_t i = 0; i < comp.size(); i++) {
+        const completion_t &el = comp.at(i);
+        if (el.match.type <= best_match_type && !(el.flags & COMPLETE_REPLACES_TOKEN)) {
+            will_replace_token = false;
+            break;
         }
     }
-    return success;
+
+    // Decide which completions survived. There may be a lot of them; it would be nice if we could
+    // figure out how to avoid copying them here.
+    std::vector<completion_t> surviving_completions;
+    for (size_t i = 0; i < comp.size(); i++) {
+        const completion_t &el = comp.at(i);
+        // Ignore completions with a less suitable match type than the best.
+        if (el.match.type > best_match_type) continue;
+
+        // Only use completions that match replace_token.
+        bool completion_replace_token = static_cast<bool>(el.flags & COMPLETE_REPLACES_TOKEN);
+        if (completion_replace_token != will_replace_token) continue;
+
+        // Don't use completions that want to replace, if we cannot replace them.
+        if (completion_replace_token && !reader_can_replace(tok, el.flags)) continue;
+
+        // This completion survived.
+        surviving_completions.push_back(el);
+    }
+
+    bool use_prefix = false;
+    if (match_type_shares_prefix(best_match_type)) {
+        // Try to find a common prefix to insert among the surviving completions.
+        wcstring common_prefix;
+        complete_flags_t flags = 0;
+        bool prefix_is_partial_completion = false;
+        for (size_t i = 0; i < surviving_completions.size(); i++) {
+            const completion_t &el = surviving_completions.at(i);
+            if (i == 0) {
+                // First entry, use the whole string.
+                common_prefix = el.completion;
+                flags = el.flags;
+            } else {
+                // Determine the shared prefix length.
+                size_t idx, max = mini(common_prefix.size(), el.completion.size());
+                for (idx = 0; idx < max; idx++) {
+                    wchar_t ac = common_prefix.at(idx), bc = el.completion.at(idx);
+                    bool matches = (ac == bc);
+                    // If we are replacing the token, allow case to vary.
+                    if (will_replace_token && !matches) {
+                        // Hackish way to compare two strings in a case insensitive way,
+                        // hopefully better than towlower().
+                        matches = (wcsncasecmp(&ac, &bc, 1) == 0);
+                    }
+                    if (!matches) break;
+                }
+
+                // idx is now the length of the new common prefix.
+                common_prefix.resize(idx);
+                prefix_is_partial_completion = true;
+
+                // Early out if we decide there's no common prefix.
+                if (idx == 0) break;
+            }
+        }
+
+        // Determine if we use the prefix. We use it if it's non-empty and it will actually make
+        // the command line longer. It may make the command line longer by virtue of not using
+        // REPLACE_TOKEN (so it always appends to the command line), or by virtue of replacing
+        // the token but being longer than it.
+        use_prefix = common_prefix.size() > (will_replace_token ? tok.size() : 0);
+        assert(!use_prefix || !common_prefix.empty());
+
+        if (use_prefix) {
+            // We got something. If more than one completion contributed, then it means we have
+            // a prefix; don't insert a space after it.
+            if (prefix_is_partial_completion) flags |= COMPLETE_NO_SPACE;
+            completion_insert(common_prefix.c_str(), flags);
+            success = true;
+        }
+    }
+
+    if (!continue_after_prefix_insertion && use_prefix) {
+        return success;
+    }
+
+    // We didn't get a common prefix, or we want to print the list anyways.
+    size_t len, prefix_start = 0;
+    wcstring prefix;
+    parse_util_get_parameter_info(el->text, el->position, NULL, &prefix_start, NULL);
+
+    assert(el->position >= prefix_start);
+    len = el->position - prefix_start;
+
+    if (will_replace_token || match_type_requires_full_replacement(best_match_type)) {
+        prefix.clear();  // no prefix
+    } else if (len <= PREFIX_MAX_LEN) {
+        prefix.append(el->text, prefix_start, len);
+    } else {
+        // Append just the end of the string.
+        prefix = wcstring(&ellipsis_char, 1);
+        prefix.append(el->text, prefix_start + len - PREFIX_MAX_LEN, PREFIX_MAX_LEN);
+    }
+
+    wchar_t quote;
+    parse_util_get_parameter_info(el->text, el->position, &quote, NULL, NULL);
+    // Update the pager data.
+    data->pager.set_prefix(prefix);
+    data->pager.set_completions(surviving_completions);
+    // Invalidate our rendering.
+    data->current_page_rendering = page_rendering_t();
+    // Modify the command line to reflect the new pager.
+    data->pager_selection_changed();
+    reader_repaint_needed();
+    return false;
 }
 
 /// Return true if we believe ourselves to be orphaned. loop_count is how many times we've tried to
@@ -2652,26 +2654,24 @@ const wchar_t *reader_readline(int nchars) {
             }
             case R_BACKWARD_KILL_LINE: {
                 editable_line_t *el = data->active_edit_line();
-                if (el->position > 0) {
-                    const wchar_t *buff = el->text.c_str();
-                    const wchar_t *end = &buff[el->position];
-                    const wchar_t *begin = end;
-
-                    begin--;  // make sure we delete at least one character (see issue #580)
-
-                    // Delete until we hit a newline, or the beginning of the string.
-                    while (begin > buff && *begin != L'\n') begin--;
-
-                    // If we landed on a newline, don't delete it.
-                    if (*begin == L'\n') begin++;
-
-                    assert(end >= begin);
-                    size_t len = maxi<size_t>(end - begin, 1);
-                    begin = end - len;
-
-                    reader_kill(el, begin - buff, len, KILL_PREPEND,
-                                last_char != R_BACKWARD_KILL_LINE);
+                if (el->position <= 0) {
+                    break;
                 }
+                const wchar_t *buff = el->text.c_str();
+                const wchar_t *end = &buff[el->position];
+                const wchar_t *begin = end;
+
+                begin--;  // make sure we delete at least one character (see issue #580)
+
+                // Delete until we hit a newline, or the beginning of the string.
+                while (begin > buff && *begin != L'\n') begin--;
+
+                // If we landed on a newline, don't delete it.
+                if (*begin == L'\n') begin++;
+                assert(end >= begin);
+                size_t len = maxi<size_t>(end - begin, 1);
+                begin = end - len;
+                reader_kill(el, begin - buff, len, KILL_PREPEND, last_char != R_BACKWARD_KILL_LINE);
                 break;
             }
             case R_KILL_WHOLE_LINE: {

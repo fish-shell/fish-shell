@@ -432,11 +432,8 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
                                                             const parse_token_t &input1,
                                                             const parse_token_t &input2,
                                                             parse_node_tag_t *out_tag) {
-    const bool log_it = false;
-    if (log_it) {
-        fprintf(stderr, "Resolving production for %ls with input token <%ls>\n",
-                token_type_description(node_type), input1.describe().c_str());
-    }
+    debug(5, "Resolving production for %ls with input token <%ls>\n",
+          token_type_description(node_type), input1.describe().c_str());
 
     // Fetch the function to resolve the list of productions.
     const production_t *(*resolver)(const parse_token_t &input1, const parse_token_t &input2,
@@ -500,9 +497,9 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
     PARSE_ASSERT(resolver != NULL);
 
     const production_t *result = resolver(input1, input2, out_tag);
-    if (result == NULL && log_it) {
-        fprintf(stderr, "Node type '%ls' has no production for input '%ls' (in %s)\n",
-                token_type_description(node_type), input1.describe().c_str(), __FUNCTION__);
+    if (result == NULL) {
+        debug(5, "Node type '%ls' has no production for input '%ls' (in %s)\n",
+              token_type_description(node_type), input1.describe().c_str(), __FUNCTION__);
     }
 
     return result;

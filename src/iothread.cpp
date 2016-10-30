@@ -30,8 +30,6 @@
 #define IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE 99
 #define IO_SERVICE_RESULT_QUEUE 100
 
-#define IOTHREAD_LOG if (0)
-
 static void iothread_service_main_thread_requests(void);
 static void iothread_service_result_queue();
 
@@ -120,7 +118,7 @@ static void *iothread_worker(void *unused) {
     scoped_lock locker(s_spawn_queue_lock);
     struct SpawnRequest_t *req;
     while ((req = dequeue_spawn_request()) != NULL) {
-        IOTHREAD_LOG fprintf(stderr, "pthread %p dequeued %p\n", this_thread(), req);
+        debug(5, "pthread %p dequeued %p\n", this_thread(), req);
         // Unlock the queue while we execute the request.
         locker.unlock();
 
@@ -153,7 +151,7 @@ static void *iothread_worker(void *unused) {
     assert(s_active_thread_count > 0);
     s_active_thread_count -= 1;
 
-    IOTHREAD_LOG fprintf(stderr, "pthread %p exiting\n", this_thread());
+    debug(5, "pthread %p exiting\n", this_thread());
     // We're done.
     return NULL;
 }
@@ -175,7 +173,7 @@ static void iothread_spawn() {
 
     // We will never join this thread.
     VOMIT_ON_FAILURE(pthread_detach(thread));
-    IOTHREAD_LOG fprintf(stderr, "pthread %p spawned\n", (void *)(intptr_t)thread);
+    debug(5, "pthread %p spawned\n", (void *)(intptr_t)thread);
     // Restore our sigmask.
     VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, NULL));
 }

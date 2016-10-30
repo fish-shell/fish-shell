@@ -196,15 +196,14 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
             // Protect against broken mbrtowc() implementations which attempt to encode UTF-8
             // sequences longer than four bytes (e.g., OS X Snow Leopard).
             use_encode_direct = true;
-        } else if (sizeof(wchar_t) == 2 && (in[in_pos] & 0xF8) == 0xF0) {
+        } else if (sizeof(wchar_t) == 2 &&  //!OCLINT(constant if expression)
+                   (in[in_pos] & 0xF8) == 0xF0) {
             // Assume we are in a UTF-16 environment (e.g., Cygwin) using a UTF-8 encoding.
             // The bits set check will be true for a four byte UTF-8 sequence that requires
             // two UTF-16 chars. Something that doesn't work with our simple use of mbrtowc().
             use_encode_direct = true;
         } else {
             ret = mbrtowc(&wc, &in[in_pos], in_len - in_pos, &state);
-            // fprintf(stderr, "WTF in_pos %d  ret %d\n", in_pos, ret);
-
             // Determine whether to encode this character with our crazy scheme.
             if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
                 use_encode_direct = true;
@@ -219,7 +218,8 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
             } else if (ret > in_len - in_pos) {
                 // Other error codes? Terrifying, should never happen.
                 use_encode_direct = true;
-            } else if (sizeof(wchar_t) == 2 && wc >= 0xD800 && wc <= 0xDFFF) {
+            } else if (sizeof(wchar_t) == 2 && wc >= 0xD800 &&  //!OCLINT(constant if expression)
+                       wc <= 0xDFFF) {
                 // If we get a surrogate pair char on a UTF-16 system (e.g., Cygwin) then
                 // it's guaranteed the UTF-8 decoding is wrong so use direct encoding.
                 use_encode_direct = true;
@@ -227,24 +227,20 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
         }
 
         if (use_encode_direct) {
-            // fprintf(stderr, "WTF use_encode_direct\n");
             wc = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
             result.push_back(wc);
             in_pos++;
             memset(&state, 0, sizeof state);
-        } else if (ret == 0) {
-            // fprintf(stderr, "WTF null byte\n");
-            // Embedded null byte!
+        } else if (ret == 0) {  // embedded null byte!
             result.push_back(L'\0');
             in_pos++;
             memset(&state, 0, sizeof state);
-        } else {
-            // fprintf(stderr, "WTF null byte\n");
-            // Normal case.
+        } else {  // normal case
             result.push_back(wc);
             in_pos += ret;
         }
     }
+
     return result;
 }
 

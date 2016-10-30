@@ -82,7 +82,7 @@ size_t utf8_to_wchar(const char *in, size_t insize, std::wstring *out, int flags
     }
 
     size_t result;
-    if (sizeof(wchar_t) == sizeof(utf8_wchar_t)) {
+    if (sizeof(wchar_t) == sizeof(utf8_wchar_t)) {  //!OCLINT(constant if expression)
         result = utf8_to_wchar_internal(in, insize, reinterpret_cast<utf8_wstring_t *>(out), flags);
     } else if (out == NULL) {
         result = utf8_to_wchar_internal(in, insize, NULL, flags);
@@ -102,7 +102,7 @@ size_t wchar_to_utf8(const wchar_t *in, size_t insize, char *out, size_t outsize
     }
 
     size_t result;
-    if (sizeof(wchar_t) == sizeof(utf8_wchar_t)) {
+    if (sizeof(wchar_t) == sizeof(utf8_wchar_t)) {  //!OCLINT(constant if expression)
         result = wchar_to_utf8_internal(reinterpret_cast<const utf8_wchar_t *>(in), insize, out,
                                         outsize, flags);
     } else {

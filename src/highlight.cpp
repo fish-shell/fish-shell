@@ -122,73 +122,73 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
         }
     }
 
-    if (!has_magic && !clean_potential_path_fragment.empty()) {
-        // Don't test the same path multiple times, which can happen if the path is absolute and the
-        // CDPATH contains multiple entries.
-        std::set<wcstring> checked_paths;
+    if (has_magic || clean_potential_path_fragment.empty()) {
+        return result;
+    }
 
-        // Keep a cache of which paths / filesystems are case sensitive.
-        case_sensitivity_cache_t case_sensitivity_cache;
+    // Don't test the same path multiple times, which can happen if the path is absolute and the
+    // CDPATH contains multiple entries.
+    std::set<wcstring> checked_paths;
 
-        for (size_t wd_idx = 0; wd_idx < directories.size() && !result; wd_idx++) {
-            const wcstring &wd = directories.at(wd_idx);
+    // Keep a cache of which paths / filesystems are case sensitive.
+    case_sensitivity_cache_t case_sensitivity_cache;
 
-            const wcstring abs_path =
-                path_apply_working_directory(clean_potential_path_fragment, wd);
+    for (size_t wd_idx = 0; wd_idx < directories.size() && !result; wd_idx++) {
+        const wcstring &wd = directories.at(wd_idx);
 
-            // Skip this if it's empty or we've already checked it.
-            if (abs_path.empty() || checked_paths.count(abs_path)) continue;
-            checked_paths.insert(abs_path);
+        const wcstring abs_path = path_apply_working_directory(clean_potential_path_fragment, wd);
 
-            // If we end with a slash, then it must be a directory.
-            bool must_be_full_dir = abs_path.at(abs_path.size() - 1) == L'/';
-            if (must_be_full_dir) {
-                struct stat buf;
-                if (0 == wstat(abs_path, &buf) && S_ISDIR(buf.st_mode)) {
-                    result = true;
-                }
-            } else {
-                // We do not end with a slash; it does not have to be a directory.
-                DIR *dir = NULL;
-                const wcstring dir_name = wdirname(abs_path);
-                const wcstring filename_fragment = wbasename(abs_path);
-                if (dir_name == L"/" && filename_fragment == L"/") {
-                    // cd ///.... No autosuggestion.
-                    result = true;
-                } else if ((dir = wopendir(dir_name))) {
-                    // Check if we're case insensitive.
-                    const bool do_case_insensitive =
-                        fs_is_case_insensitive(dir_name, dirfd(dir), case_sensitivity_cache);
+        // Skip this if it's empty or we've already checked it.
+        if (abs_path.empty() || checked_paths.count(abs_path)) continue;
+        checked_paths.insert(abs_path);
 
-                    wcstring matched_file;
+        // If we end with a slash, then it must be a directory.
+        bool must_be_full_dir = abs_path.at(abs_path.size() - 1) == L'/';
+        if (must_be_full_dir) {
+            struct stat buf;
+            if (0 == wstat(abs_path, &buf) && S_ISDIR(buf.st_mode)) {
+                result = true;
+            }
+        } else {
+            // We do not end with a slash; it does not have to be a directory.
+            DIR *dir = NULL;
+            const wcstring dir_name = wdirname(abs_path);
+            const wcstring filename_fragment = wbasename(abs_path);
+            if (dir_name == L"/" && filename_fragment == L"/") {
+                // cd ///.... No autosuggestion.
+                result = true;
+            } else if ((dir = wopendir(dir_name))) {
+                // Check if we're case insensitive.
+                const bool do_case_insensitive =
+                    fs_is_case_insensitive(dir_name, dirfd(dir), case_sensitivity_cache);
 
-                    // We opened the dir_name; look for a string where the base name prefixes it
-                    // Don't ask for the is_dir value unless we care, because it can cause extra
-                    // filesystem access.
-                    wcstring ent;
-                    bool is_dir = false;
-                    while (wreaddir_resolving(dir, dir_name, ent, require_dir ? &is_dir : NULL)) {
-                        // Maybe skip directories.
-                        if (require_dir && !is_dir) {
-                            continue;
-                        }
+                wcstring matched_file;
 
-                        if (string_prefixes_string(filename_fragment, ent) ||
-                            (do_case_insensitive &&
-                             string_prefixes_string_case_insensitive(filename_fragment, ent))) {
-                            // We matched.
-                            matched_file = ent;
-                            break;
-                        }
+                // We opened the dir_name; look for a string where the base name prefixes it Don't
+                // ask for the is_dir value unless we care, because it can cause extra filesystem
+                // access.
+                wcstring ent;
+                bool is_dir = false;
+                while (wreaddir_resolving(dir, dir_name, ent, require_dir ? &is_dir : NULL)) {
+                    // Maybe skip directories.
+                    if (require_dir && !is_dir) {
+                        continue;
                     }
-                    closedir(dir);
 
-                    // We succeeded if we found a match.
-                    result = !matched_file.empty();
+                    if (string_prefixes_string(filename_fragment, ent) ||
+                        (do_case_insensitive &&
+                         string_prefixes_string_case_insensitive(filename_fragment, ent))) {
+                        matched_file = ent;  // we matched
+                        break;
+                    }
                 }
+                closedir(dir);
+
+                result = !matched_file.empty();  // we succeeded if we found a match
             }
         }
     }
+
     return result;
 }
 
@@ -354,24 +354,25 @@ bool autosuggest_validate_from_history(const history_item_t &item,
         }
     }
 
-    // If not handled specially, handle it here.
-    if (!handled) {
-        bool cmd_ok = false;
+    if (handled) {
+        return suggestionOK;
+    }
 
-        if (path_get_path(parsed_command, NULL)) {
-            cmd_ok = true;
-        } else if (builtin_exists(parsed_command) ||
-                   function_exists_no_autoload(parsed_command, vars)) {
-            cmd_ok = true;
-        }
+    // Not handled specially so handle it here.
+    bool cmd_ok = false;
+    if (path_get_path(parsed_command, NULL)) {
+        cmd_ok = true;
+    } else if (builtin_exists(parsed_command) ||
+               function_exists_no_autoload(parsed_command, vars)) {
+        cmd_ok = true;
+    }
 
-        if (cmd_ok) {
-            const path_list_t &paths = item.get_required_paths();
-            if (paths.empty()) {
-                suggestionOK = true;
-            } else {
-                suggestionOK = detector.paths_are_valid(paths);
-            }
+    if (cmd_ok) {
+        const path_list_t &paths = item.get_required_paths();
+        if (paths.empty()) {
+            suggestionOK = true;
+        } else {
+            suggestionOK = detector.paths_are_valid(paths);
         }
     }
 
@@ -1093,26 +1094,27 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                 // Color the command.
                 const parse_node_t *cmd_node =
                     parse_tree.get_child(node, 0, parse_token_type_string);
-                if (cmd_node != NULL && cmd_node->has_source()) {
-                    bool is_valid_cmd = false;
-                    if (!this->io_ok) {
-                        // We cannot check if the command is invalid, so just assume it's valid.
-                        is_valid_cmd = true;
-                    } else {
-                        // Check to see if the command is valid.
-                        wcstring cmd(buff, cmd_node->source_start, cmd_node->source_length);
-
-                        // Try expanding it. If we cannot, it's an error.
-                        bool expanded = expand_one(
-                            cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
-                        if (expanded && !has_expand_reserved(cmd)) {
-                            is_valid_cmd =
-                                command_is_valid(cmd, decoration, working_directory, vars);
-                        }
-                    }
-                    this->color_node(*cmd_node,
-                                     is_valid_cmd ? highlight_spec_command : highlight_spec_error);
+                if (cmd_node == NULL || !cmd_node->has_source()) {
+                    break;  // not much as we can do without a node that has source text
                 }
+
+                bool is_valid_cmd = false;
+                if (!this->io_ok) {
+                    // We cannot check if the command is invalid, so just assume it's valid.
+                    is_valid_cmd = true;
+                } else {
+                    // Check to see if the command is valid.
+                    wcstring cmd(buff, cmd_node->source_start, cmd_node->source_length);
+
+                    // Try expanding it. If we cannot, it's an error.
+                    bool expanded = expand_one(
+                        cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
+                    if (expanded && !has_expand_reserved(cmd)) {
+                        is_valid_cmd = command_is_valid(cmd, decoration, working_directory, vars);
+                    }
+                }
+                this->color_node(*cmd_node,
+                                 is_valid_cmd ? highlight_spec_command : highlight_spec_error);
                 break;
             }
             case symbol_arguments_or_redirections_list:
@@ -1141,29 +1143,29 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
         }
     }
 
-    if (this->io_ok && this->cursor_pos <= this->buff.size()) {
-        // If the cursor is over an argument, and that argument is a valid path, underline it.
-        for (parse_node_tree_t::const_iterator iter = parse_tree.begin(); iter != parse_tree.end();
-             ++iter) {
-            const parse_node_t &node = *iter;
+    if (!this->io_ok || this->cursor_pos > this->buff.size()) {
+        return color_array;
+    }
 
-            // Must be an argument with source.
-            if (node.type != symbol_argument || !node.has_source()) continue;
+    // If the cursor is over an argument, and that argument is a valid path, underline it.
+    for (parse_node_tree_t::const_iterator iter = parse_tree.begin(); iter != parse_tree.end();
+         ++iter) {
+        const parse_node_t &node = *iter;
 
-            // See if this node contains the cursor. We check <= source_length so that, when
-            // backspacing (and the cursor is just beyond the last token), we may still underline
-            // it.
-            if (this->cursor_pos >= node.source_start &&
-                this->cursor_pos - node.source_start <= node.source_length &&
-                node_is_potential_path(buff, node, working_directory)) {
-                // It is, underline it.
-                for (size_t i = node.source_start; i < node.source_start + node.source_length;
-                     i++) {
-                    // Don't color highlight_spec_error because it looks dorky. For example,
-                    // trying to cd into a non-directory would show an underline and also red.
-                    if (highlight_get_primary(this->color_array.at(i)) != highlight_spec_error) {
-                        this->color_array.at(i) |= highlight_modifier_valid_path;
-                    }
+        // Must be an argument with source.
+        if (node.type != symbol_argument || !node.has_source()) continue;
+
+        // See if this node contains the cursor. We check <= source_length so that, when backspacing
+        // (and the cursor is just beyond the last token), we may still underline it.
+        if (this->cursor_pos >= node.source_start &&
+            this->cursor_pos - node.source_start <= node.source_length &&
+            node_is_potential_path(buff, node, working_directory)) {
+            // It is, underline it.
+            for (size_t i = node.source_start; i < node.source_start + node.source_length; i++) {
+                // Don't color highlight_spec_error because it looks dorky. For example,
+                // trying to cd into a non-directory would show an underline and also red.
+                if (highlight_get_primary(this->color_array.at(i)) != highlight_spec_error) {
+                    this->color_array.at(i) |= highlight_modifier_valid_path;
                 }
             }
         }

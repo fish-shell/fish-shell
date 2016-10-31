@@ -322,86 +322,88 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
     }
 
-    if (!res) {
-        if (do_complete) {
-            const wchar_t *token;
+    if (res) {
+        return 1;
+    }
 
-            parse_util_token_extent(do_complete_param.c_str(), do_complete_param.size(), &token, 0,
-                                    0, 0);
+    if (do_complete) {
+        const wchar_t *token;
 
-            // Create a scoped transient command line, so that bulitin_commandline will see our
-            // argument, not the reader buffer.
-            builtin_commandline_scoped_transient_t temp_buffer(do_complete_param);
+        parse_util_token_extent(do_complete_param.c_str(), do_complete_param.size(), &token, 0,
+                                0, 0);
 
-            if (recursion_level < 1) {
-                recursion_level++;
+        // Create a scoped transient command line, so that bulitin_commandline will see our
+        // argument, not the reader buffer.
+        builtin_commandline_scoped_transient_t temp_buffer(do_complete_param);
 
-                std::vector<completion_t> comp;
-                complete(do_complete_param, &comp, COMPLETION_REQUEST_DEFAULT,
-                         env_vars_snapshot_t::current());
+        if (recursion_level < 1) {
+            recursion_level++;
 
-                for (size_t i = 0; i < comp.size(); i++) {
-                    const completion_t &next = comp.at(i);
+            std::vector<completion_t> comp;
+            complete(do_complete_param, &comp, COMPLETION_REQUEST_DEFAULT,
+                        env_vars_snapshot_t::current());
 
-                    // Make a fake commandline, and then apply the completion to it.
-                    const wcstring faux_cmdline = token;
-                    size_t tmp_cursor = faux_cmdline.size();
-                    wcstring faux_cmdline_with_completion = completion_apply_to_command_line(
-                        next.completion, next.flags, faux_cmdline, &tmp_cursor, false);
+            for (size_t i = 0; i < comp.size(); i++) {
+                const completion_t &next = comp.at(i);
 
-                    // completion_apply_to_command_line will append a space unless COMPLETE_NO_SPACE
-                    // is set. We don't want to set COMPLETE_NO_SPACE because that won't close
-                    // quotes. What we want is to close the quote, but not append the space. So we
-                    // just look for the space and clear it.
-                    if (!(next.flags & COMPLETE_NO_SPACE) &&
-                        string_suffixes_string(L" ", faux_cmdline_with_completion)) {
-                        faux_cmdline_with_completion.resize(faux_cmdline_with_completion.size() -
-                                                            1);
-                    }
+                // Make a fake commandline, and then apply the completion to it.
+                const wcstring faux_cmdline = token;
+                size_t tmp_cursor = faux_cmdline.size();
+                wcstring faux_cmdline_with_completion = completion_apply_to_command_line(
+                    next.completion, next.flags, faux_cmdline, &tmp_cursor, false);
 
-                    // The input data is meant to be something like you would have on the command
-                    // line, e.g. includes backslashes. The output should be raw, i.e. unescaped. So
-                    // we need to unescape the command line. See #1127.
-                    unescape_string_in_place(&faux_cmdline_with_completion, UNESCAPE_DEFAULT);
-                    streams.out.append(faux_cmdline_with_completion);
-
-                    // Append any description.
-                    if (!next.description.empty()) {
-                        streams.out.push_back(L'\t');
-                        streams.out.append(next.description);
-                    }
-                    streams.out.push_back(L'\n');
+                // completion_apply_to_command_line will append a space unless COMPLETE_NO_SPACE
+                // is set. We don't want to set COMPLETE_NO_SPACE because that won't close
+                // quotes. What we want is to close the quote, but not append the space. So we
+                // just look for the space and clear it.
+                if (!(next.flags & COMPLETE_NO_SPACE) &&
+                    string_suffixes_string(L" ", faux_cmdline_with_completion)) {
+                    faux_cmdline_with_completion.resize(faux_cmdline_with_completion.size() -
+                                                        1);
                 }
 
-                recursion_level--;
-            }
-        } else if (w.woptind != argc) {
-            streams.err.append_format(_(L"%ls: Too many arguments\n"), argv[0]);
-            builtin_print_help(parser, streams, argv[0], streams.err);
+                // The input data is meant to be something like you would have on the command
+                // line, e.g. includes backslashes. The output should be raw, i.e. unescaped. So
+                // we need to unescape the command line. See #1127.
+                unescape_string_in_place(&faux_cmdline_with_completion, UNESCAPE_DEFAULT);
+                streams.out.append(faux_cmdline_with_completion);
 
-            res = true;
-        } else if (cmd.empty() && path.empty()) {
-            // No arguments specified, meaning we print the definitions of all specified completions
-            // to stdout.
-            streams.out.append(complete_print());
+                // Append any description.
+                if (!next.description.empty()) {
+                    streams.out.push_back(L'\t');
+                    streams.out.append(next.description);
+                }
+                streams.out.push_back(L'\n');
+            }
+
+            recursion_level--;
+        }
+    } else if (w.woptind != argc) {
+        streams.err.append_format(_(L"%ls: Too many arguments\n"), argv[0]);
+        builtin_print_help(parser, streams, argv[0], streams.err);
+
+        res = true;
+    } else if (cmd.empty() && path.empty()) {
+        // No arguments specified, meaning we print the definitions of all specified completions
+        // to stdout.
+        streams.out.append(complete_print());
+    } else {
+        int flags = COMPLETE_AUTO_SPACE;
+
+        if (remove) {
+            builtin_complete_remove(cmd, path, short_opt.c_str(), gnu_opt, old_opt);
+
         } else {
-            int flags = COMPLETE_AUTO_SPACE;
+            builtin_complete_add(cmd, path, short_opt.c_str(), gnu_opt, old_opt, result_mode,
+                                    authoritative, condition, comp, desc, flags);
+        }
 
-            if (remove) {
-                builtin_complete_remove(cmd, path, short_opt.c_str(), gnu_opt, old_opt);
-
-            } else {
-                builtin_complete_add(cmd, path, short_opt.c_str(), gnu_opt, old_opt, result_mode,
-                                     authoritative, condition, comp, desc, flags);
-            }
-
-            // Handle wrap targets (probably empty). We only wrap commands, not paths.
-            for (size_t w = 0; w < wrap_targets.size(); w++) {
-                const wcstring &wrap_target = wrap_targets.at(w);
-                for (size_t i = 0; i < cmd.size(); i++) {
-                    (remove ? complete_remove_wrapper : complete_add_wrapper)(cmd.at(i),
-                                                                              wrap_target);
-                }
+        // Handle wrap targets (probably empty). We only wrap commands, not paths.
+        for (size_t w = 0; w < wrap_targets.size(); w++) {
+            const wcstring &wrap_target = wrap_targets.at(w);
+            for (size_t i = 0; i < cmd.size(); i++) {
+                (remove ? complete_remove_wrapper : complete_add_wrapper)(cmd.at(i),
+                                                                            wrap_target);
             }
         }
     }

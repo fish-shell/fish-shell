@@ -188,24 +188,25 @@ void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *
                 if (pos && *pos) {
                     // Then find the next empty line.
                     for (; *pos; pos++) {
-                        if (*pos == L'\n') {
-                            wchar_t *pos2;
-                            int is_empty = 1;
+                        if (*pos != L'\n') {
+                            continue;
+                        }
 
-                            for (pos2 = pos + 1; *pos2; pos2++) {
-                                if (*pos2 == L'\n') break;
+                        int is_empty = 1;
+                        wchar_t *pos2;
+                        for (pos2 = pos + 1; *pos2; pos2++) {
+                            if (*pos2 == L'\n') break;
 
-                                if (*pos2 != L'\t' && *pos2 != L' ') {
-                                    is_empty = 0;
-                                    break;
-                                }
-                            }
-                            if (is_empty) {
-                                // And cut it.
-                                *(pos2 + 1) = L'\0';
-                                cut = 1;
+                            if (*pos2 != L'\t' && *pos2 != L' ') {
+                                is_empty = 0;
                                 break;
                             }
+                        }
+                        if (is_empty) {
+                            // And cut it.
+                            *(pos2 + 1) = L'\0';
+                            cut = 1;
+                            break;
                         }
                     }
                 }
@@ -1198,70 +1199,60 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
     return res;
 }
 
+// Convert a octal or hex character to its binary value. Surprisingly a version
+// of this function using a lookup table is only ~1.5% faster than the `switch`
+// statement version below. Since that requires initializing a table statically
+// (which is problematic if we run on an EBCDIC system) we don't use that
+// solution. Also, we relax the style rule that `case` blocks should always be
+// enclosed in parentheses given the nature of this code.
 static unsigned int builtin_echo_digit(wchar_t wc, unsigned int base) {
     assert(base == 8 || base == 16);  // base must be hex or octal
     switch (wc) {
-        case L'0': {
+        case L'0':
             return 0;
-        }
-        case L'1': {
+        case L'1':
             return 1;
-        }
-        case L'2': {
+        case L'2':
             return 2;
-        }
-        case L'3': {
+        case L'3':
             return 3;
-        }
-        case L'4': {
+        case L'4':
             return 4;
-        }
-        case L'5': {
+        case L'5':
             return 5;
-        }
-        case L'6': {
+        case L'6':
             return 6;
-        }
-        case L'7': {
+        case L'7':
             return 7;
-        }
         default: { break; }
     }
 
-    if (base == 16) {
-        switch (wc) {
-            case L'8': {
-                return 8;
-            }
-            case L'9': {
-                return 9;
-            }
-            case L'a':
-            case L'A': {
-                return 10;
-            }
-            case L'b':
-            case L'B': {
-                return 11;
-            }
-            case L'c':
-            case L'C': {
-                return 12;
-            }
-            case L'd':
-            case L'D': {
-                return 13;
-            }
-            case L'e':
-            case L'E': {
-                return 14;
-            }
-            case L'f':
-            case L'F': {
-                return 15;
-            }
-            default: { break; }
-        }
+    if (base != 16) return UINT_MAX;
+
+    switch (wc) {
+        case L'8':
+            return 8;
+        case L'9':
+            return 9;
+        case L'a':
+        case L'A':
+            return 10;
+        case L'b':
+        case L'B':
+            return 11;
+        case L'c':
+        case L'C':
+            return 12;
+        case L'd':
+        case L'D':
+            return 13;
+        case L'e':
+        case L'E':
+            return 14;
+        case L'f':
+        case L'F':
+            return 15;
+        default: { break; }
     }
 
     return UINT_MAX;
@@ -1295,21 +1286,23 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
         start = 1;
     }
 
-    if (base != 0) {
-        unsigned int idx;
-        unsigned char val = 0;  // resulting character
-        for (idx = start; idx < start + max_digits; idx++) {
-            unsigned int digit = builtin_echo_digit(str[idx], base);
-            if (digit == UINT_MAX) break;
-            val = val * base + digit;
-        }
+    if (base == 0) {
+        return success;
+    }
 
-        // We succeeded if we consumed at least one digit.
-        if (idx > start) {
-            *consumed = idx;
-            *out_val = val;
-            success = true;
-        }
+    unsigned int idx;
+    unsigned char val = 0;  // resulting character
+    for (idx = start; idx < start + max_digits; idx++) {
+        unsigned int digit = builtin_echo_digit(str[idx], base);
+        if (digit == UINT_MAX) break;
+        val = val * base + digit;
+    }
+
+    // We succeeded if we consumed at least one digit.
+    if (idx > start) {
+        *consumed = idx;
+        *out_val = val;
+        success = true;
     }
     return success;
 }
@@ -1546,7 +1539,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                                            {L"inherit-variable", required_argument, 0, 'V'},
                                            {0, 0, 0, 0}};
 
-    while (1 && !res) {
+    while (res == STATUS_BUILTIN_OK) {
         int opt_index = 0;
 
         // The leading - here specifies RETURN_IN_ORDER.
@@ -1556,7 +1549,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
             case 0: {
                 if (long_options[opt_index].flag != 0) break;
                 append_format(*out_err, BUILTIN_ERR_UNKNOWN, argv[0], long_options[opt_index].name);
-                res = 1;
+                res = STATUS_BUILTIN_ERROR;
                 break;
             }
             case 'd': {
@@ -1567,7 +1560,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                 int sig = wcs2sig(w.woptarg);
                 if (sig < 0) {
                     append_format(*out_err, _(L"%ls: Unknown signal '%ls'"), argv[0], w.woptarg);
-                    res = 1;
+                    res = STATUS_BUILTIN_ERROR;
                     break;
                 }
                 events.push_back(event_t::signal_event(sig));
@@ -1617,7 +1610,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                         append_format(*out_err,
                                       _(L"%ls: Cannot find calling job for event handler"),
                                       argv[0]);
-                        res = 1;
+                        res = STATUS_BUILTIN_ERROR;
                     } else {
                         e.type = EVENT_JOB_ID;
                         e.param1.job_id = job_id;
@@ -1628,14 +1621,14 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                     if (errno || !end || *end) {
                         append_format(*out_err, _(L"%ls: Invalid process id %ls"), argv[0],
                                       w.woptarg);
-                        res = 1;
+                        res = STATUS_BUILTIN_ERROR;
                         break;
                     }
 
                     e.type = EVENT_EXIT;
                     e.param1.pid = (opt == 'j' ? -1 : 1) * abs(pid);
                 }
-                if (!res) {
+                if (res == STATUS_BUILTIN_OK) {
                     events.push_back(e);
                 }
                 break;
@@ -1676,7 +1669,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
             }
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                res = 1;
+                res = STATUS_BUILTIN_ERROR;
                 break;
             }
             default: {
@@ -1686,83 +1679,86 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
         }
     }
 
-    if (!res) {
-        // Determine the function name, and remove it from the list of positionals.
-        wcstring function_name;
-        bool name_is_missing = positionals.empty();
-        if (!name_is_missing) {
-            if (name_is_first_positional) {
-                function_name = positionals.front();
-                positionals.erase(positionals.begin());
-            } else {
-                function_name = positionals.back();
-                positionals.erase(positionals.end() - 1);
-            }
-        }
+    if (res != STATUS_BUILTIN_OK) {
+        return STATUS_BUILTIN_ERROR;
+    }
 
-        if (name_is_missing) {
-            append_format(*out_err, _(L"%ls: Expected function name"), argv[0]);
-            res = 1;
-        } else if (wcsfuncname(function_name)) {
-            append_format(*out_err, _(L"%ls: Illegal function name '%ls'"), argv[0],
-                          function_name.c_str());
-
-            res = 1;
-        } else if (parser_keywords_is_reserved(function_name)) {
-            append_format(
-                *out_err,
-                _(L"%ls: The name '%ls' is reserved,\nand can not be used as a function name"),
-                argv[0], function_name.c_str());
-
-            res = 1;
-        } else if (function_name.empty()) {
-            append_format(*out_err, _(L"%ls: No function name given"), argv[0]);
-            res = 1;
+    // Determine the function name, and remove it from the list of positionals.
+    wcstring function_name;
+    bool name_is_missing = positionals.empty();
+    if (!name_is_missing) {
+        if (name_is_first_positional) {
+            function_name = positionals.front();
+            positionals.erase(positionals.begin());
         } else {
-            if (has_named_arguments) {
-                // All remaining positionals are named arguments.
-                named_arguments.swap(positionals);
-                for (size_t i = 0; i < named_arguments.size(); i++) {
-                    if (wcsvarname(named_arguments.at(i))) {
-                        append_format(*out_err, _(L"%ls: Invalid variable name '%ls'"), argv[0],
-                                      named_arguments.at(i).c_str());
-                        res = STATUS_BUILTIN_ERROR;
-                        break;
-                    }
+            function_name = positionals.back();
+            positionals.erase(positionals.end() - 1);
+        }
+    }
+
+    if (name_is_missing) {
+        append_format(*out_err, _(L"%ls: Expected function name"), argv[0]);
+        res = STATUS_BUILTIN_ERROR;
+    } else if (wcsfuncname(function_name)) {
+        append_format(*out_err, _(L"%ls: Illegal function name '%ls'"), argv[0],
+                      function_name.c_str());
+
+        res = STATUS_BUILTIN_ERROR;
+    } else if (parser_keywords_is_reserved(function_name)) {
+        append_format(
+            *out_err,
+            _(L"%ls: The name '%ls' is reserved,\nand can not be used as a function name"), argv[0],
+            function_name.c_str());
+
+        res = STATUS_BUILTIN_ERROR;
+    } else if (function_name.empty()) {
+        append_format(*out_err, _(L"%ls: No function name given"), argv[0]);
+        res = STATUS_BUILTIN_ERROR;
+    } else {
+        if (has_named_arguments) {
+            // All remaining positionals are named arguments.
+            named_arguments.swap(positionals);
+            for (size_t i = 0; i < named_arguments.size(); i++) {
+                if (wcsvarname(named_arguments.at(i))) {
+                    append_format(*out_err, _(L"%ls: Invalid variable name '%ls'"), argv[0],
+                                  named_arguments.at(i).c_str());
+                    res = STATUS_BUILTIN_ERROR;
+                    break;
                 }
-            } else if (!positionals.empty()) {
-                // +1 because we already got the function name.
-                append_format(*out_err, _(L"%ls: Expected one argument, got %lu"), argv[0],
-                              (unsigned long)(positionals.size() + 1));
-                res = 1;
             }
+        } else if (!positionals.empty()) {
+            // +1 because we already got the function name.
+            append_format(*out_err, _(L"%ls: Expected one argument, got %lu"), argv[0],
+                          (unsigned long)(positionals.size() + 1));
+            res = STATUS_BUILTIN_ERROR;
         }
+    }
 
-        if (!res) {
-            // Here we actually define the function!
-            function_data_t d;
+    if (res != STATUS_BUILTIN_OK) {
+        return res;
+    }
 
-            d.name = function_name;
-            if (desc) d.description = desc;
-            d.events.swap(events);
-            d.shadow_scope = shadow_scope;
-            d.named_arguments.swap(named_arguments);
-            d.inherit_vars.swap(inherit_vars);
+    // Here we actually define the function!
+    function_data_t d;
 
-            for (size_t i = 0; i < d.events.size(); i++) {
-                event_t &e = d.events.at(i);
-                e.function_name = d.name;
-            }
+    d.name = function_name;
+    if (desc) d.description = desc;
+    d.events.swap(events);
+    d.shadow_scope = shadow_scope;
+    d.named_arguments.swap(named_arguments);
+    d.inherit_vars.swap(inherit_vars);
 
-            d.definition = contents.c_str();
+    for (size_t i = 0; i < d.events.size(); i++) {
+        event_t &e = d.events.at(i);
+        e.function_name = d.name;
+    }
 
-            function_add(d, parser, definition_line_offset);
+    d.definition = contents.c_str();
+    function_add(d, parser, definition_line_offset);
 
-            // Handle wrap targets.
-            for (size_t w = 0; w < wrap_targets.size(); w++) {
-                complete_add_wrapper(function_name, wrap_targets.at(w));
-            }
-        }
+    // Handle wrap targets.
+    for (size_t w = 0; w < wrap_targets.size(); w++) {
+        complete_add_wrapper(function_name, wrap_targets.at(w));
     }
 
     return res;
@@ -2098,57 +2094,58 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
     }
 
-    if (i != argc && !exit_res) {
-        env_var_t ifs = env_get_string(L"IFS");
-        if (ifs.missing_or_empty()) {
-            // Every character is a separate token.
-            size_t bufflen = buff.size();
-            if (array) {
-                if (bufflen > 0) {
-                    wcstring chars(bufflen + (bufflen - 1), ARRAY_SEP);
-                    wcstring::iterator out = chars.begin();
-                    for (wcstring::const_iterator it = buff.begin(), end = buff.end(); it != end;
-                         ++it) {
-                        *out = *it;
-                        out += 2;
-                    }
-                    env_set(argv[i], chars.c_str(), place);
-                } else {
-                    env_set(argv[i], NULL, place);
-                }
-            } else {  // not array
-                size_t j = 0;
-                for (; i + 1 < argc; ++i) {
-                    if (j < bufflen) {
-                        wchar_t buffer[2] = {buff[j++], 0};
-                        env_set(argv[i], buffer, place);
-                    } else {
-                        env_set(argv[i], L"", place);
-                    }
-                }
-                if (i < argc) env_set(argv[i], &buff[j], place);
-            }
-        } else if (array) {
-            wcstring tokens;
-            tokens.reserve(buff.size());
-            bool empty = true;
+    if (i == argc || exit_res != STATUS_BUILTIN_OK) {
+        return exit_res;
+    }
 
-            for (wcstring_range loc = wcstring_tok(buff, ifs); loc.first != wcstring::npos;
-                 loc = wcstring_tok(buff, ifs, loc)) {
-                if (!empty) tokens.push_back(ARRAY_SEP);
-                tokens.append(buff, loc.first, loc.second);
-                empty = false;
+    env_var_t ifs = env_get_string(L"IFS");
+    if (ifs.missing_or_empty()) {
+        // Every character is a separate token.
+        size_t bufflen = buff.size();
+        if (array) {
+            if (bufflen > 0) {
+                wcstring chars(bufflen + (bufflen - 1), ARRAY_SEP);
+                wcstring::iterator out = chars.begin();
+                for (wcstring::const_iterator it = buff.begin(), end = buff.end(); it != end;
+                     ++it) {
+                    *out = *it;
+                    out += 2;
+                }
+                env_set(argv[i], chars.c_str(), place);
+            } else {
+                env_set(argv[i], NULL, place);
             }
-            env_set(argv[i], empty ? NULL : tokens.c_str(), place);
         } else {  // not array
-            wcstring_range loc = wcstring_range(0, 0);
-
-            while (i < argc) {
-                loc = wcstring_tok(buff, (i + 1 < argc) ? ifs : wcstring(), loc);
-                env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first],
-                        place);
-                ++i;
+            size_t j = 0;
+            for (; i + 1 < argc; ++i) {
+                if (j < bufflen) {
+                    wchar_t buffer[2] = {buff[j++], 0};
+                    env_set(argv[i], buffer, place);
+                } else {
+                    env_set(argv[i], L"", place);
+                }
             }
+            if (i < argc) env_set(argv[i], &buff[j], place);
+        }
+    } else if (array) {
+        wcstring tokens;
+        tokens.reserve(buff.size());
+        bool empty = true;
+
+        for (wcstring_range loc = wcstring_tok(buff, ifs); loc.first != wcstring::npos;
+             loc = wcstring_tok(buff, ifs, loc)) {
+            if (!empty) tokens.push_back(ARRAY_SEP);
+            tokens.append(buff, loc.first, loc.second);
+            empty = false;
+        }
+        env_set(argv[i], empty ? NULL : tokens.c_str(), place);
+    } else {  // not array
+        wcstring_range loc = wcstring_range(0, 0);
+
+        while (i < argc) {
+            loc = wcstring_tok(buff, (i + 1 < argc) ? ifs : wcstring(), loc);
+            env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first], place);
+            ++i;
         }
     }
 
@@ -2244,7 +2241,7 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
                 else {
                     streams.err.append_format(L"%ls: Invalid job control mode '%ls'\n", L"status",
                                               w.woptarg);
-                    res = 1;
+                    res = STATUS_BUILTIN_ERROR;
                 }
                 mode = DONE;
                 break;
@@ -2268,68 +2265,69 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
         }
     }
 
-    if (!res) {
-        switch (mode) {
-            case DONE: {
-                break;
-            }
-            case CURRENT_FILENAME: {
-                const wchar_t *fn = parser.current_filename();
-
-                if (!fn) fn = _(L"Standard input");
-
-                streams.out.append_format(L"%ls\n", fn);
-
-                break;
-            }
-            case CURRENT_LINE_NUMBER: {
-                streams.out.append_format(L"%d\n", parser.get_lineno());
-                break;
-            }
-            case IS_INTERACTIVE: {
-                return !is_interactive_session;
-            }
-            case IS_SUBST: {
-                return !is_subshell;
-            }
-            case IS_BLOCK: {
-                return !is_block;
-            }
-            case IS_LOGIN: {
-                return !is_login;
-            }
-            case IS_FULL_JOB_CONTROL: {
-                return job_control_mode != JOB_CONTROL_ALL;
-            }
-            case IS_INTERACTIVE_JOB_CONTROL: {
-                return job_control_mode != JOB_CONTROL_INTERACTIVE;
-            }
-            case IS_NO_JOB_CONTROL: {
-                return job_control_mode != JOB_CONTROL_NONE;
-            }
-            case STACK_TRACE: {
-                streams.out.append(parser.stack_trace());
-                break;
-            }
-            case NORMAL: {
-                if (is_login)
-                    streams.out.append_format(_(L"This is a login shell\n"));
-                else
-                    streams.out.append_format(_(L"This is not a login shell\n"));
-
-                streams.out.append_format(
-                    _(L"Job control: %ls\n"),
-                    job_control_mode == JOB_CONTROL_INTERACTIVE
-                        ? _(L"Only on interactive jobs")
-                        : (job_control_mode == JOB_CONTROL_NONE ? _(L"Never") : _(L"Always")));
-                streams.out.append(parser.stack_trace());
-                break;
-            }
-            default: { break; }
-        }
+    if (res == STATUS_BUILTIN_ERROR) {
+        return res;
     }
 
-    return res;
+    switch (mode) {
+        case DONE: {
+            return STATUS_BUILTIN_OK;
+        }
+        case CURRENT_FILENAME: {
+            const wchar_t *fn = parser.current_filename();
+
+            if (!fn) fn = _(L"Standard input");
+            streams.out.append_format(L"%ls\n", fn);
+            return STATUS_BUILTIN_OK;
+        }
+        case CURRENT_LINE_NUMBER: {
+            streams.out.append_format(L"%d\n", parser.get_lineno());
+            return STATUS_BUILTIN_OK;
+        }
+        case IS_INTERACTIVE: {
+            return !is_interactive_session;
+        }
+        case IS_SUBST: {
+            return !is_subshell;
+        }
+        case IS_BLOCK: {
+            return !is_block;
+        }
+        case IS_LOGIN: {
+            return !is_login;
+        }
+        case IS_FULL_JOB_CONTROL: {
+            return job_control_mode != JOB_CONTROL_ALL;
+        }
+        case IS_INTERACTIVE_JOB_CONTROL: {
+            return job_control_mode != JOB_CONTROL_INTERACTIVE;
+        }
+        case IS_NO_JOB_CONTROL: {
+            return job_control_mode != JOB_CONTROL_NONE;
+        }
+        case STACK_TRACE: {
+            streams.out.append(parser.stack_trace());
+            return STATUS_BUILTIN_OK;
+        }
+        case NORMAL: {
+            if (is_login) {
+                streams.out.append_format(_(L"This is a login shell\n"));
+            } else {
+                streams.out.append_format(_(L"This is not a login shell\n"));
+            }
+
+            streams.out.append_format(
+                _(L"Job control: %ls\n"),
+                job_control_mode == JOB_CONTROL_INTERACTIVE
+                    ? _(L"Only on interactive jobs")
+                    : (job_control_mode == JOB_CONTROL_NONE ? _(L"Never") : _(L"Always")));
+            streams.out.append(parser.stack_trace());
+            return STATUS_BUILTIN_OK;
+        }
+        default: { break; }
+    }
+
+    DIE("status subcommand not handled");
 }
 
 /// The exit builtin. Calls reader_exit to exit and returns the value specified.
@@ -2637,25 +2635,27 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
     }
 
-    if (j) {
-        if (streams.err_is_redirected) {
-            streams.err.append_format(FG_MSG, j->job_id, j->command_wcstr());
-        } else {
-            // If we aren't redirecting, send output to real stderr, since stuff in sb_err won't get
-            // printed until the command finishes.
-            fwprintf(stderr, FG_MSG, j->job_id, j->command_wcstr());
-        }
-
-        const wcstring ft = tok_first(j->command());
-        if (!ft.empty()) env_set(L"_", ft.c_str(), ENV_EXPORT);
-        reader_write_title(j->command());
-
-        make_first(j);
-        job_set_flag(j, JOB_FOREGROUND, 1);
-
-        job_continue(j, job_is_stopped(j));
+    if (!j) {
+        return STATUS_BUILTIN_ERROR;
     }
-    return j ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
+
+    if (streams.err_is_redirected) {
+        streams.err.append_format(FG_MSG, j->job_id, j->command_wcstr());
+    } else {
+        // If we aren't redirecting, send output to real stderr, since stuff in sb_err won't get
+        // printed until the command finishes.
+        fwprintf(stderr, FG_MSG, j->job_id, j->command_wcstr());
+    }
+
+    const wcstring ft = tok_first(j->command());
+    if (!ft.empty()) env_set(L"_", ft.c_str(), ENV_EXPORT);
+    reader_write_title(j->command());
+
+    make_first(j);
+    job_set_flag(j, JOB_FOREGROUND, 1);
+
+    job_continue(j, job_is_stopped(j));
+    return STATUS_BUILTIN_OK;
 }
 
 /// Helper function for builtin_bg().

@@ -238,50 +238,48 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
             wcstring path = next + L"/" + cmd + L".fish";
 
             const file_access_attempt_t access = access_file(path, R_OK);
-            if (access.accessible) {
-                found_file = true;
-
-                // Now we're actually going to take the lock.
-                scoped_lock locker(lock);
-                autoload_function_t *func = this->get_node(cmd);
-
-                // Generate the source if we need to load it.
-                bool need_to_load_function =
-                    really_load &&
-                    (func == NULL || func->access.mod_time != access.mod_time || !func->is_loaded);
-                if (need_to_load_function) {
-                    // Generate the script source.
-                    wcstring esc = escape_string(path, 1);
-                    script_source = L"source " + esc;
-                    has_script_source = true;
-
-                    // Remove any loaded command because we are going to reload it. Note that this
-                    // will deadlock if command_removed calls back into us.
-                    if (func && func->is_loaded) {
-                        command_removed(cmd);
-                        func->is_placeholder = false;
-                    }
-
-                    // Mark that we're reloading it.
-                    reloaded = true;
-                }
-
-                // Create the function if we haven't yet. This does not load it. Do not trigger
-                // eviction unless we are actually loading, because we don't want to evict off of
-                // the main thread.
-                if (!func) {
-                    func = get_autoloaded_function_with_creation(cmd, really_load);
-                }
-
-                // It's a fiction to say the script is loaded at this point, but we're definitely
-                // going to load it down below.
-                if (need_to_load_function) func->is_loaded = true;
-
-                // Unconditionally record our access time.
-                func->access = access;
-
-                break;
+            if (!access.accessible) {
+                continue;
             }
+
+            found_file = true;
+            // Now we're actually going to take the lock.
+            scoped_lock locker(lock);
+            autoload_function_t *func = this->get_node(cmd);
+
+            // Generate the source if we need to load it.
+            bool need_to_load_function =
+                really_load &&
+                (func == NULL || func->access.mod_time != access.mod_time || !func->is_loaded);
+            if (need_to_load_function) {
+                // Generate the script source.
+                wcstring esc = escape_string(path, 1);
+                script_source = L"source " + esc;
+                has_script_source = true;
+
+                // Remove any loaded command because we are going to reload it. Note that this
+                // will deadlock if command_removed calls back into us.
+                if (func && func->is_loaded) {
+                    command_removed(cmd);
+                    func->is_placeholder = false;
+                }
+
+                // Mark that we're reloading it.
+                reloaded = true;
+            }
+
+            // Create the function if we haven't yet. This does not load it. Do not trigger
+            // eviction unless we are actually loading, because we don't want to evict off of
+            // the main thread.
+            if (!func) func = get_autoloaded_function_with_creation(cmd, really_load);
+
+            // It's a fiction to say the script is loaded at this point, but we're definitely
+            // going to load it down below.
+            if (need_to_load_function) func->is_loaded = true;
+
+            // Unconditionally record our access time.
+            func->access = access;
+            break;
         }
 
         // If no file or builtin script was found we insert a placeholder function. Later we only

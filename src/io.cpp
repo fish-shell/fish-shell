@@ -165,35 +165,35 @@ void io_print(const io_chain_t &chain)
 /// created is marked close-on-exec. Returns -1 on failure (in which case the given fd is still
 /// closed).
 static int move_fd_to_unused(int fd, const io_chain_t &io_chain) {
-    int new_fd = fd;
-    if (fd >= 0 && io_chain.get_io_for_fd(fd).get() != NULL) {
-        // We have fd >= 0, and it's a conflict. dup it and recurse. Note that we recurse before
-        // anything is closed; this forces the kernel to give us a new one (or report fd
-        // exhaustion).
-        int tmp_fd;
-        do {
-            tmp_fd = dup(fd);
-        } while (tmp_fd < 0 && errno == EINTR);
-
-        assert(tmp_fd != fd);
-        if (tmp_fd < 0) {
-            // Likely fd exhaustion.
-            new_fd = -1;
-        } else {
-            // Ok, we have a new candidate fd. Recurse. If we get a valid fd, either it's the same
-            // as what we gave it, or it's a new fd and what we gave it has been closed. If we get a
-            // negative value, the fd also has been closed.
-            set_cloexec(tmp_fd);
-            new_fd = move_fd_to_unused(tmp_fd, io_chain);
-        }
-
-        // We're either returning a new fd or an error. In both cases, we promise to close the old
-        // one.
-        assert(new_fd != fd);
-        int saved_errno = errno;
-        exec_close(fd);
-        errno = saved_errno;
+    if (fd < 0 || io_chain.get_io_for_fd(fd).get() == NULL) {
+        return fd;
     }
+
+    // We have fd >= 0, and it's a conflict. dup it and recurse. Note that we recurse before
+    // anything is closed; this forces the kernel to give us a new one (or report fd exhaustion).
+    int new_fd = fd;
+    int tmp_fd;
+    do {
+        tmp_fd = dup(fd);
+    } while (tmp_fd < 0 && errno == EINTR);
+
+    assert(tmp_fd != fd);
+    if (tmp_fd < 0) {
+        // Likely fd exhaustion.
+        new_fd = -1;
+    } else {
+        // Ok, we have a new candidate fd. Recurse. If we get a valid fd, either it's the same as
+        // what we gave it, or it's a new fd and what we gave it has been closed. If we get a
+        // negative value, the fd also has been closed.
+        set_cloexec(tmp_fd);
+        new_fd = move_fd_to_unused(tmp_fd, io_chain);
+    }
+
+    // We're either returning a new fd or an error. In both cases, we promise to close the old one.
+    assert(new_fd != fd);
+    int saved_errno = errno;
+    exec_close(fd);
+    errno = saved_errno;
     return new_fd;
 }
 

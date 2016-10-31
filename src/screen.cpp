@@ -105,24 +105,26 @@ static bool allow_soft_wrap(void) {
 
 /// Does this look like the escape sequence for setting a screen name.
 static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_length) {
-    bool found = false;
-    if (code[1] == L'k') {
-        const env_var_t term_name = env_get_string(L"TERM");
-        if (!term_name.missing() && string_prefixes_string(L"screen", term_name)) {
-            const wchar_t *const screen_name_end_sentinel = L"\x1b\\";
-            const wchar_t *screen_name_end = wcsstr(&code[2], screen_name_end_sentinel);
-            if (screen_name_end == NULL) {
-                // Consider just <esc>k to be the code.
-                *resulting_length = 2;
-            } else {
-                const wchar_t *escape_sequence_end =
-                    screen_name_end + wcslen(screen_name_end_sentinel);
-                *resulting_length = escape_sequence_end - code;
-            }
-            found = true;
-        }
+    if (code[1] != L'k') {
+        return false;
     }
-    return found;
+
+    const env_var_t term_name = env_get_string(L"TERM");
+    if (term_name.missing() || !string_prefixes_string(L"screen", term_name)) {
+        return false;
+    }
+
+    const wchar_t *const screen_name_end_sentinel = L"\x1b\\";
+    const wchar_t *screen_name_end = wcsstr(&code[2], screen_name_end_sentinel);
+    if (screen_name_end == NULL) {
+        // Consider just <esc>k to be the code.
+        *resulting_length = 2;
+    } else {
+        const wchar_t *escape_sequence_end =
+            screen_name_end + wcslen(screen_name_end_sentinel);
+        *resulting_length = escape_sequence_end - code;
+    }
+    return true;
 }
 
 /// iTerm2 escape codes: CSI followed by ], terminated by either BEL or escape + backslash.
@@ -169,28 +171,28 @@ static bool is_two_byte_escape_seq(const wchar_t *code, size_t *resulting_length
 /// Generic VT100 CSI-style sequence. <esc>, followed by zero or more ASCII characters NOT in
 /// the range [@,_], followed by one character in that range.
 static bool is_csi_style_escape_seq(const wchar_t *code, size_t *resulting_length) {
-    bool found = false;
-    if (code[1] == L'[') {
-        // Start at 2 to skip over <esc>[
-        size_t cursor = 2;
-        for (; code[cursor] != L'\0'; cursor++) {
-            // Consume a sequence of ASCII characters not in the range [@, ~].
-            wchar_t widechar = code[cursor];
-
-            // If we're not in ASCII, just stop.
-            if (widechar > 127) break;
-
-            // If we're the end character, then consume it and then stop.
-            if (widechar >= L'@' && widechar <= L'~') {
-                cursor++;
-                break;
-            }
-        }
-        // curs now indexes just beyond the end of the sequence (or at the terminating zero).
-        found = true;
-        *resulting_length = cursor;
+    if (code[1] != L'[') {
+        return false;
     }
-    return found;
+
+    // Start at 2 to skip over <esc>[
+    size_t cursor = 2;
+    for (; code[cursor] != L'\0'; cursor++) {
+        // Consume a sequence of ASCII characters not in the range [@, ~].
+        wchar_t widechar = code[cursor];
+
+        // If we're not in ASCII, just stop.
+        if (widechar > 127) break;
+
+        // If we're the end character, then consume it and then stop.
+        if (widechar >= L'@' && widechar <= L'~') {
+            cursor++;
+            break;
+        }
+    }
+    // cursor now indexes just beyond the end of the sequence (or at the terminating zero).
+    *resulting_length = cursor;
+    return true;
 }
 
 /// Returns the number of characters in the escape code starting at 'code' (which should initially
@@ -817,7 +819,7 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
         }
 
         // Output any rprompt if this is the first line.
-        if (i == 0 && right_prompt_width > 0) {
+        if (i == 0 && right_prompt_width > 0) {  //!OCLINT(Use early exit/continue)
             s_move(scr, &output, (int)(screen_width - right_prompt_width), (int)i);
             s_set_color(scr, &output, 0xffffffff);
             s_write_str(&output, right_prompt);

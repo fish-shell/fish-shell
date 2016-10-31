@@ -15,7 +15,9 @@ function alias --description 'Creates a function wrapping a command'
 
         case 0
             for func in (functions -n)
-                functions $func | string match -- "function * --description 'alias *" | string replace -r -- "function .* --description '" ''| string trim -c\'
+                set -l output (functions $func | string match -r -- "function .* --description '(alias .*)'" | string split \n)
+                set -q output[2]
+                and echo $output[2]
             end
             return 0
         case 1
@@ -62,5 +64,6 @@ function alias --description 'Creates a function wrapping a command'
             set prefix command
         end
     end
-    echo "function $name --wraps $first_word --description \"alias $argv\"; $prefix $first_word $body \$argv; end" | source
+    set -l cmd_string (string escape "alias $argv")
+    echo "function $name --wraps $first_word --description $cmd_string; $prefix $first_word $body \$argv; end" | source
 end

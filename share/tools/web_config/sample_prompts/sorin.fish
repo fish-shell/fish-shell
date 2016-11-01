@@ -49,5 +49,6 @@ function fish_right_prompt
 					printf (set_color white)◼' '
 			end
 		end
+        set_color normal
 	end
 end

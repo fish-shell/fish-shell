@@ -982,6 +982,7 @@ static expand_error_t expand_brackets(const wcstring &instr, expand_flags_t flag
             }
             case BRACKET_SEP: {
                 if (bracket_count == 1) last_sep = pos;
+                break;
             }
         }
     }

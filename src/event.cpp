@@ -230,7 +230,10 @@ static wcstring event_desc_compact(const event_t &event) {
             res = format_string(L"EVENT_GENERIC(%ls)", event.str_param1.c_str());
             break;
         }
-        default: { res = format_string(L"unknown/illegal event(%x)", event.type); }
+        default: {
+            res = format_string(L"unknown/illegal event(%x)", event.type);
+            break;
+        }
     }
     if (event.function_name.size()) {
         return format_string(L"%ls: \"%ls\"", res.c_str(), event.function_name.c_str());

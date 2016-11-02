@@ -616,7 +616,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
             }
             default: {
                 DIE("unhandled selection_direction_t constant");
-                abort();
+                break;
             }
         }
     }
@@ -649,10 +649,11 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
 
         switch (direction) {
             case direction_page_north: {
-                if (current_row > page_height)
+                if (current_row > page_height) {
                     current_row = current_row - page_height;
-                else
+                } else {
                     current_row = 0;
+                }
                 break;
             }
             case direction_north: {
@@ -712,7 +713,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
             }
             default: {
                 DIE("unknown cardinal direction");
-                abort();
+                break;
             }
         }
 

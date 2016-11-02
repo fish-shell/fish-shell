@@ -870,7 +870,7 @@ wcstring block_t::description() const {
         }
         default: {
             DIE("unhandled block_type_t constant");
-            abort();
+            break;
         }
     }
 

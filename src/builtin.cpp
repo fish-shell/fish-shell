@@ -665,6 +665,7 @@ static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv
             }
             case GLOBAL: {
                 block = NULL;
+                break;
             }
             case UNSET: {
                 while (block != NULL && block->type() != FUNCTION_CALL &&
@@ -672,6 +673,7 @@ static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv
                     // Set it in function scope
                     block = parser.block_at_index(++block_idx);
                 }
+                break;
             }
             default: {
                 DIE("unexpected scope");
@@ -962,7 +964,10 @@ static wcstring functions_def(const wcstring &name) {
                 append_format(out, L" --on-event %ls", next->str_param1.c_str());
                 break;
             }
-            default: { DIE("unexpected next->type"); }
+            default: {
+                DIE("unexpected next->type");
+                break;
+            }
         }
     }
 
@@ -1361,7 +1366,7 @@ static int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 }
                 default: {
                     DIE("unexpected character in builtin_echo argument");
-                    abort();
+                    break;
                 }
             }
         }
@@ -2854,7 +2859,7 @@ static const wcstring hist_cmd_to_string(hist_cmd_t hist_cmd) {
             return L"save";
         default:
             DIE("unhandled hist_cmd_t constant");
-            abort();
+            break;
     }
 }
 
@@ -3014,7 +3019,10 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 w.nextchar = NULL;
                 break;
             }
-            default: { DIE("unexpected retval from wgetopt_long"); }
+            default: {
+                DIE("unexpected retval from wgetopt_long");
+                break;
+            }
         }
     }
 

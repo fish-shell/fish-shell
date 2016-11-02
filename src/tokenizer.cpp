@@ -219,6 +219,7 @@ void tokenizer_t::read_string() {
                             if (!tok_is_string_character(*(this->buff), is_first)) {
                                 do_loop = 0;
                             }
+                            break;
                         }
                     }
                     break;
@@ -319,7 +320,7 @@ void tokenizer_t::read_string() {
             }
             default: {
                 DIE("unexpected mode in read_string");
-                abort();
+                break;
             }
         }
         return;
@@ -760,7 +761,10 @@ bool move_word_state_machine_t::consume_char(wchar_t c) {
         case move_word_style_whitespace: {
             return consume_char_whitespace(c);
         }
-        default: { abort(); }
+        default: {
+            DIE("unhandled style");
+            break;
+        }
     }
 }
 

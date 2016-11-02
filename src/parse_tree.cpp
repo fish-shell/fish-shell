@@ -333,7 +333,7 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
             fprintf(stderr, "Bad token type %d passed to %s\n", (int)tokenizer_token_type,
                     __FUNCTION__);
             DIE("bad token type");
-            abort();
+            break;
         }
     }
     return result;

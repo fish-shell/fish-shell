@@ -84,6 +84,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                 default: {
                     debug(1, MISSING_COMMAND_ERR_MSG, nxt_path.c_str());
                     wperror(L"access");
+                    break;
                 }
             }
         }

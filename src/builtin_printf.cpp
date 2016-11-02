@@ -508,42 +508,45 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
         case L'G': {
             long double arg = string_to_scalar_type<long double>(argument, this);
             if (!have_field_width) {
-                if (!have_precision)
+                if (!have_precision) {
                     this->append_format_output(fmt.c_str(), arg);
-                else
+                } else {
                     this->append_format_output(fmt.c_str(), precision, arg);
+                }
             } else {
-                if (!have_precision)
+                if (!have_precision) {
                     this->append_format_output(fmt.c_str(), field_width, arg);
-                else
+                } else {
                     this->append_format_output(fmt.c_str(), field_width, precision, arg);
+                }
             }
             break;
         }
         case L'c': {
-            if (!have_field_width)
+            if (!have_field_width) {
                 this->append_format_output(fmt.c_str(), *argument);
-            else
+            } else {
                 this->append_format_output(fmt.c_str(), field_width, *argument);
+            }
             break;
         }
         case L's': {
             if (!have_field_width) {
                 if (!have_precision) {
                     this->append_format_output(fmt.c_str(), argument);
-                } else
+                } else {
                     this->append_format_output(fmt.c_str(), precision, argument);
+                }
             } else {
-                if (!have_precision)
+                if (!have_precision) {
                     this->append_format_output(fmt.c_str(), field_width, argument);
-                else
+                } else {
                     this->append_format_output(fmt.c_str(), field_width, precision, argument);
+                }
             }
             break;
         }
         default: {
-            // TODO: Determine if this should call DIE()
-            // WTF
             DIE("unexpected opt");
             break;
         }
@@ -615,7 +618,10 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                             modify_allowed_format_specifiers(ok, "cs", false);
                             break;
                         }
-                        default: { goto no_more_flag_characters; }
+                        default: {
+                            goto no_more_flag_characters;
+                            break;
+                        }
                     }
                 }
             no_more_flag_characters:;
@@ -693,7 +699,10 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                 f += print_esc(f, false);
                 break;
             }
-            default: { this->append_output(*f); }
+            default: {
+                this->append_output(*f);
+                break;
+            }
         }
     }
     return save_argc - argc;

@@ -284,7 +284,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
             }
             default: {
                 DIE("unhandled io_mode constant");
-                abort();
+                break;
             }
         }
 
@@ -827,7 +827,7 @@ void exec_job(parser_t &parser, job_t *j) {
             case INTERNAL_EXEC:
                 // We should have handled exec up above.
                 DIE("INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
-                abort();
+                break;
         }
 
         if (exec_error) {
@@ -1089,7 +1089,7 @@ void exec_job(parser_t &parser, job_t *j) {
             case INTERNAL_EXEC: {
                 // We should have handled exec up above.
                 DIE("INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
-                abort();
+                break;
             }
         }
 

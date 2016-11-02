@@ -314,6 +314,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
             case 0: {
                 fwprintf(stderr, _(L"getopt_long() unexpectedly returned zero\n"));
                 exit(127);
+                break;
             }
             case 'c': {
                 cmds->push_back(optarg);
@@ -358,6 +359,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
             case 'v': {
                 fwprintf(stdout, _(L"%s, version %s\n"), PACKAGE_NAME, get_fish_version());
                 exit(0);
+                break;
             }
             case 'D': {
                 char *end;
@@ -377,6 +379,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.
                 exit(1);
+                break;
             }
         }
     }

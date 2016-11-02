@@ -233,7 +233,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
 
     if (!has_script_source) {
         // Iterate over path searching for suitable completion files.
-        for (size_t i = 0; i < path_list.size(); i++) {
+        for (size_t i = 0; i < path_list.size() && !found_file; i++) {
             wcstring next = path_list.at(i);
             wcstring path = next + L"/" + cmd + L".fish";
 
@@ -242,7 +242,6 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
                 continue;
             }
 
-            found_file = true;
             // Now we're actually going to take the lock.
             scoped_lock locker(lock);
             autoload_function_t *func = this->get_node(cmd);
@@ -279,7 +278,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
 
             // Unconditionally record our access time.
             func->access = access;
-            break;
+            found_file = true;
         }
 
         // If no file or builtin script was found we insert a placeholder function. Later we only

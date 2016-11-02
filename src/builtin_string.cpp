@@ -685,58 +685,62 @@ class regex_replacer_t : public string_replacer_t {
           regex(argv0, pattern, opts.ignore_case, streams),
           replacement(interpret_escapes(replacement_)) {}
 
-    bool replace_matches(const wchar_t *arg) {
-        // A return value of true means all is well (even if no replacements were performed), false
-        // indicates an unrecoverable error.
-        if (regex.code == 0) {
-            // pcre2_compile() failed
-            return false;
-        }
-
-        uint32_t options = PCRE2_SUBSTITUTE_OVERFLOW_LENGTH | PCRE2_SUBSTITUTE_EXTENDED |
-                           (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
-        size_t arglen = wcslen(arg);
-        PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
-        wchar_t *output = (wchar_t *)malloc(sizeof(wchar_t) * bufsize);
-        int pcre2_rc = 0;
-        for (;;) {
-            if (output == NULL) {
-                DIE_MEM();
-            }
-            PCRE2_SIZE outlen = bufsize;
-            pcre2_rc = pcre2_substitute(regex.code, PCRE2_SPTR(arg), arglen,
-                                        0,  // start offset
-                                        options, regex.match,
-                                        0,  // match context
-                                        PCRE2_SPTR(replacement.c_str()), PCRE2_ZERO_TERMINATED,
-                                        (PCRE2_UCHAR *)output, &outlen);
-
-            if (pcre2_rc == PCRE2_ERROR_NOMEMORY && bufsize < outlen) {
-                bufsize = outlen;
-                // cppcheck-suppress memleakOnRealloc
-                output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
-                continue;
-            }
-            break;
-        }
-
-        bool rc = true;
-        if (pcre2_rc < 0) {
-            string_error(streams, _(L"%ls: Regular expression substitute error: %ls\n"), argv0,
-                         pcre2_strerror(pcre2_rc).c_str());
-            rc = false;
-        } else {
-            if (!opts.quiet) {
-                streams.out.append(output);
-                streams.out.append(L'\n');
-            }
-            total_replaced += pcre2_rc;
-        }
-
-        free(output);
-        return rc;
-    }
+    bool replace_matches(const wchar_t *arg);
 };
+
+/// A return value of true means all is well (even if no replacements were performed), false
+/// indicates an unrecoverable error.
+bool regex_replacer_t::replace_matches(const wchar_t *arg) {
+    if (regex.code == 0) {
+        // pcre2_compile() failed
+        return false;
+    }
+
+    uint32_t options = PCRE2_SUBSTITUTE_OVERFLOW_LENGTH | PCRE2_SUBSTITUTE_EXTENDED |
+                       (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
+    size_t arglen = wcslen(arg);
+    PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
+    wchar_t *output = (wchar_t *)malloc(sizeof(wchar_t) * bufsize);
+    int pcre2_rc;
+
+    bool done = false;
+    while (!done) {
+        if (output == NULL) {
+            DIE_MEM();
+        }
+        PCRE2_SIZE outlen = bufsize;
+        pcre2_rc = pcre2_substitute(regex.code, PCRE2_SPTR(arg), arglen,
+                                    0,  // start offset
+                                    options, regex.match,
+                                    0,  // match context
+                                    PCRE2_SPTR(replacement.c_str()), PCRE2_ZERO_TERMINATED,
+                                    (PCRE2_UCHAR *)output, &outlen);
+
+        if (pcre2_rc != PCRE2_ERROR_NOMEMORY || bufsize >= outlen) {
+            done = true;
+        } else {
+            bufsize = outlen;
+            // cppcheck-suppress memleakOnRealloc
+            output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
+        }
+    }
+
+    bool rc = true;
+    if (pcre2_rc < 0) {
+        string_error(streams, _(L"%ls: Regular expression substitute error: %ls\n"), argv0,
+                     pcre2_strerror(pcre2_rc).c_str());
+        rc = false;
+    } else {
+        if (!opts.quiet) {
+            streams.out.append(output);
+            streams.out.append(L'\n');
+        }
+        total_replaced += pcre2_rc;
+    }
+
+    free(output);
+    return rc;
+}
 
 static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     const wchar_t *short_options = L"aiqr";

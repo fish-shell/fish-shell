@@ -1386,7 +1386,7 @@ const parse_node_t *parse_node_tree_t::find_node_matching_source_location(
     const parse_node_t *result = NULL;
     // Find nodes of the given type in the tree, working backwards.
     const size_t len = this->size();
-    for (size_t idx = 0; idx < len; idx++) {
+    for (size_t idx = 0; idx < len && result == NULL; idx++) {
         const parse_node_t &node = this->at(idx);
 
         // Types must match.
@@ -1400,8 +1400,8 @@ const parse_node_t *parse_node_tree_t::find_node_matching_source_location(
 
         // Found it.
         result = &node;
-        break;
     }
+
     return result;
 }
 

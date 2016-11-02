@@ -372,7 +372,6 @@ int input_init() {
         } else {
             debug(0, _(L"Using fallback terminal type '%ls'"), DEFAULT_TERM);
         }
-    } else {
     }
 
     input_terminfo_init();

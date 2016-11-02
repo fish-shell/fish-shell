@@ -214,8 +214,7 @@ static void mangle_1_completion_description(wcstring *str) {
             str->at(trailing++) = wc;
         } else if (!was_space) {  // initial space in a run
             str->at(trailing++) = L' ';
-        } else {  // non-initial space in a run, do nothing
-        }
+        }  // else non-initial space in a run, do nothing
         was_space = is_space;
     }
 

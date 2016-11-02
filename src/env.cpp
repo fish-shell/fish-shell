@@ -284,7 +284,7 @@ static void universal_callback(fish_message_type_t type, const wchar_t *name) {
             break;
         }
         default: {
-            assert(0 && "Unhandled fish_message_type_t constant!");
+            DIE("unhandled fish_message_type_t constant");
             abort();
         }
     }

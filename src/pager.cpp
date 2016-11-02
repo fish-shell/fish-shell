@@ -615,7 +615,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 return false;
             }
             default: {
-                assert(0 && "Unhandled selection_direction_t constant");
+                DIE("unhandled selection_direction_t constant");
                 abort();
             }
         }
@@ -639,7 +639,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 new_selected_completion_idx = selected_completion_idx - 1;
             }
         } else {
-            assert(0 && "Unknown non-cardinal direction");
+            DIE("unknown non-cardinal direction");
         }
     } else {
         // Cardinal directions. We have a completion index; we wish to compute its row and column.
@@ -711,8 +711,8 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 break;
             }
             default: {
-                assert(0 && "Unknown cardinal direction");
-                break;
+                DIE("unknown cardinal direction");
+                abort();
             }
         }
 

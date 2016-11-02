@@ -1360,8 +1360,8 @@ static int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                     break;
                 }
                 default: {
-                    assert(0 && "Unexpected character in builtin_echo argument");
-                    break;
+                    DIE("unexpected character in builtin_echo argument");
+                    abort();
                 }
             }
         }
@@ -2853,7 +2853,7 @@ static const wcstring hist_cmd_to_string(hist_cmd_t hist_cmd) {
         case HIST_SAVE:
             return L"save";
         default:
-            assert(0 && "Unhandled hist_cmd_t constant!");
+            DIE("unhandled hist_cmd_t constant");
             abort();
     }
 }

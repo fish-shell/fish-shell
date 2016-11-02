@@ -1071,7 +1071,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
     void post_notification() {
         if (region != NULL) {
             /* Read off the seed */
-            uint32_t seed = ntohl(region->universal_variable_seed);
+            uint32_t seed = ntohl(region->universal_variable_seed);  //!OCLINT(constant cond op)
 
             // Increment it. Don't let it wrap to zero.
             do {
@@ -1080,9 +1080,9 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
             last_seed = seed;
 
             // Write out our data.
-            region->magic = htonl(SHMEM_MAGIC_NUMBER);
-            region->version = htonl(SHMEM_VERSION_CURRENT);
-            region->universal_variable_seed = htonl(seed);
+            region->magic = htonl(SHMEM_MAGIC_NUMBER);       //!OCLINT(constant cond op)
+            region->version = htonl(SHMEM_VERSION_CURRENT);  //!OCLINT(constant cond op)
+            region->universal_variable_seed = htonl(seed);   //!OCLINT(constant cond op)
         }
     }
 
@@ -1103,7 +1103,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
     bool poll() {
         bool result = false;
         if (region != NULL) {
-            uint32_t seed = ntohl(region->universal_variable_seed);
+            uint32_t seed = ntohl(region->universal_variable_seed);  //!OCLINT(constant cond op)
             if (seed != last_seed) {
                 result = true;
                 last_seed = seed;
@@ -1313,7 +1313,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         if (pipe_fd >= 0) {
             // We need to write some data (any data) to the pipe, then wait for a while, then read
             // it back. Nobody is expected to read it except us.
-            int pid_nbo = htonl(getpid());
+            int pid_nbo = htonl(getpid());  //!OCLINT(constant cond op)
             ssize_t amt_written = write(this->pipe_fd, &pid_nbo, sizeof pid_nbo);
             if (amt_written < 0 && (errno == EWOULDBLOCK || errno == EAGAIN)) {
                 // Very unsual: the pipe is full!

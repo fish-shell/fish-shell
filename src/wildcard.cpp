@@ -297,7 +297,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
         }
     }
 
-    assert(0 && "Unreachable code reached");
+    DIE("unreachable code reached");
 }
 
 bool wildcard_complete(const wcstring &str, const wchar_t *wc, const wchar_t *desc,

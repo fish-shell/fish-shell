@@ -332,8 +332,8 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
         default: {
             fprintf(stderr, "Bad token type %d passed to %s\n", (int)tokenizer_token_type,
                     __FUNCTION__);
-            assert(0);
-            break;
+            DIE("bad token type");
+            abort();
         }
     }
     return result;
@@ -1311,8 +1311,7 @@ const parse_node_t &parse_node_tree_t::find_child(const parse_node_t &parent,
             return *child;
         }
     }
-    PARSE_ASSERT(0);
-    return *(parse_node_t *)(NULL);  // unreachable
+    DIE("failed to find child node");
 }
 
 const parse_node_t *parse_node_tree_t::get_parent(const parse_node_t &node,

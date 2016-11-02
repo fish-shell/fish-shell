@@ -318,8 +318,8 @@ void tokenizer_t::read_string() {
                 break;
             }
             default: {
-                assert(0 && "Unexpected mode in read_string");
-                break;
+                DIE("unexpected mode in read_string");
+                abort();
             }
         }
         return;

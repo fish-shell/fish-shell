@@ -518,8 +518,8 @@ expression *test_parser::parse_expression(unsigned int start, unsigned int end) 
     unsigned int argc = end - start;
     switch (argc) {
         case 0: {
-            assert(0);  // should have been caught by the above test
-            return NULL;
+            DIE("argc should not be zero");  // should have been caught by the above test
+            abort();
         }
         case 1: {
             return error(L"Missing argument at index %u", start + 1);

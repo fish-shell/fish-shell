@@ -283,8 +283,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
                 break;
             }
             default: {
-                // Unknown type, should never happen.
-                assert(0 && "Unhandled io_mode constant");
+                DIE("unhandled io_mode constant");
                 abort();
             }
         }
@@ -442,7 +441,7 @@ void exec_job(parser_t &parser, job_t *j) {
             j->first_process->completed = 1;
             return;
         }
-        assert(0 && "This should be unreachable");
+        DIE("this should be unreachable");
     }
 
     // We may have block IOs that conflict with fd redirections. For example, we may have a command
@@ -827,10 +826,8 @@ void exec_job(parser_t &parser, job_t *j) {
 
             case INTERNAL_EXEC:
                 // We should have handled exec up above.
-                assert(
-                    0 &&
-                    "INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
-                break;
+                DIE("INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
+                abort();
         }
 
         if (exec_error) {
@@ -1071,7 +1068,7 @@ void exec_job(parser_t &parser, job_t *j) {
                         setup_child_process(j, p, process_net_io_chain);
                         safe_launch_process(p, actual_cmd, argv, envv);
                         // safe_launch_process _never_ returns...
-                        assert(0 && "safe_launch_process should not have returned");
+                        DIE("safe_launch_process should not have returned");
                     } else {
                         debug(2, L"Fork #%d, pid %d: external command '%s' from '%ls'\n",
                               g_fork_count, pid, p->argv0(), file ? file : L"<no file>");
@@ -1085,18 +1082,14 @@ void exec_job(parser_t &parser, job_t *j) {
                 // This is the parent process. Store away information on the child, and possibly
                 // fice it control over the terminal.
                 p->pid = pid;
-
                 set_child_group(j, p, 0);
-
                 break;
             }
 
             case INTERNAL_EXEC: {
                 // We should have handled exec up above.
-                assert(
-                    0 &&
-                    "INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
-                break;
+                DIE("INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
+                abort();
             }
         }
 

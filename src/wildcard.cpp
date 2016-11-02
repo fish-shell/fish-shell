@@ -385,9 +385,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     int stat_res = -1;
     int stat_errno = 0;
     int lstat_res = lwstat(filepath, &lstat_buf);
-    if (lstat_res < 0) {
-        // lstat failed.
-    } else {
+    if (lstat_res >= 0) {
         if (S_ISLNK(lstat_buf.st_mode)) {
             stat_res = wstat(filepath, &stat_buf);
 

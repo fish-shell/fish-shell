@@ -336,10 +336,13 @@ static void handle_child_status(pid_t pid, int status) {
         }
     }
 
+#if 0
+    // TODO: decide whether to eliminate this block or have it emit a warning message.
     if (!found_proc) {
         // A child we lost track of? There have been bugs in both subshell handling and in builtin
         // handling that have caused this previously...
     }
+#endif
     return;
 }
 

@@ -679,11 +679,11 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
             }
     }
 
-    // WTF? This seems to be a noop.
-    if (use_implicit_cd &&
-        !expand_string(str_cmd, &this->completions,
-                       EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(), NULL)) {
-        // Not valid as implicit cd.
+    if (use_implicit_cd) {
+        // We don't really care if this succeeds or fails. If it succeeds this->completions will be
+        // updated with choices for the user.
+        (void)expand_string(str_cmd, &this->completions,
+                            EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(), NULL);
     }
 
     if (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~') {

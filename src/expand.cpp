@@ -1386,7 +1386,7 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
     const bool has_wildcard = wildcard_has(path_to_expand, true /* internal, i.e. ANY_CHAR */);
 
     if (has_wildcard && (flags & EXECUTABLES_ONLY)) {
-        // Don't do wildcard expansion for executables. See #785. Make them expand to nothing here.
+        ;  // don't do wildcard expansion for executables, see issue #785
     } else if (((flags & EXPAND_FOR_COMPLETIONS) && (!(flags & EXPAND_SKIP_WILDCARDS))) ||
                has_wildcard) {
         // We either have a wildcard, or we don't have a wildcard but we're doing completion

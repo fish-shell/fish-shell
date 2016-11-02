@@ -979,11 +979,8 @@ wcstring get_machine_identifier() {
         for (size_t i = 0; i < MAC_ADDRESS_MAX_LEN; i++) {
             append_format(result, L"%02x", mac_addr[i]);
         }
-    } else if (get_hostname_identifier(&result)) {
-        // Hooray
-    } else {
-        // Fallback
-        result.assign(L"nohost");
+    } else if (!get_hostname_identifier(&result)) {
+        result.assign(L"nohost");  // fallback to a dummy value
     }
     return result;
 }

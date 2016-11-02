@@ -2205,7 +2205,7 @@ static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust, boo
     const wcstring &cmd = el->text, &suggest = data->autosuggestion;
     if (can_autosuggest() && !suggest.empty() &&
         string_prefixes_string_case_insensitive(cmd, suggest)) {
-        // The autosuggestion is still reasonable, so do nothing.
+        ;  // the autosuggestion is still reasonable, so do nothing
     } else {
         update_autosuggestion();
     }

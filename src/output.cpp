@@ -32,7 +32,7 @@
 static int writeb_internal(char c);
 
 /// The function used for output.
-static int (*out)(char c) = writeb_internal;
+static int (*out)(char c) = writeb_internal;  //!OCLINT(unused param)
 
 /// Whether term256 and term24bit are supported.
 static color_support_t color_support = 0;

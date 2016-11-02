@@ -769,7 +769,7 @@ void history_t::save_internal_unless_disabled() {
     }
 
     // This might be a good candidate for moving to a background thread.
-    time_profiler_t profiler(vacuum ? "save_internal vacuum"
+    time_profiler_t profiler(vacuum ? "save_internal vacuum"       //!OCLINT(unused var)
                                     : "save_internal no vacuum");  //!OCLINT(side-effect)
     this->save_internal(vacuum);
 

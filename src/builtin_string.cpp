@@ -1159,7 +1159,8 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
 
 static const struct string_subcommand {
     const wchar_t *name;
-    int (*handler)(parser_t &, io_streams_t &, int argc, wchar_t **argv);
+    int (*handler)(parser_t &, io_streams_t &, int argc,  //!OCLINT(unused param)
+                   wchar_t **argv);                       //!OCLINT(unused param)
 }
 
 string_subcommands[] = {

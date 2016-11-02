@@ -846,7 +846,6 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
             } else {
                 // Not the last segment, nonempty wildcard.
                 assert(next_slash != NULL);
-                wcstring child_effective_prefix = effective_prefix + wc_segment;
                 this->expand_intermediate_segment(base_dir, dir, wc_segment, wc_remainder,
                                                   effective_prefix + wc_segment + L'/');
             }

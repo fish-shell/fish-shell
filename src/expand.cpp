@@ -1302,8 +1302,10 @@ static void remove_internal_separator(wcstring *str, bool conv) {
 /// A stage in string expansion is represented as a function that takes an input and returns a list
 /// of output (by reference). We get flags and errors. It may return an error; if so expansion
 /// halts.
-typedef expand_error_t (*expand_stage_t)(const wcstring &input, std::vector<completion_t> *out,
-                                         expand_flags_t flags, parse_error_list_t *errors);
+typedef expand_error_t (*expand_stage_t)(const wcstring &input,           //!OCLINT(unused param)
+                                         std::vector<completion_t> *out,  //!OCLINT(unused param)
+                                         expand_flags_t flags,            //!OCLINT(unused param)
+                                         parse_error_list_t *errors);     //!OCLINT(unused param)
 
 static expand_error_t expand_stage_cmdsubst(const wcstring &input, std::vector<completion_t> *out,
                                             expand_flags_t flags, parse_error_list_t *errors) {

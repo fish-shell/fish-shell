@@ -470,7 +470,7 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
 void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_t *quote,
                                    size_t *offset, enum token_type *out_type) {
     size_t prev_pos = 0;
-    wchar_t last_quote = '\0';
+    wchar_t last_quote = L'\0';
 
     tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
     tok_t token;
@@ -487,11 +487,11 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     wchar_t *cmd_tmp = wcsdup(cmd.c_str());
     cmd_tmp[pos] = 0;
     size_t cmdlen = wcslen(cmd_tmp);
-    bool finished = (cmdlen != 0);
+    bool finished = cmdlen != 0;
     if (finished) {
         finished = (quote == NULL);
-        if (finished && wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1]) == 0) {
-            finished = (cmdlen == 1) || (cmd_tmp[cmdlen - 2] != L'\\');
+        if (finished && wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1]) != L'\0') {
+            finished = cmdlen > 1 && cmd_tmp[cmdlen - 2] == L'\\';
         }
     }
 

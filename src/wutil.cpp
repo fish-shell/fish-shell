@@ -185,11 +185,11 @@ bool set_cloexec(int fd) {
     int flags = fcntl(fd, F_GETFD, 0);
     if (flags < 0) {
         return false;
-    } else if (flags & FD_CLOEXEC) {
-        return true;
-    } else {
-        return fcntl(fd, F_SETFD, flags | FD_CLOEXEC) >= 0;
     }
+    if (flags & FD_CLOEXEC) {
+        return true;
+    }
+    return fcntl(fd, F_SETFD, flags | FD_CLOEXEC) >= 0;
 }
 
 static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool cloexec) {

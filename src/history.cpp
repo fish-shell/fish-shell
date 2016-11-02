@@ -794,11 +794,10 @@ void history_t::add(const wcstring &str, history_identifier_t ident, bool pendin
 bool icompare_pred(wchar_t a, wchar_t b) { return std::tolower(a) == std::tolower(b); }
 
 bool icompare(wcstring const &a, wcstring const &b) {
-    if (a.length() == b.length()) {
-        return std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
-    } else {
+    if (a.length() != b.length()) {
         return false;
     }
+    return std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
 }
 
 // Remove matching history entries from our list of new items. This only supports literal,

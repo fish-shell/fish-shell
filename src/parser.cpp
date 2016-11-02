@@ -564,11 +564,11 @@ bool parser_t::job_remove(job_t *j) {
     if (iter != my_job_list.end()) {
         my_job_list.erase(iter);
         return true;
-    } else {
-        debug(1, _(L"Job inconsistency"));
-        sanity_lose();
-        return false;
     }
+
+    debug(1, _(L"Job inconsistency"));
+    sanity_lose();
+    return false;
 }
 
 void parser_t::job_promote(job_t *job) {

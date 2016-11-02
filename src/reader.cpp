@@ -2212,10 +2212,10 @@ static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust, boo
 }
 
 bool shell_is_exiting() {
-    if (shell_is_interactive())
+    if (shell_is_interactive()) {
         return job_list_is_empty() && data != NULL && data->end_loop;
-    else
-        return end_loop;
+    }
+    return end_loop;
 }
 
 /// This function is called when the main loop notices that end_loop has been set while in

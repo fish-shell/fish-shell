@@ -67,32 +67,31 @@ static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
         // Use tparm to emit color escape.
         writembs(tparm(todo, idx));
         return true;
-    } else {
-        // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
-        char buff[16] = "";
-        if (idx < 16) {
-            // this allows the non-bright color to happen instead of no color working at all when
-            // a bright is attempted when only colors 0-7 are supported.
-            // TODO: enter bold mode in builtin_set_color in the same circumstance- doing that
-            // combined
-            // with what we do here, will make the brights actually work for virtual
-            // consoles/ancient emulators.
-            if (max_colors == 8 && idx > 8) idx -= 8;
-
-            snprintf(buff, sizeof buff, "\x1b[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
-        } else {
-            snprintf(buff, sizeof buff, "\x1b[%d;5;%dm", is_fg ? 38 : 48, idx);
-        }
-
-        int (*writer)(char) = output_get_writer();
-        if (writer) {
-            for (size_t i = 0; buff[i]; i++) {
-                writer(buff[i]);
-            }
-        }
-
-        return true;
     }
+
+    // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
+    char buff[16] = "";
+    if (idx < 16) {
+        // this allows the non-bright color to happen instead of no color working at all when a
+        // bright is attempted when only colors 0-7 are supported.
+        //
+        // TODO: enter bold mode in builtin_set_color in the same circumstance- doing that combined
+        // with what we do here, will make the brights actually work for virtual consoles/ancient
+        // emulators.
+        if (max_colors == 8 && idx > 8) idx -= 8;
+        snprintf(buff, sizeof buff, "\x1b[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
+    } else {
+        snprintf(buff, sizeof buff, "\x1b[%d;5;%dm", is_fg ? 38 : 48, idx);
+    }
+
+    int (*writer)(char) = output_get_writer();
+    if (writer) {
+        for (size_t i = 0; buff[i]; i++) {
+            writer(buff[i]);
+        }
+    }
+
+    return true;
 }
 
 static bool write_foreground_color(unsigned char idx) {
@@ -121,21 +120,22 @@ bool write_color(rgb_color_t color, bool is_fg) {
         // Indexed or non-24 bit color.
         unsigned char idx = index_for_color(color);
         return (is_fg ? write_foreground_color : write_background_color)(idx);
-    } else {
-        // 24 bit! No tparm here, just ANSI escape sequences.
-        // Foreground: ^[38;2;<r>;<g>;<b>m
-        // Background: ^[48;2;<r>;<g>;<b>m
-        color24_t rgb = color.to_color24();
-        char buff[128];
-        snprintf(buff, sizeof buff, "\x1b[%d;2;%u;%u;%um", is_fg ? 38 : 48, rgb.rgb[0], rgb.rgb[1],
-                 rgb.rgb[2]);
-        int (*writer)(char) = output_get_writer();
-        if (writer) {
-            for (size_t i = 0; buff[i]; i++) {
-                writer(buff[i]);
-            }
+    }
+
+    // 24 bit! No tparm here, just ANSI escape sequences.
+    // Foreground: ^[38;2;<r>;<g>;<b>m
+    // Background: ^[48;2;<r>;<g>;<b>m
+    color24_t rgb = color.to_color24();
+    char buff[128];
+    snprintf(buff, sizeof buff, "\x1b[%d;2;%u;%u;%um", is_fg ? 38 : 48, rgb.rgb[0], rgb.rgb[1],
+             rgb.rgb[2]);
+    int (*writer)(char) = output_get_writer();
+    if (writer) {
+        for (size_t i = 0; buff[i]; i++) {
+            writer(buff[i]);
         }
     }
+
     return true;
 }
 

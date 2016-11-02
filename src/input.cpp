@@ -607,8 +607,9 @@ wint_t input_readch(bool allow_commands) {
                     if (input_function_status) {
                         return input_readch();
                     }
-                    while ((c = input_common_readch(0)) && c >= R_MIN && c <= R_MAX) {
-                        // do nothing
+                    c = input_common_readch(0);
+                    while (c >= R_MIN && c <= R_MAX) {
+                        c = input_common_readch(0);
                     }
                     input_common_next_ch(c);
                     return input_readch();

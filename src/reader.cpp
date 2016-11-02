@@ -2373,7 +2373,7 @@ static bool text_ends_in_comment(const wcstring &text) {
     tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS | TOK_SQUASH_ERRORS);
     tok_t token;
     while (tok.next(&token)) {
-        // pass
+        ;  // pass
     }
     return token.type == TOK_COMMENT;
 }

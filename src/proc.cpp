@@ -388,7 +388,7 @@ typedef unsigned int process_generation_count_t;
 
 /// A static value tracking how many SIGCHLDs we have seen. This is only ever modified from within
 /// the SIGCHLD signal handler, and therefore does not need atomics or locks.
-static volatile process_generation_count_t s_sigchld_generation_count = 0;
+static volatile process_generation_count_t s_sigchld_generation_cnt = 0;
 
 /// If we have received a SIGCHLD signal, process any children. If await is false, this returns
 /// immediately if no SIGCHLD has been received. If await is true, this waits for one. Returns true
@@ -397,10 +397,10 @@ static int process_mark_finished_children(bool wants_await) {
     ASSERT_IS_MAIN_THREAD();
 
     // A static value tracking the SIGCHLD gen count at the time we last processed it. When this is
-    // different from s_sigchld_generation_count, it indicates there may be unreaped processes.
+    // different from s_sigchld_generation_cnt, it indicates there may be unreaped processes.
     // There may not be if we reaped them via the other waitpid path. This is only ever modified
     // from the main thread, and not from a signal handler.
-    static process_generation_count_t s_last_processed_sigchld_generation_count = 0;
+    static process_generation_count_t s_last_sigchld_generation_cnt = 0;
 
     int processed_count = 0;
     bool got_error = false;
@@ -409,12 +409,12 @@ static int process_mark_finished_children(bool wants_await) {
     // needs to be an atomic read (we'd use sig_atomic_t, if we knew that were unsigned -
     // fortunately aligned unsigned int is atomic on pretty much any modern chip.) It also needs to
     // occur before we start reaping, since the signal handler can be invoked at any point.
-    const process_generation_count_t local_count = s_sigchld_generation_count;
+    const process_generation_count_t local_count = s_sigchld_generation_cnt;
 
     // Determine whether we have children to process. Note that we can't reliably use the difference
     // because a single SIGCHLD may be delivered for multiple children - see #1768. Also if we are
     // awaiting, we always process.
-    bool wants_waitpid = wants_await || local_count != s_last_processed_sigchld_generation_count;
+    bool wants_waitpid = wants_await || local_count != s_last_sigchld_generation_cnt;
 
     if (wants_waitpid) {
         for (;;) {
@@ -448,7 +448,7 @@ static int process_mark_finished_children(bool wants_await) {
     if (got_error) {
         return -1;
     }
-    s_last_processed_sigchld_generation_count = local_count;
+    s_last_sigchld_generation_cnt = local_count;
     return processed_count;
 }
 
@@ -458,7 +458,7 @@ void job_handle_signal(int signal, siginfo_t *info, void *context) {
     UNUSED(info);
     UNUSED(context);
     // This is the only place that this generation count is modified. It's OK if it overflows.
-    s_sigchld_generation_count += 1;
+    s_sigchld_generation_cnt += 1;
 }
 
 /// Given a command like "cat file", truncate it to a reasonable length.
@@ -594,20 +594,17 @@ int job_reap(bool allow_interactive) {
                     const wcstring job_number_desc =
                         (job_count == 1) ? wcstring() : format_string(L"Job %d, ", j->job_id);
                     fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
-                                program_name, job_number_desc.c_str(),
-                                truncate_command(j->command()).c_str(),
-                                sig2wcs(WTERMSIG(p->status)),
-                                signal_get_desc(WTERMSIG(p->status)));
+                             program_name, job_number_desc.c_str(),
+                             truncate_command(j->command()).c_str(), sig2wcs(WTERMSIG(p->status)),
+                             signal_get_desc(WTERMSIG(p->status)));
                 } else {
                     const wcstring job_number_desc =
-                        (job_count == 1) ? wcstring()
-                                            : format_string(L"from job %d, ", j->job_id);
+                        (job_count == 1) ? wcstring() : format_string(L"from job %d, ", j->job_id);
                     fwprintf(stdout, _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' "
-                                        L"terminated by signal %ls (%ls)"),
-                                program_name, p->pid, p->argv0(), job_number_desc.c_str(),
-                                truncate_command(j->command()).c_str(),
-                                sig2wcs(WTERMSIG(p->status)),
-                                signal_get_desc(WTERMSIG(p->status)));
+                                       L"terminated by signal %ls (%ls)"),
+                             program_name, p->pid, p->argv0(), job_number_desc.c_str(),
+                             truncate_command(j->command()).c_str(), sig2wcs(WTERMSIG(p->status)),
+                             signal_get_desc(WTERMSIG(p->status)));
                 }
 
                 if (cur_term != NULL) {

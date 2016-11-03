@@ -56,8 +56,8 @@ struct input_mapping_t {
     input_mapping_t(const wcstring &s, const std::vector<wcstring> &c,
                     const wcstring &m = DEFAULT_BIND_MODE, const wcstring &sm = DEFAULT_BIND_MODE)
         : seq(s), commands(c), mode(m), sets_mode(sm) {
-        static unsigned int s_last_input_mapping_specification_order = 0;
-        specification_order = ++s_last_input_mapping_specification_order;
+        static unsigned int s_last_input_map_spec_order = 0;
+        specification_order = ++s_last_input_map_spec_order;
     }
 };
 

@@ -43,7 +43,7 @@ struct termios shell_modes;
 
 // Note we foolishly assume that pthread_t is just a primitive. But it might be a struct.
 static pthread_t main_thread_id = 0;
-static bool thread_assertions_configured_for_testing = false;
+static bool thread_asserts_cfg_for_testing = false;
 
 wchar_t ellipsis_char;
 wchar_t omitted_newline_char;
@@ -56,7 +56,7 @@ int debug_stack_frames = 0;  // default number of stack frames to show on debug(
 static pid_t initial_pid = 0;
 
 /// Be able to restore the term's foreground process group.
-static pid_t initial_foreground_process_group = -1;
+static pid_t initial_fg_process_group = -1;
 
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
@@ -1671,9 +1671,7 @@ __attribute__((noinline)) void debug_thread_error(void) {
 
 void set_main_thread() { main_thread_id = pthread_self(); }
 
-void configure_thread_assertions_for_testing(void) {
-    thread_assertions_configured_for_testing = true;
-}
+void configure_thread_assertions_for_testing(void) { thread_asserts_cfg_for_testing = true; }
 
 bool is_forked_child(void) {
     // Just bail if nobody's called setup_fork_guards, e.g. some of our tools.
@@ -1693,14 +1691,14 @@ void setup_fork_guards(void) {
 }
 
 void save_term_foreground_process_group(void) {
-    initial_foreground_process_group = tcgetpgrp(STDIN_FILENO);
+    initial_fg_process_group = tcgetpgrp(STDIN_FILENO);
 }
 
 void restore_term_foreground_process_group(void) {
-    if (initial_foreground_process_group != -1) {
+    if (initial_fg_process_group != -1) {
         // This is called during shutdown and from a signal handler. We don't bother to complain on
         // failure.
-        tcsetpgrp(STDIN_FILENO, initial_foreground_process_group);
+        tcsetpgrp(STDIN_FILENO, initial_fg_process_group);
     }
 }
 
@@ -1710,7 +1708,7 @@ bool is_main_thread() {
 }
 
 void assert_is_main_thread(const char *who) {
-    if (!is_main_thread() && !thread_assertions_configured_for_testing) {
+    if (!is_main_thread() && !thread_asserts_cfg_for_testing) {
         fprintf(stderr,
                 "Warning: %s called off of main thread. Break on debug_thread_error to debug.\n",
                 who);
@@ -1728,7 +1726,7 @@ void assert_is_not_forked_child(const char *who) {
 }
 
 void assert_is_background_thread(const char *who) {
-    if (is_main_thread() && !thread_assertions_configured_for_testing) {
+    if (is_main_thread() && !thread_asserts_cfg_for_testing) {
         fprintf(stderr,
                 "Warning: %s called on the main thread (may block!). Break on debug_thread_error "
                 "to debug.\n",

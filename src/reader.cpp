@@ -300,7 +300,7 @@ static wchar_t unescaped_quote(const wcstring &str, size_t pos);
 static struct termios terminal_mode_on_startup;
 
 /// Mode we use to execute programs.
-static struct termios terminal_mode_for_executing_programs;
+static struct termios tty_modes_for_external_cmds;
 
 static void reader_super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
 
@@ -312,7 +312,7 @@ static void term_donate() {
     set_color(rgb_color_t::normal(), rgb_color_t::normal());
 
     while (1) {
-        if (tcsetattr(0, TCSANOW, &terminal_mode_for_executing_programs)) {
+        if (tcsetattr(0, TCSANOW, &tty_modes_for_external_cmds)) {
             if (errno != EINTR) {
                 debug(1, _(L"Could not set terminal mode for new job"));
                 wperror(L"tcsetattr");
@@ -773,10 +773,10 @@ void reader_init() {
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
 
     // Set the mode used for program execution, initialized to the current mode.
-    memcpy(&terminal_mode_for_executing_programs, &terminal_mode_on_startup,
-           sizeof terminal_mode_for_executing_programs);
-    terminal_mode_for_executing_programs.c_iflag &= ~IXON;   // disable flow control
-    terminal_mode_for_executing_programs.c_iflag &= ~IXOFF;  // disable flow control
+    memcpy(&tty_modes_for_external_cmds, &terminal_mode_on_startup,
+           sizeof tty_modes_for_external_cmds);
+    tty_modes_for_external_cmds.c_iflag &= ~IXON;   // disable flow control
+    tty_modes_for_external_cmds.c_iflag &= ~IXOFF;  // disable flow control
 
     // Set the mode used for the terminal, initialized to the current mode.
     memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);
@@ -1362,12 +1362,12 @@ static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &c
 /// through the completions.
 ///
 /// \param comp the list of completion strings
-/// \param continue_after_prefix_insertion If we have a shared prefix, whether to print the list of
+/// \param cont_after_prefix_insertion If we have a shared prefix, whether to print the list of
 /// completions after inserting it.
 ///
 /// Return true if we inserted text into the command line, false if we did not.
 static bool handle_completions(const std::vector<completion_t> &comp,
-                               bool continue_after_prefix_insertion) {
+                               bool cont_after_prefix_insertion) {
     bool done = false;
     bool success = false;
     const editable_line_t *el = &data->command_line;
@@ -1486,7 +1486,7 @@ static bool handle_completions(const std::vector<completion_t> &comp,
         }
     }
 
-    if (!continue_after_prefix_insertion && use_prefix) {
+    if (!cont_after_prefix_insertion && use_prefix) {
         return success;
     }
 
@@ -2624,8 +2624,8 @@ const wchar_t *reader_readline(int nchars) {
                     data->cycle_command_line = el->text;
                     data->cycle_cursor_pos = el->position;
 
-                    bool continue_after_prefix_insertion = (c == R_COMPLETE_AND_SEARCH);
-                    comp_empty = handle_completions(comp, continue_after_prefix_insertion);
+                    bool cont_after_prefix_insertion = (c == R_COMPLETE_AND_SEARCH);
+                    comp_empty = handle_completions(comp, cont_after_prefix_insertion);
 
                     // Show the search field if requested and if we printed a list of completions.
                     if (c == R_COMPLETE_AND_SEARCH && !comp_empty && !data->pager.empty()) {

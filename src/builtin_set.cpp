@@ -77,12 +77,10 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
             struct stat buff;
             if (wstat(dir, &buff) == -1) {
                 error = true;
-            }
-            else if (!S_ISDIR(buff.st_mode)) {
+            } else if (!S_ISDIR(buff.st_mode)) {
                 error = true;
                 errno = ENOTDIR;
-            }
-            else if (waccess(dir, X_OK) == -1) {
+            } else if (waccess(dir, X_OK) == -1) {
                 error = true;
             }
 
@@ -90,7 +88,7 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
                 any_success = true;
             } else {
                 streams.err.append_format(_(BUILTIN_SET_PATH_ERROR), L"set", key, dir.c_str(),
-                        strerror(errno));
+                                          strerror(errno));
                 const wchar_t *colon = wcschr(dir.c_str(), L':');
 
                 if (colon && *(colon + 1)) {
@@ -338,7 +336,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int erase = 0, list = 0, unexport = 0;
     int universal = 0, query = 0;
     bool shorten_ok = true;
-    bool preserve_incoming_failure_exit_status = true;
+    bool preserve_failure_exit_status = true;
     const int incoming_exit_status = proc_get_last_status();
 
     // Variables used for performing the actual work.
@@ -364,12 +362,12 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case 'e': {
                 erase = 1;
-                preserve_incoming_failure_exit_status = false;
+                preserve_failure_exit_status = false;
                 break;
             }
             case 'n': {
                 list = 1;
-                preserve_incoming_failure_exit_status = false;
+                preserve_failure_exit_status = false;
                 break;
             }
             case 'x': {
@@ -398,7 +396,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case 'q': {
                 query = 1;
-                preserve_incoming_failure_exit_status = false;
+                preserve_failure_exit_status = false;
                 break;
             }
             case 'h': {
@@ -629,7 +627,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     free(dest);
 
-    if (retcode == STATUS_BUILTIN_OK && preserve_incoming_failure_exit_status)
+    if (retcode == STATUS_BUILTIN_OK && preserve_failure_exit_status)
         retcode = incoming_exit_status;
     return retcode;
 }

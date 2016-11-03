@@ -108,9 +108,6 @@ function help --description 'Show help for the fish shell'
 				if test -f "$man_arg"
 					man $man_arg
 					return
-				else if test -f "$man_arg.gz"
-					man (gunzip -c "$man_arg.gz" | psub -s .1)
-					return
 				end
 			end
 			set fish_help_page "index.html"

@@ -597,8 +597,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                 }
 
                 modify_allowed_format_specifiers(ok, "aAcdeEfFgGiosuxX", true);
-
-                for (;; f++, direc_length++) {
+                for (bool continue_looking_for_flags = true; continue_looking_for_flags;) {
                     switch (*f) {
                         case L'I':
                         case L'\'': {
@@ -619,12 +618,15 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                             break;
                         }
                         default: {
-                            goto no_more_flag_characters;
+                            continue_looking_for_flags = false;
                             break;
                         }
                     }
+                    if (continue_looking_for_flags) {
+                        f++;
+                        direc_length++;
+                    }
                 }
-            no_more_flag_characters:;
 
                 if (*f == L'*') {
                     ++f;

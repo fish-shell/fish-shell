@@ -908,7 +908,7 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
 
 /// Return a definition of the specified function. Used by the functions builtin.
 static wcstring functions_def(const wcstring &name) {
-    CHECK(!name.empty(), L"");
+    CHECK(!name.empty(), L"");  //!OCLINT(multiple unary operator)
     wcstring out;
     wcstring desc, def;
     function_get_desc(name, &desc);
@@ -1090,7 +1090,8 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
     }
 
     // Erase, desc, query, copy and list are mutually exclusive.
-    if ((erase + (!!desc) + list + query + copy) > 1) {
+    int describe = desc ? 1 : 0;
+    if (erase + describe + list + query + copy > 1) {
         streams.err.append_format(_(L"%ls: Invalid combination of options\n"), argv[0]);
 
         builtin_print_help(parser, streams, argv[0], streams.err);

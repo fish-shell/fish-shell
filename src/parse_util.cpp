@@ -1171,21 +1171,16 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                 break;
                             }
 
-                            switch (parse_node_tree_t::statement_boolean_type(*spec_statement)) {
-                                case parse_bool_and: {  // this is not allowed
+                            parse_bool_statement_type_t bool_type =
+                                parse_node_tree_t::statement_boolean_type(*spec_statement);
+                            if (bool_type == parse_bool_and) {  // this is not allowed
                                     errored = append_syntax_error(
                                         &parse_errors, spec_statement->source_start,
                                         BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
-                                    break;
-                                                    }
-                                case parse_bool_or: {  // this is not allowed
+                            } else if (bool_type == parse_bool_or) {  // this is not allowed
                                     errored = append_syntax_error(
                                         &parse_errors, spec_statement->source_start,
                                         BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
-                                    break;
-                                                    }
-                                // All others are OK.
-                                default: { break; }
                             }
                             break;
                         }

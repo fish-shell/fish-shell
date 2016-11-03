@@ -900,13 +900,11 @@ void job_continue(job_t *j, bool cont) {
                         process_mark_finished_children(false);
                         break;
                     }
-
                     case 0: {
                         // No FDs are ready. Look for finished processes.
                         process_mark_finished_children(false);
                         break;
                     }
-
                     case -1: {
                         // If there is no funky IO magic, we can use waitpid instead of handling
                         // child deaths through signals. This gives a rather large speed boost (A
@@ -915,6 +913,10 @@ void job_continue(job_t *j, bool cont) {
                         //
                         // This will return early if we get a signal, like SIGHUP.
                         process_mark_finished_children(true);
+                        break;
+                    }
+                    default: {
+                        DIE("unexpected return value from select_try()");
                         break;
                     }
                 }

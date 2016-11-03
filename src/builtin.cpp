@@ -2857,9 +2857,6 @@ static const wcstring hist_cmd_to_string(hist_cmd_t hist_cmd) {
             return L"merge";
         case HIST_SAVE:
             return L"save";
-        default:
-            DIE("unhandled hist_cmd_t constant");
-            break;
     }
 }
 

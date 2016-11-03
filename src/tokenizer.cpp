@@ -266,6 +266,9 @@ void tokenizer_t::read_string() {
                             do_loop = 0;
                             break;
                         }
+                        default: {
+                            break;  // ignore other chars
+                        }
                     }
                     break;
                 }
@@ -285,6 +288,9 @@ void tokenizer_t::read_string() {
                         case L'\0': {
                             do_loop = 0;
                             break;
+                        }
+                        default: {
+                            break;  // ignore other chars
                         }
                     }
                     break;
@@ -707,10 +713,7 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
                 break;
             }
             case s_end:
-            default: {
-                // We won't get here, but keep the compiler happy.
-                break;
-            }
+            default: { break; }
         }
     }
     return consumed;
@@ -760,10 +763,6 @@ bool move_word_state_machine_t::consume_char(wchar_t c) {
         }
         case move_word_style_whitespace: {
             return consume_char_whitespace(c);
-        }
-        default: {
-            DIE("unhandled style");
-            break;
         }
     }
 }

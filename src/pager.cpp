@@ -613,10 +613,6 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 // These do nothing.
                 return false;
             }
-            default: {
-                DIE("unhandled selection_direction_t constant");
-                break;
-            }
         }
     }
 

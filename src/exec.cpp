@@ -282,10 +282,6 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
                 out.reset(new io_fd_t(in->fd, fd, false));
                 break;
             }
-            default: {
-                DIE("unhandled io_mode constant");
-                break;
-            }
         }
 
         if (out.get() != NULL) result_chain.push_back(out);

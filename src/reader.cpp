@@ -882,9 +882,8 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field) {
         case R_REPAINT:
         case R_SUPPRESS_AUTOSUGGESTION:
         case R_BEGINNING_OF_HISTORY:
-        case R_END_OF_HISTORY:
-        default: {
-            // These commands never do.
+        case R_END_OF_HISTORY: {
+            // These commands never end paging.
             return false;
         }
         case R_EXECUTE: {
@@ -923,6 +922,7 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field) {
             // These commands operate on the search field if that's where the focus is.
             return !focused_on_search_field;
         }
+        default: { return false; }
     }
 }
 

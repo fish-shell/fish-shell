@@ -579,6 +579,9 @@ static void color_argument_internal(const wcstring &buffstr,
                             mode = e_double_quoted;
                             break;
                         }
+                        default: {
+                            break;  // we ignore all other characters
+                        }
                     }
                 }
                 break;
@@ -631,6 +634,9 @@ static void color_argument_internal(const wcstring &buffstr,
                         // Subtract one to account for the upcoming increment in the loop.
                         in_pos -= 1;
                         break;
+                    }
+                    default: {
+                        break;  // we ignore all other characters
                     }
                 }
                 break;
@@ -1246,6 +1252,9 @@ static void highlight_universal_internal(const wcstring &buffstr,
                             }
                         }
                         break;
+                    }
+                    default: {
+                        break;  // we ignore all other characters
                     }
                 }
                 if ((*str == L'\0')) break;

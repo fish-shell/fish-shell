@@ -868,10 +868,6 @@ wcstring block_t::description() const {
             result.append(L"breakpoint");
             break;
         }
-        default: {
-            DIE("unhandled block_type_t constant");
-            break;
-        }
     }
 
     if (this->src_lineno >= 0) {

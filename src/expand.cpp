@@ -984,6 +984,9 @@ static expand_error_t expand_brackets(const wcstring &instr, expand_flags_t flag
                 if (bracket_count == 1) last_sep = pos;
                 break;
             }
+            default: {
+                break;  // we ignore all other characters here
+            }
         }
     }
 
@@ -1070,6 +1073,10 @@ static int expand_cmdsubst(const wcstring &input, std::vector<completion_t> *out
             return 1;
         }
         case 1: {
+            break;
+        }
+        default: {
+            DIE("unhandled parse_ret value");
             break;
         }
     }
@@ -1294,6 +1301,9 @@ static void remove_internal_separator(wcstring *str, bool conv) {
                 case ANY_STRING_RECURSIVE: {
                     str->at(idx) = L'*';
                     break;
+                }
+                default: {
+                    break;  // we ignore all other characters
                 }
             }
         }

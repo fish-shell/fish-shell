@@ -1146,31 +1146,35 @@ bool completer_t::try_complete_variable(const wcstring &str) {
         }
 
         switch (c) {
-            case L'\\':
+            case L'\\': {
                 in_pos++;
                 break;
-
-            case L'$':
+            }
+            case L'$': {
                 if (mode == e_unquoted || mode == e_double_quoted) {
                     variable_start = in_pos;
                 }
                 break;
-
-            case L'\'':
+            }
+            case L'\'': {
                 if (mode == e_single_quoted) {
                     mode = e_unquoted;
                 } else if (mode == e_unquoted) {
                     mode = e_single_quoted;
                 }
                 break;
-
-            case L'"':
+            }
+            case L'"': {
                 if (mode == e_double_quoted) {
                     mode = e_unquoted;
                 } else if (mode == e_unquoted) {
                     mode = e_double_quoted;
                 }
                 break;
+            }
+            default: {
+                break;  // all other chars ignored here
+            }
         }
     }
 

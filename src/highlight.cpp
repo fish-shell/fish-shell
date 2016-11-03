@@ -337,17 +337,10 @@ bool autosuggest_validate_from_history(const history_item_t &item,
             handled = true;
             bool is_help =
                 string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
-            if (is_help) {
-                suggestionOK = false;
-            } else {
+            if (!is_help) {
                 wcstring path;
                 bool can_cd = path_get_cdpath(dir, &path, working_directory.c_str(), vars);
-                if (!can_cd) {
-                    suggestionOK = false;
-                } else if (paths_are_same_file(working_directory, path)) {
-                    // Don't suggest the working directory as the path!
-                    suggestionOK = false;
-                } else {
+                if (can_cd && !paths_are_same_file(working_directory, path)) {
                     suggestionOK = true;
                 }
             }

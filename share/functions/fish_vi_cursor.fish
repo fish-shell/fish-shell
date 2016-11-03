@@ -16,7 +16,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     # We use the `tput` here just to see if terminfo thinks we can change the cursor.
     # We cannot use that sequence directly as it's not the correct one for konsole and iTerm,
     # and because we may want to change the cursor even though terminfo says we can't (tmux).
-    if not tput Ss > /dev/null
+    if not tput Ss > /dev/null ^/dev/null
         # Whitelist tmux...
         and not begin
             set -q TMUX

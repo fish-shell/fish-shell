@@ -318,26 +318,29 @@ static void handle_child_status(pid_t pid, int status) {
         }
     }
 
-    if (WIFSIGNALED(status) && (WTERMSIG(status) == SIGINT || WTERMSIG(status) == SIGQUIT)) {
-        if (!is_interactive_session) {
-            struct sigaction act;
-            sigemptyset(&act.sa_mask);
-            act.sa_flags = 0;
-            act.sa_handler = SIG_DFL;
-            sigaction(SIGINT, &act, 0);
-            sigaction(SIGQUIT, &act, 0);
-            kill(getpid(), WTERMSIG(status));
-        } else {
-            // In an interactive session, tell the principal parser to skip all blocks we're
-            // executing so control-C returns control to the user.
-            if (p && found_proc) {
-                parser_t::skip_all_blocks();
-            }
-        }
+    // If the child process was not killed by a signal or other than SIGINT or SIGQUIT we're done.
+    if (!WIFSIGNALED(status) || (WTERMSIG(status) != SIGINT && WTERMSIG(status) != SIGQUIT)) {
+        return;
+    }
+
+    if (is_interactive_session) {
+        // In an interactive session, tell the principal parser to skip all blocks we're executing
+        // so control-C returns control to the user.
+        if (p && found_proc) parser_t::skip_all_blocks();
+    } else {
+        // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
+        struct sigaction act;
+        sigemptyset(&act.sa_mask);
+        act.sa_flags = 0;
+        act.sa_handler = SIG_DFL;
+        sigaction(SIGINT, &act, 0);
+        sigaction(SIGQUIT, &act, 0);
+        kill(getpid(), WTERMSIG(status));
     }
 
 #if 0
-    // TODO: decide whether to eliminate this block or have it emit a warning message.
+    // TODO: Decide whether to eliminate this block or have it emit a warning message.
+    // WARNING: See the special short-circuit logic above vis-a-vis signals.
     if (!found_proc) {
         // A child we lost track of? There have been bugs in both subshell handling and in builtin
         // handling that have caused this previously...

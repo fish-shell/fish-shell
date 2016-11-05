@@ -1734,6 +1734,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1745,6 +1746,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1756,6 +1758,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Release_C++11";
@@ -1768,6 +1771,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = NO;
 				PRODUCT_NAME = fish_tests;
 			};
 			name = Debug;
@@ -1780,6 +1784,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_NAME = fish_tests;
 			};
 			name = Release;
@@ -1792,6 +1797,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_NAME = fish_tests;
 			};
 			name = "Release_C++11";
@@ -1876,6 +1882,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = osx/Info.plist;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ridiculousfish.fish-shell";
 				PRODUCT_NAME = fish;
 				WRAPPER_EXTENSION = app;
@@ -1889,6 +1896,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_NAME = fish;
 			};
 			name = "Release_C++11";
@@ -1901,6 +1909,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Release_C++11";
@@ -1951,6 +1960,7 @@
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
+				LLVM_LTO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2 $(SRCROOT)/osx/shared_headers/";
@@ -1976,6 +1986,7 @@
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2 $(SRCROOT)/osx/shared_headers/";
@@ -2001,6 +2012,7 @@
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2 $(SRCROOT)/osx/shared_headers/";
@@ -2157,6 +2169,7 @@
 				);
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = osx/Info.plist;
+				LLVM_LTO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ridiculousfish.fish-shell";
 				PRODUCT_NAME = fish;
 				WRAPPER_EXTENSION = app;
@@ -2174,6 +2187,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = osx/Info.plist;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ridiculousfish.fish-shell";
 				PRODUCT_NAME = fish;
 				WRAPPER_EXTENSION = app;
@@ -2192,6 +2206,7 @@
 					"$(inherited)",
 				);
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -2204,6 +2219,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -2215,6 +2231,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = NO;
 				PRODUCT_NAME = fish;
 			};
 			name = Debug;
@@ -2226,6 +2243,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				LLVM_LTO = YES_THIN;
 				PRODUCT_NAME = fish;
 			};
 			name = Release;

@@ -95,8 +95,6 @@ static bool should_test_function(const char *func_name) {
 #define ESCAPE_TEST_LENGTH 100
 /// The higest character number of character to try and escape.
 #define ESCAPE_TEST_CHAR 4000
-/// Number of laps to run performance testing loop.
-#define LAPS 50
 
 /// Number of encountered errors.
 static int err_count = 0;

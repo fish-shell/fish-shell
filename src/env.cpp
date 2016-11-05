@@ -479,7 +479,7 @@ static env_node_t *env_get_node(const wcstring &key) {
 ///
 /// \param key The key
 /// \param val The value
-/// \param mode The type of the variable. Can be any combination of ENV_GLOBAL, ENV_LOCAL,
+/// \param var_mode The type of the variable. Can be any combination of ENV_GLOBAL, ENV_LOCAL,
 /// ENV_EXPORT and ENV_USER. If mode is zero, the current variable space is searched and the current
 /// mode is used. If no current variable with the same name is found, ENV_LOCAL is assumed.
 ///

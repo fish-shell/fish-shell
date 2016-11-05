@@ -105,7 +105,7 @@ if set -q c_files[1]
         # output will expect those messages to be written to stdout.
         if test "$kernel_name" = "Darwin"
             if not test -f compile_commands.json
-                xcodebuild >xcodebuild.log
+                xcodebuild -alltargets >xcodebuild.log
                 oclint-xcodebuild xcodebuild.log >/dev/null
             end
             if test $all = yes

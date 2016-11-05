@@ -2158,103 +2158,217 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     return exit_res;
 }
 
+enum status_cmd_t {
+    STATUS_NOOP,
+    STATUS_IS_LOGIN,
+    STATUS_IS_INTERACTIVE,
+    STATUS_IS_BLOCK,
+    STATUS_IS_COMMAND_SUB,
+    STATUS_IS_FULL_JOB_CTRL,
+    STATUS_IS_INTERACTIVE_JOB_CTRL,
+    STATUS_IS_NO_JOB_CTRL,
+    STATUS_CURRENT_FILENAME,
+    STATUS_CURRENT_LINE_NUMBER,
+    STATUS_SET_JOB_CONTROL,
+    STATUS_PRINT_STACK_TRACE
+};
+
+static status_cmd_t status_string_to_cmd(const wchar_t *status_command) {
+    if (wcscmp(status_command, L"is-login") == 0) {
+        return STATUS_IS_LOGIN;
+    } else if (wcscmp(status_command, L"is-interactive") == 0) {
+        return STATUS_IS_INTERACTIVE;
+    } else if (wcscmp(status_command, L"is-block") == 0) {
+        return STATUS_IS_BLOCK;
+    } else if (wcscmp(status_command, L"is-command-sub") == 0) {
+        return STATUS_IS_COMMAND_SUB;
+    } else if (wcscmp(status_command, L"is-full-job-control") == 0) {
+        return STATUS_IS_FULL_JOB_CTRL;
+    } else if (wcscmp(status_command, L"is-interactive-job-control") == 0) {
+        return STATUS_IS_INTERACTIVE_JOB_CTRL;
+    } else if (wcscmp(status_command, L"is-no-job-control") == 0) {
+        return STATUS_IS_NO_JOB_CTRL;
+    } else if (wcscmp(status_command, L"current-filename") == 0) {
+        return STATUS_CURRENT_FILENAME;
+    } else if (wcscmp(status_command, L"current-line-number") == 0) {
+        return STATUS_CURRENT_LINE_NUMBER;
+    } else if (wcscmp(status_command, L"job-control") == 0) {
+        return STATUS_SET_JOB_CONTROL;
+    } else if (wcscmp(status_command, L"print-stack-trace") == 0) {
+        return STATUS_PRINT_STACK_TRACE;
+    }
+    return STATUS_NOOP;
+}
+
+static const wcstring status_cmd_to_string(status_cmd_t status_cmd) {
+    switch (status_cmd) {
+        case STATUS_NOOP:
+            return L"no-op";
+        case STATUS_IS_LOGIN:
+            return L"is-login";
+        case STATUS_IS_INTERACTIVE:
+            return L"is-interactive";
+        case STATUS_IS_BLOCK:
+            return L"is-block";
+        case STATUS_IS_COMMAND_SUB:
+            return L"is-command-sub";
+        case STATUS_IS_FULL_JOB_CTRL:
+            return L"is-full-job-control";
+        case STATUS_IS_INTERACTIVE_JOB_CTRL:
+            return L"is-interactive-job-control";
+        case STATUS_IS_NO_JOB_CTRL:
+            return L"is-no-job-control";
+        case STATUS_CURRENT_FILENAME:
+            return L"current-filename";
+        case STATUS_CURRENT_LINE_NUMBER:
+            return L"current-line-number";
+        case STATUS_SET_JOB_CONTROL:
+            return L"job-control";
+        case STATUS_PRINT_STACK_TRACE:
+            return L"print-stack-trace";
+    }
+}
+
+/// Remember the status subcommand and disallow selecting more than one status subcommand.
+static bool set_status_cmd(wchar_t *const cmd, status_cmd_t *status_cmd, status_cmd_t sub_cmd,
+                           io_streams_t &streams) {
+    if (*status_cmd != STATUS_NOOP) {
+        wchar_t err_text[1024];
+        swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
+                 _(L"you cannot do both '%ls' and '%ls' in the same invocation"),
+                 status_cmd_to_string(*status_cmd).c_str(), status_cmd_to_string(sub_cmd).c_str());
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, err_text);
+        return false;
+    }
+
+    *status_cmd = sub_cmd;
+    return true;
+}
+
+#define CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)                                         \
+    if (args.size() != 0) {                                                                  \
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd,                               \
+                                  status_cmd_to_string(status_cmd).c_str(), 0, args.size()); \
+        status = STATUS_BUILTIN_ERROR;                                                       \
+        break;                                                                               \
+    }
+
+int job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd, io_streams_t &streams) {
+    if (wcscmp(mode, L"full") == 0) {
+        return JOB_CONTROL_ALL;
+    } else if (wcscmp(mode, L"interactive") == 0) {
+        return JOB_CONTROL_INTERACTIVE;
+    } else if (wcscmp(mode, L"none") == 0) {
+        return JOB_CONTROL_NONE;
+    }
+    streams.err.append_format(L"%ls: Invalid job control mode '%ls'\n", cmd, mode);
+    return -1;
+}
+
 /// The status builtin. Gives various status information on fish.
 static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wgetopter_t w;
-    enum {
-        NORMAL,
-        IS_SUBST,
-        IS_BLOCK,
-        IS_INTERACTIVE,
-        IS_LOGIN,
-        IS_FULL_JOB_CONTROL,
-        IS_INTERACTIVE_JOB_CONTROL,
-        IS_NO_JOB_CONTROL,
-        STACK_TRACE,
-        DONE,
-        CURRENT_FILENAME,
-        CURRENT_LINE_NUMBER
-    };
-
-    int mode = NORMAL;
+    wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    int res = STATUS_BUILTIN_OK;
+    status_cmd_t status_cmd = STATUS_NOOP;
+    int status = STATUS_BUILTIN_OK;
+    int new_job_control_mode = -1;
 
-    const struct woption long_options[] = {
-        {L"help", no_argument, 0, 'h'},
-        {L"is-command-substitution", no_argument, 0, 'c'},
-        {L"is-block", no_argument, 0, 'b'},
-        {L"is-interactive", no_argument, 0, 'i'},
-        {L"is-login", no_argument, 0, 'l'},
-        {L"is-full-job-control", no_argument, &mode, IS_FULL_JOB_CONTROL},
-        {L"is-interactive-job-control", no_argument, &mode, IS_INTERACTIVE_JOB_CONTROL},
-        {L"is-no-job-control", no_argument, &mode, IS_NO_JOB_CONTROL},
-        {L"current-filename", no_argument, 0, 'f'},
-        {L"current-line-number", no_argument, 0, 'n'},
-        {L"job-control", required_argument, 0, 'j'},
-        {L"print-stack-trace", no_argument, 0, 't'},
-        {0, 0, 0, 0}};
+    /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
+    /// the non-flag subcommand form. While these flags are deprecated they must be supported at
+    /// least until fish 3.0 and possibly longer to avoid breaking everyones config.fish and other
+    /// scripts.
+    const wchar_t *short_options = L":cbilfnhj:t";
+    const struct woption long_options[] = {{L"help", no_argument, 0, 'h'},
+                                           {L"is-command-substitution", no_argument, 0, 'c'},
+                                           {L"is-block", no_argument, 0, 'b'},
+                                           {L"is-interactive", no_argument, 0, 'i'},
+                                           {L"is-login", no_argument, 0, 'l'},
+                                           {L"is-full-job-control", no_argument, 0, 1},
+                                           {L"is-interactive-job-control", no_argument, 0, 2},
+                                           {L"is-no-job-control", no_argument, 0, 3},
+                                           {L"current-filename", no_argument, 0, 'f'},
+                                           {L"current-line-number", no_argument, 0, 'n'},
+                                           {L"job-control", required_argument, 0, 'j'},
+                                           {L"print-stack-trace", no_argument, 0, 't'},
+                                           {0, 0, 0, 0}};
 
-    while (1) {
-        int opt_index = 0;
-
-        int opt = w.wgetopt_long(argc, argv, L":cbilfnhj:t", long_options, &opt_index);
-        if (opt == -1) break;
-
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_BUILTIN_ERROR;
+            case 1: {
+                if (!set_status_cmd(cmd, &status_cmd, STATUS_IS_FULL_JOB_CTRL, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
+            case 2: {
+                if (!set_status_cmd(cmd, &status_cmd, STATUS_IS_INTERACTIVE_JOB_CTRL, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
+            case 3: {
+                if (!set_status_cmd(cmd, &status_cmd, STATUS_IS_NO_JOB_CTRL, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
             }
             case 'c': {
-                mode = IS_SUBST;
+                if (!set_status_cmd(cmd, &status_cmd, STATUS_IS_COMMAND_SUB, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
                 break;
             }
             case 'b': {
-                mode = IS_BLOCK;
+                if (!set_status_cmd(cmd, &status_cmd, STATUS_IS_BLOCK, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
                 break;
             }
             case 'i': {
-                mode = IS_INTERACTIVE;
+                if (!set_status_cmd(cmd, &status_cmd, STATUS_IS_INTERACTIVE, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
                 break;
             }
             case 'l': {
-                mode = IS_LOGIN;
+                if (!set_status_cmd(cmd, &status_cmd, STATUS_IS_LOGIN, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
                 break;
             }
             case 'f': {
-                mode = CURRENT_FILENAME;
+                if (!set_status_cmd(cmd, &status_cmd, STATUS_CURRENT_FILENAME, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
                 break;
             }
             case 'n': {
-                mode = CURRENT_LINE_NUMBER;
+                if (!set_status_cmd(cmd, &status_cmd, STATUS_CURRENT_LINE_NUMBER, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
+            case 'j': {
+                if (!set_status_cmd(cmd, &status_cmd, STATUS_SET_JOB_CONTROL, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                new_job_control_mode = job_control_str_to_mode(w.woptarg, cmd, streams);
+                if (new_job_control_mode == -1) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+                break;
+            }
+            case 't': {
+                if (!set_status_cmd(cmd, &status_cmd, STATUS_PRINT_STACK_TRACE, streams)) {
+                    return STATUS_BUILTIN_ERROR;
+                }
                 break;
             }
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_BUILTIN_OK;
-            }
-            case 'j': {
-                if (wcscmp(w.woptarg, L"full") == 0)
-                    job_control_mode = JOB_CONTROL_ALL;
-                else if (wcscmp(w.woptarg, L"interactive") == 0)
-                    job_control_mode = JOB_CONTROL_INTERACTIVE;
-                else if (wcscmp(w.woptarg, L"none") == 0)
-                    job_control_mode = JOB_CONTROL_NONE;
-                else {
-                    streams.err.append_format(L"%ls: Invalid job control mode '%ls'\n", L"status",
-                                              w.woptarg);
-                    res = STATUS_BUILTIN_ERROR;
-                }
-                mode = DONE;
-                break;
-            }
-            case 't': {
-                mode = STACK_TRACE;
-                break;
             }
             case ':': {
                 builtin_missing_argument(parser, streams, argv[0], argv[w.woptind - 1]);
@@ -2265,57 +2379,30 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
                 return STATUS_BUILTIN_ERROR;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
     }
 
-    if (res == STATUS_BUILTIN_ERROR) {
-        return res;
+    // If a status command hasn't already been specified via a flag check the first word.
+    // Note that this can be simplified after we eliminate allowing subcommands as flags.
+    if (w.woptind < argc) {
+        status_cmd_t subcmd = status_string_to_cmd(argv[w.woptind]);
+        if (subcmd != STATUS_NOOP) {
+            if (!set_status_cmd(cmd, &status_cmd, subcmd, streams)) {
+                return STATUS_BUILTIN_ERROR;
+            }
+            w.woptind++;
+        }
     }
 
-    switch (mode) {
-        case DONE: {
-            return STATUS_BUILTIN_OK;
-        }
-        case CURRENT_FILENAME: {
-            const wchar_t *fn = parser.current_filename();
+    // Every argument that we haven't consumed already is an argument for a subcommand.
+    const wcstring_list_t args(argv + w.woptind, argv + argc);
 
-            if (!fn) fn = _(L"Standard input");
-            streams.out.append_format(L"%ls\n", fn);
-            return STATUS_BUILTIN_OK;
-        }
-        case CURRENT_LINE_NUMBER: {
-            streams.out.append_format(L"%d\n", parser.get_lineno());
-            return STATUS_BUILTIN_OK;
-        }
-        case IS_INTERACTIVE: {
-            return !is_interactive_session;
-        }
-        case IS_SUBST: {
-            return !is_subshell;
-        }
-        case IS_BLOCK: {
-            return !is_block;
-        }
-        case IS_LOGIN: {
-            return !is_login;
-        }
-        case IS_FULL_JOB_CONTROL: {
-            return job_control_mode != JOB_CONTROL_ALL;
-        }
-        case IS_INTERACTIVE_JOB_CONTROL: {
-            return job_control_mode != JOB_CONTROL_INTERACTIVE;
-        }
-        case IS_NO_JOB_CONTROL: {
-            return job_control_mode != JOB_CONTROL_NONE;
-        }
-        case STACK_TRACE: {
-            streams.out.append(parser.stack_trace());
-            return STATUS_BUILTIN_OK;
-        }
-        case NORMAL: {
+    switch (status_cmd) {
+        case STATUS_NOOP: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
             if (is_login) {
                 streams.out.append_format(_(L"This is a login shell\n"));
             } else {
@@ -2328,12 +2415,84 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
                     ? _(L"Only on interactive jobs")
                     : (job_control_mode == JOB_CONTROL_NONE ? _(L"Never") : _(L"Always")));
             streams.out.append(parser.stack_trace());
-            return STATUS_BUILTIN_OK;
+            break;
         }
-        default: { break; }
+        case STATUS_SET_JOB_CONTROL: {
+            if (new_job_control_mode != -1) {
+                // Flag form was used.
+                CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            } else {
+                if (args.size() != 1) {
+                    streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd,
+                                              status_cmd_to_string(status_cmd).c_str(), 1,
+                                              args.size());
+                    status = STATUS_BUILTIN_ERROR;
+                    break;
+                }
+                new_job_control_mode = job_control_str_to_mode(args[0].c_str(), cmd, streams);
+                if (new_job_control_mode == -1) {
+                    return STATUS_BUILTIN_ERROR;
+                }
+            }
+            job_control_mode = new_job_control_mode;
+            break;
+        }
+        case STATUS_CURRENT_FILENAME: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            const wchar_t *fn = parser.current_filename();
+
+            if (!fn) fn = _(L"Standard input");
+            streams.out.append_format(L"%ls\n", fn);
+            break;
+        }
+        case STATUS_CURRENT_LINE_NUMBER: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            streams.out.append_format(L"%d\n", parser.get_lineno());
+            break;
+        }
+        case STATUS_IS_INTERACTIVE: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            status = !is_interactive_session;
+            break;
+        }
+        case STATUS_IS_COMMAND_SUB: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            status = !is_subshell;
+            break;
+        }
+        case STATUS_IS_BLOCK: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            status = !is_block;
+            break;
+        }
+        case STATUS_IS_LOGIN: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            status = !is_login;
+            break;
+        }
+        case STATUS_IS_FULL_JOB_CTRL: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            status = job_control_mode != JOB_CONTROL_ALL;
+            break;
+        }
+        case STATUS_IS_INTERACTIVE_JOB_CTRL: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            status = job_control_mode != JOB_CONTROL_INTERACTIVE;
+            break;
+        }
+        case STATUS_IS_NO_JOB_CTRL: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            status = job_control_mode != JOB_CONTROL_NONE;
+            break;
+        }
+        case STATUS_PRINT_STACK_TRACE: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            streams.out.append(parser.stack_trace());
+            break;
+        }
     }
 
-    DIE("status subcommand not handled");
+    return status;
 }
 
 /// The exit builtin. Calls reader_exit to exit and returns the value specified.
@@ -2905,8 +3064,10 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     bool case_sensitive = false;
     bool null_terminate = false;
 
-    // TODO: Remove the long options that correspond to subcommands (e.g., '--delete') on or after
-    // 2017-10 (which will be a full year after these flags have been deprecated).
+    /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
+    /// the non-flag subcommand form. While many of these flags are deprecated they must be
+    /// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
+    /// config.fish and other scripts.
     const wchar_t *short_options = L":Cmn:epchtz";
     const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'},
                                            {L"contains", no_argument, NULL, 'c'},
@@ -3035,9 +3196,12 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // If a history command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     // See the TODO above regarding the `long_options` array.
-    if (hist_cmd == HIST_NOOP && w.woptind < argc) {
-        hist_cmd = hist_string_to_cmd(argv[w.woptind]);
-        if (hist_cmd != HIST_NOOP) {
+    if (w.woptind < argc) {
+        hist_cmd_t subcmd = hist_string_to_cmd(argv[w.woptind]);
+        if (subcmd != HIST_NOOP) {
+            if (!set_hist_cmd(cmd, &hist_cmd, subcmd, streams)) {
+                return STATUS_BUILTIN_ERROR;
+            }
             w.woptind++;
         }
     }

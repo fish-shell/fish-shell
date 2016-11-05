@@ -1,17 +1,41 @@
 # vim: set filetype=fish:
 
 status -b
-or echo 'top level'
+and echo '"status -b" unexpectedly returned true at top level'
 
 begin
     status -b
+    or echo '"status -b" unexpectedly returned false inside a begin block'
 end
-and echo 'block'
 
 # Issue #1728
 # Bad file redirection on a block causes `status --is-block` to return 0 forever.
 begin; end >/ # / is a directory, it can't be opened for writing
 status -b
-and echo 'unexpected block'
+and echo '"status -b" unexpectedly returned true after bad redirect on a begin block'
 
-true
+status -l
+and echo '"status -l" unexpectedly returned true for a non-login shell'
+
+status -i
+and echo '"status -i" unexpectedly returned true for a non-interactive shell'
+
+status is-login
+and echo '"status is-login" unexpectedly returned true for a non-login shell'
+
+status is-interactive
+and echo '"status is-interactive" unexpectedly returned true for a non-interactive shell'
+
+# We should get an error message about an invalid combination of flags.
+status --is-interactive --is-login
+
+# We should get an error message about an unexpected arg for `status
+# is-block`.
+status -b is-interactive
+
+# Try to set the job control to an invalid mode.
+status job-control full1
+status --job-control=1none
+
+# Now set it to a valid mode.
+status job-control none

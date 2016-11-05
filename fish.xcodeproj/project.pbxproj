@@ -56,6 +56,7 @@
 				D01A2C9B16964C8200767098 /* Copy Files */,
 			);
 			dependencies = (
+				9C7A55801DCD73930049C25D /* PBXTargetDependency */,
 				D0F01A1315AA36280034B3B1 /* PBXTargetDependency */,
 				D0F01A1715AA36300034B3B1 /* PBXTargetDependency */,
 				D0A564EF168D09C000AF6161 /* PBXTargetDependency */,
@@ -132,6 +133,7 @@
 		9C7A556D1DCD71330049C25D /* libpcre2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D04F7FD01BA4E29300B0F227 /* libpcre2.a */; };
 		9C7A557D1DCD71890049C25D /* fish_key_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C7A557C1DCD717C0049C25D /* fish_key_reader.cpp */; };
 		9C7A557E1DCD71CD0049C25D /* print_help.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855613B3ACEE0099B651 /* print_help.cpp */; };
+		9C7A55811DCD739C0049C25D /* fish_key_reader in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9C7A55721DCD71330049C25D /* fish_key_reader */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		D00769121990137800CA4627 /* autoload.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C6FCC914CFA4B0004CE8AD /* autoload.cpp */; };
 		D00769131990137800CA4627 /* builtin_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0F3373A1506DE3C00ECEFC0 /* builtin_test.cpp */; };
 		D00769141990137800CA4627 /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0B6B0FE14E88BA400AD6C10 /* color.cpp */; };
@@ -365,6 +367,13 @@
 			remoteGlobalIDString = D04F7FCF1BA4E29300B0F227;
 			remoteInfo = libpcre2.a;
 		};
+		9C7A557F1DCD73930049C25D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9C7A55301DCD71330049C25D;
+			remoteInfo = fish_key_reader;
+		};
 		D008D0CA1BC58FDD00841177 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
@@ -517,6 +526,7 @@
 			dstPath = base/bin;
 			dstSubfolderSpec = 1;
 			files = (
+				9C7A55811DCD739C0049C25D /* fish_key_reader in CopyFiles */,
 				D0F019F115A977140034B3B1 /* fish in CopyFiles */,
 				D0F019F315A977290034B3B1 /* fish_indent in CopyFiles */,
 			);
@@ -1648,6 +1658,11 @@
 			isa = PBXTargetDependency;
 			target = D04F7FCF1BA4E29300B0F227 /* pcre2 */;
 			targetProxy = 9C7A55341DCD71330049C25D /* PBXContainerItemProxy */;
+		};
+		9C7A55801DCD73930049C25D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9C7A55301DCD71330049C25D /* fish_key_reader */;
+			targetProxy = 9C7A557F1DCD73930049C25D /* PBXContainerItemProxy */;
 		};
 		D008D0CB1BC58FDD00841177 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

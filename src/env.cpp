@@ -581,11 +581,10 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
             node = top;
         } else if (preexisting_node != NULL) {
             node = preexisting_node;
-
             if ((var_mode & (ENV_EXPORT | ENV_UNEXPORT)) == 0) {
                 // use existing entry's exportv
-                var_mode =
-                    preexisting_entry_exportv ? ENV_EXPORT : 0;  //!OCLINT(parameter reassignment)
+                var_mode =  //!OCLINT(parameter reassignment)
+                    preexisting_entry_exportv ? ENV_EXPORT : 0;
             }
         } else {
             if (!get_proc_had_barrier()) {

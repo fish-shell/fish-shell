@@ -203,13 +203,10 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
 
     // Not enough room in dst, add NUL and traverse rest of src.
     if (n == 0) {
-        if (siz != 0) *d = '\0';
-        // NUL-terminate dst.
-        while (*s++)
-            ;
+        if (siz != 0) *d = '\0';  // NUL-terminate dst
+        while (*s++) ;  // ignore rest of src
     }
-    return s - src - 1;
-    // Count does not include NUL.
+    return s - src - 1;  // count does not include NUL
 }
 #endif
 

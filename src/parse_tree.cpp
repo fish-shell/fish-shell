@@ -1276,7 +1276,8 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
 #if 0
     //wcstring result = dump_tree(this->parser->nodes, str);
     //fprintf(stderr, "Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
-    fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", output->size(), sizeof(parse_node_t), output->size() * sizeof(parse_node_t));
+    fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", output->size(), sizeof(parse_node_t),
+            output->size() * sizeof(parse_node_t));
 #endif
 
     // Indicate if we had a fatal error.

@@ -52,11 +52,15 @@ static const wchar_t *const highlight_var[] = {
 
 };
 
-/// Determine if the filesystem containing the given fd is case insensitive.
+/// Determine if the filesystem containing the given fd is case insensitive for lookups regardless
+/// of whether it preserves the case when saving a pathname.
+///
+/// Returns:
+///     false: the filesystem is not case insensitive
+///     true: the file system is case insensitive
 typedef std::map<wcstring, bool> case_sensitivity_cache_t;
 bool fs_is_case_insensitive(const wcstring &path, int fd,
                             case_sensitivity_cache_t &case_sensitivity_cache) {
-    // If _PC_CASE_SENSITIVE is not defined, assume case sensitive.
     bool result = false;
 #ifdef _PC_CASE_SENSITIVE
     // Try the cache first.
@@ -71,6 +75,11 @@ bool fs_is_case_insensitive(const wcstring &path, int fd,
         result = (ret == 0);
         case_sensitivity_cache[path] = result;
     }
+#else
+    // Silence lint tools about the unused parameters.
+    UNUSED(path);
+    UNUSED(fd);
+    UNUSED(case_sensitivity_cache);
 #endif
     return result;
 }

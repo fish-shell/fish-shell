@@ -154,19 +154,22 @@ static int chdir_set_pwd(const char *path) {
     return ret;
 }
 
+// The odd formulation of these macros is to avoid "multiple unary operator" warnings from oclint
+// were we to use the more natural "if (!(e)) err(..." form. We have to do this because the rules
+// for the C preprocessor make it practically impossible to embed a comment in the body of a macro.
 #define do_test(e)                                                   \
     do {                                                             \
-        if (!(e)) err(L"Test failed on line %lu: %s", __LINE__, #e); \
+        if (e) { ; } else { err(L"Test failed on line %lu: %s", __LINE__, #e); } \
     } while (0)
 
-#define do_test_from(e, from_line)                                                         \
+#define do_test_from(e, from)                                                         \
     do {                                                                                   \
-        if (!(e)) err(L"Test failed on line %lu (from %lu): %s", __LINE__, from_line, #e); \
+        if (e) { ; } else { err(L"Test failed on line %lu (from %lu): %s", __LINE__, from, #e); } \
     } while (0)
 
 #define do_test1(e, msg)                                                 \
     do {                                                                 \
-        if (!(e)) err(L"Test failed on line %lu: %ls", __LINE__, (msg)); \
+        if (e) { ; } else { err(L"Test failed on line %lu: %ls", __LINE__, (msg)); } \
     } while (0)
 
 /// Test sane escapes.
@@ -199,7 +202,7 @@ static void test_unescape_sane() {
         err(L"Should not have been able to unescape \\U110000\n");
     }
     if (is_wchar_ucs2()) {
-        // TODO: Make this work on MS Windows.
+        ; // TODO: Make this work on MS Windows.
     } else {
         if (!unescape_string(L"echo \\U10FFFF", &output, UNESCAPE_DEFAULT)) {
             err(L"Should have been able to unescape \\U10FFFF\n");
@@ -484,7 +487,7 @@ static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
         return PARSER_TEST_ERROR;
     }
 
-    assert(!tree.empty());
+    assert(!tree.empty());  //!OCLINT(multiple unary operator)
     const parse_node_t *first_arg = tree.next_node_in_node_list(tree.at(0), symbol_argument, NULL);
     assert(first_arg != NULL);
     return parse_util_detect_errors_in_argument(*first_arg, first_arg->get_source(src));
@@ -493,7 +496,6 @@ static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
 /// Test the parser.
 static void test_parser() {
     say(L"Testing parser");
-    parser_t parser;
 
     say(L"Testing block nesting");
     if (!parse_util_detect_errors(L"if; end")) {
@@ -627,7 +629,8 @@ static void test_parser() {
 #if 0
     // This is disabled since it produces a long backtrace. We should find a way to either visually
     // compress the backtrace, or disable error spewing.
-    parser_t::principal_parser().eval(L"function recursive1 ; recursive2 ; end ; function recursive2 ; recursive1 ; end ; recursive1; ", io_chain_t(), TOP);
+    parser_t::principal_parser().eval(L"function recursive1 ; recursive2 ; end ; "
+            L"function recursive2 ; recursive1 ; end ; recursive1; ", io_chain_t(), TOP);
 #endif
 
     say(L"Testing empty function name");
@@ -840,8 +843,8 @@ static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, si
         const unsigned char astral_mask = 0xF0;
         for (size_t i = 0; i < slen; i++) {
             if ((src[i] & astral_mask) == astral_mask) {
-                // Astral char. We expect this conversion to just fail.
-                res = 0;
+                // Astral char. We want this conversion to fail.
+                res = 0;  //!OCLINT(parameter reassignment)
                 break;
             }
         }
@@ -888,8 +891,8 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
         const uint32_t astral_mask = 0xFFFF0000U;
         for (size_t i = 0; i < slen; i++) {
             if ((src[i] & astral_mask) != 0) {
-                /* astral char */
-                res = 0;
+                // Astral char. We want this conversion to fail.
+                res = 0;  //!OCLINT(parameter reassignment)
                 break;
             }
         }
@@ -1137,7 +1140,8 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
     }
 
     if (!res) {
-        if ((arg = va_arg(va, wchar_t *)) != 0) {
+        arg = va_arg(va, wchar_t *);
+        if (arg) {
             wcstring msg = L"Expected [";
             bool first = true;
             for (wcstring_list_t::const_iterator it = expected.begin(), end = expected.end();
@@ -2207,7 +2211,6 @@ static void test_history_matches(history_search_t &search, size_t matches, unsig
     size_t i;
     for (i = 0; i < matches; i++) {
         do_test(search.go_backwards());
-        wcstring item = search.current_string();
     }
     // do_test_from(!search.go_backwards(), from_line);
     bool result = search.go_backwards();
@@ -2403,7 +2406,7 @@ static void trigger_or_wait_for_notification(universal_notifier_t *notifier,
                                              universal_notifier_t::notifier_strategy_t strategy) {
     switch (strategy) {
         case universal_notifier_t::strategy_default: {
-            assert(0 && "strategy_default should be passed");
+            DIE("strategy_default should be passed");
             break;
         }
         case universal_notifier_t::strategy_shmem_polling: {
@@ -3061,35 +3064,36 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     out_joined_args->clear();
     *out_deco = parse_statement_decoration_none;
 
-    bool result = false;
     parse_node_tree_t tree;
-    if (parse_tree_from_string(src, parse_flag_none, &tree, NULL)) {
-        // Get the statement. Should only have one.
-        const parse_node_tree_t::parse_node_list_t stmt_nodes =
-            tree.find_nodes(tree.at(0), symbol_plain_statement);
-        if (stmt_nodes.size() != 1) {
-            say(L"Unexpected number of statements (%lu) found in '%ls'", stmt_nodes.size(),
-                src.c_str());
-            return false;
-        }
-        const parse_node_t &stmt = *stmt_nodes.at(0);
-
-        // Return its decoration.
-        *out_deco = tree.decoration_for_plain_statement(stmt);
-
-        // Return its command.
-        tree.command_for_plain_statement(stmt, src, out_cmd);
-
-        // Return arguments separated by spaces.
-        const parse_node_tree_t::parse_node_list_t arg_nodes =
-            tree.find_nodes(stmt, symbol_argument);
-        for (size_t i = 0; i < arg_nodes.size(); i++) {
-            if (i > 0) out_joined_args->push_back(L' ');
-            out_joined_args->append(arg_nodes.at(i)->get_source(src));
-        }
-        result = true;
+    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL)) {
+        return false;
     }
-    return result;
+
+    // Get the statement. Should only have one.
+    const parse_node_tree_t::parse_node_list_t stmt_nodes =
+        tree.find_nodes(tree.at(0), symbol_plain_statement);
+    if (stmt_nodes.size() != 1) {
+        say(L"Unexpected number of statements (%lu) found in '%ls'", stmt_nodes.size(),
+            src.c_str());
+        return false;
+    }
+    const parse_node_t &stmt = *stmt_nodes.at(0);
+
+    // Return its decoration.
+    *out_deco = tree.decoration_for_plain_statement(stmt);
+
+    // Return its command.
+    tree.command_for_plain_statement(stmt, src, out_cmd);
+
+    // Return arguments separated by spaces.
+    const parse_node_tree_t::parse_node_list_t arg_nodes =
+        tree.find_nodes(stmt, symbol_argument);
+    for (size_t i = 0; i < arg_nodes.size(); i++) {
+        if (i > 0) out_joined_args->push_back(L' ');
+        out_joined_args->append(arg_nodes.at(i)->get_source(src));
+    }
+
+    return true;
 }
 
 // Test the LL2 (two token lookahead) nature of the parser by exercising the special builtin and
@@ -3253,29 +3257,31 @@ static wcstring_list_t separate_by_format_specifiers(const wchar_t *format) {
 
         // Walk over the format specifier (if any).
         cursor = next_specifier;
-        if (*cursor == '%') {
-            cursor++;
-            // Flag
-            if (wcschr(L"#0- +'", *cursor)) cursor++;
-            // Minimum field width
-            while (iswdigit(*cursor)) cursor++;
-            // Precision
-            if (*cursor == L'.') {
-                cursor++;
-                while (iswdigit(*cursor)) cursor++;
-            }
-            // Length modifier
-            if (!wcsncmp(cursor, L"ll", 2) || !wcsncmp(cursor, L"hh", 2)) {
-                cursor += 2;
-            } else if (wcschr(L"hljtzqL", *cursor)) {
-                cursor++;
-            }
-            // The format specifier itself. We allow any character except NUL.
-            if (*cursor != L'\0') {
-                cursor += 1;
-            }
-            assert(cursor <= end);
+        if (*cursor != '%') {
+            continue;
         }
+
+        cursor++;
+        // Flag
+        if (wcschr(L"#0- +'", *cursor)) cursor++;
+        // Minimum field width
+        while (iswdigit(*cursor)) cursor++;
+        // Precision
+        if (*cursor == L'.') {
+            cursor++;
+            while (iswdigit(*cursor)) cursor++;
+        }
+        // Length modifier
+        if (!wcsncmp(cursor, L"ll", 2) || !wcsncmp(cursor, L"hh", 2)) {
+            cursor += 2;
+        } else if (wcschr(L"hljtzqL", *cursor)) {
+            cursor++;
+        }
+        // The format specifier itself. We allow any character except NUL.
+        if (*cursor != L'\0') {
+            cursor += 1;
+        }
+        assert(cursor <= end);
     }
     return result;
 }

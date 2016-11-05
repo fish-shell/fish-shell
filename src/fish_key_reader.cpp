@@ -206,9 +206,8 @@ static void process_input(bool continuous_mode) {
             output_bind_command(bind_chars);
             if (first_char_seen && !continuous_mode) {
                 return;
-            } else {
-                continue;
             }
+            continue;
         }
 
         prev_tstamp = output_elapsed_time(prev_tstamp, first_char_seen);
@@ -307,11 +306,13 @@ int main(int argc, char **argv) {
                                        {"help", no_argument, NULL, 'h'},
                                        {NULL, 0, NULL, 0}};
     int opt;
-    while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
+    bool error = false;
+    while (!error && (opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
         switch (opt) {
             case 0: {
                 fprintf(stderr, "getopt_long() unexpectedly returned zero\n");
-                exit(1);
+                error = true;
+                break;
             }
             case 'c': {
                 continuous_mode = true;
@@ -320,6 +321,7 @@ int main(int argc, char **argv) {
             case 'h': {
                 print_help("fish_key_reader", 0);
                 exit(0);
+                break;
             }
             case 'd': {
                 char *end;
@@ -332,7 +334,7 @@ int main(int argc, char **argv) {
                     debug_level = (int)tmp;
                 } else {
                     fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
-                    exit(1);
+                    error = true;
                 }
                 break;
             }
@@ -347,16 +349,19 @@ int main(int argc, char **argv) {
                     debug_stack_frames = (int)tmp;
                 } else {
                     fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
-                    exit(1);
+                    error = true;
+                    break;
                 }
                 break;
             }
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.
-                exit(1);
+                error = true;
+                break;
             }
         }
     }
+    if (error) return 1;
 
     argc -= optind;
     if (argc != 0) {

@@ -282,7 +282,7 @@ std::string wcs2string(const wcstring &input) {
     result.reserve(input.size());
 
     mbstate_t state = {};
-    char converted[MB_LEN_MAX + 1];
+    char converted[MB_LEN_MAX];
 
     for (size_t i = 0; i < input.size(); i++) {
         wchar_t wc = input[i];
@@ -300,8 +300,8 @@ std::string wcs2string(const wcstring &input) {
         } else {
             memset(converted, 0, sizeof converted);
             size_t len = wcrtomb(converted, wc, &state);
-            if (len == (size_t)(-1)) {
-                debug(1, L"Wide character %d has no narrow representation", wc);
+            if (len == (size_t)-1) {
+                debug(1, L"Wide character U+%4X has no narrow representation", wc);
                 memset(&state, 0, sizeof(state));
             } else {
                 result.append(converted, len);
@@ -341,7 +341,7 @@ static char *wcs2str_internal(const wchar_t *in, char *out) {
         } else {
             size_t len = wcrtomb(&out[out_pos], in[in_pos], &state);
             if (len == (size_t)-1) {
-                debug(1, L"Wide character %d has no narrow representation", in[in_pos]);
+                debug(1, L"Wide character U+%4X has no narrow representation", in[in_pos]);
                 memset(&state, 0, sizeof(state));
             } else {
                 out_pos += len;
@@ -352,6 +352,14 @@ static char *wcs2str_internal(const wchar_t *in, char *out) {
     out[out_pos] = 0;
 
     return out;
+}
+
+/// Test if the character can be encoded using the current locale.
+static bool can_be_encoded(wchar_t wc) {
+    char converted[MB_LEN_MAX];
+    mbstate_t state = {};
+
+    return wcrtomb(converted, wc, &state) != (size_t)-1;
 }
 
 wcstring format_string(const wchar_t *format, ...) {
@@ -444,11 +452,11 @@ wchar_t *quote_end(const wchar_t *pos) {
 }
 
 void fish_setlocale() {
-    // Use ellipsis if on known unicode system, otherwise use $.
-    ellipsis_char = (fish_wcwidth(L'\x2026') > 0) ? L'\x2026' : L'$';
+    // Use the Unicode "ellipsis" symbol if it can be encoded using the current locale.
+    ellipsis_char = can_be_encoded(L'\x2026') ? L'\x2026' : L'$';
 
-    // U+23CE is the "return" character
-    omitted_newline_char = (fish_wcwidth(L'\x23CE') > 0) ? L'\x23CE' : L'~';
+    // Use the Unicode "return" symbol if it can be encoded using the current locale.
+    omitted_newline_char = can_be_encoded(L'\x23CE') ? L'\x23CE' : L'~';
 }
 
 bool contains_internal(const wchar_t *a, int vararg_handle, ...) {

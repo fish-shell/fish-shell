@@ -8,7 +8,11 @@
 # Chapters: 7 entires
 
 function __fish_mkvextract_find_matroska_in_args
-    for c in (commandline -opc)[2..-1]
+    set -l cmd (commandline -opc)
+    if test (count $cmd) -lt 3
+        return 1
+    end
+    for c in $cmd[3..-1]
         set -l skip_next 1
         test $skip_next -eq 0; and set skip_next 1; and continue
         switch $c
@@ -20,7 +24,7 @@ function __fish_mkvextract_find_matroska_in_args
             case "-h" "--help" "-V" "--version"
                 return 1
             case "*"
-                if test -e "$c"
+                if test -f "$c"
                     echo $c
                     return 0
                 end
@@ -31,16 +35,18 @@ function __fish_mkvextract_find_matroska_in_args
 end
 
 function __fish_mkvextract_print_attachments
-    set -l matroska (__fish_mkvextract_find_matroska_in_args)
-    if test -n '$matroska'
-        mkvmerge -i $matroska | string match 'Attachment ID*' | string replace -r '.*?(\d+).*? type \'(.*?)\'.*?file name \'(.*?)\'' '$1:\t$3 ($2)'
+    if set -l matroska (__fish_mkvextract_find_matroska_in_args)
+        if set -l info (mkvmerge -i $matroska)
+            string match 'Attachment ID*' $info | string replace -r '.*?(\d+).*? type \'(.*?)\'.*?file name \'(.*?)\'' '$1:\t$3 ($2)'
+        end
     end
 end
 
 function __fish_mkvextract_print_tracks
-    set -l matroska (__fish_mkvextract_find_matroska_in_args)
-    if test -n '$matroska'
-        mkvmerge -i $matroska | string match 'Track ID*' | string replace -r '.*?(\d+): (.*)' '$1:\t$2'
+    if set -l matroska (__fish_mkvextract_find_matroska_in_args)
+        if set -l info (mkvmerge -i $matroska)
+            string match 'Track ID*' $info | string replace -r '.*?(\d+): (.*)' '$1:\t$2'
+        end
     end
 end
 

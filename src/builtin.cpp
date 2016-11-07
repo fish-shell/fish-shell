@@ -2859,6 +2859,8 @@ static const wcstring hist_cmd_to_string(hist_cmd_t hist_cmd) {
         case HIST_SAVE:
             return L"save";
     }
+
+    DIE("should not reach this statement");  // silence some compiler errors about not returning
 }
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.

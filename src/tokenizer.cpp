@@ -765,6 +765,8 @@ bool move_word_state_machine_t::consume_char(wchar_t c) {
             return consume_char_whitespace(c);
         }
     }
+
+    DIE("should not reach this statement");  // silence some compiler errors about not returning
 }
 
 move_word_state_machine_t::move_word_state_machine_t(move_word_style_t syl)

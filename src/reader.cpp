@@ -668,20 +668,16 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
     if (term_str.missing()) return;
 
     const wchar_t *term = term_str.c_str();
-    bool recognized = false;
-    recognized = recognized || contains(term, L"xterm", L"screen", L"nxterm", L"rxvt");
+    bool recognized = contains(term, L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt");
     recognized = recognized || !wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
     recognized = recognized || !wcsncmp(term, L"screen-", wcslen(L"screen-"));
+    recognized = recognized || !wcsncmp(term, L"tmux-", wcslen(L"tmux-"));
 
     if (!recognized) {
         char *n = ttyname(STDIN_FILENO);
 
-        if (contains(term, L"linux")) {
-            return;
-        }
-
+        if (contains(term, L"linux")) return;
         if (contains(term, L"dumb")) return;
-
         if (strstr(n, "tty") || strstr(n, "/vc/")) return;
     }
 

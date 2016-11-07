@@ -165,7 +165,7 @@ for cmd in $blame $diff $log $merge
     _svn_cmpl_ $cmd -l extensions -s x -d 'Ignore changes in amount of whitespace' -xa '-b --ignore-space-change'
     _svn_cmpl_ $cmd -l extensions -s x -d 'Ignore all whitespace' -xa '-w --ignore-all-space'
     _svn_cmpl_ $cmd -l extensions -s x -d 'Ignore eol style' -xa '-w --ignore-eol-style'
-    _svn_cmpl_ $cmd -l extensions -s x -d 'Show C function name' -xa '-p --shoe-c-function'
+    _svn_cmpl_ $cmd -l extensions -s x -d 'Show C function name' -xa '-p --show-c-function'
 
     # Next completion doesn't work, since fish doesn't respect -x key
     #_svn_cmpl_ $cmd -l extensions -n '__fish_seen_subcommand_from --diff-cmd' -xa '(__fish_complete_svn_diff)'

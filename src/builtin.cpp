@@ -2387,9 +2387,12 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
 
     // If a status command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
-    if (status_cmd == STATUS_NOOP && w.woptind < argc) {
-        status_cmd = status_string_to_cmd(argv[w.woptind]);
-        if (status_cmd != STATUS_NOOP) {
+    if (w.woptind < argc) {
+        status_cmd_t subcmd = status_string_to_cmd(argv[w.woptind]);
+        if (subcmd != STATUS_NOOP) {
+            if (!set_status_cmd(cmd, &status_cmd, subcmd, streams)) {
+                return STATUS_BUILTIN_ERROR;
+            }
             w.woptind++;
         }
     }
@@ -3191,9 +3194,12 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // If a history command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     // See the TODO above regarding the `long_options` array.
-    if (hist_cmd == HIST_NOOP && w.woptind < argc) {
-        hist_cmd = hist_string_to_cmd(argv[w.woptind]);
-        if (hist_cmd != HIST_NOOP) {
+    if (w.woptind < argc) {
+        hist_cmd_t subcmd = hist_string_to_cmd(argv[w.woptind]);
+        if (subcmd != HIST_NOOP) {
+            if (!set_hist_cmd(cmd, &hist_cmd, subcmd, streams)) {
+                return STATUS_BUILTIN_ERROR;
+            }
             w.woptind++;
         }
     }

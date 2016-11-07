@@ -2,6 +2,7 @@
 open: Is a directory
 status: Invalid combination of options,
 you cannot do both 'is-interactive' and 'is-login' in the same invocation
-status: is-block expected 0 args, got 1
+status: Invalid combination of options,
+you cannot do both 'is-block' and 'is-interactive' in the same invocation
 status: Invalid job control mode 'full1'
 status: Invalid job control mode '1none'

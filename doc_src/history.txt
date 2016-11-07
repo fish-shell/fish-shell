@@ -14,8 +14,6 @@ history ( -h | --help )
 
 `history` is used to search, delete, and otherwise manipulate the history of interactive commands.
 
-Note that for backwards compatibility each subcommand can also be specified as a long option. For example, rather than `history search` you can type `history --search`. Those long options are deprecated and will be removed in a future release.
-
 The following operations (sub-commands) are available:
 
 - `search` returns history items matching the search string. If no search string is provided it returns all history items. This is the default operation if no other operation is specified. You only have to explicitly say `history search` if you wish to search for one of the subcommands. The `--contains` search option will be used if you don't specify a different search option. Entries are ordered newest to oldest. If stdout is attached to a tty the output will be piped through your pager by the history function. The history builtin simply writes the results to stdout.
@@ -60,9 +58,10 @@ history --search --contains "foo"
 history --delete --prefix "foo"
 # Interactively deletes commands which start with "foo" from the history.
 # You can select more than one entry by entering their IDs seperated by a space.
+\endfish
 
 \subsection history-notes Notes
 
 If you specify both `--prefix` and `--contains` the last flag seen is used.
 
-\endfish
+Note that for backwards compatibility each subcommand can also be specified as a long option. For example, rather than `history search` you can type `history --search`. Those long options are deprecated and will be removed in a future release.

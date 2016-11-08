@@ -778,7 +778,39 @@ long convert_digit(wchar_t d, int base);
         (void)(expr); \
     } while (0)
 
-#endif
-
 // Return true if the character is in a range reserved for fish's private use.
 bool fish_reserved_codepoint(wchar_t c);
+
+/// Used for constructing mappings between enums and strings.
+template <typename T>
+struct enum_map {
+    T val;
+    const wchar_t *const str;
+};
+
+/// Given a string return the matching enum. Return the sentinal enum if no match is made.
+template <typename T>
+static T str_to_enum(const wchar_t *subcmd_str, enum_map<T> map[]) {
+    enum_map<T> *entry = map;
+    while (entry->str) {
+        if (wcscmp(subcmd_str, entry->str) == 0) {
+            return entry->val;
+        }
+        entry++;
+    }
+    return entry->val;  // return val of sentinal entry in the array
+};
+
+/// Given an enum return the matching string.
+template <typename T>
+static const wchar_t *enum_to_str(T subcmd, enum_map<T> map[]) {
+    for (enum_map<T> *entry = map; entry->str; entry++) {
+        if (subcmd == entry->val) {
+            return entry->str;
+        }
+    }
+
+    DIE("should not reach this statement");  // silence some compiler errors about not returning
+};
+
+#endif

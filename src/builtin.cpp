@@ -2159,8 +2159,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 }
 
 enum status_cmd_t {
-    STATUS_NOOP,
-    STATUS_IS_LOGIN,
+    STATUS_IS_LOGIN = 1,
     STATUS_IS_INTERACTIVE,
     STATUS_IS_BLOCK,
     STATUS_IS_COMMAND_SUB,
@@ -2170,73 +2169,33 @@ enum status_cmd_t {
     STATUS_CURRENT_FILENAME,
     STATUS_CURRENT_LINE_NUMBER,
     STATUS_SET_JOB_CONTROL,
-    STATUS_PRINT_STACK_TRACE
+    STATUS_PRINT_STACK_TRACE,
+    STATUS_UNDEF
 };
-
-static status_cmd_t status_string_to_cmd(const wchar_t *status_command) {
-    if (wcscmp(status_command, L"is-login") == 0) {
-        return STATUS_IS_LOGIN;
-    } else if (wcscmp(status_command, L"is-interactive") == 0) {
-        return STATUS_IS_INTERACTIVE;
-    } else if (wcscmp(status_command, L"is-block") == 0) {
-        return STATUS_IS_BLOCK;
-    } else if (wcscmp(status_command, L"is-command-sub") == 0) {
-        return STATUS_IS_COMMAND_SUB;
-    } else if (wcscmp(status_command, L"is-full-job-control") == 0) {
-        return STATUS_IS_FULL_JOB_CTRL;
-    } else if (wcscmp(status_command, L"is-interactive-job-control") == 0) {
-        return STATUS_IS_INTERACTIVE_JOB_CTRL;
-    } else if (wcscmp(status_command, L"is-no-job-control") == 0) {
-        return STATUS_IS_NO_JOB_CTRL;
-    } else if (wcscmp(status_command, L"current-filename") == 0) {
-        return STATUS_CURRENT_FILENAME;
-    } else if (wcscmp(status_command, L"current-line-number") == 0) {
-        return STATUS_CURRENT_LINE_NUMBER;
-    } else if (wcscmp(status_command, L"job-control") == 0) {
-        return STATUS_SET_JOB_CONTROL;
-    } else if (wcscmp(status_command, L"print-stack-trace") == 0) {
-        return STATUS_PRINT_STACK_TRACE;
-    }
-    return STATUS_NOOP;
-}
-
-static const wcstring status_cmd_to_string(status_cmd_t status_cmd) {
-    switch (status_cmd) {
-        case STATUS_NOOP:
-            return L"no-op";
-        case STATUS_IS_LOGIN:
-            return L"is-login";
-        case STATUS_IS_INTERACTIVE:
-            return L"is-interactive";
-        case STATUS_IS_BLOCK:
-            return L"is-block";
-        case STATUS_IS_COMMAND_SUB:
-            return L"is-command-sub";
-        case STATUS_IS_FULL_JOB_CTRL:
-            return L"is-full-job-control";
-        case STATUS_IS_INTERACTIVE_JOB_CTRL:
-            return L"is-interactive-job-control";
-        case STATUS_IS_NO_JOB_CTRL:
-            return L"is-no-job-control";
-        case STATUS_CURRENT_FILENAME:
-            return L"current-filename";
-        case STATUS_CURRENT_LINE_NUMBER:
-            return L"current-line-number";
-        case STATUS_SET_JOB_CONTROL:
-            return L"job-control";
-        case STATUS_PRINT_STACK_TRACE:
-            return L"print-stack-trace";
-    }
-}
+const enum_map<status_cmd_t> status_enum_map[] = {
+    {STATUS_IS_LOGIN, L"is-login"},
+    {STATUS_IS_INTERACTIVE, L"is-interactive"},
+    {STATUS_IS_BLOCK, L"is-block"},
+    {STATUS_IS_COMMAND_SUB, L"is-command-sub"},
+    {STATUS_IS_FULL_JOB_CTRL, L"is-full-job-control"},
+    {STATUS_IS_INTERACTIVE_JOB_CTRL, L"is-interactive-job-control"},
+    {STATUS_IS_NO_JOB_CTRL, L"is-no-job-control"},
+    {STATUS_CURRENT_FILENAME, L"current-filename"},
+    {STATUS_CURRENT_LINE_NUMBER, L"current-line-number"},
+    {STATUS_SET_JOB_CONTROL, L"job-control"},
+    {STATUS_PRINT_STACK_TRACE, L"print-stack-trace"},
+    {STATUS_UNDEF, NULL}};
 
 /// Remember the status subcommand and disallow selecting more than one status subcommand.
 static bool set_status_cmd(wchar_t *const cmd, status_cmd_t *status_cmd, status_cmd_t sub_cmd,
                            io_streams_t &streams) {
-    if (*status_cmd != STATUS_NOOP) {
+    if (*status_cmd != STATUS_UNDEF) {
         wchar_t err_text[1024];
+        const wchar_t *subcmd_str1 = enum_to_str(*status_cmd, status_enum_map);
+        const wchar_t *subcmd_str2 = enum_to_str(sub_cmd, status_enum_map);
         swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
-                 _(L"you cannot do both '%ls' and '%ls' in the same invocation"),
-                 status_cmd_to_string(*status_cmd).c_str(), status_cmd_to_string(sub_cmd).c_str());
+                 _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
+                 subcmd_str2);
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, err_text);
         return false;
     }
@@ -2245,12 +2204,13 @@ static bool set_status_cmd(wchar_t *const cmd, status_cmd_t *status_cmd, status_
     return true;
 }
 
-#define CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)                                         \
-    if (args.size() != 0) {                                                                  \
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd,                               \
-                                  status_cmd_to_string(status_cmd).c_str(), 0, args.size()); \
-        status = STATUS_BUILTIN_ERROR;                                                       \
-        break;                                                                               \
+#define CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)                                        \
+    if (args.size() != 0) {                                                                 \
+        const wchar_t *subcmd_str = enum_to_str(status_cmd, status_enum_map);               \
+        if (!subcmd_str) subcmd_str = L"default";                                           \
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 0, args.size()); \
+        status = STATUS_BUILTIN_ERROR;                                                      \
+        break;                                                                              \
     }
 
 int job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd, io_streams_t &streams) {
@@ -2269,7 +2229,7 @@ int job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd, io_streams_t &str
 static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    status_cmd_t status_cmd = STATUS_NOOP;
+    status_cmd_t status_cmd = STATUS_UNDEF;
     int status = STATUS_BUILTIN_OK;
     int new_job_control_mode = -1;
 
@@ -2388,8 +2348,8 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
     // If a status command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     if (w.woptind < argc) {
-        status_cmd_t subcmd = status_string_to_cmd(argv[w.woptind]);
-        if (subcmd != STATUS_NOOP) {
+        status_cmd_t subcmd = str_to_enum(argv[w.woptind], status_enum_map);
+        if (subcmd != STATUS_UNDEF) {
             if (!set_status_cmd(cmd, &status_cmd, subcmd, streams)) {
                 return STATUS_BUILTIN_ERROR;
             }
@@ -2401,7 +2361,7 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
     const wcstring_list_t args(argv + w.woptind, argv + argc);
 
     switch (status_cmd) {
-        case STATUS_NOOP: {
+        case STATUS_UNDEF: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
             if (is_login) {
                 streams.out.append_format(_(L"This is a login shell\n"));
@@ -2423,8 +2383,8 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
                 CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
             } else {
                 if (args.size() != 1) {
-                    streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd,
-                                              status_cmd_to_string(status_cmd).c_str(), 1,
+                    const wchar_t *subcmd_str = enum_to_str(status_cmd, status_enum_map);
+                    streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 1,
                                               args.size());
                     status = STATUS_BUILTIN_ERROR;
                     break;
@@ -2986,50 +2946,21 @@ static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **arg
     return status;
 }
 
-enum hist_cmd_t { HIST_NOOP, HIST_SEARCH, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAVE };
-
-static hist_cmd_t hist_string_to_cmd(const wchar_t *hist_command) {
-    if (wcscmp(hist_command, L"search") == 0) {
-        return HIST_SEARCH;
-    } else if (wcscmp(hist_command, L"delete") == 0) {
-        return HIST_DELETE;
-    } else if (wcscmp(hist_command, L"merge") == 0) {
-        return HIST_MERGE;
-    } else if (wcscmp(hist_command, L"save") == 0) {
-        return HIST_SAVE;
-    } else if (wcscmp(hist_command, L"clear") == 0) {
-        return HIST_CLEAR;
-    }
-    return HIST_NOOP;
-}
-
-static const wcstring hist_cmd_to_string(hist_cmd_t hist_cmd) {
-    switch (hist_cmd) {
-        case HIST_NOOP:
-            return L"no-op";
-        case HIST_SEARCH:
-            return L"search";
-        case HIST_DELETE:
-            return L"delete";
-        case HIST_CLEAR:
-            return L"clear";
-        case HIST_MERGE:
-            return L"merge";
-        case HIST_SAVE:
-            return L"save";
-    }
-
-    DIE("should not reach this statement");  // silence some compiler errors about not returning
-}
+enum hist_cmd_t { HIST_SEARCH = 1, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAVE, HIST_UNDEF };
+const enum_map<hist_cmd_t> hist_enum_map[] = {{HIST_SEARCH, L"search"}, {HIST_DELETE, L"delete"},
+                                              {HIST_CLEAR, L"clear"},   {HIST_MERGE, L"merge"},
+                                              {HIST_SAVE, L"save"},     {HIST_UNDEF, NULL}};
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.
 static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t sub_cmd,
                          io_streams_t &streams) {
-    if (*hist_cmd != HIST_NOOP) {
+    if (*hist_cmd != HIST_UNDEF) {
         wchar_t err_text[1024];
+        const wchar_t *subcmd_str1 = enum_to_str(*hist_cmd, hist_enum_map);
+        const wchar_t *subcmd_str2 = enum_to_str(sub_cmd, hist_enum_map);
         swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
-                 _(L"you cannot do both '%ls' and '%ls' in the same invocation"),
-                 hist_cmd_to_string(*hist_cmd).c_str(), hist_cmd_to_string(sub_cmd).c_str());
+                 _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
+                 subcmd_str2);
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, err_text);
         return false;
     }
@@ -3040,14 +2971,15 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
 
 #define CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)                                                \
     if (history_search_type_defined || show_time_format || null_terminate) {                    \
+        const wchar_t *subcmd_str = enum_to_str(hist_cmd, hist_enum_map);                       \
         streams.err.append_format(_(L"%ls: you cannot use any options with the %ls command\n"), \
-                                  cmd, hist_cmd_to_string(hist_cmd).c_str());                   \
+                                  cmd, subcmd_str);                                             \
         status = STATUS_BUILTIN_ERROR;                                                          \
         break;                                                                                  \
     }                                                                                           \
     if (args.size() != 0) {                                                                     \
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd,                                  \
-                                  hist_cmd_to_string(hist_cmd).c_str(), 0, args.size());        \
+        const wchar_t *subcmd_str = enum_to_str(hist_cmd, hist_enum_map);                       \
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 0, args.size());     \
         status = STATUS_BUILTIN_ERROR;                                                          \
         break;                                                                                  \
     }
@@ -3056,7 +2988,7 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
 static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    hist_cmd_t hist_cmd = HIST_NOOP;
+    hist_cmd_t hist_cmd = HIST_UNDEF;
     history_search_type_t search_type = (history_search_type_t)-1;
     long max_items = LONG_MAX;
     bool history_search_type_defined = false;
@@ -3197,8 +3129,8 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     // See the TODO above regarding the `long_options` array.
     if (w.woptind < argc) {
-        hist_cmd_t subcmd = hist_string_to_cmd(argv[w.woptind]);
-        if (subcmd != HIST_NOOP) {
+        hist_cmd_t subcmd = str_to_enum(argv[w.woptind], hist_enum_map);
+        if (subcmd != HIST_UNDEF) {
             if (!set_hist_cmd(cmd, &hist_cmd, subcmd, streams)) {
                 return STATUS_BUILTIN_ERROR;
             }
@@ -3211,7 +3143,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     const wcstring_list_t args(argv + w.woptind, argv + argc);
 
     // Establish appropriate defaults.
-    if (hist_cmd == HIST_NOOP) hist_cmd = HIST_SEARCH;
+    if (hist_cmd == HIST_UNDEF) hist_cmd = HIST_SEARCH;
     if (!history_search_type_defined) {
         if (hist_cmd == HIST_SEARCH) search_type = HISTORY_SEARCH_TYPE_CONTAINS;
         if (hist_cmd == HIST_DELETE) search_type = HISTORY_SEARCH_TYPE_EXACT;
@@ -3266,8 +3198,8 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             history->save();
             break;
         }
-        case HIST_NOOP: {
-            DIE("Unexpected HIST_NOOP seen");
+        case HIST_UNDEF: {
+            DIE("Unexpected HIST_UNDEF seen");
             break;
         }
     }

@@ -1,11 +1,11 @@
-# fish 2.4.0 (released ???)
+# fish 2.4.0 (released November 8, 2016)
 
 There are no major changes between 2.4b1 and 2.4.0.
 
 ## Notable fixes and improvements
 - The documentation is now generated properly and with the correct version identifier.
 - Automatic cursor changes are now only enabled on the subset of XTerm versions known to support them, resolving a problem where older versions printed garbage to the terminal before and after every prompt (#3499).
-- Fixed a problem that rendered terminal titles inoperable on VTE.
+- Improved the title set in Apple Terminal.app.
 - Added completions for `defaults` and improved completions for `diskutil` (#3478).
 
 # fish 2.4b1 (released October 18, 2016)

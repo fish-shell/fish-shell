@@ -211,6 +211,9 @@ extern bool has_working_tty_timestamps;
     }
 
 /// Pause for input, then exit the program. If supported, print a backtrace first.
+// The `return` will never be run  but silences oclint warnings. Especially when this is called
+// from within a `switch` block. As of the time I'm writing this oclint doesn't recognize the
+// `__attribute__((noreturn))` on the exit_without_destructors() function.
 #define FATAL_EXIT()                        \
     {                                       \
         char exit_read_buff;                \
@@ -258,7 +261,7 @@ extern bool has_working_tty_timestamps;
 #define contains(str, ...) contains_internal(str, 0, __VA_ARGS__, NULL)
 
 /// Print a stack trace to stderr.
-void show_stackframe(const wchar_t msg_level, int frame_count = -1, int skip_levels = 0);
+void show_stackframe(const wchar_t msg_level, int frame_count = 100, int skip_levels = 0);
 
 /// Read a line from the stream f into the string. Returns the number of bytes read or -1 on
 /// failure.
@@ -776,3 +779,6 @@ long convert_digit(wchar_t d, int base);
     } while (0)
 
 #endif
+
+// Return true if the character is in a range reserved for fish's private use.
+bool fish_reserved_codepoint(wchar_t c);

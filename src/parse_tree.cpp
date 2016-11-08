@@ -73,70 +73,74 @@ static bool production_is_empty(const production_t *production) {
 wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix,
                                              bool is_interactive, bool skip_caret) const {
     wcstring result = text;
-    if (!skip_caret && source_start < src.size() && source_start + source_length <= src.size()) {
-        // Locate the beginning of this line of source.
-        size_t line_start = 0;
 
-        // Look for a newline prior to source_start. If we don't find one, start at the beginning of
-        // the string; otherwise start one past the newline. Note that source_start may itself point
-        // at a newline; we want to find the newline before it.
-        if (source_start > 0) {
-            size_t newline = src.find_last_of(L'\n', source_start - 1);
-            if (newline != wcstring::npos) {
-                line_start = newline + 1;
-            }
-        }
+    if (skip_caret || source_start >= src.size() || source_start + source_length > src.size()) {
+        return result;
+    }
 
-        // Look for the newline after the source range. If the source range itself includes a
-        // newline, that's the one we want, so start just before the end of the range.
-        size_t last_char_in_range =
-            (source_length == 0 ? source_start : source_start + source_length - 1);
-        size_t line_end = src.find(L'\n', last_char_in_range);
-        if (line_end == wcstring::npos) {
-            line_end = src.size();
-        }
+    // Locate the beginning of this line of source.
+    size_t line_start = 0;
 
-        assert(line_end >= line_start);
-        assert(source_start >= line_start);
-
-        // Don't include the caret and line if we're interactive this is the first line, because
-        // then it's obvious.
-        bool skip_caret = (is_interactive && source_start == 0);
-
-        if (!skip_caret) {
-            // Append the line of text.
-            if (!result.empty()) {
-                result.push_back(L'\n');
-            }
-            result.append(prefix);
-            result.append(src, line_start, line_end - line_start);
-
-            // Append the caret line. The input source may include tabs; for that reason we
-            // construct a "caret line" that has tabs in corresponding positions.
-            const wcstring line_to_measure =
-                prefix + wcstring(src, line_start, source_start - line_start);
-            wcstring caret_space_line;
-            caret_space_line.reserve(source_start - line_start);
-            for (size_t i = 0; i < line_to_measure.size(); i++) {
-                wchar_t wc = line_to_measure.at(i);
-                if (wc == L'\t') {
-                    caret_space_line.push_back(L'\t');
-                } else if (wc == L'\n') {
-                    // It's possible that the source_start points at a newline itself. In that case,
-                    // pretend it's a space. We only expect this to be at the end of the string.
-                    caret_space_line.push_back(L' ');
-                } else {
-                    int width = fish_wcwidth(wc);
-                    if (width > 0) {
-                        caret_space_line.append(static_cast<size_t>(width), L' ');
-                    }
-                }
-            }
-            result.push_back(L'\n');
-            result.append(caret_space_line);
-            result.push_back(L'^');
+    // Look for a newline prior to source_start. If we don't find one, start at the beginning of
+    // the string; otherwise start one past the newline. Note that source_start may itself point
+    // at a newline; we want to find the newline before it.
+    if (source_start > 0) {
+        size_t newline = src.find_last_of(L'\n', source_start - 1);
+        if (newline != wcstring::npos) {
+            line_start = newline + 1;
         }
     }
+
+    // Look for the newline after the source range. If the source range itself includes a
+    // newline, that's the one we want, so start just before the end of the range.
+    size_t last_char_in_range =
+        (source_length == 0 ? source_start : source_start + source_length - 1);
+    size_t line_end = src.find(L'\n', last_char_in_range);
+    if (line_end == wcstring::npos) {
+        line_end = src.size();
+    }
+
+    assert(line_end >= line_start);
+    assert(source_start >= line_start);
+
+    // Don't include the caret and line if we're interactive this is the first line, because
+    // then it's obvious.
+    bool interactive_skip_caret = is_interactive && source_start == 0;
+
+    if (interactive_skip_caret) {
+        return result;
+    }
+
+    // Append the line of text.
+    if (!result.empty()) {
+        result.push_back(L'\n');
+    }
+    result.append(prefix);
+    result.append(src, line_start, line_end - line_start);
+
+    // Append the caret line. The input source may include tabs; for that reason we
+    // construct a "caret line" that has tabs in corresponding positions.
+    const wcstring line_to_measure = prefix + wcstring(src, line_start, source_start - line_start);
+    wcstring caret_space_line;
+    caret_space_line.reserve(source_start - line_start);
+    for (size_t i = 0; i < line_to_measure.size(); i++) {
+        wchar_t wc = line_to_measure.at(i);
+        if (wc == L'\t') {
+            caret_space_line.push_back(L'\t');
+        } else if (wc == L'\n') {
+            // It's possible that the source_start points at a newline itself. In that case,
+            // pretend it's a space. We only expect this to be at the end of the string.
+            caret_space_line.push_back(L' ');
+        } else {
+            int width = fish_wcwidth(wc);
+            if (width > 0) {
+                caret_space_line.append(static_cast<size_t>(width), L' ');
+            }
+        }
+    }
+    result.push_back(L'\n');
+    result.append(caret_space_line);
+    result.push_back(L'^');
     return result;
 }
 
@@ -328,7 +332,7 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
         default: {
             fprintf(stderr, "Bad token type %d passed to %s\n", (int)tokenizer_token_type,
                     __FUNCTION__);
-            assert(0);
+            DIE("bad token type");
             break;
         }
     }
@@ -475,7 +479,7 @@ class parse_ll_t {
 
     /// Get the node corresponding to the top element of the stack.
     parse_node_t &node_for_top_symbol() {
-        PARSE_ASSERT(!symbol_stack.empty());
+        PARSE_ASSERT(!symbol_stack.empty());  //!OCLINT(multiple unary operator)
         const parse_stack_element_t &top_symbol = symbol_stack.back();
         PARSE_ASSERT(top_symbol.node_idx != NODE_OFFSET_INVALID);
         PARSE_ASSERT(top_symbol.node_idx < nodes.size());
@@ -888,116 +892,112 @@ bool parse_ll_t::report_error_for_unclosed_block() {
         block_node = this->nodes.get_child(*block_node, 0, symbol_block_header);
         block_node = this->nodes.get_child(*block_node, 0);  // specific statement
     }
-    if (block_node != NULL) {
-        // block_node is now an if_statement, switch_statement, for_header, while_header,
-        // function_header, or begin_header.
-        //
-        // Hackish: descend down the first node until we reach the bottom. This will be a keyword
-        // node like SWITCH, which will have the source range. Ordinarily the source range would be
-        // known by the parent node too, but we haven't completed parsing yet, so we haven't yet
-        // propagated source ranges.
-        const parse_node_t *cursor = block_node;
-        while (cursor->child_count > 0) {
-            cursor = this->nodes.get_child(*cursor, 0);
-            assert(cursor != NULL);
-        }
-        if (cursor->source_start != NODE_OFFSET_INVALID) {
-            const wcstring node_desc = block_type_user_presentable_description(block_node->type);
-            this->parse_error_at_location(cursor->source_start, parse_error_generic,
-                                          L"Missing end to balance this %ls", node_desc.c_str());
-            reported_error = true;
-        }
+    if (block_node == NULL) {
+        return reported_error;
+    }
+
+    // block_node is now an if_statement, switch_statement, for_header, while_header,
+    // function_header, or begin_header.
+    //
+    // Hackish: descend down the first node until we reach the bottom. This will be a keyword
+    // node like SWITCH, which will have the source range. Ordinarily the source range would be
+    // known by the parent node too, but we haven't completed parsing yet, so we haven't yet
+    // propagated source ranges.
+    const parse_node_t *cursor = block_node;
+    while (cursor->child_count > 0) {
+        cursor = this->nodes.get_child(*cursor, 0);
+        assert(cursor != NULL);
+    }
+    if (cursor->source_start != NODE_OFFSET_INVALID) {
+        const wcstring node_desc = block_type_user_presentable_description(block_node->type);
+        this->parse_error_at_location(cursor->source_start, parse_error_generic,
+                                      L"Missing end to balance this %ls", node_desc.c_str());
+        reported_error = true;
     }
     return reported_error;
 }
 
 bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token) {
-    PARSE_ASSERT(!symbol_stack.empty());
+    PARSE_ASSERT(!symbol_stack.empty());  //!OCLINT(multiple unary operator)
     PARSE_ASSERT(token.type >= FIRST_PARSE_TOKEN_TYPE);
-    bool handled = false;
     parse_stack_element_t &stack_top = symbol_stack.back();
-    if (type_is_terminal_type(stack_top.type)) {
-        // The top of the stack is terminal. We are going to handle this (because we can't produce
-        // from a terminal type).
-        handled = true;
 
-        // Now see if we actually matched
-        bool matched = false;
-        if (stack_top.type == token.type) {
-            switch (stack_top.type) {
-                case parse_token_type_string: {
-                    // We matched if the keywords match, or no keyword was required.
-                    matched = (stack_top.keyword == parse_keyword_none ||
-                               stack_top.keyword == token.keyword);
+    if (!type_is_terminal_type(stack_top.type)) {
+        return false;  // was not handled
+    }
+
+    // The top of the stack is terminal. We are going to handle this (because we can't produce
+    // from a terminal type).
+
+    // Now see if we actually matched
+    bool matched = false;
+    if (stack_top.type == token.type) {
+        if (stack_top.type == parse_token_type_string) {
+            // We matched if the keywords match, or no keyword was required.
+            matched =
+                (stack_top.keyword == parse_keyword_none || stack_top.keyword == token.keyword);
+        } else {
+            // For other types, we only require that the types match.
+            matched = true;
+        }
+    }
+
+    if (matched) {
+        // Success. Tell the node that it matched this token, and what its source range is in
+        // the parse phase, we only set source ranges for terminal types. We propagate ranges to
+        // parent nodes afterwards.
+        parse_node_t &node = node_for_top_symbol();
+        node.keyword = token.keyword;
+        node.source_start = token.source_start;
+        node.source_length = token.source_length;
+    } else {
+        // Failure
+        if (stack_top.type == parse_token_type_string && token.type == parse_token_type_string) {
+            // Keyword failure. We should unify this with the 'matched' computation above.
+            assert(stack_top.keyword != parse_keyword_none && stack_top.keyword != token.keyword);
+
+            // Check to see which keyword we got which was considered wrong.
+            switch (token.keyword) {
+                // Some keywords are only valid in certain contexts. If this cascaded all the
+                // way down through the outermost job_list, it was not in a valid context.
+                case parse_keyword_case:
+                case parse_keyword_end:
+                case parse_keyword_else: {
+                    this->parse_error_unbalancing_token(token);
+                    break;
+                }
+                case parse_keyword_none: {
+                    // This is a random other string (not a keyword).
+                    const wcstring expected = keyword_description(stack_top.keyword);
+                    this->parse_error(token, parse_error_generic, L"Expected keyword '%ls'",
+                                      expected.c_str());
                     break;
                 }
                 default: {
-                    // For other types, we only require that the types match.
-                    matched = true;
+                    // Got a real keyword we can report.
+                    const wcstring actual =
+                        (token.keyword == parse_keyword_none ? token.describe()
+                                                             : keyword_description(token.keyword));
+                    const wcstring expected = keyword_description(stack_top.keyword);
+                    this->parse_error(token, parse_error_generic,
+                                      L"Expected keyword '%ls', instead got keyword '%ls'",
+                                      expected.c_str(), actual.c_str());
                     break;
                 }
             }
-        }
-
-        if (matched) {
-            // Success. Tell the node that it matched this token, and what its source range is in
-            // the parse phase, we only set source ranges for terminal types. We propagate ranges to
-            // parent nodes afterwards.
-            parse_node_t &node = node_for_top_symbol();
-            node.keyword = token.keyword;
-            node.source_start = token.source_start;
-            node.source_length = token.source_length;
+        } else if (stack_top.keyword == parse_keyword_end &&
+                   token.type == parse_token_type_terminate &&
+                   this->report_error_for_unclosed_block()) {
+            ;  // handled by report_error_for_unclosed_block
         } else {
-            // Failure
-            if (stack_top.type == parse_token_type_string &&
-                token.type == parse_token_type_string) {
-                // Keyword failure. We should unify this with the 'matched' computation above.
-                assert(stack_top.keyword != parse_keyword_none &&
-                       stack_top.keyword != token.keyword);
-
-                // Check to see which keyword we got which was considered wrong.
-                switch (token.keyword) {
-                    // Some keywords are only valid in certain contexts. If this cascaded all the
-                    // way down through the outermost job_list, it was not in a valid context.
-                    case parse_keyword_case:
-                    case parse_keyword_end:
-                    case parse_keyword_else: {
-                        this->parse_error_unbalancing_token(token);
-                        break;
-                    }
-                    case parse_keyword_none: {
-                        // This is a random other string (not a keyword).
-                        const wcstring expected = keyword_description(stack_top.keyword);
-                        this->parse_error(token, parse_error_generic, L"Expected keyword '%ls'",
-                                          expected.c_str());
-                        break;
-                    }
-                    default: {
-                        // Got a real keyword we can report.
-                        const wcstring actual = (token.keyword == parse_keyword_none
-                                                     ? token.describe()
-                                                     : keyword_description(token.keyword));
-                        const wcstring expected = keyword_description(stack_top.keyword);
-                        this->parse_error(token, parse_error_generic,
-                                          L"Expected keyword '%ls', instead got keyword '%ls'",
-                                          expected.c_str(), actual.c_str());
-                        break;
-                    }
-                }
-            } else if (stack_top.keyword == parse_keyword_end &&
-                       token.type == parse_token_type_terminate &&
-                       this->report_error_for_unclosed_block()) {
-                // Handled by report_error_for_unclosed_block.
-            } else {
-                const wcstring expected = stack_top.user_presentable_description();
-                this->parse_error_unexpected_token(expected.c_str(), token);
-            }
+            const wcstring expected = stack_top.user_presentable_description();
+            this->parse_error_unexpected_token(expected.c_str(), token);
         }
-
-        // We handled the token, so pop the symbol stack.
-        symbol_stack.pop_back();
     }
-    return handled;
+
+    // We handled the token, so pop the symbol stack.
+    symbol_stack.pop_back();
+    return true;
 }
 
 void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
@@ -1036,7 +1036,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
     }
 
     while (!consumed && !this->fatal_errored) {
-        PARSE_ASSERT(!symbol_stack.empty());
+        PARSE_ASSERT(!symbol_stack.empty());  //!OCLINT(multiple unary operator)
 
         if (top_node_handle_terminal_types(token1)) {
             if (logit) {
@@ -1238,32 +1238,33 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
             parser.report_tokenizer_error(tokenizer_token);
         }
 
-        // Handle errors.
-        if (parser.has_fatal_error()) {
-            if (parse_flags & parse_flag_continue_after_error) {
-                // Hack. Typically the parse error is due to the first token. However, if it's a
-                // tokenizer error, then has_fatal_error was set due to the check above; in that
-                // case the second token is what matters.
-                size_t error_token_idx = 0;
-                if (queue[1].type == parse_special_type_tokenizer_error) {
-                    error_token_idx = (queue[1].type == parse_special_type_tokenizer_error ? 1 : 0);
-                    token_count = -1;  // so that it will be 0 after incrementing, and our tokenizer
-                                       // error will be ignored
-                }
-
-                // Mark a special error token, and then keep going.
-                const parse_token_t token = {parse_special_type_parse_error,
-                                             parse_keyword_none,
-                                             false,
-                                             false,
-                                             queue[error_token_idx].source_start,
-                                             queue[error_token_idx].source_length};
-                parser.accept_tokens(token, kInvalidToken);
-                parser.reset_symbols(goal);
-            } else {
-                break;  // bail out
-            }
+        if (!parser.has_fatal_error()) {
+            continue;
         }
+
+        // Handle errors.
+        if (!(parse_flags & parse_flag_continue_after_error)) {
+            break;  // bail out
+        }
+        // Hack. Typically the parse error is due to the first token. However, if it's a
+        // tokenizer error, then has_fatal_error was set due to the check above; in that
+        // case the second token is what matters.
+        size_t error_token_idx = 0;
+        if (queue[1].type == parse_special_type_tokenizer_error) {
+            error_token_idx = (queue[1].type == parse_special_type_tokenizer_error ? 1 : 0);
+            token_count = -1;  // so that it will be 0 after incrementing, and our tokenizer
+                               // error will be ignored
+        }
+
+        // Mark a special error token, and then keep going.
+        const parse_token_t token = {parse_special_type_parse_error,
+                                     parse_keyword_none,
+                                     false,
+                                     false,
+                                     queue[error_token_idx].source_start,
+                                     queue[error_token_idx].source_length};
+        parser.accept_tokens(token, kInvalidToken);
+        parser.reset_symbols(goal);
     }
 
     // Teach each node where its source range is.
@@ -1275,7 +1276,8 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
 #if 0
     //wcstring result = dump_tree(this->parser->nodes, str);
     //fprintf(stderr, "Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
-    fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", output->size(), sizeof(parse_node_t), output->size() * sizeof(parse_node_t));
+    fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", output->size(), sizeof(parse_node_t),
+            output->size() * sizeof(parse_node_t));
 #endif
 
     // Indicate if we had a fatal error.
@@ -1310,8 +1312,7 @@ const parse_node_t &parse_node_tree_t::find_child(const parse_node_t &parent,
             return *child;
         }
     }
-    PARSE_ASSERT(0);
-    return *(parse_node_t *)(NULL);  // unreachable
+    DIE("failed to find child node");
 }
 
 const parse_node_t *parse_node_tree_t::get_parent(const parse_node_t &node,
@@ -1370,13 +1371,11 @@ const parse_node_t *parse_node_tree_t::find_last_node_of_type(parse_token_type_t
     size_t idx = this->size();
     while (idx--) {
         const parse_node_t &node = this->at(idx);
-        if (node.type == type) {
-            // Types match. Check if it has the right parent.
-            if (parent == NULL || node_has_ancestor(*this, node, *parent)) {
-                // Success
-                result = &node;
-                break;
-            }
+        bool expected_type = (node.type == type);
+        if (expected_type && (parent == NULL || node_has_ancestor(*this, node, *parent))) {
+            // The types match and it has the right parent.
+            result = &node;
+            break;
         }
     }
     return result;
@@ -1387,7 +1386,7 @@ const parse_node_t *parse_node_tree_t::find_node_matching_source_location(
     const parse_node_t *result = NULL;
     // Find nodes of the given type in the tree, working backwards.
     const size_t len = this->size();
-    for (size_t idx = 0; idx < len; idx++) {
+    for (size_t idx = 0; idx < len && result == NULL; idx++) {
         const parse_node_t &node = this->at(idx);
 
         // Types must match.
@@ -1401,8 +1400,8 @@ const parse_node_t *parse_node_tree_t::find_node_matching_source_location(
 
         // Found it.
         result = &node;
-        break;
     }
+
     return result;
 }
 
@@ -1552,8 +1551,7 @@ enum parse_bool_statement_type_t parse_node_tree_t::statement_boolean_type(
 bool parse_node_tree_t::job_should_be_backgrounded(const parse_node_t &job) const {
     assert(job.type == symbol_job);
     const parse_node_t *opt_background = get_child(job, 2, symbol_optional_background);
-    bool result = opt_background != NULL && opt_background->tag == parse_background;
-    return result;
+    return opt_background != NULL && opt_background->tag == parse_background;
 }
 
 const parse_node_t *parse_node_tree_t::next_node_in_node_list(

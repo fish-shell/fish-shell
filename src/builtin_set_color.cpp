@@ -77,13 +77,13 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Parse options to obtain the requested operation and the modifiers.
     w.woptind = 0;
     while (1) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
+        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
-        if (c == -1) {
+        if (opt == -1) {
             break;
         }
 
-        switch (c) {
+        switch (opt) {
             case 0: {
                 break;
             }
@@ -109,6 +109,10 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case '?': {
                 return STATUS_BUILTIN_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }
@@ -159,19 +163,17 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     builtin_set_color_output.clear();
     output_set_writer(set_color_builtin_outputter);
 
-    if (bold) {
-        if (enter_bold_mode) writembs(tparm(enter_bold_mode));
+    if (bold && enter_bold_mode) {
+        writembs(tparm(enter_bold_mode));
     }
 
-    if (underline) {
-        if (enter_underline_mode) writembs(enter_underline_mode);
+    if (underline && enter_underline_mode) {
+        writembs(enter_underline_mode);
     }
 
-    if (bgcolor != NULL) {
-        if (bg.is_normal()) {
-            write_color(rgb_color_t::black(), false /* not is_fg */);
-            writembs(tparm(exit_attribute_mode));
-        }
+    if (bgcolor != NULL && bg.is_normal()) {
+        write_color(rgb_color_t::black(), false /* not is_fg */);
+        writembs(tparm(exit_attribute_mode));
     }
 
     if (!fg.is_none()) {
@@ -188,10 +190,8 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
     }
 
-    if (bgcolor != NULL) {
-        if (!bg.is_normal() && !bg.is_reset()) {
-            write_color(bg, false /* not is_fg */);
-        }
+    if (bgcolor != NULL && !bg.is_normal() && !bg.is_reset()) {
+        write_color(bg, false /* not is_fg */);
     }
 
     // Restore saved writer function.

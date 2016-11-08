@@ -92,7 +92,7 @@ if set -q c_files[1]
         # The stderr to stdout redirection is because cppcheck, incorrectly IMHO, writes its
         # diagnostic messages to stderr. Anyone running this who wants to capture its output will
         # expect those messages to be written to stdout.
-        cppcheck -q --verbose --std=posix --language=c++ --template "[{file}:{line}]: {severity} ({id}): {message}" --suppress=missingIncludeSystem --inline-suppr --enable=$cppchecks --rule-file=.cppcheck.rule $cppcheck_args $c_files 2>&1
+        cppcheck -q --verbose --std=posix --language=c++ --template \[(set_color --bold)(set_color --underline)"{file}"(set_color normal)(set_color --bold)":{line}"(set_color normal)"] "(set_color brmagenta)"{severity}"(set_color magenta)" ({id}):"\n(set_color normal)" {message}" --suppress=missingIncludeSystem --inline-suppr --enable=$cppchecks --rule-file=.cppcheck.rule $cppcheck_args $c_files 2>&1
     end
 
     if type -q oclint
@@ -105,7 +105,7 @@ if set -q c_files[1]
         # output will expect those messages to be written to stdout.
         if test "$kernel_name" = "Darwin"
             if not test -f compile_commands.json
-                xcodebuild >xcodebuild.log
+                xcodebuild -alltargets >xcodebuild.log
                 oclint-xcodebuild xcodebuild.log >/dev/null
             end
             if test $all = yes

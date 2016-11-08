@@ -314,6 +314,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
             case 0: {
                 fwprintf(stderr, _(L"getopt_long() unexpectedly returned zero\n"));
                 exit(127);
+                break;
             }
             case 'c': {
                 cmds->push_back(optarg);
@@ -358,6 +359,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
             case 'v': {
                 fwprintf(stdout, _(L"%s, version %s\n"), PACKAGE_NAME, get_fish_version());
                 exit(0);
+                break;
             }
             case 'D': {
                 char *end;
@@ -377,6 +379,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.
                 exit(1);
+                break;
             }
         }
     }
@@ -423,11 +426,6 @@ static void misc_init() {
 int main(int argc, char **argv) {
     int res = 1;
     int my_optind = 0;
-
-    // We can't do this at compile time due to the use of enum symbols.
-    assert(EXPAND_SENTINAL >= EXPAND_RESERVED_BASE && EXPAND_SENTINAL <= EXPAND_RESERVED_END);
-    assert(ANY_SENTINAL >= WILDCARD_RESERVED_BASE && ANY_SENTINAL <= WILDCARD_RESERVED_END);
-    assert(R_SENTINAL >= INPUT_COMMON_BASE && R_SENTINAL <= INPUT_COMMON_END);
 
     program_name = L"fish";
     set_main_thread();

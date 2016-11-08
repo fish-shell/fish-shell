@@ -247,7 +247,7 @@ void job_set_flag(job_t *j, unsigned int flag, int set) {
     }
 }
 
-int job_get_flag(const job_t *j, unsigned int flag) { return !!(j->flags & flag); }
+int job_get_flag(const job_t *j, unsigned int flag) { return static_cast<bool>(j->flags & flag); }
 
 int job_signal(job_t *j, int signal) {
     pid_t my_pid = getpid();
@@ -257,13 +257,9 @@ int job_signal(job_t *j, int signal) {
         res = killpg(j->pgid, signal);
     } else {
         for (process_t *p = j->first_process; p; p = p->next) {
-            if (!p->completed) {
-                if (p->pid) {
-                    if (kill(p->pid, signal)) {
-                        res = -1;
-                        break;
-                    }
-                }
+            if (!p->completed && p->pid && kill(p->pid, signal)) {
+                res = -1;
+                break;
             }
         }
     }
@@ -312,10 +308,8 @@ static void handle_child_status(pid_t pid, int status) {
         for (p = j->first_process; p; p = p->next) {
             if (pid == p->pid) {
                 mark_process_status(p, status);
-                if (p->completed && prev != 0) {
-                    if (!prev->completed && prev->pid) {
-                        kill(prev->pid, SIGPIPE);
-                    }
+                if (p->completed && prev && !prev->completed && prev->pid) {
+                    kill(prev->pid, SIGPIPE);
                 }
                 found_proc = true;
                 break;
@@ -324,28 +318,34 @@ static void handle_child_status(pid_t pid, int status) {
         }
     }
 
-    if (WIFSIGNALED(status) && (WTERMSIG(status) == SIGINT || WTERMSIG(status) == SIGQUIT)) {
-        if (!is_interactive_session) {
-            struct sigaction act;
-            sigemptyset(&act.sa_mask);
-            act.sa_flags = 0;
-            act.sa_handler = SIG_DFL;
-            sigaction(SIGINT, &act, 0);
-            sigaction(SIGQUIT, &act, 0);
-            kill(getpid(), WTERMSIG(status));
-        } else {
-            // In an interactive session, tell the principal parser to skip all blocks we're
-            // executing so control-C returns control to the user.
-            if (p && found_proc) {
-                parser_t::skip_all_blocks();
-            }
-        }
+    // If the child process was not killed by a signal or other than SIGINT or SIGQUIT we're done.
+    if (!WIFSIGNALED(status) || (WTERMSIG(status) != SIGINT && WTERMSIG(status) != SIGQUIT)) {
+        return;
     }
 
+    if (is_interactive_session) {
+        // In an interactive session, tell the principal parser to skip all blocks we're executing
+        // so control-C returns control to the user.
+        if (p && found_proc) parser_t::skip_all_blocks();
+    } else {
+        // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
+        struct sigaction act;
+        sigemptyset(&act.sa_mask);
+        act.sa_flags = 0;
+        act.sa_handler = SIG_DFL;
+        sigaction(SIGINT, &act, 0);
+        sigaction(SIGQUIT, &act, 0);
+        kill(getpid(), WTERMSIG(status));
+    }
+
+#if 0
+    // TODO: Decide whether to eliminate this block or have it emit a warning message.
+    // WARNING: See the special short-circuit logic above vis-a-vis signals.
     if (!found_proc) {
         // A child we lost track of? There have been bugs in both subshell handling and in builtin
         // handling that have caused this previously...
     }
+#endif
     return;
 }
 
@@ -391,7 +391,7 @@ typedef unsigned int process_generation_count_t;
 
 /// A static value tracking how many SIGCHLDs we have seen. This is only ever modified from within
 /// the SIGCHLD signal handler, and therefore does not need atomics or locks.
-static volatile process_generation_count_t s_sigchld_generation_count = 0;
+static volatile process_generation_count_t s_sigchld_generation_cnt = 0;
 
 /// If we have received a SIGCHLD signal, process any children. If await is false, this returns
 /// immediately if no SIGCHLD has been received. If await is true, this waits for one. Returns true
@@ -400,10 +400,10 @@ static int process_mark_finished_children(bool wants_await) {
     ASSERT_IS_MAIN_THREAD();
 
     // A static value tracking the SIGCHLD gen count at the time we last processed it. When this is
-    // different from s_sigchld_generation_count, it indicates there may be unreaped processes.
+    // different from s_sigchld_generation_cnt, it indicates there may be unreaped processes.
     // There may not be if we reaped them via the other waitpid path. This is only ever modified
     // from the main thread, and not from a signal handler.
-    static process_generation_count_t s_last_processed_sigchld_generation_count = 0;
+    static process_generation_count_t s_last_sigchld_generation_cnt = 0;
 
     int processed_count = 0;
     bool got_error = false;
@@ -412,12 +412,12 @@ static int process_mark_finished_children(bool wants_await) {
     // needs to be an atomic read (we'd use sig_atomic_t, if we knew that were unsigned -
     // fortunately aligned unsigned int is atomic on pretty much any modern chip.) It also needs to
     // occur before we start reaping, since the signal handler can be invoked at any point.
-    const process_generation_count_t local_count = s_sigchld_generation_count;
+    const process_generation_count_t local_count = s_sigchld_generation_cnt;
 
     // Determine whether we have children to process. Note that we can't reliably use the difference
     // because a single SIGCHLD may be delivered for multiple children - see #1768. Also if we are
     // awaiting, we always process.
-    bool wants_waitpid = wants_await || local_count != s_last_processed_sigchld_generation_count;
+    bool wants_waitpid = wants_await || local_count != s_last_sigchld_generation_cnt;
 
     if (wants_waitpid) {
         for (;;) {
@@ -451,7 +451,7 @@ static int process_mark_finished_children(bool wants_await) {
     if (got_error) {
         return -1;
     }
-    s_last_processed_sigchld_generation_count = local_count;
+    s_last_sigchld_generation_cnt = local_count;
     return processed_count;
 }
 
@@ -461,7 +461,7 @@ void job_handle_signal(int signal, siginfo_t *info, void *context) {
     UNUSED(info);
     UNUSED(context);
     // This is the only place that this generation count is modified. It's OK if it overflows.
-    s_sigchld_generation_count += 1;
+    s_sigchld_generation_cnt += 1;
 }
 
 /// Given a command like "cat file", truncate it to a reasonable length.
@@ -568,62 +568,57 @@ int job_reap(bool allow_interactive) {
             proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, p->pid,
                             (WIFSIGNALED(s) ? -1 : WEXITSTATUS(s)));
 
-            if (WIFSIGNALED(s)) {
-                // Ignore signal SIGPIPE.We issue it ourselves to the pipe writer when the pipe
-                // reader dies.
-                if (WTERMSIG(s) != SIGPIPE) {
-                    int proc_is_job = ((p == j->first_process) && (p->next == 0));
-                    if (proc_is_job) job_set_flag(j, JOB_NOTIFIED, 1);
-                    if (!job_get_flag(j, JOB_SKIP_NOTIFICATION)) {
-                        // Print nothing if we get SIGINT in the foreground process group, to avoid
-                        // spamming obvious stuff on the console (#1119). If we get SIGINT for the
-                        // foreground process, assume the user typed ^C and can see it working. It's
-                        // possible they didn't, and the signal was delivered via pkill, etc., but
-                        // the SIGINT/SIGTERM distinction is precisely to allow INT to be from a UI
-                        // and TERM to be programmatic, so this assumption is keeping with the
-                        // design of signals. If echoctl is on, then the terminal will have written
-                        // ^C to the console. If off, it won't have. We don't echo ^C either way, so
-                        // as to respect the user's preference.
-                        if (WTERMSIG(p->status) != SIGINT || !job_get_flag(j, JOB_FOREGROUND)) {
-                            if (proc_is_job) {
-                                // We want to report the job number, unless it's the only job, in
-                                // which case we don't need to.
-                                const wcstring job_number_desc =
-                                    (job_count == 1) ? wcstring()
-                                                     : format_string(L"Job %d, ", j->job_id);
-                                fwprintf(stdout,
-                                         _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
-                                         program_name, job_number_desc.c_str(),
-                                         truncate_command(j->command()).c_str(),
-                                         sig2wcs(WTERMSIG(p->status)),
-                                         signal_get_desc(WTERMSIG(p->status)));
-                            } else {
-                                const wcstring job_number_desc =
-                                    (job_count == 1) ? wcstring()
-                                                     : format_string(L"from job %d, ", j->job_id);
-                                fwprintf(stdout, _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' "
-                                                   L"terminated by signal %ls (%ls)"),
-                                         program_name, p->pid, p->argv0(), job_number_desc.c_str(),
-                                         truncate_command(j->command()).c_str(),
-                                         sig2wcs(WTERMSIG(p->status)),
-                                         signal_get_desc(WTERMSIG(p->status)));
-                            }
-
-                            if (cur_term != NULL)
-                                tputs(clr_eol, 1, &writeb);
-                            else
-                                fwprintf(stdout,
-                                         L"\x1b[K");  // no term set up - do clr_eol manually
-
-                            fwprintf(stdout, L"\n");
-                        }
-                        found = 1;
-                    }
-
-                    // Clear status so it is not reported more than once.
-                    p->status = 0;
-                }
+            // Ignore signal SIGPIPE.We issue it ourselves to the pipe writer when the pipe reader
+            // dies.
+            if (!WIFSIGNALED(s) || WTERMSIG(s) == SIGPIPE) {
+                continue;
             }
+
+            // Handle signals other than SIGPIPE.
+            int proc_is_job = ((p == j->first_process) && (p->next == 0));
+            if (proc_is_job) job_set_flag(j, JOB_NOTIFIED, 1);
+            if (job_get_flag(j, JOB_SKIP_NOTIFICATION)) {
+                continue;
+            }
+
+            // Print nothing if we get SIGINT in the foreground process group, to avoid spamming
+            // obvious stuff on the console (#1119). If we get SIGINT for the foreground
+            // process, assume the user typed ^C and can see it working. It's possible they
+            // didn't, and the signal was delivered via pkill, etc., but the SIGINT/SIGTERM
+            // distinction is precisely to allow INT to be from a UI
+            // and TERM to be programmatic, so this assumption is keeping with the design of
+            // signals. If echoctl is on, then the terminal will have written ^C to the console.
+            // If off, it won't have. We don't echo ^C either way, so as to respect the user's
+            // preference.
+            if (WTERMSIG(p->status) != SIGINT || !job_get_flag(j, JOB_FOREGROUND)) {
+                if (proc_is_job) {
+                    // We want to report the job number, unless it's the only job, in which case
+                    // we don't need to.
+                    const wcstring job_number_desc =
+                        (job_count == 1) ? wcstring() : format_string(L"Job %d, ", j->job_id);
+                    fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
+                             program_name, job_number_desc.c_str(),
+                             truncate_command(j->command()).c_str(), sig2wcs(WTERMSIG(p->status)),
+                             signal_get_desc(WTERMSIG(p->status)));
+                } else {
+                    const wcstring job_number_desc =
+                        (job_count == 1) ? wcstring() : format_string(L"from job %d, ", j->job_id);
+                    fwprintf(stdout, _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' "
+                                       L"terminated by signal %ls (%ls)"),
+                             program_name, p->pid, p->argv0(), job_number_desc.c_str(),
+                             truncate_command(j->command()).c_str(), sig2wcs(WTERMSIG(p->status)),
+                             signal_get_desc(WTERMSIG(p->status)));
+                }
+
+                if (cur_term != NULL) {
+                    tputs(clr_eol, 1, &writeb);
+                } else {
+                    fwprintf(stdout, L"\x1b[K");  // no term set up - do clr_eol manually
+                }
+                fwprintf(stdout, L"\n");
+            }
+            found = 1;
+            p->status = 0;  // clear status so it is not reported more than once
         }
 
         // If all processes have completed, tell the user the job has completed and delete it from
@@ -803,13 +798,10 @@ static bool terminal_give_to_job(job_t *j, int cont) {
         return false;
     }
 
-    if (cont) {
-        if (tcsetattr(0, TCSADRAIN, &j->tmodes)) {
-            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id,
-                  j->command_wcstr());
-            wperror(L"tcsetattr");
-            return false;
-        }
+    if (cont && tcsetattr(0, TCSADRAIN, &j->tmodes)) {
+        debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
+        wperror(L"tcsetattr");
+        return false;
     }
     return true;
 }
@@ -908,13 +900,11 @@ void job_continue(job_t *j, bool cont) {
                         process_mark_finished_children(false);
                         break;
                     }
-
                     case 0: {
                         // No FDs are ready. Look for finished processes.
                         process_mark_finished_children(false);
                         break;
                     }
-
                     case -1: {
                         // If there is no funky IO magic, we can use waitpid instead of handling
                         // child deaths through signals. This gives a rather large speed boost (A
@@ -923,6 +913,10 @@ void job_continue(job_t *j, bool cont) {
                         //
                         // This will return early if we get a signal, like SIGHUP.
                         process_mark_finished_children(true);
+                        break;
+                    }
+                    default: {
+                        DIE("unexpected return value from select_try()");
                         break;
                     }
                 }
@@ -944,15 +938,13 @@ void job_continue(job_t *j, bool cont) {
             process_t *p = j->first_process;
             while (p->next) p = p->next;
 
-            if (WIFEXITED(p->status) || WIFSIGNALED(p->status)) {
-                // Mark process status only if we are in the foreground and the last process in a
-                // pipe, and it is not a short circuited builtin.
-                if (p->pid) {
-                    int status = proc_format_status(p->status);
-                    // wprintf(L"setting status %d for %ls\n", job_get_flag( j, JOB_NEGATE
-                    // )?!status:status, j->command);
-                    proc_set_last_status(job_get_flag(j, JOB_NEGATE) ? !status : status);
-                }
+            // Mark process status only if we are in the foreground and the last process in a pipe,
+            // and it is not a short circuited builtin.
+            if ((WIFEXITED(p->status) || WIFSIGNALED(p->status)) && p->pid) {
+                int status = proc_format_status(p->status);
+                // wprintf(L"setting status %d for %ls\n", job_get_flag( j, JOB_NEGATE
+                // )?!status:status, j->command);
+                proc_set_last_status(job_get_flag(j, JOB_NEGATE) ? !status : status);
             }
         }
 

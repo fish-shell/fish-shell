@@ -50,40 +50,39 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &ou
     if (!d) return false;
 
     out_name = str2wcstring(d->d_name);
-    if (out_is_dir) {
-        // The caller cares if this is a directory, so check.
-        bool is_dir = false;
+    if (!out_is_dir) return true;
 
-        // We may be able to skip stat, if the readdir can tell us the file type directly.
-        bool check_with_stat = true;
+    // The caller cares if this is a directory, so check.
+    bool is_dir = false;
+    // We may be able to skip stat, if the readdir can tell us the file type directly.
+    bool check_with_stat = true;
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
-        if (d->d_type == DT_DIR) {
-            // Known directory.
-            is_dir = true;
-            check_with_stat = false;
-        } else if (d->d_type == DT_LNK || d->d_type == DT_UNKNOWN) {
-            // We want to treat symlinks to directories as directories. Use stat to resolve it.
-            check_with_stat = true;
-        } else {
-            // Regular file.
-            is_dir = false;
-            check_with_stat = false;
-        }
-#endif  // HAVE_STRUCT_DIRENT_D_TYPE
-        if (check_with_stat) {
-            // We couldn't determine the file type from the dirent; check by stat'ing it.
-            cstring fullpath = wcs2string(dir_path);
-            fullpath.push_back('/');
-            fullpath.append(d->d_name);
-            struct stat buf;
-            if (stat(fullpath.c_str(), &buf) != 0) {
-                is_dir = false;
-            } else {
-                is_dir = !!(S_ISDIR(buf.st_mode));
-            }
-        }
-        *out_is_dir = is_dir;
+    if (d->d_type == DT_DIR) {
+        // Known directory.
+        is_dir = true;
+        check_with_stat = false;
+    } else if (d->d_type == DT_LNK || d->d_type == DT_UNKNOWN) {
+        // We want to treat symlinks to directories as directories. Use stat to resolve it.
+        check_with_stat = true;
+    } else {
+        // Regular file.
+        is_dir = false;
+        check_with_stat = false;
     }
+#endif  // HAVE_STRUCT_DIRENT_D_TYPE
+    if (check_with_stat) {
+        // We couldn't determine the file type from the dirent; check by stat'ing it.
+        cstring fullpath = wcs2string(dir_path);
+        fullpath.push_back('/');
+        fullpath.append(d->d_name);
+        struct stat buf;
+        if (stat(fullpath.c_str(), &buf) != 0) {
+            is_dir = false;
+        } else {
+            is_dir = static_cast<bool>(S_ISDIR(buf.st_mode));
+        }
+    }
+    *out_is_dir = is_dir;
     return true;
 }
 
@@ -186,11 +185,11 @@ bool set_cloexec(int fd) {
     int flags = fcntl(fd, F_GETFD, 0);
     if (flags < 0) {
         return false;
-    } else if (flags & FD_CLOEXEC) {
-        return true;
-    } else {
-        return fcntl(fd, F_SETFD, flags | FD_CLOEXEC) >= 0;
     }
+    if (flags & FD_CLOEXEC) {
+        return true;
+    }
+    return fcntl(fd, F_SETFD, flags | FD_CLOEXEC) >= 0;
 }
 
 static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool cloexec) {
@@ -448,14 +447,6 @@ int wrename(const wcstring &old, const wcstring &newv) {
     return rename(old_narrow.c_str(), new_narrow.c_str());
 }
 
-/// Return one if the code point is in the range we reserve for internal use.
-int fish_is_reserved_codepoint(wint_t wc) {
-    if (RESERVED_CHAR_BASE <= wc && wc < RESERVED_CHAR_END) return 1;
-    if (EXPAND_RESERVED_BASE <= wc && wc < EXPAND_RESERVED_END) return 1;
-    if (WILDCARD_RESERVED_BASE <= wc && wc < WILDCARD_RESERVED_END) return 1;
-    return 0;
-}
-
 /// Return one if the code point is in a Unicode private use area.
 int fish_is_pua(wint_t wc) {
     if (PUA1_START <= wc && wc < PUA1_END) return 1;
@@ -467,7 +458,7 @@ int fish_is_pua(wint_t wc) {
 /// We need this because there are too many implementations that don't return the proper answer for
 /// some code points. See issue #3050.
 int fish_iswalnum(wint_t wc) {
-    if (fish_is_reserved_codepoint(wc)) return 0;
+    if (fish_reserved_codepoint(wc)) return 0;
     if (fish_is_pua(wc)) return 0;
     return iswalnum(wc);
 }
@@ -475,7 +466,7 @@ int fish_iswalnum(wint_t wc) {
 /// We need this because there are too many implementations that don't return the proper answer for
 /// some code points. See issue #3050.
 int fish_iswalpha(wint_t wc) {
-    if (fish_is_reserved_codepoint(wc)) return 0;
+    if (fish_reserved_codepoint(wc)) return 0;
     if (fish_is_pua(wc)) return 0;
     return iswalpha(wc);
 }
@@ -483,7 +474,7 @@ int fish_iswalpha(wint_t wc) {
 /// We need this because there are too many implementations that don't return the proper answer for
 /// some code points. See issue #3050.
 int fish_iswgraph(wint_t wc) {
-    if (fish_is_reserved_codepoint(wc)) return 0;
+    if (fish_reserved_codepoint(wc)) return 0;
     if (fish_is_pua(wc)) return 1;
     return iswgraph(wc);
 }

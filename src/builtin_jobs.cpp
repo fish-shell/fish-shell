@@ -101,6 +101,10 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
             }
             break;
         }
+        default: {
+            DIE("unexpected mode");
+            break;
+        }
     }
 }
 
@@ -158,6 +162,10 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return 1;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
             }
         }
     }

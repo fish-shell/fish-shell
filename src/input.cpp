@@ -56,8 +56,8 @@ struct input_mapping_t {
     input_mapping_t(const wcstring &s, const std::vector<wcstring> &c,
                     const wcstring &m = DEFAULT_BIND_MODE, const wcstring &sm = DEFAULT_BIND_MODE)
         : seq(s), commands(c), mode(m), sets_mode(sm) {
-        static unsigned int s_last_input_mapping_specification_order = 0;
-        specification_order = ++s_last_input_mapping_specification_order;
+        static unsigned int s_last_input_map_spec_order = 0;
+        specification_order = ++s_last_input_map_spec_order;
     }
 };
 
@@ -223,14 +223,8 @@ void input_set_bind_mode(const wcstring &bm) {
 }
 
 /// Returns the arity of a given input function.
-int input_function_arity(int function) {
-    switch (function) {
-        case R_FORWARD_JUMP:
-        case R_BACKWARD_JUMP: {
-            return 1;
-        }
-        default: { return 0; }
-    }
+static int input_function_arity(int function) {
+    return (function == R_FORWARD_JUMP || function == R_BACKWARD_JUMP) ? 1 : 0;
 }
 
 /// Sets the return status of the most recently executed input function.
@@ -378,7 +372,6 @@ int input_init() {
         } else {
             debug(0, _(L"Using fallback terminal type '%ls'"), DEFAULT_TERM);
         }
-    } else {
     }
 
     input_terminfo_init();
@@ -614,8 +607,9 @@ wint_t input_readch(bool allow_commands) {
                     if (input_function_status) {
                         return input_readch();
                     }
-                    while ((c = input_common_readch(0)) && c >= R_MIN && c <= R_MAX) {
-                        // do nothing
+                    c = input_common_readch(0);
+                    while (c >= R_MIN && c <= R_MAX) {
+                        c = input_common_readch(0);
                     }
                     input_common_next_ch(c);
                     return input_readch();

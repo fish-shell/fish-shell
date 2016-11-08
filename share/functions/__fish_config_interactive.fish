@@ -220,12 +220,17 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Notify terminals when $PWD changes (issue #906)
     # VTE and Terminal.app support this in practice.
     if test "0$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
-        function fish_title; end
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             status --is-command-substitution
             or test -n "$INSIDE_EMACS"
             and return
             printf \e\]7\;file://\%s\%s\a (hostname) (echo -n $PWD | __fish_urlencode)
+        end
+        if test "$TERM_PROGRAM" = "Apple_Terminal"
+            # Suppress duplicative title display on Terminal.app
+            echo -n \e\]0\;\a # clear existing title
+            function fish_title
+            end
         end
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end

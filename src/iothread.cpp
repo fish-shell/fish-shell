@@ -30,8 +30,6 @@
 #define IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE 99
 #define IO_SERVICE_RESULT_QUEUE 100
 
-#define IOTHREAD_LOG if (0)
-
 static void iothread_service_main_thread_requests(void);
 static void iothread_service_result_queue();
 
@@ -59,9 +57,9 @@ static pthread_mutex_t s_result_queue_lock;
 static std::queue<SpawnRequest_t *> s_result_queue;
 
 // "Do on main thread" support.
-static pthread_mutex_t s_main_thread_performer_lock;      // protects the main thread requests
-static pthread_cond_t s_main_thread_performer_condition;  // protects the main thread requests
-static pthread_mutex_t s_main_thread_request_queue_lock;  // protects the queue
+static pthread_mutex_t s_main_thread_performer_lock;  // protects the main thread requests
+static pthread_cond_t s_main_thread_performer_cond;   // protects the main thread requests
+static pthread_mutex_t s_main_thread_request_q_lock;  // protects the queue
 static std::queue<MainThreadRequest_t *> s_main_thread_request_queue;
 
 // Notifying pipes.
@@ -75,9 +73,9 @@ static void iothread_init(void) {
         // Initialize some locks.
         VOMIT_ON_FAILURE(pthread_mutex_init(&s_spawn_queue_lock, NULL));
         VOMIT_ON_FAILURE(pthread_mutex_init(&s_result_queue_lock, NULL));
-        VOMIT_ON_FAILURE(pthread_mutex_init(&s_main_thread_request_queue_lock, NULL));
+        VOMIT_ON_FAILURE(pthread_mutex_init(&s_main_thread_request_q_lock, NULL));
         VOMIT_ON_FAILURE(pthread_mutex_init(&s_main_thread_performer_lock, NULL));
-        VOMIT_ON_FAILURE(pthread_cond_init(&s_main_thread_performer_condition, NULL));
+        VOMIT_ON_FAILURE(pthread_cond_init(&s_main_thread_performer_cond, NULL));
 
         // Initialize the completion pipes.
         int pipes[2] = {0, 0};
@@ -120,7 +118,7 @@ static void *iothread_worker(void *unused) {
     scoped_lock locker(s_spawn_queue_lock);
     struct SpawnRequest_t *req;
     while ((req = dequeue_spawn_request()) != NULL) {
-        IOTHREAD_LOG fprintf(stderr, "pthread %p dequeued %p\n", this_thread(), req);
+        debug(5, "pthread %p dequeued %p\n", this_thread(), req);
         // Unlock the queue while we execute the request.
         locker.unlock();
 
@@ -153,7 +151,7 @@ static void *iothread_worker(void *unused) {
     assert(s_active_thread_count > 0);
     s_active_thread_count -= 1;
 
-    IOTHREAD_LOG fprintf(stderr, "pthread %p exiting\n", this_thread());
+    debug(5, "pthread %p exiting\n", this_thread());
     // We're done.
     return NULL;
 }
@@ -175,7 +173,7 @@ static void iothread_spawn() {
 
     // We will never join this thread.
     VOMIT_ON_FAILURE(pthread_detach(thread));
-    IOTHREAD_LOG fprintf(stderr, "pthread %p spawned\n", (void *)(intptr_t)thread);
+    debug(5, "pthread %p spawned\n", (void *)(intptr_t)thread);
     // Restore our sigmask.
     VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, NULL));
 }
@@ -222,21 +220,15 @@ int iothread_port(void) {
 
 void iothread_service_completion(void) {
     ASSERT_IS_MAIN_THREAD();
-    char wakeup_byte = 0;
+    char wakeup_byte;
+
     VOMIT_ON_FAILURE(1 != read_loop(iothread_port(), &wakeup_byte, sizeof wakeup_byte));
-    switch (wakeup_byte) {
-        case IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE: {
-            iothread_service_main_thread_requests();
-            break;
-        }
-        case IO_SERVICE_RESULT_QUEUE: {
-            iothread_service_result_queue();
-            break;
-        }
-        default: {
-            fprintf(stderr, "Unknown wakeup byte %02x in %s\n", wakeup_byte, __FUNCTION__);
-            break;
-        }
+    if (wakeup_byte == IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE) {
+        iothread_service_main_thread_requests();
+    } else if (wakeup_byte == IO_SERVICE_RESULT_QUEUE) {
+        iothread_service_result_queue();
+    } else {
+        fprintf(stderr, "Unknown wakeup byte %02x in %s\n", wakeup_byte, __FUNCTION__);
     }
 }
 
@@ -295,7 +287,7 @@ static void iothread_service_main_thread_requests(void) {
     // Move the queue to a local variable.
     std::queue<MainThreadRequest_t *> request_queue;
     {
-        scoped_lock queue_lock(s_main_thread_request_queue_lock);
+        scoped_lock queue_lock(s_main_thread_request_q_lock);
         std::swap(request_queue, s_main_thread_request_queue);
     }
 
@@ -319,7 +311,7 @@ static void iothread_service_main_thread_requests(void) {
         // Because the waiting thread performs step 1 under the lock, if we take the lock, we avoid
         // posting before the waiting thread is waiting.
         scoped_lock broadcast_lock(s_main_thread_performer_lock);
-        VOMIT_ON_FAILURE(pthread_cond_broadcast(&s_main_thread_performer_condition));
+        VOMIT_ON_FAILURE(pthread_cond_broadcast(&s_main_thread_performer_cond));
     }
 }
 
@@ -359,7 +351,7 @@ int iothread_perform_on_main_base(int (*handler)(void *), void *context) {
     // Append it. Do not delete the nested scope as it is crucial to the proper functioning of this
     // code by virtue of the lock management.
     {
-        scoped_lock queue_lock(s_main_thread_request_queue_lock);
+        scoped_lock queue_lock(s_main_thread_request_q_lock);
         s_main_thread_request_queue.push(&req);
     }
 
@@ -373,7 +365,7 @@ int iothread_perform_on_main_base(int (*handler)(void *), void *context) {
         // It would be nice to support checking for cancellation here, but the clients need a
         // deterministic way to clean up to avoid leaks
         VOMIT_ON_FAILURE(
-            pthread_cond_wait(&s_main_thread_performer_condition, &s_main_thread_performer_lock));
+            pthread_cond_wait(&s_main_thread_performer_cond, &s_main_thread_performer_lock));
     }
 
     // Ok, the request must now be done.

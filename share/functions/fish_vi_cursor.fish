@@ -1,11 +1,46 @@
 function fish_vi_cursor -d 'Set cursor shape for different vi modes'
-    # Since we read exported variables (KONSOLE_PROFILE_NAME and ITERM_PROFILE)
-    # we need to check harder if we're actually in a supported terminal,
-    # because we might be in a term-in-a-term (emacs ansi-term).
-    if not contains -- $TERM xterm konsole xterm-256color konsole-256color
-        and not set -q TMUX
+    # Check hard if we are in a supporting terminal.
+    #
+    # Challenges here are term-in-a-terms (emacs ansi-term does not support this, tmux does),
+    # that we can only figure out if we are in konsole/iterm/vte via exported variables,
+    # and ancient xterm versions.
+    #
+    # tmux defaults to $TERM = screen, but can do this if it is in a supporting terminal.
+    # Unfortunately, we can only detect this via the exported variables, so we miss some cases.
+    #
+    # We will also miss some cases of terminal-stacking,
+    # e.g. tmux started in suckless' st (no support) started in konsole.
+    # But since tmux in konsole seems rather common and that case so uncommon,
+    # we will just fail there (though it seems that tmux or st swallow it anyway).
+    #
+    # We use the `tput` here just to see if terminfo thinks we can change the cursor.
+    # We cannot use that sequence directly as it's not the correct one for konsole and iTerm,
+    # and because we may want to change the cursor even though terminfo says we can't (tmux).
+    if not tput Ss > /dev/null ^/dev/null
+        # Whitelist tmux...
+        and not begin
+            set -q TMUX
+            # ...in a supporting term...
+            and begin set -q KONSOLE_PROFILE_NAME
+                or set -q ITERM_PROFILE
+                or test "$VTE_VERSION" -gt 1910
+            end
+            # .. unless an unsupporting terminal has been started in tmux inside a supporting one
+            and begin string match -q "screen*" -- $TERM
+                or string match -q "tmux*" -- $TERM
+            end
+        end
+        and not string match -q "konsole*" -- $TERM
+        # Blacklist
+        or begin
+            # vte-based terms set $TERM = xterm*, but only gained support relatively recently.
+            set -q VTE_VERSION
+            and test "$VTE_VERSION" -le 1910
+        end
+        or set -q INSIDE_EMACS
         return
     end
+
     set -l terminal $argv[1]
     set -q terminal[1]
     or set terminal auto
@@ -18,11 +53,9 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
                or set -q ITERM_PROFILE
                 set function __fish_cursor_konsole
                 set uses_echo 1
-            else if string match -q "xterm*" -- $TERM; or test "$VTE_VERSION" -gt 1910
+            else
                 set function __fish_cursor_xterm
                 set uses_echo 1
-            else
-                return 1
             end
         case konsole
             set function __fish_cursor_konsole

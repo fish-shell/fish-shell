@@ -119,7 +119,7 @@ typedef struct complete_entry_opt {
             case option_type_double_long:
                 return 2;
         }
-        assert(0 && "Unreachable");
+        DIE("unreachable");
     }
 
 } complete_entry_opt_t;
@@ -289,9 +289,11 @@ class completer_t {
         return flags & COMPLETION_REQUEST_AUTOSUGGESTION ? COMPLETE_AUTOSUGGEST : COMPLETE_DEFAULT;
     }
 
-    bool wants_descriptions() const { return !!(flags & COMPLETION_REQUEST_DESCRIPTIONS); }
+    bool wants_descriptions() const {
+        return static_cast<bool>(flags & COMPLETION_REQUEST_DESCRIPTIONS);
+    }
 
-    bool fuzzy() const { return !!(flags & COMPLETION_REQUEST_FUZZY_MATCH); }
+    bool fuzzy() const { return static_cast<bool>(flags & COMPLETION_REQUEST_FUZZY_MATCH); }
 
     fuzzy_match_type_t max_fuzzy_match_type() const {
         // If we are doing fuzzy matching, request all types; if not request only prefix matching.
@@ -668,22 +670,22 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     std::vector<completion_t> possible_comp;
 
     if (use_command) {
-        if (expand_string(str_cmd, &this->completions,
-                          EXPAND_SPECIAL_FOR_COMMAND | EXPAND_FOR_COMPLETIONS | EXECUTABLES_ONLY |
-                              this->expand_flags(),
-                          NULL) != EXPAND_ERROR) {
-            if (this->wants_descriptions()) {
-                this->complete_cmd_desc(str_cmd);
+        expand_error_t result = expand_string(str_cmd, &this->completions,
+                                              EXPAND_SPECIAL_FOR_COMMAND | EXPAND_FOR_COMPLETIONS |
+                                                  EXECUTABLES_ONLY | this->expand_flags(),
+                                              NULL);
+        if (result != EXPAND_ERROR && this->wants_descriptions()) {
+            this->complete_cmd_desc(str_cmd);
             }
-        }
     }
+
     if (use_implicit_cd) {
-        if (!expand_string(str_cmd, &this->completions,
-                           EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(),
-                           NULL)) {
-            // Not valid as implicit cd.
-        }
+        // We don't really care if this succeeds or fails. If it succeeds this->completions will be
+        // updated with choices for the user.
+        (void)expand_string(str_cmd, &this->completions,
+                            EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(), NULL);
     }
+
     if (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~') {
         if (use_function) {
             wcstring_list_t names = function_get_names(str_cmd.at(0) == L'_');
@@ -875,11 +877,10 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     if (this->type() == COMPLETE_DEFAULT) {
         ASSERT_IS_MAIN_THREAD();
         complete_load(cmd, true);
-    } else if (this->type() == COMPLETE_AUTOSUGGEST) {
-        // Maybe load this command (on the main thread).
-        if (!completion_autoloader.has_tried_loading(cmd)) {
-            iothread_perform_on_main(complete_load_no_reload, &cmd);
-        }
+    } else if (this->type() == COMPLETE_AUTOSUGGEST &&
+               !completion_autoloader.has_tried_loading(cmd)) {
+        // Load this command (on the main thread).
+        iothread_perform_on_main(complete_load_no_reload, &cmd);
     }
 
     // Make a list of lists of all options that we care about.
@@ -925,13 +926,12 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                 for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end();
                      ++oiter) {
                     const complete_entry_opt_t *o = &*oiter;
-                    if (o->type == option_type_single_long) {
-                        if (param_match(o, popt) && this->condition_test(o->condition)) {
-                            old_style_match = true;
-                            if (o->result_mode & NO_COMMON) use_common = false;
-                            if (o->result_mode & NO_FILES) use_files = false;
-                            complete_from_args(str, o->comp, o->localized_desc(), o->flags);
-                        }
+                    if (o->type == option_type_single_long && param_match(o, popt) &&
+                        this->condition_test(o->condition)) {
+                        old_style_match = true;
+                        if (o->result_mode & NO_COMMON) use_common = false;
+                        if (o->result_mode & NO_FILES) use_files = false;
+                        complete_from_args(str, o->comp, o->localized_desc(), o->flags);
                     }
                 }
 
@@ -956,71 +956,73 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
             }
         }
 
-        if (use_common) {
-            for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end();
-                 ++oiter) {
-                const complete_entry_opt_t *o = &*oiter;
-                // If this entry is for the base command, check if any of the arguments match.
-                if (!this->condition_test(o->condition)) continue;
-                if (o->option.empty()) {
-                    use_files = use_files && ((o->result_mode & NO_FILES) == 0);
-                    complete_from_args(str, o->comp, o->localized_desc(), o->flags);
-                }
+        if (!use_common) {
+            continue;
+        }
 
-                if (wcslen(str) > 0 && use_switches) {
-                    // Check if the short style option matches.
-                    if (short_ok(str, o, options)) {
-                        // It's a match.
-                        const wcstring desc = o->localized_desc();
-                        append_completion(&this->completions, o->option, desc, 0);
-                    }
-
-                    // Check if the long style option matches.
-                    if (o->type == option_type_single_long || o->type == option_type_double_long) {
-                        int match = 0, match_no_case = 0;
-
-                        wcstring whole_opt(o->expected_dash_count(), L'-');
-                        whole_opt.append(o->option);
-
-                        match = string_prefixes_string(str, whole_opt);
-
-                        if (!match) {
-                            match_no_case = wcsncasecmp(str, whole_opt.c_str(), wcslen(str)) == 0;
-                        }
-
-                        if (match || match_no_case) {
-                            int has_arg = 0;  // does this switch have any known arguments
-                            int req_arg = 0;  // does this switch _require_ an argument
-
-                            size_t offset = 0;
-                            complete_flags_t flags = 0;
-
-                            if (match) {
-                                offset = wcslen(str);
-                            } else {
-                                flags = COMPLETE_REPLACES_TOKEN;
-                            }
-
-                            has_arg = !o->comp.empty();
-                            req_arg = (o->result_mode & NO_COMMON);
-
-                            if (o->type == option_type_double_long && (has_arg && !req_arg)) {
-                                // Optional arguments to a switch can only be handled using the '=',
-                                // so we add it as a completion. By default we avoid using '=' and
-                                // instead rely on '--switch switch-arg', since it is more commonly
-                                // supported by homebrew getopt-like functions.
-                                wcstring completion =
-                                    format_string(L"%ls=", whole_opt.c_str() + offset);
-                                append_completion(&this->completions, completion, C_(o->desc),
-                                                  flags);
-                            }
-
-                            append_completion(&this->completions, whole_opt.c_str() + offset,
-                                              C_(o->desc), flags);
-                        }
-                    }
-                }
+        for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end();
+                ++oiter) {
+            const complete_entry_opt_t *o = &*oiter;
+            // If this entry is for the base command, check if any of the arguments match.
+            if (!this->condition_test(o->condition)) continue;
+            if (o->option.empty()) {
+                use_files = use_files && ((o->result_mode & NO_FILES) == 0);
+                complete_from_args(str, o->comp, o->localized_desc(), o->flags);
             }
+
+            if (wcslen(str) == 0 || !use_switches) {
+                continue;
+            }
+
+            // Check if the short style option matches.
+            if (short_ok(str, o, options)) {
+                // It's a match.
+                const wcstring desc = o->localized_desc();
+                append_completion(&this->completions, o->option, desc, 0);
+            }
+
+            // Check if the long style option matches.
+            if (o->type != option_type_single_long && o->type != option_type_double_long) {
+                continue;
+            }
+            int match = 0, match_no_case = 0;
+
+            wcstring whole_opt(o->expected_dash_count(), L'-');
+            whole_opt.append(o->option);
+
+            match = string_prefixes_string(str, whole_opt);
+            if (!match) {
+                match_no_case = wcsncasecmp(str, whole_opt.c_str(), wcslen(str)) == 0;
+            }
+
+            if (!match && !match_no_case) {
+                continue;
+            }
+
+            int has_arg = 0;  // does this switch have any known arguments
+            int req_arg = 0;  // does this switch _require_ an argument
+            size_t offset = 0;
+            complete_flags_t flags = 0;
+
+            if (match) {
+                offset = wcslen(str);
+            } else {
+                flags = COMPLETE_REPLACES_TOKEN;
+            }
+
+            has_arg = !o->comp.empty();
+            req_arg = (o->result_mode & NO_COMMON);
+
+            if (o->type == option_type_double_long && (has_arg && !req_arg)) {
+                // Optional arguments to a switch can only be handled using the '=', so we add it as
+                // a completion. By default we avoid using '=' and instead rely on '--switch
+                // switch-arg', since it is more commonly supported by homebrew getopt-like
+                // functions.
+                wcstring completion = format_string(L"%ls=", whole_opt.c_str() + offset);
+                append_completion(&this->completions, completion, C_(o->desc), flags);
+            }
+
+            append_completion(&this->completions, whole_opt.c_str() + offset, C_(o->desc), flags);
         }
     }
 
@@ -1144,31 +1146,35 @@ bool completer_t::try_complete_variable(const wcstring &str) {
         }
 
         switch (c) {
-            case L'\\':
+            case L'\\': {
                 in_pos++;
                 break;
-
-            case L'$':
+            }
+            case L'$': {
                 if (mode == e_unquoted || mode == e_double_quoted) {
                     variable_start = in_pos;
                 }
                 break;
-
-            case L'\'':
+            }
+            case L'\'': {
                 if (mode == e_single_quoted) {
                     mode = e_unquoted;
                 } else if (mode == e_unquoted) {
                     mode = e_single_quoted;
                 }
                 break;
-
-            case L'"':
+            }
+            case L'"': {
                 if (mode == e_double_quoted) {
                     mode = e_unquoted;
                 } else if (mode == e_unquoted) {
                     mode = e_double_quoted;
                 }
                 break;
+            }
+            default: {
+                break;  // all other chars ignored here
+            }
         }
     }
 
@@ -1196,50 +1202,52 @@ bool completer_t::try_complete_user(const wcstring &str) {
 #else
     const wchar_t *cmd = str.c_str();
     const wchar_t *first_char = cmd;
-    int res = 0;
-    double start_time = timef();
 
-    if (*first_char == L'~' && !wcschr(first_char, L'/')) {
-        const wchar_t *user_name = first_char + 1;
-        const wchar_t *name_end = wcschr(user_name, L'~');
-        if (name_end == 0) {
-            struct passwd *pw;
-            size_t name_len = wcslen(user_name);
-
-            setpwent();
-
-            while ((pw = getpwent()) != 0) {
-                double current_time = timef();
-
-                if (current_time - start_time > 0.2) {
-                    return 1;
-                }
-
-                if (pw->pw_name) {
-                    const wcstring pw_name_str = str2wcstring(pw->pw_name);
-                    const wchar_t *pw_name = pw_name_str.c_str();
-                    if (wcsncmp(user_name, pw_name, name_len) == 0) {
-                        wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
-                        append_completion(&this->completions, &pw_name[name_len], desc,
-                                          COMPLETE_NO_SPACE);
-
-                        res = 1;
-                    } else if (wcsncasecmp(user_name, pw_name, name_len) == 0) {
-                        wcstring name = format_string(L"~%ls", pw_name);
-                        wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
-
-                        append_completion(&this->completions, name, desc, COMPLETE_REPLACES_TOKEN |
-                                                                              COMPLETE_DONT_ESCAPE |
-                                                                              COMPLETE_NO_SPACE);
-                        res = 1;
-                    }
-                }
-            }
-            endpwent();
-        }
+    if (*first_char != L'~' || wcschr(first_char, L'/')) {
+        return false;
     }
 
-    return res;
+    const wchar_t *user_name = first_char + 1;
+    const wchar_t *name_end = wcschr(user_name, L'~');
+    if (name_end) {
+        return false;
+    }
+
+    double start_time = timef();
+    bool result = false;
+    struct passwd *pw;
+    size_t name_len = wcslen(user_name);
+
+    setpwent();
+    while ((pw = getpwent()) != 0) {
+        double current_time = timef();
+        if (current_time - start_time > 0.2) {
+            return 1;
+        }
+
+        if (!pw->pw_name) {
+            continue;
+        }
+
+        const wcstring pw_name_str = str2wcstring(pw->pw_name);
+        const wchar_t *pw_name = pw_name_str.c_str();
+        if (wcsncmp(user_name, pw_name, name_len) == 0) {
+            wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
+            append_completion(&this->completions, &pw_name[name_len], desc, COMPLETE_NO_SPACE);
+
+            result = true;
+        } else if (wcsncasecmp(user_name, pw_name, name_len) == 0) {
+            wcstring name = format_string(L"~%ls", pw_name);
+            wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
+
+            append_completion(&this->completions, name, desc, COMPLETE_REPLACES_TOKEN |
+                                                                    COMPLETE_DONT_ESCAPE |
+                                                                    COMPLETE_NO_SPACE);
+            result = true;
+        }
+    }
+    endpwent();
+    return result;
 #endif
 }
 
@@ -1534,7 +1542,7 @@ wcstring complete_print() {
                     break;
                 }
                 case option_type_short: {
-                    assert(!o->option.empty());
+                    assert(!o->option.empty());  //!OCLINT(multiple unary operator)
                     append_format(out, L" --short-option '%lc'", o->option.at(0));
                     break;
                 }

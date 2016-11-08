@@ -262,6 +262,10 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return 1;
             }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
         }
     }
 
@@ -278,46 +282,42 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return 0;
     }
 
-    switch (argc - w.woptind) {
-        case 0: {  // show current limit value
-            print(what, hard, streams);
-            break;
-        }
-        case 1: {  // change current limit value
-            rlim_t new_limit;
-            wchar_t *end;
+    int arg_count = argc - w.woptind;
+    if (arg_count == 0) {
+        // Show current limit value.
+        print(what, hard, streams);
+    } else if (arg_count == 1) {
+        // Change current limit value.
+        rlim_t new_limit;
+        wchar_t *end;
 
-            // Set both hard and soft limits if nothing else was specified.
-            if (!(hard + soft)) {
-                hard = soft = 1;
+        // Set both hard and soft limits if nothing else was specified.
+        if (!(hard + soft)) {
+            hard = soft = 1;
+        }
+
+        if (wcscasecmp(argv[w.woptind], L"unlimited") == 0) {
+            new_limit = RLIM_INFINITY;
+        } else if (wcscasecmp(argv[w.woptind], L"hard") == 0) {
+            new_limit = get(what, 1);
+        } else if (wcscasecmp(argv[w.woptind], L"soft") == 0) {
+            new_limit = get(what, soft);
+        } else {
+            errno = 0;
+            new_limit = wcstol(argv[w.woptind], &end, 10);
+            if (errno || *end) {
+                streams.err.append_format(L"%ls: Invalid limit '%ls'\n", argv[0], argv[w.woptind]);
+                builtin_print_help(parser, streams, argv[0], streams.err);
+                return 1;
             }
-
-            if (wcscasecmp(argv[w.woptind], L"unlimited") == 0) {
-                new_limit = RLIM_INFINITY;
-            } else if (wcscasecmp(argv[w.woptind], L"hard") == 0) {
-                new_limit = get(what, 1);
-            } else if (wcscasecmp(argv[w.woptind], L"soft") == 0) {
-                new_limit = get(what, soft);
-            } else {
-                errno = 0;
-                new_limit = wcstol(argv[w.woptind], &end, 10);
-                if (errno || *end) {
-                    streams.err.append_format(L"%ls: Invalid limit '%ls'\n", argv[0],
-                                              argv[w.woptind]);
-                    builtin_print_help(parser, streams, argv[0], streams.err);
-                    return 1;
-                }
-                new_limit *= get_multiplier(what);
-            }
-
-            return set(what, hard, soft, new_limit, streams);
+            new_limit *= get_multiplier(what);
         }
-        default: {
-            streams.err.append(argv[0]);
-            streams.err.append(L": Too many arguments\n");
-            builtin_print_help(parser, streams, argv[0], streams.err);
-            return 1;
-        }
+
+        return set(what, hard, soft, new_limit, streams);
     }
-    return 0;
+
+    streams.err.append(argv[0]);
+    streams.err.append(L": Too many arguments\n");
+    builtin_print_help(parser, streams, argv[0], streams.err);
+    return 1;
 }

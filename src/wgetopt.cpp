@@ -161,8 +161,9 @@ const wchar_t *wgetopter_t::_wgetopt_initialize(const wchar_t *optstring) {
     } else if (optstring[0] == '+') {
         ordering = REQUIRE_ORDER;
         ++optstring;
-    } else
+    } else {
         ordering = PERMUTE;
+    }
 
     return optstring;
 }
@@ -211,7 +212,7 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
                                    const struct woption *longopts, int *longind, int long_only) {
     woptarg = NULL;
 
-    if (woptind == 0) optstring = _wgetopt_initialize(optstring);
+    if (woptind == 0) optstring = _wgetopt_initialize(optstring);  //!OCLINT(parameter reassignment)
 
     if (nextchar == NULL || *nextchar == '\0') {
         // Advance to the next ARGV-element.
@@ -380,59 +381,62 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
     }
 
     // Look at and handle the next short option-character.
-    {
-        wchar_t c = *nextchar++;
-        wchar_t *temp = const_cast<wchar_t *>(my_index(optstring, c));
+    wchar_t c = *nextchar++;
+    wchar_t *temp = const_cast<wchar_t *>(my_index(optstring, c));
 
-        // Increment `woptind' when we start to process its last character.
-        if (*nextchar == '\0') ++woptind;
+    // Increment `woptind' when we start to process its last character.
+    if (*nextchar == '\0') ++woptind;
 
-        if (temp == NULL || c == ':') {
-            if (wopterr) {
-                fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0], (wint_t)c);
-            }
-            woptopt = c;
-
-            if (*nextchar != '\0') woptind++;
-
-            return '?';
+    if (temp == NULL || c == ':') {
+        if (wopterr) {
+            fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0], (wint_t)c);
         }
-        if (temp[1] == ':') {
-            if (temp[2] == ':') {
-                // This is an option that accepts an argument optionally.
-                if (*nextchar != '\0') {
-                    woptarg = nextchar;
-                    woptind++;
-                } else
-                    woptarg = NULL;
-                nextchar = NULL;
-            } else {
-                // This is an option that requires an argument.
-                if (*nextchar != '\0') {
-                    woptarg = nextchar;
-                    // If we end this ARGV-element by taking the rest as an arg, we must advance to
-                    // the next element now.
-                    woptind++;
-                } else if (woptind == argc) {
-                    if (wopterr) {
-                        // 1003.2 specifies the format of this message.
-                        fwprintf(stderr, _(L"%ls: Option requires an argument -- %lc\n"), argv[0],
-                                 (wint_t)c);
-                    }
-                    woptopt = c;
-                    if (optstring[0] == ':')
-                        c = ':';
-                    else
-                        c = '?';
-                } else
-                    // We already incremented `woptind' once; increment it again when taking next
-                    // ARGV-elt as argument.
-                    woptarg = argv[woptind++];
-                nextchar = NULL;
-            }
-        }
+        woptopt = c;
+
+        if (*nextchar != '\0') woptind++;
+        return '?';
+    }
+
+    if (temp[1] != ':') {
         return c;
     }
+
+    if (temp[2] == ':') {
+        // This is an option that accepts an argument optionally.
+        if (*nextchar != '\0') {
+            woptarg = nextchar;
+            woptind++;
+        } else {
+            woptarg = NULL;
+        }
+        nextchar = NULL;
+    } else {
+        // This is an option that requires an argument.
+        if (*nextchar != '\0') {
+            woptarg = nextchar;
+            // If we end this ARGV-element by taking the rest as an arg, we must advance to
+            // the next element now.
+            woptind++;
+        } else if (woptind == argc) {
+            if (wopterr) {
+                // 1003.2 specifies the format of this message.
+                fwprintf(stderr, _(L"%ls: Option requires an argument -- %lc\n"), argv[0],
+                         (wint_t)c);
+            }
+            woptopt = c;
+            if (optstring[0] == ':') {
+                c = ':';
+            } else {
+                c = '?';
+            }
+        } else {
+            // We already incremented `woptind' once; increment it again when taking next
+            // ARGV-elt as argument.
+            woptarg = argv[woptind++];
+        }
+        nextchar = NULL;
+    }
+    return c;
 }
 
 int wgetopter_t::wgetopt_long(int argc, wchar_t **argv, const wchar_t *options,

@@ -372,38 +372,41 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     wcstring_list_t argument_list;
     parse_execution_result_t result = this->determine_arguments(header, &argument_list, failglob);
 
-    if (result == parse_execution_success) {
-        // The function definition extends from the end of the header to the function end. It's not
-        // just the range of the contents because that loses comments - see issue #1710.
-        assert(block_end_command.has_source());
-        size_t contents_start = header.source_start + header.source_length;
-        size_t contents_end =
-            block_end_command.source_start;  // 1 past the last character in the function definition
-        assert(contents_end >= contents_start);
-
-        // Swallow whitespace at both ends.
-        while (contents_start < contents_end && iswspace(this->src.at(contents_start))) {
-            contents_start++;
-        }
-        while (contents_start < contents_end && iswspace(this->src.at(contents_end - 1))) {
-            contents_end--;
-        }
-
-        assert(contents_end >= contents_start);
-        const wcstring contents_str =
-            wcstring(this->src, contents_start, contents_end - contents_start);
-        int definition_line_offset = this->line_offset_of_character_at_offset(contents_start);
-        wcstring error_str;
-        io_streams_t streams;
-        int err = builtin_function(*parser, streams, argument_list, contents_str,
-                                   definition_line_offset, &error_str);
-        proc_set_last_status(err);
-
-        if (!error_str.empty()) {
-            this->report_error(header, L"%ls", error_str.c_str());
-            result = parse_execution_errored;
-        }
+    if (result != parse_execution_success) {
+        return result;
     }
+
+    // The function definition extends from the end of the header to the function end. It's not
+    // just the range of the contents because that loses comments - see issue #1710.
+    assert(block_end_command.has_source());
+    size_t contents_start = header.source_start + header.source_length;
+    size_t contents_end =
+        block_end_command.source_start;  // 1 past the last character in the function definition
+    assert(contents_end >= contents_start);
+
+    // Swallow whitespace at both ends.
+    while (contents_start < contents_end && iswspace(this->src.at(contents_start))) {
+        contents_start++;
+    }
+    while (contents_start < contents_end && iswspace(this->src.at(contents_end - 1))) {
+        contents_end--;
+    }
+
+    assert(contents_end >= contents_start);
+    const wcstring contents_str =
+        wcstring(this->src, contents_start, contents_end - contents_start);
+    int definition_line_offset = this->line_offset_of_character_at_offset(contents_start);
+    wcstring error_str;
+    io_streams_t streams;
+    int err = builtin_function(*parser, streams, argument_list, contents_str,
+                                definition_line_offset, &error_str);
+    proc_set_last_status(err);
+
+    if (!error_str.empty()) {
+        this->report_error(header, L"%ls", error_str.c_str());
+        result = parse_execution_errored;
+    }
+
     return result;
 }
 
@@ -534,6 +537,10 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
         case EXPAND_OK: {
             break;
         }
+        default: {
+            DIE("unexpected expand_string() return value");
+            break;
+        }
     }
 
     if (result == parse_execution_success && switch_values_expanded.size() != 1) {
@@ -542,66 +549,67 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
                          switch_values_expanded.size());
     }
 
-    if (result == parse_execution_success) {
-        const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
+    if (result != parse_execution_success) {
+        return result;
+    }
 
-        switch_block_t *sb = new switch_block_t();
-        parser->push_block(sb);
+    const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
 
-        // Expand case statements.
-        const parse_node_t *case_item_list = get_child(statement, 3, symbol_case_item_list);
+    switch_block_t *sb = new switch_block_t();
+    parser->push_block(sb);
 
-        // Loop while we don't have a match but do have more of the list.
-        const parse_node_t *matching_case_item = NULL;
-        while (matching_case_item == NULL && case_item_list != NULL) {
-            if (should_cancel_execution(sb)) {
-                result = parse_execution_cancelled;
-                break;
-            }
+    // Expand case statements.
+    const parse_node_t *case_item_list = get_child(statement, 3, symbol_case_item_list);
 
-            // Get the next item and the remainder of the list.
-            const parse_node_t *case_item =
-                tree.next_node_in_node_list(*case_item_list, symbol_case_item, &case_item_list);
-            if (case_item == NULL) {
-                // No more items.
-                break;
-            }
+    // Loop while we don't have a match but do have more of the list.
+    const parse_node_t *matching_case_item = NULL;
+    while (matching_case_item == NULL && case_item_list != NULL) {
+        if (should_cancel_execution(sb)) {
+            result = parse_execution_cancelled;
+            break;
+        }
 
-            // Pull out the argument list.
-            const parse_node_t &arg_list = *get_child(*case_item, 1, symbol_argument_list);
+        // Get the next item and the remainder of the list.
+        const parse_node_t *case_item =
+            tree.next_node_in_node_list(*case_item_list, symbol_case_item, &case_item_list);
+        if (case_item == NULL) {
+            // No more items.
+            break;
+        }
 
-            // Expand arguments. A case item list may have a wildcard that fails to expand to
-            // anything. We also report case errors, but don't stop execution; i.e. a case item that
-            // contains an unexpandable process will report and then fail to match.
-            wcstring_list_t case_args;
-            parse_execution_result_t case_result =
-                this->determine_arguments(arg_list, &case_args, failglob);
-            if (case_result == parse_execution_success) {
-                for (size_t i = 0; i < case_args.size(); i++) {
-                    const wcstring &arg = case_args.at(i);
+        // Pull out the argument list.
+        const parse_node_t &arg_list = *get_child(*case_item, 1, symbol_argument_list);
 
-                    // Unescape wildcards so they can be expanded again.
-                    wcstring unescaped_arg = parse_util_unescape_wildcards(arg);
-                    bool match = wildcard_match(switch_value_expanded, unescaped_arg);
+        // Expand arguments. A case item list may have a wildcard that fails to expand to
+        // anything. We also report case errors, but don't stop execution; i.e. a case item that
+        // contains an unexpandable process will report and then fail to match.
+        wcstring_list_t case_args;
+        parse_execution_result_t case_result =
+            this->determine_arguments(arg_list, &case_args, failglob);
+        if (case_result == parse_execution_success) {
+            for (size_t i = 0; i < case_args.size(); i++) {
+                const wcstring &arg = case_args.at(i);
 
-                    // If this matched, we're done.
-                    if (match) {
-                        matching_case_item = case_item;
-                        break;
-                    }
+                // Unescape wildcards so they can be expanded again.
+                wcstring unescaped_arg = parse_util_unescape_wildcards(arg);
+                bool match = wildcard_match(switch_value_expanded, unescaped_arg);
+
+                // If this matched, we're done.
+                if (match) {
+                    matching_case_item = case_item;
+                    break;
                 }
             }
         }
-
-        if (result == parse_execution_success && matching_case_item != NULL) {
-            // Success, evaluate the job list.
-            const parse_node_t *job_list = get_child(*matching_case_item, 3, symbol_job_list);
-            result = this->run_job_list(*job_list, sb);
-        }
-
-        parser->pop_block(sb);
     }
 
+    if (result == parse_execution_success && matching_case_item != NULL) {
+        // Success, evaluate the job list.
+        const parse_node_t *job_list = get_child(*matching_case_item, 3, symbol_job_list);
+        result = this->run_job_list(*job_list, sb);
+    }
+
+    parser->pop_block(sb);
     return result;
 }
 
@@ -945,6 +953,10 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(
             case EXPAND_OK: {
                 break;
             }
+            default: {
+                DIE("unexpected expand_string() return value");
+                break;
+            }
         }
 
         // Now copy over any expanded arguments. Do it using swap() to avoid extra allocations; this
@@ -1184,7 +1196,7 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
     // Return what happened.
     if (result == parse_execution_success) {
         // Link up the processes.
-        assert(!processes.empty());
+        assert(!processes.empty());  //!OCLINT(multiple unary operator)
         j->first_process = processes.at(0);
         for (size_t i = 1; i < processes.size(); i++) {
             processes.at(i - 1)->next = processes.at(i);
@@ -1208,12 +1220,10 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
     // Get terminal modes.
     struct termios tmodes = {};
-    if (shell_is_interactive()) {
-        if (tcgetattr(STDIN_FILENO, &tmodes)) {
-            // Need real error handling here.
-            wperror(L"tcgetattr");
-            return parse_execution_errored;
-        }
+    if (shell_is_interactive() && tcgetattr(STDIN_FILENO, &tmodes)) {
+        // Need real error handling here.
+        wperror(L"tcgetattr");
+        return parse_execution_errored;
     }
 
     // Increment the eval_level for the duration of this command.
@@ -1370,7 +1380,7 @@ parse_execution_result_t parse_execution_context_t::run_job_list(const parse_nod
 parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
     node_offset_t offset, const block_t *associated_block, const io_chain_t &io) {
     // Don't ever expect to have an empty tree if this is called.
-    assert(!tree.empty());
+    assert(!tree.empty());  //!OCLINT(multiple unary operator)
     assert(offset < tree.size());
 
     // Apply this block IO for the duration of this function.

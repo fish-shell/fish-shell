@@ -386,7 +386,7 @@ toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) | show-SED
 	@echo " SED       $(em)$@$(sgr0)"
 	$v rm -f toc.tmp $@
 # Ugly hack to set the toc initial title for the main page
-	$v echo '- <a href="index.html" id="toc-index">fish shell documentation - $FISH_BUILD_VERSION</a>' > toc.tmp
+	$v echo '- <a href="index.html" id="toc-index">fish shell documentation - $(FISH_BUILD_VERSION)</a>' > toc.tmp
 # The first sed command captures the page name, followed by the description
 # The second sed command captures the command name \1 and the description \2, but only up to a dash
 # This is to reduce the size of the TOC in the command listing on the main page
@@ -454,7 +454,7 @@ lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 	else \
 		WORDBL='\\<'; WORDBR='\\>'; \
 	fi; $(SED) <lexicon.txt >>$@.tmp -n -e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" -e '$$G;s/.*\n/b tidy/p';
-	mv $@.tmp $@; test -x $@ || chmod a+x $@; 
+	$v mv $@.tmp $@; test -x $@ || chmod a+x $@; 
 
 
 #
@@ -649,6 +649,7 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
+	$v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/groff
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config
@@ -673,6 +674,7 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
 	done;
 	@echo "Installing $(bo)man pages$(sgr0)";
+	$v $(INSTALL) -m 644 share/groff/* $(DESTDIR)$(datadir)/fish/groff/
 	$v for i in $(wildcard share/man/man1/*.1); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
 	done;

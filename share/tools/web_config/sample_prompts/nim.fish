@@ -2,8 +2,11 @@
 # author: Guilhem "Nim" Saurel − https://github.com/nim65s/dotfiles/
 
 function fish_prompt
-    and set retc green; or set retc red
-    tty|string match -q -r tty; and set tty tty; or set tty pts
+    and set retc green
+    or set retc red
+    tty | string match -q -r tty
+    and set tty tty
+    or set tty pts
 
     set_color $retc
     if [ $tty = tty ]
@@ -26,7 +29,7 @@ function fish_prompt
     else
         set_color -o cyan
     end
-    echo -n (hostname)
+    echo -n (prompt_hostname)
     set_color -o white
     #echo -n :(prompt_pwd)
     echo -n :(pwd|sed "s=$HOME=~=")
@@ -46,16 +49,16 @@ function fish_prompt
     echo -n (date +%X)
     set_color -o green
     echo -n ]
-    
+
     if type -q acpi
-		if [ (acpi -a 2> /dev/null | string match -r off) ]
-			echo -n '─['
-			set_color -o red
-			echo -n (acpi -b|cut -d' ' -f 4-)
-			set_color -o green
-			echo -n ']'
-		end
-	end
+        if [ (acpi -a 2> /dev/null | string match -r off) ]
+            echo -n '─['
+            set_color -o red
+            echo -n (acpi -b|cut -d' ' -f 4-)
+            set_color -o green
+            echo -n ']'
+        end
+    end
     echo
     set_color normal
     for job in (jobs)

@@ -32,7 +32,7 @@
 static int writeb_internal(char c);
 
 /// The function used for output.
-static int (*out)(char c) = writeb_internal;
+static int (*out)(char c) = writeb_internal;  //!OCLINT(unused param)
 
 /// Whether term256 and term24bit are supported.
 static color_support_t color_support = 0;
@@ -67,32 +67,31 @@ static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
         // Use tparm to emit color escape.
         writembs(tparm(todo, idx));
         return true;
-    } else {
-        // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
-        char buff[16] = "";
-        if (idx < 16) {
-            // this allows the non-bright color to happen instead of no color working at all when
-            // a bright is attempted when only colors 0-7 are supported.
-            // TODO: enter bold mode in builtin_set_color in the same circumstance- doing that
-            // combined
-            // with what we do here, will make the brights actually work for virtual
-            // consoles/ancient emulators.
-            if (max_colors == 8 && idx > 8) idx -= 8;
-
-            snprintf(buff, sizeof buff, "\x1b[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
-        } else {
-            snprintf(buff, sizeof buff, "\x1b[%d;5;%dm", is_fg ? 38 : 48, idx);
-        }
-
-        int (*writer)(char) = output_get_writer();
-        if (writer) {
-            for (size_t i = 0; buff[i]; i++) {
-                writer(buff[i]);
-            }
-        }
-
-        return true;
     }
+
+    // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
+    char buff[16] = "";
+    if (idx < 16) {
+        // this allows the non-bright color to happen instead of no color working at all when a
+        // bright is attempted when only colors 0-7 are supported.
+        //
+        // TODO: enter bold mode in builtin_set_color in the same circumstance- doing that combined
+        // with what we do here, will make the brights actually work for virtual consoles/ancient
+        // emulators.
+        if (max_colors == 8 && idx > 8) idx -= 8;
+        snprintf(buff, sizeof buff, "\x1b[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
+    } else {
+        snprintf(buff, sizeof buff, "\x1b[%d;5;%dm", is_fg ? 38 : 48, idx);
+    }
+
+    int (*writer)(char) = output_get_writer();
+    if (writer) {
+        for (size_t i = 0; buff[i]; i++) {
+            writer(buff[i]);
+        }
+    }
+
+    return true;
 }
 
 static bool write_foreground_color(unsigned char idx) {
@@ -115,26 +114,28 @@ static bool write_background_color(unsigned char idx) {
 
 // Exported for builtin_set_color's usage only.
 bool write_color(rgb_color_t color, bool is_fg) {
-    bool supports_term24bit = !!(output_get_color_support() & color_support_term24bit);
+    bool supports_term24bit =
+        static_cast<bool>(output_get_color_support() & color_support_term24bit);
     if (!supports_term24bit || !color.is_rgb()) {
         // Indexed or non-24 bit color.
         unsigned char idx = index_for_color(color);
         return (is_fg ? write_foreground_color : write_background_color)(idx);
-    } else {
-        // 24 bit! No tparm here, just ANSI escape sequences.
-        // Foreground: ^[38;2;<r>;<g>;<b>m
-        // Background: ^[48;2;<r>;<g>;<b>m
-        color24_t rgb = color.to_color24();
-        char buff[128];
-        snprintf(buff, sizeof buff, "\x1b[%d;2;%u;%u;%um", is_fg ? 38 : 48, rgb.rgb[0], rgb.rgb[1],
-                 rgb.rgb[2]);
-        int (*writer)(char) = output_get_writer();
-        if (writer) {
-            for (size_t i = 0; buff[i]; i++) {
-                writer(buff[i]);
-            }
+    }
+
+    // 24 bit! No tparm here, just ANSI escape sequences.
+    // Foreground: ^[38;2;<r>;<g>;<b>m
+    // Background: ^[48;2;<r>;<g>;<b>m
+    color24_t rgb = color.to_color24();
+    char buff[128];
+    snprintf(buff, sizeof buff, "\x1b[%d;2;%u;%u;%um", is_fg ? 38 : 48, rgb.rgb[0], rgb.rgb[1],
+             rgb.rgb[2]);
+    int (*writer)(char) = output_get_writer();
+    if (writer) {
+        for (size_t i = 0; buff[i]; i++) {
+            writer(buff[i]);
         }
     }
+
     return true;
 }
 
@@ -271,12 +272,8 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
     }
 
     // Lastly, we set bold mode and underline mode correctly.
-    if ((enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0) && !bg_set) {
-        if (is_bold && !was_bold) {
-            if (enter_bold_mode) {
-                writembs(tparm(enter_bold_mode));
-            }
-        }
+    if (is_bold && !was_bold && enter_bold_mode && strlen(enter_bold_mode) > 0 && !bg_set) {
+        writembs(tparm(enter_bold_mode));
         was_bold = is_bold;
     }
 
@@ -312,13 +309,10 @@ int writech(wint_t ch) {
     if (ch >= ENCODE_DIRECT_BASE && ch < ENCODE_DIRECT_BASE + 256) {
         buff[0] = ch - ENCODE_DIRECT_BASE;
         len = 1;
-    } else if (MB_CUR_MAX == 1)  // single-byte locale (C/POSIX/ISO-8859)
-    {
+    } else if (MB_CUR_MAX == 1) {
+        // single-byte locale (C/POSIX/ISO-8859)
         // If `wc` contains a wide character we emit a question-mark.
-        if (ch & ~0xFF) {
-            ch = '?';
-        }
-        buff[0] = ch;
+        buff[0] = ch & ~0xFF ? '?' : ch;
         len = 1;
     } else {
         mbstate_t state = {};
@@ -389,7 +383,7 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
     }
     // If we have both RGB and named colors, then prefer rgb if term256 is supported.
     rgb_color_t result = rgb_color_t::none();
-    bool has_term256 = !!(support & color_support_term256);
+    bool has_term256 = static_cast<bool>(support & color_support_term256);
     if ((!first_rgb.is_none() && has_term256) || first_named.is_none()) {
         result = first_rgb;
     } else {
@@ -446,7 +440,8 @@ rgb_color_t parse_color(const wcstring &val, bool is_background) {
 
 #if 0
     wcstring desc = result.description();
-    printf("Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(), is_background ? "background" : "foreground");
+    printf("Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(),
+           is_background ? "background" : "foreground");
 #endif
 
     return result;

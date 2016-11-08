@@ -161,7 +161,7 @@ void function_add(const function_data_t &data, const parser_t &parser, int defin
     UNUSED(parser);
     ASSERT_IS_MAIN_THREAD();
 
-    CHECK(!data.name.empty(), );
+    CHECK(!data.name.empty(), );  //!OCLINT(multiple unary operator)
     CHECK(data.definition, );
     scoped_lock locker(functions_lock);
 
@@ -272,9 +272,9 @@ bool function_get_desc(const wcstring &name, wcstring *out_desc) {
     if (out_desc && func && !func->description.empty()) {
         out_desc->assign(_(func->description.c_str()));
         return true;
-    } else {
-        return false;
     }
+
+    return false;
 }
 
 void function_set_desc(const wcstring &name, const wcstring &desc) {
@@ -311,8 +311,8 @@ wcstring_list_t function_get_names(int get_hidden) {
         const wcstring &name = iter->first;
 
         // Maybe skip hidden.
-        if (!get_hidden) {
-            if (name.empty() || name.at(0) == L'_') continue;
+        if (!get_hidden && (name.empty() || name.at(0) == L'_')) {
+            continue;
         }
         names.insert(name);
     }

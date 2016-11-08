@@ -518,8 +518,8 @@ expression *test_parser::parse_expression(unsigned int start, unsigned int end) 
     unsigned int argc = end - start;
     switch (argc) {
         case 0: {
-            assert(0);  // should have been caught by the above test
-            return NULL;
+            DIE("argc should not be zero");  // should have been caught by the above test
+            break;
         }
         case 1: {
             return error(L"Missing argument at index %u", start + 1);
@@ -579,62 +579,55 @@ bool binary_primary::evaluate(wcstring_list_t &errors) {
 }
 
 bool unary_operator::evaluate(wcstring_list_t &errors) {
-    switch (token) {
-        case test_bang: {
-            assert(subject.get());
-            return !subject->evaluate(errors);
-        }
-        default: {
-            errors.push_back(format_string(L"Unknown token type in %s", __func__));
-            return false;
-        }
+    if (token == test_bang) {
+        assert(subject.get());
+        return !subject->evaluate(errors);
     }
+
+    errors.push_back(format_string(L"Unknown token type in %s", __func__));
+    return false;
 }
 
 bool combining_expression::evaluate(wcstring_list_t &errors) {
-    switch (token) {
-        case test_combine_and:
-        case test_combine_or: {
-            // One-element case.
-            if (subjects.size() == 1) return subjects.at(0)->evaluate(errors);
+    if (token == test_combine_and || token == test_combine_or) {
+        assert(!subjects.empty());  //!OCLINT(multiple unary operator)
+        assert(combiners.size() + 1 == subjects.size());
 
-            // Evaluate our lists, remembering that AND has higher precedence than OR. We can
-            // visualize this as a sequence of OR expressions of AND expressions.
-            assert(combiners.size() + 1 == subjects.size());
-            assert(!subjects.empty());
+        // One-element case.
+        if (subjects.size() == 1) return subjects.at(0)->evaluate(errors);
 
-            size_t idx = 0, max = subjects.size();
-            bool or_result = false;
-            while (idx < max) {
-                if (or_result) {  // short circuit
+        // Evaluate our lists, remembering that AND has higher precedence than OR. We can
+        // visualize this as a sequence of OR expressions of AND expressions.
+        size_t idx = 0, max = subjects.size();
+        bool or_result = false;
+        while (idx < max) {
+            if (or_result) {  // short circuit
+                break;
+            }
+
+            // Evaluate a stream of AND starting at given subject index. It may only have one
+            // element.
+            bool and_result = true;
+            for (; idx < max; idx++) {
+                // Evaluate it, short-circuiting.
+                and_result = and_result && subjects.at(idx)->evaluate(errors);
+
+                // If the combiner at this index (which corresponding to how we combine with the
+                // next subject) is not AND, then exit the loop.
+                if (idx + 1 < max && combiners.at(idx) != test_combine_and) {
+                    idx++;
                     break;
                 }
-
-                // Evaluate a stream of AND starting at given subject index. It may only have one
-                // element.
-                bool and_result = true;
-                for (; idx < max; idx++) {
-                    // Evaluate it, short-circuiting.
-                    and_result = and_result && subjects.at(idx)->evaluate(errors);
-
-                    // If the combiner at this index (which corresponding to how we combine with the
-                    // next subject) is not AND, then exit the loop.
-                    if (idx + 1 < max && combiners.at(idx) != test_combine_and) {
-                        idx++;
-                        break;
-                    }
-                }
-
-                // OR it in.
-                or_result = or_result || and_result;
             }
-            return or_result;
+
+            // OR it in.
+            or_result = or_result || and_result;
         }
-        default: {
-            errors.push_back(format_string(L"Unknown token type in %s", __func__));
-            return BUILTIN_TEST_FAIL;
-        }
+        return or_result;
     }
+
+    errors.push_back(format_string(L"Unknown token type in %s", __func__));
+    return BUILTIN_TEST_FAIL;
 }
 
 bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
@@ -798,42 +791,36 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Collect the arguments into a list.
     const wcstring_list_t args(argv + 1, argv + 1 + argc);
 
-    switch (argc) {
-        case 0: {
-            // Per 1003.1, exit false.
-            return BUILTIN_TEST_FAIL;
-        }
-        case 1: {
-            // Per 1003.1, exit true if the arg is non-empty.
-            return args.at(0).empty() ? BUILTIN_TEST_FAIL : BUILTIN_TEST_SUCCESS;
-        }
-        default: {
-            // Try parsing. If expr is not nil, we are responsible for deleting it.
-            wcstring err;
-            expression *expr = test_parser::parse_args(args, err);
-            if (!expr) {
-#if 0
-                printf("Oops! test was given args:\n");
-                for (size_t i=0; i < argc; i++) {
-                    printf("\t%ls\n", args.at(i).c_str());
-                }
-                printf("and returned parse error: %ls\n", err.c_str());
-#endif
-                streams.err.append(err);
-                return BUILTIN_TEST_FAIL;
-            }
+    if (argc == 0) {
+        return BUILTIN_TEST_FAIL;  // Per 1003.1, exit false.
+    } else if (argc == 1) {
+        // Per 1003.1, exit true if the arg is non-empty.
+        return args.at(0).empty() ? BUILTIN_TEST_FAIL : BUILTIN_TEST_SUCCESS;
+    }
 
-            wcstring_list_t eval_errors;
-            bool result = expr->evaluate(eval_errors);
-            if (!eval_errors.empty()) {
-                printf("test returned eval errors:\n");
-                for (size_t i = 0; i < eval_errors.size(); i++) {
-                    printf("\t%ls\n", eval_errors.at(i).c_str());
-                }
-            }
-            delete expr;
-            return result ? BUILTIN_TEST_SUCCESS : BUILTIN_TEST_FAIL;
+    // Try parsing. If expr is not nil, we are responsible for deleting it.
+    wcstring err;
+    expression *expr = test_parser::parse_args(args, err);
+    if (!expr) {
+#if 0
+        printf("Oops! test was given args:\n");
+        for (size_t i=0; i < argc; i++) {
+            printf("\t%ls\n", args.at(i).c_str());
+        }
+        printf("and returned parse error: %ls\n", err.c_str());
+#endif
+        streams.err.append(err);
+        return BUILTIN_TEST_FAIL;
+    }
+
+    wcstring_list_t eval_errors;
+    bool result = expr->evaluate(eval_errors);
+    if (!eval_errors.empty()) {
+        printf("test returned eval errors:\n");
+        for (size_t i = 0; i < eval_errors.size(); i++) {
+            printf("\t%ls\n", eval_errors.at(i).c_str());
         }
     }
-    return 1;
+    delete expr;
+    return result ? BUILTIN_TEST_SUCCESS : BUILTIN_TEST_FAIL;
 }

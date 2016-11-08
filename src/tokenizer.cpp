@@ -64,10 +64,10 @@ tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags)
       continue_line_after_comment(false) {
     assert(b != NULL);
 
-    this->accept_unfinished = !!(flags & TOK_ACCEPT_UNFINISHED);
-    this->show_comments = !!(flags & TOK_SHOW_COMMENTS);
-    this->squash_errors = !!(flags & TOK_SQUASH_ERRORS);
-    this->show_blank_lines = !!(flags & TOK_SHOW_BLANK_LINES);
+    this->accept_unfinished = static_cast<bool>(flags & TOK_ACCEPT_UNFINISHED);
+    this->show_comments = static_cast<bool>(flags & TOK_SHOW_COMMENTS);
+    this->squash_errors = static_cast<bool>(flags & TOK_SQUASH_ERRORS);
+    this->show_blank_lines = static_cast<bool>(flags & TOK_SHOW_BLANK_LINES);
 
     this->has_next = (*b != L'\0');
     this->tok_next();
@@ -219,6 +219,7 @@ void tokenizer_t::read_string() {
                             if (!tok_is_string_character(*(this->buff), is_first)) {
                                 do_loop = 0;
                             }
+                            break;
                         }
                     }
                     break;
@@ -265,6 +266,9 @@ void tokenizer_t::read_string() {
                             do_loop = 0;
                             break;
                         }
+                        default: {
+                            break;  // ignore other chars
+                        }
                     }
                     break;
                 }
@@ -284,6 +288,9 @@ void tokenizer_t::read_string() {
                         case L'\0': {
                             do_loop = 0;
                             break;
+                        }
+                        default: {
+                            break;  // ignore other chars
                         }
                     }
                     break;
@@ -318,7 +325,7 @@ void tokenizer_t::read_string() {
                 break;
             }
             default: {
-                assert(0 && "Unexpected mode in read_string");
+                DIE("unexpected mode in read_string");
                 break;
             }
         }
@@ -706,10 +713,7 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
                 break;
             }
             case s_end:
-            default: {
-                // We won't get here, but keep the compiler happy.
-                break;
-            }
+            default: { break; }
         }
     }
     return consumed;
@@ -760,8 +764,9 @@ bool move_word_state_machine_t::consume_char(wchar_t c) {
         case move_word_style_whitespace: {
             return consume_char_whitespace(c);
         }
-        default: { abort(); }
     }
+
+    DIE("should not reach this statement");  // silence some compiler errors about not returning
 }
 
 move_word_state_machine_t::move_word_state_machine_t(move_word_style_t syl)

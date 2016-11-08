@@ -66,7 +66,9 @@ int set_child_group(job_t *j, process_t *p, int print_errors) {
             j->pgid = p->pid;
         }
 
-        if (setpgid(p->pid, j->pgid)) {
+        if (setpgid(p->pid, j->pgid)) {  //!OCLINT(collapsible if statements)
+            // TODO: Figure out why we're testing whether the pgid is correct after attempting to
+            // set it failed. This was added in commit 4e912ef8 from 2012-02-27.
             if (getpgid(p->pid) != j->pgid && print_errors) {
                 char pid_buff[128];
                 char job_id_buff[128];
@@ -95,7 +97,8 @@ int set_child_group(job_t *j, process_t *p, int print_errors) {
     }
 
     if (job_get_flag(j, JOB_TERMINAL) && job_get_flag(j, JOB_FOREGROUND)) {
-        if (tcsetpgrp(0, j->pgid) && print_errors) {
+        int result = tcsetpgrp(0, j->pgid);
+        if (result == -1 && print_errors) {
             char job_id_buff[64];
             char command_buff[64];
             format_long_safe(job_id_buff, j->job_id);
@@ -485,20 +488,14 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
 /// allocate memory, etc.
 bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errlen) {
     bool success = true;
-    if (out && outlen) {
-        if (write_loop(STDOUT_FILENO, out, outlen) < 0) {
-            int e = errno;
-            debug_safe(0, "Error while writing to stdout");
-            safe_perror("write_loop");
-            success = false;
-            errno = e;
-        }
+    if (out && outlen && write_loop(STDOUT_FILENO, out, outlen) < 0) {
+        int e = errno;
+        debug_safe(0, "Error while writing to stdout");
+        safe_perror("write_loop");
+        success = false;
+        errno = e;
     }
 
-    if (err && errlen) {
-        if (write_loop(STDERR_FILENO, err, errlen) < 0) {
-            success = false;
-        }
-    }
+    if (err && errlen && write_loop(STDERR_FILENO, err, errlen) < 0) success = false;
     return success;
 }

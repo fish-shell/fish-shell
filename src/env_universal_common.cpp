@@ -930,23 +930,24 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
     struct ifaddrs *ifap;
     bool ok = false;
 
-    if (getifaddrs(&ifap) == 0) {
-        for (const ifaddrs *p = ifap; p; p = p->ifa_next) {
-            if (p->ifa_addr && p->ifa_addr->sa_family == AF_LINK) {
-                if (p->ifa_name && p->ifa_name[0] &&
-                    !strcmp((const char *)p->ifa_name, interface)) {
-                    const sockaddr_dl &sdl = *reinterpret_cast<sockaddr_dl *>(p->ifa_addr);
-
-                    size_t alen = sdl.sdl_alen;
-                    if (alen > MAC_ADDRESS_MAX_LEN) alen = MAC_ADDRESS_MAX_LEN;
-                    memcpy(macaddr, sdl.sdl_data + sdl.sdl_nlen, alen);
-                    ok = true;
-                    break;
-                }
-            }
-        }
-        freeifaddrs(ifap);
+    if (getifaddrs(&ifap) != 0) {
+        return ok;
     }
+
+    for (const ifaddrs *p = ifap; p; p = p->ifa_next) {
+        bool is_af_link = p->ifa_addr && p->ifa_addr->sa_family == AF_LINK;
+        if (is_af_link && p->ifa_name && p->ifa_name[0] &&
+            !strcmp((const char *)p->ifa_name, interface)) {
+            const sockaddr_dl &sdl = *reinterpret_cast<sockaddr_dl *>(p->ifa_addr);
+
+            size_t alen = sdl.sdl_alen;
+            if (alen > MAC_ADDRESS_MAX_LEN) alen = MAC_ADDRESS_MAX_LEN;
+            memcpy(macaddr, sdl.sdl_data + sdl.sdl_nlen, alen);
+            ok = true;
+            break;
+        }
+    }
+    freeifaddrs(ifap);
     return ok;
 }
 
@@ -978,11 +979,8 @@ wcstring get_machine_identifier() {
         for (size_t i = 0; i < MAC_ADDRESS_MAX_LEN; i++) {
             append_format(result, L"%02x", mac_addr[i]);
         }
-    } else if (get_hostname_identifier(&result)) {
-        // Hooray
-    } else {
-        // Fallback
-        result.assign(L"nohost");
+    } else if (!get_hostname_identifier(&result)) {
+        result.assign(L"nohost");  // fallback to a dummy value
     }
     return result;
 }
@@ -1033,12 +1031,11 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         }
 
         // Set the size, if it's too small.
-        if (!errored && size < (off_t)sizeof(universal_notifier_shmem_t)) {
-            if (ftruncate(fd, sizeof(universal_notifier_shmem_t)) < 0) {
-                int err = errno;
-                report_error(err, L"Unable to truncate shared memory object with path '%s'", path);
-                errored = true;
-            }
+        bool set_size = !errored && size < (off_t)sizeof(universal_notifier_shmem_t);
+        if (set_size && ftruncate(fd, sizeof(universal_notifier_shmem_t)) < 0) {
+            int err = errno;
+            report_error(err, L"Unable to truncate shared memory object with path '%s'", path);
+            errored = true;
         }
 
         // Memory map the region.
@@ -1074,7 +1071,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
     void post_notification() {
         if (region != NULL) {
             /* Read off the seed */
-            uint32_t seed = ntohl(region->universal_variable_seed);
+            uint32_t seed = ntohl(region->universal_variable_seed);  //!OCLINT(constant cond op)
 
             // Increment it. Don't let it wrap to zero.
             do {
@@ -1083,9 +1080,9 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
             last_seed = seed;
 
             // Write out our data.
-            region->magic = htonl(SHMEM_MAGIC_NUMBER);
-            region->version = htonl(SHMEM_VERSION_CURRENT);
-            region->universal_variable_seed = htonl(seed);
+            region->magic = htonl(SHMEM_MAGIC_NUMBER);       //!OCLINT(constant cond op)
+            region->version = htonl(SHMEM_VERSION_CURRENT);  //!OCLINT(constant cond op)
+            region->universal_variable_seed = htonl(seed);   //!OCLINT(constant cond op)
         }
     }
 
@@ -1106,7 +1103,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
     bool poll() {
         bool result = false;
         if (region != NULL) {
-            uint32_t seed = ntohl(region->universal_variable_seed);
+            uint32_t seed = ntohl(region->universal_variable_seed);  //!OCLINT(constant cond op)
             if (seed != last_seed) {
                 result = true;
                 last_seed = seed;
@@ -1237,10 +1234,12 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         int fd = wopen_cloexec(vars_path, O_RDWR | O_NONBLOCK, 0600);
         if (fd < 0 && errno == ENOENT) {
             // File doesn't exist, try creating it.
-            if (mkfifo(narrow_path.c_str(), 0600) >= 0) {
+            int mkfifo_status = mkfifo(narrow_path.c_str(), 0600);
+            if (mkfifo_status != -1) {
                 fd = wopen_cloexec(vars_path, O_RDWR | O_NONBLOCK, 0600);
             }
         }
+
         if (fd < 0) {
             // Maybe open failed, maybe mkfifo failed.
             int err = errno;
@@ -1314,13 +1313,11 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         if (pipe_fd >= 0) {
             // We need to write some data (any data) to the pipe, then wait for a while, then read
             // it back. Nobody is expected to read it except us.
-            int pid_nbo = htonl(getpid());
+            int pid_nbo = htonl(getpid());  //!OCLINT(constant cond op)
             ssize_t amt_written = write(this->pipe_fd, &pid_nbo, sizeof pid_nbo);
-            if (amt_written < 0) {
-                if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                    // Very unsual: the pipe is full!
-                    drain_excessive_data();
-                }
+            if (amt_written < 0 && (errno == EWOULDBLOCK || errno == EAGAIN)) {
+                // Very unsual: the pipe is full!
+                drain_excessive_data();
             }
 
             // Now schedule a read for some time in the future.
@@ -1358,8 +1355,6 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
     }
 
     bool poll() {
-        bool result = false;
-
         // Check if we are past the readback time.
         if (this->readback_time_usec > 0 && get_time() >= this->readback_time_usec) {
             // Read back what we wrote. We do nothing with the value.
@@ -1374,30 +1369,29 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         }
 
         // Check to see if we are doing readability polling.
-        if (polling_due_to_readable_fd && pipe_fd >= 0) {
-            // We are polling, so we are definitely going to sync.
-            result = true;
-
-            // See if this is still readable.
-            fd_set fds;
-            FD_ZERO(&fds);
-            FD_SET(this->pipe_fd, &fds);
-            struct timeval timeout = {};
-            select(this->pipe_fd + 1, &fds, NULL, NULL, &timeout);
-            if (!FD_ISSET(this->pipe_fd, &fds)) {
-                // No longer readable, no longer polling.
-                polling_due_to_readable_fd = false;
-                drain_if_still_readable_time_usec = 0;
-            } else {
-                // Still readable. If it's been readable for a long time, there is probably
-                // lingering data on the pipe.
-                if (get_time() >= drain_if_still_readable_time_usec) {
-                    drain_excessive_data();
-                }
-            }
+        if (!polling_due_to_readable_fd || pipe_fd < 0) {
+            return false;
         }
 
-        return result;
+        // We are polling, so we are definitely going to sync.
+        // See if this is still readable.
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(this->pipe_fd, &fds);
+        struct timeval timeout = {};
+        select(this->pipe_fd + 1, &fds, NULL, NULL, &timeout);
+        if (!FD_ISSET(this->pipe_fd, &fds)) {
+            // No longer readable, no longer polling.
+            polling_due_to_readable_fd = false;
+            drain_if_still_readable_time_usec = 0;
+        } else {
+            // Still readable. If it's been readable for a long time, there is probably
+            // lingering data on the pipe.
+            if (get_time() >= drain_if_still_readable_time_usec) {
+                drain_excessive_data();
+            }
+        }
+        return true;
     }
 };
 
@@ -1416,23 +1410,25 @@ static universal_notifier_t::notifier_strategy_t fetch_default_strategy_from_env
     const size_t opt_count = sizeof options / sizeof *options;
 
     const char *var = getenv(UNIVERSAL_NOTIFIER_ENV_NAME);
-    if (var != NULL && var[0] != '\0') {
-        size_t i;
-        for (i = 0; i < opt_count; i++) {
-            if (!strcmp(var, options[i].name)) {
-                result = options[i].strat;
-                break;
-            }
+    if (var == NULL || var[0] == '\0') {
+        return result;
+    }
+
+    size_t i;
+    for (i = 0; i < opt_count; i++) {
+        if (!strcmp(var, options[i].name)) {
+            result = options[i].strat;
+            break;
         }
-        if (i >= opt_count) {
-            fprintf(stderr, "Warning: unrecognized value for %s: '%s'\n",
-                    UNIVERSAL_NOTIFIER_ENV_NAME, var);
-            fprintf(stderr, "Warning: valid values are ");
-            for (size_t j = 0; j < opt_count; j++) {
-                fprintf(stderr, "%s%s", j > 0 ? ", " : "", options[j].name);
-            }
-            fputc('\n', stderr);
+    }
+    if (i >= opt_count) {
+        fprintf(stderr, "Warning: unrecognized value for %s: '%s'\n",
+                UNIVERSAL_NOTIFIER_ENV_NAME, var);
+        fprintf(stderr, "Warning: valid values are ");
+        for (size_t j = 0; j < opt_count; j++) {
+            fprintf(stderr, "%s%s", j > 0 ? ", " : "", options[j].name);
         }
+        fputc('\n', stderr);
     }
     return result;
 }
@@ -1460,7 +1456,7 @@ universal_notifier_t &universal_notifier_t::default_notifier() {
 universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(
     universal_notifier_t::notifier_strategy_t strat, const wchar_t *test_path) {
     if (strat == strategy_default) {
-        strat = resolve_default_strategy();
+        strat = resolve_default_strategy();  //!OCLINT(parameter reassignment)
     }
     switch (strat) {
         case strategy_shmem_polling: {

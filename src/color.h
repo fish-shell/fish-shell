@@ -96,7 +96,7 @@ class rgb_color_t {
     color24_t to_color24() const;
 
     /// Returns whether the color is bold.
-    bool is_bold() const { return !!(flags & flag_bold); }
+    bool is_bold() const { return static_cast<bool>(flags & flag_bold); }
 
     /// Set whether the color is bold.
     void set_bold(bool x) {
@@ -107,7 +107,7 @@ class rgb_color_t {
     }
 
     /// Returns whether the color is underlined.
-    bool is_underline() const { return !!(flags & flag_underline); }
+    bool is_underline() const { return static_cast<bool>(flags & flag_underline); }
 
     /// Set whether the color is underlined.
     void set_underline(bool x) {

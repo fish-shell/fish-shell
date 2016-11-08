@@ -216,22 +216,24 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
             match_acceptable = match_type_shares_prefix(match.type);
         }
 
-        if (match_acceptable && out != NULL) {
-            // Wildcard complete.
-            bool full_replacement = match_type_requires_full_replacement(match.type) ||
-                                    (flags & COMPLETE_REPLACES_TOKEN);
-
-            // If we are not replacing the token, be careful to only store the part of the string
-            // after the wildcard.
-            assert(!full_replacement || wcslen(wc) <= wcslen(str));
-            wcstring out_completion = full_replacement ? params.orig : str + wcslen(wc);
-            wcstring out_desc = resolve_description(&out_completion, params.desc, params.desc_func);
-
-            // Note: out_completion may be empty if the completion really is empty, e.g.
-            // tab-completing 'foo' when a file 'foo' exists.
-            complete_flags_t local_flags = flags | (full_replacement ? COMPLETE_REPLACES_TOKEN : 0);
-            append_completion(out, out_completion, out_desc, local_flags, match);
+        if (!match_acceptable || out == NULL) {
+            return match_acceptable;
         }
+
+        // Wildcard complete.
+        bool full_replacement =
+            match_type_requires_full_replacement(match.type) || (flags & COMPLETE_REPLACES_TOKEN);
+
+        // If we are not replacing the token, be careful to only store the part of the string after
+        // the wildcard.
+        assert(!full_replacement || wcslen(wc) <= wcslen(str));
+        wcstring out_completion = full_replacement ? params.orig : str + wcslen(wc);
+        wcstring out_desc = resolve_description(&out_completion, params.desc, params.desc_func);
+
+        // Note: out_completion may be empty if the completion really is empty, e.g. tab-completing
+        // 'foo' when a file 'foo' exists.
+        complete_flags_t local_flags = flags | (full_replacement ? COMPLETE_REPLACES_TOKEN : 0);
+        append_completion(out, out_completion, out_desc, local_flags, match);
         return match_acceptable;
     } else if (next_wc_char_pos > 0) {
         // Here we have a non-wildcard prefix. Note that we don't do fuzzy matching for stuff before
@@ -289,10 +291,13 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
             // We don't even try with this one.
             return false;
         }
-        default: { assert(0 && "Unreachable code reached"); }
+        default: {
+            DIE("Unreachable code reached");
+            break;
+        }
     }
 
-    assert(0 && "Unreachable code reached");
+    DIE("unreachable code reached");
 }
 
 bool wildcard_complete(const wcstring &str, const wchar_t *wc, const wchar_t *desc,
@@ -322,58 +327,44 @@ bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_f
 /// \param err The errno value after a failed stat call on the file.
 static wcstring file_get_desc(const wcstring &filename, int lstat_res, const struct stat &lbuf,
                               int stat_res, const struct stat &buf, int err) {
-    if (!lstat_res) {
-        if (S_ISLNK(lbuf.st_mode)) {
-            if (!stat_res) {
-                if (S_ISDIR(buf.st_mode)) {
-                    return COMPLETE_DIRECTORY_SYMLINK_DESC;
-                }
-                if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-                    if (waccess(filename, X_OK) == 0) {
-                        // Weird group permissions and other such issues make it non-trivial to
-                        // find out if we can actually execute a file using the result from
-                        // stat. It is much safer to use the access function, since it tells us
-                        // exactly what we want to know.
-                        return COMPLETE_EXEC_LINK_DESC;
-                    }
-                }
+    if (lstat_res) {
+        return COMPLETE_FILE_DESC;
+    }
 
-                return COMPLETE_SYMLINK_DESC;
+    if (S_ISLNK(lbuf.st_mode)) {
+        if (!stat_res) {
+            if (S_ISDIR(buf.st_mode)) {
+                return COMPLETE_DIRECTORY_SYMLINK_DESC;
+            }
+            if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0) {
+                // Weird group permissions and other such issues make it non-trivial to find out if
+                // we can actually execute a file using the result from stat. It is much safer to
+                // use the access function, since it tells us exactly what we want to know.
+                return COMPLETE_EXEC_LINK_DESC;
             }
 
-            switch (err) {
-                case ENOENT: {
-                    return COMPLETE_ROTTEN_SYMLINK_DESC;
-                }
-                case ELOOP: {
-                    return COMPLETE_LOOP_SYMLINK_DESC;
-                }
-                default: {
-                    // On unknown errors we do nothing. The file will be given the default 'File'
-                    // description or one based on the suffix.
-                }
-            }
-        } else if (S_ISCHR(buf.st_mode)) {
-            return COMPLETE_CHAR_DESC;
-        } else if (S_ISBLK(buf.st_mode)) {
-            return COMPLETE_BLOCK_DESC;
-        } else if (S_ISFIFO(buf.st_mode)) {
-            return COMPLETE_FIFO_DESC;
-        } else if (S_ISSOCK(buf.st_mode)) {
-            return COMPLETE_SOCKET_DESC;
-        } else if (S_ISDIR(buf.st_mode)) {
-            return COMPLETE_DIRECTORY_DESC;
-        } else {
-            if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXGRP)) {
-                if (waccess(filename, X_OK) == 0) {
-                    // Weird group permissions and other such issues make it non-trivial to find out
-                    // if we can actually execute a file using the result from stat. It is much
-                    // safer to use the access function, since it tells us exactly what we want to
-                    // know.
-                    return COMPLETE_EXEC_DESC;
-                }
-            }
+            return COMPLETE_SYMLINK_DESC;
         }
+
+        if (err == ENOENT) return COMPLETE_ROTTEN_SYMLINK_DESC;
+        if (err == ELOOP) return COMPLETE_LOOP_SYMLINK_DESC;
+        // On unknown errors we do nothing. The file will be given the default 'File'
+        // description or one based on the suffix.
+    } else if (S_ISCHR(buf.st_mode)) {
+        return COMPLETE_CHAR_DESC;
+    } else if (S_ISBLK(buf.st_mode)) {
+        return COMPLETE_BLOCK_DESC;
+    } else if (S_ISFIFO(buf.st_mode)) {
+        return COMPLETE_FIFO_DESC;
+    } else if (S_ISSOCK(buf.st_mode)) {
+        return COMPLETE_SOCKET_DESC;
+    } else if (S_ISDIR(buf.st_mode)) {
+        return COMPLETE_DIRECTORY_DESC;
+    } else if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXGRP) && waccess(filename, X_OK) == 0) {
+        // Weird group permissions and other such issues make it non-trivial to find out if we can
+        // actually execute a file using the result from stat. It is much safer to use the access
+        // function, since it tells us exactly what we want to know.
+        return COMPLETE_EXEC_DESC;
     }
 
     return COMPLETE_FILE_DESC;
@@ -394,9 +385,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     int stat_res = -1;
     int stat_errno = 0;
     int lstat_res = lwstat(filepath, &lstat_buf);
-    if (lstat_res < 0) {
-        // lstat failed.
-    } else {
+    if (lstat_res >= 0) {
         if (S_ISLNK(lstat_buf.st_mode)) {
             stat_res = wstat(filepath, &stat_buf);
 
@@ -415,15 +404,14 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     const bool is_directory = stat_res == 0 && S_ISDIR(stat_buf.st_mode);
     const bool is_executable = stat_res == 0 && S_ISREG(stat_buf.st_mode);
 
-    if (expand_flags & DIRECTORIES_ONLY) {
-        if (!is_directory) {
-            return false;
-        }
+    const bool need_directory = expand_flags & DIRECTORIES_ONLY;
+    if (need_directory && !is_directory) {
+        return false;
     }
-    if (expand_flags & EXECUTABLES_ONLY) {
-        if (!is_executable || waccess(filepath, X_OK) != 0) {
-            return false;
-        }
+
+    const bool executables_only = expand_flags & EXECUTABLES_ONLY;
+    if (executables_only && (!is_executable || waccess(filepath, X_OK) != 0)) {
+        return false;
     }
 
     // Compute the description.
@@ -502,7 +490,7 @@ class wildcard_expander_t {
 
     void add_expansion_result(const wcstring &result) {
         // This function is only for the non-completions case.
-        assert(!(this->flags & EXPAND_FOR_COMPLETIONS));
+        assert(!static_cast<bool>(this->flags & EXPAND_FOR_COMPLETIONS));  //!OCLINT(multiple unary operator)
         if (this->completion_set.insert(result).second) {
             append_completion(this->resolved_completions, result);
             this->did_add = true;
@@ -812,7 +800,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
 
     if (wc_segment.empty()) {
         // Handle empty segment.
-        assert(!segment_has_wildcards);
+        assert(!segment_has_wildcards);  //!OCLINT(multiple unary operator)
         if (is_last_segment) {
             this->expand_trailing_slash(base_dir, effective_prefix);
         } else {
@@ -856,7 +844,6 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
             } else {
                 // Not the last segment, nonempty wildcard.
                 assert(next_slash != NULL);
-                wcstring child_effective_prefix = effective_prefix + wc_segment;
                 this->expand_intermediate_segment(base_dir, dir, wc_segment, wc_remainder,
                                                   effective_prefix + wc_segment + L'/');
             }

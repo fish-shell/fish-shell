@@ -18,11 +18,11 @@ static void die(const char *format, ...) {
     vfprintf(stderr, format, ap);
     va_end(ap);
     fputc('\n', stderr);
-    
+
     if (s_command_path[0] != '\0') {
         unlink(s_command_path);
     }
-    
+
     exit(EXIT_FAILURE);
 }
 
@@ -31,14 +31,14 @@ static void launch_fish_with_applescript(NSString *fish_binary_path)
     // load the script from a resource by fetching its URL from within our bundle
     NSString *path = [[NSBundle mainBundle] pathForResource:@"launch_fish" ofType:@"scpt"];
     if (! path) die("Couldn't get path to launch_fish.scpt");
-    
+
     NSURL *url = [NSURL fileURLWithPath:path isDirectory:NO];
     if (! url) die("Couldn't get URL to launch_fish.scpt");
-      
+
     NSDictionary *errors = nil;
     NSAppleScript *appleScript = [[NSAppleScript alloc] initWithContentsOfURL:url error:&errors];
     if (! appleScript) die("Couldn't load AppleScript");
-    
+
     // create the first parameter
     NSAppleEventDescriptor *firstParameter =
             [NSAppleEventDescriptor descriptorWithString:fish_binary_path];
@@ -84,16 +84,17 @@ static void launch_fish_with_applescript(NSString *fish_binary_path)
 
 /* This approach asks Terminal to open a script that we control */
 int main(void) {
-    
+
     @autoreleasepool {
         /* Get the fish executable. Make sure it's absolute. */
-        NSURL *fish_executable = [[NSBundle mainBundle] URLForResource:@"fish" withExtension:@"" subdirectory:@"base/bin"];
+        NSURL *fish_executable = [[NSBundle mainBundle] URLForResource:@"fish" withExtension:@""
+                                                          subdirectory:@"base/bin"];
         if (! fish_executable)
             die("Could not find fish executable in bundle");
-        
+
         launch_fish_with_applescript([fish_executable path]);
     }
-    
+
     /* If we succeeded, it will clean itself up */
     return 0;
 }

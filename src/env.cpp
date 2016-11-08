@@ -283,10 +283,6 @@ static void universal_callback(fish_message_type_t type, const wchar_t *name) {
             str = L"ERASE";
             break;
         }
-        default: {
-            assert(0 && "Unhandled fish_message_type_t constant!");
-            abort();
-        }
     }
 
     if (str) {
@@ -476,6 +472,25 @@ static env_node_t *env_get_node(const wcstring &key) {
     return env;
 }
 
+/// Set the value of the environment variable whose name matches key to val.
+///
+/// Memory policy: All keys and values are copied, the parameters can and should be freed by the
+/// caller afterwards
+///
+/// \param key The key
+/// \param val The value
+/// \param var_mode The type of the variable. Can be any combination of ENV_GLOBAL, ENV_LOCAL,
+/// ENV_EXPORT and ENV_USER. If mode is zero, the current variable space is searched and the current
+/// mode is used. If no current variable with the same name is found, ENV_LOCAL is assumed.
+///
+/// Returns:
+///
+/// * ENV_OK on success.
+/// * ENV_PERM, can only be returned when setting as a user, e.g. ENV_USER is set. This means that
+/// the user tried to change a read-only variable.
+/// * ENV_SCOPE, the variable cannot be set in the given scope. This applies to readonly/electric
+/// variables set from the local or universal scopes, or set as exported.
+/// * ENV_INVALID, the variable value was invalid. This applies only to special variables.
 int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) {
     ASSERT_IS_MAIN_THREAD();
     bool has_changed_old = has_changed_exported;
@@ -512,7 +527,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
                 umask(mask);
                 // Do not actually create a umask variable, on env_get, it will be calculated
                 // dynamically.
-                return 0;
+                return ENV_OK;
             }
         }
 
@@ -521,7 +536,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
 
     // Zero element arrays are internaly not coded as null but as this placeholder string.
     if (!val) {
-        val = ENV_NULL;
+        val = ENV_NULL;  //!OCLINT(parameter reassignment)
     }
 
     if (var_mode & ENV_UNIVERSAL) {
@@ -566,10 +581,10 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
             node = top;
         } else if (preexisting_node != NULL) {
             node = preexisting_node;
-
             if ((var_mode & (ENV_EXPORT | ENV_UNEXPORT)) == 0) {
                 // use existing entry's exportv
-                var_mode = preexisting_entry_exportv ? ENV_EXPORT : 0;
+                var_mode =  //!OCLINT(parameter reassignment)
+                    preexisting_entry_exportv ? ENV_EXPORT : 0;
             }
         } else {
             if (!get_proc_had_barrier()) {
@@ -635,7 +650,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
     // debug( 1, L"env_set: return from event firing" );
 
     react_to_variable_change(key);
-    return 0;
+    return ENV_OK;
 }
 
 /// Attempt to remove/free the specified key/value pair from the specified map.
@@ -713,7 +728,7 @@ int env_remove(const wcstring &key, int var_mode) {
 }
 
 const wchar_t *env_var_t::c_str(void) const {
-    assert(!is_missing);
+    assert(!is_missing);  //!OCLINT(multiple unary operator)
     return wcstring::c_str();
 }
 
@@ -864,9 +879,7 @@ void env_push(bool new_scope) {
     node->next = top;
     node->new_scope = new_scope;
 
-    if (new_scope) {
-        if (local_scope_exports(top)) mark_changed_exported();
-    }
+    if (new_scope && local_scope_exports(top)) mark_changed_exported();
     top = node;
 }
 
@@ -884,7 +897,7 @@ void env_pop() {
             }
         }
 
-        if (killme->new_scope) {
+        if (killme->new_scope) {  //!OCLINT(collapsible if statements)
             if (killme->exportv || local_scope_exports(killme->next)) mark_changed_exported();
         }
 

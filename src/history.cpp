@@ -769,7 +769,7 @@ void history_t::save_internal_unless_disabled() {
     }
 
     // This might be a good candidate for moving to a background thread.
-    time_profiler_t profiler(vacuum ? "save_internal vacuum"
+    time_profiler_t profiler(vacuum ? "save_internal vacuum"       //!OCLINT(unused var)
                                     : "save_internal no vacuum");  //!OCLINT(side-effect)
     this->save_internal(vacuum);
 
@@ -794,11 +794,10 @@ void history_t::add(const wcstring &str, history_identifier_t ident, bool pendin
 bool icompare_pred(wchar_t a, wchar_t b) { return std::tolower(a) == std::tolower(b); }
 
 bool icompare(wcstring const &a, wcstring const &b) {
-    if (a.length() == b.length()) {
-        return std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
-    } else {
+    if (a.length() != b.length()) {
         return false;
     }
+    return std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
 }
 
 // Remove matching history entries from our list of new items. This only supports literal,
@@ -939,43 +938,45 @@ void history_t::populate_from_mmap(void) {
 /// if successful. Returns the mapped memory region by reference.
 bool history_t::map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
                          file_id_t *file_id) {
-    bool result = false;
     wcstring filename = history_filename(name, L"");
-    if (!filename.empty()) {
-        int fd = wopen_cloexec(filename, O_RDONLY);
-        if (fd >= 0) {
-            // Get the file ID if requested.
-            if (file_id != NULL) *file_id = file_id_for_fd(fd);
+    if (filename.empty()) {
+        return false;
+    }
 
-            // Take a read lock to guard against someone else appending. This is released when the
-            // file is closed (below). We will read the file after releasing the lock, but that's
-            // not a problem, because we never modify already written data. In short, the purpose of
-            // this lock is to ensure we don't see the file size change mid-update.
-            //
-            //    We may fail to lock (e.g. on lockless NFS - see
-            //    https://github.com/fish-shell/fish-shell/issues/685 ). In that case, we proceed as
-            //    if it did not fail. The risk is that we may get an incomplete history item; this
-            //    is unlikely because we only treat an item as valid if it has a terminating
-            //    newline.
-            //
-            //  Simulate a failing lock in chaos_mode.
-            if (!chaos_mode) history_file_lock(fd, F_RDLCK);
-            off_t len = lseek(fd, 0, SEEK_END);
-            if (len != (off_t)-1) {
-                size_t mmap_length = (size_t)len;
-                if (lseek(fd, 0, SEEK_SET) == 0) {
-                    char *mmap_start;
-                    if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd,
-                                                   0)) != MAP_FAILED) {
-                        result = true;
-                        *out_map_start = mmap_start;
-                        *out_map_len = mmap_length;
-                    }
-                }
+    int fd = wopen_cloexec(filename, O_RDONLY);
+    if (fd == -1) {
+        return false;
+    }
+
+    bool result = false;
+    // Get the file ID if requested.
+    if (file_id != NULL) *file_id = file_id_for_fd(fd);
+
+    // Take a read lock to guard against someone else appending. This is released when the file
+    // is closed (below). We will read the file after releasing the lock, but that's not a
+    // problem, because we never modify already written data. In short, the purpose of this lock
+    // is to ensure we don't see the file size change mid-update.
+    //
+    // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed as
+    // if it did not fail. The risk is that we may get an incomplete history item; this is
+    // unlikely because we only treat an item as valid if it has a terminating newline.
+    //
+    // Simulate a failing lock in chaos_mode.
+    if (!chaos_mode) history_file_lock(fd, F_RDLCK);
+    off_t len = lseek(fd, 0, SEEK_END);
+    if (len != (off_t)-1) {
+        size_t mmap_length = (size_t)len;
+        if (lseek(fd, 0, SEEK_SET) == 0) {
+            char *mmap_start;
+            if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd,
+                                            0)) != MAP_FAILED) {
+                result = true;
+                *out_map_start = mmap_start;
+                *out_map_len = mmap_length;
             }
-            close(fd);
         }
     }
+    close(fd);
     return result;
 }
 

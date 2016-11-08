@@ -84,6 +84,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                 default: {
                     debug(1, MISSING_COMMAND_ERR_MSG, nxt_path.c_str());
                     wperror(L"access");
+                    break;
                 }
             }
         }
@@ -189,19 +190,7 @@ wcstring path_apply_working_directory(const wcstring &path, const wcstring &work
 
     // We're going to make sure that if we want to prepend the wd, that the string has no leading
     // "/".
-    bool prepend_wd;
-    switch (path.at(0)) {
-        case L'/':
-        case HOME_DIRECTORY: {
-            prepend_wd = false;
-            break;
-        }
-        default: {
-            prepend_wd = true;
-            break;
-        }
-    }
-
+    bool prepend_wd = path.at(0) != L'/' && path.at(0) != HOME_DIRECTORY;
     if (!prepend_wd) {
         // No need to prepend the wd, so just return the path we were given.
         return path;
@@ -298,16 +287,6 @@ bool path_get_data(wcstring &path) {
     return !result.empty();
 }
 
-__attribute__((unused)) static void replace_all(wcstring &str, const wchar_t *needle,
-                                                const wchar_t *replacement) {
-    size_t needle_len = wcslen(needle);
-    size_t offset = 0;
-    while ((offset = str.find(needle, offset)) != wcstring::npos) {
-        str.replace(offset, needle_len, replacement);
-        offset += needle_len;
-    }
-}
-
 void path_make_canonical(wcstring &path) {
     // Ignore trailing slashes, unless it's the first character.
     size_t len = path.size();
@@ -386,7 +365,7 @@ bool paths_are_same_file(const wcstring &path1, const wcstring &path2) {
     struct stat s1, s2;
     if (wstat(path1, &s1) == 0 && wstat(path2, &s2) == 0) {
         return s1.st_ino == s2.st_ino && s1.st_dev == s2.st_dev;
-    } else {
-        return false;
     }
+
+    return false;
 }

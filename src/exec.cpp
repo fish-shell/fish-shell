@@ -282,11 +282,6 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
                 out.reset(new io_fd_t(in->fd, fd, false));
                 break;
             }
-            default: {
-                // Unknown type, should never happen.
-                assert(0 && "Unhandled io_mode constant");
-                abort();
-            }
         }
 
         if (out.get() != NULL) result_chain.push_back(out);
@@ -353,7 +348,7 @@ static void internal_exec_helper(parser_t &parser, const wcstring &def, node_off
 // foreground process group, we don't use posix_spawn if we're going to foreground the process. (If
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
 static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *process) {
-    if (job_get_flag(job, JOB_CONTROL)) {
+    if (job_get_flag(job, JOB_CONTROL)) {  //!OCLINT(collapsible if statements)
         // We are going to use job control; therefore when we launch this job it will get its own
         // process group ID. But will it be foregrounded?
         if (job_get_flag(job, JOB_TERMINAL) && job_get_flag(job, JOB_FOREGROUND)) {
@@ -406,7 +401,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
         if ((io->io_mode == IO_BUFFER)) {
             io_buffer_t *io_buffer = static_cast<io_buffer_t *>(io.get());
-            assert(!io_buffer->is_input);
+            assert(!io_buffer->is_input);  //!OCLINT(multiple unary operator)
         }
     }
 
@@ -442,7 +437,7 @@ void exec_job(parser_t &parser, job_t *j) {
             j->first_process->completed = 1;
             return;
         }
-        assert(0 && "This should be unreachable");
+        DIE("this should be unreachable");
     }
 
     // We may have block IOs that conflict with fd redirections. For example, we may have a command
@@ -827,9 +822,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
             case INTERNAL_EXEC:
                 // We should have handled exec up above.
-                assert(
-                    0 &&
-                    "INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
+                DIE("INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
                 break;
         }
 
@@ -913,45 +906,42 @@ void exec_job(parser_t &parser, job_t *j) {
                 // output, so that we can truncate the file. Does not apply to /dev/null.
                 bool must_fork = redirection_is_to_real_file(stdout_io.get()) ||
                                  redirection_is_to_real_file(stderr_io.get());
-                if (!must_fork) {
-                    if (p->next == NULL) {
-                        const bool stdout_is_to_buffer =
-                            stdout_io && stdout_io->io_mode == IO_BUFFER;
-                        const bool no_stdout_output = stdout_buffer.empty();
-                        const bool no_stderr_output = stderr_buffer.empty();
+                if (!must_fork && p->next == NULL) {
+                    const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
+                    const bool no_stdout_output = stdout_buffer.empty();
+                    const bool no_stderr_output = stderr_buffer.empty();
 
-                        if (no_stdout_output && no_stderr_output) {
-                            // The builtin produced no output and is not inside of a pipeline. No
-                            // need to fork or even output anything.
-                            debug(3, L"Skipping fork: no output for internal builtin '%ls'",
-                                  p->argv0());
-                            fork_was_skipped = true;
-                        } else if (no_stderr_output && stdout_is_to_buffer) {
-                            // The builtin produced no stderr, and its stdout is going to an
-                            // internal buffer. There is no need to fork. This helps out the
-                            // performance quite a bit in complex completion code.
-                            debug(3, L"Skipping fork: buffered output for internal builtin '%ls'",
-                                  p->argv0());
+                    if (no_stdout_output && no_stderr_output) {
+                        // The builtin produced no output and is not inside of a pipeline. No
+                        // need to fork or even output anything.
+                        debug(3, L"Skipping fork: no output for internal builtin '%ls'",
+                              p->argv0());
+                        fork_was_skipped = true;
+                    } else if (no_stderr_output && stdout_is_to_buffer) {
+                        // The builtin produced no stderr, and its stdout is going to an
+                        // internal buffer. There is no need to fork. This helps out the
+                        // performance quite a bit in complex completion code.
+                        debug(3, L"Skipping fork: buffered output for internal builtin '%ls'",
+                              p->argv0());
 
-                            io_buffer_t *io_buffer = static_cast<io_buffer_t *>(stdout_io.get());
-                            const std::string res = wcs2string(builtin_io_streams->out.buffer());
+                        io_buffer_t *io_buffer = static_cast<io_buffer_t *>(stdout_io.get());
+                        const std::string res = wcs2string(builtin_io_streams->out.buffer());
 
-                            io_buffer->out_buffer_append(res.data(), res.size());
-                            fork_was_skipped = true;
-                        } else if (stdout_io.get() == NULL && stderr_io.get() == NULL) {
-                            // We are writing to normal stdout and stderr. Just do it - no need to
-                            // fork.
-                            debug(3, L"Skipping fork: ordinary output for internal builtin '%ls'",
-                                  p->argv0());
-                            const std::string outbuff = wcs2string(stdout_buffer);
-                            const std::string errbuff = wcs2string(stderr_buffer);
-                            bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(),
-                                                                 errbuff.data(), errbuff.size());
-                            if (!builtin_io_done && errno != EPIPE) {
-                                show_stackframe(L'E');
-                            }
-                            fork_was_skipped = true;
+                        io_buffer->out_buffer_append(res.data(), res.size());
+                        fork_was_skipped = true;
+                    } else if (stdout_io.get() == NULL && stderr_io.get() == NULL) {
+                        // We are writing to normal stdout and stderr. Just do it - no need to
+                        // fork.
+                        debug(3, L"Skipping fork: ordinary output for internal builtin '%ls'",
+                              p->argv0());
+                        const std::string outbuff = wcs2string(stdout_buffer);
+                        const std::string errbuff = wcs2string(stderr_buffer);
+                        bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(),
+                                                             errbuff.data(), errbuff.size());
+                        if (!builtin_io_done && errno != EPIPE) {
+                            show_stackframe(L'E');
                         }
+                        fork_was_skipped = true;
                     }
                 }
 
@@ -1074,7 +1064,7 @@ void exec_job(parser_t &parser, job_t *j) {
                         setup_child_process(j, p, process_net_io_chain);
                         safe_launch_process(p, actual_cmd, argv, envv);
                         // safe_launch_process _never_ returns...
-                        assert(0 && "safe_launch_process should not have returned");
+                        DIE("safe_launch_process should not have returned");
                     } else {
                         debug(2, L"Fork #%d, pid %d: external command '%s' from '%ls'\n",
                               g_fork_count, pid, p->argv0(), file ? file : L"<no file>");
@@ -1088,17 +1078,13 @@ void exec_job(parser_t &parser, job_t *j) {
                 // This is the parent process. Store away information on the child, and possibly
                 // fice it control over the terminal.
                 p->pid = pid;
-
                 set_child_group(j, p, 0);
-
                 break;
             }
 
             case INTERNAL_EXEC: {
                 // We should have handled exec up above.
-                assert(
-                    0 &&
-                    "INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
+                DIE("INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
                 break;
             }
         }
@@ -1177,37 +1163,38 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst,
     // If the caller asked us to preserve the exit status, restore the old status. Otherwise set the
     // status of the subcommand.
     proc_set_last_status(apply_exit_status ? subcommand_status : prev_status);
-
     is_subshell = prev_subshell;
 
-    if (lst != NULL && io_buffer.get() != NULL) {
-        const char *begin = io_buffer->out_buffer_ptr();
-        const char *end = begin + io_buffer->out_buffer_size();
-        if (split_output) {
-            const char *cursor = begin;
-            while (cursor < end) {
-                // Look for the next separator.
-                const char *stop = (const char *)memchr(cursor, '\n', end - cursor);
-                const bool hit_separator = (stop != NULL);
-                if (!hit_separator) {
-                    // If it's not found, just use the end.
-                    stop = end;
-                }
-                // Stop now points at the first character we do not want to copy.
-                const wcstring wc = str2wcstring(cursor, stop - cursor);
-                lst->push_back(wc);
+    if (lst == NULL || io_buffer.get() == NULL) {
+        return subcommand_status;
+    }
 
-                // If we hit a separator, skip over it; otherwise we're at the end.
-                cursor = stop + (hit_separator ? 1 : 0);
+    const char *begin = io_buffer->out_buffer_ptr();
+    const char *end = begin + io_buffer->out_buffer_size();
+    if (split_output) {
+        const char *cursor = begin;
+        while (cursor < end) {
+            // Look for the next separator.
+            const char *stop = (const char *)memchr(cursor, '\n', end - cursor);
+            const bool hit_separator = (stop != NULL);
+            if (!hit_separator) {
+                // If it's not found, just use the end.
+                stop = end;
             }
-        } else {
-            // we're not splitting output, but we still want to trim off a trailing newline.
-            if (end != begin && end[-1] == '\n') {
-                --end;
-            }
-            const wcstring wc = str2wcstring(begin, end - begin);
+            // Stop now points at the first character we do not want to copy.
+            const wcstring wc = str2wcstring(cursor, stop - cursor);
             lst->push_back(wc);
+
+            // If we hit a separator, skip over it; otherwise we're at the end.
+            cursor = stop + (hit_separator ? 1 : 0);
         }
+    } else {
+        // We're not splitting output, but we still want to trim off a trailing newline.
+        if (end != begin && end[-1] == '\n') {
+            --end;
+        }
+        const wcstring wc = str2wcstring(begin, end - begin);
+        lst->push_back(wc);
     }
 
     return subcommand_status;

@@ -88,13 +88,11 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
     size_t off2 = parse_util_get_offset_from_line(buff, line + 1);
 
     if (off == (size_t)-1) return (size_t)-1;
-
     if (off2 == (size_t)-1) off2 = wcslen(buff) + 1;
-
-    if (line_offset < 0) line_offset = 0;
+    if (line_offset < 0) line_offset = 0;  //!OCLINT(parameter reassignment)
 
     if ((size_t)line_offset >= off2 - off - 1) {
-        line_offset = off2 - off - 1;
+        line_offset = off2 - off - 1;  //!OCLINT(parameter reassignment)
     }
 
     return off + line_offset;
@@ -199,26 +197,28 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
     int ret = parse_util_locate_brackets_of_type(valid_range_start, &bracket_range_begin,
                                                  &bracket_range_end, accept_incomplete, open_type,
                                                  close_type);
-    if (ret > 0) {
-        // The command substitutions must not be NULL and must be in the valid pointer range, and
-        // the end must be bigger than the beginning.
-        assert(bracket_range_begin != NULL && bracket_range_begin >= valid_range_start &&
-               bracket_range_begin <= valid_range_end);
-        assert(bracket_range_end != NULL && bracket_range_end > bracket_range_begin &&
-               bracket_range_end >= valid_range_start && bracket_range_end <= valid_range_end);
-
-        // Assign the substring to the out_contents.
-        const wchar_t *interior_begin = bracket_range_begin + 1;
-        out_contents->assign(interior_begin, bracket_range_end - interior_begin);
-
-        // Return the start and end.
-        *out_start = bracket_range_begin - buff;
-        *out_end = bracket_range_end - buff;
-
-        // Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though
-        // overflow is not likely.
-        *inout_cursor_offset = 1 + *out_end;
+    if (ret <= 0) {
+        return ret;
     }
+
+    // The command substitutions must not be NULL and must be in the valid pointer range, and
+    // the end must be bigger than the beginning.
+    assert(bracket_range_begin != NULL && bracket_range_begin >= valid_range_start &&
+            bracket_range_begin <= valid_range_end);
+    assert(bracket_range_end != NULL && bracket_range_end > bracket_range_begin &&
+            bracket_range_end >= valid_range_start && bracket_range_end <= valid_range_end);
+
+    // Assign the substring to the out_contents.
+    const wchar_t *interior_begin = bracket_range_begin + 1;
+    out_contents->assign(interior_begin, bracket_range_end - interior_begin);
+
+    // Return the start and end.
+    *out_start = bracket_range_begin - buff;
+    *out_end = bracket_range_end - buff;
+
+    // Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though
+    // overflow is not likely.
+    *inout_cursor_offset = 1 + *out_end;
     return ret;
 }
 
@@ -472,8 +472,7 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
 void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_t *quote,
                                    size_t *offset, enum token_type *out_type) {
     size_t prev_pos = 0;
-    wchar_t last_quote = '\0';
-    int unfinished;
+    wchar_t last_quote = L'\0';
 
     tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
     tok_t token;
@@ -490,30 +489,25 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     wchar_t *cmd_tmp = wcsdup(cmd.c_str());
     cmd_tmp[pos] = 0;
     size_t cmdlen = wcslen(cmd_tmp);
-    unfinished = (cmdlen == 0);
-    if (!unfinished) {
-        unfinished = (quote != 0);
-
-        if (!unfinished) {
-            if (wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1]) != 0) {
-                if ((cmdlen == 1) || (cmd_tmp[cmdlen - 2] != L'\\')) {
-                    unfinished = 1;
-                }
-            }
+    bool finished = cmdlen != 0;
+    if (finished) {
+        finished = (quote == NULL);
+        if (finished && wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1]) != L'\0') {
+            finished = cmdlen > 1 && cmd_tmp[cmdlen - 2] == L'\\';
         }
     }
 
     if (quote) *quote = last_quote;
 
     if (offset != 0) {
-        if (!unfinished) {
+        if (finished) {
             while ((cmd_tmp[prev_pos] != 0) && (wcschr(L";|", cmd_tmp[prev_pos]) != 0)) prev_pos++;
-
             *offset = prev_pos;
         } else {
             *offset = pos;
         }
     }
+
     free(cmd_tmp);
 }
 
@@ -763,10 +757,9 @@ static int parser_is_pipe_forbidden(const wcstring &word) {
 
 bool parse_util_argument_is_help(const wchar_t *s, int min_match) {
     CHECK(s, 0);
-
     size_t len = wcslen(s);
 
-    min_match = maxi(min_match, 3);
+    min_match = maxi(min_match, 3);  //!OCLINT(parameter reassignment)
 
     return wcscmp(L"-h", s) == 0 || (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
 }
@@ -930,25 +923,28 @@ static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offse
                                                             parse_error_list_t *out_errors) {
     parser_test_error_bits_t result_bits = 0;
     wcstring unescaped_arg_src;
-    if (unescape_string(arg_src, &unescaped_arg_src, UNESCAPE_SPECIAL)) {
-        if (!unescaped_arg_src.empty()) {
-            wchar_t last = unescaped_arg_src.at(unescaped_arg_src.size() - 1);
-            if (last == VARIABLE_EXPAND) {
-                result_bits |= PARSER_TEST_ERROR;
-                if (out_errors != NULL) {
-                    wcstring subcommand_first_token = tok_first(cmdsubst_src);
-                    if (subcommand_first_token.empty()) {
-                        // e.g. $(). Report somthing.
-                        subcommand_first_token = L"...";
-                    }
-                    append_syntax_error(
-                        out_errors,
-                        arg_src_offset + arg_src.size() - 1,  // global position of the dollar
-                        ERROR_BAD_VAR_SUBCOMMAND1, truncate_string(subcommand_first_token).c_str());
-                }
+
+    if (!unescape_string(arg_src, &unescaped_arg_src, UNESCAPE_SPECIAL) ||
+        unescaped_arg_src.empty()) {
+        return result_bits;
+    }
+
+    wchar_t last = unescaped_arg_src.at(unescaped_arg_src.size() - 1);
+    if (last == VARIABLE_EXPAND) {
+        result_bits |= PARSER_TEST_ERROR;
+        if (out_errors != NULL) {
+            wcstring subcommand_first_token = tok_first(cmdsubst_src);
+            if (subcommand_first_token.empty()) {
+                // e.g. $(). Report somthing.
+                subcommand_first_token = L"...";
             }
+            append_syntax_error(
+                out_errors,
+                arg_src_offset + arg_src.size() - 1,  // global position of the dollar
+                ERROR_BAD_VAR_SUBCOMMAND1, truncate_string(subcommand_first_token).c_str());
         }
     }
+
     return result_bits;
 }
 
@@ -1014,6 +1010,10 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 }
                 break;
             }
+            default: {
+                DIE("unexpected parse_util_locate_cmdsubst() return value");
+                break;
+            }
         }
     }
 
@@ -1029,28 +1029,24 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
     // Check for invalid variable expansions.
     const size_t unesc_size = unesc.size();
     for (size_t idx = 0; idx < unesc_size; idx++) {
-        switch (unesc.at(idx)) {
-            case VARIABLE_EXPAND:
-            case VARIABLE_EXPAND_SINGLE: {
-                wchar_t next_char = idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0';
+        if (unesc.at(idx) != VARIABLE_EXPAND && unesc.at(idx) != VARIABLE_EXPAND_SINGLE) {
+            continue;
+        }
 
-                if (next_char != VARIABLE_EXPAND && next_char != VARIABLE_EXPAND_SINGLE &&
-                    !wcsvarchr(next_char)) {
-                    err = 1;
-                    if (out_errors) {
-                        // We have something like $$$^....  Back up until we reach the first $.
-                        size_t first_dollar = idx;
-                        while (first_dollar > 0 &&
-                               (unesc.at(first_dollar - 1) == VARIABLE_EXPAND ||
-                                unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
-                            first_dollar--;
-                        }
-                        parse_util_expand_variable_error(unesc, node.source_start, first_dollar,
-                                                         out_errors);
-                    }
+        wchar_t next_char = idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0';
+        if (next_char != VARIABLE_EXPAND && next_char != VARIABLE_EXPAND_SINGLE &&
+            !wcsvarchr(next_char)) {
+            err = 1;
+            if (out_errors) {
+                // We have something like $$$^....  Back up until we reach the first $.
+                size_t first_dollar = idx;
+                while (first_dollar > 0 &&
+                        (unesc.at(first_dollar - 1) == VARIABLE_EXPAND ||
+                        unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
+                    first_dollar--;
                 }
-
-                break;
+                parse_util_expand_variable_error(unesc, node.source_start, first_dollar,
+                                                    out_errors);
             }
         }
     }
@@ -1158,33 +1154,33 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                             assert(next_job_list != NULL);
                             const parse_node_t *next_job =
                                 node_tree.next_node_in_node_list(*next_job_list, symbol_job, NULL);
-                            if (next_job != NULL) {
-                                const parse_node_t *next_statement =
-                                    node_tree.get_child(*next_job, 0, symbol_statement);
-                                if (next_statement != NULL) {
-                                    const parse_node_t *spec_statement =
-                                        node_tree.get_child(*next_statement, 0);
-                                    if (spec_statement &&
-                                        spec_statement->type == symbol_boolean_statement) {
-                                        switch (parse_node_tree_t::statement_boolean_type(
-                                            *spec_statement)) {
-                                            // These are not allowed.
-                                            case parse_bool_and:
-                                                errored = append_syntax_error(
-                                                    &parse_errors, spec_statement->source_start,
-                                                    BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
-                                                break;
-                                            case parse_bool_or:
-                                                errored = append_syntax_error(
-                                                    &parse_errors, spec_statement->source_start,
-                                                    BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
-                                                break;
-                                            case parse_bool_not:
-                                                // This one is OK.
-                                                break;
-                                        }
-                                    }
-                                }
+                            if (next_job == NULL) {
+                                break;
+                            }
+
+                            const parse_node_t *next_statement =
+                                node_tree.get_child(*next_job, 0, symbol_statement);
+                            if (next_statement == NULL) {
+                                break;
+                            }
+
+                            const parse_node_t *spec_statement =
+                                node_tree.get_child(*next_statement, 0);
+                            if (!spec_statement ||
+                                spec_statement->type != symbol_boolean_statement) {
+                                break;
+                            }
+
+                            parse_bool_statement_type_t bool_type =
+                                parse_node_tree_t::statement_boolean_type(*spec_statement);
+                            if (bool_type == parse_bool_and) {  // this is not allowed
+                                    errored = append_syntax_error(
+                                        &parse_errors, spec_statement->source_start,
+                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
+                            } else if (bool_type == parse_bool_or) {  // this is not allowed
+                                    errored = append_syntax_error(
+                                        &parse_errors, spec_statement->source_start,
+                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
                             }
                             break;
                         }

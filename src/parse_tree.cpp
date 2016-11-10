@@ -20,53 +20,10 @@
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-// This array provides strings for each symbol in enum parse_token_type_t in parse_constants.h.
-const wchar_t *const token_type_map[] = {
-    L"token_type_invalid",
-    L"symbol_job_list",
-    L"symbol_job",
-    L"symbol_job_continuation",
-    L"symbol_statement",
-    L"symbol_block_statement",
-    L"symbol_block_header",
-    L"symbol_for_header",
-    L"symbol_while_header",
-    L"symbol_begin_header",
-    L"symbol_function_header",
-    L"symbol_if_statement",
-    L"symbol_if_clause",
-    L"symbol_else_clause",
-    L"symbol_else_continuation",
-    L"symbol_switch_statement",
-    L"symbol_case_item_list",
-    L"symbol_case_item",
-    L"symbol_boolean_statement",
-    L"symbol_decorated_statement",
-    L"symbol_plain_statement",
-    L"symbol_arguments_or_redirections_list",
-    L"symbol_argument_or_redirection",
-    L"symbol_andor_job_list",
-    L"symbol_argument_list",
-    L"symbol_freestanding_argument_list",
-    L"symbol_argument",
-    L"symbol_redirection",
-    L"symbol_optional_background",
-    L"symbol_end_command",
-    L"parse_token_type_string",
-    L"parse_token_type_pipe",
-    L"parse_token_type_redirection",
-    L"parse_token_type_background",
-    L"parse_token_type_end",
-    L"parse_token_type_terminate",
-    L"parse_special_type_parse_error",
-    L"parse_special_type_tokenizer_error",
-    L"parse_special_type_comment",
-};
-
 using namespace parse_productions;
 
-static bool production_is_empty(const production_t *production) {
-    return (*production)[0] == token_type_invalid;
+static bool production_is_empty(const production_element_t *production) {
+    return *production == token_type_invalid;
 }
 
 /// Returns a string description of this parse error.
@@ -164,7 +121,8 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt) {
 
 /// Returns a string description for the given token type.
 const wchar_t *token_type_description(parse_token_type_t type) {
-    if (type >= 0 && type <= LAST_TOKEN_TYPE) return token_type_map[type];
+    const wchar_t *description = enum_to_str(type, token_enum_map);
+    if (description) return description;
 
     // This leaks memory but it should never be run unless we have a bug elsewhere in the code.
     const wcstring d = format_string(L"unknown_token_type_%ld", static_cast<long>(type));
@@ -173,37 +131,9 @@ const wchar_t *token_type_description(parse_token_type_t type) {
     return std::wcscpy(d2, d.c_str());
 }
 
-#define LONGIFY(x) L##x
-#define KEYWORD_MAP(x) \
-    { parse_keyword_##x, LONGIFY(#x) }
-static const struct {
-    const parse_keyword_t keyword;
-    const wchar_t *const name;
-}
-keyword_map[] =
-{
-    // Note that these must be sorted (except for the first), so that we can do binary search.
-    KEYWORD_MAP(none),
-    KEYWORD_MAP(and),
-    KEYWORD_MAP(begin),
-    KEYWORD_MAP(builtin),
-    KEYWORD_MAP(case),
-    KEYWORD_MAP(command),
-    KEYWORD_MAP(else),
-    KEYWORD_MAP(end),
-    KEYWORD_MAP(exec),
-    KEYWORD_MAP(for),
-    KEYWORD_MAP(function),
-    KEYWORD_MAP(if),
-    KEYWORD_MAP(in),
-    KEYWORD_MAP(not),
-    KEYWORD_MAP(or),
-    KEYWORD_MAP(switch),
-    KEYWORD_MAP(while)
-};
-
 const wchar_t *keyword_description(parse_keyword_t type) {
-    if (type >= 0 && type <= LAST_KEYWORD) return keyword_map[type].name;
+    const wchar_t *keyword = enum_to_str(type, keyword_enum_map);
+    if (keyword) return keyword;
 
     // This leaks memory but it should never be run unless we have a bug elsewhere in the code.
     const wcstring d = format_string(L"unknown_keyword_%ld", static_cast<long>(type));
@@ -487,21 +417,20 @@ class parse_ll_t {
     }
 
     /// Pop from the top of the symbol stack, then push the given production, updating node counts.
-    /// Note that production_t has type "pointer to array" so some care is required.
-    inline void symbol_stack_pop_push_production(const production_t *production) {
+    /// Note that production_element_t has type "pointer to array" so some care is required.
+    inline void symbol_stack_pop_push_production(const production_element_t *production) {
         bool logit = false;
         if (logit) {
-            size_t count = 0;
+            int count = 0;
             fprintf(stderr, "Applying production:\n");
-            for (size_t i = 0; i < MAX_SYMBOLS_PER_PRODUCTION; i++) {
-                production_element_t elem = (*production)[i];
-                if (production_element_is_valid(elem)) {
-                    parse_token_type_t type = production_element_type(elem);
-                    parse_keyword_t keyword = production_element_keyword(elem);
-                    fprintf(stderr, "\t%ls <%ls>\n", token_type_description(type),
-                            keyword_description(keyword));
-                    count++;
-                }
+            for (int i = 0;; i++) {
+                production_element_t elem = production[i];
+                if (!production_element_is_valid(elem)) break;  // all done, bail out
+                parse_token_type_t type = production_element_type(elem);
+                parse_keyword_t keyword = production_element_keyword(elem);
+                fprintf(stderr, "\t%ls <%ls>\n", token_type_description(type),
+                        keyword_description(keyword));
+                count++;
             }
             if (!count) fprintf(stderr, "\t<empty>\n");
         }
@@ -522,12 +451,9 @@ class parse_ll_t {
         representative_child.parent = parent_node_idx;
 
         node_offset_t child_count = 0;
-        for (size_t i = 0; i < MAX_SYMBOLS_PER_PRODUCTION; i++) {
-            production_element_t elem = (*production)[i];
-            if (!production_element_is_valid(elem)) {
-                break;  // all done, bail out
-            }
-
+        for (int i = 0;; i++) {
+            production_element_t elem = production[i];
+            if (!production_element_is_valid(elem)) break;  // all done, bail out
             // Append the parse node.
             representative_child.type = production_element_type(elem);
             nodes.push_back(representative_child);
@@ -550,7 +476,7 @@ class parse_ll_t {
         symbol_stack.reserve(symbol_stack.size() + child_count);
         node_offset_t idx = child_count;
         while (idx--) {
-            production_element_t elem = (*production)[idx];
+            production_element_t elem = production[idx];
             PARSE_ASSERT(production_element_is_valid(elem));
             symbol_stack.push_back(parse_stack_element_t(elem, child_start + idx));
         }
@@ -1053,7 +979,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
         parse_stack_element_t &stack_elem = symbol_stack.back();
         parse_node_t &node = nodes.at(stack_elem.node_idx);
         parse_node_tag_t tag = 0;
-        const production_t *production =
+        const production_element_t *production =
             production_for_token(stack_elem.type, token1, token2, &tag);
         node.tag = tag;
         if (production == NULL) {
@@ -1088,23 +1014,8 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
 }
 
 // Given an expanded string, returns any keyword it matches.
-static parse_keyword_t keyword_with_name(const wchar_t *name) {
-    // Binary search on keyword_map. Start at 1 since 0 is keyword_none.
-    parse_keyword_t result = parse_keyword_none;
-    size_t left = 1, right = sizeof keyword_map / sizeof *keyword_map;
-    while (left < right) {
-        size_t mid = left + (right - left) / 2;
-        int cmp = wcscmp(name, keyword_map[mid].name);
-        if (cmp < 0) {
-            right = mid;  // name was smaller than mid
-        } else if (cmp > 0) {
-            left = mid + 1;  // name was larger than mid
-        } else {
-            result = keyword_map[mid].keyword;  // found it
-            break;
-        }
-    }
-    return result;
+static inline parse_keyword_t keyword_with_name(const wchar_t *name) {
+    return str_to_enum(name, keyword_enum_map, keyword_enum_map_len);
 }
 
 static bool is_keyword_char(wchar_t c) {

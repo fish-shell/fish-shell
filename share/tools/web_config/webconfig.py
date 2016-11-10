@@ -19,14 +19,6 @@ else:
     import socketserver as SocketServer
     from urllib.parse import parse_qs
 
-# Check to see if IPv6 is enabled in the kernel
-HAS_IPV6 = True
-try:
-    s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-    s.close()
-except:
-    HAS_IPV6 = False
-
 # Disable CLI web browsers
 term = os.environ.pop('TERM', None)
 import webbrowser
@@ -34,7 +26,7 @@ if term:
     os.environ['TERM'] = term
 
 import subprocess
-import re, socket, cgi, select, time, glob, random, string, binascii
+import re, cgi, select, time, glob, random, string, binascii
 try:
     import json
 except ImportError:
@@ -466,7 +458,7 @@ class FishConfigTCPServer(SocketServer.TCPServer):
     """TCPServer that only accepts connections from localhost (IPv4/IPv6)."""
     WHITELIST = set(['::1', '::ffff:127.0.0.1', '127.0.0.1'])
 
-    address_family = socket.AF_INET6 if HAS_IPV6 else socket.AF_INET
+    address_family = socket.AF_INET6 if socket.has_ipv6 else socket.AF_INET
 
     def verify_request(self, request, client_address):
         return client_address[0] in FishConfigTCPServer.WHITELIST
@@ -968,7 +960,7 @@ authkey = binascii.b2a_hex(os.urandom(16)).decode('ascii')
 
 # Try to find a suitable port
 PORT = 8000
-HOST = "::" if HAS_IPV6 else "localhost"
+HOST = "::" if socket.has_ipv6 else "localhost"
 while PORT <= 9000:
     try:
         Handler = FishConfigHTTPRequestHandler

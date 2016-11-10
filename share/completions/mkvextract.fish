@@ -9,7 +9,7 @@
 
 function __fish_mkvextract_find_matroska_in_args
     set -l cmd (commandline -opc)
-    if test (count $cmd) -lt 3
+    if not set -q cmd[3]
         return 1
     end
     for c in $cmd[3..-1]
@@ -37,7 +37,7 @@ end
 function __fish_mkvextract_print_attachments
     if set -l matroska (__fish_mkvextract_find_matroska_in_args)
         if set -l info (mkvmerge -i $matroska)
-            string match 'Attachment ID*' $info | string replace -r '.*?(\d+).*? type \'(.*?)\'.*?file name \'(.*?)\'' '$1:\t$3 ($2)'
+            string match 'Attachment ID*' -- $info | string replace -r '.*?(\d+).*? type \'(.*?)\'.*?file name \'(.*?)\'' '$1:\t$3 ($2)'
         end
     end
 end
@@ -45,7 +45,7 @@ end
 function __fish_mkvextract_print_tracks
     if set -l matroska (__fish_mkvextract_find_matroska_in_args)
         if set -l info (mkvmerge -i $matroska)
-            string match 'Track ID*' $info | string replace -r '.*?(\d+): (.*)' '$1:\t$2'
+            string match 'Track ID*' -- $info | string replace -r '.*?(\d+): (.*)' '$1:\t$2'
         end
     end
 end

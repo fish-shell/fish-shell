@@ -977,7 +977,7 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - @key{Alt,&uarr;,Up} and @key{Alt,&darr;,Down} search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the <a href='#history'>history</a> section for more information on history searching.
 
-- @key{Control,C} deletes the entire line.
+- @key{Control,C} cancels the entire line.
 
 - @key{Control,D} delete one character to the right of the cursor. If the command line is empty, @key{Control,D} will exit fish.
 
@@ -986,6 +986,8 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 - @key{Control,L} clears and repaints the screen.
 
 - @key{Control,W} moves the previous path component (everything up to the previous "/") to the <a href="#killring">killring</a>.
+
+- @key{Control,X} copies the current buffer to the system's clipboard, @key{Control,V} inserts the clipboard contents.
 
 - @key{Alt,D} moves the next word to the <a href="#killring">killring</a>.
 
@@ -1068,16 +1070,11 @@ Command mode is also known as normal mode.
 
 - @key{[} and @key{]} search the command history for the previous/next token containing the token under the cursor before the search was started. See the <a href='#history'>history</a> section for more information on history searching.
 
-- @key{Control, X} copies the current buffer to the system's clipboard, @key{Control, V} inserts the clipboard contents.
-- @key{Control,C} deletes the entire line.
-
 - @key{Backspace} moves the cursor left.
 
 \subsubsection vi-mode-insert Insert mode
 
-- @key{Escape} or @key{Control,C} enters <a href="#vi-mode-command">command mode</a>.
-
-- @key{Control,x} moves the cursor to the end of the line. If an autosuggestion is available, it will be accepted completely.
+- @key{Escape} enters <a href="#vi-mode-command">command mode</a>.
 
 - @key{Backspace} removes one character to the left.
 

@@ -2172,19 +2172,21 @@ enum status_cmd_t {
     STATUS_PRINT_STACK_TRACE,
     STATUS_UNDEF
 };
+// Must be sorted by string, not enum or random.
 const enum_map<status_cmd_t> status_enum_map[] = {
-    {STATUS_IS_LOGIN, L"is-login"},
-    {STATUS_IS_INTERACTIVE, L"is-interactive"},
+    {STATUS_CURRENT_FILENAME, L"current-filename"},
+    {STATUS_CURRENT_LINE_NUMBER, L"current-line-number"},
     {STATUS_IS_BLOCK, L"is-block"},
     {STATUS_IS_COMMAND_SUB, L"is-command-sub"},
     {STATUS_IS_FULL_JOB_CTRL, L"is-full-job-control"},
+    {STATUS_IS_INTERACTIVE, L"is-interactive"},
     {STATUS_IS_INTERACTIVE_JOB_CTRL, L"is-interactive-job-control"},
+    {STATUS_IS_LOGIN, L"is-login"},
     {STATUS_IS_NO_JOB_CTRL, L"is-no-job-control"},
-    {STATUS_CURRENT_FILENAME, L"current-filename"},
-    {STATUS_CURRENT_LINE_NUMBER, L"current-line-number"},
     {STATUS_SET_JOB_CONTROL, L"job-control"},
     {STATUS_PRINT_STACK_TRACE, L"print-stack-trace"},
     {STATUS_UNDEF, NULL}};
+#define status_enum_map_len (sizeof status_enum_map / sizeof *status_enum_map)
 
 /// Remember the status subcommand and disallow selecting more than one status subcommand.
 static bool set_status_cmd(wchar_t *const cmd, status_cmd_t *status_cmd, status_cmd_t sub_cmd,
@@ -2348,7 +2350,7 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
     // If a status command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     if (w.woptind < argc) {
-        status_cmd_t subcmd = str_to_enum(argv[w.woptind], status_enum_map);
+        status_cmd_t subcmd = str_to_enum(argv[w.woptind], status_enum_map, status_enum_map_len);
         if (subcmd != STATUS_UNDEF) {
             if (!set_status_cmd(cmd, &status_cmd, subcmd, streams)) {
                 return STATUS_BUILTIN_ERROR;
@@ -2947,9 +2949,11 @@ static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **arg
 }
 
 enum hist_cmd_t { HIST_SEARCH = 1, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAVE, HIST_UNDEF };
-const enum_map<hist_cmd_t> hist_enum_map[] = {{HIST_SEARCH, L"search"}, {HIST_DELETE, L"delete"},
-                                              {HIST_CLEAR, L"clear"},   {HIST_MERGE, L"merge"},
-                                              {HIST_SAVE, L"save"},     {HIST_UNDEF, NULL}};
+// Must be sorted by string, not enum or random.
+const enum_map<hist_cmd_t> hist_enum_map[] = {{HIST_CLEAR, L"clear"},   {HIST_DELETE, L"delete"},
+                                              {HIST_MERGE, L"merge"},   {HIST_SAVE, L"save"},
+                                              {HIST_SEARCH, L"search"}, {HIST_UNDEF, NULL}};
+#define hist_enum_map_len (sizeof hist_enum_map / sizeof *hist_enum_map)
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.
 static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t sub_cmd,
@@ -3129,7 +3133,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     // See the TODO above regarding the `long_options` array.
     if (w.woptind < argc) {
-        hist_cmd_t subcmd = str_to_enum(argv[w.woptind], hist_enum_map);
+        hist_cmd_t subcmd = str_to_enum(argv[w.woptind], hist_enum_map, hist_enum_map_len);
         if (subcmd != HIST_UNDEF) {
             if (!set_hist_cmd(cmd, &hist_cmd, subcmd, streams)) {
                 return STATUS_BUILTIN_ERROR;

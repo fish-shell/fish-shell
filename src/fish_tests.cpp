@@ -2404,6 +2404,10 @@ bool poll_notifier(universal_notifier_t *note) {
 
 static void trigger_or_wait_for_notification(universal_notifier_t *notifier,
                                              universal_notifier_t::notifier_strategy_t strategy) {
+    // This argument should be removed if it isn't actually needed by these unit tests. I'm going to
+    // silence the warning. See https://github.com/fish-shell/fish-shell/issues/3439.
+    UNUSED(notifier);
+
     switch (strategy) {
         case universal_notifier_t::strategy_default: {
             DIE("strategy_default should be passed");

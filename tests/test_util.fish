@@ -109,7 +109,7 @@ function say -V suppress_color
 
     if begin; test -n "$suppress_color"; or set_color $color_flags $argv[1]; end
         printf '%s' $argv[2..-1]
-        test -z "$suppress_color"; and set_color reset
+        test -z "$suppress_color"; and set_color normal
         if test -z "$suppress_newline"
             echo
         end

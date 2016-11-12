@@ -1,4 +1,9 @@
 <?xml version="1.0"?>
+
+<!-- Sadly we can't enable the following two rules since doing so causes false
+     positives in standard header files rather than just project specific
+     source files. If we can find a way to enable these rules by also
+     excluding system include files we should do so.
 <rule version="1">
     <pattern> wcwidth \(</pattern>
     <message>
@@ -16,3 +21,4 @@
         <summary>Always use fish_wcswidth rather than wcswidth.</summary>
     </message>
 </rule>
+<--!>

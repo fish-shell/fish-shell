@@ -39,6 +39,12 @@ for arg in $argv
         set cppcheck_args $cppcheck_args $arg
     end
 end
+
+# Not sure when this became necessary but without these flags cppcheck no longer works on macOS.
+# It complains that "Cppcheck cannot find all the include files." Adding these include paths should
+# be harmless everyelse.
+set cppcheck_args $cppcheck_args -I/usr/include -I.
+
 if test "$machine_type" = "x86_64"
     set cppcheck_args -D__x86_64__ -D__LP64__ $cppcheck_args
 end

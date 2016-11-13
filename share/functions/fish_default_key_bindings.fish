@@ -1,4 +1,10 @@
 function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fish"
+    if contains -- -h $argv
+        or contains -- --help $argv
+        echo "Sorry but this function doesn't support -h or --help"
+        return 1
+    end
+
     if not set -q argv[1]
         # Clear earlier bindings, if any
         bind --erase --all
@@ -6,16 +12,20 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
             # Allow the user to set the variable universally
             set -q fish_key_bindings
             or set -g fish_key_bindings
-            set fish_key_bindings fish_default_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
+            # This triggers the handler, which calls us again and ensures the user_key_bindings
+            # are executed.
+            set fish_key_bindings fish_default_key_bindings
             return
         end
     end
 
     # These are shell-specific bindings that we share with vi mode.
     __fish_shared_key_bindings $argv
+    or return  # protect against invalid $argv
 
     # This is the default binding, i.e. the one used if no other binding matches
     bind $argv "" self-insert
+    or exit  # protect against invalid $argv
 
     bind $argv \n execute
     bind $argv \r execute

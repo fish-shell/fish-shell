@@ -1,4 +1,10 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
+    if contains -- -h $argv
+        or contains -- --help $argv
+        echo "Sorry but this function doesn't support -h or --help"
+        return 1
+    end
+
     # Erase all bindings if not explicitly requested otherwise to
     # allow for hybrid bindings.
     # This needs to be checked here because if we are called again
@@ -16,7 +22,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         # Allow the user to set the variable universally
         set -q fish_key_bindings
         or set -g fish_key_bindings
-        set fish_key_bindings fish_vi_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
+        # This triggers the handler, which calls us again and ensures the user_key_bindings
+        # are executed.
+        set fish_key_bindings fish_vi_key_bindings
         return
     end
 

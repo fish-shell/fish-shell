@@ -1,5 +1,5 @@
 # For Solaris OS, we don't need to generate completions. Since it can hang the PC.
-if test (uname) != 'SunOS'
+if test (uname) != 'SunOS' -a -x /usr/bin/killall
 	__fish_make_completion_signals
 
 	for i in $__kill_signals

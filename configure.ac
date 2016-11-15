@@ -314,6 +314,62 @@ AC_CHECK_FUNCS( getpwent )
 
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )
 
+dnl AC_CHECK_FUNCS uses C linkage, but sometimes (Solaris!) the behaviour is
+dnl different with C++.
+AC_MSG_CHECKING([for wcsdup])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ wchar_t* foo = wcsdup(L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_WCSDUP, 1, Define to 1 if you have the `wcsdup' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for std::wcsdup])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ wchar_t* foo = std::wcsdup(L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_STD__WCSDUP, 1, Define to 1 if you have the `std::wcsdup' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for wcscasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = wcscasecmp(L"", L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_WCSCASECMP, 1, Define to 1 if you have the `wcscasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for std::wcscasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = std::wcscasecmp(L"", L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_STD__WCSCASECMP, 1, Define to 1 if you have the `std::wcscasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for wcsncasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = wcsncasecmp(L"", L"", 0); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_WCSNCASECMP, 1, Define to 1 if you have the `wcsncasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for std::wcsncasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = std::wcsncasecmp(L"", L"", 0); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_STD__WCSNCASECMP, 1, Define to 1 if you have the `std::wcsncasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
 if test x$local_gettext != xno; then
   AC_CHECK_FUNCS( gettext )
 

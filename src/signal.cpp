@@ -14,7 +14,6 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Struct describing an entry for the lookup table used to convert between signal names and signal

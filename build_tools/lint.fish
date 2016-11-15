@@ -114,7 +114,9 @@ if set -q c_files[1]
 
         echo
         echo ========================================
-        echo "Running `cppcheck --check-config` to identify missing includes similar problems"
+        echo 'Running `cppcheck --check-config` to identify missing includes similar problems.'
+        echo 'Ignore unmatchedSuppression warnings as they are probably false positives we'
+        echo 'cannot suppress.'
         echo ========================================
         cppcheck $cppcheck_args --check-config $c_files 2>&1
     end

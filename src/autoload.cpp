@@ -1,7 +1,6 @@
 // The classes responsible for autoloading functions and completions.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stddef.h>

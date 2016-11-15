@@ -3,7 +3,6 @@
 // IWYU pragma: no_include <cstddef>
 #include <assert.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <wchar.h>
 #include <wctype.h>
 #include <map>

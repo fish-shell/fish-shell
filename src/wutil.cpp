@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
+#include <wctype.h>
 #include <map>
 #include <memory>
 #include <string>

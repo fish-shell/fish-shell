@@ -28,7 +28,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <wchar.h>
-#include <wctype.h>
 #include <algorithm>
 #include <map>
 #include <memory>

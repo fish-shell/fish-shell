@@ -31,7 +31,6 @@
 #include <vector>
 
 #include "common.h"
-#include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "highlight.h"
 #include "output.h"

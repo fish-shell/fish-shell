@@ -720,8 +720,8 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
             done = true;
         } else {
             bufsize = outlen;
-            // cppcheck-suppress memleakOnRealloc
-            output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
+            wchar_t *new_output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
+            if (new_output) output = new_output;
         }
     }
 

@@ -3,6 +3,7 @@
 #define FISH_WUTIL_H
 
 #include <dirent.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <time.h>

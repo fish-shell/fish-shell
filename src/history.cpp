@@ -1450,7 +1450,11 @@ static bool format_history_record(const history_item_t &item, const wchar_t *sho
         streams.out.append(timestamp_string);
     }
     streams.out.append(item.str());
-    streams.out.append(null_terminate ? L'\0' : L'\n');
+    if (null_terminate) {
+        streams.out.append(L'\0');
+    } else {
+        streams.out.append(L'\n');
+    }
     return true;
 }
 

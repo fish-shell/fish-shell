@@ -8,9 +8,7 @@
 #include <pwd.h>
 #include <stddef.h>
 #include <stdlib.h>
-#ifdef HAVE__NL_MSG_CAT_CNTR
 #include <string.h>
-#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>

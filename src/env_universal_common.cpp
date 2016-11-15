@@ -17,7 +17,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
-#include <wctype.h>
 #include <string>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>

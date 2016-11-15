@@ -9,17 +9,20 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # allow for hybrid bindings.
     # This needs to be checked here because if we are called again
     # via the variable handler the argument will be gone.
-    if not contains -- $argv[1] --no-erase
-        bind --erase --all
-    else if set -q argv[1]
+    set -l rebind true
+    if test "$argv[1]" = "--no-erase"
+        set rebind false
         set -e argv[1]
+    else
+        bind --erase --all  # clear earlier bindings, if any
     end
 
     # Allow just calling this function to correctly set the bindings.
     # Because it's a rather discoverable name, users will execute it
     # and without this would then have subtly broken bindings.
     if test "$fish_key_bindings" != "fish_vi_key_bindings"
-        # Allow the user to set the variable universally
+        and test "$rebind" = "true"
+        # Allow the user to set the variable universally.
         set -q fish_key_bindings
         or set -g fish_key_bindings
         # This triggers the handler, which calls us again and ensures the user_key_bindings
@@ -31,7 +34,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # The default escape timeout is 300ms. But for users of Vi bindings that can be slightly
     # annoying when trying to switch to Vi "normal" mode. So set a shorter timeout in this case
     # unless the user has explicitly set the delay.
-    set -q fish_escape_delay_ms; or set -g fish_escape_delay_ms 100
+    set -q fish_escape_delay_ms
+    or set -g fish_escape_delay_ms 100
 
     set -l init_mode insert
     # These are only the special vi-style keys

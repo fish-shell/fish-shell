@@ -6,8 +6,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     end
 
     if not set -q argv[1]
-        # Clear earlier bindings, if any
-        bind --erase --all
+        bind --erase --all  # clear earlier bindings, if any
         if test "$fish_key_bindings" != "fish_default_key_bindings"
             # Allow the user to set the variable universally
             set -q fish_key_bindings

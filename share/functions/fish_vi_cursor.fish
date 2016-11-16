@@ -23,7 +23,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
             # ...in a supporting term...
             and begin set -q KONSOLE_PROFILE_NAME
                 or set -q ITERM_PROFILE
-                or test "$VTE_VERSION" -gt 1910
+                or test "$VTE_VERSION" -ge 4000
             end
             # .. unless an unsupporting terminal has been started in tmux inside a supporting one
             and begin string match -q "screen*" -- $TERM
@@ -34,8 +34,9 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
         # Blacklist
         or begin
             # vte-based terms set $TERM = xterm*, but only gained support relatively recently.
+            # From https://bugzilla.gnome.org/show_bug.cgi?id=720821, it appears it was version 0.40.0
             set -q VTE_VERSION
-            and test "$VTE_VERSION" -le 1910
+            and test "$VTE_VERSION" -lt 4000
         end
         or set -q INSIDE_EMACS
         return

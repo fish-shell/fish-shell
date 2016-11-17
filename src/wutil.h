@@ -112,7 +112,7 @@ int fish_iswgraph(wint_t wc);
 
 const wchar_t *wcsvarname(const wchar_t *str);
 const wchar_t *wcsvarname(const wcstring &str);
-const wchar_t *wcsfuncname(const wcstring &str);
+bool wcsfuncname(const wcstring &str);
 bool wcsvarchr(wchar_t chr);
 int fish_wcswidth(const wchar_t *str);
 int fish_wcswidth(const wcstring &str);

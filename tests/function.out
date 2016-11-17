@@ -19,6 +19,6 @@ $bar: (5)
 5: '3'
 $baz: (0)
 Function name1 found
-Function name2 found
+Function name2 not found as expected
 Function name3 found
-Function name4 found
+Function name4 not found as expected

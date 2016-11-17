@@ -498,10 +498,15 @@ const wchar_t *wcsvarname(const wchar_t *str) {
 /// \return null if this is a valid name, and a pointer to the first invalid character otherwise.
 const wchar_t *wcsvarname(const wcstring &str) { return wcsvarname(str.c_str()); }
 
-/// Test if the given string is a valid function name.
+/// Test if the string is a valid function name.
 ///
-/// \return null if this is a valid name, and a pointer to the first invalid character otherwise.
-const wchar_t *wcsfuncname(const wcstring &str) { return wcschr(str.c_str(), L'/'); }
+/// \return true if it is valid else false.
+bool wcsfuncname(const wcstring &str) {
+    if (str.size() == 0) return false;
+    if (str.at(0) == L'-') return false;
+    if (str.find_first_of(L'/') != wcstring::npos) return false;
+    return true;
+}
 
 /// Test if the given string is valid in a variable name.
 ///

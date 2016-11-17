@@ -2905,7 +2905,7 @@ static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **arg
     int argc = builtin_count_args(argv);
 
     if (argc > 2) {
-        streams.err.append_format(_(L"%ls: Too many arguments\n"), argv[0]);
+        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         builtin_print_help(parser, streams, argv[0], streams.err);
         return STATUS_BUILTIN_ERROR;
     }

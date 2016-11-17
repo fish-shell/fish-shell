@@ -3,7 +3,6 @@
 # Regression test for issue #3129. In previous versions these statements would
 # cause an `assert()` to fire thus killing the shell.
 complete -c pkill -o ''
-complete -c pkill -d ''
 complete -c pkill -l ''
 complete -c pkill -s ''
 

@@ -1,0 +1,9 @@
+function: Illegal function name '-a'
+fish: function -a arg1 arg2 name2 ; end
+      ^
+function: Illegal function name '--argument-names'
+fish: function --argument-names arg1 arg2 name4 ; end
+      ^
+function: Unexpected positional argument 'abc'
+fish: function name5 abc --argument-names def ; end
+      ^

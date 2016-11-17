@@ -31,16 +31,16 @@ set bar 'bad bar'
 set baz 'bad baz'
 frob
 
-# Test that -a does not mix up the function name with arguments
-# See #2068
+# This sequence of tests originally verified that functions `name2` and
+# `name4` were created. See issue #2068. That behavior is not what we want.
+# The function name must always be the first argument of the `function`
+# command. See issue #2827.
 function name1 -a arg1 arg2 ; end
 function -a arg1 arg2 name2 ; end
 function name3 --argument-names arg1 arg2 ; end
 function --argument-names arg1 arg2 name4 ; end
-for i in (seq 4)
-    if functions -q name$i
-        echo "Function name$i found"
-    else
-        echo "Function name$i not found, but should have been"
-    end
-end
+function name5 abc --argument-names def ; end
+functions -q name1; and echo "Function name1 found"
+functions -q name2; or echo "Function name2 not found as expected"
+functions -q name3; and echo "Function name3 found"
+functions -q name4; or echo "Function name4 not found as expected"

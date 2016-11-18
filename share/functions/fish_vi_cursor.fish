@@ -24,6 +24,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
             and begin set -q KONSOLE_PROFILE_NAME
                 or set -q ITERM_PROFILE
                 or test "$VTE_VERSION" -ge 4000
+                or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280
             end
             # .. unless an unsupporting terminal has been started in tmux inside a supporting one
             and begin string match -q "screen*" -- $TERM
@@ -39,6 +40,21 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
             and test "$VTE_VERSION" -lt 4000
         end
         or set -q INSIDE_EMACS
+        or begin
+            # TERM = xterm is special because plenty of things claim to be it, but aren't fully compatible
+            # This includes old vte-terms (without $VTE_VERSION), old xterms (without $XTERM_VERSION or < 280)
+            # and maybe other stuff.
+            # This needs to be kept _at least_ as long as Ubuntu 14.04 is still a thing
+            # because that ships a gnome-terminal without support and without $VTE_VERSION.
+            string match -q 'xterm*' -- $TERM
+            and not begin set -q KONSOLE_PROFILE_NAME
+                or set -q ITERM_PROFILE
+                or test "$VTE_VERSION" -ge 4000
+                # If $XTERM_VERSION is undefined, this will return 1 and print an error. Silence it.
+                or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280 ^/dev/null
+            end
+        end
+                
         return
     end
 

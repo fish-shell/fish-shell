@@ -1663,7 +1663,6 @@ static void reader_interactive_init() {
 /// Destroy data for interactive use.
 static void reader_interactive_destroy() {
     kill_destroy();
-    writestr(L"\n");
     set_color(rgb_color_t::reset(), rgb_color_t::reset());
     input_destroy();
 }

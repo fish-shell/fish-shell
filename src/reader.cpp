@@ -1375,7 +1375,7 @@ static bool handle_completions(const std::vector<completion_t> &comp,
     const wcstring tok(begin, end - begin);
 
     // Check trivial cases.
-    int size = comp.size();
+    size_t size = comp.size();
     if (size == 0) {
         // No suitable completions found, flash screen and return.
         reader_flash();

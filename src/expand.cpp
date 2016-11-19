@@ -166,7 +166,7 @@ wcstring expand_escape_variable(const wcstring &in) {
 
     tokenize_variable_array(in, lst);
 
-    int size = lst.size();
+    size_t size = lst.size();
     if (size == 0) {
         buff.append(L"''");
     } else if (size == 1) {

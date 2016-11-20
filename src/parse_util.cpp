@@ -492,7 +492,7 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     bool finished = cmdlen != 0;
     if (finished) {
         finished = (quote == NULL);
-        if (finished && wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1]) != L'\0') {
+        if (finished && wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1]) != NULL) {
             finished = cmdlen > 1 && cmd_tmp[cmdlen - 2] == L'\\';
         }
     }

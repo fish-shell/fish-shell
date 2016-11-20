@@ -791,15 +791,6 @@ void history_t::add(const wcstring &str, history_identifier_t ident, bool pendin
     this->add(history_item_t(str, when, ident), pending);
 }
 
-bool icompare_pred(wchar_t a, wchar_t b) { return std::tolower(a) == std::tolower(b); }
-
-bool icompare(wcstring const &a, wcstring const &b) {
-    if (a.length() != b.length()) {
-        return false;
-    }
-    return std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
-}
-
 // Remove matching history entries from our list of new items. This only supports literal,
 // case-sensitive, matches.
 void history_t::remove(const wcstring &str_to_remove) {

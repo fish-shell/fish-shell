@@ -870,9 +870,9 @@ depend: | show-MKDIR_P
 # TODO - why not have the Makefile run lint.fish on actual files itself (generate a report target?)
 #
 lint:
-	$v build_tools/lint.fish $(CXX) $(CXXFLAGS) $(CPPFLAGS)
+	$v build_tools/lint.fish "$(CXX)" $(CXXFLAGS) $(CPPFLAGS)
 lint-all:
-	$v build_tools/lint.fish $(CXX) --all $(CXXFLAGS) $(CPPFLAGS)
+	$v build_tools/lint.fish "$(CXX)" --all $(CXXFLAGS) $(CPPFLAGS)
 .PHONY: lint lint-all
 
 #

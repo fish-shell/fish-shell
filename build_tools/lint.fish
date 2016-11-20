@@ -106,7 +106,7 @@ if set -q c_files[1]
         set -l cm (set_color magenta)
         set -l cbrm (set_color brmagenta)
         set -l template "[$cb$cu{file}$cn$cb:{line}$cn] $cbrm{severity}$cm ({id}):$cn\n {message}"
-        set cppcheck_args -q --verbose --std=posix --language=c++ --template $template \
+        set cppcheck_args -q --verbose --std=c++11 --std=posix --language=c++ --template $template \
             --suppress=missingIncludeSystem --inline-suppr --enable=$cppchecks \
             --rule-file=.cppcheck.rules --suppressions-list=.cppcheck.suppressions $cppcheck_args
 

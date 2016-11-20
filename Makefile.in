@@ -286,7 +286,7 @@ prof: all
 # directory once Doxygen is done.
 #
 doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
-	@echo " SED doxygen  $(em)user_doc$(sgr0)"
+	@echo "  doxygen  $(em)user_doc$(sgr0)"
 	$v (cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | doxygen - && touch user_doc
 	$v rm -f $(wildcard $(addprefix ./user_doc/html/,arrow*.png bc_s.png bdwn.png closed.png doc.png folder*.png ftv2*.png nav*.png open.png splitbar.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html))
 
@@ -367,7 +367,7 @@ test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
 # builtins
 #
 doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in |
-	@echo " CAT AWK   $(em)$@$(sgr0)"
+	@echo "  CAT AWK  $(em)$@$(sgr0)"
 	$v rm -f command_list.tmp command_list_toc.tmp $@
 	$v for i in $(sort $(HELP_SRC)); do \
 		echo "<hr>" >>command_list.tmp; \
@@ -383,7 +383,7 @@ doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in |
 	$v cat $@.in | $(AWK) '{if ($$0 ~ /@command_list_toc@/) { system("cat command_list_toc.txt"); } else if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
 
 toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) | show-SED
-	@echo " SED       $(em)$@$(sgr0)"
+	@echo "  SED      $(em)$@$(sgr0)"
 	$v rm -f toc.tmp $@
 # Ugly hack to set the toc initial title for the main page
 	$v echo '- <a href="index.html" id="toc-index">fish shell documentation - $(FISH_BUILD_VERSION)</a>' > toc.tmp
@@ -400,7 +400,7 @@ toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) | show-SED
 	$v mv toc.tmp $@
 
 doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
-	@echo " AWK CAT      $(em)$@$(sgr0)"
+	@echo "  AWK CAT  $(em)$@$(sgr0)"
 	$v cat $@.in | $(AWK) '{if ($$0 ~ /@toc@/){ system("cat toc.txt");} else{ print $$0;}}' >$@
 
 #
@@ -415,7 +415,7 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
 lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED show-FGREP
 	$v rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
 # Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
-	@echo " SEDFGREP  $(em)$@$(sgr0)"
+	@echo "  SEDFGREP $(em)$@$(sgr0)"
 	$v $(SED) <command_list_toc.txt >>lexicon.tmp -n \
 		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
 		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt
@@ -474,7 +474,7 @@ doc.h: $(HDR_FILES)
 # the internal help function text.
 #
 %.doxygen:%.txt
-	@echo " cat *      $(em)$@$(sgr0)"
+	@echo "  cat *     $(em)$@$(sgr0)"
 	$v echo  "/** \page " `basename $*` >$@;
 	$v cat $*.txt >>$@;
 	$v echo "*/" >>$@
@@ -520,7 +520,7 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 messages.pot: $(wildcard src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish)
-	@echo " xgettext  $(em)$@$(sgr0)"
+	@echo "  xgettext $(em)$@$(sgr0)"
 	xgettext -k_ -kN_ $(wildcard src/*.cpp src/*.h) -o messages.pot
 	$v xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 $(wildcard share/completions/*.fish share/functions/*.fish) share/fish.config -o messages.pot
 
@@ -818,7 +818,7 @@ $(PCRE2_LIB): $(PCRE2_H)
 	$v $(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
 
 $(PCRE2_H):
-	@echo " autoconf  $(em)$@$(sgr0)"
+	@echo "  autoconf $(em)$@$(sgr0)"
 	$v (cd $(PCRE2_DIR) && ./config.status)
 
 #

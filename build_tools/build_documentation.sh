@@ -19,13 +19,6 @@ else
 	exit 1
 fi
 
-# Determine which man pages we don't want to generate.
-# on OS X, don't make a man page for open, since we defeat fish's open function on OS X.
-CONDEMNED_PAGES=
-if test `uname` = 'Darwin'; then
-	CONDEMNED_PAGES="$CONDEMNED_PAGES open.1"
-fi
-
 # Helper function to turn a relative path into an absolute path
 resolve_path()
 {
@@ -44,7 +37,6 @@ echo "      doxygen file: $DOXYFILE"
 echo "   input directory: $INPUTDIR"
 echo "      input filter: $INPUTFILTER"
 echo "  output directory: $OUTPUTDIR"
-echo "          skipping: $CONDEMNED_PAGES"
 
 #Until now the makefile likely has been affecting our output, reset for upcoming warnings
 tput sgr0
@@ -129,9 +121,6 @@ if test "$RESULT" = 0 ; then
             -e "s/^$CMD_NAME * \\\- \([^ ]*\) /\\\fB\1\\\fP -/"
 		mv "${CMD_NAME}.1.tmp" "${CMD_NAME}.1"
 	done
-
-	# Erase condemned pages
-	rm -f $CONDEMNED_PAGES
 fi
 
 # Destroy TMPLOC

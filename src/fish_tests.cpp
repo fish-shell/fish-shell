@@ -2820,6 +2820,24 @@ void history_tests_t::test_history_merge(void) {
         }
     }
 
+    // Make sure incorporate_external_changes doesn't drop items! (#3496)
+    history_t * const writer = hists[0];
+    history_t * const reader = hists[1];
+    const wcstring more_texts[] = {
+        L"Item_#3496_1", L"Item_#3496_2", L"Item_#3496_3", L"Item_#3496_4",
+        L"Item_#3496_5", L"Item_#3496_6"
+    };
+    for (size_t i=0; i < sizeof more_texts / sizeof *more_texts; i++) {
+        // time_barrier because merging will ignore items that may be newer
+        if (i > 0) time_barrier();
+        writer->add(more_texts[i]);
+        writer->incorporate_external_changes();
+        reader->incorporate_external_changes();
+        for (size_t j=0; j < i; j++) {
+            do_test(history_contains(reader, more_texts[j]));
+        }
+    }
+
     // Clean up.
     for (size_t i = 0; i < 3; i++) {
         delete hists[i];

@@ -1652,6 +1652,7 @@ void history_t::incorporate_external_changes() {
         // We'll pick them up from the file (#2312)
         this->save_internal(false);
         this->new_items.clear();
+        this->first_unwritten_new_item_index = 0;
     }
 }
 

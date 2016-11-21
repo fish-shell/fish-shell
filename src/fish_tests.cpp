@@ -68,8 +68,6 @@
 static const char *const *s_arguments;
 static int s_test_run_count = 0;
 
-bool is_wchar_ucs2() { return sizeof(wchar_t) == 2; }
-
 // Indicate if we should test the given function. Either we test everything (all arguments) or we
 // run only tests that have a prefix in s_arguments.
 static bool should_test_function(const char *func_name) {
@@ -202,13 +200,12 @@ static void test_unescape_sane() {
     if (unescape_string(L"echo \\U110000", &output, UNESCAPE_DEFAULT)) {
         err(L"Should not have been able to unescape \\U110000\n");
     }
-    if (is_wchar_ucs2()) {
-        ; // TODO: Make this work on MS Windows.
-    } else {
-        if (!unescape_string(L"echo \\U10FFFF", &output, UNESCAPE_DEFAULT)) {
-            err(L"Should have been able to unescape \\U10FFFF\n");
-        }
+#if WCHAR_MAX != 0xffff
+    // TODO: Make this work on MS Windows.
+    if (!unescape_string(L"echo \\U10FFFF", &output, UNESCAPE_DEFAULT)) {
+        err(L"Should have been able to unescape \\U10FFFF\n");
     }
+#endif
 }
 
 /// Test the escaping/unescaping code by escaping/unescaping random strings and verifying that the
@@ -837,9 +834,10 @@ static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, si
     size_t size;
     wchar_t *mem = NULL;
 
+#if WCHAR_MAX == 0xffff
     // Hack: if wchar is only UCS-2, and the UTF-8 input string contains astral characters, then
     // tweak the expected size to 0.
-    if (src != NULL && is_wchar_ucs2()) {
+    if (src) {
         // A UTF-8 code unit may represent an astral code point if it has 4 or more leading 1s.
         const unsigned char astral_mask = 0xF0;
         for (size_t i = 0; i < slen; i++) {
@@ -850,6 +848,7 @@ static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, si
             }
         }
     }
+#endif
 
     if (!dst) {
         size = utf8_to_wchar(src, slen, NULL, flags);
@@ -886,9 +885,10 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
     size_t size;
     char *mem = NULL;
 
+#if WCHAR_MAX == 0xffff
     // Hack: if wchar is simulating UCS-2, and the wchar_t input string contains astral characters,
     // then tweak the expected size to 0.
-    if (src != NULL && is_wchar_ucs2()) {
+    if (src) {
         const uint32_t astral_mask = 0xFFFF0000U;
         for (size_t i = 0; i < slen; i++) {
             if ((src[i] & astral_mask) != 0) {
@@ -898,6 +898,7 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
             }
         }
     }
+#endif
 
     if (dst) {
         mem = (char *)malloc(dlen);

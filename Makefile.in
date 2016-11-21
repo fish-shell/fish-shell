@@ -1020,14 +1020,13 @@ obj/expand.o: src/complete.h src/env.h src/exec.h src/expand.h
 obj/expand.o: src/parse_constants.h src/iothread.h src/parse_util.h
 obj/expand.o: src/tokenizer.h src/path.h src/proc.h src/io.h src/parse_tree.h
 obj/expand.o: src/util.h src/wildcard.h src/wutil.h
-obj/fallback.o: config.h src/signal.h src/fallback.h src/util.h
+obj/fallback.o: config.h src/signal.h src/common.h src/fallback.h src/util.h
 obj/fish.o: config.h src/builtin.h src/common.h src/fallback.h src/signal.h
 obj/fish.o: src/env.h src/event.h src/expand.h src/parse_constants.h
 obj/fish.o: src/fish_version.h src/function.h src/history.h src/wutil.h
-obj/fish.o: src/input.h src/input_common.h src/io.h src/parser.h
-obj/fish.o: src/parse_tree.h src/tokenizer.h src/proc.h src/path.h
-obj/fish.o: src/reader.h src/complete.h src/highlight.h src/color.h
-obj/fish.o: src/wildcard.h
+obj/fish.o: src/input.h src/io.h src/parser.h src/parse_tree.h
+obj/fish.o: src/tokenizer.h src/proc.h src/path.h src/reader.h src/complete.h
+obj/fish.o: src/highlight.h src/color.h
 obj/fish_indent.o: config.h src/color.h src/common.h src/fallback.h
 obj/fish_indent.o: src/signal.h src/env.h src/fish_version.h src/highlight.h
 obj/fish_indent.o: src/input.h src/output.h src/parse_constants.h
@@ -1136,8 +1135,8 @@ obj/sanity.o: src/wutil.h src/kill.h src/proc.h src/io.h src/parse_tree.h
 obj/sanity.o: src/parse_constants.h src/tokenizer.h src/reader.h
 obj/sanity.o: src/complete.h src/highlight.h src/color.h src/env.h
 obj/sanity.o: src/sanity.h
-obj/screen.o: config.h src/common.h src/fallback.h src/signal.h src/env.h
-obj/screen.o: src/highlight.h src/color.h src/output.h src/pager.h
+obj/screen.o: config.h src/common.h src/fallback.h src/signal.h
+obj/screen.o: src/highlight.h src/color.h src/env.h src/output.h src/pager.h
 obj/screen.o: src/complete.h src/reader.h src/parse_constants.h src/screen.h
 obj/screen.o: src/util.h
 obj/signal.o: config.h src/signal.h src/common.h src/fallback.h src/event.h
@@ -1146,7 +1145,7 @@ obj/signal.o: src/tokenizer.h src/reader.h src/complete.h src/highlight.h
 obj/signal.o: src/color.h src/env.h src/wutil.h
 obj/tokenizer.o: config.h src/common.h src/fallback.h src/signal.h
 obj/tokenizer.o: src/tokenizer.h src/wutil.h
-obj/utf8.o: config.h src/utf8.h
+obj/utf8.o: config.h src/common.h src/fallback.h src/signal.h src/utf8.h
 obj/util.o: config.h src/common.h src/fallback.h src/signal.h src/util.h
 obj/util.o: src/wutil.h
 obj/wcstringutil.o: config.h src/common.h src/fallback.h src/signal.h

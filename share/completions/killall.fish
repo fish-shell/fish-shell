@@ -22,7 +22,11 @@ if test (uname) != 'SunOS'
 		end
 	end
 
-	complete -c killall -xa '(__fish_complete_proc)'
+    if test "$USER" = root
+        complete -c killall -xa '(__fish_complete_proc)'
+    else
+       complete -c killall -xa "(ps u | awk '{print \$11}' | sed '1d;s/.*\///;/^(/d')"
+    end
 
 	if killall --version > /dev/null ^ /dev/null
 		complete -c killall -s e -l exact -d 'Require an exact match for very long names'

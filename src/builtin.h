@@ -109,6 +109,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                         output_stream_t &b);
 int builtin_count_args(const wchar_t *const *argv);
+bool builtin_is_valid_varname(const wchar_t *varname, wcstring &errstr, const wchar_t *cmd);
 
 void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                             const wchar_t *opt);

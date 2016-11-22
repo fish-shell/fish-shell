@@ -484,6 +484,7 @@ int fish_iswgraph(wint_t wc) {
 ///
 /// \return null if this is a valid name, and a pointer to the first invalid character otherwise.
 const wchar_t *wcsvarname(const wchar_t *str) {
+    if (str[0] == L'\0') return str;
     while (*str) {
         if ((!fish_iswalnum(*str)) && (*str != L'_')) {
             return str;

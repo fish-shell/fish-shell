@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,6 +77,27 @@ bool builtin_data_t::operator<(const wcstring &other) const {
 
 bool builtin_data_t::operator<(const builtin_data_t *other) const {
     return wcscmp(this->name, other->name) < 0;
+}
+
+static void builtin_append_format(wcstring &str, const wchar_t *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    append_formatv(str, fmt, ap);
+    va_end(ap);
+}
+
+bool builtin_is_valid_varname(const wchar_t *varname, wcstring &errstr, const wchar_t *cmd) {
+    const wchar_t *invalid_char = wcsvarname(varname);
+    if (!invalid_char) {
+        return true;
+    }
+
+    if (*invalid_char == L'\0') {
+        builtin_append_format(errstr, BUILTIN_ERR_VARNAME_ZERO, cmd);
+    } else {
+        builtin_append_format(errstr, BUILTIN_ERR_VARCHAR, cmd, *invalid_char);
+    }
+    return false;
 }
 
 /// Counts the number of arguments in the specified null-terminated array
@@ -1938,20 +1960,12 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
 
     // Verify all variable names.
+    wcstring errstr;
     for (i = w.woptind; i < argc; i++) {
-        wchar_t *src;
-
-        if (!wcslen(argv[i])) {
-            streams.err.append_format(BUILTIN_ERR_VARNAME_ZERO, argv[0]);
+        if (!builtin_is_valid_varname(argv[i], errstr, argv[0])) {
+            streams.err.append(errstr);
+            builtin_print_help(parser, streams, argv[0], streams.err);
             return STATUS_BUILTIN_ERROR;
-        }
-
-        for (src = argv[i]; *src; src++) {
-            if ((!iswalnum(*src)) && (*src != L'_')) {
-                streams.err.append_format(BUILTIN_ERR_VARCHAR, argv[0], *src);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_BUILTIN_ERROR;
-            }
         }
     }
 

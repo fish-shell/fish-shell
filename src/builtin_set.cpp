@@ -524,18 +524,11 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         *wcschr(dest, L'[') = 0;
     }
 
-    if (!wcslen(dest)) {
-        free(dest);
-        streams.err.append_format(BUILTIN_ERR_VARNAME_ZERO, argv[0]);
+    wcstring errstr;
+    if (!builtin_is_valid_varname(dest, errstr, argv[0])) {
+        streams.err.append(errstr);
         builtin_print_help(parser, streams, argv[0], streams.err);
-        return 1;
-    }
-
-    if ((bad_char = wcsvarname(dest))) {
-        streams.err.append_format(BUILTIN_ERR_VARCHAR, argv[0], *bad_char);
-        builtin_print_help(parser, streams, argv[0], streams.err);
-        free(dest);
-        return 1;
+        return STATUS_BUILTIN_ERROR;
     }
 
     // Set assignment can work in two modes, either using slices or using the whole array. We detect

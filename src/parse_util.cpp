@@ -847,7 +847,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
             if (closing_bracket != wcstring::npos) {
                 size_t var_start = dollar_pos + 2, var_end = closing_bracket;
                 var_name = wcstring(token, var_start, var_end - var_start);
-                looks_like_variable = !var_name.empty() && wcsvarname(var_name.c_str()) == NULL;
+                looks_like_variable = wcsvarname(var_name) == NULL;
             }
             if (looks_like_variable) {
                 append_syntax_error(

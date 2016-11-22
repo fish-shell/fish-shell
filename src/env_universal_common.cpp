@@ -230,7 +230,7 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
     result->push_back(' ');
 
     // Append variable name like "fish_color_cwd".
-    if (wcsvarname(key_in.c_str())) {
+    if (wcsvarname(key_in)) {
         debug(0, L"Illegal variable name: '%ls'", key_in.c_str());
         success = false;
     }

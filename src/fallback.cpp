@@ -498,14 +498,12 @@ static int mk_wcswidth(const wchar_t *pwcs, size_t n) {
  */
 
 /*
- * Emulate flock() with fcntl(), where available.
- * Otherwise, don't do locking; just pretend success.
+ * Emulate flock() with fcntl().
  */
 
 int flock(int fd, int op) {
     int rc = 0;
 
-#if defined(F_SETLK) && defined(F_SETLKW)
     struct flock fl = {0};
 
     switch (op & (LOCK_EX|LOCK_SH|LOCK_UN)) {
@@ -531,7 +529,6 @@ int flock(int fd, int op) {
 
     if (rc && (errno == EAGAIN))
         errno = EWOULDBLOCK;
-#endif
 
     return rc;
 }

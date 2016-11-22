@@ -2,6 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
+#include <stddef.h>
 #include <sys/resource.h>
 #include <wchar.h>
 
@@ -9,6 +10,7 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "proc.h"
 #include "util.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -120,14 +122,11 @@ static const wchar_t *get_desc(int what) {
 
 /// Set the new value of the specified resource limit. This function does _not_ multiply the limit
 // value by the multiplier constant used by the commandline ulimit.
-static int set(int resource, int hard, int soft, rlim_t value, io_streams_t &streams) {
+static int set_limit(int resource, int hard, int soft, rlim_t value, io_streams_t &streams) {
     struct rlimit ls;
+
     getrlimit(resource, &ls);
-
-    if (hard) {
-        ls.rlim_max = value;
-    }
-
+    if (hard) ls.rlim_max = value;
     if (soft) {
         ls.rlim_cur = value;
 
@@ -139,185 +138,170 @@ static int set(int resource, int hard, int soft, rlim_t value, io_streams_t &str
     }
 
     if (setrlimit(resource, &ls)) {
-        if (errno == EPERM)
+        if (errno == EPERM) {
             streams.err.append_format(
                 L"ulimit: Permission denied when changing resource of type '%ls'\n",
                 get_desc(resource));
-        else
+        } else {
             builtin_wperror(L"ulimit", streams);
-        return 1;
+        }
+        return STATUS_BUILTIN_ERROR;
     }
-    return 0;
+    return STATUS_BUILTIN_OK;
 }
 
 /// The ulimit builtin, used for setting resource limits.
 int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wgetopter_t w;
-    int hard = 0;
-    int soft = 0;
-
-    int what = RLIMIT_FSIZE;
-    int report_all = 0;
-
+    wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
+    bool report_all = false;
+    bool hard = false;
+    bool soft = false;
+    int what = RLIMIT_FSIZE;
 
-    w.woptind = 0;
+    const wchar_t *short_options = L":HSacdflmnstuvh";
+    const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
+                                           {L"hard", no_argument, NULL, 'H'},
+                                           {L"soft", no_argument, NULL, 'S'},
+                                           {L"core-size", no_argument, NULL, 'c'},
+                                           {L"data-size", no_argument, NULL, 'd'},
+                                           {L"file-size", no_argument, NULL, 'f'},
+                                           {L"lock-size", no_argument, NULL, 'l'},
+                                           {L"resident-set-size", no_argument, NULL, 'm'},
+                                           {L"file-descriptor-count", no_argument, NULL, 'n'},
+                                           {L"stack-size", no_argument, NULL, 's'},
+                                           {L"cpu-time", no_argument, NULL, 't'},
+                                           {L"process-count", no_argument, NULL, 'u'},
+                                           {L"virtual-memory-size", no_argument, NULL, 'v'},
+                                           {L"help", no_argument, NULL, 'h'},
+                                           {NULL, 0, NULL, 0}};
 
-    while (1) {
-        static const struct woption long_options[] = {
-            {L"all", no_argument, 0, 'a'},
-            {L"hard", no_argument, 0, 'H'},
-            {L"soft", no_argument, 0, 'S'},
-            {L"core-size", no_argument, 0, 'c'},
-            {L"data-size", no_argument, 0, 'd'},
-            {L"file-size", no_argument, 0, 'f'},
-            {L"lock-size", no_argument, 0, 'l'},
-            {L"resident-set-size", no_argument, 0, 'm'},
-            {L"file-descriptor-count", no_argument, 0, 'n'},
-            {L"stack-size", no_argument, 0, 's'},
-            {L"cpu-time", no_argument, 0, 't'},
-            {L"process-count", no_argument, 0, 'u'},
-            {L"virtual-memory-size", no_argument, 0, 'v'},
-            {L"help", no_argument, 0, 'h'},
-            {0, 0, 0, 0}};
-
-        int opt_index = 0;
-
-        int opt = w.wgetopt_long(argc, argv, L"aHScdflmnstuvh", long_options, &opt_index);
-        if (opt == -1) break;
-
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return 1;
-            }
-            case L'a': {
-                report_all = 1;
+            case 'a': {
+                report_all = true;
                 break;
             }
-            case L'H': {
-                hard = 1;
+            case 'H': {
+                hard = true;
                 break;
             }
-            case L'S': {
-                soft = 1;
+            case 'S': {
+                soft = true;
                 break;
             }
-            case L'c': {
+            case 'c': {
                 what = RLIMIT_CORE;
                 break;
             }
-            case L'd': {
+            case 'd': {
                 what = RLIMIT_DATA;
                 break;
             }
-            case L'f': {
+            case 'f': {
                 what = RLIMIT_FSIZE;
                 break;
             }
 #ifdef RLIMIT_MEMLOCK
-            case L'l': {
+            case 'l': {
                 what = RLIMIT_MEMLOCK;
                 break;
             }
 #endif
 #ifdef RLIMIT_RSS
-            case L'm': {
+            case 'm': {
                 what = RLIMIT_RSS;
                 break;
             }
 #endif
-            case L'n': {
+            case 'n': {
                 what = RLIMIT_NOFILE;
                 break;
             }
-            case L's': {
+            case 's': {
                 what = RLIMIT_STACK;
                 break;
             }
-            case L't': {
+            case 't': {
                 what = RLIMIT_CPU;
                 break;
             }
 #ifdef RLIMIT_NPROC
-            case L'u': {
+            case 'u': {
                 what = RLIMIT_NPROC;
                 break;
             }
 #endif
 #ifdef RLIMIT_AS
-            case L'v': {
+            case 'v': {
                 what = RLIMIT_AS;
                 break;
             }
 #endif
-            case L'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
+            case 'h': {
+                builtin_print_help(parser, streams, cmd, streams.out);
                 return 0;
             }
-            case L'?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return 1;
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_BUILTIN_ERROR;
+            }
+            case '?': {
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                return STATUS_BUILTIN_ERROR;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
     }
 
     if (report_all) {
-        if (argc - w.woptind == 0) {
-            print_all(hard, streams);
-        } else {
-            streams.err.append(argv[0]);
-            streams.err.append(L": Too many arguments\n");
-            builtin_print_help(parser, streams, argv[0], streams.err);
-            return 1;
-        }
-
-        return 0;
+        print_all(hard, streams);
+        return STATUS_BUILTIN_OK;
     }
 
     int arg_count = argc - w.woptind;
     if (arg_count == 0) {
         // Show current limit value.
         print(what, hard, streams);
-    } else if (arg_count == 1) {
-        // Change current limit value.
-        rlim_t new_limit;
-        wchar_t *end;
-
-        // Set both hard and soft limits if nothing else was specified.
-        if (!(hard + soft)) {
-            hard = soft = 1;
-        }
-
-        if (wcscasecmp(argv[w.woptind], L"unlimited") == 0) {
-            new_limit = RLIM_INFINITY;
-        } else if (wcscasecmp(argv[w.woptind], L"hard") == 0) {
-            new_limit = get(what, 1);
-        } else if (wcscasecmp(argv[w.woptind], L"soft") == 0) {
-            new_limit = get(what, soft);
-        } else {
-            errno = 0;
-            new_limit = wcstol(argv[w.woptind], &end, 10);
-            if (errno || *end) {
-                streams.err.append_format(L"%ls: Invalid limit '%ls'\n", argv[0], argv[w.woptind]);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return 1;
-            }
-            new_limit *= get_multiplier(what);
-        }
-
-        return set(what, hard, soft, new_limit, streams);
+        return STATUS_BUILTIN_OK;
+    } else if (arg_count != 1) {
+        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_BUILTIN_ERROR;
     }
 
-    streams.err.append(argv[0]);
-    streams.err.append(L": Too many arguments\n");
-    builtin_print_help(parser, streams, argv[0], streams.err);
-    return 1;
+    // Change current limit value.
+    if (!hard && !soft) {
+        // Set both hard and soft limits if neither was specified.
+        hard = soft = true;
+    }
+
+    rlim_t new_limit;
+    if (*argv[w.woptind] == L'\0') {
+        streams.err.append_format(_(L"%ls: New limit cannot be an empty string\n"), cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_BUILTIN_ERROR;
+    } else if (wcscasecmp(argv[w.woptind], L"unlimited") == 0) {
+        new_limit = RLIM_INFINITY;
+    } else if (wcscasecmp(argv[w.woptind], L"hard") == 0) {
+        new_limit = get(what, 1);
+    } else if (wcscasecmp(argv[w.woptind], L"soft") == 0) {
+        new_limit = get(what, soft);
+    } else {
+        wchar_t *end;
+        new_limit = wcstol(argv[w.woptind], &end, 10);
+        if (*end) {
+            streams.err.append_format(_(L"%ls: Invalid limit '%ls'\n"), cmd, argv[w.woptind]);
+            builtin_print_help(parser, streams, cmd, streams.err);
+            return STATUS_BUILTIN_ERROR;
+        }
+        new_limit *= get_multiplier(what);
+    }
+
+    return set_limit(what, hard, soft, new_limit, streams);
 }

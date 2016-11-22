@@ -9,7 +9,7 @@ you can redistribute it and/or modify it under the terms of the GNU GPL as
 published by the Free Software Foundation.
 
 fish also includes software licensed under the GNU Lesser General Public
-License version 2, the OpenBSD license and the ISC license.
+License version 2, the OpenBSD license, the ISC license, and the NetBSD license.
 
 Full licensing information is contained in doc_src/license.hdr.
 

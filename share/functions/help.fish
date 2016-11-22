@@ -23,15 +23,15 @@ function help --description 'Show help for the fish shell'
 	#
 	set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape rekonq google-chrome chromium-browser
 
-	if type -q "$fish_help_browser[1]"
+	if set -q fish_help_browser[1]
 		# User has set a fish-specific help browser. This overrides the
-		# browser that may be defined by $BROWSER. The $fish_help_browser
+		# browser that may be defined by $BROWSER. The fish_help_browser
 		# variable may be an array containing a browser name plus options.
 		set fish_browser $fish_help_browser
 	else
 		set -l text_browsers htmlview www-browser links elinks lynx w3m
 
-		if type -q "$BROWSER"
+		if set -q BROWSER
 			# User has manually set a preferred browser, so we respect that
 			set fish_browser $BROWSER
 		else
@@ -71,7 +71,7 @@ function help --description 'Show help for the fish shell'
 		end
 	end
 
-	if test -z $fish_browser[1]
+	if set -q $fish_browser[1]
 		printf (_ '%s: Could not find a web browser.\n') help
 		printf (_ 'Please set the variable $BROWSER or $fish_help_browser and try again.\n\n')
 		return 1

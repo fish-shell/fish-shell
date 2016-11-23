@@ -117,8 +117,8 @@ bool wcsvarchr(wchar_t chr);
 int fish_wcswidth(const wchar_t *str);
 int fish_wcswidth(const wcstring &str);
 
-/// Like wcstol(), but fails on a value outside the range of an int.
-int fish_wcstoi(const wchar_t *str, wchar_t **endptr, int base);
+int fish_wcstoi(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
+long fish_wcstol(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
 
 /// Class for representing a file's inode. We use this to detect and avoid symlink loops, among
 /// other things. While an inode / dev pair is sufficient to distinguish co-existing files, Linux

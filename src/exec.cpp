@@ -11,13 +11,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <wchar.h>
 #include <algorithm>
 #include <vector>
 #ifdef HAVE_SPAWN_H
 #include <spawn.h>
 #endif
-#include <wctype.h>
 #include <map>
 #include <memory>
 #include <string>
@@ -420,10 +418,8 @@ void exec_job(parser_t &parser, job_t *j) {
             const env_var_t shlvl_str = env_get_string(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
             wcstring nshlvl_str = L"0";
             if (!shlvl_str.missing()) {
-                wchar_t *end;
-                long shlvl_i = wcstol(shlvl_str.c_str(), &end, 10);
-                while (iswspace(*end)) ++end;  // skip trailing whitespace
-                if (shlvl_i > 0 && *end == '\0') {
+                long shlvl_i = fish_wcstol(shlvl_str.c_str());
+                if (!errno && shlvl_i > 0) {
                     nshlvl_str = to_string<long>(shlvl_i - 1);
                 }
             }

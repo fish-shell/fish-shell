@@ -308,16 +308,10 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
             if (timestamp_mode) {
                 const wchar_t *time_string = out.c_str();
                 while (*time_string && !iswdigit(*time_string)) time_string++;
-                errno = 0;
 
                 if (*time_string) {
-                    time_t tm;
-                    wchar_t *end;
-
-                    errno = 0;
-                    tm = (time_t)wcstol(time_string, &end, 10);
-
-                    if (tm && !errno && !*end) {
+                    time_t tm = (time_t)fish_wcstol(time_string);
+                    if (!errno && tm >= 0) {
                         timestamp = tm;
                     }
                 }
@@ -959,8 +953,8 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
         size_t mmap_length = (size_t)len;
         if (lseek(fd, 0, SEEK_SET) == 0) {
             char *mmap_start;
-            if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd,
-                                            0)) != MAP_FAILED) {
+            if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0)) !=
+                MAP_FAILED) {
                 result = true;
                 *out_map_start = mmap_start;
                 *out_map_len = mmap_length;

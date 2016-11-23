@@ -399,7 +399,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     wcstring error_str;
     io_streams_t streams;
     int err = builtin_function(*parser, streams, argument_list, contents_str,
-                                definition_line_offset, &error_str);
+                               definition_line_offset, &error_str);
     proc_set_last_status(err);
 
     if (!error_str.empty()) {
@@ -1010,10 +1010,8 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
                 if (target == L"-") {
                     new_io.reset(new io_close_t(source_fd));
                 } else {
-                    wchar_t *end = NULL;
-                    errno = 0;
-                    int old_fd = fish_wcstoi(target.c_str(), &end, 10);
-                    if (old_fd < 0 || errno || *end) {
+                    int old_fd = fish_wcstoi(target.c_str());
+                    if (errno || old_fd < 0) {
                         errored =
                             report_error(redirect_node, _(L"Requested redirection to '%ls', which "
                                                           L"is not a valid file descriptor"),

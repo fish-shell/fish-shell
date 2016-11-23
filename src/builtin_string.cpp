@@ -878,10 +878,8 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
                 break;
             }
             case 'm': {
-                errno = 0;
-                wchar_t *endptr = 0;
-                max = wcstol(w.woptarg, &endptr, 10);
-                if (*endptr != L'\0' || errno != 0) {
+                max = fish_wcstol(w.woptarg);
+                if (errno) {
                     string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 }
@@ -969,7 +967,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
     long length = -1;
     bool quiet = false;
     wgetopter_t w;
-    wchar_t *endptr = NULL;
+
     for (;;) {
         int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
@@ -981,15 +979,13 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
                 break;
             }
             case 'l': {
-                errno = 0;
-                length = wcstol(w.woptarg, &endptr, 10);
-                if (*endptr != L'\0' || (errno != 0 && errno != ERANGE)) {
-                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
-                }
+                length = fish_wcstol(w.woptarg);
                 if (length < 0 || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid length value '%ls'\n"), argv[0],
                                  w.woptarg);
+                    return BUILTIN_STRING_ERROR;
+                } else if (errno) {
+                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 }
                 break;
@@ -999,15 +995,13 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
                 break;
             }
             case 's': {
-                errno = 0;
-                start = wcstol(w.woptarg, &endptr, 10);
-                if (*endptr != L'\0' || (errno != 0 && errno != ERANGE)) {
-                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
-                }
+                start = fish_wcstol(w.woptarg);
                 if (start == 0 || start == LONG_MIN || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid start value '%ls'\n"), argv[0],
                                  w.woptarg);
+                    return BUILTIN_STRING_ERROR;
+                } else if (errno) {
+                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 }
                 break;

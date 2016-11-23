@@ -28,16 +28,15 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
 
     long secondary_diff = 0;
     if (iswdigit(*a) && iswdigit(*b)) {
-        wchar_t *aend, *bend;
+        const wchar_t *aend, *bend;
         long al;
         long bl;
         long diff;
 
-        errno = 0;
-        al = wcstol(a, &aend, 10);
-        bl = wcstol(b, &bend, 10);
-
-        if (errno) {
+        al = fish_wcstol(a, &aend);
+        int a1_errno = errno;
+        bl = fish_wcstol(b, &bend);
+        if (a1_errno || errno) {
             // Huge numbers - fall back to regular string comparison.
             return wcscmp(a, b);
         }

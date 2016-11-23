@@ -25,6 +25,7 @@
 #include "input_common.h"
 #include "iothread.h"
 #include "util.h"
+#include "wutil.h"
 
 /// Time in milliseconds to wait for another byte to be available for reading
 /// after \x1b is read before assuming that escape key was pressed, and not an
@@ -167,13 +168,11 @@ void update_wait_on_escape_ms() {
         return;
     }
 
-    wchar_t *endptr;
-    long tmp = wcstol(escape_time_ms.c_str(), &endptr, 10);
-
-    if (*endptr != '\0' || tmp < 10 || tmp >= 5000) {
+    long tmp = fish_wcstol(escape_time_ms.c_str());
+    if (errno || tmp < 10 || tmp >= 5000) {
         fwprintf(stderr,
                  L"ignoring fish_escape_delay_ms: value '%ls' "
-                 "is not an integer or is < 10 or >= 5000 ms\n",
+                 L"is not an integer or is < 10 or >= 5000 ms\n",
                  escape_time_ms.c_str());
     } else {
         wait_on_escape_ms = (int)tmp;

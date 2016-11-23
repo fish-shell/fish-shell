@@ -4,14 +4,15 @@
 // IWYU pragma: no_include <cstring>
 // IWYU pragma: no_include <cstddef>
 #include <assert.h>
+#include <errno.h>
 #include <libgen.h>
 #include <limits.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>
@@ -99,10 +100,10 @@ static bool should_test_function(const char *func_name) {
 static int err_count = 0;
 
 /// Print formatted output.
-static void say(const wchar_t *blah, ...) {
+static void say(const wchar_t *fmt, ...) {
     va_list va;
-    va_start(va, blah);
-    vwprintf(blah, va);
+    va_start(va, fmt);
+    vwprintf(fmt, va);
     va_end(va);
     wprintf(L"\n");
 }
@@ -156,20 +157,99 @@ static int chdir_set_pwd(const char *path) {
 // The odd formulation of these macros is to avoid "multiple unary operator" warnings from oclint
 // were we to use the more natural "if (!(e)) err(..." form. We have to do this because the rules
 // for the C preprocessor make it practically impossible to embed a comment in the body of a macro.
-#define do_test(e)                                                   \
-    do {                                                             \
-        if (e) { ; } else { err(L"Test failed on line %lu: %s", __LINE__, #e); } \
+#define do_test(e)                                             \
+    do {                                                       \
+        if (e) {                                               \
+            ;                                                  \
+        } else {                                               \
+            err(L"Test failed on line %lu: %s", __LINE__, #e); \
+        }                                                      \
     } while (0)
 
-#define do_test_from(e, from)                                                         \
-    do {                                                                                   \
-        if (e) { ; } else { err(L"Test failed on line %lu (from %lu): %s", __LINE__, from, #e); } \
+#define do_test_from(e, from)                                                   \
+    do {                                                                        \
+        if (e) {                                                                \
+            ;                                                                   \
+        } else {                                                                \
+            err(L"Test failed on line %lu (from %lu): %s", __LINE__, from, #e); \
+        }                                                                       \
     } while (0)
 
-#define do_test1(e, msg)                                                 \
-    do {                                                                 \
-        if (e) { ; } else { err(L"Test failed on line %lu: %ls", __LINE__, (msg)); } \
+#define do_test1(e, msg)                                           \
+    do {                                                           \
+        if (e) {                                                   \
+            ;                                                      \
+        } else {                                                   \
+            err(L"Test failed on line %lu: %ls", __LINE__, (msg)); \
+        }                                                          \
     } while (0)
+
+/// Test that the fish functions for converting strings to numbers work.
+static void test_str_to_num() {
+    const wchar_t *end;
+    int i;
+    long l;
+
+    i = fish_wcstoi(L"");
+    do_test1(errno == EINVAL && i == 0, L"converting empty string to int did not fail");
+    i = fish_wcstoi(L" \n ");
+    do_test1(errno == EINVAL && i == 0, L"converting whitespace string to int did not fail");
+    i = fish_wcstoi(L"123");
+    do_test1(errno == 0 && i == 123, L"converting valid num to int did not succeed");
+    i = fish_wcstoi(L"-123");
+    do_test1(errno == 0 && i == -123, L"converting valid num to int did not succeed");
+    i = fish_wcstoi(L" 345  ");
+    do_test1(errno == 0 && i == 345, L"converting valid num to int did not succeed");
+    i = fish_wcstoi(L" -345  ");
+    do_test1(errno == 0 && i == -345, L"converting valid num to int did not succeed");
+    i = fish_wcstoi(L"x345");
+    do_test1(errno == EINVAL && i == 0, L"converting invalid num to int did not fail");
+    i = fish_wcstoi(L" x345");
+    do_test1(errno == EINVAL && i == 0, L"converting invalid num to int did not fail");
+    i = fish_wcstoi(L"456 x");
+    do_test1(errno == -1 && i == 456, L"converting invalid num to int did not fail");
+    i = fish_wcstoi(L"99999999999999999999999");
+    do_test1(errno == ERANGE && i == INT_MAX, L"converting invalid num to int did not fail");
+    i = fish_wcstoi(L"-99999999999999999999999");
+    do_test1(errno == ERANGE && i == INT_MIN, L"converting invalid num to int did not fail");
+    i = fish_wcstoi(L"567]", &end);
+    do_test1(errno == -1 && i == 567 && *end == L']',
+             L"converting valid num to int did not succeed");
+    // This is subtle. "567" in base 8 is "375" in base 10. The final "8" is not converted.
+    i = fish_wcstoi(L"5678", &end, 8);
+    do_test1(errno == -1 && i == 375 && *end == L'8',
+             L"converting invalid num to int did not fail");
+
+    l = fish_wcstol(L"");
+    do_test1(errno == EINVAL && l == 0, L"converting empty string to long did not fail");
+    l = fish_wcstol(L" \t ");
+    do_test1(errno == EINVAL && l == 0, L"converting whitespace string to long did not fail");
+    l = fish_wcstol(L"123");
+    do_test1(errno == 0 && l == 123, L"converting valid num to long did not succeed");
+    l = fish_wcstol(L"-123");
+    do_test1(errno == 0 && l == -123, L"converting valid num to long did not succeed");
+    l = fish_wcstol(L" 345  ");
+    do_test1(errno == 0 && l == 345, L"converting valid num to long did not succeed");
+    l = fish_wcstol(L" -345  ");
+    do_test1(errno == 0 && l == -345, L"converting valid num to long did not succeed");
+    l = fish_wcstol(L"x345");
+    do_test1(errno == EINVAL && l == 0, L"converting invalid num to long did not fail");
+    l = fish_wcstol(L" x345");
+    do_test1(errno == EINVAL && l == 0, L"converting invalid num to long did not fail");
+    l = fish_wcstol(L"456 x");
+    do_test1(errno == -1 && l == 456, L"converting invalid num to long did not fail");
+    l = fish_wcstol(L"99999999999999999999999");
+    do_test1(errno == ERANGE && l == LONG_MAX, L"converting invalid num to long did not fail");
+    l = fish_wcstol(L"-99999999999999999999999");
+    do_test1(errno == ERANGE && l == LONG_MIN, L"converting invalid num to long did not fail");
+    l = fish_wcstol(L"567]", &end);
+    do_test1(errno == -1 && l == 567 && *end == L']',
+             L"converting valid num to long did not succeed");
+    // This is subtle. "567" in base 8 is "375" in base 10. The final "8" is not converted.
+    l = fish_wcstol(L"5678", &end, 8);
+    do_test1(errno == -1 && l == 375 && *end == L'8',
+             L"converting invalid num to long did not fail");
+}
 
 /// Test sane escapes.
 static void test_unescape_sane() {
@@ -1008,10 +1088,10 @@ static void test_utf8() {
                     "um/wm boundaries +1");
     test_utf82wchar(um, sizeof(um), NULL, 0, 0, sizeof(wm) / sizeof(*wm), "um/wm calculate length");
 
-    // The following tests won't pass on systems (e.g., Cygwin) where sizeof wchar_t is 2. That's
-    // due to several reasons but the primary one is that narrowing conversions of literals assigned
-    // to the wchar_t arrays above don't result in values that will be treated as errors by the
-    // conversion functions.
+// The following tests won't pass on systems (e.g., Cygwin) where sizeof wchar_t is 2. That's
+// due to several reasons but the primary one is that narrowing conversions of literals assigned
+// to the wchar_t arrays above don't result in values that will be treated as errors by the
+// conversion functions.
 #if WCHAR_MAX != 0xffff
     test_utf82wchar(u4, sizeof(u4), w4, sizeof(w4) / sizeof(*w4), 0, sizeof(w4) / sizeof(*w4),
                     "u4/w4 4 octets chars");
@@ -2827,19 +2907,17 @@ void history_tests_t::test_history_merge(void) {
     }
 
     // Make sure incorporate_external_changes doesn't drop items! (#3496)
-    history_t * const writer = hists[0];
-    history_t * const reader = hists[1];
-    const wcstring more_texts[] = {
-        L"Item_#3496_1", L"Item_#3496_2", L"Item_#3496_3", L"Item_#3496_4",
-        L"Item_#3496_5", L"Item_#3496_6"
-    };
-    for (size_t i=0; i < sizeof more_texts / sizeof *more_texts; i++) {
+    history_t *const writer = hists[0];
+    history_t *const reader = hists[1];
+    const wcstring more_texts[] = {L"Item_#3496_1", L"Item_#3496_2", L"Item_#3496_3",
+                                   L"Item_#3496_4", L"Item_#3496_5", L"Item_#3496_6"};
+    for (size_t i = 0; i < sizeof more_texts / sizeof *more_texts; i++) {
         // time_barrier because merging will ignore items that may be newer
         if (i > 0) time_barrier();
         writer->add(more_texts[i]);
         writer->incorporate_external_changes();
         reader->incorporate_external_changes();
-        for (size_t j=0; j < i; j++) {
+        for (size_t j = 0; j < i; j++) {
             do_test(history_contains(reader, more_texts[j]));
         }
     }
@@ -3114,8 +3192,7 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     tree.command_for_plain_statement(stmt, src, out_cmd);
 
     // Return arguments separated by spaces.
-    const parse_node_tree_t::parse_node_list_t arg_nodes =
-        tree.find_nodes(stmt, symbol_argument);
+    const parse_node_tree_t::parse_node_list_t arg_nodes = tree.find_nodes(stmt, symbol_argument);
     for (size_t i = 0; i < arg_nodes.size(); i++) {
         if (i > 0) out_joined_args->push_back(L' ');
         out_joined_args->append(arg_nodes.at(i)->get_source(src));
@@ -3959,6 +4036,7 @@ int main(int argc, char **argv) {
     // Set default signal handlers, so we can ctrl-C out of this.
     signal_reset_handlers();
 
+    if (should_test_function("str_to_num")) test_str_to_num();
     if (should_test_function("highlighting")) test_highlighting();
     if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
     if (should_test_function("new_parser_fuzzing"))

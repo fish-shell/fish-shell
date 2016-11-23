@@ -150,19 +150,15 @@ static int match_signal_name(const wchar_t *canonical, const wchar_t *name) {
 }
 
 int wcs2sig(const wchar_t *str) {
-    int i;
-    wchar_t *end = 0;
-
-    for (i = 0; lookup[i].desc; i++) {
+    for (int i = 0; lookup[i].desc; i++) {
         if (match_signal_name(lookup[i].name, str)) {
             return lookup[i].signal;
         }
     }
-    errno = 0;
-    int res = fish_wcstoi(str, &end, 10);
-    if (!errno && res >= 0 && !*end) return res;
 
-    return -1;
+    int res = fish_wcstoi(str);
+    if (errno || res < 0) return -1;
+    return res;
 }
 
 const wchar_t *sig2wcs(int sig) {

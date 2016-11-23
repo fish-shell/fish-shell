@@ -1506,8 +1506,8 @@ static int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) 
     return STATUS_BUILTIN_OK;
 }
 
-static int validate_function_name(int argc, const wchar_t * const *argv, wcstring &function_name,
-        const wchar_t *cmd, wcstring *out_err) {
+static int validate_function_name(int argc, const wchar_t *const *argv, wcstring &function_name,
+                                  const wchar_t *cmd, wcstring *out_err) {
     if (argc < 2) {
         // This is currently impossible but let's be paranoid.
         append_format(*out_err, _(L"%ls: Expected function name"), cmd);
@@ -1614,7 +1614,6 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
             case 'j':
             case 'p': {
                 pid_t pid;
-                wchar_t *end;
                 event_t e(EVENT_ANY);
 
                 if ((opt == 'j') && (wcscasecmp(w.woptarg, L"caller") == 0)) {
@@ -1640,15 +1639,14 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                         append_format(*out_err,
                                       _(L"%ls: Cannot find calling job for event handler"), cmd);
                         return STATUS_BUILTIN_ERROR;
-                    } else {
-                        e.type = EVENT_JOB_ID;
-                        e.param1.job_id = job_id;
                     }
+                    e.type = EVENT_JOB_ID;
+                    e.param1.job_id = job_id;
                 } else {
-                    errno = 0;
-                    pid = fish_wcstoi(w.woptarg, &end, 10);
-                    if (errno || !end || *end) {
-                        append_format(*out_err, _(L"%ls: Invalid process id %ls"), cmd, w.woptarg);
+                    pid = fish_wcstoi(w.woptarg);
+                    if (errno || pid < 0) {
+                        append_format(*out_err, _(L"%ls: Invalid process id '%ls'"), cmd,
+                                      w.woptarg);
                         return STATUS_BUILTIN_ERROR;
                     }
 
@@ -1703,10 +1701,9 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
             for (int i = w.woptind; i < argc; i++) {
                 named_arguments.push_back(argv[i]);
             }
-        }
-        else {
+        } else {
             append_format(*out_err, _(L"%ls: Unexpected positional argument '%ls'"), cmd,
-                    argv[w.woptind]);
+                          argv[w.woptind]);
             return STATUS_BUILTIN_ERROR;
         }
     }
@@ -1786,12 +1783,8 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
         lrand48_r(&seed_buffer, &res);
         streams.out.append_format(L"%ld\n", res % 32768);
     } else if (arg_count == 1) {
-        long foo;
-        wchar_t *end = 0;
-
-        errno = 0;
-        foo = wcstol(argv[w.woptind], &end, 10);
-        if (errno || *end) {
+        long foo = fish_wcstol(argv[w.woptind]);
+        if (errno) {
             streams.err.append_format(_(L"%ls: Seed value '%ls' is not a valid number\n"), argv[0],
                                       argv[w.woptind]);
             return STATUS_BUILTIN_ERROR;
@@ -1819,7 +1812,6 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     int exit_res = STATUS_BUILTIN_OK;
     const wchar_t *mode_name = READ_MODE_NAME;
     int nchars = 0;
-    wchar_t *end;
     int shell = 0;
     int array = 0;
     bool split_null = false;
@@ -1891,9 +1883,8 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 break;
             }
             case L'n': {
-                errno = 0;
-                nchars = fish_wcstoi(w.woptarg, &end, 10);
-                if (errno || *end != 0) {
+                nchars = fish_wcstoi(w.woptarg);
+                if (errno) {
                     if (errno == ERANGE) {
                         streams.err.append_format(_(L"%ls: Argument '%ls' is out of range\n"),
                                                   argv[0], w.woptarg);
@@ -2429,10 +2420,8 @@ static int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     if (argc == 1) {
         ec = proc_get_last_status();
     } else {
-        wchar_t *end;
-        errno = 0;
-        ec = wcstol(argv[1], &end, 10);
-        if (errno || *end != 0) {
+        ec = fish_wcstol(argv[1]);
+        if (errno) {
             streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), argv[0],
                                       argv[1]);
             builtin_print_help(parser, streams, argv[0], streams.err);
@@ -2676,13 +2665,11 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Specifying more than one job to put to the foreground is a syntax error, we still
         // try to locate the job argv[1], since we want to know if this is an ambigous job
         // specification or if this is an malformed job id.
-        wchar_t *endptr;
         int pid;
         int found_job = 0;
 
-        errno = 0;
-        pid = fish_wcstoi(argv[1], &endptr, 10);
-        if (!(*endptr || errno)) {
+        pid = fish_wcstoi(argv[1]);
+        if (!(errno || pid < 0)) {
             j = job_get_from_pid(pid);
             if (j) found_job = 1;
         }
@@ -2698,12 +2685,8 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         j = 0;
 
     } else {
-        wchar_t *end;
-        int pid;
-        errno = 0;
-        pid = abs(fish_wcstoi(argv[1], &end, 10));
-
-        if (*end || errno) {
+        int pid = abs(fish_wcstoi(argv[1]));
+        if (errno) {
             streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, argv[0], argv[1]);
             builtin_print_help(parser, streams, argv[0], streams.err);
         } else {
@@ -2785,14 +2768,12 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             res = send_to_bg(parser, streams, j, _(L"(default)"));
         }
     } else {
-        wchar_t *end;
         int i;
         int pid;
 
         for (i = 1; argv[i]; i++) {
-            errno = 0;
-            pid = fish_wcstoi(argv[i], &end, 10);
-            if (errno || pid < 0 || *end || !job_get_from_pid(pid)) {
+            pid = fish_wcstoi(argv[i]);
+            if (errno || pid < 0 || !job_get_from_pid(pid)) {
                 streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), argv[0], argv[i]);
                 return STATUS_BUILTIN_ERROR;
             }
@@ -2871,10 +2852,8 @@ static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **arg
 
     int status;
     if (argc == 2) {
-        wchar_t *end;
-        errno = 0;
-        status = fish_wcstoi(argv[1], &end, 10);
-        if (errno || *end != 0) {
+        status = fish_wcstoi(argv[1]);
+        if (errno) {
             streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), argv[0],
                                       argv[1]);
             builtin_print_help(parser, streams, argv[0], streams.err);
@@ -3042,9 +3021,8 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 break;
             }
             case 'n': {
-                wchar_t *end = 0;
-                max_items = wcstol(w.woptarg, &end, 10);
-                if (!(*w.woptarg != L'\0' && *end == L'\0')) {
+                max_items = fish_wcstol(w.woptarg);
+                if (errno) {
                     streams.err.append_format(_(L"%ls: max value '%ls' is not a valid number\n"),
                                               argv[0], w.woptarg);
                     return STATUS_BUILTIN_ERROR;
@@ -3065,9 +3043,8 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             }
             case '?': {
                 // Try to parse it as a number; e.g., "-123".
-                wchar_t *end = 0;
-                max_items = wcstol(argv[w.woptind - 1] + 1, &end, 10);
-                if (!(argv[w.woptind - 1][1] != L'\0' && *end == L'\0')) {
+                max_items = fish_wcstol(argv[w.woptind - 1] + 1);
+                if (errno) {
                     streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, argv[w.woptind - 1]);
                     return STATUS_BUILTIN_ERROR;
                 }

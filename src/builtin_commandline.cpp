@@ -426,12 +426,8 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
     if (cursor_mode) {
         if (argc - w.woptind) {
-            wchar_t *endptr;
-            long new_pos;
-            errno = 0;
-
-            new_pos = wcstol(argv[w.woptind], &endptr, 10);
-            if (*endptr || errno) {
+            long new_pos = fish_wcstol(argv[w.woptind]);
+            if (errno) {
                 streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, argv[0], argv[w.woptind]);
                 builtin_print_help(parser, streams, argv[0], streams.err);
             }

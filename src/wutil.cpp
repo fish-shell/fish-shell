@@ -524,16 +524,74 @@ int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, wcslen(str)); 
 /// See fallback.h for the normal definitions.
 int fish_wcswidth(const wcstring &str) { return fish_wcswidth(str.c_str(), str.size()); }
 
-int fish_wcstoi(const wchar_t *str, wchar_t **endptr, int base) {
-    long ret = wcstol(str, endptr, base);
-    if (ret > INT_MAX) {
-        ret = INT_MAX;
+/// Like fish_wcstol(), but fails on a value outside the range of an int.
+///
+/// This is needed because BSD and GNU implementations differ in several ways that make it really
+/// annoying to use them in a portable fashion.
+///
+/// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
+/// than a digit. Leading whitespace is ignored (per the base wcstol implementation). Trailing
+/// whitespace is also ignored. We also treat empty strings and strings containing only whitespace
+/// as invalid.
+int fish_wcstoi(const wchar_t *str, const wchar_t **endptr, int base) {
+    while (iswspace(*str)) ++str;  // skip leading whitespace
+    if (!*str) {  // this is because some implementations don't handle this sensibly
+        errno = EINVAL;
+        if (endptr) *endptr = str;
+        return 0;
+    }
+
+    errno = 0;
+    wchar_t *_endptr;
+    long result = wcstol(str, &_endptr, base);
+    if (result > INT_MAX) {
+        result = INT_MAX;
         errno = ERANGE;
-    } else if (ret < INT_MIN) {
-        ret = INT_MIN;
+    } else if (result < INT_MIN) {
+        result = INT_MIN;
         errno = ERANGE;
     }
-    return (int)ret;
+    while (iswspace(*_endptr)) ++_endptr;  // skip trailing whitespace
+    if (!errno && *_endptr) {
+        if (_endptr == str) {
+            errno = EINVAL;
+        } else {
+            errno = -1;
+        }
+    }
+    if (endptr) *endptr = _endptr;
+    return (int)result;
+}
+
+/// An enhanced version of wcstol().
+///
+/// This is needed because BSD and GNU implementations differ in several ways that make it really
+/// annoying to use them in a portable fashion.
+///
+/// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
+/// than a digit. Leading whitespace is ignored (per the base wcstol implementation). Trailing
+/// whitespace is also ignored.
+long fish_wcstol(const wchar_t *str, const wchar_t **endptr, int base) {
+    while (iswspace(*str)) ++str;  // skip leading whitespace
+    if (!*str) {  // this is because some implementations don't handle this sensibly
+        errno = EINVAL;
+        if (endptr) *endptr = str;
+        return 0;
+    }
+
+    errno = 0;
+    wchar_t *_endptr;
+    long result = wcstol(str, &_endptr, base);
+    while (iswspace(*_endptr)) ++_endptr;  // skip trailing whitespace
+    if (!errno && *_endptr) {
+        if (_endptr == str) {
+            errno = EINVAL;
+        } else {
+            errno = -1;
+        }
+    }
+    if (endptr) *endptr = _endptr;
+    return result;
 }
 
 file_id_t file_id_t::file_id_from_stat(const struct stat *buf) {

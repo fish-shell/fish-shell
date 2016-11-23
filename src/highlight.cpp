@@ -4,11 +4,9 @@
 // IWYU pragma: no_include <cstddef>
 #include <dirent.h>
 #include <errno.h>
-#include <limits.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <wchar.h>
-#include <wctype.h>
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -874,19 +872,8 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node) {
                     path_apply_working_directory(target, this->working_directory);
                 switch (redirect_type) {
                     case TOK_REDIRECT_FD: {
-                        // Target should be an fd. It must be all digits, and must not overflow.
-                        // fish_wcstoi returns INT_MAX on overflow; we could instead check errno to
-                        // disambiguiate this from a real INT_MAX fd, but instead we just disallow
-                        // that.
-                        const wchar_t *target_cstr = target.c_str();
-                        wchar_t *end = NULL;
-                        int fd = fish_wcstoi(target_cstr, &end, 10);
-
-                        // The iswdigit check ensures there's no leading whitespace, the *end check
-                        // ensures the entire string was consumed, and the numeric checks ensure the
-                        // fd is at least zero and there was no overflow.
-                        target_is_valid =
-                            (iswdigit(target_cstr[0]) && *end == L'\0' && fd >= 0 && fd < INT_MAX);
+                        int fd = fish_wcstoi(target.c_str());
+                        target_is_valid = !errno && fd >= 0;
                         break;
                     }
                     case TOK_REDIRECT_IN: {

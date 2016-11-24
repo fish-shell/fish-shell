@@ -395,7 +395,7 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid) {
         // Remember the pid.
         pid = fish_wcstoi(name.c_str());
         if (errno || pid < 0) {
-            debug(1, _("Unexpected failure to convert pid '%ls' to integer\n"), cname);
+            debug(1, _(L"Unexpected failure to convert pid '%ls' to integer\n"), name.c_str());
         }
 
         // The 'cmdline' file exists, it should contain the commandline.

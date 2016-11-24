@@ -192,6 +192,8 @@ static void test_str_to_num() {
 
     i = fish_wcstoi(L"");
     do_test1(errno == EINVAL && i == 0, L"converting empty string to int did not fail");
+    i = fish_wcstoi(L" \n ");
+    do_test1(errno == EINVAL && i == 0, L"converting whitespace string to int did not fail");
     i = fish_wcstoi(L"123");
     do_test1(errno == 0 && i == 123, L"converting valid num to int did not succeed");
     i = fish_wcstoi(L"-123");
@@ -201,6 +203,8 @@ static void test_str_to_num() {
     i = fish_wcstoi(L" -345  ");
     do_test1(errno == 0 && i == -345, L"converting valid num to int did not succeed");
     i = fish_wcstoi(L"x345");
+    do_test1(errno == EINVAL && i == 0, L"converting invalid num to int did not fail");
+    i = fish_wcstoi(L" x345");
     do_test1(errno == EINVAL && i == 0, L"converting invalid num to int did not fail");
     i = fish_wcstoi(L"456 x");
     do_test1(errno == -1 && i == 456, L"converting invalid num to int did not fail");
@@ -218,6 +222,8 @@ static void test_str_to_num() {
 
     l = fish_wcstol(L"");
     do_test1(errno == EINVAL && l == 0, L"converting empty string to long did not fail");
+    l = fish_wcstol(L" \t ");
+    do_test1(errno == EINVAL && l == 0, L"converting whitespace string to long did not fail");
     l = fish_wcstol(L"123");
     do_test1(errno == 0 && l == 123, L"converting valid num to long did not succeed");
     l = fish_wcstol(L"-123");
@@ -227,6 +233,8 @@ static void test_str_to_num() {
     l = fish_wcstol(L" -345  ");
     do_test1(errno == 0 && l == -345, L"converting valid num to long did not succeed");
     l = fish_wcstol(L"x345");
+    do_test1(errno == EINVAL && l == 0, L"converting invalid num to long did not fail");
+    l = fish_wcstol(L" x345");
     do_test1(errno == EINVAL && l == 0, L"converting invalid num to long did not fail");
     l = fish_wcstol(L"456 x");
     do_test1(errno == -1 && l == 456, L"converting invalid num to long did not fail");

@@ -2,7 +2,6 @@ function help --description 'Show help for the fish shell'
 	
 	# Declare variables to set correct scope
 	set -l fish_browser
-	set -l fish_browser_bg
 
 	set -l h syntax completion editor job-control todo bugs history killring help
 	set h $h color prompt title variables builtin-overview changes expand
@@ -23,58 +22,58 @@ function help --description 'Show help for the fish shell'
 	# by the help function defined below.
 	#
 	set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape rekonq google-chrome chromium-browser
-	set -l text_browsers htmlview www-browser links elinks lynx w3m
 
-	if type -q "$BROWSER"
-		# User has manually set a preferred browser, so we respect that
-		set fish_browser $BROWSER
-
-		# If browser is known to be graphical, put into background
-		if contains -- $BROWSER $graphical_browsers
-			set fish_browser_bg 1
-		end
+	if set -q fish_help_browser[1]
+		# User has set a fish-specific help browser. This overrides the
+		# browser that may be defined by $BROWSER. The fish_help_browser
+		# variable may be an array containing a browser name plus options.
+		set fish_browser $fish_help_browser
 	else
-		# Check for a text-based browser.
-		for i in $text_browsers
-			if type -q -f $i
-				set fish_browser $i
-				break
-			end
-		end
+		set -l text_browsers htmlview www-browser links elinks lynx w3m
 
-		# If we are in a graphical environment, check if there is a graphical
-		# browser to use instead.
-		if test "$DISPLAY" -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o "$XAUTHORITY" = "" \)
-			for i in $graphical_browsers
+		if set -q BROWSER
+			# User has manually set a preferred browser, so we respect that
+			set fish_browser $BROWSER
+		else
+			# Check for a text-based browser.
+			for i in $text_browsers
 				if type -q -f $i
 					set fish_browser $i
-					set fish_browser_bg 1
 					break
 				end
 			end
-		end
+	
+			# If we are in a graphical environment, check if there is a graphical
+			# browser to use instead.
+			if test "$DISPLAY" -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o "$XAUTHORITY" = "" \)
+				for i in $graphical_browsers
+					if type -q -f $i
+						set fish_browser $i
+						break
+					end
+				end
+			end
 
-		# If the OS appears to be Windows (graphical), try to use cygstart
-		if type -q cygstart
-			set fish_browser cygstart
-		# If xdg-open is available, just use that
-		else if type -q xdg-open
-			set fish_browser xdg-open
-		end
+			# If the OS appears to be Windows (graphical), try to use cygstart
+			if type -q cygstart
+				set fish_browser cygstart
+			# If xdg-open is available, just use that
+			else if type -q xdg-open
+				set fish_browser xdg-open
+			end
 	
-	
-		# On OS X, we go through osascript by default
-		if test (uname) = Darwin
-			if type -q osascript
-				set fish_browser osascript
+			# On OS X, we go through osascript by default
+			if test (uname) = Darwin
+				if type -q osascript
+					set fish_browser osascript
+				end
 			end
 		end
-
 	end
 
-	if test -z $fish_browser
+	if not set -q fish_browser
 		printf (_ '%s: Could not find a web browser.\n') help
-				printf (_ 'Please set the variable $BROWSER to a suitable browser and try again.\n\n')
+		printf (_ 'Please set the variable $BROWSER or fish_help_browser and try again.\n\n')
 		return 1
 	end
 
@@ -136,17 +135,15 @@ function help --description 'Show help for the fish shell'
 		return
 	end
 	
-	if test $fish_browser_bg
 
-		switch $fish_browser
+	# If browser is known to be graphical, put into background
+	if contains -- $fish_browser[1] $graphical_browsers
+		switch $fish_browser[1]
 			case 'htmlview' 'x-www-browser'
 				printf (_ 'help: Help is being displayed in your default browser.\n')
-
 			case '*'
-				printf (_ 'help: Help is being displayed in %s.\n') $fish_browser
-
+			        printf (_ 'help: Help is being displayed in %s.\n') $fish_browser[1]
 		end
-
 		eval "$fish_browser $page_url &"
 	else
 		eval $fish_browser $page_url

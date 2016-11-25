@@ -1764,15 +1764,18 @@ static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) 
 
 static bool run_test_test(int expected, const wcstring &str) {
     using namespace std;
-    wcstring_list_t lst;
+    wcstring_list_t argv;
+    completion_list_t comps;
 
-    wistringstream iss(str);
-    copy(istream_iterator<wcstring, wchar_t, std::char_traits<wchar_t> >(iss),
-         istream_iterator<wstring, wchar_t, std::char_traits<wchar_t> >(),
-         back_inserter<vector<wcstring> >(lst));
+    // We need to tokenize the string in the same manner a normal shell would do. This is because we
+    // need to test things like quoted strings that have leading and trailing whitespace.
+    parser_t::expand_argument_list(str, 0, &comps);
+    for (completion_list_t::const_iterator it = comps.begin(), end = comps.end(); it != end; ++it) {
+        argv.push_back(it->completion);
+    }
 
-    bool bracket = run_one_test_test(expected, lst, true);
-    bool nonbracket = run_one_test_test(expected, lst, false);
+    bool bracket = run_one_test_test(expected, argv, true);
+    bool nonbracket = run_one_test_test(expected, argv, false);
     do_test(bracket == nonbracket);
     return nonbracket;
 }
@@ -1801,6 +1804,17 @@ static void test_test() {
     do_test(run_test_test(0, L"0 -eq 0"));
     do_test(run_test_test(0, L"-1 -eq -1"));
     do_test(run_test_test(0, L"1 -ne -1"));
+    do_test(run_test_test(1, L"' 2 ' -ne 2"));
+    do_test(run_test_test(0, L"' 2' -eq 2"));
+    do_test(run_test_test(0, L"'2 ' -eq 2"));
+    do_test(run_test_test(0, L"' 2 ' -eq 2"));
+    do_test(run_test_test(1, L"' 2x' -eq 2"));
+    do_test(run_test_test(1, L"'' -eq 0"));
+    do_test(run_test_test(1, L"'' -ne 0"));
+    do_test(run_test_test(1, L"'  ' -eq 0"));
+    do_test(run_test_test(1, L"'  ' -ne 0"));
+    do_test(run_test_test(1, L"'x' -eq 0"));
+    do_test(run_test_test(1, L"'x' -ne 0"));
     do_test(run_test_test(1, L"-1 -ne -1"));
     do_test(run_test_test(0, L"abc != def"));
     do_test(run_test_test(1, L"abc = def"));

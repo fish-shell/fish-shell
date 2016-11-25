@@ -639,10 +639,8 @@ bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
 // example, should we interpret 0x10 as 0, 10, or 16? Here we use only base 10 and use wcstoll,
 // which allows for leading + and -, and leading whitespace. This matches bash.
 static bool parse_number(const wcstring &arg, long long *out) {
-    const wchar_t *str = arg.c_str();
-    wchar_t *endptr = NULL;
-    *out = wcstoll(str, &endptr, 10);
-    return endptr && *endptr == L'\0';
+    *out = fish_wcstoll(arg.c_str());
+    return !errno;
 }
 
 static bool binary_primary_evaluate(test_expressions::token_t token, const wcstring &left,

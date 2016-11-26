@@ -15,7 +15,7 @@ Detailed user documentation is available by running `help` within fish, and also
 
 fish requires a C++11 compiler. It builds successfully with g++ 4.8 or later, or with clang 3.3 or later.
 
-fish can be built using autotools or Xcode. autoconf 2.60 or later is required to build from git versions, but is not required for releases.
+fish can be built using autotools or Xcode. autoconf 2.60 or later, as well as automake 1.13 or later, are required to build from git versions. These are not required to build from released tarballs.
 
 fish depends on a curses implementation, such as ncurses. The headers and libraries are required for building.
 

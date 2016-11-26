@@ -110,7 +110,7 @@ AX_CXX_COMPILE_STDCXX_11(noext,mandatory)
 # Tell autoconf to create config.h header
 #
 AC_CONFIG_HEADERS(config.h)
-AC_CANONICAL_TARGET
+AC_CANONICAL_HOST
 
 
 #
@@ -249,6 +249,18 @@ AC_CHECK_FILES([/proc/self/stat])
 # Disable curses macros that conflict with the STL
 AC_DEFINE([NCURSES_NOMACROS], [1], [Define to 1 to disable ncurses macros that conflict with the STL])
 AC_DEFINE([NOMACROS], [1], [Define to 1 to disable curses macros that conflict with the STL])
+
+# Threading is excitingly broken on Solaris without adding -pthread to CXXFLAGS
+# Only support GCC for now
+dnl Ideally we would use the AX_PTHREAD macro here, but it's GPL3-licensed
+dnl ACX_PTHREAD is way too old and seems to break the OS X build
+dnl Both only check with AC_LANG(C) in any case
+case $host_os in
+  solaris*)
+  CXXFLAGS="$CXXFLAGS -pthread"
+  CFLAGS="$CFLAGS -pthread"
+  ;;
+esac
 
 #
 # Check presense of various libraries. This is done on a per-binary

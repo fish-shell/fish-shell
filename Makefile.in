@@ -889,7 +889,8 @@ style-all:
 # Restore the source tree to the state right after extracting a tarball.
 #
 distclean: clean
-	$v $(MAKE) V=$(V) -C $(PCRE2_DIR) distclean ||:
+	$v test ! -f $(PCRE2_DIR)/Makefile || \
+	  $(MAKE) V=$(V) -C $(PCRE2_DIR) distclean ||:
 	$v rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 
@@ -906,9 +907,12 @@ clean:
 # PCRE's make clean has a few slightly annoying exceptions to the V= rule. If V=0
 # send all output to /dev/null - unless there's an error, in which case run it again not silenced.
 ifeq ($(V), 0 )
-	$(MAKE) -C $(PCRE2_DIR) clean ||:
+	@test ! -f $(PCRE2_DIR)/Makefile || \
+	  $(MAKE) -C $(PCRE2_DIR) clean ||:
 else
-	@$(MAKE) -s -C $(PCRE2_DIR) clean > /dev/null || $(MAKE) -s -C $(PCRE2_DIR) clean ||:
+	@test ! -f $(PCRE2_DIR)/Makefile || \
+	  $(MAKE) -s -C $(PCRE2_DIR) clean > /dev/null || \
+	  $(MAKE) -s -C $(PCRE2_DIR) clean ||:
 endif
 	$v rm -f obj/*.o *.o doc.h doc.tmp
 	$v rm -f doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr

@@ -15,6 +15,7 @@ AC_INIT(fish,
         m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),
         fish-users@lists.sourceforge.net)
 ac_clean_files=a.out.dSYM
+
 #
 # List of output variables produced by this configure script
 #
@@ -82,6 +83,12 @@ else
 fi
 
 #
+# Include the autoconf macros directory
+#
+
+AC_CONFIG_MACRO_DIRS([m4])
+
+#
 # Set up various programs needed for install
 # Note AC_PROG_CXX sets CXXFLAGS if not set, which we want
 # So ensure this happens before we modify CXXFLAGS below
@@ -97,6 +104,7 @@ AC_PROG_AWK
 AC_PROG_FGREP
 AC_PROG_SED
 AC_USE_SYSTEM_EXTENSIONS
+AX_CXX_COMPILE_STDCXX_11(noext,mandatory)
 
 #
 # Tell autoconf to create config.h header

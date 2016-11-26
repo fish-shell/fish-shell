@@ -2499,9 +2499,11 @@ static void trigger_or_wait_for_notification(universal_notifier_t *notifier,
             DIE("strategy_default should be passed");
             break;
         }
+#ifdef HAVE_SHM_OPEN
         case universal_notifier_t::strategy_shmem_polling: {
             break;  // nothing required
         }
+#endif
         case universal_notifier_t::strategy_notifyd: {
             // notifyd requires a round trip to the notifyd server, which means we have to wait a
             // little bit to receive it. In practice, this seems to be enough.
@@ -2585,7 +2587,9 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
 static void test_universal_notifiers() {
     if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt"))
         err(L"mkdir failed");
+#ifdef HAVE_SHM_OPEN
     test_notifiers_with_strategy(universal_notifier_t::strategy_shmem_polling);
+#endif
     test_notifiers_with_strategy(universal_notifier_t::strategy_named_pipe);
 #if __APPLE__
     test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);

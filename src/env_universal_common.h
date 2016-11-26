@@ -115,9 +115,11 @@ class universal_notifier_t {
         // Default meta-strategy to use the 'best' notifier for the system.
         strategy_default,
 
+#ifdef HAVE_SHM_OPEN
         // Use a value in shared memory. Simple, but requires polling and therefore semi-frequent
         // wakeups.
         strategy_shmem_polling,
+#endif
 
         // Strategy that uses a named pipe. Somewhat complex, but portable and doesn't require
         // polling most of the time.

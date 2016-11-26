@@ -984,6 +984,7 @@ wcstring get_machine_identifier() {
     return result;
 }
 
+#ifdef HAVE_SHM_OPEN
 class universal_notifier_shmem_poller_t : public universal_notifier_t {
     // This is what our shared memory looks like. Everything here is stored in network byte order
     // (big-endian).
@@ -1123,6 +1124,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         return usec_per_sec / 3;  // 3 times a second
     }
 };
+#endif
 
 /// A notifyd-based notifier. Very straightforward.
 class universal_notifier_notifyd_t : public universal_notifier_t {
@@ -1403,7 +1405,9 @@ static universal_notifier_t::notifier_strategy_t fetch_default_strategy_from_env
         const char *name;
         universal_notifier_t::notifier_strategy_t strat;
     } options[] = {{"default", universal_notifier_t::strategy_default},
+#ifdef HAVE_SHM_OPEN
                    {"shmem", universal_notifier_t::strategy_shmem_polling},
+#endif
                    {"pipe", universal_notifier_t::strategy_named_pipe},
                    {"notifyd", universal_notifier_t::strategy_notifyd}};
     const size_t opt_count = sizeof options / sizeof *options;
@@ -1458,9 +1462,11 @@ universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(
         strat = resolve_default_strategy();  //!OCLINT(parameter reassignment)
     }
     switch (strat) {
+#ifdef HAVE_SHM_OPEN
         case strategy_shmem_polling: {
             return new universal_notifier_shmem_poller_t();
         }
+#endif
         case strategy_notifyd: {
             return new universal_notifier_notifyd_t();
         }

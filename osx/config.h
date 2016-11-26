@@ -190,6 +190,9 @@
 /* Perform string translations with gettext */
 /* #undef USE_GETTEXT */
 
+/* Define to 1 if the shm_open() function exists. */
+#define HAVE_SHM_OPEN 1
+
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
 # define _ALL_SOURCE 1

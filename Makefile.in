@@ -891,7 +891,7 @@ style-all:
 distclean: clean
 	$v test ! -f $(PCRE2_DIR)/Makefile || \
 	  $(MAKE) V=$(V) -C $(PCRE2_DIR) distclean ||:
-	$v rm -f config.status config.log config.h Makefile
+	$v rm -rf config.status config.log config.h Makefile autom4te.cache aclocal.m4
 .PHONY: distclean
 
 #

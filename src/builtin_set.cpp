@@ -192,12 +192,9 @@ static int parse_index(std::vector<long> &indexes, const wchar_t *src, const wch
     while (iswspace(*src)) src++;
 
     while (*src != L']') {
-        wchar_t *end;
-        long l_ind;
-
-        errno = 0;
-        l_ind = wcstol(src, &end, 10);
-        if (end == src || errno) {
+        const wchar_t *end;
+        long l_ind = fish_wcstol(src, &end);
+        if (errno > 0) {  // ignore errno == -1 meaning the int did not end with a '\0'
             streams.err.append_format(_(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
             return 0;
         }
@@ -207,8 +204,8 @@ static int parse_index(std::vector<long> &indexes, const wchar_t *src, const wch
         src = end;  //!OCLINT(parameter reassignment)
         if (*src == L'.' && *(src + 1) == L'.') {
             src += 2;
-            long l_ind2 = wcstol(src, &end, 10);
-            if (end == src || errno) {
+            long l_ind2 = fish_wcstol(src, &end);
+            if (errno > 0) {  // ignore errno == -1 meaning the int did not end with a '\0'
                 return 1;
             }
             src = end;  //!OCLINT(parameter reassignment)
@@ -346,8 +343,6 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int retcode = 0;
     int scope;
     int slice = 0;
-
-    const wchar_t *bad_char = NULL;
 
     // Parse options to obtain the requested operation and the modifiers.
     w.woptind = 0;

@@ -14,7 +14,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <wchar.h>
-#include <wctype.h>
 #include <algorithm>
 #include <map>
 #include <set>
@@ -412,10 +411,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     const env_var_t shlvl_str = env_get_string(L"SHLVL");
     wcstring nshlvl_str = L"1";
     if (!shlvl_str.missing()) {
-        wchar_t *end;
-        long shlvl_i = wcstol(shlvl_str.c_str(), &end, 10);
-        while (iswspace(*end)) ++end;  // skip trailing whitespace
-        if (shlvl_i >= 0 && *end == '\0') {
+        const wchar_t *end;
+        // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a diagnostic?
+        long shlvl_i = fish_wcstol(shlvl_str.c_str(), &end);
+        if (!errno && shlvl_i >= 0) {
             nshlvl_str = to_string<long>(shlvl_i + 1);
         }
     }
@@ -514,14 +513,10 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
     }
 
     if (key == L"umask") {
-        wchar_t *end;
-
         // Set the new umask.
         if (val && wcslen(val)) {
-            errno = 0;
-            long mask = wcstol(val, &end, 8);
-
-            if (!errno && (!*end) && (mask <= 0777) && (mask >= 0)) {
+            long mask = fish_wcstol(val, NULL, 8);
+            if (!errno && mask <= 0777 && mask >= 0) {
                 umask(mask);
                 // Do not actually create a umask variable, on env_get, it will be calculated
                 // dynamically.

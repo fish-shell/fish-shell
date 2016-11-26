@@ -4,7 +4,6 @@
 #include <errno.h>
 #include <stddef.h>
 #include <sys/resource.h>
-#include <wchar.h>
 
 #include "builtin.h"
 #include "common.h"
@@ -293,9 +292,8 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     } else if (wcscasecmp(argv[w.woptind], L"soft") == 0) {
         new_limit = get(what, soft);
     } else {
-        wchar_t *end;
-        new_limit = wcstol(argv[w.woptind], &end, 10);
-        if (*end) {
+        new_limit = fish_wcstol(argv[w.woptind]);
+        if (errno) {
             streams.err.append_format(_(L"%ls: Invalid limit '%ls'\n"), cmd, argv[w.woptind]);
             builtin_print_help(parser, streams, cmd, streams.err);
             return STATUS_BUILTIN_ERROR;

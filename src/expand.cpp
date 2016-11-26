@@ -393,7 +393,10 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid) {
         if (buf.st_uid != getuid()) continue;
 
         // Remember the pid.
-        pid = fish_wcstoi(name.c_str(), NULL, 10);
+        pid = fish_wcstoi(name.c_str());
+        if (errno || pid < 0) {
+            debug(1, _(L"Unexpected failure to convert pid '%ls' to integer\n"), name.c_str());
+        }
 
         // The 'cmdline' file exists, it should contain the commandline.
         FILE *cmdfile;
@@ -477,12 +480,8 @@ static int find_job(const struct find_job_data_t *info) {
                 }
             }
         } else {
-            int jid;
-            wchar_t *end;
-
-            errno = 0;
-            jid = fish_wcstoi(proc, &end, 10);
-            if (jid > 0 && !errno && !*end) {
+            int jid = fish_wcstoi(proc);
+            if (!errno && jid > 0) {
                 j = job_get(jid);
                 if ((j != 0) && (j->command_wcstr() != 0) && (!j->command_is_empty())) {
                     append_completion(&completions, to_string<long>(j->pgid));
@@ -643,25 +642,22 @@ static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags,
 /// with [.
 static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx,
                           std::vector<size_t> &source_positions, size_t array_size) {
-    wchar_t *end;
-
     const long size = (long)array_size;
     size_t pos = 1;  // skip past the opening square bracket
-    //  debug( 0, L"parse_slice on '%ls'", in );
 
     while (1) {
-        long tmp;
-
         while (iswspace(in[pos]) || (in[pos] == INTERNAL_SEPARATOR)) pos++;
         if (in[pos] == L']') {
             pos++;
             break;
         }
 
-        errno = 0;
         const size_t i1_src_pos = pos;
-        tmp = wcstol(&in[pos], &end, 10);
-        if ((errno) || (end == &in[pos])) {
+        const wchar_t *end;
+        long tmp = fish_wcstol(&in[pos], &end);
+        // We don't test `*end` as is typically done because we expect it to not be the null char.
+        // Ignore the case of errno==-1 because it means the end char wasn't the null char.
+        if (errno > 0) {
             return pos;
         }
         // debug( 0, L"Push idx %d", tmp );
@@ -674,8 +670,9 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             while (in[pos] == INTERNAL_SEPARATOR) pos++;
 
             const size_t number_start = pos;
-            long tmp1 = wcstol(&in[pos], &end, 10);
-            if ((errno) || (end == &in[pos])) {
+            long tmp1 = fish_wcstol(&in[pos], &end);
+            // Ignore the case of errno==-1 because it means the end char wasn't the null char.
+            if (errno > 0) {
                 return pos;
             }
             pos = end - in;
@@ -698,11 +695,8 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
     }
 
     if (end_ptr) {
-        // debug( 0, L"Remainder is '%ls', slice def was %d characters long", in+pos, pos );
-
         *end_ptr = (wchar_t *)(in + pos);
     }
-    // debug( 0, L"ok, done" );
 
     return 0;
 }

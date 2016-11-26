@@ -41,6 +41,7 @@ Desktop.ini
 # These file names can appear anywhere in the hierarchy. They tend to be OS
 # or build system artifacts.
 autom4te.cache
+aclocal.m4
 Makefile
 config.h
 config.cache

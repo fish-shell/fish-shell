@@ -34,23 +34,23 @@ AC_SUBST(EXTRA_PCRE2)
 # running autoconf to handle an updates configure.ac.
 #
 
-AC_MSG_CHECKING([if autoconf needs to be run])
+AC_MSG_CHECKING([if autoreconf needs to be run])
 if test configure -ot configure.ac; then
   AC_MSG_RESULT([yes])
-  if which autoconf >/dev/null; then
-    # No need to provide any error messages if autoconf fails, the
+  if which autoreconf >/dev/null; then
+    # No need to provide any error messages if autoreconf fails, the
     # shell and autconf should take care of that themselves
-    AC_MSG_NOTICE([running autoconf])
-    if autoconf; then
+    AC_MSG_NOTICE([running autoreconf --no-recursive])
+    if autoreconf --no-recursive; then
       ./configure "$@"
       exit
     fi
     exit 1
   else
     AC_MSG_ERROR(
-      [cannot find the autoconf program in your path.
+      [cannot find the autoreconf program in your path.
 This program needs to be run whenever the configure.ac file is modified.
-Please install autoconf and try again.]
+Please install autoreconf and try again.]
     )
   fi
 else

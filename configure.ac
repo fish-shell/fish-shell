@@ -252,7 +252,7 @@ AC_DEFINE([NOMACROS], [1], [Define to 1 to disable curses macros that conflict w
 # Check for os dependant libraries for all binaries.
 AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
-AC_SEARCH_LIBS( shm_open, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
+AC_SEARCH_LIBS( shm_open, rt, [AC_DEFINE([HAVE_SHM_OPEN], [1], [Define to 1 if the shm_open() function exists])] )
 AC_SEARCH_LIBS( pthread_create, pthread, , [AC_MSG_ERROR([Cannot find the pthread library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses tinfo curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
 AC_SEARCH_LIBS( [dladdr], [dl] )

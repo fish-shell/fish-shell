@@ -180,8 +180,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # Also print an error so the user knows
         if not functions -q "$fish_key_bindings"
             echo "There is no fish_key_bindings function called: '$fish_key_bindings'" >&2
-            if set -q __fish_active_key_bindings
+            # We need to see if this is a defined function, otherwise we'd be in an endless loop.
+            if functions -q $__fish_active_key_bindings
                 echo "Keeping $__fish_active_key_bindings" >&2
+                # Set the variable to the old value so this error doesn't happen again.
+                set fish_key_bindings $__fish_active_key_bindings
                 return 1
             else if functions -q fish_default_key_bindings
                 echo "Reverting to default bindings" >&2

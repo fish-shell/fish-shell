@@ -21,7 +21,7 @@ if command ls --version 1>/dev/null 2>/dev/null
 					break
 				end
 			end
-			set -gx LS_COLORS (dircolors -c $colorfile | string replace -r 'setenv LS_COLORS \'(.*)\'' '$1')
+			set -gx LS_COLORS (dircolors -c $colorfile | string replace -r 'setenv LS_COLORS \'(.*)\'' '$1' | string replace ' >&/dev/null'  '' )
 		end
 	end
 

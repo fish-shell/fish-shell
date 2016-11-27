@@ -21,6 +21,10 @@ if not command -s open >/dev/null
 			for i in $argv
 				xdg-open $i
 			end
+		else if type -q -f /bin/open
+			for i in $argv
+				/bin/open $i
+			end
 		else
 			echo (_ 'No open utility found. Try installing "xdg-open" or "xdg-utils".')
 		end

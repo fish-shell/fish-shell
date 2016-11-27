@@ -110,8 +110,9 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Generate man page completions if not present.
     #
     if not test -d $userdatadir/fish/generated_completions
-        #fish_update_completions is a function, so it can not be directly run in background.
-        eval (string escape "$__fish_bin_dir/fish") "-c 'fish_update_completions > /dev/null ^/dev/null' &"
+        command -s python >/dev/null # feature needs python, don't try this on launch without it (#3588)
+        # fish_update_completions is a function, so it can not be directly run in background.
+        and eval (string escape "$__fish_bin_dir/fish") "-c 'fish_update_completions >/dev/null ^/dev/null' &"
     end
 
     #

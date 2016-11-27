@@ -821,17 +821,18 @@ static int builtin_emit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     int argc = builtin_count_args(argv);
-    int print_path = 0;
+    bool find_path = false;
+    bool quiet = false;
 
     w.woptind = 0;
 
     static const struct woption long_options[] = {
-        {L"search", no_argument, 0, 's'}, {L"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
+         {L"quiet", no_argument, 0, 'q'}, {L"search", no_argument, 0, 's'}, {L"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
 
     while (1) {
         int opt_index = 0;
 
-        int opt = w.wgetopt_long(argc, argv, L"svh", long_options, &opt_index);
+        int opt = w.wgetopt_long(argc, argv, L"qsvh", long_options, &opt_index);
         if (opt == -1) break;
 
         switch (opt) {
@@ -848,7 +849,11 @@ static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **ar
             }
             case 's':
             case 'v': {
-                print_path = 1;
+                find_path = true;
+                break;
+            }
+            case 'q': {
+                quiet = true;
                 break;
             }
             case '?': {
@@ -862,7 +867,7 @@ static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **ar
         }
     }
 
-    if (!print_path) {
+    if (!find_path) {
         builtin_print_help(parser, streams, argv[0], streams.out);
         return STATUS_BUILTIN_ERROR;
     }
@@ -873,7 +878,7 @@ static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **ar
         const wchar_t *command_name = argv[idx];
         wcstring path;
         if (path_get_path(command_name, &path)) {
-            streams.out.append_format(L"%ls\n", path.c_str());
+            if (!quiet) streams.out.append_format(L"%ls\n", path.c_str());
             ++found;
         }
     }

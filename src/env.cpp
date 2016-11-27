@@ -334,7 +334,7 @@ static bool variable_is_colon_delimited_array(const wcstring &str) {
 }
 
 /// Set up the USER variable.
-static void setup_user(bool force=false) {
+static void setup_user(bool force) {
     if (env_get_string(L"USER").missing_or_empty() || force) {
         const struct passwd *pw = getpwuid(getuid());
         if (pw && pw->pw_name) {
@@ -404,7 +404,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 
     // Set up the USER and PATH variables
     setup_path();
-    setup_user();
+    setup_user(false);
 
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
@@ -429,7 +429,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         const env_var_t unam = env_get_string(L"USER");
         char *unam_narrow = wcs2str(unam.c_str());
         struct passwd *pw = getpwnam(unam_narrow);
-        if (pw == NULL) { // Maybe USER is set but it's bogus. Reset USER from the db and try again.
+        if (pw == NULL) {
+            // Maybe USER is set but it's bogus. Reset USER from the db and try again.
             setup_user(true);
             const env_var_t unam = env_get_string(L"USER");
             unam_narrow = wcs2str(unam.c_str());
@@ -747,9 +748,12 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
     // that in env_set().
     if (is_electric(key)) {
         if (!search_global) return env_var_t::missing_var();
-        // Big hack. We only allow getting the history on the main thread. Note that history_t may
-        // ask for an environment variable, so don't take the lock here (we don't need it).
-        if (key == L"history" && is_main_thread()) {
+        if (key == L"history") {
+            // Big hack. We only allow getting the history on the main thread. Note that history_t
+            // may ask for an environment variable, so don't take the lock here (we don't need it).
+            if (!is_main_thread()) {
+                return env_var_t::missing_var();
+            }
             env_var_t result;
 
             history_t *history = reader_get_history();
@@ -767,7 +771,8 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
         } else if (key == L"umask") {
             return format_string(L"0%0.3o", get_umask());
         }
-        // We should never get here unless the electric var list is out of sync.
+        // We should never get here unless the electric var list is out of sync with the above code.
+        DIE("unerecognized electric var name");
     }
 
     if (search_local || search_global) {

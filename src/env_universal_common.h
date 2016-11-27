@@ -1,5 +1,6 @@
 #ifndef FISH_ENV_UNIVERSAL_COMMON_H
 #define FISH_ENV_UNIVERSAL_COMMON_H
+#include "config.h"
 
 #include <pthread.h>
 #include <stdio.h>

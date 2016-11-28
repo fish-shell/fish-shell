@@ -1,6 +1,6 @@
 function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument item
 	# special support for builtin_help_get()
-	set -l tty_width
+	set -l tty_width 0
 	if test "$item" = "--tty-width"
 		set tty_width $argv[2]
 		set item $argv[3]

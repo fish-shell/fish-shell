@@ -636,9 +636,13 @@ bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
 
 // IEEE 1003.1 says nothing about what it means for two strings to be "algebraically equal". For
 // example, should we interpret 0x10 as 0, 10, or 16? Here we use only base 10 and use wcstoll,
-// which allows for leading + and -, and leading whitespace. This matches bash.
+// which allows for leading + and -, and whitespace. This is consistent, albeit a bit more lenient
+// since we allow trailing whitespace, with other implementations such as bash.
 static bool parse_number(const wcstring &arg, long long *out) {
     *out = fish_wcstoll(arg.c_str());
+    if (errno) {
+        debug(0, "test: invalid integer '%ls'", arg.c_str());
+    }
     return !errno;
 }
 

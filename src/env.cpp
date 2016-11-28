@@ -333,6 +333,17 @@ static bool variable_is_colon_delimited_array(const wcstring &str) {
     return contains(str, L"PATH", L"MANPATH", L"CDPATH");
 }
 
+/// Set up the USER variable.
+static void setup_user(bool force=false) {
+    if (env_get_string(L"USER").missing_or_empty() || force) {
+        const struct passwd *pw = getpwuid(getuid());
+        if (pw && pw->pw_name) {
+            const wcstring uname = str2wcstring(pw->pw_name);
+            env_set(L"USER", uname.c_str(), ENV_GLOBAL | ENV_EXPORT);
+        }
+    }
+}
+
 void env_init(const struct config_paths_t *paths /* or NULL */) {
     // These variables can not be altered directly by the user.
     const wchar_t *const ro_keys[] = {
@@ -391,17 +402,9 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         env_set(FISH_BIN_DIR, paths->bin.c_str(), ENV_GLOBAL);
     }
 
-    // Set up the PATH variable.
+    // Set up the USER and PATH variables
     setup_path();
-
-    // Set up the USER variable.
-    if (env_get_string(L"USER").missing_or_empty()) {
-        const struct passwd *pw = getpwuid(getuid());
-        if (pw && pw->pw_name) {
-            const wcstring uname = str2wcstring(pw->pw_name);
-            env_set(L"USER", uname.c_str(), ENV_GLOBAL | ENV_EXPORT);
-        }
-    }
+    setup_user();
 
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
@@ -426,7 +429,13 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         const env_var_t unam = env_get_string(L"USER");
         char *unam_narrow = wcs2str(unam.c_str());
         struct passwd *pw = getpwnam(unam_narrow);
-        if (pw->pw_dir != NULL) {
+        if (pw == NULL) { // Maybe USER is set but it's bogus. Reset USER from the db and try again.
+            setup_user(true);
+            const env_var_t unam = env_get_string(L"USER");
+            unam_narrow = wcs2str(unam.c_str());
+            pw = getpwnam(unam_narrow);
+        }
+        if (pw && pw->pw_dir) {
             const wcstring dir = str2wcstring(pw->pw_dir);
             env_set(L"HOME", dir.c_str(), ENV_GLOBAL | ENV_EXPORT);
         }

@@ -4,6 +4,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>
+#include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -637,9 +638,13 @@ bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
 
 // IEEE 1003.1 says nothing about what it means for two strings to be "algebraically equal". For
 // example, should we interpret 0x10 as 0, 10, or 16? Here we use only base 10 and use wcstoll,
-// which allows for leading + and -, and leading whitespace. This matches bash.
-static bool parse_number(const wcstring &arg, long long *out) {
+// which allows for leading + and -, and whitespace. This is consistent, albeit a bit more lenient
+// since we allow trailing whitespace, with other implementations such as bash.
+static bool parse_number(const wcstring &arg, long long *out, wcstring_list_t &errors) {
     *out = fish_wcstoll(arg.c_str());
+    if (errno) {
+        errors.push_back(format_string(_(L"invalid integer '%ls'"), arg.c_str()));
+    }
     return !errno;
 }
 
@@ -655,28 +660,28 @@ static bool binary_primary_evaluate(test_expressions::token_t token, const wcstr
             return left != right;
         }
         case test_number_equal: {
-            return parse_number(left, &left_num) && parse_number(right, &right_num) &&
-                   left_num == right_num;
+            return parse_number(left, &left_num, errors) &&
+                   parse_number(right, &right_num, errors) && left_num == right_num;
         }
         case test_number_not_equal: {
-            return parse_number(left, &left_num) && parse_number(right, &right_num) &&
-                   left_num != right_num;
+            return parse_number(left, &left_num, errors) &&
+                   parse_number(right, &right_num, errors) && left_num != right_num;
         }
         case test_number_greater: {
-            return parse_number(left, &left_num) && parse_number(right, &right_num) &&
-                   left_num > right_num;
+            return parse_number(left, &left_num, errors) &&
+                   parse_number(right, &right_num, errors) && left_num > right_num;
         }
         case test_number_greater_equal: {
-            return parse_number(left, &left_num) && parse_number(right, &right_num) &&
-                   left_num >= right_num;
+            return parse_number(left, &left_num, errors) &&
+                   parse_number(right, &right_num, errors) && left_num >= right_num;
         }
         case test_number_lesser: {
-            return parse_number(left, &left_num) && parse_number(right, &right_num) &&
-                   left_num < right_num;
+            return parse_number(left, &left_num, errors) &&
+                   parse_number(right, &right_num, errors) && left_num < right_num;
         }
         case test_number_lesser_equal: {
-            return parse_number(left, &left_num) && parse_number(right, &right_num) &&
-                   left_num <= right_num;
+            return parse_number(left, &left_num, errors) &&
+                   parse_number(right, &right_num, errors) && left_num <= right_num;
         }
         default: {
             errors.push_back(format_string(L"Unknown token type in %s", __func__));
@@ -729,7 +734,7 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
             return !wstat(arg, &buf) && buf.st_size > 0;
         }
         case test_filedesc_t: {  // "-t", whether the fd is associated with a terminal
-            return parse_number(arg, &num) && num == (int)num && isatty((int)num);
+            return parse_number(arg, &num, errors) && num == (int)num && isatty((int)num);
         }
         case test_fileperm_r: {  // "-r", read permission
             return !waccess(arg, R_OK);

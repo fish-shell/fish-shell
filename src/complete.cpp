@@ -1372,7 +1372,6 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                 }
             }
 
-            // cppcheck-suppress nullPointerRedundantCheck
             if (cmd_node && cmd_node->location_in_or_at_end_of_source_range(pos)) {
                 // Complete command filename.
                 completer.complete_cmd(current_token, use_function, use_builtin, use_command,

@@ -127,7 +127,6 @@ const wchar_t *token_type_description(parse_token_type_t type) {
     // This leaks memory but it should never be run unless we have a bug elsewhere in the code.
     const wcstring d = format_string(L"unknown_token_type_%ld", static_cast<long>(type));
     wchar_t *d2 = new wchar_t[d.size() + 1];
-    // cppcheck-suppress memleak
     return std::wcscpy(d2, d.c_str());
 }
 
@@ -138,7 +137,6 @@ const wchar_t *keyword_description(parse_keyword_t type) {
     // This leaks memory but it should never be run unless we have a bug elsewhere in the code.
     const wcstring d = format_string(L"unknown_keyword_%ld", static_cast<long>(type));
     wchar_t *d2 = new wchar_t[d.size() + 1];
-    // cppcheck-suppress memleak
     return std::wcscpy(d2, d.c_str());
 }
 

@@ -1059,7 +1059,6 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
 
         // Read the current seed.
         this->poll();
-        // cppcheck-suppress memleak // addr not really leaked
     }
 
    public:

@@ -670,7 +670,7 @@ ssize_t read_loop(int fd, void *buff, size_t count);
 ///
 /// will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that
 /// program_name is 'fish'.
-void __attribute__((noinline)) debug(int level, const char *msg, ...);
+void __attribute__((noinline)) debug(int level, const char *msg, ...) __attribute__ ((format (printf, 2, 3)));
 void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...);
 
 /// Replace special characters with backslash escape sequences. Newline is replaced with \n, etc.

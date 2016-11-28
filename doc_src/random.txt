@@ -2,31 +2,31 @@
 
 \subsection random-synopsis Synopsis
 \fish{synopsis}
-random [SEED]
+random [(-s | --seed) SEED] END
+random [(-s | --seed) SEED] START END
+random [(-s | --seed) SEED] START END STEP
 \endfish
 
 \subsection random-description Description
 
-`random` outputs a psuedo-random number from 0 to 32767, inclusive.
-Even ignoring the very narrow range of values you should not assume
-this produces truly random values within that range. Do not use the
-value for any cryptographic purposes, and take care to handle collisions:
-the same random number appearing more than once in a given fish instance.
+`RANDOM` generates a psuedo-random integer from a uniform distribution in
+the inclusive range [START; END] with a spacing of STEP. One argument
+indicates a START of 0, two arguments indicates a STEP of 1. Only integer
+arguments are supported and STEP should be strictly positive.
 
-If a `SEED` value is provided, it is used to seed the random number
-generator, and no output will be produced. This can be useful for debugging
-purposes, where it can be desirable to get the same random number sequence
-multiple times. If the random number generator is called without first
-seeding it, the current time will be used as the seed.
+If a `SEED` value is provided, the random number will be generated from that
+seed, meaning that you will get the same generated number throughout multiple
+invocations with the same parameters. Providing a seed will NOT give the same
+result across different systems.
 
+You should not consider `RANDOM` cryptographically secure.
 
 \subsection random-example Example
 
-The following code will count down from a random number to 1:
+The following code will count down from a random even number between 10 and 20 to 1:
 
 \fish
-for i in (seq (random) -1 1)
+for i in (seq (random 10 20 2) -1 1)
     echo $i
-    sleep
 end
 \endfish

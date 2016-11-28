@@ -42,7 +42,7 @@ if status --is-interactive
 				set -q KONSOLE_PROFILE_NAME # KDE's konsole
 				or string match -q -- "*:*" $ITERM_SESSION_ID # Supporting versions of iTerm2 will include a colon here
 				or string match -q -- "st-*" $TERM # suckless' st
-				or test "$VTE_VERSION" -ge 3600 # Should be all gtk3-vte-based terms after version 3.6.0.0
+				or test -n "$VTE_VERSION" -a "$VTE_VERSION" -ge 3600 # Should be all gtk3-vte-based terms after version 3.6.0.0
 				or test "$COLORTERM" = truecolor -o "$COLORTERM" = 24bit # slang expects this
 			end
 			# Only set it if it isn't to allow override by setting to 0

@@ -166,7 +166,7 @@ class test_parser {
     expression *parse_binary_primary(unsigned int start, unsigned int end);
     expression *parse_just_a_string(unsigned int start, unsigned int end);
 
-    static expression *parse_args(const wcstring_list_t &args, wcstring &err);
+    static expression *parse_args(const wcstring_list_t &args, wcstring &err, wchar_t *program_name);
 };
 
 struct range_t {
@@ -537,7 +537,7 @@ expression *test_parser::parse_expression(unsigned int start, unsigned int end) 
     }
 }
 
-expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err) {
+expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err, wchar_t *program_name) {
     // Empty list and one-arg list should be handled by caller.
     assert(args.size() > 1);
 
@@ -547,7 +547,8 @@ expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err) 
     // Handle errors.
     // For now we only show the first error.
     if (!parser.errors.empty()) {
-        err.append(L"test: ");
+        err.append(program_name);
+        err.append(L": ");
         err.append(parser.errors.at(0));
         err.push_back(L'\n');
     }
@@ -558,7 +559,7 @@ expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err) 
         assert(result->range.end <= args.size());
         if (result->range.end < args.size()) {
             if (err.empty()) {
-                append_format(err, L"test: unexpected argument at index %lu: '%ls'\n",
+                append_format(err, L"%ls: unexpected argument at index %lu: '%ls'\n", program_name,
                               (unsigned long)result->range.end, args.at(result->range.end).c_str());
             }
 
@@ -771,7 +772,8 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (!argv[0]) return BUILTIN_TEST_FAIL;
 
     // Whether we are invoked with bracket '[' or not.
-    const bool is_bracket = !wcscmp(argv[0], L"[");
+    wchar_t *program_name = argv[0];
+    const bool is_bracket = !wcscmp(program_name, L"[");
 
     size_t argc = 0;
     while (argv[argc + 1]) argc++;
@@ -780,7 +782,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // of arguments after the command name; thus argv[argc] is the last argument.
     if (is_bracket) {
         if (!wcscmp(argv[argc], L"]")) {
-            // Ignore the closing bracketp.
+            // Ignore the closing bracket from now on.
             argc--;
         } else {
             streams.err.append(L"[: the last argument must be ']'\n");
@@ -800,7 +802,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     // Try parsing. If expr is not nil, we are responsible for deleting it.
     wcstring err;
-    expression *expr = test_parser::parse_args(args, err);
+    expression *expr = test_parser::parse_args(args, err, program_name);
     if (!expr) {
 #if 0
         printf("Oops! test was given args:\n");

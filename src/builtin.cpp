@@ -34,6 +34,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <random>
 
 #include "builtin.h"
 #include "builtin_commandline.h"
@@ -1740,15 +1741,20 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
 
 /// The random builtin generates random numbers.
 static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    static int seeded = 0;
-    static struct drand48_data seed_buffer;
-
-    int argc = builtin_count_args(argv);
+    static bool seeded = false;
+    static std::mt19937_64 engine;
+    if (!seeded) {
+        // seed engine with 8*32 bits of random data
+        std::random_device rd;
+        std::seed_seq seed{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+        engine.seed(seed);
+        seeded = true;
+    }
 
     wgetopter_t w;
-
-    static const struct woption long_options[] = {{L"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
-
+    int argc = builtin_count_args(argv);
+    static const struct woption long_options[] = {{L"help", no_argument, 0, 'h'},
+                                                 {0,0,0,0}};
     while (1) {
         int opt_index = 0;
 
@@ -1765,7 +1771,7 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
             }
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
-                break;
+                return STATUS_BUILTIN_OK;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
@@ -1777,31 +1783,64 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
             }
         }
     }
-
-    int arg_count = argc - w.woptind;
-    if (arg_count == 0) {
-        long res;
-        if (!seeded) {
-            seeded = 1;
-            srand48_r(time(0), &seed_buffer);
-        }
-        lrand48_r(&seed_buffer, &res);
-        streams.out.append_format(L"%ld\n", res % 32768);
-    } else if (arg_count == 1) {
-        long foo = fish_wcstol(argv[w.woptind]);
+    // argument parsing
+    bool parse_error = false;
+    auto parse_ll = [&](const wchar_t* str) {
+        long long ll = fish_wcstoll(str);
         if (errno) {
-            streams.err.append_format(_(L"%ls: Seed value '%ls' is not a valid number\n"), argv[0],
-                                      argv[w.woptind]);
+            streams.err.append_format(L"%ls: %ls is not a valid integer\n", argv[0], str);
+            parse_error = true;
+        }
+        return ll;
+    };
+    int arg_count = argc - w.woptind;
+    long long start, end, step;
+    if (arg_count == 0) {
+        start = 0;
+        end = 32767;
+        step = 1;
+    } else if (arg_count == 1) {
+        long long seed = parse_ll(argv[w.woptind]);
+        if (!parse_error) {
+            engine.seed(seed);
+            return STATUS_BUILTIN_OK;
+        } else {
             return STATUS_BUILTIN_ERROR;
         }
-        seeded = 1;
-        srand48_r(foo, &seed_buffer);
+    } else if (arg_count == 2) {
+        start = parse_ll(argv[w.woptind]);
+        step = 1;
+        end = parse_ll(argv[w.woptind + 1]);
+    } else if (arg_count == 3) {
+        start = parse_ll(argv[w.woptind]);
+        step = parse_ll(argv[w.woptind + 1]);
+        end = parse_ll(argv[w.woptind + 2]);
     } else {
-        streams.err.append_format(_(L"%ls: Expected zero or one argument, got %d\n"), argv[0],
-                                  argc - w.woptind);
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return STATUS_BUILTIN_ERROR;
     }
+
+    // error handling
+    if (parse_error) {
+        return STATUS_BUILTIN_ERROR;
+    } else if (start > end) {
+        streams.err.append_format(L"%ls: END must be greater than or equal to START\n", argv[0]);
+        return STATUS_BUILTIN_ERROR;
+    } else if (step <= 0) {
+        streams.err.append_format(L"%ls: STEP must be a positive integer\n", argv[0]);
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    // rng-ing
+    long long result;
+    if (end - start < step) {
+        // nine nine nine nine nine nine
+        result = start;
+    } else {
+        std::uniform_int_distribution<long long> dist(start, start+(end-start)/step);
+        result = start+step*(dist(engine)-start);
+    }
+    streams.out.append_format(L"%ld\n", result);
     return STATUS_BUILTIN_OK;
 }
 

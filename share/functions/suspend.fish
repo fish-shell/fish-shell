@@ -1,7 +1,8 @@
 function suspend -d "Suspend the current shell."
-    if contains -- $argv --help; or contains -- $argv -h
-         __fish_print_help suspend
-         and return 0
+    if contains -- $argv --help
+        or contains -- $argv -h
+        __fish_print_help suspend
+        and return 0
     end
     if begin contains -- $argv --force
             or not status --is-interactive and not status --is-login

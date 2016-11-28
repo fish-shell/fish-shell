@@ -10,7 +10,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     end
 
     bind $argv \cy yank
-    or return  # protect against invalid $argv
+    or return # protect against invalid $argv
     bind $argv \ey yank-pop
 
     # Left/Right arrow

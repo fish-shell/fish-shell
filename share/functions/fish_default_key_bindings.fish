@@ -6,7 +6,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     end
 
     if not set -q argv[1]
-        bind --erase --all  # clear earlier bindings, if any
+        bind --erase --all # clear earlier bindings, if any
         if test "$fish_key_bindings" != "fish_default_key_bindings"
             # Allow the user to set the variable universally
             set -q fish_key_bindings
@@ -20,11 +20,11 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 
     # These are shell-specific bindings that we share with vi mode.
     __fish_shared_key_bindings $argv
-    or return  # protect against invalid $argv
+    or return # protect against invalid $argv
 
     # This is the default binding, i.e. the one used if no other binding matches
     bind $argv "" self-insert
-    or exit  # protect against invalid $argv
+    or exit # protect against invalid $argv
 
     bind $argv \n execute
     bind $argv \r execute

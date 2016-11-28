@@ -13,5 +13,6 @@ function __fish_toggle_comment_commandline --description 'Comment/uncomment the 
     end
     set -l cmdlines (printf '%s\n' '#'$cmdlines | string replace -r '^##' '')
     commandline -r $cmdlines
-    string match -q '#*' $cmdlines[1]; and commandline -f execute
+    string match -q '#*' $cmdlines[1]
+    and commandline -f execute
 end

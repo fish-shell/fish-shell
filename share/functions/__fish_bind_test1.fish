@@ -5,21 +5,21 @@ function __fish_bind_test1
     for i in (commandline -poc)
         switch $i
             case -k --k --ke --key
-            set use_keys yes
+                set use_keys yes
 
             case "-*"
 
             case "*"
-            set args $args $i
+                set args $args $i
         end
     end
 
     switch $use_keys
         case yes
-        switch (count $args)
-            case 1
-            return 0
-        end
+            switch (count $args)
+                case 1
+                    return 0
+            end
     end
     return 1
 end

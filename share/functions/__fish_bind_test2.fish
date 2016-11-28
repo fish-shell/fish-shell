@@ -1,20 +1,20 @@
 
 function __fish_bind_test2
-set -l args
-for i in (commandline -poc)
-	switch $i
-		case "-*"
+    set -l args
+    for i in (commandline -poc)
+        switch $i
+            case "-*"
 
-		case "*"
-		set args $args $i
-	end
-end
+            case "*"
+                set args $args $i
+        end
+    end
 
-	switch (count $args)
-	       case 2
-	       return 0
-	end
+    switch (count $args)
+        case 2
+            return 0
+    end
 
-	return 1
+    return 1
 
 end

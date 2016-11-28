@@ -14,7 +14,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         set rebind false
         set -e argv[1]
     else
-        bind --erase --all  # clear earlier bindings, if any
+        bind --erase --all # clear earlier bindings, if any
     end
 
     # Allow just calling this function to correctly set the bindings.
@@ -58,7 +58,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     bind -M insert \r execute
     bind -M insert \n execute
-    
+
     bind -M insert "" self-insert
 
     # Add way to kill current command line while in insert mode.

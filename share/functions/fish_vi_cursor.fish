@@ -16,7 +16,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     # We use the `tput` here just to see if terminfo thinks we can change the cursor.
     # We cannot use that sequence directly as it's not the correct one for konsole and iTerm,
     # and because we may want to change the cursor even though terminfo says we can't (tmux).
-    if not tput Ss > /dev/null ^/dev/null
+    if not tput Ss >/dev/null ^/dev/null
         # Whitelist tmux...
         and not begin
             set -q TMUX
@@ -54,7 +54,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
                 or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280 ^/dev/null
             end
         end
-                
+
         return
     end
 
@@ -67,7 +67,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     switch "$terminal"
         case auto
             if set -q KONSOLE_PROFILE_NAME
-               or set -q ITERM_PROFILE
+                or set -q ITERM_PROFILE
                 set function __fish_cursor_konsole
                 set uses_echo 1
             else
@@ -85,7 +85,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     set -l tmux_prefix
     set -l tmux_postfix
     if set -q TMUX
-       and set -q uses_echo[1]
+        and set -q uses_echo[1]
         set tmux_prefix echo -ne "'\ePtmux;\e'"
         set tmux_postfix echo -ne "'\e\\\\'"
     end

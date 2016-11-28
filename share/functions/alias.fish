@@ -1,5 +1,5 @@
 function alias --description 'Creates a function wrapping a command'
-    if count $argv > /dev/null
+    if count $argv >/dev/null
         switch $argv[1]
             case -h --h --he --hel --help
                 __fish_print_help alias

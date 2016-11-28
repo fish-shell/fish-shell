@@ -3,7 +3,7 @@
 #
 
 if echo | command grep --color=auto "" >/dev/null 2>&1
-	function grep
-		command grep --color=auto $argv
-	end
+    function grep
+        command grep --color=auto $argv
+    end
 end

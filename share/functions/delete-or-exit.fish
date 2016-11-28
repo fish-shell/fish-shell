@@ -7,17 +7,17 @@
 
 function delete-or-exit
 
-	set -l cmd (commandline)
+    set -l cmd (commandline)
 
-	switch "$cmd"
+    switch "$cmd"
 
-		case ''
-		exit 0
+        case ''
+            exit 0
 
-		case '*'
-		commandline -f delete-char
+        case '*'
+            commandline -f delete-char
 
-	end
+    end
 
 end
 

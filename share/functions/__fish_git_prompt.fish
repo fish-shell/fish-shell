@@ -484,7 +484,8 @@ function __fish_git_prompt_informative_status
 
     # If `math` fails for some reason, assume the state is clean - it's the simpler path
     set -l state (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles ^/dev/null)
-    if test -z "$state"; or test "$state" = 0
+    if test -z "$state"
+        or test "$state" = 0
         set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
     else
         for i in $___fish_git_prompt_status_order

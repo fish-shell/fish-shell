@@ -1,18 +1,18 @@
 
 function nextd --description "Move forward in the directory history"
 
-	if count $argv >/dev/null
-		switch $argv[1]
-			case -h --h --he --hel --help
-				__fish_print_help nextd
-				return 0
-		end
-	end
+    if count $argv >/dev/null
+        switch $argv[1]
+            case -h --h --he --hel --help
+                __fish_print_help nextd
+                return 0
+        end
+    end
 
-	# Parse arguments
-	set -l show_hist 0
-	set -l times 1
-    if count $argv > /dev/null
+    # Parse arguments
+    set -l show_hist 0
+    set -l times 1
+    if count $argv >/dev/null
         for i in (seq (count $argv))
             switch $argv[$i]
                 case '-l' --l --li --lis --list
@@ -33,12 +33,13 @@ function nextd --description "Move forward in the directory history"
         end
     end
 
-	# Traverse history
-	set -l code 1
-    if count $times > /dev/null
+    # Traverse history
+    set -l code 1
+    if count $times >/dev/null
         for i in (seq $times)
             # Try one step backward
-            if __fish_move_last dirnext dirprev;
+            if __fish_move_last dirnext dirprev
+
                 # We consider it a success if we were able to do at least 1 step
                 # (low expectations are the key to happiness ;)
                 set code 0
@@ -48,16 +49,16 @@ function nextd --description "Move forward in the directory history"
         end
     end
 
-	# Show history if needed
-	if test $show_hist = 1
-		dirh
-	end
+    # Show history if needed
+    if test $show_hist = 1
+        dirh
+    end
 
-	# Set direction for 'cd -'
-	if test $code = 0 ^/dev/null
-		set -g __fish_cd_direction prev
-	end
+    # Set direction for 'cd -'
+    if test $code = 0 ^/dev/null
+        set -g __fish_cd_direction prev
+    end
 
-	# All done
-	return $code
+    # All done
+    return $code
 end

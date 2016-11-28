@@ -1,53 +1,53 @@
 
 function __fish_contains_opt -d "Checks if a specific option has been given in the current commandline"
-	set -l next_short
+    set -l next_short
 
-	set -l short_opt
-	set -l long_opt
+    set -l short_opt
+    set -l long_opt
 
-	for i in $argv
-		if test $next_short
-			set next_short
-			set short_opt $short_opt $i
-		else
-			switch $i
-				case -s
-					set next_short 1
-				case '-*'
-					echo __fish_contains_opt: Unknown option $i
-					return 1
+    for i in $argv
+        if test $next_short
+            set next_short
+            set short_opt $short_opt $i
+        else
+            switch $i
+                case -s
+                    set next_short 1
+                case '-*'
+                    echo __fish_contains_opt: Unknown option $i
+                    return 1
 
-				case '**'
-					set long_opt $long_opt $i
-			end
-		end
-	end
+                case '**'
+                    set long_opt $long_opt $i
+            end
+        end
+    end
 
-	for i in $short_opt
+    for i in $short_opt
 
-		if test -z $i
-			continue
-		end
+        if test -z $i
+            continue
+        end
 
-		if commandline -cpo | __fish_sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
-			return 0
-		end
+        if commandline -cpo | __fish_sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
+            return 0
+        end
 
-		if commandline -ct | __fish_sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
-			return 0
-		end
-	end
+        if commandline -ct | __fish_sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
+            return 0
+        end
+    end
 
-	for i in $long_opt
-		if test -z $i
-			continue
-		end
+    for i in $long_opt
+        if test -z $i
+            continue
+        end
 
-		if contains -- --$i (commandline -cpo)
-			return 0
-		end
-	end
+        if contains -- --$i (commandline -cpo)
+            return 0
+        end
+    end
 
-	return 1
+    return 1
 end
 

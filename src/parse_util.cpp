@@ -1287,10 +1287,12 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                     }
 
                     // Check that we don't do an invalid builtin (issue #1252).
-                    if (!errored && decoration == parse_statement_decoration_builtin &&
-                        !builtin_exists(command)) {
-                        errored = append_syntax_error(&parse_errors, node.source_start,
+                    if (!errored && decoration == parse_statement_decoration_builtin) {
+                        expand_one(command, EXPAND_SKIP_CMDSUBST, NULL);
+                        if (!builtin_exists(command)) {
+                            errored = append_syntax_error(&parse_errors, node.source_start,
                                                       UNKNOWN_BUILTIN_ERR_MSG, command.c_str());
+                        }
                     }
                 }
             }

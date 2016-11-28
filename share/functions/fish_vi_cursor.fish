@@ -23,7 +23,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
             # ...in a supporting term...
             and begin set -q KONSOLE_PROFILE_NAME
                 or set -q ITERM_PROFILE
-                or test "$VTE_VERSION" -ge 4000
+                or test "0$VTE_VERSION" -ge 4000
                 or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280
             end
             # .. unless an unsupporting terminal has been started in tmux inside a supporting one
@@ -49,7 +49,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
             string match -q 'xterm*' -- $TERM
             and not begin set -q KONSOLE_PROFILE_NAME
                 or set -q ITERM_PROFILE
-                or test "$VTE_VERSION" -ge 4000
+                or test "0$VTE_VERSION" -ge 4000
                 # If $XTERM_VERSION is undefined, this will return 1 and print an error. Silence it.
                 or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280 ^/dev/null
             end

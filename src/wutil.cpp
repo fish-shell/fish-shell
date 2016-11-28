@@ -631,11 +631,13 @@ long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr, int base) {
 /// annoying to use them in a portable fashion.
 ///
 /// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
-/// than a digit. Leading whitespace is ignored (per the base wcstoll implementation). Trailing
-/// whitespace is also ignored.
+/// than a digit. Leading minus is considered invalid. Leading whitespace is ignored (per the base
+/// wcstoull implementation). Trailing whitespace is also ignored.
 unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int base) {
     while (iswspace(*str)) ++str;  // skip leading whitespace
-    if (!*str) {  // this is because some implementations don't handle this sensibly
+    if (!*str ||      // this is because some implementations don't handle this sensibly
+        *str == '-')  // disallow minus as the first character to avoid questionable wrap-around
+    {
         errno = EINVAL;
         if (endptr) *endptr = str;
         return 0;

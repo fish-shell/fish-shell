@@ -26,12 +26,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <time.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <random>
 #include <string>
 #include <utility>
 
@@ -1742,15 +1743,21 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
 
 /// The random builtin generates random numbers.
 static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    static int seeded = 0;
-    static struct drand48_data seed_buffer;
-
-    int argc = builtin_count_args(argv);
+    static bool seeded = false;
+    static std::minstd_rand engine;
+    if (!seeded) {
+        // seed engine with 2*32 bits of random data
+        // for the 64 bits of internal state of minstd_rand
+        std::random_device rd;
+        std::seed_seq seed{rd(), rd()};
+        engine.seed(seed);
+        seeded = true;
+    }
 
     wgetopter_t w;
-
-    static const struct woption long_options[] = {{L"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
-
+    int argc = builtin_count_args(argv);
+    static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
+                                                  {NULL, 0, NULL, 0}};
     while (1) {
         int opt_index = 0;
 
@@ -1767,7 +1774,7 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
             }
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
-                break;
+                return STATUS_BUILTIN_OK;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
@@ -1781,28 +1788,114 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
     }
 
     int arg_count = argc - w.woptind;
-    if (arg_count == 0) {
-        long res;
-        if (!seeded) {
-            seeded = 1;
-            srand48_r(time(0), &seed_buffer);
-        }
-        lrand48_r(&seed_buffer, &res);
-        streams.out.append_format(L"%ld\n", res % 32768);
-    } else if (arg_count == 1) {
-        long foo = fish_wcstol(argv[w.woptind]);
-        if (errno) {
-            streams.err.append_format(_(L"%ls: Seed value '%ls' is not a valid number\n"), argv[0],
-                                      argv[w.woptind]);
+    long long start, end;
+    unsigned long long step;
+    bool choice = false;
+    if (arg_count >= 1 && !wcscmp(argv[w.woptind], L"choice")) {
+        if (arg_count == 1) {
+            streams.err.append_format(L"%ls: nothing to choose from\n", argv[0]);
             return STATUS_BUILTIN_ERROR;
         }
-        seeded = 1;
-        srand48_r(foo, &seed_buffer);
+        choice = true;
+        start = 1;
+        step = 1;
+        end = arg_count - 1;
     } else {
-        streams.err.append_format(_(L"%ls: Expected zero or one argument, got %d\n"), argv[0],
-                                  argc - w.woptind);
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        bool parse_error = false;
+        auto parse_ll = [&](const wchar_t *str) {
+            long long ll = fish_wcstoll(str);
+            if (errno) {
+                streams.err.append_format(L"%ls: %ls is not a valid integer\n", argv[0], str);
+                parse_error = true;
+            }
+            return ll;
+        };
+        auto parse_ull = [&](const wchar_t *str) {
+            unsigned long long ull = fish_wcstoull(str);
+            if (errno) {
+                streams.err.append_format(L"%ls: %ls is not a valid integer\n", argv[0], str);
+                parse_error = true;
+            }
+            return ull;
+        };
+        if (arg_count == 0) {
+            start = 0;
+            end = 32767;
+            step = 1;
+        } else if (arg_count == 1) {
+            long long seed = parse_ll(argv[w.woptind]);
+            if (parse_error) return STATUS_BUILTIN_ERROR;
+            engine.seed(static_cast<uint32_t>(seed));
+            return STATUS_BUILTIN_OK;
+        } else if (arg_count == 2) {
+            start = parse_ll(argv[w.woptind]);
+            step = 1;
+            end = parse_ll(argv[w.woptind + 1]);
+        } else if (arg_count == 3) {
+            start = parse_ll(argv[w.woptind]);
+            step = parse_ull(argv[w.woptind + 1]);
+            end = parse_ll(argv[w.woptind + 2]);
+        } else {
+            streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
+            return STATUS_BUILTIN_ERROR;
+        }
+
+        if (parse_error) {
+            return STATUS_BUILTIN_ERROR;
+        } else if (start >= end) {
+            streams.err.append_format(L"%ls: END must be greater than START\n", argv[0]);
+            return STATUS_BUILTIN_ERROR;
+        } else if (step == 0) {
+            streams.err.append_format(L"%ls: STEP must be a positive integer\n", argv[0]);
+            return STATUS_BUILTIN_ERROR;
+        }
+    }
+
+    // only for negative argument
+    auto safe_abs = [](long long ll) -> unsigned long long {
+        return -static_cast<unsigned long long>(ll);
+    };
+    long long real_end;
+    if (start >= 0 || end < 0) {
+        // 0 <= start <= end
+        long long diff = end - start;
+        // 0 <= diff <= LL_MAX
+        real_end = start + static_cast<long long>(diff / step);
+    } else {
+        // start < 0 <= end
+        unsigned long long abs_start = safe_abs(start);
+        unsigned long long diff = (end + abs_start);
+        real_end = diff / step - abs_start;
+    }
+
+    if (!choice && start == real_end) {
+        streams.err.append_format(L"%ls: range contains only one possible value\n", argv[0]);
         return STATUS_BUILTIN_ERROR;
+    }
+
+    std::uniform_int_distribution<long long> dist(start, real_end);
+    long long random = dist(engine);
+    long long result;
+    if (start >= 0) {
+        // 0 <= start <= random <= end
+        long long diff = random - start;
+        // 0 < step * diff <= end - start <= LL_MAX
+        result = start + static_cast<long long>(diff * step);
+    } else if (random < 0) {
+        // start <= random < 0
+        long long diff = random - start;
+        result = diff * step - safe_abs(start);
+    } else {
+        // start < 0 <= random
+        unsigned long long abs_start = safe_abs(start);
+        unsigned long long diff = (random + abs_start);
+        result = diff * step - abs_start;
+    }
+
+    if (choice) {
+        streams.out.append_format(L"%ls\n", argv[w.woptind + result]);
+    } else {
+        streams.out.append_format(L"%lld\n", result);
     }
     return STATUS_BUILTIN_OK;
 }

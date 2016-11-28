@@ -2461,7 +2461,10 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (!got_cd_path) {
-        if (errno == ENOTDIR) {
+        if (dir_in.missing_or_empty()) { 
+            streams.err.append_format(_(L"%ls: $HOME not set\n"), argv[0]);
+        }
+        else if (errno == ENOTDIR) {
             streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), argv[0],
                                       dir_in.c_str());
         } else if (errno == ENOENT) {

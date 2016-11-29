@@ -166,7 +166,7 @@ inline bool selection_direction_is_cardinal(selection_direction_t dir) {
     } while (0)
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.
-void exit_without_destructors(int code) __attribute__((noreturn));
+[[noreturn]] void exit_without_destructors(int code);
 
 /// Save the shell mode on startup so we can restore them on exit.
 extern struct termios shell_modes;
@@ -210,10 +210,11 @@ extern bool has_working_tty_timestamps;
         return retval;                                                                    \
     }
 
-/// Pause for input, then exit the program. If supported, print a backtrace first.
+// Pause for input, then exit the program. If supported, print a backtrace first.
 // The `return` will never be run  but silences oclint warnings. Especially when this is called
 // from within a `switch` block. As of the time I'm writing this oclint doesn't recognize the
 // `__attribute__((noreturn))` on the exit_without_destructors() function.
+// TODO: we use C++11 [[noreturn]] now, does that change things?
 #define FATAL_EXIT()                        \
     {                                       \
         char exit_read_buff;                \

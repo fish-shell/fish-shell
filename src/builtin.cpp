@@ -2444,12 +2444,12 @@ static int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     env_var_t dir_in;
     wcstring dir;
-    int res = STATUS_BUILTIN_OK;
 
     if (argv[1] == NULL) {
         dir_in = env_get_string(L"HOME");
         if (dir_in.missing_or_empty()) {
             streams.err.append_format(_(L"%ls: Could not find home directory\n"), argv[0]);
+            return STATUS_BUILTIN_ERROR;
         }
     } else {
         dir_in = env_var_t(argv[1]);
@@ -2461,10 +2461,7 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (!got_cd_path) {
-        if (dir_in.missing_or_empty()) { 
-            streams.err.append_format(_(L"%ls: $HOME not set\n"), argv[0]);
-        }
-        else if (errno == ENOTDIR) {
+        if (errno == ENOTDIR) {
             streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), argv[0],
                                       dir_in.c_str());
         } else if (errno == ENOENT) {
@@ -2473,18 +2470,17 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         } else if (errno == EROTTEN) {
             streams.err.append_format(_(L"%ls: '%ls' is a rotten symlink\n"), argv[0],
                                       dir_in.c_str());
-
         } else {
             streams.err.append_format(_(L"%ls: Unknown error trying to locate directory '%ls'\n"),
                                       argv[0], dir_in.c_str());
         }
 
-        if (!shell_is_interactive()) {
-            streams.err.append(parser.current_line());
-        }
+        if (!shell_is_interactive()) streams.err.append(parser.current_line());
 
-        res = 1;
-    } else if (wchdir(dir) != 0) {
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    if (wchdir(dir) != 0) {
         struct stat buffer;
         int status;
 
@@ -2500,13 +2496,15 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append(parser.current_line());
         }
 
-        res = 1;
-    } else if (!env_set_pwd()) {
-        res = 1;
-        streams.err.append_format(_(L"%ls: Could not set PWD variable\n"), argv[0]);
+        return STATUS_BUILTIN_ERROR;
     }
 
-    return res;
+    if (!env_set_pwd()) {
+        streams.err.append_format(_(L"%ls: Could not set PWD variable\n"), argv[0]);
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    return STATUS_BUILTIN_OK;
 }
 
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.

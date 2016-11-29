@@ -1194,7 +1194,7 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
             return STATUS_BUILTIN_ERROR;
         }
 
-        if ((wcsfuncname(new_func) != 0) || parser_keywords_is_reserved(new_func)) {
+        if (!wcsfuncname(new_func) || parser_keywords_is_reserved(new_func)) {
             streams.err.append_format(_(L"%ls: Illegal function name '%ls'\n"), argv[0],
                                       new_func.c_str());
             builtin_print_help(parser, streams, argv[0], streams.err);

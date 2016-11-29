@@ -35,12 +35,26 @@ frob
 # `name4` were created. See issue #2068. That behavior is not what we want.
 # The function name must always be the first argument of the `function`
 # command. See issue #2827.
-function name1 -a arg1 arg2 ; end
+function name1 -a arg1 arg2 ; echo hello; end
 function -a arg1 arg2 name2 ; end
-function name3 --argument-names arg1 arg2 ; end
+function name3 --argument-names arg1 arg2 ; echo hello; echo goodbye; end
 function --argument-names arg1 arg2 name4 ; end
 function name5 abc --argument-names def ; end
 functions -q name1; and echo "Function name1 found"
 functions -q name2; or echo "Function name2 not found as expected"
 functions -q name3; and echo "Function name3 found"
 functions -q name4; or echo "Function name4 not found as expected"
+
+# Verify that functions can be copied. Tests against regression of issue #3601.
+functions -c name1 name1a
+functions --copy name3 name3a
+functions -q name1a
+or echo "Function name1a not found as expected"
+functions -q name3a
+or echo "Function name3a not found as expected"
+echo Checking that the copied functions are identical other than the name
+diff (functions name1 | psub) (functions name1a | psub)
+diff (functions name3 | psub) (functions name3a | psub)
+# The diff would cause us to exit with a non-zero status even if it produces
+# the expected output.
+exit 0

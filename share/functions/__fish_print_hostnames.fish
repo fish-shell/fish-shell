@@ -9,9 +9,8 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         # Ignore zero ips
         getent hosts | string match -r -v '^0.0.0.0' | string replace -r '[0-9.]*\s*' '' | string split " "
     else if test -r /etc/hosts
-        # Ignore commented lines and functionally empty lines
-        string match -r -v '^\s*0.0.0.0|^\s*#|^\s*$' </etc/hosts # Strip comments
-| string replace -ra '#.*$' '' | string replace -r '[0-9.]*\s*' '' | string trim | string replace -ra '\s+' '\n'
+        # Ignore commented lines and functionally empty lines. Strip comments.
+        string match -r -v '^\s*0.0.0.0|^\s*#|^\s*$' </etc/hosts | string replace -ra '#.*$' '' | string replace -r '[0-9.]*\s*' '' | string trim | string replace -ra '\s+' '\n'
 end
 
 # Print nfs servers from /etc/fstab

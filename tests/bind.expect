@@ -92,6 +92,18 @@ expect_prompt -re {\r\nTAXT\r\n} {
     puts stderr "vi mode replace char, default timeout: long delay"
 }
 
+# Test deleting characters with 'x'.
+send "echo MORE-TEXT"
+send "\033"
+# Delay needed to allow fish to transition to vi "normal" mode.
+sleep 0.150
+send "xxxxx\r"
+expect_prompt -re {\r\nMORE\r\n} {
+    puts "vi mode delete char, default timeout: long delay"
+} unmatched {
+    puts stderr "vi mode delete char, default timeout: long delay"
+}
+
 # Verify that changing the escape timeout has an effect.
 send "set -g fish_escape_delay_ms 200\r"
 expect_prompt

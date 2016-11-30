@@ -129,6 +129,9 @@ int killpg(int pgr, int sig);
 /// Fallback implementation of flock in terms of fcntl
 /// Danger! The semantics of flock and fcntl locking are very different.
 /// Use with caution.
+// Ignore the cppcheck warning as this is the implementation that it is
+// warning about!
+// cppcheck-suppress flockSemanticsWarning
 int flock(int fd, int op);
 
 #define LOCK_SH 1       /* Shared lock.  */

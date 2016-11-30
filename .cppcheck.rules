@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 
+<![CDATA[
 <!-- Sadly we can't enable the following two rules since doing so causes false
      positives in standard header files rather than just project specific
      source files. If we can find a way to enable these rules by also
@@ -22,3 +23,13 @@
     </message>
 </rule>
 <--!>
+]]>
+
+<rule>
+    <pattern>flock \(</pattern>
+    <message>
+        <id>flockSemanticsWarning</id>
+        <severity>warning</severity>
+        <summary>flock has a fallback implemented in terms of fcntl; ensure that the fcntl semantics will apply (see http://0pointer.de/blog/projects/locking.html)</summary>
+    </message>
+</rule>

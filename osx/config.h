@@ -10,6 +10,9 @@
 /* Define to 1 if you have the <curses.h> header file. */
 #define HAVE_CURSES_H 1
 
+/* define if the compiler supports basic C++11 syntax */
+#define HAVE_CXX11 1
+
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #define HAVE_DIRENT_H 1
@@ -64,6 +67,9 @@
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_NDIR_H */
+
+/* Define to 1 if the shm_open() function exists */
+#define HAVE_SHM_OPEN 1
 
 /* Define to 1 if you have the <siginfo.h> header file. */
 /* #undef HAVE_SIGINFO_H */
@@ -189,9 +195,6 @@
 
 /* Perform string translations with gettext */
 /* #undef USE_GETTEXT */
-
-/* Define to 1 if the shm_open() function exists. */
-#define HAVE_SHM_OPEN 1
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE

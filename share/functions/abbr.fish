@@ -13,6 +13,9 @@ function abbr --description "Manage abbreviations"
             case '-a' '--add'
                 set new_mode add
                 set needs_arg multi
+            case '-r' '--rename'
+                set new_mode rename
+                set needs_arg double
             case '-e' '--erase'
                 set new_mode erase
                 set needs_arg single
@@ -54,6 +57,19 @@ function abbr --description "Manage abbreviations"
         set mode_arg $argv[1]
         set needs_arg no
         set -e argv[1]
+    else if test $needs_arg = double
+        # Pull the two parameters from argv.
+        # * leave argv non-empty, if there are more than two arguments
+        # * leave needs_arg set to double if there is not enough arguments
+        if set -q argv[1]
+            set param1 $argv[1]
+            set -e argv[1]
+            if set -q argv[1]
+                set param2 $argv[1]
+                set needs_arg no
+                set -e argv[1]
+            end
+        end
     else if test $needs_arg = multi
         set mode_arg $argv
         set needs_arg no
@@ -104,6 +120,32 @@ function abbr --description "Manage abbreviations"
                 set -U fish_user_abbreviations
             end
             set fish_user_abbreviations $fish_user_abbreviations "$key $value"
+            return 0
+
+        case 'rename'
+            set -l old_name $param1
+            set -l new_name $param2
+
+            # if the target name already exists, throw an error
+            if set -l idx (__fish_abbr_get_by_key $new_name)
+                printf ( _ "%s: abbreviation '%s' already exists, cannot rename\n" ) abbr $new_name >&2
+                return 2
+            end
+
+            # Because we later store "$key $value", there can't be any spaces in the key
+            if string match -q "* *" -- $new_name
+                printf ( _ "%s: abbreviation cannot have spaces in the key\n" ) abbr >&2
+                return 1
+            end
+
+            set -l idx (__fish_abbr_get_by_key $old_name)
+            or begin
+                printf ( _ "%s: no such abbreviation '%s'\n" ) abbr $old_name >&2
+                return 2
+            end
+
+            set -l value (string split " " -m 1 -- $fish_user_abbreviations[$idx])[2]
+            set fish_user_abbreviations[$idx] "$new_name $value"
             return 0
 
         case 'erase'

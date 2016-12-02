@@ -2,13 +2,12 @@ function __fish_print_VBox_vms
     set -l print_names true
     set -l print_uuids true
 
-    if set -q argv[1]
-        switch $argv[1]
-            case 'nouuids'
-                set print_uuids false
-            case 'nonames'
-                set print_names false
-        end
+    if contains -- nouuids $argv
+        set print_uuids false
+    end
+
+    if contains -- nonames $argv
+        set print_names false
     end
 
     set -l lines (VBoxManage list vms | string match -r '"(.*)" {(.*)}')

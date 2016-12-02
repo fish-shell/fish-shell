@@ -1813,7 +1813,7 @@
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2 $(SRCROOT)/osx/shared_headers/";
 				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "";
+				WARNING_CFLAGS = "-Wno-unreachable-code";
 			};
 			name = Debug;
 		};
@@ -1839,7 +1839,7 @@
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2 $(SRCROOT)/osx/shared_headers/";
 				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "";
+				WARNING_CFLAGS = "-Wno-unreachable-code";
 			};
 			name = Release;
 		};

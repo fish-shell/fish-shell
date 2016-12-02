@@ -12,7 +12,7 @@ function __fish_print_VBox_vms
     end
 
     set -l lines (VBoxManage list vms | string match -r '"(.*)" {(.*)}')
-    while set -q lines[2]
+    while set -q lines[3]
         if test $print_names = true
             printf '%s\tVirtual machine\n' $lines[2]
         end
@@ -21,8 +21,6 @@ function __fish_print_VBox_vms
             printf '%s\t%s virtual machine\n' $lines[3] $lines[2]
         end
 
-        set -e lines[1]
-        set -e lines[1]
-        set -e lines[1]
+        set -e lines[1..3]
     end
 end

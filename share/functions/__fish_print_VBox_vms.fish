@@ -10,7 +10,11 @@ function __fish_print_VBox_vms
         set print_names false
     end
 
+    # `VBoxManage list vms` output example:
+    # "Machine Name" {222537b0-1ea1-454a-abf0-ed0d6c3c6346}
+    # "Another Machine" {332537b4-1ea1-454a-abf0-ed1d6c3c2347}
     set -l lines (VBoxManage list vms | string match -r '"(.*)" {(.*)}')
+
     while set -q lines[3]
         if test $print_names = true
             printf '%s\tVirtual machine\n' $lines[2]

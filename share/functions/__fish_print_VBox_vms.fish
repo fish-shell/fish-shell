@@ -3,11 +3,11 @@ function __fish_print_VBox_vms
     set -l print_uuids true
 
     if set -q argv[1]
-        if test $argv[1] = 'nouuids'
-            set print_uuids false
-        end
-        if test $argv[1] = 'nonames'
-            set print_names false
+        switch $argv[1]
+            case 'nouuids'
+                set print_uuids false
+            case 'nonames'
+                set print_names false
         end
     end
 

@@ -59,7 +59,7 @@ complete -c netctl-auto -n "not __fish_seen_subcommand_from $cmds" -a enable -f 
 complete -c netctl-auto -n "not __fish_seen_subcommand_from $cmds" -a disable -f -d "Disable network profile for automatic selection"
 complete -c netctl-auto -n "not __fish_seen_subcommand_from $cmds" -a enable-all -f -d "Enable all profiles for automatic selection"
 complete -c netctl-auto -n "not __fish_seen_subcommand_from $cmds" -a disable-all -f -d "Disable all profiles for automatic selection"
-complete -c netctl-auto -n "not __fish_seen_subcommand_from $cmds" -a is-active -f -d "Check whether specified network profile is active"
+complete -c netctl-auto -n "not __fish_seen_subcommand_from $cmds" -a is-active -f -d "Check whether specified profile is active"
 complete -c netctl-auto -n "not __fish_seen_subcommand_from $cmds" -a is-enabled -f -d "Check whether specified profile is enabled"
 
 complete -c netctl-auto -n "__fish_seen_subcommand_from switch-to" -f -a "(__fish_print_netctl-auto_profile other disabled)" -d "Profile"

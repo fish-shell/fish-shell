@@ -1,5 +1,5 @@
 function __fish_print_pygmentize
-    set -l lines (pygmentize -L $argv[1] | string match -r '^(?:\* |    ).*(?:)$' | string replace -r '\* (.*):$' '$1' | string replace -r '^(.*)^\.' '$1' | string trim)
+    set -l lines (pygmentize -L $argv[1] | string match -r '^(?:\* |    ).*(?:)$' | string replace -r '\* (.*):$' '$1' | string replace -r '^(.*)\.$' '$1' | string trim)
 
     while set -q lines[2]
         set -l names (string split ", " $lines[1])

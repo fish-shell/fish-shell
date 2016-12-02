@@ -5,24 +5,24 @@ function __fish_print_VBox_vms
     if set -q argv[1]
         if test $argv[1] = 'nouuids'
             set print_uuids false
-	end
-	if test $argv[1] = 'nonames'
-	    set print_names false
-	end
+        end
+        if test $argv[1] = 'nonames'
+            set print_names false
+        end
     end
 
     set -l lines (VBoxManage list vms | string match -r '"(.*)" {(.*)}')
     while set -q lines[2]
-    	if test $print_names = true
-        	printf '%s\tVirtual machine\n' $lines[2]
-	end
+        if test $print_names = true
+            printf '%s\tVirtual machine\n' $lines[2]
+        end
 
-	if test $print_uuids = true
-		printf '%s\t%s virtual machine\n' $lines[3] $lines[2]
-	end
+        if test $print_uuids = true
+            printf '%s\t%s virtual machine\n' $lines[3] $lines[2]
+        end
 
         set -e lines[1]
         set -e lines[1]
-	set -e lines[1]
+        set -e lines[1]
     end
 end

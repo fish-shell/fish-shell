@@ -3,9 +3,9 @@ function __fish_print_pygmentize
 
     while set -q lines[2]
         set -l names (string split ", " $lines[1])
-	for name in $names
+        for name in $names
             printf '%s\t%s\n' $name $lines[2]
-	end
+        end
 
         set -e lines[1]
         set -e lines[1]

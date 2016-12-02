@@ -21,6 +21,7 @@ fi
 
 # Determine which man pages we don't want to generate.
 # on OS X, don't make a man page for open, since we defeat fish's open function on OS X.
+# This is also done in the Makefile, but the Xcode build doesn't use that
 CONDEMNED_PAGES=
 if test `uname` = 'Darwin'; then
 	CONDEMNED_PAGES="$CONDEMNED_PAGES open.1"

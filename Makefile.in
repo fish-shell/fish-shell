@@ -181,6 +181,17 @@ PROGRAMS := fish fish_indent fish_key_reader
 # Manual pages to install
 #
 MANUALS := $(addsuffix .1, $(addprefix share/man/man1/, $(PROGRAMS)))
+HELP_MANPAGES := $(wildcard share/man/man1/*.1)
+
+# Determine which man pages we don't want to install
+# On OS X, don't install a man page for open, since we defeat fish's open
+# function on OS X.
+# This is also done in build_tools/build_documentation.sh, but because the
+# tarball includes this page, we need to skip it in the Makefile too (see
+# https://github.com/fish-shell/fish-shell/issues/2561).
+ifeq ($(shell uname), Darwin)
+	HELP_MANPAGES := $(filter-out share/man/man1/open.1, $(HELP_MANPAGES))
+endif
 
 #
 # All translation message catalogs
@@ -675,7 +686,7 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 	done;
 	@echo "Installing $(bo)man pages$(sgr0)";
 	$v $(INSTALL) -m 644 share/groff/* $(DESTDIR)$(datadir)/fish/groff/
-	$v for i in $(wildcard share/man/man1/*.1); do \
+	$v for i in $(HELP_MANPAGES); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
 	done;
 	@echo "Installing helper tools";

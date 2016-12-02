@@ -67,8 +67,10 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     switch "$terminal"
         case auto
             if set -q KONSOLE_PROFILE_NAME
-                or set -q ITERM_PROFILE
                 set function __fish_cursor_konsole
+                set uses_echo 1
+            else if set -q ITERM_PROFILE
+                set function __fish_cursor_1337
                 set uses_echo 1
             else
                 set function __fish_cursor_xterm

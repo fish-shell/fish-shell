@@ -74,8 +74,6 @@ class pager_t {
         size_t comp_width;
         /// On-screen width of the description information.
         size_t desc_width;
-        /// Preferred total width.
-        size_t pref_width;
         /// Minimum acceptable width.
         size_t min_width;
 
@@ -85,8 +83,20 @@ class pager_t {
               representative(L""),
               comp_width(0),
               desc_width(0),
-              pref_width(0),
               min_width(0) {}
+
+        // Returns the width of the separator between the
+        // completion and description. If we have no description,
+        // we have no separator width
+        size_t separator_width() const {
+            return this->desc_width > 0 ? 4 : 0;
+        }
+
+        // Returns the preferred width, containing the sum of the
+        // width of the completion, separator, and description
+        size_t preferred_width() const {
+            return this->comp_width + this->desc_width + this->separator_width();
+        }
     };
 
    private:

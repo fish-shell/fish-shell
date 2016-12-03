@@ -88,10 +88,10 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
     UNUSED(column);
     UNUSED(row);
     UNUSED(rendering);
-    int comp_width, desc_width;
+    size_t comp_width, desc_width;
     line_t line_data;
 
-    if (c->pref_width <= width) {
+    if (c->preferred_width() <= width) {
         // The entry fits, we give it as much space as it wants.
         comp_width = c->comp_width;
         desc_width = c->desc_width;
@@ -293,9 +293,6 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
 
         // Compute desc_width.
         comp->desc_width = fish_wcswidth(comp->desc.c_str());
-
-        // Compute preferred width.
-        comp->pref_width = comp->comp_width + comp->desc_width + (comp->desc_width ? 4 : 0);
     }
 
     recalc_min_widths(infos);
@@ -417,7 +414,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
             if (lst.size() <= col * row_count + row) continue;
 
             c = &lst.at(col * row_count + row);
-            pref = c->pref_width;
+            pref = c->preferred_width();
             min = c->min_width;
 
             if (col != cols - 1) {

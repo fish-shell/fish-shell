@@ -43,8 +43,6 @@ class page_rendering_t {
 #define PAGER_UNDISCLOSED_MAX_ROWS 4
 
 typedef std::vector<completion_t> completion_list_t;
-page_rendering_t render_completions(const completion_list_t &raw_completions,
-                                    const wcstring &prefix);
 
 class pager_t {
     size_t available_term_width;

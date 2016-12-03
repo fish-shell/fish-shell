@@ -6,6 +6,7 @@
 #include <wchar.h>
 #include <wctype.h>
 #include <map>
+#include <numeric>
 #include <vector>
 
 #include "common.h"
@@ -43,17 +44,6 @@ static size_t divide_round_up(size_t numer, size_t denom) {
     return numer / denom + (has_rem ? 1 : 0);
 }
 
-/// This function calculates the minimum width for each completion entry in the specified
-/// array_list. This width depends on the terminal size, so this function should be called when the
-/// terminal changes size.
-void pager_t::recalc_min_widths(comp_info_list_t *lst) const {
-    for (size_t i = 0; i < lst->size(); i++) {
-        comp_t *c = &lst->at(i);
-        c->min_width = mini(c->desc_width, maxi((size_t)0, available_term_width / 3 - 2)) +
-                       mini(c->desc_width, maxi((size_t)0, available_term_width / 5 - 4)) + 4;
-    }
-}
-
 /// Print the specified string, but use at most the specified amount of space. If the whole string
 /// can't be fitted, ellipsize it.
 ///
@@ -62,7 +52,7 @@ void pager_t::recalc_min_widths(comp_info_list_t *lst) const {
 /// \param max the maximum space that may be used for printing
 /// \param has_more if this flag is true, this is not the entire string, and the string should be
 /// ellisiszed even if the string fits but takes up the whole space.
-static int print_max(const wcstring &str, highlight_spec_t color, int max, bool has_more,
+static int print_max(const wcstring &str, highlight_spec_t color, size_t max, bool has_more,
                      line_t *line) {
     int written = 0;
     for (size_t i = 0; i < str.size(); i++) {
@@ -155,7 +145,7 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
 /// \param row_stop the row after the last row to print
 /// \param prefix The string to print before each completion
 /// \param lst The list of completions to print
-void pager_t::completion_print(size_t cols, int *width_per_column, size_t row_start,
+void pager_t::completion_print(size_t cols, const int *width_per_column, size_t row_start,
                                size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst,
                                page_rendering_t *rendering) const {
     // Teach the rendering about the rows it printed.
@@ -294,8 +284,6 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
         // Compute desc_width.
         comp->desc_width = fish_wcswidth(comp->desc.c_str());
     }
-
-    recalc_min_widths(infos);
 }
 
 // Indicates if the given completion info passes any filtering we have.
@@ -356,29 +344,23 @@ void pager_t::set_term_size(int w, int h) {
     assert(h > 0);
     available_term_width = w;
     available_term_height = h;
-    recalc_min_widths(&completion_infos);
 }
 
-/// Try to print the list of completions l with the prefix prefix using cols as the number of
+/// Try to print the list of completions lst with the prefix prefix using cols as the number of
 /// columns. Return true if the completion list was printed, false if the terminal is too narrow for
 /// the specified number of columns. Always succeeds if cols is 1.
 bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const comp_info_list_t &lst,
                                    page_rendering_t *rendering, size_t suggested_start_row) const {
     // The calculated preferred width of each column.
-    int pref_width[PAGER_MAX_COLS] = {0};
-    // The calculated minimum width of each column.
-    int min_width[PAGER_MAX_COLS] = {0};
-    // If the list can be printed with this width, width will contain the width of each column.
-    int *width = pref_width;
-
+    int width_by_column[PAGER_MAX_COLS] = {0};
+    
     // Set to one if the list should be printed at this width.
     bool print = false;
 
     // Compute the effective term width and term height, accounting for disclosure.
     size_t term_width = this->available_term_width;
-    size_t term_height =
-        this->available_term_height - 1 -
-        (search_field_shown ? 1 : 0);  // we always subtract 1 to make room for a comment row
+    // FIXME arithmetic
+    size_t term_height = this->available_term_height - 1 - (search_field_shown ? 1 : 0);  // we always subtract 1 to make room for a comment row
     if (!this->fully_disclosed) {
         term_height = mini(term_height, (size_t)PAGER_UNDISCLOSED_MAX_ROWS);
     }
@@ -395,13 +377,10 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
 
     // If we have only one row remaining to disclose, then squelch the comment row. This prevents us
     // from consuming a line to show "...and 1 more row".
-    if (!this->fully_disclosed && rendering->remaining_to_disclose == 1) {
+    if (rendering->remaining_to_disclose == 1) {
         term_height += 1;
         rendering->remaining_to_disclose = 0;
     }
-
-    size_t pref_tot_width = 0;
-    size_t min_tot_width = 0;
 
     // Skip completions on tiny terminals.
     if (term_width < PAGER_MIN_WIDTH) return true;
@@ -409,35 +388,30 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     // Calculate how wide the list would be.
     for (size_t col = 0; col < cols; col++) {
         for (size_t row = 0; row < row_count; row++) {
-            int pref, min;
-            const comp_t *c;
-            if (lst.size() <= col * row_count + row) continue;
+            const size_t comp_idx = col * row_count + row;
+            if (comp_idx >= lst.size()) continue;
+            const comp_t *c = &lst.at(comp_idx);
 
-            c = &lst.at(col * row_count + row);
-            pref = c->preferred_width();
-            min = c->min_width;
+            // If we are not the last column, add two spaces after us
+            // to pad for the next column
+            const size_t column_padding = ((col+1 == cols) ? 0 : 2);
+            const size_t space_required = c->preferred_width() + column_padding;
 
-            if (col != cols - 1) {
-                pref += 2;
-                min += 2;
-            }
-            min_width[col] = maxi(min_width[col], min);
-            pref_width[col] = maxi(pref_width[col], pref);
+            width_by_column[col] = maxi(size_t(width_by_column[col]), space_required);
         }
-        min_tot_width += min_width[col];
-        pref_tot_width += pref_width[col];
     }
+
+    // Compute total preferred width
+    const size_t pref_tot_width = std::accumulate(width_by_column, width_by_column + cols, 0);
 
     // Force fit if one column.
     if (cols == 1) {
         if (pref_tot_width > term_width) {
-            pref_width[0] = term_width;
+            width_by_column[0] = term_width;
         }
-        width = pref_width;
         print = true;
     } else if (pref_tot_width <= term_width) {
         // Terminal is wide enough. Print the list!
-        width = pref_width;
         print = true;
     }
 
@@ -464,18 +438,17 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     assert(stop_row >= start_row);
     assert(stop_row <= row_count);
     assert(stop_row - start_row <= term_height);
-    completion_print(cols, width, start_row, stop_row, prefix, lst, rendering);
+    completion_print(cols, width_by_column, start_row, stop_row, prefix, lst, rendering);
 
     // Ellipsis helper string. Either empty or containing the ellipsis char.
     const wchar_t ellipsis_string[] = {ellipsis_char == L'\x2026' ? L'\x2026' : L'\0', L'\0'};
 
     // Add the progress line. It's a "more to disclose" line if necessary, or a row listing if
     // it's scrollable; otherwise ignore it.
+    // We should never have one row remaining to disclose (else we would have just disclosed it)
     wcstring progress_text;
-    if (rendering->remaining_to_disclose == 1) {
-        // I don't expect this case to ever happen.
-        progress_text = format_string(_(L"%lsand 1 more row"), ellipsis_string);
-    } else if (rendering->remaining_to_disclose > 1) {
+    assert(rendering->remaining_to_disclose != 1);
+    if (rendering->remaining_to_disclose > 1) {
         progress_text = format_string(_(L"%lsand %lu more rows"), ellipsis_string,
                                       (unsigned long)rendering->remaining_to_disclose);
     } else if (start_row > 0 || stop_row < row_count) {
@@ -491,9 +464,11 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
 
     if (!progress_text.empty()) {
         line_t &line = rendering->screen_data.add_line();
-        print_max(progress_text, highlight_spec_pager_progress |
-                                     highlight_make_background(highlight_spec_pager_progress),
-                  term_width, true /* has_more */, &line);
+        highlight_spec_t spec =
+            highlight_spec_pager_progress |
+            highlight_make_background(highlight_spec_pager_progress);
+        print_max(progress_text, spec, term_width,
+                  true /* has_more */, &line);
     }
 
     if (search_field_shown) {

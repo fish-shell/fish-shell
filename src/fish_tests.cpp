@@ -4010,6 +4010,44 @@ static void test_env_vars(void) {
     // TODO: Add tests for the locale and ncurses vars.
 }
 
+static void test_illegal_command_exit_code(void) {
+    say(L"Testing illegal command exit code");
+
+    struct command_result_tuple_t {
+        const wchar_t *txt;
+        int result;
+    };
+
+    const command_result_tuple_t tests[] = {
+        {L"echo", STATUS_BUILTIN_OK},
+        {L"pwd", STATUS_BUILTIN_OK},
+        {L")", STATUS_ILLEGAL_CMD},
+        {L") ", STATUS_ILLEGAL_CMD},
+        {L"*", STATUS_ILLEGAL_CMD},
+        {L"**", STATUS_ILLEGAL_CMD},
+        {L"%", STATUS_ILLEGAL_CMD},
+        {L"%test", STATUS_ILLEGAL_CMD},
+    // the following two inputs cause errors during tests for unknown reasons
+    // ("terminate called after throwing an instance of 'std::bad_alloc'")
+    //     {L"?", STATUS_ILLEGAL_CMD},
+    //     {L"abc?def", STATUS_ILLEGAL_CMD},
+        {L") ", STATUS_ILLEGAL_CMD}};
+
+    int res = 0;
+    const io_chain_t empty_ios;
+    parser_t &parser = parser_t::principal_parser();
+
+    size_t i = 0;
+    for (i = 0; i < sizeof tests / sizeof *tests; i++) {
+        res = parser.eval(tests[i].txt, empty_ios, TOP);
+
+        int exit_status = res ? STATUS_UNKNOWN_COMMAND : proc_get_last_status();
+        if (exit_status != tests[i].result) {
+            err(L"command '%ls': expected exit code %d , got %d", tests[i].txt, tests[i].result, exit_status);
+        }
+    }
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
@@ -4102,6 +4140,7 @@ int main(int argc, char **argv) {
     if (should_test_function("history_formats")) history_tests_t::test_history_formats();
     if (should_test_function("string")) test_string();
     if (should_test_function("env_vars")) test_env_vars();
+    if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

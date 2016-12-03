@@ -29,6 +29,9 @@
 /// The status code use when a wildcard had no matches.
 #define STATUS_UNMATCHED_WILDCARD 124
 
+/// The status code use when illegal command name is encountered.
+#define STATUS_ILLEGAL_CMD 123
+
 /// The status code used for normal exit in a  builtin.
 #define STATUS_BUILTIN_OK 0
 

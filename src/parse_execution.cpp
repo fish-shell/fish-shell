@@ -832,6 +832,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
     if (!expanded) {
         report_error(statement, ILLEGAL_CMD_ERR_MSG, cmd.c_str());
+        proc_set_last_status(STATUS_ILLEGAL_CMD);
         return parse_execution_errored;
     }
 

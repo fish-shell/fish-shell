@@ -51,29 +51,41 @@ static size_t divide_round_up(size_t numer, size_t denom) {
 /// \param color the color to apply to every printed character
 /// \param max the maximum space that may be used for printing
 /// \param has_more if this flag is true, this is not the entire string, and the string should be
-/// ellisiszed even if the string fits but takes up the whole space.
-static int print_max(const wcstring &str, highlight_spec_t color, size_t max, bool has_more,
-                     line_t *line) {
-    int written = 0;
+/// ellipsized even if the string fits but takes up the whole space.
+static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max,
+                        bool has_more, line_t *line) {
+    size_t remaining = max;
     for (size_t i = 0; i < str.size(); i++) {
         wchar_t c = str.at(i);
+        int iwidth_c = fish_wcwidth(c);
+        if (iwidth_c < 0) {
+            // skip non-printable characters
+            continue;
+        }
+        size_t width_c = size_t(iwidth_c);
 
-        if (written + fish_wcwidth(c) > max) break;
-        if ((written + fish_wcwidth(c) == max) && (has_more || i + 1 < str.size())) {
+        if (width_c > remaining) break;
+
+        if ((width_c == remaining) && (has_more || i + 1 < str.size())) {
             line->append(ellipsis_char, color);
-            written += fish_wcwidth(ellipsis_char);
+            int ellipsis_width = fish_wcwidth(ellipsis_char);
+            remaining -= std::min(remaining, size_t(ellipsis_width));
             break;
         }
 
         line->append(c, color);
-        written += fish_wcwidth(c);
+        assert(remaining >= width_c);
+        remaining -= width_c;
     }
-    return written;
+
+    // return how much we consumed
+    assert(remaining <= max);
+    return max - remaining;
 }
 
 /// Print the specified item using at the specified amount of space.
 line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, size_t row,
-                                      size_t column, int width, bool secondary, bool selected,
+                                      size_t column, size_t width, bool secondary, bool selected,
                                       page_rendering_t *rendering) const {
     UNUSED(column);
     UNUSED(row);
@@ -87,11 +99,20 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         desc_width = c->desc_width;
     } else {
         // The completion and description won't fit on the allocated space. Give a maximum of 2/3 of
-        // the space to the completion, and whatever is left to the description.
-        int desc_all = c->desc_width ? c->desc_width + 4 : 0;
+        // the space to the completion, and whatever is left to the description
+        // This expression is an overflow-safe way of calculating (width-4)*2/3
+        size_t width_minus_spacer = width - std::min(width, size_t(4));
+        size_t two_thirds_width = (width_minus_spacer/3)*2 + ((width_minus_spacer%3)*2)/3;
+        comp_width = std::min(c->comp_width, two_thirds_width);
 
-        comp_width = maxi(mini((int)c->comp_width, 2 * (width - 4) / 3), width - desc_all);
-        desc_width = c->desc_width ? width - 4 - comp_width : 0;
+        // If the description is short, give the completion the remaining space
+        size_t desc_punct_width = c->description_punctuated_width();
+        if (width > desc_punct_width) {
+            comp_width = std::max(comp_width, width - desc_punct_width);
+        }
+
+        // The description gets what's left
+        assert(comp_width <= width);
     }
 
     int bg_color = secondary ? highlight_spec_pager_secondary : highlight_spec_normal;
@@ -99,38 +120,43 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         bg_color = highlight_spec_search_match;
     }
 
-    int written = 0;
+    // Print the completion part
+    size_t comp_remaining = comp_width;
     for (size_t i = 0; i < c->comp.size(); i++) {
         const wcstring &comp = c->comp.at(i);
+        if (i > 0) {
+            comp_remaining -= print_max(PAGER_SPACER_STRING, highlight_spec_normal, comp_remaining,
+                      true /* has_more */, &line_data);
+        }
 
-        if (i != 0)
-            written += print_max(PAGER_SPACER_STRING, highlight_spec_normal, comp_width - written,
-                                 true /* has_more */, &line_data);
-
-        int packed_color = highlight_spec_pager_prefix | highlight_make_background(bg_color);
-        written += print_max(prefix, packed_color, comp_width - written, !comp.empty(), &line_data);
+        highlight_spec_t packed_color = highlight_spec_pager_prefix | highlight_make_background(bg_color);
+        comp_remaining -= print_max(prefix, packed_color, comp_remaining, !comp.empty(), &line_data);
 
         packed_color = highlight_spec_pager_completion | highlight_make_background(bg_color);
-        written +=
-            print_max(comp, packed_color, comp_width - written, i + 1 < c->comp.size(), &line_data);
+        comp_remaining -= print_max(comp, packed_color, comp_remaining, i + 1 < c->comp.size(), &line_data);
     }
 
-    if (desc_width) {
-        int packed_color = highlight_spec_pager_description | highlight_make_background(bg_color);
-        while (written < (width - desc_width - 2))  // the 2 here refers to the parenthesis below
-        {
-            written += print_max(L" ", packed_color, 1, false, &line_data);
+    size_t desc_remaining = width - comp_width + comp_remaining;
+    if (c->desc_width > 0 && desc_remaining > 4) {
+        highlight_spec_t desc_color = highlight_spec_pager_description | highlight_make_background(bg_color);
+        highlight_spec_t punct_color = highlight_spec_pager_completion | highlight_make_background(bg_color);
+
+        // always have at least two spaces to separate completion and description
+        desc_remaining -= print_max(L"  ", punct_color, 2, false, &line_data);
+
+        // right-justify the description by adding spaces
+        // the 2 here refers to the parenthesis below
+        while (desc_remaining > c->desc_width + 2) {
+            desc_remaining -= print_max(L" ", punct_color, 1, false, &line_data);
         }
-        // hack - this just works around the issue
-        print_max(L"(", highlight_spec_pager_completion | highlight_make_background(bg_color), 1,
-                  false, &line_data);
-        print_max(c->desc, packed_color, desc_width, false, &line_data);
-        print_max(L")", highlight_spec_pager_completion | highlight_make_background(bg_color), 1,
-                  false, &line_data);
+
+        assert(desc_remaining >= 2);
+        desc_remaining -= print_max(L"(", punct_color, 1, false, &line_data);
+        desc_remaining -= print_max(c->desc, desc_color, desc_remaining - 1, false, &line_data);
+        desc_remaining -= print_max(L")", punct_color, 1, false, &line_data);
     } else {
-        while (written < width) {
-            written += print_max(L" ", 0, 1, false, &line_data);
-        }
+        // No description, or it won't fit. Just add spaces.
+        print_max(wcstring(desc_remaining, L' '), 0, desc_remaining, false, &line_data);
     }
 
     return line_data;
@@ -352,7 +378,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     assert(cols > 0);
     // The calculated preferred width of each column.
     size_t width_by_column[PAGER_MAX_COLS] = {0};
-    
+
     // Compute the effective term width and term height, accounting for disclosure.
     size_t term_width = this->available_term_width;
     // FIXME arithmetic
@@ -470,10 +496,12 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         line_t *search_field = &rendering->screen_data.insert_line_at_index(0);
 
         // We limit the width to term_width - 1.
-        int search_field_written = print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal,
-                                             term_width - 1, false, search_field);
-        print_max(search_field_text, highlight_modifier_force_underline,
-                  term_width - search_field_written - 1, false, search_field);
+        size_t search_field_remaining = term_width - 1;
+        search_field_remaining -= print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal,
+                                            search_field_remaining, false, search_field);
+
+        search_field_remaining -= print_max(search_field_text, highlight_modifier_force_underline,
+                                            search_field_remaining, false, search_field);
     }
 
     return true;

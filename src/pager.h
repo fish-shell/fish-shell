@@ -85,17 +85,18 @@ class pager_t {
               desc_width(0)
         {}
 
-        // Returns the width of the separator between the
-        // completion and description. If we have no description,
-        // we have no separator width
-        size_t separator_width() const {
-            return this->desc_width > 0 ? 4 : 0;
+        // Our text looks like this:
+        // completion  (description)
+        // Two spaces separating, plus parens, yields 4 total extra space
+        // but only if we have a description of course
+        size_t description_punctuated_width() const {
+            return this->desc_width + (this->desc_width ? 4 : 0);
         }
 
         // Returns the preferred width, containing the sum of the
-        // width of the completion, separator, and description
+        // width of the completion, separator, description
         size_t preferred_width() const {
-            return this->comp_width + this->desc_width + this->separator_width();
+            return this->comp_width + this->description_punctuated_width();
         }
     };
 
@@ -122,7 +123,7 @@ class pager_t {
                           const wcstring &prefix, const comp_info_list_t &lst,
                           page_rendering_t *rendering) const;
     line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column,
-                                 int width, bool secondary, bool selected,
+                                 size_t width, bool secondary, bool selected,
                                  page_rendering_t *rendering) const;
 
    public:

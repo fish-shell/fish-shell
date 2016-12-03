@@ -26,6 +26,9 @@ typedef std::vector<comp_t> comp_info_list_t;
 /// The minimum width (in characters) the terminal must to show completions at all.
 #define PAGER_MIN_WIDTH 16
 
+/// Minimum height to show completions
+#define PAGER_MIN_HEIGHT 4
+
 /// The maximum number of columns of completion to attempt to fit onto the screen.
 #define PAGER_MAX_COLS 6
 
@@ -379,9 +382,11 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     // The calculated preferred width of each column.
     size_t width_by_column[PAGER_MAX_COLS] = {0};
 
+    // Skip completions on tiny terminals.
+    if (this->available_term_width < PAGER_MIN_WIDTH || this->available_term_height < PAGER_MIN_HEIGHT) return true;
+
     // Compute the effective term width and term height, accounting for disclosure.
     size_t term_width = this->available_term_width;
-    // FIXME arithmetic
     size_t term_height = this->available_term_height - 1 - (search_field_shown ? 1 : 0);  // we always subtract 1 to make room for a comment row
     if (!this->fully_disclosed) {
         term_height = mini(term_height, (size_t)PAGER_UNDISCLOSED_MAX_ROWS);
@@ -403,9 +408,6 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         term_height += 1;
         rendering->remaining_to_disclose = 0;
     }
-
-    // Skip completions on tiny terminals.
-    if (term_width < PAGER_MIN_WIDTH) return true;
 
     // Calculate how wide the list would be.
     for (size_t col = 0; col < cols; col++) {

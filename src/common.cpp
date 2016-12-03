@@ -533,11 +533,15 @@ ssize_t read_loop(int fd, void *buff, size_t count) {
     return result;
 }
 
+bool should_suppress_stderr_for_tests() {
+    // Hack to not print error messages in the tests.
+    return program_name && !wcscmp(program_name, TESTS_PROGRAM_NAME);
+}
+
 static bool should_debug(int level) {
     if (level > debug_level) return false;
 
-    // Hack to not print error messages in the tests.
-    if (program_name && !wcscmp(program_name, L"(ignore)")) return false;
+    if (should_suppress_stderr_for_tests()) return false;
 
     return true;
 }

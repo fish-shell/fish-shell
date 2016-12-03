@@ -820,7 +820,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     wcstring_list_t eval_errors;
     bool result = expr->evaluate(eval_errors);
-    if (!eval_errors.empty()) {
+    if (!eval_errors.empty() && ! should_suppress_stderr_for_tests()) {
         printf("test returned eval errors:\n");
         for (size_t i = 0; i < eval_errors.size(); i++) {
             printf("\t%ls\n", eval_errors.at(i).c_str());

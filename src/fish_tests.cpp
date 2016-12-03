@@ -4072,7 +4072,9 @@ int main(int argc, char **argv) {
     srand((unsigned int)time(NULL));
     configure_thread_assertions_for_testing();
 
-    program_name = L"(ignore)";
+    // Set the program name to this sentinel value
+    // This will prevent some misleading stderr output during the tests
+    program_name = TESTS_PROGRAM_NAME;
     s_arguments = argv + 1;
 
     struct utsname uname_info;

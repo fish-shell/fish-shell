@@ -373,6 +373,10 @@ string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
 /// Test if a list contains a string using a linear search.
 bool list_contains_string(const wcstring_list_t &list, const wcstring &str);
 
+// Check if we are running in the test mode, where we should suppress error output
+#define TESTS_PROGRAM_NAME L"(ignore)"
+bool should_suppress_stderr_for_tests();
+
 void assert_is_main_thread(const char *who);
 #define ASSERT_IS_MAIN_THREAD_TRAMPOLINE(x) assert_is_main_thread(x)
 #define ASSERT_IS_MAIN_THREAD() ASSERT_IS_MAIN_THREAD_TRAMPOLINE(__FUNCTION__)

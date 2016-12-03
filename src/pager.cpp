@@ -140,12 +140,12 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
 /// style.
 ///
 /// \param cols number of columns to print in
-/// \param width_per_column An array specifying the width of each column
+/// \param width_by_column An array specifying the width of each column
 /// \param row_start The first row to print
 /// \param row_stop the row after the last row to print
 /// \param prefix The string to print before each completion
 /// \param lst The list of completions to print
-void pager_t::completion_print(size_t cols, const int *width_per_column, size_t row_start,
+void pager_t::completion_print(size_t cols, const size_t *width_by_column, size_t row_start,
                                size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst,
                                page_rendering_t *rendering) const {
     // Teach the rendering about the rows it printed.
@@ -154,14 +154,12 @@ void pager_t::completion_print(size_t cols, const int *width_per_column, size_t 
     rendering->row_start = row_start;
     rendering->row_end = row_stop;
 
-    size_t rows = (lst.size() - 1) / cols + 1;
+    size_t rows = divide_round_up(lst.size(), cols);
 
     size_t effective_selected_idx = this->visual_selected_completion_index(rows, cols);
 
     for (size_t row = row_start; row < row_stop; row++) {
         for (size_t col = 0; col < cols; col++) {
-            int is_last = (col == (cols - 1));
-
             if (lst.size() <= col * rows + row) continue;
 
             size_t idx = col * rows + row;
@@ -171,7 +169,7 @@ void pager_t::completion_print(size_t cols, const int *width_per_column, size_t 
             // Print this completion on its own "line".
             line_t line = completion_print_item(
                 prefix, el, row, col,
-                width_per_column[col] - (is_last ? 0 : PAGER_SPACER_STRING_WIDTH), row % 2,
+                width_by_column[col], row % 2,
                 is_selected, rendering);
 
             // If there's more to come, append two spaces.
@@ -351,12 +349,10 @@ void pager_t::set_term_size(int w, int h) {
 /// the specified number of columns. Always succeeds if cols is 1.
 bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const comp_info_list_t &lst,
                                    page_rendering_t *rendering, size_t suggested_start_row) const {
+    assert(cols > 0);
     // The calculated preferred width of each column.
-    int width_by_column[PAGER_MAX_COLS] = {0};
+    size_t width_by_column[PAGER_MAX_COLS] = {0};
     
-    // Set to one if the list should be printed at this width.
-    bool print = false;
-
     // Compute the effective term width and term height, accounting for disclosure.
     size_t term_width = this->available_term_width;
     // FIXME arithmetic
@@ -390,31 +386,24 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         for (size_t row = 0; row < row_count; row++) {
             const size_t comp_idx = col * row_count + row;
             if (comp_idx >= lst.size()) continue;
-            const comp_t *c = &lst.at(comp_idx);
-
-            // If we are not the last column, add two spaces after us
-            // to pad for the next column
-            const size_t column_padding = ((col+1 == cols) ? 0 : 2);
-            const size_t space_required = c->preferred_width() + column_padding;
-
-            width_by_column[col] = maxi(size_t(width_by_column[col]), space_required);
+            const comp_t &c = lst.at(comp_idx);
+            width_by_column[col] = std::max(width_by_column[col], c.preferred_width());
         }
     }
 
-    // Compute total preferred width
-    const size_t pref_tot_width = std::accumulate(width_by_column, width_by_column + cols, 0);
-
+    bool print;
+    assert(cols >= 1);
     // Force fit if one column.
     if (cols == 1) {
-        if (pref_tot_width > term_width) {
-            width_by_column[0] = term_width;
-        }
+        width_by_column[0] = std::min(width_by_column[0], term_width);
         print = true;
-    } else if (pref_tot_width <= term_width) {
-        // Terminal is wide enough. Print the list!
-        print = true;
+    } else {
+        // Compute total preferred width, plus spacing
+        assert(cols > 0);
+        size_t total_width_needed = std::accumulate(width_by_column, width_by_column + cols, 0);
+        total_width_needed += (cols - 1) * PAGER_SPACER_STRING_WIDTH;
+        print = (total_width_needed <= term_width);
     }
-
     if (!print) {
         return false;  // no need to continue
     }

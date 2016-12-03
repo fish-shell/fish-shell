@@ -118,7 +118,7 @@ class pager_t {
 
     bool completion_info_passes_filter(const comp_t &info) const;
 
-    void completion_print(size_t cols, const int *width_per_column, size_t row_start, size_t row_stop,
+    void completion_print(size_t cols, const size_t *width_per_column, size_t row_start, size_t row_stop,
                           const wcstring &prefix, const comp_info_list_t &lst,
                           page_rendering_t *rendering) const;
     line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column,

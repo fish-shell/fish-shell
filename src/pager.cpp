@@ -55,8 +55,8 @@ static size_t divide_round_up(size_t numer, size_t denom) {
 /// \param max the maximum space that may be used for printing
 /// \param has_more if this flag is true, this is not the entire string, and the string should be
 /// ellipsized even if the string fits but takes up the whole space.
-static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max,
-                        bool has_more, line_t *line) {
+static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max, bool has_more,
+                        line_t *line) {
     size_t remaining = max;
     for (size_t i = 0; i < str.size(); i++) {
         wchar_t c = str.at(i);
@@ -105,7 +105,7 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         // the space to the completion, and whatever is left to the description
         // This expression is an overflow-safe way of calculating (width-4)*2/3
         size_t width_minus_spacer = width - std::min(width, size_t(4));
-        size_t two_thirds_width = (width_minus_spacer/3)*2 + ((width_minus_spacer%3)*2)/3;
+        size_t two_thirds_width = (width_minus_spacer / 3) * 2 + ((width_minus_spacer % 3) * 2) / 3;
         comp_width = std::min(c->comp_width, two_thirds_width);
 
         // If the description is short, give the completion the remaining space
@@ -129,20 +129,25 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         const wcstring &comp = c->comp.at(i);
         if (i > 0) {
             comp_remaining -= print_max(PAGER_SPACER_STRING, highlight_spec_normal, comp_remaining,
-                      true /* has_more */, &line_data);
+                                        true /* has_more */, &line_data);
         }
 
-        highlight_spec_t packed_color = highlight_spec_pager_prefix | highlight_make_background(bg_color);
-        comp_remaining -= print_max(prefix, packed_color, comp_remaining, !comp.empty(), &line_data);
+        highlight_spec_t packed_color =
+            highlight_spec_pager_prefix | highlight_make_background(bg_color);
+        comp_remaining -=
+            print_max(prefix, packed_color, comp_remaining, !comp.empty(), &line_data);
 
         packed_color = highlight_spec_pager_completion | highlight_make_background(bg_color);
-        comp_remaining -= print_max(comp, packed_color, comp_remaining, i + 1 < c->comp.size(), &line_data);
+        comp_remaining -=
+            print_max(comp, packed_color, comp_remaining, i + 1 < c->comp.size(), &line_data);
     }
 
     size_t desc_remaining = width - comp_width + comp_remaining;
     if (c->desc_width > 0 && desc_remaining > 4) {
-        highlight_spec_t desc_color = highlight_spec_pager_description | highlight_make_background(bg_color);
-        highlight_spec_t punct_color = highlight_spec_pager_completion | highlight_make_background(bg_color);
+        highlight_spec_t desc_color =
+            highlight_spec_pager_description | highlight_make_background(bg_color);
+        highlight_spec_t punct_color =
+            highlight_spec_pager_completion | highlight_make_background(bg_color);
 
         // always have at least two spaces to separate completion and description
         desc_remaining -= print_max(L"  ", punct_color, 2, false, &line_data);
@@ -196,10 +201,8 @@ void pager_t::completion_print(size_t cols, const size_t *width_by_column, size_
             bool is_selected = (idx == effective_selected_idx);
 
             // Print this completion on its own "line".
-            line_t line = completion_print_item(
-                prefix, el, row, col,
-                width_by_column[col], row % 2,
-                is_selected, rendering);
+            line_t line = completion_print_item(prefix, el, row, col, width_by_column[col], row % 2,
+                                                is_selected, rendering);
 
             // If there's more to come, append two spaces.
             if (col + 1 < cols) {
@@ -383,11 +386,15 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     size_t width_by_column[PAGER_MAX_COLS] = {0};
 
     // Skip completions on tiny terminals.
-    if (this->available_term_width < PAGER_MIN_WIDTH || this->available_term_height < PAGER_MIN_HEIGHT) return true;
+    if (this->available_term_width < PAGER_MIN_WIDTH ||
+        this->available_term_height < PAGER_MIN_HEIGHT)
+        return true;
 
     // Compute the effective term width and term height, accounting for disclosure.
     size_t term_width = this->available_term_width;
-    size_t term_height = this->available_term_height - 1 - (search_field_shown ? 1 : 0);  // we always subtract 1 to make room for a comment row
+    size_t term_height =
+        this->available_term_height - 1 -
+        (search_field_shown ? 1 : 0);  // we always subtract 1 to make room for a comment row
     if (!this->fully_disclosed) {
         term_height = mini(term_height, (size_t)PAGER_UNDISCLOSED_MAX_ROWS);
     }
@@ -481,11 +488,9 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
 
     if (!progress_text.empty()) {
         line_t &line = rendering->screen_data.add_line();
-        highlight_spec_t spec =
-            highlight_spec_pager_progress |
-            highlight_make_background(highlight_spec_pager_progress);
-        print_max(progress_text, spec, term_width,
-                  true /* has_more */, &line);
+        highlight_spec_t spec = highlight_spec_pager_progress |
+                                highlight_make_background(highlight_spec_pager_progress);
+        print_max(progress_text, spec, term_width, true /* has_more */, &line);
     }
 
     if (search_field_shown) {

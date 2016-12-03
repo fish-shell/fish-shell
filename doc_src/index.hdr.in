@@ -865,6 +865,8 @@ If `fish` encounters a problem while executing a command, the status variable ma
 
 - 1 is the generally the exit status from fish builtin commands if they were supplied with invalid arguments
 
+- 123 means that the command was not executed because the command name contained invalid characters
+
 - 124 means that the command was not executed because none of the wildcards in the command produced any matches
 
 - 125 means that while an executable with the specified name was located, the operating system could not actually execute the command

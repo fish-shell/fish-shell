@@ -1627,6 +1627,106 @@ static void test_pager_navigation() {
     }
 }
 
+struct pager_layout_testcase_t {
+    size_t width;
+    const wchar_t *expected;
+
+    // Run ourselves as a test case
+    // Set our data on the pager, and then check the rendering
+    // We should have one line, and it should have our expected text
+    void run(pager_t &pager) const {
+        pager.set_term_size(this->width, 24);
+        page_rendering_t rendering = pager.render();
+        const screen_data_t &sd = rendering.screen_data;
+        do_test(sd.line_count() == 1);
+        if (sd.line_count() > 0) {
+            wcstring expected = this->expected;
+
+            // hack: handle the case where ellipsis is not L'\x2026'
+            if (ellipsis_char != L'\x2026') {
+                std::replace(expected.begin(), expected.end(), L'\x2026', ellipsis_char);
+            }
+
+            wcstring text = sd.line(0).to_string();
+            if (text != expected) {
+                fprintf(stderr, "width %lu got <%ls>, expected <%ls>\n", this->width, text.c_str(), expected.c_str());
+            }
+            do_test(text == expected);
+        }
+    }
+};
+
+static void test_pager_layout() {
+    // These tests are woefully incomplete
+    // They only test the truncation logic for a single completion
+    say(L"Testing pager layout");
+    pager_t pager;
+
+    // These test cases have equal completions and descriptions
+    const completion_t c1(L"abcdefghij", L"1234567890");
+    pager.set_completions(completion_list_t(1, c1));
+    const pager_layout_testcase_t testcases1[] = {
+        {26, L"abcdefghij  (1234567890)"},
+        {25, L"abcdefghij  (1234567890)"},
+        {24, L"abcdefghij  (1234567890)"},
+        {23, L"abcdefghij  (12345678…)"},
+        {22, L"abcdefghij  (1234567…)"},
+        {21, L"abcdefghij  (123456…)"},
+        {20, L"abcdefghij  (12345…)"},
+        {19, L"abcdefghij  (1234…)"},
+        {18, L"abcdefgh…  (1234…)"},
+        {17, L"abcdefg…  (1234…)"},
+        {16, L"abcdefg…  (123…)"},
+        {0, NULL} // sentinel terminator
+    };
+    for (size_t i=0; testcases1[i].expected != NULL; i++) {
+        testcases1[i].run(pager);
+    }
+
+    // These test cases have heavyweight completions
+    const completion_t c2(L"abcdefghijklmnopqrs", L"1");
+    pager.set_completions(completion_list_t(1, c2));
+    const pager_layout_testcase_t testcases2[] = {
+        {26, L"abcdefghijklmnopqrs  (1)"},
+        {25, L"abcdefghijklmnopqrs  (1)"},
+        {24, L"abcdefghijklmnopqrs  (1)"},
+        {23, L"abcdefghijklmnopq…  (1)"},
+        {22, L"abcdefghijklmnop…  (1)"},
+        {21, L"abcdefghijklmno…  (1)"},
+        {20, L"abcdefghijklmn…  (1)"},
+        {19, L"abcdefghijklm…  (1)"},
+        {18, L"abcdefghijkl…  (1)"},
+        {17, L"abcdefghijk…  (1)"},
+        {16, L"abcdefghij…  (1)"},
+        {0, NULL} // sentinel terminator
+    };
+    for (size_t i=0; testcases2[i].expected != NULL; i++) {
+        testcases2[i].run(pager);
+    }
+
+    // These test cases have no descriptions
+    const completion_t c3(L"abcdefghijklmnopqrst", L"");
+    pager.set_completions(completion_list_t(1, c3));
+    const pager_layout_testcase_t testcases3[] = {
+        {26, L"abcdefghijklmnopqrst"},
+        {25, L"abcdefghijklmnopqrst"},
+        {24, L"abcdefghijklmnopqrst"},
+        {23, L"abcdefghijklmnopqrst"},
+        {22, L"abcdefghijklmnopqrst"},
+        {21, L"abcdefghijklmnopqrst"},
+        {20, L"abcdefghijklmnopqrst"},
+        {19, L"abcdefghijklmnopqr…"},
+        {18, L"abcdefghijklmnopq…"},
+        {17, L"abcdefghijklmnop…"},
+        {16, L"abcdefghijklmno…"},
+        {0, NULL} // sentinel terminator
+    };
+    for (size_t i=0; testcases3[i].expected != NULL; i++) {
+        testcases3[i].run(pager);
+    }
+}
+
+
 enum word_motion_t { word_motion_left, word_motion_right };
 static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
                                const wcstring &test) {
@@ -4123,6 +4223,7 @@ int main(int argc, char **argv) {
     if (should_test_function("test")) test_test();
     if (should_test_function("path")) test_path();
     if (should_test_function("pager_navigation")) test_pager_navigation();
+    if (should_test_function("pager_layout")) test_pager_layout();
     if (should_test_function("word_motion")) test_word_motion();
     if (should_test_function("is_potential_path")) test_is_potential_path();
     if (should_test_function("colors")) test_colors();

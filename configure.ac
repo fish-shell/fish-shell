@@ -110,7 +110,7 @@ AX_CXX_COMPILE_STDCXX_11(noext,mandatory)
 # Tell autoconf to create config.h header
 #
 AC_CONFIG_HEADERS(config.h)
-AC_CANONICAL_TARGET
+AC_CANONICAL_HOST
 
 
 #
@@ -250,6 +250,18 @@ AC_CHECK_FILES([/proc/self/stat])
 AC_DEFINE([NCURSES_NOMACROS], [1], [Define to 1 to disable ncurses macros that conflict with the STL])
 AC_DEFINE([NOMACROS], [1], [Define to 1 to disable curses macros that conflict with the STL])
 
+# Threading is excitingly broken on Solaris without adding -pthread to CXXFLAGS
+# Only support GCC for now
+dnl Ideally we would use the AX_PTHREAD macro here, but it's GPL3-licensed
+dnl ACX_PTHREAD is way too old and seems to break the OS X build
+dnl Both only check with AC_LANG(C) in any case
+case $host_os in
+  solaris*)
+  CXXFLAGS="$CXXFLAGS -pthread"
+  CFLAGS="$CFLAGS -pthread"
+  ;;
+esac
+
 #
 # Check presense of various libraries. This is done on a per-binary
 # level, since including various extra libraries in all binaries only
@@ -310,9 +322,65 @@ AC_CHECK_FUNCS( futimes )
 AC_CHECK_FUNCS( wcslcpy lrand48_r killpg )
 AC_CHECK_FUNCS( backtrace_symbols getifaddrs )
 AC_CHECK_FUNCS( futimens clock_gettime )
-AC_CHECK_FUNCS( getpwent )
+AC_CHECK_FUNCS( getpwent flock )
 
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )
+
+dnl AC_CHECK_FUNCS uses C linkage, but sometimes (Solaris!) the behaviour is
+dnl different with C++.
+AC_MSG_CHECKING([for wcsdup])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ wchar_t* foo = wcsdup(L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_WCSDUP, 1, Define to 1 if you have the `wcsdup' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for std::wcsdup])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ wchar_t* foo = std::wcsdup(L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_STD__WCSDUP, 1, Define to 1 if you have the `std::wcsdup' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for wcscasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = wcscasecmp(L"", L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_WCSCASECMP, 1, Define to 1 if you have the `wcscasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for std::wcscasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = std::wcscasecmp(L"", L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_STD__WCSCASECMP, 1, Define to 1 if you have the `std::wcscasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for wcsncasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = wcsncasecmp(L"", L"", 0); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_WCSNCASECMP, 1, Define to 1 if you have the `wcsncasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for std::wcsncasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = std::wcsncasecmp(L"", L"", 0); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_STD__WCSNCASECMP, 1, Define to 1 if you have the `std::wcsncasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
 
 if test x$local_gettext != xno; then
   AC_CHECK_FUNCS( gettext )
@@ -479,6 +547,33 @@ if test "x$tparm_solaris_kludge" = "xyes"; then
 else
   AC_MSG_RESULT(no)
 fi
+
+# Check that threads actually work on Solaris
+AC_MSG_CHECKING([for threadsafe errno])
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+    #include <errno.h>
+    #include <pthread.h>
+    #include <signal.h>
+
+    void *thread1_func(void *p_arg)
+    {
+            errno = 1;
+    }
+    ],[
+    errno = 0;
+    pthread_t t1;
+    pthread_create(&t1, NULL, thread1_func, NULL);
+    pthread_join(t1, NULL);
+    return errno;
+  ])],
+  [AC_MSG_RESULT(yes)],
+  [
+    AC_MSG_RESULT(no)
+    AC_MSG_FAILURE([errno is not threadsafe - check your compiler settings])
+  ],
+  [AC_MSG_RESULT(crosscompiling, skipped)]
+)
 
 pcre2_min_version=10.21
 EXTRA_PCRE2=

@@ -842,10 +842,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return True
 
     def do_save_abbreviation(self, abbreviation):
-        out, err = run_fish_cmd('abbr --add \'%s %s\'' % (
+        out, err = run_fish_cmd('abbr --add \'%s\' \'%s\'' % (
             abbreviation['word'], abbreviation['phrase']))
-        if err:
-            return err
+        if out or err:
+            return out
         else:
             return True
 

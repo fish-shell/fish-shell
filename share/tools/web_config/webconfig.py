@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import unicode_literals
+from __future__ import print_function
 import binascii
 import cgi
 import glob
@@ -40,7 +41,6 @@ except ImportError:
 
 
 def run_fish_cmd(text):
-    from subprocess import PIPE
     # Ensure that fish is using UTF-8.
     ctype = os.environ.get("LC_ALL", os.environ.get("LC_CTYPE",
                                                     os.environ.get("LANG")))
@@ -51,12 +51,13 @@ def run_fish_cmd(text):
         # Fish makes the same assumption in config.fish
         env = os.environ.copy()
         env.update(LC_CTYPE="en_US.UTF-8", LANG="en_US.UTF-8")
-    p = subprocess.Popen([FISH_BIN_PATH], stdin=PIPE, stdout=PIPE, stderr=PIPE,
+    p = subprocess.Popen([FISH_BIN_PATH], stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                          env=env)
     out, err = p.communicate(text.encode('utf-8'))
     out = out.decode('utf-8', 'replace')
     err = err.decode('utf-8', 'replace')
-    return(out, err)
+    return out, err
 
 
 def escape_fish_cmd(text):
@@ -836,18 +837,18 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_remove_abbreviation(self, abbreviation):
         out, err = run_fish_cmd('abbr --erase %s' % abbreviation['word'])
-        if out or err:
+        if err:
             return err
         else:
-            return True
+            return None
 
     def do_save_abbreviation(self, abbreviation):
         out, err = run_fish_cmd('abbr --add \'%s\' \'%s\'' % (
             abbreviation['word'], abbreviation['phrase']))
-        if out or err:
-            return out
+        if err:
+            return err
         else:
-            return True
+            return None
 
     def secure_startswith(self, haystack, needle):
         if len(haystack) < len(needle):
@@ -975,17 +976,17 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 output = ["Unable to set prompt"]
         elif p == '/save_abbreviation/':
-            r = self.do_save_abbreviation(postvars)
-            if r:
-                output = ["OK"]
+            errmsg = self.do_save_abbreviation(postvars)
+            if errmsg:
+                output = [errmsg]
             else:
-                output = [r]
+                output = ["OK"]
         elif p == '/remove_abbreviation/':
-            r = self.do_remove_abbreviation(postvars)
-            if r:
-                output = ["OK"]
+            errmsg = self.do_remove_abbreviation(postvars)
+            if errmsg:
+                output = [errmsg]
             else:
-                output = [r]
+                output = ["OK"]
         else:
             return self.send_error(404)
 

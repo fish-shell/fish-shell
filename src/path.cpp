@@ -266,7 +266,7 @@ static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring 
     } else {
         const env_var_t home = env_get_string(L"HOME", ENV_GLOBAL | ENV_EXPORT);
         if (!home.missing_or_empty()) {
-            path = home + L"/.config/fish";
+            path = home + (which_dir == L"config" ? L"/.config/fish" : L"/.local/share/fish");
             if (create_directory(path) != -1) {
                 path_done = true;
             } else {

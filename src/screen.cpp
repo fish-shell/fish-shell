@@ -123,8 +123,7 @@ static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_len
         // Consider just <esc>k to be the code.
         *resulting_length = 2;
     } else {
-        const wchar_t *escape_sequence_end =
-            screen_name_end + wcslen(screen_name_end_sentinel);
+        const wchar_t *escape_sequence_end = screen_name_end + wcslen(screen_name_end_sentinel);
         *resulting_length = escape_sequence_end - code;
     }
     return true;

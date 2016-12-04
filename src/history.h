@@ -327,7 +327,8 @@ class history_search_t {
     }
 
     // Default constructor.
-    history_search_t() : history(), term(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), case_sensitive(true) {}
+    history_search_t()
+        : history(), term(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), case_sensitive(true) {}
 };
 
 // Init history library. The history file won't actually be loaded until the first time a history

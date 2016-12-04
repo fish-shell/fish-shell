@@ -595,8 +595,8 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
         // Try taking the lock, if necessary. If we failed, we may be on lockless NFS, etc.; in that
         // case we pretend we succeeded. See the comment in save_to_path for the rationale.
         if (needs_lock) {
-            // This is safe in terms of the fallback function implemented in terms of fcntl: only ever
-            // run on the main thread, and protected by the universal variable lock
+            // This is safe in terms of the fallback function implemented in terms of fcntl: only
+            // ever run on the main thread, and protected by the universal variable lock.
             // cppcheck-suppress flockSemanticsWarning
             while (flock(fd, LOCK_EX) < 0) {
                 /* error */

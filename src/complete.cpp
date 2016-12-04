@@ -676,7 +676,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
                                               NULL);
         if (result != EXPAND_ERROR && this->wants_descriptions()) {
             this->complete_cmd_desc(str_cmd);
-            }
+        }
     }
 
     if (use_implicit_cd) {
@@ -961,7 +961,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
         }
 
         for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end();
-                ++oiter) {
+             ++oiter) {
             const complete_entry_opt_t *o = &*oiter;
             // If this entry is for the base command, check if any of the arguments match.
             if (!this->condition_test(o->condition)) continue;
@@ -1240,9 +1240,8 @@ bool completer_t::try_complete_user(const wcstring &str) {
             wcstring name = format_string(L"~%ls", pw_name);
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
 
-            append_completion(&this->completions, name, desc, COMPLETE_REPLACES_TOKEN |
-                                                                    COMPLETE_DONT_ESCAPE |
-                                                                    COMPLETE_NO_SPACE);
+            append_completion(&this->completions, name, desc,
+                              COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
             result = true;
         }
     }

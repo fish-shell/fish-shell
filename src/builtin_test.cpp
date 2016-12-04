@@ -167,7 +167,8 @@ class test_parser {
     expression *parse_binary_primary(unsigned int start, unsigned int end);
     expression *parse_just_a_string(unsigned int start, unsigned int end);
 
-    static expression *parse_args(const wcstring_list_t &args, wcstring &err, wchar_t *program_name);
+    static expression *parse_args(const wcstring_list_t &args, wcstring &err,
+                                  wchar_t *program_name);
 };
 
 struct range_t {
@@ -538,7 +539,8 @@ expression *test_parser::parse_expression(unsigned int start, unsigned int end) 
     }
 }
 
-expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err, wchar_t *program_name) {
+expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err,
+                                    wchar_t *program_name) {
     // Empty list and one-arg list should be handled by caller.
     assert(args.size() > 1);
 
@@ -820,7 +822,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     wcstring_list_t eval_errors;
     bool result = expr->evaluate(eval_errors);
-    if (!eval_errors.empty() && ! should_suppress_stderr_for_tests()) {
+    if (!eval_errors.empty() && !should_suppress_stderr_for_tests()) {
         printf("test returned eval errors:\n");
         for (size_t i = 0; i < eval_errors.size(); i++) {
             printf("\t%ls\n", eval_errors.at(i).c_str());

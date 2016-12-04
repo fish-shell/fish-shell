@@ -55,9 +55,7 @@ struct line_t {
         colors.insert(colors.end(), line.colors.begin(), line.colors.end());
     }
 
-    wcstring to_string() const {
-        return wcstring(this->text.begin(), this->text.end());
-    }
+    wcstring to_string() const { return wcstring(this->text.begin(), this->text.end()); }
 };
 
 /// A class representing screen contents.

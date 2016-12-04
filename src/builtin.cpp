@@ -826,8 +826,10 @@ static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **ar
 
     w.woptind = 0;
 
-    static const struct woption long_options[] = {
-         {L"quiet", no_argument, 0, 'q'}, {L"search", no_argument, 0, 's'}, {L"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
+    static const struct woption long_options[] = {{L"quiet", no_argument, NULL, 'q'},
+                                                  {L"search", no_argument, NULL, 's'},
+                                                  {L"help", no_argument, NULL, 'h'},
+                                                  {NULL, 0, NULL, 0}};
 
     while (1) {
         int opt_index = 0;

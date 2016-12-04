@@ -75,15 +75,9 @@ class pager_t {
         /// On-screen width of the description information.
         size_t desc_width;
         /// Minimum acceptable width.
-        //size_t min_width;
+        // size_t min_width;
 
-        comp_t()
-            : comp(),
-              desc(),
-              representative(L""),
-              comp_width(0),
-              desc_width(0)
-        {}
+        comp_t() : comp(), desc(), representative(L""), comp_width(0), desc_width(0) {}
 
         // Our text looks like this:
         // completion  (description)
@@ -119,8 +113,8 @@ class pager_t {
 
     bool completion_info_passes_filter(const comp_t &info) const;
 
-    void completion_print(size_t cols, const size_t *width_per_column, size_t row_start, size_t row_stop,
-                          const wcstring &prefix, const comp_info_list_t &lst,
+    void completion_print(size_t cols, const size_t *width_per_column, size_t row_start,
+                          size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst,
                           page_rendering_t *rendering) const;
     line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column,
                                  size_t width, bool secondary, bool selected,

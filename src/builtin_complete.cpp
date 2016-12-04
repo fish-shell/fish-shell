@@ -310,8 +310,8 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (do_complete) {
         const wchar_t *token;
 
-        parse_util_token_extent(do_complete_param.c_str(), do_complete_param.size(), &token, 0,
-                                0, 0);
+        parse_util_token_extent(do_complete_param.c_str(), do_complete_param.size(), &token, 0, 0,
+                                0);
 
         // Create a scoped transient command line, so that bulitin_commandline will see our
         // argument, not the reader buffer.
@@ -322,7 +322,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
             std::vector<completion_t> comp;
             complete(do_complete_param, &comp, COMPLETION_REQUEST_DEFAULT,
-                        env_vars_snapshot_t::current());
+                     env_vars_snapshot_t::current());
 
             for (size_t i = 0; i < comp.size(); i++) {
                 const completion_t &next = comp.at(i);
@@ -339,8 +339,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 // just look for the space and clear it.
                 if (!(next.flags & COMPLETE_NO_SPACE) &&
                     string_suffixes_string(L" ", faux_cmdline_with_completion)) {
-                    faux_cmdline_with_completion.resize(faux_cmdline_with_completion.size() -
-                                                        1);
+                    faux_cmdline_with_completion.resize(faux_cmdline_with_completion.size() - 1);
                 }
 
                 // The input data is meant to be something like you would have on the command

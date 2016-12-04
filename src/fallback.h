@@ -134,10 +134,10 @@ int killpg(int pgr, int sig);
 // cppcheck-suppress flockSemanticsWarning
 int flock(int fd, int op);
 
-#define LOCK_SH 1       /* Shared lock.  */
-#define LOCK_EX 2       /* Exclusive lock.  */
-#define LOCK_UN 8       /* Unlock.  */
-#define LOCK_NB 4       /* Don't block when locking.  */
+#define LOCK_SH 1  // Shared lock.
+#define LOCK_EX 2  // Exclusive lock.
+#define LOCK_UN 8  // Unlock.
+#define LOCK_NB 4  // Don't block when locking.
 
 #endif
 

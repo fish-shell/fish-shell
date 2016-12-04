@@ -204,7 +204,8 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
     // Not enough room in dst, add NUL and traverse rest of src.
     if (n == 0) {
         if (siz != 0) *d = '\0';  // NUL-terminate dst
-        while (*s++) ;  // ignore rest of src
+        while (*s++)
+            ;  // ignore rest of src
     }
     return s - src - 1;  // count does not include NUL
 }
@@ -506,7 +507,7 @@ int flock(int fd, int op) {
 
     struct flock fl = {0};
 
-    switch (op & (LOCK_EX|LOCK_SH|LOCK_UN)) {
+    switch (op & (LOCK_EX | LOCK_SH | LOCK_UN)) {
         case LOCK_EX:
             fl.l_type = F_WRLCK;
             break;
@@ -527,10 +528,9 @@ int flock(int fd, int op) {
     fl.l_whence = SEEK_SET;
     rc = fcntl(fd, op & LOCK_NB ? F_SETLK : F_SETLKW, &fl);
 
-    if (rc && (errno == EAGAIN))
-        errno = EWOULDBLOCK;
+    if (rc && (errno == EAGAIN)) errno = EWOULDBLOCK;
 
     return rc;
 }
 
-#endif // HAVE_FLOCK
+#endif  // HAVE_FLOCK

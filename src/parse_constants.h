@@ -136,22 +136,14 @@ enum parse_keyword_t {
 } __packed;
 
 const enum_map<parse_keyword_t> keyword_enum_map[] = {
-    {parse_keyword_and, L"and"},
-    {parse_keyword_begin, L"begin"},
-    {parse_keyword_builtin, L"builtin"},
-    {parse_keyword_case, L"case"},
-    {parse_keyword_command, L"command"},
-    {parse_keyword_else, L"else"},
-    {parse_keyword_end, L"end"},
-    {parse_keyword_exec, L"exec"},
-    {parse_keyword_for, L"for"},
-    {parse_keyword_function, L"function"},
-    {parse_keyword_if, L"if"},
-    {parse_keyword_in, L"in"},
-    {parse_keyword_not, L"not"},
-    {parse_keyword_or, L"or"},
-    {parse_keyword_switch, L"switch"},
-    {parse_keyword_while, L"while"},
+    {parse_keyword_and, L"and"},         {parse_keyword_begin, L"begin"},
+    {parse_keyword_builtin, L"builtin"}, {parse_keyword_case, L"case"},
+    {parse_keyword_command, L"command"}, {parse_keyword_else, L"else"},
+    {parse_keyword_end, L"end"},         {parse_keyword_exec, L"exec"},
+    {parse_keyword_for, L"for"},         {parse_keyword_function, L"function"},
+    {parse_keyword_if, L"if"},           {parse_keyword_in, L"in"},
+    {parse_keyword_not, L"not"},         {parse_keyword_or, L"or"},
+    {parse_keyword_switch, L"switch"},   {parse_keyword_while, L"while"},
     {parse_keyword_none, NULL}};
 #define keyword_enum_map_len (sizeof keyword_enum_map / sizeof *keyword_enum_map)
 

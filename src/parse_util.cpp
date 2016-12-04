@@ -204,9 +204,9 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
     // The command substitutions must not be NULL and must be in the valid pointer range, and
     // the end must be bigger than the beginning.
     assert(bracket_range_begin != NULL && bracket_range_begin >= valid_range_start &&
-            bracket_range_begin <= valid_range_end);
+           bracket_range_begin <= valid_range_end);
     assert(bracket_range_end != NULL && bracket_range_end > bracket_range_begin &&
-            bracket_range_end >= valid_range_start && bracket_range_end <= valid_range_end);
+           bracket_range_end >= valid_range_start && bracket_range_end <= valid_range_end);
 
     // Assign the substring to the out_contents.
     const wchar_t *interior_begin = bracket_range_begin + 1;
@@ -1040,13 +1040,12 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
             if (out_errors) {
                 // We have something like $$$^....  Back up until we reach the first $.
                 size_t first_dollar = idx;
-                while (first_dollar > 0 &&
-                        (unesc.at(first_dollar - 1) == VARIABLE_EXPAND ||
-                        unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
+                while (first_dollar > 0 && (unesc.at(first_dollar - 1) == VARIABLE_EXPAND ||
+                                            unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
                     first_dollar--;
                 }
                 parse_util_expand_variable_error(unesc, node.source_start, first_dollar,
-                                                    out_errors);
+                                                 out_errors);
             }
         }
     }
@@ -1174,13 +1173,13 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                             parse_bool_statement_type_t bool_type =
                                 parse_node_tree_t::statement_boolean_type(*spec_statement);
                             if (bool_type == parse_bool_and) {  // this is not allowed
-                                    errored = append_syntax_error(
-                                        &parse_errors, spec_statement->source_start,
-                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
+                                errored =
+                                    append_syntax_error(&parse_errors, spec_statement->source_start,
+                                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
                             } else if (bool_type == parse_bool_or) {  // this is not allowed
-                                    errored = append_syntax_error(
-                                        &parse_errors, spec_statement->source_start,
-                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
+                                errored =
+                                    append_syntax_error(&parse_errors, spec_statement->source_start,
+                                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
                             }
                             break;
                         }

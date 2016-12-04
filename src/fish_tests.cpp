@@ -1649,7 +1649,8 @@ struct pager_layout_testcase_t {
 
             wcstring text = sd.line(0).to_string();
             if (text != expected) {
-                fprintf(stderr, "width %lu got <%ls>, expected <%ls>\n", this->width, text.c_str(), expected.c_str());
+                fprintf(stderr, "width %lu got <%ls>, expected <%ls>\n", this->width, text.c_str(),
+                        expected.c_str());
             }
             do_test(text == expected);
         }
@@ -1666,20 +1667,14 @@ static void test_pager_layout() {
     const completion_t c1(L"abcdefghij", L"1234567890");
     pager.set_completions(completion_list_t(1, c1));
     const pager_layout_testcase_t testcases1[] = {
-        {26, L"abcdefghij  (1234567890)"},
-        {25, L"abcdefghij  (1234567890)"},
-        {24, L"abcdefghij  (1234567890)"},
-        {23, L"abcdefghij  (12345678…)"},
-        {22, L"abcdefghij  (1234567…)"},
-        {21, L"abcdefghij  (123456…)"},
-        {20, L"abcdefghij  (12345…)"},
-        {19, L"abcdefghij  (1234…)"},
-        {18, L"abcdefgh…  (1234…)"},
-        {17, L"abcdefg…  (1234…)"},
-        {16, L"abcdefg…  (123…)"},
-        {0, NULL} // sentinel terminator
+        {26, L"abcdefghij  (1234567890)"}, {25, L"abcdefghij  (1234567890)"},
+        {24, L"abcdefghij  (1234567890)"}, {23, L"abcdefghij  (12345678…)"},
+        {22, L"abcdefghij  (1234567…)"},   {21, L"abcdefghij  (123456…)"},
+        {20, L"abcdefghij  (12345…)"},     {19, L"abcdefghij  (1234…)"},
+        {18, L"abcdefgh…  (1234…)"},       {17, L"abcdefg…  (1234…)"},
+        {16, L"abcdefg…  (123…)"},         {0, NULL}  // sentinel terminator
     };
-    for (size_t i=0; testcases1[i].expected != NULL; i++) {
+    for (size_t i = 0; testcases1[i].expected != NULL; i++) {
         testcases1[i].run(pager);
     }
 
@@ -1687,20 +1682,14 @@ static void test_pager_layout() {
     const completion_t c2(L"abcdefghijklmnopqrs", L"1");
     pager.set_completions(completion_list_t(1, c2));
     const pager_layout_testcase_t testcases2[] = {
-        {26, L"abcdefghijklmnopqrs  (1)"},
-        {25, L"abcdefghijklmnopqrs  (1)"},
-        {24, L"abcdefghijklmnopqrs  (1)"},
-        {23, L"abcdefghijklmnopq…  (1)"},
-        {22, L"abcdefghijklmnop…  (1)"},
-        {21, L"abcdefghijklmno…  (1)"},
-        {20, L"abcdefghijklmn…  (1)"},
-        {19, L"abcdefghijklm…  (1)"},
-        {18, L"abcdefghijkl…  (1)"},
-        {17, L"abcdefghijk…  (1)"},
-        {16, L"abcdefghij…  (1)"},
-        {0, NULL} // sentinel terminator
+        {26, L"abcdefghijklmnopqrs  (1)"}, {25, L"abcdefghijklmnopqrs  (1)"},
+        {24, L"abcdefghijklmnopqrs  (1)"}, {23, L"abcdefghijklmnopq…  (1)"},
+        {22, L"abcdefghijklmnop…  (1)"},   {21, L"abcdefghijklmno…  (1)"},
+        {20, L"abcdefghijklmn…  (1)"},     {19, L"abcdefghijklm…  (1)"},
+        {18, L"abcdefghijkl…  (1)"},       {17, L"abcdefghijk…  (1)"},
+        {16, L"abcdefghij…  (1)"},         {0, NULL}  // sentinel terminator
     };
-    for (size_t i=0; testcases2[i].expected != NULL; i++) {
+    for (size_t i = 0; testcases2[i].expected != NULL; i++) {
         testcases2[i].run(pager);
     }
 
@@ -1708,24 +1697,17 @@ static void test_pager_layout() {
     const completion_t c3(L"abcdefghijklmnopqrst", L"");
     pager.set_completions(completion_list_t(1, c3));
     const pager_layout_testcase_t testcases3[] = {
-        {26, L"abcdefghijklmnopqrst"},
-        {25, L"abcdefghijklmnopqrst"},
-        {24, L"abcdefghijklmnopqrst"},
-        {23, L"abcdefghijklmnopqrst"},
-        {22, L"abcdefghijklmnopqrst"},
-        {21, L"abcdefghijklmnopqrst"},
-        {20, L"abcdefghijklmnopqrst"},
-        {19, L"abcdefghijklmnopqr…"},
-        {18, L"abcdefghijklmnopq…"},
-        {17, L"abcdefghijklmnop…"},
-        {16, L"abcdefghijklmno…"},
-        {0, NULL} // sentinel terminator
+        {26, L"abcdefghijklmnopqrst"}, {25, L"abcdefghijklmnopqrst"},
+        {24, L"abcdefghijklmnopqrst"}, {23, L"abcdefghijklmnopqrst"},
+        {22, L"abcdefghijklmnopqrst"}, {21, L"abcdefghijklmnopqrst"},
+        {20, L"abcdefghijklmnopqrst"}, {19, L"abcdefghijklmnopqr…"},
+        {18, L"abcdefghijklmnopq…"},   {17, L"abcdefghijklmnop…"},
+        {16, L"abcdefghijklmno…"},     {0, NULL}  // sentinel terminator
     };
-    for (size_t i=0; testcases3[i].expected != NULL; i++) {
+    for (size_t i = 0; testcases3[i].expected != NULL; i++) {
         testcases3[i].run(pager);
     }
 }
-
 
 enum word_motion_t { word_motion_left, word_motion_right };
 static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
@@ -4127,10 +4109,10 @@ static void test_illegal_command_exit_code(void) {
         {L"**", STATUS_ILLEGAL_CMD},
         {L"%", STATUS_ILLEGAL_CMD},
         {L"%test", STATUS_ILLEGAL_CMD},
-    // the following two inputs cause errors during tests for unknown reasons
-    // ("terminate called after throwing an instance of 'std::bad_alloc'")
-    //     {L"?", STATUS_ILLEGAL_CMD},
-    //     {L"abc?def", STATUS_ILLEGAL_CMD},
+        // the following two inputs cause errors during tests for unknown reasons
+        // ("terminate called after throwing an instance of 'std::bad_alloc'")
+        //     {L"?", STATUS_ILLEGAL_CMD},
+        //     {L"abc?def", STATUS_ILLEGAL_CMD},
         {L") ", STATUS_ILLEGAL_CMD}};
 
     int res = 0;
@@ -4143,7 +4125,8 @@ static void test_illegal_command_exit_code(void) {
 
         int exit_status = res ? STATUS_UNKNOWN_COMMAND : proc_get_last_status();
         if (exit_status != tests[i].result) {
-            err(L"command '%ls': expected exit code %d , got %d", tests[i].txt, tests[i].result, exit_status);
+            err(L"command '%ls': expected exit code %d , got %d", tests[i].txt, tests[i].result,
+                exit_status);
         }
     }
 }

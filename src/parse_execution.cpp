@@ -708,8 +708,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(
         parser->get_backtrace(src, error_list, &backtrace_and_desc);
 
         // Print it.
-        if (! should_suppress_stderr_for_tests())
-            fprintf(stderr, "%ls", backtrace_and_desc.c_str());
+        if (!should_suppress_stderr_for_tests()) fprintf(stderr, "%ls", backtrace_and_desc.c_str());
     }
     return parse_execution_errored;
 }

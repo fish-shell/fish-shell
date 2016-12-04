@@ -490,7 +490,8 @@ class wildcard_expander_t {
 
     void add_expansion_result(const wcstring &result) {
         // This function is only for the non-completions case.
-        assert(!static_cast<bool>(this->flags & EXPAND_FOR_COMPLETIONS));  //!OCLINT(multiple unary operator)
+        assert(!static_cast<bool>(this->flags &
+                                  EXPAND_FOR_COMPLETIONS));  //!OCLINT(multiple unary operator)
         if (this->completion_set.insert(result).second) {
             append_completion(this->resolved_completions, result);
             this->did_add = true;

@@ -1,9 +1,8 @@
 #
-# Make ls use colors if we are on a system that supports this
+# Make ls use colors if we are on a system that supports that feature and writing to stdout.
 #
-
-if command ls --version 1>/dev/null 2>/dev/null
-    # This is GNU ls
+if command ls --version >/dev/null ^/dev/null
+    # This appears to be GNU ls.
     function ls --description "List contents of directory"
         set -l param --color=auto
         if isatty 1
@@ -13,7 +12,7 @@ if command ls --version 1>/dev/null 2>/dev/null
     end
 
     if not set -q LS_COLORS
-        if type -q -f dircolors
+        if command -s dircolors >/dev/null
             set -l colorfile
             for file in ~/.dir_colors ~/.dircolors /etc/DIR_COLORS
                 if test -f $file
@@ -21,16 +20,14 @@ if command ls --version 1>/dev/null 2>/dev/null
                     break
                 end
             end
-            set -gx LS_COLORS (dircolors -c $colorfile | string replace -r 'setenv LS_COLORS \'(.*)\'' '$1')
+            # Here we rely on the legacy behavior of `dircolors -c` producing output suitable for
+            # csh in order to extract just the data we're interested in.
+            set -gx LS_COLORS (dircolors -c $colorfile | string split ' ')[3]
         end
     end
-
-else
-    # BSD, OS X and a few more support colors through the -G switch instead
-    if command ls -G / 1>/dev/null 2>/dev/null
-        function ls --description "List contents of directory"
-            command ls -G $argv
-        end
+else if command ls -G / >/dev/null ^/dev/null
+    # It looks like BSD, OS X and a few more which support colors through the -G switch instead.
+    function ls --description "List contents of directory"
+        command ls -G $argv
     end
 end
-

@@ -1753,8 +1753,8 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
 
     wgetopter_t w;
     int argc = builtin_count_args(argv);
-    static const struct woption long_options[] = {{L"help", no_argument, 0, 'h'},
-                                                 {0,0,0,0}};
+    static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
+                                                  {NULL, 0, NULL, 0}};
     while (1) {
         int opt_index = 0;
 
@@ -1823,23 +1823,19 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
     // error handling
     if (parse_error) {
         return STATUS_BUILTIN_ERROR;
-    } else if (start > end) {
-        streams.err.append_format(L"%ls: END must be greater than or equal to START\n", argv[0]);
+    } else if (start >= end) {
+        streams.err.append_format(L"%ls: END must be greater than START\n", argv[0]);
         return STATUS_BUILTIN_ERROR;
     } else if (step <= 0) {
         streams.err.append_format(L"%ls: STEP must be a positive integer\n", argv[0]);
         return STATUS_BUILTIN_ERROR;
+    } else if (end - start < step) {
+        streams.err.append_format(L"%ls: Only one possible value in range\n", argv[0]);
+        return STATUS_BUILTIN_ERROR;
     }
 
-    // rng-ing
-    long long result;
-    if (end - start < step) {
-        // nine nine nine nine nine nine
-        result = start;
-    } else {
-        std::uniform_int_distribution<long long> dist(start, start+(end-start)/step);
-        result = start+step*(dist(engine)-start);
-    }
+    std::uniform_int_distribution<long long> dist(start, start+(end-start)/step);
+    long long result = start+step*(dist(engine)-start);
     streams.out.append_format(L"%ld\n", result);
     return STATUS_BUILTIN_OK;
 }

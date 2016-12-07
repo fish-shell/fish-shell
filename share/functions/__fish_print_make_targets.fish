@@ -1,13 +1,11 @@
-function __fish_print_make_targets
-    # Some seds (e.g. on Mac OS X), don't support \n in the RHS
-    # Use a literal newline instead
-    # http://sed.sourceforge.net/sedfaq4.html#s4.1
-    # The 'rev | cut | rev' trick removes everything after the last colon
-    for file in GNUmakefile Makefile makefile
+function __fish_print_make_targets --argument directory
+    if test -z "$directory"
+        set directory '.'
+    end
+
+    for file in $directory/{GNUmakefile,Makefile,makefile}
         if test -f $file
-            __fish_sgrep -h -o -E '^[^#%=$[:space:]][^#%=$]*:([^=]|$)' $file ^/dev/null | rev | cut -d ":" -f 2- | rev | sed -e 's/^ *//;s/ *$//;s/  */\\
-/g' ^/dev/null
-            # On case insensitive filesystems, Makefile and makefile are the same; stop now so we don't double-print 
+            make -C $directory -prRn | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($1 !~ "^[#.]") {print $1}}' ^/dev/null
             break
         end
     end

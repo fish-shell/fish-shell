@@ -991,15 +991,15 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - @key{Control,X} copies the current buffer to the system's clipboard, @key{Control,V} inserts the clipboard contents.
 
-- @key{Alt,D} moves the next word to the <a href="#killring">killring</a>.
+- @key{Alt,d} moves the next word to the <a href="#killring">killring</a>.
 
-- @key{Alt,H} (or @key{F1}) shows the manual page for the current command, if one exists.
+- @key{Alt,h} (or @key{F1}) shows the manual page for the current command, if one exists.
 
-- @key{Alt,L} lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
+- @key{Alt,l} lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 
-- @key{Alt,P} adds the string '`| less;`' to the end of the job under the cursor. The result is that the output of the command will be paged.
+- @key{Alt,p} adds the string '`| less;`' to the end of the job under the cursor. The result is that the output of the command will be paged.
 
-- @key{Alt,W} prints a short description of the command under the cursor.
+- @key{Alt,w} prints a short description of the command under the cursor.
 
 \subsection emacs-mode Emacs mode commands
 
@@ -1013,11 +1013,11 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - @key{Control,K} moves contents from the cursor to the end of line to the <a href="#killring">killring</a>.
 
-- @key{Alt,C} capitalizes the current word.
+- @key{Alt,c} capitalizes the current word.
 
-- @key{Alt,U} makes the current word uppercase.
+- @key{Alt,u} makes the current word uppercase.
 
-- @key{Control, t} transposes the last two characters
+- @key{Control,t} transposes the last two characters
 
 - @key{Alt,t} transposes the last two words
 

@@ -1,6 +1,6 @@
 # Completions for make
 function __fish_complete_make_targets
-    set directory (echo $argv | string replace -r '^make .*(-C|--directory) ?([^ ]*) .*$' '$2')
+    set directory (string replace -r '^make .*(-C ?|--directory[= ]?)([^ ]*) .*$' '$2' -- $argv)
     if test $status -eq 0 -a -d $directory
         __fish_print_make_targets $directory
     else

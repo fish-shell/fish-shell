@@ -24,8 +24,8 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         emacs $f
     else
         echo
-        echo (_ 'Sorry, but you did not define $EDITOR and I could not find vim or emacs.')
-        echo (_ 'I cannot allow you to edit the command line in an external editor.')
+        echo (_ 'External editor requested but $EDITOR not set, and vim or emacs not available.')
+        echo (_ 'Try setting the EDITOR variable to a text editor, or installing vim or emacs.')
         commandline -f repaint
         command rm $f
         return 1

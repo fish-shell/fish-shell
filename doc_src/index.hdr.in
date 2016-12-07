@@ -1001,7 +1001,7 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - @key{Alt,w} prints a short description of the command under the cursor.
 
-- @key{Alt,e} Edit the current command line in an external editor defined by the `$EDITOR` env var, else vim if it is in `$PATH`, else emacs if it is in `$PATH`, else an error is displayed.
+- @key{Alt,e} edit the current command line in an external editor. The editor is chosen from the first available of the `$EDITOR` variable, or the `vim` or `emacs` commands.
 
 - @key{Alt,v} Same as @key{Alt,e}.
 

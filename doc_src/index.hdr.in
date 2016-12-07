@@ -1001,6 +1001,10 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - @key{Alt,w} prints a short description of the command under the cursor.
 
+- @key{Alt,e} Edit the current command line in an external editor defined by the `$EDITOR` env var, else vim if it is in `$PATH`, else emacs if it is in `$PATH`, else an error is displayed.
+
+- @key{Alt,v} Same as @key{Alt,e}.
+
 \subsection emacs-mode Emacs mode commands
 
 - @key{Home} or @key{Control,A} moves the cursor to the beginning of the line.

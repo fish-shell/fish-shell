@@ -96,4 +96,8 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also,
     # remove the commenting chars so the command can be further edited then executed.
     bind $argv \e\# __fish_toggle_comment_commandline
+
+    # The [meta-e] and [meta-v] keystrokes invoke an external editor on the command buffer.
+    bind \ee edit_command_buffer
+    bind \ev edit_command_buffer
 end

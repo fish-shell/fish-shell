@@ -16,21 +16,20 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
 
     # Edit the command line with the users preferred editor or vim or emacs.
     commandline -b >$f
-    if set -q EDITOR
+    if set -q VISUAL
+        eval $VISUAL $f
+    else if set -q EDITOR
         eval $EDITOR $f
-    else if command -s vim >/dev/null
-        vim $f
-    else if command -s emacs >/dev/null
-        emacs $f
     else
         echo
-        echo (_ 'External editor requested but $EDITOR not set, and vim or emacs not available.')
-        echo (_ 'Try setting the EDITOR variable to a text editor, or installing vim or emacs.')
+        echo (_ 'External editor requested but $VISUAL or $EDITOR not set.')
+        echo (_ 'Please set VISUAL or EDITOR to your preferred editor.')
         commandline -f repaint
         command rm $f
         return 1
     end
 
+    # Here we're checking the exit status of the editor.
     if test $status -eq 0 -a -s $f
         # Set the command to the output of the edited command and move the cursor to the
         # end of the edited command.

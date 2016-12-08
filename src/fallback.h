@@ -77,6 +77,24 @@ wchar_t *wcsndup(const wchar_t *in, size_t c);
 #endif
 #endif  //__APPLE__
 
+/// These functions are missing from Solaris 10
+#ifndef HAVE_WCSDUP
+wchar_t *wcsdup(const wchar_t *in);
+#endif
+#ifndef HAVE_WCSCASECMP
+int wcscasecmp(const wchar_t *a, const wchar_t *b);
+#endif
+#ifndef HAVE_WCSNCASECMP
+int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
+#endif
+#ifndef HAVE_DIRFD
+#ifndef __XOPEN_OR_POSIX
+#define dirfd(d) (d->dd_fd)
+#else
+#define dirfd(d) (d->d_fd)
+#endif
+#endif
+
 #ifndef HAVE_WCSNDUP
 /// Fallback for wcsndup function. Returns a copy of \c in, truncated to a maximum length of \c c.
 wchar_t *wcsndup(const wchar_t *in, size_t c);

@@ -91,7 +91,6 @@ char *tparm_solaris_kludge(char *str, ...) {
 
 #endif
 
-#if __APPLE__
 /// Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g.
 /// building on Linux) these should end up just being stripped, as they are static functions that
 /// are not referenced in this file.
@@ -105,7 +104,6 @@ __attribute__((unused)) static wchar_t *wcsdup_fallback(const wchar_t *in) {
     memcpy(out, in, sizeof(wchar_t) * (len + 1));
     return out;
 }
-#endif
 
 __attribute__((unused)) static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b) {
     if (*a == 0) {
@@ -159,6 +157,19 @@ int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
 }
 #endif  // __DARWIN_C_LEVEL >= 200809L
 #endif  // __APPLE__
+
+/// These functions are missing from Solaris 10
+#ifndef HAVE_WCSDUP
+wchar_t *wcsdup(const wchar_t *in) { return wcsdup_fallback(in); }
+#endif
+#ifndef HAVE_WCSCASECMP
+int wcscasecmp(const wchar_t *a, const wchar_t *b) { return wcscasecmp_fallback(a, b); }
+#endif
+#ifndef HAVE_WCSNCASECMP
+int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
+    return wcsncasecmp_fallback(a, b, n);
+}
+#endif
 
 #ifndef HAVE_WCSNDUP
 wchar_t *wcsndup(const wchar_t *in, size_t c) {

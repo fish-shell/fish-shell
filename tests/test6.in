@@ -51,6 +51,12 @@ complete -c CCCC -e
 echo "CCCC:"
 complete -C'CCCC -' | sort
 
+echo "Test that -- suppresses option completions"
+complete -c TestDoubleDash -l TestDoubleDashOption
+complete -C'TestDoubleDash -' | sort
+echo "Expect no output:" (complete -C'TestDoubleDash -- -' | sort)
+
+
 # Test that directory completions work correctly
 if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end
     pushd test6.tmp.dir

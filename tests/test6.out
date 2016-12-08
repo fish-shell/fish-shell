@@ -30,6 +30,9 @@ CCCC:
 -b
 -bar
 CCCC:
+Test that -- suppresses option completions
+--TestDoubleDashOption
+Expect no output:
 implicit cd complete works
 no implicit cd complete after 'command'
 PATH does not cause incorrect implicit cd

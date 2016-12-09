@@ -71,6 +71,8 @@ The following special input functions are available:
 
 - `backward-word`, move one word to the left
 
+- `beginning-of-buffer`, moves to the beginning of the buffer, i.e. the start of the first line
+
 - `beginning-of-history`, move to the beginning of the history
 
 - `beginning-of-line`, move to the beginning of the line
@@ -86,6 +88,8 @@ The following special input functions are available:
 - `delete-char`, delete one character to the right of the cursor
 
 - `downcase-word`, make the current word lowercase
+
+- `end-of-buffer`, moves to the end of the buffer, i.e. the end of the first line
 
 - `end-of-history`, move to the end of the history
 

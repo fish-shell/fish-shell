@@ -920,6 +920,8 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                 }
             } else if (popt[0] == L'-') {
                 // Set to true if we found a matching old-style switch.
+                // Here we are testing the previous argument,
+                // to see how we should complete the current argument
                 bool old_style_match = false;
 
                 // If we are using old style long options, check for them first.
@@ -943,6 +945,8 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                         const complete_entry_opt_t *o = &*oiter;
                         // Gnu-style options with _optional_ arguments must be specified as a single
                         // token, so that it can be differed from a regular argument.
+                        // Here we are testing the previous argument for a GNU-style match,
+                        // to see how we should complete the current argument
                         if (o->type == option_type_double_long && !(o->result_mode & NO_COMMON))
                             continue;
 
@@ -960,6 +964,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
             continue;
         }
 
+        // Now we try to complete an option itself
         for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end();
              ++oiter) {
             const complete_entry_opt_t *o = &*oiter;

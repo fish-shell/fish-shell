@@ -56,6 +56,16 @@ complete -c TestDoubleDash -l TestDoubleDashOption
 complete -C'TestDoubleDash -' | sort
 echo "Expect no output:" (complete -C'TestDoubleDash -- -' | sort)
 
+# fish seems to have always handled "exclusive" options strangely
+# It seems to treat them the same as "old-style" (single-dash) long options
+echo "Testing exclusive options"
+complete -c TestExclusive -x -s Q
+complete -c TestExclusive -x -s W
+complete -c TestExclusive -s A
+echo "Expect -A -Q -W:" (complete -C'TestExclusive -' | sort | string join ' ')
+echo "Expect -AQ -AW:" (complete -C'TestExclusive -A' | sort | string join ' ')
+echo "Expect no output 1:" (complete -C'TestExclusive -Q')
+echo "Expect no output 2:" (complete -C'TestExclusive -W')
 
 # Test that directory completions work correctly
 if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end

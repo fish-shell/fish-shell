@@ -1850,13 +1850,52 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
         }
     }
 
-    std::uniform_int_distribution<long long> dist(start, (end - start) / step);
-    long long result = start + step * (dist(engine) - start);
+    // only for negative argument
+    auto safe_abs = [] (long long ll) -> unsigned long long {
+        return -static_cast<unsigned long long>(ll);
+    };
+    long long real_end;
+    if (start >= 0 || end < 0) {
+        // 0 <= start <= end
+        long long diff = end - start;
+        // 0 <= diff <= LL_MAX
+        real_end = start + static_cast<long long>(diff / step);
+    } else {
+        // start < 0 <= end
+        unsigned long long abs_start = safe_abs(start);
+        unsigned long long diff = (end + abs_start);
+        real_end = diff / step - abs_start;
+    }
+
+    if (!choice && start == real_end)
+    {
+        streams.err.append_format(L"%ls: range contains only one possible value\n", argv[0]);
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    std::uniform_int_distribution<long long> dist(start, real_end);
+    long long random = dist(engine);
+    long long result;
+    if (start >= 0) {
+        // 0 <= start <= random <= end
+        long long diff = random - start;
+        // 0 < step * diff <= end - start <= LL_MAX
+        result = start + static_cast<long long>(diff * step);
+    } else if (random < 0) {
+        // start <= random < 0
+        long long diff = random - start;
+        result = diff * step - safe_abs(start);
+    } else {
+        // start < 0 <= random
+        unsigned long long abs_start = safe_abs(start);
+        unsigned long long diff = (random + abs_start);
+        result = diff * step - abs_start;
+    }
 
     if (choice) {
         streams.out.append_format(L"%ls\n", argv[w.woptind + result]);
     } else {
-        streams.out.append_format(L"%ld\n", result);
+        streams.out.append_format(L"%lld\n", result);
     }
     return STATUS_BUILTIN_OK;
 }

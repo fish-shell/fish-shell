@@ -1783,60 +1783,81 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
             }
         }
     }
-    // argument parsing
-    bool parse_error = false;
-    auto parse_ll = [&](const wchar_t* str) {
-        long long ll = fish_wcstoll(str);
-        if (errno) {
-            streams.err.append_format(L"%ls: %ls is not a valid integer\n", argv[0], str);
-            parse_error = true;
-        }
-        return ll;
-    };
     int arg_count = argc - w.woptind;
-    long long start, end, step;
-    if (arg_count == 0) {
-        start = 0;
-        end = 32767;
-        step = 1;
-    } else if (arg_count == 1) {
-        long long seed = parse_ll(argv[w.woptind]);
-        if (!parse_error) {
-            engine.seed(seed);
-            return STATUS_BUILTIN_OK;
-        } else {
+    long long start, end;
+    unsigned long long step;
+    bool choice = false;
+    if (arg_count >= 1 && !wcscmp(argv[w.woptind], L"choice")) {
+        if (arg_count == 1) {
+            streams.err.append_format(L"%ls: nothing to choose from\n", argv[0]);
             return STATUS_BUILTIN_ERROR;
         }
-    } else if (arg_count == 2) {
-        start = parse_ll(argv[w.woptind]);
+        choice = true;
+        start = 1;
         step = 1;
-        end = parse_ll(argv[w.woptind + 1]);
-    } else if (arg_count == 3) {
-        start = parse_ll(argv[w.woptind]);
-        step = parse_ll(argv[w.woptind + 1]);
-        end = parse_ll(argv[w.woptind + 2]);
+        end = arg_count - 1;
     } else {
-        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return STATUS_BUILTIN_ERROR;
+        bool parse_error = false;
+        auto parse_ll = [&](const wchar_t* str) {
+            long long ll = fish_wcstoll(str);
+            if (errno) {
+                streams.err.append_format(L"%ls: %ls is not a valid integer\n", argv[0], str);
+                parse_error = true;
+            }
+            return ll;
+        };
+        auto parse_ull = [&](const wchar_t* str) {
+            unsigned long long ull = fish_wcstoull(str);
+            if (errno) {
+                streams.err.append_format(L"%ls: %ls is not a valid integer\n", argv[0], str);
+                parse_error = true;
+            }
+            return ull;
+        };
+        if (arg_count == 0) {
+            start = 0;
+            end = 32767;
+            step = 1;
+        } else if (arg_count == 1) {
+            long long seed = parse_ll(argv[w.woptind]);
+            if (!parse_error) {
+                engine.seed(seed);
+                return STATUS_BUILTIN_OK;
+            } else {
+                return STATUS_BUILTIN_ERROR;
+            }
+        } else if (arg_count == 2) {
+            start = parse_ll(argv[w.woptind]);
+            step = 1;
+            end = parse_ll(argv[w.woptind + 1]);
+        } else if (arg_count == 3) {
+            start = parse_ll(argv[w.woptind]);
+            step = parse_ull(argv[w.woptind + 1]);
+            end = parse_ll(argv[w.woptind + 2]);
+        } else {
+            streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
+            return STATUS_BUILTIN_ERROR;
+        }
+
+        if (parse_error) {
+            return STATUS_BUILTIN_ERROR;
+        } else if (start >= end) {
+            streams.err.append_format(L"%ls: END must be greater than START\n", argv[0]);
+            return STATUS_BUILTIN_ERROR;
+        } else if (step == 0) {
+            streams.err.append_format(L"%ls: STEP must be a positive integer\n", argv[0]);
+            return STATUS_BUILTIN_ERROR;
+        }
     }
 
-    // error handling
-    if (parse_error) {
-        return STATUS_BUILTIN_ERROR;
-    } else if (start >= end) {
-        streams.err.append_format(L"%ls: END must be greater than START\n", argv[0]);
-        return STATUS_BUILTIN_ERROR;
-    } else if (step <= 0) {
-        streams.err.append_format(L"%ls: STEP must be a positive integer\n", argv[0]);
-        return STATUS_BUILTIN_ERROR;
-    } else if (end - start < step) {
-        streams.err.append_format(L"%ls: Only one possible value in range\n", argv[0]);
-        return STATUS_BUILTIN_ERROR;
-    }
+    std::uniform_int_distribution<long long> dist(start, (end - start) / step);
+    long long result = start + step * (dist(engine) - start);
 
-    std::uniform_int_distribution<long long> dist(start, start+(end-start)/step);
-    long long result = start+step*(dist(engine)-start);
-    streams.out.append_format(L"%ld\n", result);
+    if (choice) {
+        streams.out.append_format(L"%ls\n", argv[w.woptind + result]);
+    } else {
+        streams.out.append_format(L"%ld\n", result);
+    }
     return STATUS_BUILTIN_OK;
 }
 

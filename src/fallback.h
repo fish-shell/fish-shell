@@ -75,7 +75,7 @@ int wcscasecmp(const wchar_t *a, const wchar_t *b);
 int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 wchar_t *wcsndup(const wchar_t *in, size_t c);
 #endif
-#endif  //__APPLE__
+#else  //__APPLE__
 
 /// These functions are missing from Solaris 10
 #ifndef HAVE_WCSDUP
@@ -92,6 +92,7 @@ int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 #define dirfd(d) (d->dd_fd)
 #else
 #define dirfd(d) (d->d_fd)
+#endif
 #endif
 #endif
 

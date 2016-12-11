@@ -17,6 +17,9 @@
    */
 #define HAVE_DIRENT_H 1
 
+/* Define to 1 if you have the `dirfd' function. */
+#define HAVE_DIRFD 1
+
 /* Define to 1 if you have the <execinfo.h> header file. */
 #define HAVE_EXECINFO_H 1
 
@@ -86,6 +89,15 @@
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
 
+/* Define to 1 if you have the `std::wcscasecmp' function. */
+/* #undef HAVE_STD__WCSCASECMP */
+
+/* Define to 1 if you have the `std::wcsdup' function. */
+/* #undef HAVE_STD__WCSDUP */
+
+/* Define to 1 if you have the `std::wcsncasecmp' function. */
+/* #undef HAVE_STD__WCSNCASECMP */
+
 /* Define to 1 if you have the <strings.h> header file. */
 #define HAVE_STRINGS_H 1
 
@@ -147,6 +159,9 @@
 
 /* Define to 1 if you have the `wcslcpy' function. */
 #define HAVE_WCSLCPY 1
+
+/* Define to 1 if you have the `wcsncasecmp' function. */
+#define HAVE_WCSNCASECMP 1
 
 /* Define to 1 if you have the `wcsndup' function. */
 /* #undef HAVE_WCSNDUP */

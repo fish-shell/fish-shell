@@ -1742,11 +1742,12 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
 /// The random builtin generates random numbers.
 static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     static bool seeded = false;
-    static std::mt19937_64 engine;
+    static std::minstd_rand engine;
     if (!seeded) {
-        // seed engine with 8*32 bits of random data
+        // seed engine with 2*32 bits of random data
+        // for the 64 bits of internal state of minstd_rand
         std::random_device rd;
-        std::seed_seq seed{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+        std::seed_seq seed{rd(), rd()};
         engine.seed(seed);
         seeded = true;
     }

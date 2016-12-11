@@ -22,8 +22,17 @@ end
 set -l commands read list write reset compile update watch dump load help
 
 complete -f -e -c dconf
-# TODO: Descriptions for these commands
-complete -A -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a "$commands"
+complete -f -c dconf -n "not __fish_seen_subcommand_from read" -a 'read' -d 'Read the value of a key'
+complete -f -c dconf -n "not __fish_seen_subcommand_from list" -a 'list' -d 'List the sub-keys and sub-directories of a directory'
+complete -f -c dconf -n "not __fish_seen_subcommand_from write" -a 'write' -d 'Write a new value to a key'
+complete -f -c dconf -n "not __fish_seen_subcommand_from reset" -a 'reset' -d 'Delete a key or an entire directory'
+complete -f -c dconf -n "not __fish_seen_subcommand_from compile" -a 'compile' -d 'Compile a binary database from keyfiles'
+complete -f -c dconf -n "not __fish_seen_subcommand_from update" -a 'update' -d 'Update the system dconf databases'
+complete -f -c dconf -n "not __fish_seen_subcommand_from watch" -a 'watch' -d 'Watch a key or directory for changes'
+complete -f -c dconf -n "not __fish_seen_subcommand_from dump" -a 'dump' -d 'Dump an entire subpath to stdout'
+complete -f -c dconf -n "not __fish_seen_subcommand_from load" -a 'load' -d 'Populate a subpath from stdin'
+complete -f -c dconf -n "not __fish_seen_subcommand_from help" -a 'help' -d 'Display help and exit'
+
 
 ### Arguments to commands
 # Technically, reset/watch take a "PATH" (which is a dir or a key)

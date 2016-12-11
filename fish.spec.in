@@ -11,6 +11,10 @@ URL:                    http://fishshell.com/
 Source0:                %{name}_@VERSION@.orig.tar.gz
 BuildRequires:          ncurses-devel gettext gcc-c++ autoconf
 
+%if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
+BuildRequires: gcc48 gcc48-c++
+%endif
+
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:		bc
@@ -34,6 +38,10 @@ is simple but incompatible with other shell languages.
 %setup -q -n %{name}-@VERSION@
 
 %build
+%if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
+export CC=gcc48
+export CXX=g++48
+%endif
 %configure
 make %{?_smp_mflags}
 

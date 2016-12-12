@@ -13,7 +13,9 @@ random -- 10 $diff_max
 random -- 1 1d
 random -- 1 1c 10
 random -- 10 10
+random -- 1 - 10
 random -- 1 -1 10
+random -- 1 $min 10
 random -- 1 0 10
 random -- 1 11 10
 random -- 0 $diff_max $max

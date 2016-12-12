@@ -834,9 +834,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
 
     switch (char_after_dollar) {
         case BRACKET_BEGIN:
-        case L'{':
-
-        {
+        case L'{': {
             // The BRACKET_BEGIN is for unquoted, the { is for quoted. Anyways we have (possible
             // quoted) ${. See if we have a }, and the stuff in between is variable material. If so,
             // report a bracket error. Otherwise just complain about the ${.
@@ -859,7 +857,6 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
             }
             break;
         }
-
         case INTERNAL_SEPARATOR: {
             // e.g.: echo foo"$"baz
             // These are only ever quotes, not command substitutions. Command substitutions are
@@ -867,7 +864,6 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
             append_syntax_error(errors, global_dollar_pos, ERROR_NO_VAR_NAME);
             break;
         }
-
         case '(': {
             // e.g.: 'echo "foo$(bar)baz"
             // Try to determine what's in the parens.
@@ -888,12 +884,10 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
                                 truncate_string(token_after_parens).c_str());
             break;
         }
-
         case L'\0': {
             append_syntax_error(errors, global_dollar_pos, ERROR_NO_VAR_NAME);
             break;
         }
-
         default: {
             wchar_t token_stop_char = char_after_dollar;
             // Unescape (see issue #50).
@@ -971,12 +965,10 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 }
                 return err;
             }
-
             case 0: {
                 do_loop = 0;
                 break;
             }
-
             case 1: {
                 const wcstring subst(paran_begin + 1, paran_end);
 

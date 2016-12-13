@@ -42,7 +42,11 @@ is simple but incompatible with other shell languages.
 export CC=gcc48
 export CXX=g++48
 %endif
+%if 0%{?opensuse_bs}
+%configure || cat config.log
+%else
 %configure
+%endif
 make %{?_smp_mflags}
 
 %install

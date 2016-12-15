@@ -58,8 +58,15 @@ static void debug_safe_int(int level, const char *format, int val) {
     debug_safe(level, format, buff);
 }
 
-int set_child_group(job_t *j, process_t *p, int print_errors) {
-    int res = 0;
+/// This function should be called by both the parent process and the child right after fork() has
+/// been called. If job control is enabled, the child is put in the jobs group, and if the child is
+/// also in the foreground, it is also given control of the terminal. When called in the parent
+/// process, this function may fail, since the child might have already finished and called exit.
+/// The parent process may safely ignore the exit status of this call.
+///
+/// Returns true on sucess, false on failiure.
+bool set_child_group(job_t *j, process_t *p, int print_errors) {
+    bool retval = true;
 
     if (job_get_flag(j, JOB_CONTROL)) {
         if (!j->pgid) {
@@ -89,27 +96,31 @@ int set_child_group(job_t *j, process_t *p, int print_errors) {
                     pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
 
                 safe_perror("setpgid");
-                res = -1;
+                retval = false;
             }
         }
     } else {
         j->pgid = getpid();
     }
 
-    if (job_get_flag(j, JOB_TERMINAL) && job_get_flag(j, JOB_FOREGROUND)) {
-        int result = tcsetpgrp(0, j->pgid);
-        if (result == -1 && print_errors) {
-            char job_id_buff[64];
-            char command_buff[64];
-            format_long_safe(job_id_buff, j->job_id);
-            narrow_string_safe(command_buff, j->command_wcstr());
-            debug_safe(1, "Could not send job %s ('%s') to foreground", job_id_buff, command_buff);
-            safe_perror("tcsetpgrp");
-            res = -1;
+    if (job_get_flag(j, JOB_TERMINAL) && job_get_flag(j, JOB_FOREGROUND)) {  //!OCLINT(early exit)
+        int result = tcsetpgrp(STDIN_FILENO, j->pgid);  // to avoid "collapsible if statements" warn
+        if (result == -1) {
+            if (errno == ENOTTY) redirect_tty_output();
+            if (print_errors) {
+                char job_id_buff[64];
+                char command_buff[64];
+                format_long_safe(job_id_buff, j->job_id);
+                narrow_string_safe(command_buff, j->command_wcstr());
+                debug_safe(1, "Could not send job %s ('%s') to foreground", job_id_buff,
+                           command_buff);
+                safe_perror("tcsetpgrp");
+                retval = false;
+            }
         }
     }
 
-    return res;
+    return retval;
 }
 
 /// Set up a childs io redirections. Should only be called by setup_child_process(). Does the
@@ -217,7 +228,7 @@ int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain) {
     bool ok = true;
 
     if (p) {
-        ok = (0 == set_child_group(j, p, 1));
+        ok = set_child_group(j, p, 1);
     }
 
     if (ok) {

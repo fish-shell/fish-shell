@@ -312,7 +312,8 @@ static void term_donate() {
     set_color(rgb_color_t::normal(), rgb_color_t::normal());
 
     while (1) {
-        if (tcsetattr(0, TCSANOW, &tty_modes_for_external_cmds)) {
+        if (tcsetattr(STDIN_FILENO, TCSANOW, &tty_modes_for_external_cmds) == -1) {
+            if (errno == ENOTTY) redirect_tty_output();
             if (errno != EINTR) {
                 debug(1, _(L"Could not set terminal mode for new job"));
                 wperror(L"tcsetattr");
@@ -340,10 +341,11 @@ static void update_buff_pos(editable_line_t *el, size_t buff_pos) {
 /// Grab control of terminal.
 static void term_steal() {
     while (1) {
-        if (tcsetattr(0, TCSANOW, &shell_modes)) {
+        if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
+            if (errno == ENOTTY) redirect_tty_output();
             if (errno != EINTR) {
                 debug(1, _(L"Could not set terminal mode for shell"));
-                wperror(L"tcsetattr");
+                perror("tcsetattr");
                 break;
             }
         } else
@@ -808,7 +810,9 @@ void restore_term_mode() {
     // Restore the term mode if we own the terminal. It's important we do this before
     // restore_foreground_process_group, otherwise we won't think we own the terminal.
     if (getpid() == tcgetpgrp(STDIN_FILENO)) {
-        tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup);
+        if (tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup) == -1 && errno == ENOTTY) {
+            redirect_tty_output();
+        }
     }
 }
 
@@ -1638,22 +1642,24 @@ static void reader_interactive_init() {
     // Put ourselves in our own process group.
     shell_pgid = getpid();
     if (getpgrp() != shell_pgid && setpgid(shell_pgid, shell_pgid) < 0) {
-        debug(1, _(L"Couldn't put the shell in its own process group"));
+        debug(0, _(L"Couldn't put the shell in its own process group"));
         wperror(L"setpgid");
         exit_without_destructors(1);
     }
 
     // Grab control of the terminal.
-    if (tcsetpgrp(STDIN_FILENO, shell_pgid)) {
-        debug(1, _(L"Couldn't grab control of terminal"));
+    if (tcsetpgrp(STDIN_FILENO, shell_pgid) == -1) {
+        if (errno == ENOTTY) redirect_tty_output();
+        debug(0, _(L"Couldn't grab control of terminal"));
         wperror(L"tcsetpgrp");
         exit_without_destructors(1);
     }
 
     common_handle_winch(0);
 
-    if (tcsetattr(0, TCSANOW, &shell_modes))  // set the new modes
-    {
+    // Set the new modes.
+    if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {
+        if (errno == ENOTTY) redirect_tty_output();
         wperror(L"tcsetattr");
     }
 
@@ -2401,9 +2407,10 @@ const wchar_t *reader_readline(int nchars) {
     reader_repaint();
 
     // Get the current terminal modes. These will be restored when the function returns.
-    tcgetattr(0, &old_modes);
+    tcgetattr(STDIN_FILENO, &old_modes);
     // Set the new modes.
-    if (tcsetattr(0, TCSANOW, &shell_modes)) {
+    if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {
+        if (errno == ENOTTY) redirect_tty_output();
         wperror(L"tcsetattr");
     }
 
@@ -3269,7 +3276,8 @@ const wchar_t *reader_readline(int nchars) {
     }
 
     if (!reader_exit_forced()) {
-        if (tcsetattr(0, TCSANOW, &old_modes)) {
+        if (tcsetattr(0, TCSANOW, &old_modes) == -1) {
+            if (errno == ENOTTY) redirect_tty_output();
             wperror(L"tcsetattr");  // return to previous mode
         }
         set_color(rgb_color_t::reset(), rgb_color_t::reset());

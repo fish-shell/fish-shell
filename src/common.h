@@ -843,3 +843,5 @@ using std::wcsncasecmp;
 #endif
 
 #endif
+
+void redirect_tty_output(void);

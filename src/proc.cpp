@@ -792,13 +792,15 @@ static void read_try(job_t *j) {
 /// \param cont If this variable is set, we are giving back control to a job that has previously
 /// been stopped. In that case, we need to set the terminal attributes to those saved in the job.
 static bool terminal_give_to_job(job_t *j, int cont) {
-    if (tcsetpgrp(0, j->pgid)) {
+    if (tcsetpgrp(STDIN_FILENO, j->pgid) == -1) {
+        if (errno == ENOTTY) redirect_tty_output();
         debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
         wperror(L"tcsetpgrp");
         return false;
     }
 
-    if (cont && tcsetattr(0, TCSADRAIN, &j->tmodes)) {
+    if (cont && tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes)) {
+        if (errno == ENOTTY) redirect_tty_output();
         debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
         wperror(L"tcsetattr");
         return false;
@@ -809,16 +811,16 @@ static bool terminal_give_to_job(job_t *j, int cont) {
 /// Returns control of the terminal to the shell, and saves the terminal attribute state to the job,
 /// so that we can restore the terminal ownership to the job at a later time.
 static int terminal_return_from_job(job_t *j) {
-    if (tcsetpgrp(0, getpgrp())) {
+    if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
+        if (errno == ENOTTY) redirect_tty_output();
         debug(1, _(L"Could not return shell to foreground"));
         wperror(L"tcsetpgrp");
         return 0;
     }
 
-    /*
-       Save jobs terminal modes.
-    */
-    if (tcgetattr(0, &j->tmodes)) {
+    // Save jobs terminal modes.
+    if (tcgetattr(STDIN_FILENO, &j->tmodes)) {
+        if (errno == ENOTTY) redirect_tty_output();
         debug(1, _(L"Could not return shell to foreground"));
         wperror(L"tcgetattr");
         return 0;
@@ -830,7 +832,7 @@ static int terminal_return_from_job(job_t *j) {
 // https://github.com/fish-shell/fish-shell/issues/121
 #if 0
     // Restore the shell's terminal modes.
-    if (tcsetattr(0, TCSADRAIN, &shell_modes)) {
+    if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes)) {
         debug(1, _(L"Could not return shell to foreground"));
         wperror(L"tcsetattr");
         return 0;

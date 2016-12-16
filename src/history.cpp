@@ -1,5 +1,4 @@
 // History functions, part of the user interface.
-//
 #include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>
@@ -10,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+// We need the sys/file.h for the flock() declaration on Linux but not OS X.
+#include <sys/file.h>  // IWYU pragma: keep
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -17,6 +18,7 @@
 #include <wchar.h>
 #include <wctype.h>
 #include <algorithm>
+#include <cwchar>
 #include <iterator>
 #include <map>
 
@@ -121,14 +123,21 @@ class time_profiler_t {
     }
 };
 
-/// Lock a file via fcntl; returns true on success, false on failure.
-static bool history_file_lock(int fd, short type) {
-    assert(type == F_RDLCK || type == F_WRLCK);
-    struct flock flk = {};
-    flk.l_type = type;
-    flk.l_whence = SEEK_SET;
-    int ret = fcntl(fd, F_SETLKW, (void *)&flk);
-    return ret != -1;
+/// Lock the history file.
+/// Returns true on success, false on failure.
+static bool history_file_lock(int fd, int lock_type) {
+    static bool do_locking = true;
+    if (!do_locking) return false;
+
+    double start_time = timef();
+    int retval = flock(fd, lock_type);
+    double duration = timef() - start_time;
+    if (duration > 0.25) {
+        debug(1, _(L"Locking the history file took too long (%.3f seconds)."), duration);
+        do_locking = false;
+        return false;
+    }
+    return retval != -1;
 }
 
 /// Our LRU cache is used for restricting the amount of history we have, and limiting how long we
@@ -947,7 +956,7 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
     // unlikely because we only treat an item as valid if it has a terminating newline.
     //
     // Simulate a failing lock in chaos_mode.
-    if (!chaos_mode) history_file_lock(fd, F_RDLCK);
+    if (!chaos_mode) history_file_lock(fd, LOCK_SH);
     off_t len = lseek(fd, 0, SEEK_END);
     if (len != (off_t)-1) {
         size_t mmap_length = (size_t)len;
@@ -961,6 +970,7 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
             }
         }
     }
+    if (!chaos_mode) history_file_lock(fd, LOCK_UN);
     close(fd);
     return result;
 }
@@ -1338,7 +1348,7 @@ bool history_t::save_internal_via_appending() {
         // by writing with O_APPEND.
         //
         // Simulate a failing lock in chaos_mode
-        if (!chaos_mode) history_file_lock(out_fd, F_WRLCK);
+        if (!chaos_mode) history_file_lock(out_fd, LOCK_EX);
 
         // We (hopefully successfully) took the exclusive lock. Append to the file.
         // Note that this is sketchy for a few reasons:
@@ -1378,6 +1388,7 @@ bool history_t::save_internal_via_appending() {
             ok = true;
         }
 
+        if (!chaos_mode) history_file_lock(out_fd, LOCK_UN);
         close(out_fd);
     }
 

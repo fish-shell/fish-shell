@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <netinet/in.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,20 +15,19 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <wchar.h>
-#include <string>
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
-#include <netinet/in.h>
-#include <map>
-#include <utility>
+// We need the sys/file.h for the flock() declaration on Linux but not OS X.
+#include <sys/file.h>  // IWYU pragma: keep
 // We need the ioctl.h header so we can check if SIOCGIFHWADDR is defined by it so we know if we're
 // on a Linux system.
 #include <sys/ioctl.h>  // IWYU pragma: keep
-// We need the sys/file.h for the flock() declaration on Linux but not OS X.
-#include <sys/file.h>  // IWYU pragma: keep
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
+#include <unistd.h>
+#include <wchar.h>
+#include <map>
+#include <string>
+#include <utility>
 
 #include "common.h"
 #include "env.h"
@@ -550,6 +550,28 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
     return success;
 }
 
+/// Check how long the operation took and print a message if it took too long.
+/// Returns false if it took too long else true.
+static bool check_duration(double start_time) {
+    double duration = timef() - start_time;
+    if (duration > 0.25) {
+        debug(1, _(L"Locking the universal var file took too long (%.3f seconds)."), duration);
+        return false;
+    }
+    return true;
+}
+
+/// Try locking the file. Return true if we succeeded else false. This is safe in terms of the
+/// fallback function implemented in terms of fcntl: only ever run on the main thread, and protected
+/// by the universal variable lock.
+static bool lock_uvar_file(int fd) {
+    double start_time = timef();
+    while (flock(fd, LOCK_EX) == -1) {
+        if (errno != EINTR) return false;  // do nothing per issue #2149
+    }
+    return check_duration(start_time);
+}
+
 bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
     // Attempt to open the file for reading at the given path, atomically acquiring a lock. On BSD,
     // we can use O_EXLOCK. On Linux, we open the file, take a lock, and then compare fstat() to
@@ -557,22 +579,25 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
     //
     // We pass O_RDONLY with O_CREAT; this creates a potentially empty file. We do this so that we
     // have something to lock on.
-    int result_fd = -1;
+    static bool do_locking = true;
     bool needs_lock = true;
     int flags = O_RDWR | O_CREAT;
+
 #ifdef O_EXLOCK
-    flags |= O_EXLOCK;
-    needs_lock = false;
+    if (do_locking) {
+        flags |= O_EXLOCK;
+        needs_lock = false;
+    }
 #endif
-    for (;;) {
-        int fd = wopen_cloexec(path, flags, 0644);
-        if (fd < 0) {
-            if (errno == EINTR) {
-                /* Signal; try again */
-                continue;
-            }
+
+    int fd = -1;
+    while (fd == -1) {
+        double start_time = timef();
+        fd = wopen_cloexec(path, flags, 0644);
+        if (fd == -1) {
+            if (errno == EINTR) continue;  // signaled; try again
 #ifdef O_EXLOCK
-            else if (errno == ENOTSUP || errno == EOPNOTSUPP) {
+            if (do_locking && (errno == ENOTSUP || errno == EOPNOTSUPP)) {
                 // Filesystem probably does not support locking. Clear the flag and try again. Note
                 // that we try taking the lock via flock anyways. Note that on Linux the two errno
                 // symbols have the same value but on BSD they're different.
@@ -581,30 +606,20 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
                 continue;
             }
 #endif
-            else {
-                const char *error = strerror(errno);
-                debug(0, _(L"Unable to open universal variable file '%ls': %s"), path.c_str(),
-                      error);
-                break;
-            }
+            const char *error = strerror(errno);
+            debug(0, _(L"Unable to open universal variable file '%ls': %s"), path.c_str(), error);
+            break;
         }
 
-        // If we get here, we must have a valid fd.
-        assert(fd >= 0);
+        assert(fd >= 0);  // if we get here, we must have a valid fd
+        if (!needs_lock && do_locking) {
+            do_locking = check_duration(start_time);
+        }
 
         // Try taking the lock, if necessary. If we failed, we may be on lockless NFS, etc.; in that
         // case we pretend we succeeded. See the comment in save_to_path for the rationale.
-        if (needs_lock) {
-            // This is safe in terms of the fallback function implemented in terms of fcntl: only
-            // ever run on the main thread, and protected by the universal variable lock.
-            // cppcheck-suppress flockSemanticsWarning
-            while (flock(fd, LOCK_EX) < 0) {
-                /* error */
-                if (errno != EINTR) {
-                    /* Do nothing per #2149 */
-                    break;
-                }
-            }
+        if (needs_lock && do_locking) {
+            do_locking = lock_uvar_file(fd);
         }
 
         // Hopefully we got the lock. However, it's possible the file changed out from under us
@@ -612,18 +627,12 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
         if (file_id_for_fd(fd) != file_id_for_path(path)) {
             // Oops, it changed! Try again.
             close(fd);
-            continue;
+            fd = -1;
         }
-
-        // Finally, we have an fd that's valid and hopefully locked. We're done.
-        assert(fd >= 0);
-        result_fd = fd;
-        break;
     }
 
-    *out_fd = result_fd;
-
-    return result_fd >= 0;
+    *out_fd = fd;
+    return fd >= 0;
 }
 
 // Returns true if modified variables were written, false if not. (There may still be variable

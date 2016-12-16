@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <paths.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -133,7 +134,7 @@ static wcstring get_runtime_path() {
         }
 
         // /tmp/fish.user
-        std::string tmpdir = "/tmp/fish.";
+        std::string tmpdir = _PATH_TMP "fish.";
         tmpdir.append(uname);
         if (check_runtime_path(tmpdir.c_str()) != 0) {
             debug(0,

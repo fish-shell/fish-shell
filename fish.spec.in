@@ -41,6 +41,10 @@ is simple but incompatible with other shell languages.
 %if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
 export CC=gcc48
 export CXX=g++48
+%if 0%{?rhel} < 6
+# i686 required for atomic instructions; default is i386
+export CXXFLAGS="$CXXFLAGS -march=i686"
+%endif
 %endif
 %if 0%{?opensuse_bs}
 %configure || cat config.log

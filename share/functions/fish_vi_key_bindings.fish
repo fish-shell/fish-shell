@@ -118,8 +118,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Backspace deletes a char in insert mode, but not in normal/default mode.
     bind -M insert -k backspace backward-delete-char
     bind -M default -k backspace backward-char
-    bind -M insert \x7f backward-delete-char
-    bind -M default \x7f backward-char
+    bind -M insert \ch backward-delete-char
+    bind -M default \ch backward-char
+    bind -M insert \x7f delete-char
+    bind -M default \x7f delete-char
     bind \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-delete
 
     bind dd kill-whole-line

@@ -1821,12 +1821,9 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
             step = 1;
         } else if (arg_count == 1) {
             long long seed = parse_ll(argv[w.woptind]);
-            if (!parse_error) {
-                engine.seed(seed);
-                return STATUS_BUILTIN_OK;
-            } else {
-                return STATUS_BUILTIN_ERROR;
-            }
+            if (parse_error) return STATUS_BUILTIN_ERROR;
+            engine.seed(static_cast<uint32_t>(seed));
+            return STATUS_BUILTIN_OK;
         } else if (arg_count == 2) {
             start = parse_ll(argv[w.woptind]);
             step = 1;

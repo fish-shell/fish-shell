@@ -196,6 +196,8 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (reverse && enter_reverse_mode) {
         writembs(enter_reverse_mode);
+    } else if (reverse && enter_standout_mode) {
+        writembs(enter_standout_mode);
     }
 
     if (bgcolor != NULL && bg.is_normal()) {

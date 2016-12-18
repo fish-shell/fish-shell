@@ -2222,45 +2222,37 @@ bool shell_is_exiting() {
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
 static void handle_end_loop() {
-    job_t *j;
-    int stopped_jobs_count = 0;
-    int is_breakpoint = 0;
+    bool bg_jobs = false;
+    bool is_breakpoint = false;
     const parser_t &parser = parser_t::principal_parser();
 
     for (size_t i = 0; i < parser.block_count(); i++) {
         if (parser.block_at_index(i)->type() == BREAKPOINT) {
-            is_breakpoint = 1;
+            is_breakpoint = true;
             break;
         }
     }
 
     job_iterator_t jobs;
-    while ((j = jobs.next())) {
-        if (!job_is_completed(j) && (job_is_stopped(j))) {
-            stopped_jobs_count++;
+    while (job_t *j = jobs.next()) {
+        if (!job_is_completed(j)) {
+            bg_jobs = true;
             break;
         }
     }
 
-    if (!reader_exit_forced() && !data->prev_end_loop && stopped_jobs_count && !is_breakpoint) {
-        writestr(_(
-            L"There are stopped jobs. A second attempt to exit will enforce their termination.\n"));
-
+    if (!reader_exit_forced() && !data->prev_end_loop && bg_jobs && !is_breakpoint) {
+        writestr(_(L"There are stopped or running jobs.\n"));
+	writestr(_(L"A second attempt to exit will force their termination.\n"));
         reader_exit(0, 0);
         data->prev_end_loop = 1;
     } else {
-        // PCA: We used to only hangup jobs if stdin was closed. This prevented child processes from
-        // exiting. It's unclear to my why it matters if stdin is closed, but it seems to me if
-        // we're forcing an exit, we definitely want to hang up our processes. See issue #138.
-        if (reader_exit_forced() || !isatty(0)) {
-            // We already know that stdin is a tty since we're in interactive mode. If isatty
-            // returns false, it means stdin must have been closed.
-            job_iterator_t jobs;
-            while ((j = jobs.next())) {
-                // Send SIGHUP only to foreground processes. See issue #1771.
-                if (!job_is_completed(j) && job_get_flag(j, JOB_FOREGROUND)) {
-                    job_signal(j, SIGHUP);
-                }
+        // Kill background jobs.
+        job_iterator_t jobs;
+        while (job_t *j = jobs.next()) {
+            if (!job_is_completed(j)) {
+                if (job_is_stopped(j)) job_signal(j, SIGCONT);
+                job_signal(j, SIGHUP);
             }
         }
     }

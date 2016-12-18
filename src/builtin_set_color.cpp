@@ -58,11 +58,12 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                            {L"underline", no_argument, 0, 'u'},
                                            {L"italics", no_argument, 0, 'i'},
                                            {L"dim", no_argument, 0, 'd'},
+                                           {L"reverse", no_argument, 0, 'r'},
                                            {L"version", no_argument, 0, 'v'},
                                            {L"print-colors", no_argument, 0, 'c'},
                                            {0, 0, 0, 0}};
 
-    const wchar_t *short_options = L"b:hvoidcu";
+    const wchar_t *short_options = L"b:hvoidrcu";
 
     int argc = builtin_count_args(argv);
 
@@ -73,7 +74,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     const wchar_t *bgcolor = NULL;
-    bool bold = false, underline = false, italics = false, dim = false;
+    bool bold = false, underline = false, italics = false, dim = false, reverse = false;
     int errret;
 
     // Parse options to obtain the requested operation and the modifiers.
@@ -109,6 +110,10 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 dim = true;
                 break;
             }
+            case 'r': {
+                reverse = true;
+                break;
+            }
             case 'u': {
                 underline = true;
                 break;
@@ -138,7 +143,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         fgcolors.push_back(fg);
     }
 
-    if (fgcolors.empty() && bgcolor == NULL && !bold && !underline && !italics && !dim) {
+    if (fgcolors.empty() && bgcolor == NULL && !bold && !underline && !italics && !dim && !reverse) {
         streams.err.append_format(_(L"%ls: Expected an argument\n"), argv[0]);
         return STATUS_BUILTIN_ERROR;
     }
@@ -187,6 +192,10 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (dim && enter_dim_mode) {
         writembs(enter_dim_mode);
+    }
+
+    if (reverse && enter_reverse_mode) {
+        writembs(enter_reverse_mode);
     }
 
     if (bgcolor != NULL && bg.is_normal()) {

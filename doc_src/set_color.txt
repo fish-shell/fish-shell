@@ -23,6 +23,7 @@ The following options are available:
 - `-o`, `--bold` sets bold mode.
 - `-d`, `--dim` sets dim mode.
 - `-i`, `--italics` sets italics mode.
+- `-r`, `--reverse` sets reverse mode.
 - `-u`, `--underline` sets underlined mode.
 
 Using the *normal* keyword will reset foreground, background, and all formatting back to default.

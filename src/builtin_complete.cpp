@@ -58,25 +58,17 @@ static void builtin_complete_add2(const wchar_t *cmd, int cmd_type, const wchar_
 /// Silly function.
 static void builtin_complete_add(const wcstring_list_t &cmd, const wcstring_list_t &path,
                                  const wchar_t *short_opt, wcstring_list_t &gnu_opt,
-                                 wcstring_list_t &old_opt, int result_mode, int authoritative,
+                                 wcstring_list_t &old_opt, int result_mode,
                                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc,
                                  int flags) {
     for (size_t i = 0; i < cmd.size(); i++) {
         builtin_complete_add2(cmd.at(i).c_str(), COMMAND, short_opt, gnu_opt, old_opt, result_mode,
                               condition, comp, desc, flags);
-
-        if (authoritative != -1) {
-            complete_set_authoritative(cmd.at(i).c_str(), COMMAND, authoritative);
-        }
     }
 
     for (size_t i = 0; i < path.size(); i++) {
         builtin_complete_add2(path.at(i).c_str(), PATH, short_opt, gnu_opt, old_opt, result_mode,
                               condition, comp, desc, flags);
-
-        if (authoritative != -1) {
-            complete_set_authoritative(path.at(i).c_str(), PATH, authoritative);
-        }
     }
 }
 
@@ -128,7 +120,6 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
     int result_mode = SHARED;
     int remove = 0;
-    int authoritative = -1;
     wcstring short_opt;
     wcstring_list_t gnu_opt, old_opt;
     const wchar_t *comp = L"", *desc = L"", *condition = L"";
@@ -183,7 +174,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     else
                         cmd_to_complete.push_back(tmp);
                 } else {
-                    streams.err.append_format(L"%ls: Invalid token '%ls'\n", cmd, w.woptarg);
+                    streams.err.append_format(_(L"%ls: Invalid token '%ls'\n"), cmd, w.woptarg);
                     return STATUS_BUILTIN_ERROR;
                 }
                 break;
@@ -193,17 +184,19 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 break;
             }
             case 'u': {
-                authoritative = 0;
+                streams.err.append_format(
+                    _(L"%ls: -u / --unauthoritative flags have been removed\n"), cmd);
                 break;
             }
             case 'A': {
-                authoritative = 1;
+                streams.err.append_format(_(L"%ls: -A / --authoritative flags have been removed\n"),
+                                          cmd);
                 break;
             }
             case 's': {
                 short_opt.append(w.woptarg);
                 if (w.woptarg[0] == '\0') {
-                    streams.err.append_format(L"%ls: -s requires a non-empty string\n", cmd);
+                    streams.err.append_format(_(L"%ls: -s requires a non-empty string\n"), cmd);
                     return STATUS_BUILTIN_ERROR;
                 }
                 break;
@@ -211,7 +204,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             case 'l': {
                 gnu_opt.push_back(w.woptarg);
                 if (w.woptarg[0] == '\0') {
-                    streams.err.append_format(L"%ls: -l requires a non-empty string\n", cmd);
+                    streams.err.append_format(_(L"%ls: -l requires a non-empty string\n"), cmd);
                     return STATUS_BUILTIN_ERROR;
                 }
                 break;
@@ -219,7 +212,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             case 'o': {
                 old_opt.push_back(w.woptarg);
                 if (w.woptarg[0] == '\0') {
-                    streams.err.append_format(L"%ls: -o requires a non-empty string\n", cmd);
+                    streams.err.append_format(_(L"%ls: -o requires a non-empty string\n"), cmd);
                     return STATUS_BUILTIN_ERROR;
                 }
                 break;
@@ -369,7 +362,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             builtin_complete_remove(cmd_to_complete, path, short_opt.c_str(), gnu_opt, old_opt);
         } else {
             builtin_complete_add(cmd_to_complete, path, short_opt.c_str(), gnu_opt, old_opt,
-                                 result_mode, authoritative, condition, comp, desc, flags);
+                                 result_mode, condition, comp, desc, flags);
         }
 
         // Handle wrap targets (probably empty). We only wrap commands, not paths.

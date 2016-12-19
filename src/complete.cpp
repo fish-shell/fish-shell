@@ -138,8 +138,6 @@ class completion_entry_t {
     const wcstring cmd;
     /// True if command is a path.
     const bool cmd_is_path;
-    /// True if no other options than the ones supplied are possible.
-    bool authoritative;
     /// Order for when this completion was created. This aids in outputting completions sorted by
     /// time.
     const unsigned int order;
@@ -151,8 +149,8 @@ class completion_entry_t {
     void add_option(const complete_entry_opt_t &opt);
     bool remove_option(const wcstring &option, complete_option_type_t type);
 
-    completion_entry_t(const wcstring &c, bool type, bool author)
-        : cmd(c), cmd_is_path(type), authoritative(author), order(++kCompleteOrder) {}
+    completion_entry_t(const wcstring &c, bool type)
+        : cmd(c), cmd_is_path(type), order(++kCompleteOrder) {}
 };
 
 /// Set of all completion entries.
@@ -418,20 +416,12 @@ static completion_entry_t &complete_get_exact_entry(const wcstring &cmd, bool cm
     ASSERT_IS_LOCKED(completion_lock);
 
     std::pair<completion_entry_set_t::iterator, bool> ins =
-        completion_set.insert(completion_entry_t(cmd, cmd_is_path, false));
+        completion_set.insert(completion_entry_t(cmd, cmd_is_path));
 
     // NOTE SET_ELEMENTS_ARE_IMMUTABLE: Exposing mutable access here is only okay as long as callers
     // do not change any field that matters to ordering - affecting order without telling std::set
     // invalidates its internal state.
     return const_cast<completion_entry_t &>(*ins.first);
-}
-
-void complete_set_authoritative(const wchar_t *cmd, bool cmd_is_path, bool authoritative) {
-    CHECK(cmd, );
-    scoped_lock lock(completion_lock);
-
-    completion_entry_t &c = complete_get_exact_entry(cmd, cmd_is_path);
-    c.authoritative = authoritative;
 }
 
 void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
@@ -481,7 +471,7 @@ void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &opti
                      complete_option_type_t type) {
     scoped_lock lock(completion_lock);
 
-    completion_entry_t tmp_entry(cmd, cmd_is_path, false);
+    completion_entry_t tmp_entry(cmd, cmd_is_path);
     completion_entry_set_t::iterator iter = completion_set.find(tmp_entry);
     if (iter != completion_set.end()) {
         // const_cast: See SET_ELEMENTS_ARE_IMMUTABLE.
@@ -498,7 +488,7 @@ void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &opti
 void complete_remove_all(const wcstring &cmd, bool cmd_is_path) {
     scoped_lock lock(completion_lock);
 
-    completion_entry_t tmp_entry(cmd, cmd_is_path, false);
+    completion_entry_t tmp_entry(cmd, cmd_is_path);
     completion_set.erase(tmp_entry);
 }
 

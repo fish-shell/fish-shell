@@ -143,10 +143,6 @@ void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
                   complete_option_type_t option_type, int result_mode, const wchar_t *condition,
                   const wchar_t *comp, const wchar_t *desc, int flags);
 
-/// Sets whether the completion list for this command is complete. If true, any options not matching
-/// one of the provided options will be flagged as an error by syntax highlighting.
-void complete_set_authoritative(const wchar_t *cmd, bool cmd_type, bool authoritative);
-
 /// Remove a previously defined completion.
 void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
                      complete_option_type_t type);

@@ -8,7 +8,7 @@ function __fish_print_make_targets --argument directory
     end
 
     set -l bsd_make
-    if make -p -f/dev/null ^/dev/null
+    if make -C $directory -p >/dev/null ^/dev/null
         set bsd_make 0
     else
         set bsd_make 1

@@ -110,7 +110,7 @@ complete -n '__fish_seen_subcommand_from install' -c adb -l 'iv' -d 'Hex-encoded
 
 # uninstall
 complete -n '__fish_seen_subcommand_from uninstall' -c adb -s k -d 'Keep the data and cache directories'
-complete -n '__fish_seen_subcommand_from uninstall' -c adb -f -u -a "(__fish_adb_list_uninstallable_packages)"
+complete -n '__fish_seen_subcommand_from uninstall' -c adb -f -a "(__fish_adb_list_uninstallable_packages)"
 
 # devices
 complete -n '__fish_seen_subcommand_from devices' -c adb -s l -d 'Also list device qualifiers'

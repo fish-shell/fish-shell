@@ -79,7 +79,7 @@ function psub --description "Read from stdin into a file and output the filename
 
     # Find unique function name
     while true
-        set funcname __fish_psub_(random)
+        set funcname __fish_psub_(random 10000000)
 
         if not functions $funcname >/dev/null ^/dev/null
             break
@@ -95,5 +95,6 @@ function psub --description "Read from stdin into a file and output the filename
         end
         functions -e $funcname
     end
+
 
 end

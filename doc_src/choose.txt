@@ -1,0 +1,18 @@
+\section choose choose - Chooses a random item from a list
+
+\subsection choose-synopsis Synopsis
+\fish{synopsis}
+choose [ITEMS...]
+\endfish
+
+\subsection choose-description Description
+
+`CHOOSE` is a very simple wrapper around `RANDOM` that selects a random item
+from a given list.
+
+\subsection choose-example Example
+
+Open a random picture in any subdirectiory:
+\fish
+open (choose **.jpg) 
+\endfish

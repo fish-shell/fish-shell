@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <memory>
@@ -48,9 +49,17 @@ static bool should_exit(wchar_t wc) {
     recent_chars[1] = recent_chars[2];
     recent_chars[2] = recent_chars[3];
     recent_chars[3] = c;
-    return (memcmp(recent_chars, "exit", 4) == 0 || memcmp(recent_chars, "quit", 4) == 0 ||
-            memcmp(recent_chars + 2, "\x3\x3", 2) == 0 ||  // ctrl-C, ctrl-C
-            memcmp(recent_chars + 2, "\x4\x4", 2) == 0);   // ctrl-D, ctrl-D
+    if (c == shell_modes.c_cc[VINTR]) {
+        if (recent_chars[2] == shell_modes.c_cc[VINTR]) return true;
+        fprintf(stderr, "Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VINTR] + 0x40);
+        return false;
+    }
+    if (c == shell_modes.c_cc[VEOF]) {
+        if (recent_chars[2] == shell_modes.c_cc[VEOF]) return true;
+        fprintf(stderr, "Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VEOF] + 0x40);
+        return false;
+    }
+    return memcmp(recent_chars, "exit", 4) == 0 || memcmp(recent_chars, "quit", 4) == 0;
 }
 
 /// Return the name if the recent sequence of characters matches a known terminfo sequence.
@@ -201,7 +210,12 @@ static void process_input(bool continuous_mode) {
 
     fprintf(stderr, "Press a key\n\n");
     while (keep_running) {
-        wchar_t wc = input_common_readch(true);
+        wchar_t wc;
+        if (reader_interrupted()) {
+            wc = shell_modes.c_cc[VINTR];
+        } else {
+            wc = input_common_readch(true);
+        }
         if (wc == R_TIMEOUT || wc == R_EOF) {
             output_bind_command(bind_chars);
             if (first_char_seen && !continuous_mode) {
@@ -230,12 +244,11 @@ static void process_input(bool continuous_mode) {
 /// Otherwise just report receipt of the signal.
 static struct sigaction old_sigactions[32];
 static void signal_handler(int signo, siginfo_t *siginfo, void *siginfo_arg) {
-    debug(2, L"signal #%d (%ls) received", signo, sig2wcs(signo));
-    // SIGINT isn't included in the following conditional because it is handled specially by fish.
-    // Specifically, it causes \cC to be reinserted into the tty input stream.
+    fwprintf(stdout, _(L"signal #%d (%ls) received\n"), signo, sig2wcs(signo));
     if (signo == SIGHUP || signo == SIGTERM || signo == SIGABRT || signo == SIGSEGV) {
         keep_running = false;
     }
+
     if (old_sigactions[signo].sa_handler != SIG_IGN &&
         old_sigactions[signo].sa_handler != SIG_DFL) {
         int needs_siginfo = old_sigactions[signo].sa_flags & SA_SIGINFO;
@@ -279,13 +292,13 @@ static void setup_and_process_keys(bool continuous_mode) {
     reader_init();
     input_init();
     proc_push_interactive(1);
-    signal_set_handlers();
     install_our_signal_handlers();
 
     if (continuous_mode) {
         fprintf(stderr, "\n");
         fprintf(stderr, "To terminate this program type \"exit\" or \"quit\" in this window,\n");
-        fprintf(stderr, "or press [ctrl-C] or [ctrl-D] twice in a row.\n");
+        fprintf(stderr, "or press [ctrl-%c] or [ctrl-%c] twice in a row.\n",
+                shell_modes.c_cc[VINTR] + 0x40, shell_modes.c_cc[VEOF] + 0x40);
         fprintf(stderr, "\n");
     }
 

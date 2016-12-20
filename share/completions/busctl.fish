@@ -108,7 +108,7 @@ end
 set -l commands list status monitor capture tree introspect call get-property set-property help
 
 complete -f -e -c busctl
-complete -A -f -c busctl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
+complete -f -c busctl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
 
 ### Arguments to commands
 # "status" only takes a single service as argument

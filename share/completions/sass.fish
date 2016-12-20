@@ -11,7 +11,7 @@ complete -c sass -s r -l require -x -d "Require a Ruby library before running Sa
 #         --compass                    Make Compass imports available and load project configuration.
 complete -c sass -l compass -d "Make Compass imports available and load project configuration."
 #     -t, --style NAME                 Output style. Can be nested (default), compact, compressed, or expanded.
-complete -c sass -s t -l style -x -A -a "nested compact compressed expanded" -d "Output style. Can be nested (default), compact, compressed, or expanded."
+complete -c sass -s t -l style -x -a "nested compact compressed expanded" -d "Output style. Can be nested (default), compact, compressed, or expanded."
 #     -?, -h, --help                   Show this help message.
 complete -c sass -s '?' -s h -l help -f -d "Show help message."
 #     -v, --version                    Print the Sass version.
@@ -44,7 +44,7 @@ complete -c sass -l scss -d "Use the CSS-superset SCSS syntax."
 #                                        file: always absolute file URIs
 #                                        inline: include the source text in the sourcemap
 #                                        none: no sourcemaps
-complete -c sass -l sourcemap -x -A -a "auto\t'(default) relative paths where possible, file URIs elsewhere'
+complete -c sass -l sourcemap -x -a "auto\t'(default) relative paths where possible, file URIs elsewhere'
 sfile\t'always absolute file URIs'
 inline\t'include the source text in the sourcemap'
 none\t'no sourcemaps'" -d "How to link generated output to the source files."

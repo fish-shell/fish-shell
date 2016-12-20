@@ -14,29 +14,30 @@
 #include "config.h"
 
 // IWYU pragma: no_include <type_traits>
+#include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>
-#include <termios.h>
-#include <time.h>
-#include <unistd.h>
-#include <wctype.h>
-#include <algorithm>
-#include <stack>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
-#include <assert.h>
-#include <fcntl.h>
-#include <signal.h>
+#include <sys/time.h>
 #include <sys/types.h>
+#include <termios.h>
+#include <time.h>
+#include <unistd.h>
 #include <wchar.h>
+#include <wctype.h>
+
+#include <algorithm>
+#include <stack>
 #include <memory>
 
 #include "color.h"
@@ -2222,17 +2223,18 @@ bool shell_is_exiting() {
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
 static void handle_end_loop() {
-    bool bg_jobs = false;
-    bool is_breakpoint = false;
-    const parser_t &parser = parser_t::principal_parser();
-
-    for (size_t i = 0; i < parser.block_count(); i++) {
-        if (parser.block_at_index(i)->type() == BREAKPOINT) {
-            is_breakpoint = true;
-            break;
+    if (!reader_exit_forced()) {
+        const parser_t &parser = parser_t::principal_parser();
+        for (size_t i = 0; i < parser.block_count(); i++) {
+            if (parser.block_at_index(i)->type() == BREAKPOINT) {
+                // We're executing within a breakpoint so we do not want to terminate the shell and
+                // kill background jobs.
+                return;
+            }
         }
     }
 
+    bool bg_jobs = false;
     job_iterator_t jobs;
     while (job_t *j = jobs.next()) {
         if (!job_is_completed(j)) {
@@ -2241,19 +2243,20 @@ static void handle_end_loop() {
         }
     }
 
-    if (!reader_exit_forced() && !data->prev_end_loop && bg_jobs && !is_breakpoint) {
+    if (!data->prev_end_loop && bg_jobs) {
         writestr(_(L"There are stopped or running jobs.\n"));
 	writestr(_(L"A second attempt to exit will force their termination.\n"));
         reader_exit(0, 0);
         data->prev_end_loop = 1;
-    } else {
-        // Kill background jobs.
-        job_iterator_t jobs;
-        while (job_t *j = jobs.next()) {
-            if (!job_is_completed(j)) {
-                if (job_is_stopped(j)) job_signal(j, SIGCONT);
-                job_signal(j, SIGHUP);
-            }
+        return;
+    }
+
+    // Kill background jobs before exiting.
+    jobs.reset();
+    while (job_t *j = jobs.next()) {
+        if (!job_is_completed(j)) {
+            if (job_is_stopped(j)) job_signal(j, SIGCONT);
+            job_signal(j, SIGHUP);
         }
     }
 }

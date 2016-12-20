@@ -2251,7 +2251,7 @@ static void handle_end_loop() {
         return;
     }
 
-    // Kill background jobs before exiting.
+    // Kill remaining jobs before exiting.
     jobs.reset();
     while (job_t *j = jobs.next()) {
         if (!job_is_completed(j)) {

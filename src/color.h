@@ -19,8 +19,8 @@ class rgb_color_t {
     unsigned char type : 4;
 
     // Flags
-    enum { flag_bold = 1 << 0, flag_underline = 1 << 1 };
-    unsigned char flags : 4;
+    enum { flag_bold = 1 << 0, flag_underline = 1 << 1, flag_italics = 1 << 2, flag_dim = 1 << 3, flag_reverse = 1 << 4 };
+    unsigned char flags : 5;
 
     union {
         unsigned char name_idx;  // 0-10
@@ -115,6 +115,39 @@ class rgb_color_t {
             flags |= flag_underline;
         else
             flags &= ~flag_underline;
+    }
+
+    /// Returns whether the color is italics.
+    bool is_italics() const { return static_cast<bool>(flags & flag_italics); }
+
+    /// Set whether the color is italics.
+    void set_italics(bool x) {
+        if (x)
+            flags |= flag_italics;
+        else
+            flags &= ~flag_italics;
+    }
+
+    /// Returns whether the color is dim.
+    bool is_dim() const { return static_cast<bool>(flags & flag_dim); }
+
+    /// Set whether the color is dim.
+    void set_dim(bool x) {
+        if (x)
+            flags |= flag_dim;
+        else
+            flags &= ~flag_dim;
+    }
+
+    /// Returns whether the color is reverse.
+    bool is_reverse() const { return static_cast<bool>(flags & flag_reverse); }
+
+    /// Set whether the color is reverse.
+    void set_reverse(bool x) {
+        if (x)
+            flags |= flag_reverse;
+        else
+            flags &= ~flag_reverse;
     }
 
     /// Compare two colors for equality.

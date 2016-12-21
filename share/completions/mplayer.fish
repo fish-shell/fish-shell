@@ -82,6 +82,4 @@ complete -c mplayer -o vfm -x --description "Video output" -a "
 complete -c mplayer -l help --description "Display help and exit"
 complete -c mplayer -l version --description "Display version and exit"
 
-complete -c mplayer -u
-
 set -e mplayer_lang

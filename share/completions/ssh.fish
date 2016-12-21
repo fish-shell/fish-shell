@@ -46,6 +46,3 @@ complete -c ssh -s X --description "Enable X11 forwarding"
 complete -c ssh -s L --description "Locally forwarded ports"
 complete -c ssh -s R --description "Remotely forwarded ports"
 complete -c ssh -s D --description "Dynamic port forwarding"
-
-# Since ssh runs subcommands, it can accept any switches
-complete -c ssh -u

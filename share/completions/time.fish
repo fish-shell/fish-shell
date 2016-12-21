@@ -8,6 +8,3 @@ complete -c time -s a -l append -n "__fish_no_arguments" --description "(Used to
 complete -c time -s v -l verbose -n "__fish_no_arguments" --description "Verbose mode"
 complete -c time -l help -n "__fish_no_arguments" --description "Display help and exit"
 complete -c time -s V -l version -n "__fish_no_arguments" --description "Display version and exit"
-
-# Since time runs subcommands, it can accept any switches
-complete -c time -u

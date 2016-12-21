@@ -78,5 +78,3 @@ complete -c set -n '__fish_set_is_color' -s o -l bold --description 'Make font b
 complete -c set -n '__fish_is_first_token' -x -a '$__fish_locale_vars' -d 'Locale variable'
 complete -c set -n '__fish_set_is_locale' -x -a '(locale -a)' -d (_ Locale)
 complete -c set -s L -l long -d 'Do not truncate long lines'
-
-complete -c set -u

@@ -21,7 +21,7 @@ complete -c systemd-nspawn -s L -l selinux-apifs-context -d 'Sets the SELinux se
 complete -c systemd-nspawn -l capability -d 'Grant additional capabilities to the container'
 complete -c systemd-nspawn -l drop-capability -d 'Drop capabilities from the container'
 complete -c systemd-nspawn -l kill-signal -d "Signal to send to the container's PID1 when nspawn receives SIGTERM"
-complete -c systemd-nspawn -l link-journal -d 'Set container journal visibility' -a 'no host try-host guest try-guest auto' -r -A
+complete -c systemd-nspawn -l link-journal -d 'Set container journal visibility' -a 'no host try-host guest try-guest auto' -r
 complete -c systemd-nspawn -s j -d 'Equivalent to --link-journal=try-guest'
 complete -c systemd-nspawn -l read-only -d 'Mount the root file system read-only for the container'
 complete -c systemd-nspawn -l bind -l bind-ro -d 'Bind mount a file or directory from the host in the container' -r

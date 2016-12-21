@@ -10,5 +10,3 @@ complete -c configure -l exec-prefix --description "Architecture-dependent insta
 complete -c configure -l build --description "Configure for building on BUILD" -x
 complete -c configure -l host --description "Cross-compile to build programs to run on HOST" -x
 complete -c configure -l target --description "Configure for building compilers for TARGET" -x
-
-complete -c configure -u

@@ -1193,36 +1193,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
     bool polling_due_to_readable_fd;
     long long drain_if_still_readable_time_usec;
 
-    void make_pipe(const wchar_t *test_path) {
-        wcstring vars_path = test_path ? wcstring(test_path) : default_named_pipe_path();
-        vars_path.append(L".notifier");
-        const std::string narrow_path = wcs2string(vars_path);
-
-        int fd = wopen_cloexec(vars_path, O_RDWR | O_NONBLOCK, 0600);
-        if (fd < 0 && errno == ENOENT) {
-            // File doesn't exist, try creating it.
-            int mkfifo_status = mkfifo(narrow_path.c_str(), 0600);
-            if (mkfifo_status != -1) {
-                fd = wopen_cloexec(vars_path, O_RDWR | O_NONBLOCK, 0600);
-            }
-        }
-
-        if (fd < 0) {
-            // Maybe open failed, maybe mkfifo failed.
-            // We explicitly do NOT report an error for ENOENT or EACCESS. This works around #1955,
-            // where $XDG_RUNTIME_DIR may get a bogus value under success.
-            if (errno != ENOENT && errno != EPERM) {
-                const char *error = strerror(errno);
-                debug(
-                    0,
-                    _(L"Unable to make or open a FIFO for universal variables with path '%ls': %s"),
-                    vars_path.c_str(), error);
-            }
-            pipe_fd = -1;
-        } else {
-            pipe_fd = fd;
-        }
-    }
+    void make_pipe(const wchar_t *test_path);
 
     void drain_excessive_data() {
         // The pipe seems to have data on it, that won't go away. Read a big chunk out of it. We
@@ -1466,4 +1437,30 @@ unsigned long universal_notifier_t::usec_delay_between_polls() const { return 0;
 bool universal_notifier_t::notification_fd_became_readable(int fd) {
     UNUSED(fd);
     return false;
+}
+
+void universal_notifier_named_pipe_t::make_pipe(const wchar_t *test_path) {
+    wcstring vars_path = test_path ? wcstring(test_path) : default_named_pipe_path();
+    vars_path.append(L".notifier");
+    const std::string narrow_path = wcs2string(vars_path);
+
+    int mkfifo_status = mkfifo(narrow_path.c_str(), 0600);
+    if (mkfifo_status == -1 && errno != EEXIST) {
+        const char *error = strerror(errno);
+        const wchar_t *errmsg = _(L"Unable to make a pipe for universal variables using '%ls': %s");
+        debug(0, errmsg, vars_path.c_str(), error);
+        pipe_fd = -1;
+        return;
+    }
+
+    int fd = wopen_cloexec(vars_path, O_RDWR | O_NONBLOCK, 0600);
+    if (fd < 0) {
+        const char *error = strerror(errno);
+        const wchar_t *errmsg = _(L"Unable to open a pipe for universal variables using '%ls': %s");
+        debug(0, errmsg, vars_path.c_str(), error);
+        pipe_fd = -1;
+        return;
+    }
+
+    pipe_fd = fd;
 }

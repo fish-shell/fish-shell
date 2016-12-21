@@ -698,17 +698,17 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
     proc_push_interactive(0);
     if (exec_subshell(fish_title_command, lst, false /* ignore exit status */) != -1 &&
         !lst.empty()) {
-        writestr(L"\x1b]0;");
+        fputs("\e]0;", stdout);
         for (size_t i = 0; i < lst.size(); i++) {
-            writestr(lst.at(i).c_str());
+            fputws(lst.at(i).c_str(), stdout);
         }
-        writestr(L"\7");
+        fputc('\a', stdout);
     }
     proc_pop_interactive();
     set_color(rgb_color_t::reset(), rgb_color_t::reset());
     if (reset_cursor_position && !lst.empty()) {
         // Put the cursor back at the beginning of the line (issue #2453).
-        writestr(L"\r");
+        fputc('\r', stdout);
     }
 }
 
@@ -1300,7 +1300,7 @@ static void reader_flash() {
     }
 
     reader_repaint();
-    writestr(L"\a");
+    fputwc(L'\a', stdout);
 
     pollint.tv_sec = 0;
     pollint.tv_nsec = 100 * 1000000;
@@ -2244,8 +2244,8 @@ static void handle_end_loop() {
     }
 
     if (!data->prev_end_loop && bg_jobs) {
-        writestr(_(L"There are stopped or running jobs.\n"));
-	writestr(_(L"A second attempt to exit will force their termination.\n"));
+        fputws(_(L"There are stopped or running jobs.\n"), stdout);
+	fputws(_(L"A second attempt to exit will force their termination.\n"), stdout);
         reader_exit(0, 0);
         data->prev_end_loop = 1;
         return;
@@ -3260,7 +3260,7 @@ const wchar_t *reader_readline(int nchars) {
         reader_repaint_if_needed();
     }
 
-    writestr(L"\n");
+    fputc('\n', stdout);
 
     // Ensure we have no pager contents when we exit.
     if (!data->pager.empty()) {

@@ -301,7 +301,11 @@ int writeb(tputs_arg_t b) {
     return 0;
 }
 
-/// Write a wide character using the output method specified using output_set_writer().
+/// Write a wide character using the output method specified using output_set_writer(). This should
+/// only be used when writing characters from user supplied strings. This is needed due to our use
+/// of the ENCODE_DIRECT_BASE mechanism to allow the user to specify arbitrary byte values to be
+/// output. Such as in a `printf` invocation that includes literal byte values such as `\x1B`.
+/// This should not be used for writing non-user supplied characters.
 int writech(wint_t ch) {
     char buff[MB_LEN_MAX + 1];
     size_t len;
@@ -328,15 +332,16 @@ int writech(wint_t ch) {
     return 0;
 }
 
-/// Write a wide character string to FD 1.
+/// Write a wide character string to stdout. This should not be used to output things like warning
+/// messages; just use debug() or fwprintf() for that. It should only be used to output user
+/// supplied strings that might contain literal bytes; e.g., "\342\224\214" from issue #1894. This
+/// is needed because those strings may contain chars specially encoded using ENCODE_DIRECT_BASE.
 void writestr(const wchar_t *str) {
     CHECK(str, );
 
-    if (MB_CUR_MAX == 1)  // single-byte locale (C/POSIX/ISO-8859)
-    {
-        while (*str) {
-            writech(*str++);
-        }
+    if (MB_CUR_MAX == 1) {
+        // Single-byte locale (C/POSIX/ISO-8859).
+        while (*str) writech(*str++);
         return;
     }
 
@@ -349,11 +354,11 @@ void writestr(const wchar_t *str) {
     // Convert the string.
     len++;
     char *buffer, static_buffer[256];
-    if (len <= sizeof static_buffer)
+    if (len <= sizeof static_buffer) {
         buffer = static_buffer;
-    else
+    } else {
         buffer = new char[len];
-
+    }
     wcstombs(buffer, str, len);
 
     // Write the string.

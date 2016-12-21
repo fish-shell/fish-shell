@@ -67,6 +67,11 @@ echo "Expect -AQ -AW:" (complete -C'TestExclusive -A' | sort | string join ' ')
 echo "Expect no output 1:" (complete -C'TestExclusive -Q')
 echo "Expect no output 2:" (complete -C'TestExclusive -W')
 
+# Test for optional arguments, like cp's --backup
+complete -c TestOptionalArgument -l backup -f -a 'none all simple'
+echo "Expect --backup --backup=:" (complete -C'TestOptionalArgument -' | sort | string join ' ')
+echo "Expect --backup=all  --backup=none  --backup=simple:" (complete -C'TestOptionalArgument --backup=' | sort | string join ' ')
+
 # Test that directory completions work correctly
 if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end
     pushd test6.tmp.dir

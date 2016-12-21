@@ -16,7 +16,7 @@ complete -c adduser -l group --description 'When combined with --system, a group
 complete -c adduser -l help --description 'Display brief instructions'
 complete -c adduser -l home --description 'Use specified directory as the user\'s home directory' -x -a '(__fish_complete_directories)'
 complete -c adduser -l shell --description 'Use shell as the user\'s login shell, rather than the default specified by the configuration file' -x -a '(cat /etc/shells)'
-complete -c adduser -l ingroup --description 'Add the new user to GROUP instead of a usergroup or the default group defined by USERS_GID in the configuration file' -x -a '(cat /etc/group|cut -d : -f 1)'
+complete -c adduser -l ingroup --description 'Add the new user to GROUP instead of a usergroup or the default group defined by USERS_GID in the configuration file' -x -a '(cut -d : -f 1 /etc/group)'
 complete -c adduser -l no-create-home --description 'Do not create the home directory, even if it doesni\'t exist'
 complete -c adduser -l quiet --description 'Suppress informational messages, only show warnings and errors'
 complete -c adduser -l debug --description 'Be verbose, most useful if you want to nail down a problem with adduser'

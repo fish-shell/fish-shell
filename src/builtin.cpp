@@ -2226,7 +2226,7 @@ const enum_map<status_cmd_t> status_enum_map[] = {
     {STATUS_CURRENT_FILENAME, L"current-filename"},
     {STATUS_CURRENT_LINE_NUMBER, L"current-line-number"},
     {STATUS_IS_BLOCK, L"is-block"},
-    {STATUS_IS_COMMAND_SUB, L"is-command-sub"},
+    {STATUS_IS_COMMAND_SUB, L"is-command-substitution"},
     {STATUS_IS_FULL_JOB_CTRL, L"is-full-job-control"},
     {STATUS_IS_INTERACTIVE, L"is-interactive"},
     {STATUS_IS_INTERACTIVE_JOB_CTRL, L"is-interactive-job-control"},

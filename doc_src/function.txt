@@ -31,7 +31,7 @@ The following options are available:
 
 - `-S` or `--no-scope-shadowing` allows the function to access the variables of calling functions. Normally, any variables inside the function that have the same name as variables from the calling function are "shadowed", and their contents is independent of the calling function.
 
-- `-V` or `--inherit-variable NAME` snapshots the value of the variable `NAME` and defines a local variable with that same name and value when the function is executed.
+- `-V` or `--inherit-variable NAME` snapshots the value of the variable `NAME` and defines a local variable with that same name and value when the function is defined. This is similar to a closure in other languages like Python but a bit different. Note the word "snapshot" in the first sentence. If you change the value of the variable after defining the function, even if you do so in the same scope (typically another function) the new value will not be used by the function you just created using this option. See the `function notify` example below for how this might be used.
 
 If the user enters any additional arguments after the function, they are inserted into the environment <a href="index.html#variables-arrays">variable array</a> `$argv`. If the `--argument-names` option is provided, the arguments are also assigned to names specified in that option.
 

@@ -126,7 +126,7 @@ function __fish_svn_prompt --description "Prompt function for svn"
         if [ (count $column_status) -ne 0 ]
 
             # we only want to display unique status flags (eg: if there are 5 modified files, the prompt should only show the modified status once)
-            set -l column_unique_status (echo $column_status | sort | uniq)
+            set -l column_unique_status (echo $column_status | sort -u)
             # parse the status flags for this column and create the formatting by calling out to the helper function
             set -l svn_status_flags (__fish_svn_prompt_parse_status $column_unique_status)
 

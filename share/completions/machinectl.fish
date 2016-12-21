@@ -50,7 +50,7 @@ complete -f -c machinectl -n "__fish_seen_subcommand_from list-images" -s a -l a
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "status" -d "Show information about machine"
 complete -f -c machinectl -n "__fish_seen_subcommand_from status" -s l -l full -d "Do not ellipsize process tree entries"
 complete -x -c machinectl -n "__fish_seen_subcommand_from status" -s n -l lines -d "How many journal lines to show"
-complete -x -A -c machinectl -n "__fish_seen_subcommand_from status" -s o -l output -d "Formatting of journal output" -a \
+complete -x -c machinectl -n "__fish_seen_subcommand_from status" -s o -l output -d "Formatting of journal output" -a \
 'short short-iso short-precise short-monotonic verbose export json json-pretty json-sse cat'
 
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "show" -d "Show properties of machines"
@@ -66,7 +66,7 @@ complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "reb
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "terminate" -d "Terminate machine (without shutting down)"
 
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "kill" -d "Send signal to process in a machine"
-complete -x -A -c machinectl -n "__fish_seen_subcommand_from kill" -l kill-who -d "Choose who to send the signal to" -a 'leader all'
+complete -x -c machinectl -n "__fish_seen_subcommand_from kill" -l kill-who -d "Choose who to send the signal to" -a 'leader all'
 __fish_make_completion_signals
 complete -x -c machinectl -n "__fish_seen_subcommand_from kill" -s s -l signal -d "Signal to send" -a "$__kill_signals"
 
@@ -100,8 +100,8 @@ complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "exp
 complete -f -c machinectl -n "__fish_seen_subcommand_from export-tar export-raw" -l format -d "Specify compression format" -a 'uncompressed xz gzip bzip2'
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "list-transfers" -d "Show running downloads, imports and exports"
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "cancel-transfers" -d "Abort running downloads, imports or exports"
-complete -x -A -c machinectl -n "__fish_seen_subcommand_from pull-{tar,raw}" -l verify -a 'no checksum signature' -d "Verify image with specified method"
-complete -x -A -c machinectl -n "__fish_seen_subcommand_from pull-dkr" -l verify -a 'no' -d "Verify image (not available for dkr)"
+complete -x -c machinectl -n "__fish_seen_subcommand_from pull-{tar,raw}" -l verify -a 'no checksum signature' -d "Verify image with specified method"
+complete -x -c machinectl -n "__fish_seen_subcommand_from pull-dkr" -l verify -a 'no' -d "Verify image (not available for dkr)"
 complete -x -c machinectl -n "__fish_seen_subcommand_from pull-dkr" -l dkr-index-url -d "Specify index server"
 complete -f -c machinectl -n "__fish_seen_subcommand_from pull-{tar,raw,dkr}" -l force -d "Overwrite existing machine image"
 

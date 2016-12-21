@@ -23,6 +23,7 @@ complete -c ssh -s a --description "Disables forwarding of the authentication ag
 complete -c ssh -s A --description "Enables forwarding of the authentication agent"
 complete -x -c ssh -s b --description "Interface to transmit from" -a "
 (
+	# TODO /proc/net/arp is not POSIX compliant
 	cut -d ' ' -f 1 /proc/net/arp ^/dev/null | string match -r -v '^IP'
 )
 "

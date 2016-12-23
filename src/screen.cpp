@@ -1195,7 +1195,8 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // Don't need to check for fish_wcwidth errors; this is done when setting up
         // omitted_newline_char in common.cpp.
         int non_space_width = fish_wcwidth(omitted_newline_char);
-        if (screen_width >= non_space_width) {
+        // We do `>` rather than `>=` because the code below might require one extra space.
+        if (screen_width > non_space_width) {
             bool justgrey = true;
             if (enter_dim_mode) {
                 std::string dim = tparm(enter_dim_mode);
@@ -1235,9 +1236,12 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // spaces from the new line.
         abandon_line_string.append(non_space_width, L' ');
         abandon_line_string.push_back(L'\r');
-        // Clear entire line. It's not clear why we do this since zsh, from which we adopted this
-        // heuristic, does not do this.
-        abandon_line_string.append(L"\x1b[2K");
+        // Clear entire line. Zsh doesn't do this. Fish added this with commit 4417a6ee: If you have
+        // a prompt preceded by a new line, you'll get a line full of spaces instead of an empty
+        // line above your prompt. This doesn't make a difference in normal usage, but copying and
+        // pasting your terminal log becomes a pain. This commit clears that line, making it an
+        // actual empty line.
+        abandon_line_string.append(L"\e[2K");
 
         const std::string narrow_abandon_line_string = wcs2string(abandon_line_string);
         write_loop(STDOUT_FILENO, narrow_abandon_line_string.c_str(),

@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "common.h"
+#include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "highlight.h"
 #include "output.h"
@@ -1224,15 +1225,18 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
                 abandon_line_string.append(
                     str2wcstring(tparm(exit_attribute_mode)));  // normal text ANSI escape sequence
             }
-            abandon_line_string.append(screen_width - non_space_width, L' ');
+            int newline_glitch_width = term_has_xn ? 0 : 1;
+            abandon_line_string.append(screen_width - non_space_width - newline_glitch_width, L' ');
         }
         abandon_line_string.push_back(L'\r');
+        abandon_line_string.push_back(omitted_newline_char);
         // Now we are certainly on a new line. But we may have dropped the omitted newline char on
         // it. So append enough spaces to overwrite the omitted newline char, and then clear all the
-        // spaces from the new line
+        // spaces from the new line.
         abandon_line_string.append(non_space_width, L' ');
         abandon_line_string.push_back(L'\r');
-        // clear entire line - el2
+        // Clear entire line. It's not clear why we do this since zsh, from which we adopted this
+        // heuristic, does not do this.
         abandon_line_string.append(L"\x1b[2K");
 
         const std::string narrow_abandon_line_string = wcs2string(abandon_line_string);

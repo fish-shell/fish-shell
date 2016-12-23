@@ -54,6 +54,10 @@ static void invalidate_soft_wrap(screen_t *scr);
 typedef std::vector<char> data_buffer_t;
 static data_buffer_t *s_writeb_buffer = 0;
 
+/// Clears num_lines of lines from the current cursor position upwards. At the end the cursor is
+/// left at the top left hand side of the resulting cleard rectangle
+static void clear_lines(screen_t *const s, const size_t num_lines);
+
 static int s_writeb(char character);
 
 /// Class to temporarily set s_writeb_buffer and the writer function in a scoped way.
@@ -276,13 +280,10 @@ struct prompt_layout_t {
 /// Calculate layout information for the given prompt. Does some clever magic to detect common
 /// escape sequences that may be embeded in a prompt, such as color codes.
 static prompt_layout_t calc_prompt_layout(const wchar_t *prompt) {
+    prompt_layout_t prompt_layout = {1, 0, 0};
     size_t current_line_width = 0;
-    size_t j;
 
-    prompt_layout_t prompt_layout = {};
-    prompt_layout.line_count = 1;
-
-    for (j = 0; prompt[j]; j++) {
+    for (size_t j = 0; prompt[j]; j++) {
         if (prompt[j] == L'\x1b') {
             // This is the start of an escape code. Skip over it if it's at least one character
             // long.
@@ -308,17 +309,6 @@ static prompt_layout_t calc_prompt_layout(const wchar_t *prompt) {
     }
     prompt_layout.last_line_width = current_line_width;
     return prompt_layout;
-}
-
-static size_t calc_prompt_lines(const wcstring &prompt) {
-    // Hack for the common case where there's no newline at all. I don't know if a newline can
-    // appear in an escape sequence, so if we detect a newline we have to defer to
-    // calc_prompt_width_and_lines.
-    size_t result = 1;
-    if (prompt.find(L'\n') != wcstring::npos || prompt.find(L'\f') != wcstring::npos) {
-        result = calc_prompt_layout(prompt.c_str()).line_count;
-    }
-    return result;
 }
 
 /// Stat stdout and stderr and save result. This should be done before calling a function that may
@@ -604,6 +594,21 @@ static bool perform_any_impending_soft_wrap(screen_t *scr, int x, int y) {
         }
     }
     return false;
+}
+
+static void clear_lines(screen_t *const s, const size_t numlines) {
+    s->actual.cursor.y = 0;
+    s->actual.cursor.x = 0;
+
+    if (numlines < 1) {
+        return;  // We're done
+    }
+
+    // Fill the space after new line so there are no artefacts
+    printf("%s", "\r\x1b[2K");  // go to the front and delete the first line
+    for (size_t i = 1; i < numlines; ++i) {
+        printf("%s", "\x1b[1A\x1b[2K");  // go up one and kill the line
+    }
 }
 
 /// Make sure we don't soft wrap.
@@ -1173,9 +1178,26 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // by lying to ourselves and claiming that we're really below what we consider "line 0"
         // (which is the last line of the prompt). This will cause us to move up to try to get back
         // to line 0, but really we're getting back to the initial line of the prompt.
-        const size_t prompt_line_count = calc_prompt_lines(s->actual_left_prompt);
-        assert(prompt_line_count >= 1);
-        s->actual.cursor.y += (prompt_line_count - 1);
+        const prompt_layout_t prompt_layout = calc_prompt_layout(s->actual_left_prompt.c_str());
+        const unsigned int current_width = static_cast<unsigned int>(common_get_width());
+        assert(prompt_layout.line_count >= 1);
+
+        if (prompt_layout.line_count > 1) {
+            if (static_cast<unsigned int>(s->actual_width) > current_width) {
+                // Multi-line wrapped
+                clear_lines(s, static_cast<unsigned int>(s->actual_width) / current_width +
+                                   prompt_layout.line_count);
+            } else {
+                // Multi-line
+                clear_lines(s, prompt_layout.line_count);
+            }
+        } else if (prompt_layout.max_line_width > current_width) {
+            // Single-line wrapped
+            clear_lines(s, prompt_layout.max_line_width / current_width + prompt_layout.line_count);
+        } else {
+            // Single-line
+            clear_lines(s, prompt_layout.line_count);
+        }
     } else if (abandon_line) {
         s->actual.cursor.y = 0;
     }

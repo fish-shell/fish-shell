@@ -184,4 +184,6 @@ struct var_entry_t {
 };
 
 typedef std::map<wcstring, var_entry_t> var_table_t;
+
+extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
 #endif

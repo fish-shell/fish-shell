@@ -14,6 +14,13 @@
 #include <time.h>
 #include <unistd.h>
 #include <wchar.h>
+
+#if HAVE_TERM_H
+#include <term.h>
+#elif HAVE_NCURSES_TERM_H
+#include <ncurses/term.h>
+#endif
+
 #include <algorithm>
 #include <map>
 #include <set>
@@ -49,6 +56,9 @@
 extern char **environ;
 
 bool g_use_posix_spawn = false;  // will usually be set to true
+
+/// Does the terminal have the "eat_newline_glitch".
+bool term_has_xn = false;
 
 /// Struct representing one level in the function variable stack.
 struct env_node_t {
@@ -245,6 +255,7 @@ static void handle_curses(const wchar_t *env_var_name) {
     // changed. At the present time it can be called just once. Also, we should really only do this
     // if the TERM var is set.
     // input_init();
+    term_has_xn = tgetflag((char *)"xn") == 1;  // does terminal have the eat_newline_glitch
 }
 
 /// React to modifying the given variable.

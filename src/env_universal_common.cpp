@@ -45,6 +45,11 @@
 #include <notify.h>
 #endif
 
+#ifdef __HAIKU__
+#define _BSD_SOURCE
+#include <bsd/ifaddrs.h>
+#endif //Haiku
+
 // NAME_MAX is not defined on Solaris and suggests the use of pathconf()
 // There is no obvious sensible pathconf() for shared memory and _XPG_NAME_MAX
 // seems a reasonable choice.

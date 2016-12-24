@@ -118,7 +118,7 @@ static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_len
     }
 #endif
 
-    const wchar_t *const screen_name_end_sentinel = L"\x1b\\";
+    const wchar_t *const screen_name_end_sentinel = L"\e\\";
     const wchar_t *screen_name_end = wcsstr(&code[2], screen_name_end_sentinel);
     if (screen_name_end == NULL) {
         // Consider just <esc>k to be the code.
@@ -139,7 +139,7 @@ static bool is_iterm2_escape_seq(const wchar_t *code, size_t *resulting_length) 
         size_t cursor = 2;
         for (; code[cursor] != L'\0'; cursor++) {
             // Consume a sequence of characters up to <esc>\ or <bel>.
-            if (code[cursor] == '\x07' || (code[cursor] == '\\' && code[cursor - 1] == '\x1b')) {
+            if (code[cursor] == '\x07' || (code[cursor] == '\\' && code[cursor - 1] == '\e')) {
                 found = true;
                 break;
             }
@@ -199,12 +199,12 @@ static bool is_csi_style_escape_seq(const wchar_t *code, size_t *resulting_lengt
 }
 
 /// Returns the number of characters in the escape code starting at 'code' (which should initially
-/// contain \x1b).
+/// contain \e).
 size_t escape_code_length(const wchar_t *code) {
     assert(code != NULL);
 
-    // The only escape codes we recognize start with \x1b.
-    if (code[0] != L'\x1b') return 0;
+    // The only escape codes we recognize start with \e.
+    if (code[0] != L'\e') return 0;
 
     size_t resulting_length = 0;
     bool found = false;
@@ -284,7 +284,7 @@ static prompt_layout_t calc_prompt_layout(const wchar_t *prompt) {
     prompt_layout.line_count = 1;
 
     for (j = 0; prompt[j]; j++) {
-        if (prompt[j] == L'\x1b') {
+        if (prompt[j] == L'\e') {
             // This is the start of an escape code. Skip over it if it's at least one character
             // long.
             size_t escape_len = escape_code_length(&prompt[j]);

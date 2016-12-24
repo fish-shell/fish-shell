@@ -2719,7 +2719,7 @@ const wchar_t *reader_readline(int nchars) {
                 break;
             }
             // Escape was pressed.
-            case L'\x1b': {
+            case L'\e': {
                 if (data->search_mode) {
                     data->search_mode = NO_SEARCH;
 

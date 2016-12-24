@@ -28,7 +28,7 @@
 #include "wutil.h"
 
 /// Time in milliseconds to wait for another byte to be available for reading
-/// after \x1b is read before assuming that escape key was pressed, and not an
+/// after \e is read before assuming that escape key was pressed, and not an
 /// escape sequence.
 #define WAIT_ON_ESCAPE_DEFAULT 300
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;

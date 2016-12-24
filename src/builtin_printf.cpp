@@ -312,7 +312,7 @@ void builtin_printf_state_t::print_esc_char(wchar_t c) {
             break;
         }
         case L'e': {  // escape
-            this->append_output(L'\x1B');
+            this->append_output(L'\e');
             break;
         }
         case L'f': {  // form feed

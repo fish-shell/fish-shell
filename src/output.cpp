@@ -79,9 +79,9 @@ static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
         // with what we do here, will make the brights actually work for virtual consoles/ancient
         // emulators.
         if (max_colors == 8 && idx > 8) idx -= 8;
-        snprintf(buff, sizeof buff, "\x1b[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
+        snprintf(buff, sizeof buff, "\e[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
     } else {
-        snprintf(buff, sizeof buff, "\x1b[%d;5;%dm", is_fg ? 38 : 48, idx);
+        snprintf(buff, sizeof buff, "\e[%d;5;%dm", is_fg ? 38 : 48, idx);
     }
 
     int (*writer)(char) = output_get_writer();
@@ -127,7 +127,7 @@ bool write_color(rgb_color_t color, bool is_fg) {
     // Background: ^[48;2;<r>;<g>;<b>m
     color24_t rgb = color.to_color24();
     char buff[128];
-    snprintf(buff, sizeof buff, "\x1b[%d;2;%u;%u;%um", is_fg ? 38 : 48, rgb.rgb[0], rgb.rgb[1],
+    snprintf(buff, sizeof buff, "\e[%d;2;%u;%u;%um", is_fg ? 38 : 48, rgb.rgb[0], rgb.rgb[1],
              rgb.rgb[2]);
     int (*writer)(char) = output_get_writer();
     if (writer) {

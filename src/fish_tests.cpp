@@ -119,7 +119,7 @@ static void err(const wchar_t *blah, ...) {
 
     // Show errors in red.
     if (colorize) {
-        fputs("\x1b[31m", stdout);
+        fputs("\e[31m", stdout);
     }
     wprintf(L"Error: ");
     vwprintf(blah, va);
@@ -127,7 +127,7 @@ static void err(const wchar_t *blah, ...) {
 
     // Return to normal color.
     if (colorize) {
-        fputs("\x1b[0m", stdout);
+        fputs("\e[0m", stdout);
     }
 
     wprintf(L"\n");
@@ -1117,26 +1117,25 @@ static void test_escape_sequences(void) {
     if (escape_code_length(L"") != 0) err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"abcd") != 0)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1b[2J") != 4)
+    if (escape_code_length(L"\e[2J") != 4)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1b[38;5;123mABC") != strlen("\x1b[38;5;123m"))
+    if (escape_code_length(L"\e[38;5;123mABC") != strlen("\e[38;5;123m"))
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1b@") != 2)
+    if (escape_code_length(L"\e@") != 2)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
 
     // iTerm2 escape sequences.
-    if (escape_code_length(L"\x1b]50;CurrentDir=/tmp/foo\x07NOT_PART_OF_SEQUENCE") != 25)
+    if (escape_code_length(L"\e]50;CurrentDir=/tmp/foo\x07NOT_PART_OF_SEQUENCE") != 25)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1b]50;SetMark\x07NOT_PART_OF_SEQUENCE") != 13)
+    if (escape_code_length(L"\e]50;SetMark\x07NOT_PART_OF_SEQUENCE") != 13)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1b"
-                           L"]6;1;bg;red;brightness;255\x07NOT_PART_OF_SEQUENCE") != 28)
+    if (escape_code_length(L"\e]6;1;bg;red;brightness;255\x07NOT_PART_OF_SEQUENCE") != 28)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1b]Pg4040ff\x1b\\NOT_PART_OF_SEQUENCE") != 12)
+    if (escape_code_length(L"\e]Pg4040ff\e\\NOT_PART_OF_SEQUENCE") != 12)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1b]blahblahblah\x1b\\") != 16)
+    if (escape_code_length(L"\e]blahblahblah\e\\") != 16)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1b]blahblahblah\x07") != 15)
+    if (escape_code_length(L"\e]blahblahblah\x07") != 15)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
 }
 

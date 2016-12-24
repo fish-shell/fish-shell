@@ -833,7 +833,7 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
                     need_escape = need_complex_escape = 1;
                     break;
                 }
-                case L'\x1b': {
+                case L'\e': {
                     out += L'\\';
                     out += L'e';
                     need_escape = need_complex_escape = 1;
@@ -1066,9 +1066,9 @@ size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_i
             }
             break;
         }
-        // \x1b means escape.
+        // \e means escape.
         case L'e': {
-            result_char_or_none = L'\x1b';
+            result_char_or_none = L'\e';
             break;
         }
         // \f means form feed.

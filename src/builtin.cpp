@@ -1431,7 +1431,7 @@ static int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                         break;
                     }
                     case L'e': {
-                        wc = L'\x1B';
+                        wc = L'\e';
                         break;
                     }
                     case L'f': {

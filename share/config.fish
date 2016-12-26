@@ -144,6 +144,29 @@ set -xg PATH $__fish_tmp_path
 set -e __fish_tmp_path
 functions -e __fish_load_path_helper_paths
 
+# OS X-ism: Load the manpath files out of /etc/manpaths and /etc/manpaths.d/*
+if set -q MANPATH
+    set -g __fish_tmp_manpath $MANPATH
+    function __fish_load_manpath_helper_manpaths
+        # We want to rearrange the manpath to reflect this order. Delete that manpath component if it exists and then prepend it.
+        # Since we are prepending but want to preserve the order of the input file, we reverse the array, append, and then reverse it again
+        set __fish_tmp_manpath $__fish_tmp_manpath[-1..1]
+        while read -l new_manpath_comp
+            if test -d $new_manpath_comp
+                set -l where (contains -i -- $new_manpath_comp $__fish_tmp_manpath)
+                and set -e __fish_tmp_manpath[$where]
+                set __fish_tmp_manpath $new_manpath_comp $__fish_tmp_manpath
+            end
+        end
+        set __fish_tmp_manpath $__fish_tmp_manpath[-1..1]
+    end
+    test -r /etc/manpaths ; and __fish_load_manpath_helper_manpaths < /etc/manpaths
+    for manpathfile in /etc/manpaths.d/* ; __fish_load_manpath_helper_manpaths < $manpathfile ; end
+    set -xg MANPATH $__fish_tmp_manpath
+    set -e __fish_tmp_manpath
+    functions -e __fish_load_manpath_helper_manpaths
+end
+
 
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
 # Invoke it immediately to apply the current value of fish_user_path

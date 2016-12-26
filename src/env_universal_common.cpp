@@ -1,28 +1,30 @@
 // The utility library for universal variables. Used both by the client library and by the daemon.
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 
 #include <arpa/inet.h>  // IWYU pragma: keep
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <netinet/in.h>
+#include <netinet/in.h>  // IWYU pragma: keep
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __CYGWIN__
 #include <sys/mman.h>
+#endif
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>  // IWYU pragma: keep
+#endif
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <sys/time.h>
+#include <sys/time.h>  // IWYU pragma: keep
 #include <sys/types.h>
 // We need the sys/file.h for the flock() declaration on Linux but not OS X.
 #include <sys/file.h>  // IWYU pragma: keep
 // We need the ioctl.h header so we can check if SIOCGIFHWADDR is defined by it so we know if we're
 // on a Linux system.
 #include <sys/ioctl.h>  // IWYU pragma: keep
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
 #include <unistd.h>
 #include <wchar.h>
 #include <map>
@@ -35,7 +37,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "path.h"
 #include "utf8.h"
-#include "util.h"
+#include "util.h"  // IWYU pragma: keep
 #include "wutil.h"
 
 #if __APPLE__
@@ -950,8 +952,8 @@ wcstring get_machine_identifier() {
     return result;
 }
 
-#ifdef HAVE_SHM_OPEN
 class universal_notifier_shmem_poller_t : public universal_notifier_t {
+#ifdef __CYGWIN__
     // This is what our shared memory looks like. Everything here is stored in network byte order
     // (big-endian).
     struct universal_notifier_shmem_t {
@@ -1089,17 +1091,22 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         }
         return usec_per_sec / 3;  // 3 times a second
     }
-};
+#else  // this class isn't valid on this system
+   public:
+    universal_notifier_shmem_poller_t() {
+        DIE("universal_notifier_shmem_poller_t cannot be used on this system");
+    }
 #endif
+};
 
 /// A notifyd-based notifier. Very straightforward.
 class universal_notifier_notifyd_t : public universal_notifier_t {
+#if FISH_NOTIFYD_AVAILABLE
     int notify_fd;
     int token;
     std::string name;
 
     void setup_notifyd() {
-#if FISH_NOTIFYD_AVAILABLE
         // Per notify(3), the user.uid.%d style is only accessible to processes with that uid.
         char local_name[256];
         snprintf(local_name, sizeof local_name, "user.uid.%d.%ls.uvars", getuid(),
@@ -1128,7 +1135,6 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
             // marked as CLO_EXEC, that's probably a good thing.
             set_cloexec(this->notify_fd + 1);
         }
-#endif
     }
 
    public:
@@ -1138,9 +1144,7 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
 
     ~universal_notifier_notifyd_t() {
         if (token != -1 /* NOTIFY_TOKEN_INVALID */) {
-#if FISH_NOTIFYD_AVAILABLE
             notify_cancel(token);
-#endif
         }
     }
 
@@ -1161,16 +1165,18 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
     }
 
     void post_notification() {
-#if FISH_NOTIFYD_AVAILABLE
         uint32_t status = notify_post(name.c_str());
         if (status != NOTIFY_STATUS_OK) {
-            fprintf(stderr,
-                    "Warning: notify_post() failed with status %u. Universal variable "
-                    "notifications may not be sent.",
-                    status);
+            debug(1, "notify_post() failed with status %u. Uvar notifications may not be sent.",
+                  status);
         }
-#endif
     }
+#else  // this class isn't valid on this system
+   public:
+    universal_notifier_notifyd_t() {
+        DIE("universal_notifier_notifyd_t cannot be used on this system");
+    }
+#endif
 };
 
 #define NAMED_PIPE_FLASH_DURATION_USEC (1000000 / 10)
@@ -1186,6 +1192,7 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
 // when there is data remaining in the pipe, if the pipe is kept readable too long, clients will
 // attempt to read data out of it (to render it no longer readable).
 class universal_notifier_named_pipe_t : public universal_notifier_t {
+#if !defined(__APPLE__) && !defined(__CYGWIN__)
     int pipe_fd;
     long long readback_time_usec;
     size_t readback_amount;
@@ -1206,7 +1213,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
     }
 
    public:
-    explicit universal_notifier_named_pipe_t(const wchar_t *test_path)
+    universal_notifier_named_pipe_t(const wchar_t *test_path)
         : pipe_fd(-1),
           readback_time_usec(0),
           readback_amount(0),
@@ -1332,54 +1339,15 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         }
         return true;
     }
+#else  // this class isn't valid on this system
+   public:
+    universal_notifier_named_pipe_t(const wchar_t *test_path) {
+        DIE("universal_notifier_named_pipe_t cannot be used on this system");
+    }
+#endif
 };
 
-class universal_notifier_null_t : public universal_notifier_t {};  // does nothing
-
-static universal_notifier_t::notifier_strategy_t fetch_default_strategy_from_environment() {
-    universal_notifier_t::notifier_strategy_t result = universal_notifier_t::strategy_default;
-
-    const struct {
-        const char *name;
-        universal_notifier_t::notifier_strategy_t strat;
-    } options[] = {{"default", universal_notifier_t::strategy_default},
-#ifdef HAVE_SHM_OPEN
-                   {"shmem", universal_notifier_t::strategy_shmem_polling},
-#endif
-                   {"pipe", universal_notifier_t::strategy_named_pipe},
-                   {"notifyd", universal_notifier_t::strategy_notifyd}};
-    const size_t opt_count = sizeof options / sizeof *options;
-
-    const char *var = getenv(UNIVERSAL_NOTIFIER_ENV_NAME);
-    if (var == NULL || var[0] == '\0') {
-        return result;
-    }
-
-    size_t i;
-    for (i = 0; i < opt_count; i++) {
-        if (!strcmp(var, options[i].name)) {
-            result = options[i].strat;
-            break;
-        }
-    }
-    if (i >= opt_count) {
-        fprintf(stderr, "Warning: unrecognized value for %s: '%s'\n", UNIVERSAL_NOTIFIER_ENV_NAME,
-                var);
-        fprintf(stderr, "Warning: valid values are ");
-        for (size_t j = 0; j < opt_count; j++) {
-            fprintf(stderr, "%s%s", j > 0 ? ", " : "", options[j].name);
-        }
-        fputc('\n', stderr);
-    }
-    return result;
-}
-
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy() {
-    static universal_notifier_t::notifier_strategy_t s_explicit_strategy =
-        fetch_default_strategy_from_environment();
-    if (s_explicit_strategy != strategy_default) {
-        return s_explicit_strategy;
-    }
 #if FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
 #elif defined(__CYGWIN__)
@@ -1390,32 +1358,25 @@ universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_
 }
 
 universal_notifier_t &universal_notifier_t::default_notifier() {
-    static universal_notifier_t *result = new_notifier_for_strategy(strategy_default);
+    static universal_notifier_t *result =
+        new_notifier_for_strategy(universal_notifier_t::resolve_default_strategy());
     return *result;
 }
 
 universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(
     universal_notifier_t::notifier_strategy_t strat, const wchar_t *test_path) {
-    if (strat == strategy_default) {
-        strat = resolve_default_strategy();  //!OCLINT(parameter reassignment)
-    }
     switch (strat) {
-#ifdef HAVE_SHM_OPEN
-        case strategy_shmem_polling: {
-            return new universal_notifier_shmem_poller_t();
-        }
-#endif
         case strategy_notifyd: {
             return new universal_notifier_notifyd_t();
+        }
+        case strategy_shmem_polling: {
+            return new universal_notifier_shmem_poller_t();
         }
         case strategy_named_pipe: {
             return new universal_notifier_named_pipe_t(test_path);
         }
-        case strategy_null: {
-            return new universal_notifier_null_t();
-        }
         default: {
-            fprintf(stderr, "Unsupported strategy %d\n", strat);
+            debug(0, "Unsupported universal notifier strategy %d\n", strat);
             return NULL;
         }
     }
@@ -1439,6 +1400,7 @@ bool universal_notifier_t::notification_fd_became_readable(int fd) {
     return false;
 }
 
+#if !defined(__APPLE__) && !defined(__CYGWIN__)
 void universal_notifier_named_pipe_t::make_pipe(const wchar_t *test_path) {
     wcstring vars_path = test_path ? wcstring(test_path) : default_named_pipe_path();
     vars_path.append(L".notifier");
@@ -1464,3 +1426,4 @@ void universal_notifier_named_pipe_t::make_pipe(const wchar_t *test_path) {
 
     pipe_fd = fd;
 }
+#endif

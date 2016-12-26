@@ -25,11 +25,8 @@
 #include <wchar.h>
 #include <wctype.h>
 #include <algorithm>
-#include <iostream>
-#include <iterator>
 #include <memory>
 #include <set>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -1648,7 +1645,7 @@ struct pager_layout_testcase_t {
 
             wcstring text = sd.line(0).to_string();
             if (text != expected) {
-                fprintf(stderr, "width %lu got <%ls>, expected <%ls>\n", this->width, text.c_str(),
+                fprintf(stderr, "width %zu got <%ls>, expected <%ls>\n", this->width, text.c_str(),
                         expected.c_str());
             }
             do_test(text == expected);
@@ -2583,37 +2580,24 @@ bool poll_notifier(universal_notifier_t *note) {
     return result;
 }
 
-static void trigger_or_wait_for_notification(universal_notifier_t *notifier,
-                                             universal_notifier_t::notifier_strategy_t strategy) {
-    // This argument should be removed if it isn't actually needed by these unit tests. I'm going to
-    // silence the warning. See https://github.com/fish-shell/fish-shell/issues/3439.
-    UNUSED(notifier);
-
+static void trigger_or_wait_for_notification(universal_notifier_t::notifier_strategy_t strategy) {
     switch (strategy) {
-        case universal_notifier_t::strategy_default: {
-            DIE("strategy_default should be passed");
-            break;
-        }
-#ifdef HAVE_SHM_OPEN
         case universal_notifier_t::strategy_shmem_polling: {
             break;  // nothing required
         }
-#endif
         case universal_notifier_t::strategy_notifyd: {
             // notifyd requires a round trip to the notifyd server, which means we have to wait a
-            // little bit to receive it. In practice, this seems to be enough.
-            usleep(1000000 / 25);
+            // little bit to receive it. In practice 40 ms seems to be enough.
+            usleep(40000);
             break;
         }
-        case universal_notifier_t::strategy_named_pipe:
-        case universal_notifier_t::strategy_null: {
-            break;
+        case universal_notifier_t::strategy_named_pipe: {
+            break;  // nothing required
         }
     }
 }
 
 static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy_t strategy) {
-    assert(strategy != universal_notifier_t::strategy_default);
     say(L"Testing universal notifiers with strategy %d", (int)strategy);
     universal_notifier_t *notifiers[16];
     size_t notifier_count = sizeof notifiers / sizeof *notifiers;
@@ -2636,7 +2620,7 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
         notifiers[post_idx]->post_notification();
 
         // Do special stuff to "trigger" a notification for testing.
-        trigger_or_wait_for_notification(notifiers[post_idx], strategy);
+        trigger_or_wait_for_notification(strategy);
 
         for (size_t i = 0; i < notifier_count; i++) {
             // We aren't concerned with the one who posted. Poll from it (to drain it), and then
@@ -2680,15 +2664,12 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
 }
 
 static void test_universal_notifiers() {
-    if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt"))
+    if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) {
         err(L"mkdir failed");
-#ifdef HAVE_SHM_OPEN
-    test_notifiers_with_strategy(universal_notifier_t::strategy_shmem_polling);
-#endif
-    test_notifiers_with_strategy(universal_notifier_t::strategy_named_pipe);
-#if __APPLE__
-    test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
-#endif
+    }
+
+    auto strategy = universal_notifier_t::resolve_default_strategy();
+    test_notifiers_with_strategy(strategy);
 
     if (system("rm -Rf /tmp/fish_uvars_test/")) err(L"rm failed");
 }

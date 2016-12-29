@@ -105,7 +105,11 @@ bool set_child_group(job_t *j, process_t *p, int print_errors) {
     }
 
     if (job_get_flag(j, JOB_TERMINAL) && job_get_flag(j, JOB_FOREGROUND)) {  //!OCLINT(early exit)
-        int result = tcsetpgrp(STDIN_FILENO, j->pgid);  // to avoid "collapsible if statements" warn
+        int result = -1;
+        errno = EINTR;
+        while (result == -1 && errno == EINTR) {
+            result = tcsetpgrp(STDIN_FILENO, j->pgid);
+        }
         if (result == -1) {
             if (errno == ENOTTY) redirect_tty_output();
             if (print_errors) {

@@ -500,15 +500,23 @@ __sentinel bool contains_internal(const wcstring &needle, int vararg_handle, ...
 }
 
 long read_blocked(int fd, void *buf, size_t count) {
-    ssize_t res;
-    sigset_t chldset, oldset;
+    long bytes_read = 0;
 
-    sigemptyset(&chldset);
-    sigaddset(&chldset, SIGCHLD);
-    VOMIT_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &chldset, &oldset));
-    res = read(fd, buf, count);
-    VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &oldset, NULL));
-    return res;
+    while (count) {
+        ssize_t res = read(fd, (char *)buf + bytes_read, count);
+        if (res == 0) {
+            break;
+        } else if (res == -1) {
+            if (errno == EINTR) continue;
+            if (errno == EAGAIN) return bytes_read ? bytes_read : -1;
+            return -1;
+        } else {
+            bytes_read += res;
+            count -= res;
+        }
+    }
+
+    return bytes_read;
 }
 
 /// Loop a write request while failure is non-critical. Return -1 and set errno in case of critical

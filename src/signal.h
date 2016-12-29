@@ -38,4 +38,5 @@ bool signal_is_blocked();
 /// Returns signals with non-default handlers.
 void get_signals_with_handlers(sigset_t *set);
 
+extern bool ignore_signal_block;
 #endif

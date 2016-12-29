@@ -367,12 +367,10 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
 
 void exec_job(parser_t &parser, job_t *j) {
     pid_t pid = 0;
-    sigset_t chldset;
 
     // Set to true if something goes wrong while exec:ing the job, in which case the cleanup code
     // will kick in.
     bool exec_error = false;
-
     bool needs_keepalive = false;
     process_t keepalive;
 
@@ -383,9 +381,6 @@ void exec_job(parser_t &parser, job_t *j) {
     if (no_exec) {
         return;
     }
-
-    sigemptyset(&chldset);
-    sigaddset(&chldset, SIGCHLD);
 
     debug(4, L"Exec job '%ls' with id %d", j->command_wcstr(), j->job_id);
 

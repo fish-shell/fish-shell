@@ -26,6 +26,14 @@ void signal_set_handlers();
 /// default action (SIG_DFL) will be set
 void signal_handle(int sig, int do_handle);
 
+#define signal_block()
+#define signal_unblock()
+#define signal_is_blocked() false
+#if 0
+// TODO: Determine if the following three functions will need to be reinstated. For the time being
+// they are #define stubs since they appear to be unnecessary and noticably slow the shell down.
+// Be sure to reinstate the CHECK_BLOCK macro if these functions are reinstated.
+
 /// Block all signals.
 void signal_block();
 
@@ -34,6 +42,7 @@ void signal_unblock();
 
 /// Returns true if signals are being blocked.
 bool signal_is_blocked();
+#endif
 
 /// Returns signals with non-default handlers.
 void get_signals_with_handlers(sigset_t *set);

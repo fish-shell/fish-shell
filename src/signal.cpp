@@ -264,13 +264,17 @@ void signal_set_handlers() {
     // an event.
     sigaction(SIGINT, &act, 0);
     sigaction(SIGQUIT, &act, 0);
-    sigaction(SIGTSTP, &act, 0);
-    sigaction(SIGTTIN, &act, 0);
-    sigaction(SIGTTOU, &act, 0);
     sigaction(SIGCHLD, &act, 0);
 
     // Ignore sigpipe, which we may get from the universal variable notifier.
     sigaction(SIGPIPE, &act, 0);
+
+    // Ignore TTY I/O signals as we'll handle such problems by appropriate checks of relevant
+    // syscall return values.
+    act.sa_handler = SIG_IGN;
+    sigaction(SIGTSTP, &act, 0);
+    sigaction(SIGTTIN, &act, 0);
+    sigaction(SIGTTOU, &act, 0);
 
     if (shell_is_interactive()) {
         // Interactive mode. Ignore interactive signals.  We are a shell, we know what is best for
@@ -279,9 +283,6 @@ void signal_set_handlers() {
 
         sigaction(SIGINT, &act, 0);
         sigaction(SIGQUIT, &act, 0);
-        sigaction(SIGTSTP, &act, 0);
-        sigaction(SIGTTIN, &act, 0);
-        sigaction(SIGTTOU, &act, 0);
 
         act.sa_sigaction = &handle_int;
         act.sa_flags = SA_SIGINFO;
@@ -366,6 +367,10 @@ void get_signals_with_handlers(sigset_t *set) {
     }
 }
 
+#if 0
+// TODO: Determine if the following three functions will need to be reinstated. For the time being
+// they are #define stubs since they appear to be unnecessary and noticably slow the shell down.
+
 void signal_block() {
     ASSERT_IS_MAIN_THREAD();
     sigset_t chldset;
@@ -376,7 +381,7 @@ void signal_block() {
     }
 
     block_count++;
-    //	debug( 0, L"signal block level increased to %d", block_count );
+    // debug( 0, L"signal block level increased to %d", block_count );
 }
 
 void signal_unblock() {
@@ -395,7 +400,8 @@ void signal_unblock() {
         sigfillset(&chldset);
         VOMIT_ON_FAILURE(pthread_sigmask(SIG_UNBLOCK, &chldset, 0));
     }
-    //	debug( 0, L"signal block level decreased to %d", block_count );
+    // debug( 0, L"signal block level decreased to %d", block_count );
 }
 
 bool signal_is_blocked() { return static_cast<bool>(block_count); }
+#endif

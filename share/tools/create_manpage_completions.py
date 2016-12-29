@@ -857,12 +857,26 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
 def get_paths_from_manpath():
     # Return all the paths to man(1) and man(8) files in the manpath
     import subprocess, os
-    proc = subprocess.Popen(['manpath'], stdout=subprocess.PIPE)
-    manpath, err_data = proc.communicate()
+    # $MANPATH takes precedence, just like with `man` on the CLI.
+    if os.getenv("MANPATH"):
+        manpath = os.getenv("MANPATH")
+    else:
+        # Some systems have manpath, others have `man --path` (like Haiku).
+        # TODO: Deal with systems that have neither (OpenBSD)
+        for prog in [['manpath'], ['man', '--path']]:
+            try:
+                proc = subprocess.Popen(prog, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            except OSError: # Command does not exist, keep trying
+                continue
+            break # Command exists, use it.
+        manpath, err_data = proc.communicate()
     parent_paths = manpath.decode().strip().split(':')
-    if not parent_paths:
-        sys.stderr.write("Unable to get the manpath (tried manpath)\n")
-        sys.exit(-1)
+    if not parent_paths or proc.returncode > 0:
+        # HACK: Use some fallback in case we can't get anything else.
+        # `mandoc` does not provide `manpath` or `man --path` and $MANPATH might not be set, so just use the default for mandoc (minus /usr/X11R6/man, because that's not relevant).
+        # The alternative is reading its config file (/etc/man.conf)
+        sys.stderr.write("Unable to get the manpath, falling back to /usr/share/man:/usr/local/share/man. Please set $MANPATH if that is not correct.\n")
+        parent_paths = ["/usr/share/man", "/usr/local/share/man"]
     result = []
     for parent_path in parent_paths:
         for section in ['man1', 'man6', 'man8']:

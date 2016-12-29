@@ -558,8 +558,8 @@ void parser_t::job_add(job_t *job) {
     this->my_job_list.push_front(job);
 }
 
-bool parser_t::job_remove(job_t *j) {
-    job_list_t::iterator iter = std::find(my_job_list.begin(), my_job_list.end(), j);
+bool parser_t::job_remove(job_t *job) {
+    job_list_t::iterator iter = std::find(my_job_list.begin(), my_job_list.end(), job);
     if (iter != my_job_list.end()) {
         my_job_list.erase(iter);
         return true;

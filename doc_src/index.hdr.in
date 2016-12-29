@@ -240,6 +240,8 @@ There are a few important things that need to be noted about aliases:
 
 - If the alias has the same name as the aliased command, it is necessary to prefix the call to the program with `command` in order to tell fish that the function should not call itself, but rather a command with the same name. Failing to do so will cause infinite recursion bugs.
 
+- Autoloading isn't applicable since, by definition, the alias command creates the function at the time it is executed. If you want to defer creation of the function to when it is used simply create a script that uses the function command per the discussion below about autoloading functions.
+
 To easily create a function of this form, you can use the <a href="commands.html#alias">alias</a> command.
 
 

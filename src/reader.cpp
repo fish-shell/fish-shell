@@ -698,17 +698,17 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
     proc_push_interactive(0);
     if (exec_subshell(fish_title_command, lst, false /* ignore exit status */) != -1 &&
         !lst.empty()) {
-        fputs("\e]0;", stdout);
+        fputws(L"\e]0;", stdout);
         for (size_t i = 0; i < lst.size(); i++) {
             fputws(lst.at(i).c_str(), stdout);
         }
-        fputc('\a', stdout);
+        fputwc(L'\a', stdout);
     }
     proc_pop_interactive();
     set_color(rgb_color_t::reset(), rgb_color_t::reset());
     if (reset_cursor_position && !lst.empty()) {
         // Put the cursor back at the beginning of the line (issue #2453).
-        fputc('\r', stdout);
+        fputwc(L'\r', stdout);
     }
 }
 
@@ -3260,7 +3260,7 @@ const wchar_t *reader_readline(int nchars) {
         reader_repaint_if_needed();
     }
 
-    fputc('\n', stdout);
+    fputwc(L'\n', stdout);
 
     // Ensure we have no pager contents when we exit.
     if (!data->pager.empty()) {

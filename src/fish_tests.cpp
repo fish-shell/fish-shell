@@ -116,7 +116,7 @@ static void err(const wchar_t *blah, ...) {
 
     // Show errors in red.
     if (colorize) {
-        fputs("\e[31m", stdout);
+        fputws(L"\e[31m", stdout);
     }
     wprintf(L"Error: ");
     vwprintf(blah, va);
@@ -124,7 +124,7 @@ static void err(const wchar_t *blah, ...) {
 
     // Return to normal color.
     if (colorize) {
-        fputs("\e[0m", stdout);
+        fputws(L"\e[0m", stdout);
     }
 
     wprintf(L"\n");
@@ -2450,7 +2450,6 @@ static int test_universal_helper(int *x) {
         if (!synced) {
             err(L"Failed to sync universal variables after modification");
         }
-        fputc('.', stderr);
     }
 
     // Last step is to delete the first key.
@@ -2459,7 +2458,6 @@ static int test_universal_helper(int *x) {
     if (!synced) {
         err(L"Failed to sync universal variables after deletion");
     }
-    fputc('.', stderr);
     return 0;
 }
 

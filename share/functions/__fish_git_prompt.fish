@@ -475,8 +475,8 @@ function __fish_git_prompt_informative_status
     set -l changedFiles (command git diff --name-status | string match -r \\w)
     set -l stagedFiles (command git diff --staged --name-status | string match -r \\w)
 
-    set -l dirtystate (math (count $changedFiles) - (count (echo $changedFiles | string match -r "U")) ^/dev/null)
-    set -l invalidstate (count (echo $stagedFiles | string match -r "U"))
+    set -l dirtystate (math (count $changedFiles) - (count (string match -r "U" -- $changedFiles)) ^/dev/null)
+    set -l invalidstate (count (string match -r "U" -- $stagedFiles))
     set -l stagedstate (math (count $stagedFiles) - $invalidstate ^/dev/null)
     set -l untrackedfiles (command git ls-files --others --exclude-standard | wc -l | string trim)
 

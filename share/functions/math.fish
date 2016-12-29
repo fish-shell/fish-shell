@@ -21,9 +21,12 @@ function math --description "Perform math calculations in bc"
         return 2 # no arguments is an error
     end
 
-    # Stitch lines together manually. We can't rely on BC_LINE_LENGTH because some systems don't
-    # have a new enough version of bc.
-    set -l out (echo "scale=$scale; $argv" | bc | string replace -r '\\\\$' '' | string join '')
+    # Set BC_LINE_LENGTH to a ridiculously high number so it only uses one line for most results.
+    # Results with more digits than that are basically never used anyway.
+    # We can't use 0 since some systems (including macOS) use an ancient bc that doesn't support it.
+    # 32767 should still work on 2-byte int systems, though this is untested.
+    set -lx BC_LINE_LENGTH 32767
+    set -l out (echo "scale=$scale; $argv" | bc)
     switch "$out"
         case ''
             # No output indicates an error occurred.

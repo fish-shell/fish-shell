@@ -11,7 +11,7 @@ function __fish_complete_proc --description 'Complete by list of running process
         # command line rather than using the stat data.
         # If the command line is unavailable, you get the stat data in brackets - so
         # parse out brackets too.
-        set ps_cmd 'ps -A -o command'
+        set ps_opt -A -o command
 
         # Erase everything after the first space
         set sed_cmds $sed_cmds 's/ .*//'
@@ -29,7 +29,7 @@ function __fish_complete_proc --description 'Complete by list of running process
         set sed_cmds $sed_cmds 's/^[0-9]*$//'
     else
         # OS X, BSD. Preserve leading spaces.
-        set ps_cmd 'ps axc -o comm'
+        set ps_opt axc -o comm
 
         # Delete parenthesized (zombie) processes
         set sed_cmds $sed_cmds '/(.*)/d'
@@ -43,5 +43,5 @@ function __fish_complete_proc --description 'Complete by list of running process
     set sed_cmds $sed_cmds 's/^-//' 's/ *$//'
 
     # Run ps, pipe it through our massive set of sed commands, then sort and unique
-    eval $ps_cmd | sed '-e '$sed_cmds | sort -u
+    ps $ps_opt | sed '-e '$sed_cmds | sort -u
 end

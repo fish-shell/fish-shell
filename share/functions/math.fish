@@ -21,12 +21,9 @@ function math --description "Perform math calculations in bc"
         return 2 # no arguments is an error
     end
 
-    # With BC_LINE_LENGTH set to 2, the first line is a slash and the following line can be arbitrarily long.
-    # We can't set this to 0 because some systems don't have a new enough version of bc.
-    set -lx BC_LINE_LENGTH 2
-    set -l out (echo "scale=$scale; $argv" | bc)
-    set -q out[2]
-    and set out $out[2]
+    # Stitch lines together manually. We can't rely on BC_LINE_LENGTH because some systems don't
+    # have a new enough version of bc.
+    set -l out (echo "scale=$scale; $argv" | bc | string replace -r '\\\\$' '' | string join '')
     switch "$out"
         case ''
             # No output indicates an error occurred.

@@ -275,6 +275,9 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) 
         else {
             if (result2.is_bold()) result.set_bold(true);
             if (result2.is_underline()) result.set_underline(true);
+            if (result2.is_italics()) result.set_italics(true);
+            if (result2.is_dim()) result.set_dim(true);
+            if (result2.is_reverse()) result.set_reverse(true);
         }
     }
 

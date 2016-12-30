@@ -173,9 +173,15 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
     static rgb_color_t last_color2 = rgb_color_t::normal();
     static bool was_bold = false;
     static bool was_underline = false;
+    static bool was_italics = false;
+    static bool was_dim = false;
+    static bool was_reverse = false;
     bool bg_set = false, last_bg_set = false;
     bool is_bold = false;
     bool is_underline = false;
+    bool is_italics = false;
+    bool is_dim = false;
+    bool is_reverse = false;
 
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
     // just give up...
@@ -189,10 +195,22 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
     is_underline |= c.is_underline();
     is_underline |= c2.is_underline();
 
+    is_italics |= c.is_italics();
+    is_italics |= c2.is_italics();
+
+    is_dim |= c.is_dim();
+    is_dim |= c2.is_dim();
+
+    is_reverse |= c.is_reverse();
+    is_reverse |= c2.is_reverse();
+
     if (c.is_reset() || c2.is_reset()) {
         c = c2 = normal;
         was_bold = false;
         was_underline = false;
+        was_italics = false;
+        was_dim = false;
+        was_reverse = false;
         // If we exit attibute mode, we must first set a color, or previously coloured text might
         // lose it's color. Terminals are weird...
         write_foreground_color(0);
@@ -207,6 +225,33 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
         last_color2 = normal;
         was_bold = false;
         was_underline = false;
+        was_italics = false;
+        was_dim = false;
+        was_reverse = false;
+    }
+
+    if (was_dim && !is_dim ) {
+        // Only way to exit dim mode is a reset of all attributes.
+        writembs(exit_attribute_mode);
+        last_color = normal;
+        last_color2 = normal;
+        was_bold = false;
+        was_underline = false;
+        was_italics = false;
+        was_dim = false;
+        was_reverse = false;
+    }
+
+    if (was_reverse && !is_reverse ) {
+        // Only way to exit reverse mode is a reset of all attributes.
+        writembs(exit_attribute_mode);
+        last_color = normal;
+        last_color2 = normal;
+        was_bold = false;
+        was_underline = false;
+        was_italics = false;
+        was_dim = false;
+        was_reverse = false;
     }
 
     if (!last_color2.is_normal() && !last_color2.is_reset()) {
@@ -231,6 +276,9 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
             writembs(exit_attribute_mode);
             was_bold = false;
             was_underline = false;
+            was_italics = false;
+            was_dim = false;
+            was_reverse = false;
             // We don't know if exit_attribute_mode resets colors, so we set it to something known.
             if (write_foreground_color(0)) {
                 last_color = rgb_color_t::black();
@@ -246,6 +294,9 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
             last_color2 = rgb_color_t::normal();
             was_bold = false;
             was_underline = false;
+            was_italics = false;
+            was_dim = false;
+            was_reverse = false;
         } else if (!c.is_special()) {
             write_color(c, true /* foreground */);
         }
@@ -264,6 +315,9 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 
             was_bold = false;
             was_underline = false;
+            was_italics = false;
+            was_dim = false;
+            was_reverse = false;
             last_color2 = c2;
         } else if (!c2.is_special()) {
             write_color(c2, false /* not foreground */);
@@ -271,7 +325,7 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
         }
     }
 
-    // Lastly, we set bold mode and underline mode correctly.
+    // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
     if (is_bold && !was_bold && enter_bold_mode && strlen(enter_bold_mode) > 0 && !bg_set) {
         writembs(tparm(enter_bold_mode));
         was_bold = is_bold;
@@ -285,6 +339,32 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
         writembs(enter_underline_mode);
     }
     was_underline = is_underline;
+
+    if (was_italics && !is_italics && enter_italics_mode && strlen(enter_italics_mode) > 0) {
+        writembs(exit_italics_mode);
+        was_italics = is_italics;
+    }
+
+    if (!was_italics && is_italics && enter_italics_mode && strlen(enter_italics_mode) > 0) {
+        writembs(enter_italics_mode);
+        was_italics = is_italics;
+    }
+
+    if (is_dim && !was_dim && enter_dim_mode && strlen(enter_dim_mode) > 0) {
+        writembs(enter_dim_mode);
+        was_dim = is_dim;
+    }
+
+    if (is_reverse && !was_reverse) {
+        // Some terms do not have a reverse mode set, so standout mode is a fallback.
+        if (enter_reverse_mode && strlen(enter_reverse_mode) > 0) {
+            writembs(enter_reverse_mode);
+            was_reverse = is_reverse;
+        } else if (enter_standout_mode && strlen(enter_standout_mode) > 0) {
+            writembs(enter_standout_mode);
+            was_reverse = is_reverse;
+        }
+    }
 }
 
 /// Default output method, simply calls write() on stdout.
@@ -405,6 +485,9 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
 rgb_color_t parse_color(const wcstring &val, bool is_background) {
     int is_bold = 0;
     int is_underline = 0;
+    int is_italics = 0;
+    int is_dim = 0;
+    int is_reverse = 0;
 
     std::vector<rgb_color_t> candidates;
 
@@ -425,6 +508,12 @@ rgb_color_t parse_color(const wcstring &val, bool is_background) {
                 is_bold = true;
             else if (next == L"--underline" || next == L"-u")
                 is_underline = true;
+            else if (next == L"--italics" || next == L"-i")
+                is_italics = true;
+            else if (next == L"--dim" || next == L"-d")
+                is_dim = true;
+            else if (next == L"--reverse" || next == L"-r")
+                is_reverse = true;
             else
                 color_name = next;
         }
@@ -442,6 +531,9 @@ rgb_color_t parse_color(const wcstring &val, bool is_background) {
 
     result.set_bold(is_bold);
     result.set_underline(is_underline);
+    result.set_italics(is_italics);
+    result.set_dim(is_dim);
+    result.set_reverse(is_reverse);
 
 #if 0
     wcstring desc = result.description();

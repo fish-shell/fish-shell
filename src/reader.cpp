@@ -415,7 +415,7 @@ static void reader_repaint() {
 
     if (data->sel_active) {
         highlight_spec_t selection_color = highlight_make_background(highlight_spec_selection);
-        for (size_t i = data->sel_start_pos; i <= std::min(len - 1, data->sel_stop_pos); i++) {
+        for (size_t i = data->sel_start_pos; i < std::min(len, data->sel_stop_pos); i++) {
             colors[i] = selection_color;
         }
     }
@@ -1922,7 +1922,7 @@ bool reader_get_selection(size_t *start, size_t *len) {
     bool result = false;
     if (data != NULL && data->sel_active) {
         *start = data->sel_start_pos;
-        *len = std::min(data->sel_stop_pos - data->sel_start_pos + 1, data->command_line.size());
+        *len = std::min(data->sel_stop_pos - data->sel_start_pos, data->command_line.size());
         result = true;
     }
     return result;

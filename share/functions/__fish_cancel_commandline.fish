@@ -9,8 +9,8 @@ function __fish_cancel_commandline
         #
         # Set reverse fg/bg color mode, output ^C, restore normal mode, clear to EOL (to erase any
         # autosuggestion).
-        if command -v tput >/dev/null
-            echo -ns (tput smso; or tput so) "^C" (tput rmso; or tput se) (tput el; or tput ce)
+        if command -sq tput
+            echo -ns (set_color -r) "^C" (set_color normal) (tput el; or tput ce)
         else
             echo -n "^C"
         end

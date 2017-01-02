@@ -1346,7 +1346,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
     }
 #else  // this class isn't valid on this system
    public:
-    universal_notifier_named_pipe_t(const wchar_t *test_path) {
+    universal_notifier_named_pipe_t() {
         DIE("universal_notifier_named_pipe_t cannot be used on this system");
     }
 #endif
@@ -1378,7 +1378,7 @@ universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(
             return new universal_notifier_shmem_poller_t();
         }
         case strategy_named_pipe: {
-            return new universal_notifier_named_pipe_t(test_path);
+            return new universal_notifier_named_pipe_t();
         }
         default: {
             debug(0, "Unsupported universal notifier strategy %d\n", strat);

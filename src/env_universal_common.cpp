@@ -1347,6 +1347,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
 #else  // this class isn't valid on this system
    public:
     universal_notifier_named_pipe_t(const wchar_t *test_path) {
+        auto x = test_path;  // silence "unused parameter" warning
         DIE("universal_notifier_named_pipe_t cannot be used on this system");
     }
 #endif

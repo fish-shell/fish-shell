@@ -1944,44 +1944,40 @@ static int read_interactive(wcstring &buff, int nchars, bool shell, const wchar_
     return exit_res;
 }
 
-/// Read from the fd in chunks until we've read the requested number of characters or a newline or
-/// null, as appropriate, is seen. This is should only be used when the fd is seekable.
-static int read_in_chunks(int fd, wcstring &buff, int nchars, bool split_null) {
+/// Bash uses 128 bytes for its chunk size. Very informal testing I did suggested that a smaller
+/// chunk size performed better. However, we're going to use the bash value under the assumption
+/// they've done more extensive testing.
+#define READ_CHUNK_SIZE 128
+
+/// Read from the fd in chunks until we see newline or null, as appropriate, is seen. This is only
+/// used when the fd is seekable (so not from a tty or pipe) and we're not reading a specific number
+/// of chars.
+static int read_in_chunks(int fd, wcstring &buff, bool split_null) {
     int exit_res = STATUS_BUILTIN_OK;
+    std::string str;
     bool eof = false;
+    bool finished = false;
 
-    while (true) {
-        bool finished = false;
-        wchar_t res = 0;
-        mbstate_t state = {};
+    while (!finished) {
+        char inbuf[READ_CHUNK_SIZE];
+        int bytes_read = read_blocked(fd, inbuf, READ_CHUNK_SIZE);
 
-        while (!finished) {
-            char b;
-            if (read_blocked(fd, &b, 1) <= 0) {
-                eof = true;
-                break;
-            }
-
-            if (MB_CUR_MAX == 1) {
-                res = (unsigned char)b;
-                finished = true;
-            } else {
-                size_t sz = mbrtowc(&res, &b, 1, &state);
-                if (sz == (size_t)-1) {
-                    memset(&state, 0, sizeof(state));
-                } else if (sz != (size_t)-2) {
-                    finished = true;
-                }
-            }
+        if (bytes_read <= 0) {
+            eof = true;
+            break;
         }
 
-        if (eof) break;
-        if (!split_null && res == L'\n') break;
-        if (split_null && res == L'\0') break;
-
-        buff.push_back(res);
-        if (0 < nchars && (size_t)nchars <= buff.size()) {
-            break;
+        int i;
+        for (i = 0; i < bytes_read && !finished; i++) {
+            if ((!split_null && inbuf[i] == L'\n') || (split_null && inbuf[i] == L'\0')) {
+                finished = true;
+            } else {
+                str.push_back(inbuf[i]);
+            }
+        }
+        buff += str2wcstring(str);
+        if (i < bytes_read) {
+            CHECK(lseek(fd, i - bytes_read, SEEK_CUR) != -1, STATUS_BUILTIN_ERROR)
         }
     }
 
@@ -2201,15 +2197,18 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
     }
 
-    if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
+    // TODO: Determine if the original set of conditions for interactive reads should be reinstated:
+    // if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
+    int stream_stdin_is_a_tty = isatty(streams.stdin_fd);
+    if (stream_stdin_is_a_tty && !split_null) {
         // We should read interactively using reader_readline(). This does not support splitting on
         // null. The call to reader_readline may change woptind, so we save and restore it.
         int saved_woptind = w.woptind;
         exit_res =
             read_interactive(buff, nchars, shell, mode_name, prompt, right_prompt, commandline);
         w.woptind = saved_woptind;
-    } else if (lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
-        exit_res = read_in_chunks(streams.stdin_fd, buff, nchars, split_null);
+    } else if (!nchars && !stream_stdin_is_a_tty && lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
+        exit_res = read_in_chunks(streams.stdin_fd, buff, split_null);
     } else {
         exit_res = read_one_char_at_a_time(streams.stdin_fd, buff, nchars, split_null);
     }

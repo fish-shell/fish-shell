@@ -1900,11 +1900,152 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
     return STATUS_BUILTIN_OK;
 }
 
+/// Read from the tty. This is only valid when the stream is stdin and it is attached to a tty and
+/// we weren't asked to split on null characters.
+static int read_interactive(wcstring &buff, int nchars, bool shell, const wchar_t *mode_name,
+                            const wchar_t *prompt, const wchar_t *right_prompt,
+                            const wchar_t *commandline) {
+    int exit_res = STATUS_BUILTIN_OK;
+    const wchar_t *line;
+
+    reader_push(mode_name);
+    reader_set_left_prompt(prompt);
+    reader_set_right_prompt(right_prompt);
+    if (shell) {
+        reader_set_complete_function(&complete);
+        reader_set_highlight_function(&highlight_shell);
+        reader_set_test_function(&reader_shell_test);
+    }
+    // No autosuggestions or abbreviations in builtin_read.
+    reader_set_allow_autosuggesting(false);
+    reader_set_expand_abbreviations(false);
+    reader_set_exit_on_interrupt(true);
+
+    reader_set_buffer(commandline, wcslen(commandline));
+    proc_push_interactive(1);
+
+    event_fire_generic(L"fish_prompt");
+    line = reader_readline(nchars);
+    proc_pop_interactive();
+    if (line) {
+        if (0 < nchars && (size_t)nchars < wcslen(line)) {
+            // Line may be longer than nchars if a keybinding used `commandline -i`
+            // note: we're deliberately throwing away the tail of the commandline.
+            // It shouldn't be unread because it was produced with `commandline -i`,
+            // not typed.
+            buff = wcstring(line, nchars);
+        } else {
+            buff = wcstring(line);
+        }
+    } else {
+        exit_res = STATUS_BUILTIN_ERROR;
+    }
+    reader_pop();
+    return exit_res;
+}
+
+/// Read from the fd in chunks until we've read the requested number of characters or a newline or
+/// null, as appropriate, is seen. This is should only be used when the fd is seekable.
+static int read_in_chunks(int fd, wcstring &buff, int nchars, bool split_null) {
+    int exit_res = STATUS_BUILTIN_OK;
+    bool eof = false;
+
+    while (true) {
+        bool finished = false;
+        wchar_t res = 0;
+        mbstate_t state = {};
+
+        while (!finished) {
+            char b;
+            if (read_blocked(fd, &b, 1) <= 0) {
+                eof = true;
+                break;
+            }
+
+            if (MB_CUR_MAX == 1) {
+                res = (unsigned char)b;
+                finished = true;
+            } else {
+                size_t sz = mbrtowc(&res, &b, 1, &state);
+                if (sz == (size_t)-1) {
+                    memset(&state, 0, sizeof(state));
+                } else if (sz != (size_t)-2) {
+                    finished = true;
+                }
+            }
+        }
+
+        if (eof) break;
+        if (!split_null && res == L'\n') break;
+        if (split_null && res == L'\0') break;
+
+        buff.push_back(res);
+        if (0 < nchars && (size_t)nchars <= buff.size()) {
+            break;
+        }
+    }
+
+    if (buff.empty() && eof) {
+        exit_res = STATUS_BUILTIN_ERROR;
+    }
+
+    return exit_res;
+}
+
+/// Read from the fd on char at a time until we've read the requested number of characters or a
+/// newline or null, as appropriate, is seen. This is inefficient so should only be used when the
+/// fd is not seekable.
+static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool split_null) {
+    int exit_res = STATUS_BUILTIN_OK;
+    bool eof = false;
+
+    while (true) {
+        bool finished = false;
+        wchar_t res = 0;
+        mbstate_t state = {};
+
+        while (!finished) {
+            char b;
+            if (read_blocked(fd, &b, 1) <= 0) {
+                eof = true;
+                break;
+            }
+
+            if (MB_CUR_MAX == 1) {
+                res = (unsigned char)b;
+                finished = true;
+            } else {
+                size_t sz = mbrtowc(&res, &b, 1, &state);
+                if (sz == (size_t)-1) {
+                    memset(&state, 0, sizeof(state));
+                } else if (sz != (size_t)-2) {
+                    finished = true;
+                }
+            }
+        }
+
+        if (eof) break;
+        if (!split_null && res == L'\n') break;
+        if (split_null && res == L'\0') break;
+
+        buff.push_back(res);
+        if (0 < nchars && (size_t)nchars <= buff.size()) {
+            break;
+        }
+    }
+
+    if (buff.empty() && eof) {
+        exit_res = STATUS_BUILTIN_ERROR;
+    }
+
+    return exit_res;
+}
+
 /// The read builtin. Reads from stdin and stores the values in environment variables.
 static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     wcstring buff;
-    int i, argc = builtin_count_args(argv);
+    int argc = builtin_count_args(argv);
     int place = ENV_USER;
     const wchar_t *prompt = DEFAULT_READ_PROMPT;
     const wchar_t *right_prompt = L"";
@@ -1912,8 +2053,8 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     int exit_res = STATUS_BUILTIN_OK;
     const wchar_t *mode_name = READ_MODE_NAME;
     int nchars = 0;
-    int shell = 0;
-    int array = 0;
+    bool shell = false;
+    bool array = false;
     bool split_null = false;
 
     while (1) {
@@ -2000,11 +2141,11 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 break;
             }
             case 's': {
-                shell = 1;
+                shell = true;
                 break;
             }
             case 'a': {
-                array = 1;
+                array = true;
                 break;
             }
             case L'z': {
@@ -2052,7 +2193,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
     // Verify all variable names.
     wcstring errstr;
-    for (i = w.woptind; i < argc; i++) {
+    for (int i = w.woptind; i < argc; i++) {
         if (!builtin_is_valid_varname(argv[i], errstr, argv[0])) {
             streams.err.append(errstr);
             builtin_print_help(parser, streams, argv[0], streams.err);
@@ -2060,96 +2201,20 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
     }
 
-    // The call to reader_readline may change woptind, so we save it away here.
-    i = w.woptind;
-
-    // Check if we should read interactively using \c reader_readline().
     if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
-        const wchar_t *line;
-
-        reader_push(mode_name);
-        reader_set_left_prompt(prompt);
-        reader_set_right_prompt(right_prompt);
-        if (shell) {
-            reader_set_complete_function(&complete);
-            reader_set_highlight_function(&highlight_shell);
-            reader_set_test_function(&reader_shell_test);
-        }
-        // No autosuggestions or abbreviations in builtin_read.
-        reader_set_allow_autosuggesting(false);
-        reader_set_expand_abbreviations(false);
-        reader_set_exit_on_interrupt(true);
-
-        reader_set_buffer(commandline, wcslen(commandline));
-        proc_push_interactive(1);
-
-        event_fire_generic(L"fish_prompt");
-        line = reader_readline(nchars);
-        proc_pop_interactive();
-        if (line) {
-            if (0 < nchars && (size_t)nchars < wcslen(line)) {
-                // Line may be longer than nchars if a keybinding used `commandline -i`
-                // note: we're deliberately throwing away the tail of the commandline.
-                // It shouldn't be unread because it was produced with `commandline -i`,
-                // not typed.
-                buff = wcstring(line, nchars);
-            } else {
-                buff = wcstring(line);
-            }
-        } else {
-            exit_res = STATUS_BUILTIN_ERROR;
-        }
-        reader_pop();
+        // We should read interactively using reader_readline(). This does not support splitting on
+        // null. The call to reader_readline may change woptind, so we save and restore it.
+        int saved_woptind = w.woptind;
+        exit_res =
+            read_interactive(buff, nchars, shell, mode_name, prompt, right_prompt, commandline);
+        w.woptind = saved_woptind;
+    } else if (lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
+        exit_res = read_in_chunks(streams.stdin_fd, buff, nchars, split_null);
     } else {
-        int eof = 0;
-
-        buff.clear();
-
-        while (1) {
-            int finished = 0;
-            wchar_t res = 0;
-            mbstate_t state = {};
-
-            while (!finished) {
-                char b;
-                if (read_blocked(streams.stdin_fd, &b, 1) <= 0) {
-                    eof = 1;
-                    break;
-                }
-
-                if (MB_CUR_MAX == 1)  // single-byte locale
-                {
-                    res = (unsigned char)b;
-                    finished = 1;
-                } else {
-                    size_t sz = mbrtowc(&res, &b, 1, &state);
-                    if (sz == (size_t)-1) {
-                        memset(&state, 0, sizeof(state));
-                    } else if (sz != (size_t)-2) {
-                        finished = 1;
-                    }
-                }
-            }
-
-            if (eof) break;
-
-            if (!split_null && res == L'\n') break;
-
-            if (split_null && res == L'\0') break;
-
-            buff.push_back(res);
-
-            if (0 < nchars && (size_t)nchars <= buff.size()) {
-                break;
-            }
-        }
-
-        if (buff.empty() && eof) {
-            exit_res = STATUS_BUILTIN_ERROR;
-        }
+        exit_res = read_one_char_at_a_time(streams.stdin_fd, buff, nchars, split_null);
     }
 
-    if (i == argc || exit_res != STATUS_BUILTIN_OK) {
+    if (w.woptind == argc || exit_res != STATUS_BUILTIN_OK) {
         return exit_res;
     }
 
@@ -2166,21 +2231,21 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                     *out = *it;
                     out += 2;
                 }
-                env_set(argv[i], chars.c_str(), place);
+                env_set(argv[w.woptind], chars.c_str(), place);
             } else {
-                env_set(argv[i], NULL, place);
+                env_set(argv[w.woptind], NULL, place);
             }
         } else {  // not array
             size_t j = 0;
-            for (; i + 1 < argc; ++i) {
+            for (; w.woptind + 1 < argc; ++w.woptind) {
                 if (j < bufflen) {
                     wchar_t buffer[2] = {buff[j++], 0};
-                    env_set(argv[i], buffer, place);
+                    env_set(argv[w.woptind], buffer, place);
                 } else {
-                    env_set(argv[i], L"", place);
+                    env_set(argv[w.woptind], L"", place);
                 }
             }
-            if (i < argc) env_set(argv[i], &buff[j], place);
+            if (w.woptind < argc) env_set(argv[w.woptind], &buff[j], place);
         }
     } else if (array) {
         wcstring tokens;
@@ -2193,14 +2258,15 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             tokens.append(buff, loc.first, loc.second);
             empty = false;
         }
-        env_set(argv[i], empty ? NULL : tokens.c_str(), place);
+        env_set(argv[w.woptind], empty ? NULL : tokens.c_str(), place);
     } else {  // not array
         wcstring_range loc = wcstring_range(0, 0);
 
-        while (i < argc) {
-            loc = wcstring_tok(buff, (i + 1 < argc) ? ifs : wcstring(), loc);
-            env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first], place);
-            ++i;
+        while (w.woptind < argc) {
+            loc = wcstring_tok(buff, (w.woptind + 1 < argc) ? ifs : wcstring(), loc);
+            env_set(argv[w.woptind], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first],
+                    place);
+            ++w.woptind;
         }
     }
 

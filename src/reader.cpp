@@ -2424,7 +2424,7 @@ const wchar_t *reader_readline(int nchars) {
             is_interactive_read = 1;
             c = input_readch();
             is_interactive_read = was_interactive_read;
-            // fprintf(stderr, "C: %lx\n", (long)c);
+            // fwprintf(stderr, L"C: %lx\n", (long)c);
 
             if (((!fish_reserved_codepoint(c))) && (c > 31) && (c != 127) && can_read(0)) {
                 wchar_t arr[READAHEAD_MAX + 1];
@@ -2486,7 +2486,7 @@ const wchar_t *reader_readline(int nchars) {
         if (command_ends_paging(c, focused_on_search_field)) {
             clear_pager();
         }
-        // fprintf(stderr, "\n\nchar: %ls\n\n", describe_char(c).c_str());
+        // fwprintf(stderr, L"\n\nchar: %ls\n\n", describe_char(c).c_str());
 
         switch (c) {
             // Go to beginning of line.
@@ -2607,7 +2607,7 @@ const wchar_t *reader_readline(int nchars) {
                     // up to the end of the token we're completing.
                     const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
 
-                    // fprintf(stderr, "Complete (%ls)\n", buffcpy.c_str());
+                    // fwprintf(stderr, L"Complete (%ls)\n", buffcpy.c_str());
                     complete_flags_t complete_flags = COMPLETION_REQUEST_DEFAULT |
                                                       COMPLETION_REQUEST_DESCRIPTIONS |
                                                       COMPLETION_REQUEST_FUZZY_MATCH;

@@ -541,9 +541,7 @@ bool should_suppress_stderr_for_tests() {
 
 static bool should_debug(int level) {
     if (level > debug_level) return false;
-
     if (should_suppress_stderr_for_tests()) return false;
-
     return true;
 }
 
@@ -1534,9 +1532,8 @@ int create_directory(const wcstring &d) {
 }
 
 __attribute__((noinline)) void bugreport() {
-    debug(1, _(L"This is a bug. Break on bugreport to debug. "
-               L"If you can reproduce it, please send a bug report to %s."),
-          PACKAGE_BUGREPORT);
+    debug(0, _(L"This is a bug. Break on bugreport to debug."));
+    debug(0, _(L"If you can reproduce it, please send a bug report to %s."), PACKAGE_BUGREPORT);
 }
 
 wcstring format_size(long long sz) {
@@ -1722,28 +1719,24 @@ bool is_main_thread() {
 
 void assert_is_main_thread(const char *who) {
     if (!is_main_thread() && !thread_asserts_cfg_for_testing) {
-        fprintf(stderr,
-                "Warning: %s called off of main thread. Break on debug_thread_error to debug.\n",
-                who);
+        debug(0, "%s called off of main thread.", who);
+        debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
 
 void assert_is_not_forked_child(const char *who) {
     if (is_forked_child()) {
-        fprintf(stderr,
-                "Warning: %s called in a forked child. Break on debug_thread_error to debug.\n",
-                who);
+        debug(0, "%s called in a forked child.", who);
+        debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
 
 void assert_is_background_thread(const char *who) {
     if (is_main_thread() && !thread_asserts_cfg_for_testing) {
-        fprintf(stderr,
-                "Warning: %s called on the main thread (may block!). Break on debug_thread_error "
-                "to debug.\n",
-                who);
+        debug(0, "%s called on the main thread (may block!).", who);
+        debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
@@ -1751,10 +1744,8 @@ void assert_is_background_thread(const char *who) {
 void assert_is_locked(void *vmutex, const char *who, const char *caller) {
     pthread_mutex_t *mutex = static_cast<pthread_mutex_t *>(vmutex);
     if (0 == pthread_mutex_trylock(mutex)) {
-        fprintf(stderr,
-                "Warning: %s is not locked when it should be in '%s'. Break on debug_thread_error "
-                "to debug.\n",
-                who, caller);
+        debug(0, "%s is not locked when it should be in '%s'", who, caller);
+        debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
         pthread_mutex_unlock(mutex);
     }

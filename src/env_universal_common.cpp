@@ -95,7 +95,8 @@ static const wcstring default_vars_path() {
     return vars_filename_in_directory(path);
 }
 
-/// Check, and create if necessary, a secure runtime path Derived from tmux.c in tmux
+#if !defined(__APPLE__) && !defined(__CYGWIN__)
+/// Check, and create if necessary, a secure runtime path. Derived from tmux.c in tmux
 /// (http://tmux.sourceforge.net/).
 static int check_runtime_path(const char *path) {
     // Copyright (c) 2007 Nicholas Marriott <nicm@users.sourceforge.net>
@@ -143,9 +144,8 @@ static wcstring get_runtime_path() {
         std::string tmpdir = "/tmp/fish.";
         tmpdir.append(uname);
         if (check_runtime_path(tmpdir.c_str()) != 0) {
-            debug(0,
-                  L"Runtime path not available. Try deleting the directory %s and restarting fish.",
-                  tmpdir.c_str());
+            debug(0, L"Runtime path not available.");
+            debug(0, L"Try deleting the directory %s and restarting fish.", tmpdir.c_str());
         } else {
             result = str2wcstring(tmpdir);
         }
@@ -159,6 +159,7 @@ static wcstring default_named_pipe_path() {
     // Note that vars_filename_in_directory returns empty string when passed the empty string.
     return vars_filename_in_directory(get_runtime_path());
 }
+#endif
 
 /// Test if the message msg contains the command cmd.
 static bool match(const wchar_t *msg, const wchar_t *cmd) {
@@ -1121,10 +1122,8 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
         uint32_t status =
             notify_register_file_descriptor(name.c_str(), &this->notify_fd, 0, &this->token);
         if (status != NOTIFY_STATUS_OK) {
-            fprintf(stderr,
-                    "Warning: notify_register_file_descriptor() failed with status %u. Universal "
-                    "variable notifications may not be received.",
-                    status);
+            debug(1, "notify_register_file_descriptor() failed with status %u.", status);
+            debug(1, "Universal variable notifications may not be received.");
         }
         if (this->notify_fd >= 0) {
             // Mark us for non-blocking reads, and CLO_EXEC.
@@ -1184,8 +1183,10 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
 #endif
 };
 
-#define NAMED_PIPE_FLASH_DURATION_USEC (1000000 / 10)
-#define SUSTAINED_READABILITY_CLEANUP_DURATION_USEC (1000000 * 5)
+#if !defined(__APPLE__) && !defined(__CYGWIN__)
+#define NAMED_PIPE_FLASH_DURATION_USEC (1e5)
+#define SUSTAINED_READABILITY_CLEANUP_DURATION_USEC (5 * 1e6)
+#endif
 
 // Named-pipe based notifier. All clients open the same named pipe for reading and writing. The
 // pipe's readability status is a trigger to enter polling mode.
@@ -1347,7 +1348,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
 #else  // this class isn't valid on this system
    public:
     universal_notifier_named_pipe_t(const wchar_t *test_path) {
-        auto x = test_path;  // silence "unused parameter" warning
+        static_cast<void>(test_path);
         DIE("universal_notifier_named_pipe_t cannot be used on this system");
     }
 #endif

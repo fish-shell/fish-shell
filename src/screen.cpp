@@ -416,7 +416,7 @@ static void s_desired_append_char(screen_t *s, wchar_t b, int c, int indent, siz
         if ((s->desired.cursor.x + cw) > screen_width) {
             // Current line is soft wrapped (assuming we support it).
             s->desired.line(s->desired.cursor.y).is_soft_wrapped = true;
-            // fprintf(stderr, "\n\n1 Soft wrapping %d\n\n", s->desired.cursor.y);
+            // fwprintf(stderr, L"\n\n1 Soft wrapping %d\n\n", s->desired.cursor.y);
 
             line_no = (int)s->desired.line_count();
             s->desired.add_line();

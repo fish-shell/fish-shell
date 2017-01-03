@@ -374,7 +374,7 @@ int input_init() {
         } else {
             debug(0, _(L"Using fallback terminal type '%ls'"), DEFAULT_TERM);
         }
-        putc('\n', stderr);
+        fputwc(L'\n', stderr);
     }
 
     input_terminfo_init();

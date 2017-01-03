@@ -280,7 +280,7 @@ static void mark_process_status(process_t *p, int status) {
     } else {
         // This should never be reached.
         p->completed = 1;
-        fprintf(stderr, "Process %ld exited abnormally\n", (long)p->pid);
+        debug(1, "Process %ld exited abnormally", (long)p->pid);
     }
 }
 

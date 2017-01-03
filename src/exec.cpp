@@ -1131,16 +1131,12 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst,
     const int prev_status = proc_get_last_status();
     bool split_output = false;
 
-    // fprintf(stderr, "subcmd %ls\n", cmd.c_str());
-
     const env_var_t ifs = env_get_string(L"IFS");
-
     if (!ifs.missing_or_empty()) {
         split_output = true;
     }
 
     is_subshell = 1;
-
     int subcommand_status = -1;  // assume the worst
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may

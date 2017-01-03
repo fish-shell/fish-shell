@@ -6,7 +6,6 @@
 #include <limits.h>
 #include <pthread.h>
 #include <signal.h>
-#include <stdio.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -228,7 +227,7 @@ void iothread_service_completion(void) {
     } else if (wakeup_byte == IO_SERVICE_RESULT_QUEUE) {
         iothread_service_result_queue();
     } else {
-        fprintf(stderr, "Unknown wakeup byte %02x in %s\n", wakeup_byte, __FUNCTION__);
+        debug(0, "Unknown wakeup byte %02x in %s", wakeup_byte, __FUNCTION__);
     }
 }
 

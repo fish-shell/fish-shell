@@ -615,8 +615,7 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
         this->get_backtrace(cmd, error_list, &backtrace_and_desc);
 
         // Print it.
-        fprintf(stderr, "%ls", backtrace_and_desc.c_str());
-
+        fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
         return 1;
     }
     return this->eval_acquiring_tree(cmd, io, block_type, moved_ref<parse_node_tree_t>(tree));

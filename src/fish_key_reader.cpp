@@ -34,10 +34,10 @@
 
 struct config_paths_t determine_config_directory_paths(const char *argv0);
 
-static const char *ctrl_symbolic_names[] = {NULL,  NULL,  NULL,  NULL,  NULL,  NULL,  NULL, "\\a",
-                                            "\\b", "\\t", "\\n", "\\v", "\\f", "\\r", NULL, NULL,
-                                            NULL,  NULL,  NULL,  NULL,  NULL,  NULL,  NULL, NULL,
-                                            NULL,  NULL,  NULL,  "\\e", NULL,  NULL,  NULL, NULL};
+static const wchar_t *ctrl_symbolic_names[] = {
+    NULL,   NULL,   NULL,   NULL, NULL, NULL,   NULL, L"\\a", L"\\b", L"\\t", L"\\n",
+    L"\\v", L"\\f", L"\\r", NULL, NULL, NULL,   NULL, NULL,   NULL,   NULL,   NULL,
+    NULL,   NULL,   NULL,   NULL, NULL, L"\\e", NULL, NULL,   NULL,   NULL};
 static bool keep_running = true;
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
@@ -51,12 +51,12 @@ static bool should_exit(wchar_t wc) {
     recent_chars[3] = c;
     if (c == shell_modes.c_cc[VINTR]) {
         if (recent_chars[2] == shell_modes.c_cc[VINTR]) return true;
-        fprintf(stderr, "Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VINTR] + 0x40);
+        fwprintf(stderr, L"Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VINTR] + 0x40);
         return false;
     }
     if (c == shell_modes.c_cc[VEOF]) {
         if (recent_chars[2] == shell_modes.c_cc[VEOF]) return true;
-        fprintf(stderr, "Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VEOF] + 0x40);
+        fwprintf(stderr, L"Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VEOF] + 0x40);
         return false;
     }
     return memcmp(recent_chars, "exit", 4) == 0 || memcmp(recent_chars, "quit", 4) == 0;
@@ -116,46 +116,48 @@ static bool must_escape(wchar_t wc) {
     }
 }
 
-static char *char_to_symbol(wchar_t wc, bool bind_friendly) {
-    static char buf[128];
+static wchar_t *char_to_symbol(wchar_t wc, bool bind_friendly) {
+#define BUF_LEN 64
+    static wchar_t buf[BUF_LEN];
 
-    if (wc < ' ') {
+    if (wc < L' ') {
         // ASCII control character.
         if (ctrl_symbolic_names[wc]) {
             if (bind_friendly) {
-                snprintf(buf, sizeof(buf), "%s", ctrl_symbolic_names[wc]);
+                swprintf(buf, BUF_LEN, L"%ls", ctrl_symbolic_names[wc]);
             } else {
-                snprintf(buf, sizeof(buf), "\\c%c  (or %s)", wc + 64, ctrl_symbolic_names[wc]);
+                swprintf(buf, BUF_LEN, L"\\c%c  (or %ls)", wc + 0x40, ctrl_symbolic_names[wc]);
             }
         } else {
-            snprintf(buf, sizeof(buf), "\\c%c", wc + 64);
+            swprintf(buf, BUF_LEN, L"\\c%c", wc + 0x40);
         }
-    } else if (wc == ' ') {
+    } else if (wc == L' ') {
         // The "space" character.
         if (bind_friendly) {
-            snprintf(buf, sizeof(buf), "\\x%X", wc);
+            swprintf(buf, BUF_LEN, L"\\x%X", ' ');
         } else {
-            snprintf(buf, sizeof(buf), "\\x%X  (aka \"space\")", wc);
+            swprintf(buf, BUF_LEN, L"\\x%X  (aka \"space\")", ' ');
         }
     } else if (wc == 0x7F) {
         // The "del" character.
         if (bind_friendly) {
-            snprintf(buf, sizeof(buf), "\\x%X", wc);
+            swprintf(buf, BUF_LEN, L"\\x%X", 0x7F);
         } else {
-            snprintf(buf, sizeof(buf), "\\x%X  (aka \"del\")", wc);
+            swprintf(buf, BUF_LEN, L"\\x%X  (aka \"del\")", 0x7F);
         }
     } else if (wc < 0x80) {
         // ASCII characters that are not control characters.
         if (bind_friendly && must_escape(wc)) {
-            snprintf(buf, sizeof(buf), "\\%c", wc);
+            swprintf(buf, BUF_LEN, L"\\%c", wc);
         } else {
-            snprintf(buf, sizeof(buf), "%c", wc);
+            swprintf(buf, BUF_LEN, L"%c", wc);
         }
     } else if (wc <= 0xFFFF) {
-        snprintf(buf, sizeof(buf), "\\u%04X", wc);
+        swprintf(buf, BUF_LEN, L"\\u%04X", (int)wc);
     } else {
-        snprintf(buf, sizeof(buf), "\\U%06X", wc);
+        swprintf(buf, BUF_LEN, L"\\U%06X", (int)wc);
     }
+
     return buf;
 }
 
@@ -165,17 +167,17 @@ static void add_char_to_bind_command(wchar_t wc, std::vector<wchar_t> &bind_char
 
 static void output_bind_command(std::vector<wchar_t> &bind_chars) {
     if (bind_chars.size()) {
-        fputs("bind ", stdout);
+        fputws(L"bind ", stdout);
         for (size_t i = 0; i < bind_chars.size(); i++) {
-            fputs(char_to_symbol(bind_chars[i], true), stdout);
+            fputws(char_to_symbol(bind_chars[i], true), stdout);
         }
-        fputs(" 'do something'\n", stdout);
+        fputws(L" 'do something'\n", stdout);
         bind_chars.clear();
     }
 }
 
 static void output_info_about_char(wchar_t wc) {
-    fprintf(stderr, "hex: %4X  char: %s\n", wc, char_to_symbol(wc, false));
+    fwprintf(stderr, L"hex: %4X  char: %ls\n", wc, char_to_symbol(wc, false));
 }
 
 static bool output_matching_key_name(wchar_t wc) {
@@ -193,11 +195,11 @@ static double output_elapsed_time(double prev_tstamp, bool first_char_seen) {
     double now = timef();
     long long int delta_tstamp_us = 1000000 * (now - prev_tstamp);
 
-    if (delta_tstamp_us >= 200000 && first_char_seen) putc('\n', stderr);
+    if (delta_tstamp_us >= 200000 && first_char_seen) fputwc(L'\n', stderr);
     if (delta_tstamp_us >= 1000000) {
-        fprintf(stderr, "              ");
+        fwprintf(stderr, L"              ");
     } else {
-        fprintf(stderr, "(%3lld.%03lld ms)  ", delta_tstamp_us / 1000, delta_tstamp_us % 1000);
+        fwprintf(stderr, L"(%3lld.%03lld ms)  ", delta_tstamp_us / 1000, delta_tstamp_us % 1000);
     }
     return now;
 }
@@ -208,7 +210,7 @@ static void process_input(bool continuous_mode) {
     double prev_tstamp = 0.0;
     std::vector<wchar_t> bind_chars;
 
-    fprintf(stderr, "Press a key\n\n");
+    fwprintf(stderr, L"Press a key\n\n");
     while (keep_running) {
         wchar_t wc;
         if (reader_interrupted()) {
@@ -232,7 +234,7 @@ static void process_input(bool continuous_mode) {
         }
 
         if (should_exit(wc)) {
-            fprintf(stderr, "\nExiting at your request.\n");
+            fwprintf(stderr, L"\nExiting at your request.\n");
             break;
         }
 
@@ -295,11 +297,11 @@ static void setup_and_process_keys(bool continuous_mode) {
     install_our_signal_handlers();
 
     if (continuous_mode) {
-        fprintf(stderr, "\n");
-        fprintf(stderr, "To terminate this program type \"exit\" or \"quit\" in this window,\n");
-        fprintf(stderr, "or press [ctrl-%c] or [ctrl-%c] twice in a row.\n",
-                shell_modes.c_cc[VINTR] + 0x40, shell_modes.c_cc[VEOF] + 0x40);
-        fprintf(stderr, "\n");
+        fwprintf(stderr, L"\n");
+        fwprintf(stderr, L"To terminate this program type \"exit\" or \"quit\" in this window,\n");
+        fwprintf(stderr, L"or press [ctrl-%c] or [ctrl-%c] twice in a row.\n",
+                 shell_modes.c_cc[VINTR] + 0x40, shell_modes.c_cc[VEOF] + 0x40);
+        fwprintf(stderr, L"\n");
     }
 
     process_input(continuous_mode);
@@ -323,7 +325,7 @@ int main(int argc, char **argv) {
     while (!error && (opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
         switch (opt) {
             case 0: {
-                fprintf(stderr, "getopt_long() unexpectedly returned zero\n");
+                fwprintf(stderr, L"getopt_long() unexpectedly returned zero\n");
                 error = true;
                 break;
             }
@@ -378,12 +380,12 @@ int main(int argc, char **argv) {
 
     argc -= optind;
     if (argc != 0) {
-        fprintf(stderr, "Expected no arguments, got %d\n", argc);
+        fwprintf(stderr, L"Expected no arguments, got %d\n", argc);
         return 1;
     }
 
     if (!isatty(STDIN_FILENO)) {
-        fprintf(stderr, "Stdin must be attached to a tty.\n");
+        fwprintf(stderr, L"Stdin must be attached to a tty.\n");
         return 1;
     }
 

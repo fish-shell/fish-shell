@@ -441,7 +441,7 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(
             break;
         }
         default: {
-            fprintf(stderr, "Unexpected block header: %ls\n", header.describe().c_str());
+            debug(0, L"Unexpected block header: %ls\n", header.describe().c_str());
             PARSER_DIE();
             break;
         }
@@ -700,7 +700,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(
     const parse_error_list_t &error_list) const {
     if (!parser->cancellation_requested) {
         if (error_list.empty()) {
-            fprintf(stderr, "Bug: Error reported but no error text found.");
+            debug(0, "Error reported but no error text found.");
         }
 
         // Get a backtrace.
@@ -708,7 +708,9 @@ parse_execution_result_t parse_execution_context_t::report_errors(
         parser->get_backtrace(src, error_list, &backtrace_and_desc);
 
         // Print it.
-        if (!should_suppress_stderr_for_tests()) fprintf(stderr, "%ls", backtrace_and_desc.c_str());
+        if (!should_suppress_stderr_for_tests()) {
+            fwprintf(stderr, L"%ls", backtrace_and_desc.c_str());
+        }
     }
     return parse_execution_errored;
 }
@@ -1034,8 +1036,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
             }
             default: {
                 // Should be unreachable.
-                fprintf(stderr, "Unexpected redirection type %ld. aborting.\n",
-                        (long)redirect_type);
+                debug(0, "Unexpected redirection type %ld.", (long)redirect_type);
                 PARSER_DIE();
                 break;
             }
@@ -1133,8 +1134,8 @@ parse_execution_result_t parse_execution_context_t::populate_job_process(
             break;
         }
         default: {
-            fprintf(stderr, "'%ls' not handled by new parser yet\n",
-                    specific_statement.describe().c_str());
+            debug(0, L"'%ls' not handled by new parser yet.",
+                  specific_statement.describe().c_str());
             PARSER_DIE();
             break;
         }
@@ -1426,8 +1427,7 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
         default: {
             // In principle, we could support other node types. However we never expect to be passed
             // them - see above.
-            fprintf(stderr, "Unexpected node %ls found in %s\n", node.describe().c_str(),
-                    __FUNCTION__);
+            debug(0, "Unexpected node %ls found in %s", node.describe().c_str(), __FUNCTION__);
             PARSER_DIE();
             break;
         }

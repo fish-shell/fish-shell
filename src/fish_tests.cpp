@@ -766,19 +766,10 @@ static void test_cancellation() {
     // we cancel we expect no output.
     test_1_cancellation(L"echo (while true ; echo blah ; end)");
 
-    fprintf(stderr, ".");
-
     // Nasty infinite loop that doesn't actually execute anything.
     test_1_cancellation(L"echo (while true ; end) (while true ; end) (while true ; end)");
-    fprintf(stderr, ".");
-
     test_1_cancellation(L"while true ; end");
-    fprintf(stderr, ".");
-
     test_1_cancellation(L"for i in (while true ; end) ; end");
-    fprintf(stderr, ".");
-
-    fprintf(stderr, "\n");
 
     // Restore signal handling.
     proc_pop_interactive();
@@ -1645,8 +1636,8 @@ struct pager_layout_testcase_t {
 
             wcstring text = sd.line(0).to_string();
             if (text != expected) {
-                fprintf(stderr, "width %zu got <%ls>, expected <%ls>\n", this->width, text.c_str(),
-                        expected.c_str());
+                fwprintf(stderr, L"width %zu got <%ls>, expected <%ls>\n", this->width,
+                         text.c_str(), expected.c_str());
             }
             do_test(text == expected);
         }
@@ -2175,8 +2166,8 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
     wcstring result =
         completion_apply_to_command_line(completion, flags, line, &cursor_pos, append_only);
     if (result != expected) {
-        fprintf(stderr, "line %ld: %ls + %ls -> [%ls], expected [%ls]\n", source_line, line.c_str(),
-                completion.c_str(), result.c_str(), expected.c_str());
+        fwprintf(stderr, L"line %ld: %ls + %ls -> [%ls], expected [%ls]\n", source_line,
+                 line.c_str(), completion.c_str(), result.c_str(), expected.c_str());
     }
     do_test(result == expected);
     do_test(cursor_pos == out_cursor_pos);
@@ -2501,7 +2492,7 @@ static void test_universal() {
     }
 
     if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rm failed");
-    putc('\n', stderr);
+    fputwc(L'\n', stderr);
 }
 
 static bool callback_data_less_than(const callback_data_t &a, const callback_data_t &b) {
@@ -3225,7 +3216,7 @@ static void test_new_parser_fuzzing(void) {
     bool log_it = true;
     unsigned long max_len = 5;
     for (unsigned long len = 0; len < max_len; len++) {
-        if (log_it) fprintf(stderr, "%lu / %lu...", len, max_len);
+        if (log_it) fwprintf(stderr, L"%lu / %lu...", len, max_len);
 
         // We wish to look at all permutations of 4 elements of 'fuzzes' (with replacement).
         // Construct an int and keep incrementing it.
@@ -3234,7 +3225,7 @@ static void test_new_parser_fuzzing(void) {
                                       &src)) {
             parse_tree_from_string(src, parse_flag_continue_after_error, &node_tree, &errors);
         }
-        if (log_it) fprintf(stderr, "done (%lu)\n", permutation);
+        if (log_it) fwprintf(stderr, L"done (%lu)\n", permutation);
     }
     double end = timef();
     if (log_it) say(L"All fuzzed in %f seconds!", end - start);
@@ -4121,8 +4112,8 @@ int main(int argc, char **argv) {
             exit(-1);
         }
         if (!strcmp(wd, "/")) {
-            fprintf(stderr,
-                    "Unable to find 'tests' directory, which should contain file test.fish\n");
+            fwprintf(stderr,
+                     L"Unable to find 'tests' directory, which should contain file test.fish\n");
             exit(EXIT_FAILURE);
         }
         if (chdir(dirname(wd)) < 0) {

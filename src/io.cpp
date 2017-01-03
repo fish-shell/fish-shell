@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <wchar.h>
 
 #include "common.h"
 #include "exec.h"
@@ -15,19 +16,20 @@
 
 io_data_t::~io_data_t() {}
 
-void io_close_t::print() const { fprintf(stderr, "close %d\n", fd); }
+void io_close_t::print() const { fwprintf(stderr, L"close %d\n", fd); }
 
-void io_fd_t::print() const { fprintf(stderr, "FD map %d -> %d\n", old_fd, fd); }
+void io_fd_t::print() const { fwprintf(stderr, L"FD map %d -> %d\n", old_fd, fd); }
 
-void io_file_t::print() const { fprintf(stderr, "file (%s)\n", filename_cstr); }
+void io_file_t::print() const { fwprintf(stderr, L"file (%s)\n", filename_cstr); }
 
 void io_pipe_t::print() const {
-    fprintf(stderr, "pipe {%d, %d} (input: %s)\n", pipe_fd[0], pipe_fd[1], is_input ? "yes" : "no");
+    fwprintf(stderr, L"pipe {%d, %d} (input: %s)\n", pipe_fd[0], pipe_fd[1],
+             is_input ? "yes" : "no");
 }
 
 void io_buffer_t::print() const {
-    fprintf(stderr, "buffer %p (input: %s, size %lu)\n", out_buffer_ptr(), is_input ? "yes" : "no",
-            (unsigned long)out_buffer_size());
+    fwprintf(stderr, L"buffer %p (input: %s, size %lu)\n", out_buffer_ptr(),
+             is_input ? "yes" : "no", (unsigned long)out_buffer_size());
 }
 
 void io_buffer_t::read() {
@@ -139,21 +141,21 @@ void io_print(const io_chain_t &chain)
 {
     if (chain.empty())
     {
-        fprintf(stderr, "Empty chain %p\n", &chain);
+        fwprintf(stderr, L"Empty chain %p\n", &chain);
         return;
     }
 
-    fprintf(stderr, "Chain %p (%ld items):\n", &chain, (long)chain.size());
+    fwprintf(stderr, L"Chain %p (%ld items):\n", &chain, (long)chain.size());
     for (size_t i=0; i < chain.size(); i++)
     {
         const shared_ptr<io_data_t> &io = chain.at(i);
         if (io.get() == NULL)
         {
-            fprintf(stderr, "\t(null)\n");
+            fwprintf(stderr, L"\t(null)\n");
         }
         else
         {
-            fprintf(stderr, "\t%lu: fd:%d, ", (unsigned long)i, io->fd);
+            fwprintf(stderr, L"\t%lu: fd:%d, ", (unsigned long)i, io->fd);
             io->print();
         }
     }

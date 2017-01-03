@@ -127,6 +127,7 @@ const wchar_t *token_type_description(parse_token_type_t type) {
     // This leaks memory but it should never be run unless we have a bug elsewhere in the code.
     const wcstring d = format_string(L"unknown_token_type_%ld", static_cast<long>(type));
     wchar_t *d2 = new wchar_t[d.size() + 1];
+    // cppcheck-suppress memleak
     return std::wcscpy(d2, d.c_str());
 }
 
@@ -137,6 +138,7 @@ const wchar_t *keyword_description(parse_keyword_t type) {
     // This leaks memory but it should never be run unless we have a bug elsewhere in the code.
     const wcstring d = format_string(L"unknown_keyword_%ld", static_cast<long>(type));
     wchar_t *d2 = new wchar_t[d.size() + 1];
+    // cppcheck-suppress memleak
     return std::wcscpy(d2, d.c_str());
 }
 
@@ -258,8 +260,7 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
             break;
         }
         default: {
-            fprintf(stderr, "Bad token type %d passed to %s\n", (int)tokenizer_token_type,
-                    __FUNCTION__);
+            debug(0, "Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
             DIE("bad token type");
             break;
         }
@@ -420,17 +421,17 @@ class parse_ll_t {
         bool logit = false;
         if (logit) {
             int count = 0;
-            fprintf(stderr, "Applying production:\n");
+            fwprintf(stderr, L"Applying production:\n");
             for (int i = 0;; i++) {
                 production_element_t elem = production[i];
                 if (!production_element_is_valid(elem)) break;  // all done, bail out
                 parse_token_type_t type = production_element_type(elem);
                 parse_keyword_t keyword = production_element_keyword(elem);
-                fprintf(stderr, "\t%ls <%ls>\n", token_type_description(type),
-                        keyword_description(keyword));
+                fwprintf(stderr, L"\t%ls <%ls>\n", token_type_description(type),
+                         keyword_description(keyword));
                 count++;
             }
-            if (!count) fprintf(stderr, "\t<empty>\n");
+            if (!count) fwprintf(stderr, L"\t<empty>\n");
         }
 
         // Get the parent index. But we can't get the parent parse node yet, since it may be made
@@ -537,9 +538,9 @@ void parse_ll_t::dump_stack(void) const {
         }
     }
 
-    fprintf(stderr, "Stack dump (%zu elements):\n", symbol_stack.size());
+    fwprintf(stderr, L"Stack dump (%zu elements):\n", symbol_stack.size());
     for (size_t idx = 0; idx < stack_lines.size(); idx++) {
-        fprintf(stderr, "    %ls\n", stack_lines.at(idx).c_str());
+        fwprintf(stderr, L"    %ls\n", stack_lines.at(idx).c_str());
     }
 }
 #endif
@@ -927,7 +928,7 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token) {
 void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
     bool logit = false;
     if (logit) {
-        fprintf(stderr, "Accept token %ls\n", token1.describe().c_str());
+        fwprintf(stderr, L"Accept token %ls\n", token1.describe().c_str());
     }
     PARSE_ASSERT(token1.type >= FIRST_PARSE_TOKEN_TYPE);
 
@@ -964,7 +965,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
 
         if (top_node_handle_terminal_types(token1)) {
             if (logit) {
-                fprintf(stderr, "Consumed token %ls\n", token1.describe().c_str());
+                fwprintf(stderr, L"Consumed token %ls\n", token1.describe().c_str());
             }
             // consumed = true;
             break;
@@ -1184,8 +1185,8 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
 
 #if 0
     //wcstring result = dump_tree(this->parser->nodes, str);
-    //fprintf(stderr, "Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
-    fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", output->size(), sizeof(parse_node_t),
+    //fwprintf(stderr, L"Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
+    fwprintf(stderr, L"%lu nodes, node size %lu, %lu bytes\n", output->size(), sizeof(parse_node_t),
             output->size() * sizeof(parse_node_t));
 #endif
 

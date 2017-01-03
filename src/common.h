@@ -143,6 +143,26 @@ inline bool selection_direction_is_cardinal(selection_direction_t dir) {
     }
 }
 
+/// Issue a debug message with printf-style string formating and automatic line breaking. The string
+/// will begin with the string \c program_name, followed by a colon and a whitespace.
+///
+/// Because debug is often called to tell the user about an error, before using wperror to give a
+/// specific error message, debug will never ever modify the value of errno.
+///
+/// \param level the priority of the message. Lower number means higher priority. Messages with a
+/// priority_number higher than \c debug_level will be ignored..
+/// \param msg the message format string.
+///
+/// Example:
+///
+/// <code>debug( 1, L"Pi = %.3f", M_PI );</code>
+///
+/// will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that
+/// program_name is 'fish'.
+void __attribute__((noinline)) debug(int level, const char *msg, ...)
+    __attribute__((format(printf, 2, 3)));
+void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...);
+
 /// Helper macro for errors.
 #define VOMIT_ON_FAILURE(a)         \
     do {                            \
@@ -157,12 +177,12 @@ inline bool selection_direction_is_cardinal(selection_direction_t dir) {
             VOMIT_ABORT(err, #a);    \
         }                            \
     } while (0)
-#define VOMIT_ABORT(err, str)                                                                  \
-    do {                                                                                       \
-        int code = (err);                                                                      \
-        fprintf(stderr, "%s failed on line %d in file %s: %d (%s)\n", str, __LINE__, __FILE__, \
-                code, strerror(code));                                                         \
-        abort();                                                                               \
+#define VOMIT_ABORT(err, str)                                                               \
+    do {                                                                                    \
+        int code = (err);                                                                   \
+        debug(0, "%s failed on line %d in file %s: %d (%s)", str, __LINE__, __FILE__, code, \
+              strerror(code));                                                              \
+        abort();                                                                            \
     } while (0)
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.
@@ -224,11 +244,10 @@ extern bool has_working_tty_timestamps;
     }
 
 /// Exit program at once after emitting an error message.
-#define DIE(msg)                                                                      \
-    {                                                                                 \
-        fprintf(stderr, "fish: %s on line %ld of file %s, shutting down fish\n", msg, \
-                (long)__LINE__, __FILE__);                                            \
-        FATAL_EXIT();                                                                 \
+#define DIE(msg)                                                                                  \
+    {                                                                                             \
+        debug(0, "%s on line %ld of file %s, shutting down fish", msg, (long)__LINE__, __FILE__); \
+        FATAL_EXIT();                                                                             \
     }
 
 /// Exit program at once, leaving an error message about running out of memory.
@@ -659,25 +678,6 @@ ssize_t write_loop(int fd, const char *buff, size_t count);
 /// error.
 ssize_t read_loop(int fd, void *buff, size_t count);
 
-/// Issue a debug message with printf-style string formating and automatic line breaking. The string
-/// will begin with the string \c program_name, followed by a colon and a whitespace.
-///
-/// Because debug is often called to tell the user about an error, before using wperror to give a
-/// specific error message, debug will never ever modify the value of errno.
-///
-/// \param level the priority of the message. Lower number means higher priority. Messages with a
-/// priority_number higher than \c debug_level will be ignored..
-/// \param msg the message format string.
-///
-/// Example:
-///
-/// <code>debug( 1, L"Pi = %.3f", M_PI );</code>
-///
-/// will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that
-/// program_name is 'fish'.
-void __attribute__((noinline)) debug(int level, const char *msg, ...)
-    __attribute__((format(printf, 2, 3)));
-void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...);
 
 /// Replace special characters with backslash escape sequences. Newline is replaced with \n, etc.
 ///

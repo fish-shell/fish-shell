@@ -857,16 +857,20 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
 def get_paths_from_manpath():
     # Return all the paths to man(1) and man(8) files in the manpath
     import subprocess, os
-    # Some systems have manpath, others have `man --path` (like Haiku).
-    # TODO: Deal with systems that have neither (OpenBSD)
-    for prog in [['manpath'], ['man', '--path']]:
-        try:
-            program = prog
-            proc = subprocess.Popen(program, stdout=subprocess.PIPE)
-        except OSError: # Command does not exist, keep trying
-            continue
-        break # Command exists, use it.
-    manpath, err_data = proc.communicate()
+    # $MANPATH takes precedence, just like with `man` on the CLI.
+    if os.getenv("MANPATH"):
+        manpath = os.getenv("MANPATH")
+    else:
+        # Some systems have manpath, others have `man --path` (like Haiku).
+        # TODO: Deal with systems that have neither (OpenBSD)
+        for prog in [['manpath'], ['man', '--path']]:
+            try:
+                program = prog
+                proc = subprocess.Popen(program, stdout=subprocess.PIPE)
+            except OSError: # Command does not exist, keep trying
+                continue
+            break # Command exists, use it.
+        manpath, err_data = proc.communicate()
     parent_paths = manpath.decode().strip().split(':')
     if not parent_paths:
         sys.stderr.write("Unable to get the manpath (tried `%s`)\n" % " ".join(program))

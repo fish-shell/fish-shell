@@ -240,7 +240,7 @@ There are a few important things that need to be noted about aliases:
 
 - If the alias has the same name as the aliased command, it is necessary to prefix the call to the program with `command` in order to tell fish that the function should not call itself, but rather a command with the same name. Failing to do so will cause infinite recursion bugs.
 
-- Autoloading isn't applicable since, by definition, the alias command creates the function at the time it is executed. If you want to defer creation of the function to when it is used simply create a script that uses the function command per the discussion below about autoloading functions.
+- Autoloading isn't applicable to aliases. Since, by definition, the function is created at the time the alias command is executed. You cannot autoload aliases.
 
 To easily create a function of this form, you can use the <a href="commands.html#alias">alias</a> command.
 
@@ -264,6 +264,8 @@ This wide search may be confusing. If you are unsure, your functions probably be
 It is very important that function definition files only contain the definition for the specified function and nothing else. Otherwise, it is possible that autoloading a function files requires that the function already be loaded, which creates a circular dependency.
 
 Autoloading also won't work for <a href=#event>event handlers</a>, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the <a href=#event>event handlers</a> section for more information.
+
+Autoloading is not applicable to functions created by the `alias` command. For functions simple enough that you prefer to use the `alias` command to define them you'll need to put those commands in your `~/.config/fish/config.fish` script or some other script run when the shell starts.
 
 If you are developing another program, you may wish to install functions which are available for all users of the fish shell on a system. They can be installed to the "vendor" functions directory. As this path may vary from system to system, the `pkgconfig` framework should be used to discover this path with the output of `pkg-config --variable functionsdir fish`.
 

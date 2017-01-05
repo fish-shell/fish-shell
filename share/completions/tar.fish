@@ -63,4 +63,4 @@ complete -c tar -l uncompress --description "Filter through compress"
 complete -c tar -s z -l gzip --description "Filter through gzip"
 complete -c tar -l gunzip --description "Filter through gzip"
 complete -c tar -l use-compress-program -r --description "Filter through specified program"
-
+complete -c tar -s J -l xz --description "Filter through xz"

@@ -26,7 +26,7 @@ function pushd --description 'Push directory to stack'
         end
 
         # get the top two values of the dirs stack ... the first is pwd
-        set -l top_dir (command pwd)
+        set -l top_dir $PWD
         set -l next_dir $dirstack[1]
 
         # alter the top of dirstack and move to directory
@@ -38,7 +38,7 @@ function pushd --description 'Push directory to stack'
     # emulate bash: check for rotations
     if test -n "$rot_l" -o -n "$rot_r"
         # grab the current stack
-        set -l stack (command pwd) $dirstack
+        set -l stack $PWD $dirstack
 
         # translate a right rotation to a left rotation
         if test -n "$rot_r"
@@ -72,6 +72,6 @@ function pushd --description 'Push directory to stack'
     end
 
     # argv[1] is a directory
-    set -g dirstack (command pwd) $dirstack
+    set -g dirstack $PWD $dirstack
     cd $argv[1]
 end

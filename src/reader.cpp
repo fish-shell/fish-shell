@@ -2244,8 +2244,8 @@ static void handle_end_loop() {
     }
 
     if (!data->prev_end_loop && bg_jobs) {
-        fputws(_(L"There are stopped or running jobs.\n"), stdout);
-	fputws(_(L"A second attempt to exit will force their termination.\n"), stdout);
+        fputws(_(L"There are still jobs active (use the jobs command to see them).\n"), stdout);
+        fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
         reader_exit(0, 0);
         data->prev_end_loop = 1;
         return;

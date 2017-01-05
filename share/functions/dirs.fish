@@ -1,6 +1,6 @@
 function dirs --description 'Print directory stack'
     # process options
-    if count $argv >/dev/null
+    if set -q argv[1]
         switch $argv[1]
             case -c
                 # clear directory stack
@@ -10,9 +10,6 @@ function dirs --description 'Print directory stack'
     end
 
     # replace $HOME with ~
-    echo -n (echo (command pwd) | sed -e "s|^$HOME|~|")"  "
-    for i in $dirstack
-        echo -n (echo $i | sed -e "s|^$HOME|~|")"  "
-    end
+    string replace -r '^'"$HOME"'($|/)' '~$1' -- $PWD $dirstack | string join " "
     echo
 end

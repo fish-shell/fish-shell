@@ -1726,7 +1726,7 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
         size_t char_idx = (motion == word_motion_left ? idx - 1 : idx);
         wchar_t wc = command.at(char_idx);
         bool will_stop = !sm.consume_char(wc);
-        // printf("idx %lu, looking at %lu (%c): %d\n", idx, char_idx, (char)wc, will_stop);
+        // wprintf(L"idx %lu, looking at %lu (%c): %d\n", idx, char_idx, (char)wc, will_stop);
         bool expected_stop = (stops.count(idx) > 0);
         if (will_stop != expected_stop) {
             wcstring tmp = command;

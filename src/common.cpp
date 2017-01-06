@@ -608,7 +608,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
                                   param7, param8, param9, param10, param11, param12};
     if (!msg) return;
 
-    // Can't call printf, that may allocate memory Just call write() over and over.
+    // Can't call wprintf, that may allocate memory Just call write() over and over.
     if (level > debug_level) return;
     int errno_old = errno;
 
@@ -1691,7 +1691,7 @@ bool is_forked_child(void) {
 
     bool is_child_of_fork = (getpid() != initial_pid);
     if (is_child_of_fork) {
-        printf("Uh-oh: %d\n", getpid());
+        wprintf(L"Uh-oh: %d\n", getpid());
         while (1) sleep(10000);
     }
     return is_child_of_fork;

@@ -537,7 +537,7 @@ rgb_color_t parse_color(const wcstring &val, bool is_background) {
 
 #if 0
     wcstring desc = result.description();
-    printf("Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(),
+    wprintf(L"Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(),
            is_background ? "background" : "foreground");
 #endif
 

@@ -666,7 +666,7 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
         s_end
     };
 
-    // printf("state %d, consume '%lc'\n", state, c);
+    // wprintf(L"state %d, consume '%lc'\n", state, c);
     bool consumed = false;
     while (state != s_end && !consumed) {
         switch (state) {

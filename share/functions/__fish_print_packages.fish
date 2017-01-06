@@ -56,7 +56,7 @@ function __fish_print_packages
     if type -q -f zypper
         # Use libzypp cache file if available
         if test -f /var/cache/zypp/solv/@System/solv.idx
-            cat /var/cache/zypp/solv/*/solv.idx | awk '!/application:|srcpackage:|product:|pattern:|patch:/ {print $1'\t$package'}'
+            awk '!/application:|srcpackage:|product:|pattern:|patch:/ {print $1'\t$package'}' /var/cache/zypp/solv/*/solv.idx
             return
         end
 

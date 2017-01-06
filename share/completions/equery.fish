@@ -4,21 +4,21 @@
 
 function __fish_equery_print_installed_pkgs --description 'Prints completions for installed packages on the system from /var/db/pkg'
  if test -d /var/db/pkg
-   find /var/db/pkg/ -type d | cut -d'/' -f5-6 | sort | uniq | sed 's/-[0-9]\{1,\}\..*$//'
+   find /var/db/pkg/ -type d | cut -d'/' -f5-6 | sort -u | sed 's/-[0-9]\{1,\}\..*$//'
    return
  end
 end
 
 function __fish_equery_print_all_pkgs --description 'Prints completions for all available packages on the system from /usr/portage'
  if test -d /usr/portage
-   find /usr/portage/ -maxdepth 2 -type d | cut -d'/' -f4-5 | sed 's/^\(distfiles\|profiles\|eclass\).*$//' | sort | uniq | sed 's/-[0-9]\{1,\}\..*$//'
+   find /usr/portage/ -maxdepth 2 -type d | cut -d'/' -f4-5 | sed 's/^\(distfiles\|profiles\|eclass\).*$//' | sort -u | sed 's/-[0-9]\{1,\}\..*$//'
    return
  end
 end
 
 function __fish_equery_print_all_categories --description 'Prints completions for all available categories on the system from /usr/portage'
  if test -d /usr/portage
-   find /usr/portage/ -maxdepth 1 -type d | cut -d'/' -f4 | sed 's/^\(distfiles\|profiles\|eclass\).*$//' | sort | uniq | sed 's/-[0-9]\{1,\}\..*$//'
+   find /usr/portage/ -maxdepth 1 -type d | cut -d'/' -f4 | sed 's/^\(distfiles\|profiles\|eclass\).*$//' | sort -u | sed 's/-[0-9]\{1,\}\..*$//'
    return
  end
 end

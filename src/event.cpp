@@ -166,7 +166,7 @@ static void show_all_handlers(void) {
     for (event_list_t::const_iterator iter = events.begin(); iter != events.end(); ++iter) {
         const event_t *foo = *iter;
         wcstring tmp = event_get_desc(foo);
-        printf("    handler now %ls\n", tmp.c_str());
+        wprintf(L"    handler now %ls\n", tmp.c_str());
     }
 }
 #endif

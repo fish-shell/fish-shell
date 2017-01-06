@@ -275,7 +275,7 @@ void iothread_drain_all(void) {
     }
 #if TIME_DRAIN
     double after = timef();
-    printf("(Waited %.02f msec for %d thread(s) to drain)\n", 1000 * (after - now), thread_count);
+    wprintf(L"(Waited %.02f msec for %d thread(s) to drain)\n", 1000 * (after - now), thread_count);
 #endif
 }
 

@@ -763,7 +763,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
             stop_pos++;
         }
 
-        // printf( "Stop for '%c'\n", in[stop_pos]);
+        // wprintf(L"Stop for '%c'\n", in[stop_pos]);
         var_len = stop_pos - start_pos;
 
         if (var_len == 0) {

@@ -80,7 +80,7 @@ void print_jobs(void)
     job_iterator_t jobs;
     job_t *j;
     while (j = jobs.next()) {
-        printf("%p -> %ls -> (foreground %d, complete %d, stopped %d, constructed %d)\n",
+        wprintf("%p -> %ls -> (foreground %d, complete %d, stopped %d, constructed %d)\n",
                 j, j->command_wcstr(), job_get_flag(j, JOB_FOREGROUND), job_is_completed(j),
                 job_is_stopped(j), job_get_flag(j, JOB_CONSTRUCTED));
     }

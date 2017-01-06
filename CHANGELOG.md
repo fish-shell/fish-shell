@@ -1,5 +1,12 @@
-# fish next-2.x (released ???)
+# fish 2.5.0b1 (released ???)
 
+## Significant changes
+
+## Notable fixes and improvements
+- Added completions for `VBoxHeadless`, `VBoxSDL`, `base64`, `caffeinate`, `dconf`,
+	`dig`, `dpkg-reconfigure`, `feh`, `launchctl`, `lxc`, `mddiagnose`, `mdfind`,
+	`mdimport`, `mdls`, `mdutil`, `mkvextract`, `nvram`, `objdump`,
+	`sysbench`, and `tmutil`
 ---
 
 # fish 2.4.0 (released November 8, 2016)

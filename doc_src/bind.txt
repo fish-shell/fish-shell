@@ -83,7 +83,7 @@ The following special input functions are available:
 
 - `complete`, guess the remainder of the current token
 
-- `complete-and-search`, invoke the searchable pager on completion options
+- `complete-and-search`, invoke the searchable pager on completion options (for convenience, this also moves backwards in the completion pager)
 
 - `delete-char`, delete one character to the right of the cursor
 

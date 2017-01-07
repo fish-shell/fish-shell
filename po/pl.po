@@ -46,11 +46,11 @@ msgstr "%ls: Nieznana opcja '%ls'\n"
 
 #: src/builtin.h:50
 msgid "%ls: Variable can't be both exported and unexported\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.h:47
 msgid "%ls: Variable scope can only be one of universal, global and local\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.h:43
 msgid ""
@@ -366,11 +366,11 @@ msgstr "%ls: Nieprawidłowa ścieżka: %ls\n"
 
 #: src/builtin.cpp:3046
 msgid "builtin history delete only supports --case-sensitive\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:3040
 msgid "builtin history delete only supports --exact\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:2966 src/builtin.cpp:3000
 msgid "%ls: max value '%ls' is not a valid number\n"
@@ -386,11 +386,11 @@ msgstr ""
 
 #: src/builtin.cpp:2788
 msgid "%ls: Not inside of function\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:2718
 msgid "%ls: Not inside of loop\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:2675
 msgid "(default)"
@@ -402,7 +402,7 @@ msgstr "Wyślij zadanie %d '%ls' w tło\n"
 
 #: src/builtin.cpp:2644
 msgid "%ls: Can't put job %d, '%ls' to background because it is not under job control\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:2639
 msgid "%ls: Unknown job '%ls'\n"
@@ -410,11 +410,11 @@ msgstr "%ls: Nieznane zadanie '%ls'\n"
 
 #: src/builtin.cpp:2607
 msgid "%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:2583
 msgid "%ls: Ambiguous job\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:2565 src/builtin.cpp:2672
 msgid "%ls: There are no suitable jobs\n"
@@ -430,7 +430,7 @@ msgstr "%ls: '%ls' nie jest plikiem\n"
 
 #: src/builtin.cpp:2499 src/builtin.cpp:2507
 msgid "%ls: Error encountered while sourcing file '%ls':\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:2469
 msgid "%ls: Key not specified\n"
@@ -450,7 +450,7 @@ msgstr "%ls: Nieokreślony błąd podczas wyszukiwania lokalizacji '%ls'\n"
 
 #: src/builtin.cpp:2373
 msgid "%ls: '%ls' is a rotten symlink\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:2370
 msgid "%ls: The directory '%ls' does not exist\n"
@@ -506,7 +506,7 @@ msgstr "%ls: Oczekiwano 0 lub 1 argument, otrzymano %d\n"
 
 #: src/builtin.cpp:1797
 msgid "%ls: Seed value '%ls' is not a valid number\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:1707
 msgid "%ls: Expected one argument, got %lu"
@@ -578,7 +578,7 @@ msgstr "%ls: Nie określono bloków\n"
 
 #: src/builtin.cpp:646
 msgid "%ls: Can not specify scope when removing block\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:579
 msgid "%ls: Invalid state\n"
@@ -586,11 +586,11 @@ msgstr "%ls: Nieprawidłowy stan\n"
 
 #: src/builtin.cpp:552
 msgid "%ls: No binding found for sequence '%ls'\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:548
 msgid "%ls: No binding found for key '%ls'\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin.cpp:361
 msgid "%ls: Unknown error trying to bind to key named '%ls'\n"
@@ -634,19 +634,19 @@ msgstr "%ls: Nieprawidłowa wartość długości  '%ls'\n"
 
 #: src/builtin_string.cpp:706
 msgid "%ls: Regular expression substitute error: %ls\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin_string.cpp:393
 msgid "%ls: Regular expression internal error\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin_string.cpp:388
 msgid "%ls: Regular expression match error: %ls\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin_string.cpp:347
 msgid "%ls: Regular expression compile error: %ls\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin_string.cpp:33
 msgid "%ls: Expected argument\n"
@@ -898,7 +898,7 @@ msgstr "\tz listą parametrów '%ls'\n"
 
 #: src/parser.cpp:426
 msgid "\tcalled on standard input\n"
-msgstr "\n"
+msgstr ""
 
 #: src/parser.cpp:424
 msgid "\tcalled during startup\n"
@@ -906,7 +906,7 @@ msgstr "\tprzywołano podczas rozruchu\n"
 
 #: src/parser.cpp:421
 msgid "\tcalled on line %d of file %ls\n"
-msgstr "\n"
+msgstr ""
 
 #: src/parser.cpp:410
 msgid "in command substitution\n"
@@ -918,7 +918,7 @@ msgstr "w funkcji '%ls'\n"
 
 #: src/parser.cpp:399
 msgid "from sourcing file %ls\n"
-msgstr "\n"
+msgstr ""
 
 #: src/parser.cpp:380
 msgid "in event handler: %ls\n"
@@ -1089,7 +1089,7 @@ msgid ""
 "Expected file path to read/write for -w:\n"
 "\n"
 " $ %ls -w foo.fish\n"
-msgstr "\n"
+msgstr ""
 
 #: src/fish_indent.cpp:437 src/fish.cpp:372 src/fish_key_reader.cpp:349
 msgid "Invalid value '%s' for debug-stack-frames flag"
@@ -1193,23 +1193,23 @@ msgstr "'%ls' ma %ls"
 
 #: src/builtin_set.cpp:630
 msgid "%ls: Warning: universal scope selected, but a global variable '%ls' exists.\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin_set.cpp:611
 msgid "%ls: Values cannot be specfied with erase\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin_set.cpp:511
 msgid "%ls: Erase needs a variable name\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin_set.cpp:204
 msgid "%ls: Invalid index starting at '%ls'\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin_set.cpp:183
 msgid "%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin_set.cpp:141
 msgid "%ls: Tried to set the special variable '%ls' to an invalid value\n"
@@ -1217,7 +1217,7 @@ msgstr "%ls: Próbowano nadać nieprawidłową wartość specjalnej zmiennej '%l
 
 #: src/builtin_set.cpp:134
 msgid "%ls: Tried to set the special variable '%ls' with the wrong scope\n"
-msgstr "\n"
+msgstr ""
 
 #: src/builtin_set.cpp:127
 msgid "%ls: Tried to change the read-only variable '%ls'\n"
@@ -1265,7 +1265,7 @@ msgstr "%ls: Opcja '--%ls' nie pozwala na argumenty\n"
 
 #: src/wgetopt.cpp:317
 msgid "%ls: Option '%ls' is ambiguous\n"
-msgstr "\n"
+msgstr ""
 
 #: src/exec.cpp:760
 msgid "Unknown input redirection type %d"
@@ -1305,7 +1305,7 @@ msgstr ""
 
 #: src/reader.cpp:2255
 msgid "There are stopped jobs. A second attempt to exit will enforce their termination.\n"
-msgstr "\n"
+msgstr ""
 
 #: src/reader.cpp:2042
 msgid "Pop null reader block"

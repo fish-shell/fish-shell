@@ -72,6 +72,10 @@
 #include "util.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+// Name of the variable that tells how long it took, in milliseconds, for the previous
+// interactive command to complete.
+#define ENV_CMD_DURATION L"CMD_DURATION"
+
 /// Maximum length of prefix string when printing completion list. Longer prefixes will be
 /// ellipsized.
 #define PREFIX_MAX_LEN 9
@@ -767,6 +771,11 @@ static void exec_prompt() {
 
 void reader_init() {
     VOMIT_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
+
+    // Ensure this var is present even before an interactive command is run so that if it is used
+    // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
+    // prompt is issued.
+    env_set(ENV_CMD_DURATION, L"0", ENV_UNEXPORT);
 
     // Save the initial terminal mode.
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
@@ -1927,8 +1936,6 @@ bool reader_get_selection(size_t *start, size_t *len) {
     }
     return result;
 }
-
-#define ENV_CMD_DURATION L"CMD_DURATION"
 
 void set_env_cmd_duration(struct timeval *after, struct timeval *before) {
     time_t secs = after->tv_sec - before->tv_sec;

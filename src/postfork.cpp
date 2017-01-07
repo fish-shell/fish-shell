@@ -499,15 +499,23 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
 /// Perform output from builtins. May be called from a forked child, so don't do anything that may
 /// allocate memory, etc.
 bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errlen) {
+    int saved_errno = 0;
     bool success = true;
     if (out && outlen && write_loop(STDOUT_FILENO, out, outlen) < 0) {
-        int e = errno;
-        debug_safe(0, "Error while writing to stdout");
-        safe_perror("write_loop");
+        saved_errno = errno;
+        if (errno != EPIPE) {
+            debug_safe(0, "Error while writing to stdout");
+            errno = saved_errno;
+            safe_perror("write_loop");
+        }
         success = false;
-        errno = e;
     }
 
-    if (err && errlen && write_loop(STDERR_FILENO, err, errlen) < 0) success = false;
+    if (err && errlen && write_loop(STDERR_FILENO, err, errlen) < 0) {
+        saved_errno = errno;
+        success = false;
+    }
+
+    errno = saved_errno;
     return success;
 }

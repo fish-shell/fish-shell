@@ -511,6 +511,8 @@ long read_blocked(int fd, void *buf, size_t count) {
     return res;
 }
 
+/// Loop a write request while failure is non-critical. Return -1 and set errno in case of critical
+/// error.
 ssize_t write_loop(int fd, const char *buff, size_t count) {
     size_t out_cum = 0;
     while (out_cum < count) {

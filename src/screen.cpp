@@ -661,7 +661,7 @@ static bool test_stuff(screen_t *scr)
         int c = getchar();
         if (c != EOF) break;
     }
-    puts("Bye");
+    wprintf(L"Bye\n");
     exit(0);
     while (1) sleep(10000);
     return true;

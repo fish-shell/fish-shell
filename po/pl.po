@@ -1,0 +1,1544 @@
+# Translation of fish in Polish
+# This file is distributed under the same license as the fish package.
+# Author: m4sk1n <m4sk1n@vivaldi.net>
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2017-01-07 10:24:59+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: GlotPress/2.2.2\n"
+"Language: pl\n"
+"Project-Id-Version: fish\n"
+
+#: src/expand.h:100
+msgid "Array index out of bounds"
+msgstr ""
+
+#: src/builtin.h:74
+msgid "Send job %d, '%ls' to foreground\n"
+msgstr "Wysłano zadanie %d, '%ls' na pierwszy plan\n"
+
+#: src/builtin.h:71
+msgid "%ls: Argument '%ls' is not a number\n"
+msgstr "%ls: Argument '%ls' nie jest liczbą \n"
+
+#: src/builtin.h:65
+msgid "%ls: Variable name can not be the empty string\n"
+msgstr "%ls: Nazwa zmiennej nie może być pustym ciągiem znaków \n"
+
+#: src/builtin.h:61
+msgid "%ls: Invalid character '%lc' in variable name. Only alphanumerical characters and underscores are valid in a variable name.\n"
+msgstr "%ls: Nieprawidłowy znak '%lc' w nazwie zmiennej. Możesz używać tylko znaków alfanumerycznych i podkreślników w nazwach zmiennych.\n"
+
+#: src/builtin.h:57
+msgid "%ls: %ls expected %d args, got %d\n"
+msgstr "%ls: %ls oczekiwał %d argumentów, otrzymał %d\n"
+
+#: src/builtin.h:56
+msgid "%ls: expected %d args, got %d\n"
+msgstr "%ls: oczekiwano %d argumentów, otrzymano %d\n"
+
+#: src/builtin.h:53
+msgid "%ls: Unknown option '%ls'\n"
+msgstr "%ls: Nieznana opcja '%ls'\n"
+
+#: src/builtin.h:50
+msgid "%ls: Variable can't be both exported and unexported\n"
+msgstr ""
+
+#: src/builtin.h:47
+msgid "%ls: Variable scope can only be one of universal, global and local\n"
+msgstr ""
+
+#: src/builtin.h:43
+msgid ""
+"%ls: Invalid combination of options,\n"
+"%ls\n"
+msgstr ""
+"%ls: Nieprawidłowa kombinacja opcji,\n"
+"%ls\n"
+
+#: src/builtin.h:37
+msgid "%ls: Expected argument for option %ls\n"
+msgstr "%ls: Oczekiwano argumentu dla funkcji %ls\n"
+
+#: src/parse_constants.h:271
+msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
+msgstr "Nieobsługiwane użycie '='. W fish używane jest 'set %ls %ls'."
+
+#: src/parse_constants.h:266
+msgid "Unsupported use of '='. To run '%ls' with a modified environment, please use 'env %ls=%ls %ls%ls'"
+msgstr "Nieobsługiwane użycie '='. Aby uruchomić '%ls' w zmodyfikowanym środowisku, użyj 'env %ls=%ls %ls%ls'"
+
+#: src/parse_constants.h:262
+msgid "Unsupported use of '&&'. In fish, please use 'COMMAND; and COMMAND'."
+msgstr "Nieobsługiwane użycie '&&'. W fish używane jest 'COMMAND; and COMMAND'."
+
+#: src/parse_constants.h:259
+msgid "Unsupported use of '||'. In fish, please use 'COMMAND; or COMMAND'."
+msgstr "Nieobsługiwane użycie '||'. W fish używane jest 'COMMAND; or COMMAND'."
+
+#: src/parse_constants.h:256
+msgid "Expected a variable name after this $."
+msgstr "Oczekiwano nazwy zmiennej po znaku $."
+
+#: src/parse_constants.h:253
+msgid "$* is not supported. In fish, please use $argv."
+msgstr "$* nie jest obsługiwane. W fish używane jest $argv."
+
+#: src/parse_constants.h:250
+msgid "$(...) is not supported. In fish, please use '(%ls)'."
+msgstr "$(...) nie jest obsługiwane. W fish używane jest '(%ls)'."
+
+#: src/parse_constants.h:247
+msgid "$@ is not supported. In fish, please use $argv."
+msgstr "$@ nie jest obsługiwane. W fish używane jest $argv."
+
+#: src/parse_constants.h:244
+msgid "$# is not supported. In fish, please use 'count $argv'."
+msgstr "$# nie jest obsługiwane. W fish używane jest 'count $argv'."
+
+#: src/parse_constants.h:241
+msgid "$$ is not the pid. In fish, please use %%self."
+msgstr "$$ nie jest numerem identyfikacyjnym procesu. W fish używane jest %%self."
+
+#: src/parse_constants.h:238
+msgid "$? is not the exit status. In fish, please use $status."
+msgstr ""
+
+#: src/parse_constants.h:235
+msgid "Variables cannot be bracketed. In fish, please use \"$%ls\"."
+msgstr "Zmienne nie mogą znajdować się w nawiasach. W fish używane jest \"$%ls\"."
+
+#: src/parse_constants.h:231
+msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
+msgstr "Zmienne nie mogą znajdować się w nawiasach. W fish używane jest {$%ls}."
+
+#: src/parse_constants.h:228
+msgid "$%lc is not a valid variable in fish."
+msgstr "$%lc nie jest prawidłową zmienną w fish."
+
+#: src/parse_constants.h:223
+msgid "'return' outside of function definition"
+msgstr "'return' poza definicją funkcji"
+
+#: src/parse_constants.h:220
+msgid "'continue' while not inside of loop"
+msgstr "'continue' użyte poza pętlą"
+
+#: src/parse_constants.h:217
+msgid "'break' while not inside of loop"
+msgstr "'break' użyte poza pętlą"
+
+#: src/parse_constants.h:213
+msgid "No matches for wildcard '%ls'.  (Tip: empty matches are allowed in 'set', 'count', 'for'.)"
+msgstr ""
+
+#: src/parse_constants.h:209
+msgid "Illegal file descriptor in redirection '%ls'"
+msgstr ""
+
+#: src/parse_constants.h:206
+msgid "Unable to find a process '%ls'"
+msgstr "Nie udało się odnaleźć procesu '%ls'"
+
+#: src/parse_constants.h:203
+msgid "Unable to expand variable name '%ls'"
+msgstr "Nie udało się rozszerzyć nazwy zmiennej '%ls'"
+
+#: src/parse_constants.h:200
+msgid "Unknown builtin '%ls'"
+msgstr ""
+
+#: src/parse_constants.h:197
+msgid "Illegal command name '%ls'"
+msgstr "Niedozwolona nazwa komendy '%ls'"
+
+#: src/parse_constants.h:193
+msgid "The function call stack limit has been exceeded. Do you have an accidental infinite loop?"
+msgstr ""
+
+#: src/parse_constants.h:189
+msgid "The function '%ls' calls itself immediately, which would result in an infinite loop."
+msgstr "Funkcja '%ls' wywołuje natychmiastowo siebie. Może to skutkować nieskończoną pętlą."
+
+#: src/exec.h:11
+msgid "An error occurred while setting up pipe"
+msgstr ""
+
+#: src/builtin.cpp:3237
+msgid "Perform a command multiple times"
+msgstr "Wykonaj komendę wielokrotnie"
+
+#: src/builtin.cpp:3236
+msgid "Set or get the shells resource usage limits"
+msgstr ""
+
+#: src/builtin.cpp:3235
+msgid "Return a successful result"
+msgstr "Zwróć pomyślny wynik"
+
+#: src/builtin.cpp:3232
+msgid "Manipulate strings"
+msgstr "Zmień wartości ciągów znaków"
+
+#: src/builtin.cpp:3231
+msgid "Return status information about fish"
+msgstr "Zwróć informacje o fish"
+
+#: src/builtin.cpp:3230
+msgid "Evaluate contents of file"
+msgstr ""
+
+#: src/builtin.cpp:3229
+msgid "Set the terminal color"
+msgstr "Ustaw kolor terminala"
+
+#: src/builtin.cpp:3228
+msgid "Handle environment variables"
+msgstr "Operuj zmiennymi środowiskowymi"
+
+#: src/builtin.cpp:3227
+msgid "Stop the currently evaluated function"
+msgstr "Zatrzymaj obecnie używaną funkcję"
+
+#: src/builtin.cpp:3226
+msgid "Convert path to absolute path without symlinks"
+msgstr "Zamień ścieżkę na ścieżkę bezwzględną bez nawiązań symbolicznych"
+
+#: src/builtin.cpp:3225
+msgid "Read a line of input into variables"
+msgstr ""
+
+#: src/builtin.cpp:3224
+msgid "Generate random number"
+msgstr "Zwróć losową liczbę"
+
+#: src/builtin.cpp:3223
+msgid "Print the working directory"
+msgstr "Zwróć katalog roboczy"
+
+#: src/builtin.cpp:3222
+msgid "Prints formatted text"
+msgstr "Zwraca sformatowany tekst"
+
+#: src/builtin.cpp:3221
+msgid "Execute command if previous command failed"
+msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+
+#: src/builtin.cpp:3220
+msgid "Negate exit status of job"
+msgstr ""
+
+#: src/builtin.cpp:3219
+msgid "Print currently running jobs"
+msgstr "Wypisz obecnie uruchomione zadania"
+
+#: src/builtin.cpp:3218
+msgid "Evaluate block if condition is true"
+msgstr ""
+
+#: src/builtin.cpp:3217
+msgid "History of commands executed by user"
+msgstr "Historia komend wykonanych przez użytkownika"
+
+#: src/builtin.cpp:3216
+msgid "List or remove functions"
+msgstr "Wypisz lub usuń funkcje"
+
+#: src/builtin.cpp:3215
+msgid "Define a new function"
+msgstr "Zdefiniuj nową funkcję"
+
+#: src/builtin.cpp:3214
+msgid "Perform a set of commands multiple times"
+msgstr "Wykonaj zestaw komend wielokrotnie"
+
+#: src/builtin.cpp:3213
+msgid "Send job to foreground"
+msgstr ""
+
+#: src/builtin.cpp:3212
+msgid "Return an unsuccessful result"
+msgstr "Zwróć niepomyślny wynik"
+
+#: src/builtin.cpp:3211
+msgid "Exit the shell"
+msgstr "Opuść powłokę"
+
+#: src/builtin.cpp:3210
+msgid "Run command in current process"
+msgstr "Uruchom komendę w obecnym procesie"
+
+#: src/builtin.cpp:3209
+msgid "End a block of commands"
+msgstr "Zakończ zestaw komend"
+
+#: src/builtin.cpp:3208
+msgid "Emit an event"
+msgstr ""
+
+#: src/builtin.cpp:3207
+msgid "Evaluate block if condition is false"
+msgstr ""
+
+#: src/builtin.cpp:3206
+msgid "Print arguments"
+msgstr "Wypisz argumenty"
+
+#: src/builtin.cpp:3205
+msgid "Count the number of arguments"
+msgstr "Wylicz liczbę argumentów"
+
+#: src/builtin.cpp:3204
+msgid "Skip the rest of the current lap of the innermost loop"
+msgstr ""
+
+#: src/builtin.cpp:3202
+msgid "Search for a specified string in a list"
+msgstr "Szukaj określonego ciągu znaków w liście"
+
+#: src/builtin.cpp:3201
+msgid "Edit command specific completions"
+msgstr "Edytuj sugestie do określonej komendy"
+
+#: src/builtin.cpp:3200
+msgid "Set or get the commandline"
+msgstr ""
+
+#: src/builtin.cpp:3199
+msgid "Run a program instead of a function or builtin"
+msgstr ""
+
+#: src/builtin.cpp:3198
+msgid "Change working directory"
+msgstr "Zmień katalog roboczy"
+
+#: src/builtin.cpp:3197 src/builtin.cpp:3233
+msgid "Conditionally execute a block of commands"
+msgstr ""
+
+#: src/builtin.cpp:3196
+msgid "Run a builtin command instead of a function"
+msgstr ""
+
+#: src/builtin.cpp:3195
+msgid "Temporarily halt execution of a script and launch an interactive debug prompt"
+msgstr ""
+
+#: src/builtin.cpp:3193
+msgid "Stop the innermost loop"
+msgstr ""
+
+#: src/builtin.cpp:3192
+msgid "Temporarily block delivery of events"
+msgstr ""
+
+#: src/builtin.cpp:3191
+msgid "Handle fish key bindings"
+msgstr "Steruj przypisaniami klawiszy fish'a"
+
+#: src/builtin.cpp:3190
+msgid "Send job to background"
+msgstr "Przenieś zadanie w tło"
+
+#: src/builtin.cpp:3189
+msgid "Create a block of code"
+msgstr "Stwórz blok kodu"
+
+#: src/builtin.cpp:3188
+msgid "Execute command if previous command suceeded"
+msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się powodzeniem"
+
+#: src/builtin.cpp:3186
+msgid "Try out the new parser"
+msgstr ""
+
+#: src/builtin.cpp:3183 src/builtin.cpp:3234
+msgid "Test a condition"
+msgstr ""
+
+#: src/builtin.cpp:3168
+msgid "%ls: Invalid path: %ls\n"
+msgstr "%ls: Nieprawidłowa ścieżka: %ls\n"
+
+#: src/builtin.cpp:3046
+msgid "builtin history delete only supports --case-sensitive\n"
+msgstr ""
+
+#: src/builtin.cpp:3040
+msgid "builtin history delete only supports --exact\n"
+msgstr ""
+
+#: src/builtin.cpp:2966 src/builtin.cpp:3000
+msgid "%ls: max value '%ls' is not a valid number\n"
+msgstr "%ls: maksymalna wartość '%ls' nie jest prawidłową liczbą\n"
+
+#: src/builtin.cpp:2857
+msgid "%ls: you cannot use any options with the %ls command\n"
+msgstr "%ls: nie możesz używać opcji z komendą %ls\n"
+
+#: src/builtin.cpp:2845
+msgid "you cannot do both '%ls' and '%ls' in the same invocation"
+msgstr ""
+
+#: src/builtin.cpp:2788
+msgid "%ls: Not inside of function\n"
+msgstr ""
+
+#: src/builtin.cpp:2718
+msgid "%ls: Not inside of loop\n"
+msgstr ""
+
+#: src/builtin.cpp:2675
+msgid "(default)"
+msgstr "(domyślne)"
+
+#: src/builtin.cpp:2650
+msgid "Send job %d '%ls' to background\n"
+msgstr "Wyślij zadanie %d '%ls' w tło\n"
+
+#: src/builtin.cpp:2644
+msgid "%ls: Can't put job %d, '%ls' to background because it is not under job control\n"
+msgstr ""
+
+#: src/builtin.cpp:2639
+msgid "%ls: Unknown job '%ls'\n"
+msgstr "%ls: Nieznane zadanie '%ls'\n"
+
+#: src/builtin.cpp:2607
+msgid "%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n"
+msgstr ""
+
+#: src/builtin.cpp:2583
+msgid "%ls: Ambiguous job\n"
+msgstr ""
+
+#: src/builtin.cpp:2565 src/builtin.cpp:2672
+msgid "%ls: There are no suitable jobs\n"
+msgstr "%ls: Brak pasujących zadań\n"
+
+#: src/builtin.cpp:2532
+msgid "%ls: Error while reading file '%ls'\n"
+msgstr "%ls: Nie udało się odczytać '%ls'\n"
+
+#: src/builtin.cpp:2515
+msgid "%ls: '%ls' is not a file\n"
+msgstr "%ls: '%ls' nie jest plikiem\n"
+
+#: src/builtin.cpp:2499 src/builtin.cpp:2507
+msgid "%ls: Error encountered while sourcing file '%ls':\n"
+msgstr ""
+
+#: src/builtin.cpp:2469
+msgid "%ls: Key not specified\n"
+msgstr "%ls: Nie określono klawisza\n"
+
+#: src/builtin.cpp:2405
+msgid "%ls: Could not set PWD variable\n"
+msgstr "%ls: Nie można ustawić zmiennej PWD\n"
+
+#: src/builtin.cpp:2392
+msgid "%ls: Permission denied: '%ls'\n"
+msgstr "%ls: Brak uprawnień: '%ls'\n"
+
+#: src/builtin.cpp:2377
+msgid "%ls: Unknown error trying to locate directory '%ls'\n"
+msgstr "%ls: Nieokreślony błąd podczas wyszukiwania lokalizacji '%ls'\n"
+
+#: src/builtin.cpp:2373
+msgid "%ls: '%ls' is a rotten symlink\n"
+msgstr ""
+
+#: src/builtin.cpp:2370
+msgid "%ls: The directory '%ls' does not exist\n"
+msgstr "%ls: Ścieżka '%ls' nie istnieje\n"
+
+#: src/builtin.cpp:2367 src/builtin.cpp:2395
+msgid "%ls: '%ls' is not a directory\n"
+msgstr "%ls: '%ls' nie jest ścieżką\n"
+
+#: src/builtin.cpp:2354
+msgid "%ls: Could not find home directory\n"
+msgstr "%ls: Nie można odnaleźć katalogu domowego\n"
+
+#: src/builtin.cpp:2299
+msgid "Always"
+msgstr "Zawsze"
+
+#: src/builtin.cpp:2299
+msgid "Never"
+msgstr "Nigdy"
+
+#: src/builtin.cpp:2298
+msgid "Only on interactive jobs"
+msgstr "Tylko dla zadań interaktywnych"
+
+#: src/builtin.cpp:2296
+msgid "Job control: %ls\n"
+msgstr "Kontrola zadania: %ls\n"
+
+#: src/builtin.cpp:2293
+msgid "This is not a login shell\n"
+msgstr "To nie jest powłoka logowania \n"
+
+#: src/builtin.cpp:2291
+msgid "This is a login shell\n"
+msgstr "To jest powłoka logowania \n"
+
+#: src/builtin.cpp:1960
+msgid "%ls: --array option requires a single variable name.\n"
+msgstr "%ls: opcja  --array wymaga nazwy jednej zmiennej.\n"
+
+#: src/builtin.cpp:1912 src/builtin.cpp:2324 src/builtin.cpp:2766
+msgid "%ls: Argument '%ls' must be an integer\n"
+msgstr "%ls: Argument '%ls' musi być liczbą całkowitą\n"
+
+#: src/builtin.cpp:1905
+msgid "%ls: Argument '%ls' is out of range\n"
+msgstr "%ls: Argument '%ls' jest poza zasięgiem\n"
+
+#: src/builtin.cpp:1807
+msgid "%ls: Expected zero or one argument, got %d\n"
+msgstr "%ls: Oczekiwano 0 lub 1 argument, otrzymano %d\n"
+
+#: src/builtin.cpp:1797
+msgid "%ls: Seed value '%ls' is not a valid number\n"
+msgstr ""
+
+#: src/builtin.cpp:1707
+msgid "%ls: Expected one argument, got %lu"
+msgstr "%ls: Oczekiwano jeden argument, otrzymano %lu"
+
+#: src/builtin.cpp:1691
+msgid "%ls: No function name given"
+msgstr "%ls: Nie podano nazwy funkcji"
+
+#: src/builtin.cpp:1686
+msgid ""
+"%ls: The name '%ls' is reserved,\n"
+"and can not be used as a function name"
+msgstr ""
+"%ls: Nazwa '%ls' jest zastrzeżona\n"
+"i nie może być wykorzystywana jako nazwa funkcji"
+
+#: src/builtin.cpp:1679
+msgid "%ls: Illegal function name '%ls'"
+msgstr "%ls: Niedozwolona nazwa funkcji '%ls'"
+
+#: src/builtin.cpp:1676
+msgid "%ls: Expected function name"
+msgstr "%ls: Oczekiwano nazwy funkcji"
+
+#: src/builtin.cpp:1605
+msgid "%ls: Invalid process id %ls"
+msgstr "%ls: Nieprawidłowy identyfikator procesu %ls"
+
+#: src/builtin.cpp:1594
+msgid "%ls: Cannot find calling job for event handler"
+msgstr ""
+
+#: src/builtin.cpp:1554 src/builtin.cpp:1635 src/builtin.cpp:1699
+msgid "%ls: Invalid variable name '%ls'"
+msgstr "%ls: Nieprawidłowa nazwa zmiennej '%ls'"
+
+#: src/builtin.cpp:1545
+msgid "%ls: Unknown signal '%ls'"
+msgstr "%ls: Nieznany sygnał '%ls'"
+
+#: src/builtin.cpp:1156
+msgid "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"
+msgstr "%ls: Funkcja '%ls' już istnieje. Nie można utworzyć kopii '%ls'\n"
+
+#: src/builtin.cpp:1147
+msgid "%ls: Illegal function name '%ls'\n"
+msgstr "%ls: Niedozwolona nazwa funkcji '%ls'\n"
+
+#: src/builtin.cpp:1128
+msgid "%ls: Expected exactly two names (current function name, and new function name)\n"
+msgstr "%ls: Oczekiwano dokładnie dwóch nazw (nazwa obecnej funkcji i nazwa nowej)\n"
+
+#: src/builtin.cpp:1091 src/builtin.cpp:1139
+msgid "%ls: Function '%ls' does not exist\n"
+msgstr "%ls: Funkcja '%ls' nie istnieje\n"
+
+#: src/builtin.cpp:1084
+msgid "%ls: Expected exactly one function name\n"
+msgstr "%ls: Oczekiwano dokładnie jednej nazwy funkcji\n"
+
+#: src/builtin.cpp:1069 src/builtin.h:40
+msgid "%ls: Invalid combination of options\n"
+msgstr "%ls: Nieprawidłowe połączenie opcji\n"
+
+#: src/builtin.cpp:652
+msgid "%ls: No blocks defined\n"
+msgstr "%ls: Nie określono bloków\n"
+
+#: src/builtin.cpp:646
+msgid "%ls: Can not specify scope when removing block\n"
+msgstr ""
+
+#: src/builtin.cpp:579
+msgid "%ls: Invalid state\n"
+msgstr "%ls: Nieprawidłowy stan\n"
+
+#: src/builtin.cpp:552
+msgid "%ls: No binding found for sequence '%ls'\n"
+msgstr ""
+
+#: src/builtin.cpp:548
+msgid "%ls: No binding found for key '%ls'\n"
+msgstr ""
+
+#: src/builtin.cpp:361
+msgid "%ls: Unknown error trying to bind to key named '%ls'\n"
+msgstr "%ls: Nieznany błąd podczas próby przypisania do klawisza '%ls'\n"
+
+#: src/builtin.cpp:356
+msgid "%ls: Key with name '%ls' does not have any mapping\n"
+msgstr "%ls: Klawisz '%ls' nie ma żadnego przypisania\n"
+
+#: src/builtin.cpp:351
+msgid "%ls: No key with name '%ls' found\n"
+msgstr "%ls: Nie znaleziono klaiwsza '%ls'\n"
+
+#: src/builtin.cpp:223
+msgid ""
+"%ls: Type 'help %ls' for related documentation\n"
+"\n"
+msgstr ""
+"%ls: Wpisz 'help %ls' aby uzyskać informacje z tym związane\n"
+"\n"
+
+#: src/io.cpp:55
+msgid "An error occured while reading output from code block on file descriptor %d"
+msgstr ""
+
+#: src/builtin_string.cpp:1154
+msgid "string: Unknown subcommand '%ls'\n"
+msgstr "string: Nieznane podpolecenie '%ls'\n"
+
+#: src/builtin_string.cpp:1139
+msgid "string: Expected subcommand\n"
+msgstr "string: Oczekiwano podpolecenia\n"
+
+#: src/builtin_string.cpp:978
+msgid "%ls: Invalid start value '%ls'\n"
+msgstr "%ls: Nieprawidłową wartość początkowa '%ls'\n"
+
+#: src/builtin_string.cpp:960
+msgid "%ls: Invalid length value '%ls'\n"
+msgstr "%ls: Nieprawidłowa wartość długości  '%ls'\n"
+
+#: src/builtin_string.cpp:706
+msgid "%ls: Regular expression substitute error: %ls\n"
+msgstr ""
+
+#: src/builtin_string.cpp:393
+msgid "%ls: Regular expression internal error\n"
+msgstr ""
+
+#: src/builtin_string.cpp:388
+msgid "%ls: Regular expression match error: %ls\n"
+msgstr ""
+
+#: src/builtin_string.cpp:347
+msgid "%ls: Regular expression compile error: %ls\n"
+msgstr ""
+
+#: src/builtin_string.cpp:33
+msgid "%ls: Expected argument\n"
+msgstr "%ls: Oczekiwano argumentu\n"
+
+#: src/pager.cpp:491
+msgid "(no matches)"
+msgstr "(brak pasujących wyników)"
+
+#: src/pager.cpp:488
+msgid "rows %lu to %lu of %lu"
+msgstr "rzędy od %lu do %lu z %lu"
+
+#: src/pager.cpp:481
+msgid "%lsand %lu more rows"
+msgstr "%lsand %lu więcej rzędów"
+
+#: src/pager.cpp:479
+msgid "%lsand 1 more row"
+msgstr "%lsand 1 rząd więcej"
+
+#: src/pager.cpp:36
+msgid "search: "
+msgstr "wyszukiwanie:"
+
+#: src/signal.cpp:394
+msgid "Signal block mismatch"
+msgstr ""
+
+#: src/signal.cpp:178 src/signal.cpp:190
+msgid "Unknown"
+msgstr "Nieznany"
+
+#: src/signal.cpp:142
+msgid "Unused signal"
+msgstr "Niewykorzystywany sygnał"
+
+#: src/signal.cpp:139
+msgid "Abort (Alias for SIGABRT)"
+msgstr ""
+
+#: src/signal.cpp:136
+msgid "Emulator trap"
+msgstr ""
+
+#: src/signal.cpp:133
+msgid "Stack fault"
+msgstr ""
+
+#: src/signal.cpp:130
+msgid "Information request"
+msgstr "Żądanie informacji"
+
+#: src/signal.cpp:127
+msgid "Bad system call"
+msgstr ""
+
+#: src/signal.cpp:124
+msgid "Power failure"
+msgstr ""
+
+#: src/signal.cpp:121
+msgid "I/O on asynchronous file descriptor is possible"
+msgstr ""
+
+#: src/signal.cpp:115 src/signal.cpp:118
+msgid "Window size change"
+msgstr "Zmiana rozmiaru okna"
+
+#: src/signal.cpp:112
+msgid "Profiling timer expired"
+msgstr ""
+
+#: src/signal.cpp:109
+msgid "Virtual timer expired"
+msgstr ""
+
+#: src/signal.cpp:106
+msgid "File size limit exceeded"
+msgstr "Przekroczony limit rozmiaru pliku"
+
+#: src/signal.cpp:103
+msgid "CPU time limit exceeded"
+msgstr ""
+
+#: src/signal.cpp:100
+msgid "Urgent socket condition"
+msgstr ""
+
+#: src/signal.cpp:97
+msgid "Stop from terminal output"
+msgstr ""
+
+#: src/signal.cpp:94
+msgid "Stop from terminal input"
+msgstr ""
+
+#: src/signal.cpp:91
+msgid "Stop request from job control (^Z)"
+msgstr ""
+
+#: src/signal.cpp:88
+msgid "Forced stop"
+msgstr "Wymuszono zatrzymanie"
+
+#: src/signal.cpp:85
+msgid "Continue previously stopped process"
+msgstr "Kontynuuj wcześniej zatrzymany proces"
+
+#: src/signal.cpp:82
+msgid "Child process status changed"
+msgstr "Zmieniono status procesu potomnego"
+
+#: src/signal.cpp:79
+msgid "Polite quit request"
+msgstr ""
+
+#: src/signal.cpp:76
+msgid "Timer expired"
+msgstr ""
+
+#: src/signal.cpp:73
+msgid "Broken pipe"
+msgstr ""
+
+#: src/signal.cpp:70
+msgid "Address boundary error"
+msgstr ""
+
+#: src/signal.cpp:67
+msgid "User defined signal 2"
+msgstr "Sygnał zdefiniowany przez użytkownika 2"
+
+#: src/signal.cpp:64
+msgid "User defined signal 1"
+msgstr "Sygnał zdefiniowany przez użytkownika 1"
+
+#: src/signal.cpp:61
+msgid "Forced quit"
+msgstr "Przymusowe wyjście"
+
+#: src/signal.cpp:58
+msgid "Floating point exception"
+msgstr ""
+
+#: src/signal.cpp:55
+msgid "Misaligned address error"
+msgstr ""
+
+#: src/signal.cpp:52
+msgid "Abort"
+msgstr "Przerwij"
+
+#: src/signal.cpp:49
+msgid "Trace or breakpoint trap"
+msgstr ""
+
+#: src/signal.cpp:46
+msgid "Illegal instruction"
+msgstr "Niedozwolona instrukcja"
+
+#: src/signal.cpp:43
+msgid "Quit request from job control with core dump (^\\)"
+msgstr ""
+
+#: src/signal.cpp:40
+msgid "Quit request from job control (^C)"
+msgstr ""
+
+#: src/signal.cpp:37
+msgid "Terminal hung up"
+msgstr "Terminal zawieszony"
+
+#: src/autoload.cpp:105
+msgid "Could not autoload item '%ls', it is already being autoloaded. This is a circular dependency in the autoloading scripts, please remove it."
+msgstr ""
+
+#: src/event.cpp:440
+msgid "Signal list overflow. Signals have been ignored."
+msgstr ""
+
+#: src/event.cpp:151
+msgid "Unknown event type '0x%x'"
+msgstr "Nieznany typ zdarzenia '0x%x'"
+
+#: src/event.cpp:147
+msgid "handler for generic event '%ls'"
+msgstr ""
+
+#: src/event.cpp:142
+msgid "exit handler for job with job id %d"
+msgstr ""
+
+#: src/event.cpp:131
+msgid "exit handler for job with process group %d"
+msgstr ""
+
+#: src/event.cpp:128 src/event.cpp:139
+msgid "exit handler for job %d, '%ls'"
+msgstr "zakończ obsługę zadania %d, '%ls'"
+
+#: src/event.cpp:124
+msgid "exit handler for process %d"
+msgstr "zakończ obsługę procesu %d"
+
+#: src/event.cpp:119
+msgid "handler for variable '%ls'"
+msgstr "obsługa zmiennej '%ls'"
+
+#: src/event.cpp:114
+msgid "signal handler for %ls (%ls)"
+msgstr "obsługa sygnału dla %ls (%ls)"
+
+#: src/common.cpp:1547
+msgid "empty"
+msgstr "pusto"
+
+#: src/common.cpp:1535
+msgid "This is a bug. Break on bugreport to debug. If you can reproduce it, please send a bug report to %s."
+msgstr ""
+
+#: src/parser.cpp:783
+msgid "%ls: "
+msgstr "%ls: "
+
+#: src/parser.cpp:780
+msgid "%ls (line %lu): "
+msgstr "%ls (linia %lu): "
+
+#: src/parser.cpp:697
+msgid "End of block mismatch. Program terminating."
+msgstr ""
+
+#: src/parser.cpp:567
+msgid "Job inconsistency"
+msgstr ""
+
+#: src/parser.cpp:531
+msgid "Startup"
+msgstr "Uruchamianie"
+
+#: src/parser.cpp:528
+msgid "%ls (line %d): "
+msgstr "%ls (linia %d): "
+
+#: src/parser.cpp:439
+msgid "\twith parameter list '%ls'\n"
+msgstr "\tz listą parametrów '%ls'\n"
+
+#: src/parser.cpp:426
+msgid "\tcalled on standard input\n"
+msgstr ""
+
+#: src/parser.cpp:424
+msgid "\tcalled during startup\n"
+msgstr "\tprzywołano podczas rozruchu\n"
+
+#: src/parser.cpp:421
+msgid "\tcalled on line %d of file %ls\n"
+msgstr ""
+
+#: src/parser.cpp:410
+msgid "in command substitution\n"
+msgstr "w zastępstwie polecenia \n"
+
+#: src/parser.cpp:406
+msgid "in function '%ls'\n"
+msgstr "w funkcji '%ls'\n"
+
+#: src/parser.cpp:399
+msgid "from sourcing file %ls\n"
+msgstr ""
+
+#: src/parser.cpp:380
+msgid "in event handler: %ls\n"
+msgstr "w procedurze obsługi zdarzeń: %ls\n"
+
+#: src/parser.cpp:322
+msgid "Time\tSum\tCommand\n"
+msgstr "Czas\tSuma\tKomenda\n"
+
+#: src/parser.cpp:320
+msgid "Could not write profiling information to file '%s'"
+msgstr ""
+
+#: src/parser.cpp:76
+msgid "unknown/invalid block"
+msgstr "nieznany/nieprawidłowy blok"
+
+#: src/parser.cpp:73
+msgid "event handler block"
+msgstr "blok obsługi zdarzenia"
+
+#: src/parser.cpp:70
+msgid "block created by the . builtin"
+msgstr ""
+
+#: src/parser.cpp:67
+msgid "'begin' unconditional block"
+msgstr ""
+
+#: src/parser.cpp:64
+msgid "command substitution block"
+msgstr ""
+
+#: src/parser.cpp:61
+msgid "global root block"
+msgstr ""
+
+#: src/parser.cpp:58
+msgid "unexecutable block"
+msgstr "blok niewykonywalny"
+
+#: src/parser.cpp:55
+msgid "'switch' block"
+msgstr "blok 'switch'"
+
+#: src/parser.cpp:52
+msgid "function invocation block with no variable shadowing"
+msgstr ""
+
+#: src/parser.cpp:49
+msgid "function invocation block"
+msgstr ""
+
+#: src/parser.cpp:46
+msgid "function definition block"
+msgstr ""
+
+#: src/parser.cpp:43
+msgid "'if' conditional block"
+msgstr "blok warunkowy 'if'"
+
+#: src/parser.cpp:40
+msgid "block created by breakpoint"
+msgstr ""
+
+#: src/parser.cpp:37
+msgid "'for' block"
+msgstr "blok 'for'"
+
+#: src/parser.cpp:34
+msgid "'while' block"
+msgstr "blok 'while'"
+
+#: src/parser.cpp:31
+msgid "Tried to evaluate commands using invalid block type '%ls'"
+msgstr ""
+
+#: src/env.cpp:907
+msgid "Tried to pop empty environment stack."
+msgstr ""
+
+#: src/env.cpp:318
+msgid "Could not determine current working directory. Is your locale set correctly?"
+msgstr ""
+
+#: src/output.cpp:461
+msgid "Tried to use terminfo string %s on line %ld of %s, which is undefined in terminal of type \"%ls\". Please report this error to %s"
+msgstr ""
+
+#: src/builtin_printf.cpp:706
+msgid "printf: not enough arguments"
+msgstr "printf: brak wystarczających argumentów"
+
+#: src/builtin_printf.cpp:677
+msgid "%.*ls: invalid conversion specification"
+msgstr ""
+
+#: src/builtin_printf.cpp:652
+msgid "invalid precision: %ls"
+msgstr ""
+
+#: src/builtin_printf.cpp:625
+msgid "invalid field width: %ls"
+msgstr ""
+
+#: src/builtin_printf.cpp:395
+msgid "Unicode character out of range: \\%c%0*x"
+msgstr ""
+
+#: src/builtin_printf.cpp:378
+msgid "Missing hexadecimal number in Unicode escape"
+msgstr ""
+
+#: src/builtin_printf.cpp:358
+msgid "missing hexadecimal number in escape"
+msgstr ""
+
+#: src/builtin_printf.cpp:246
+msgid "%ls: value not completely converted"
+msgstr ""
+
+#: src/builtin_printf.cpp:244
+msgid "%ls: expected a numeric value"
+msgstr "%ls: oczekiwano wartości liczbowej"
+
+#: src/fish.cpp:527 src/parser.cpp:533 src/builtin.cpp:2254
+msgid "Standard input"
+msgstr "Standardowe wejście"
+
+#: src/fish.cpp:525
+msgid "Error while reading file %ls\n"
+msgstr "Wystąpił błąd podczas odczytywania pliku %ls\n"
+
+#: src/fish.cpp:452
+msgid "Can not use the no-execute mode when running an interactive session"
+msgstr "Nie możesz użyć trybu niewykonywalnego kiedy uruchomiona jest sesja interaktywna"
+
+#: src/fish.cpp:359
+msgid "%s, version %s\n"
+msgstr "%s, wersja %s\n"
+
+#: src/fish.cpp:275
+msgid "Old versions of fish appear to be running. You will not be able to share variable values between old and new fish sessions. For best results, restart all running instances of fish."
+msgstr "Stara wersja fish wydaje się być uruchomiona. Nie możesz dzielić wartości zmiennych między sesjami starszej i nowszej wersji fish. Dla najlepszych wyników, uruchom ponownie wszystkie sesję fish."
+
+#: src/path.cpp:280
+msgid "Unable to create a data directory for fish. Your history will not be saved. Please set the $XDG_DATA_HOME variable to a directory where the current user has write access."
+msgstr "Nie udało się utworzyć katalogu danych dla fish. Twoja historia nie zostanie zapisana. Przypisz zmienną $XDG_DATA_HOME do katalogu, do którego obecny użytkownik ma uprawnienia zapisu."
+
+#: src/path.cpp:250 src/env_universal_common.cpp:533
+msgid "Unable to create a configuration directory for fish. Your personal settings will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory where the current user has write access."
+msgstr "Nie udało się utworzyć katalogu konfiguracji dla fish. Twoje ustawienia nie zostaną zapisane. Przypisz zmienną $XDG_CONFIG_HOME do katalogu, do którego obecny użytkownik ma uprawnienia zapisu."
+
+#: src/path.cpp:22
+msgid "Error while searching for command '%ls'"
+msgstr "Wystąpił błąd podczas wyszukiwania komendy '%ls'"
+
+#: src/fish_indent.cpp:472
+msgid "Too many arguments\n"
+msgstr "Zbyt dużo argumentów\n"
+
+#: src/fish_indent.cpp:468 src/fish_indent.cpp:498
+msgid "Opening \"%s\" failed: %s\n"
+msgstr "Otwieranie '%s' nie powiodło się: %s\n"
+
+#: src/fish_indent.cpp:456
+msgid ""
+"Expected file path to read/write for -w:\n"
+"\n"
+" $ %ls -w foo.fish\n"
+msgstr ""
+
+#: src/fish_indent.cpp:437 src/fish.cpp:372 src/fish_key_reader.cpp:349
+msgid "Invalid value '%s' for debug-stack-frames flag"
+msgstr ""
+
+#: src/fish_indent.cpp:422 src/fish.cpp:332 src/fish_key_reader.cpp:334
+msgid "Invalid value '%s' for debug-level flag"
+msgstr ""
+
+#: src/fish_indent.cpp:392
+msgid "%ls, version %s\n"
+msgstr "%ls, wersja %s\n"
+
+#: src/fish_indent.cpp:378 src/fish.cpp:315
+msgid "getopt_long() unexpectedly returned zero\n"
+msgstr "getopt_long() nieoczekiwanie zwrócił 0\n"
+
+#: src/wutil.cpp:137
+msgid "getcwd() failed with errno %d/%s"
+msgstr ""
+
+#: src/parse_execution.cpp:1006
+msgid "Requested redirection to '%ls', which is not a valid file descriptor"
+msgstr ""
+
+#: src/parse_execution.cpp:990
+msgid "Invalid redirection target: %ls"
+msgstr "Nieprawidłowy cel przekierowania: %ls"
+
+#: src/parse_execution.cpp:779
+msgid "The file '%ls' is not executable by this user"
+msgstr "Plik '%ls' nie jest wykonywalny dla tego użytkownika"
+
+#: src/parse_execution.cpp:775
+msgid "Variables may not be used as commands. In fish, please define a function or use 'eval %ls'."
+msgstr "Zmienne nie mogą być używane jako komendy. W fish należy zdefiniować funkcję lub użyć 'eval %ls'."
+
+#: src/parse_execution.cpp:541
+msgid "switch: Expected exactly one argument, got %lu\n"
+msgstr "switch: Oczekiwano dokładnie jednego argumentu, otrzymano %lu\n"
+
+#: src/builtin_commandline.cpp:364
+msgid "%ls: Unknown input function '%ls'\n"
+msgstr "%ls: Nieznane wejście funkcji '%ls'\n"
+
+#: src/proc.cpp:1020
+msgid "Job '%ls', process '%ls' has inconsistent state 'completed'=%d"
+msgstr ""
+
+#: src/proc.cpp:1014
+msgid "Job '%ls', process '%ls' has inconsistent state 'stopped'=%d"
+msgstr ""
+
+#: src/proc.cpp:1010
+msgid "Process name"
+msgstr "Nazwa procesu"
+
+#: src/proc.cpp:1009
+msgid "Process argument list"
+msgstr "Lista argumentów procesu"
+
+#: src/proc.cpp:998
+msgid "More than one job in foreground: job 1: '%ls' job 2: '%ls'"
+msgstr "Więcej niż jedno zadanie na pierwszym planie: zadanie 1: '%ls' zadanie 2: '%ls'"
+
+#: src/proc.cpp:993 src/proc.cpp:1011
+msgid "Process list pointer"
+msgstr ""
+
+#: src/proc.cpp:821 src/proc.cpp:830 src/proc.cpp:842
+msgid "Could not return shell to foreground"
+msgstr "Nie można przywrócić powłoki na pierwszy plan"
+
+#: src/proc.cpp:801 src/proc.cpp:808
+msgid "Could not send job %d ('%ls') to foreground"
+msgstr "Nie można przenieść zadania %d ('%ls') na pierwszy plan"
+
+#: src/proc.cpp:783
+msgid "An error occured while reading output from code block"
+msgstr "Wystąpił błąd podczas odczytywania wyjścia z bloku kodu"
+
+#: src/proc.cpp:634
+msgid "ended"
+msgstr "zakończono"
+
+#: src/proc.cpp:604
+msgid "%ls: Process %d, '%ls' %ls'%ls' terminated by signal %ls (%ls)"
+msgstr "%ls: Proces %d, '%ls' %ls'%ls' zakończony sygnałem %ls (%ls)"
+
+#: src/proc.cpp:595
+msgid "%ls: %ls'%ls' terminated by signal %ls (%ls)"
+msgstr "%ls: %ls'%ls' zakończony sygnałem %ls (%ls)"
+
+#: src/proc.cpp:502
+msgid "Job %d, '%ls' has %ls"
+msgstr "Zadanie %d, '%ls' ma %ls"
+
+#: src/proc.cpp:500
+msgid "'%ls' has %ls"
+msgstr "'%ls' ma %ls"
+
+#: src/builtin_set.cpp:630
+msgid "%ls: Warning: universal scope selected, but a global variable '%ls' exists.\n"
+msgstr ""
+
+#: src/builtin_set.cpp:611
+msgid "%ls: Values cannot be specfied with erase\n"
+msgstr ""
+
+#: src/builtin_set.cpp:511
+msgid "%ls: Erase needs a variable name\n"
+msgstr ""
+
+#: src/builtin_set.cpp:204
+msgid "%ls: Invalid index starting at '%ls'\n"
+msgstr ""
+
+#: src/builtin_set.cpp:183
+msgid "%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"
+msgstr ""
+
+#: src/builtin_set.cpp:141
+msgid "%ls: Tried to set the special variable '%ls' to an invalid value\n"
+msgstr "%ls: Próbowano nadać nieprawidłową wartość specjalnej zmiennej '%ls'\n"
+
+#: src/builtin_set.cpp:134
+msgid "%ls: Tried to set the special variable '%ls' with the wrong scope\n"
+msgstr ""
+
+#: src/builtin_set.cpp:127
+msgid "%ls: Tried to change the read-only variable '%ls'\n"
+msgstr "%ls: Próbowano zmienić wartość zmiennej tylko do odczytu '%ls'\n"
+
+#: src/builtin_set_color.cpp:145
+msgid "%ls: Could not set up terminal\n"
+msgstr "%ls: Nie można skonfigurować terminala\n"
+
+#: src/builtin_set_color.cpp:128
+msgid "%ls: Expected an argument\n"
+msgstr "%ls: Oczekiwano argumentu\n"
+
+#: src/builtin_set_color.cpp:121 src/builtin_set_color.cpp:139
+msgid "%ls: Unknown color '%ls'\n"
+msgstr "%ls: Nieznany kolor '%ls'\n"
+
+#: src/wgetopt.cpp:419
+msgid "%ls: Option requires an argument -- %lc\n"
+msgstr "%ls: Opcja wymaga argumentu -- %lc\n"
+
+#: src/wgetopt.cpp:392
+msgid "%ls: Invalid option -- %lc\n"
+msgstr "%ls: Nieprawidłowa opcja -- %lc\n"
+
+#: src/wgetopt.cpp:373
+msgid "%ls: Unrecognized option '%lc%ls'\n"
+msgstr "%ls: Nierozpoznana opcja '%lc%ls'\n"
+
+#: src/wgetopt.cpp:370
+msgid "%ls: Unrecognized option '--%ls'\n"
+msgstr "%ls: Nierozpoznana opcja '--%ls'\n"
+
+#: src/wgetopt.cpp:349
+msgid "%ls: Option '%ls' requires an argument\n"
+msgstr "%ls: Opcja '%ls' wymaga argumentu\n"
+
+#: src/wgetopt.cpp:338
+msgid "%ls: Option '%lc%ls' doesn't allow an argument\n"
+msgstr "%ls: Opcja '%lc%ls' nie pozwala na argumenty\n"
+
+#: src/wgetopt.cpp:334
+msgid "%ls: Option '--%ls' doesn't allow an argument\n"
+msgstr "%ls: Opcja '--%ls' nie pozwala na argumenty\n"
+
+#: src/wgetopt.cpp:317
+msgid "%ls: Option '%ls' is ambiguous\n"
+msgstr ""
+
+#: src/exec.cpp:760
+msgid "Unknown input redirection type %d"
+msgstr "Nieznany typ przekierowania %d"
+
+#: src/exec.cpp:644
+msgid "Unknown function '%ls'"
+msgstr "Nieznana funkcja '%ls'"
+
+#: src/exec.cpp:51
+msgid "An error occurred while redirecting file '%s'"
+msgstr "Wystąpił błąd podczas przekierowywania pliku '%s'"
+
+#: src/exec.cpp:48
+msgid "An error occurred while writing output"
+msgstr ""
+
+#: src/exec.cpp:45
+msgid "An error occurred while redirecting file descriptor %d"
+msgstr ""
+
+#: src/reader.cpp:3392
+msgid "Error while opening input stream"
+msgstr ""
+
+#: src/reader.cpp:3371
+msgid "Error while closing input stream"
+msgstr ""
+
+#: src/reader.cpp:3357
+msgid "Error while reading from file descriptor"
+msgstr ""
+
+#: src/reader.cpp:3269
+msgid "Unknown key binding 0x%X"
+msgstr ""
+
+#: src/reader.cpp:2255
+msgid "There are stopped jobs. A second attempt to exit will enforce their termination.\n"
+msgstr ""
+
+#: src/reader.cpp:2042
+msgid "Pop null reader block"
+msgstr ""
+
+#: src/reader.cpp:1659
+msgid "Couldn't grab control of terminal"
+msgstr ""
+
+#: src/reader.cpp:1651
+msgid "Couldn't put the shell in its own process group"
+msgstr ""
+
+#: src/reader.cpp:1625
+msgid "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
+msgstr ""
+
+#: src/reader.cpp:1616
+msgid "No TTY for interactive shell (tcgetpgrp failed)"
+msgstr ""
+
+#: src/reader.cpp:345
+msgid "Could not set terminal mode for shell"
+msgstr ""
+
+#: src/reader.cpp:317
+msgid "Could not set terminal mode for new job"
+msgstr "Nie można ustawić trybu terminala dla nowego zadania"
+
+#: src/parse_util.cpp:36
+msgid "Backgrounded commands can not be used as conditionals"
+msgstr ""
+
+#: src/parse_util.cpp:32
+msgid "The '%ls' command can not be used immediately after a backgrounded job"
+msgstr "Komenda '%ls' nie może zostać użyta bezpośrednio po zadaniu w tle"
+
+#: src/parse_util.cpp:28
+msgid "The '%ls' command can not be used in a pipeline"
+msgstr ""
+
+#: src/tokenizer.cpp:41
+msgid "Cannot use stdin (fd 0) as pipe output"
+msgstr ""
+
+#: src/tokenizer.cpp:38
+msgid "Invalid input/output redirection"
+msgstr ""
+
+#: src/tokenizer.cpp:35
+msgid "Unexpected end of string, incomplete escape sequence"
+msgstr ""
+
+#: src/tokenizer.cpp:32
+msgid "Unexpected end of string, square brackets do not match"
+msgstr ""
+
+#: src/tokenizer.cpp:29
+msgid "Unexpected end of string, parenthesis do not match"
+msgstr ""
+
+#: src/tokenizer.cpp:26
+msgid "Unexpected end of string, quotes are not balanced"
+msgstr ""
+
+#: src/builtin_complete.cpp:379 src/builtin.cpp:2774 src/builtin.h:68
+msgid "%ls: Too many arguments\n"
+msgstr "%ls: Zbyt dużo argumentów\n"
+
+#: src/expand.cpp:1014
+msgid "Mismatched brackets"
+msgstr ""
+
+#: src/expand.cpp:67
+msgid "Last background job"
+msgstr "Ostatnie zadanie działające w tle"
+
+#: src/expand.cpp:64
+msgid "Shell process"
+msgstr "Proces powłoki"
+
+#: src/expand.cpp:61
+msgid "Job: %ls"
+msgstr "Zadanie: %ls"
+
+#: src/expand.cpp:58
+msgid "Job"
+msgstr "Zadanie"
+
+#: src/expand.cpp:55
+msgid "Process"
+msgstr "Proces"
+
+#: src/expand.cpp:52
+msgid "Child process"
+msgstr "Proces potomny"
+
+#: src/complete.cpp:52
+msgid "Variable: %ls"
+msgstr "Zmienna: %ls"
+
+#: src/complete.cpp:49
+msgid "Home for %ls"
+msgstr "Katalog domowy dla %ls"
+
+#: src/input.cpp:407
+msgid "Error while closing terminfo"
+msgstr "Wystąpił błąd podczas zamykania termingo"
+
+#: src/input.cpp:379
+msgid "Using fallback terminal type '%ls'"
+msgstr "Używanie zapasowego typu terminala '%ls'"
+
+#: src/input.cpp:375
+msgid "Could not set up terminal using the fallback terminal type '%ls' - exiting"
+msgstr "Nie można skonfigurować terminala używając zapasowego typu terminala '%ls' - opuszczanie"
+
+#: src/input.cpp:369
+msgid "Check that this terminal type is supported on this system"
+msgstr "Sprawdź czy ten typ terminala jest obsługiwany przez ten system"
+
+#: src/input.cpp:368
+msgid "TERM environment variable set to '%ls'"
+msgstr "Zmienna środowiskowa TERM ustawiona jest do '%ls'"
+
+#: src/input.cpp:366
+msgid "TERM environment variable not set"
+msgstr "Zmienna środowiskowa TERM ustawiona jest do '%ls'"
+
+#: src/input.cpp:363
+msgid "Could not set up terminal"
+msgstr "Nie mozna skonfigurować terminala"
+
+#: src/wildcard.cpp:48
+msgid "Directory"
+msgstr "Katalog"
+
+#: src/wildcard.cpp:46
+msgid "Socket"
+msgstr "Gniazdo"
+
+#: src/wildcard.cpp:44
+msgid "Symbolic link loop"
+msgstr "Pętla nawiązań symbolicznych"
+
+#: src/wildcard.cpp:42
+msgid "Rotten symbolic link"
+msgstr ""
+
+#: src/wildcard.cpp:40
+msgid "Symbolic link to directory"
+msgstr "Nawiązanie symboliczne do katalogu"
+
+#: src/wildcard.cpp:38
+msgid "Symbolic link"
+msgstr "Nawiązanie symboliczne"
+
+#: src/wildcard.cpp:36
+msgid "Fifo"
+msgstr ""
+
+#: src/wildcard.cpp:34
+msgid "Block device"
+msgstr ""
+
+#: src/wildcard.cpp:32
+msgid "Character device"
+msgstr ""
+
+#: src/wildcard.cpp:30
+msgid "File"
+msgstr "Plik"
+
+#: src/wildcard.cpp:28
+msgid "Executable link"
+msgstr "Link wykonywalny"
+
+#: src/wildcard.cpp:26
+msgid "Executable"
+msgstr "Wykonywalny"
+
+#: src/sanity.cpp:39
+msgid "The pointer '%ls' is null"
+msgstr ""
+
+#: src/sanity.cpp:34
+msgid "The pointer '%ls' is invalid"
+msgstr ""
+
+#: src/sanity.cpp:18
+msgid "Errors detected, shutting down. Break on sanity_lose() to debug."
+msgstr ""
+
+#: src/builtin_jobs.cpp:216
+msgid "%ls: There are no jobs\n"
+msgstr "%ls: Nie ma żadnych zadań\n"
+
+#: src/builtin_jobs.cpp:196 src/builtin.cpp:2604
+msgid "%ls: No suitable job: %d\n"
+msgstr "%ls: Brak pasujących zadań: %d\n"
+
+#: src/builtin_jobs.cpp:186 src/builtin.cpp:2585 src/builtin.cpp:2686
+msgid "%ls: '%ls' is not a job\n"
+msgstr "%ls: '%ls' nie jest zadaniem\n"
+
+#: src/builtin_jobs.cpp:96
+msgid "Command\n"
+msgstr "Komenda\n"
+
+#: src/builtin_jobs.cpp:85
+msgid "Process\n"
+msgstr "Proces\n"
+
+#: src/builtin_jobs.cpp:77
+msgid "Group\n"
+msgstr "Grupa\n"
+
+#: src/builtin_jobs.cpp:68
+msgid "running"
+msgstr "uruchomiona"
+
+#: src/builtin_jobs.cpp:68 src/proc.cpp:644
+msgid "stopped"
+msgstr "zatrzymana"
+
+#: src/builtin_jobs.cpp:60
+msgid "State\tCommand\n"
+msgstr "Stan\tKomenda\n"
+
+#: src/builtin_jobs.cpp:58
+msgid "CPU\t"
+msgstr "CPU\t"
+
+#: src/builtin_jobs.cpp:56
+msgid "Job\tGroup\t"
+msgstr "Zadanie\tGrupa\t"

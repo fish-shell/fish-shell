@@ -43,6 +43,7 @@ If `-a` or `--array` is provided, only one variable name is allowed and the toke
 
 See the documentation for `set` for more details on the scoping rules for variables.
 
+When read reaches the end-of-file (EOF) instead of the separator, it returns 1. If not, it returns 0.
 
 \subsection read-example Example
 

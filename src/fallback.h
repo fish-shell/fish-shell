@@ -23,6 +23,11 @@
 int fish_wcwidth(wchar_t wc);
 int fish_wcswidth(const wchar_t *str, size_t n);
 
+// Replacement for mkostemp(str, O_CLOEXEC)
+// This uses mkostemp if available,
+// otherwise it uses mkstemp followed by fcntl
+int fish_mkstemp_cloexec(char *);
+
 #ifndef WCHAR_MAX
 /// This _should_ be defined by wchar.h, but e.g. OpenBSD doesn't.
 #define WCHAR_MAX INT_MAX

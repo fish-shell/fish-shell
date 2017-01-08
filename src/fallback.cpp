@@ -91,6 +91,20 @@ char *tparm_solaris_kludge(char *str, ...) {
 
 #endif
 
+int fish_mkstemp_cloexec(char *name_template) {
+#if HAVE_MKOSTEMP
+    // null check because mkostemp may be a weak symbol
+    if (&mkostemp != nullptr) {
+        return mkostemp(name_template, O_CLOEXEC);
+    }
+#endif
+    int result_fd = mkstemp(name_template);
+    if (result_fd != -1) {
+        fcntl(result_fd, F_SETFD, FD_CLOEXEC);
+    }
+    return result_fd;
+}
+
 /// Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g.
 /// building on Linux) these should end up just being stripped, as they are static functions that
 /// are not referenced in this file.

@@ -535,15 +535,7 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
 
     for (size_t attempt = 0; attempt < 10 && !success; attempt++) {
         char *narrow_str = wcs2str(tmp_name_template.c_str());
-#if HAVE_MKOSTEMP
-        int result_fd = mkostemp(narrow_str, O_CLOEXEC);
-#else
-        int result_fd = mkstemp(narrow_str);
-        if (result_fd != -1) {
-            fcntl(result_fd, F_SETFD, FD_CLOEXEC);
-        }
-#endif
-
+        int result_fd = fish_mkstemp_cloexec(narrow_str);
         saved_errno = errno;
         success = result_fd != -1;
         *out_fd = result_fd;

@@ -63,6 +63,12 @@ char *tparm_solaris_kludge(char *str, ...);
 /// On other platforms, use what's detected at build time.
 #if __APPLE__
 #if __DARWIN_C_LEVEL >= 200809L
+// We have to explicitly redeclare these as weak,
+// since we are forced to set the MIN_REQUIRED availability macro to 10.7
+// to use libc++, which in turn exposes these as strong
+wchar_t *wcsdup(const wchar_t *) __attribute__((weak_import));
+int wcscasecmp(const wchar_t *, const wchar_t *) __attribute__((weak_import));
+int wcsncasecmp(const wchar_t *, const wchar_t *, size_t n) __attribute__((weak_import));
 wchar_t *wcsdup_use_weak(const wchar_t *);
 int wcscasecmp_use_weak(const wchar_t *, const wchar_t *);
 int wcsncasecmp_use_weak(const wchar_t *s1, const wchar_t *s2, size_t n);

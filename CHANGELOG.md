@@ -1,12 +1,30 @@
-# fish 2.5.0b1 (released ???)
+# fish 2.5b1 (released ???)
 
 ## Significant changes
+- fish now requires C++11 to build.
+- The `random` command has added features, including the possibility to add start, stop and step values
+  and the `choice` subcommand to pick an argument from a list (#3619).
+- The `test` command now prints errors for numeric operations on invalid integers (#3346, #3581).
+- List indexes are handled better, and a bit more liberally in some cases (`echo $PATH[1 .. 3]` is now valid) (#3579).
+- `function` now errors out if passed invalid flags (#3574).
+- `set_color` now supports italics ("-i") and dim mode ("-d") (#3650).
+- `command` now accepts "-q"/"--quiet" for `command -sq $command` (#3591).
+- Selection mode (used with "begin-selection") no longer selects a character the cursor does not move over (#3684).
+- The `help` command now reads the $fish_help_browser variable (#3131).
 
 ## Notable fixes and improvements
+- `complete` no longer prints errors when given an empty string as a description (#3557).
+- Abbreviations can now be renamed with `abbr -r OLD_KEY NEW_KEY` (#3610).
+- $status is now set to 123 when a syntactically invalid command is entered (#3616).
+- The `status` command now accepts subcommands like `status is-interactive`. The old forms continue to be supported for the foreseeable future (#3526).
+- A new `prompt_hostname` function which prints a hostname suitable for use in prompts (#3482).
+- A new function `edit_command_buffer` (bound to alt-e/alt-v by default) to edit the command buffer in $EDITOR (#3627).
+- __fish_man_page (bound to alt-h by default) now tries to recognize subcommands (e.g. `git add` will now open the "git-add" man page) (#3678).
+- Improved completions for `apt` (#3695), `nmcli` (#3648), `fusermount` (#3642), `make` (#3628).
 - Added completions for `VBoxHeadless`, `VBoxSDL`, `base64`, `caffeinate`, `dconf`,
 	`dig`, `dpkg-reconfigure`, `feh`, `launchctl`, `lxc`, `mddiagnose`, `mdfind`,
 	`mdimport`, `mdls`, `mdutil`, `mkvextract`, `nvram`, `objdump`,
-	`sysbench`, and `tmutil`
+	`sysbench`, and `tmutil`.
 ---
 
 # fish 2.4.0 (released November 8, 2016)

@@ -1230,24 +1230,16 @@ bool history_t::save_internal_via_rewrite() {
 
         signal_block();
 
-        // Try to create a temporary file, up to 10 times. We don't use mkstemps because we want to
-        // open it CLO_EXEC. This should almost always succeed on the first try.
+        // Try to create a CLO_EXEC temporary file, up to 10 times.
+        // This should almost always succeed on the first try.
         int out_fd = -1;
         wcstring tmp_name;
         for (size_t attempt = 0; attempt < 10 && out_fd == -1; attempt++) {
             char *narrow_str = wcs2str(tmp_name_template.c_str());
-#if HAVE_MKOSTEMP
-            out_fd = mkostemp(narrow_str, O_CLOEXEC);
+            out_fd = fish_mkstemp_cloexec(narrow_str);
             if (out_fd >= 0) {
                 tmp_name = str2wcstring(narrow_str);
             }
-#else
-            if (narrow_str && mktemp(narrow_str)) {
-                // It was successfully templated; try opening it atomically.
-                tmp_name = str2wcstring(narrow_str);
-                out_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC, 0600);
-            }
-#endif
             free(narrow_str);
         }
 

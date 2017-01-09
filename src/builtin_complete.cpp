@@ -21,9 +21,6 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-// This boolean ensures we only issue the warning about using the -A/--authoritative flag one time.
-static bool authoritative_flag_warning = false;
-
 // builtin_complete_* are a set of rather silly looping functions that make sure that all the proper
 // combinations of complete_add or complete_remove get called. This is needed since complete allows
 // you to specify multiple switches on a single commandline, like 'complete -s a -s b -s c', but the
@@ -187,23 +184,11 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 break;
             }
             case 'u': {
-                if (!authoritative_flag_warning) {
-                    streams.err.append_format(
-                        _(L"%ls: Please update your completion scripts by removing "
-                          L"-u / --unauthoritative / -A / --authoritative flags."),
-                        cmd);
-                    authoritative_flag_warning = true;
-                }
+                // This option was removed in commit 1911298 and is now a no-op.
                 break;
             }
             case 'A': {
-                if (!authoritative_flag_warning) {
-                    streams.err.append_format(
-                        _(L"%ls: Please update your completion scripts by removing "
-                          L"-u / --unauthoritative / -A / --authoritative flags."),
-                        cmd);
-                    authoritative_flag_warning = true;
-                }
+                // This option was removed in commit 1911298 and is now a no-op.
                 break;
             }
             case 's': {

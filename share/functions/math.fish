@@ -22,11 +22,14 @@ function math --description "Perform math calculations in bc"
     end
 
     # Set BC_LINE_LENGTH to a ridiculously high number so it only uses one line for most results.
-    # Results with more digits than that are basically never used anyway.
     # We can't use 0 since some systems (including macOS) use an ancient bc that doesn't support it.
-    # 32767 should still work on 2-byte int systems, though this is untested.
-    set -lx BC_LINE_LENGTH 32767
+    # We also can't count on this being recognized since some BSD systems don't recognize this env
+    # var at all and limit the line length to 70.
+    set -lx BC_LINE_LENGTH 500
     set -l out (echo "scale=$scale; $argv" | bc)
+    if set -q out[2]
+        set out (string join '' (string replace \\ '' $out))
+    end
     switch "$out"
         case ''
             # No output indicates an error occurred.

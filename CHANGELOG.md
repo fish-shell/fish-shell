@@ -11,6 +11,7 @@
 - `command` now accepts "-q"/"--quiet" for `command -sq $command` (#3591).
 - Selection mode (used with "begin-selection") no longer selects a character the cursor does not move over (#3684).
 - The `help` command now reads the $fish_help_browser variable (#3131).
+- fish no longer prints a warning when it identifies a running instance of an old version (2.1.0 and earlier). Changes to universal variables may not propagate between these old versions and 2.5b1.
 
 ## Notable fixes and improvements
 - `complete` accepts empty strings as descriptions (#3557).

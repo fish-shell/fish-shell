@@ -16,10 +16,8 @@
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>  // IWYU pragma: keep
 #endif
-#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>  // IWYU pragma: keep
-#include <sys/types.h>
 // We need the sys/file.h for the flock() declaration on Linux but not OS X.
 #include <sys/file.h>  // IWYU pragma: keep
 // We need the ioctl.h header so we can check if SIOCGIFHWADDR is defined by it so we know if we're
@@ -866,6 +864,7 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t
 #ifdef SIOCGIFHWADDR
 
 // Linux
+#include <sys/socket.h>
 #include <net/if.h>
 static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
                             const char *interface = "eth0") {

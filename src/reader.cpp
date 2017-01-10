@@ -660,33 +660,37 @@ bool reader_thread_job_is_stale() {
     return (void *)(uintptr_t)s_generation_count != pthread_getspecific(generation_count_key);
 }
 
-void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
-    const env_var_t term_str = env_get_string(L"TERM");
 
-    // This is a pretty lame heuristic for detecting terminals that do not support setting the
-    // title. If we recognise the terminal name as that of a virtual terminal, we assume it supports
-    // setting the title. If we recognise it as that of a console, we assume it does not support
-    // setting the title. Otherwise we check the ttyname and see if we believe it is a virtual
-    // terminal.
-    //
-    // One situation in which this breaks down is with screen, since screen supports setting the
-    // terminal title if the underlying terminal does so, but will print garbage on terminals that
-    // don't. Since we can't see the underlying terminal below screen there is no way to fix this.
-    if (term_str.missing()) return;
+/// This is a pretty lame heuristic for detecting terminals that do not support setting the
+/// title. If we recognise the terminal name as that of a virtual terminal, we assume it supports
+/// setting the title. If we recognise it as that of a console, we assume it does not support
+/// setting the title. Otherwise we check the ttyname and see if we believe it is a virtual
+/// terminal.
+///
+/// One situation in which this breaks down is with screen, since screen supports setting the
+/// terminal title if the underlying terminal does so, but will print garbage on terminals that
+/// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
+static bool term_supports_setting_title() {
+    const env_var_t term_str = env_get_string(L"TERM");
+    if (term_str.missing()) return false;
 
     const wchar_t *term = term_str.c_str();
     bool recognized = contains(term, L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt");
-    recognized = recognized || !wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
-    recognized = recognized || !wcsncmp(term, L"screen-", wcslen(L"screen-"));
-    recognized = recognized || !wcsncmp(term, L"tmux-", wcslen(L"tmux-"));
-
+    if (!recognized) recognized = !wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
+    if (!recognized) recognized = !wcsncmp(term, L"screen-", wcslen(L"screen-"));
+    if (!recognized) recognized = !wcsncmp(term, L"tmux-", wcslen(L"tmux-"));
     if (!recognized) {
-        char *n = ttyname(STDIN_FILENO);
+        if (contains(term, L"linux", L"dumb")) return false;
 
-        if (contains(term, L"linux")) return;
-        if (contains(term, L"dumb")) return;
-        if (strstr(n, "tty") || strstr(n, "/vc/")) return;
+        char *n = ttyname(STDIN_FILENO);
+        if (!n || strstr(n, "tty") || strstr(n, "/vc/")) return false;
     }
+
+    return true;
+}
+
+void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
+    if (!term_supports_setting_title()) return;
 
     wcstring fish_title_command = DEFAULT_TITLE;
     if (function_exists(L"fish_title")) {
@@ -698,7 +702,6 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
     }
 
     wcstring_list_t lst;
-
     proc_push_interactive(0);
     if (exec_subshell(fish_title_command, lst, false /* ignore exit status */) != -1 &&
         !lst.empty()) {

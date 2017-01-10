@@ -238,6 +238,47 @@ static bool var_is_curses(const wcstring &key) {
     return false;
 }
 
+/// True if we think we can set the terminal title else false.
+static bool can_set_term_title = false;
+
+/// Returns true if we think the terminal supports setting its title.
+bool term_supports_setting_title() {
+    return can_set_term_title;
+}
+
+/// This is a pretty lame heuristic for detecting terminals that do not support setting the
+/// title. If we recognise the terminal name as that of a virtual terminal, we assume it supports
+/// setting the title. If we recognise it as that of a console, we assume it does not support
+/// setting the title. Otherwise we check the ttyname and see if we believe it is a virtual
+/// terminal.
+///
+/// One situation in which this breaks down is with screen, since screen supports setting the
+/// terminal title if the underlying terminal does so, but will print garbage on terminals that
+/// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
+static bool does_term_support_setting_title() {
+    const env_var_t term_str = env_get_string(L"TERM");
+    if (term_str.missing()) return false;
+
+    const wchar_t *term = term_str.c_str();
+    bool recognized = contains(term, L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt");
+    if (!recognized) recognized = !wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
+    if (!recognized) recognized = !wcsncmp(term, L"screen-", wcslen(L"screen-"));
+    if (!recognized) recognized = !wcsncmp(term, L"tmux-", wcslen(L"tmux-"));
+    if (!recognized) {
+        if (contains(term, L"linux", L"dumb")) return false;
+
+        char *n = ttyname(STDIN_FILENO);
+        if (!n || strstr(n, "tty") || strstr(n, "/vc/")) return false;
+    }
+
+    return true;
+}
+
+/// Handle changes to the TERM env var that do not involves the curses subsystem.
+static void handle_term() {
+    can_set_term_title = does_term_support_setting_title();
+}
+
 /// Push all curses/terminfo env vars into the global environment where they can be found by those
 /// libraries.
 static void handle_curses(const wchar_t *env_var_name) {
@@ -264,6 +305,7 @@ static void react_to_variable_change(const wcstring &key) {
         handle_locale(key.c_str());
     } else if (var_is_curses(key)) {
         handle_curses(key.c_str());
+        if (key == L"TERM") handle_term();
     } else if (var_is_timezone(key)) {
         handle_timezone(key.c_str());
     } else if (key == L"fish_term256" || key == L"fish_term24bit") {

@@ -99,6 +99,9 @@ int function_exists_no_autoload(const wcstring &name, const env_vars_snapshot_t 
 /// \param get_hidden whether to include hidden functions, i.e. ones starting with an underscore.
 wcstring_list_t function_get_names(int get_hidden);
 
+/// Returns true if the function was autoloaded.
+bool function_is_autoloaded(const wcstring &name);
+
 /// Returns tha absolute path of the file where the specified function was defined. Returns 0 if the
 /// file was defined on the commandline.
 ///
@@ -126,7 +129,7 @@ std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name);
 bool function_copy(const wcstring &name, const wcstring &new_name);
 
 /// Returns whether this function shadows variables of the underlying function.
-int function_get_shadow_scope(const wcstring &name);
+bool function_get_shadow_scope(const wcstring &name);
 
 /// Prepares the environment for executing a function.
 void function_prepare_environment(const wcstring &name, const wchar_t *const *argv,

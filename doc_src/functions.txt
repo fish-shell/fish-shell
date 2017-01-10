@@ -3,6 +3,7 @@
 \subsection functions-synopsis Synopsis
 \fish{synopsis}
 functions [ -a | --all ] [ -n | --names ]
+functions [ -m | --metadata ] [ -v ] FUNCTION
 functions -c OLDNAME NEWNAME
 functions -d DESCRIPTION FUNCTION
 functions [ -e | -q ] FUNCTIONS...
@@ -14,7 +15,7 @@ functions [ -e | -q ] FUNCTIONS...
 
 The following options are available:
 
-- `-a` or `--all` lists all functions, even those whose name start with an underscore.
+- `-a` or `--all` lists all functions, even those whose name starts with an underscore.
 
 - `-c OLDNAME NEWNAME` or `--copy OLDNAME NEWNAME` creates a new function named NEWNAME, using the definition of the OLDNAME function.
 
@@ -22,9 +23,20 @@ The following options are available:
 
 - `-e` or `--erase` causes the specified functions to be erased.
 
+- `-m` or `--metadata` reports the path name where each function is defined or could be autoloaded, `stdin` if the function was defined interactively or on the command line or by reading stdin, and `n/a` if the function isn't available. If the `--verbose` option is also specified then four lines are written:
+
+    -# the pathname as already described,
+    -# `autoloaded`, `not-autoloaded` or `n/a`,
+    -# the line number within the file or zero if not applicable,
+    -# `scope-shadowing` if the function shadows the vars in the calling function (the normal case) else `no-scope-shadowing`, or `n/a` if the function isn't defined.
+
+You should not assume that only four lines will be written since we may add additional information to the output in the future.
+
 - `-n` or `--names` lists the names of all defined functions.
 
 - `-q` or `--query` tests if the specified functions exist.
+
+- `-v` or `--verbose` will make some output more verbose.
 
 The default behavior of `functions`, when called with no arguments, is to print the names of all defined functions. Unless the `-a` option is given, no functions starting with underscores are not included in the output.
 

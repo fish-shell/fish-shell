@@ -259,7 +259,7 @@ std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name) {
     return func ? func->inherit_vars : std::map<wcstring, env_var_t>();
 }
 
-int function_get_shadow_scope(const wcstring &name) {
+bool function_get_shadow_scope(const wcstring &name) {
     scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->shadow_scope : false;
@@ -323,6 +323,12 @@ const wchar_t *function_get_definition_file(const wcstring &name) {
     scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->definition_file : NULL;
+}
+
+bool function_is_autoloaded(const wcstring &name) {
+    scoped_lock locker(functions_lock);
+    const function_info_t *func = function_get(name);
+    return func->is_autoload;
 }
 
 int function_get_definition_offset(const wcstring &name) {

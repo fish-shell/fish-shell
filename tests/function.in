@@ -55,6 +55,5 @@ or echo "Function name3a not found as expected"
 echo Checking that the copied functions are identical other than the name
 diff (functions name1 | psub) (functions name1a | psub)
 diff (functions name3 | psub) (functions name3a | psub)
-# The diff would cause us to exit with a non-zero status even if it produces
-# the expected output.
+
 exit 0

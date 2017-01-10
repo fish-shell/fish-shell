@@ -1,0 +1,50 @@
+# vim: set filetype=fish:
+#
+# Test the `functions` builtin
+
+function f1
+end
+
+# ==========
+# Verify that `functions --file` works as expected when given too many args.
+set x (functions --file f1 f2 2>&1)
+if test "$x" != "functions: Expected exactly one function name for --file"
+    echo "Unexpected output for 'functions --file f1 f2': $x" >&2
+end
+
+# ==========
+# Verify that `functions --file` works as expected when given the name of a
+# known function.
+set x (functions --file f1)
+if test "$x" != "stdin"
+    echo "Unexpected output for 'functions --file f1': $x" >&2
+end
+
+# ==========
+# Verify that `functions --file` works as expected when given the name of an
+# unknown function.
+set x (functions -f f2)
+if test "$x" != "n/a"
+    echo "Unexpected output for 'functions --file f2': $x" >&2
+end
+
+# ==========
+# Verify that `functions --file` works as expected when given the name of a
+# function that could be autoloaded but isn't currently loaded.
+set x (functions -f abbr)
+if test (count $x) -ne 1
+or not string match -q '*/share/functions/abbr.fish' "$x"
+    echo "Unexpected output for 'functions -f abbr': $x" >&2
+end
+
+# ==========
+# Verify that `functions --verbose --file` works as expected when given the name of a
+# function that was autoloaded.
+set x (functions -v -f abbr)
+if test (count $x) -ne 4
+or not string match -q '*/share/functions/abbr.fish' $x[1]
+or test $x[2] != autoloaded
+or test $x[3] != 1
+or test $x[4] != scope-shadowing
+    echo "Unexpected output for 'functions -v -f abbr': $x" >&2
+end

@@ -1045,6 +1045,34 @@ static wcstring functions_def(const wcstring &name) {
     return out;
 }
 
+static int show_function_details(const wchar_t *funcname, bool verbose, io_streams_t &streams) {
+    const wchar_t *path = L"n/a";
+    const wchar_t *autoloaded = L"n/a";
+    const wchar_t *shadows_scope = L"n/a";
+    int line_number = 0;
+
+    if (function_exists(funcname)) {
+        path = function_get_definition_file(funcname);
+        if (path) {
+            autoloaded = function_is_autoloaded(funcname) ? L"autoloaded" : L"not-autoloaded";
+            line_number = function_get_definition_offset(funcname);
+        } else {
+            path = L"stdin";
+        }
+        shadows_scope =
+            function_get_shadow_scope(funcname) ? L"scope-shadowing" : L"no-scope-shadowing";
+    }
+
+    streams.out.append_format(L"%ls\n", path);
+    if (verbose) {
+        streams.out.append_format(L"%ls\n", autoloaded);
+        streams.out.append_format(L"%d\n", line_number);
+        streams.out.append_format(L"%ls\n", shadows_scope);
+    }
+
+    return STATUS_BUILTIN_OK;
+}
+
 /// The functions builtin, used for listing and erasing functions.
 static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
@@ -1058,17 +1086,20 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
     int res = STATUS_BUILTIN_OK;
     int query = 0;
     int copy = 0;
+    bool show_pathname = false;
+    bool verbose = false;
 
     static const struct woption long_options[] = {
-        {L"erase", no_argument, 0, 'e'}, {L"description", required_argument, 0, 'd'},
-        {L"names", no_argument, 0, 'n'}, {L"all", no_argument, 0, 'a'},
-        {L"help", no_argument, 0, 'h'},  {L"query", no_argument, 0, 'q'},
-        {L"copy", no_argument, 0, 'c'},  {0, 0, 0, 0}};
+        {L"erase", no_argument, NULL, 'e'},   {L"description", required_argument, NULL, 'd'},
+        {L"names", no_argument, NULL, 'n'},   {L"all", no_argument, NULL, 'a'},
+        {L"help", no_argument, NULL, 'h'},    {L"query", no_argument, NULL, 'q'},
+        {L"copy", no_argument, NULL, 'c'},    {L"file", no_argument, NULL, 'f'},
+        {L"verbose", no_argument, NULL, 'v'}, {NULL, 0, NULL, 0}};
 
     while (1) {
         int opt_index = 0;
 
-        int opt = w.wgetopt_long(argc, argv, L"ed:nahqc", long_options, &opt_index);
+        int opt = w.wgetopt_long(argc, argv, L"ed:fnahqcv", long_options, &opt_index);
         if (opt == -1) break;
 
         switch (opt) {
@@ -1079,8 +1110,16 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
                 builtin_print_help(parser, streams, argv[0], streams.err);
                 return STATUS_BUILTIN_ERROR;
             }
+            case 'v': {
+                verbose = true;
+                break;
+            }
             case 'e': {
                 erase = 1;
+                break;
+            }
+            case 'f': {
+                show_pathname = true;
                 break;
             }
             case 'd': {
@@ -1152,6 +1191,15 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
 
         function_set_desc(func, desc);
         return STATUS_BUILTIN_OK;
+    } else if (show_pathname) {
+        if (argc - w.woptind != 1) {
+            streams.err.append_format(_(L"%ls: Expected exactly one function name for --file\n"),
+                                      argv[0]);
+            return STATUS_BUILTIN_ERROR;
+        }
+
+        const wchar_t *funcname = argv[w.woptind];
+        return show_function_details(funcname, verbose, streams);
     } else if (list || (argc == w.woptind)) {
         int is_screen = !streams.out_is_redirected && isatty(STDOUT_FILENO);
         size_t i;

@@ -875,7 +875,7 @@ def get_paths_from_manpath():
         # HACK: Use some fallback in case we can't get anything else.
         # `mandoc` does not provide `manpath` or `man --path` and $MANPATH might not be set, so just use the default for mandoc (minus /usr/X11R6/man, because that's not relevant).
         # The alternative is reading its config file (/etc/man.conf)
-        sys.stderr.write("Unable to get the manpath, falling back to /usr/share/man:/usr/local/share/man. Please set $MANPATH if that is not correct.")
+        sys.stderr.write("Unable to get the manpath, falling back to /usr/share/man:/usr/local/share/man. Please set $MANPATH if that is not correct.\n")
         parent_paths = ["/usr/share/man", "/usr/local/share/man"]
     result = []
     for parent_path in parent_paths:

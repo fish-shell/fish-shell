@@ -1710,7 +1710,9 @@ void restore_term_foreground_process_group(void) {
     if (initial_fg_process_group != -1) {
         // This is called during shutdown and from a signal handler. We don't bother to complain on
         // failure.
-        tcsetpgrp(STDIN_FILENO, initial_fg_process_group);
+        if (tcsetpgrp(STDIN_FILENO, initial_fg_process_group) == -1 && errno == ENOTTY) {
+            redirect_tty_output();
+        }
     }
 }
 
@@ -1943,13 +1945,13 @@ bool fish_reserved_codepoint(wchar_t c) {
            (c >= INPUT_COMMON_BASE && c < INPUT_COMMON_END);
 }
 
-/// Reopen stdout and/or stderr on /dev/null. This is invoked when we find that our tty has become
-/// invalid.
+/// Reopen stdin, stdout and/or stderr on /dev/null. This is invoked when we find that our tty has
+/// become invalid.
 void redirect_tty_output() {
     struct termios t;
     int fd = open("/dev/null", O_WRONLY);
-    if (tcgetattr(STDIN_FILENO, &t) == -1) dup2(fd, STDIN_FILENO);
-    if (tcgetattr(STDOUT_FILENO, &t) == -1) dup2(fd, STDOUT_FILENO);
-    if (tcgetattr(STDERR_FILENO, &t) == -1) dup2(fd, STDERR_FILENO);
+    if (tcgetattr(STDIN_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDIN_FILENO);
+    if (tcgetattr(STDOUT_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDOUT_FILENO);
+    if (tcgetattr(STDERR_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDERR_FILENO);
     close(fd);
 }

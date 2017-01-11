@@ -820,7 +820,7 @@ static int terminal_return_from_job(job_t *j) {
 
     // Save jobs terminal modes.
     if (tcgetattr(STDIN_FILENO, &j->tmodes)) {
-        if (errno == ENOTTY) redirect_tty_output();
+        if (errno == EIO) redirect_tty_output();
         debug(1, _(L"Could not return shell to foreground"));
         wperror(L"tcgetattr");
         return 0;
@@ -832,7 +832,8 @@ static int terminal_return_from_job(job_t *j) {
 // https://github.com/fish-shell/fish-shell/issues/121
 #if 0
     // Restore the shell's terminal modes.
-    if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes)) {
+    if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
+        if (errno == EIO) redirect_tty_output();
         debug(1, _(L"Could not return shell to foreground"));
         wperror(L"tcsetattr");
         return 0;

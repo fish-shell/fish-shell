@@ -448,6 +448,22 @@ var additional_color_schemes = [
     redirection: 'FAFAFA'
 },
 
+{
+    'name': 'Dracula',
+    'preferred_background': '#282a36',
+
+    colors: ['282A36', '44475A', '44475A', 'F8F8F2', '6272A4', '8BE9FD', '50FA7B', 'FFB86C', 'FF79C6', 'BD93F9', 'FF5555', 'F1FA8C'],
+
+    autosuggestion: 'BD93F9',
+    command: 'F8F8F2',
+    comment: '6272A4',
+    end: '50FA7B',
+    error: 'FFB86C',
+    param: 'FF79C6',
+    quote: 'F1FA8C',
+    redirection: '8BE9FD'
+},
+
 construct_color_scheme_mono('Mono Lace', 'white', false),
 construct_color_scheme_mono('Mono Smoke', 'black', true)
 ];

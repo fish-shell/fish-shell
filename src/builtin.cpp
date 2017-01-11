@@ -1045,7 +1045,8 @@ static wcstring functions_def(const wcstring &name) {
     return out;
 }
 
-static int show_function_details(const wchar_t *funcname, bool verbose, io_streams_t &streams) {
+static int report_function_metadata(const wchar_t *funcname, bool verbose, io_streams_t &streams,
+        bool metadata_as_comments) {
     const wchar_t *path = L"n/a";
     const wchar_t *autoloaded = L"n/a";
     const wchar_t *shadows_scope = L"n/a";
@@ -1063,11 +1064,17 @@ static int show_function_details(const wchar_t *funcname, bool verbose, io_strea
             function_get_shadow_scope(funcname) ? L"scope-shadowing" : L"no-scope-shadowing";
     }
 
-    streams.out.append_format(L"%ls\n", path);
-    if (verbose) {
-        streams.out.append_format(L"%ls\n", autoloaded);
-        streams.out.append_format(L"%d\n", line_number);
-        streams.out.append_format(L"%ls\n", shadows_scope);
+    if (metadata_as_comments) {
+        if (path != L"stdin") {
+            streams.out.append_format(L"# Defined in %ls @ line %d\n", path, line_number);
+        }
+    } else {
+        streams.out.append_format(L"%ls\n", path);
+        if (verbose) {
+            streams.out.append_format(L"%ls\n", autoloaded);
+            streams.out.append_format(L"%d\n", line_number);
+            streams.out.append_format(L"%ls\n", shadows_scope);
+        }
     }
 
     return STATUS_BUILTIN_OK;
@@ -1086,20 +1093,20 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
     int res = STATUS_BUILTIN_OK;
     int query = 0;
     int copy = 0;
-    bool show_pathname = false;
+    bool report_metadata = false;
     bool verbose = false;
 
     static const struct woption long_options[] = {
         {L"erase", no_argument, NULL, 'e'},   {L"description", required_argument, NULL, 'd'},
         {L"names", no_argument, NULL, 'n'},   {L"all", no_argument, NULL, 'a'},
         {L"help", no_argument, NULL, 'h'},    {L"query", no_argument, NULL, 'q'},
-        {L"copy", no_argument, NULL, 'c'},    {L"file", no_argument, NULL, 'f'},
+        {L"copy", no_argument, NULL, 'c'},    {L"metadata", no_argument, NULL, 'm'},
         {L"verbose", no_argument, NULL, 'v'}, {NULL, 0, NULL, 0}};
 
     while (1) {
         int opt_index = 0;
 
-        int opt = w.wgetopt_long(argc, argv, L"ed:fnahqcv", long_options, &opt_index);
+        int opt = w.wgetopt_long(argc, argv, L"ed:mnahqcv", long_options, &opt_index);
         if (opt == -1) break;
 
         switch (opt) {
@@ -1118,8 +1125,8 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
                 erase = 1;
                 break;
             }
-            case 'f': {
-                show_pathname = true;
+            case 'm': {
+                report_metadata = true;
                 break;
             }
             case 'd': {
@@ -1191,15 +1198,15 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
 
         function_set_desc(func, desc);
         return STATUS_BUILTIN_OK;
-    } else if (show_pathname) {
+    } else if (report_metadata) {
         if (argc - w.woptind != 1) {
-            streams.err.append_format(_(L"%ls: Expected exactly one function name for --file\n"),
-                                      argv[0]);
+            streams.err.append_format(
+                    _(L"%ls: Expected exactly one function name for --metadata\n"), argv[0]);
             return STATUS_BUILTIN_ERROR;
         }
 
         const wchar_t *funcname = argv[w.woptind];
-        return show_function_details(funcname, verbose, streams);
+        return report_function_metadata(funcname, verbose, streams, false);
     } else if (list || (argc == w.woptind)) {
         int is_screen = !streams.out_is_redirected && isatty(STDOUT_FILENO);
         size_t i;
@@ -1272,8 +1279,9 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
         else {
             if (!query) {
                 if (i != w.woptind) streams.out.append(L"\n");
-
-                streams.out.append(functions_def(argv[i]));
+                const wchar_t *funcname = argv[w.woptind];
+                report_function_metadata(funcname, verbose, streams, true);
+                streams.out.append(functions_def(funcname));
             }
         }
     }

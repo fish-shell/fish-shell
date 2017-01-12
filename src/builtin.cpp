@@ -2192,14 +2192,17 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
     }
 
-    if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
+    // TODO: Determine if the original set of conditions for interactive reads should be reinstated:
+    // if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
+    int stream_stdin_is_a_tty = isatty(streams.stdin_fd);
+    if (stream_stdin_is_a_tty && !split_null) {
         // We should read interactively using reader_readline(). This does not support splitting on
         // null. The call to reader_readline may change woptind, so we save and restore it.
         int saved_woptind = w.woptind;
         exit_res =
             read_interactive(buff, nchars, shell, mode_name, prompt, right_prompt, commandline);
         w.woptind = saved_woptind;
-    } else if (!nchars && lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
+    } else if (!nchars && !stream_stdin_is_a_tty && lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
         exit_res = read_in_chunks(streams.stdin_fd, buff, split_null);
     } else {
         exit_res = read_one_char_at_a_time(streams.stdin_fd, buff, nchars, split_null);

@@ -30,10 +30,9 @@ Now fish should launch successfully. (Please open an issue if it does not.)
 
 This is only necessary on 10.6. OS X 10.7 and later include the required library by default.
 
-## Significant changes
+## Other significant changes
 
-- fish now requires C++11 to build. This affects some older platforms; please see the Platform changes section for more information.
-- Attempting to exit with running processes in the background produces a warning, then signals them to terminate if a second attempt to terminate them is made. This brings the behaviour for running background processes into line with stopped processes. (#3497)
+- Attempting to exit with running processes in the background produces a warning, then signals them to terminate if a second attempt to exit is made. This brings the behaviour for running background processes into line with stopped processes. (#3497)
 - `random` can now have start, stop and step values specified, or the new `choice` subcommand can be used to pick an argument from a list (#3619).
 - A new key bindings preset, `fish_hybrid_key_bindings`, including all the Emacs-style and Vi-style bindings, which behaves like `fish_vi_key_bindings` in fish 2.3.0 (#3556).
 - `function` now returns an error when called with invalid options, rather than defining the function anyway (#3574). This was a regression present in fish 2.3 and 2.4.0.
@@ -44,6 +43,7 @@ This is only necessary on 10.6. OS X 10.7 and later include the required library
 - `status` accepts subcommands, and should be used like `status is-interactive`. The old options continue to be supported for the foreseeable future (#3526), although only one subcommand or option can be specified at a time.
 - Selection mode (used with "begin-selection") no longer selects a character the cursor does not move over (#3684).
 - List indexes are handled better, and a bit more liberally in some cases (`echo $PATH[1 .. 3]` is now valid) (#3579).
+- The `fish_mode_prompt` function is now simply a stub around `fish_default_mode_prompt`, which allows the mode prompt to be included more easily in customised prompt functions (#3641).
 
 ## Notable fixes and improvements
 - `alias`, run without options or arguments, lists all defined aliases, and aliases now include a description in the function signature that identifies them.

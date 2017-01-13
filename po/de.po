@@ -1773,7 +1773,7 @@ msgid ""
 "The function call stack limit has been exceeded. Do you have an accidental "
 "infinite loop?"
 msgstr ""
-"Zu viele verschachtelte Funktionsaufrufe. Gibt es eine Endlosschleife?
+"Zu viele verschachtelte Funktionsaufrufe. Gibt es eine Endlosschleife?"
 
 #: src/parse_constants.h:233
 #, c-format

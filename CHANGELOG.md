@@ -1,4 +1,4 @@
-# fish 2.5b1 (released ???)
+# fish 2.5b1 (released January 14, 2017)
 
 ## Platform Changes
 

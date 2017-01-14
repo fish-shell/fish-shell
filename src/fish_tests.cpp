@@ -100,9 +100,9 @@ static int err_count = 0;
 static void say(const wchar_t *fmt, ...) {
     va_list va;
     va_start(va, fmt);
-    vwprintf(fmt, va);
+    vfwprintf(stdout, fmt, va);
     va_end(va);
-    wprintf(L"\n");
+    fwprintf(stdout, L"\n");
 }
 
 /// Print formatted error string.
@@ -118,8 +118,8 @@ static void err(const wchar_t *blah, ...) {
     if (colorize) {
         fputws(L"\e[31m", stdout);
     }
-    wprintf(L"Error: ");
-    vwprintf(blah, va);
+    fwprintf(stdout, L"Error: ");
+    vfwprintf(stdout, blah, va);
     va_end(va);
 
     // Return to normal color.
@@ -127,7 +127,7 @@ static void err(const wchar_t *blah, ...) {
         fputws(L"\e[0m", stdout);
     }
 
-    wprintf(L"\n");
+    fwprintf(stdout, L"\n");
 }
 
 /// Joins a wcstring_list_t via commas.
@@ -451,8 +451,8 @@ static void test_tokenizer() {
             }
             if (types[i] != token.type) {
                 err(L"Tokenization error:");
-                wprintf(L"Token number %zu of string \n'%ls'\n, got token type %ld\n", i + 1, str,
-                        (long)token.type);
+                fwprintf(stdout, L"Token number %zu of string \n'%ls'\n, got token type %ld\n",
+                         i + 1, str, (long)token.type);
             }
             i++;
         }
@@ -1726,7 +1726,8 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
         size_t char_idx = (motion == word_motion_left ? idx - 1 : idx);
         wchar_t wc = command.at(char_idx);
         bool will_stop = !sm.consume_char(wc);
-        // wprintf(L"idx %lu, looking at %lu (%c): %d\n", idx, char_idx, (char)wc, will_stop);
+        // fwprintf(stdout, L"idx %lu, looking at %lu (%c): %d\n", idx, char_idx, (char)wc,
+        //          will_stop);
         bool expected_stop = (stops.count(idx) > 0);
         if (will_stop != expected_stop) {
             wcstring tmp = command;
@@ -2211,15 +2212,15 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command,
     bool expects_error = (expected == L"<error>");
 
     if (comps.empty() && !expects_error) {
-        printf("line %ld: autosuggest_suggest_special() failed for command %ls\n", line,
-               command.c_str());
+        fwprintf(stderr, L"line %ld: autosuggest_suggest_special() failed for command %ls\n", line,
+                 command.c_str());
         do_test(!comps.empty());
         return;
     } else if (!comps.empty() && expects_error) {
-        printf(
-            "line %ld: autosuggest_suggest_special() was expected to fail but did not, for command "
-            "%ls\n",
-            line, command.c_str());
+        fwprintf(stderr,
+                 L"line %ld: autosuggest_suggest_special() was expected to fail but did not, "
+                 L"for command %ls\n",
+                 line, command.c_str());
         do_test(comps.empty());
     }
 
@@ -2228,11 +2229,12 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command,
         const completion_t &suggestion = comps.at(0);
 
         if (suggestion.completion != expected) {
-            printf(
-                "line %ld: complete() for cd returned the wrong expected string for command %ls\n",
+            fwprintf(
+                stderr,
+                L"line %ld: complete() for cd returned the wrong expected string for command %ls\n",
                 line, command.c_str());
-            printf("  actual: %ls\n", suggestion.completion.c_str());
-            printf("expected: %ls\n", expected.c_str());
+            fwprintf(stderr, L"  actual: %ls\n", suggestion.completion.c_str());
+            fwprintf(stderr, L"expected: %ls\n", expected.c_str());
             do_test(suggestion.completion == expected);
         }
     }
@@ -2347,8 +2349,9 @@ static void perform_one_autosuggestion_should_ignore_test(const wcstring &comman
     do_test(comps.empty());
     if (!comps.empty()) {
         const wcstring &suggestion = comps.front().completion;
-        printf("line %ld: complete() expected to return nothing for %ls\n", line, command.c_str());
-        printf("  instead got: %ls\n", suggestion.c_str());
+        fwprintf(stderr, L"line %ld: complete() expected to return nothing for %ls\n", line,
+                 command.c_str());
+        fwprintf(stderr, L"  instead got: %ls\n", suggestion.c_str());
     }
 }
 
@@ -3136,7 +3139,7 @@ void history_tests_t::test_history_speed(void)
         if (stop >= end)
             break;
     }
-    printf("%lu items - %.2f msec per item\n", (unsigned long)count, (stop - start) * 1E6 / count);
+    fwprintf(stdout, L"%lu items - %.2f msec per item\n", (unsigned long)count, (stop - start) * 1E6 / count);
     hist->clear();
     delete hist;
 }

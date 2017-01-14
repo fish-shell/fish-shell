@@ -162,11 +162,11 @@ wcstring event_get_desc(const event_t &e) {
 
 #if 0
 static void show_all_handlers(void) {
-    wprintf(L"event handlers:\n");
+    fwprintf(stdout, L"event handlers:\n");
     for (event_list_t::const_iterator iter = events.begin(); iter != events.end(); ++iter) {
         const event_t *foo = *iter;
         wcstring tmp = event_get_desc(foo);
-        wprintf(L"    handler now %ls\n", tmp.c_str());
+        fwprintf(stdout, L"    handler now %ls\n", tmp.c_str());
     }
 }
 #endif

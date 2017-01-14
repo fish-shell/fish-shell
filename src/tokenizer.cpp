@@ -489,7 +489,7 @@ void tokenizer_t::tok_next() {
     }
 
     if (!this->has_next) {
-        // wprintf( L"EOL\n" );
+        // fwprintf(stdout, L"EOL\n" );
         this->last_type = TOK_END;
         return;
     }
@@ -666,7 +666,7 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
         s_end
     };
 
-    // wprintf(L"state %d, consume '%lc'\n", state, c);
+    // fwprintf(stdout, L"state %d, consume '%lc'\n", state, c);
     bool consumed = false;
     while (state != s_end && !consumed) {
         switch (state) {

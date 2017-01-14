@@ -80,9 +80,9 @@ void print_jobs(void)
     job_iterator_t jobs;
     job_t *j;
     while (j = jobs.next()) {
-        wprintf("%p -> %ls -> (foreground %d, complete %d, stopped %d, constructed %d)\n",
-                j, j->command_wcstr(), job_get_flag(j, JOB_FOREGROUND), job_is_completed(j),
-                job_is_stopped(j), job_get_flag(j, JOB_CONSTRUCTED));
+        fwprintf(stdout, L"%p -> %ls -> (foreground %d, complete %d, stopped %d, constructed %d)\n",
+                 j, j->command_wcstr(), job_get_flag(j, JOB_FOREGROUND), job_is_completed(j),
+                 job_is_stopped(j), job_get_flag(j, JOB_CONSTRUCTED));
     }
 }
 #endif
@@ -944,7 +944,7 @@ void job_continue(job_t *j, bool cont) {
             // and it is not a short circuited builtin.
             if ((WIFEXITED(p->status) || WIFSIGNALED(p->status)) && p->pid) {
                 int status = proc_format_status(p->status);
-                // wprintf(L"setting status %d for %ls\n", job_get_flag( j, JOB_NEGATE
+                // fwprintf(stdout, L"setting status %d for %ls\n", job_get_flag( j, JOB_NEGATE
                 // )?!status:status, j->command);
                 proc_set_last_status(job_get_flag(j, JOB_NEGATE) ? !status : status);
             }

@@ -183,7 +183,7 @@ static void output_info_about_char(wchar_t wc) {
 static bool output_matching_key_name(wchar_t wc) {
     char *name = sequence_name(wc);
     if (name) {
-        wprintf(L"bind -k %s 'do something'\n", name);
+        fwprintf(stdout, L"bind -k %s 'do something'\n", name);
         free(name);
         return true;
     }

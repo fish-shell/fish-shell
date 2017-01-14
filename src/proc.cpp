@@ -792,19 +792,32 @@ static void read_try(job_t *j) {
 /// \param cont If this variable is set, we are giving back control to a job that has previously
 /// been stopped. In that case, we need to set the terminal attributes to those saved in the job.
 static bool terminal_give_to_job(job_t *j, int cont) {
-    if (tcsetpgrp(STDIN_FILENO, j->pgid) == -1) {
+    int result = -1;
+    errno = EINTR;
+    while (result == -1 && errno == EINTR) {
+        result = tcsetpgrp(STDIN_FILENO, j->pgid);
+    }
+    if (result == -1) {
         if (errno == ENOTTY) redirect_tty_output();
         debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
         wperror(L"tcsetpgrp");
         return false;
     }
 
-    if (cont && tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes)) {
+    if (cont) {
+    int result = -1;
+    errno = EINTR;
+    while (result == -1 && errno == EINTR) {
+        result = tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes);
+    }
+    if (result == -1) {
         if (errno == ENOTTY) redirect_tty_output();
-        debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
+        debug(1, _(L"terminal_give_to_job(): Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
         wperror(L"tcsetattr");
         return false;
     }
+    }
+
     return true;
 }
 

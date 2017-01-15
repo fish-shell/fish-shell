@@ -886,6 +886,7 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
 #elif defined(HAVE_GETIFADDRS)
 
 // OS X and BSD
+#include <sys/socket.h>
 #include <ifaddrs.h>
 #include <net/if_dl.h>
 static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],

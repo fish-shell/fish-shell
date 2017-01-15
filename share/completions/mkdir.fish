@@ -2,7 +2,7 @@
 # Checks if we are using GNU tools
 if mkdir --version > /dev/null ^ /dev/null
     complete -c mkdir -l version --description 'Output version'
-    complete -c mkdir -s m -l mode --description 'Set file mode (as in chmod)' -x	
+    complete -c mkdir -s m -l mode --description 'Set file mode (as in chmod)' -x
     complete -c mkdir -s p -l parents --description 'Make parent directories as needed'
     complete -c mkdir -s v -l verbose --description 'Print a message for each created directory'
     complete -c mkdir -l help --description 'Display help'

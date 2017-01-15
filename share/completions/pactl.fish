@@ -23,7 +23,7 @@ function __fish_pa_print_type
 	pactl list short $argv
 	# Pa allows both a numerical index and a name
 	pactl list short $argv | string replace -r  '(\w+)\t.*' '$1'
-end 
+end
 
 function __fish_pa_list_ports
 	# Yes, this is localized

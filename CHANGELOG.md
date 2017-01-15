@@ -506,7 +506,7 @@ Bug Fixes
 * **fish_indent is fixed.** In particular, the `funced` and `funcsave` functions work again.
 * A SIGTERM now ends the whole execution stack again (resolving #13).
 * Bumped the __fish_config_interactive version number so the default fish_color_autosuggestion kicks in.
-* fish_config better handles combined term256 and classic colors like "555 yellow". 
+* fish_config better handles combined term256 and classic colors like "555 yellow".
 
 New Features
 ------------
@@ -564,4 +564,4 @@ The large number of forks relative to bash are due to fish's insanely expensive 
 
 The large reduction in lstat() numbers is due to fish no longer needing to call ttyname() on OS X.
 
-We've got some work to do to be as lean as bash, but we're on the right track. 
+We've got some work to do to be as lean as bash, but we're on the right track.

@@ -249,7 +249,7 @@ show-%:
 #
 all: show-CXX show-CXXFLAGS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
 ifneq (,$(findstring install,$(MAKECMDGOALS)))
-# Fish has been built, but if the goal was 'install', we aren't done yet and this output isnt't desirable 
+# Fish has been built, but if the goal was 'install', we aren't done yet and this output isnt't desirable
 	@echo "$(green)fish has now been built.$(sgr0)"
 	@echo "Run $(yellow)$(notdir $(MAKE)) install$(sgr0) to install fish.$(sgr0)"
 endif
@@ -465,7 +465,7 @@ lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 	else \
 		WORDBL='\\<'; WORDBR='\\>'; \
 	fi; $(SED) <lexicon.txt >>$@.tmp -n -e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" -e '$$G;s/.*\n/b tidy/p';
-	$v mv $@.tmp $@; test -x $@ || chmod a+x $@; 
+	$v mv $@.tmp $@; test -x $@ || chmod a+x $@;
 
 
 #
@@ -608,7 +608,7 @@ check-legacy-binaries:
 .PHONY: check-legacy-binaries
 
 install: all install-force | check-legacy-binaries
-	@echo 
+	@echo
 	@echo "$(bo)fish is now installed on your system.$(sgr0)"
 	@echo "To run fish, type $(bo)$(green)fish$(sgr0) in your terminal."
 	@echo "$(T_YELLOW)Even if you are already in fish, you should now start a new fish session.$(sgr0)"
@@ -744,7 +744,7 @@ uninstall: uninstall-translations | show-prefix show-bindir show-sysconfdir show
 	@echo
 	@echo "In 5 seconds, $(red)all data$(sgr0) (includes functions, completions, tools) in"
 	@echo $$"\t$(bo)$(DESTDIR)$(datadir)/fish$(sgr0) will be deleted!"
-	@echo 
+	@echo
 	@echo $$"If you put things there, $(red)stop now!$(sgr0) $(bo)\\c"
 	@echo $$"$(bo)5$(sgr0) \\c"
 	@sleep 1
@@ -777,7 +777,7 @@ uninstall: uninstall-translations | show-prefix show-bindir show-sysconfdir show
 	@echo "[ $(bo)"$(basename $(MANUALS))$(sgr0) $$"] in \\c"
 	@echo "$(em)$(mandir)/man1$(sgr0)"
 	-$v for i in $(MANUALS); do \
-		rm -rf "$(DESTDIR)$(mandir)/man1/"$$$(basename $i)$$$(wildcard .*); 
+		rm -rf "$(DESTDIR)$(mandir)/man1/"$$$(basename $i)$$$(wildcard .*);
 	done;
 	@echo
 	@echo "$(green)Fish (likely) unintalled$(sgr0)"
@@ -806,7 +806,7 @@ uninstall-translations: show-DESTDIR show-localedir
 #
 # How basic files get compiled
 #
-obj/%.o: src/%.cpp | show-CXX show-CXXFLAGS show-CPPFLAGS obj 
+obj/%.o: src/%.cpp | show-CXX show-CXXFLAGS show-CPPFLAGS obj
 	@echo "  CXX      $(em)$@$(sgr0)"
 	$v $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
@@ -847,7 +847,7 @@ fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
 	$v $(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 #
-# Build the fish_key_reader program to show input from the terminal. 
+# Build the fish_key_reader program to show input from the terminal.
 #
 fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
 	@echo "  CXX LD   $(em)$@$(sgr0)"
@@ -864,7 +864,7 @@ fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
 # exactly the files that result in objects, leaving the #include'd files
 # behind.
 #
-depend: | show-MKDIR_P 
+depend: | show-MKDIR_P
 	@echo "  CXX LD   $(em)$@$(sgr0)"
 	$v $(MKDIR_P) /tmp/fish_make_depend/src
 	# This is ran only once in a blue moon - full verbosity so we are reminded what it does.

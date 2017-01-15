@@ -3,7 +3,7 @@
 # =========================
 #
 # Adrien Grellier <adrien.grellier@laposte.net>
-# 
+#
 
 function __fish_vim-addons_subcommand  --description 'Test if vim-addons has yet to be given the subcommand'
 	for i in (commandline -opc)

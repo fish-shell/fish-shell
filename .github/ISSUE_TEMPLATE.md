@@ -4,9 +4,9 @@
 
 **fish version installed** *(`fish --version`)*:
 
-**OS/terminal used**: 
+**OS/terminal used**:
 
-Talk about the the issue here. 
+Talk about the the issue here.
 
 ## Reproduction steps
 1. step one

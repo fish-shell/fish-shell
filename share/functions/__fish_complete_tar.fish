@@ -21,7 +21,7 @@ function __fish_complete_tar -d "Peek inside of archives and list all files"
                     printf (_ "%s\tArchived file\n") $file_list
                 end
                 return
-                
+
             case '*.tar.xz'
                 if test -f $i
                     set -l file_list (tar -Jt <$i)

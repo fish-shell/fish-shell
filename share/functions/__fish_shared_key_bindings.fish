@@ -22,6 +22,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind $argv \eOC forward-char
     bind $argv \eOD backward-char
 
+    bind $argv -k ppage beginning-of-history
+    bind $argv -k npage end-of-history
+
     # Interaction with the system clipboard.
     bind $argv \cx fish_clipboard_copy
     bind $argv \cv fish_clipboard_paste

@@ -38,7 +38,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # bump this to 2_4_0 when rolling release if anything changes after 9/10/2016
     if not set -q __fish_init_2_39_8
         # Regular syntax highlighting colors
-        # XXX - not quite the same as default colors in web config. Sync these up. 
+        # XXX - not quite the same as default colors in web config. Sync these up.
         set -q fish_color_normal
         or set -U fish_color_normal normal
         set -q fish_color_command

@@ -1,6 +1,6 @@
-complete -f -c yast2 -a '(yast2 -l)' -d 'Module' 
+complete -f -c yast2 -a '(yast2 -l)' -d 'Module'
 
-complete -f -c yast2 -s h -l help           -d 'Show help' 
+complete -f -c yast2 -s h -l help           -d 'Show help'
 complete -f -c yast2 -s l -l list           -d 'List all available modules'
 complete -f -c yast2      -l qt             -d 'Use the QT graphical user interface'
 complete -f -c yast2      -l gtk            -d 'Use the GTK graphical user interface'

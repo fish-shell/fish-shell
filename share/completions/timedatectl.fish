@@ -1,4 +1,4 @@
-set -l commands status set-time{,zone} list-timezones set-local-rtc set-ntp 
+set -l commands status set-time{,zone} list-timezones set-local-rtc set-ntp
 
 complete -c timedatectl -f
 complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a "status"

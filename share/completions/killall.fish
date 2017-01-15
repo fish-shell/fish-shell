@@ -42,9 +42,9 @@ if test (uname) != 'SunOS'
 		complete -c killall -s s -d 'Simulate, but do not send any signals'
 		complete -c killall -s d -d 'Print detailed info. Doesn\'t send signals'
 		complete -c killall -s u -x -d 'Only processes for USER'
-		# Completions for users 
+		# Completions for users
 		__make_users_completions
-		complete -c killall -s t -d 'Limit to processes running on specified TTY' 
+		complete -c killall -s t -d 'Limit to processes running on specified TTY'
 		complete -c killall -s t -xa "(ps a -o tty | sed 1d | uniq)"
 		complete -c killall -s c -x -d 'Limit to processes matching specified PROCNAME'
 		complete -c killall -s z -d 'Do not skip zombies'

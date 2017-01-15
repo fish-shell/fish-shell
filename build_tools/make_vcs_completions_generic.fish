@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 #
-# This file provides generic functions for generating specific completions for 
-# hg, darcs and a few other vcs systems. It uses the fact that all these 
+# This file provides generic functions for generating specific completions for
+# hg, darcs and a few other vcs systems. It uses the fact that all these
 # systems have a somewhat uniform command line help mechanism.
 #
 

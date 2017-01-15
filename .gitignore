@@ -88,7 +88,7 @@ messages.pot
 /tests/*.tmp.*
 /share/pkgconfig
 
-# xcode 
+# xcode
 ## Build generated
 build/
 DerivedData/

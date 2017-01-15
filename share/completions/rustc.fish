@@ -2,7 +2,7 @@
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 complete -e -c rustc
 
-complete -c rustc -s h -l help 
+complete -c rustc -s h -l help
 
 complete -c rustc -x -l cfg
 complete -c rustc -r -s L -a 'dylib= static= framework='

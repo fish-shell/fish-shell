@@ -19,4 +19,4 @@ else # OS X
 	complete -c date -s u -d 'Display or set the date int UTC time'
 	complete -c date -s v -d 'Adjust the time component backward(-)/forward(+) according to VAL' -x
 end
-	
+

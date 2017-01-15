@@ -3,7 +3,7 @@
 function __fish_mkinitcpio_complete_hooks
 	mkinitcpio --listhooks | tail -n +2 | sed -e "s/^[¹²³].*//" -e "s/\t\+/\n/g" | sed -e "s/^\([^[:space:]]\+\)[¹²³]\$/\1\t(deprecated)/g"
 end
-	
+
 complete -c mkinitcpio -s A -l addhooks -d 'Add the additional hooks to the image' -a "(__fish_mkinitcpio_complete_hooks)" -f
 complete -c mkinitcpio -s c -l config -d 'Use config file to generate the ramdisk'
 complete -c mkinitcpio -s d -l generatedir -d 'Set directory as the location where the initramfs is built'

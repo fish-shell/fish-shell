@@ -659,7 +659,7 @@ if test "x$included_pcre2" = "xyes"; then
   AC_MSG_NOTICE([using included PCRE2 library])
   # unfortunately these get added to the global configuration
   ac_configure_args="$ac_configure_args --disable-pcre2-8 --enable-pcre2-$WCHAR_T_BITS --disable-shared"
-  AC_CONFIG_SUBDIRS([pcre2-10.21])
+  AC_CONFIG_SUBDIRS([pcre2-10.22])
 
   PCRE2_CXXFLAGS='-I$(PCRE2_DIR)/src'
   PCRE2_LIBS='-L$(PCRE2_LIBDIR) -lpcre2-$(PCRE2_WIDTH)'

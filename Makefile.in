@@ -70,7 +70,7 @@ extra_confdir = @extra_confdir@
 # pcre2
 #
 PCRE2_WIDTH = @WCHAR_T_BITS@
-PCRE2_DIR = pcre2-10.21
+PCRE2_DIR = pcre2-10.22
 PCRE2_LIBDIR = $(PCRE2_DIR)/.libs
 PCRE2_LIB = $(PCRE2_LIBDIR)/libpcre2-$(PCRE2_WIDTH).a
 PCRE2_H = $(PCRE2_DIR)/src/pcre2.h

@@ -817,7 +817,7 @@
 				D04F7FF71BA4E82C00B0F227 /* pcre2_chartables.c.dist */,
 			);
 			name = pcre;
-			path = "pcre2-10.21/src";
+			path = "pcre2-10.22/src";
 			sourceTree = SOURCE_ROOT;
 		};
 		D08A328E17B4455100F3A533 /* fish_tests */ = {

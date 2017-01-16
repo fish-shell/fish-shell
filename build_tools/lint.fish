@@ -135,14 +135,14 @@ if set -q c_files[1]
                 oclint-xcodebuild xcodebuild.log >/dev/null
             end
             if test $all = yes
-                oclint-json-compilation-database -e '/pcre2-10.21/' -- -enable-global-analysis 2>&1
+                oclint-json-compilation-database -e '/pcre2-10.22/' -- -enable-global-analysis 2>&1
             else
                 set i_files
                 for f in $c_files
                     set i_files $i_files -i $f
                 end
-                echo oclint-json-compilation-database -e '/pcre2-10.21/' $i_files
-                oclint-json-compilation-database -e '/pcre2-10.21/' $i_files 2>&1
+                echo oclint-json-compilation-database -e '/pcre2-10.22/' $i_files
+                oclint-json-compilation-database -e '/pcre2-10.22/' $i_files 2>&1
             end
         else
             # Presumably we're on Linux or other platform not requiring special

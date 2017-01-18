@@ -847,4 +847,13 @@ using std::wcsncasecmp;
 
 #endif
 
-void redirect_tty_output(void);
+// Minimum allowed terminal size and default size if the detected size is not reasonable.
+#define MIN_TERM_COL 20
+#define MIN_TERM_ROW 2
+#define DFLT_TERM_COL 80
+#define DFLT_TERM_ROW 24
+#define DFLT_TERM_COL_STR L"80"
+#define DFLT_TERM_ROW_STR L"24"
+void redirect_tty_output();
+void invalidate_termsize();
+struct winsize get_current_winsize();

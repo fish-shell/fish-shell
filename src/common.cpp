@@ -7,7 +7,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -33,8 +32,10 @@
 #include <memory>  // IWYU pragma: keep
 
 #include "common.h"
+#include "env.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "proc.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -62,9 +63,9 @@ static pid_t initial_fg_process_group = -1;
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
 /// common_get_width()/common_get_height().
-static struct winsize termsize;
-static volatile bool termsize_valid;
-static rwlock_t termsize_rwlock;
+static pthread_mutex_t termsize_lock = PTHREAD_MUTEX_INITIALIZER;
+static struct winsize termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
+static volatile bool termsize_valid = false;
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
 static void debug_shared(const wchar_t msg_level, const wcstring &msg);
@@ -1356,32 +1357,97 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
     return success;
 }
 
-void common_handle_winch(int signal) {
-    // Don't run ioctl() here, it's not safe to use in signals.
-    UNUSED(signal);
+/// Used to invalidate our idea of having a valid window size. This can occur when either the
+/// COLUMNS or LINES variables are changed. This is also invoked when the shell regains control of
+/// the tty since it is possible the terminal size changed while an external command was running.
+void invalidate_termsize(bool invalidate_vars) {
     termsize_valid = false;
+    if (invalidate_vars) {
+        termsize.ws_col = termsize.ws_row = USHRT_MAX;
+    }
+}
+
+/// Handle SIGWINCH. This is also invoked when the shell regains control of the tty since it is
+/// possible the terminal size changed while an external command was running.
+void common_handle_winch(int signal) {
+    // Don't run ioctl() here. Technically it's not safe to use in signals although in practice it
+    // is safe on every platform I've used. But we want to be conservative on such matters.
+    UNUSED(signal);
+    invalidate_termsize(false);
+}
+
+/// Validate the new terminal size. Fallback to the env vars if necessary. Ensure the values are
+/// sane and if not fallback to a default of 80x24.
+static void validate_new_termsize(struct winsize *new_termsize) {
+    if (new_termsize->ws_col == 0 || new_termsize->ws_row == 0) {
+#ifdef HAVE_WINSIZE
+        if (shell_is_interactive()) {
+            debug(1, _(L"Current terminal parameters have rows and/or columns set to zero."));
+            debug(1, _(L"The stty command can be used to correct this "
+                       L"(e.g., stty rows 80 columns 24)."));
+        }
+#endif
+        // Fallback to the environment vars.
+        env_var_t col_var = env_get_string(L"COLUMNS");
+        env_var_t row_var = env_get_string(L"LINES");
+        if (!col_var.missing_or_empty() && !row_var.missing_or_empty()) {
+            // Both vars have to have valid values.
+            int col = fish_wcstoi(col_var.c_str());
+            bool col_ok = errno == 0 && col > 0 && col <= USHRT_MAX;
+            int row = fish_wcstoi(row_var.c_str());
+            bool row_ok = errno == 0 && row > 0 && row <= USHRT_MAX;
+            if (col_ok && row_ok) {
+                new_termsize->ws_col = col;
+                new_termsize->ws_row = row;
+            }
+        }
+    }
+
+    if (new_termsize->ws_col < MIN_TERM_COL || new_termsize->ws_row < MIN_TERM_ROW) {
+        if (shell_is_interactive()) {
+            debug(1, _(L"Current terminal parameters set terminal size to unreasonable value."));
+            debug(1, _(L"Defaulting terminal size to 80x24."));
+        }
+        new_termsize->ws_col = DFLT_TERM_COL;
+        new_termsize->ws_row = DFLT_TERM_ROW;
+    }
+}
+
+/// Export the new terminal size as env vars and to the kernel if possible.
+static void export_new_termsize(struct winsize *new_termsize) {
+    wchar_t buf[64];
+    swprintf(buf, 64, L"%d", (int)new_termsize->ws_col);
+    env_set(L"COLUMNS", buf, ENV_EXPORT | ENV_GLOBAL);
+    swprintf(buf, 64, L"%d", (int)new_termsize->ws_row);
+    env_set(L"LINES", buf, ENV_EXPORT | ENV_GLOBAL);
+
+#ifdef HAVE_WINSIZE
+    ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);
+#endif
 }
 
 /// Updates termsize as needed, and returns a copy of the winsize.
-static struct winsize get_current_winsize() {
-#ifndef HAVE_WINSIZE
-    struct winsize retval = {0};
-    retval.ws_col = 80;
-    retval.ws_row = 24;
-    return retval;
-#endif
-    scoped_rwlock guard(termsize_rwlock, true);
-    struct winsize retval = termsize;
-    if (!termsize_valid) {
-        struct winsize size;
-        if (ioctl(1, TIOCGWINSZ, &size) == 0) {
-            retval = size;
-            guard.upgrade();
-            termsize = retval;
-        }
+struct winsize get_current_winsize() {
+    scoped_lock guard(termsize_lock);
+
+    if (termsize_valid) return termsize;
+
+    struct winsize new_termsize = {0, 0, 0, 0};
+#ifdef HAVE_WINSIZE
+    errno = 0;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_termsize) != -1 &&
+        new_termsize.ws_col == termsize.ws_col && new_termsize.ws_row == termsize.ws_row) {
         termsize_valid = true;
+        return termsize;
     }
-    return retval;
+#endif
+
+    validate_new_termsize(&new_termsize);
+    export_new_termsize(&new_termsize);
+    termsize.ws_col = new_termsize.ws_col;
+    termsize.ws_row = new_termsize.ws_row;
+    termsize_valid = true;
+    return termsize;
 }
 
 int common_get_width() { return get_current_winsize().ws_col; }

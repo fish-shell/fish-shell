@@ -357,7 +357,7 @@ static void term_steal() {
             break;
     }
 
-    common_handle_winch(0);
+    invalidate_termsize();
 }
 
 int reader_exit_forced() { return exit_forced; }
@@ -1644,7 +1644,7 @@ static void reader_interactive_init() {
         exit_without_destructors(1);
     }
 
-    common_handle_winch(0);
+    invalidate_termsize();
 
     // Set the new modes.
     if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {

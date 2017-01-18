@@ -1,8 +1,6 @@
 function __fish_print_interfaces --description "Print a list of known network interfaces"
     if test -d /sys/class/net
-        for i in /sys/class/net/*
-            basename $i
-        end
+        string replace /sys/class/net/ '' /sys/class/net/*
     else # OSX/BSD
         command ifconfig -l | string split ' '
     end

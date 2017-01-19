@@ -315,6 +315,8 @@ static void react_to_variable_change(const wcstring &key) {
         reader_react_to_color_change();
     } else if (key == L"fish_escape_delay_ms") {
         update_wait_on_escape_ms();
+    } else if (key == L"LINES" || key == L"COLUMNS") {
+        invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
     }
 }
 

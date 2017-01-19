@@ -1360,9 +1360,11 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
 /// Used to invalidate our idea of having a valid window size. This can occur when either the
 /// COLUMNS or LINES variables are changed. This is also invoked when the shell regains control of
 /// the tty since it is possible the terminal size changed while an external command was running.
-void invalidate_termsize() {
+void invalidate_termsize(bool invalidate_vars) {
     termsize_valid = false;
-    termsize.ws_col = termsize.ws_row = 0;
+    if (invalidate_vars) {
+        termsize.ws_col = termsize.ws_row = USHRT_MAX;
+    }
 }
 
 /// Handle SIGWINCH. This is also invoked when the shell regains control of the tty since it is
@@ -1371,7 +1373,7 @@ void common_handle_winch(int signal) {
     // Don't run ioctl() here. Technically it's not safe to use in signals although in practice it
     // is safe on every platform I've used. But we want to be conservative on such matters.
     UNUSED(signal);
-    invalidate_termsize();
+    invalidate_termsize(false);
 }
 
 /// Validate the new terminal size. Fallback to the env vars if necessary. Ensure the values are
@@ -1379,7 +1381,10 @@ void common_handle_winch(int signal) {
 static void validate_new_termsize(struct winsize *new_termsize) {
     if (new_termsize->ws_col == 0 || new_termsize->ws_row == 0) {
 #ifdef HAVE_WINSIZE
-        if (shell_is_interactive()) debug(1, _(L"the terminal reports cols and/or rows is zero"));
+        if (shell_is_interactive()) {
+            debug(1, _(L"The terminal reports cols and/or rows is zero."));
+            debug(1, _(L"You should use the stty command to set appropriate values."));
+        }
 #endif
         // Fallback to the environment vars.
         env_var_t col_var = env_get_string(L"COLUMNS");
@@ -1425,6 +1430,7 @@ struct winsize get_current_winsize() {
 
     struct winsize new_termsize = {0, 0, 0, 0};
 #ifdef HAVE_WINSIZE
+    errno = 0;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_termsize) != -1 &&
         new_termsize.ws_col == termsize.ws_col && new_termsize.ws_row == termsize.ws_row) {
         termsize_valid = true;

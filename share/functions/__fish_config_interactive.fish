@@ -230,14 +230,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
             and return
             printf \e\]7\;file://\%s\%s\a (hostname) (echo -n $PWD | __fish_urlencode)
         end
-        if test "$TERM_PROGRAM" = "Apple_Terminal"
-            # Suppress duplicative title display on Terminal.app
-            if not functions -q fish_title
-                echo -n \e\]0\;\a # clear existing title
-                function fish_title -d 'no-op terminal title'
-                end
-            end
-        end
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end
 

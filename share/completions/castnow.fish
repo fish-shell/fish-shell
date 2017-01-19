@@ -15,7 +15,7 @@ complete -c castnow -l subtitles-color -d "Set subtitles font RGBA color" -x
 complete -c castnow -l subtitles-port -d "Specify port to be used for serving subtitles" -x
 complete -c castnow -l myip -d "Set local IP" -x
 complete -c castnow -l quiet -d "No output"
-complete -c castnow -l type -d "Explicitly set the mime-type" -a "(__fish_print_xdg_mimetypes | string match -r 'video/.*')" -x
+complete -c castnow -l type -d "Explicitly set the mime-type" -a "(__fish_print_xdg_mimetypes | string match -r '^video/.*')" -x
 complete -c castnow -l bypass-srt-encoding -d "Disable automatic UTF-8 encoding of SRT subtitles"
 complete -c castnow -l seek -d "Seek to specified time (format: [hh:]mm:ss)" -x
 complete -c castnow -l loop -d "Loop over playlist, or file"

@@ -527,7 +527,7 @@ complete -f -c git -n '__fish_git_using_command push' -l tags -d 'Push all refs 
 complete -f -c git -n '__fish_git_using_command push' -s n -l dry-run -d 'Do everything except actually send the updates'
 complete -f -c git -n '__fish_git_using_command push' -l porcelain -d 'Produce machine-readable output'
 complete -f -c git -n '__fish_git_using_command push' -s f -l force -d 'Force update of remote refs'
-complete -f -c git -n '__fish_git_using_command push' -s u -l set-upstream-to -d 'Add upstream (tracking) reference'
+complete -f -c git -n '__fish_git_using_command push' -s u -l set-upstream -d 'Add upstream (tracking) reference'
 complete -f -c git -n '__fish_git_using_command push' -s q -l quiet -d 'Be quiet'
 complete -f -c git -n '__fish_git_using_command push' -s v -l verbose -d 'Be verbose'
 complete -f -c git -n '__fish_git_using_command push' -l progress -d 'Force progress status'

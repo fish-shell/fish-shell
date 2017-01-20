@@ -315,6 +315,8 @@ static void react_to_variable_change(const wcstring &key) {
         reader_react_to_color_change();
     } else if (key == L"fish_escape_delay_ms") {
         update_wait_on_escape_ms();
+    } else if (key == L"LINES" || key == L"COLUMNS") {
+        invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
     }
 }
 
@@ -357,15 +359,25 @@ static void setup_path() {
     }
 }
 
-int env_set_pwd() {
+/// Initialize the `COLUMNS` and `LINES` env vars if they don't already exist to reasonable
+/// defaults. They will be updated later by the `get_current_winsize()` function if they need to be
+/// adjusted.
+static void env_set_termsize() {
+    env_var_t cols = env_get_string(L"COLUMNS");
+    if (cols.missing_or_empty()) env_set(L"COLUMNS", DFLT_TERM_COL_STR, ENV_EXPORT | ENV_GLOBAL);
+    env_var_t rows = env_get_string(L"LINES");
+    if (rows.missing_or_empty()) env_set(L"LINES", DFLT_TERM_ROW_STR, ENV_EXPORT | ENV_GLOBAL);
+}
+
+bool env_set_pwd() {
     wcstring res = wgetcwd();
     if (res.empty()) {
         debug(0,
               _(L"Could not determine current working directory. Is your locale set correctly?"));
-        return 0;
+        return false;
     }
     env_set(L"PWD", res.c_str(), ENV_EXPORT | ENV_GLOBAL);
-    return 1;
+    return true;
 }
 
 wcstring env_get_pwd_slash(void) {
@@ -400,7 +412,7 @@ static void setup_user(bool force) {
 void env_init(const struct config_paths_t *paths /* or NULL */) {
     // These variables can not be altered directly by the user.
     const wchar_t *const ro_keys[] = {
-        L"status", L"history", L"_", L"LINES", L"COLUMNS", L"PWD", L"FISH_VERSION",
+        L"status", L"history", L"_", L"PWD", L"FISH_VERSION",
         // L"SHLVL" is readonly but will be inserted below after we increment it.
     };
     for (size_t i = 0; i < sizeof ro_keys / sizeof *ro_keys; i++) {
@@ -411,8 +423,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     env_electric.insert(L"history");
     env_electric.insert(L"status");
     env_electric.insert(L"umask");
-    env_electric.insert(L"COLUMNS");
-    env_electric.insert(L"LINES");
 
     top = new env_node_t;
     global_env = top;
@@ -496,8 +506,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         free(unam_narrow);
     }
 
-    // Set PWD.
-    env_set_pwd();
+    env_set_pwd();       // initialize the PWD variable
+    env_set_termsize();  // initialize the terminal size variables
 
     // Set up universal variables. The empty string means to use the deafult path.
     assert(s_universal_variables == NULL);
@@ -815,10 +825,6 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
             }
             if (history) history->get_string_representation(&result, ARRAY_SEP_STR);
             return result;
-        } else if (key == L"COLUMNS") {
-            return to_string(common_get_width());
-        } else if (key == L"LINES") {
-            return to_string(common_get_height());
         } else if (key == L"status") {
             return to_string(proc_get_last_status());
         } else if (key == L"umask") {

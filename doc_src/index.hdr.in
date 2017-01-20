@@ -849,11 +849,13 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `FISH_VERSION`, the version of the currently running fish
 
+- `SHLVL`, the level of nesting of shells
+
+These two variables are not read-only and can be set by the user. They will be used if the `stty` rows and cols values are zero (which can happen on a serial console). Fish checks that the values re reasonable which means cols >= 20 and rows >= 2. Note that fish will also modify these vars to match what it believes to be the size of the terminal. This means that the terminal size reported by the kernel has precedence over these variables.
+
 - `COLUMNS`, the current width of the terminal
 
 - `LINES`, the current height of the terminal
-
-- `SHLVL`, the level of nesting of shells
 
 The names of these variables are mostly derived from the csh family of shells and differ from the ones used by Bourne style shells such as bash.
 

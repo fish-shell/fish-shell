@@ -1,6 +1,6 @@
 complete -c stack -f
 
-# Completion for 'stack' haskell build tool (http://docs.haskellstack.org/en/stable/index.html)
+# Completion for 'stack' haskell build tool (http://haskellstack.org)
 # (Handmade) generated from version 1.0.0
 
 #

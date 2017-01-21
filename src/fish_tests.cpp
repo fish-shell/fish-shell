@@ -2495,7 +2495,6 @@ static void test_universal() {
     }
 
     if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rm failed");
-    fputwc(L'\n', stderr);
 }
 
 static bool callback_data_less_than(const callback_data_t &a, const callback_data_t &b) {
@@ -4073,7 +4072,7 @@ static void test_illegal_command_exit_code(void) {
     };
 
     const command_result_tuple_t tests[] = {
-        {L"echo", STATUS_BUILTIN_OK},
+        {L"echo -n", STATUS_BUILTIN_OK},
         {L"pwd", STATUS_BUILTIN_OK},
         {L")", STATUS_ILLEGAL_CMD},
         {L") ", STATUS_ILLEGAL_CMD},

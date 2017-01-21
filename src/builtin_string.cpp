@@ -804,24 +804,22 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
         return BUILTIN_STRING_ERROR;
     }
 
-    string_replacer_t *replacer;
+    std::unique_ptr<string_replacer_t> replacer;
     if (regex) {
-        replacer = new regex_replacer_t(argv[0], pattern, replacement, opts, streams);
+        replacer = make_unique<regex_replacer_t>(argv[0], pattern, replacement, opts, streams);
     } else {
-        replacer = new literal_replacer_t(argv[0], pattern, replacement, opts, streams);
+        replacer = make_unique<literal_replacer_t>(argv[0], pattern, replacement, opts, streams);
     }
 
     const wchar_t *arg;
     wcstring storage;
     while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
         if (!replacer->replace_matches(arg)) {
-            delete replacer;
             return BUILTIN_STRING_ERROR;
         }
     }
 
     int rc = replacer->replace_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
-    delete replacer;
     return rc;
 }
 

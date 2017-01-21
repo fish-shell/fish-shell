@@ -242,6 +242,15 @@ static void handle_chld(int sig, siginfo_t *info, void *context) {
     default_handler(sig, info, context);
 }
 
+// We have a sigalarm handler that does nothing
+// This is used in the signal torture test, to verify
+// that we behave correctly when receiving lots of irrelevant signals
+static void handle_sigalarm(int sig, siginfo_t *info, void *context) {
+    UNUSED(sig);
+    UNUSED(info);
+    UNUSED(context);
+}
+
 void signal_reset_handlers() {
     int i;
 
@@ -284,6 +293,11 @@ static void set_interactive_handlers() {
     act.sa_sigaction = &handle_hup;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGHUP, &act, 0);
+
+    // SIGALARM as part of our signal torture test
+    act.sa_sigaction = &handle_sigalarm;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGALRM, &act, 0);
 
 #ifdef SIGWINCH
     act.sa_sigaction = &handle_winch;

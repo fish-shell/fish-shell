@@ -653,21 +653,9 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
     job_reap(0);  // not sure why we reap jobs here
 
     // Start it up
-    const block_t *const start_current_block = current_block();
     scope_block_t *scope_block = this->push_block<scope_block_t>(block_type);
     int result = ctx->eval_node_at_offset(node_idx, scope_block, io);
-
-    // Clean up the block stack.
     this->pop_block(scope_block);
-    while (start_current_block != current_block()) {
-        if (current_block() == NULL) {
-            debug(0, _(L"End of block mismatch. Program terminating."));
-            bugreport();
-            FATAL_EXIT();
-            break;
-        }
-        this->pop_block(current_block());
-    }
 
     job_reap(0);  // reap again
 

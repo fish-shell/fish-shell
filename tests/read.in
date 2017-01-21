@@ -117,4 +117,14 @@ echo -ne 'foo\nbar\0baz\nquux' | while read -lza foo
     print_vars foo
 end
 
+echo
+echo '# chunked read tests'
+set -l path /tmp/fish_chunked_read_test.txt
+set -l longstr (seq 1024 | string join ',')
+echo -n $longstr > $path
+read -l longstr2 < $path
+test "$longstr" = "$longstr2"
+and echo "Chunked reads test pass"
+or echo "Chunked reads test failure: long strings don't match!"
+
 true

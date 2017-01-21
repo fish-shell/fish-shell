@@ -55,3 +55,6 @@ newline
 1 'foo' 1 'bar'
 2 'foo' 'bar'
 2 'baz' 'quux'
+
+# chunked read tests
+Chunked reads test pass

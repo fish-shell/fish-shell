@@ -2024,20 +2024,19 @@ static int read_in_chunks(int fd, wcstring &buff, bool split_null) {
             break;
         }
 
-        long i;
-        for (i = 0; i < bytes_read && !finished; i++) {
-            if ((!split_null && inbuf[i] == L'\n') || (split_null && inbuf[i] == L'\0')) {
-                finished = true;
-            } else {
-                str.push_back(inbuf[i]);
-            }
-        }
-        buff += str2wcstring(str);
-        if (i < bytes_read) {
-            CHECK(lseek(fd, i - bytes_read, SEEK_CUR) != -1, STATUS_BUILTIN_ERROR)
+        const char *end = std::find(inbuf, inbuf + bytes_read, split_null ? L'\0' : L'\n');
+        long bytes_consumed = end - inbuf; // note: must be signed for use in lseek
+        assert(bytes_consumed <= bytes_read);
+        str.append(inbuf, bytes_consumed);
+        if (bytes_consumed < bytes_read) {
+            // We found a splitter
+            // +1 because we need to treat the splitter as consumed, but not append it to the string
+            CHECK(lseek(fd, bytes_consumed - bytes_read + 1, SEEK_CUR) != -1, STATUS_BUILTIN_ERROR)
+            finished = true;
         }
     }
 
+    buff = str2wcstring(str);
     if (buff.empty() && eof) {
         exit_res = STATUS_BUILTIN_ERROR;
     }

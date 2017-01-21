@@ -234,20 +234,20 @@ void parser_t::forbid_function(const wcstring &function) { forbidden_function.pu
 void parser_t::allow_function() { forbidden_function.pop_back(); }
 
 /// Print profiling information to the specified stream.
-static void print_profile(const std::vector<profile_item_t *> &items, FILE *out) {
+static void print_profile(const std::vector<std::unique_ptr<profile_item_t>> &items, FILE *out) {
     for (size_t pos = 0; pos < items.size(); pos++) {
         const profile_item_t *me, *prev;
         size_t i;
         int my_time;
 
-        me = items.at(pos);
+        me = items.at(pos).get();
         if (me->skipped) {
             continue;
         }
 
         my_time = me->parse + me->exec;
         for (i = pos + 1; i < items.size(); i++) {
-            prev = items.at(i);
+            prev = items.at(i).get();
             if (prev->skipped) {
                 continue;
             }
@@ -569,10 +569,10 @@ job_t *parser_t::job_get_from_pid(int pid) {
 }
 
 profile_item_t *parser_t::create_profile_item() {
-    profile_item_t *result = NULL;
+    profile_item_t *result = nullptr;
     if (g_profiling_active) {
-        result = new profile_item_t();
-        profile_items.push_back(result);
+        profile_items.emplace_back(new profile_item_t());
+        result = profile_items.back().get();
     }
     return result;
 }

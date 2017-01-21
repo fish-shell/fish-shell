@@ -196,8 +196,11 @@ class parser_t {
     wcstring block_stack_description() const;
 #endif
 
-    /// List of profile items, allocated with new.
-    std::vector<profile_item_t *> profile_items;
+    /// List of profile items
+    /// These are pointers because we return pointers to them to callers,
+    /// who may hold them across blocks (which would cause reallocations internal
+    /// to profile_items)
+    std::vector<std::unique_ptr<profile_item_t>> profile_items;
 
     // No copying allowed.
     parser_t(const parser_t &);

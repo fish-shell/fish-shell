@@ -126,5 +126,6 @@ read -l longstr2 < $path
 test "$longstr" = "$longstr2"
 and echo "Chunked reads test pass"
 or echo "Chunked reads test failure: long strings don't match!"
+rm $path
 
 true

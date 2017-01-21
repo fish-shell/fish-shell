@@ -1065,7 +1065,7 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
     }
 
     if (metadata_as_comments) {
-        if (path != L"stdin") {
+        if (wcscmp(path, L"stdin")) {
             streams.out.append_format(L"# Defined in %ls @ line %d\n", path, line_number);
         }
     } else {

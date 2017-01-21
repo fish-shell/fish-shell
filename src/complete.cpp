@@ -1450,7 +1450,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                             // transient commandline for builtin_commandline. But not for
                             // COMPLETION_REQUEST_AUTOSUGGESTION, which may occur on background
                             // threads.
-                            builtin_commandline_scoped_transient_t *transient_cmd = NULL;
+                            std::unique_ptr<builtin_commandline_scoped_transient_t> transient_cmd;
                             if (i == 0) {
                                 assert(wrap_chain.at(i) == current_command_unescape);
                             } else if (!(flags & COMPLETION_REQUEST_AUTOSUGGESTION)) {
@@ -1458,15 +1458,13 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                                 wcstring faux_cmdline = cmd;
                                 faux_cmdline.replace(cmd_node->source_start,
                                                      cmd_node->source_length, wrap_chain.at(i));
-                                transient_cmd =
-                                    new builtin_commandline_scoped_transient_t(faux_cmdline);
+                                transient_cmd = make_unique<builtin_commandline_scoped_transient_t>(faux_cmdline);
                             }
                             if (!completer.complete_param(wrap_chain.at(i),
                                                           previous_argument_unescape,
                                                           current_argument_unescape, !had_ddash)) {
                                 do_file = false;
                             }
-                            delete transient_cmd;  // may be null
                         }
                     }
 

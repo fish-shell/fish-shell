@@ -573,7 +573,7 @@ job_t *parser_t::job_get_from_pid(int pid) {
 profile_item_t *parser_t::create_profile_item() {
     profile_item_t *result = nullptr;
     if (g_profiling_active) {
-        profile_items.emplace_back(new profile_item_t());
+        profile_items.push_back(make_unique<profile_item_t>());
         result = profile_items.back().get();
     }
     return result;
@@ -612,8 +612,7 @@ int parser_t::eval_acquiring_tree(const wcstring &cmd, const io_chain_t &io,
         (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
 
     // Append to the execution context stack.
-    // Note usage of unique_ptr, so we don't have to delete
-    execution_contexts.emplace_back(new parse_execution_context_t(tree, cmd, this, exec_eval_level));
+    execution_contexts.push_back(make_unique<parse_execution_context_t>(tree, cmd, this, exec_eval_level));
     const parse_execution_context_t *ctx = execution_contexts.back().get();
 
     // Execute the first node.

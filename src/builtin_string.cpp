@@ -572,9 +572,9 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
 
     std::unique_ptr<string_matcher_t> matcher;
     if (regex) {
-        matcher.reset(new pcre2_matcher_t(argv[0], pattern, opts, streams));
+        matcher = make_unique<pcre2_matcher_t>(argv[0], pattern, opts, streams);
     } else {
-        matcher.reset(new wildcard_matcher_t(argv[0], pattern, opts, streams));
+        matcher = make_unique<wildcard_matcher_t>(argv[0], pattern, opts, streams);
     }
 
     const wchar_t *arg;

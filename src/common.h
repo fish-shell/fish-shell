@@ -644,6 +644,12 @@ wcstring vformat_string(const wchar_t *format, va_list va_orig);
 void append_format(wcstring &str, const wchar_t *format, ...);
 void append_formatv(wcstring &str, const wchar_t *format, va_list ap);
 
+/// make_unique implementation
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 /// This functions returns the end of the quoted substring beginning at \c in. The type of quoting
 /// character is detemrined by examining \c in. Returns 0 on error.
 ///

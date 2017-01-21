@@ -629,8 +629,8 @@ void exec_job(parser_t &parser, job_t *j) {
                     debug(0, _(L"Unknown function '%ls'"), p->argv0());
                     break;
                 }
-                function_block_t *newv = new function_block_t(p, func_name, shadow_scope);
-                parser.push_block(newv);
+
+                function_block_t *fb = parser.push_block<function_block_t>(p, func_name, shadow_scope);
 
                 // Setting variables might trigger an event handler, hence we need to unblock
                 // signals.
@@ -661,7 +661,7 @@ void exec_job(parser_t &parser, job_t *j) {
                 }
 
                 parser.allow_function();
-                parser.pop_block();
+                parser.pop_block(fb);
 
                 break;
             }

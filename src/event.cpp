@@ -394,10 +394,9 @@ static void event_fire_internal(const event_t &event) {
         prev_status = proc_get_last_status();
         parser_t &parser = parser_t::principal_parser();
 
-        block_t *block = new event_block_t(event);
-        parser.push_block(block);
+        event_block_t *b = parser.push_block<event_block_t>(event);
         parser.eval(buffer, io_chain_t(), TOP);
-        parser.pop_block();
+        parser.pop_block(b);
         proc_pop_interactive();
         proc_set_last_status(prev_status);
     }

@@ -266,9 +266,8 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
     assert(statement.type == symbol_if_statement);
 
     // Push an if block.
-    if_block_t *ib = new if_block_t();
+    if_block_t *ib = parser->push_block<if_block_t>();
     ib->node_offset = this->get_offset(statement);
-    parser->push_block(ib);
 
     parse_execution_result_t result = parse_execution_success;
 
@@ -348,14 +347,9 @@ parse_execution_result_t parse_execution_context_t::run_begin_statement(
     assert(header.type == symbol_begin_header);
     assert(contents.type == symbol_job_list);
 
-    // Basic begin/end block. Push a scope block.
-    scope_block_t *sb = new scope_block_t(BEGIN);
-    parser->push_block(sb);
-
-    // Run the job list.
+    // Basic begin/end block. Push a scope block, run jobs, pop it
+    scope_block_t *sb = parser->push_block<scope_block_t>(BEGIN);
     parse_execution_result_t ret = run_job_list(contents, sb);
-
-    // Pop the block.
     parser->pop_block(sb);
 
     return ret;
@@ -470,8 +464,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         return ret;
     }
 
-    for_block_t *fb = new for_block_t();
-    parser->push_block(fb);
+    for_block_t *fb = parser->push_block<for_block_t>();
 
     // Now drive the for loop.
     const size_t arg_count = argument_sequence.size();
@@ -552,8 +545,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
 
     const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
 
-    switch_block_t *sb = new switch_block_t();
-    parser->push_block(sb);
+    switch_block_t *sb = parser->push_block<switch_block_t>();
 
     // Expand case statements.
     const parse_node_t *case_item_list = get_child(statement, 3, symbol_case_item_list);
@@ -616,9 +608,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     assert(block_contents.type == symbol_job_list);
 
     // Push a while block.
-    while_block_t *wb = new while_block_t();
+    while_block_t *wb = parser->push_block<while_block_t>();
     wb->node_offset = this->get_offset(header);
-    parser->push_block(wb);
 
     parse_execution_result_t ret = parse_execution_success;
 
@@ -666,9 +657,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         }
     }
 
-    /* Done */
+    // Done
     parser->pop_block(wb);
-
     return ret;
 }
 

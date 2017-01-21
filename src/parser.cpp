@@ -122,7 +122,8 @@ void parser_t::skip_all_blocks(void) {
     s_principal_parser.cancellation_requested = true;
 }
 
-void parser_t::push_block(block_t *new_current) {
+// Given a new-allocated block, push it onto our block stack, acquiring ownership
+void parser_t::push_block_int(block_t *new_current) {
     const enum block_type_t type = new_current->type();
     new_current->src_lineno = parser_t::get_lineno();
 
@@ -144,7 +145,8 @@ void parser_t::push_block(block_t *new_current) {
     new_current->job = nullptr;
     new_current->loop_status = LOOP_NORMAL;
 
-    this->block_stack.push_back(new_current);
+    // Push it onto our stack. This acquires ownership because of unique_ptr.
+    this->block_stack.emplace_back(new_current);
 
     // Types TOP and SUBST are not considered blocks for the purposes of `status -b`.
     if (type != TOP && type != SUBST) {
@@ -157,36 +159,31 @@ void parser_t::push_block(block_t *new_current) {
     }
 }
 
-void parser_t::pop_block() {
+void parser_t::pop_block(const block_t *expected) {
+    assert(expected == this->current_block());
     if (block_stack.empty()) {
         debug(1, L"function %s called on empty block stack.", __func__);
         bugreport();
         return;
     }
 
-    block_t *old = block_stack.back();
+    // acquire ownership out of the block stack
+    // this will trigger deletion when it goes out of scope
+    std::unique_ptr<block_t> old = std::move(block_stack.back());
     block_stack.pop_back();
 
     if (old->wants_pop_env) env_pop();
 
-    delete old;
-
     // Figure out if `status -b` should consider us to be in a block now.
     int new_is_block = 0;
-    for (std::vector<block_t *>::const_iterator it = block_stack.begin(), end = block_stack.end();
-         it != end; ++it) {
-        const enum block_type_t type = (*it)->type();
+    for (const auto &b : block_stack) {
+        const enum block_type_t type = b->type();
         if (type != TOP && type != SUBST) {
             new_is_block = 1;
             break;
         }
     }
     is_block = new_is_block;
-}
-
-void parser_t::pop_block(const block_t *expected) {
-    assert(expected == this->current_block());
-    this->pop_block();
 }
 
 const wchar_t *parser_t::get_block_desc(int block) const {
@@ -221,15 +218,15 @@ wcstring parser_t::block_stack_description() const {
 const block_t *parser_t::block_at_index(size_t idx) const {
     // Zero corresponds to the last element in our vector.
     size_t count = block_stack.size();
-    return idx < count ? block_stack.at(count - idx - 1) : NULL;
+    return idx < count ? block_stack.at(count - idx - 1).get() : NULL;
 }
 
 block_t *parser_t::block_at_index(size_t idx) {
     size_t count = block_stack.size();
-    return idx < count ? block_stack.at(count - idx - 1) : NULL;
+    return idx < count ? block_stack.at(count - idx - 1).get() : NULL;
 }
 
-block_t *parser_t::current_block() { return block_stack.empty() ? NULL : block_stack.back(); }
+block_t *parser_t::current_block() { return block_stack.empty() ? NULL : block_stack.back().get(); }
 
 void parser_t::forbid_function(const wcstring &function) { forbidden_function.push_back(function); }
 
@@ -657,12 +654,11 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
 
     // Start it up
     const block_t *const start_current_block = current_block();
-    block_t *scope_block = new scope_block_t(block_type);
-    this->push_block(scope_block);
+    scope_block_t *scope_block = this->push_block<scope_block_t>(block_type);
     int result = ctx->eval_node_at_offset(node_idx, scope_block, io);
 
     // Clean up the block stack.
-    this->pop_block();
+    this->pop_block(scope_block);
     while (start_current_block != current_block()) {
         if (current_block() == NULL) {
             debug(0, _(L"End of block mismatch. Program terminating."));
@@ -670,7 +666,7 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
             FATAL_EXIT();
             break;
         }
-        this->pop_block();
+        this->pop_block(current_block());
     }
 
     job_reap(0);  // reap again

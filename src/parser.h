@@ -187,8 +187,8 @@ class parser_t {
     wcstring_list_t forbidden_function;
     /// The jobs associated with this parser.
     job_list_t my_job_list;
-    /// The list of blocks, allocated with new. It's our responsibility to delete these.
-    std::vector<block_t *> block_stack;
+    /// The list of blocks
+    std::vector<std::unique_ptr<block_t>> block_stack;
 
 #if 0
 // TODO: Lint says this isn't used (which is true). Should this be removed?
@@ -216,6 +216,9 @@ class parser_t {
 
     /// Helper for stack_trace().
     void stack_trace_internal(size_t block_idx, wcstring *out) const;
+
+    /// Helper for push_block()
+    void push_block_int(block_t *b);
 
    public:
     /// Get the "principal" parser, whatever that is.
@@ -284,11 +287,15 @@ class parser_t {
     // know whether it's run during initialization or not.
     void set_is_within_fish_initialization(bool flag);
 
-    /// Pushes the block. pop_block will call delete on it.
-    void push_block(block_t *newv);
-
-    /// Remove the outermost block namespace.
-    void pop_block();
+    /// Pushes a new block created with the given arguments
+    /// Returns a pointer to the block. The pointer is valid
+    /// until the call to pop_block()
+    template<typename BLOCKTYPE, typename... Args>
+    BLOCKTYPE *push_block(Args&&... args) {
+        BLOCKTYPE *ret = new BLOCKTYPE(std::forward<Args>(args)...);
+        this->push_block_int(ret);
+        return ret;
+    }
 
     /// Remove the outermost block, asserting it's the given one.
     void pop_block(const block_t *b);

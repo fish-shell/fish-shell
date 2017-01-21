@@ -2838,14 +2838,14 @@ static int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **arg
         fn_intern = intern(argv[1]);
     }
 
-    parser.push_block(new source_block_t(fn_intern));
+    const source_block_t *sb = parser.push_block<source_block_t>(fn_intern);
     reader_push_current_filename(fn_intern);
 
     env_set_argv(argc > 1 ? argv + 2 : argv + 1);
 
     res = reader_read(fd, streams.io_chain ? *streams.io_chain : io_chain_t());
 
-    parser.pop_block();
+    parser.pop_block(sb);
 
     if (res) {
         streams.err.append_format(_(L"%ls: Error while reading file '%ls'\n"), argv[0],
@@ -3052,11 +3052,11 @@ static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t *
         return STATUS_BUILTIN_ERROR;
     }
 
-    parser.push_block(new breakpoint_block_t());
+    const breakpoint_block_t *bpb = parser.push_block<breakpoint_block_t>();
 
     reader_read(STDIN_FILENO, streams.io_chain ? *streams.io_chain : io_chain_t());
 
-    parser.pop_block();
+    parser.pop_block(bpb);
 
     return proc_get_last_status();
 }

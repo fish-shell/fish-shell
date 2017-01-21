@@ -570,24 +570,22 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         return BUILTIN_STRING_ERROR;
     }
 
-    string_matcher_t *matcher;
+    std::unique_ptr<string_matcher_t> matcher;
     if (regex) {
-        matcher = new pcre2_matcher_t(argv[0], pattern, opts, streams);
+        matcher.reset(new pcre2_matcher_t(argv[0], pattern, opts, streams));
     } else {
-        matcher = new wildcard_matcher_t(argv[0], pattern, opts, streams);
+        matcher.reset(new wildcard_matcher_t(argv[0], pattern, opts, streams));
     }
 
     const wchar_t *arg;
     wcstring storage;
     while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
         if (!matcher->report_matches(arg)) {
-            delete matcher;
             return BUILTIN_STRING_ERROR;
         }
     }
 
     int rc = matcher->match_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
-    delete matcher;
     return rc;
 }
 

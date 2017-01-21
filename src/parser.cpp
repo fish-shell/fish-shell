@@ -41,9 +41,6 @@ class io_chain_t;
 /// If block description.
 #define IF_BLOCK N_(L"'if' conditional block")
 
-/// Function definition block description.
-#define FUNCTION_DEF_BLOCK N_(L"function definition block")
-
 /// Function invocation block description.
 #define FUNCTION_CALL_BLOCK N_(L"function invocation block")
 
@@ -52,9 +49,6 @@ class io_chain_t;
 
 /// Switch block description.
 #define SWITCH_BLOCK N_(L"'switch' block")
-
-/// Fake block description.
-#define FAKE_BLOCK N_(L"unexecutable block")
 
 /// Top block description.
 #define TOP_BLOCK N_(L"global root block")
@@ -89,11 +83,9 @@ static const struct block_lookup_entry block_lookup[] = {
     {WHILE, L"while", WHILE_BLOCK},
     {FOR, L"for", FOR_BLOCK},
     {IF, L"if", IF_BLOCK},
-    {FUNCTION_DEF, L"function", FUNCTION_DEF_BLOCK},
     {FUNCTION_CALL, 0, FUNCTION_CALL_BLOCK},
     {FUNCTION_CALL_NO_SHADOW, 0, FUNCTION_CALL_NO_SHADOW_BLOCK},
     {SWITCH, L"switch", SWITCH_BLOCK},
-    {FAKE, 0, FAKE_BLOCK},
     {TOP, 0, TOP_BLOCK},
     {SUBST, 0, SUBST_BLOCK},
     {BEGIN, L"begin", BEGIN_BLOCK},
@@ -161,10 +153,6 @@ void parser_t::push_block(block_t *new_current) {
         new_current->skip = 0;
     }
 
-    // Fake blocks and function definition blocks are never executed.
-    if (type == FAKE || type == FUNCTION_DEF) {
-        new_current->skip = 1;
-    }
 
     new_current->job = 0;
     new_current->loop_status = LOOP_NORMAL;
@@ -176,8 +164,7 @@ void parser_t::push_block(block_t *new_current) {
         is_block = 1;
     }
 
-    if ((new_current->type() != FUNCTION_DEF) && (new_current->type() != FAKE) &&
-        (new_current->type() != TOP)) {
+    if (new_current->type() != TOP) {
         env_push(type == FUNCTION_CALL);
         new_current->wants_pop_env = true;
     }
@@ -822,10 +809,6 @@ wcstring block_t::description() const {
             result.append(L"if");
             break;
         }
-        case FUNCTION_DEF: {
-            result.append(L"function_def");
-            break;
-        }
         case FUNCTION_CALL: {
             result.append(L"function_call");
             break;
@@ -836,10 +819,6 @@ wcstring block_t::description() const {
         }
         case SWITCH: {
             result.append(L"switch");
-            break;
-        }
-        case FAKE: {
-            result.append(L"fake");
             break;
         }
         case SUBST: {
@@ -893,8 +872,6 @@ for_block_t::for_block_t() : block_t(FOR) {}
 while_block_t::while_block_t() : block_t(WHILE) {}
 
 switch_block_t::switch_block_t() : block_t(SWITCH) {}
-
-fake_block_t::fake_block_t() : block_t(FAKE) {}
 
 scope_block_t::scope_block_t(block_type_t type) : block_t(type) {
     assert(type == BEGIN || type == TOP || type == SUBST);

@@ -220,12 +220,11 @@ parse_execution_context_t::cancellation_reason(const block_t *block) const {
     if (parser && parser->cancellation_requested) {
         return execution_cancellation_skip;
     }
-    if (block && block->loop_status != LOOP_NORMAL) {
-        // Nasty hack - break and continue set the 'skip' flag as well as the loop status flag.
-        return execution_cancellation_loop_control;
-    }
     if (block && block->skip) {
         return execution_cancellation_skip;
+    }
+    if (block && block->loop_status != LOOP_NORMAL) {
+        return execution_cancellation_loop_control;
     }
     return execution_cancellation_none;
 }
@@ -485,7 +484,6 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         const wcstring &val = argument_sequence.at(i);
         env_set(for_var_name, val.c_str(), ENV_LOCAL);
         fb->loop_status = LOOP_NORMAL;
-        fb->skip = 0;
 
         this->run_job_list(block_contents, fb);
 
@@ -494,7 +492,6 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
             if (fb->loop_status == LOOP_CONTINUE) {
                 // Reset the loop state.
                 fb->loop_status = LOOP_NORMAL;
-                fb->skip = false;
                 continue;
             } else if (fb->loop_status == LOOP_BREAK) {
                 break;
@@ -656,7 +653,6 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             if (wb->loop_status == LOOP_CONTINUE) {
                 // Reset the loop state.
                 wb->loop_status = LOOP_NORMAL;
-                wb->skip = false;
                 continue;
             } else if (wb->loop_status == LOOP_BREAK) {
                 break;

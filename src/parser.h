@@ -178,7 +178,7 @@ class parser_t {
 
    private:
     /// Indication that we should skip all blocks.
-    bool cancellation_requested;
+    volatile sig_atomic_t cancellation_requested;
     /// Indicates that we are within the process of initializing fish.
     bool is_within_fish_initialization;
     /// Stack of execution contexts. We own these pointers and must delete them.

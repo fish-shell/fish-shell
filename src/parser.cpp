@@ -101,17 +101,13 @@ static wcstring user_presentable_path(const wcstring &path) {
 
 parser_t::parser_t() : cancellation_requested(false), is_within_fish_initialization(false) {}
 
-/// A pointer to the principal parser (which is a static local).
-static parser_t *s_principal_parser = NULL;
+
+static parser_t s_principal_parser;
 
 parser_t &parser_t::principal_parser(void) {
     ASSERT_IS_NOT_FORKED_CHILD();
     ASSERT_IS_MAIN_THREAD();
-    static parser_t parser;
-    if (!s_principal_parser) {
-        s_principal_parser = &parser;
-    }
-    return parser;
+    return s_principal_parser;
 }
 
 void parser_t::set_is_within_fish_initialization(bool flag) {
@@ -120,14 +116,8 @@ void parser_t::set_is_within_fish_initialization(bool flag) {
 
 void parser_t::skip_all_blocks(void) {
     // Tell all blocks to skip.
-    if (s_principal_parser) {
-        s_principal_parser->cancellation_requested = true;
-
-        // write(2, "Cancelling blocks\n", strlen("Cancelling blocks\n"));
-        for (size_t i = 0; i < s_principal_parser->block_count(); i++) {
-            s_principal_parser->block_at_index(i)->skip = true;
-        }
-    }
+    // This may be called from a signal handler!
+    s_principal_parser.cancellation_requested = true;
 }
 
 void parser_t::push_block(block_t *new_current) {
@@ -139,22 +129,17 @@ void parser_t::push_block(block_t *new_current) {
         new_current->src_filename = intern(filename);
     }
 
+    // New blocks should be skipped if the outer block is skipped, except TOP and SUBST block, which
+    // open up new environments.
     const block_t *old_current = this->current_block();
-    if (old_current && old_current->skip) {
-        new_current->skip = true;
-    }
-
-    // New blocks should be skipped if the outer block is skipped, except TOP ans SUBST block, which
-    // open up new environments. Fake blocks should always be skipped. Rather complicated... :-(
-    new_current->skip = old_current ? old_current->skip : 0;
+    new_current->skip = old_current && old_current->skip;
 
     // Type TOP and SUBST are never skipped.
     if (type == TOP || type == SUBST) {
-        new_current->skip = 0;
+        new_current->skip = false;
     }
 
-
-    new_current->job = 0;
+    new_current->job = nullptr;
     new_current->loop_status = LOOP_NORMAL;
 
     this->block_stack.push_back(new_current);
@@ -782,7 +767,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
 
 block_t::block_t(block_type_t t)
     : block_type(t),
-      skip(),
+      skip(false),
       tok_pos(),
       node_offset(NODE_OFFSET_INVALID),
       loop_status(LOOP_NORMAL),

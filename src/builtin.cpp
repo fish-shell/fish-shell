@@ -3033,15 +3033,14 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
         return STATUS_BUILTIN_ERROR;
     }
 
-    // Skip blocks interior to the loop.
+    // Skip blocks interior to the loop (but not the loop itself)
     size_t block_idx = loop_idx;
     while (block_idx--) {
         parser.block_at_index(block_idx)->skip = true;
     }
 
-    /* Skip the loop itself */
+    // Mark the loop's status
     block_t *loop_block = parser.block_at_index(loop_idx);
-    loop_block->skip = true;
     loop_block->loop_status = is_break ? LOOP_BREAK : LOOP_CONTINUE;
     return STATUS_BUILTIN_OK;
 }
@@ -3098,12 +3097,11 @@ static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **arg
         return STATUS_BUILTIN_ERROR;
     }
 
-    // Skip everything up to (and then including) the function block.
-    for (size_t i = 0; i < function_block_idx; i++) {
+    // Skip everything up to and including the function block.
+    for (size_t i = 0; i <= function_block_idx; i++) {
         block_t *b = parser.block_at_index(i);
         b->skip = true;
     }
-    parser.block_at_index(function_block_idx)->skip = true;
     return status;
 }
 

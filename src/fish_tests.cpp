@@ -769,6 +769,7 @@ static void test_cancellation() {
     // Nasty infinite loop that doesn't actually execute anything.
     test_1_cancellation(L"echo (while true ; end) (while true ; end) (while true ; end)");
     test_1_cancellation(L"while true ; end");
+    test_1_cancellation(L"while true ; echo nothing > /dev/null; end");
     test_1_cancellation(L"for i in (while true ; end) ; end");
 
     // Restore signal handling.

@@ -2008,6 +2008,7 @@ static int read_interactive(wcstring &buff, int nchars, bool shell, const wchar_
 /// Read from the fd in chunks until we see newline or null, as appropriate, is seen. This is only
 /// used when the fd is seekable (so not from a tty or pipe) and we're not reading a specific number
 /// of chars.
+/// Returns an exit status
 static int read_in_chunks(int fd, wcstring &buff, bool split_null) {
     int exit_res = STATUS_BUILTIN_OK;
     std::string str;
@@ -2016,14 +2017,14 @@ static int read_in_chunks(int fd, wcstring &buff, bool split_null) {
 
     while (!finished) {
         char inbuf[READ_CHUNK_SIZE];
-        int bytes_read = read_blocked(fd, inbuf, READ_CHUNK_SIZE);
+        long bytes_read = read_blocked(fd, inbuf, READ_CHUNK_SIZE);
 
         if (bytes_read <= 0) {
             eof = true;
             break;
         }
 
-        int i;
+        long i;
         for (i = 0; i < bytes_read && !finished; i++) {
             if ((!split_null && inbuf[i] == L'\n') || (split_null && inbuf[i] == L'\0')) {
                 finished = true;

@@ -4080,10 +4080,8 @@ static void test_illegal_command_exit_code(void) {
         {L"**", STATUS_ILLEGAL_CMD},
         {L"%", STATUS_ILLEGAL_CMD},
         {L"%test", STATUS_ILLEGAL_CMD},
-        // the following two inputs cause errors during tests for unknown reasons
-        // ("terminate called after throwing an instance of 'std::bad_alloc'")
-        //     {L"?", STATUS_ILLEGAL_CMD},
-        //     {L"abc?def", STATUS_ILLEGAL_CMD},
+        {L"?", STATUS_ILLEGAL_CMD},
+        {L"abc?def", STATUS_ILLEGAL_CMD},
         {L") ", STATUS_ILLEGAL_CMD}};
 
     int res = 0;

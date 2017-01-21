@@ -101,6 +101,8 @@ static wcstring user_presentable_path(const wcstring &path) {
 
 parser_t::parser_t() : cancellation_requested(false), is_within_fish_initialization(false) {}
 
+// Out of line destructor to enable forward declaration of parse_execution_context_t
+parser_t::~parser_t() {}
 
 static parser_t s_principal_parser;
 
@@ -481,7 +483,7 @@ wcstring parser_t::current_line() {
     if (execution_contexts.empty()) {
         return wcstring();
     }
-    const parse_execution_context_t *context = execution_contexts.back();
+    const parse_execution_context_t *context = execution_contexts.back().get();
     assert(context != NULL);
 
     int source_offset = context->get_current_source_offset();
@@ -610,17 +612,16 @@ int parser_t::eval_acquiring_tree(const wcstring &cmd, const io_chain_t &io,
         (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
 
     // Append to the execution context stack.
-    parse_execution_context_t *ctx =
-        new parse_execution_context_t(tree, cmd, this, exec_eval_level);
-    execution_contexts.push_back(ctx);
+    // Note usage of unique_ptr, so we don't have to delete
+    execution_contexts.emplace_back(new parse_execution_context_t(tree, cmd, this, exec_eval_level));
+    const parse_execution_context_t *ctx = execution_contexts.back().get();
 
     // Execute the first node.
     this->eval_block_node(0, io, block_type);
 
     // Clean up the execution context stack.
-    assert(!execution_contexts.empty() && execution_contexts.back() == ctx);
+    assert(!execution_contexts.empty() && execution_contexts.back().get() == ctx);
     execution_contexts.pop_back();
-    delete ctx;
 
     return 0;
 }
@@ -631,7 +632,7 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
     // the topmost execution context's tree. What happens if two trees were to be interleaved?
     // Fortunately that cannot happen (yet); in the future we probably want some sort of reference
     // counted trees.
-    parse_execution_context_t *ctx = execution_contexts.back();
+    parse_execution_context_t *ctx = execution_contexts.back().get();
     assert(ctx != NULL);
 
     CHECK_BLOCK(1);
@@ -655,7 +656,7 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
 
     job_reap(0);  // not sure why we reap jobs here
 
-    /* Start it up */
+    // Start it up
     const block_t *const start_current_block = current_block();
     block_t *scope_block = new scope_block_t(block_type);
     this->push_block(scope_block);

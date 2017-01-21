@@ -181,8 +181,8 @@ class parser_t {
     volatile sig_atomic_t cancellation_requested;
     /// Indicates that we are within the process of initializing fish.
     bool is_within_fish_initialization;
-    /// Stack of execution contexts. We own these pointers and must delete them.
-    std::vector<parse_execution_context_t *> execution_contexts;
+    /// Stack of execution contexts.
+    std::vector<std::unique_ptr<parse_execution_context_t>> execution_contexts;
     /// List of called functions, used to help prevent infinite recursion.
     wcstring_list_t forbidden_function;
     /// The jobs associated with this parser.
@@ -337,6 +337,8 @@ class parser_t {
 
     /// Return a string representing the current stack trace.
     wcstring stack_trace() const;
+
+    ~parser_t();
 };
 
 #endif

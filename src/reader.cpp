@@ -286,7 +286,7 @@ static reader_data_t *data = 0;
 
 /// This flag is set to true when fish is interactively reading from stdin. It changes how a ^C is
 /// handled by the fish interrupt handler.
-static int is_interactive_read;
+static volatile sig_atomic_t is_interactive_read;
 
 /// Flag for ending non-interactive shell.
 static int end_loop = 0;
@@ -295,7 +295,7 @@ static int end_loop = 0;
 static std::stack<const wchar_t *, std::vector<const wchar_t *> > current_filename;
 
 /// This variable is set to true by the signal handler when ^C is pressed.
-static volatile int interrupted = 0;
+static volatile sig_atomic_t interrupted = 0;
 
 // Prototypes for a bunch of functions defined later on.
 static bool is_backslashed(const wcstring &str, size_t pos);

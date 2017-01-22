@@ -20,6 +20,9 @@
 #include "proc.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+using std::unique_ptr;
+using std::move;
+
 enum { BUILTIN_TEST_SUCCESS = STATUS_BUILTIN_OK, BUILTIN_TEST_FAIL = STATUS_BUILTIN_ERROR };
 
 int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
@@ -147,7 +150,7 @@ class test_parser {
     wcstring_list_t strings;
     wcstring_list_t errors;
 
-    expression *error(const wchar_t *fmt, ...);
+    unique_ptr<expression> error(const wchar_t *fmt, ...);
     void add_error(const wchar_t *fmt, ...);
 
     const wcstring &arg(unsigned int idx) { return strings.at(idx); }
@@ -155,20 +158,21 @@ class test_parser {
    public:
     explicit test_parser(const wcstring_list_t &val) : strings(val) {}
 
-    expression *parse_expression(unsigned int start, unsigned int end);
-    expression *parse_3_arg_expression(unsigned int start, unsigned int end);
-    expression *parse_4_arg_expression(unsigned int start, unsigned int end);
-    expression *parse_combining_expression(unsigned int start, unsigned int end);
-    expression *parse_unary_expression(unsigned int start, unsigned int end);
+    unique_ptr<expression> parse_expression(unsigned int start, unsigned int end);
+    unique_ptr<expression> parse_3_arg_expression(unsigned int start, unsigned int end);
+    unique_ptr<expression> parse_4_arg_expression(unsigned int start, unsigned int end);
+    unique_ptr<expression> parse_combining_expression(unsigned int start, unsigned int end);
+    unique_ptr<expression> parse_unary_expression(unsigned int start, unsigned int end);
 
-    expression *parse_primary(unsigned int start, unsigned int end);
-    expression *parse_parenthentical(unsigned int start, unsigned int end);
-    expression *parse_unary_primary(unsigned int start, unsigned int end);
-    expression *parse_binary_primary(unsigned int start, unsigned int end);
-    expression *parse_just_a_string(unsigned int start, unsigned int end);
+    unique_ptr<expression> parse_primary(unsigned int start, unsigned int end);
+    unique_ptr<expression> parse_parenthentical(unsigned int start, unsigned int end);
+    unique_ptr<expression> parse_unary_primary(unsigned int start, unsigned int end);
+    unique_ptr<expression> parse_binary_primary(unsigned int start, unsigned int end);
+    unique_ptr<expression> parse_just_a_string(unsigned int start, unsigned int end);
 
-    static expression *parse_args(const wcstring_list_t &args, wcstring &err,
-                                  wchar_t *program_name);
+    static unique_ptr<expression> parse_args(const wcstring_list_t &args,
+                                             wcstring &err,
+                                             wchar_t *program_name);
 };
 
 struct range_t {
@@ -193,8 +197,6 @@ class expression {
     virtual bool evaluate(wcstring_list_t &errors) = 0;
 };
 
-typedef std::auto_ptr<expression> expr_ref_t;
-
 /// Single argument like -n foo or "just a string".
 class unary_primary : public expression {
    public:
@@ -218,9 +220,9 @@ class binary_primary : public expression {
 /// Unary operator like bang.
 class unary_operator : public expression {
    public:
-    expr_ref_t subject;
-    unary_operator(token_t tok, range_t where, expr_ref_t &exp)
-        : expression(tok, where), subject(exp) {}
+    unique_ptr<expression> subject;
+    unary_operator(token_t tok, range_t where, unique_ptr<expression> exp)
+        : expression(tok, where), subject(move(exp)) {}
     bool evaluate(wcstring_list_t &errors);
 };
 
@@ -228,22 +230,17 @@ class unary_operator : public expression {
 /// we don't have to worry about precedence in the parser.
 class combining_expression : public expression {
    public:
-    const std::vector<expression *> subjects;
+    const std::vector<unique_ptr<expression>> subjects;
     const std::vector<token_t> combiners;
 
-    combining_expression(token_t tok, range_t where, const std::vector<expression *> &exprs,
-                         const std::vector<token_t> &combs)
-        : expression(tok, where), subjects(exprs), combiners(combs) {
+    combining_expression(token_t tok, range_t where, std::vector<unique_ptr<expression>> exprs,
+                         std::vector<token_t> combs)
+        : expression(tok, where), subjects(move(exprs)), combiners(move(combs)) {
         // We should have one more subject than combiner.
         assert(subjects.size() == combiners.size() + 1);
     }
 
-    // We are responsible for destroying our expressions.
-    virtual ~combining_expression() {
-        for (size_t i = 0; i < subjects.size(); i++) {
-            delete subjects[i];
-        }
-    }
+    virtual ~combining_expression() {}
 
     bool evaluate(wcstring_list_t &errors);
 };
@@ -251,9 +248,9 @@ class combining_expression : public expression {
 /// Parenthetical expression.
 class parenthetical_expression : public expression {
    public:
-    expr_ref_t contents;
-    parenthetical_expression(token_t tok, range_t where, expr_ref_t &expr)
-        : expression(tok, where), contents(expr) {}
+    unique_ptr<expression> contents;
+    parenthetical_expression(token_t tok, range_t where, unique_ptr<expression> expr)
+        : expression(tok, where), contents(move(expr)) {}
 
     virtual bool evaluate(wcstring_list_t &errors);
 };
@@ -266,7 +263,7 @@ void test_parser::add_error(const wchar_t *fmt, ...) {
     va_end(va);
 }
 
-expression *test_parser::error(const wchar_t *fmt, ...) {
+unique_ptr<expression> test_parser::error(const wchar_t *fmt, ...) {
     assert(fmt != NULL);
     va_list va;
     va_start(va, fmt);
@@ -275,15 +272,15 @@ expression *test_parser::error(const wchar_t *fmt, ...) {
     return NULL;
 }
 
-expression *test_parser::parse_unary_expression(unsigned int start, unsigned int end) {
+unique_ptr<expression> test_parser::parse_unary_expression(unsigned int start, unsigned int end) {
     if (start >= end) {
         return error(L"Missing argument at index %u", start);
     }
     token_t tok = token_for_string(arg(start))->tok;
     if (tok == test_bang) {
-        expr_ref_t subject(parse_unary_expression(start + 1, end));
+        unique_ptr<expression> subject(parse_unary_expression(start + 1, end));
         if (subject.get()) {
-            return new unary_operator(tok, range_t(start, subject->range.end), subject);
+            return make_unique<unary_operator>(tok, range_t(start, subject->range.end), move(subject));
         }
         return NULL;
     }
@@ -291,10 +288,10 @@ expression *test_parser::parse_unary_expression(unsigned int start, unsigned int
 }
 
 /// Parse a combining expression (AND, OR).
-expression *test_parser::parse_combining_expression(unsigned int start, unsigned int end) {
+unique_ptr<expression> test_parser::parse_combining_expression(unsigned int start, unsigned int end) {
     if (start >= end) return NULL;
 
-    std::vector<expression *> subjects;
+    std::vector<unique_ptr<expression>> subjects;
     std::vector<token_t> combiners;
     unsigned int idx = start;
     bool first = true;
@@ -315,7 +312,7 @@ expression *test_parser::parse_combining_expression(unsigned int start, unsigned
         }
 
         // Parse another expression.
-        expression *expr = parse_unary_expression(idx, end);
+        unique_ptr<expression> expr = parse_unary_expression(idx, end);
         if (!expr) {
             add_error(L"Missing argument at index %u", idx);
             if (!first) {
@@ -327,7 +324,7 @@ expression *test_parser::parse_combining_expression(unsigned int start, unsigned
 
         // Go to the end of this expression.
         idx = expr->range.end;
-        subjects.push_back(expr);
+        subjects.push_back(move(expr));
         first = false;
     }
 
@@ -336,10 +333,10 @@ expression *test_parser::parse_combining_expression(unsigned int start, unsigned
     }
     // Our new expression takes ownership of all expressions we created. The token we pass is
     // irrelevant.
-    return new combining_expression(test_combine_and, range_t(start, idx), subjects, combiners);
+    return make_unique<combining_expression>(test_combine_and, range_t(start, idx), move(subjects), move(combiners));
 }
 
-expression *test_parser::parse_unary_primary(unsigned int start, unsigned int end) {
+unique_ptr<expression> test_parser::parse_unary_primary(unsigned int start, unsigned int end) {
     // We need two arguments.
     if (start >= end) {
         return error(L"Missing argument at index %u", start);
@@ -352,10 +349,10 @@ expression *test_parser::parse_unary_primary(unsigned int start, unsigned int en
     const token_info_t *info = token_for_string(arg(start));
     if (!(info->flags & UNARY_PRIMARY)) return NULL;
 
-    return new unary_primary(info->tok, range_t(start, start + 2), arg(start + 1));
+    return make_unique<unary_primary>(info->tok, range_t(start, start + 2), arg(start + 1));
 }
 
-expression *test_parser::parse_just_a_string(unsigned int start, unsigned int end) {
+unique_ptr<expression> test_parser::parse_just_a_string(unsigned int start, unsigned int end) {
     // Handle a string as a unary primary that is not a token of any other type. e.g. 'test foo -a
     // bar' should evaluate to true We handle this with a unary primary of test_string_n.
 
@@ -371,48 +368,10 @@ expression *test_parser::parse_just_a_string(unsigned int start, unsigned int en
 
     // This is hackish; a nicer way to implement this would be with a "just a string" expression
     // type.
-    return new unary_primary(test_string_n, range_t(start, start + 1), arg(start));
+    return make_unique<unary_primary>(test_string_n, range_t(start, start + 1), arg(start));
 }
 
-#if 0
-expression *test_parser::parse_unary_primary(unsigned int start, unsigned int end)
-{
-    // We need either one or two arguments.
-    if (start >= end) {
-        return error(L"Missing argument at index %u", start);
-    }
-
-    // The index of the argument to the unary primary.
-    unsigned int arg_idx;
-
-    // All our unary primaries are prefix, so any operator is at start. But it also may just be a
-    // string, with no operator.
-    const token_info_t *info = token_for_string(arg(start));
-    if (info->flags & UNARY_PRIMARY) {
-        /* We have an operator. Skip the operator argument */
-        arg_idx = start + 1;
-
-        // We have some freedom here...do we allow other tokens for the argument to operate on? For
-        // example, should 'test -n =' work? I say yes. So no typechecking on the next token.
-    } else if (info->tok == test_unknown) {
-        // "Just a string.
-        arg_idx = start;
-    } else {
-        // Here we don't allow arbitrary tokens as "just a string." I.e. 'test = -a =' should have a
-        // parse error. We could relax this at some point.
-        return error(L"Parse error at argument index %u", start);
-    }
-
-    // Verify we have the argument we want, i.e. test -n should fail to parse.
-    if (arg_idx >= end) {
-        return error(L"Missing argument at index %u", arg_idx);
-    }
-
-    return new unary_primary(info->tok, range_t(start, arg_idx + 1), arg(arg_idx));
-}
-#endif
-
-expression *test_parser::parse_binary_primary(unsigned int start, unsigned int end) {
+unique_ptr<expression> test_parser::parse_binary_primary(unsigned int start, unsigned int end) {
     // We need three arguments.
     for (unsigned int idx = start; idx < start + 3; idx++) {
         if (idx >= end) {
@@ -424,10 +383,10 @@ expression *test_parser::parse_binary_primary(unsigned int start, unsigned int e
     const token_info_t *info = token_for_string(arg(start + 1));
     if (!(info->flags & BINARY_PRIMARY)) return NULL;
 
-    return new binary_primary(info->tok, range_t(start, start + 3), arg(start), arg(start + 2));
+    return make_unique<binary_primary>(info->tok, range_t(start, start + 3), arg(start), arg(start + 2));
 }
 
-expression *test_parser::parse_parenthentical(unsigned int start, unsigned int end) {
+unique_ptr<expression> test_parser::parse_parenthentical(unsigned int start, unsigned int end) {
     // We need at least three arguments: open paren, argument, close paren.
     if (start + 3 >= end) return NULL;
 
@@ -436,9 +395,8 @@ expression *test_parser::parse_parenthentical(unsigned int start, unsigned int e
     if (open_paren->tok != test_paren_open) return NULL;
 
     // Parse a subexpression.
-    expression *subexr_ptr = parse_expression(start + 1, end);
-    if (!subexr_ptr) return NULL;
-    expr_ref_t subexpr(subexr_ptr);
+    unique_ptr<expression> subexpr = parse_expression(start + 1, end);
+    if (!subexpr) return NULL;
 
     // Parse a close paren.
     unsigned close_index = subexpr->range.end;
@@ -452,15 +410,15 @@ expression *test_parser::parse_parenthentical(unsigned int start, unsigned int e
     }
 
     // Success.
-    return new parenthetical_expression(test_paren_open, range_t(start, close_index + 1), subexpr);
+    return make_unique<parenthetical_expression>(test_paren_open, range_t(start, close_index + 1), move(subexpr));
 }
 
-expression *test_parser::parse_primary(unsigned int start, unsigned int end) {
+unique_ptr<expression> test_parser::parse_primary(unsigned int start, unsigned int end) {
     if (start >= end) {
         return error(L"Missing argument at index %u", start);
     }
 
-    expression *expr = NULL;
+    unique_ptr<expression> expr = NULL;
     if (!expr) expr = parse_parenthentical(start, end);
     if (!expr) expr = parse_unary_primary(start, end);
     if (!expr) expr = parse_binary_primary(start, end);
@@ -469,24 +427,25 @@ expression *test_parser::parse_primary(unsigned int start, unsigned int end) {
 }
 
 // See IEEE 1003.1 breakdown of the behavior for different parameter counts.
-expression *test_parser::parse_3_arg_expression(unsigned int start, unsigned int end) {
+unique_ptr<expression> test_parser::parse_3_arg_expression(unsigned int start, unsigned int end) {
     assert(end - start == 3);
-    expression *result = NULL;
+    unique_ptr<expression> result = NULL;
 
     const token_info_t *center_token = token_for_string(arg(start + 1));
     if (center_token->flags & BINARY_PRIMARY) {
         result = parse_binary_primary(start, end);
     } else if (center_token->tok == test_combine_and || center_token->tok == test_combine_or) {
-        expr_ref_t left(parse_unary_expression(start, start + 1));
-        expr_ref_t right(parse_unary_expression(start + 2, start + 3));
+        unique_ptr<expression> left(parse_unary_expression(start, start + 1));
+        unique_ptr<expression> right(parse_unary_expression(start + 2, start + 3));
         if (left.get() && right.get()) {
             // Transfer ownership to the vector of subjects.
-            std::vector<token_t> combiners(1, center_token->tok);
-            std::vector<expression *> subjects;
-            subjects.push_back(left.release());
-            subjects.push_back(right.release());
-            result = new combining_expression(center_token->tok, range_t(start, end), subjects,
-                                              combiners);
+            std::vector<token_t> combiners = {center_token->tok};
+            std::vector<unique_ptr<expression>> subjects;
+            subjects.push_back(move(left));
+            subjects.push_back(move(right));
+            result = make_unique<combining_expression>(center_token->tok, range_t(start, end),
+                                                       move(subjects),
+                                                       move(combiners));
         }
     } else {
         result = parse_unary_expression(start, end);
@@ -494,15 +453,15 @@ expression *test_parser::parse_3_arg_expression(unsigned int start, unsigned int
     return result;
 }
 
-expression *test_parser::parse_4_arg_expression(unsigned int start, unsigned int end) {
+unique_ptr<expression> test_parser::parse_4_arg_expression(unsigned int start, unsigned int end) {
     assert(end - start == 4);
-    expression *result = NULL;
+    unique_ptr<expression> result = NULL;
 
     token_t first_token = token_for_string(arg(start))->tok;
     if (first_token == test_bang) {
-        expr_ref_t subject(parse_3_arg_expression(start + 1, end));
+        unique_ptr<expression> subject(parse_3_arg_expression(start + 1, end));
         if (subject.get()) {
-            result = new unary_operator(first_token, range_t(start, subject->range.end), subject);
+            result = make_unique<unary_operator>(first_token, range_t(start, subject->range.end), move(subject));
         }
     } else if (first_token == test_paren_open) {
         result = parse_parenthentical(start, end);
@@ -512,7 +471,7 @@ expression *test_parser::parse_4_arg_expression(unsigned int start, unsigned int
     return result;
 }
 
-expression *test_parser::parse_expression(unsigned int start, unsigned int end) {
+unique_ptr<expression> test_parser::parse_expression(unsigned int start, unsigned int end) {
     if (start >= end) {
         return error(L"Missing argument at index %u", start);
     }
@@ -539,13 +498,13 @@ expression *test_parser::parse_expression(unsigned int start, unsigned int end) 
     }
 }
 
-expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err,
+unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcstring &err,
                                     wchar_t *program_name) {
     // Empty list and one-arg list should be handled by caller.
     assert(args.size() > 1);
 
     test_parser parser(args);
-    expression *result = parser.parse_expression(0, (unsigned int)args.size());
+    unique_ptr<expression> result = parser.parse_expression(0, (unsigned int)args.size());
 
     // Handle errors.
     // For now we only show the first error.
@@ -565,9 +524,7 @@ expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err,
                 append_format(err, L"%ls: unexpected argument at index %lu: '%ls'\n", program_name,
                               (unsigned long)result->range.end, args.at(result->range.end).c_str());
             }
-
-            delete result;
-            result = NULL;
+            result.reset(NULL);
         }
     }
 
@@ -805,9 +762,9 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return args.at(0).empty() ? BUILTIN_TEST_FAIL : BUILTIN_TEST_SUCCESS;
     }
 
-    // Try parsing. If expr is not nil, we are responsible for deleting it.
+    // Try parsing
     wcstring err;
-    expression *expr = test_parser::parse_args(args, err, program_name);
+    unique_ptr<expression> expr = test_parser::parse_args(args, err, program_name);
     if (!expr) {
 #if 0
         streams.err.append(L"Oops! test was given args:\n");
@@ -828,6 +785,5 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(L"\t%ls\n", eval_errors.at(i).c_str());
         }
     }
-    delete expr;
     return result ? BUILTIN_TEST_SUCCESS : BUILTIN_TEST_FAIL;
 }

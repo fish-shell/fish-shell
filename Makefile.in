@@ -677,42 +677,19 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 	@echo "Installing pkgconfig file"
 	$v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
 	@echo "Installing the $(bo)fish completion library$(sgr0)...";
-	$v for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
-	done;
+	$v $(INSTALL) -m 644 $(COMPLETIONS_DIR_FILES:%='%') $(DESTDIR)$(datadir)/fish/completions/
 	@echo "Installing $(bo)fish functions$(sgr0)";
-	$v for i in $(FUNCTIONS_DIR_FILES:%='%'); do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
-	done;
+	$v $(INSTALL) -m 644 $(FUNCTIONS_DIR_FILES:%='%') $(DESTDIR)$(datadir)/fish/functions/
 	@echo "Installing $(bo)man pages$(sgr0)";
 	$v $(INSTALL) -m 644 share/groff/* $(DESTDIR)$(datadir)/fish/groff/
-	$v for i in $(HELP_MANPAGES); do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
-	done;
+	$v test -z "$(HELP_MANPAGES)" || $(INSTALL) -m 644 $(HELP_MANPAGES) $(DESTDIR)$(datadir)/fish/man/man1/
 	@echo "Installing helper tools";
-	$v for i in $(wildcard share/tools/*.py); do\
-		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/; \
-	done;
-	$v for i in share/tools/web_config/*.*; do\
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
-		true; \
-	done;
-	$v for i in share/tools/web_config/js/*.*; do\
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/js/; \
-		true; \
-	done;
-	$v for i in share/tools/web_config/partials/*; do\
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/partials/; \
-		true; \
-	done;
-	$v for i in share/tools/web_config/sample_prompts/*.fish; do\
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts/; \
-		true; \
-	done;
-	$v for i in share/tools/web_config/*.py; do\
-		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
-		true; \
-	done;
+	$v $(INSTALL) -m 755 share/tools/*.py $(DESTDIR)$(datadir)/fish/tools/
+	$v $(INSTALL) -m 644 share/tools/web_config/*.* $(DESTDIR)$(datadir)/fish/tools/web_config/
+	$v $(INSTALL) -m 644 share/tools/web_config/js/*.* $(DESTDIR)$(datadir)/fish/tools/web_config/js/
+	$v $(INSTALL) -m 644 share/tools/web_config/partials/* $(DESTDIR)$(datadir)/fish/tools/web_config/partials/
+	$v $(INSTALL) -m 644 share/tools/web_config/sample_prompts/*.fish $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts/
+	$v $(INSTALL) -m 755 share/tools/web_config/*.py $(DESTDIR)$(datadir)/fish/tools/web_config/
 	@echo "Installing online user documentation";
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	$v for i in user_doc/html/* CHANGELOG.md; do \

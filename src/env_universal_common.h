@@ -135,9 +135,9 @@ class universal_notifier_t {
     static notifier_strategy_t resolve_default_strategy();
     virtual ~universal_notifier_t();
 
-    // Factory constructor. Free with delete.
-    static universal_notifier_t *new_notifier_for_strategy(notifier_strategy_t strat,
-                                                           const wchar_t *test_path = NULL);
+    // Factory constructor.
+    static std::unique_ptr<universal_notifier_t> new_notifier_for_strategy(notifier_strategy_t strat,
+                                                                           const wchar_t *test_path = NULL);
 
     // Default instance. Other instances are possible for testing.
     static universal_notifier_t &default_notifier();

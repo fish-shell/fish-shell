@@ -1357,22 +1357,22 @@ universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_
 }
 
 universal_notifier_t &universal_notifier_t::default_notifier() {
-    static universal_notifier_t *result =
+    static std::unique_ptr<universal_notifier_t> result =
         new_notifier_for_strategy(universal_notifier_t::resolve_default_strategy());
     return *result;
 }
 
-universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(
+std::unique_ptr<universal_notifier_t> universal_notifier_t::new_notifier_for_strategy(
     universal_notifier_t::notifier_strategy_t strat, const wchar_t *test_path) {
     switch (strat) {
         case strategy_notifyd: {
-            return new universal_notifier_notifyd_t();
+            return make_unique<universal_notifier_notifyd_t>();
         }
         case strategy_shmem_polling: {
-            return new universal_notifier_shmem_poller_t();
+            return make_unique<universal_notifier_shmem_poller_t>();
         }
         case strategy_named_pipe: {
-            return new universal_notifier_named_pipe_t(test_path);
+            return make_unique<universal_notifier_named_pipe_t>(test_path);
         }
         default: {
             debug(0, "Unsupported universal notifier strategy %d\n", strat);

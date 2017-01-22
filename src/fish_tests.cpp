@@ -532,12 +532,12 @@ static int test_iothread_thread_call(int *addr) {
 
 static void test_iothread(void) {
     say(L"Testing iothreads");
-    int *int_ptr = new int(0);
+    std::unique_ptr<int> int_ptr = make_unique<int>(0);
     int iterations = 50000;
     int max_achieved_thread_count = 0;
     double start = timef();
     for (int i = 0; i < iterations; i++) {
-        int thread_count = iothread_perform(test_iothread_thread_call, int_ptr);
+        int thread_count = iothread_perform(test_iothread_thread_call, int_ptr.get());
         max_achieved_thread_count = std::max(max_achieved_thread_count, thread_count);
     }
 
@@ -552,8 +552,6 @@ static void test_iothread(void) {
 
     say(L"    (%.02f msec, with max of %d threads)", (end - start) * 1000.0,
         max_achieved_thread_count);
-
-    delete int_ptr;
 }
 
 static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
@@ -2553,7 +2551,7 @@ static void test_universal_callbacks() {
     if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rm failed");
 }
 
-bool poll_notifier(universal_notifier_t *note) {
+bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
     bool result = false;
     if (note->usec_delay_between_polls() > 0) {
         result = note->poll();
@@ -2591,7 +2589,7 @@ static void trigger_or_wait_for_notification(universal_notifier_t::notifier_stra
 
 static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy_t strategy) {
     say(L"Testing universal notifiers with strategy %d", (int)strategy);
-    universal_notifier_t *notifiers[16];
+    std::unique_ptr<universal_notifier_t> notifiers[16];
     size_t notifier_count = sizeof notifiers / sizeof *notifiers;
 
     // Populate array of notifiers.
@@ -2625,7 +2623,7 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
             if (!poll_notifier(notifiers[i])) {
                 err(L"Universal variable notifier (%lu) %p polled failed to notice changes, with "
                     L"strategy %d",
-                    i, notifiers[i], (int)strategy);
+                    i, notifiers[i].get(), (int)strategy);
             }
         }
 
@@ -2647,11 +2645,6 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
             err(L"Universal variable notifier polled true after all changes, with strategy %d",
                 (int)strategy);
         }
-    }
-
-    // Clean up.
-    for (size_t i = 0; i < notifier_count; i++) {
-        delete notifiers[i];
     }
 }
 

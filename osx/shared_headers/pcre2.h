@@ -42,9 +42,9 @@ POSSIBILITY OF SUCH DAMAGE.
 /* The current PCRE version information. */
 
 #define PCRE2_MAJOR          10
-#define PCRE2_MINOR          21
-#define PCRE2_PRERELEASE
-#define PCRE2_DATE           2016-01-12
+#define PCRE2_MINOR          22
+#define PCRE2_PRERELEASE     
+#define PCRE2_DATE           2016-07-29
 
 /* When an application links to a PCRE DLL in Windows, the symbols that are
 imported have to be identified as such. When building PCRE2, the appropriate
@@ -146,13 +146,19 @@ sanity checks). */
 #define PCRE2_DFA_RESTART         0x00000040u
 #define PCRE2_DFA_SHORTEST        0x00000080u
 
-/* These are additional options for pcre2_substitute(). */
+/* These are additional options for pcre2_substitute(), which passes any others
+through to pcre2_match(). */
 
 #define PCRE2_SUBSTITUTE_GLOBAL           0x00000100u
 #define PCRE2_SUBSTITUTE_EXTENDED         0x00000200u
 #define PCRE2_SUBSTITUTE_UNSET_EMPTY      0x00000400u
 #define PCRE2_SUBSTITUTE_UNKNOWN_UNSET    0x00000800u
 #define PCRE2_SUBSTITUTE_OVERFLOW_LENGTH  0x00001000u
+
+/* A further option for pcre2_match(), not allowed for pcre2_dfa_match(),
+ignored for pcre2_jit_match(). */
+
+#define PCRE2_NO_JIT              0x00002000u
 
 /* Newline and \R settings, for use in compile contexts. The newline values
 must be kept in step with values set in config.h and both sets must all be
@@ -245,6 +251,7 @@ numbers must not be changed. */
 #define PCRE2_ERROR_BADSUBSTITUTION   (-59)
 #define PCRE2_ERROR_BADSUBSPATTERN    (-60)
 #define PCRE2_ERROR_TOOMANYREPLACE    (-61)
+#define PCRE2_ERROR_BADSERIALIZEDDATA (-62)
 
 /* Request types for pcre2_pattern_info() */
 
@@ -436,7 +443,9 @@ PCRE2_EXP_DECL int       pcre2_set_recursion_memory_management( \
 PCRE2_EXP_DECL \
   pcre2_code            *pcre2_compile(PCRE2_SPTR, PCRE2_SIZE, uint32_t, \
                            int *, PCRE2_SIZE *, pcre2_compile_context *); \
-PCRE2_EXP_DECL void      pcre2_code_free(pcre2_code *);
+PCRE2_EXP_DECL void      pcre2_code_free(pcre2_code *); \
+PCRE2_EXP_DECL \
+  pcre2_code            *pcre2_code_copy(const pcre2_code *);
 
 
 /* Functions that give information about a compiled pattern. */
@@ -585,6 +594,7 @@ pcre2_compile are called by application code. */
 /* Functions: the complete list in alphabetical order */
 
 #define pcre2_callout_enumerate               PCRE2_SUFFIX(pcre2_callout_enumerate_)
+#define pcre2_code_copy                       PCRE2_SUFFIX(pcre2_code_copy_)
 #define pcre2_code_free                       PCRE2_SUFFIX(pcre2_code_free_)
 #define pcre2_compile                         PCRE2_SUFFIX(pcre2_compile_)
 #define pcre2_compile_context_copy            PCRE2_SUFFIX(pcre2_compile_context_copy_)

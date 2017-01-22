@@ -609,7 +609,7 @@ void exec_job(parser_t &parser, job_t *j) {
         shared_ptr<io_buffer_t> block_output_io_buffer;
 
         // This is the io_streams we pass to internal builtins.
-        std::auto_ptr<io_streams_t> builtin_io_streams;
+        std::unique_ptr<io_streams_t> builtin_io_streams;
 
         switch (p->type) {
             case INTERNAL_FUNCTION: {

@@ -2408,6 +2408,10 @@ static bool history_contains(history_t *history, const wcstring &txt) {
     return result;
 }
 
+static bool history_contains(const std::unique_ptr<history_t> &history, const wcstring &txt) {
+    return history_contains(history.get(), txt);
+}
+
 static void test_input() {
     say(L"Testing input");
     // Ensure sequences are order independent. Here we add two bindings where the first is a prefix
@@ -2803,7 +2807,7 @@ static wcstring_list_t generate_history_lines(int pid) {
 
 void history_tests_t::test_history_races_pound_on_history() {
     // Called in child process to modify history.
-    history_t *hist = new history_t(L"race_test");
+    std::unique_ptr<history_t> hist = make_unique<history_t>(L"race_test");
     hist->chaos_mode = true;
     const wcstring_list_t hist_lines = generate_history_lines(getpid());
     for (size_t idx = 0; idx < hist_lines.size(); idx++) {
@@ -2811,16 +2815,16 @@ void history_tests_t::test_history_races_pound_on_history() {
         hist->add(line);
         hist->save();
     }
-    delete hist;
 }
 
 void history_tests_t::test_history_races(void) {
     say(L"Testing history race conditions");
 
     // Ensure history is clear.
-    history_t *hist = new history_t(L"race_test");
-    hist->clear();
-    delete hist;
+    {
+        std::unique_ptr<history_t> hist = make_unique<history_t>(L"race_test");
+        hist->clear();
+    }
 
 // Test concurrent history writing.
 #define RACE_COUNT 10
@@ -2861,7 +2865,7 @@ void history_tests_t::test_history_races(void) {
     time_barrier();
 
     // Ensure that we got sane, sorted results.
-    hist = new history_t(L"race_test");
+    std::unique_ptr<history_t> hist = make_unique<history_t>(L"race_test");
     hist->chaos_mode = true;
     size_t hist_idx;
     for (hist_idx = 1;; hist_idx++) {
@@ -2890,7 +2894,6 @@ void history_tests_t::test_history_races(void) {
     do_test(hist_idx >= RACE_COUNT);
 
     // hist->clear();
-    delete hist;
 }
 
 void history_tests_t::test_history_merge(void) {
@@ -2901,7 +2904,7 @@ void history_tests_t::test_history_merge(void) {
     say(L"Testing history merge");
     const size_t count = 3;
     const wcstring name = L"merge_test";
-    history_t *hists[count] = {new history_t(name), new history_t(name), new history_t(name)};
+    std::unique_ptr<history_t> hists[count] = {make_unique<history_t>(name), make_unique<history_t>(name), make_unique<history_t>(name)};
     const wcstring texts[count] = {L"History 1", L"History 2", L"History 3"};
     const wcstring alt_texts[count] = {L"History Alt 1", L"History Alt 2", L"History Alt 3"};
 
@@ -2935,7 +2938,7 @@ void history_tests_t::test_history_merge(void) {
     // Make a new history. It should contain everything. The time_barrier() is so that the timestamp
     // is newer, since we only pick up items whose timestamp is before the birth stamp.
     time_barrier();
-    history_t *everything = new history_t(name);
+    std::unique_ptr<history_t> everything = make_unique<history_t>(name);
     for (size_t i = 0; i < count; i++) {
         do_test(history_contains(everything, texts[i]));
     }
@@ -2972,8 +2975,8 @@ void history_tests_t::test_history_merge(void) {
     }
 
     // Make sure incorporate_external_changes doesn't drop items! (#3496)
-    history_t *const writer = hists[0];
-    history_t *const reader = hists[1];
+    history_t *const writer = hists[0].get();
+    history_t *const reader = hists[1].get();
     const wcstring more_texts[] = {L"Item_#3496_1", L"Item_#3496_2", L"Item_#3496_3",
                                    L"Item_#3496_4", L"Item_#3496_5", L"Item_#3496_6"};
     for (size_t i = 0; i < sizeof more_texts / sizeof *more_texts; i++) {
@@ -2986,13 +2989,7 @@ void history_tests_t::test_history_merge(void) {
             do_test(history_contains(reader, more_texts[j]));
         }
     }
-
-    // Clean up.
-    for (size_t i = 0; i < 3; i++) {
-        delete hists[i];
-    }
     everything->clear();
-    delete everything;  // not as scary as it looks
 }
 
 static bool install_sample_history(const wchar_t *name) {
@@ -3114,7 +3111,7 @@ void history_tests_t::test_history_formats(void) {
 void history_tests_t::test_history_speed(void)
 {
     say(L"Testing history speed (pid is %d)", getpid());
-    history_t *hist = new history_t(L"speed_test");
+    std::unique_ptr<history_t> hist = make_unique<history_t>(L"speed_test");
     wcstring item = L"History Speed Test - X";
 
     // Test for 10 seconds.
@@ -3134,7 +3131,6 @@ void history_tests_t::test_history_speed(void)
     }
     fwprintf(stdout, L"%lu items - %.2f msec per item\n", (unsigned long)count, (stop - start) * 1E6 / count);
     hist->clear();
-    delete hist;
 }
 #endif
 

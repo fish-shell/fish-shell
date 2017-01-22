@@ -833,18 +833,13 @@ void reader_repaint_if_needed() {
     }
 }
 
-static void reader_repaint_if_needed_one_arg(void *unused) {
-    UNUSED(unused);
-    reader_repaint_if_needed();
-}
-
 void reader_react_to_color_change() {
     if (!data) return;
 
     if (!data->repaint_needed || !data->screen_reset_needed) {
         data->repaint_needed = true;
         data->screen_reset_needed = true;
-        input_common_add_callback(reader_repaint_if_needed_one_arg, NULL);
+        input_common_add_callback(reader_repaint_if_needed);
     }
 }
 

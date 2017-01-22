@@ -302,15 +302,6 @@ bool event_is_signal_observed(int sig) {
     return result;
 }
 
-/// Callback for firing (and then deleting) an event.
-static void fire_event_callback(void *arg) {
-    ASSERT_IS_MAIN_THREAD();
-    assert(arg != NULL);
-    event_t *event = static_cast<event_t *>(arg);
-    event_fire(event);
-    delete event;
-}
-
 /// Perform the specified event. Since almost all event firings will not be matched by even a single
 /// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
 /// allocated/initialized unless needed.
@@ -332,8 +323,10 @@ static void event_fire_internal(const event_t &event) {
     if (signal_is_blocked()) {
         // Fix for https://github.com/fish-shell/fish-shell/issues/608. Don't run event handlers
         // while signals are blocked.
-        event_t *heap_event = new event_t(event);
-        input_common_add_callback(fire_event_callback, heap_event);
+        input_common_add_callback([event](){
+            ASSERT_IS_MAIN_THREAD();
+            event_fire(&event);
+        });
         return;
     }
 

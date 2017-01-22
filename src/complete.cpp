@@ -479,7 +479,6 @@ void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &opti
 
         bool delete_it = entry.remove_option(option, type);
         if (delete_it) {
-            // Delete this entry.
             completion_set.erase(iter);
         }
     }

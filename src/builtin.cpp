@@ -944,7 +944,7 @@ static wcstring functions_def(const wcstring &name) {
     function_get_definition(name, &def);
     event_t search(EVENT_ANY);
     search.function_name = name;
-    std::vector<event_t *> ev;
+    std::vector<std::shared_ptr<event_t>> ev;
     event_get(search, &ev);
 
     out.append(L"function ");
@@ -967,7 +967,7 @@ static wcstring functions_def(const wcstring &name) {
     }
 
     for (size_t i = 0; i < ev.size(); i++) {
-        event_t *next = ev.at(i);
+        const event_t *next = ev.at(i).get();
         switch (next->type) {
             case EVENT_SIGNAL: {
                 append_format(out, L" --on-signal %ls", sig2wcs(next->param1.signal));

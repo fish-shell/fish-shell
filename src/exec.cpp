@@ -642,7 +642,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 if (p->next) {
                     // Be careful to handle failure, e.g. too many open fds.
-                    block_output_io_buffer.reset(io_buffer_t::create(STDOUT_FILENO, all_ios));
+                    block_output_io_buffer = io_buffer_t::create(STDOUT_FILENO, all_ios);
                     if (block_output_io_buffer.get() == NULL) {
                         exec_error = true;
                         job_mark_process_as_failed(j, p);
@@ -668,7 +668,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
             case INTERNAL_BLOCK_NODE: {
                 if (p->next) {
-                    block_output_io_buffer.reset(io_buffer_t::create(STDOUT_FILENO, all_ios));
+                    block_output_io_buffer = io_buffer_t::create(STDOUT_FILENO, all_ios);
                     if (block_output_io_buffer.get() == NULL) {
                         // We failed (e.g. no more fds could be created).
                         exec_error = true;

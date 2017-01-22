@@ -76,10 +76,10 @@ bool io_buffer_t::avoid_conflicts_with_io_chain(const io_chain_t &ios) {
     return result;
 }
 
-io_buffer_t *io_buffer_t::create(int fd, const io_chain_t &conflicts) {
+shared_ptr<io_buffer_t> io_buffer_t::create(int fd, const io_chain_t &conflicts) {
     bool success = true;
     assert(fd >= 0);
-    io_buffer_t *buffer_redirect = new io_buffer_t(fd);
+    shared_ptr<io_buffer_t> buffer_redirect(new io_buffer_t(fd));
 
     if (exec_pipe(buffer_redirect->pipe_fd) == -1) {
         debug(1, PIPE_ERROR);
@@ -95,8 +95,7 @@ io_buffer_t *io_buffer_t::create(int fd, const io_chain_t &conflicts) {
     }
 
     if (!success) {
-        delete buffer_redirect;
-        buffer_redirect = NULL;
+        buffer_redirect.reset();
     }
     return buffer_redirect;
 }

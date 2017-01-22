@@ -24,9 +24,4 @@ complete -c mount -s O -x --description 'Exclude file systems'
 complete -c mount -l bind -f --description 'Remount a subtree to a second position'
 complete -c mount -l move -f --description 'Move a subtree to a new position'
 complete -c mount -x -s t --description 'File system' -a "(__fish_print_filesystems)"
-
-complete -c mount -x -s o --description 'Mount option' -a '(__fish_append , $__fish_mount_opts)'
-
-set -g __fish_mount_opts async\tUse\ asynchronous\ I/O atime\tUpdate\ time\ on\ each\ access auto\tMounted\ with\ -a defaults\tUse\ default\ options dev\tInterpret\ character/block\ special\ devices exec\tPermit\ executables _netdev\tFilesystem\ uses\ network noatime\tDo\ not\ update\ time\ on\ each\ access noauto\tNot\ mounted\ by\ -a nodev\tDo\ not\ interpret\ character/block\ special\ devices noexec\tDo\ not\ permit\ executables nosuid\tIgnore\ suid\ bits nouser\tOnly\ root\ may\ mount remount\tRemount\ read-only\ filesystem ro\tMount\ read-only rw\tMount\ read-write suid\tAllow\ suid\ bits sync\tUse\ synchronous\ I/O dirsync\tUse\ synchronous\ directory\ operations user\tAny\ user\ may\ mount users\tAny\ user\ may\ mount\ and\ unmount
-
-
+complete -c mount -x -s o --description 'Mount option' -a '(__fish_complete_mount_opts)'

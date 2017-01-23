@@ -835,14 +835,6 @@ static void complete_load(const wcstring &name, bool reload) {
     completion_autoloader.load(name, reload);
 }
 
-/// Performed on main thread, from background thread. Return type is ignored.
-static int complete_load_no_reload(wcstring *name) {
-    assert(name != NULL);
-    ASSERT_IS_MAIN_THREAD();
-    complete_load(*name, false);
-    return 0;
-}
-
 /// complete_param: Given a command, find completions for the argument str of command cmd_orig with
 /// previous option popt.
 ///
@@ -868,8 +860,10 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
         complete_load(cmd, true);
     } else if (this->type() == COMPLETE_AUTOSUGGEST &&
                !completion_autoloader.has_tried_loading(cmd)) {
-        // Load this command (on the main thread).
-        iothread_perform_on_main(complete_load_no_reload, &cmd);
+        // Load this command (on the main thread)
+        iothread_perform_on_main([&](){
+            complete_load(cmd, false);
+        });
     }
 
     // Make a list of lists of all options that we care about.

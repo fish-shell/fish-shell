@@ -26,19 +26,29 @@ void iothread_service_completion(void);
 /// Waits for all iothreads to terminate.
 void iothread_drain_all(void);
 
-/// Helper templates.
-template <typename T>
-int iothread_perform(int (*handler)(T *), void (*completion)(T *, int), T *context) {
-    return iothread_perform_base((int (*)(void *))handler,
-                                 (void (*)(void *, int))completion,
-                                 static_cast<void *>(context));
+int iothread_perform(std::function<void(void)> &&func,
+                     std::function<void(void)> &&completion = std::function<void(void)>());
+
+// Variant that allows computing a value in func, and then passing it to the completion handler
+template<typename T>
+int iothread_perform(std::function<T(void)> &&handler, std::function<void(T)> &&completion) {
+    T *result = new T();
+    return iothread_perform([=](){ *result = handler(); },
+                            [=](){ completion(std::move(*result)); delete result; }
+                            );
 }
 
-// Variant that takes no completion callback.
+/// Legacy templates
+template <typename T>
+int iothread_perform(int (*handler)(T *), void (*completion)(T *, int), T *context) {
+    return iothread_perform(std::function<int(void)>([=](){return handler(context);}),
+                            std::function<void(int)>([=](int v){completion(context, v);})
+                            );
+}
+
 template <typename T>
 int iothread_perform(int (*handler)(T *), T *context) {
-    return iothread_perform_base((int (*)(void *))handler, (void (*)(void *, int))0,
-                                 static_cast<void *>(context));
+    return iothread_perform([=](){ handler(context); });
 }
 
 /// Performs a function on the main thread, blocking until it completes.

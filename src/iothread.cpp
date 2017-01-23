@@ -56,9 +56,9 @@ struct main_thread_request_t {
 
     // No moving OR copying
     // main_thread_requests are always stack allocated, and we deal in pointers to them
-    void operator=(const spawn_request_t &) = delete;
-    main_thread_request_t(const spawn_request_t &) = delete;
-    main_thread_request_t(spawn_request_t &&) = delete;
+    void operator=(const main_thread_request_t &) = delete;
+    main_thread_request_t(const main_thread_request_t &) = delete;
+    main_thread_request_t(main_thread_request_t &&) = delete;
 };
 
 // Spawn support. Requests are allocated and come in on request_queue. They go out on result_queue,

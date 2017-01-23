@@ -2,6 +2,8 @@
 #ifndef FISH_IOTHREAD_H
 #define FISH_IOTHREAD_H
 
+#include <functional>
+
 /// Runs a command on a thread.
 ///
 /// \param handler The function to execute on a background thread. Accepts an arbitrary context
@@ -24,9 +26,6 @@ void iothread_service_completion(void);
 /// Waits for all iothreads to terminate.
 void iothread_drain_all(void);
 
-/// Performs a function on the main thread, blocking until it completes.
-int iothread_perform_on_main_base(int (*handler)(void *), void *context);
-
 /// Helper templates.
 template <typename T>
 int iothread_perform(int (*handler)(T *), void (*completion)(T *, int), T *context) {
@@ -42,9 +41,16 @@ int iothread_perform(int (*handler)(T *), T *context) {
                                  static_cast<void *>(context));
 }
 
+/// Performs a function on the main thread, blocking until it completes.
+void iothread_perform_on_main(std::function<void(void)> &&func);
+
 template <typename T>
 int iothread_perform_on_main(int (*handler)(T *), T *context) {
-    return iothread_perform_on_main_base((int (*)(void *))handler, (void *)(context));
+    int result = 0;
+    iothread_perform_on_main([&result,handler,context](){
+        result = handler(context);
+    });
+    return result;
 }
 
 #endif

@@ -49,12 +49,10 @@ struct spawn_request_t {
 };
 
 struct main_thread_request_t {
-    int (*handler)(void *) = NULL;
-    void *context = NULL;
-    volatile int handler_result = -1;
     volatile bool done = false;
+    std::function<void(void)> func;
 
-    main_thread_request_t() {}
+    main_thread_request_t(std::function<void(void)> &&f) : func(f) {}
 
     // No moving OR copying
     // main_thread_requests are always stack allocated, and we deal in pointers to them
@@ -305,7 +303,7 @@ static void iothread_service_main_thread_requests(void) {
         while (!request_queue.empty()) {
             main_thread_request_t *req = request_queue.front();
             request_queue.pop();
-            req->handler_result = req->handler(req->context);
+            req->func();
             req->done = true;
         }
 
@@ -342,16 +340,14 @@ static void iothread_service_result_queue() {
     }
 }
 
-int iothread_perform_on_main_base(int (*handler)(void *), void *context) {
-    // If this is the main thread, just do it.
+void iothread_perform_on_main(std::function<void(void)> &&func) {
     if (is_main_thread()) {
-        return handler(context);
+        func();
+        return;
     }
 
     // Make a new request. Note we are synchronous, so this can be stack allocated!
-    main_thread_request_t req;
-    req.handler = handler;
-    req.context = context;
+    main_thread_request_t req(std::move(func));
 
     // Append it. Do not delete the nested scope as it is crucial to the proper functioning of this
     // code by virtue of the lock management.
@@ -370,10 +366,9 @@ int iothread_perform_on_main_base(int (*handler)(void *), void *context) {
         // It would be nice to support checking for cancellation here, but the clients need a
         // deterministic way to clean up to avoid leaks
         VOMIT_ON_FAILURE(
-            pthread_cond_wait(&s_main_thread_performer_cond, &s_main_thread_performer_lock));
+                         pthread_cond_wait(&s_main_thread_performer_cond, &s_main_thread_performer_lock));
     }
 
     // Ok, the request must now be done.
     assert(req.done);
-    return req.handler_result;
 }

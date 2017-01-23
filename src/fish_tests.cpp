@@ -531,7 +531,7 @@ static void test_iothread(void) {
     int max_achieved_thread_count = 0;
     double start = timef();
     for (int i = 0; i < iterations; i++) {
-        int thread_count = iothread_perform(test_iothread_thread_call, int_ptr.get());
+        int thread_count = iothread_perform([&](){ test_iothread_thread_call(int_ptr.get());});
         max_achieved_thread_count = std::max(max_achieved_thread_count, thread_count);
     }
 
@@ -713,23 +713,16 @@ static void test_parser() {
     do_test(comps.at(2).completion == L"delta");
 }
 
-/// Wait a while and then SIGINT the main thread.
-struct test_cancellation_info_t {
-    pthread_t thread;
-    double delay;
-};
-
-static int signal_main(test_cancellation_info_t *info) {
-    usleep(info->delay * 1E6);
-    pthread_kill(info->thread, SIGINT);
-    return 0;
-}
-
 static void test_1_cancellation(const wchar_t *src) {
     shared_ptr<io_buffer_t> out_buff(io_buffer_t::create(STDOUT_FILENO, io_chain_t()));
     const io_chain_t io_chain(out_buff);
-    test_cancellation_info_t ctx = {pthread_self(), 0.25 /* seconds */};
-    iothread_perform(signal_main, &ctx);
+    pthread_t thread = pthread_self();
+    double delay = 0.25 /* seconds */;
+    iothread_perform([=](){
+        /// Wait a while and then SIGINT the main thread.
+        usleep(delay * 1E6);
+        pthread_kill(thread, SIGINT);
+    });
     parser_t::principal_parser().eval(src, io_chain, TOP);
     out_buff->read();
     if (out_buff->out_buffer_size() != 0) {
@@ -2431,11 +2424,11 @@ static void test_input() {
 #define UVARS_PER_THREAD 8
 #define UVARS_TEST_PATH L"/tmp/fish_uvars_test/varsfile.txt"
 
-static int test_universal_helper(int *x) {
+static int test_universal_helper(int x) {
     env_universal_t uvars(UVARS_TEST_PATH);
     for (int j = 0; j < UVARS_PER_THREAD; j++) {
-        const wcstring key = format_string(L"key_%d_%d", *x, j);
-        const wcstring val = format_string(L"val_%d_%d", *x, j);
+        const wcstring key = format_string(L"key_%d_%d", x, j);
+        const wcstring val = format_string(L"val_%d_%d", x, j);
         uvars.set(key, val, false);
         bool synced = uvars.sync(NULL);
         if (!synced) {
@@ -2444,7 +2437,7 @@ static int test_universal_helper(int *x) {
     }
 
     // Last step is to delete the first key.
-    uvars.remove(format_string(L"key_%d_%d", *x, 0));
+    uvars.remove(format_string(L"key_%d_%d", x, 0));
     bool synced = uvars.sync(NULL);
     if (!synced) {
         err(L"Failed to sync universal variables after deletion");
@@ -2457,10 +2450,8 @@ static void test_universal() {
     if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
 
     const int threads = 16;
-    static int ctx[threads];
     for (int i = 0; i < threads; i++) {
-        ctx[i] = i;
-        iothread_perform(test_universal_helper, &ctx[i]);
+        iothread_perform([=](){test_universal_helper(i);});
     }
     iothread_drain_all();
 

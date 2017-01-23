@@ -44,13 +44,4 @@ int iothread_perform(int (*handler)(T *), T *context) {
 /// Performs a function on the main thread, blocking until it completes.
 void iothread_perform_on_main(std::function<void(void)> &&func);
 
-template <typename T>
-int iothread_perform_on_main(int (*handler)(T *), T *context) {
-    int result = 0;
-    iothread_perform_on_main([&result,handler,context](){
-        result = handler(context);
-    });
-    return result;
-}
-
 #endif

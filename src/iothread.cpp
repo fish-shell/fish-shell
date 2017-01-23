@@ -14,6 +14,7 @@
 
 #include "common.h"
 #include "iothread.h"
+#include "wutil.h"
 
 #ifdef _POSIX_THREAD_THREADS_MAX
 #if _POSIX_THREAD_THREADS_MAX < 64
@@ -94,10 +95,8 @@ static void iothread_init(void) {
         s_read_pipe = pipes[0];
         s_write_pipe = pipes[1];
 
-        // 0 means success to VOMIT_ON_FAILURE. Arrange to pass 0 if fcntl returns anything other
-        // than -1.
-        VOMIT_ON_FAILURE(-1 == fcntl(s_read_pipe, F_SETFD, FD_CLOEXEC));
-        VOMIT_ON_FAILURE(-1 == fcntl(s_write_pipe, F_SETFD, FD_CLOEXEC));
+        set_cloexec(s_read_pipe);
+        set_cloexec(s_write_pipe);
     }
 }
 

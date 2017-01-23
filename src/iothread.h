@@ -29,13 +29,31 @@ void iothread_drain_all(void);
 int iothread_perform(std::function<void(void)> &&func,
                      std::function<void(void)> &&completion = std::function<void(void)>());
 
-// Variant that allows computing a value in func, and then passing it to the completion handler
+// Template helpers
 template<typename T>
-int iothread_perform(std::function<T(void)> &&handler, std::function<void(T)> &&completion) {
-    T *result = new T();
-    return iothread_perform([=](){ *result = handler(); },
-                            [=](){ completion(std::move(*result)); delete result; }
-                            );
+struct _iothread_trampoline {
+    template<typename HANDLER, typename COMPLETION>
+    static int perform(const HANDLER &handler, const COMPLETION &completion) {
+        T *result = new T();
+        return iothread_perform([=](){ *result = handler(); },
+                                [=](){ completion(std::move(*result)); delete result; });
+    }
+};
+
+
+// Void specialization
+template<>
+struct _iothread_trampoline<void> {
+    template<typename HANDLER, typename COMPLETION>
+    static int perform(const HANDLER &handler, const COMPLETION &completion) {
+        return iothread_perform(handler, completion);
+    }
+};
+
+// Variant that allows computing a value in func, and then passing it to the completion handler
+template<typename HANDLER, typename COMPLETION>
+int iothread_perform(const HANDLER &handler, const COMPLETION &completion) {
+    return _iothread_trampoline<decltype(handler())>::perform(handler, completion);
 }
 
 /// Legacy templates

@@ -62,8 +62,6 @@ static const wchar_t *C_(const wcstring &s) {
 static const wcstring &C_(const wcstring &s) { return s; }
 #endif
 
-static void complete_load(const wcstring &name, bool reload);
-
 /// Testing apparatus.
 const wcstring_list_t *s_override_variable_names = NULL;
 
@@ -827,19 +825,24 @@ static bool short_ok(const wcstring &arg, const complete_entry_opt_t *entry,
     return result;
 }
 
+struct cmd_data_t {
+    const wcstring &name;
+    bool has_path;
+};
+
 /// Load command-specific completions for the specified command.
-static void complete_load(const wcstring &name, bool reload) {
-    // We have to load this as a function, since it may define a --wraps or signature.
-    // See issue #2466.
-    function_load(name);
-    completion_autoloader.load(name, reload);
+static void complete_load(const struct cmd_data_t *cmd, bool reload) {
+    // don't bother to autoload if there's no associated command able to use potential completions
+    // (#2365)
+    if (cmd->has_path || builtin_exists(cmd->name) || function_exists(cmd->name)) {
+        completion_autoloader.load(cmd->name, reload);
+    }
 }
 
 /// Performed on main thread, from background thread. Return type is ignored.
-static int complete_load_no_reload(wcstring *name) {
-    assert(name != NULL);
+static int complete_load_no_reload(const struct cmd_data_t *cmd) {
     ASSERT_IS_MAIN_THREAD();
-    complete_load(*name, false);
+    complete_load(cmd, false);
     return 0;
 }
 
@@ -862,14 +865,15 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
 
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, path, cmd);
-
+    const struct cmd_data_t data = {cmd, path != L""};
     if (this->type() == COMPLETE_DEFAULT) {
         ASSERT_IS_MAIN_THREAD();
-        complete_load(cmd, true);
+        complete_load(&data, true);
     } else if (this->type() == COMPLETE_AUTOSUGGEST &&
                !completion_autoloader.has_tried_loading(cmd)) {
         // Load this command (on the main thread).
-        iothread_perform_on_main(complete_load_no_reload, &cmd);
+
+        iothread_perform_on_main(complete_load_no_reload, &data);
     }
 
     // Make a list of lists of all options that we care about.

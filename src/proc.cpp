@@ -699,7 +699,7 @@ void proc_update_jiffies() {
     for (job = j.next(); job; job = j.next()) {
         for (process_ptr_t &p : job->processes) {
             gettimeofday(&p->last_time, 0);
-            p->last_jiffies = proc_get_jiffies(p);
+            p->last_jiffies = proc_get_jiffies(p.get());
         }
     }
 }

@@ -363,7 +363,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 // the queue of unused keypresses.
                 input_queue_ch(c);
             } else {
-                streams.err.append_format(_(L"%ls: Unknown input function '%ls'\n"), argv[0],
+                streams.err.append_format(_(L"%ls: Unknown input function '%ls'"), argv[0],
                                           argv[i]);
                 builtin_print_help(parser, streams, argv[0], streams.err);
                 return 1;
@@ -384,7 +384,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
     // Check for invalid switch combinations.
     if ((search_mode || line_mode || cursor_mode || paging_mode) && (argc - w.woptind > 1)) {
-        streams.err.append_format(argv[0], L": Too many arguments\n", NULL);
+        streams.err.append_format(L"%ls: Too many arguments", argv[0]);
         builtin_print_help(parser, streams, argv[0], streams.err);
         return 1;
     }

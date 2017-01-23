@@ -511,16 +511,10 @@ static void test_tokenizer() {
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
 }
 
-// Little function that runs in the main thread.
-static int test_iothread_main_call(int *addr) {
-    *addr += 1;
-    return *addr;
-}
-
 // Little function that runs in a background thread, bouncing to the main.
 static int test_iothread_thread_call(int *addr) {
     int before = *addr;
-    iothread_perform_on_main(test_iothread_main_call, addr);
+    iothread_perform_on_main([=](){ *addr += 1; });
     int after = *addr;
 
     // Must have incremented it at least once.

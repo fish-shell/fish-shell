@@ -32,14 +32,14 @@
 static void iothread_service_main_thread_requests(void);
 static void iothread_service_result_queue();
 
-struct SpawnRequest_t {
+struct spawn_request_t {
     int (*handler)(void *);
     void (*completionCallback)(void *, int);
     void *context;
     int handlerResult;
 };
 
-struct MainThreadRequest_t {
+struct main_thread_request_t {
     int (*handler)(void *);
     void *context;
     volatile int handlerResult;
@@ -49,17 +49,17 @@ struct MainThreadRequest_t {
 // Spawn support. Requests are allocated and come in on request_queue. They go out on result_queue,
 // at which point they can be deallocated. s_active_thread_count is also protected by the lock.
 static pthread_mutex_t s_spawn_queue_lock;
-static std::queue<SpawnRequest_t *> s_request_queue;
+static std::queue<spawn_request_t *> s_request_queue;
 static int s_active_thread_count;
 
 static pthread_mutex_t s_result_queue_lock;
-static std::queue<SpawnRequest_t *> s_result_queue;
+static std::queue<spawn_request_t *> s_result_queue;
 
 // "Do on main thread" support.
 static pthread_mutex_t s_main_thread_performer_lock;  // protects the main thread requests
 static pthread_cond_t s_main_thread_performer_cond;   // protects the main thread requests
 static pthread_mutex_t s_main_thread_request_q_lock;  // protects the queue
-static std::queue<MainThreadRequest_t *> s_main_thread_request_queue;
+static std::queue<main_thread_request_t *> s_main_thread_request_queue;
 
 // Notifying pipes.
 static int s_read_pipe, s_write_pipe;
@@ -89,14 +89,14 @@ static void iothread_init(void) {
     }
 }
 
-static void add_to_queue(struct SpawnRequest_t *req) {
+static void add_to_queue(struct spawn_request_t *req) {
     ASSERT_IS_LOCKED(s_spawn_queue_lock);
     s_request_queue.push(req);
 }
 
-static SpawnRequest_t *dequeue_spawn_request(void) {
+static spawn_request_t *dequeue_spawn_request(void) {
     ASSERT_IS_LOCKED(s_spawn_queue_lock);
-    SpawnRequest_t *result = NULL;
+    spawn_request_t *result = NULL;
     if (!s_request_queue.empty()) {
         result = s_request_queue.front();
         s_request_queue.pop();
@@ -104,7 +104,7 @@ static SpawnRequest_t *dequeue_spawn_request(void) {
     return result;
 }
 
-static void enqueue_thread_result(SpawnRequest_t *req) {
+static void enqueue_thread_result(spawn_request_t *req) {
     scoped_lock locker(s_result_queue_lock);
     s_result_queue.push(req);
 }
@@ -115,7 +115,7 @@ static void *this_thread() { return (void *)(intptr_t)pthread_self(); }
 static void *iothread_worker(void *unused) {
     UNUSED(unused);
     scoped_lock locker(s_spawn_queue_lock);
-    struct SpawnRequest_t *req;
+    struct spawn_request_t *req;
     while ((req = dequeue_spawn_request()) != NULL) {
         debug(5, "pthread %p dequeued %p\n", this_thread(), req);
         // Unlock the queue while we execute the request.
@@ -184,7 +184,7 @@ int iothread_perform_base(int (*handler)(void *), void (*completionCallback)(voi
     iothread_init();
 
     // Create and initialize a request.
-    struct SpawnRequest_t *req = new SpawnRequest_t();
+    struct spawn_request_t *req = new spawn_request_t();
     req->handler = handler;
     req->completionCallback = completionCallback;
     req->context = context;
@@ -285,7 +285,7 @@ static void iothread_service_main_thread_requests(void) {
     ASSERT_IS_MAIN_THREAD();
 
     // Move the queue to a local variable.
-    std::queue<MainThreadRequest_t *> request_queue;
+    std::queue<main_thread_request_t *> request_queue;
     {
         scoped_lock queue_lock(s_main_thread_request_q_lock);
         std::swap(request_queue, s_main_thread_request_queue);
@@ -295,7 +295,7 @@ static void iothread_service_main_thread_requests(void) {
         // Perform each of the functions. Note we are NOT responsible for deleting these. They are
         // stack allocated in their respective threads!
         while (!request_queue.empty()) {
-            MainThreadRequest_t *req = request_queue.front();
+            main_thread_request_t *req = request_queue.front();
             request_queue.pop();
             req->handlerResult = req->handler(req->context);
             req->done = true;
@@ -318,7 +318,7 @@ static void iothread_service_main_thread_requests(void) {
 /* Service the queue of results */
 static void iothread_service_result_queue() {
     // Move the queue to a local variable.
-    std::queue<SpawnRequest_t *> result_queue;
+    std::queue<spawn_request_t *> result_queue;
     {
         scoped_lock queue_lock(s_result_queue_lock);
         std::swap(result_queue, s_result_queue);
@@ -326,7 +326,7 @@ static void iothread_service_result_queue() {
 
     // Perform each completion in order. We are responsibile for cleaning them up.
     while (!result_queue.empty()) {
-        SpawnRequest_t *req = result_queue.front();
+        spawn_request_t *req = result_queue.front();
         result_queue.pop();
         if (req->completionCallback) {
             req->completionCallback(req->context, req->handlerResult);
@@ -342,7 +342,7 @@ int iothread_perform_on_main_base(int (*handler)(void *), void *context) {
     }
 
     // Make a new request. Note we are synchronous, so this can be stack allocated!
-    MainThreadRequest_t req;
+    main_thread_request_t req;
     req.handler = handler;
     req.context = context;
     req.handlerResult = 0;

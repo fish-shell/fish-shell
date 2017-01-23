@@ -694,11 +694,10 @@ unsigned long proc_get_jiffies(process_t *p) {
 /// Update the CPU time for all jobs.
 void proc_update_jiffies() {
     job_t *job;
-    process_t *p;
     job_iterator_t j;
 
     for (job = j.next(); job; job = j.next()) {
-        for (p = job->first_process; p; p = p->next) {
+        for (process_ptr_t &p : job->processes) {
             gettimeofday(&p->last_time, 0);
             p->last_jiffies = proc_get_jiffies(p);
         }

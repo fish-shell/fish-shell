@@ -525,7 +525,7 @@ wcstring parser_t::current_line() {
 
 void parser_t::job_add(job_t *job) {
     assert(job != NULL);
-    assert(job->first_process != NULL);
+    assert(! job->processes.empty());
     this->my_job_list.push_front(job);
 }
 

@@ -1146,9 +1146,9 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
     parse_execution_result_t result = parse_execution_success;
 
     // Create processes. Each one may fail.
-    std::vector<process_t *> processes;
-    processes.push_back(new process_t());
-    result = this->populate_job_process(j, processes.back(), *statement_node);
+    process_list_t processes;
+    processes.emplace_back(new process_t());
+    result = this->populate_job_process(j, processes.back().get(), *statement_node);
 
     // Construct process_ts for job continuations (pipelines), by walking the list until we hit the
     // terminal (empty) job continuation.
@@ -1171,29 +1171,23 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
         assert(statement_node != NULL);
 
         // Store the new process (and maybe with an error).
-        processes.push_back(new process_t());
-        result = this->populate_job_process(j, processes.back(), *statement_node);
+        processes.emplace_back(new process_t());
+        result = this->populate_job_process(j, processes.back().get(), *statement_node);
 
         // Get the next continuation.
         job_cont = get_child(*job_cont, 2, symbol_job_continuation);
         assert(job_cont != NULL);
     }
 
+    // Inform our processes of who is first and last
+    processes.front()->is_first_in_job = true;
+    processes.back()->is_last_in_job = true;
+
     // Return what happened.
     if (result == parse_execution_success) {
         // Link up the processes.
         assert(!processes.empty());  //!OCLINT(multiple unary operator)
-        j->first_process = processes.at(0);
-        for (size_t i = 1; i < processes.size(); i++) {
-            processes.at(i - 1)->next = processes.at(i);
-        }
-    } else {
-        // Clean up processes.
-        for (size_t i = 0; i < processes.size(); i++) {
-            const process_t *proc = processes.at(i);
-            processes.at(i) = NULL;
-            delete proc;
-        }
+        j->processes = std::move(processes);
     }
     return result;
 }
@@ -1313,7 +1307,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
         // Check to see if this contained any external commands.
         bool job_contained_external_command = false;
-        for (const process_t *proc = j->first_process; proc != NULL; proc = proc->next) {
+        for (const auto &proc : j->processes) {
             if (proc->type == EXTERNAL) {
                 job_contained_external_command = true;
                 break;

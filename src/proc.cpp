@@ -214,9 +214,7 @@ job_t *job_get_from_pid(int pid) {
 ///
 /// \param j the job to test
 int job_is_stopped(const job_t *j) {
-    process_t *p;
-
-    for (p = j->first_process; p; p = p->next) {
+    for (const process_ptr_t &p : j->processes) {
         if (!p->completed && !p->stopped) {
             return 0;
         }
@@ -228,9 +226,9 @@ int job_is_stopped(const job_t *j) {
 ///
 /// \param j the job to test
 bool job_is_completed(const job_t *j) {
-    assert(j->first_process != NULL);
+    assert(! j->processes.empty());
     bool result = true;
-    for (process_t *p = j->first_process; p != NULL; p = p->next) {
+    for (const process_ptr_t &p : j->processes) {
         if (!p->completed) {
             result = false;
             break;
@@ -256,7 +254,7 @@ int job_signal(job_t *j, int signal) {
     if (j->pgid != my_pid) {
         res = killpg(j->pgid, signal);
     } else {
-        for (process_t *p = j->first_process; p; p = p->next) {
+        for (const process_ptr_t &p : j->processes) {
             if (!p->completed && p->pid && kill(p->pid, signal)) {
                 res = -1;
                 break;
@@ -284,12 +282,15 @@ static void mark_process_status(process_t *p, int status) {
     }
 }
 
-void job_mark_process_as_failed(const job_t *job, process_t *p) {
+void job_mark_process_as_failed(job_t *job, const process_t *failed_proc) {
     // The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a
-    // valid pid. Mark it as dead.
-    UNUSED(job);
-    for (process_t *cursor = p; cursor != NULL; cursor = cursor->next) {
-        cursor->completed = 1;
+    // valid pid. Mark it and everything after it as dead.
+    bool found = false;
+    for (process_ptr_t &p : job->processes) {
+        found = found || (p.get() == failed_proc);
+        if (found) {
+            p->completed = true;
+        }
     }
 }
 
@@ -299,22 +300,22 @@ void job_mark_process_as_failed(const job_t *job, process_t *p) {
 /// \param status the status as returned by wait
 static void handle_child_status(pid_t pid, int status) {
     bool found_proc = false;
-    const job_t *j = NULL;
+    job_t *j = NULL;
     process_t *p = NULL;
 
     job_iterator_t jobs;
     while (!found_proc && (j = jobs.next())) {
-        process_t *prev = 0;
-        for (p = j->first_process; p; p = p->next) {
+        process_t *prev = NULL;
+        for (process_ptr_t &p : j->processes) {
             if (pid == p->pid) {
-                mark_process_status(p, status);
+                mark_process_status(p.get(), status);
                 if (p->completed && prev && !prev->completed && prev->pid) {
                     kill(prev->pid, SIGPIPE);
                 }
                 found_proc = true;
                 break;
             }
-            prev = p;
+            prev = p.get();
         }
     }
 
@@ -350,7 +351,9 @@ static void handle_child_status(pid_t pid, int status) {
 }
 
 process_t::process_t()
-    : type(),  // gets set later
+    : is_first_in_job(),
+      is_last_in_job(),
+      type(),  // gets set later
       internal_block_node(NODE_OFFSET_INVALID),
       pid(0),
       pipe_write_fd(0),
@@ -358,8 +361,7 @@ process_t::process_t()
       completed(0),
       stopped(0),
       status(0),
-      count_help_magic(0),
-      next(NULL)
+      count_help_magic(0)
 #ifdef HAVE__PROC_SELF_STAT
       ,
       last_time(),
@@ -368,20 +370,17 @@ process_t::process_t()
 {
 }
 
-process_t::~process_t() { delete this->next; }
-
 job_t::job_t(job_id_t jobid, const io_chain_t &bio)
-    : block_io(bio), first_process(NULL), pgid(0), tmodes(), job_id(jobid), flags(0) {}
+    : block_io(bio), pgid(0), tmodes(), job_id(jobid), flags(0) {}
 
 job_t::~job_t() {
-    delete first_process;
     release_job_id(job_id);
 }
 
 /// Return all the IO redirections. Start with the block IO, then walk over the processes.
 io_chain_t job_t::all_io_redirections() const {
     io_chain_t result = this->block_io;
-    for (process_t *p = this->first_process; p != NULL; p = p->next) {
+    for (const process_ptr_t &p : this->processes) {
         result.append(p->io_chain());
     }
     return result;
@@ -557,7 +556,7 @@ int job_reap(bool allow_interactive) {
             continue;
         }
 
-        for (process_t *p = j->first_process; p; p = p->next) {
+        for (const process_ptr_t &p : j->processes) {
             int s;
             if (!p->completed) continue;
 
@@ -575,7 +574,7 @@ int job_reap(bool allow_interactive) {
             }
 
             // Handle signals other than SIGPIPE.
-            int proc_is_job = ((p == j->first_process) && (p->next == 0));
+            int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
             if (proc_is_job) job_set_flag(j, JOB_NOTIFIED, 1);
             if (job_get_flag(j, JOB_SKIP_NOTIFICATION)) {
                 continue;
@@ -884,9 +883,7 @@ void job_continue(job_t *j, bool cont) {
 
         // Send the job a continue signal, if necessary.
         if (cont) {
-            process_t *p;
-
-            for (p = j->first_process; p; p = p->next) p->stopped = 0;
+            for (process_ptr_t &p : j->processes) p->stopped = false;
 
             if (job_get_flag(j, JOB_CONTROL)) {
                 if (killpg(j->pgid, SIGCONT)) {
@@ -894,7 +891,7 @@ void job_continue(job_t *j, bool cont) {
                     return;
                 }
             } else {
-                for (p = j->first_process; p; p = p->next) {
+                for (const process_ptr_t &p : j->processes) {
                     if (kill(p->pid, SIGCONT) < 0) {
                         wperror(L"kill (SIGCONT)");
                         return;
@@ -951,8 +948,7 @@ void job_continue(job_t *j, bool cont) {
             // order!
             read_try(j);
 
-            process_t *p = j->first_process;
-            while (p->next) p = p->next;
+            const std::unique_ptr<process_t> &p = j->processes.back();
 
             // Mark process status only if we are in the foreground and the last process in a pipe,
             // and it is not a short circuited builtin.
@@ -994,11 +990,9 @@ void proc_sanity_check() {
 
     job_iterator_t jobs;
     while ((j = jobs.next())) {
-        process_t *p;
 
         if (!job_get_flag(j, JOB_CONSTRUCTED)) continue;
 
-        validate_pointer(j->first_process, _(L"Process list pointer"), 0);
 
         // More than one foreground job?
         if (job_get_flag(j, JOB_FOREGROUND) && !(job_is_stopped(j) || job_is_completed(j))) {
@@ -1010,13 +1004,11 @@ void proc_sanity_check() {
             fg_job = j;
         }
 
-        p = j->first_process;
-        while (p) {
+        for (const process_ptr_t &p : j->processes) {
             // Internal block nodes do not have argv - see issue #1545.
             bool null_ok = (p->type == INTERNAL_BLOCK_NODE);
             validate_pointer(p->get_argv(), _(L"Process argument list"), null_ok);
             validate_pointer(p->argv0(), _(L"Process name"), null_ok);
-            validate_pointer(p->next, _(L"Process list pointer"), true);
 
             if ((p->stopped & (~0x00000001)) != 0) {
                 debug(0, _(L"Job '%ls', process '%ls' has inconsistent state \'stopped\'=%d"),
@@ -1030,7 +1022,6 @@ void proc_sanity_check() {
                 sanity_lose();
             }
 
-            p = p->next;
         }
     }
 }

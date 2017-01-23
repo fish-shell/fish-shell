@@ -28,13 +28,12 @@ enum {
 /// Calculates the cpu usage (in percent) of the specified job.
 static int cpu_use(const job_t *j) {
     double u = 0;
-    process_t *p;
 
-    for (p = j->first_process; p; p = p->next) {
+    for (const process_ptr_t &p : j->processes) {
         struct timeval t;
         int jiffies;
         gettimeofday(&t, 0);
-        jiffies = proc_get_jiffies(p);
+        jiffies = proc_get_jiffies(p.get());
 
         double t1 = 1000000.0 * p->last_time.tv_sec + p->last_time.tv_usec;
         double t2 = 1000000.0 * t.tv_sec + t.tv_usec;
@@ -48,7 +47,6 @@ static int cpu_use(const job_t *j) {
 
 /// Print information about the specified job.
 static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_t &streams) {
-    process_t *p;
     switch (mode) {
         case JOBS_DEFAULT: {
             if (header) {
@@ -85,7 +83,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
                 streams.out.append(_(L"Process\n"));
             }
 
-            for (p = j->first_process; p; p = p->next) {
+            for (const process_ptr_t &p : j->processes) {
                 streams.out.append_format(L"%d\n", p->pid);
             }
             break;
@@ -96,7 +94,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
                 streams.out.append(_(L"Command\n"));
             }
 
-            for (p = j->first_process; p; p = p->next) {
+            for (const process_ptr_t &p : j->processes) {
                 streams.out.append_format(L"%ls\n", p->argv0());
             }
             break;

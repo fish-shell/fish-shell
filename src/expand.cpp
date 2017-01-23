@@ -519,9 +519,8 @@ static int find_job(const struct find_job_data_t *info) {
 
     jobs.reset();
     while ((j = jobs.next())) {
-        process_t *p;
         if (j->command_is_empty()) continue;
-        for (p = j->first_process; p; p = p->next) {
+        for (const process_ptr_t &p : j->processes) {
             if (p->actual_cmd.empty()) continue;
 
             size_t offset;

@@ -90,7 +90,10 @@ class process_t {
 
    public:
     process_t();
-    ~process_t();
+
+    // Note whether we are the first and/or last in the job
+    bool is_first_in_job;
+    bool is_last_in_job;
 
     /// Type of process. Can be one of \c EXTERNAL, \c INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c
     /// INTERNAL_EXEC.
@@ -140,8 +143,6 @@ class process_t {
     volatile int status;
     /// Special flag to tell the evaluation function for count to print the help information.
     int count_help_magic;
-    /// Next process in pipeline. We own this and we are responsible for deleting it.
-    process_t *next;
 #ifdef HAVE__PROC_SELF_STAT
     /// Last time of cpu time check.
     struct timeval last_time;
@@ -149,6 +150,9 @@ class process_t {
     unsigned long last_jiffies;
 #endif
 };
+
+typedef std::unique_ptr<process_t> process_ptr_t;
+typedef std::vector<process_ptr_t> process_list_t;
 
 /// Constants for the flag variable in the job struct.
 enum {
@@ -204,9 +208,9 @@ class job_t {
     /// Sets the command.
     void set_command(const wcstring &cmd) { command_str = cmd; }
 
-    /// A linked list of all the processes in this job. We are responsible for deleting this when we
-    /// are deallocated.
-    process_t *first_process;
+    /// All the processes in this job.
+    process_list_t processes;
+
     /// Process group ID for the process group that this job is running in.
     pid_t pgid;
     /// The saved terminal modes of this job. This needs to be saved so that we can restore the
@@ -342,7 +346,7 @@ void job_handle_signal(int signal, siginfo_t *info, void *con);
 int job_signal(job_t *j, int signal);
 
 /// Mark a process as failed to execute (and therefore completed).
-void job_mark_process_as_failed(const job_t *job, process_t *p);
+void job_mark_process_as_failed(job_t *job, const process_t *p);
 
 #ifdef HAVE__PROC_SELF_STAT
 /// Use the procfs filesystem to look up how many jiffies of cpu time was used by this process. This

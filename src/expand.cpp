@@ -429,25 +429,14 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid) {
 
 #endif
 
-// Helper function to do a job search.
-struct find_job_data_t {
-    const wchar_t *proc;  // the process to search for - possibly numeric, possibly a name
-    expand_flags_t flags;
-    std::vector<completion_t> *completions;
-};
-
 /// The following function is invoked on the main thread, because the job list is not thread safe.
-/// It should search the job list for something matching the given proc, and then return 1 to stop
-/// the search, 0 to continue it.
-static int find_job(const struct find_job_data_t *info) {
+/// It should search the job list for something matching the given proc, and then return true to stop
+/// the search, false to continue it.
+static bool find_job(const wchar_t *proc, expand_flags_t flags, std::vector<completion_t> *completions) {
     ASSERT_IS_MAIN_THREAD();
 
-    const wchar_t *const proc = info->proc;
-    const expand_flags_t flags = info->flags;
-    std::vector<completion_t> &completions = *info->completions;
-
     const job_t *j;
-    int found = 0;
+    bool found = false;
     // If we are not doing tab completion, we first check for the single '%' character, because an
     // empty string will pass the numeric check below. But if we are doing tab completion, we want
     // all of the job IDs as completion options, not just the last job backgrounded, so we pass this
@@ -457,13 +446,13 @@ static int find_job(const struct find_job_data_t *info) {
         job_iterator_t jobs;
         while ((j = jobs.next())) {
             if (!j->command_is_empty()) {
-                append_completion(&completions, to_string<long>(j->pgid));
+                append_completion(completions, to_string<long>(j->pgid));
                 break;
             }
         }
         // You don't *really* want to flip a coin between killing the last process backgrounded and
         // all processes, do you? Let's not try other match methods with the solo '%' syntax.
-        found = 1;
+        found = true;
     } else if (iswnumeric(proc)) {
         // This is a numeric job string, like '%2'.
         if (flags & EXPAND_FOR_COMPLETIONS) {
@@ -476,7 +465,7 @@ static int find_job(const struct find_job_data_t *info) {
 
                 if (wcsncmp(proc, jid, wcslen(proc)) == 0) {
                     wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_wcstr());
-                    append_completion(&completions, jid + wcslen(proc), desc_buff, 0);
+                    append_completion(completions, jid + wcslen(proc), desc_buff, 0);
                 }
             }
         } else {
@@ -484,13 +473,13 @@ static int find_job(const struct find_job_data_t *info) {
             if (!errno && jid > 0) {
                 j = job_get(jid);
                 if ((j != 0) && (j->command_wcstr() != 0) && (!j->command_is_empty())) {
-                    append_completion(&completions, to_string<long>(j->pgid));
+                    append_completion(completions, to_string<long>(j->pgid));
                 }
             }
         }
         // Stop here so you can't match a random process name when you're just trying to use job
         // control.
-        found = 1;
+        found = true;
     }
 
     if (found) {
@@ -504,10 +493,10 @@ static int find_job(const struct find_job_data_t *info) {
         size_t offset;
         if (match_pid(j->command(), proc, &offset)) {
             if (flags & EXPAND_FOR_COMPLETIONS) {
-                append_completion(&completions, j->command_wcstr() + offset + wcslen(proc),
+                append_completion(completions, j->command_wcstr() + offset + wcslen(proc),
                                   COMPLETE_JOB_DESC, 0);
             } else {
-                append_completion(&completions, to_string<long>(j->pgid));
+                append_completion(completions, to_string<long>(j->pgid));
                 found = 1;
             }
         }
@@ -526,10 +515,10 @@ static int find_job(const struct find_job_data_t *info) {
             size_t offset;
             if (match_pid(p->actual_cmd, proc, &offset)) {
                 if (flags & EXPAND_FOR_COMPLETIONS) {
-                    append_completion(&completions, wcstring(p->actual_cmd, offset + wcslen(proc)),
+                    append_completion(completions, wcstring(p->actual_cmd, offset + wcslen(proc)),
                                       COMPLETE_CHILD_PROCESS_DESC, 0);
                 } else {
-                    append_completion(&completions, to_string<long>(p->pid), L"", 0);
+                    append_completion(completions, to_string<long>(p->pid), L"", 0);
                     found = 1;
                 }
             }
@@ -551,8 +540,10 @@ static int find_job(const struct find_job_data_t *info) {
 static void find_process(const wchar_t *proc, expand_flags_t flags,
                          std::vector<completion_t> *out) {
     if (!(flags & EXPAND_SKIP_JOBS)) {
-        const struct find_job_data_t data = {proc, flags, out};
-        int found = iothread_perform_on_main(find_job, &data);
+        bool found = false;
+        iothread_perform_on_main([&](){
+            found = find_job(proc, flags, out);
+        });
         if (found) {
             return;
         }

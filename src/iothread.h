@@ -26,16 +26,42 @@ void iothread_service_completion(void);
 /// Waits for all iothreads to terminate.
 void iothread_drain_all(void);
 
-int iothread_perform(std::function<void(void)> &&func,
-                     std::function<void(void)> &&completion = std::function<void(void)>());
+// Internal implementation
+int iothread_perform_impl(std::function<void(void)> &&func,
+                          std::function<void(void)> &&completion);
 
-// Variant that allows computing a value in func, and then passing it to the completion handler
+// Template helpers
 template<typename T>
-int iothread_perform(std::function<T(void)> &&handler, std::function<void(T)> &&completion) {
-    T *result = new T();
-    return iothread_perform([=](){ *result = handler(); },
-                            [=](){ completion(std::move(*result)); delete result; }
-                            );
+struct _iothread_trampoline {
+    template<typename HANDLER, typename COMPLETION>
+    static int perform(const HANDLER &handler, const COMPLETION &completion) {
+        T *result = new T();
+        return iothread_perform_impl([=](){ *result = handler(); },
+                                     [=](){ completion(std::move(*result)); delete result; });
+    }
+};
+
+
+// Void specialization
+template<>
+struct _iothread_trampoline<void> {
+    template<typename HANDLER, typename COMPLETION>
+    static int perform(const HANDLER &handler, const COMPLETION &completion) {
+        return iothread_perform_impl(handler, completion);
+    }
+};
+
+// iothread_perform invokes a handler on a background thread, and then a completion function
+// on the main thread. The value returned from the handler is passed to the completion.
+template<typename HANDLER, typename COMPLETION>
+int iothread_perform(const HANDLER &handler, const COMPLETION &completion) {
+    return _iothread_trampoline<decltype(handler())>::perform(handler, completion);
+}
+
+// variant of iothread_perform without a completion handler
+inline int iothread_perform(std::function<void(void)> &&func) {
+    return iothread_perform_impl(std::move(func),
+                                 std::function<void(void)>());
 }
 
 /// Legacy templates

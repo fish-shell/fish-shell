@@ -1222,7 +1222,7 @@ static void update_autosuggestion(void) {
         const editable_line_t *el = data->active_edit_line();
         autosuggestion_context_t *ctx =
             new autosuggestion_context_t(data->history, el->text, el->position);
-        iothread_perform(threaded_autosuggest, autosuggest_completed, ctx);
+        iothread_perform(&threaded_autosuggest, &autosuggest_completed, ctx);
     }
 }
 
@@ -2178,7 +2178,7 @@ static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust, boo
         highlight_complete(ctx, result);
     } else {
         // Highlighting including I/O proceeds in the background.
-        iothread_perform(threaded_highlight, highlight_complete, ctx);
+        iothread_perform(&threaded_highlight, &highlight_complete, ctx);
     }
     highlight_search();
 

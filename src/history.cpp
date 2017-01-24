@@ -1773,7 +1773,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
 
         // Kick it off. Even though we haven't added the item yet, it updates the item on the main
         // thread, so we can't race.
-        iothread_perform(threaded_perform_file_detection, perform_file_detection_done, context);
+        iothread_perform(&threaded_perform_file_detection, &perform_file_detection_done, context);
     }
 
     // Actually add the item to the history.

@@ -984,16 +984,18 @@ int proc_format_status(int status) {
 }
 
 void proc_sanity_check() {
-    job_t *fg_job = NULL;
+    job_t *j;
+    job_t *fg_job = 0;
 
     job_iterator_t jobs;
-    while (job_t *j = jobs.next()) {
+    while ((j = jobs.next())) {
+
         if (!job_get_flag(j, JOB_CONSTRUCTED)) continue;
 
 
         // More than one foreground job?
         if (job_get_flag(j, JOB_FOREGROUND) && !(job_is_stopped(j) || job_is_completed(j))) {
-            if (fg_job) {
+            if (fg_job != 0) {
                 debug(0, _(L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
                       fg_job->command_wcstr(), j->command_wcstr());
                 sanity_lose();

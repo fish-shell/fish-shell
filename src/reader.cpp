@@ -310,7 +310,7 @@ static struct termios tty_modes_for_external_cmds;
 static void reader_super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
 
 /// Variable to keep track of forced exits - see \c reader_exit_forced();
-static bool exit_forced;
+static int exit_forced;
 
 /// Give up control of terminal.
 static void term_donate() {
@@ -360,7 +360,7 @@ static void term_steal() {
     invalidate_termsize();
 }
 
-bool reader_exit_forced() { return exit_forced; }
+int reader_exit_forced() { return exit_forced; }
 
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
 wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
@@ -807,7 +807,7 @@ void restore_term_mode() {
 void reader_exit(int do_exit, int forced) {
     if (data) data->end_loop = do_exit;
     end_loop = do_exit;
-    if (forced) exit_forced = true;
+    if (forced) exit_forced = 1;
 }
 
 void reader_repaint_needed() {
@@ -2204,8 +2204,6 @@ bool shell_is_exiting() {
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
 static void handle_end_loop() {
-    job_iterator_t jobs;
-
     if (!reader_exit_forced()) {
         const parser_t &parser = parser_t::principal_parser();
         for (size_t i = 0; i < parser.block_count(); i++) {
@@ -2215,22 +2213,23 @@ static void handle_end_loop() {
                 return;
             }
         }
+    }
 
-        bool bg_jobs = false;
-        while (job_t *j = jobs.next()) {
-            if (!job_is_completed(j)) {
-                bg_jobs = true;
-                break;
-            }
+    bool bg_jobs = false;
+    job_iterator_t jobs;
+    while (job_t *j = jobs.next()) {
+        if (!job_is_completed(j)) {
+            bg_jobs = true;
+            break;
         }
+    }
 
-        if (!data->prev_end_loop && bg_jobs) {
-            fputws(_(L"There are still jobs active (use the jobs command to see them).\n"), stdout);
-            fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
-            reader_exit(0, 0);
-            data->prev_end_loop = 1;
-            return;
-        }
+    if (!data->prev_end_loop && bg_jobs) {
+        fputws(_(L"There are still jobs active (use the jobs command to see them).\n"), stdout);
+        fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
+        reader_exit(0, 0);
+        data->prev_end_loop = 1;
+        return;
     }
 
     // Kill remaining jobs before exiting.
@@ -2524,7 +2523,7 @@ const wchar_t *reader_readline(int nchars) {
                 break;
             }
             case R_EOF: {
-                exit_forced = true;
+                exit_forced = 1;
                 data->end_loop = 1;
                 break;
             }

@@ -66,7 +66,8 @@ function __fish_complete_man
 		'
         
         # Fish commands are not given by apropos
-        ls (dirname $__fish_datadir)/fish/man/man1/ ^/dev/null | string replace -r '\.1$' '\tFish command' | string match -r '^'$token'.*'
+        set -l files $__fish_datadir/man/man1/*.1
+        string replace -r '.*/([^/]+)\.1$' '$1\tFish command' -- $files
     else
         return 1
     end

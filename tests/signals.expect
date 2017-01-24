@@ -1,0 +1,28 @@
+# vim: set filetype=expect:
+#
+# Test signal handling for interactive shells.
+
+# Verify that sending SIGHUP to the shell, such as will happen when the tty is
+# closed by the terminal, terminates the shell and the foreground command and
+# any background commands run from that shell.
+set pid [spawn $fish]
+expect_prompt
+send "sleep 130 &\r"
+expect_prompt
+send "sleep 131 &\r"
+expect_prompt
+send "sleep 132\r"
+exec -- kill -HUP $pid
+
+# Verify the spawned fish shell has exited.
+close
+wait
+
+# Verify all child processes have been killed. We don't use `-p $pid` because
+# if the shell has a bug the child processes might have been reparented to pid
+# 1 rather than killed.
+set status [catch {exec pgrep -l -f "sleep 13"} output]
+if {$status == 0} {
+    puts stderr "Commands spawned by the shell still running after SIGHUP"
+    puts stderr $output
+}

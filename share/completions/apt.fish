@@ -2,7 +2,7 @@
 
 function __fish_apt_no_subcommand --description 'Test if apt has yet to be given the subcommand'
 	for i in (commandline -opc)
-		if contains -- $i update upgrade full-upgrade search list install show remove edit-sources purge changelog
+		if contains -- $i update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove
 			return 1
 		end
 	end
@@ -69,3 +69,6 @@ __fish_apt_subcommand purge -x         --description 'Remove packages and delete
 
 # Changelog
 __fish_apt_subcommand changelog -r     --description 'Download and display package changelog'
+
+# Autoremove
+__fish_apt_subcommand autoremove       --description 'Remove packages no longer needed as dependencies'

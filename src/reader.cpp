@@ -2072,50 +2072,6 @@ void reader_import_history_if_necessary(void) {
     }
 }
 
-/// A class as the context pointer for a background (threaded) highlight operation.
-class background_highlight_context_t {
-   public:
-    /// The string to highlight.
-    const wcstring string_to_highlight;
-    /// Color buffer.
-    std::vector<highlight_spec_t> colors;
-    /// The position to use for bracket matching.
-    const size_t match_highlight_pos;
-    /// Function for syntax highlighting.
-    const highlight_function_t highlight_function;
-    /// Environment variables.
-    const env_vars_snapshot_t vars;
-    /// When the request was made.
-    const double when;
-    /// Gen count at the time the request was made.
-    const unsigned int generation_count;
-
-    background_highlight_context_t(const wcstring &pbuff, size_t phighlight_pos,
-                                   highlight_function_t phighlight_func)
-        : string_to_highlight(pbuff),
-          colors(pbuff.size(), 0),
-          match_highlight_pos(phighlight_pos),
-          highlight_function(phighlight_func),
-          vars(env_vars_snapshot_t::highlighting_keys),
-          when(timef()),
-          generation_count(s_generation_count) {}
-
-    int perform_highlight() {
-        if (generation_count != s_generation_count) {
-            // The gen count has changed, so don't do anything.
-            return 0;
-        }
-        VOMIT_ON_FAILURE(
-            pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
-
-        if (!string_to_highlight.empty()) {
-            highlight_function(string_to_highlight, colors, match_highlight_pos, NULL /* error */,
-                               vars);
-        }
-        return 0;
-    }
-};
-
 /// Called to set the highlight flag for search results.
 static void highlight_search(void) {
     if (!data->search_buff.empty() && !data->history_search.is_at_end()) {
@@ -2131,26 +2087,46 @@ static void highlight_search(void) {
     }
 }
 
-static void highlight_complete(background_highlight_context_t *ctx, int result) {
-    UNUSED(result);  // ignored because of the indirect invocation via iothread_perform()
+struct highlight_result_t {
+    std::vector<highlight_spec_t> colors;
+    wcstring text;
+};
+
+static void highlight_complete(highlight_result_t result) {
     ASSERT_IS_MAIN_THREAD();
-    if (ctx->string_to_highlight == data->command_line.text) {
+    if (result.text == data->command_line.text) {
         // The data hasn't changed, so swap in our colors. The colors may not have changed, so do
         // nothing if they have not.
-        assert(ctx->colors.size() == data->command_line.size());
-        if (data->colors != ctx->colors) {
-            data->colors.swap(ctx->colors);
+        assert(result.colors.size() == data->command_line.size());
+        if (data->colors != result.colors) {
+            data->colors = std::move(result.colors);
             sanity_check();
             highlight_search();
             reader_repaint();
         }
     }
-
-    delete ctx;
 }
 
-static int threaded_highlight(background_highlight_context_t *ctx) {
-    return ctx->perform_highlight();
+// Given text, bracket matching position, and whether IO is allowed,
+// return a function that performs highlighting. The function may be invoked on a background thread.
+static std::function<highlight_result_t(void)> get_highlight_performer(const wcstring &text,
+                                                               long match_highlight_pos, bool no_io) {
+    env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
+    unsigned int generation_count = s_generation_count;
+    highlight_function_t highlight_func = no_io ? highlight_shell_no_io : data->highlight_function;
+    return [=]() -> highlight_result_t {
+        if (generation_count != s_generation_count) {
+            // The gen count has changed, so don't do anything.
+            return {};
+        }
+        if (text.empty()) {
+            return {};
+        }
+        VOMIT_ON_FAILURE(pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
+        std::vector<highlight_spec_t> colors(text.size(), 0);
+        highlight_func(text, colors, match_highlight_pos, NULL /* error */, vars);
+        return {std::move(colors), text};
+    };
 }
 
 /// Call specified external highlighting function and then do search highlighting. Lastly, clear the
@@ -2169,16 +2145,13 @@ static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust, boo
 
     reader_sanity_check();
 
-    highlight_function_t highlight_func = no_io ? highlight_shell_no_io : data->highlight_function;
-    background_highlight_context_t *ctx =
-        new background_highlight_context_t(el->text, match_highlight_pos, highlight_func);
+    auto highlight_performer = get_highlight_performer(el->text, match_highlight_pos, no_io);
     if (no_io) {
-        // Highlighting without IO, we just do it. Note that highlight_complete deletes ctx.
-        int result = ctx->perform_highlight();
-        highlight_complete(ctx, result);
+        // Highlighting without IO, we just do it.
+        highlight_complete(highlight_performer());
     } else {
         // Highlighting including I/O proceeds in the background.
-        iothread_perform(&threaded_highlight, &highlight_complete, ctx);
+        iothread_perform(highlight_performer, &highlight_complete);
     }
     highlight_search();
 

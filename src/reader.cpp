@@ -1111,42 +1111,38 @@ static void completion_insert(const wchar_t *val, complete_flags_t flags) {
     reader_set_buffer_maintaining_pager(new_command_line, cursor);
 }
 
-struct autosuggestion_context_t {
+struct autosuggestion_result_t {
+    wcstring suggestion;
     wcstring search_string;
-    wcstring autosuggestion;
-    size_t cursor_pos;
-    history_search_t searcher;
-    file_detection_context_t detector;
-    const wcstring working_directory;
-    const env_vars_snapshot_t vars;
-    const unsigned int generation_count;
+};
 
-    autosuggestion_context_t(history_t *history, const wcstring &term, size_t pos)
-        : search_string(term),
-          cursor_pos(pos),
-          searcher(*history, term, HISTORY_SEARCH_TYPE_PREFIX),
-          detector(history),
-          working_directory(env_get_pwd_slash()),
-          vars(env_vars_snapshot_t::highlighting_keys),
-          generation_count(s_generation_count) {}
-
-    // The function run in the background thread to determine an autosuggestion.
-    int threaded_autosuggest(void) {
-        ASSERT_IS_BACKGROUND_THREAD();
-
+// Returns a function that can be invoked (potentially
+// on a background thread) to determine the autosuggestion
+static std::function<autosuggestion_result_t(void)>
+get_autosuggestion_performer(const wcstring &search_string, size_t cursor_pos, history_t *history) {
+    const unsigned int generation_count = s_generation_count;
+    const wcstring working_directory(env_get_pwd_slash());
+    env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
+    // TODO: suspicious use of 'history' here
+    // This is safe because histories are immortal, but perhaps
+    // this should use shared_ptr
+    return [=]() -> autosuggestion_result_t {
+        const autosuggestion_result_t nothing = {};
         // If the main thread has moved on, skip all the work.
         if (generation_count != s_generation_count) {
-            return 0;
+            return nothing;
         }
 
-        VOMIT_ON_FAILURE(
-            pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
+        VOMIT_ON_FAILURE(pthread_setspecific(generation_count_key,
+                                             (void *)(uintptr_t)generation_count));
 
         // Let's make sure we aren't using the empty string.
         if (search_string.empty()) {
-            return 0;
+            return nothing;
         }
 
+        history_search_t searcher(*history, search_string, HISTORY_SEARCH_TYPE_PREFIX);
+        file_detection_context_t detector(history);
         while (!reader_thread_job_is_stale() && searcher.go_backwards()) {
             history_item_t item = searcher.current_item();
 
@@ -1155,23 +1151,22 @@ struct autosuggestion_context_t {
 
             if (autosuggest_validate_from_history(item, detector, working_directory, vars)) {
                 // The command autosuggestion was handled specially, so we're done.
-                this->autosuggestion = searcher.current_string();
-                return 1;
+                return {searcher.current_string(), search_string};
             }
         }
 
         // Maybe cancel here.
-        if (reader_thread_job_is_stale()) return 0;
+        if (reader_thread_job_is_stale()) return nothing;
 
         // Here we do something a little funny. If the line ends with a space, and the cursor is not
         // at the end, don't use completion autosuggestions. It ends up being pretty weird seeing
         // stuff get spammed on the right while you go back to edit a line
         const wchar_t last_char = search_string.at(search_string.size() - 1);
-        const bool cursor_at_end = (this->cursor_pos == search_string.size());
-        if (!cursor_at_end && iswspace(last_char)) return 0;
+        const bool cursor_at_end = (cursor_pos == search_string.size());
+        if (!cursor_at_end && iswspace(last_char)) return nothing;
 
         // On the other hand, if the line ends with a quote, don't go dumping stuff after the quote.
-        if (wcschr(L"'\"", last_char) && cursor_at_end) return 0;
+        if (wcschr(L"'\"", last_char) && cursor_at_end) return nothing;
 
         // Try normal completions.
         std::vector<completion_t> completions;
@@ -1179,18 +1174,15 @@ struct autosuggestion_context_t {
         completions_sort_and_prioritize(&completions);
         if (!completions.empty()) {
             const completion_t &comp = completions.at(0);
-            size_t cursor = this->cursor_pos;
-            this->autosuggestion = completion_apply_to_command_line(
-                comp.completion, comp.flags, this->search_string, &cursor, true /* append only */);
-            return 1;
+            size_t cursor = cursor_pos;
+            wcstring suggestion = completion_apply_to_command_line(comp.completion, comp.flags,
+                                                                   search_string, &cursor,
+                                                                   true /* append only */);
+            return {std::move(suggestion), search_string};
         }
 
-        return 0;
-    }
-};
-
-static int threaded_autosuggest(autosuggestion_context_t *ctx) {
-    return ctx->threaded_autosuggest();
+        return nothing;
+    };
 }
 
 static bool can_autosuggest(void) {
@@ -1202,15 +1194,17 @@ static bool can_autosuggest(void) {
            el == &data->command_line && el->text.find_first_not_of(whitespace) != wcstring::npos;
 }
 
-static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {
-    if (result && can_autosuggest() && ctx->search_string == data->command_line.text &&
-        string_prefixes_string_case_insensitive(ctx->search_string, ctx->autosuggestion)) {
+// Called after an autosuggestion has been computed on a background thread
+static void autosuggest_completed(autosuggestion_result_t result) {
+    if (! result.suggestion.empty() &&
+        can_autosuggest() &&
+        result.search_string == data->command_line.text &&
+        string_prefixes_string_case_insensitive(result.search_string, result.suggestion)) {
         // Autosuggestion is active and the search term has not changed, so we're good to go.
-        data->autosuggestion = ctx->autosuggestion;
+        data->autosuggestion = std::move(result.suggestion);
         sanity_check();
         reader_repaint();
     }
-    delete ctx;
 }
 
 static void update_autosuggestion(void) {
@@ -1220,9 +1214,8 @@ static void update_autosuggestion(void) {
     if (data->allow_autosuggestion && !data->suppress_autosuggestion &&
         !data->command_line.empty() && data->history_search.is_at_end()) {
         const editable_line_t *el = data->active_edit_line();
-        autosuggestion_context_t *ctx =
-            new autosuggestion_context_t(data->history, el->text, el->position);
-        iothread_perform(&threaded_autosuggest, &autosuggest_completed, ctx);
+        auto performer = get_autosuggestion_performer(el->text, el->position, data->history);
+        iothread_perform(performer, &autosuggest_completed);
     }
 }
 

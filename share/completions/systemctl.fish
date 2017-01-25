@@ -1,4 +1,4 @@
-set -l systemd_version (systemctl --version | head -n 1 | cut -f 2 -d ' ')
+set -l systemd_version (systemctl --version | string match "systemd*" | string replace -r "\D*(\d+)"  '$1')
 set -l commands list-units list-sockets start stop reload restart try-restart reload-or-restart reload-or-try-restart \
 	isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help \
 	reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump \
@@ -56,10 +56,10 @@ complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-d
 set -l commands_types start stop restart try-restart reload-or-restart reload-or-try-restart is-active is-failed is-enabled reenable mask loaded link list-dependencies show status
 
 if test $systemd_version -gt 208
-    complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a cat -d 'Show an unit'
+    complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a cat -d 'Show a unit'
     set commands_types $commands_types cat
     if test $systemd_version -gt 217
-        complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a edit -d 'Edit an unit'
+        complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a edit -d 'Edit a unit'
         set commands_types $commands_types edit
     end
 end

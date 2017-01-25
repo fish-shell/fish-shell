@@ -12,19 +12,18 @@
 #include "sanity.h"
 
 /// Status from earlier sanity checks.
-static int insane;
+static bool insane = false;
 
 void sanity_lose() {
     debug(0, _(L"Errors detected, shutting down. Break on sanity_lose() to debug."));
-    insane = 1;
+    insane = true;
 }
 
-int sanity_check() {
+bool sanity_check() {
     if (!insane && shell_is_interactive()) history_sanity_check();
     if (!insane) reader_sanity_check();
     if (!insane) kill_sanity_check();
     if (!insane) proc_sanity_check();
-
     return insane;
 }
 

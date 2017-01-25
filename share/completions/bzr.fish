@@ -1,4 +1,4 @@
-# NOTE: Fish helpers function is your best friend here!
+# NOTE: Fish helper functions are your best friend here!
 # see https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_seen_subcommand_from.fish
 # and https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_use_subcommand.fish
 

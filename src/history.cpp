@@ -1661,53 +1661,25 @@ void history_sanity_check() {
     // No sanity checking implemented yet...
 }
 
-int file_detection_context_t::perform_file_detection(bool test_all) {
+path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory) {
     ASSERT_IS_BACKGROUND_THREAD();
-    valid_paths.clear();
-    // TODO: Figure out why this bothers to return a variable result since the only consumer,
-    // perform_file_detection_done(), ignores the result. It seems like either this should always
-    // return a constant or perform_file_detection_done() should use our return value.
-    int result = 1;
-    for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end();
-         ++iter) {
-        if (path_is_valid(*iter, working_directory)) {
-            // Push the original (possibly relative) path.
-            valid_paths.push_back(*iter);
-        } else {
-            // Not a valid path.
-            result = 0;
-            if (!test_all) break;
+    wcstring_list_t result;
+    for (const wcstring &path : paths) {
+        if (path_is_valid(path, working_directory)) {
+            result.push_back(path);
         }
     }
     return result;
 }
 
-bool file_detection_context_t::paths_are_valid(const path_list_t &paths) {
-    this->potential_paths = paths;
-    return perform_file_detection(false) > 0;
-}
-
-file_detection_context_t::file_detection_context_t(history_t *hist, history_identifier_t ident)
-    : history(hist), working_directory(env_get_pwd_slash()), history_item_identifier(ident) {}
-
-static int threaded_perform_file_detection(file_detection_context_t *ctx) {
+bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory) {
     ASSERT_IS_BACKGROUND_THREAD();
-    assert(ctx != NULL);
-    return ctx->perform_file_detection(true /* test all */);
-}
-
-static void perform_file_detection_done(file_detection_context_t *ctx, int success) {
-    UNUSED(success);
-    ASSERT_IS_MAIN_THREAD();
-
-    // Now that file detection is done, update the history item with the valid file paths.
-    ctx->history->set_valid_file_paths(ctx->valid_paths, ctx->history_item_identifier);
-
-    // Allow saving again.
-    ctx->history->enable_automatic_saving();
-
-    // Done with the context.
-    delete ctx;
+    for (const wcstring &path : paths) {
+        if (! path_is_valid(path, working_directory)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 static bool string_could_be_path(const wcstring &potential_path) {
@@ -1720,7 +1692,6 @@ static bool string_could_be_path(const wcstring &potential_path) {
 
 void history_t::add_pending_with_file_detection(const wcstring &str) {
     ASSERT_IS_MAIN_THREAD();
-    path_list_t potential_paths;
 
     // Find all arguments that look like they could be file paths.
     bool impending_exit = false;
@@ -1728,6 +1699,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
     parse_tree_from_string(str, parse_flag_none, &tree, NULL);
     size_t count = tree.size();
 
+    path_list_t potential_paths;
     for (size_t i = 0; i < count; i++) {
         const parse_node_t &node = tree.at(i);
         if (!node.has_source()) {
@@ -1764,16 +1736,18 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
         static history_identifier_t sLastIdentifier = 0;
         identifier = ++sLastIdentifier;
 
-        // Create a new detection context.
-        file_detection_context_t *context = new file_detection_context_t(this, identifier);
-        context->potential_paths.swap(potential_paths);
-
         // Prevent saving until we're done, so we have time to get the paths.
         this->disable_automatic_saving();
 
-        // Kick it off. Even though we haven't added the item yet, it updates the item on the main
-        // thread, so we can't race.
-        iothread_perform(&threaded_perform_file_detection, &perform_file_detection_done, context);
+        // Check for which paths are valid on a background thread,
+        // then on the main thread update our history item
+        const wcstring wd = env_get_pwd_slash();
+        iothread_perform([=](){
+            return valid_paths(potential_paths, wd);
+        }, [=](path_list_t validated_paths){
+            this->set_valid_file_paths(validated_paths, identifier);
+            this->enable_automatic_saving();
+        });
     }
 
     // Actually add the item to the history.

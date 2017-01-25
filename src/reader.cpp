@@ -1127,6 +1127,8 @@ get_autosuggestion_performer(const wcstring &search_string, size_t cursor_pos, h
     // This is safe because histories are immortal, but perhaps
     // this should use shared_ptr
     return [=]() -> autosuggestion_result_t {
+        ASSERT_IS_BACKGROUND_THREAD();
+
         const autosuggestion_result_t nothing = {};
         // If the main thread has moved on, skip all the work.
         if (generation_count != s_generation_count) {
@@ -1142,14 +1144,13 @@ get_autosuggestion_performer(const wcstring &search_string, size_t cursor_pos, h
         }
 
         history_search_t searcher(*history, search_string, HISTORY_SEARCH_TYPE_PREFIX);
-        file_detection_context_t detector(history);
         while (!reader_thread_job_is_stale() && searcher.go_backwards()) {
             history_item_t item = searcher.current_item();
 
             // Skip items with newlines because they make terrible autosuggestions.
             if (item.str().find('\n') != wcstring::npos) continue;
 
-            if (autosuggest_validate_from_history(item, detector, working_directory, vars)) {
+            if (autosuggest_validate_from_history(item, working_directory, vars)) {
                 // The command autosuggestion was handled specially, so we're done.
                 return {searcher.current_string(), search_string};
             }

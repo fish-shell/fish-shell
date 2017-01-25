@@ -64,6 +64,10 @@ function __fish_complete_man
 		  print name, sect
 		}
 		'
+        
+        # Fish commands are not given by apropos
+        set -l files $__fish_datadir/man/man1/*.1
+        string replace -r '.*/([^/]+)\.1$' '$1\tFish command' -- $files
     else
         return 1
     end

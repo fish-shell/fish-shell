@@ -2870,9 +2870,9 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // the foreground.
         job_iterator_t jobs;
         while ((j = jobs.next())) {
-            if (job_get_flag(j, JOB_CONSTRUCTED) && (!job_is_completed(j)) &&
-                ((job_is_stopped(j) || (!job_get_flag(j, JOB_FOREGROUND))) &&
-                 job_get_flag(j, JOB_CONTROL))) {
+            if (j->get_flag(JOB_CONSTRUCTED) && (!job_is_completed(j)) &&
+                ((job_is_stopped(j) || (!j->get_flag(JOB_FOREGROUND))) &&
+                 j->get_flag(JOB_CONTROL))) {
                 break;
             }
         }
@@ -2909,10 +2909,10 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             builtin_print_help(parser, streams, argv[0], streams.err);
         } else {
             j = job_get_from_pid(pid);
-            if (!j || !job_get_flag(j, JOB_CONSTRUCTED) || job_is_completed(j)) {
+            if (!j || !j->get_flag(JOB_CONSTRUCTED) || job_is_completed(j)) {
                 streams.err.append_format(_(L"%ls: No suitable job: %d\n"), argv[0], pid);
                 j = 0;
-            } else if (!job_get_flag(j, JOB_CONTROL)) {
+            } else if (!j->get_flag(JOB_CONTROL)) {
                 streams.err.append_format(_(L"%ls: Can't put job %d, '%ls' to foreground because "
                                             L"it is not under job control\n"),
                                           argv[0], pid, j->command_wcstr());
@@ -2938,7 +2938,7 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     reader_write_title(j->command());
 
     job_promote(j);
-    job_set_flag(j, JOB_FOREGROUND, 1);
+    j->set_flag(JOB_FOREGROUND, true);
 
     job_continue(j, job_is_stopped(j));
     return STATUS_BUILTIN_OK;
@@ -2950,7 +2950,7 @@ static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j, const w
         streams.err.append_format(_(L"%ls: Unknown job '%ls'\n"), L"bg", name);
         builtin_print_help(parser, streams, L"bg", streams.err);
         return STATUS_BUILTIN_ERROR;
-    } else if (!job_get_flag(j, JOB_CONTROL)) {
+    } else if (!j->get_flag(JOB_CONTROL)) {
         streams.err.append_format(
             _(L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n"),
             L"bg", j->job_id, j->command_wcstr());
@@ -2961,7 +2961,7 @@ static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j, const w
     streams.err.append_format(_(L"Send job %d '%ls' to background\n"), j->job_id,
                               j->command_wcstr());
     job_promote(j);
-    job_set_flag(j, JOB_FOREGROUND, 0);
+    j->set_flag(JOB_FOREGROUND, false);
     job_continue(j, job_is_stopped(j));
     return STATUS_BUILTIN_OK;
 }
@@ -2974,7 +2974,7 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         job_t *j;
         job_iterator_t jobs;
         while ((j = jobs.next())) {
-            if (job_is_stopped(j) && job_get_flag(j, JOB_CONTROL) && (!job_is_completed(j))) {
+            if (job_is_stopped(j) && j->get_flag(JOB_CONTROL) && (!job_is_completed(j))) {
                 break;
             }
         }

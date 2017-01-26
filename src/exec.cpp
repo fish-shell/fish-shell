@@ -345,10 +345,10 @@ static void internal_exec_helper(parser_t &parser, const wcstring &def, node_off
 // foreground process group, we don't use posix_spawn if we're going to foreground the process. (If
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
 static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *process) {
-    if (job_get_flag(job, JOB_CONTROL)) {  //!OCLINT(collapsible if statements)
+    if (job->get_flag(JOB_CONTROL)) {  //!OCLINT(collapsible if statements)
         // We are going to use job control; therefore when we launch this job it will get its own
         // process group ID. But will it be foregrounded?
-        if (job_get_flag(job, JOB_TERMINAL) && job_get_flag(job, JOB_FOREGROUND)) {
+        if (job->get_flag(JOB_TERMINAL) && job->get_flag(JOB_FOREGROUND)) {
             // It will be foregrounded, so we will call tcsetpgrp(), therefore do not use
             // posix_spawn.
             return false;
@@ -423,7 +423,7 @@ void exec_job(parser_t &parser, job_t *j) {
             // launch_process _never_ returns.
             launch_process_nofork(j->processes.front().get());
         } else {
-            job_set_flag(j, JOB_CONSTRUCTED, 1);
+            j->set_flag(JOB_CONSTRUCTED, true);
             j->processes.front()->completed = 1;
             return;
         }
@@ -452,7 +452,7 @@ void exec_job(parser_t &parser, job_t *j) {
     // sure that the process group doesn't die accidentally, and is often needed when a
     // builtin/block/function is inside a pipeline, since that usually means we have to wait for one
     // program to exit before continuing in the pipeline, causing the group leader to exit.
-    if (job_get_flag(j, JOB_CONTROL) && !exec_error) {
+    if (j->get_flag(JOB_CONTROL) && !exec_error) {
         for (const process_ptr_t &p : j->processes) {
             if (p->type != EXTERNAL) {
                 if (! p->is_last_in_job || ! p->is_first_in_job) {
@@ -792,8 +792,8 @@ void exec_job(parser_t &parser, job_t *j) {
                     // way, the builtin does not need to know what job it is part of. It could
                     // probably figure that out by walking the job list, but it seems more robust to
                     // make exec handle things.
-                    const int fg = job_get_flag(j, JOB_FOREGROUND);
-                    job_set_flag(j, JOB_FOREGROUND, 0);
+                    const int fg = j->get_flag(JOB_FOREGROUND);
+                    j->set_flag(JOB_FOREGROUND, false);
 
                     signal_unblock();
 
@@ -803,7 +803,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
                     // Restore the fg flag, which is temporarily set to false during builtin
                     // execution so as not to confuse some job-handling builtins.
-                    job_set_flag(j, JOB_FOREGROUND, fg);
+                    j->set_flag(JOB_FOREGROUND, fg);
                 }
 
                 // If stdin has been redirected, close the redirection stream.
@@ -839,7 +839,7 @@ void exec_job(parser_t &parser, job_t *j) {
                     // No buffer, so we exit directly. This means we have to manually set the exit
                     // status.
                     if (p->is_last_in_job) {
-                        proc_set_last_status(job_get_flag(j, JOB_NEGATE) ? (!status) : status);
+                        proc_set_last_status(j->get_flag(JOB_NEGATE) ? (!status) : status);
                     }
                     p->completed = 1;
                     break;
@@ -874,7 +874,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 } else {
                     if (p->is_last_in_job) {
-                        proc_set_last_status(job_get_flag(j, JOB_NEGATE) ? (!status) : status);
+                        proc_set_last_status(j->get_flag(JOB_NEGATE) ? (!status) : status);
                     }
                     p->completed = 1;
                 }
@@ -951,7 +951,7 @@ void exec_job(parser_t &parser, job_t *j) {
                               p->status);
 
                         int status = p->status;
-                        proc_set_last_status(job_get_flag(j, JOB_NEGATE) ? (!status) : status);
+                        proc_set_last_status(j->get_flag(JOB_NEGATE) ? (!status) : status);
                     }
                 } else {
                     // Ok, unfortunately, we have to do a real fork. Bummer. We work hard to make
@@ -1114,8 +1114,8 @@ void exec_job(parser_t &parser, job_t *j) {
     signal_unblock();
     debug(3, L"Job is constructed");
 
-    job_set_flag(j, JOB_CONSTRUCTED, 1);
-    if (!job_get_flag(j, JOB_FOREGROUND)) {
+    j->set_flag(JOB_CONSTRUCTED, true);
+    if (!j->get_flag(JOB_FOREGROUND)) {
         proc_last_bg_pid = j->pgid;
     }
 
@@ -1124,7 +1124,7 @@ void exec_job(parser_t &parser, job_t *j) {
     } else {
         // Mark the errored job as not in the foreground. I can't fully justify whether this is the
         // right place, but it prevents sanity_lose from complaining.
-        job_set_flag(j, JOB_FOREGROUND, 0);
+        j->set_flag(JOB_FOREGROUND, false);
     }
 }
 

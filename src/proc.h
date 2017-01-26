@@ -223,6 +223,10 @@ class job_t {
     /// Bitset containing information about the job. A combination of the JOB_* constants.
     unsigned int flags;
 
+    // Get and set flags
+    bool get_flag(job_flag_t flag) const;
+    void set_flag(job_flag_t flag, bool set);
+
     /// Returns the block IO redirections associated with the job. These are things like the IO
     /// redirections associated with the begin...end statement.
     const io_chain_t &block_io_chain() const { return this->block_io; }
@@ -297,12 +301,6 @@ extern int job_control_mode;
 /// verifier mode where fish tries to validate the syntax of a file but doesn't actually do
 /// anything.
 extern int no_exec;
-
-/// Add the specified flag to the bitset of flags for the specified job.
-void job_set_flag(job_t *j, job_flag_t flag, bool set);
-
-/// Returns one if the specified flag is set in the specified job, 0 otherwise.
-bool job_get_flag(const job_t *j, job_flag_t flag);
 
 /// Sets the status of the last process to exit.
 void proc_set_last_status(int s);

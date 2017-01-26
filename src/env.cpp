@@ -1030,11 +1030,11 @@ bool env_exist(const wchar_t *key, env_mode_flags_t mode) {
 /// variable.
 static bool local_scope_exports(const env_node_t *n) {
     assert(n != NULL);
-    if (n == vars_stack().global_env) return 0;
+    if (n == vars_stack().global_env) return false;
 
-    if (n->exportv) return 1;
+    if (n->exportv) return true;
 
-    if (n->new_scope) return 0;
+    if (n->new_scope) return false;
 
     return local_scope_exports(n->next.get());
 }

@@ -64,19 +64,6 @@ inline int iothread_perform(std::function<void(void)> &&func) {
                                  std::function<void(void)>());
 }
 
-/// Legacy templates
-template <typename T>
-int iothread_perform(int (*handler)(T *), void (*completion)(T *, int), T *context) {
-    return iothread_perform(std::function<int(void)>([=](){return handler(context);}),
-                            std::function<void(int)>([=](int v){completion(context, v);})
-                            );
-}
-
-template <typename T>
-int iothread_perform(int (*handler)(T *), T *context) {
-    return iothread_perform([=](){ handler(context); });
-}
-
 /// Performs a function on the main thread, blocking until it completes.
 void iothread_perform_on_main(std::function<void(void)> &&func);
 

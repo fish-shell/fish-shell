@@ -24,7 +24,8 @@ complete \
 	commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
 )(__fish_print_hostnames):
 
-(__fish_print_users)@\tUsername
+# Disable as username completion is not very useful
+# (__fish_print_users)@\tUsername
 
 "
 

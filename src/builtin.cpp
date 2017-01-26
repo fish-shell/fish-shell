@@ -1681,7 +1681,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                 event_t e(EVENT_ANY);
 
                 if ((opt == 'j') && (wcscasecmp(w.woptarg, L"caller") == 0)) {
-                    int job_id = -1;
+                    job_id_t job_id = -1;
 
                     if (is_subshell) {
                         size_t block_idx = 0;
@@ -2861,10 +2861,6 @@ static int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **arg
     return res;
 }
 
-/// Make the specified job the first job of the job list. Moving jobs around in the list makes the
-/// list reflect the order in which the jobs were used.
-static void make_first(job_t *j) { job_promote(j); }
-
 /// Builtin for putting a job in the foreground.
 static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     job_t *j = NULL;
@@ -2941,7 +2937,7 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (!ft.empty()) env_set(L"_", ft.c_str(), ENV_EXPORT);
     reader_write_title(j->command());
 
-    make_first(j);
+    job_promote(j);
     job_set_flag(j, JOB_FOREGROUND, 1);
 
     job_continue(j, job_is_stopped(j));
@@ -2964,7 +2960,7 @@ static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j, const w
 
     streams.err.append_format(_(L"Send job %d '%ls' to background\n"), j->job_id,
                               j->command_wcstr());
-    make_first(j);
+    job_promote(j);
     job_set_flag(j, JOB_FOREGROUND, 0);
     job_continue(j, job_is_stopped(j));
     return STATUS_BUILTIN_OK;

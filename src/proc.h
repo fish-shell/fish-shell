@@ -155,7 +155,7 @@ typedef std::unique_ptr<process_t> process_ptr_t;
 typedef std::vector<process_ptr_t> process_list_t;
 
 /// Constants for the flag variable in the job struct.
-enum {
+enum job_flag_t {
     /// Whether the user has been told about stopped job.
     JOB_NOTIFIED = 1 << 0,
     /// Whether this job is in the foreground.
@@ -189,8 +189,8 @@ class job_t {
     const io_chain_t block_io;
 
     // No copying.
-    job_t(const job_t &rhs);
-    void operator=(const job_t &);
+    job_t(const job_t &rhs) = delete;
+    void operator=(const job_t &) = delete;
 
    public:
     job_t(job_id_t jobid, const io_chain_t &bio);
@@ -249,7 +249,8 @@ extern int is_login;
 /// Whether we are running an event handler.
 extern int is_event;
 
-typedef std::list<job_t *> job_list_t;
+// List of jobs. We sometimes mutate this while iterating - hence it must be a list, not a vector
+typedef std::list<shared_ptr<job_t>> job_list_t;
 
 bool job_list_is_empty(void);
 
@@ -264,7 +265,7 @@ class job_iterator_t {
     job_t *next() {
         job_t *job = NULL;
         if (current != end) {
-            job = *current;
+            job = current->get();
             ++current;
         }
         return job;
@@ -298,19 +299,16 @@ extern int job_control_mode;
 extern int no_exec;
 
 /// Add the specified flag to the bitset of flags for the specified job.
-void job_set_flag(job_t *j, unsigned int flag, int set);
+void job_set_flag(job_t *j, job_flag_t flag, bool set);
 
 /// Returns one if the specified flag is set in the specified job, 0 otherwise.
-int job_get_flag(const job_t *j, unsigned int flag);
+bool job_get_flag(const job_t *j, job_flag_t flag);
 
 /// Sets the status of the last process to exit.
 void proc_set_last_status(int s);
 
 /// Returns the status of the last process to exit.
 int proc_get_last_status();
-
-/// Remove the specified job.
-void job_free(job_t *j);
 
 /// Promotes a job to the front of the job list.
 void job_promote(job_t *job);

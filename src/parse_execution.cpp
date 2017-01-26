@@ -1265,34 +1265,32 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         return result;
     }
 
-    job_t *j = new job_t(acquire_job_id(), block_io);
-    j->tmodes = tmodes;
-    job_set_flag(j, JOB_CONTROL,
+    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), block_io);
+    job->tmodes = tmodes;
+    job_set_flag(job.get(), JOB_CONTROL,
                  (job_control_mode == JOB_CONTROL_ALL) ||
                      ((job_control_mode == JOB_CONTROL_INTERACTIVE) && shell_is_interactive()));
 
-    job_set_flag(j, JOB_FOREGROUND, !tree.job_should_be_backgrounded(job_node));
+    job_set_flag(job.get(), JOB_FOREGROUND, !tree.job_should_be_backgrounded(job_node));
 
-    job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) && !is_subshell && !is_event);
+    job_set_flag(job.get(), JOB_TERMINAL, job_get_flag(job.get(), JOB_CONTROL) && !is_subshell && !is_event);
 
-    job_set_flag(j, JOB_SKIP_NOTIFICATION,
+    job_set_flag(job.get(), JOB_SKIP_NOTIFICATION,
                  is_subshell || is_block || is_event || !shell_is_interactive());
 
     // Tell the current block what its job is. This has to happen before we populate it (#1394).
-    parser->current_block()->job = j;
+    parser->current_block()->job = job;
 
     // Populate the job. This may fail for reasons like command_not_found. If this fails, an error
     // will have been printed.
     parse_execution_result_t pop_result =
-        this->populate_job_from_job_node(j, job_node, associated_block);
+        this->populate_job_from_job_node(job.get(), job_node, associated_block);
 
     // Clean up the job on failure or cancellation.
     bool populated_job = (pop_result == parse_execution_success);
     if (!populated_job || this->should_cancel_execution(associated_block)) {
-        assert(parser->current_block()->job == j);
+        assert(parser->current_block()->job == job);
         parser->current_block()->job = NULL;
-        delete j;
-        j = NULL;
         populated_job = false;
     }
 
@@ -1303,11 +1301,11 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
     if (populated_job) {
         // Success. Give the job to the parser - it will clean it up.
-        parser->job_add(j);
+        parser->job_add(job);
 
         // Check to see if this contained any external commands.
         bool job_contained_external_command = false;
-        for (const auto &proc : j->processes) {
+        for (const auto &proc : job->processes) {
             if (proc->type == EXTERNAL) {
                 job_contained_external_command = true;
                 break;
@@ -1315,7 +1313,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         }
 
         // Actually execute the job.
-        exec_job(*this->parser, j);
+        exec_job(*this->parser, job.get());
 
         // Only external commands require a new fishd barrier.
         if (job_contained_external_command) {
@@ -1328,7 +1326,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         profile_item->level = eval_level;
         profile_item->parse = (int)(parse_time - start_time);
         profile_item->exec = (int)(exec_time - parse_time);
-        profile_item->cmd = j ? j->command() : wcstring();
+        profile_item->cmd = job ? job->command() : wcstring();
         profile_item->skipped = !populated_job;
     }
 

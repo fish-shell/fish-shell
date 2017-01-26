@@ -2184,7 +2184,7 @@ static void handle_end_loop() {
         }
 
         bool bg_jobs = false;
-        while (job_t *j = jobs.next()) {
+        while (const job_t *j = jobs.next()) {
             if (!job_is_completed(j)) {
                 bg_jobs = true;
                 break;

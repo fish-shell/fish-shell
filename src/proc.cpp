@@ -138,18 +138,12 @@ void job_promote(job_t *job) {
     parser_t::principal_parser().job_promote(job);
 }
 
-/// Remove job from the job list and free all memory associated with it.
-void job_free(job_t *j) {
-    job_remove(j);
-    delete j;
-}
-
 void proc_destroy() {
     job_list_t &jobs = parser_t::principal_parser().job_list();
     while (!jobs.empty()) {
-        job_t *job = jobs.front();
+        job_t *job = jobs.front().get();
         debug(2, L"freeing leaked job %ls", job->command_wcstr());
-        job_free(job);
+        job_remove(job);
     }
 }
 
@@ -237,7 +231,7 @@ bool job_is_completed(const job_t *j) {
     return result;
 }
 
-void job_set_flag(job_t *j, unsigned int flag, int set) {
+void job_set_flag(job_t *j, job_flag_t flag, bool set) {
     if (set) {
         j->flags |= flag;
     } else {
@@ -245,7 +239,9 @@ void job_set_flag(job_t *j, unsigned int flag, int set) {
     }
 }
 
-int job_get_flag(const job_t *j, unsigned int flag) { return static_cast<bool>(j->flags & flag); }
+bool job_get_flag(const job_t *j, job_flag_t flag) {
+    return !! (j->flags & flag);
+}
 
 int job_signal(job_t *j, int signal) {
     pid_t my_pid = getpid();
@@ -630,7 +626,7 @@ int job_reap(bool allow_interactive) {
             proc_fire_event(L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0);
             proc_fire_event(L"JOB_EXIT", EVENT_JOB_ID, j->job_id, 0);
 
-            job_free(j);
+            job_remove(j);
         } else if (job_is_stopped(j) && !job_get_flag(j, JOB_NOTIFIED)) {
             // Notify the user about newly stopped jobs.
             if (!job_get_flag(j, JOB_SKIP_NOTIFICATION)) {
@@ -983,10 +979,10 @@ int proc_format_status(int status) {
 }
 
 void proc_sanity_check() {
-    job_t *fg_job = NULL;
+    const job_t *fg_job = NULL;
 
     job_iterator_t jobs;
-    while (job_t *j = jobs.next()) {
+    while (const job_t *j = jobs.next()) {
         if (!job_get_flag(j, JOB_CONSTRUCTED)) continue;
 
 

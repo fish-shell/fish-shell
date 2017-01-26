@@ -435,7 +435,6 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid) {
 static bool find_job(const wchar_t *proc, expand_flags_t flags, std::vector<completion_t> *completions) {
     ASSERT_IS_MAIN_THREAD();
 
-    const job_t *j;
     bool found = false;
     // If we are not doing tab completion, we first check for the single '%' character, because an
     // empty string will pass the numeric check below. But if we are doing tab completion, we want
@@ -444,7 +443,7 @@ static bool find_job(const wchar_t *proc, expand_flags_t flags, std::vector<comp
     if (wcslen(proc) == 0 && !(flags & EXPAND_FOR_COMPLETIONS)) {
         // This is an empty job expansion: '%'. It expands to the last job backgrounded.
         job_iterator_t jobs;
-        while ((j = jobs.next())) {
+        while (const job_t *j = jobs.next()) {
             if (!j->command_is_empty()) {
                 append_completion(completions, to_string<long>(j->pgid));
                 break;
@@ -457,7 +456,7 @@ static bool find_job(const wchar_t *proc, expand_flags_t flags, std::vector<comp
         // This is a numeric job string, like '%2'.
         if (flags & EXPAND_FOR_COMPLETIONS) {
             job_iterator_t jobs;
-            while ((j = jobs.next())) {
+            while (const job_t *j = jobs.next()) {
                 wchar_t jid[16];
                 if (j->command_is_empty()) continue;
 
@@ -471,8 +470,8 @@ static bool find_job(const wchar_t *proc, expand_flags_t flags, std::vector<comp
         } else {
             int jid = fish_wcstoi(proc);
             if (!errno && jid > 0) {
-                j = job_get(jid);
-                if ((j != 0) && (j->command_wcstr() != 0) && (!j->command_is_empty())) {
+                const job_t *j = job_get(jid);
+                if (j && !j->command_is_empty()) {
                     append_completion(completions, to_string<long>(j->pgid));
                 }
             }
@@ -487,7 +486,7 @@ static bool find_job(const wchar_t *proc, expand_flags_t flags, std::vector<comp
     }
 
     job_iterator_t jobs;
-    while ((j = jobs.next())) {
+    while (const job_t *j = jobs.next()) {
         if (j->command_is_empty()) continue;
 
         size_t offset;
@@ -507,7 +506,7 @@ static bool find_job(const wchar_t *proc, expand_flags_t flags, std::vector<comp
     }
 
     jobs.reset();
-    while ((j = jobs.next())) {
+    while (const job_t *j = jobs.next()) {
         if (j->command_is_empty()) continue;
         for (const process_ptr_t &p : j->processes) {
             if (p->actual_cmd.empty()) continue;

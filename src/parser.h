@@ -78,7 +78,7 @@ struct block_t {
     /// Status for the current loop block. Can be any of the values from the loop_status enum.
     enum loop_status_t loop_status;
     /// The job that is currently evaluated in the specified block.
-    job_t *job;
+    shared_ptr<job_t> job;
     /// Name of file that created this block. This string is intern'd.
     const wchar_t *src_filename;
     /// Line number where this block was created.
@@ -207,7 +207,7 @@ class parser_t {
     parser_t &operator=(const parser_t &);
 
     /// Adds a job to the beginning of the job list.
-    void job_add(job_t *job);
+    void job_add(shared_ptr<job_t> job);
 
     /// Returns the name of the currently evaluated function if we are currently evaluating a
     /// function, null otherwise. This is tested by moving down the block-scope-stack, checking
@@ -310,7 +310,7 @@ class parser_t {
     void job_promote(job_t *job);
 
     /// Return the job with the specified job id. If id is 0 or less, return the last job used.
-    job_t *job_get(int job_id);
+    job_t *job_get(job_id_t job_id);
 
     /// Returns the job with the given pid.
     job_t *job_get_from_pid(int pid);

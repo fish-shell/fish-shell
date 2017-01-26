@@ -299,9 +299,8 @@ void job_mark_process_as_failed(job_t *job, const process_t *failed_proc) {
 /// \param pid the pid of the process whose status changes
 /// \param status the status as returned by wait
 static void handle_child_status(pid_t pid, int status) {
-    bool found_proc = false;
     job_t *j = NULL;
-    process_t *p = NULL;
+    const process_t *found_proc = NULL;
 
     job_iterator_t jobs;
     while (!found_proc && (j = jobs.next())) {
@@ -312,7 +311,7 @@ static void handle_child_status(pid_t pid, int status) {
                 if (p->completed && prev && !prev->completed && prev->pid) {
                     kill(prev->pid, SIGPIPE);
                 }
-                found_proc = true;
+                found_proc = p.get();
                 break;
             }
             prev = p.get();
@@ -327,7 +326,7 @@ static void handle_child_status(pid_t pid, int status) {
     if (is_interactive_session) {
         // In an interactive session, tell the principal parser to skip all blocks we're executing
         // so control-C returns control to the user.
-        if (p && found_proc) parser_t::skip_all_blocks();
+        if (found_proc) parser_t::skip_all_blocks();
     } else {
         // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
         struct sigaction act;

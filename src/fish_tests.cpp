@@ -757,6 +757,15 @@ static void test_cancellation() {
     test_1_cancellation(L"while true ; echo nothing > /dev/null; end");
     test_1_cancellation(L"for i in (while true ; end) ; end");
 
+    // Ensure that if child processes SIGINT, we exit our loops
+    // Test for #3780
+    // Ugly hack - temporarily set is_interactive_session
+    // else we will SIGINT ourselves in response to our child death
+    scoped_push<int> iis(&is_interactive_session, 1);
+    const wchar_t *child_self_destructor = L"while true ; sh -c 'sleep .25; kill -s INT $$' ; end";
+    parser_t::principal_parser().eval(child_self_destructor, io_chain_t(), TOP);
+    iis.restore();
+
     // Restore signal handling.
     proc_pop_interactive();
     signal_reset_handlers();

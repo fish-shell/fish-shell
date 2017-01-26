@@ -102,9 +102,6 @@ static env_universal_t *s_universal_variables = NULL;
 /// Getter for universal variables.
 static env_universal_t *uvars() { return s_universal_variables; }
 
-/// Table for global variables.
-static var_table_t *global;
-
 // Helper class for storing constant strings, without needing to wrap them in a wcstring.
 
 // Comparer for const string set.
@@ -426,7 +423,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 
     top = new env_node_t;
     global_env = top;
-    global = &top->env;
 
     // Now the environment variable handling is set up, the next step is to insert valid data.
 
@@ -950,7 +946,7 @@ void env_push(bool new_scope) {
 }
 
 void env_pop() {
-    if (&top->env != global) {
+    if (top != global_env) {
         int i;
         const wchar_t *locale_changed = NULL;
         env_node_t *killme = top;

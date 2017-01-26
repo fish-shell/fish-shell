@@ -8,7 +8,14 @@ __fish_complete_ssh scp
 # scp specific completions
 #
 
-complete -c scp -d Hostname -a "
+#
+# Hostname
+#
+complete \
+	--command     scp \
+	--description Hostname \
+	--condition   "commandline --cut-at-cursor --current-token | string match --invert '*:*'" \
+	--arguments   "
 
 (__fish_print_hostnames):
 
@@ -22,9 +29,22 @@ complete -c scp -d Hostname -a "
 "
 
 #
+# Local path
+#
+complete \
+	--command     scp \
+	--description "Local Path" \
+	--condition   "commandline -ct | string match ':'"
+
+#
 # Remote path
 #
-complete -c scp -d "Remote Path" -n "commandline -ct| __fish_sgrep -o '.*:'" -a "
+complete \
+	--command     scp \
+	--description "Remote Path" \
+	--no-files \
+	--condition   "commandline --cut-at-cursor --current-token | string match --regex '.+:'" \
+	--arguments   "
 
 (
 	#Prepend any user@host information supplied before the remote completion
@@ -43,4 +63,3 @@ complete -c scp -s p --description "Preserves modification times, access times, 
 complete -c scp -s q --description "Do not display progress bar"
 complete -c scp -s r --description "Recursively copy"
 complete -c scp -s S --description "Encryption program"
-

@@ -60,11 +60,22 @@ bool g_use_posix_spawn = false;  // will usually be set to true
 /// Does the terminal have the "eat_newline_glitch".
 bool term_has_xn = false;
 
+/// List of all locale environment variable names.
+static const wchar_t *const locale_variable[] = {
+    L"LANG",     L"LANGUAGE",          L"LC_ALL",         L"LC_ADDRESS",   L"LC_COLLATE",
+    L"LC_CTYPE", L"LC_IDENTIFICATION", L"LC_MEASUREMENT", L"LC_MESSAGES",  L"LC_MONETARY",
+    L"LC_NAME",  L"LC_NUMERIC",        L"LC_PAPER",       L"LC_TELEPHONE", L"LC_TIME",
+    NULL};
+
+/// List of all curses environment variable names.
+static const wchar_t *const curses_variable[] = {L"TERM", L"TERMINFO", L"TERMINFO_DIRS", NULL};
+
 // Struct representing one level in the function variable stack.
-// Only our variable stack should create these
+// Only our variable stack should create and destroy these
 class env_node_t {
     friend struct var_stack_t;
     env_node_t(bool is_new_scope) : new_scope(is_new_scope) {}
+    ~env_node_t() {}
 
 public:
 
@@ -96,6 +107,7 @@ static pthread_mutex_t env_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static void mark_changed_exported();
 static int local_scope_exports(env_node_t *n);
+static void handle_locale(const wchar_t *env_var_name);
 
 // A class wrapping up a variable stack
 // Currently there is only one variable stack in fish,
@@ -123,15 +135,61 @@ struct var_stack_t {
 
     // Pushes a new node onto our stack
     // Optionally creates a new scope for the node
-    void push(bool new_scope) {
-        env_node_t *node = new env_node_t(new_scope);
-        node->next = this->top;
-        this->top = node;
-        if (new_scope && local_scope_exports(this->top)) {
+    void push(bool new_scope);
+
+    // Pops the top node if it's not global
+    void pop();
+};
+
+void var_stack_t::push(bool new_scope) {
+    env_node_t *node = new env_node_t(new_scope);
+    node->next = this->top;
+    this->top = node;
+    if (new_scope && local_scope_exports(this->top)) {
+        mark_changed_exported();
+    }
+}
+
+void var_stack_t::pop() {
+    // Don't pop the global
+    if (this->top == this->global_env) {
+        debug(0, _(L"Tried to pop empty environment stack."));
+        sanity_lose();
+        return;
+    }
+
+    const wchar_t *locale_changed = NULL;
+    env_node_t *killme = this->top;
+
+    for (int i = 0; locale_variable[i]; i++) {
+        var_table_t::iterator result = killme->env.find(locale_variable[i]);
+        if (result != killme->env.end()) {
+            locale_changed = locale_variable[i];
+            break;
+        }
+    }
+
+    if (killme->new_scope) {  //!OCLINT(collapsible if statements)
+        if (killme->exportv || local_scope_exports(killme->next)) {
             mark_changed_exported();
         }
     }
-};
+    this->top = this->top->next;
+    assert(this->top != NULL);
+
+    var_table_t::iterator iter;
+    for (iter = killme->env.begin(); iter != killme->env.end(); ++iter) {
+        const var_entry_t &entry = iter->second;
+        if (entry.exportv) {
+            mark_changed_exported();
+            break;
+        }
+    }
+    delete killme;
+    // TODO: move this to something general
+    if (locale_changed) handle_locale(locale_changed);
+}
+
 
 // Get the global variable stack
 static var_stack_t &vars_stack() {
@@ -173,16 +231,6 @@ static null_terminated_array_t<char> export_array;
 /// Flag for checking if we need to regenerate the exported variable array.
 static bool has_changed_exported = true;
 static void mark_changed_exported() { has_changed_exported = true; }
-
-/// List of all locale environment variable names.
-static const wchar_t *const locale_variable[] = {
-    L"LANG",     L"LANGUAGE",          L"LC_ALL",         L"LC_ADDRESS",   L"LC_COLLATE",
-    L"LC_CTYPE", L"LC_IDENTIFICATION", L"LC_MEASUREMENT", L"LC_MESSAGES",  L"LC_MONETARY",
-    L"LC_NAME",  L"LC_NUMERIC",        L"LC_PAPER",       L"LC_TELEPHONE", L"LC_TIME",
-    NULL};
-
-/// List of all curses environment variable names.
-static const wchar_t *const curses_variable[] = {L"TERM", L"TERMINFO", L"TERMINFO_DIRS", NULL};
 
 const var_entry_t *env_node_t::find_entry(const wcstring &key) {
     const var_entry_t *result = NULL;
@@ -981,42 +1029,7 @@ void env_push(bool new_scope) {
 }
 
 void env_pop() {
-    if (vars_stack().top != vars_stack().global_env) {
-        int i;
-        const wchar_t *locale_changed = NULL;
-        env_node_t *killme = vars_stack().top;
-
-        for (i = 0; locale_variable[i]; i++) {
-            var_table_t::iterator result = killme->env.find(locale_variable[i]);
-            if (result != killme->env.end()) {
-                locale_changed = locale_variable[i];
-                break;
-            }
-        }
-
-        if (killme->new_scope) {  //!OCLINT(collapsible if statements)
-            if (killme->exportv || local_scope_exports(killme->next)) mark_changed_exported();
-        }
-
-        vars_stack().top = vars_stack().top->next;
-
-        var_table_t::iterator iter;
-        for (iter = killme->env.begin(); iter != killme->env.end(); ++iter) {
-            const var_entry_t &entry = iter->second;
-            if (entry.exportv) {
-                mark_changed_exported();
-                break;
-            }
-        }
-
-        delete killme;
-
-        if (locale_changed) handle_locale(locale_changed);
-
-    } else {
-        debug(0, _(L"Tried to pop empty environment stack."));
-        sanity_lose();
-    }
+    vars_stack().pop();
 }
 
 /// Function used with to insert keys of one table into a set::set<wcstring>.

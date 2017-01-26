@@ -27,7 +27,64 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 
     # Check hosts known to ssh
     set -l known_hosts ~/.ssh/known_hosts{,2} /etc/ssh/known_hosts{,2} # Yes, seriously - the default specifies both with and without "2"
-    for file in /etc/ssh/ssh_config ~/.ssh/config
+    # Check default ssh configs
+    set -l ssh_config
+    # Get alias and commandline options
+    set -l ssh_command (functions ssh | string split ' ') (commandline -cpo)
+    # Extract ssh config path from last -F short option
+    if contains -- '-F' $ssh_command
+        set -l ssh_config_path_is_next 1
+        for token in $ssh_command
+            if contains -- '-F' $token
+                set ssh_config_path_is_next 0
+            else if test $ssh_config_path_is_next -eq 0
+                set ssh_config (eval "echo $token")
+                set ssh_config_path_is_next 1
+            end
+        end
+    else
+        set ssh_config $ssh_config ~/.ssh/config
+    end
+
+    # Extract ssh config paths from Include option
+    function _ssh_include --argument-names ssh_config
+        # Relative paths in Include directive use /etc/ssh or ~/.ssh depending on
+        # system or user level config. -F will not override this behaviour
+        if test $ssh_config = '/etc/ssh/ssh_config'
+            set relative_path '/etc/ssh'
+        else
+            set relative_path $HOME/.ssh
+        end
+
+        function _recursive --no-scope-shadowing
+            set paths
+            for config in $argv
+                set paths $paths (cat $config ^/dev/null \
+                # Keep only Include lines
+                | string match --regex --ignore-case '^\s*Include\s+.+' \
+                # Remove Include syntax
+                | string replace --regex --ignore-case '^\s*Include\s+' '' \
+                # Normalize whitespace
+                | string trim | string replace --regex --all '\s+' ' ')
+            end
+            if test -n "$paths"
+                # Expand paths which may have globbing and tokenize
+                set paths (eval "echo $paths" | string split ' ')
+                for path_index in (seq (count $paths))
+                    # Resolve relative paths
+                    if string match --invert '/*' $paths[$path_index] >/dev/null
+                        set paths[$path_index] $relative_path/$paths[$path_index]
+                    end
+                    echo $paths[$path_index]
+                end
+                _recursive $paths
+            end
+        end
+        _recursive $ssh_config
+    end
+    set -l ssh_configs (_ssh_include /etc/ssh/ssh_config) (_ssh_include $ssh_config)
+
+    for file in $ssh_configs
         if test -r $file
             # Print hosts from system wide ssh configuration file
             # Note the non-capturing group to avoid printing "name"

@@ -1,16 +1,16 @@
 function __fish_print_user_ids
-    if test -x /usr/bin/getent
+    if command -sq getent
         for line in (getent passwd)
-            set v (string split : $line)
+            set v (string split : -- $line)
             printf "%s\t%s\n" $v[3] $v[1]
         end
     end
 end
 
 function __fish_print_group_ids
-    if test -x /usr/bin/getent
+    if command -sq getent
         for line in (getent group)
-            set v (string split : $line)
+            set v (string split : -- $line)
             printf "%s\t%s\n" $v[3] $v[1]
         end
     end
@@ -137,13 +137,13 @@ function __fish_complete_mount_opts
  acl\
 
 
-    set -l token (commandline -tc | string replace -r '^-o' '')
-    set -l args (string split , $token ^/dev/null)
+    set -l token (commandline -tc | string replace -r '^-o' -- '')
+    set -l args (string split , -- $token)
 
     set -l last_arg $args[-1]
     set -e args[-1]
 
-    switch $last_arg
+    switch (string replace -r '=.*' '=' -- $last_arg)
         case uid=
             set fish_mount_opts $fish_mount_opts uid=(__fish_print_user_ids)
         case gid=
@@ -157,18 +157,8 @@ function __fish_complete_mount_opts
 
     set -l prefix ''
     if set -q args[1]
-        set prefix (string join , $args),
+        set prefix (string join , -- $args),
     end
 
-    for opt in $fish_mount_opts
-        printf '%s\n' $prefix$opt
-
-        if not string match '*=*' $opt ^/dev/null >/dev/null
-            if string match -r '\t' $opt ^/dev/null >/dev/null
-                printf '%s\n' $prefix(string replace \t ,\t $opt)
-            else
-                printf '%s\n' $prefix$opt,
-            end
-        end
-    end
+    printf '%s\n' $prefix$fish_mount_opts
 end

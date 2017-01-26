@@ -92,11 +92,6 @@ public:
 
     /// Returns a pointer to the given entry if present, or NULL.
     const var_entry_t *find_entry(const wcstring &key);
-
-    /// Returns the next scope to search in order, respecting the new_scope flag, or NULL if we're
-    /// done.
-    env_node_t *next_scope_to_search();
-    const env_node_t *next_scope_to_search() const;
 };
 
 class variable_entry_t {
@@ -139,6 +134,11 @@ struct var_stack_t {
 
     // Pops the top node if it's not global
     void pop();
+
+    // Returns the next scope to search for a given node, respecting the new_scope lag
+    // Returns NULL if we're done
+    env_node_t *next_scope_to_search(env_node_t *node);
+    const env_node_t *next_scope_to_search(const env_node_t *node) const;
 };
 
 void var_stack_t::push(bool new_scope) {
@@ -190,6 +190,22 @@ void var_stack_t::pop() {
     if (locale_changed) handle_locale(locale_changed);
 }
 
+const env_node_t *var_stack_t::next_scope_to_search(const env_node_t *node) const {
+    assert(node != NULL);
+    if (node == this->global_env) {
+        return NULL;
+    }
+    return node->new_scope ? this->global_env : node->next;
+}
+
+env_node_t *var_stack_t::next_scope_to_search(env_node_t *node) {
+    assert(node != NULL);
+    if (node == this->global_env) {
+        return NULL;
+    }
+    return node->new_scope ? this->global_env : node->next;
+}
+
 
 // Get the global variable stack
 static var_stack_t &vars_stack() {
@@ -239,12 +255,6 @@ const var_entry_t *env_node_t::find_entry(const wcstring &key) {
         result = &where->second;
     }
     return result;
-}
-
-env_node_t *env_node_t::next_scope_to_search() { return this->new_scope ? vars_stack().global_env : this->next; }
-
-const env_node_t *env_node_t::next_scope_to_search() const {
-    return this->new_scope ? vars_stack().global_env : this->next;
 }
 
 /// Return the current umask value.
@@ -621,7 +631,7 @@ static env_node_t *env_get_node(const wcstring &key) {
             break;
         }
 
-        env = env->next_scope_to_search();
+        env = vars_stack().next_scope_to_search(env);
     }
     return env;
 }
@@ -937,7 +947,7 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
                 if (!search_global || env == vars_stack().global_env) break;
                 env = vars_stack().global_env;
             } else {
-                env = env->next_scope_to_search();
+                env = vars_stack().next_scope_to_search(env);
             }
         }
     }
@@ -994,7 +1004,7 @@ bool env_exist(const wchar_t *key, env_mode_flags_t mode) {
                 const var_entry_t &res = result->second;
                 return res.exportv ? test_exported : test_unexported;
             }
-            env = env->next_scope_to_search();
+            env = vars_stack().next_scope_to_search(env);
         }
     }
 

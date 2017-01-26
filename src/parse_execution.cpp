@@ -75,10 +75,10 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
-parse_execution_context_t::parse_execution_context_t(moved_ref<parse_node_tree_t> t,
+parse_execution_context_t::parse_execution_context_t(parse_node_tree_t t,
                                                      const wcstring &s, parser_t *p,
                                                      int initial_eval_level)
-    : tree(t),
+    : tree(std::move(t)),
       src(s),
       parser(p),
       eval_level(initial_eval_level),

@@ -593,15 +593,14 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
         fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
         return 1;
     }
-    return this->eval_acquiring_tree(cmd, io, block_type, moved_ref<parse_node_tree_t>(tree));
+    return this->eval(cmd, io, block_type, std::move(tree));
 }
 
-int parser_t::eval_acquiring_tree(const wcstring &cmd, const io_chain_t &io,
-                                  enum block_type_t block_type, moved_ref<parse_node_tree_t> tree) {
+int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type, parse_node_tree_t tree) {
     CHECK_BLOCK(1);
     assert(block_type == TOP || block_type == SUBST);
 
-    if (tree.val.empty()) {
+    if (tree.empty()) {
         return 0;
     }
 
@@ -613,7 +612,8 @@ int parser_t::eval_acquiring_tree(const wcstring &cmd, const io_chain_t &io,
         (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
 
     // Append to the execution context stack.
-    execution_contexts.push_back(make_unique<parse_execution_context_t>(tree, cmd, this, exec_eval_level));
+    execution_contexts.push_back(make_unique<parse_execution_context_t>(std::move(tree), cmd,
+                                                                        this, exec_eval_level));
     const parse_execution_context_t *ctx = execution_contexts.back().get();
 
     // Execute the first node.

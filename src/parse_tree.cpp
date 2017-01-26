@@ -603,15 +603,11 @@ void parse_ll_t::determine_node_ranges(void) {
 
 void parse_ll_t::acquire_output(parse_node_tree_t *output, parse_error_list_t *errors) {
     if (output != NULL) {
-        output->swap(this->nodes);
+        *output = std::move(this->nodes);
     }
-    this->nodes.clear();
-
     if (errors != NULL) {
-        errors->swap(this->errors);
+        *errors = std::move(this->errors);
     }
-    this->errors.clear();
-    this->symbol_stack.clear();
 }
 
 void parse_ll_t::parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *fmt,

@@ -190,7 +190,7 @@ static void iothread_spawn() {
     VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, NULL));
 }
 
-int iothread_perform(void_function_t &&func, void_function_t &&completion) {
+int iothread_perform_impl(void_function_t &&func, void_function_t &&completion) {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
     iothread_init();

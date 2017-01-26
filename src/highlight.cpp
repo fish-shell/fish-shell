@@ -327,7 +327,6 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
 }
 
 bool autosuggest_validate_from_history(const history_item_t &item,
-                                       file_detection_context_t &detector,
                                        const wcstring &working_directory,
                                        const env_vars_snapshot_t &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
@@ -372,11 +371,7 @@ bool autosuggest_validate_from_history(const history_item_t &item,
 
     if (cmd_ok) {
         const path_list_t &paths = item.get_required_paths();
-        if (paths.empty()) {
-            suggestionOK = true;
-        } else {
-            suggestionOK = detector.paths_are_valid(paths);
-        }
+        suggestionOK = all_paths_are_valid(paths, working_directory);
     }
 
     return suggestionOK;

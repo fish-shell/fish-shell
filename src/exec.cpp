@@ -208,7 +208,7 @@ static void launch_process_nofork(process_t *p) {
     null_terminated_array_t<char> argv_array;
     convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
 
-    const char *const *envv = env_export_arr(false);
+    const char *const *envv = env_export_arr();
     char *actual_cmd = wcs2str(p->actual_cmd.c_str());
 
     // Ensure the terminal modes are what they were before we changed them.
@@ -566,7 +566,14 @@ void exec_job(parser_t &parser, job_t *j) {
         // to generate it, since that result would not get written back to the parent. This call
         // could be safely removed, but it would result in slightly lower performance - at least on
         // uniprocessor systems.
-        if (p->type == EXTERNAL) env_export_arr(true);
+        if (p->type == EXTERNAL) {
+            // Apply universal barrier so we have the most recent uvar changes
+            if (! get_proc_had_barrier()) {
+                set_proc_had_barrier(true);
+                env_universal_barrier();
+            }
+            env_export_arr();
+        }
 
         // Set up fds that will be used in the pipe.
         if (pipes_to_next_command) {
@@ -998,7 +1005,7 @@ void exec_job(parser_t &parser, job_t *j) {
                 make_fd_blocking(STDIN_FILENO);
 
                 const char *const *argv = argv_array.get();
-                const char *const *envv = env_export_arr(false);
+                const char *const *envv = env_export_arr();
 
                 std::string actual_cmd_str = wcs2string(p->actual_cmd);
                 const char *actual_cmd = actual_cmd_str.c_str();

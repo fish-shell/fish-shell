@@ -134,8 +134,8 @@ void env_pop();
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();
 
-/// Returns an array containing all exported variables in a format suitable for execv.
-const char *const *env_export_arr(bool recalc);
+/// Returns an array containing all exported variables in a format suitable for execv
+const char *const *env_export_arr();
 
 /// Sets up argv as the given null terminated array of strings.
 void env_set_argv(const wchar_t *const *argv);

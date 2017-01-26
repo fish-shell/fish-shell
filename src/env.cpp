@@ -100,7 +100,6 @@ class variable_entry_t {
 
 static pthread_mutex_t env_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static void mark_changed_exported();
 static int local_scope_exports(env_node_t *n);
 static void handle_locale(const wchar_t *env_var_name);
 
@@ -114,6 +113,14 @@ struct var_stack_t {
 
     // Bottom node on the function stack.
     env_node_t *global_env = NULL;
+
+    // Exported variable array used by execv.
+    null_terminated_array_t<char> export_array;
+
+    /// Flag for checking if we need to regenerate the exported variable array.
+    bool has_changed_exported = true;
+    void mark_changed_exported() { has_changed_exported = true; }
+    void update_export_array_if_necessary();
 
     var_stack_t() {
         this->top = new env_node_t(false);
@@ -146,7 +153,7 @@ void var_stack_t::push(bool new_scope) {
     node->next = this->top;
     this->top = node;
     if (new_scope && local_scope_exports(this->top)) {
-        mark_changed_exported();
+        this->mark_changed_exported();
     }
 }
 
@@ -171,7 +178,7 @@ void var_stack_t::pop() {
 
     if (killme->new_scope) {  //!OCLINT(collapsible if statements)
         if (killme->exportv || local_scope_exports(killme->next)) {
-            mark_changed_exported();
+            this->mark_changed_exported();
         }
     }
     this->top = this->top->next;
@@ -181,7 +188,7 @@ void var_stack_t::pop() {
     for (iter = killme->env.begin(); iter != killme->env.end(); ++iter) {
         const var_entry_t &entry = iter->second;
         if (entry.exportv) {
-            mark_changed_exported();
+            this->mark_changed_exported();
             break;
         }
     }
@@ -240,13 +247,6 @@ static const_string_set_t env_electric;
 static bool is_electric(const wcstring &key) {
     return env_electric.find(key.c_str()) != env_electric.end();
 }
-
-/// Exported variable array used by execv.
-static null_terminated_array_t<char> export_array;
-
-/// Flag for checking if we need to regenerate the exported variable array.
-static bool has_changed_exported = true;
-static void mark_changed_exported() { has_changed_exported = true; }
 
 const var_entry_t *env_node_t::find_entry(const wcstring &key) {
     const var_entry_t *result = NULL;
@@ -436,7 +436,7 @@ static void universal_callback(fish_message_type_t type, const wchar_t *name) {
     }
 
     if (str) {
-        mark_changed_exported();
+        vars_stack().mark_changed_exported();
 
         event_t ev = event_t::variable_event(name);
         ev.arguments.push_back(L"VARIABLE");
@@ -657,7 +657,7 @@ static env_node_t *env_get_node(const wcstring &key) {
 /// * ENV_INVALID, the variable value was invalid. This applies only to special variables.
 int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) {
     ASSERT_IS_MAIN_THREAD();
-    bool has_changed_old = has_changed_exported;
+    bool has_changed_old = vars_stack().has_changed_exported;
     int done = 0;
 
     if (val && contains(key, L"PWD", L"HOME")) {
@@ -716,7 +716,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
             uvars()->set(key, val, new_export);
             env_universal_barrier();
             if (old_export || new_export) {
-                mark_changed_exported();
+                vars_stack().mark_changed_exported();
             }
         }
     } else {
@@ -795,7 +795,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
                 entry.exportv = false;
             }
 
-            if (has_changed_old || has_changed_new) mark_changed_exported();
+            if (has_changed_old || has_changed_new) vars_stack().mark_changed_exported();
         }
     }
 
@@ -824,7 +824,7 @@ static bool try_remove(env_node_t *n, const wchar_t *key, int var_mode) {
     var_table_t::iterator result = n->env.find(key);
     if (result != n->env.end()) {
         if (result->second.exportv) {
-            mark_changed_exported();
+            vars_stack().mark_changed_exported();
         }
         n->env.erase(result);
         return true;
@@ -879,7 +879,7 @@ int env_remove(const wcstring &key, int var_mode) {
             event_fire(&ev);
         }
 
-        if (is_exported) mark_changed_exported();
+        if (is_exported) vars_stack().mark_changed_exported();
     }
 
     react_to_variable_change(key);
@@ -1155,45 +1155,41 @@ static void export_func(const std::map<wcstring, wcstring> &envs, std::vector<st
     }
 }
 
-static void update_export_array_if_necessary(bool recalc) {
-    ASSERT_IS_MAIN_THREAD();
-    if (recalc && !get_proc_had_barrier()) {
-        set_proc_had_barrier(true);
-        env_universal_barrier();
+void var_stack_t::update_export_array_if_necessary() {
+    if (! this->has_changed_exported) {
+        return;
     }
+    std::map<wcstring, wcstring> vals;
 
-    if (has_changed_exported) {
-        std::map<wcstring, wcstring> vals;
+    debug(4, L"env_export_arr() recalc");
 
-        debug(4, L"env_export_arr() recalc");
+    get_exported(this->top, &vals);
 
-        get_exported(vars_stack().top, &vals);
+    if (uvars()) {
+        const wcstring_list_t uni = uvars()->get_names(true, false);
+        for (size_t i = 0; i < uni.size(); i++) {
+            const wcstring &key = uni.at(i);
+            const env_var_t val = uvars()->get(key);
 
-        if (uvars()) {
-            const wcstring_list_t uni = uvars()->get_names(true, false);
-            for (size_t i = 0; i < uni.size(); i++) {
-                const wcstring &key = uni.at(i);
-                const env_var_t val = uvars()->get(key);
-
-                if (!val.missing() && val != ENV_NULL) {
-                    // Note that std::map::insert does NOT overwrite a value already in the map,
-                    // which we depend on here.
-                    vals.insert(std::pair<wcstring, wcstring>(key, val));
-                }
+            if (!val.missing() && val != ENV_NULL) {
+                // Note that std::map::insert does NOT overwrite a value already in the map,
+                // which we depend on here.
+                vals.insert(std::pair<wcstring, wcstring>(key, val));
             }
         }
-
-        std::vector<std::string> local_export_buffer;
-        export_func(vals, local_export_buffer);
-        export_array.set(local_export_buffer);
-        has_changed_exported = false;
     }
+
+    std::vector<std::string> local_export_buffer;
+    export_func(vals, local_export_buffer);
+    export_array.set(local_export_buffer);
+    has_changed_exported = false;
 }
 
-const char *const *env_export_arr(bool recalc) {
+const char *const *env_export_arr() {
     ASSERT_IS_MAIN_THREAD();
-    update_export_array_if_necessary(recalc);
-    return export_array.get();
+    ASSERT_IS_NOT_FORKED_CHILD();
+    vars_stack().update_export_array_if_necessary();
+    return vars_stack().export_array.get();
 }
 
 void env_set_argv(const wchar_t *const *argv) {

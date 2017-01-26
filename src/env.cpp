@@ -90,11 +90,18 @@ class variable_entry_t {
 
 static pthread_mutex_t env_lock = PTHREAD_MUTEX_INITIALIZER;
 
-/// Top node on the function stack.
-static env_node_t *top = NULL;
+// A class wrapping up a variable stack
+// Currently there is only one variable stack in fish,
+// but we can imagine having separate (linked) stacks
+// if we introduce multiple threads of execution
+struct var_stack_t {
+    // Top node on the function stack.
+    env_node_t *top = NULL;
 
-/// Bottom node on the function stack.
-static env_node_t *global_env = NULL;
+    // Bottom node on the function stack.
+    env_node_t *global_env = NULL;
+};
+static var_stack_t vars_stack;
 
 /// Universal variables global instance. Initialized in env_init.
 static env_universal_t *s_universal_variables = NULL;
@@ -150,10 +157,10 @@ const var_entry_t *env_node_t::find_entry(const wcstring &key) {
     return result;
 }
 
-env_node_t *env_node_t::next_scope_to_search() { return this->new_scope ? global_env : this->next; }
+env_node_t *env_node_t::next_scope_to_search() { return this->new_scope ? vars_stack.global_env : this->next; }
 
 const env_node_t *env_node_t::next_scope_to_search() const {
-    return this->new_scope ? global_env : this->next;
+    return this->new_scope ? vars_stack.global_env : this->next;
 }
 
 /// Return the current umask value.
@@ -421,8 +428,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     env_electric.insert(L"status");
     env_electric.insert(L"umask");
 
-    top = new env_node_t;
-    global_env = top;
+    vars_stack.top = new env_node_t;
+    vars_stack.global_env = vars_stack.top;
 
     // Now the environment variable handling is set up, the next step is to insert valid data.
 
@@ -527,7 +534,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 /// Search all visible scopes in order for the specified key. Return the first scope in which it was
 /// found.
 static env_node_t *env_get_node(const wcstring &key) {
-    env_node_t *env = top;
+    env_node_t *env = vars_stack.top;
     while (env != NULL) {
         if (env->find_entry(key) != NULL) {
             break;
@@ -638,9 +645,9 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
 
         env_node_t *node = NULL;
         if (var_mode & ENV_GLOBAL) {
-            node = global_env;
+            node = vars_stack.global_env;
         } else if (var_mode & ENV_LOCAL) {
-            node = top;
+            node = vars_stack.top;
         } else if (preexisting_node != NULL) {
             node = preexisting_node;
             if ((var_mode & (ENV_EXPORT | ENV_UNEXPORT)) == 0) {
@@ -672,7 +679,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
             } else {
                 // New variable with unspecified scope. The default scope is the innermost scope
                 // that is shadowing, which will be either the current function or the global scope.
-                node = top;
+                node = vars_stack.top;
                 while (node->next && !node->new_scope) {
                     node = node->next;
                 }
@@ -737,7 +744,7 @@ static bool try_remove(env_node_t *n, const wchar_t *key, int var_mode) {
     }
 
     if (n->new_scope) {
-        return try_remove(global_env, key, var_mode);
+        return try_remove(vars_stack.global_env, key, var_mode);
     }
     return try_remove(n->next, key, var_mode);
 }
@@ -751,11 +758,11 @@ int env_remove(const wcstring &key, int var_mode) {
         return 2;
     }
 
-    first_node = top;
+    first_node = vars_stack.top;
 
     if (!(var_mode & ENV_UNIVERSAL)) {
         if (var_mode & ENV_GLOBAL) {
-            first_node = global_env;
+            first_node = vars_stack.global_env;
         }
 
         if (try_remove(first_node, key.c_str(), var_mode)) {
@@ -834,7 +841,7 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
         /* Lock around a local region */
         scoped_lock locker(env_lock);
 
-        env_node_t *env = search_local ? top : global_env;
+        env_node_t *env = search_local ? vars_stack.top : vars_stack.global_env;
 
         while (env != NULL) {
             const var_entry_t *entry = env->find_entry(key);
@@ -846,8 +853,8 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
             }
 
             if (has_scope) {
-                if (!search_global || env == global_env) break;
-                env = global_env;
+                if (!search_global || env == vars_stack.global_env) break;
+                env = vars_stack.global_env;
             } else {
                 env = env->next_scope_to_search();
             }
@@ -895,9 +902,9 @@ bool env_exist(const wchar_t *key, env_mode_flags_t mode) {
     }
 
     if (test_local || test_global) {
-        const env_node_t *env = test_local ? top : global_env;
+        const env_node_t *env = test_local ? vars_stack.top : vars_stack.global_env;
         while (env != NULL) {
-            if (env == global_env && !test_global) {
+            if (env == vars_stack.global_env && !test_global) {
                 break;
             }
 
@@ -927,7 +934,7 @@ bool env_exist(const wchar_t *key, env_mode_flags_t mode) {
 /// Returns true if the specified scope or any non-shadowed non-global subscopes contain an exported
 /// variable.
 static int local_scope_exports(env_node_t *n) {
-    if (n == global_env) return 0;
+    if (n == vars_stack.global_env) return 0;
 
     if (n->exportv) return 1;
 
@@ -938,18 +945,18 @@ static int local_scope_exports(env_node_t *n) {
 
 void env_push(bool new_scope) {
     env_node_t *node = new env_node_t;
-    node->next = top;
+    node->next = vars_stack.top;
     node->new_scope = new_scope;
 
-    if (new_scope && local_scope_exports(top)) mark_changed_exported();
-    top = node;
+    if (new_scope && local_scope_exports(vars_stack.top)) mark_changed_exported();
+    vars_stack.top = node;
 }
 
 void env_pop() {
-    if (top != global_env) {
+    if (vars_stack.top != vars_stack.global_env) {
         int i;
         const wchar_t *locale_changed = NULL;
-        env_node_t *killme = top;
+        env_node_t *killme = vars_stack.top;
 
         for (i = 0; locale_variable[i]; i++) {
             var_table_t::iterator result = killme->env.find(locale_variable[i]);
@@ -963,7 +970,7 @@ void env_pop() {
             if (killme->exportv || local_scope_exports(killme->next)) mark_changed_exported();
         }
 
-        top = top->next;
+        vars_stack.top = vars_stack.top->next;
 
         var_table_t::iterator iter;
         for (iter = killme->env.begin(); iter != killme->env.end(); ++iter) {
@@ -1007,7 +1014,7 @@ wcstring_list_t env_get_names(int flags) {
     int show_global = flags & ENV_GLOBAL;
     int show_universal = flags & ENV_UNIVERSAL;
 
-    env_node_t *n = top;
+    env_node_t *n = vars_stack.top;
     const bool show_exported = (flags & ENV_EXPORT) || !(flags & ENV_UNEXPORT);
     const bool show_unexported = (flags & ENV_UNEXPORT) || !(flags & ENV_EXPORT);
 
@@ -1017,7 +1024,7 @@ wcstring_list_t env_get_names(int flags) {
 
     if (show_local) {
         while (n) {
-            if (n == global_env) break;
+            if (n == vars_stack.global_env) break;
 
             add_key_to_string_set(n->env, &names, show_exported, show_unexported);
             if (n->new_scope)
@@ -1028,7 +1035,7 @@ wcstring_list_t env_get_names(int flags) {
     }
 
     if (show_global) {
-        add_key_to_string_set(global_env->env, &names, show_exported, show_unexported);
+        add_key_to_string_set(vars_stack.global_env->env, &names, show_exported, show_unexported);
         if (show_unexported) {
             result.insert(result.end(), env_electric.begin(), env_electric.end());
         }
@@ -1048,7 +1055,7 @@ static void get_exported(const env_node_t *n, std::map<wcstring, wcstring> *h) {
     if (!n) return;
 
     if (n->new_scope)
-        get_exported(global_env, h);
+        get_exported(vars_stack.global_env, h);
     else
         get_exported(n->next, h);
 
@@ -1109,7 +1116,7 @@ static void update_export_array_if_necessary(bool recalc) {
 
         debug(4, L"env_export_arr() recalc");
 
-        get_exported(top, &vals);
+        get_exported(vars_stack.top, &vals);
 
         if (uvars()) {
             const wcstring_list_t uni = uvars()->get_names(true, false);

@@ -146,6 +146,11 @@ struct var_stack_t {
     // Returns NULL if we're done
     env_node_t *next_scope_to_search(env_node_t *node);
     const env_node_t *next_scope_to_search(const env_node_t *node) const;
+
+    // Returns the scope used for unspecified scopes
+    // An unspecified scope is either the topmost shadowing scope, or the global scope if none
+    // This implements the default behavior of 'set'
+    env_node_t *resolve_unspecified_scope();
 };
 
 void var_stack_t::push(bool new_scope) {
@@ -213,6 +218,13 @@ env_node_t *var_stack_t::next_scope_to_search(env_node_t *node) {
     return node->new_scope ? this->global_env : node->next;
 }
 
+env_node_t *var_stack_t::resolve_unspecified_scope() {
+    env_node_t *node = this->top;
+    while (node && !node->new_scope) {
+        node = node->next;
+    }
+    return node ? node : this->global_env;
+}
 
 // Get the global variable stack
 static var_stack_t &vars_stack() {
@@ -768,12 +780,8 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
                 done = 1;
 
             } else {
-                // New variable with unspecified scope. The default scope is the innermost scope
-                // that is shadowing, which will be either the current function or the global scope.
-                node = vars_stack().top;
-                while (node->next && !node->new_scope) {
-                    node = node->next;
-                }
+                // New variable with unspecified scope
+                node = vars_stack().resolve_unspecified_scope();
             }
         }
 

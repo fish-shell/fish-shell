@@ -183,7 +183,6 @@ void pager_t::completion_print(size_t cols, const size_t *width_by_column, size_
                                size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst,
                                page_rendering_t *rendering) const {
     // Teach the rendering about the rows it printed.
-    assert(row_start >= 0);
     assert(row_stop >= row_start);
     rendering->row_start = row_start;
     rendering->row_end = row_stop;
@@ -456,7 +455,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         size_t last_starting_row = row_count - term_height;
         start_row = mini(suggested_start_row, last_starting_row);
         stop_row = start_row + term_height;
-        assert(start_row >= 0 && start_row <= last_starting_row);
+        assert(start_row <= last_starting_row);
     }
 
     assert(stop_row >= start_row);

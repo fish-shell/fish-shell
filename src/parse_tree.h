@@ -20,7 +20,7 @@ typedef uint32_t node_offset_t;
 
 typedef uint32_t source_offset_t;
 
-#define SOURCE_OFFSET_INVALID (static_cast<source_offset_t>(-1))
+constexpr source_offset_t SOURCE_OFFSET_INVALID = static_cast<source_offset_t>(-1);
 
 /// A struct representing the token type that we use internally.
 struct parse_token_t {

@@ -493,7 +493,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 
 /// Try reading the specified function mapping.
 static bool input_mapping_is_match(const input_mapping_t &m) {
-    wint_t c = 0;
+    wchar_t c = 0;
     int j;
 
     debug(2, L"trying to match mapping %ls", escape(m.seq.c_str(), ESCAPE_ALL).c_str());

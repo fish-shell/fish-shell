@@ -1122,20 +1122,14 @@ static void test_escape_sequences(void) {
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
 }
 
-class lru_node_test_t : public lru_node_t {
+class test_lru_t : public lru_cache_t<test_lru_t, int> {
    public:
-    explicit lru_node_test_t(const wcstring &tmp) : lru_node_t(tmp) {}
-};
+    test_lru_t() : lru_cache_t<test_lru_t, int>(16) {}
 
-class test_lru_t : public lru_cache_t<lru_node_test_t> {
-   public:
-    test_lru_t() : lru_cache_t<lru_node_test_t>(16) {}
+    std::vector<std::pair<wcstring, int>> evicted;
 
-    std::vector<lru_node_test_t *> evicted_nodes;
-
-    virtual void node_was_evicted(lru_node_test_t *node) {
-        do_test(find(evicted_nodes.begin(), evicted_nodes.end(), node) == evicted_nodes.end());
-        evicted_nodes.push_back(node);
+    void entry_was_evicted(wcstring key, int val) {
+        evicted.push_back({key, val});
     }
 };
 
@@ -1143,24 +1137,18 @@ static void test_lru(void) {
     say(L"Testing LRU cache");
 
     test_lru_t cache;
-    std::vector<lru_node_test_t *> expected_evicted;
-    size_t total_nodes = 20;
-    for (size_t i = 0; i < total_nodes; i++) {
-        do_test(cache.size() == std::min(i, (size_t)16));
-        lru_node_test_t *node = new lru_node_test_t(to_string(i));
-        if (i < 4) expected_evicted.push_back(node);
+    std::vector<std::pair<wcstring, int>> expected_evicted;
+    int total_nodes = 20;
+    for (int i = 0; i < total_nodes; i++) {
+        do_test(cache.size() == size_t(std::min(i, 16)));
+        if (i < 4) expected_evicted.push_back({to_string(i), i});
         // Adding the node the first time should work, and subsequent times should fail.
-        do_test(cache.add_node(node));
-        do_test(!cache.add_node(node));
+        do_test(cache.insert(to_string(i), i));
+        do_test(!cache.insert(to_string(i), i+1));
     }
-    do_test(cache.evicted_nodes == expected_evicted);
+    do_test(cache.evicted == expected_evicted);
     cache.evict_all_nodes();
-    do_test(cache.evicted_nodes.size() == total_nodes);
-    while (!cache.evicted_nodes.empty()) {
-        lru_node_t *node = cache.evicted_nodes.back();
-        cache.evicted_nodes.pop_back();
-        delete node;
-    }
+    do_test(cache.evicted.size() == size_t(total_nodes));
 }
 
 /// Perform parameter expansion and test if the output equals the zero-terminated parameter list

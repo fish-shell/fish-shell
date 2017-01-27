@@ -142,23 +142,22 @@ static bool history_file_lock(int fd, int lock_type) {
 
 /// Our LRU cache is used for restricting the amount of history we have, and limiting how long we
 /// order it.
-class history_lru_node_t : public lru_node_t {
+class history_lru_item_t {
    public:
+    wcstring text;
     time_t timestamp;
     path_list_t required_paths;
-    explicit history_lru_node_t(const history_item_t &item)
-        : lru_node_t(item.str()),
+    explicit history_lru_item_t(const history_item_t &item)
+        : text(item.str()),
           timestamp(item.timestamp()),
           required_paths(item.get_required_paths()) {}
 };
 
-class history_lru_cache_t : public lru_cache_t<history_lru_node_t> {
-   protected:
-    /// Override to delete evicted nodes.
-    virtual void node_was_evicted(history_lru_node_t *node) { delete node; }
-
+class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_lru_item_t> {
+    typedef lru_cache_t<history_lru_cache_t, history_lru_item_t> super;
    public:
-    explicit history_lru_cache_t(size_t max) : lru_cache_t<history_lru_node_t>(max) {}
+
+    using super::super;
 
     /// Function to add a history item.
     void add_item(const history_item_t &item) {
@@ -167,10 +166,10 @@ class history_lru_cache_t : public lru_cache_t<history_lru_node_t> {
 
         // See if it's in the cache. If it is, update the timestamp. If not, we create a new node
         // and add it. Note that calling get_node promotes the node to the front.
-        history_lru_node_t *node = this->get_node(item.str());
+        wcstring key = item.str();
+        history_lru_item_t *node = this->get(key);
         if (node == NULL) {
-            node = new history_lru_node_t(item);
-            this->add_node(node);
+            this->insert(std::move(key), history_lru_item_t(item));
         } else {
             node->timestamp = std::max(node->timestamp, item.timestamp());
             // What to do about paths here? Let's just ignore them.
@@ -1248,8 +1247,9 @@ bool history_t::save_internal_via_rewrite() {
             bool errored = false;
             history_output_buffer_t buffer;
             for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); ++iter) {
-                const history_lru_node_t *node = *iter;
-                append_yaml_to_buffer(node->key, node->timestamp, node->required_paths, &buffer);
+                const wcstring &text = (*iter).first;
+                const history_lru_item_t &item = (*iter).second;
+                append_yaml_to_buffer(text, item.timestamp, item.required_paths, &buffer);
                 if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE &&
                     !buffer.flush_to_fd(out_fd)) {
                     errored = true;

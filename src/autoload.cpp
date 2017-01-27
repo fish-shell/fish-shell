@@ -57,13 +57,12 @@ autoload_t::autoload_t(const wcstring &env_var_name_var, const builtin_script_t 
 
 autoload_t::~autoload_t() { pthread_mutex_destroy(&lock); }
 
-void autoload_t::node_was_evicted(autoload_function_t *node) {
+void autoload_t::entry_was_evicted(wcstring key, autoload_function_t node) {
     // This should only ever happen on the main thread.
     ASSERT_IS_MAIN_THREAD();
 
     // Tell ourselves that the command was removed if it was loaded.
-    if (node->is_loaded) this->command_removed(node->key);
-    delete node;
+    if (node.is_loaded) this->command_removed(std::move(key));
 }
 
 int autoload_t::unload(const wcstring &cmd) { return this->evict_node(cmd); }
@@ -130,7 +129,7 @@ static bool script_name_precedes_script_name(const builtin_script_t &script1,
 /// Check whether the given command is loaded.
 bool autoload_t::has_tried_loading(const wcstring &cmd) {
     scoped_lock locker(lock);
-    autoload_function_t *func = this->get_node(cmd);
+    autoload_function_t *func = this->get(cmd);
     return func != NULL;
 }
 
@@ -144,14 +143,16 @@ static bool is_stale(const autoload_function_t *func) {
 autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcstring &cmd,
                                                                        bool allow_eviction) {
     ASSERT_IS_LOCKED(lock);
-    autoload_function_t *func = this->get_node(cmd);
+    autoload_function_t *func = this->get(cmd);
     if (!func) {
-        func = new autoload_function_t(cmd);
+        bool added;
         if (allow_eviction) {
-            this->add_node(func);
+            added = this->insert(cmd, autoload_function_t(false));
         } else {
-            this->add_node_without_eviction(func);
+            added = this->insert_no_eviction(cmd, autoload_function_t(false));
         }
+        func = this->get(cmd);
+        assert(func);
     }
     return func;
 }
@@ -188,7 +189,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
     {
         bool allow_stale_functions = !reload;
         scoped_lock locker(lock);
-        autoload_function_t *func = this->get_node(cmd);  // get the function
+        autoload_function_t *func = this->get(cmd);  // get the function
 
         // If we can use this function, return whether we were able to access it.
         if (use_cached(func, really_load, allow_stale_functions)) {
@@ -243,7 +244,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
 
             // Now we're actually going to take the lock.
             scoped_lock locker(lock);
-            autoload_function_t *func = this->get_node(cmd);
+            autoload_function_t *func = this->get(cmd);
 
             // Generate the source if we need to load it.
             bool need_to_load_function =
@@ -286,15 +287,15 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
         if (!found_file && !has_script_source) {
             scoped_lock locker(lock);
             // Generate a placeholder.
-            autoload_function_t *func = this->get_node(cmd);
+            autoload_function_t *func = this->get(cmd);
             if (!func) {
-                func = new autoload_function_t(cmd);
-                func->is_placeholder = true;
                 if (really_load) {
-                    this->add_node(func);
+                    this->insert(cmd, autoload_function_t(true));
                 } else {
-                    this->add_node_without_eviction(func);
+                    this->insert(cmd, autoload_function_t(true));
                 }
+                func = this->get(cmd);
+                assert(func);
             }
             func->access.last_checked = time(NULL);
         }

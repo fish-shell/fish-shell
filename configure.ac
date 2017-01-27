@@ -217,11 +217,12 @@ CXXFLAGS="$CXXFLAGS -fno-exceptions"
 
 
 #
-# -Wall is there to keep me on my toes
-# But signed comparison warnings are way too aggressive
+# Set some warning flags
+# Don't warn about missing field initializers, it has too many
+# false positives for code like `struct termios tmodes = {};`
 #
 
-CXXFLAGS="$CXXFLAGS -Wextra"
+CXXFLAGS="$CXXFLAGS -Wextra -Wno-missing-field-initializers"
 
 #
 # This is needed in order to get the really cool backtraces on Linux

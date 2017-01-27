@@ -640,8 +640,8 @@ void append_formatv(wcstring &str, const wchar_t *format, va_list ap);
 using std::make_unique;
 #else
 /// make_unique implementation
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args) {
+template <typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args &&... args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 #endif
@@ -682,7 +682,6 @@ ssize_t write_loop(int fd, const char *buff, size_t count);
 /// Loop a read request while failure is non-critical. Return -1 and set errno in case of critical
 /// error.
 ssize_t read_loop(int fd, void *buff, size_t count);
-
 
 /// Replace special characters with backslash escape sequences. Newline is replaced with \n, etc.
 ///

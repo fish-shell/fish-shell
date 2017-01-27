@@ -143,7 +143,8 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         fgcolors.push_back(fg);
     }
 
-    if (fgcolors.empty() && bgcolor == NULL && !bold && !underline && !italics && !dim && !reverse) {
+    if (fgcolors.empty() && bgcolor == NULL && !bold && !underline && !italics && !dim &&
+        !reverse) {
         streams.err.append_format(_(L"%ls: Expected an argument\n"), argv[0]);
         return STATUS_BUILTIN_ERROR;
     }

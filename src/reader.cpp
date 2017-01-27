@@ -37,8 +37,8 @@
 #include <wctype.h>
 
 #include <algorithm>
-#include <stack>
 #include <memory>
+#include <stack>
 
 #include "color.h"
 #include "common.h"
@@ -1118,8 +1118,8 @@ struct autosuggestion_result_t {
 
 // Returns a function that can be invoked (potentially
 // on a background thread) to determine the autosuggestion
-static std::function<autosuggestion_result_t(void)>
-get_autosuggestion_performer(const wcstring &search_string, size_t cursor_pos, history_t *history) {
+static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer(
+    const wcstring &search_string, size_t cursor_pos, history_t *history) {
     const unsigned int generation_count = s_generation_count;
     const wcstring working_directory(env_get_pwd_slash());
     env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
@@ -1135,8 +1135,8 @@ get_autosuggestion_performer(const wcstring &search_string, size_t cursor_pos, h
             return nothing;
         }
 
-        VOMIT_ON_FAILURE(pthread_setspecific(generation_count_key,
-                                             (void *)(uintptr_t)generation_count));
+        VOMIT_ON_FAILURE(
+            pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
 
         // Let's make sure we aren't using the empty string.
         if (search_string.empty()) {
@@ -1176,9 +1176,8 @@ get_autosuggestion_performer(const wcstring &search_string, size_t cursor_pos, h
         if (!completions.empty()) {
             const completion_t &comp = completions.at(0);
             size_t cursor = cursor_pos;
-            wcstring suggestion = completion_apply_to_command_line(comp.completion, comp.flags,
-                                                                   search_string, &cursor,
-                                                                   true /* append only */);
+            wcstring suggestion = completion_apply_to_command_line(
+                comp.completion, comp.flags, search_string, &cursor, true /* append only */);
             return {std::move(suggestion), search_string};
         }
 
@@ -1197,8 +1196,7 @@ static bool can_autosuggest(void) {
 
 // Called after an autosuggestion has been computed on a background thread
 static void autosuggest_completed(autosuggestion_result_t result) {
-    if (! result.suggestion.empty() &&
-        can_autosuggest() &&
+    if (!result.suggestion.empty() && can_autosuggest() &&
         result.search_string == data->command_line.text &&
         string_prefixes_string_case_insensitive(result.search_string, result.suggestion)) {
         // Autosuggestion is active and the search term has not changed, so we're good to go.
@@ -2104,7 +2102,8 @@ static void highlight_complete(highlight_result_t result) {
 // Given text, bracket matching position, and whether IO is allowed,
 // return a function that performs highlighting. The function may be invoked on a background thread.
 static std::function<highlight_result_t(void)> get_highlight_performer(const wcstring &text,
-                                                               long match_highlight_pos, bool no_io) {
+                                                                       long match_highlight_pos,
+                                                                       bool no_io) {
     env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
     unsigned int generation_count = s_generation_count;
     highlight_function_t highlight_func = no_io ? highlight_shell_no_io : data->highlight_function;
@@ -2116,7 +2115,8 @@ static std::function<highlight_result_t(void)> get_highlight_performer(const wcs
         if (text.empty()) {
             return {};
         }
-        VOMIT_ON_FAILURE(pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
+        VOMIT_ON_FAILURE(
+            pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
         std::vector<highlight_spec_t> colors(text.size(), 0);
         highlight_func(text, colors, match_highlight_pos, NULL /* error */, vars);
         return {std::move(colors), text};

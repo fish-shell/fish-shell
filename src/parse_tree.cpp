@@ -124,7 +124,6 @@ const wchar_t *token_type_description(parse_token_type_t type) {
     const wchar_t *description = enum_to_str(type, token_enum_map);
     if (description) return description;
     return L"unknown_token_type";
-
 }
 
 const wchar_t *keyword_description(parse_keyword_t type) {

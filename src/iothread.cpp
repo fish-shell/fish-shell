@@ -39,13 +39,10 @@ struct spawn_request_t {
     void_function_t handler;
     void_function_t completion;
 
-    spawn_request_t()
-    {}
+    spawn_request_t() {}
 
-    spawn_request_t(void_function_t f, void_function_t comp) :
-        handler(std::move(f)),
-        completion(std::move(comp))
-    {}
+    spawn_request_t(void_function_t f, void_function_t comp)
+        : handler(std::move(f)), completion(std::move(comp)) {}
 
     // Move-only
     spawn_request_t &operator=(const spawn_request_t &) = delete;
@@ -77,9 +74,11 @@ static pthread_mutex_t s_result_queue_lock = PTHREAD_MUTEX_INITIALIZER;
 static std::queue<spawn_request_t> s_result_queue;
 
 // "Do on main thread" support.
-static pthread_mutex_t s_main_thread_performer_lock = PTHREAD_MUTEX_INITIALIZER;  // protects the main thread requests
-static pthread_cond_t s_main_thread_performer_cond;   // protects the main thread requests
-static pthread_mutex_t s_main_thread_request_q_lock = PTHREAD_MUTEX_INITIALIZER;  // protects the queue
+static pthread_mutex_t s_main_thread_performer_lock =
+    PTHREAD_MUTEX_INITIALIZER;                       // protects the main thread requests
+static pthread_cond_t s_main_thread_performer_cond;  // protects the main thread requests
+static pthread_mutex_t s_main_thread_request_q_lock =
+    PTHREAD_MUTEX_INITIALIZER;  // protects the queue
 static std::queue<main_thread_request_t *> s_main_thread_request_queue;
 
 // Notifying pipes.
@@ -194,7 +193,7 @@ int iothread_perform_impl(void_function_t &&func, void_function_t &&completion) 
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
     iothread_init();
-    
+
     struct spawn_request_t req(std::move(func), std::move(completion));
     int local_thread_count = -1;
     bool spawn_new_thread = false;
@@ -366,7 +365,7 @@ void iothread_perform_on_main(void_function_t &&func) {
         // It would be nice to support checking for cancellation here, but the clients need a
         // deterministic way to clean up to avoid leaks
         VOMIT_ON_FAILURE(
-                         pthread_cond_wait(&s_main_thread_performer_cond, &s_main_thread_performer_lock));
+            pthread_cond_wait(&s_main_thread_performer_cond, &s_main_thread_performer_lock));
     }
 
     // Ok, the request must now be done.

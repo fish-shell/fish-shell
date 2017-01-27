@@ -1046,7 +1046,7 @@ static wcstring functions_def(const wcstring &name) {
 }
 
 static int report_function_metadata(const wchar_t *funcname, bool verbose, io_streams_t &streams,
-        bool metadata_as_comments) {
+                                    bool metadata_as_comments) {
     const wchar_t *path = L"n/a";
     const wchar_t *autoloaded = L"n/a";
     const wchar_t *shadows_scope = L"n/a";
@@ -1201,7 +1201,7 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
     } else if (report_metadata) {
         if (argc - w.woptind != 1) {
             streams.err.append_format(
-                    _(L"%ls: Expected exactly one function name for --metadata\n"), argv[0]);
+                _(L"%ls: Expected exactly one function name for --metadata\n"), argv[0]);
             return STATUS_BUILTIN_ERROR;
         }
 
@@ -2025,7 +2025,7 @@ static int read_in_chunks(int fd, wcstring &buff, bool split_null) {
         }
 
         const char *end = std::find(inbuf, inbuf + bytes_read, split_null ? L'\0' : L'\n');
-        long bytes_consumed = end - inbuf; // note: must be signed for use in lseek
+        long bytes_consumed = end - inbuf;  // note: must be signed for use in lseek
         assert(bytes_consumed <= bytes_read);
         str.append(inbuf, bytes_consumed);
         if (bytes_consumed < bytes_read) {

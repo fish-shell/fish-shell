@@ -244,7 +244,8 @@ class parser_t {
     int eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
 
     /// Evaluate the expressions contained in cmd, which has been parsed into the given parse tree.
-    int eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type, parse_node_tree_t t);
+    int eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type,
+             parse_node_tree_t t);
 
     /// Evaluates a block node at the given node offset in the topmost execution context.
     int eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type);
@@ -288,8 +289,8 @@ class parser_t {
     /// Pushes a new block created with the given arguments
     /// Returns a pointer to the block. The pointer is valid
     /// until the call to pop_block()
-    template<typename BLOCKTYPE, typename... Args>
-    BLOCKTYPE *push_block(Args&&... args) {
+    template <typename BLOCKTYPE, typename... Args>
+    BLOCKTYPE *push_block(Args &&... args) {
         BLOCKTYPE *ret = new BLOCKTYPE(std::forward<Args>(args)...);
         this->push_block_int(ret);
         return ret;

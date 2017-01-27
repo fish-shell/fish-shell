@@ -136,8 +136,8 @@ class universal_notifier_t {
     virtual ~universal_notifier_t();
 
     // Factory constructor.
-    static std::unique_ptr<universal_notifier_t> new_notifier_for_strategy(notifier_strategy_t strat,
-                                                                           const wchar_t *test_path = NULL);
+    static std::unique_ptr<universal_notifier_t> new_notifier_for_strategy(
+        notifier_strategy_t strat, const wchar_t *test_path = NULL);
 
     // Default instance. Other instances are possible for testing.
     static universal_notifier_t &default_notifier();

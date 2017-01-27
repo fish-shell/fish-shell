@@ -75,9 +75,8 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
-parse_execution_context_t::parse_execution_context_t(parse_node_tree_t t,
-                                                     const wcstring &s, parser_t *p,
-                                                     int initial_eval_level)
+parse_execution_context_t::parse_execution_context_t(parse_node_tree_t t, const wcstring &s,
+                                                     parser_t *p, int initial_eval_level)
     : tree(std::move(t)),
       src(s),
       parser(p),
@@ -1264,14 +1263,15 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), block_io);
     job->tmodes = tmodes;
     job->set_flag(JOB_CONTROL,
-                   (job_control_mode == JOB_CONTROL_ALL) ||
-                     ((job_control_mode == JOB_CONTROL_INTERACTIVE) && shell_is_interactive()));
+                  (job_control_mode == JOB_CONTROL_ALL) ||
+                      ((job_control_mode == JOB_CONTROL_INTERACTIVE) && shell_is_interactive()));
 
     job->set_flag(JOB_FOREGROUND, !tree.job_should_be_backgrounded(job_node));
 
     job->set_flag(JOB_TERMINAL, job->get_flag(JOB_CONTROL) && !is_subshell && !is_event);
 
-    job->set_flag(JOB_SKIP_NOTIFICATION, is_subshell || is_block || is_event || !shell_is_interactive());
+    job->set_flag(JOB_SKIP_NOTIFICATION,
+                  is_subshell || is_block || is_event || !shell_is_interactive());
 
     // Tell the current block what its job is. This has to happen before we populate it (#1394).
     parser->current_block()->job = job;

@@ -230,7 +230,7 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
         was_reverse = false;
     }
 
-    if (was_dim && !is_dim ) {
+    if (was_dim && !is_dim) {
         // Only way to exit dim mode is a reset of all attributes.
         writembs(exit_attribute_mode);
         last_color = normal;
@@ -242,7 +242,7 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
         was_reverse = false;
     }
 
-    if (was_reverse && !is_reverse ) {
+    if (was_reverse && !is_reverse) {
         // Only way to exit reverse mode is a reset of all attributes.
         writembs(exit_attribute_mode);
         last_color = normal;

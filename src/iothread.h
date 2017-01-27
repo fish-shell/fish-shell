@@ -27,8 +27,7 @@ void iothread_service_completion(void);
 void iothread_drain_all(void);
 
 // Internal implementation
-int iothread_perform_impl(std::function<void(void)> &&func,
-                          std::function<void(void)> &&completion);
+int iothread_perform_impl(std::function<void(void)> &&func, std::function<void(void)> &&completion);
 
 // Template helpers
 // This is the glue part of the handler-completion handoff
@@ -36,21 +35,23 @@ int iothread_perform_impl(std::function<void(void)> &&func,
 // and then call the completion with that object. However if our type is void,
 // this won't work (new void() fails!). So we have to use this template.
 // The type T is the return type of HANDLER and the argument to COMPLETION
-template<typename T>
+template <typename T>
 struct _iothread_trampoline {
-    template<typename HANDLER, typename COMPLETION>
+    template <typename HANDLER, typename COMPLETION>
     static int perform(const HANDLER &handler, const COMPLETION &completion) {
-        T *result = new T(); // TODO: placement new?
-        return iothread_perform_impl([=](){ *result = handler(); },
-                                     [=](){ completion(std::move(*result)); delete result; });
+        T *result = new T();  // TODO: placement new?
+        return iothread_perform_impl([=]() { *result = handler(); },
+                                     [=]() {
+                                         completion(std::move(*result));
+                                         delete result;
+                                     });
     }
 };
 
-
 // Void specialization
-template<>
+template <>
 struct _iothread_trampoline<void> {
-    template<typename HANDLER, typename COMPLETION>
+    template <typename HANDLER, typename COMPLETION>
     static int perform(const HANDLER &handler, const COMPLETION &completion) {
         return iothread_perform_impl(handler, completion);
     }
@@ -60,15 +61,14 @@ struct _iothread_trampoline<void> {
 // on the main thread. The value returned from the handler is passed to the completion.
 // In other words, this is like COMPLETION(HANDLER()) except the handler part is invoked
 // on a background thread.
-template<typename HANDLER, typename COMPLETION>
+template <typename HANDLER, typename COMPLETION>
 int iothread_perform(const HANDLER &handler, const COMPLETION &completion) {
     return _iothread_trampoline<decltype(handler())>::perform(handler, completion);
 }
 
 // variant of iothread_perform without a completion handler
 inline int iothread_perform(std::function<void(void)> &&func) {
-    return iothread_perform_impl(std::move(func),
-                                 std::function<void(void)>());
+    return iothread_perform_impl(std::move(func), std::function<void(void)>());
 }
 
 /// Performs a function on the main thread, blocking until it completes.

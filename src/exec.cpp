@@ -455,7 +455,7 @@ void exec_job(parser_t &parser, job_t *j) {
     if (j->get_flag(JOB_CONTROL) && !exec_error) {
         for (const process_ptr_t &p : j->processes) {
             if (p->type != EXTERNAL) {
-                if (! p->is_last_in_job || ! p->is_first_in_job) {
+                if (!p->is_last_in_job || !p->is_first_in_job) {
                     needs_keepalive = true;
                     break;
                 }
@@ -498,7 +498,7 @@ void exec_job(parser_t &parser, job_t *j) {
         if (exec_error) {
             break;
         }
-        process_t * const p = unique_p.get();
+        process_t *const p = unique_p.get();
         // The IO chain for this process. It starts with the block IO, then pipes, and then gets any
         // from the process.
         io_chain_t process_net_io_chain = j->block_io_chain();
@@ -509,7 +509,7 @@ void exec_job(parser_t &parser, job_t *j) {
         pipe_next_read = -1;
 
         // See if we need a pipe.
-        const bool pipes_to_next_command = ! p->is_last_in_job;
+        const bool pipes_to_next_command = !p->is_last_in_job;
 
         // The pipes the current process write to and read from. Unfortunately these can't be just
         // allocated on the stack, since j->io wants shared_ptr.
@@ -554,7 +554,7 @@ void exec_job(parser_t &parser, job_t *j) {
         process_net_io_chain.append(p->io_chain());
 
         // Read pipe goes last.
-        if (! p->is_first_in_job) {
+        if (!p->is_first_in_job) {
             pipe_read.reset(new io_pipe_t(p->pipe_read_fd, true));
             // Record the current read in pipe_read.
             pipe_read->pipe_fd[0] = pipe_current_read;
@@ -568,7 +568,7 @@ void exec_job(parser_t &parser, job_t *j) {
         // uniprocessor systems.
         if (p->type == EXTERNAL) {
             // Apply universal barrier so we have the most recent uvar changes
-            if (! get_proc_had_barrier()) {
+            if (!get_proc_had_barrier()) {
                 set_proc_had_barrier(true);
                 env_universal_barrier();
             }
@@ -637,7 +637,8 @@ void exec_job(parser_t &parser, job_t *j) {
                     break;
                 }
 
-                function_block_t *fb = parser.push_block<function_block_t>(p, func_name, shadow_scope);
+                function_block_t *fb =
+                    parser.push_block<function_block_t>(p, func_name, shadow_scope);
 
                 // Setting variables might trigger an event handler, hence we need to unblock
                 // signals.
@@ -647,7 +648,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 parser.forbid_function(func_name);
 
-                if (! p->is_last_in_job) {
+                if (!p->is_last_in_job) {
                     // Be careful to handle failure, e.g. too many open fds.
                     block_output_io_buffer = io_buffer_t::create(STDOUT_FILENO, all_ios);
                     if (block_output_io_buffer.get() == NULL) {
@@ -674,7 +675,7 @@ void exec_job(parser_t &parser, job_t *j) {
             }
 
             case INTERNAL_BLOCK_NODE: {
-                if (! p->is_last_in_job) {
+                if (!p->is_last_in_job) {
                     block_output_io_buffer = io_buffer_t::create(STDOUT_FILENO, all_ios);
                     if (block_output_io_buffer.get() == NULL) {
                         // We failed (e.g. no more fds could be created).
@@ -764,7 +765,7 @@ void exec_job(parser_t &parser, job_t *j) {
                 } else {
                     // Determine if we have a "direct" redirection for stdin.
                     bool stdin_is_directly_redirected;
-                    if (! p->is_first_in_job) {
+                    if (!p->is_first_in_job) {
                         // We must have a pipe
                         stdin_is_directly_redirected = true;
                     } else {

@@ -2,8 +2,8 @@
 #ifndef INPUT_COMMON_H
 #define INPUT_COMMON_H
 
-#include <functional>
 #include <stddef.h>
+#include <functional>
 
 #include "common.h"
 

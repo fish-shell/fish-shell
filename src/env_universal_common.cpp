@@ -46,7 +46,7 @@
 #ifdef __HAIKU__
 #define _BSD_SOURCE
 #include <bsd/ifaddrs.h>
-#endif //Haiku
+#endif  // Haiku
 
 // NAME_MAX is not defined on Solaris and suggests the use of pathconf()
 // There is no obvious sensible pathconf() for shared memory and _XPG_NAME_MAX
@@ -864,8 +864,8 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t
 #ifdef SIOCGIFHWADDR
 
 // Linux
-#include <sys/socket.h>
 #include <net/if.h>
+#include <sys/socket.h>
 static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
                             const char *interface = "eth0") {
     bool result = false;
@@ -886,9 +886,9 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
 #elif defined(HAVE_GETIFADDRS)
 
 // OS X and BSD
-#include <sys/socket.h>
 #include <ifaddrs.h>
 #include <net/if_dl.h>
+#include <sys/socket.h>
 static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
                             const char *interface = "en0") {
     // BSD, Mac OS X

@@ -263,7 +263,7 @@ void event_remove(const event_t &criterion) {
     event_list_t::iterator iter = s_event_handlers.begin();
     while (iter != s_event_handlers.end()) {
         const event_t *n = iter->get();
-        if (! event_match(criterion, *n)) {
+        if (!event_match(criterion, *n)) {
             ++iter;
             continue;
         }
@@ -323,7 +323,7 @@ static void event_fire_internal(const event_t &event) {
     if (signal_is_blocked()) {
         // Fix for https://github.com/fish-shell/fish-shell/issues/608. Don't run event handlers
         // while signals are blocked.
-        input_common_add_callback([event](){
+        input_common_add_callback([event]() {
             ASSERT_IS_MAIN_THREAD();
             event_fire(&event);
         });
@@ -333,9 +333,8 @@ static void event_fire_internal(const event_t &event) {
     // Iterate over our list of matching events.
     for (shared_ptr<event_t> &criterion : fire) {
         // Only fire if this event is still present
-        if (std::find(s_event_handlers.begin(),
-                      s_event_handlers.end(),
-                      criterion) == s_event_handlers.end()) {
+        if (std::find(s_event_handlers.begin(), s_event_handlers.end(), criterion) ==
+            s_event_handlers.end()) {
             continue;
         }
 
@@ -445,9 +444,7 @@ void event_fire(const event_t *event) {
 
 void event_init() {}
 
-void event_destroy() {
-    s_event_handlers.clear();
-}
+void event_destroy() { s_event_handlers.clear(); }
 
 void event_fire_generic(const wchar_t *name, wcstring_list_t *args) {
     CHECK(name, );

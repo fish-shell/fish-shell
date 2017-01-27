@@ -525,7 +525,7 @@ wcstring parser_t::current_line() {
 
 void parser_t::job_add(shared_ptr<job_t> job) {
     assert(job != NULL);
-    assert(! job->processes.empty());
+    assert(!job->processes.empty());
     this->my_job_list.push_front(std::move(job));
 }
 
@@ -596,7 +596,8 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
     return this->eval(cmd, io, block_type, std::move(tree));
 }
 
-int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type, parse_node_tree_t tree) {
+int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type,
+                   parse_node_tree_t tree) {
     CHECK_BLOCK(1);
     assert(block_type == TOP || block_type == SUBST);
 
@@ -612,8 +613,8 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
         (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
 
     // Append to the execution context stack.
-    execution_contexts.push_back(make_unique<parse_execution_context_t>(std::move(tree), cmd,
-                                                                        this, exec_eval_level));
+    execution_contexts.push_back(
+        make_unique<parse_execution_context_t>(std::move(tree), cmd, this, exec_eval_level));
     const parse_execution_context_t *ctx = execution_contexts.back().get();
 
     // Execute the first node.

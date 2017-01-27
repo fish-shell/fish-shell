@@ -76,8 +76,7 @@ class env_node_t {
     friend struct var_stack_t;
     env_node_t(bool is_new_scope) : new_scope(is_new_scope) {}
 
-public:
-
+   public:
     /// Variable table.
     var_table_t env;
     /// Does this node imply a new variable scope? If yes, all non-global variables below this one
@@ -122,9 +121,7 @@ struct var_stack_t {
     void mark_changed_exported() { has_changed_exported = true; }
     void update_export_array_if_necessary();
 
-    var_stack_t() : top(new env_node_t(false)) {
-        this->global_env = this->top.get();
-    }
+    var_stack_t() : top(new env_node_t(false)) { this->global_env = this->top.get(); }
 
     // Pushes a new node onto our stack
     // Optionally creates a new scope for the node
@@ -177,9 +174,9 @@ void var_stack_t::pop() {
         }
     }
 
-    // Actually do the pop!
-    // Move the top pointer into a local variable, then replace the top pointer with the next pointer
-    // afterwards we should have a node with no next pointer, and our top should be non-null
+    // Actually do the pop! Move the top pointer into a local variable, then replace the top pointer
+    // with the next pointer afterwards we should have a node with no next pointer, and our top
+    // should be non-null.
     std::unique_ptr<env_node_t> old_top = std::move(this->top);
     this->top = std::move(old_top->next);
     old_top->next.reset();
@@ -194,7 +191,7 @@ void var_stack_t::pop() {
             break;
         }
     }
-    // TODO: move this to something general
+    // TODO: Move this to something general.
     if (locale_changed) handle_locale(locale_changed);
 }
 
@@ -348,9 +345,7 @@ static bool var_is_curses(const wcstring &key) {
 static bool can_set_term_title = false;
 
 /// Returns true if we think the terminal supports setting its title.
-bool term_supports_setting_title() {
-    return can_set_term_title;
-}
+bool term_supports_setting_title() { return can_set_term_title; }
 
 /// This is a pretty lame heuristic for detecting terminals that do not support setting the
 /// title. If we recognise the terminal name as that of a virtual terminal, we assume it supports
@@ -381,9 +376,7 @@ static bool does_term_support_setting_title() {
 }
 
 /// Handle changes to the TERM env var that do not involves the curses subsystem.
-static void handle_term() {
-    can_set_term_title = does_term_support_setting_title();
-}
+static void handle_term() { can_set_term_title = does_term_support_setting_title(); }
 
 /// Push all curses/terminfo env vars into the global environment where they can be found by those
 /// libraries.
@@ -1039,13 +1032,9 @@ static bool local_scope_exports(const env_node_t *n) {
     return local_scope_exports(n->next.get());
 }
 
-void env_push(bool new_scope) {
-    vars_stack().push(new_scope);
-}
+void env_push(bool new_scope) { vars_stack().push(new_scope); }
 
-void env_pop() {
-    vars_stack().pop();
-}
+void env_pop() { vars_stack().pop(); }
 
 /// Function used with to insert keys of one table into a set::set<wcstring>.
 static void add_key_to_string_set(const var_table_t &envs, std::set<wcstring> *str_set,
@@ -1161,7 +1150,7 @@ static void export_func(const std::map<wcstring, wcstring> &envs, std::vector<st
 }
 
 void var_stack_t::update_export_array_if_necessary() {
-    if (! this->has_changed_exported) {
+    if (!this->has_changed_exported) {
         return;
     }
     std::map<wcstring, wcstring> vals;

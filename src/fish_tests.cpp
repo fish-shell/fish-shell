@@ -514,7 +514,7 @@ static void test_tokenizer() {
 // Little function that runs in a background thread, bouncing to the main.
 static int test_iothread_thread_call(int *addr) {
     int before = *addr;
-    iothread_perform_on_main([=](){ *addr += 1; });
+    iothread_perform_on_main([=]() { *addr += 1; });
     int after = *addr;
 
     // Must have incremented it at least once.
@@ -531,7 +531,7 @@ static void test_iothread(void) {
     int max_achieved_thread_count = 0;
     double start = timef();
     for (int i = 0; i < iterations; i++) {
-        int thread_count = iothread_perform([&](){ test_iothread_thread_call(int_ptr.get());});
+        int thread_count = iothread_perform([&]() { test_iothread_thread_call(int_ptr.get()); });
         max_achieved_thread_count = std::max(max_achieved_thread_count, thread_count);
     }
 
@@ -718,7 +718,7 @@ static void test_1_cancellation(const wchar_t *src) {
     const io_chain_t io_chain(out_buff);
     pthread_t thread = pthread_self();
     double delay = 0.25 /* seconds */;
-    iothread_perform([=](){
+    iothread_perform([=]() {
         /// Wait a while and then SIGINT the main thread.
         usleep(delay * 1E6);
         pthread_kill(thread, SIGINT);
@@ -2460,7 +2460,7 @@ static void test_universal() {
 
     const int threads = 16;
     for (int i = 0; i < threads; i++) {
-        iothread_perform([=](){test_universal_helper(i);});
+        iothread_perform([=]() { test_universal_helper(i); });
     }
     iothread_drain_all();
 
@@ -2898,7 +2898,8 @@ void history_tests_t::test_history_merge(void) {
     say(L"Testing history merge");
     const size_t count = 3;
     const wcstring name = L"merge_test";
-    std::unique_ptr<history_t> hists[count] = {make_unique<history_t>(name), make_unique<history_t>(name), make_unique<history_t>(name)};
+    std::unique_ptr<history_t> hists[count] = {
+        make_unique<history_t>(name), make_unique<history_t>(name), make_unique<history_t>(name)};
     const wcstring texts[count] = {L"History 1", L"History 2", L"History 3"};
     const wcstring alt_texts[count] = {L"History Alt 1", L"History Alt 2", L"History Alt 3"};
 
@@ -4056,16 +4057,11 @@ static void test_illegal_command_exit_code(void) {
     };
 
     const command_result_tuple_t tests[] = {
-        {L"echo -n", STATUS_BUILTIN_OK},
-        {L"pwd", STATUS_BUILTIN_OK},
-        {L")", STATUS_ILLEGAL_CMD},
-        {L") ", STATUS_ILLEGAL_CMD},
-        {L"*", STATUS_ILLEGAL_CMD},
-        {L"**", STATUS_ILLEGAL_CMD},
-        {L"%", STATUS_ILLEGAL_CMD},
-        {L"%test", STATUS_ILLEGAL_CMD},
-        {L"?", STATUS_ILLEGAL_CMD},
-        {L"abc?def", STATUS_ILLEGAL_CMD},
+        {L"echo -n", STATUS_BUILTIN_OK}, {L"pwd", STATUS_BUILTIN_OK},
+        {L")", STATUS_ILLEGAL_CMD},      {L") ", STATUS_ILLEGAL_CMD},
+        {L"*", STATUS_ILLEGAL_CMD},      {L"**", STATUS_ILLEGAL_CMD},
+        {L"%", STATUS_ILLEGAL_CMD},      {L"%test", STATUS_ILLEGAL_CMD},
+        {L"?", STATUS_ILLEGAL_CMD},      {L"abc?def", STATUS_ILLEGAL_CMD},
         {L") ", STATUS_ILLEGAL_CMD}};
 
     int res = 0;

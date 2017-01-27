@@ -673,8 +673,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         // updated with choices for the user.
         expand_error_t ignore =
             expand_string(str_cmd, &this->completions,
-                          EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(),
-                          NULL);
+                          EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(), NULL);
         USE(ignore);
     }
 
@@ -864,9 +863,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     } else if (this->type() == COMPLETE_AUTOSUGGEST &&
                !completion_autoloader.has_tried_loading(cmd)) {
         // Load this command (on the main thread)
-        iothread_perform_on_main([&](){
-            complete_load(cmd, false);
-        });
+        iothread_perform_on_main([&]() { complete_load(cmd, false); });
     }
 
     // Make a list of lists of all options that we care about.
@@ -1454,7 +1451,8 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                                 wcstring faux_cmdline = cmd;
                                 faux_cmdline.replace(cmd_node->source_start,
                                                      cmd_node->source_length, wrap_chain.at(i));
-                                transient_cmd = make_unique<builtin_commandline_scoped_transient_t>(faux_cmdline);
+                                transient_cmd = make_unique<builtin_commandline_scoped_transient_t>(
+                                    faux_cmdline);
                             }
                             if (!completer.complete_param(wrap_chain.at(i),
                                                           previous_argument_unescape,

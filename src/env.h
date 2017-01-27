@@ -153,7 +153,7 @@ class env_vars_snapshot_t {
     std::map<wcstring, wcstring> vars;
     bool is_current() const;
 
-public:
+   public:
     env_vars_snapshot_t(const env_vars_snapshot_t &) = default;
     env_vars_snapshot_t &operator=(const env_vars_snapshot_t &) = default;
 

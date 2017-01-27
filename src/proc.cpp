@@ -220,7 +220,7 @@ int job_is_stopped(const job_t *j) {
 ///
 /// \param j the job to test
 bool job_is_completed(const job_t *j) {
-    assert(! j->processes.empty());
+    assert(!j->processes.empty());
     bool result = true;
     for (const process_ptr_t &p : j->processes) {
         if (!p->completed) {
@@ -239,9 +239,7 @@ void job_t::set_flag(job_flag_t flag, bool set) {
     }
 }
 
-bool job_t::get_flag(job_flag_t flag) const {
-    return !! (this->flags & flag);
-}
+bool job_t::get_flag(job_flag_t flag) const { return !!(this->flags & flag); }
 
 int job_signal(job_t *j, int signal) {
     pid_t my_pid = getpid();
@@ -368,9 +366,7 @@ process_t::process_t()
 job_t::job_t(job_id_t jobid, const io_chain_t &bio)
     : block_io(bio), pgid(0), tmodes(), job_id(jobid), flags(0) {}
 
-job_t::~job_t() {
-    release_job_id(job_id);
-}
+job_t::~job_t() { release_job_id(job_id); }
 
 /// Return all the IO redirections. Start with the block IO, then walk over the processes.
 io_chain_t job_t::all_io_redirections() const {
@@ -798,17 +794,18 @@ static bool terminal_give_to_job(job_t *j, int cont) {
     }
 
     if (cont) {
-    int result = -1;
-    errno = EINTR;
-    while (result == -1 && errno == EINTR) {
-        result = tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes);
-    }
-    if (result == -1) {
-        if (errno == ENOTTY) redirect_tty_output();
-        debug(1, _(L"terminal_give_to_job(): Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
-        wperror(L"tcsetattr");
-        return false;
-    }
+        int result = -1;
+        errno = EINTR;
+        while (result == -1 && errno == EINTR) {
+            result = tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes);
+        }
+        if (result == -1) {
+            if (errno == ENOTTY) redirect_tty_output();
+            debug(1, _(L"terminal_give_to_job(): Could not send job %d ('%ls') to foreground"),
+                  j->job_id, j->command_wcstr());
+            wperror(L"tcsetattr");
+            return false;
+        }
     }
 
     return true;
@@ -985,7 +982,6 @@ void proc_sanity_check() {
     while (const job_t *j = jobs.next()) {
         if (!j->get_flag(JOB_CONSTRUCTED)) continue;
 
-
         // More than one foreground job?
         if (j->get_flag(JOB_FOREGROUND) && !(job_is_stopped(j) || job_is_completed(j))) {
             if (fg_job) {
@@ -1013,7 +1009,6 @@ void proc_sanity_check() {
                       j->command_wcstr(), p->argv0(), p->completed);
                 sanity_lose();
             }
-
         }
     }
 }

@@ -1675,7 +1675,7 @@ path_list_t valid_paths(const path_list_t &paths, const wcstring &working_direct
 bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory) {
     ASSERT_IS_BACKGROUND_THREAD();
     for (const wcstring &path : paths) {
-        if (! path_is_valid(path, working_directory)) {
+        if (!path_is_valid(path, working_directory)) {
             return false;
         }
     }
@@ -1742,12 +1742,11 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
         // Check for which paths are valid on a background thread,
         // then on the main thread update our history item
         const wcstring wd = env_get_pwd_slash();
-        iothread_perform([=](){
-            return valid_paths(potential_paths, wd);
-        }, [=](path_list_t validated_paths){
-            this->set_valid_file_paths(validated_paths, identifier);
-            this->enable_automatic_saving();
-        });
+        iothread_perform([=]() { return valid_paths(potential_paths, wd); },
+                         [=](path_list_t validated_paths) {
+                             this->set_valid_file_paths(validated_paths, identifier);
+                             this->enable_automatic_saving();
+                         });
     }
 
     // Actually add the item to the history.

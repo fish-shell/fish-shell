@@ -170,8 +170,7 @@ class test_parser {
     unique_ptr<expression> parse_binary_primary(unsigned int start, unsigned int end);
     unique_ptr<expression> parse_just_a_string(unsigned int start, unsigned int end);
 
-    static unique_ptr<expression> parse_args(const wcstring_list_t &args,
-                                             wcstring &err,
+    static unique_ptr<expression> parse_args(const wcstring_list_t &args, wcstring &err,
                                              wchar_t *program_name);
 };
 
@@ -280,7 +279,8 @@ unique_ptr<expression> test_parser::parse_unary_expression(unsigned int start, u
     if (tok == test_bang) {
         unique_ptr<expression> subject(parse_unary_expression(start + 1, end));
         if (subject.get()) {
-            return make_unique<unary_operator>(tok, range_t(start, subject->range.end), move(subject));
+            return make_unique<unary_operator>(tok, range_t(start, subject->range.end),
+                                               move(subject));
         }
         return NULL;
     }
@@ -288,7 +288,8 @@ unique_ptr<expression> test_parser::parse_unary_expression(unsigned int start, u
 }
 
 /// Parse a combining expression (AND, OR).
-unique_ptr<expression> test_parser::parse_combining_expression(unsigned int start, unsigned int end) {
+unique_ptr<expression> test_parser::parse_combining_expression(unsigned int start,
+                                                               unsigned int end) {
     if (start >= end) return NULL;
 
     std::vector<unique_ptr<expression>> subjects;
@@ -333,7 +334,8 @@ unique_ptr<expression> test_parser::parse_combining_expression(unsigned int star
     }
     // Our new expression takes ownership of all expressions we created. The token we pass is
     // irrelevant.
-    return make_unique<combining_expression>(test_combine_and, range_t(start, idx), move(subjects), move(combiners));
+    return make_unique<combining_expression>(test_combine_and, range_t(start, idx), move(subjects),
+                                             move(combiners));
 }
 
 unique_ptr<expression> test_parser::parse_unary_primary(unsigned int start, unsigned int end) {
@@ -383,7 +385,8 @@ unique_ptr<expression> test_parser::parse_binary_primary(unsigned int start, uns
     const token_info_t *info = token_for_string(arg(start + 1));
     if (!(info->flags & BINARY_PRIMARY)) return NULL;
 
-    return make_unique<binary_primary>(info->tok, range_t(start, start + 3), arg(start), arg(start + 2));
+    return make_unique<binary_primary>(info->tok, range_t(start, start + 3), arg(start),
+                                       arg(start + 2));
 }
 
 unique_ptr<expression> test_parser::parse_parenthentical(unsigned int start, unsigned int end) {
@@ -410,7 +413,8 @@ unique_ptr<expression> test_parser::parse_parenthentical(unsigned int start, uns
     }
 
     // Success.
-    return make_unique<parenthetical_expression>(test_paren_open, range_t(start, close_index + 1), move(subexpr));
+    return make_unique<parenthetical_expression>(test_paren_open, range_t(start, close_index + 1),
+                                                 move(subexpr));
 }
 
 unique_ptr<expression> test_parser::parse_primary(unsigned int start, unsigned int end) {
@@ -444,8 +448,7 @@ unique_ptr<expression> test_parser::parse_3_arg_expression(unsigned int start, u
             subjects.push_back(move(left));
             subjects.push_back(move(right));
             result = make_unique<combining_expression>(center_token->tok, range_t(start, end),
-                                                       move(subjects),
-                                                       move(combiners));
+                                                       move(subjects), move(combiners));
         }
     } else {
         result = parse_unary_expression(start, end);
@@ -461,7 +464,8 @@ unique_ptr<expression> test_parser::parse_4_arg_expression(unsigned int start, u
     if (first_token == test_bang) {
         unique_ptr<expression> subject(parse_3_arg_expression(start + 1, end));
         if (subject.get()) {
-            result = make_unique<unary_operator>(first_token, range_t(start, subject->range.end), move(subject));
+            result = make_unique<unary_operator>(first_token, range_t(start, subject->range.end),
+                                                 move(subject));
         }
     } else if (first_token == test_paren_open) {
         result = parse_parenthentical(start, end);
@@ -499,7 +503,7 @@ unique_ptr<expression> test_parser::parse_expression(unsigned int start, unsigne
 }
 
 unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcstring &err,
-                                    wchar_t *program_name) {
+                                               wchar_t *program_name) {
     // Empty list and one-arg list should be handled by caller.
     assert(args.size() > 1);
 

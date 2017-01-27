@@ -430,9 +430,10 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid) {
 #endif
 
 /// The following function is invoked on the main thread, because the job list is not thread safe.
-/// It should search the job list for something matching the given proc, and then return true to stop
-/// the search, false to continue it.
-static bool find_job(const wchar_t *proc, expand_flags_t flags, std::vector<completion_t> *completions) {
+/// It should search the job list for something matching the given proc, and then return true to
+/// stop the search, false to continue it.
+static bool find_job(const wchar_t *proc, expand_flags_t flags,
+                     std::vector<completion_t> *completions) {
     ASSERT_IS_MAIN_THREAD();
 
     bool found = false;
@@ -540,9 +541,7 @@ static void find_process(const wchar_t *proc, expand_flags_t flags,
                          std::vector<completion_t> *out) {
     if (!(flags & EXPAND_SKIP_JOBS)) {
         bool found = false;
-        iothread_perform_on_main([&](){
-            found = find_job(proc, flags, out);
-        });
+        iothread_perform_on_main([&]() { found = find_job(proc, flags, out); });
         if (found) {
             return;
         }

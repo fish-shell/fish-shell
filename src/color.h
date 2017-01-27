@@ -19,7 +19,13 @@ class rgb_color_t {
     unsigned char type : 4;
 
     // Flags
-    enum { flag_bold = 1 << 0, flag_underline = 1 << 1, flag_italics = 1 << 2, flag_dim = 1 << 3, flag_reverse = 1 << 4 };
+    enum {
+        flag_bold = 1 << 0,
+        flag_underline = 1 << 1,
+        flag_italics = 1 << 2,
+        flag_dim = 1 << 3,
+        flag_reverse = 1 << 4
+    };
     unsigned char flags : 5;
 
     union {

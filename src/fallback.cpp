@@ -170,7 +170,7 @@ int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
     return wcsncasecmp_fallback(a, b, n);
 }
 #endif  // __DARWIN_C_LEVEL >= 200809L
-#else  // __APPLE__
+#else   // __APPLE__
 
 /// These functions are missing from Solaris 10
 #ifndef HAVE_WCSDUP

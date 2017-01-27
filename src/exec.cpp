@@ -291,8 +291,8 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
 
     // Now either return success, or clean up.
     if (success) {
-        out_chain->swap(result_chain);
-        out_opened_fds->swap(opened_fds);
+        *out_chain = std::move(result_chain);
+        *out_opened_fds = std::move(opened_fds);
     } else {
         result_chain.clear();
         io_cleanup_fds(opened_fds);

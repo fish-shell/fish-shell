@@ -1330,7 +1330,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
 
     // Return the string by reference, and then success.
     if (!errored) {
-        output_str->swap(result);
+        *output_str = std::move(result);
     }
     return !errored;
 }
@@ -1340,7 +1340,7 @@ bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special) {
     wcstring output;
     bool success = unescape_string_internal(str->c_str(), str->size(), &output, escape_special);
     if (success) {
-        str->swap(output);
+        *str = std::move(output);
     }
     return success;
 }

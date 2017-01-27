@@ -389,13 +389,13 @@ void env_universal_t::acquire_variables(var_table_t *vars_to_acquire) {
             // source entry in vars since we are about to get rid of this->vars entirely.
             var_entry_t &src = src_iter->second;
             var_entry_t &dst = (*vars_to_acquire)[key];
-            dst.val.swap(src.val);
+            dst.val = std::move(src.val);
             dst.exportv = src.exportv;
         }
     }
 
     // We have constructed all the callbacks and updated vars_to_acquire. Acquire it!
-    this->vars.swap(*vars_to_acquire);
+    this->vars = std::move(*vars_to_acquire);
 }
 
 void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks) {
@@ -844,7 +844,7 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t
             if (unescape_string(tmp + 1, &val, 0)) {
                 var_entry_t &entry = (*vars)[key];
                 entry.exportv = exportv;
-                entry.val.swap(val);  // acquire the value
+                entry.val = std::move(val);  // acquire the value
             }
         } else {
             debug(1, PARSE_ERR, msg);

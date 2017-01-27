@@ -1293,11 +1293,11 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     if (has_unclosed_block || has_unclosed_quote) res |= PARSER_TEST_INCOMPLETE;
 
     if (out_errors != NULL) {
-        out_errors->swap(parse_errors);
+        *out_errors = std::move(parse_errors);
     }
 
     if (out_tree != NULL) {
-        out_tree->swap(node_tree);
+        *out_tree = std::move(node_tree);
     }
 
     return res;

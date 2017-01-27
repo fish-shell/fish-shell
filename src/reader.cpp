@@ -625,7 +625,7 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
             // lengths.
             size_t new_buff_pos = el->position + new_cmdline.size() - el->text.size();
 
-            el->text.swap(new_cmdline);
+            el->text = std::move(new_cmdline);
             update_buff_pos(el, new_buff_pos);
             data->command_line_changed(el);
             result = true;

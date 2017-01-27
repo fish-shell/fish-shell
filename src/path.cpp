@@ -72,7 +72,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                 continue;
             }
             if (S_ISREG(buff.st_mode)) {
-                if (out_path) out_path->swap(nxt_path);
+                if (out_path) *out_path = std::move(nxt_path);
                 return true;
             }
             err = EACCES;

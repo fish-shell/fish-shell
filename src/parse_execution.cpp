@@ -948,14 +948,11 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(
             }
         }
 
-        // Now copy over any expanded arguments. Do it using swap() to avoid extra allocations; this
+        // Now copy over any expanded arguments. Use std::move() to avoid extra allocations; this
         // is called very frequently.
-        size_t old_arg_count = out_arguments->size();
-        size_t new_arg_count = arg_expanded.size();
-        out_arguments->resize(old_arg_count + new_arg_count);
-        for (size_t i = 0; i < new_arg_count; i++) {
-            wcstring &new_arg = arg_expanded.at(i).completion;
-            out_arguments->at(old_arg_count + i).swap(new_arg);
+        out_arguments->reserve(out_arguments->size() + arg_expanded.size());
+        for (completion_t &new_arg : arg_expanded) {
+            out_arguments->push_back(std::move(new_arg.completion));
         }
     }
 
@@ -1035,7 +1032,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
     }
 
     if (out_chain && !errored) {
-        out_chain->swap(result);
+        *out_chain = std::move(result);
     }
     return !errored;
 }

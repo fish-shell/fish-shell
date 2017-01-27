@@ -237,7 +237,7 @@ bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_
     if (tree.command_for_plain_statement(plain_statement, src, &cmd) &&
         expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS)) {
         // Success, return the expanded string by reference.
-        out_cmd->swap(cmd);
+        *out_cmd = std::move(cmd);
         return true;
     }
     return false;

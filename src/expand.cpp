@@ -820,7 +820,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
                     }
 
                     // string_values is the new var_item_list.
-                    var_item_list.swap(string_values);
+                    var_item_list = std::move(string_values);
                 }
             }
 

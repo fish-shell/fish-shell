@@ -1624,7 +1624,7 @@ wcstring_list_t complete_get_wrap_chain(const wcstring &command) {
     wcstring target;
     while (!to_visit.empty()) {
         // Grab the next command to visit, put it in target.
-        target.swap(to_visit.back());
+        target = std::move(to_visit.back());
         to_visit.pop_back();
 
         // Try inserting into visited. If it was already present, we skip it; this is how we avoid

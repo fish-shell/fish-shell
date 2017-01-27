@@ -609,7 +609,7 @@ wcstring tok_first(const wcstring &str) {
     tokenizer_t t(str.c_str(), TOK_SQUASH_ERRORS);
     tok_t token;
     if (t.next(&token) && token.type == TOK_STRING) {
-        result.swap(token.text);
+        result = std::move(token.text);
     }
     return result;
 }

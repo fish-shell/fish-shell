@@ -293,7 +293,7 @@ static void iothread_service_main_thread_requests(void) {
     std::queue<main_thread_request_t *> request_queue;
     {
         scoped_lock queue_lock(s_main_thread_request_q_lock);
-        std::swap(request_queue, s_main_thread_request_queue);
+        request_queue.swap(s_main_thread_request_queue);
     }
 
     if (!request_queue.empty()) {
@@ -326,7 +326,7 @@ static void iothread_service_result_queue() {
     std::queue<spawn_request_t> result_queue;
     {
         scoped_lock queue_lock(s_result_queue_lock);
-        std::swap(result_queue, s_result_queue);
+        result_queue.swap(s_result_queue);
     }
 
     // Perform each completion in order. We are responsibile for cleaning them up.

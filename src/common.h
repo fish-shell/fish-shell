@@ -598,15 +598,16 @@ class scoped_push {
    public:
     explicit scoped_push(T *r) : ref(r), saved_value(*r), restored(false) {}
 
-    scoped_push(T *r, const T &new_value) : ref(r), saved_value(*r), restored(false) {
-        *r = new_value;
+    scoped_push(T *r, T new_value) : ref(r), restored(false) {
+        saved_value = std::move(*ref);
+        *ref = std::move(new_value);
     }
 
     ~scoped_push() { restore(); }
 
     void restore() {
         if (!restored) {
-            std::swap(*ref, saved_value);
+            *ref = std::move(saved_value);
             restored = true;
         }
     }

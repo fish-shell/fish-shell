@@ -39,7 +39,7 @@
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-#define NOT_A_WCHAR (static_cast<wint_t>(WEOF))
+constexpr wint_t NOT_A_WCHAR = static_cast<wint_t>(WEOF);
 
 struct termios shell_modes;
 
@@ -950,8 +950,7 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags) {
 
 /// Helper to return the last character in a string, or NOT_A_WCHAR.
 static wint_t string_last_char(const wcstring &str) {
-    size_t len = str.size();
-    return len == 0 ? NOT_A_WCHAR : str.at(len - 1);
+    return str.empty() ? NOT_A_WCHAR : str.back();
 }
 
 /// Given a null terminated string starting with a backslash, read the escape as if it is unquoted,
@@ -1229,12 +1228,12 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 }
                 case L'\'': {
                     mode = mode_single_quotes;
-                    to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
                     break;
                 }
                 case L'\"': {
                     mode = mode_double_quotes;
-                    to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
                     break;
                 }
                 default: { break; }
@@ -1268,14 +1267,14 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     }
                 }
             } else if (c == L'\'') {
-                to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
                 mode = mode_unquoted;
             }
         } else if (mode == mode_double_quotes) {
             switch (c) {
                 case L'"': {
                     mode = mode_unquoted;
-                    to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
                     break;
                 }
                 case '\\': {

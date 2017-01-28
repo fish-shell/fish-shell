@@ -1,3 +1,6 @@
+# go is a tool for managing Go source code.
+# See: https://golang.org
+
 function __fish__go_buildflags_completions -d 'Complete go build commands' --argument-names cmd
         complete -c go -n "__fish_seen_subcommand_from $cmd" -s a -d 'force rebuild'
         complete -c go -n "__fish_seen_subcommand_from $cmd" -s n -d 'print the commands but do not run them'
@@ -7,12 +10,12 @@ function __fish__go_buildflags_completions -d 'Complete go build commands' --arg
         complete -c go -n "__fish_seen_subcommand_from $cmd" -o work -d 'print and preserve work directory'
         complete -c go -n "__fish_seen_subcommand_from $cmd" -s x -d 'print the commands'
         complete -c go -n "__fish_seen_subcommand_from $cmd" -o ccflags -r -d 'c compiler flags'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -o compiler -r -d 'name of compiler to use, as in runtime.Compiler (gccgo or gc)'
+        complete -c go -n "__fish_seen_subcommand_from $cmd" -o compiler -x -d 'name of compiler to use, as in runtime' -a 'gccgo gc'
         complete -c go -n "__fish_seen_subcommand_from $cmd" -o gccgoflags -r -d 'gccgo compiler/linker flags'
         complete -c go -n "__fish_seen_subcommand_from $cmd" -o gcflags -r -d 'go compiler flags'
         complete -c go -n "__fish_seen_subcommand_from $cmd" -o installsuffix -r -d 'suffix for installation directory'
         complete -c go -n "__fish_seen_subcommand_from $cmd" -o ldflags -r -d 'linker flags'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -o tags -r -d 'build tags '
+        complete -c go -n "__fish_seen_subcommand_from $cmd" -o tags -r -d 'build tags'
 end
 
 function __fish_complete_go_files -d 'Complete go' --argument-names cmd
@@ -52,7 +55,7 @@ complete -c go -n '__fish_seen_subcommand_from fmt' -s x -d "prints commands as 
 
 # get
 complete -c go -n '__fish_use_subcommand' -a get -d 'download and install packages and dependencies'
-complete -c go -n '__fish_seen_subcommand_from get' -s d -d "stop after downloading the packages; don\'t install"
+complete -c go -n '__fish_seen_subcommand_from get' -s d -d "stop after downloading the packages; don't install"
 complete -c go -n '__fish_seen_subcommand_from get' -o fix -d "run fix tool on packages before resolving dependencies or building"
 complete -c go -n '__fish_seen_subcommand_from get' -s u -d "update remote packages"
 __fish__go_buildflags_completions get
@@ -80,7 +83,7 @@ __fish_complete_go_files run
 # test
 complete -c go -n '__fish_use_subcommand' -a test -d 'test packages'
 complete -c go -n '__fish_seen_subcommand_from test' -s c -r -d "compile the test binary to pkg.test but do not run it"
-complete -c go -n '__fish_seen_subcommand_from test' -s i -d "install dependent packages, but don\'t run tests"
+complete -c go -n '__fish_seen_subcommand_from test' -s i -d "install dependent packages, but don't run tests"
 __fish__go_buildflags_completions test
 __fish_complete_go_files test
 
@@ -97,4 +100,3 @@ complete -c go -f -n '__fish_seen_subcommand_from version'
 complete -c go -n '__fish_use_subcommand' -a vet -d 'vet packages'
 complete -c go -n '__fish_seen_subcommand_from vet' -s n -d "print the command that would be executed"
 complete -c go -n '__fish_seen_subcommand_from vet' -s x -d "prints commands as they are executed"
-

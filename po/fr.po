@@ -41,7 +41,7 @@ msgstr ""
 #: builtin.cpp:531
 #, c-format
 msgid "%ls: No key with name '%ls' found\n"
-msgstr "%ls: Pas de clef avec le nom '%ls' trouvée\n"
+msgstr "%ls: Aucune clef avec le nom '%ls' n'a été trouvée\n"
 
 #: builtin.cpp:537
 #, fuzzy, c-format
@@ -1184,7 +1184,7 @@ msgstr "%ls (ligne %d): "
 
 #: parser.cpp:760
 msgid "Startup"
-msgstr ""
+msgstr "Démarrage"
 
 #: parser.cpp:803
 msgid "Job inconsistency"
@@ -1756,7 +1756,7 @@ msgstr "Une erreur est survenue lors du paramétrage du tube"
 
 #: expand.h:135
 msgid "Array index out of bounds"
-msgstr ""
+msgstr "Indice de liste hors limite"
 
 #: parse_constants.h:185
 #, c-format
@@ -1770,6 +1770,8 @@ msgid ""
 "The function call stack limit has been exceeded. Do you have an accidental "
 "infinite loop?"
 msgstr ""
+"La taille de la pile d'appels de fonctions a atteint sa limite. Avez-vous"
+"une boucle infinie involontaire?"
 
 #: parse_constants.h:192
 #, fuzzy
@@ -2422,7 +2424,7 @@ msgstr "Ignorer les bogues dans votre système"
 
 #: share/completions/apt-listbugs.fish:7
 msgid "Ignore newer bugs than upgrade packages"
-msgstr ""
+msgstr "Ignorer les nouveaux bugs et mettre à jour les paquets"
 
 #: share/completions/apt-listbugs.fish:8
 msgid "Bugs for downgrade packages"
@@ -2520,7 +2522,7 @@ msgstr "Synchroniser les paquets installés"
 
 #: share/completions/apt-mark.fish:26
 msgid "Hold a package, prevent automatic installation or removal"
-msgstr ""
+msgstr "Mentienir un paquet, empêchant suppression ou installation automatique"
 
 #: share/completions/apt-mark.fish:27
 #, fuzzy
@@ -2856,7 +2858,7 @@ msgstr "Nettoyer les paquets ne pouvant plus être téléchargés"
 
 #: share/completions/aptitude.fish:25
 msgid "Remove all downloaded .deb files from the package cache directory"
-msgstr ""
+msgstr "Supprimer tous les fichiers .deb du cache"
 
 #: share/completions/aptitude.fish:26
 msgid "Forget all internal information about what packages are \\new"
@@ -2877,7 +2879,7 @@ msgstr "Afficher tous les paquets source avec version"
 
 #: share/completions/aptitude.fish:30
 msgid "Download and displays the Debian changelog for the packages"
-msgstr ""
+msgstr "Télécharger et afficher le changelog pour le paquet Debian"
 
 #: share/completions/aptitude.fish:31
 #, fuzzy
@@ -2886,15 +2888,15 @@ msgstr "Mettre à niveau ou installer les plus nouveaux paquets"
 
 #: share/completions/aptitude.fish:32
 msgid "Download the packages to the current directory"
-msgstr ""
+msgstr "Télécharger le paquet dans le répertoire courant"
 
 #: share/completions/aptitude.fish:33
 msgid "Forbid the upgrade to a particular version"
-msgstr ""
+msgstr "Interdir la mise à jour vers une version précise"
 
 #: share/completions/aptitude.fish:34
 msgid "Ignore the packages by future upgrade commands"
-msgstr ""
+msgstr "Ignorer le paquet pour les futures commandes de mise à jour"
 
 #: share/completions/aptitude.fish:35
 #, fuzzy
@@ -2903,7 +2905,7 @@ msgstr "Installer des paquets source"
 
 #: share/completions/aptitude.fish:36
 msgid "Cancel any scheduled actions on the packages"
-msgstr ""
+msgstr "Annuler toute action programmée pour un paquet"
 
 #: share/completions/aptitude.fish:37
 #, fuzzy
@@ -2912,7 +2914,7 @@ msgstr "Synchroniser les paquets installés"
 
 #: share/completions/aptitude.fish:38
 msgid "Remove and delete all associated configuration and data files"
-msgstr ""
+msgstr "Supprimer tous les fichiers de configuration associés"
 
 #: share/completions/aptitude.fish:39
 #, fuzzy
@@ -2945,7 +2947,7 @@ msgstr "Cherche les paquet contenant le motif"
 
 #: share/completions/aptitude.fish:45
 msgid "Display brief summary of the available commands and options"
-msgstr ""
+msgstr "Afficher un sommaire des commandes et options disponibles"
 
 #: share/completions/arp.fish:4
 msgid "Class of hw type"
@@ -3001,7 +3003,7 @@ msgstr "Afficher les tâches listées"
 
 #: share/completions/atd.fish:2
 msgid "Limiting load factor"
-msgstr ""
+msgstr "Limiter le facteur de charge"
 
 #: share/completions/atd.fish:3
 msgid "Minimum interval in seconds"

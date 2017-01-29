@@ -156,11 +156,11 @@ int proc_get_last_status() { return last_status; }
 
 // Basic thread safe job IDs. The vector consumed_job_ids has a true value wherever the job ID
 // corresponding to that slot is in use. The job ID corresponding to slot 0 is 1.
-static pthread_mutex_t job_id_lock = PTHREAD_MUTEX_INITIALIZER;
-static std::vector<bool> consumed_job_ids;
+static owning_lock<std::vector<bool>> locked_consumed_job_ids;
 
 job_id_t acquire_job_id(void) {
-    scoped_lock locker(job_id_lock);
+    auto locker = locked_consumed_job_ids.acquire();
+    std::vector<bool> &consumed_job_ids = locker.value;
 
     // Find the index of the first 0 slot.
     std::vector<bool>::iterator slot =
@@ -179,7 +179,8 @@ job_id_t acquire_job_id(void) {
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
-    scoped_lock locker(job_id_lock);
+    auto locker = locked_consumed_job_ids.acquire();
+    std::vector<bool> &consumed_job_ids = locker.value;
     size_t slot = (size_t)(jid - 1), count = consumed_job_ids.size();
 
     // Make sure this slot is within our vector and is currently set to consumed.

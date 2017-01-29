@@ -177,20 +177,13 @@ class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_lru_
     }
 };
 
+// The set of histories
+// Note that histories are currently immortal
 class history_collection_t {
-    pthread_mutex_t m_lock;
-    std::map<wcstring, history_t *> m_histories;
+    owning_lock<std::map<wcstring, std::unique_ptr<history_t>>> histories;
 
-   public:
-    history_collection_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_init(&m_lock, NULL)); }
-    ~history_collection_t() {
-        for (std::map<wcstring, history_t *>::const_iterator i = m_histories.begin();
-             i != m_histories.end(); ++i) {
-            delete i->second;
-        }
-        pthread_mutex_destroy(&m_lock);
-    }
-    history_t &alloc(const wcstring &name);
+    public:
+    history_t &get_creating(const wcstring &name);
     void save();
 };
 
@@ -698,16 +691,21 @@ static size_t offset_of_next_item(const char *begin, size_t mmap_length,
     return result;
 }
 
-history_t &history_collection_t::alloc(const wcstring &name) {
+history_t &history_collection_t::get_creating(const wcstring &name) {
+    // Return a history for the given name, creating it if necessary
     // Note that histories are currently never deleted, so we can return a reference to them without
-    // using something like shared_ptr.
-    scoped_lock locker(m_lock);
-    history_t *&current = m_histories[name];
-    if (current == NULL) current = new history_t(name);
-    return *current;
+    // using something like shared_ptr
+    auto hs = histories.acquire();
+    std::unique_ptr<history_t> &hist = hs.value[name];
+    if (! hist) {
+        hist = make_unique<history_t>(name);
+    }
+    return *hist;
 }
 
-history_t &history_t::history_with_name(const wcstring &name) { return histories.alloc(name); }
+history_t &history_t::history_with_name(const wcstring &name) {
+    return histories.get_creating(name);
+}
 
 history_t::history_t(const wcstring &pname)
     : name(pname),
@@ -1647,11 +1645,10 @@ void history_t::incorporate_external_changes() {
 void history_init() {}
 
 void history_collection_t::save() {
-    // Save all histories.
-    for (std::map<wcstring, history_t *>::iterator iter = m_histories.begin();
-         iter != m_histories.end(); ++iter) {
-        history_t *hist = iter->second;
-        hist->save();
+    // Save all histories
+    auto h = histories.acquire();
+    for (auto &p : h.value) {
+        p.second->save();
     }
 }
 

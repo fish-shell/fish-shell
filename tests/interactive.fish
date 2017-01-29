@@ -7,6 +7,10 @@
 # This is a list of flakey tests that often succeed when rerun.
 set TESTS_TO_RETRY bind.expect
 
+# Set this var to modify behavior of the code being tests. Such as avoiding running
+# `fish_update_completions` when running tests.
+set -x FISH_UNIT_TESTS_RUNNING 1
+
 # Change to directory containing this script
 cd (dirname (status -f))
 

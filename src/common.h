@@ -544,10 +544,16 @@ class scoped_lock {
     bool locked;
 
     // No copying.
-    scoped_lock &operator=(const scoped_lock &);
-    scoped_lock(const scoped_lock &);
+    scoped_lock &operator=(const scoped_lock &) = delete;
+    scoped_lock(const scoped_lock &)  = delete;
 
    public:
+    scoped_lock(scoped_lock &&rhs) : lock_obj(rhs.lock_obj), locked(rhs.locked) {
+        // we acquire any locked state
+        // ensure the rhs doesn't try to unlock
+        rhs.locked = false;
+    }
+
     void lock(void);
     void unlock(void);
     explicit scoped_lock(pthread_mutex_t &mutex);
@@ -561,6 +567,9 @@ class rwlock_t {
     rwlock_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_init(&rwlock, NULL)); }
 
     ~rwlock_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_destroy(&rwlock)); }
+
+    rwlock_t &operator=(const rwlock_t &) = delete;
+    rwlock_t(const rwlock_t &)  = delete;
 };
 
 // Scoped lock class for rwlocks.
@@ -570,8 +579,8 @@ class scoped_rwlock {
     bool locked_shared;
 
     // No copying.
-    scoped_rwlock &operator=(const scoped_lock &);
-    explicit scoped_rwlock(const scoped_lock &);
+    scoped_rwlock &operator=(const scoped_lock &) = delete;
+    explicit scoped_rwlock(const scoped_lock &) = delete;
 
    public:
     void lock(void);
@@ -583,6 +592,57 @@ class scoped_rwlock {
     explicit scoped_rwlock(pthread_rwlock_t &rwlock, bool shared = false);
     explicit scoped_rwlock(rwlock_t &rwlock, bool shared = false);
     ~scoped_rwlock();
+};
+
+// An object wrapping a scoped lock and a value
+// This is returned from owning_lock.acquire()
+// Sample usage:
+//   owning_lock<string> locked_name;
+//   acquired_lock<string> name = name.acquire();
+//   name.value = "derp"
+//
+// Or for simple cases:
+//   name.acquire().value = "derp"
+//
+template<typename DATA>
+class acquired_lock {
+    scoped_lock lock;
+    acquired_lock(mutex_lock_t &lk, DATA *v) : lock(lk), value(*v)
+    {}
+
+    template<typename T>
+    friend class owning_lock;
+
+    public:
+    // No copying, move only
+    acquired_lock &operator=(const acquired_lock &) = delete;
+    acquired_lock(const acquired_lock &) = delete;
+    acquired_lock(acquired_lock &&) = default;
+    acquired_lock &operator=(acquired_lock &&) = default;
+
+    DATA &value;
+};
+
+// A lock that owns a piece of data
+// Access to the data is only provided by taking the lock
+template<typename DATA>
+class owning_lock {
+    // No copying
+    owning_lock &operator=(const scoped_lock &) = delete;
+    owning_lock(const scoped_lock &) = delete;
+    owning_lock(owning_lock &&) = default;
+    owning_lock &operator=(owning_lock &&) = default;
+
+    mutex_lock_t lock;
+    DATA data;
+
+public:
+    owning_lock(DATA d) : data(std::move(d)) {}
+    owning_lock() : data() {}
+
+    acquired_lock<DATA> acquire() {
+        return {lock, &data};
+    }
 };
 
 /// A scoped manager to save the current value of some variable, and optionally set it to a new

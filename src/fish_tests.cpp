@@ -1170,9 +1170,11 @@ static void test_lru(void) {
         while (expected_values.size() > test_lru_t::test_capacity) {
             expected_values.erase(expected_values.begin());
         }
+        cache.check_sanity();
     }
     do_test(cache.evicted == expected_evicted);
     do_test(cache.values() == expected_values);
+    cache.check_sanity();
 
     // Stable-sort ints in reverse order
     // This a/2 check ensures that some different ints compare the same

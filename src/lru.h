@@ -242,7 +242,9 @@ class lru_cache_t {
     }
 
     // Number of entries
-    size_t size() { return this->node_map.size(); }
+    size_t size() const {
+        return this->node_map.size();
+    }
 
     // Sorting support
     // Given a binary function F implementing less-than on the contents, place the nodes in sorted order
@@ -296,6 +298,41 @@ class lru_cache_t {
 
     iterator begin() const { return iterator(mouth.prev); };
     iterator end() const { return iterator(&mouth); };
+
+    void check_sanity() const {
+        // Check linked list sanity
+        size_t expected_count = this->size();
+        const lru_link_t *prev = &mouth;
+        const lru_link_t *cursor = mouth.next;
+
+        size_t max = 1024 * 1024 * 64;
+        size_t count = 0;
+        while (cursor != &mouth) {
+            if (cursor->prev != prev) {
+                assert(0 && "Node busted previous link");
+            }
+            prev = cursor;
+            cursor = cursor->next;
+            if (count++ > max) {
+                assert(0 && "LRU cache unable to re-reach the mouth - not circularly linked?");
+            }
+        }
+        if (mouth.prev != prev) {
+            assert(0 && "mouth.prev does not connect to last node");
+        }
+        if (count != expected_count) {
+            assert(0 && "Linked list count mismatch from map count");
+        }
+
+        // Count iterators
+        size_t iter_dist = 0;
+        for (const auto &p : *this) {
+            iter_dist++;
+        }
+        if (iter_dist != count) {
+            assert(0 && "Linked list iterator mismatch from map count");
+        }
+    }
 };
 
 #endif

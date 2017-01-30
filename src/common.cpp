@@ -61,9 +61,11 @@ static pid_t initial_pid = 0;
 static pid_t initial_fg_process_group = -1;
 
 /// This struct maintains the current state of the terminal size. It is updated on demand after
-/// receiving a SIGWINCH.  Use common_get_width()/common_get_height() to access.
-owning_lock<struct winsize> termsize = {{USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX}};
-static volatile sig_atomic_t termsize_valid = false;
+/// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
+/// common_get_width()/common_get_height().
+static pthread_mutex_t termsize_lock = PTHREAD_MUTEX_INITIALIZER;
+static struct winsize termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
+static volatile bool termsize_valid = false;
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
 static void debug_shared(const wchar_t msg_level, const wcstring &msg);
@@ -1358,12 +1360,10 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
 /// COLUMNS or LINES variables are changed. This is also invoked when the shell regains control of
 /// the tty since it is possible the terminal size changed while an external command was running.
 void invalidate_termsize(bool invalidate_vars) {
+    termsize_valid = false;
     if (invalidate_vars) {
-        auto lock_ts = termsize.acquire();
-        struct winsize &termsize = lock_ts.value;
         termsize.ws_col = termsize.ws_row = USHRT_MAX;
     }
-    termsize_valid = false;
 }
 
 /// Handle SIGWINCH. This is also invoked when the shell regains control of the tty since it is
@@ -1372,7 +1372,7 @@ void common_handle_winch(int signal) {
     // Don't run ioctl() here. Technically it's not safe to use in signals although in practice it
     // is safe on every platform I've used. But we want to be conservative on such matters.
     UNUSED(signal);
-    termsize_valid = false;
+    invalidate_termsize(false);
 }
 
 /// Validate the new terminal size. Fallback to the env vars if necessary. Ensure the values are
@@ -1413,11 +1413,11 @@ static void validate_new_termsize(struct winsize *new_termsize) {
 }
 
 /// Export the new terminal size as env vars and to the kernel if possible.
-static void export_new_termsize(const struct winsize &new_termsize) {
+static void export_new_termsize(struct winsize *new_termsize) {
     wchar_t buf[64];
-    swprintf(buf, 64, L"%d", (int)new_termsize.ws_col);
+    swprintf(buf, 64, L"%d", (int)new_termsize->ws_col);
     env_set(L"COLUMNS", buf, ENV_EXPORT | ENV_GLOBAL);
-    swprintf(buf, 64, L"%d", (int)new_termsize.ws_row);
+    swprintf(buf, 64, L"%d", (int)new_termsize->ws_row);
     env_set(L"LINES", buf, ENV_EXPORT | ENV_GLOBAL);
 
 #ifdef HAVE_WINSIZE
@@ -1425,43 +1425,28 @@ static void export_new_termsize(const struct winsize &new_termsize) {
 #endif
 }
 
-// Returns the current termsize by reference.
-// Return true if it changed
-static bool check_winsize_changes(struct winsize *out_result) {
-    auto lock_ts = termsize.acquire();
-    struct winsize &termsize = lock_ts.value;
-    bool changed = false;
-    if (! termsize_valid) {
-        struct winsize new_termsize = {0, 0, 0, 0};
-#ifdef HAVE_WINSIZE
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_termsize);
-#endif
-        if (new_termsize.ws_col != termsize.ws_col ||
-            new_termsize.ws_row != termsize.ws_row) {
-            validate_new_termsize(&new_termsize);
-            termsize.ws_col = new_termsize.ws_col;
-            termsize.ws_row = new_termsize.ws_row;
-            changed = true;
-        }
-        termsize_valid = true;
-    }
-    *out_result = termsize;
-    return changed;
-}
-
 /// Updates termsize as needed, and returns a copy of the winsize.
-/// Note
 struct winsize get_current_winsize() {
-    struct winsize new_termsize;
-    if (check_winsize_changes(&new_termsize)) {
-        // It changed!
-        // Note it's important that we don't hold the lock here,
-        // since we may be calling out to user code
-        // TODO: we can't export except on the main thread
-        // need to make this thread safe!
-        export_new_termsize(new_termsize);
+    scoped_lock guard(termsize_lock);
+
+    if (termsize_valid) return termsize;
+
+    struct winsize new_termsize = {0, 0, 0, 0};
+#ifdef HAVE_WINSIZE
+    errno = 0;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_termsize) != -1 &&
+        new_termsize.ws_col == termsize.ws_col && new_termsize.ws_row == termsize.ws_row) {
+        termsize_valid = true;
+        return termsize;
     }
-    return new_termsize;
+#endif
+
+    validate_new_termsize(&new_termsize);
+    export_new_termsize(&new_termsize);
+    termsize.ws_col = new_termsize.ws_col;
+    termsize.ws_row = new_termsize.ws_row;
+    termsize_valid = true;
+    return termsize;
 }
 
 int common_get_width() { return get_current_winsize().ws_col; }

@@ -577,7 +577,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
     //
     // We pass O_RDONLY with O_CREAT; this creates a potentially empty file. We do this so that we
     // have something to lock on.
-    static bool do_locking = true;
+    static std::atomic<bool> do_locking(true);
     bool needs_lock = true;
     int flags = O_RDWR | O_CREAT;
 

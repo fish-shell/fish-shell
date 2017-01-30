@@ -25,6 +25,7 @@
 #include <sys/ioctl.h>  // IWYU pragma: keep
 #include <unistd.h>
 #include <wchar.h>
+#include <atomic>
 #include <map>
 #include <string>
 #include <utility>

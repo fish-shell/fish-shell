@@ -38,12 +38,8 @@ const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, 
 #endif
 #endif
 
-/// Lock to protect wgettext.
-static pthread_mutex_t wgettext_lock;
-
 /// Map used as cache by wgettext.
-typedef std::map<wcstring, wcstring> wgettext_map_t;
-static wgettext_map_t wgettext_map;
+static owning_lock<std::map<wcstring, wcstring>> wgettext_map;
 
 bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name,
                         bool *out_is_dir) {
@@ -405,7 +401,6 @@ wcstring wbasename(const wcstring &path) {
 
 // Really init wgettext.
 static void wgettext_really_init() {
-    pthread_mutex_init(&wgettext_lock, NULL);
     fish_bindtextdomain(PACKAGE_NAME, LOCALEDIR);
     fish_textdomain(PACKAGE_NAME);
 }
@@ -423,8 +418,8 @@ const wcstring &wgettext(const wchar_t *in) {
     wcstring key = in;
 
     wgettext_init_if_necessary();
-    scoped_lock locker(wgettext_lock);
-    wcstring &val = wgettext_map[key];
+    auto wmap = wgettext_map.acquire();
+    wcstring &val = wmap.value[key];
     if (val.empty()) {
         cstring mbs_in = wcs2string(key);
         char *out = fish_gettext(mbs_in.c_str());

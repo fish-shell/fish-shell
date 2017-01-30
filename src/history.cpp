@@ -155,8 +155,8 @@ class history_lru_item_t {
 
 class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_lru_item_t> {
     typedef lru_cache_t<history_lru_cache_t, history_lru_item_t> super;
-   public:
 
+   public:
     using super::super;
 
     /// Function to add a history item.

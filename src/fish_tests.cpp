@@ -1128,9 +1128,7 @@ class test_lru_t : public lru_cache_t<test_lru_t, int> {
 
     std::vector<std::pair<wcstring, int>> evicted;
 
-    void entry_was_evicted(wcstring key, int val) {
-        evicted.push_back({key, val});
-    }
+    void entry_was_evicted(wcstring key, int val) { evicted.push_back({key, val}); }
 };
 
 static void test_lru(void) {
@@ -1144,7 +1142,7 @@ static void test_lru(void) {
         if (i < 4) expected_evicted.push_back({to_string(i), i});
         // Adding the node the first time should work, and subsequent times should fail.
         do_test(cache.insert(to_string(i), i));
-        do_test(!cache.insert(to_string(i), i+1));
+        do_test(!cache.insert(to_string(i), i + 1));
     }
     do_test(cache.evicted == expected_evicted);
     cache.evict_all_nodes();

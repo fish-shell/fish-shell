@@ -27,10 +27,7 @@ file_access_attempt_t access_file(const wcstring &path, int mode);
 
 struct autoload_function_t {
     explicit autoload_function_t(bool placeholder)
-        : access(),
-          is_loaded(false),
-          is_placeholder(placeholder),
-          is_internalized(false) {}
+        : access(), is_loaded(false), is_placeholder(placeholder), is_internalized(false) {}
 
     /// The last access attempt recorded
     file_access_attempt_t access;
@@ -82,7 +79,6 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
     virtual void command_removed(const wcstring &cmd) { UNUSED(cmd); }
 
    public:
-
     // CRTP override
     void entry_was_evicted(wcstring key, autoload_function_t node);
 

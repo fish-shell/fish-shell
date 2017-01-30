@@ -8,19 +8,19 @@
 
 #include "common.h"
 
-// Least-recently-used cache class
+// Least-recently-used cache class.
+//
 // This a map from wcstring to CONTENTS, that will evict entries when the count exceeds the maximum.
-// It uses CRTP to inform clients when entries are evicted. This uses the classic LRU cache structure:
-// a dictionary mapping keys to nodes, where the nodes also form a linked list. Our linked list is
-// circular and has a sentinel node (the "mouth" - picture a snake swallowing its tail). This simplifies
-// the logic: no pointer is ever NULL! It also works well with C++'s iterator since the sentinel node
-// is a natural value for end(). Our nodes also have the unusual property of having a "back pointer":
-// they store an iterator to the entry in the map containing the node. This allows us, given a node, to
-// immediately locate the node and its key in the dictionary. This allows us to avoid duplicating the key
-// in the node.
+// It uses CRTP to inform clients when entries are evicted. This uses the classic LRU cache
+// structure: a dictionary mapping keys to nodes, where the nodes also form a linked list. Our
+// linked list is circular and has a sentinel node (the "mouth" - picture a snake swallowing its
+// tail). This simplifies the logic: no pointer is ever NULL! It also works well with C++'s iterator
+// since the sentinel node is a natural value for end(). Our nodes also have the unusual property of
+// having a "back pointer": they store an iterator to the entry in the map containing the node. This
+// allows us, given a node, to immediately locate the node and its key in the dictionary. This
+// allows us to avoid duplicating the key in the node.
 template <class DERIVED, class CONTENTS>
 class lru_cache_t {
-
     struct lru_node_t;
     typedef typename std::map<wcstring, lru_node_t>::iterator node_iter_t;
 
@@ -44,11 +44,8 @@ class lru_cache_t {
         // The value from the client
         CONTENTS value;
 
-        explicit lru_node_t(CONTENTS v) :
-            value(std::move(v))
-        {}
+        explicit lru_node_t(CONTENTS v) : value(std::move(v)) {}
     };
-
 
     // Max node count. This may be (transiently) exceeded by add_node_without_eviction, which is
     // used from background threads.
@@ -146,7 +143,7 @@ class lru_cache_t {
     // Adds a node under the given key. Returns true if the node was added, false if the node was
     // not because a node with that key is already in the set.
     bool insert(wcstring key, CONTENTS value) {
-        if (! this->insert_no_eviction(std::move(key), std::move(value))) {
+        if (!this->insert_no_eviction(std::move(key), std::move(value))) {
             return false;
         }
 
@@ -161,7 +158,7 @@ class lru_cache_t {
     bool insert_no_eviction(wcstring key, CONTENTS value) {
         // Try inserting; return false if it was already in the set.
         auto iter_inserted = this->node_map.emplace(std::move(key), lru_node_t(std::move(value)));
-        if (! iter_inserted.second) {
+        if (!iter_inserted.second) {
             // already present
             return false;
         }
@@ -190,6 +187,7 @@ class lru_cache_t {
     // Iterator for walking nodes, from least recently used to most.
     class iterator {
         lru_link_t *node;
+
        public:
         typedef std::pair<const wcstring &, const CONTENTS &> value_type;
 

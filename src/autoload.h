@@ -65,6 +65,9 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
     /// A table containing all the files that are currently being loaded.
     /// This is here to help prevent recursion.
     std::set<wcstring> is_loading_set;
+    // Function invoked when a command is removed
+    typedef void (*command_removed_function_t)(const wcstring &);
+    const command_removed_function_t command_removed;
 
     void remove_all_functions() { this->evict_all_nodes(); }
 
@@ -74,19 +77,17 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
     autoload_function_t *get_autoloaded_function_with_creation(const wcstring &cmd,
                                                                bool allow_eviction);
 
-   protected:
-    /// Overridable callback for when a command is removed.
-    virtual void command_removed(const wcstring &cmd) { UNUSED(cmd); }
-
    public:
     // CRTP override
     void entry_was_evicted(wcstring key, autoload_function_t node);
 
     // Create an autoload_t for the given environment variable name.
-    autoload_t(const wcstring &env_var_name_var, const builtin_script_t *scripts,
-               size_t script_count);
+    autoload_t(const wcstring &env_var_name_var,
+               command_removed_function_t callback,
+               const builtin_script_t *scripts = NULL,
+               size_t script_count = 0);
 
-    virtual ~autoload_t();
+    ~autoload_t();
 
     /// Autoload the specified file, if it exists in the specified path. Do not load it multiple
     /// times unless its timestamp changes or parse_util_unload is called.

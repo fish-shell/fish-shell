@@ -37,24 +37,15 @@ static std::set<wcstring> function_tombstones;
 /// Lock for functions.
 static pthread_mutex_t functions_lock;
 
-/// Autoloader for functions.
-class function_autoload_t : public autoload_t {
-   public:
-    function_autoload_t();
-    virtual void command_removed(const wcstring &cmd);
-};
-
-static function_autoload_t function_autoloader;
-
-/// Constructor
-function_autoload_t::function_autoload_t() : autoload_t(L"fish_function_path", NULL, 0) {}
-
 static bool function_remove_ignore_autoload(const wcstring &name, bool tombstone = true);
 
 /// Callback when an autoloaded function is removed.
-void function_autoload_t::command_removed(const wcstring &cmd) {
+void autoloaded_function_removed(const wcstring &cmd) {
     function_remove_ignore_autoload(cmd, false);
 }
+
+// Function autoloader
+static autoload_t function_autoloader(L"fish_function_path", autoloaded_function_removed);
 
 /// Kludgy flag set by the load function in order to tell function_add that the function being
 /// defined is autoloaded. There should be a better way to do this...

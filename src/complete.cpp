@@ -346,22 +346,13 @@ class completer_t {
     }
 };
 
-/// Autoloader for completions.
-class completion_autoload_t : public autoload_t {
-   public:
-    completion_autoload_t();
-    virtual void command_removed(const wcstring &cmd);
-};
-
-static completion_autoload_t completion_autoloader;
-
-// Constructor
-completion_autoload_t::completion_autoload_t() : autoload_t(L"fish_complete_path", NULL, 0) {}
-
-/// Callback when an autoloaded completion is removed.
-void completion_autoload_t::command_removed(const wcstring &cmd) {
+// Callback when an autoloaded completion is removed.
+static void autoloaded_completion_removed(const wcstring &cmd) {
     complete_remove_all(cmd, false /* not a path */);
 }
+
+// Autoloader for completions
+static autoload_t completion_autoloader(L"fish_complete_path", autoloaded_completion_removed);
 
 /// Create a new completion entry.
 void append_completion(std::vector<completion_t> *completions, const wcstring &comp,

@@ -46,12 +46,14 @@ file_access_attempt_t access_file(const wcstring &path, int mode) {
     return result;
 }
 
-autoload_t::autoload_t(const wcstring &env_var_name_var, const builtin_script_t *const scripts,
-                       size_t script_count)
+autoload_t::autoload_t(const wcstring &env_var_name_var,
+                       command_removed_function_t cmd_removed_callback,
+                       const builtin_script_t *const scripts, size_t script_count)
     : lock(),
       env_var_name(env_var_name_var),
       builtin_scripts(scripts),
-      builtin_script_count(script_count) {
+      builtin_script_count(script_count),
+      command_removed(cmd_removed_callback) {
     pthread_mutex_init(&lock, NULL);
 }
 

@@ -113,7 +113,72 @@ class lru_cache_t {
         USE(value);
     }
 
+    // Implementation of merge step for mergesort
+    // Given two singly linked lists left and right,
+    // and a binary func F implementing less-than, return
+    // the list in sorted order
+    template <typename F>
+    static lru_link_t *merge(lru_link_t *left, size_t left_len,
+                             lru_link_t *right, size_t right_len,
+                             const F &func) {
+        assert(left_len > 0 && right_len > 0);
+
+        auto popleft = [&](){
+            lru_link_t *ret = left;
+            left = left->next;
+            left_len--;
+            return ret;
+        };
+
+        auto popright = [&](){
+            lru_link_t *ret = right;
+            right = right->next;
+            right_len--;
+            return ret;
+        };
+
+        lru_link_t *head;
+        lru_link_t **cursor = &head;
+        while (left_len && right_len) {
+            bool goleft = ! func(static_cast<lru_node_t *>(left)->value,
+                                 static_cast<lru_node_t *>(right)->value);
+            *cursor = goleft ? popleft() : popright();
+            cursor = &(*cursor)->next;
+        }
+        while (left_len || right_len) {
+            *cursor = left_len ? popleft() : popright();
+            cursor = &(*cursor)->next;
+        }
+        return head;
+    }
+
+    // mergesort the given list of the given length
+    // This only sets the next pointers, not the prev ones
+    template<typename F>
+    static lru_link_t *mergesort(lru_link_t *node, size_t length, const F &func) {
+        if (length <= 1) {
+            return node;
+        }
+        // divide us into two lists, left and right
+        const size_t left_len = length / 2;
+        const size_t right_len = length - left_len;
+        lru_link_t *left = node;
+
+        lru_link_t *right = node;
+        for (size_t i=0; i < left_len; i++) {
+            right = right->next;
+        }
+
+        // Recursive sorting
+        left = mergesort(left, left_len, func);
+        right = mergesort(right, right_len, func);
+
+        // Merge them
+        return merge(left, left_len, right, right_len, func);
+    }
+
    public:
+
     // Constructor
     // Note our linked list is always circular!
     explicit lru_cache_t(size_t max_size = 1024) : max_node_count(max_size) {
@@ -159,7 +224,8 @@ class lru_cache_t {
         // Try inserting; return false if it was already in the set.
         auto iter_inserted = this->node_map.emplace(std::move(key), lru_node_t(std::move(value)));
         if (!iter_inserted.second) {
-            // already present
+            // already present - so promote it
+            promote_node(&iter_inserted.first->second);
             return false;
         }
 
@@ -178,6 +244,32 @@ class lru_cache_t {
     // Number of entries
     size_t size() { return this->node_map.size(); }
 
+    // Sorting support
+    // Given a binary function F implementing less-than on the contents, place the nodes in sorted order
+    template<typename F>
+    void stable_sort(const F &func) {
+        // Perform the sort. This sets forward pointers only
+        size_t length = this->size();
+        if (length <= 1) {
+            return;
+        }
+
+        lru_link_t *sorted = mergesort(this->mouth.next, length, func);
+        mouth.next = sorted;
+        // Go through and set back back pointers
+        lru_link_t *cursor = sorted;
+        lru_link_t *prev = &mouth;
+        for (size_t i=0; i < length; i++) {
+            cursor->prev = prev;
+            prev = cursor;
+            cursor = cursor->next;
+        }
+        // prev is now last element in list
+        // make the list circular
+        prev->next = &mouth;
+        mouth.prev = prev;
+    }
+
     void evict_all_nodes(void) {
         while (this->size() > 0) {
             evict_last_node();
@@ -186,12 +278,12 @@ class lru_cache_t {
 
     // Iterator for walking nodes, from least recently used to most.
     class iterator {
-        lru_link_t *node;
+        const lru_link_t *node;
 
        public:
         typedef std::pair<const wcstring &, const CONTENTS &> value_type;
 
-        explicit iterator(lru_link_t *val) : node(val) {}
+        explicit iterator(const lru_link_t *val) : node(val) {}
         void operator++() { node = node->prev; }
         bool operator==(const iterator &other) { return node == other.node; }
         bool operator!=(const iterator &other) { return !(*this == other); }
@@ -202,8 +294,8 @@ class lru_cache_t {
         }
     };
 
-    iterator begin() { return iterator(mouth.prev); }
-    iterator end() { return iterator(&mouth); }
+    iterator begin() const { return iterator(mouth.prev); };
+    iterator end() const { return iterator(&mouth); };
 };
 
 #endif

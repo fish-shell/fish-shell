@@ -1125,11 +1125,30 @@ static void test_escape_sequences(void) {
 
 class test_lru_t : public lru_cache_t<test_lru_t, int> {
    public:
-    test_lru_t() : lru_cache_t<test_lru_t, int>(16) {}
+    static constexpr size_t test_capacity = 16;
+    typedef std::pair<wcstring, int> value_type;
 
-    std::vector<std::pair<wcstring, int>> evicted;
+    test_lru_t() : lru_cache_t<test_lru_t, int>(test_capacity) {}
+
+    std::vector<value_type> evicted;
 
     void entry_was_evicted(wcstring key, int val) { evicted.push_back({key, val}); }
+
+    std::vector<value_type> values() const {
+        std::vector<value_type> result;
+        for (const auto &p : *this) {
+            result.push_back(p);
+        }
+        return result;
+    }
+
+    std::vector<int> ints() const {
+        std::vector<int> result;
+        for (const auto &p : *this) {
+            result.push_back(p.second);
+        }
+        return result;
+    }
 };
 
 static void test_lru(void) {
@@ -1137,15 +1156,48 @@ static void test_lru(void) {
 
     test_lru_t cache;
     std::vector<std::pair<wcstring, int>> expected_evicted;
+    std::vector<std::pair<wcstring, int>> expected_values;
     int total_nodes = 20;
     for (int i = 0; i < total_nodes; i++) {
         do_test(cache.size() == size_t(std::min(i, 16)));
+        do_test(cache.values() == expected_values);
         if (i < 4) expected_evicted.push_back({to_string(i), i});
         // Adding the node the first time should work, and subsequent times should fail.
         do_test(cache.insert(to_string(i), i));
         do_test(!cache.insert(to_string(i), i + 1));
+
+        expected_values.push_back({to_string(i), i});
+        while (expected_values.size() > test_lru_t::test_capacity) {
+            expected_values.erase(expected_values.begin());
+        }
     }
     do_test(cache.evicted == expected_evicted);
+    do_test(cache.values() == expected_values);
+
+    // Stable-sort ints in reverse order
+    // This a/2 check ensures that some different ints compare the same
+    // It also gives us a different order than we started with
+    auto comparer = [](int a, int b){
+        return a/2 > b/2;
+    };
+    std::vector<int> ints = cache.ints();
+    std::stable_sort(ints.begin(), ints.end(), comparer);
+
+    cache.stable_sort(comparer);
+    std::vector<int> new_ints = cache.ints();
+    if (new_ints != ints) {
+        auto commajoin = [](const std::vector<int> &vs) {
+            wcstring ret;
+            for (int v : vs) {
+                append_format(ret, L"%d,", v);
+            }
+            if (! ret.empty()) ret.pop_back();
+            return ret;
+        };
+        err(L"LRU stable sort failed. Expected %ls, got %ls\n", commajoin(new_ints).c_str(), commajoin(ints).c_str());
+    }
+
+
     cache.evict_all_nodes();
     do_test(cache.evicted.size() == size_t(total_nodes));
 }

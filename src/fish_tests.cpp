@@ -25,6 +25,7 @@
 #include <wchar.h>
 #include <wctype.h>
 #include <algorithm>
+#include <atomic>
 #include <memory>
 #include <set>
 #include <string>
@@ -512,7 +513,7 @@ static void test_tokenizer() {
 }
 
 // Little function that runs in a background thread, bouncing to the main.
-static int test_iothread_thread_call(int *addr) {
+static int test_iothread_thread_call(std::atomic<int> *addr) {
     int before = *addr;
     iothread_perform_on_main([=]() { *addr += 1; });
     int after = *addr;
@@ -526,7 +527,7 @@ static int test_iothread_thread_call(int *addr) {
 
 static void test_iothread(void) {
     say(L"Testing iothreads");
-    std::unique_ptr<int> int_ptr = make_unique<int>(0);
+    std::unique_ptr<std::atomic<int>> int_ptr = make_unique<std::atomic<int>>(0);
     int iterations = 50000;
     int max_achieved_thread_count = 0;
     double start = timef();
@@ -541,7 +542,7 @@ static void test_iothread(void) {
 
     // Should have incremented it once per thread.
     if (*int_ptr != iterations) {
-        say(L"Expected int to be %d, but instead it was %d", iterations, *int_ptr);
+        say(L"Expected int to be %d, but instead it was %d", iterations, int_ptr->load());
     }
 
     say(L"    (%.02f msec, with max of %d threads)", (end - start) * 1000.0,

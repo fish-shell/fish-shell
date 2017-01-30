@@ -47,12 +47,9 @@ file_access_attempt_t access_file(const wcstring &path, int mode) {
 }
 
 autoload_t::autoload_t(const wcstring &env_var_name_var,
-                       command_removed_function_t cmd_removed_callback,
-                       const builtin_script_t *const scripts, size_t script_count)
+                       command_removed_function_t cmd_removed_callback)
     : lock(),
       env_var_name(env_var_name_var),
-      builtin_scripts(scripts),
-      builtin_script_count(script_count),
       command_removed(cmd_removed_callback) {
     pthread_mutex_init(&lock, NULL);
 }
@@ -121,11 +118,6 @@ bool autoload_t::can_load(const wcstring &cmd, const env_vars_snapshot_t &vars) 
     std::vector<wcstring> path_list;
     tokenize_variable_array(path_var, path_list);
     return this->locate_file_and_maybe_load_it(cmd, false, false, path_list);
-}
-
-static bool script_name_precedes_script_name(const builtin_script_t &script1,
-                                             const builtin_script_t &script2) {
-    return wcscmp(script1.name, script2.name) < 0;
 }
 
 /// Check whether the given command is loaded.
@@ -201,110 +193,78 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
 
     // The source of the script will end up here.
     wcstring script_source;
-    bool has_script_source = false;
 
     // Whether we found an accessible file.
     bool found_file = false;
 
-    // Look for built-in scripts via a binary search.
-    const builtin_script_t *matching_builtin_script = NULL;
-    if (builtin_script_count > 0) {
-        const builtin_script_t test_script = {cmd.c_str(), NULL};
-        const builtin_script_t *array_end = builtin_scripts + builtin_script_count;
-        const builtin_script_t *found = std::lower_bound(builtin_scripts, array_end, test_script,
-                                                         script_name_precedes_script_name);
-        if (found != array_end && !wcscmp(found->name, test_script.name)) {
-            matching_builtin_script = found;
-        }
-    }
-    if (matching_builtin_script) {
-        has_script_source = true;
-        script_source = str2wcstring(matching_builtin_script->def);
+    // Iterate over path searching for suitable completion files.
+    for (size_t i = 0; i < path_list.size() && !found_file; i++) {
+        wcstring next = path_list.at(i);
+        wcstring path = next + L"/" + cmd + L".fish";
 
-        // Make a node representing this function.
+        const file_access_attempt_t access = access_file(path, R_OK);
+        if (!access.accessible) {
+            continue;
+        }
+
+        // Now we're actually going to take the lock.
         scoped_lock locker(lock);
-        autoload_function_t *func = this->get_autoloaded_function_with_creation(cmd, really_load);
+        autoload_function_t *func = this->get(cmd);
 
-        // This function is internalized.
-        func->is_internalized = true;
+        // Generate the source if we need to load it.
+        bool need_to_load_function =
+            really_load &&
+            (func == NULL || func->access.mod_time != access.mod_time || !func->is_loaded);
+        if (need_to_load_function) {
+            // Generate the script source.
+            script_source = L"source " + escape_string(path, ESCAPE_ALL);
 
-        // It's a fiction to say the script is loaded at this point, but we're definitely going to
-        // load it down below.
-        if (really_load) func->is_loaded = true;
+            // Remove any loaded command because we are going to reload it. Note that this
+            // will deadlock if command_removed calls back into us.
+            if (func && func->is_loaded) {
+                command_removed(cmd);
+                func->is_placeholder = false;
+            }
+
+            // Mark that we're reloading it.
+            reloaded = true;
+        }
+
+        // Create the function if we haven't yet. This does not load it. Do not trigger
+        // eviction unless we are actually loading, because we don't want to evict off of
+        // the main thread.
+        if (!func) func = get_autoloaded_function_with_creation(cmd, really_load);
+
+        // It's a fiction to say the script is loaded at this point, but we're definitely
+        // going to load it down below.
+        if (need_to_load_function) func->is_loaded = true;
+
+        // Unconditionally record our access time.
+        func->access = access;
+        found_file = true;
     }
 
-    if (!has_script_source) {
-        // Iterate over path searching for suitable completion files.
-        for (size_t i = 0; i < path_list.size() && !found_file; i++) {
-            wcstring next = path_list.at(i);
-            wcstring path = next + L"/" + cmd + L".fish";
-
-            const file_access_attempt_t access = access_file(path, R_OK);
-            if (!access.accessible) {
-                continue;
+    // If no file or builtin script was found we insert a placeholder function. Later we only
+    // research if the current time is at least five seconds later. This way, the files won't be
+    // searched over and over again.
+    if (!found_file && script_source.empty()) {
+        scoped_lock locker(lock);
+        // Generate a placeholder.
+        autoload_function_t *func = this->get(cmd);
+        if (!func) {
+            if (really_load) {
+                this->insert(cmd, autoload_function_t(true));
+            } else {
+                this->insert(cmd, autoload_function_t(true));
             }
-
-            // Now we're actually going to take the lock.
-            scoped_lock locker(lock);
-            autoload_function_t *func = this->get(cmd);
-
-            // Generate the source if we need to load it.
-            bool need_to_load_function =
-                really_load &&
-                (func == NULL || func->access.mod_time != access.mod_time || !func->is_loaded);
-            if (need_to_load_function) {
-                // Generate the script source.
-                wcstring esc = escape_string(path, 1);
-                script_source = L"source " + esc;
-                has_script_source = true;
-
-                // Remove any loaded command because we are going to reload it. Note that this
-                // will deadlock if command_removed calls back into us.
-                if (func && func->is_loaded) {
-                    command_removed(cmd);
-                    func->is_placeholder = false;
-                }
-
-                // Mark that we're reloading it.
-                reloaded = true;
-            }
-
-            // Create the function if we haven't yet. This does not load it. Do not trigger
-            // eviction unless we are actually loading, because we don't want to evict off of
-            // the main thread.
-            if (!func) func = get_autoloaded_function_with_creation(cmd, really_load);
-
-            // It's a fiction to say the script is loaded at this point, but we're definitely
-            // going to load it down below.
-            if (need_to_load_function) func->is_loaded = true;
-
-            // Unconditionally record our access time.
-            func->access = access;
-            found_file = true;
+            func = this->get(cmd);
+            assert(func);
         }
-
-        // If no file or builtin script was found we insert a placeholder function. Later we only
-        // research if the current time is at least five seconds later. This way, the files won't be
-        // searched over and over again.
-        if (!found_file && !has_script_source) {
-            scoped_lock locker(lock);
-            // Generate a placeholder.
-            autoload_function_t *func = this->get(cmd);
-            if (!func) {
-                if (really_load) {
-                    this->insert(cmd, autoload_function_t(true));
-                } else {
-                    this->insert(cmd, autoload_function_t(true));
-                }
-                func = this->get(cmd);
-                assert(func);
-            }
-            func->access.last_checked = time(NULL);
-        }
+        func->access.last_checked = time(NULL);
     }
 
     // If we have a script, either built-in or a file source, then run it.
-    if (really_load && has_script_source) {
+    if (really_load && !script_source.empty()) {
         // Do nothing on failure.
         exec_subshell(script_source, false /* do not apply exit status */);
     }
@@ -313,5 +273,5 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
         return reloaded;
     }
 
-    return found_file || has_script_source;
+    return found_file || !script_source.empty();
 }

@@ -40,11 +40,6 @@ struct autoload_function_t {
     bool is_internalized;
 };
 
-struct builtin_script_t {
-    const wchar_t *name;
-    const char *def;
-};
-
 class env_vars_snapshot_t;
 
 /// Class representing a path from which we can autoload and the autoloaded contents.
@@ -54,10 +49,6 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
     pthread_mutex_t lock;
     /// The environment variable name.
     const wcstring env_var_name;
-    /// Builtin script array.
-    const struct builtin_script_t *const builtin_scripts;
-    /// Builtin script count.
-    const size_t builtin_script_count;
     /// The path from which we most recently autoloaded.
     wcstring last_path;
     /// the most reecently autoloaded path, tokenized (split on separators).
@@ -83,9 +74,7 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
 
     // Create an autoload_t for the given environment variable name.
     autoload_t(const wcstring &env_var_name_var,
-               command_removed_function_t callback,
-               const builtin_script_t *scripts = NULL,
-               size_t script_count = 0);
+               command_removed_function_t callback);
 
     ~autoload_t();
 

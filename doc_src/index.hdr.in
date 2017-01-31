@@ -106,6 +106,7 @@ Some characters can not be written directly on the command line. For these chara
 - '<code>\\\></code>' escapes the more than character
 - '<code>\\^</code>' escapes the circumflex character
 - '<code>\\&amp;</code>' escapes the ampersand character
+- '<code>\\|</code>' escapes the vertical bar character
 - '<code>\\;</code>' escapes the semicolon character
 - '<code>\\"</code>' escapes the quote character
 - '<code>\\'</code>' escapes the apostrophe character

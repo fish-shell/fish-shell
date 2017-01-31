@@ -57,7 +57,7 @@ struct input_mapping_t {
     wcstring sets_mode;
 
     input_mapping_t(const wcstring &s, const std::vector<wcstring> &c,
-                    const wcstring &m = DEFAULT_BIND_MODE, const wcstring &sm = DEFAULT_BIND_MODE)
+                    const wcstring &m, const wcstring &sm)
         : seq(s), commands(c), mode(m), sets_mode(sm) {
         static unsigned int s_last_input_map_spec_order = 0;
         specification_order = ++s_last_input_map_spec_order;
@@ -220,6 +220,8 @@ wcstring input_get_bind_mode() {
 /// Set the current bind mode.
 void input_set_bind_mode(const wcstring &bm) {
     // Only set this if it differs to not execute variable handlers all the time.
+    // modes may not be empty - empty is a sentinel value meaning to not change the mode
+    assert(! bm.empty());
     if (input_get_bind_mode() != bm.c_str()) {
         env_set(FISH_BIND_MODE_VAR, bm.c_str(), ENV_GLOBAL);
     }
@@ -449,7 +451,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 
     // !has_functions && !has_commands: only set bind mode
     if (!has_commands && !has_functions) {
-        input_set_bind_mode(m.sets_mode);
+        if (!m.sets_mode.empty()) input_set_bind_mode(m.sets_mode);
         return;
     }
 
@@ -488,7 +490,8 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         input_common_next_ch(R_NULL);
     }
 
-    input_set_bind_mode(m.sets_mode);
+    // Empty bind mode indicates to not reset the mode (#2871)
+    if (!m.sets_mode.empty()) input_set_bind_mode(m.sets_mode);
 }
 
 /// Try reading the specified function mapping.

@@ -297,7 +297,7 @@ static bool builtin_bind_list_one(const wcstring &seq, const wcstring &bind_mode
         streams.out.append(L" -M ");
         streams.out.append(emode);
     }
-    if (sets_mode != bind_mode) {
+    if (!sets_mode.empty() && sets_mode != bind_mode) {
         const wcstring esets_mode = escape_string(sets_mode, ESCAPE_ALL);
         streams.out.append(L" -m ");
         streams.out.append(esets_mode);
@@ -330,13 +330,12 @@ static bool builtin_bind_list_one(const wcstring &seq, const wcstring &bind_mode
 static void builtin_bind_list(const wchar_t *bind_mode, io_streams_t &streams) {
     const std::vector<input_mapping_name_t> lst = input_mapping_get_names();
 
-    for (std::vector<input_mapping_name_t>::const_iterator it = lst.begin(), end = lst.end();
-         it != end; ++it) {
-        if (bind_mode != NULL && bind_mode != it->mode) {
+    for (const input_mapping_name_t &binding : lst) {
+        if (bind_mode != NULL && bind_mode != binding.mode) {
             continue;
         }
 
-        builtin_bind_list_one(it->seq, it->mode, streams);
+        builtin_bind_list_one(binding.seq, binding.mode, streams);
     }
 }
 
@@ -456,8 +455,7 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     int all = 0;
     const wchar_t *bind_mode = DEFAULT_BIND_MODE;
     bool bind_mode_given = false;
-    const wchar_t *sets_bind_mode = DEFAULT_BIND_MODE;
-    bool sets_bind_mode_given = false;
+    const wchar_t *sets_bind_mode = L"";
     int use_terminfo = 0;
 
     w.woptind = 0;
@@ -516,7 +514,6 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             }
             case 'm': {
                 sets_bind_mode = w.woptarg;
-                sets_bind_mode_given = true;
                 break;
             }
             case '?': {
@@ -528,11 +525,6 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 break;
             }
         }
-    }
-
-    // if mode is given, but not new mode, default to new mode to mode.
-    if (bind_mode_given && !sets_bind_mode_given) {
-        sets_bind_mode = bind_mode;
     }
 
     switch (mode) {

@@ -12,18 +12,30 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     # e.g. tmux started in suckless' st (no support) started in konsole.
     # But since tmux in konsole seems rather common and that case so uncommon,
     # we will just fail there (though it seems that tmux or st swallow it anyway).
-    #
+
+    if set -q INSIDE_EMACS
+        return
+    end
+
+    # vte-based terms set $TERM = xterm*, but only gained support relatively recently.
+    # From https://bugzilla.gnome.org/show_bug.cgi?id=720821, it appears it was version 0.40.0
+    if set -q VTE_VERSION
+        and test "$VTE_VERSION" -lt 4000 ^/dev/null
+        return
+    end
+
     # We use the `tput` here just to see if terminfo thinks we can change the cursor.
     # We cannot use that sequence directly as it's not the correct one for konsole and iTerm,
     # and because we may want to change the cursor even though terminfo says we can't (tmux).
-    if not tput Ss > /dev/null ^/dev/null
+    if not tput Ss >/dev/null ^/dev/null
         # Whitelist tmux...
         and not begin
             set -q TMUX
             # ...in a supporting term...
             and begin set -q KONSOLE_PROFILE_NAME
                 or set -q ITERM_PROFILE
-                or test "$VTE_VERSION" -gt 1910
+                or set -q VTE_VERSION # which version is already checked above
+                or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280
             end
             # .. unless an unsupporting terminal has been started in tmux inside a supporting one
             and begin string match -q "screen*" -- $TERM
@@ -31,13 +43,21 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
             end
         end
         and not string match -q "konsole*" -- $TERM
-        # Blacklist
         or begin
-            # vte-based terms set $TERM = xterm*, but only gained support relatively recently.
-            set -q VTE_VERSION
-            and test "$VTE_VERSION" -le 1910
+            # TERM = xterm is special because plenty of things claim to be it, but aren't fully compatible
+            # This includes old vte-terms (without $VTE_VERSION), old xterms (without $XTERM_VERSION or < 280)
+            # and maybe other stuff.
+            # This needs to be kept _at least_ as long as Ubuntu 14.04 is still a thing
+            # because that ships a gnome-terminal without support and without $VTE_VERSION.
+            string match -q 'xterm*' -- $TERM
+            and not begin set -q KONSOLE_PROFILE_NAME
+                or set -q ITERM_PROFILE
+                or set -q VTE_VERSION # which version is already checked above
+                # If $XTERM_VERSION is undefined, this will return 1 and print an error. Silence it.
+                or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280 ^/dev/null
+            end
         end
-        or set -q INSIDE_EMACS
+
         return
     end
 
@@ -50,8 +70,10 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     switch "$terminal"
         case auto
             if set -q KONSOLE_PROFILE_NAME
-               or set -q ITERM_PROFILE
                 set function __fish_cursor_konsole
+                set uses_echo 1
+            else if set -q ITERM_PROFILE
+                set function __fish_cursor_1337
                 set uses_echo 1
             else
                 set function __fish_cursor_xterm
@@ -68,7 +90,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     set -l tmux_prefix
     set -l tmux_postfix
     if set -q TMUX
-       and set -q uses_echo[1]
+        and set -q uses_echo[1]
         set tmux_prefix echo -ne "'\ePtmux;\e'"
         set tmux_postfix echo -ne "'\e\\\\'"
     end

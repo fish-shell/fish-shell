@@ -134,8 +134,8 @@ void env_pop();
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();
 
-/// Returns an array containing all exported variables in a format suitable for execv.
-const char *const *env_export_arr(bool recalc);
+/// Returns an array containing all exported variables in a format suitable for execv
+const char *const *env_export_arr();
 
 /// Sets up argv as the given null terminated array of strings.
 void env_set_argv(const wchar_t *const *argv);
@@ -144,7 +144,7 @@ void env_set_argv(const wchar_t *const *argv);
 wcstring_list_t env_get_names(int flags);
 
 /// Update the PWD variable directory.
-int env_set_pwd();
+bool env_set_pwd();
 
 /// Returns the PWD with a terminating slash.
 wcstring env_get_pwd_slash();
@@ -153,10 +153,10 @@ class env_vars_snapshot_t {
     std::map<wcstring, wcstring> vars;
     bool is_current() const;
 
-    env_vars_snapshot_t(const env_vars_snapshot_t &);
-    void operator=(const env_vars_snapshot_t &);
-
    public:
+    env_vars_snapshot_t(const env_vars_snapshot_t &) = default;
+    env_vars_snapshot_t &operator=(const env_vars_snapshot_t &) = default;
+
     env_vars_snapshot_t(const wchar_t *const *keys);
     env_vars_snapshot_t();
 
@@ -184,4 +184,9 @@ struct var_entry_t {
 };
 
 typedef std::map<wcstring, var_entry_t> var_table_t;
+
+extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
+
+/// Returns true if we think the terminal supports setting its title.
+bool term_supports_setting_title();
 #endif

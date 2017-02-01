@@ -75,10 +75,9 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
-parse_execution_context_t::parse_execution_context_t(moved_ref<parse_node_tree_t> t,
-                                                     const wcstring &s, parser_t *p,
-                                                     int initial_eval_level)
-    : tree(t),
+parse_execution_context_t::parse_execution_context_t(parse_node_tree_t t, const wcstring &s,
+                                                     parser_t *p, int initial_eval_level)
+    : tree(std::move(t)),
       src(s),
       parser(p),
       eval_level(initial_eval_level),
@@ -103,7 +102,6 @@ node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) co
     const parse_node_t *addr = &node;
     const parse_node_t *base = &this->tree.at(0);
     assert(addr >= base);
-    assert(addr - base < SOURCE_OFFSET_INVALID);
     node_offset_t offset = static_cast<node_offset_t>(addr - base);
     assert(offset < this->tree.size());
     assert(&tree.at(offset) == &node);
@@ -220,12 +218,11 @@ parse_execution_context_t::cancellation_reason(const block_t *block) const {
     if (parser && parser->cancellation_requested) {
         return execution_cancellation_skip;
     }
-    if (block && block->loop_status != LOOP_NORMAL) {
-        // Nasty hack - break and continue set the 'skip' flag as well as the loop status flag.
-        return execution_cancellation_loop_control;
-    }
     if (block && block->skip) {
         return execution_cancellation_skip;
+    }
+    if (block && block->loop_status != LOOP_NORMAL) {
+        return execution_cancellation_loop_control;
     }
     return execution_cancellation_none;
 }
@@ -267,9 +264,8 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
     assert(statement.type == symbol_if_statement);
 
     // Push an if block.
-    if_block_t *ib = new if_block_t();
+    if_block_t *ib = parser->push_block<if_block_t>();
     ib->node_offset = this->get_offset(statement);
-    parser->push_block(ib);
 
     parse_execution_result_t result = parse_execution_success;
 
@@ -349,14 +345,9 @@ parse_execution_result_t parse_execution_context_t::run_begin_statement(
     assert(header.type == symbol_begin_header);
     assert(contents.type == symbol_job_list);
 
-    // Basic begin/end block. Push a scope block.
-    scope_block_t *sb = new scope_block_t(BEGIN);
-    parser->push_block(sb);
-
-    // Run the job list.
+    // Basic begin/end block. Push a scope block, run jobs, pop it
+    scope_block_t *sb = parser->push_block<scope_block_t>(BEGIN);
     parse_execution_result_t ret = run_job_list(contents, sb);
-
-    // Pop the block.
     parser->pop_block(sb);
 
     return ret;
@@ -399,7 +390,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     wcstring error_str;
     io_streams_t streams;
     int err = builtin_function(*parser, streams, argument_list, contents_str,
-                                definition_line_offset, &error_str);
+                               definition_line_offset, &error_str);
     proc_set_last_status(err);
 
     if (!error_str.empty()) {
@@ -441,7 +432,7 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(
             break;
         }
         default: {
-            fprintf(stderr, "Unexpected block header: %ls\n", header.describe().c_str());
+            debug(0, L"Unexpected block header: %ls\n", header.describe().c_str());
             PARSER_DIE();
             break;
         }
@@ -471,8 +462,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         return ret;
     }
 
-    for_block_t *fb = new for_block_t();
-    parser->push_block(fb);
+    for_block_t *fb = parser->push_block<for_block_t>();
 
     // Now drive the for loop.
     const size_t arg_count = argument_sequence.size();
@@ -485,7 +475,6 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         const wcstring &val = argument_sequence.at(i);
         env_set(for_var_name, val.c_str(), ENV_LOCAL);
         fb->loop_status = LOOP_NORMAL;
-        fb->skip = 0;
 
         this->run_job_list(block_contents, fb);
 
@@ -494,7 +483,6 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
             if (fb->loop_status == LOOP_CONTINUE) {
                 // Reset the loop state.
                 fb->loop_status = LOOP_NORMAL;
-                fb->skip = false;
                 continue;
             } else if (fb->loop_status == LOOP_BREAK) {
                 break;
@@ -555,8 +543,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
 
     const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
 
-    switch_block_t *sb = new switch_block_t();
-    parser->push_block(sb);
+    switch_block_t *sb = parser->push_block<switch_block_t>();
 
     // Expand case statements.
     const parse_node_t *case_item_list = get_child(statement, 3, symbol_case_item_list);
@@ -619,9 +606,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     assert(block_contents.type == symbol_job_list);
 
     // Push a while block.
-    while_block_t *wb = new while_block_t();
+    while_block_t *wb = parser->push_block<while_block_t>();
     wb->node_offset = this->get_offset(header);
-    parser->push_block(wb);
 
     parse_execution_result_t ret = parse_execution_success;
 
@@ -656,7 +642,6 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             if (wb->loop_status == LOOP_CONTINUE) {
                 // Reset the loop state.
                 wb->loop_status = LOOP_NORMAL;
-                wb->skip = false;
                 continue;
             } else if (wb->loop_status == LOOP_BREAK) {
                 break;
@@ -670,9 +655,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         }
     }
 
-    /* Done */
+    // Done
     parser->pop_block(wb);
-
     return ret;
 }
 
@@ -700,7 +684,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(
     const parse_error_list_t &error_list) const {
     if (!parser->cancellation_requested) {
         if (error_list.empty()) {
-            fprintf(stderr, "Bug: Error reported but no error text found.");
+            debug(0, "Error reported but no error text found.");
         }
 
         // Get a backtrace.
@@ -708,7 +692,9 @@ parse_execution_result_t parse_execution_context_t::report_errors(
         parser->get_backtrace(src, error_list, &backtrace_and_desc);
 
         // Print it.
-        fprintf(stderr, "%ls", backtrace_and_desc.c_str());
+        if (!should_suppress_stderr_for_tests()) {
+            fwprintf(stderr, L"%ls", backtrace_and_desc.c_str());
+        }
     }
     return parse_execution_errored;
 }
@@ -832,6 +818,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
     if (!expanded) {
         report_error(statement, ILLEGAL_CMD_ERR_MSG, cmd.c_str());
+        proc_set_last_status(STATUS_ILLEGAL_CMD);
         return parse_execution_errored;
     }
 
@@ -959,14 +946,11 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(
             }
         }
 
-        // Now copy over any expanded arguments. Do it using swap() to avoid extra allocations; this
+        // Now copy over any expanded arguments. Use std::move() to avoid extra allocations; this
         // is called very frequently.
-        size_t old_arg_count = out_arguments->size();
-        size_t new_arg_count = arg_expanded.size();
-        out_arguments->resize(old_arg_count + new_arg_count);
-        for (size_t i = 0; i < new_arg_count; i++) {
-            wcstring &new_arg = arg_expanded.at(i).completion;
-            out_arguments->at(old_arg_count + i).swap(new_arg);
+        out_arguments->reserve(out_arguments->size() + arg_expanded.size());
+        for (completion_t &new_arg : arg_expanded) {
+            out_arguments->push_back(std::move(new_arg.completion));
         }
     }
 
@@ -1010,10 +994,8 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
                 if (target == L"-") {
                     new_io.reset(new io_close_t(source_fd));
                 } else {
-                    wchar_t *end = NULL;
-                    errno = 0;
-                    int old_fd = fish_wcstoi(target.c_str(), &end, 10);
-                    if (old_fd < 0 || errno || *end) {
+                    int old_fd = fish_wcstoi(target.c_str());
+                    if (errno || old_fd < 0) {
                         errored =
                             report_error(redirect_node, _(L"Requested redirection to '%ls', which "
                                                           L"is not a valid file descriptor"),
@@ -1035,8 +1017,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
             }
             default: {
                 // Should be unreachable.
-                fprintf(stderr, "Unexpected redirection type %ld. aborting.\n",
-                        (long)redirect_type);
+                debug(0, "Unexpected redirection type %ld.", (long)redirect_type);
                 PARSER_DIE();
                 break;
             }
@@ -1049,7 +1030,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
     }
 
     if (out_chain && !errored) {
-        out_chain->swap(result);
+        *out_chain = std::move(result);
     }
     return !errored;
 }
@@ -1072,7 +1053,7 @@ parse_execution_result_t parse_execution_context_t::populate_boolean_process(
         }
         case parse_bool_not: {
             // NOT. Negate it.
-            job_set_flag(job, JOB_NEGATE, !job_get_flag(job, JOB_NEGATE));
+            job->set_flag(JOB_NEGATE, !job->get_flag(JOB_NEGATE));
             break;
         }
     }
@@ -1134,8 +1115,8 @@ parse_execution_result_t parse_execution_context_t::populate_job_process(
             break;
         }
         default: {
-            fprintf(stderr, "'%ls' not handled by new parser yet\n",
-                    specific_statement.describe().c_str());
+            debug(0, L"'%ls' not handled by new parser yet.",
+                  specific_statement.describe().c_str());
             PARSER_DIE();
             break;
         }
@@ -1160,9 +1141,9 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
     parse_execution_result_t result = parse_execution_success;
 
     // Create processes. Each one may fail.
-    std::vector<process_t *> processes;
-    processes.push_back(new process_t());
-    result = this->populate_job_process(j, processes.back(), *statement_node);
+    process_list_t processes;
+    processes.emplace_back(new process_t());
+    result = this->populate_job_process(j, processes.back().get(), *statement_node);
 
     // Construct process_ts for job continuations (pipelines), by walking the list until we hit the
     // terminal (empty) job continuation.
@@ -1185,29 +1166,23 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
         assert(statement_node != NULL);
 
         // Store the new process (and maybe with an error).
-        processes.push_back(new process_t());
-        result = this->populate_job_process(j, processes.back(), *statement_node);
+        processes.emplace_back(new process_t());
+        result = this->populate_job_process(j, processes.back().get(), *statement_node);
 
         // Get the next continuation.
         job_cont = get_child(*job_cont, 2, symbol_job_continuation);
         assert(job_cont != NULL);
     }
 
+    // Inform our processes of who is first and last
+    processes.front()->is_first_in_job = true;
+    processes.back()->is_last_in_job = true;
+
     // Return what happened.
     if (result == parse_execution_success) {
         // Link up the processes.
         assert(!processes.empty());  //!OCLINT(multiple unary operator)
-        j->first_process = processes.at(0);
-        for (size_t i = 1; i < processes.size(); i++) {
-            processes.at(i - 1)->next = processes.at(i);
-        }
-    } else {
-        // Clean up processes.
-        for (size_t i = 0; i < processes.size(); i++) {
-            const process_t *proc = processes.at(i);
-            processes.at(i) = NULL;
-            delete proc;
-        }
+        j->processes = std::move(processes);
     }
     return result;
 }
@@ -1285,34 +1260,32 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         return result;
     }
 
-    job_t *j = new job_t(acquire_job_id(), block_io);
-    j->tmodes = tmodes;
-    job_set_flag(j, JOB_CONTROL,
-                 (job_control_mode == JOB_CONTROL_ALL) ||
-                     ((job_control_mode == JOB_CONTROL_INTERACTIVE) && (shell_is_interactive())));
+    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), block_io);
+    job->tmodes = tmodes;
+    job->set_flag(JOB_CONTROL,
+                  (job_control_mode == JOB_CONTROL_ALL) ||
+                      ((job_control_mode == JOB_CONTROL_INTERACTIVE) && shell_is_interactive()));
 
-    job_set_flag(j, JOB_FOREGROUND, !tree.job_should_be_backgrounded(job_node));
+    job->set_flag(JOB_FOREGROUND, !tree.job_should_be_backgrounded(job_node));
 
-    job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) && !is_subshell && !is_event);
+    job->set_flag(JOB_TERMINAL, job->get_flag(JOB_CONTROL) && !is_subshell && !is_event);
 
-    job_set_flag(j, JOB_SKIP_NOTIFICATION,
-                 is_subshell || is_block || is_event || !shell_is_interactive());
+    job->set_flag(JOB_SKIP_NOTIFICATION,
+                  is_subshell || is_block || is_event || !shell_is_interactive());
 
     // Tell the current block what its job is. This has to happen before we populate it (#1394).
-    parser->current_block()->job = j;
+    parser->current_block()->job = job;
 
     // Populate the job. This may fail for reasons like command_not_found. If this fails, an error
     // will have been printed.
     parse_execution_result_t pop_result =
-        this->populate_job_from_job_node(j, job_node, associated_block);
+        this->populate_job_from_job_node(job.get(), job_node, associated_block);
 
     // Clean up the job on failure or cancellation.
     bool populated_job = (pop_result == parse_execution_success);
     if (!populated_job || this->should_cancel_execution(associated_block)) {
-        assert(parser->current_block()->job == j);
+        assert(parser->current_block()->job == job);
         parser->current_block()->job = NULL;
-        delete j;
-        j = NULL;
         populated_job = false;
     }
 
@@ -1323,11 +1296,11 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
     if (populated_job) {
         // Success. Give the job to the parser - it will clean it up.
-        parser->job_add(j);
+        parser->job_add(job);
 
         // Check to see if this contained any external commands.
         bool job_contained_external_command = false;
-        for (const process_t *proc = j->first_process; proc != NULL; proc = proc->next) {
+        for (const auto &proc : job->processes) {
             if (proc->type == EXTERNAL) {
                 job_contained_external_command = true;
                 break;
@@ -1335,7 +1308,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         }
 
         // Actually execute the job.
-        exec_job(*this->parser, j);
+        exec_job(*this->parser, job.get());
 
         // Only external commands require a new fishd barrier.
         if (job_contained_external_command) {
@@ -1348,7 +1321,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         profile_item->level = eval_level;
         profile_item->parse = (int)(parse_time - start_time);
         profile_item->exec = (int)(exec_time - parse_time);
-        profile_item->cmd = j ? j->command() : wcstring();
+        profile_item->cmd = job ? job->command() : wcstring();
         profile_item->skipped = !populated_job;
     }
 
@@ -1427,8 +1400,7 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
         default: {
             // In principle, we could support other node types. However we never expect to be passed
             // them - see above.
-            fprintf(stderr, "Unexpected node %ls found in %s\n", node.describe().c_str(),
-                    __FUNCTION__);
+            debug(0, "Unexpected node %ls found in %s", node.describe().c_str(), __FUNCTION__);
             PARSER_DIE();
             break;
         }

@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
+#include <wctype.h>
 #include <map>
 #include <memory>
 #include <string>
@@ -37,12 +38,8 @@ const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, 
 #endif
 #endif
 
-/// Lock to protect wgettext.
-static pthread_mutex_t wgettext_lock;
-
 /// Map used as cache by wgettext.
-typedef std::map<wcstring, wcstring> wgettext_map_t;
-static wgettext_map_t wgettext_map;
+static owning_lock<std::map<wcstring, wcstring>> wgettext_map;
 
 bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name,
                         bool *out_is_dir) {
@@ -404,7 +401,6 @@ wcstring wbasename(const wcstring &path) {
 
 // Really init wgettext.
 static void wgettext_really_init() {
-    pthread_mutex_init(&wgettext_lock, NULL);
     fish_bindtextdomain(PACKAGE_NAME, LOCALEDIR);
     fish_textdomain(PACKAGE_NAME);
 }
@@ -422,8 +418,8 @@ const wcstring &wgettext(const wchar_t *in) {
     wcstring key = in;
 
     wgettext_init_if_necessary();
-    scoped_lock locker(wgettext_lock);
-    wcstring &val = wgettext_map[key];
+    auto wmap = wgettext_map.acquire();
+    wcstring &val = wmap.value[key];
     if (val.empty()) {
         cstring mbs_in = wcs2string(key);
         char *out = fish_gettext(mbs_in.c_str());
@@ -483,6 +479,7 @@ int fish_iswgraph(wint_t wc) {
 ///
 /// \return null if this is a valid name, and a pointer to the first invalid character otherwise.
 const wchar_t *wcsvarname(const wchar_t *str) {
+    if (str[0] == L'\0') return str;
     while (*str) {
         if ((!fish_iswalnum(*str)) && (*str != L'_')) {
             return str;
@@ -497,10 +494,15 @@ const wchar_t *wcsvarname(const wchar_t *str) {
 /// \return null if this is a valid name, and a pointer to the first invalid character otherwise.
 const wchar_t *wcsvarname(const wcstring &str) { return wcsvarname(str.c_str()); }
 
-/// Test if the given string is a valid function name.
+/// Test if the string is a valid function name.
 ///
-/// \return null if this is a valid name, and a pointer to the first invalid character otherwise.
-const wchar_t *wcsfuncname(const wcstring &str) { return wcschr(str.c_str(), L'/'); }
+/// \return true if it is valid else false.
+bool wcsfuncname(const wcstring &str) {
+    if (str.size() == 0) return false;
+    if (str.at(0) == L'-') return false;
+    if (str.find_first_of(L'/') != wcstring::npos) return false;
+    return true;
+}
 
 /// Test if the given string is valid in a variable name.
 ///
@@ -517,16 +519,138 @@ int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, wcslen(str)); 
 /// See fallback.h for the normal definitions.
 int fish_wcswidth(const wcstring &str) { return fish_wcswidth(str.c_str(), str.size()); }
 
-int fish_wcstoi(const wchar_t *str, wchar_t **endptr, int base) {
-    long ret = wcstol(str, endptr, base);
-    if (ret > INT_MAX) {
-        ret = INT_MAX;
+/// Like fish_wcstol(), but fails on a value outside the range of an int.
+///
+/// This is needed because BSD and GNU implementations differ in several ways that make it really
+/// annoying to use them in a portable fashion.
+///
+/// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
+/// than a digit. Leading whitespace is ignored (per the base wcstol implementation). Trailing
+/// whitespace is also ignored. We also treat empty strings and strings containing only whitespace
+/// as invalid.
+int fish_wcstoi(const wchar_t *str, const wchar_t **endptr, int base) {
+    while (iswspace(*str)) ++str;  // skip leading whitespace
+    if (!*str) {  // this is because some implementations don't handle this sensibly
+        errno = EINVAL;
+        if (endptr) *endptr = str;
+        return 0;
+    }
+
+    errno = 0;
+    wchar_t *_endptr;
+    long result = wcstol(str, &_endptr, base);
+    if (result > INT_MAX) {
+        result = INT_MAX;
         errno = ERANGE;
-    } else if (ret < INT_MIN) {
-        ret = INT_MIN;
+    } else if (result < INT_MIN) {
+        result = INT_MIN;
         errno = ERANGE;
     }
-    return (int)ret;
+    while (iswspace(*_endptr)) ++_endptr;  // skip trailing whitespace
+    if (!errno && *_endptr) {
+        if (_endptr == str) {
+            errno = EINVAL;
+        } else {
+            errno = -1;
+        }
+    }
+    if (endptr) *endptr = _endptr;
+    return (int)result;
+}
+
+/// An enhanced version of wcstol().
+///
+/// This is needed because BSD and GNU implementations differ in several ways that make it really
+/// annoying to use them in a portable fashion.
+///
+/// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
+/// than a digit. Leading whitespace is ignored (per the base wcstol implementation). Trailing
+/// whitespace is also ignored.
+long fish_wcstol(const wchar_t *str, const wchar_t **endptr, int base) {
+    while (iswspace(*str)) ++str;  // skip leading whitespace
+    if (!*str) {  // this is because some implementations don't handle this sensibly
+        errno = EINVAL;
+        if (endptr) *endptr = str;
+        return 0;
+    }
+
+    errno = 0;
+    wchar_t *_endptr;
+    long result = wcstol(str, &_endptr, base);
+    while (iswspace(*_endptr)) ++_endptr;  // skip trailing whitespace
+    if (!errno && *_endptr) {
+        if (_endptr == str) {
+            errno = EINVAL;
+        } else {
+            errno = -1;
+        }
+    }
+    if (endptr) *endptr = _endptr;
+    return result;
+}
+
+/// An enhanced version of wcstoll().
+///
+/// This is needed because BSD and GNU implementations differ in several ways that make it really
+/// annoying to use them in a portable fashion.
+///
+/// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
+/// than a digit. Leading whitespace is ignored (per the base wcstoll implementation). Trailing
+/// whitespace is also ignored.
+long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr, int base) {
+    while (iswspace(*str)) ++str;  // skip leading whitespace
+    if (!*str) {  // this is because some implementations don't handle this sensibly
+        errno = EINVAL;
+        if (endptr) *endptr = str;
+        return 0;
+    }
+
+    errno = 0;
+    wchar_t *_endptr;
+    long long result = wcstoll(str, &_endptr, base);
+    while (iswspace(*_endptr)) ++_endptr;  // skip trailing whitespace
+    if (!errno && *_endptr) {
+        if (_endptr == str) {
+            errno = EINVAL;
+        } else {
+            errno = -1;
+        }
+    }
+    if (endptr) *endptr = _endptr;
+    return result;
+}
+
+/// An enhanced version of wcstoull().
+///
+/// This is needed because BSD and GNU implementations differ in several ways that make it really
+/// annoying to use them in a portable fashion.
+///
+/// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
+/// than a digit. Leading minus is considered invalid. Leading whitespace is ignored (per the base
+/// wcstoull implementation). Trailing whitespace is also ignored.
+unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int base) {
+    while (iswspace(*str)) ++str;  // skip leading whitespace
+    if (!*str ||      // this is because some implementations don't handle this sensibly
+        *str == '-')  // disallow minus as the first character to avoid questionable wrap-around
+    {
+        errno = EINVAL;
+        if (endptr) *endptr = str;
+        return 0;
+    }
+
+    errno = 0;
+    wchar_t *_endptr;
+    unsigned long long result = wcstoull(str, &_endptr, base);
+    while (iswspace(*_endptr)) ++_endptr;  // skip trailing whitespace
+    if (!errno && *_endptr) {
+        if (_endptr == str) {
+            errno = EINVAL;
+        } else {
+            errno = -1;
+        }
+    }
+    if (endptr) *endptr = _endptr;
+    return result;
 }
 
 file_id_t file_id_t::file_id_from_stat(const struct stat *buf) {

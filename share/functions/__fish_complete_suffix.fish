@@ -7,47 +7,47 @@
 
 function __fish_complete_suffix -d "Complete using files"
 
-	# Variable declarations
+    # Variable declarations
 
-	set -l comp
-	set -l suff
-	set -l desc
-	set -l files
+    set -l comp
+    set -l suff
+    set -l desc
+    set -l files
 
-	switch (count $argv)
+    switch (count $argv)
 
-		case 1
-		set comp (commandline -ct)
-		set suff $argv
-		set desc ""
+        case 1
+            set comp (commandline -ct)
+            set suff $argv
+            set desc ""
 
-		case 2
-		set comp $argv[1]
-		set suff $argv[2]
-		set desc ""
+        case 2
+            set comp $argv[1]
+            set suff $argv[2]
+            set desc ""
 
-		case 3
-		set comp $argv[1]
-		set suff $argv[2]
-		set desc $argv[3]
+        case 3
+            set comp $argv[1]
+            set suff $argv[2]
+            set desc $argv[3]
 
-	end
+    end
 
-	# Perform the completion
+    # Perform the completion
 
-	set base (echo $comp |sed -e 's/\.[a-zA-Z0-9]*$//')
-	eval "set files $base*$suff"
+    set base (echo $comp |sed -e 's/\.[a-zA-Z0-9]*$//')
+    eval "set files $base*$suff"
 
-	if test $files[1]
-		printf "%s\t$desc\n" $files
-	end
+    if test $files[1]
+        printf "%s\t$desc\n" $files
+    end
 
-	#
-	# Also do directory completion, since there might be files
-	# with the correct suffix in a subdirectory
-	# No need to describe directories (#279)
-	#
+    #
+    # Also do directory completion, since there might be files
+    # with the correct suffix in a subdirectory
+    # No need to describe directories (#279)
+    #
 
-	__fish_complete_directories $comp ""
+    __fish_complete_directories $comp ""
 
 end

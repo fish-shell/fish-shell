@@ -61,6 +61,10 @@ the fish manual.
 
 - `-C` or `--do-complete` with no argument makes complete try to find all possible completions for the current command line buffer. If the shell is not in interactive mode, an error is returned.
 
+- `-A` and `--authoritative` no longer do anything and are silently ignored.
+
+- `-u` and `--unauthoritative` no longer do anything and are silently ignored.
+
 Command specific tab-completions in `fish` are based on the notion of options and arguments. An option is a parameter which begins with a hyphen, such as '`-h`', '`-help`' or '`--help`'. Arguments are parameters that do not begin with a hyphen. Fish recognizes three styles of options, the same styles as the GNU version of the getopt library. These styles are:
 
 - Short options, like '`-a`'. Short options are a single character long, are preceded by a single hyphen and may be grouped together (like '`-la`', which is equivalent to '`-l -a`'). Option arguments may be specified in the following parameter ('`-w 32`') or by appending the option with the value ('`-w32`').

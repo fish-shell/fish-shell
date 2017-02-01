@@ -1,6 +1,6 @@
 
 
 function N_ --description "No-op"
-	printf "%s" $argv
+    printf "%s" $argv
 end
 

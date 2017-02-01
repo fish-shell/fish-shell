@@ -40,11 +40,9 @@ enum block_type_t {
     WHILE,                    /// While loop block
     FOR,                      /// For loop block
     IF,                       /// If block
-    FUNCTION_DEF,             /// Function definition block
     FUNCTION_CALL,            /// Function invocation block
     FUNCTION_CALL_NO_SHADOW,  /// Function invocation block with no variable shadowing
     SWITCH,                   /// Switch block
-    FAKE,                     /// Fake block
     SUBST,                    /// Command substitution scope
     TOP,                      /// Outermost block
     BEGIN,                    /// Unconditional block
@@ -80,7 +78,7 @@ struct block_t {
     /// Status for the current loop block. Can be any of the values from the loop_status enum.
     enum loop_status_t loop_status;
     /// The job that is currently evaluated in the specified block.
-    job_t *job;
+    shared_ptr<job_t> job;
     /// Name of file that created this block. This string is intern'd.
     const wchar_t *src_filename;
     /// Line number where this block was created.
@@ -180,17 +178,17 @@ class parser_t {
 
    private:
     /// Indication that we should skip all blocks.
-    bool cancellation_requested;
+    volatile sig_atomic_t cancellation_requested;
     /// Indicates that we are within the process of initializing fish.
     bool is_within_fish_initialization;
-    /// Stack of execution contexts. We own these pointers and must delete them.
-    std::vector<parse_execution_context_t *> execution_contexts;
+    /// Stack of execution contexts.
+    std::vector<std::unique_ptr<parse_execution_context_t>> execution_contexts;
     /// List of called functions, used to help prevent infinite recursion.
     wcstring_list_t forbidden_function;
     /// The jobs associated with this parser.
     job_list_t my_job_list;
-    /// The list of blocks, allocated with new. It's our responsibility to delete these.
-    std::vector<block_t *> block_stack;
+    /// The list of blocks
+    std::vector<std::unique_ptr<block_t>> block_stack;
 
 #if 0
 // TODO: Lint says this isn't used (which is true). Should this be removed?
@@ -198,15 +196,18 @@ class parser_t {
     wcstring block_stack_description() const;
 #endif
 
-    /// List of profile items, allocated with new.
-    std::vector<profile_item_t *> profile_items;
+    /// List of profile items
+    /// These are pointers because we return pointers to them to callers,
+    /// who may hold them across blocks (which would cause reallocations internal
+    /// to profile_items)
+    std::vector<std::unique_ptr<profile_item_t>> profile_items;
 
     // No copying allowed.
     parser_t(const parser_t &);
     parser_t &operator=(const parser_t &);
 
     /// Adds a job to the beginning of the job list.
-    void job_add(job_t *job);
+    void job_add(shared_ptr<job_t> job);
 
     /// Returns the name of the currently evaluated function if we are currently evaluating a
     /// function, null otherwise. This is tested by moving down the block-scope-stack, checking
@@ -215,6 +216,9 @@ class parser_t {
 
     /// Helper for stack_trace().
     void stack_trace_internal(size_t block_idx, wcstring *out) const;
+
+    /// Helper for push_block()
+    void push_block_int(block_t *b);
 
    public:
     /// Get the "principal" parser, whatever that is.
@@ -240,9 +244,8 @@ class parser_t {
     int eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
 
     /// Evaluate the expressions contained in cmd, which has been parsed into the given parse tree.
-    /// This takes ownership of the tree.
-    int eval_acquiring_tree(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type,
-                            moved_ref<parse_node_tree_t> t);
+    int eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type,
+             parse_node_tree_t t);
 
     /// Evaluates a block node at the given node offset in the topmost execution context.
     int eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type);
@@ -283,11 +286,15 @@ class parser_t {
     // know whether it's run during initialization or not.
     void set_is_within_fish_initialization(bool flag);
 
-    /// Pushes the block. pop_block will call delete on it.
-    void push_block(block_t *newv);
-
-    /// Remove the outermost block namespace.
-    void pop_block();
+    /// Pushes a new block created with the given arguments
+    /// Returns a pointer to the block. The pointer is valid
+    /// until the call to pop_block()
+    template <typename BLOCKTYPE, typename... Args>
+    BLOCKTYPE *push_block(Args &&... args) {
+        BLOCKTYPE *ret = new BLOCKTYPE(std::forward<Args>(args)...);
+        this->push_block_int(ret);
+        return ret;
+    }
 
     /// Remove the outermost block, asserting it's the given one.
     void pop_block(const block_t *b);
@@ -302,7 +309,7 @@ class parser_t {
     void job_promote(job_t *job);
 
     /// Return the job with the specified job id. If id is 0 or less, return the last job used.
-    job_t *job_get(int job_id);
+    job_t *job_get(job_id_t job_id);
 
     /// Returns the job with the given pid.
     job_t *job_get_from_pid(int pid);
@@ -336,6 +343,8 @@ class parser_t {
 
     /// Return a string representing the current stack trace.
     wcstring stack_trace() const;
+
+    ~parser_t();
 };
 
 #endif

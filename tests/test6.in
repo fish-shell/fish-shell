@@ -3,7 +3,6 @@
 # Regression test for issue #3129. In previous versions these statements would
 # cause an `assert()` to fire thus killing the shell.
 complete -c pkill -o ''
-complete -c pkill -d ''
 complete -c pkill -l ''
 complete -c pkill -s ''
 
@@ -51,6 +50,27 @@ complete -C'CCCC -' | sort
 complete -c CCCC -e
 echo "CCCC:"
 complete -C'CCCC -' | sort
+
+echo "Test that -- suppresses option completions"
+complete -c TestDoubleDash -l TestDoubleDashOption
+complete -C'TestDoubleDash -' | sort
+echo "Expect no output:" (complete -C'TestDoubleDash -- -' | sort)
+
+# fish seems to have always handled "exclusive" options strangely
+# It seems to treat them the same as "old-style" (single-dash) long options
+echo "Testing exclusive options"
+complete -c TestExclusive -x -s Q
+complete -c TestExclusive -x -s W
+complete -c TestExclusive -s A
+echo "Expect -A -Q -W:" (complete -C'TestExclusive -' | sort | string join ' ')
+echo "Expect -AQ -AW:" (complete -C'TestExclusive -A' | sort | string join ' ')
+echo "Expect no output 1:" (complete -C'TestExclusive -Q')
+echo "Expect no output 2:" (complete -C'TestExclusive -W')
+
+# Test for optional arguments, like cp's --backup
+complete -c TestOptionalArgument -l backup -f -a 'none all simple'
+echo "Expect --backup --backup=:" (complete -C'TestOptionalArgument -' | sort | string join ' ')
+echo "Expect --backup=all  --backup=none  --backup=simple:" (complete -C'TestOptionalArgument --backup=' | sort | string join ' ')
 
 # Test that directory completions work correctly
 if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end

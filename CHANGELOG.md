@@ -1,4 +1,103 @@
-# next-2.x
+# fish 2.5b1 (released ???)
+
+## Platform Changes
+
+Starting with version 2.5, fish requires a more up-to-date version of C++, specifically C++11 (from 2011). This affects some older platforms:
+
+### Linux
+
+For users building from source, GCC's g++ 4.8 or later, or LLVM's clang 3.3 or later, are known to work. Older platforms may require a newer compiler installed.
+
+Unfortunately, because of the complexity of the toolchain, binary packages are no longer published by the fish-shell developers for the following platforms:
+
+ - Red Hat Enterprise Linux and CentOS 5 & 6 for 64-bit builds
+ - Ubuntu 12.04 (EoLTS April 2017)
+ - Debian 7 (EoLTS May 2018)
+
+Installing newer version of fish on these systems will require building from source.
+
+### OS X SnowLeopard
+
+Starting with version 2.5, fish requires a C++11 standard library on OS X 10.6 ("SnowLeopard"). If this library is not installed, you will see this error: `dyld: Library not loaded: /usr/lib/libc++.1.dylib`
+
+MacPorts is the easiest way to obtain this library. After installing the SnowLeopard MacPorts release from the install page, run:
+
+```
+sudo port -v install libcxx
+```
+
+Now fish should launch successfully. (Please open an issue if it does not.)
+
+This is only necessary on 10.6. OS X 10.7 and later include the required library by default.
+
+## Other significant changes
+
+- Attempting to exit with running processes in the background produces a warning, then signals them to terminate if a second attempt to exit is made. This brings the behaviour for running background processes into line with stopped processes. (#3497)
+- `random` can now have start, stop and step values specified, or the new `choice` subcommand can be used to pick an argument from a list (#3619).
+- A new key bindings preset, `fish_hybrid_key_bindings`, including all the Emacs-style and Vi-style bindings, which behaves like `fish_vi_key_bindings` in fish 2.3.0 (#3556).
+- `function` now returns an error when called with invalid options, rather than defining the function anyway (#3574). This was a regression present in fish 2.3 and 2.4.0.
+- fish no longer prints a warning when it identifies a running instance of an old version (2.1.0 and earlier). Changes to universal variables may not propagate between these old versions and 2.5b1.
+- Improved compatiblity with Android (#3585), MSYS/mingw (#2360), Solaris (#3456, #3340)
+- Like other shells, the `test` builting now returns an error for numeric operations on invalid integers (#3346, #3581).
+- `complete` no longer recognises `--authoritative` and `--unauthoritative` options, and they are marked as obsolete.
+- `status` accepts subcommands, and should be used like `status is-interactive`. The old options continue to be supported for the foreseeable future (#3526), although only one subcommand or option can be specified at a time.
+- Selection mode (used with "begin-selection") no longer selects a character the cursor does not move over (#3684).
+- List indexes are handled better, and a bit more liberally in some cases (`echo $PATH[1 .. 3]` is now valid) (#3579).
+- The `fish_mode_prompt` function is now simply a stub around `fish_default_mode_prompt`, which allows the mode prompt to be included more easily in customised prompt functions (#3641).
+
+## Notable fixes and improvements
+- `alias`, run without options or arguments, lists all defined aliases, and aliases now include a description in the function signature that identifies them.
+- `complete` accepts empty strings as descriptions (#3557).
+- `command` accepts `-q`/`--quiet` in combination with `--search` (#3591), providing a simple way of checking whether a command exists in scripts.
+- Abbreviations can now be renamed with `abbr --rename OLD_KEY NEW_KEY` (#3610).
+- The command synopses printed by `--help` options work better with copying and pasting (#2673).
+- `help` launches the browser specified by the `$fish_help_browser variable` if it is set (#3131).
+- History merging could lose items under certain circumstances and is now fixed (#3496).
+- The `$status` variable is now set to 123 when a syntactically invalid command is entered (#3616).
+- Exiting fish now signals all background processes to terminate, not just stopped jobs (#3497).
+- A new `prompt_hostname` function which prints a hostname suitable for use in prompts (#3482).
+- The `__fish_man_page` function (bound to Alt-h by default) now tries to recognize subcommands (e.g. `git add` will now open the "git-add" man page) (#3678).
+- A new function `edit_command_buffer` (bound to Alt-e & Alt-v by default) to edit the command buffer in an external editor (#1215, #3627).
+- `set_color` now supports italics (`--italics`), dim (`--dim`) and reverse (`--reverse`) modes (#3650).
+- Filesystems with very slow locking (eg incorrectly-configured NFS) will no longer slow fish down (#685).
+- Improved completions for `apt` (#3695), `fusermount` (#3642), `make` (#3628), `netctl-auto` (#3378), `nmcli` (#3648), `pygmentize` (#3378), and `tar` (#3719).
+- Added completions for:
+ - `VBoxHeadless` (#3378)
+ - `VBoxSDL` (#3378)
+ - `base64` (#3378)
+ - `caffeinate` (#3524)
+ - `dconf` (#3638)
+ - `dig` (#3495)
+ - `dpkg-reconfigure` (#3521 & #3522)
+ - `feh` (#3378)
+ - `launchctl` (#3682)
+ - `lxc` (#3554 & #3564),
+ - `mddiagnose` (#3524)
+ - `mdfind` (#3524)
+ - `mdimport`  (#3524)
+ - `mdls` (#3524)
+ - `mdutil` (#3524)
+ - `mkvextract` (#3492)
+ - `nvram` (#3524)
+ - `objdump` (#3378)
+ - `sysbench` (#3491)
+ - `tmutil` (#3524)
+
+---
+
+# fish 2.4.0 (released November 8, 2016)
+
+There are no major changes between 2.4b1 and 2.4.0.
+
+## Notable fixes and improvements
+- The documentation is now generated properly and with the correct version identifier.
+- Automatic cursor changes are now only enabled on the subset of XTerm versions known to support them, resolving a problem where older versions printed garbage to the terminal before and after every prompt (#3499).
+- Improved the title set in Apple Terminal.app.
+- Added completions for `defaults` and improved completions for `diskutil` (#3478).
+
+---
+
+# fish 2.4b1 (released October 18, 2016)
 
 ## Significant changes
 - The clipboard integration has been revamped with explicit bindings. The killring commands no longer copy from, or paste to, the X11 clipboard - use the new copy (`C-x`) and paste (`C-v`) bindings instead. The clipboard is now available on OS X as well as systems using X11 (e.g. Linux). (#3061)
@@ -37,7 +136,7 @@
   -  `p4`, the Perforce client (#3314)
   -  `pygmentize` (#3378)
   -  `ranger` (#3378)
-- Improved completions for `aura` (#3297), `abbr` (#3267), `brew` (#3309), `chown` (#3380, #3383),`cygport` (#3392), `git` (#3274, #3226, #3225, #3094, #3087, #3035, #3021, #2982, #3230), `kill & `pkill` (#3200) `screen` (#3271), and `xz` (#3378).
+- Improved completions for `aura` (#3297), `abbr` (#3267), `brew` (#3309), `chown` (#3380, #3383),`cygport` (#3392), `git` (#3274, #3226, #3225, #3094, #3087, #3035, #3021, #2982, #3230), `kill` & `pkill` (#3200), `screen` (#3271), `wget` (#3470), and `xz` (#3378).
 - Distributors, packagers and developers will notice that the build process produces more succinct output by default; use `make V=1` to get verbose output (#3248).
 - Improved compatibility with minor platforms including musl (#2988), Cygwin (#2993), Android (#3441, #3442), Haiku (#3322) and Solaris .
 
@@ -407,7 +506,7 @@ Bug Fixes
 * **fish_indent is fixed.** In particular, the `funced` and `funcsave` functions work again.
 * A SIGTERM now ends the whole execution stack again (resolving #13).
 * Bumped the __fish_config_interactive version number so the default fish_color_autosuggestion kicks in.
-* fish_config better handles combined term256 and classic colors like "555 yellow". 
+* fish_config better handles combined term256 and classic colors like "555 yellow".
 
 New Features
 ------------
@@ -465,4 +564,4 @@ The large number of forks relative to bash are due to fish's insanely expensive 
 
 The large reduction in lstat() numbers is due to fish no longer needing to call ttyname() on OS X.
 
-We've got some work to do to be as lean as bash, but we're on the right track. 
+We've got some work to do to be as lean as bash, but we're on the right track.

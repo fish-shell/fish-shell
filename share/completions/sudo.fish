@@ -24,5 +24,3 @@ complete -c sudo -s u -a "(__fish_complete_users)" -x -d "Run command as user"
 complete -c sudo -s v -n "__fish_no_arguments" -d "Validate the credentials, extending timeout"
 
 complete -c sudo -d "Command to run" -x -a "(__fish_complete_subcommand_root -u -g)"
-# Since sudo runs subcommands, it can accept any switches
-complete -c sudo -u

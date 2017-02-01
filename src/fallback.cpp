@@ -91,7 +91,20 @@ char *tparm_solaris_kludge(char *str, ...) {
 
 #endif
 
-#if __APPLE__
+int fish_mkstemp_cloexec(char *name_template) {
+#if HAVE_MKOSTEMP
+    // null check because mkostemp may be a weak symbol
+    if (&mkostemp != nullptr) {
+        return mkostemp(name_template, O_CLOEXEC);
+    }
+#endif
+    int result_fd = mkstemp(name_template);
+    if (result_fd != -1) {
+        fcntl(result_fd, F_SETFD, FD_CLOEXEC);
+    }
+    return result_fd;
+}
+
 /// Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g.
 /// building on Linux) these should end up just being stripped, as they are static functions that
 /// are not referenced in this file.
@@ -105,7 +118,6 @@ __attribute__((unused)) static wchar_t *wcsdup_fallback(const wchar_t *in) {
     memcpy(out, in, sizeof(wchar_t) * (len + 1));
     return out;
 }
-#endif
 
 __attribute__((unused)) static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b) {
     if (*a == 0) {
@@ -158,7 +170,21 @@ int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
     return wcsncasecmp_fallback(a, b, n);
 }
 #endif  // __DARWIN_C_LEVEL >= 200809L
-#endif  // __APPLE__
+#else   // __APPLE__
+
+/// These functions are missing from Solaris 10
+#ifndef HAVE_WCSDUP
+wchar_t *wcsdup(const wchar_t *in) { return wcsdup_fallback(in); }
+#endif
+#ifndef HAVE_WCSCASECMP
+int wcscasecmp(const wchar_t *a, const wchar_t *b) { return wcscasecmp_fallback(a, b); }
+#endif
+#ifndef HAVE_WCSNCASECMP
+int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
+    return wcsncasecmp_fallback(a, b, n);
+}
+#endif
+#endif
 
 #ifndef HAVE_WCSNDUP
 wchar_t *wcsndup(const wchar_t *in, size_t c) {
@@ -204,7 +230,8 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
     // Not enough room in dst, add NUL and traverse rest of src.
     if (n == 0) {
         if (siz != 0) *d = '\0';  // NUL-terminate dst
-        while (*s++) ;  // ignore rest of src
+        while (*s++)
+            ;  // ignore rest of src
     }
     return s - src - 1;  // count does not include NUL
 }
@@ -464,3 +491,72 @@ static int mk_wcswidth(const wchar_t *pwcs, size_t n) {
     return width;
 }
 #endif  // HAVE_BROKEN_WCWIDTH
+
+#ifndef HAVE_FLOCK
+/*	$NetBSD: flock.c,v 1.6 2008/04/28 20:24:12 martin Exp $	*/
+
+/*-
+ * Copyright (c) 2001 The NetBSD Foundation, Inc.
+ * All rights reserved.
+ *
+ * This code is derived from software contributed to The NetBSD Foundation
+ * by Todd Vierling.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Emulate flock() with fcntl().
+ */
+
+int flock(int fd, int op) {
+    int rc = 0;
+
+    struct flock fl = {0};
+
+    switch (op & (LOCK_EX | LOCK_SH | LOCK_UN)) {
+        case LOCK_EX:
+            fl.l_type = F_WRLCK;
+            break;
+
+        case LOCK_SH:
+            fl.l_type = F_RDLCK;
+            break;
+
+        case LOCK_UN:
+            fl.l_type = F_UNLCK;
+            break;
+
+        default:
+            errno = EINVAL;
+            return -1;
+    }
+
+    fl.l_whence = SEEK_SET;
+    rc = fcntl(fd, op & LOCK_NB ? F_SETLK : F_SETLKW, &fl);
+
+    if (rc && (errno == EAGAIN)) errno = EWOULDBLOCK;
+
+    return rc;
+}
+
+#endif  // HAVE_FLOCK

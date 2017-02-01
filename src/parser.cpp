@@ -3,7 +3,6 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <wchar.h>
 #include <algorithm>
 #include <memory>
@@ -42,9 +41,6 @@ class io_chain_t;
 /// If block description.
 #define IF_BLOCK N_(L"'if' conditional block")
 
-/// Function definition block description.
-#define FUNCTION_DEF_BLOCK N_(L"function definition block")
-
 /// Function invocation block description.
 #define FUNCTION_CALL_BLOCK N_(L"function invocation block")
 
@@ -53,9 +49,6 @@ class io_chain_t;
 
 /// Switch block description.
 #define SWITCH_BLOCK N_(L"'switch' block")
-
-/// Fake block description.
-#define FAKE_BLOCK N_(L"unexecutable block")
 
 /// Top block description.
 #define TOP_BLOCK N_(L"global root block")
@@ -90,11 +83,9 @@ static const struct block_lookup_entry block_lookup[] = {
     {WHILE, L"while", WHILE_BLOCK},
     {FOR, L"for", FOR_BLOCK},
     {IF, L"if", IF_BLOCK},
-    {FUNCTION_DEF, L"function", FUNCTION_DEF_BLOCK},
     {FUNCTION_CALL, 0, FUNCTION_CALL_BLOCK},
     {FUNCTION_CALL_NO_SHADOW, 0, FUNCTION_CALL_NO_SHADOW_BLOCK},
     {SWITCH, L"switch", SWITCH_BLOCK},
-    {FAKE, 0, FAKE_BLOCK},
     {TOP, 0, TOP_BLOCK},
     {SUBST, 0, SUBST_BLOCK},
     {BEGIN, L"begin", BEGIN_BLOCK},
@@ -110,17 +101,15 @@ static wcstring user_presentable_path(const wcstring &path) {
 
 parser_t::parser_t() : cancellation_requested(false), is_within_fish_initialization(false) {}
 
-/// A pointer to the principal parser (which is a static local).
-static parser_t *s_principal_parser = NULL;
+// Out of line destructor to enable forward declaration of parse_execution_context_t
+parser_t::~parser_t() {}
+
+static parser_t s_principal_parser;
 
 parser_t &parser_t::principal_parser(void) {
     ASSERT_IS_NOT_FORKED_CHILD();
     ASSERT_IS_MAIN_THREAD();
-    static parser_t parser;
-    if (!s_principal_parser) {
-        s_principal_parser = &parser;
-    }
-    return parser;
+    return s_principal_parser;
 }
 
 void parser_t::set_is_within_fish_initialization(bool flag) {
@@ -129,17 +118,12 @@ void parser_t::set_is_within_fish_initialization(bool flag) {
 
 void parser_t::skip_all_blocks(void) {
     // Tell all blocks to skip.
-    if (s_principal_parser) {
-        s_principal_parser->cancellation_requested = true;
-
-        // write(2, "Cancelling blocks\n", strlen("Cancelling blocks\n"));
-        for (size_t i = 0; i < s_principal_parser->block_count(); i++) {
-            s_principal_parser->block_at_index(i)->skip = true;
-        }
-    }
+    // This may be called from a signal handler!
+    s_principal_parser.cancellation_requested = true;
 }
 
-void parser_t::push_block(block_t *new_current) {
+// Given a new-allocated block, push it onto our block stack, acquiring ownership
+void parser_t::push_block_int(block_t *new_current) {
     const enum block_type_t type = new_current->type();
     new_current->src_lineno = parser_t::get_lineno();
 
@@ -148,72 +132,58 @@ void parser_t::push_block(block_t *new_current) {
         new_current->src_filename = intern(filename);
     }
 
+    // New blocks should be skipped if the outer block is skipped, except TOP and SUBST block, which
+    // open up new environments.
     const block_t *old_current = this->current_block();
-    if (old_current && old_current->skip) {
-        new_current->skip = true;
-    }
-
-    // New blocks should be skipped if the outer block is skipped, except TOP ans SUBST block, which
-    // open up new environments. Fake blocks should always be skipped. Rather complicated... :-(
-    new_current->skip = old_current ? old_current->skip : 0;
+    new_current->skip = old_current && old_current->skip;
 
     // Type TOP and SUBST are never skipped.
     if (type == TOP || type == SUBST) {
-        new_current->skip = 0;
+        new_current->skip = false;
     }
 
-    // Fake blocks and function definition blocks are never executed.
-    if (type == FAKE || type == FUNCTION_DEF) {
-        new_current->skip = 1;
-    }
-
-    new_current->job = 0;
+    new_current->job = nullptr;
     new_current->loop_status = LOOP_NORMAL;
 
-    this->block_stack.push_back(new_current);
+    // Push it onto our stack. This acquires ownership because of unique_ptr.
+    this->block_stack.emplace_back(new_current);
 
     // Types TOP and SUBST are not considered blocks for the purposes of `status -b`.
     if (type != TOP && type != SUBST) {
         is_block = 1;
     }
 
-    if ((new_current->type() != FUNCTION_DEF) && (new_current->type() != FAKE) &&
-        (new_current->type() != TOP)) {
+    if (new_current->type() != TOP) {
         env_push(type == FUNCTION_CALL);
         new_current->wants_pop_env = true;
     }
 }
 
-void parser_t::pop_block() {
+void parser_t::pop_block(const block_t *expected) {
+    assert(expected == this->current_block());
     if (block_stack.empty()) {
         debug(1, L"function %s called on empty block stack.", __func__);
         bugreport();
         return;
     }
 
-    block_t *old = block_stack.back();
+    // acquire ownership out of the block stack
+    // this will trigger deletion when it goes out of scope
+    std::unique_ptr<block_t> old = std::move(block_stack.back());
     block_stack.pop_back();
 
     if (old->wants_pop_env) env_pop();
 
-    delete old;
-
     // Figure out if `status -b` should consider us to be in a block now.
     int new_is_block = 0;
-    for (std::vector<block_t *>::const_iterator it = block_stack.begin(), end = block_stack.end();
-         it != end; ++it) {
-        const enum block_type_t type = (*it)->type();
+    for (const auto &b : block_stack) {
+        const enum block_type_t type = b->type();
         if (type != TOP && type != SUBST) {
             new_is_block = 1;
             break;
         }
     }
     is_block = new_is_block;
-}
-
-void parser_t::pop_block(const block_t *expected) {
-    assert(expected == this->current_block());
-    this->pop_block();
 }
 
 const wchar_t *parser_t::get_block_desc(int block) const {
@@ -248,35 +218,35 @@ wcstring parser_t::block_stack_description() const {
 const block_t *parser_t::block_at_index(size_t idx) const {
     // Zero corresponds to the last element in our vector.
     size_t count = block_stack.size();
-    return idx < count ? block_stack.at(count - idx - 1) : NULL;
+    return idx < count ? block_stack.at(count - idx - 1).get() : NULL;
 }
 
 block_t *parser_t::block_at_index(size_t idx) {
     size_t count = block_stack.size();
-    return idx < count ? block_stack.at(count - idx - 1) : NULL;
+    return idx < count ? block_stack.at(count - idx - 1).get() : NULL;
 }
 
-block_t *parser_t::current_block() { return block_stack.empty() ? NULL : block_stack.back(); }
+block_t *parser_t::current_block() { return block_stack.empty() ? NULL : block_stack.back().get(); }
 
 void parser_t::forbid_function(const wcstring &function) { forbidden_function.push_back(function); }
 
 void parser_t::allow_function() { forbidden_function.pop_back(); }
 
 /// Print profiling information to the specified stream.
-static void print_profile(const std::vector<profile_item_t *> &items, FILE *out) {
+static void print_profile(const std::vector<std::unique_ptr<profile_item_t>> &items, FILE *out) {
     for (size_t pos = 0; pos < items.size(); pos++) {
         const profile_item_t *me, *prev;
         size_t i;
         int my_time;
 
-        me = items.at(pos);
+        me = items.at(pos).get();
         if (me->skipped) {
             continue;
         }
 
         my_time = me->parse + me->exec;
         for (i = pos + 1; i < items.size(); i++) {
-            prev = items.at(i);
+            prev = items.at(i).get();
             if (prev->skipped) {
                 continue;
             }
@@ -510,7 +480,7 @@ wcstring parser_t::current_line() {
     if (execution_contexts.empty()) {
         return wcstring();
     }
-    const parse_execution_context_t *context = execution_contexts.back();
+    const parse_execution_context_t *context = execution_contexts.back().get();
     assert(context != NULL);
 
     int source_offset = context->get_current_source_offset();
@@ -553,17 +523,18 @@ wcstring parser_t::current_line() {
     return line_info;
 }
 
-void parser_t::job_add(job_t *job) {
+void parser_t::job_add(shared_ptr<job_t> job) {
     assert(job != NULL);
-    assert(job->first_process != NULL);
-    this->my_job_list.push_front(job);
+    assert(!job->processes.empty());
+    this->my_job_list.push_front(std::move(job));
 }
 
-bool parser_t::job_remove(job_t *j) {
-    job_list_t::iterator iter = std::find(my_job_list.begin(), my_job_list.end(), j);
-    if (iter != my_job_list.end()) {
-        my_job_list.erase(iter);
-        return true;
+bool parser_t::job_remove(job_t *job) {
+    for (auto iter = my_job_list.begin(); iter != my_job_list.end(); ++iter) {
+        if (iter->get() == job) {
+            my_job_list.erase(iter);
+            return true;
+        }
     }
 
     debug(1, _(L"Job inconsistency"));
@@ -572,7 +543,12 @@ bool parser_t::job_remove(job_t *j) {
 }
 
 void parser_t::job_promote(job_t *job) {
-    job_list_t::iterator loc = std::find(my_job_list.begin(), my_job_list.end(), job);
+    job_list_t::iterator loc;
+    for (loc = my_job_list.begin(); loc != my_job_list.end(); ++loc) {
+        if (loc->get() == job) {
+            break;
+        }
+    }
     assert(loc != my_job_list.end());
 
     // Move the job to the beginning.
@@ -580,10 +556,8 @@ void parser_t::job_promote(job_t *job) {
 }
 
 job_t *parser_t::job_get(job_id_t id) {
-    job_iterator_t jobs(my_job_list);
-    job_t *job;
-    while ((job = jobs.next())) {
-        if (id <= 0 || job->job_id == id) return job;
+    for (const auto &job : my_job_list) {
+        if (id <= 0 || job->job_id == id) return job.get();
     }
     return NULL;
 }
@@ -598,10 +572,10 @@ job_t *parser_t::job_get_from_pid(int pid) {
 }
 
 profile_item_t *parser_t::create_profile_item() {
-    profile_item_t *result = NULL;
+    profile_item_t *result = nullptr;
     if (g_profiling_active) {
-        result = new profile_item_t();
-        profile_items.push_back(result);
+        profile_items.push_back(make_unique<profile_item_t>());
+        result = profile_items.back().get();
     }
     return result;
 }
@@ -616,19 +590,18 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
         this->get_backtrace(cmd, error_list, &backtrace_and_desc);
 
         // Print it.
-        fprintf(stderr, "%ls", backtrace_and_desc.c_str());
-
+        fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
         return 1;
     }
-    return this->eval_acquiring_tree(cmd, io, block_type, moved_ref<parse_node_tree_t>(tree));
+    return this->eval(cmd, io, block_type, std::move(tree));
 }
 
-int parser_t::eval_acquiring_tree(const wcstring &cmd, const io_chain_t &io,
-                                  enum block_type_t block_type, moved_ref<parse_node_tree_t> tree) {
+int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type,
+                   parse_node_tree_t tree) {
     CHECK_BLOCK(1);
     assert(block_type == TOP || block_type == SUBST);
 
-    if (tree.val.empty()) {
+    if (tree.empty()) {
         return 0;
     }
 
@@ -640,17 +613,16 @@ int parser_t::eval_acquiring_tree(const wcstring &cmd, const io_chain_t &io,
         (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
 
     // Append to the execution context stack.
-    parse_execution_context_t *ctx =
-        new parse_execution_context_t(tree, cmd, this, exec_eval_level);
-    execution_contexts.push_back(ctx);
+    execution_contexts.push_back(
+        make_unique<parse_execution_context_t>(std::move(tree), cmd, this, exec_eval_level));
+    const parse_execution_context_t *ctx = execution_contexts.back().get();
 
     // Execute the first node.
     this->eval_block_node(0, io, block_type);
 
     // Clean up the execution context stack.
-    assert(!execution_contexts.empty() && execution_contexts.back() == ctx);
+    assert(!execution_contexts.empty() && execution_contexts.back().get() == ctx);
     execution_contexts.pop_back();
-    delete ctx;
 
     return 0;
 }
@@ -661,7 +633,7 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
     // the topmost execution context's tree. What happens if two trees were to be interleaved?
     // Fortunately that cannot happen (yet); in the future we probably want some sort of reference
     // counted trees.
-    parse_execution_context_t *ctx = execution_contexts.back();
+    parse_execution_context_t *ctx = execution_contexts.back().get();
     assert(ctx != NULL);
 
     CHECK_BLOCK(1);
@@ -685,23 +657,10 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
 
     job_reap(0);  // not sure why we reap jobs here
 
-    /* Start it up */
-    const block_t *const start_current_block = current_block();
-    block_t *scope_block = new scope_block_t(block_type);
-    this->push_block(scope_block);
+    // Start it up
+    scope_block_t *scope_block = this->push_block<scope_block_t>(block_type);
     int result = ctx->eval_node_at_offset(node_idx, scope_block, io);
-
-    // Clean up the block stack.
-    this->pop_block();
-    while (start_current_block != current_block()) {
-        if (current_block() == NULL) {
-            debug(0, _(L"End of block mismatch. Program terminating."));
-            bugreport();
-            FATAL_EXIT();
-            break;
-        }
-        this->pop_block();
-    }
+    this->pop_block(scope_block);
 
     job_reap(0);  // reap again
 
@@ -797,7 +756,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
 
 block_t::block_t(block_type_t t)
     : block_type(t),
-      skip(),
+      skip(false),
       tok_pos(),
       node_offset(NODE_OFFSET_INVALID),
       loop_status(LOOP_NORMAL),
@@ -824,10 +783,6 @@ wcstring block_t::description() const {
             result.append(L"if");
             break;
         }
-        case FUNCTION_DEF: {
-            result.append(L"function_def");
-            break;
-        }
         case FUNCTION_CALL: {
             result.append(L"function_call");
             break;
@@ -838,10 +793,6 @@ wcstring block_t::description() const {
         }
         case SWITCH: {
             result.append(L"switch");
-            break;
-        }
-        case FAKE: {
-            result.append(L"fake");
             break;
         }
         case SUBST: {
@@ -895,8 +846,6 @@ for_block_t::for_block_t() : block_t(FOR) {}
 while_block_t::while_block_t() : block_t(WHILE) {}
 
 switch_block_t::switch_block_t() : block_t(SWITCH) {}
-
-fake_block_t::fake_block_t() : block_t(FAKE) {}
 
 scope_block_t::scope_block_t(block_type_t type) : block_t(type) {
     assert(type == BEGIN || type == TOP || type == SUBST);

@@ -320,7 +320,7 @@ function __fish_complete_ip
 			end
 	end
 end
-			
+
 complete -f -c ip
 complete -f -c ip -a '(__fish_complete_ip)'
 complete -f -c ip -n "not __fish_seen_subcommand_from $ip_all_commands" -a "$ip_commands"

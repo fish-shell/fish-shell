@@ -41,9 +41,9 @@ fishconfig.config(function($httpProvider, $compileProvider) {
     var global_error_element = null;
 
     var showMessage = function(content) {
-        global_error_element.text(content); 
+        global_error_element.text(content);
     };
-    
+
     $httpProvider.responseInterceptors.push(function($q) {
         return function(promise) {
             return promise.then(function(successResponse) {

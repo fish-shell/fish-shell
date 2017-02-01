@@ -50,46 +50,37 @@ static const wchar_t *get_buffer() { return current_buffer; }
 /// Returns the position of the cursor.
 static size_t get_cursor_pos() { return current_cursor_pos; }
 
-static pthread_mutex_t transient_commandline_lock = PTHREAD_MUTEX_INITIALIZER;
-static wcstring_list_t *get_transient_stack() {
+static owning_lock<wcstring_list_t> &get_transient_stack() {
     ASSERT_IS_MAIN_THREAD();
-    ASSERT_IS_LOCKED(transient_commandline_lock);
-    // A pointer is a little more efficient than an object as a static because we can elide the
-    // thread-safe initialization.
-    static wcstring_list_t *result = NULL;
-    if (!result) {
-        result = new wcstring_list_t();
-    }
-    return result;
+    static owning_lock<wcstring_list_t> s_transient_stack;
+    return s_transient_stack;
 }
 
 static bool get_top_transient(wcstring *out_result) {
-    ASSERT_IS_MAIN_THREAD();
-    bool result = false;
-    scoped_lock locker(transient_commandline_lock);
-    const wcstring_list_t *stack = get_transient_stack();
-    if (!stack->empty()) {
-        out_result->assign(stack->back());
-        result = true;
+    auto locked = get_transient_stack().acquire();
+    wcstring_list_t &stack = locked.value;
+    if (stack.empty()) {
+        return false;
     }
-    return result;
+    out_result->assign(stack.back());
+    return true;
 }
 
 builtin_commandline_scoped_transient_t::builtin_commandline_scoped_transient_t(
     const wcstring &cmd) {
     ASSERT_IS_MAIN_THREAD();
-    scoped_lock locker(transient_commandline_lock);
-    wcstring_list_t *stack = get_transient_stack();
-    stack->push_back(cmd);
-    this->token = stack->size();
+    auto locked = get_transient_stack().acquire();
+    wcstring_list_t &stack = locked.value;
+    stack.push_back(cmd);
+    this->token = stack.size();
 }
 
 builtin_commandline_scoped_transient_t::~builtin_commandline_scoped_transient_t() {
     ASSERT_IS_MAIN_THREAD();
-    scoped_lock locker(transient_commandline_lock);
-    wcstring_list_t *stack = get_transient_stack();
-    assert(this->token == stack->size());
-    stack->pop_back();
+    auto locked = get_transient_stack().acquire();
+    wcstring_list_t &stack = locked.value;
+    assert(this->token == stack.size());
+    stack.pop_back();
 }
 
 /// Replace/append/insert the selection with/at/after the specified string.
@@ -363,7 +354,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 // the queue of unused keypresses.
                 input_queue_ch(c);
             } else {
-                streams.err.append_format(_(L"%ls: Unknown input function '%ls'\n"), argv[0],
+                streams.err.append_format(_(L"%ls: Unknown input function '%ls'"), argv[0],
                                           argv[i]);
                 builtin_print_help(parser, streams, argv[0], streams.err);
                 return 1;
@@ -384,7 +375,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
     // Check for invalid switch combinations.
     if ((search_mode || line_mode || cursor_mode || paging_mode) && (argc - w.woptind > 1)) {
-        streams.err.append_format(argv[0], L": Too many arguments\n", NULL);
+        streams.err.append_format(L"%ls: Too many arguments", argv[0]);
         builtin_print_help(parser, streams, argv[0], streams.err);
         return 1;
     }
@@ -426,12 +417,8 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
     if (cursor_mode) {
         if (argc - w.woptind) {
-            wchar_t *endptr;
-            long new_pos;
-            errno = 0;
-
-            new_pos = wcstol(argv[w.woptind], &endptr, 10);
-            if (*endptr || errno) {
+            long new_pos = fish_wcstol(argv[w.woptind]);
+            if (errno) {
                 streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, argv[0], argv[w.woptind]);
                 builtin_print_help(parser, streams, argv[0], streams.err);
             }

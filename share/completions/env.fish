@@ -7,6 +7,3 @@ complete -c env -s i -l ignore-environment --description "Start with an empty en
 complete -c env -s u -l unset --description "Remove variable from the environment" -x -a "(set -n)"
 complete -c env -l help --description "Display help and exit"
 complete -c env -l version --description "Display version and exit"
-
-# Since env runs subcommands, it can accept any switches
-complete -c env -u

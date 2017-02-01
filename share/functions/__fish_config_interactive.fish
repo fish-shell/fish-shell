@@ -38,7 +38,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # bump this to 2_4_0 when rolling release if anything changes after 9/10/2016
     if not set -q __fish_init_2_39_8
         # Regular syntax highlighting colors
-        # XXX - not quite the same as default colors in web config. Sync these up. 
+        # XXX - not quite the same as default colors in web config. Sync these up.
         set -q fish_color_normal
         or set -U fish_color_normal normal
         set -q fish_color_command
@@ -110,8 +110,14 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Generate man page completions if not present.
     #
     if not test -d $userdatadir/fish/generated_completions
-        #fish_update_completions is a function, so it can not be directly run in background.
-        eval (string escape "$__fish_bin_dir/fish") "-c 'fish_update_completions > /dev/null ^/dev/null' &"
+        # Generating completions from man pages needs python (see issue #3588).
+        # Don't do this if we're being invoked as part of running unit tests.
+        if command -qs python
+        and not set -q FISH_UNIT_TESTS_RUNNING
+            # We cannot simply do `fish_update_completions &` because it is a function. Hence the
+            # need for the convoluted `eval` to run it in a subshell.
+            eval (string escape "$__fish_bin_dir/fish") "-c 'fish_update_completions >/dev/null ^/dev/null' &"
+        end
     end
 
     #
@@ -179,8 +185,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # Also print an error so the user knows
         if not functions -q "$fish_key_bindings"
             echo "There is no fish_key_bindings function called: '$fish_key_bindings'" >&2
-            if set -q __fish_active_key_bindings
+            # We need to see if this is a defined function, otherwise we'd be in an endless loop.
+            if functions -q $__fish_active_key_bindings
                 echo "Keeping $__fish_active_key_bindings" >&2
+                # Set the variable to the old value so this error doesn't happen again.
+                set fish_key_bindings $__fish_active_key_bindings
                 return 1
             else if functions -q fish_default_key_bindings
                 echo "Reverting to default bindings" >&2
@@ -228,8 +237,10 @@ function __fish_config_interactive -d "Initializations that should be performed 
         end
         if test "$TERM_PROGRAM" = "Apple_Terminal"
             # Suppress duplicative title display on Terminal.app
-            echo -n \e\]0\;\a # clear existing title
-            function fish_title
+            if not functions -q fish_title
+                echo -n \e\]0\;\a # clear existing title
+                function fish_title -d 'no-op terminal title'
+                end
             end
         end
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab

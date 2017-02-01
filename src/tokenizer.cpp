@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
@@ -490,7 +489,7 @@ void tokenizer_t::tok_next() {
     }
 
     if (!this->has_next) {
-        // wprintf( L"EOL\n" );
+        // fwprintf(stdout, L"EOL\n" );
         this->last_type = TOK_END;
         return;
     }
@@ -610,7 +609,7 @@ wcstring tok_first(const wcstring &str) {
     tokenizer_t t(str.c_str(), TOK_SQUASH_ERRORS);
     tok_t token;
     if (t.next(&token) && token.type == TOK_STRING) {
-        result.swap(token.text);
+        result = std::move(token.text);
     }
     return result;
 }
@@ -667,7 +666,7 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
         s_end
     };
 
-    // printf("state %d, consume '%lc'\n", state, c);
+    // fwprintf(stdout, L"state %d, consume '%lc'\n", state, c);
     bool consumed = false;
     while (state != s_end && !consumed) {
         switch (state) {

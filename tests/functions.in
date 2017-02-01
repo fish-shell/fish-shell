@@ -1,0 +1,50 @@
+# vim: set filetype=fish:
+#
+# Test the `functions` builtin
+
+function f1
+end
+
+# ==========
+# Verify that `functions --metadata` works as expected when given too many args.
+set x (functions --metadata f1 f2 2>&1)
+if test "$x" != "functions: Expected exactly one function name for --metadata"
+    echo "Unexpected output for 'functions --metadata f1 f2': $x" >&2
+end
+
+# ==========
+# Verify that `functions --metadata` works as expected when given the name of a
+# known function.
+set x (functions --metadata f1)
+if test "$x" != "stdin"
+    echo "Unexpected output for 'functions --metadata f1': $x" >&2
+end
+
+# ==========
+# Verify that `functions --metadata` works as expected when given the name of an
+# unknown function.
+set x (functions -m f2)
+if test "$x" != "n/a"
+    echo "Unexpected output for 'functions --metadata f2': $x" >&2
+end
+
+# ==========
+# Verify that `functions --metadata` works as expected when given the name of a
+# function that could be autoloaded but isn't currently loaded.
+set x (functions -m abbr)
+if test (count $x) -ne 1
+or not string match -q '*/share/functions/abbr.fish' "$x"
+    echo "Unexpected output for 'functions -m abbr': $x" >&2
+end
+
+# ==========
+# Verify that `functions --verbose --metadata` works as expected when given the name of a
+# function that was autoloaded.
+set x (functions -v -m abbr)
+if test (count $x) -ne 4
+or not string match -q '*/share/functions/abbr.fish' $x[1]
+or test $x[2] != autoloaded
+or test $x[3] != 1
+or test $x[4] != scope-shadowing
+    echo "Unexpected output for 'functions -v -m abbr': $x" >&2
+end

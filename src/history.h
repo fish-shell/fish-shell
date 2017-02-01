@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
+#include <wctype.h>
 #include <deque>
 #include <memory>
 #include <set>
@@ -326,7 +327,8 @@ class history_search_t {
     }
 
     // Default constructor.
-    history_search_t() : history(), term(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), case_sensitive(true) {}
+    history_search_t()
+        : history(), term(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), case_sensitive(true) {}
 };
 
 // Init history library. The history file won't actually be loaded until the first time a history
@@ -339,34 +341,12 @@ void history_destroy();
 // Perform sanity checks.
 void history_sanity_check();
 
-// A helper class for threaded detection of paths.
-struct file_detection_context_t {
-    // Constructor.
-    explicit file_detection_context_t(history_t *hist, history_identifier_t ident = 0);
+// Given a list of paths and a working directory, return the paths that are valid
+// This does disk I/O and may only be called in a background thread
+path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory);
 
-    // Determine which of potential_paths are valid, and put them in valid_paths.
-    int perform_file_detection();
-
-    // The history associated with this context.
-    history_t *const history;
-
-    // The working directory at the time the command was issued.
-    wcstring working_directory;
-
-    // Paths to test.
-    path_list_t potential_paths;
-
-    // Paths that were found to be valid.
-    path_list_t valid_paths;
-
-    // Identifier of the history item to which we are associated.
-    const history_identifier_t history_item_identifier;
-
-    // Performs file detection. Returns 1 if every path in potential_paths is valid, 0 otherwise. If
-    // test_all is true, tests every path; otherwise stops as soon as it reaches an invalid path.
-    int perform_file_detection(bool test_all);
-
-    // Determine whether the given paths are all valid.
-    bool paths_are_valid(const path_list_t &paths);
-};
+// Given a list of paths and a working directory,
+// return true if all paths in the list are valid
+// Returns true for if paths is empty
+bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory);
 #endif

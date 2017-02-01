@@ -49,9 +49,7 @@ rm -f "$path" "$path".gz
 git archive --format=tar --prefix="$prefix"/ HEAD > "$path"
 
 # tarball out the documentation, generate a configure script and version file
-# Don't use autoreconf since it invokes commands that may not be installed, like aclocal
-# Don't run autoheader since configure.ac runs it. autoconf is enough.
-autoconf
+autoreconf --no-recursive
 ./configure --with-doxygen
 make doc share/man
 echo $VERSION > version

@@ -54,6 +54,8 @@ struct line_t {
         text.insert(text.end(), line.text.begin(), line.text.end());
         colors.insert(colors.end(), line.colors.begin(), line.colors.end());
     }
+
+    wcstring to_string() const { return wcstring(this->text.begin(), this->text.end()); }
 };
 
 /// A class representing screen contents.
@@ -89,7 +91,9 @@ class screen_data_t {
 
     line_t &line(size_t idx) { return line_datas.at(idx); }
 
-    size_t line_count(void) { return line_datas.size(); }
+    const line_t &line(size_t idx) const { return line_datas.at(idx); }
+
+    size_t line_count() const { return line_datas.size(); }
 
     void append_lines(const screen_data_t &d) {
         this->line_datas.insert(this->line_datas.end(), d.line_datas.begin(), d.line_datas.end());

@@ -17,14 +17,7 @@ class io_chain_t;
 class job_t;
 class process_t;
 
-/// This function should be called by both the parent process and the child right after fork() has
-/// been called. If job control is enabled, the child is put in the jobs group, and if the child is
-/// also in the foreground, it is also given control of the terminal. When called in the parent
-/// process, this function may fail, since the child might have already finished and called exit.
-/// The parent process may safely ignore the exit status of this call.
-///
-/// Returns 0 on sucess, -1 on failiure.
-int set_child_group(job_t *j, process_t *p, int print_errors);
+bool set_child_group(job_t *j, process_t *p, int print_errors);
 
 /// Initialize a new child process. This should be called right away after forking in the child
 /// process. If job control is enabled for this job, the process is put in the process group of the

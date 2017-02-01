@@ -5,8 +5,8 @@
 #include <cxxabi.h>
 #include <dlfcn.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -32,12 +32,14 @@
 #include <memory>  // IWYU pragma: keep
 
 #include "common.h"
+#include "env.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "proc.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-#define NOT_A_WCHAR (static_cast<wint_t>(WEOF))
+constexpr wint_t NOT_A_WCHAR = static_cast<wint_t>(WEOF);
 
 struct termios shell_modes;
 
@@ -61,9 +63,9 @@ static pid_t initial_fg_process_group = -1;
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
 /// common_get_width()/common_get_height().
-static struct winsize termsize;
-static volatile bool termsize_valid;
-static rwlock_t termsize_rwlock;
+static pthread_mutex_t termsize_lock = PTHREAD_MUTEX_INITIALIZER;
+static struct winsize termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
+static volatile bool termsize_valid = false;
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
 static void debug_shared(const wchar_t msg_level, const wcstring &msg);
@@ -499,17 +501,27 @@ __sentinel bool contains_internal(const wcstring &needle, int vararg_handle, ...
 }
 
 long read_blocked(int fd, void *buf, size_t count) {
-    ssize_t res;
-    sigset_t chldset, oldset;
+    long bytes_read = 0;
 
-    sigemptyset(&chldset);
-    sigaddset(&chldset, SIGCHLD);
-    VOMIT_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &chldset, &oldset));
-    res = read(fd, buf, count);
-    VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &oldset, NULL));
-    return res;
+    while (count) {
+        ssize_t res = read(fd, (char *)buf + bytes_read, count);
+        if (res == 0) {
+            break;
+        } else if (res == -1) {
+            if (errno == EINTR) continue;
+            if (errno == EAGAIN) return bytes_read ? bytes_read : -1;
+            return -1;
+        } else {
+            bytes_read += res;
+            count -= res;
+        }
+    }
+
+    return bytes_read;
 }
 
+/// Loop a write request while failure is non-critical. Return -1 and set errno in case of critical
+/// error.
 ssize_t write_loop(int fd, const char *buff, size_t count) {
     size_t out_cum = 0;
     while (out_cum < count) {
@@ -533,12 +545,14 @@ ssize_t read_loop(int fd, void *buff, size_t count) {
     return result;
 }
 
+bool should_suppress_stderr_for_tests() {
+    // Hack to not print error messages in the tests.
+    return program_name && !wcscmp(program_name, TESTS_PROGRAM_NAME);
+}
+
 static bool should_debug(int level) {
     if (level > debug_level) return false;
-
-    // Hack to not print error messages in the tests.
-    if (program_name && !wcscmp(program_name, L"(ignore)")) return false;
-
+    if (should_suppress_stderr_for_tests()) return false;
     return true;
 }
 
@@ -603,7 +617,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
                                   param7, param8, param9, param10, param11, param12};
     if (!msg) return;
 
-    // Can't call printf, that may allocate memory Just call write() over and over.
+    // Can't call fwprintf, that may allocate memory Just call write() over and over.
     if (level > debug_level) return;
     int errno_old = errno;
 
@@ -828,7 +842,7 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
                     need_escape = need_complex_escape = 1;
                     break;
                 }
-                case L'\x1b': {
+                case L'\e': {
                     out += L'\\';
                     out += L'e';
                     need_escape = need_complex_escape = 1;
@@ -936,8 +950,7 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags) {
 
 /// Helper to return the last character in a string, or NOT_A_WCHAR.
 static wint_t string_last_char(const wcstring &str) {
-    size_t len = str.size();
-    return len == 0 ? NOT_A_WCHAR : str.at(len - 1);
+    return str.empty() ? NOT_A_WCHAR : str.back();
 }
 
 /// Given a null terminated string starting with a backslash, read the escape as if it is unquoted,
@@ -1061,9 +1074,9 @@ size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_i
             }
             break;
         }
-        // \x1b means escape.
+        // \e means escape.
         case L'e': {
-            result_char_or_none = L'\x1b';
+            result_char_or_none = L'\e';
             break;
         }
         // \f means form feed.
@@ -1215,12 +1228,12 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 }
                 case L'\'': {
                     mode = mode_single_quotes;
-                    to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
                     break;
                 }
                 case L'\"': {
                     mode = mode_double_quotes;
-                    to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
                     break;
                 }
                 default: { break; }
@@ -1254,14 +1267,14 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     }
                 }
             } else if (c == L'\'') {
-                to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
                 mode = mode_unquoted;
             }
         } else if (mode == mode_double_quotes) {
             switch (c) {
                 case L'"': {
                     mode = mode_unquoted;
-                    to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
                     break;
                 }
                 case '\\': {
@@ -1316,7 +1329,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
 
     // Return the string by reference, and then success.
     if (!errored) {
-        output_str->swap(result);
+        *output_str = std::move(result);
     }
     return !errored;
 }
@@ -1326,7 +1339,7 @@ bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special) {
     wcstring output;
     bool success = unescape_string_internal(str->c_str(), str->size(), &output, escape_special);
     if (success) {
-        str->swap(output);
+        *str = std::move(output);
     }
     return success;
 }
@@ -1343,32 +1356,97 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
     return success;
 }
 
-void common_handle_winch(int signal) {
-    // Don't run ioctl() here, it's not safe to use in signals.
-    UNUSED(signal);
+/// Used to invalidate our idea of having a valid window size. This can occur when either the
+/// COLUMNS or LINES variables are changed. This is also invoked when the shell regains control of
+/// the tty since it is possible the terminal size changed while an external command was running.
+void invalidate_termsize(bool invalidate_vars) {
     termsize_valid = false;
+    if (invalidate_vars) {
+        termsize.ws_col = termsize.ws_row = USHRT_MAX;
+    }
+}
+
+/// Handle SIGWINCH. This is also invoked when the shell regains control of the tty since it is
+/// possible the terminal size changed while an external command was running.
+void common_handle_winch(int signal) {
+    // Don't run ioctl() here. Technically it's not safe to use in signals although in practice it
+    // is safe on every platform I've used. But we want to be conservative on such matters.
+    UNUSED(signal);
+    invalidate_termsize(false);
+}
+
+/// Validate the new terminal size. Fallback to the env vars if necessary. Ensure the values are
+/// sane and if not fallback to a default of 80x24.
+static void validate_new_termsize(struct winsize *new_termsize) {
+    if (new_termsize->ws_col == 0 || new_termsize->ws_row == 0) {
+#ifdef HAVE_WINSIZE
+        if (shell_is_interactive()) {
+            debug(1, _(L"Current terminal parameters have rows and/or columns set to zero."));
+            debug(1, _(L"The stty command can be used to correct this "
+                       L"(e.g., stty rows 80 columns 24)."));
+        }
+#endif
+        // Fallback to the environment vars.
+        env_var_t col_var = env_get_string(L"COLUMNS");
+        env_var_t row_var = env_get_string(L"LINES");
+        if (!col_var.missing_or_empty() && !row_var.missing_or_empty()) {
+            // Both vars have to have valid values.
+            int col = fish_wcstoi(col_var.c_str());
+            bool col_ok = errno == 0 && col > 0 && col <= USHRT_MAX;
+            int row = fish_wcstoi(row_var.c_str());
+            bool row_ok = errno == 0 && row > 0 && row <= USHRT_MAX;
+            if (col_ok && row_ok) {
+                new_termsize->ws_col = col;
+                new_termsize->ws_row = row;
+            }
+        }
+    }
+
+    if (new_termsize->ws_col < MIN_TERM_COL || new_termsize->ws_row < MIN_TERM_ROW) {
+        if (shell_is_interactive()) {
+            debug(1, _(L"Current terminal parameters set terminal size to unreasonable value."));
+            debug(1, _(L"Defaulting terminal size to 80x24."));
+        }
+        new_termsize->ws_col = DFLT_TERM_COL;
+        new_termsize->ws_row = DFLT_TERM_ROW;
+    }
+}
+
+/// Export the new terminal size as env vars and to the kernel if possible.
+static void export_new_termsize(struct winsize *new_termsize) {
+    wchar_t buf[64];
+    swprintf(buf, 64, L"%d", (int)new_termsize->ws_col);
+    env_set(L"COLUMNS", buf, ENV_EXPORT | ENV_GLOBAL);
+    swprintf(buf, 64, L"%d", (int)new_termsize->ws_row);
+    env_set(L"LINES", buf, ENV_EXPORT | ENV_GLOBAL);
+
+#ifdef HAVE_WINSIZE
+    ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);
+#endif
 }
 
 /// Updates termsize as needed, and returns a copy of the winsize.
-static struct winsize get_current_winsize() {
-#ifndef HAVE_WINSIZE
-    struct winsize retval = {0};
-    retval.ws_col = 80;
-    retval.ws_row = 24;
-    return retval;
-#endif
-    scoped_rwlock guard(termsize_rwlock, true);
-    struct winsize retval = termsize;
-    if (!termsize_valid) {
-        struct winsize size;
-        if (ioctl(1, TIOCGWINSZ, &size) == 0) {
-            retval = size;
-            guard.upgrade();
-            termsize = retval;
-        }
+struct winsize get_current_winsize() {
+    scoped_lock guard(termsize_lock);
+
+    if (termsize_valid) return termsize;
+
+    struct winsize new_termsize = {0, 0, 0, 0};
+#ifdef HAVE_WINSIZE
+    errno = 0;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_termsize) != -1 &&
+        new_termsize.ws_col == termsize.ws_col && new_termsize.ws_row == termsize.ws_row) {
         termsize_valid = true;
+        return termsize;
     }
-    return retval;
+#endif
+
+    validate_new_termsize(&new_termsize);
+    export_new_termsize(&new_termsize);
+    termsize.ws_col = new_termsize.ws_col;
+    termsize.ws_row = new_termsize.ws_row;
+    termsize_valid = true;
+    return termsize;
 }
 
 int common_get_width() { return get_current_winsize().ws_col; }
@@ -1529,9 +1607,8 @@ int create_directory(const wcstring &d) {
 }
 
 __attribute__((noinline)) void bugreport() {
-    debug(1, _(L"This is a bug. Break on bugreport to debug. "
-               L"If you can reproduce it, please send a bug report to %s."),
-          PACKAGE_BUGREPORT);
+    debug(0, _(L"This is a bug. Break on bugreport to debug."));
+    debug(0, _(L"If you can reproduce it, please send a bug report to %s."), PACKAGE_BUGREPORT);
 }
 
 wcstring format_size(long long sz) {
@@ -1687,7 +1764,7 @@ bool is_forked_child(void) {
 
     bool is_child_of_fork = (getpid() != initial_pid);
     if (is_child_of_fork) {
-        printf("Uh-oh: %d\n", getpid());
+        debug(0, L"Uh-oh: getpid() != initial_pid: %d != %d\n", getpid(), initial_pid);
         while (1) sleep(10000);
     }
     return is_child_of_fork;
@@ -1706,7 +1783,9 @@ void restore_term_foreground_process_group(void) {
     if (initial_fg_process_group != -1) {
         // This is called during shutdown and from a signal handler. We don't bother to complain on
         // failure.
-        tcsetpgrp(STDIN_FILENO, initial_fg_process_group);
+        if (tcsetpgrp(STDIN_FILENO, initial_fg_process_group) == -1 && errno == ENOTTY) {
+            redirect_tty_output();
+        }
     }
 }
 
@@ -1717,28 +1796,24 @@ bool is_main_thread() {
 
 void assert_is_main_thread(const char *who) {
     if (!is_main_thread() && !thread_asserts_cfg_for_testing) {
-        fprintf(stderr,
-                "Warning: %s called off of main thread. Break on debug_thread_error to debug.\n",
-                who);
+        debug(0, "%s called off of main thread.", who);
+        debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
 
 void assert_is_not_forked_child(const char *who) {
     if (is_forked_child()) {
-        fprintf(stderr,
-                "Warning: %s called in a forked child. Break on debug_thread_error to debug.\n",
-                who);
+        debug(0, "%s called in a forked child.", who);
+        debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
 
 void assert_is_background_thread(const char *who) {
     if (is_main_thread() && !thread_asserts_cfg_for_testing) {
-        fprintf(stderr,
-                "Warning: %s called on the main thread (may block!). Break on debug_thread_error "
-                "to debug.\n",
-                who);
+        debug(0, "%s called on the main thread (may block!).", who);
+        debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
@@ -1746,10 +1821,8 @@ void assert_is_background_thread(const char *who) {
 void assert_is_locked(void *vmutex, const char *who, const char *caller) {
     pthread_mutex_t *mutex = static_cast<pthread_mutex_t *>(vmutex);
     if (0 == pthread_mutex_trylock(mutex)) {
-        fprintf(stderr,
-                "Warning: %s is not locked when it should be in '%s'. Break on debug_thread_error "
-                "to debug.\n",
-                who, caller);
+        debug(0, "%s is not locked when it should be in '%s'", who, caller);
+        debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
         pthread_mutex_unlock(mutex);
     }
@@ -1931,16 +2004,27 @@ long convert_digit(wchar_t d, int base) {
     return res;
 }
 
-// Test if the specified character is in a range that fish uses interally to store special tokens.
-//
-// NOTE: This is used when tokenizing the input. It is also used when reading input, before
-// tokenization, to replace such chars with REPLACEMENT_WCHAR if they're not part of a quoted
-// string. We don't want external input to be able to feed reserved characters into our lexer/parser
-// or code evaluator.
+/// Test if the specified character is in a range that fish uses interally to store special tokens.
+///
+/// NOTE: This is used when tokenizing the input. It is also used when reading input, before
+/// tokenization, to replace such chars with REPLACEMENT_WCHAR if they're not part of a quoted
+/// string. We don't want external input to be able to feed reserved characters into our
+/// lexer/parser or code evaluator.
 //
 // TODO: Actually implement the replacement as documented above.
 bool fish_reserved_codepoint(wchar_t c) {
     return (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END) ||
            (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END) ||
            (c >= INPUT_COMMON_BASE && c < INPUT_COMMON_END);
+}
+
+/// Reopen stdin, stdout and/or stderr on /dev/null. This is invoked when we find that our tty has
+/// become invalid.
+void redirect_tty_output() {
+    struct termios t;
+    int fd = open("/dev/null", O_WRONLY);
+    if (tcgetattr(STDIN_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDIN_FILENO);
+    if (tcgetattr(STDOUT_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDOUT_FILENO);
+    if (tcgetattr(STDERR_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDERR_FILENO);
+    close(fd);
 }

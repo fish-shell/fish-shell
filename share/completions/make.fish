@@ -1,13 +1,21 @@
 # Completions for make
+function __fish_complete_make_targets
+    set directory (string replace -r '^make .*(-C ?|--directory[= ]?)([^ ]*) .*$' '$2' -- $argv)
+    if test $status -eq 0 -a -d $directory
+        __fish_print_make_targets $directory
+    else
+        __fish_print_make_targets
+    end
+end
 
 # This completion reenables file completion on
 # assignments, so e.g. 'make foo FILES=<tab>' will receive standard
 # filename completion.
 complete -c make -n 'commandline -ct | string match "*=*"'
 
-complete -x -c make -a "(__fish_print_make_targets)" --description "Target"
+complete -x -c make -a "(__fish_complete_make_targets (commandline -c))" --description "Target"
 complete -r -c make -s f --description "Use file as makefile" -r
-complete -x -c make -s C -x -a "(__fish_complete_directories (commandline -ct))" --description "Change directory"
+complete -x -c make -s C -l directory -x -a "(__fish_complete_directories (commandline -ct))" --description "Change directory"
 complete -c make -s d --description "Debug mode"
 complete -c make -s e --description "Environment before makefile"
 complete -c make -s i --description "Ignore errors"

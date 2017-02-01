@@ -23,7 +23,8 @@ complete -c ssh -s a --description "Disables forwarding of the authentication ag
 complete -c ssh -s A --description "Enables forwarding of the authentication agent"
 complete -x -c ssh -s b --description "Interface to transmit from" -a "
 (
-	cat /proc/net/arp ^/dev/null| string match -r -v '^IP'|cut -d ' ' -f 1 ^/dev/null
+	# TODO /proc/net/arp is not POSIX compliant
+	cut -d ' ' -f 1 /proc/net/arp ^/dev/null | string match -r -v '^IP'
 )
 "
 
@@ -46,6 +47,3 @@ complete -c ssh -s X --description "Enable X11 forwarding"
 complete -c ssh -s L --description "Locally forwarded ports"
 complete -c ssh -s R --description "Remotely forwarded ports"
 complete -c ssh -s D --description "Dynamic port forwarding"
-
-# Since ssh runs subcommands, it can accept any switches
-complete -c ssh -u

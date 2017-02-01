@@ -570,24 +570,22 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         return BUILTIN_STRING_ERROR;
     }
 
-    string_matcher_t *matcher;
+    std::unique_ptr<string_matcher_t> matcher;
     if (regex) {
-        matcher = new pcre2_matcher_t(argv[0], pattern, opts, streams);
+        matcher = make_unique<pcre2_matcher_t>(argv[0], pattern, opts, streams);
     } else {
-        matcher = new wildcard_matcher_t(argv[0], pattern, opts, streams);
+        matcher = make_unique<wildcard_matcher_t>(argv[0], pattern, opts, streams);
     }
 
     const wchar_t *arg;
     wcstring storage;
     while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
         if (!matcher->report_matches(arg)) {
-            delete matcher;
             return BUILTIN_STRING_ERROR;
         }
     }
 
     int rc = matcher->match_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
-    delete matcher;
     return rc;
 }
 
@@ -720,8 +718,8 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
             done = true;
         } else {
             bufsize = outlen;
-            // cppcheck-suppress memleakOnRealloc
-            output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
+            wchar_t *new_output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
+            if (new_output) output = new_output;
         }
     }
 
@@ -806,24 +804,22 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
         return BUILTIN_STRING_ERROR;
     }
 
-    string_replacer_t *replacer;
+    std::unique_ptr<string_replacer_t> replacer;
     if (regex) {
-        replacer = new regex_replacer_t(argv[0], pattern, replacement, opts, streams);
+        replacer = make_unique<regex_replacer_t>(argv[0], pattern, replacement, opts, streams);
     } else {
-        replacer = new literal_replacer_t(argv[0], pattern, replacement, opts, streams);
+        replacer = make_unique<literal_replacer_t>(argv[0], pattern, replacement, opts, streams);
     }
 
     const wchar_t *arg;
     wcstring storage;
     while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
         if (!replacer->replace_matches(arg)) {
-            delete replacer;
             return BUILTIN_STRING_ERROR;
         }
     }
 
     int rc = replacer->replace_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
-    delete replacer;
     return rc;
 }
 
@@ -878,10 +874,8 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
                 break;
             }
             case 'm': {
-                errno = 0;
-                wchar_t *endptr = 0;
-                max = wcstol(w.woptarg, &endptr, 10);
-                if (*endptr != L'\0' || errno != 0) {
+                max = fish_wcstol(w.woptarg);
+                if (errno) {
                     string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 }
@@ -969,7 +963,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
     long length = -1;
     bool quiet = false;
     wgetopter_t w;
-    wchar_t *endptr = NULL;
+
     for (;;) {
         int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
@@ -981,15 +975,13 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
                 break;
             }
             case 'l': {
-                errno = 0;
-                length = wcstol(w.woptarg, &endptr, 10);
-                if (*endptr != L'\0' || (errno != 0 && errno != ERANGE)) {
-                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
-                }
+                length = fish_wcstol(w.woptarg);
                 if (length < 0 || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid length value '%ls'\n"), argv[0],
                                  w.woptarg);
+                    return BUILTIN_STRING_ERROR;
+                } else if (errno) {
+                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 }
                 break;
@@ -999,15 +991,13 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
                 break;
             }
             case 's': {
-                errno = 0;
-                start = wcstol(w.woptarg, &endptr, 10);
-                if (*endptr != L'\0' || (errno != 0 && errno != ERANGE)) {
-                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
-                }
+                start = fish_wcstol(w.woptarg);
                 if (start == 0 || start == LONG_MIN || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid start value '%ls'\n"), argv[0],
                                  w.woptarg);
+                    return BUILTIN_STRING_ERROR;
+                } else if (errno) {
+                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 }
                 break;

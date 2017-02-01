@@ -3,7 +3,14 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # They are supposed to be unrelated to text-editing (or movement).
     # This takes $argv so the vi-bindings can pass the mode they are valid in.
 
+    if contains -- -h $argv
+        or contains -- --help $argv
+        echo "Sorry but this function doesn't support -h or --help"
+        return 1
+    end
+
     bind $argv \cy yank
+    or return # protect against invalid $argv
     bind $argv \ey yank-pop
 
     # Left/Right arrow
@@ -14,6 +21,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Some terminals output these when they're in in keypad mode.
     bind $argv \eOC forward-char
     bind $argv \eOD backward-char
+
+    bind $argv -k ppage beginning-of-history
+    bind $argv -k npage end-of-history
 
     # Interaction with the system clipboard.
     bind $argv \cx fish_clipboard_copy
@@ -81,11 +91,16 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind $argv -k f1 __fish_man_page
     bind $argv \eh __fish_man_page
 
-    # This will make sure the output of the current command is paged using the default pager when you press Meta-p.
+    # This will make sure the output of the current command is paged using the default pager when
+    # you press Meta-p.
     # If none is set, less will be used.
     bind $argv \ep '__fish_paginate'
-    
+
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also,
     # remove the commenting chars so the command can be further edited then executed.
     bind $argv \e\# __fish_toggle_comment_commandline
+
+    # The [meta-e] and [meta-v] keystrokes invoke an external editor on the command buffer.
+    bind \ee edit_command_buffer
+    bind \ev edit_command_buffer
 end

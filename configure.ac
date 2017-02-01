@@ -15,6 +15,7 @@ AC_INIT(fish,
         m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),
         fish-users@lists.sourceforge.net)
 ac_clean_files=a.out.dSYM
+
 #
 # List of output variables produced by this configure script
 #
@@ -33,23 +34,23 @@ AC_SUBST(EXTRA_PCRE2)
 # running autoconf to handle an updates configure.ac.
 #
 
-AC_MSG_CHECKING([if autoconf needs to be run])
+AC_MSG_CHECKING([if autoreconf needs to be run])
 if test configure -ot configure.ac; then
   AC_MSG_RESULT([yes])
-  if which autoconf >/dev/null; then
-    # No need to provide any error messages if autoconf fails, the
+  if which autoreconf >/dev/null; then
+    # No need to provide any error messages if autoreconf fails, the
     # shell and autconf should take care of that themselves
-    AC_MSG_NOTICE([running autoconf])
-    if autoconf; then
+    AC_MSG_NOTICE([running autoreconf --no-recursive])
+    if autoreconf --no-recursive; then
       ./configure "$@"
       exit
     fi
     exit 1
   else
     AC_MSG_ERROR(
-      [cannot find the autoconf program in your path.
+      [cannot find the autoreconf program in your path.
 This program needs to be run whenever the configure.ac file is modified.
-Please install autoconf and try again.]
+Please install autoreconf and try again.]
     )
   fi
 else
@@ -82,6 +83,12 @@ else
 fi
 
 #
+# Include the autoconf macros directory
+#
+
+AC_CONFIG_MACRO_DIRS([m4])
+
+#
 # Set up various programs needed for install
 # Note AC_PROG_CXX sets CXXFLAGS if not set, which we want
 # So ensure this happens before we modify CXXFLAGS below
@@ -97,12 +104,13 @@ AC_PROG_AWK
 AC_PROG_FGREP
 AC_PROG_SED
 AC_USE_SYSTEM_EXTENSIONS
+AX_CXX_COMPILE_STDCXX_11(noext,mandatory)
 
 #
 # Tell autoconf to create config.h header
 #
 AC_CONFIG_HEADERS(config.h)
-AC_CANONICAL_TARGET
+AC_CANONICAL_HOST
 
 
 #
@@ -209,11 +217,12 @@ CXXFLAGS="$CXXFLAGS -fno-exceptions"
 
 
 #
-# -Wall is there to keep me on my toes
-# But signed comparison warnings are way too aggressive
+# Set some warning flags
+# Don't warn about missing field initializers, it has too many
+# false positives for code like `struct termios tmodes = {};`
 #
 
-CXXFLAGS="$CXXFLAGS -Wextra"
+CXXFLAGS="$CXXFLAGS -Wextra -Wno-missing-field-initializers"
 
 #
 # This is needed in order to get the really cool backtraces on Linux
@@ -242,6 +251,18 @@ AC_CHECK_FILES([/proc/self/stat])
 AC_DEFINE([NCURSES_NOMACROS], [1], [Define to 1 to disable ncurses macros that conflict with the STL])
 AC_DEFINE([NOMACROS], [1], [Define to 1 to disable curses macros that conflict with the STL])
 
+# Threading is excitingly broken on Solaris without adding -pthread to CXXFLAGS
+# Only support GCC for now
+dnl Ideally we would use the AX_PTHREAD macro here, but it's GPL3-licensed
+dnl ACX_PTHREAD is way too old and seems to break the OS X build
+dnl Both only check with AC_LANG(C) in any case
+case $host_os in
+  solaris*)
+  CXXFLAGS="$CXXFLAGS -pthread"
+  CFLAGS="$CFLAGS -pthread"
+  ;;
+esac
+
 #
 # Check presense of various libraries. This is done on a per-binary
 # level, since including various extra libraries in all binaries only
@@ -250,9 +271,8 @@ AC_DEFINE([NOMACROS], [1], [Define to 1 to disable curses macros that conflict w
 #
 
 # Check for os dependant libraries for all binaries.
-AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
-AC_SEARCH_LIBS( shm_open, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
+AC_SEARCH_LIBS( shm_open, rt, [AC_DEFINE([HAVE_SHM_OPEN], [1], [Define to 1 if the shm_open() function exists])] )
 AC_SEARCH_LIBS( pthread_create, pthread, , [AC_MSG_ERROR([Cannot find the pthread library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses tinfo curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
 AC_SEARCH_LIBS( [dladdr], [dl] )
@@ -302,9 +322,66 @@ AC_CHECK_FUNCS( futimes )
 AC_CHECK_FUNCS( wcslcpy lrand48_r killpg )
 AC_CHECK_FUNCS( backtrace_symbols getifaddrs )
 AC_CHECK_FUNCS( futimens clock_gettime )
-AC_CHECK_FUNCS( getpwent )
+AC_CHECK_FUNCS( getpwent flock )
+AC_CHECK_FUNCS( dirfd )
 
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )
+
+dnl AC_CHECK_FUNCS uses C linkage, but sometimes (Solaris!) the behaviour is
+dnl different with C++.
+AC_MSG_CHECKING([for wcsdup])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ wchar_t* foo = wcsdup(L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_WCSDUP, 1, Define to 1 if you have the `wcsdup' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for std::wcsdup])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ wchar_t* foo = std::wcsdup(L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_STD__WCSDUP, 1, Define to 1 if you have the `std::wcsdup' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for wcscasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = wcscasecmp(L"", L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_WCSCASECMP, 1, Define to 1 if you have the `wcscasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for std::wcscasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = std::wcscasecmp(L"", L""); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_STD__WCSCASECMP, 1, Define to 1 if you have the `std::wcscasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for wcsncasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = wcsncasecmp(L"", L"", 0); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_WCSNCASECMP, 1, Define to 1 if you have the `wcsncasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
+AC_MSG_CHECKING([for std::wcsncasecmp])
+AC_TRY_LINK( [ #include <wchar.h> ],
+             [ int foo = std::wcsncasecmp(L"", L"", 0); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_STD__WCSNCASECMP, 1, Define to 1 if you have the `std::wcsncasecmp' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
 
 if test x$local_gettext != xno; then
   AC_CHECK_FUNCS( gettext )
@@ -472,6 +549,34 @@ else
   AC_MSG_RESULT(no)
 fi
 
+# Check that threads actually work on Solaris
+AC_MSG_CHECKING([for threadsafe errno])
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+    #include <errno.h>
+    #include <pthread.h>
+    #include <signal.h>
+
+    void *thread1_func(void *p_arg)
+    {
+            errno = 1;
+            return 0;
+    }
+    ],[
+    errno = 0;
+    pthread_t t1;
+    pthread_create(&t1, NULL, thread1_func, NULL);
+    pthread_join(t1, NULL);
+    return errno;
+  ])],
+  [AC_MSG_RESULT(yes)],
+  [
+    AC_MSG_RESULT(no)
+    AC_MSG_FAILURE([errno is not threadsafe - check your compiler settings])
+  ],
+  [AC_MSG_RESULT(crosscompiling, skipped)]
+)
+
 pcre2_min_version=10.21
 EXTRA_PCRE2=
 AC_ARG_WITH(
@@ -555,7 +660,7 @@ if test "x$included_pcre2" = "xyes"; then
   AC_MSG_NOTICE([using included PCRE2 library])
   # unfortunately these get added to the global configuration
   ac_configure_args="$ac_configure_args --disable-pcre2-8 --enable-pcre2-$WCHAR_T_BITS --disable-shared"
-  AC_CONFIG_SUBDIRS([pcre2-10.21])
+  AC_CONFIG_SUBDIRS([pcre2-10.22])
 
   PCRE2_CXXFLAGS='-I$(PCRE2_DIR)/src'
   PCRE2_LIBS='-L$(PCRE2_LIBDIR) -lpcre2-$(PCRE2_WIDTH)'

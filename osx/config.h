@@ -10,12 +10,21 @@
 /* Define to 1 if you have the <curses.h> header file. */
 #define HAVE_CURSES_H 1
 
+/* define if the compiler supports basic C++11 syntax */
+#define HAVE_CXX11 1
+
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #define HAVE_DIRENT_H 1
 
+/* Define to 1 if you have the `dirfd' function. */
+#define HAVE_DIRFD 1
+
 /* Define to 1 if you have the <execinfo.h> header file. */
 #define HAVE_EXECINFO_H 1
+
+/* Define to 1 if you have the `flock' function. */
+#define HAVE_FLOCK 1
 
 /* Define to 1 if you have the `futimens' function. */
 /* #undef HAVE_FUTIMENS */
@@ -65,6 +74,9 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_NDIR_H */
 
+/* Define to 1 if the shm_open() function exists */
+#define HAVE_SHM_OPEN 1
+
 /* Define to 1 if you have the <siginfo.h> header file. */
 /* #undef HAVE_SIGINFO_H */
 
@@ -76,6 +88,15 @@
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
+
+/* Define to 1 if you have the `std::wcscasecmp' function. */
+/* #undef HAVE_STD__WCSCASECMP */
+
+/* Define to 1 if you have the `std::wcsdup' function. */
+/* #undef HAVE_STD__WCSDUP */
+
+/* Define to 1 if you have the `std::wcsncasecmp' function. */
+/* #undef HAVE_STD__WCSNCASECMP */
 
 /* Define to 1 if you have the <strings.h> header file. */
 #define HAVE_STRINGS_H 1
@@ -139,6 +160,9 @@
 /* Define to 1 if you have the `wcslcpy' function. */
 #define HAVE_WCSLCPY 1
 
+/* Define to 1 if you have the `wcsncasecmp' function. */
+#define HAVE_WCSNCASECMP 1
+
 /* Define to 1 if you have the `wcsndup' function. */
 /* #undef HAVE_WCSNDUP */
 
@@ -167,7 +191,7 @@
 #define PACKAGE_NAME "fish"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "fish 2.3.1-git"
+#define PACKAGE_STRING "fish 2.4.0-git"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "fish"
@@ -176,7 +200,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.3.1-git"
+#define PACKAGE_VERSION "2.4.0-git"
 
 /* The size of `wchar_t', as computed by sizeof. */
 #define SIZEOF_WCHAR_T 4

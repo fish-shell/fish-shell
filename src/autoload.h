@@ -25,13 +25,9 @@ struct file_access_attempt_t {
 };
 file_access_attempt_t access_file(const wcstring &path, int mode);
 
-struct autoload_function_t : public lru_node_t {
-    explicit autoload_function_t(const wcstring &key)
-        : lru_node_t(key),
-          access(),
-          is_loaded(false),
-          is_placeholder(false),
-          is_internalized(false) {}
+struct autoload_function_t {
+    explicit autoload_function_t(bool placeholder)
+        : access(), is_loaded(false), is_placeholder(placeholder), is_internalized(false) {}
 
     /// The last access attempt recorded
     file_access_attempt_t access;
@@ -44,24 +40,15 @@ struct autoload_function_t : public lru_node_t {
     bool is_internalized;
 };
 
-struct builtin_script_t {
-    const wchar_t *name;
-    const char *def;
-};
-
 class env_vars_snapshot_t;
 
 /// Class representing a path from which we can autoload and the autoloaded contents.
-class autoload_t : private lru_cache_t<autoload_function_t> {
+class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
    private:
     /// Lock for thread safety.
     pthread_mutex_t lock;
     /// The environment variable name.
     const wcstring env_var_name;
-    /// Builtin script array.
-    const struct builtin_script_t *const builtin_scripts;
-    /// Builtin script count.
-    const size_t builtin_script_count;
     /// The path from which we most recently autoloaded.
     wcstring last_path;
     /// the most reecently autoloaded path, tokenized (split on separators).
@@ -69,27 +56,27 @@ class autoload_t : private lru_cache_t<autoload_function_t> {
     /// A table containing all the files that are currently being loaded.
     /// This is here to help prevent recursion.
     std::set<wcstring> is_loading_set;
+    // Function invoked when a command is removed
+    typedef void (*command_removed_function_t)(const wcstring &);
+    const command_removed_function_t command_removed;
 
-    void remove_all_functions(void) { this->evict_all_nodes(); }
+    void remove_all_functions() { this->evict_all_nodes(); }
 
     bool locate_file_and_maybe_load_it(const wcstring &cmd, bool really_load, bool reload,
                                        const wcstring_list_t &path_list);
 
-    virtual void node_was_evicted(autoload_function_t *node);
-
     autoload_function_t *get_autoloaded_function_with_creation(const wcstring &cmd,
                                                                bool allow_eviction);
 
-   protected:
-    /// Overridable callback for when a command is removed.
-    virtual void command_removed(const wcstring &cmd) { UNUSED(cmd); }
-
    public:
-    /// Create an autoload_t for the given environment variable name.
-    autoload_t(const wcstring &env_var_name_var, const builtin_script_t *scripts,
-               size_t script_count);
+    // CRTP override
+    void entry_was_evicted(wcstring key, autoload_function_t node);
 
-    virtual ~autoload_t();
+    // Create an autoload_t for the given environment variable name.
+    autoload_t(const wcstring &env_var_name_var,
+               command_removed_function_t callback);
+
+    ~autoload_t();
 
     /// Autoload the specified file, if it exists in the specified path. Do not load it multiple
     /// times unless its timestamp changes or parse_util_unload is called.

@@ -25,9 +25,10 @@
 #include "input_common.h"
 #include "iothread.h"
 #include "util.h"
+#include "wutil.h"
 
 /// Time in milliseconds to wait for another byte to be available for reading
-/// after \x1b is read before assuming that escape key was pressed, and not an
+/// after \e is read before assuming that escape key was pressed, and not an
 /// escape sequence.
 #define WAIT_ON_ESCAPE_DEFAULT 300
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
@@ -36,8 +37,7 @@ static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 static std::deque<wchar_t> lookahead_list;
 
 // Queue of pairs of (function pointer, argument) to be invoked. Expected to be mostly empty.
-typedef std::pair<void (*)(void *), void *> callback_info_t;
-typedef std::queue<callback_info_t, std::list<callback_info_t> > callback_queue_t;
+typedef std::list<std::function<void(void)>> callback_queue_t;
 static callback_queue_t callback_queue;
 static void input_flush_callbacks(void);
 
@@ -167,13 +167,11 @@ void update_wait_on_escape_ms() {
         return;
     }
 
-    wchar_t *endptr;
-    long tmp = wcstol(escape_time_ms.c_str(), &endptr, 10);
-
-    if (*endptr != '\0' || tmp < 10 || tmp >= 5000) {
+    long tmp = fish_wcstol(escape_time_ms.c_str());
+    if (errno || tmp < 10 || tmp >= 5000) {
         fwprintf(stderr,
                  L"ignoring fish_escape_delay_ms: value '%ls' "
-                 "is not an integer or is < 10 or >= 5000 ms\n",
+                 L"is not an integer or is < 10 or >= 5000 ms\n",
                  escape_time_ms.c_str());
     } else {
         wait_on_escape_ms = (int)tmp;
@@ -238,22 +236,18 @@ void input_common_queue_ch(wint_t ch) { lookahead_push_back(ch); }
 
 void input_common_next_ch(wint_t ch) { lookahead_push_front(ch); }
 
-void input_common_add_callback(void (*callback)(void *), void *arg) {
+void input_common_add_callback(std::function<void(void)> callback) {
     ASSERT_IS_MAIN_THREAD();
-    callback_queue.push(callback_info_t(callback, arg));
+    callback_queue.push_back(std::move(callback));
 }
 
 static void input_flush_callbacks(void) {
-    // Nothing to do if nothing to do.
-    if (callback_queue.empty()) return;
-
     // We move the queue into a local variable, so that events queued up during a callback don't get
     // fired until next round.
+    ASSERT_IS_MAIN_THREAD();
     callback_queue_t local_queue;
     std::swap(local_queue, callback_queue);
-    while (!local_queue.empty()) {
-        const callback_info_t &callback = local_queue.front();
-        callback.first(callback.second);  // cute
-        local_queue.pop();
+    for (auto &f : local_queue) {
+        f();
     }
 }

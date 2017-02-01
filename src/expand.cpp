@@ -150,7 +150,7 @@ static int is_quotable(const wchar_t *str) {
         case L'\t':
         case L'\r':
         case L'\b':
-        case L'\x1b': {
+        case L'\e': {
             return 0;
         }
         default: { return is_quotable(str + 1); }
@@ -166,7 +166,7 @@ wcstring expand_escape_variable(const wcstring &in) {
 
     tokenize_variable_array(in, lst);
 
-    int size = lst.size();
+    size_t size = lst.size();
     if (size == 0) {
         buff.append(L"''");
     } else if (size == 1) {
@@ -393,7 +393,10 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid) {
         if (buf.st_uid != getuid()) continue;
 
         // Remember the pid.
-        pid = fish_wcstoi(name.c_str(), NULL, 10);
+        pid = fish_wcstoi(name.c_str());
+        if (errno || pid < 0) {
+            debug(1, _(L"Unexpected failure to convert pid '%ls' to integer\n"), name.c_str());
+        }
 
         // The 'cmdline' file exists, it should contain the commandline.
         FILE *cmdfile;
@@ -426,25 +429,14 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid) {
 
 #endif
 
-// Helper function to do a job search.
-struct find_job_data_t {
-    const wchar_t *proc;  // the process to search for - possibly numeric, possibly a name
-    expand_flags_t flags;
-    std::vector<completion_t> *completions;
-};
-
 /// The following function is invoked on the main thread, because the job list is not thread safe.
-/// It should search the job list for something matching the given proc, and then return 1 to stop
-/// the search, 0 to continue it.
-static int find_job(const struct find_job_data_t *info) {
+/// It should search the job list for something matching the given proc, and then return true to
+/// stop the search, false to continue it.
+static bool find_job(const wchar_t *proc, expand_flags_t flags,
+                     std::vector<completion_t> *completions) {
     ASSERT_IS_MAIN_THREAD();
 
-    const wchar_t *const proc = info->proc;
-    const expand_flags_t flags = info->flags;
-    std::vector<completion_t> &completions = *info->completions;
-
-    const job_t *j;
-    int found = 0;
+    bool found = false;
     // If we are not doing tab completion, we first check for the single '%' character, because an
     // empty string will pass the numeric check below. But if we are doing tab completion, we want
     // all of the job IDs as completion options, not just the last job backgrounded, so we pass this
@@ -452,20 +444,20 @@ static int find_job(const struct find_job_data_t *info) {
     if (wcslen(proc) == 0 && !(flags & EXPAND_FOR_COMPLETIONS)) {
         // This is an empty job expansion: '%'. It expands to the last job backgrounded.
         job_iterator_t jobs;
-        while ((j = jobs.next())) {
+        while (const job_t *j = jobs.next()) {
             if (!j->command_is_empty()) {
-                append_completion(&completions, to_string<long>(j->pgid));
+                append_completion(completions, to_string<long>(j->pgid));
                 break;
             }
         }
         // You don't *really* want to flip a coin between killing the last process backgrounded and
         // all processes, do you? Let's not try other match methods with the solo '%' syntax.
-        found = 1;
+        found = true;
     } else if (iswnumeric(proc)) {
         // This is a numeric job string, like '%2'.
         if (flags & EXPAND_FOR_COMPLETIONS) {
             job_iterator_t jobs;
-            while ((j = jobs.next())) {
+            while (const job_t *j = jobs.next()) {
                 wchar_t jid[16];
                 if (j->command_is_empty()) continue;
 
@@ -473,25 +465,21 @@ static int find_job(const struct find_job_data_t *info) {
 
                 if (wcsncmp(proc, jid, wcslen(proc)) == 0) {
                     wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_wcstr());
-                    append_completion(&completions, jid + wcslen(proc), desc_buff, 0);
+                    append_completion(completions, jid + wcslen(proc), desc_buff, 0);
                 }
             }
         } else {
-            int jid;
-            wchar_t *end;
-
-            errno = 0;
-            jid = fish_wcstoi(proc, &end, 10);
-            if (jid > 0 && !errno && !*end) {
-                j = job_get(jid);
-                if ((j != 0) && (j->command_wcstr() != 0) && (!j->command_is_empty())) {
-                    append_completion(&completions, to_string<long>(j->pgid));
+            int jid = fish_wcstoi(proc);
+            if (!errno && jid > 0) {
+                const job_t *j = job_get(jid);
+                if (j && !j->command_is_empty()) {
+                    append_completion(completions, to_string<long>(j->pgid));
                 }
             }
         }
         // Stop here so you can't match a random process name when you're just trying to use job
         // control.
-        found = 1;
+        found = true;
     }
 
     if (found) {
@@ -499,16 +487,16 @@ static int find_job(const struct find_job_data_t *info) {
     }
 
     job_iterator_t jobs;
-    while ((j = jobs.next())) {
+    while (const job_t *j = jobs.next()) {
         if (j->command_is_empty()) continue;
 
         size_t offset;
         if (match_pid(j->command(), proc, &offset)) {
             if (flags & EXPAND_FOR_COMPLETIONS) {
-                append_completion(&completions, j->command_wcstr() + offset + wcslen(proc),
+                append_completion(completions, j->command_wcstr() + offset + wcslen(proc),
                                   COMPLETE_JOB_DESC, 0);
             } else {
-                append_completion(&completions, to_string<long>(j->pgid));
+                append_completion(completions, to_string<long>(j->pgid));
                 found = 1;
             }
         }
@@ -519,19 +507,18 @@ static int find_job(const struct find_job_data_t *info) {
     }
 
     jobs.reset();
-    while ((j = jobs.next())) {
-        process_t *p;
+    while (const job_t *j = jobs.next()) {
         if (j->command_is_empty()) continue;
-        for (p = j->first_process; p; p = p->next) {
+        for (const process_ptr_t &p : j->processes) {
             if (p->actual_cmd.empty()) continue;
 
             size_t offset;
             if (match_pid(p->actual_cmd, proc, &offset)) {
                 if (flags & EXPAND_FOR_COMPLETIONS) {
-                    append_completion(&completions, wcstring(p->actual_cmd, offset + wcslen(proc)),
+                    append_completion(completions, wcstring(p->actual_cmd, offset + wcslen(proc)),
                                       COMPLETE_CHILD_PROCESS_DESC, 0);
                 } else {
-                    append_completion(&completions, to_string<long>(p->pid), L"", 0);
+                    append_completion(completions, to_string<long>(p->pid), L"", 0);
                     found = 1;
                 }
             }
@@ -553,8 +540,8 @@ static int find_job(const struct find_job_data_t *info) {
 static void find_process(const wchar_t *proc, expand_flags_t flags,
                          std::vector<completion_t> *out) {
     if (!(flags & EXPAND_SKIP_JOBS)) {
-        const struct find_job_data_t data = {proc, flags, out};
-        int found = iothread_perform_on_main(find_job, &data);
+        bool found = false;
+        iothread_perform_on_main([&]() { found = find_job(proc, flags, out); });
         if (found) {
             return;
         }
@@ -643,25 +630,22 @@ static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags,
 /// with [.
 static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx,
                           std::vector<size_t> &source_positions, size_t array_size) {
-    wchar_t *end;
-
     const long size = (long)array_size;
     size_t pos = 1;  // skip past the opening square bracket
-    //  debug( 0, L"parse_slice on '%ls'", in );
 
     while (1) {
-        long tmp;
-
         while (iswspace(in[pos]) || (in[pos] == INTERNAL_SEPARATOR)) pos++;
         if (in[pos] == L']') {
             pos++;
             break;
         }
 
-        errno = 0;
         const size_t i1_src_pos = pos;
-        tmp = wcstol(&in[pos], &end, 10);
-        if ((errno) || (end == &in[pos])) {
+        const wchar_t *end;
+        long tmp = fish_wcstol(&in[pos], &end);
+        // We don't test `*end` as is typically done because we expect it to not be the null char.
+        // Ignore the case of errno==-1 because it means the end char wasn't the null char.
+        if (errno > 0) {
             return pos;
         }
         // debug( 0, L"Push idx %d", tmp );
@@ -674,8 +658,9 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             while (in[pos] == INTERNAL_SEPARATOR) pos++;
 
             const size_t number_start = pos;
-            long tmp1 = wcstol(&in[pos], &end, 10);
-            if ((errno) || (end == &in[pos])) {
+            long tmp1 = fish_wcstol(&in[pos], &end);
+            // Ignore the case of errno==-1 because it means the end char wasn't the null char.
+            if (errno > 0) {
                 return pos;
             }
             pos = end - in;
@@ -698,11 +683,8 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
     }
 
     if (end_ptr) {
-        // debug( 0, L"Remainder is '%ls', slice def was %d characters long", in+pos, pos );
-
         *end_ptr = (wchar_t *)(in + pos);
     }
-    // debug( 0, L"ok, done" );
 
     return 0;
 }
@@ -769,7 +751,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
             stop_pos++;
         }
 
-        // printf( "Stop for '%c'\n", in[stop_pos]);
+        // fwprintf(stdout, L"Stop for '%c'\n", in[stop_pos]);
         var_len = stop_pos - start_pos;
 
         if (var_len == 0) {
@@ -837,7 +819,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
                     }
 
                     // string_values is the new var_item_list.
-                    var_item_list.swap(string_values);
+                    var_item_list = std::move(string_values);
                 }
             }
 

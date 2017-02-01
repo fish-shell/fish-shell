@@ -1,2 +1,7 @@
 abbr: no such abbreviation 'NOT_AN_ABBR'
 abbr: abbreviation cannot have spaces in the key
+abbr: no such abbreviation '__abbr6'
+abbr: abbreviation cannot have spaces in the key
+abbr: option requires an argument -- -r
+abbr: Unexpected argument -- __abbr10
+abbr: abbreviation '__abbr12' already exists, cannot rename

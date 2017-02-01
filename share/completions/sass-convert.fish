@@ -9,11 +9,11 @@
 #     -F, --from FORMAT                The format to convert from. Can be css, scss, sass.
 #                                      By default, this is inferred from the input filename.
 #                                      If there is none, defaults to css.
-complete -c sass-convert -s F -l from -x -a "css scss sass" -A -d "The format to convert from. Can be css, scss, sass. By default, this is inferred from the input filename. If there is none, defaults to css."
+complete -c sass-convert -s F -l from -x -a "css scss sass" -d "The format to convert from. Can be css, scss, sass. By default, this is inferred from the input filename. If there is none, defaults to css."
 #     -T, --to FORMAT                  The format to convert to. Can be scss or sass.
 #                                      By default, this is inferred from the output filename.
 #                                      If there is none, defaults to sass.
-complete -c sass-convert -s T -l to -x -a "scss sass" -A -d "The format to convert to. Can be scss or sass. By default, this is inferred from the output filename. If there is none, defaults to sass."
+complete -c sass-convert -s T -l to -x -a "scss sass" -d "The format to convert to. Can be scss or sass. By default, this is inferred from the output filename. If there is none, defaults to sass."
 #     -i, --in-place                   Convert a file to its own syntax.
 #                                      This can be used to update some deprecated syntax.
 complete -c sass-convert -s i -l in-place -d "Convert a file to its own syntax. This can be used to update some deprecated syntax."

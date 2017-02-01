@@ -472,11 +472,11 @@ set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untra
 
 function __fish_git_prompt_informative_status
 
-    set -l changedFiles (command git diff --name-status | cut -c 1-2)
-    set -l stagedFiles (command git diff --staged --name-status | cut -c 1-2)
+    set -l changedFiles (command git diff --name-status | string match -r \\w)
+    set -l stagedFiles (command git diff --staged --name-status | string match -r \\w)
 
-    set -l dirtystate (math (count $changedFiles) - (count (echo $changedFiles | grep "U")) ^/dev/null)
-    set -l invalidstate (count (echo $stagedFiles | grep "U"))
+    set -l dirtystate (math (count $changedFiles) - (count (string match -r "U" -- $changedFiles)) ^/dev/null)
+    set -l invalidstate (count (string match -r "U" -- $stagedFiles))
     set -l stagedstate (math (count $stagedFiles) - $invalidstate ^/dev/null)
     set -l untrackedfiles (command git ls-files --others --exclude-standard | wc -l | string trim)
 
@@ -484,7 +484,8 @@ function __fish_git_prompt_informative_status
 
     # If `math` fails for some reason, assume the state is clean - it's the simpler path
     set -l state (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles ^/dev/null)
-    if test -z "$state"; or test "$state" = 0
+    if test -z "$state"
+        or test "$state" = 0
         set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
     else
         for i in $___fish_git_prompt_status_order

@@ -8,7 +8,7 @@ While the documentation is pretty robust to variations in the documentation sour
 
 ## Line breaks and wrapping
 
-Contrary to the rest of the fish source code, the documentation greatly benefits from the use of long lines and soft wrapping. It allows paragraphs to be treated as complete blocks by Doxygen, means that the semantic filter can see complete lines when deciding on how to apply syntax highlighting, and means that man pages will consistently wrap to the width of the users console in advanced pagers, such as 'most'. 
+Contrary to the rest of the fish source code, the documentation greatly benefits from the use of long lines and soft wrapping. It allows paragraphs to be treated as complete blocks by Doxygen, means that the semantic filter can see complete lines when deciding on how to apply syntax highlighting, and means that man pages will consistently wrap to the width of the users console in advanced pagers, such as 'most'.
 
 ## Doxygen special commands and aliases
 
@@ -16,7 +16,7 @@ While Markdown syntax forms the basis of the documentation content, there are so
 
 ### Structure: \\page, \\section and \\subsection
 
-Use of Doxygen sections markers are important, as these determine what will be eventually output as a web page, man page or included in the developer docs. 
+Use of Doxygen sections markers are important, as these determine what will be eventually output as a web page, man page or included in the developer docs.
 
 Currently the make process for the documentation is quite convoluted, but basically the HTML docs are produced from a single, compiled file, doc.h. This contains a number of \\page markers that produce the various pages used in the documentation. The format of a \\page mark is:
 
@@ -175,7 +175,7 @@ ___ (3 underscores): Display a cursor.
 Graphical keyboard shortcuts can be defined using the following special commands. These allow for the different text requirements across the html and man pages. The HTML uses CSS to create a keyboard style, whereas the man page would display the key as text.
 
 - `@key{lable}`
-  Displays a key with a purely textual lable, such as: 'Tab', 'Page Up', 'Page Down', 'Home', 'End', 'F1', 'F19' and so on. 
+  Displays a key with a purely textual lable, such as: 'Tab', 'Page Up', 'Page Down', 'Home', 'End', 'F1', 'F19' and so on.
 
 - `@key{modifier,lable}`
   Displays a keystroke requiring the use of a 'modifier' key, such as 'Control-A', 'Shift-X', 'Alt-Tab' etc.
@@ -204,7 +204,7 @@ Some useful Unicode/HTML5 entities:
 Tested on:
 - Ubuntu 14.04 with Doxygen 1.8.8, built from [GitHub source](https://github.com/doxygen/doxygen.git).
 - CentOS 6.5 with Doxygen 1.8.8, built from [GitHub source](https://github.com/doxygen/doxygen.git).
-- Mac OS X 10.9 with Homebrew install Doxygen 1.8.7 and 1.8.8. 
+- Mac OS X 10.9 with Homebrew install Doxygen 1.8.7 and 1.8.8.
 
 Graphviz was also installed in all the above testing.
 

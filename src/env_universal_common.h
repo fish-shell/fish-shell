@@ -1,5 +1,6 @@
 #ifndef FISH_ENV_UNIVERSAL_COMMON_H
 #define FISH_ENV_UNIVERSAL_COMMON_H
+#include "config.h"  // IWYU pragma: keep
 
 #include <pthread.h>
 #include <stdio.h>
@@ -112,22 +113,14 @@ class env_universal_t {
 class universal_notifier_t {
    public:
     enum notifier_strategy_t {
-        // Default meta-strategy to use the 'best' notifier for the system.
-        strategy_default,
-
         // Use a value in shared memory. Simple, but requires polling and therefore semi-frequent
         // wakeups.
         strategy_shmem_polling,
-
+        // Strategy that uses notify(3). Simple and efficient, but OS X/macOS only.
+        strategy_notifyd,
         // Strategy that uses a named pipe. Somewhat complex, but portable and doesn't require
         // polling most of the time.
         strategy_named_pipe,
-
-        // Strategy that uses notify(3). Simple and efficient, but OS X only.
-        strategy_notifyd,
-
-        // Null notifier, does nothing.
-        strategy_null
     };
 
    protected:
@@ -137,14 +130,14 @@ class universal_notifier_t {
     // No copying.
     universal_notifier_t &operator=(const universal_notifier_t &);
     universal_notifier_t(const universal_notifier_t &x);
-    static notifier_strategy_t resolve_default_strategy();
 
    public:
+    static notifier_strategy_t resolve_default_strategy();
     virtual ~universal_notifier_t();
 
-    // Factory constructor. Free with delete.
-    static universal_notifier_t *new_notifier_for_strategy(notifier_strategy_t strat,
-                                                           const wchar_t *test_path = NULL);
+    // Factory constructor.
+    static std::unique_ptr<universal_notifier_t> new_notifier_for_strategy(
+        notifier_strategy_t strat, const wchar_t *test_path = NULL);
 
     // Default instance. Other instances are possible for testing.
     static universal_notifier_t &default_notifier();

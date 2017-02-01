@@ -6,7 +6,7 @@
 void sanity_lose();
 
 /// Perform sanity checks, return 1 if program is in a sane state 0 otherwise.
-int sanity_check();
+bool sanity_check();
 
 /// Try and determine if ptr is a valid pointer. If not, loose sanity.
 ///

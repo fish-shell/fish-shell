@@ -38,7 +38,9 @@ expect -ex "char: \\c@\r\nbind \\c@ 'do something'\r\n" {
 }
 
 # Does it keep running if handed control sequences in the wrong order?
-send "\x03\x04"
+send "\x03"
+sleep 0.010
+send "\x04"
 expect -ex "char: \\cD\r\n" {
     puts "invalid terminate sequence handled"
 } unmatched {

@@ -14,8 +14,10 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
+
+// This is a temporary var while we explore whether signal_block() and friends is needed.
+bool ignore_signal_block = false;
 
 /// Struct describing an entry for the lookup table used to convert between signal names and signal
 /// ids, etc.
@@ -151,19 +153,15 @@ static int match_signal_name(const wchar_t *canonical, const wchar_t *name) {
 }
 
 int wcs2sig(const wchar_t *str) {
-    int i;
-    wchar_t *end = 0;
-
-    for (i = 0; lookup[i].desc; i++) {
+    for (int i = 0; lookup[i].desc; i++) {
         if (match_signal_name(lookup[i].name, str)) {
             return lookup[i].signal;
         }
     }
-    errno = 0;
-    int res = fish_wcstoi(str, &end, 10);
-    if (!errno && res >= 0 && !*end) return res;
 
-    return -1;
+    int res = fish_wcstoi(str);
+    if (errno || res < 0) return -1;
+    return res;
 }
 
 const wchar_t *sig2wcs(int sig) {
@@ -244,6 +242,15 @@ static void handle_chld(int sig, siginfo_t *info, void *context) {
     default_handler(sig, info, context);
 }
 
+// We have a sigalarm handler that does nothing
+// This is used in the signal torture test, to verify
+// that we behave correctly when receiving lots of irrelevant signals
+static void handle_sigalarm(int sig, siginfo_t *info, void *context) {
+    UNUSED(sig);
+    UNUSED(info);
+    UNUSED(context);
+}
+
 void signal_reset_handlers() {
     int i;
 
@@ -257,88 +264,82 @@ void signal_reset_handlers() {
     }
 }
 
-/// Sets appropriate signal handlers.
-void signal_set_handlers() {
+static void set_interactive_handlers() {
     struct sigaction act;
-
     sigemptyset(&act.sa_mask);
-    act.sa_flags = SA_SIGINFO;
-    act.sa_sigaction = &default_handler;
 
-    // First reset everything to a use default_handler, a function whose sole action is to fire of
-    // an event.
+    // Interactive mode. Ignore interactive signals.  We are a shell, we know what is best for
+    // the user.
+    act.sa_handler = SIG_IGN;
     sigaction(SIGINT, &act, 0);
     sigaction(SIGQUIT, &act, 0);
     sigaction(SIGTSTP, &act, 0);
-    sigaction(SIGTTIN, &act, 0);
     sigaction(SIGTTOU, &act, 0);
-    sigaction(SIGCHLD, &act, 0);
 
-    // Ignore sigpipe, which we may get from the universal variable notifier.
-    sigaction(SIGPIPE, &act, 0);
+    // We don't ignore SIGTTIN because we might send it to ourself.
+    act.sa_sigaction = &default_handler;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGTTIN, &act, 0);
 
-    if (shell_is_interactive()) {
-        // Interactive mode. Ignore interactive signals.  We are a shell, we know what is best for
-        // the user.
-        act.sa_handler = SIG_IGN;
+    act.sa_sigaction = &handle_int;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGINT, &act, 0);
 
-        sigaction(SIGINT, &act, 0);
-        sigaction(SIGQUIT, &act, 0);
-        sigaction(SIGTSTP, &act, 0);
-        sigaction(SIGTTIN, &act, 0);
-        sigaction(SIGTTOU, &act, 0);
+    // SIGTERM restores the terminal controlling process before dying.
+    act.sa_sigaction = &handle_term;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGTERM, &act, 0);
 
-        act.sa_sigaction = &handle_int;
-        act.sa_flags = SA_SIGINFO;
-        if (sigaction(SIGINT, &act, 0)) {
-            wperror(L"sigaction");
-            FATAL_EXIT();
-        }
+    act.sa_sigaction = &handle_hup;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGHUP, &act, 0);
 
-        act.sa_sigaction = &handle_chld;
-        act.sa_flags = SA_SIGINFO;
-        if (sigaction(SIGCHLD, &act, 0)) {
-            wperror(L"sigaction");
-            FATAL_EXIT();
-        }
+    // SIGALARM as part of our signal torture test
+    act.sa_sigaction = &handle_sigalarm;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGALRM, &act, 0);
 
 #ifdef SIGWINCH
-        act.sa_flags = SA_SIGINFO;
-        act.sa_sigaction = &handle_winch;
-        if (sigaction(SIGWINCH, &act, 0)) {
-            wperror(L"sigaction");
-            FATAL_EXIT();
-        }
+    act.sa_sigaction = &handle_winch;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGWINCH, &act, 0);
 #endif
+}
 
-        act.sa_flags = SA_SIGINFO;
-        act.sa_sigaction = &handle_hup;
-        if (sigaction(SIGHUP, &act, 0)) {
-            wperror(L"sigaction");
-            FATAL_EXIT();
-        }
+static void set_non_interactive_handlers() {
+    struct sigaction act;
+    sigemptyset(&act.sa_mask);
 
-        // SIGTERM restores the terminal controlling process before dying.
-        act.sa_flags = SA_SIGINFO;
-        act.sa_sigaction = &handle_term;
-        if (sigaction(SIGTERM, &act, 0)) {
-            wperror(L"sigaction");
-            FATAL_EXIT();
-        }
+    // Non-interactive. Ignore interrupt, check exit status of processes to determine result
+    // instead.
+    act.sa_handler = SIG_IGN;
+    sigaction(SIGINT, &act, 0);
+    sigaction(SIGQUIT, &act, 0);
+}
+
+/// Sets up appropriate signal handlers.
+void signal_set_handlers() {
+    struct sigaction act;
+    sigemptyset(&act.sa_mask);
+
+    // Ignore SIGPIPE. We'll detect failed writes and deal with them appropriately. We don't want
+    // this signal interrupting other syscalls or terminating us.
+    act.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &act, 0);
+
+    // Whether or not we're interactive we want SIGCHLD to not interrupt restartable syscalls.
+    act.sa_flags = SA_SIGINFO;
+    act.sa_sigaction = &handle_chld;
+    act.sa_flags = SA_SIGINFO | SA_RESTART;
+    if (sigaction(SIGCHLD, &act, 0)) {
+        wperror(L"sigaction");
+        FATAL_EXIT();
+    }
+
+    if (shell_is_interactive()) {
+        set_interactive_handlers();
     } else {
-        // Non-interactive. Ignore interrupt, check exit status of processes to determine result
-        // instead.
-        act.sa_handler = SIG_IGN;
-        sigaction(SIGINT, &act, 0);
-        sigaction(SIGQUIT, &act, 0);
-
-        act.sa_handler = SIG_DFL;
-        act.sa_sigaction = &handle_chld;
-        act.sa_flags = SA_SIGINFO;
-        if (sigaction(SIGCHLD, &act, 0)) {
-            wperror(L"sigaction");
-            exit_without_destructors(1);
-        }
+        set_non_interactive_handlers();
     }
 }
 
@@ -372,6 +373,8 @@ void get_signals_with_handlers(sigset_t *set) {
 }
 
 void signal_block() {
+    if (ignore_signal_block) return;
+
     ASSERT_IS_MAIN_THREAD();
     sigset_t chldset;
 
@@ -381,10 +384,12 @@ void signal_block() {
     }
 
     block_count++;
-    //	debug( 0, L"signal block level increased to %d", block_count );
+    // debug( 0, L"signal block level increased to %d", block_count );
 }
 
 void signal_unblock() {
+    if (ignore_signal_block) return;
+
     ASSERT_IS_MAIN_THREAD();
     sigset_t chldset;
 
@@ -400,7 +405,10 @@ void signal_unblock() {
         sigfillset(&chldset);
         VOMIT_ON_FAILURE(pthread_sigmask(SIG_UNBLOCK, &chldset, 0));
     }
-    //	debug( 0, L"signal block level decreased to %d", block_count );
+    // debug( 0, L"signal block level decreased to %d", block_count );
 }
 
-bool signal_is_blocked() { return static_cast<bool>(block_count); }
+bool signal_is_blocked() {
+    if (ignore_signal_block) return false;
+    return static_cast<bool>(block_count);
+}

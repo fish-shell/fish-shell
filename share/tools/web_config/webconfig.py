@@ -1,50 +1,49 @@
 #!/usr/bin/env python
 
 from __future__ import unicode_literals
-# Whether we're Python 2
-import sys
+from __future__ import print_function
+import binascii
+import cgi
+import glob
 import multiprocessing.pool
-import os
 import operator
+import os
+import random
+import re
+import select
 import socket
+import string
+import subprocess
+import sys
+import webbrowser
+
+FISH_BIN_PATH = False  # will be set later
 IS_PY2 = sys.version_info[0] == 2
 
 if IS_PY2:
     import SimpleHTTPServer
     import SocketServer
     from urlparse import parse_qs
-
 else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
     from urllib.parse import parse_qs
 
-# Check to see if IPv6 is enabled in the kernel
-HAS_IPV6 = True
-try:
-    s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-    s.close()
-except:
-    HAS_IPV6 = False
-
 # Disable CLI web browsers
 term = os.environ.pop('TERM', None)
-import webbrowser
 if term:
     os.environ['TERM'] = term
 
-import subprocess
-import re, socket, cgi, select, time, glob, random, string, binascii
 try:
     import json
 except ImportError:
     import simplejson as json
 
-FISH_BIN_PATH = False # will be set later
+
 def run_fish_cmd(text):
-    from subprocess import PIPE
-    # ensure that fish is using UTF-8
-    ctype = os.environ.get("LC_ALL", os.environ.get("LC_CTYPE", os.environ.get("LANG")))
+    # Ensure that fish is using UTF-8.
+    ctype = os.environ.get("LC_ALL", os.environ.get("LC_CTYPE",
+                                                    os.environ.get("LANG")))
     env = None
     if ctype is None or re.search(r"\.utf-?8$", ctype, flags=re.I) is None:
         # override LC_CTYPE with en_US.UTF-8
@@ -52,11 +51,14 @@ def run_fish_cmd(text):
         # Fish makes the same assumption in config.fish
         env = os.environ.copy()
         env.update(LC_CTYPE="en_US.UTF-8", LANG="en_US.UTF-8")
-    p = subprocess.Popen([FISH_BIN_PATH], stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
+    p = subprocess.Popen([FISH_BIN_PATH], stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                         env=env)
     out, err = p.communicate(text.encode('utf-8'))
     out = out.decode('utf-8', 'replace')
     err = err.decode('utf-8', 'replace')
-    return(out, err)
+    return out, err
+
 
 def escape_fish_cmd(text):
     # Replace one backslash with two, and single quotes with backslash-quote
@@ -64,56 +66,52 @@ def escape_fish_cmd(text):
     return "'" + escaped + "'"
 
 named_colors = {
-    'black'     : '000000',
-    'red'       : '800000',
-    'green'     : '008000',
-    'brown'     : '725000',
-    'yellow'    : '808000',
-    'blue'      : '000080',
-    'magenta'   : '800080',
-    'purple'    : '800080',
-    'cyan'      : '008080',
-    'grey'      : 'e5e5e5',
-    'brgrey'    : '555555',
-    'white'     : 'c0c0c0',
-    'brblack'   : '808080',
-    'brred'     : 'ff0000',
-    'brgreen'   : '00ff00',
-    'brbrown'   : 'ffff00',
-    'bryellow'  : 'ffff00',
-    'brblue'    : '0000ff',
-    'brmagenta' : 'ff00ff',
-    'brpurple'  : 'ff00ff',
-    'brcyan'    : '00ffff',
-    'brwhite'   : 'ffffff'
+    'black': '000000', 'red': '800000', 'green': '008000', 'brown': '725000',
+    'yellow': '808000', 'blue': '000080', 'magenta': '800080',
+    'purple': '800080', 'cyan': '008080', 'grey': 'e5e5e5', 'brgrey': '555555',
+    'white': 'c0c0c0', 'brblack': '808080', 'brred': 'ff0000',
+    'brgreen': '00ff00', 'brbrown': 'ffff00', 'bryellow': 'ffff00',
+    'brblue': '0000ff', 'brmagenta': 'ff00ff', 'brpurple': 'ff00ff',
+    'brcyan': '00ffff', 'brwhite': 'ffffff'
 }
 
 bindings_blacklist = set(["self-insert", "'begin;end'"])
+
 
 def parse_one_color(comp):
     """ A basic function to parse a single color value like 'FFA000' """
     if comp in named_colors:
         # Named color
         return named_colors[comp]
-    elif re.match(r"[0-9a-fA-F]{3}", comp) is not None or re.match(r"[0-9a-fA-F]{6}", comp) is not None:
+    elif (re.match(r"[0-9a-fA-F]{3}", comp) is not None or
+          re.match(r"[0-9a-fA-F]{6}", comp) is not None):
         # Hex color
         return comp
     else:
         # Unknown
         return ''
 
+
 def better_color(c1, c2):
     """ Indicate which color is "better", i.e. prefer term256 colors """
-    if not c2: return c1
-    if not c1: return c2
-    if c1 == 'normal': return c2
-    if c2 == 'normal': return c1
-    if c2 in named_colors: return c1
-    if c1 in named_colors: return c2
+    if not c2:
+        return c1
+    if not c1:
+        return c2
+    if c1 == 'normal':
+        return c2
+    if c2 == 'normal':
+        return c1
+    if c2 in named_colors:
+        return c1
+    if c1 in named_colors:
+        return c2
     return c1
 
+
 def parse_color(color_str):
-    """ A basic function to parse a color string, for example, 'red' '--bold' """
+    """ A basic function to parse a color string, for example, 'red' '--bold'.
+    """
     comps = color_str.split(' ')
     color = 'normal'
     background_color = ''
@@ -127,21 +125,69 @@ def parse_color(color_str):
             underline = True
         elif comp.startswith('--background='):
             # Background color
-            background_color = better_color(background_color, parse_one_color(comp[len('--background='):]))
+            background_color = better_color(
+                background_color, parse_one_color(comp[len('--background='):]))
         else:
             # Regular color
             color = better_color(color, parse_one_color(comp))
 
-    return {"color": color, "background": background_color, "bold": bold, "underline": underline}
+    return {"color": color, "background": background_color, "bold": bold,
+            "underline": underline}
+
 
 def parse_bool(val):
     val = val.lower()
-    if val.startswith('f') or val.startswith('0'): return False
-    if val.startswith('t') or val.startswith('1'): return True
+    if val.startswith('f') or val.startswith('0'):
+        return False
+    if val.startswith('t') or val.startswith('1'):
+        return True
     return bool(val)
 
+
 def html_color_for_ansi_color_index(val):
-    arr = ['black', '#AA0000', '#00AA00', '#AA5500', '#0000AA', '#AA00AA', '#00AAAA', '#AAAAAA', '#555555', '#FF5555', '#55FF55', '#FFFF55', '#5555FF', '#FF55FF', '#55FFFF', 'white', '#000000', '#00005f', '#000087', '#0000af', '#0000d7', '#0000ff', '#005f00', '#005f5f', '#005f87', '#005faf', '#005fd7', '#005fff', '#008700', '#00875f', '#008787', '#0087af', '#0087d7', '#0087ff', '#00af00', '#00af5f', '#00af87', '#00afaf', '#00afd7', '#00afff', '#00d700', '#00d75f', '#00d787', '#00d7af', '#00d7d7', '#00d7ff', '#00ff00', '#00ff5f', '#00ff87', '#00ffaf', '#00ffd7', '#00ffff', '#5f0000', '#5f005f', '#5f0087', '#5f00af', '#5f00d7', '#5f00ff', '#5f5f00', '#5f5f5f', '#5f5f87', '#5f5faf', '#5f5fd7', '#5f5fff', '#5f8700', '#5f875f', '#5f8787', '#5f87af', '#5f87d7', '#5f87ff', '#5faf00', '#5faf5f', '#5faf87', '#5fafaf', '#5fafd7', '#5fafff', '#5fd700', '#5fd75f', '#5fd787', '#5fd7af', '#5fd7d7', '#5fd7ff', '#5fff00', '#5fff5f', '#5fff87', '#5fffaf', '#5fffd7', '#5fffff', '#870000', '#87005f', '#870087', '#8700af', '#8700d7', '#8700ff', '#875f00', '#875f5f', '#875f87', '#875faf', '#875fd7', '#875fff', '#878700', '#87875f', '#878787', '#8787af', '#8787d7', '#8787ff', '#87af00', '#87af5f', '#87af87', '#87afaf', '#87afd7', '#87afff', '#87d700', '#87d75f', '#87d787', '#87d7af', '#87d7d7', '#87d7ff', '#87ff00', '#87ff5f', '#87ff87', '#87ffaf', '#87ffd7', '#87ffff', '#af0000', '#af005f', '#af0087', '#af00af', '#af00d7', '#af00ff', '#af5f00', '#af5f5f', '#af5f87', '#af5faf', '#af5fd7', '#af5fff', '#af8700', '#af875f', '#af8787', '#af87af', '#af87d7', '#af87ff', '#afaf00', '#afaf5f', '#afaf87', '#afafaf', '#afafd7', '#afafff', '#afd700', '#afd75f', '#afd787', '#afd7af', '#afd7d7', '#afd7ff', '#afff00', '#afff5f', '#afff87', '#afffaf', '#afffd7', '#afffff', '#d70000', '#d7005f', '#d70087', '#d700af', '#d700d7', '#d700ff', '#d75f00', '#d75f5f', '#d75f87', '#d75faf', '#d75fd7', '#d75fff', '#d78700', '#d7875f', '#d78787', '#d787af', '#d787d7', '#d787ff', '#d7af00', '#d7af5f', '#d7af87', '#d7afaf', '#d7afd7', '#d7afff', '#d7d700', '#d7d75f', '#d7d787', '#d7d7af', '#d7d7d7', '#d7d7ff', '#d7ff00', '#d7ff5f', '#d7ff87', '#d7ffaf', '#d7ffd7', '#d7ffff', '#ff0000', '#ff005f', '#ff0087', '#ff00af', '#ff00d7', '#ff00ff', '#ff5f00', '#ff5f5f', '#ff5f87', '#ff5faf', '#ff5fd7', '#ff5fff', '#ff8700', '#ff875f', '#ff8787', '#ff87af', '#ff87d7', '#ff87ff', '#ffaf00', '#ffaf5f', '#ffaf87', '#ffafaf', '#ffafd7', '#ffafff', '#ffd700', '#ffd75f', '#ffd787', '#ffd7af', '#ffd7d7', '#ffd7ff', '#ffff00', '#ffff5f', '#ffff87', '#ffffaf', '#ffffd7', '#ffffff', '#080808', '#121212', '#1c1c1c', '#262626', '#303030', '#3a3a3a', '#444444', '#4e4e4e', '#585858', '#626262', '#6c6c6c', '#767676', '#808080', '#8a8a8a', '#949494', '#9e9e9e', '#a8a8a8', '#b2b2b2', '#bcbcbc', '#c6c6c6', '#d0d0d0', '#dadada', '#e4e4e4', '#eeeeee']
+    arr = ['black', '#AA0000', '#00AA00', '#AA5500', '#0000AA', '#AA00AA',
+           '#00AAAA', '#AAAAAA', '#555555', '#FF5555', '#55FF55', '#FFFF55',
+           '#5555FF', '#FF55FF', '#55FFFF', 'white', '#000000', '#00005f',
+           '#000087', '#0000af', '#0000d7', '#0000ff', '#005f00', '#005f5f',
+           '#005f87', '#005faf', '#005fd7', '#005fff', '#008700', '#00875f',
+           '#008787', '#0087af', '#0087d7', '#0087ff', '#00af00', '#00af5f',
+           '#00af87', '#00afaf', '#00afd7', '#00afff', '#00d700', '#00d75f',
+           '#00d787', '#00d7af', '#00d7d7', '#00d7ff', '#00ff00', '#00ff5f',
+           '#00ff87', '#00ffaf', '#00ffd7', '#00ffff', '#5f0000', '#5f005f',
+           '#5f0087', '#5f00af', '#5f00d7', '#5f00ff', '#5f5f00', '#5f5f5f',
+           '#5f5f87', '#5f5faf', '#5f5fd7', '#5f5fff', '#5f8700', '#5f875f',
+           '#5f8787', '#5f87af', '#5f87d7', '#5f87ff', '#5faf00', '#5faf5f',
+           '#5faf87', '#5fafaf', '#5fafd7', '#5fafff', '#5fd700', '#5fd75f',
+           '#5fd787', '#5fd7af', '#5fd7d7', '#5fd7ff', '#5fff00', '#5fff5f',
+           '#5fff87', '#5fffaf', '#5fffd7', '#5fffff', '#870000', '#87005f',
+           '#870087', '#8700af', '#8700d7', '#8700ff', '#875f00', '#875f5f',
+           '#875f87', '#875faf', '#875fd7', '#875fff', '#878700', '#87875f',
+           '#878787', '#8787af', '#8787d7', '#8787ff', '#87af00', '#87af5f',
+           '#87af87', '#87afaf', '#87afd7', '#87afff', '#87d700', '#87d75f',
+           '#87d787', '#87d7af', '#87d7d7', '#87d7ff', '#87ff00', '#87ff5f',
+           '#87ff87', '#87ffaf', '#87ffd7', '#87ffff', '#af0000', '#af005f',
+           '#af0087', '#af00af', '#af00d7', '#af00ff', '#af5f00', '#af5f5f',
+           '#af5f87', '#af5faf', '#af5fd7', '#af5fff', '#af8700', '#af875f',
+           '#af8787', '#af87af', '#af87d7', '#af87ff', '#afaf00', '#afaf5f',
+           '#afaf87', '#afafaf', '#afafd7', '#afafff', '#afd700', '#afd75f',
+           '#afd787', '#afd7af', '#afd7d7', '#afd7ff', '#afff00', '#afff5f',
+           '#afff87', '#afffaf', '#afffd7', '#afffff', '#d70000', '#d7005f',
+           '#d70087', '#d700af', '#d700d7', '#d700ff', '#d75f00', '#d75f5f',
+           '#d75f87', '#d75faf', '#d75fd7', '#d75fff', '#d78700', '#d7875f',
+           '#d78787', '#d787af', '#d787d7', '#d787ff', '#d7af00', '#d7af5f',
+           '#d7af87', '#d7afaf', '#d7afd7', '#d7afff', '#d7d700', '#d7d75f',
+           '#d7d787', '#d7d7af', '#d7d7d7', '#d7d7ff', '#d7ff00', '#d7ff5f',
+           '#d7ff87', '#d7ffaf', '#d7ffd7', '#d7ffff', '#ff0000', '#ff005f',
+           '#ff0087', '#ff00af', '#ff00d7', '#ff00ff', '#ff5f00', '#ff5f5f',
+           '#ff5f87', '#ff5faf', '#ff5fd7', '#ff5fff', '#ff8700', '#ff875f',
+           '#ff8787', '#ff87af', '#ff87d7', '#ff87ff', '#ffaf00', '#ffaf5f',
+           '#ffaf87', '#ffafaf', '#ffafd7', '#ffafff', '#ffd700', '#ffd75f',
+           '#ffd787', '#ffd7af', '#ffd7d7', '#ffd7ff', '#ffff00', '#ffff5f',
+           '#ffff87', '#ffffaf', '#ffffd7', '#ffffff', '#080808', '#121212',
+           '#1c1c1c', '#262626', '#303030', '#3a3a3a', '#444444', '#4e4e4e',
+           '#585858', '#626262', '#6c6c6c', '#767676', '#808080', '#8a8a8a',
+           '#949494', '#9e9e9e', '#a8a8a8', '#b2b2b2', '#bcbcbc', '#c6c6c6',
+           '#d0d0d0', '#dadada', '#e4e4e4', '#eeeeee']
     if val < 0 or val >= len(arr):
         return ''
     else:
@@ -149,6 +195,8 @@ def html_color_for_ansi_color_index(val):
 
 # Function to return special ANSI escapes like exit_attribute_mode
 g_special_escapes_dict = None
+
+
 def get_special_ansi_escapes():
     global g_special_escapes_dict
     if g_special_escapes_dict is None:
@@ -160,8 +208,10 @@ def get_special_ansi_escapes():
         def get_tparm(key):
             val = None
             key = curses.tigetstr("sgr0")
-            if key: val = curses.tparm(key)
-            if val: val = val.decode('utf-8')
+            if key:
+                val = curses.tparm(key)
+            if val:
+                val = val.decode('utf-8')
             return val
 
         # Just a few for now
@@ -173,6 +223,8 @@ def get_special_ansi_escapes():
 
 # Given a known ANSI escape sequence, convert it to HTML and append to the list
 # Returns whether we have an open <span>
+
+
 def append_html_for_ansi_escape(full_val, result, span_open):
 
     # Strip off the initial \x1b[ and terminating m
@@ -187,16 +239,16 @@ def append_html_for_ansi_escape(full_val, result, span_open):
     match = re.match('38;5;(\d+)', val)
     if match is not None:
         close_span()
-        html_color =  html_color_for_ansi_color_index(int(match.group(1)))
+        html_color = html_color_for_ansi_color_index(int(match.group(1)))
         result.append('<span style="color: ' + html_color + '">')
-        return True # span now open
+        return True  # span now open
 
     # term8 foreground color
     if val in [str(x) for x in range(30, 38)]:
         close_span()
-        html_color =  html_color_for_ansi_color_index(int(val) - 30)
+        html_color = html_color_for_ansi_color_index(int(val) - 30)
         result.append('<span style="color: ' + html_color + '">')
-        return True # span now open
+        return True  # span now open
 
     # Try special escapes
     special_escapes = get_special_ansi_escapes()
@@ -209,15 +261,17 @@ def append_html_for_ansi_escape(full_val, result, span_open):
     # Do nothing on failure
     return span_open
 
+
 def strip_ansi(val):
     # Make a half-assed effort to strip ANSI control sequences
     # We assume that all such sequences start with 0x1b and end with m,
     # which catches most cases
     return re.sub("\x1b[^m]*m", '', val)
 
+
 def ansi_prompt_line_width(val):
-    # Given an ANSI prompt, return the length of its longest line, as in the number of characters it takes up
-    # Start by stripping off ANSI
+    # Given an ANSI prompt, return the length of its longest line, as in the
+    # number of characters it takes up. Start by stripping off ANSI.
     stripped_val = strip_ansi(val)
 
     # Now count the longest line
@@ -225,10 +279,10 @@ def ansi_prompt_line_width(val):
 
 
 def ansi_to_html(val):
-    # Split us up by ANSI escape sequences
-    # We want to catch not only the standard color codes, but also things like sgr0
-    # Hence this lame check
-    # Note that Python 2.6 doesn't have a flag param to re.split, so we have to compile it first
+    # Split us up by ANSI escape sequences. We want to catch not only the
+    # standard color codes, but also things like sgr0. Hence this lame check.
+    # Note that Python 2.6 doesn't have a flag param to re.split, so we have to
+    # compile it first.
     reg = re.compile("""
         (                        # Capture
          \x1b                    # Escape
@@ -253,10 +307,12 @@ def ansi_to_html(val):
             result.append(cgi.escape(strip_ansi(component)))
         else:
             # It's an escape sequence. Close the previous escape.
-            span_open = append_html_for_ansi_escape(component, result, span_open)
+            span_open = append_html_for_ansi_escape(component, result,
+                                                    span_open)
 
     # Close final escape
-    if span_open: result.append('</span>')
+    if span_open:
+        result.append('</span>')
 
     # Remove empty elements
     result = [x for x in result if x]
@@ -272,6 +328,7 @@ def ansi_to_html(val):
 
     return ''.join(result)
 
+
 class FishVar:
     """ A class that represents a variable """
     def __init__(self, name, value):
@@ -283,15 +340,20 @@ class FishVar:
     def get_json_obj(self):
         # Return an array(3): name, value, flags
         flags = []
-        if self.universal: flags.append('universal')
-        if self.exported: flags.append('exported')
-        return {"name": self.name, "value": self.value, "Flags": ', '.join(flags)}
+        if self.universal:
+            flags.append('universal')
+        if self.exported:
+            flags.append('exported')
+        return {"name": self.name, "value": self.value,
+                "Flags": ', '.join(flags)}
+
 
 class FishBinding:
     """A class that represents keyboard binding """
 
-    def __init__(self, command, raw_binding, readable_binding, description=None):
-        self.command =  command
+    def __init__(self, command, raw_binding, readable_binding,
+                 description=None):
+        self.command = command
         self.bindings = []
         self.description = description
         self.add_binding(raw_binding, readable_binding)
@@ -302,23 +364,24 @@ class FishBinding:
                 i['raw_bindings'].append(raw_binding)
                 break
         else:
-            self.bindings.append({'readable_binding':readable_binding, 'raw_bindings':[raw_binding]})
+            self.bindings.append({'readable_binding': readable_binding,
+                                  'raw_bindings': [raw_binding]})
 
     def get_json_obj(self):
-        return {"command" : self.command, "bindings": self.bindings, "description": self.description}
+        return {"command": self.command, "bindings": self.bindings,
+                "description": self.description}
 
 
 class BindingParser:
     """ Class to parse codes for bind command """
 
-    #TODO: What does snext and sprevious mean ?
-    readable_keys=  { "dc":"Delete", "npage": "Page Up", "ppage":"Page Down",
-                    "sdc": "Shift Delete", "shome": "Shift Home",
-                    "left": "Left Arrow", "right": "Right Arrow",
-                    "up": "Up Arrow", "down": "Down Arrow",
-                    "sleft": "Shift Left", "sright": "Shift Right",
-                    "btab": "Shift Tab"
-                    }
+    # TODO: What does snext and sprevious mean ?
+    readable_keys = {"dc": "Delete", "npage": "Page Up", "ppage": "Page Down",
+                     "sdc": "Shift Delete", "shome": "Shift Home",
+                     "left": "Left Arrow", "right": "Right Arrow",
+                     "up": "Up Arrow", "down": "Down Arrow",
+                     "sleft": "Shift Left", "sright": "Shift Right",
+                     "btab": "Shift Tab"}
 
     def set_buffer(self, buffer):
         """ Sets code to parse """
@@ -356,7 +419,8 @@ class BindingParser:
 
         # \[1\; is start of control sequence
         if c == '1':
-            b = self.get_char(); c = self.get_char()
+            b = self.get_char()
+            c = self.get_char()
             if b == '\\' and c == '~':
                 result += "Home"
             elif c == ";":
@@ -369,7 +433,8 @@ class BindingParser:
 
         # \[4\~ is End
         if c == '4':
-            b = self.get_char(); c = self.get_char()
+            b = self.get_char()
+            c = self.get_char()
             if b == '\\' and c == '~':
                 result += "End"
 
@@ -466,7 +531,7 @@ class FishConfigTCPServer(SocketServer.TCPServer):
     """TCPServer that only accepts connections from localhost (IPv4/IPv6)."""
     WHITELIST = set(['::1', '::ffff:127.0.0.1', '127.0.0.1'])
 
-    address_family = socket.AF_INET6 if HAS_IPV6 else socket.AF_INET
+    address_family = socket.AF_INET6 if socket.has_ipv6 else socket.AF_INET
 
     def verify_request(self, request, client_address):
         return client_address[0] in FishConfigTCPServer.WHITELIST
@@ -526,7 +591,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
                 color_name, color_value = [x.strip() for x in match.group(1, 2)]
                 color_desc = descriptions.get(color_name, '')
-                data = { "name": color_name, "description" : color_desc }
+                data = {"name": color_name, "description": color_desc}
                 data.update(parse_color(color_value))
                 result.append(data)
                 remaining.discard(color_name)
@@ -564,18 +629,22 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         vars = {}
         for line in out.split('\n'):
             comps = line.split(' ', 1)
-            if len(comps) < 2: continue
+            if len(comps) < 2:
+                continue
             fish_var = FishVar(comps[0], comps[1])
             vars[fish_var.name] = fish_var
 
         # Mark universal variables. L means don't abbreviate.
         for name in self.do_get_variable_names('set -nUL'):
-            if name in vars: vars[name].universal = True
+            if name in vars:
+                vars[name].universal = True
         # Mark exported variables. L means don't abbreviate.
         for name in self.do_get_variable_names('set -nxL'):
-            if name in vars: vars[name].exported = True
+            if name in vars:
+                vars[name].exported = True
 
-        return [vars[key].get_json_obj() for key in sorted(vars.keys(), key=lambda x: x.lower())]
+        return [vars[key].get_json_obj() for key
+                in sorted(vars.keys(), key=lambda x: x.lower())]
 
     def do_get_bindings(self):
         """ Get key bindings """
@@ -621,29 +690,37 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 bindings.append(fish_binding)
                 command_to_binding[command] = fish_binding
 
-        return [ binding.get_json_obj() for binding in bindings ]
+        return [binding.get_json_obj() for binding in bindings]
 
     def do_get_history(self):
-        # Use \x1e ("record separator") to distinguish between history items. The first
-        # backslash is so Python passes one backslash to fish
+        # Use \x1e ("record separator") to distinguish between history items.
+        # The first backslash is so Python passes one backslash to fish.
         out, err = run_fish_cmd('for val in $history; echo -n $val \\x1e; end')
         result = out.split(' \x1e')
-        if result: result.pop() # Trim off the trailing element
+        if result:
+            result.pop()  # trim off the trailing element
         return result
 
     def do_get_color_for_variable(self, name):
-        "Return the color with the given name, or the empty string if there is none"
+        # Return the color with the given name, or the empty string if there is
+        # none.
         out, err = run_fish_cmd("echo -n $" + name)
         return out
 
-    def do_set_color_for_variable(self, name, color, background_color, bold, underline):
-        if not color: color = 'normal'
+    def do_set_color_for_variable(self, name, color, background_color, bold,
+                                  underline):
+        if not color:
+            color = 'normal'
         "Sets a color for a fish color name, like 'autosuggestion'"
         command = 'set -U fish_color_' + name
-        if color: command += ' ' + color
-        if background_color: command += ' --background=' + background_color
-        if bold: command += ' --bold'
-        if underline: command += ' --underline'
+        if color:
+            command += ' ' + color
+        if background_color:
+            command += ' --background=' + background_color
+        if bold:
+            command += ' --bold'
+        if underline:
+            command += ' --underline'
 
         out, err = run_fish_cmd(command)
         return out
@@ -655,7 +732,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_delete_history_item(self, history_item_text):
         # It's really lame that we always return success here
         cmd = ('builtin history delete --exact -- %s; builtin history save' %
-            escape_fish_cmd(history_item_text))
+               escape_fish_cmd(history_item_text))
         out, err = run_fish_cmd(cmd)
         return True
 
@@ -669,29 +746,35 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         prompt_demo_ansi, err = run_fish_cmd(command_to_run)
         prompt_demo_html = ansi_to_html(prompt_demo_ansi)
         prompt_demo_font_size = self.font_size_for_ansi_prompt(prompt_demo_ansi)
-        result = {'function': prompt_function_text, 'demo': prompt_demo_html, 'font_size': prompt_demo_font_size }
+        result = {'function': prompt_function_text, 'demo': prompt_demo_html,
+                  'font_size': prompt_demo_font_size}
         if extras_dict:
             result.update(extras_dict)
         return result
 
     def do_get_current_prompt(self):
-        # Return the current prompt
-        # We run 'false' to demonstrate how the prompt shows the command status (#1624)
+        # Return the current prompt. We run 'false' to demonstrate how the
+        # prompt shows the command status (#1624).
         prompt_func, err = run_fish_cmd('functions fish_prompt')
-        result = self.do_get_prompt('builtin cd "' + initial_wd + '" ; false ; fish_prompt', prompt_func.strip(), {'name': 'Current'})
+        result = self.do_get_prompt(
+            'builtin cd "' + initial_wd + '" ; false ; fish_prompt',
+            prompt_func.strip(), {'name': 'Current'})
         return result
 
     def do_get_sample_prompt(self, text, extras_dict):
-        # Return the prompt you get from the given text
-        # extras_dict is a dictionary whose values get merged in
-        # We run 'false' to demonstrate how the prompt shows the command status (#1624)
-        cmd = text + "\n builtin cd \"" + initial_wd + "\" \n false \n fish_prompt\n"
+        # Return the prompt you get from the given text. Extras_dict is a
+        # dictionary whose values get merged in. We run 'false' to demonstrate
+        # how the prompt shows the command status (#1624)
+        cmd = (text + "\n builtin cd \"" + initial_wd +
+               "\" \n false \n fish_prompt\n")
         return self.do_get_prompt(cmd, text.strip(), extras_dict)
 
     def parse_one_sample_prompt_hash(self, line, result_dict):
         # Allow us to skip whitespace, etc.
-        if not line: return True
-        if line.isspace(): return True
+        if not line:
+            return True
+        if line.isspace():
+            return True
 
         # Parse a comment hash like '# name: Classic'
         match = re.match(r"#\s*(\w+?): (.+)", line, re.IGNORECASE)
@@ -703,7 +786,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Skip other hash comments
         return line.startswith('#')
 
-
     def read_one_sample_prompt(self, path):
         try:
             with open(path, 'rb') as fd:
@@ -713,10 +795,13 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 parsing_hashes = True
                 unicode_lines = (line.decode('utf-8') for line in fd)
                 for line in unicode_lines:
-                    # Parse hashes until parse_one_sample_prompt_hash return False
+                    # Parse hashes until parse_one_sample_prompt_hash return
+                    # False.
                     if parsing_hashes:
-                        parsing_hashes = self.parse_one_sample_prompt_hash(line, extras_dict)
-                    # Maybe not we're not parsing hashes, or maybe we already were not
+                        parsing_hashes = self.parse_one_sample_prompt_hash(
+                            line, extras_dict)
+                    # Maybe not we're not parsing hashes, or maybe we already
+                    # were not.
                     if not parsing_hashes:
                         function_lines.append(line)
                 func = ''.join(function_lines).strip()
@@ -752,37 +837,46 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_remove_abbreviation(self, abbreviation):
         out, err = run_fish_cmd('abbr --erase %s' % abbreviation['word'])
-        if out or err:
-            return err
-        else:
-            return True
-
-    def do_save_abbreviation(self, abbreviation):
-        out, err = run_fish_cmd('abbr --add \'%s %s\'' % (abbreviation['word'], abbreviation['phrase']))
         if err:
             return err
         else:
-            return True
+            return None
+
+    def do_save_abbreviation(self, abbreviation):
+        out, err = run_fish_cmd('abbr --add \'%s\' \'%s\'' % (
+            abbreviation['word'], abbreviation['phrase']))
+        if err:
+            return err
+        else:
+            return None
 
     def secure_startswith(self, haystack, needle):
         if len(haystack) < len(needle):
             return False
         bits = 0
-        for x,y in zip(haystack, needle):
+        for x, y in zip(haystack, needle):
             bits |= ord(x) ^ ord(y)
         return bits == 0
 
     def font_size_for_ansi_prompt(self, prompt_demo_ansi):
         width = ansi_prompt_line_width(prompt_demo_ansi)
         # Pick a font size
-        if width >= 70: font_size = '8pt'
-        if width >= 60: font_size = '10pt'
-        elif width >= 50: font_size = '11pt'
-        elif width >= 40: font_size = '13pt'
-        elif width >= 30: font_size = '15pt'
-        elif width >= 25: font_size = '16pt'
-        elif width >= 20: font_size = '17pt'
-        else: font_size = '18pt'
+        if width >= 70:
+            font_size = '8pt'
+        if width >= 60:
+            font_size = '10pt'
+        elif width >= 50:
+            font_size = '11pt'
+        elif width >= 40:
+            font_size = '13pt'
+        elif width >= 30:
+            font_size = '15pt'
+        elif width >= 25:
+            font_size = '16pt'
+        elif width >= 20:
+            font_size = '17pt'
+        else:
+            font_size = '18pt'
         return font_size
 
     def do_GET(self):
@@ -820,7 +914,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         # Return valid output
         self.send_response(200)
-        self.send_header('Content-type','application/json')
+        self.send_header('Content-type', 'application/json')
         self.end_headers()
         self.write_to_wfile('\n')
 
@@ -861,7 +955,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             if what:
                 # Not sure why we get lists here?
-                output = self.do_set_color_for_variable(what[0], color[0], background_color[0], parse_bool(bold[0]), parse_bool(underline[0]))
+                output = self.do_set_color_for_variable(
+                    what[0], color[0], background_color[0],
+                    parse_bool(bold[0]), parse_bool(underline[0]))
             else:
                 output = 'Bad request'
         elif p == '/get_function/':
@@ -880,23 +976,23 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 output = ["Unable to set prompt"]
         elif p == '/save_abbreviation/':
-            r = self.do_save_abbreviation(postvars)
-            if r == True:
-                output = ["OK"]
+            errmsg = self.do_save_abbreviation(postvars)
+            if errmsg:
+                output = [errmsg]
             else:
-                output = [r]
+                output = ["OK"]
         elif p == '/remove_abbreviation/':
-            r = self.do_remove_abbreviation(postvars)
-            if r == True:
-                output = ["OK"]
+            errmsg = self.do_remove_abbreviation(postvars)
+            if errmsg:
+                output = [errmsg]
             else:
-                output = [r]
+                output = ["OK"]
         else:
             return self.send_error(404)
 
         # Return valid output
         self.send_response(200)
-        self.send_header('Content-type','application/json')
+        self.send_header('Content-type', 'application/json')
         self.end_headers()
         self.write_to_wfile('\n')
 
@@ -932,7 +1028,8 @@ redirect_template_html = """
 fish_bin_dir = os.environ.get('__fish_bin_dir')
 fish_bin_path = None
 if not fish_bin_dir:
-    print('The __fish_bin_dir environment variable is not set. Looking in $PATH...')
+    print('The __fish_bin_dir environment variable is not set. '
+          'Looking in $PATH...')
     # distutils.spawn is terribly broken, because it looks in wd before PATH,
     # and doesn't actually validate that the file is even executable
     for p in os.environ['PATH'].split(os.pathsep):
@@ -950,7 +1047,8 @@ else:
     fish_bin_path = os.path.join(fish_bin_dir, 'fish')
 
 if not os.access(fish_bin_path, os.X_OK):
-    print("fish could not be executed at path '%s'. Is fish installed correctly?" % fish_bin_path)
+    print("fish could not be executed at path '%s'. "
+          "Is fish installed correctly?" % fish_bin_path)
     sys.exit(-1)
 FISH_BIN_PATH = fish_bin_path
 
@@ -958,8 +1056,8 @@ FISH_BIN_PATH = fish_bin_path
 # so get the current working directory
 initial_wd = os.getcwd()
 
-# Make sure that the working directory is the one that contains the script server file,
-# because the document root is the working directory
+# Make sure that the working directory is the one that contains the script
+# server file, because the document root is the working directory.
 where = os.path.dirname(sys.argv[0])
 os.chdir(where)
 
@@ -968,7 +1066,7 @@ authkey = binascii.b2a_hex(os.urandom(16)).decode('ascii')
 
 # Try to find a suitable port
 PORT = 8000
-HOST = "::" if HAS_IPV6 else "localhost"
+HOST = "::" if socket.has_ipv6 else "localhost"
 while PORT <= 9000:
     try:
         Handler = FishConfigHTTPRequestHandler
@@ -992,16 +1090,17 @@ if PORT > 9000:
 # Just look at the first letter
 initial_tab = ''
 if len(sys.argv) > 1:
-    for tab in ['functions', 'prompt', 'colors', 'variables', 'history', 'bindings', 'abbreviations']:
+    for tab in ['functions', 'prompt', 'colors', 'variables', 'history',
+                'bindings', 'abbreviations']:
         if tab.startswith(sys.argv[1]):
             initial_tab = '#' + tab
             break
 
 url = 'http://localhost:%d/%s/%s' % (PORT, authkey, initial_tab)
 
-# Create temporary file to hold redirect to real server
-# This prevents exposing the URL containing the authentication key on the command line
-# (see CVE-2014-2914 or https://github.com/fish-shell/fish-shell/issues/1438)
+# Create temporary file to hold redirect to real server. This prevents exposing
+# the URL containing the authentication key on the command line (see
+# CVE-2014-2914 or https://github.com/fish-shell/fish-shell/issues/1438).
 if 'XDG_CACHE_HOME' in os.environ:
     dirname = os.path.expanduser(os.path.expandvars('$XDG_CACHE_HOME/fish/'))
 else:
@@ -1012,11 +1111,12 @@ try:
     os.makedirs(dirname, 0o0700)
 except OSError as e:
     if e.errno == 17:
-       pass
+        pass
     else:
-       raise e
+        raise e
 
-randtoken = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+randtoken = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                    for _ in range(6))
 filename = dirname + 'web_config-%s.html' % randtoken
 
 f = open(filename, 'w')

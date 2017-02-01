@@ -48,8 +48,18 @@ function __fish_print_gpg_algo -d "Complete using all algorithms of the type spe
 	# will take effect again.
 	set -lx LC_ALL C
 
-	# XXX this misses certain ciphers in gpg --version - redo this entirely and use fish's annoying  group printing as a feature finally!
-	gpg --version | __fish_sgrep "$argv:"| __fish_sgrep -v "Home:"|cut -d : -f 2 |tr , \n|tr -d " "
+	# sed script explained:
+	# in the line that matches "$argv:"
+	# 	define label 'loop'
+	# 	if the line ends with a ','
+	# 		add next line to buffer
+	#		transliterate '\n' with ' '
+	#		goto loop
+	# 	remove everything until the first ':' of the line
+	# 	remove all blanks
+	# 	transliterate ',' with '\n' (OSX apparently doesn't like '\n' on RHS of the s-command)
+	# 	print result
+	gpg --version | sed -ne "/$argv:/"'{:loop; /,$/{N; y!\n! !; b loop}; s!^[^:]*:!!; s![ ]*!!g; y!,!\n!; p}'
 end
 
 

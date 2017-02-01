@@ -203,7 +203,7 @@ function nextUid() {
 
 /**
  * Set or clear the hashkey for an object.
- * @param obj object 
+ * @param obj object
  * @param h the hashkey (!truthy to delete the hashkey)
  */
 function setHashKey(obj, h) {
@@ -2154,21 +2154,21 @@ forEach({
                 }
               }
               return false;
-            };	
+            };
 
           events[type] = [];
-		
+
 		  // Refer to jQuery's implementation of mouseenter & mouseleave
           // Read about mouseenter and mouseleave:
           // http://www.quirksmode.org/js/events_mouse.html#link8
-          var eventmap = { mouseleave : "mouseout", mouseenter : "mouseover"}          
+          var eventmap = { mouseleave : "mouseout", mouseenter : "mouseover"}
           bindFn(element, eventmap[type], function(event) {
             var ret, target = this, related = event.relatedTarget;
             // For mousenter/leave call the handler if related is outside the target.
             // NB: No relatedTarget if the mouse left/entered the browser window
             if ( !related || (related !== target && !contains(target, related)) ){
               handle(event, type);
-            }	
+            }
 
           });
 
@@ -3472,18 +3472,18 @@ function $BrowserProvider(){
  *
  * @description
  * Factory that constructs cache objects and gives access to them.
- * 
+ *
  * <pre>
- * 
+ *
  *  var cache = $cacheFactory('cacheId');
  *  expect($cacheFactory.get('cacheId')).toBe(cache);
  *  expect($cacheFactory.get('noSuchCacheId')).not.toBeDefined();
  *
  *  cache.put("key", "value");
  *  cache.put("another key", "another value");
- * 
+ *
  *  expect(cache.info()).toEqual({id: 'cacheId', size: 2}); // Since we've specified no options on creation
- * 
+ *
  * </pre>
  *
  *
@@ -3660,10 +3660,10 @@ function $CacheFactoryProvider() {
  * @name ng.$templateCache
  *
  * @description
- * The first time a template is used, it is loaded in the template cache for quick retrieval.  You can 
- * load templates directly into the cache in a `script` tag, or by consuming the `$templateCache` 
+ * The first time a template is used, it is loaded in the template cache for quick retrieval.  You can
+ * load templates directly into the cache in a `script` tag, or by consuming the `$templateCache`
  * service directly.
- * 
+ *
  * Adding via the `script` tag:
  * <pre>
  * <html ng-app>
@@ -3675,29 +3675,29 @@ function $CacheFactoryProvider() {
  *   ...
  * </html>
  * </pre>
- * 
- * **Note:** the `script` tag containing the template does not need to be included in the `head` of the document, but 
+ *
+ * **Note:** the `script` tag containing the template does not need to be included in the `head` of the document, but
  * it must be below the `ng-app` definition.
- * 
+ *
  * Adding via the $templateCache service:
- * 
+ *
  * <pre>
  * var myApp = angular.module('myApp', []);
  * myApp.run(function($templateCache) {
  *   $templateCache.put('templateId.html', 'This is the content of the template');
  * });
  * </pre>
- * 
+ *
  * To retrieve the template later, simply use it in your HTML:
  * <pre>
  * <div ng-include=" 'templateId.html' "></div>
  * </pre>
- * 
+ *
  * or get it via Javascript:
  * <pre>
  * $templateCache.get('templateId.html')
  * </pre>
- * 
+ *
  * See {@link ng.$cacheFactory $cacheFactory}.
  *
  */
@@ -6902,25 +6902,25 @@ function $ParseProvider() {
  *   you can treat promises attached to a scope as if they were the resulting values.
  * - Q has many more features than $q, but that comes at a cost of bytes. $q is tiny, but contains
  *   all the important functionality needed for common async tasks.
- * 
+ *
  *  # Testing
- * 
+ *
  *  <pre>
  *    it('should simulate promise', inject(function($q, $rootScope) {
  *      var deferred = $q.defer();
  *      var promise = deferred.promise;
  *      var resolvedValue;
- * 
+ *
  *      promise.then(function(value) { resolvedValue = value; });
  *      expect(resolvedValue).toBeUndefined();
- * 
+ *
  *      // Simulate resolving of promise
  *      deferred.resolve(123);
  *      // Note that the 'then' function does not get called synchronously.
  *      // This is because we want the promise API to always be async, whether or not
  *      // it got called synchronously or asynchronously.
  *      expect(resolvedValue).toBeUndefined();
- * 
+ *
  *      // Propagate promise resolution to 'then' functions using $apply().
  *      $rootScope.$apply();
  *      expect(resolvedValue).toEqual(123);
@@ -8140,7 +8140,7 @@ function $RootScopeProvider(){
        *
        * @description
        * Broadcasted when a scope and its children are being destroyed.
-       * 
+       *
        * Note that, in AngularJS, there is also a `$destroy` jQuery event, which can be used to
        * clean up DOM bindings before an element is removed from the DOM.
        */
@@ -8164,7 +8164,7 @@ function $RootScopeProvider(){
        * Just before a scope is destroyed a `$destroy` event is broadcasted on this scope.
        * Application code can register a `$destroy` event handler that will give it chance to
        * perform any necessary cleanup.
-       * 
+       *
        * Note that, in AngularJS, there is also a `$destroy` jQuery event, which can be used to
        * clean up DOM bindings before an element is removed from the DOM.
        */
@@ -12677,8 +12677,8 @@ var ngValueDirective = function() {
  * Typically, you don't use `ngBind` directly, but instead you use the double curly markup like
  * `{{ expression }}` which is similar but less verbose.
  *
- * It is preferrable to use `ngBind` instead of `{{ expression }}` when a template is momentarily 
- * displayed by the browser in its raw state before Angular compiles it. Since `ngBind` is an 
+ * It is preferrable to use `ngBind` instead of `{{ expression }}` when a template is momentarily
+ * displayed by the browser in its raw state before Angular compiles it. Since `ngBind` is an
  * element attribute, it makes the bindings invisible to the user while the page is loading.
  *
  * An alternative solution to this problem would be using the
@@ -13174,20 +13174,20 @@ var ngControllerDirective = [function() {
  * @element html
  * @description
  * Enables [CSP (Content Security Policy)](https://developer.mozilla.org/en/Security/CSP) support.
- * 
+ *
  * This is necessary when developing things like Google Chrome Extensions.
- * 
+ *
  * CSP forbids apps to use `eval` or `Function(string)` generated functions (among other things).
  * For us to be compatible, we just need to implement the "getterFn" in $parse without violating
  * any of these restrictions.
- * 
+ *
  * AngularJS uses `Function(string)` generated functions as a speed optimization. By applying `ngCsp`
  * it is be possible to opt into the CSP compatible mode. When this mode is on AngularJS will
  * evaluate all expressions up to 30% slower than in non-CSP mode, but no security violations will
  * be raised.
- * 
+ *
  * In order to use this feature put `ngCsp` directive on the root element of the application.
- * 
+ *
  * @example
  * This example shows how to apply the `ngCsp` directive to the `html` tag.
    <pre>

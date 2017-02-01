@@ -204,9 +204,9 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
     // The command substitutions must not be NULL and must be in the valid pointer range, and
     // the end must be bigger than the beginning.
     assert(bracket_range_begin != NULL && bracket_range_begin >= valid_range_start &&
-            bracket_range_begin <= valid_range_end);
+           bracket_range_begin <= valid_range_end);
     assert(bracket_range_end != NULL && bracket_range_end > bracket_range_begin &&
-            bracket_range_end >= valid_range_start && bracket_range_end <= valid_range_end);
+           bracket_range_end >= valid_range_start && bracket_range_end <= valid_range_end);
 
     // Assign the substring to the out_contents.
     const wchar_t *interior_begin = bracket_range_begin + 1;
@@ -346,8 +346,6 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
     const wchar_t *a = NULL, *b = NULL, *pa = NULL, *pb = NULL;
 
     CHECK(buff, );
-
-    assert(cursor_pos >= 0);
 
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
     parse_util_cmdsubst_extent(buff, cursor_pos, &cmdsubst_begin, &cmdsubst_end);
@@ -492,7 +490,7 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     bool finished = cmdlen != 0;
     if (finished) {
         finished = (quote == NULL);
-        if (finished && wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1]) != L'\0') {
+        if (finished && wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1])) {
             finished = cmdlen > 1 && cmd_tmp[cmdlen - 2] == L'\\';
         }
     }
@@ -834,20 +832,18 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
 
     switch (char_after_dollar) {
         case BRACKET_BEGIN:
-        case L'{':
-
-        {
+        case L'{': {
             // The BRACKET_BEGIN is for unquoted, the { is for quoted. Anyways we have (possible
             // quoted) ${. See if we have a }, and the stuff in between is variable material. If so,
             // report a bracket error. Otherwise just complain about the ${.
             bool looks_like_variable = false;
             size_t closing_bracket =
-                token.find(char_after_dollar == L'{' ? L'}' : BRACKET_END, dollar_pos + 2);
+                token.find(char_after_dollar == L'{' ? L'}' : wchar_t(BRACKET_END), dollar_pos + 2);
             wcstring var_name;
             if (closing_bracket != wcstring::npos) {
                 size_t var_start = dollar_pos + 2, var_end = closing_bracket;
                 var_name = wcstring(token, var_start, var_end - var_start);
-                looks_like_variable = !var_name.empty() && wcsvarname(var_name.c_str()) == NULL;
+                looks_like_variable = wcsvarname(var_name) == NULL;
             }
             if (looks_like_variable) {
                 append_syntax_error(
@@ -859,7 +855,6 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
             }
             break;
         }
-
         case INTERNAL_SEPARATOR: {
             // e.g.: echo foo"$"baz
             // These are only ever quotes, not command substitutions. Command substitutions are
@@ -867,7 +862,6 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
             append_syntax_error(errors, global_dollar_pos, ERROR_NO_VAR_NAME);
             break;
         }
-
         case '(': {
             // e.g.: 'echo "foo$(bar)baz"
             // Try to determine what's in the parens.
@@ -888,12 +882,10 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
                                 truncate_string(token_after_parens).c_str());
             break;
         }
-
         case L'\0': {
             append_syntax_error(errors, global_dollar_pos, ERROR_NO_VAR_NAME);
             break;
         }
-
         default: {
             wchar_t token_stop_char = char_after_dollar;
             // Unescape (see issue #50).
@@ -971,12 +963,10 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 }
                 return err;
             }
-
             case 0: {
                 do_loop = 0;
                 break;
             }
-
             case 1: {
                 const wcstring subst(paran_begin + 1, paran_end);
 
@@ -1040,13 +1030,12 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
             if (out_errors) {
                 // We have something like $$$^....  Back up until we reach the first $.
                 size_t first_dollar = idx;
-                while (first_dollar > 0 &&
-                        (unesc.at(first_dollar - 1) == VARIABLE_EXPAND ||
-                        unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
+                while (first_dollar > 0 && (unesc.at(first_dollar - 1) == VARIABLE_EXPAND ||
+                                            unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
                     first_dollar--;
                 }
                 parse_util_expand_variable_error(unesc, node.source_start, first_dollar,
-                                                    out_errors);
+                                                 out_errors);
             }
         }
     }
@@ -1174,13 +1163,13 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                             parse_bool_statement_type_t bool_type =
                                 parse_node_tree_t::statement_boolean_type(*spec_statement);
                             if (bool_type == parse_bool_and) {  // this is not allowed
-                                    errored = append_syntax_error(
-                                        &parse_errors, spec_statement->source_start,
-                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
+                                errored =
+                                    append_syntax_error(&parse_errors, spec_statement->source_start,
+                                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
                             } else if (bool_type == parse_bool_or) {  // this is not allowed
-                                    errored = append_syntax_error(
-                                        &parse_errors, spec_statement->source_start,
-                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
+                                errored =
+                                    append_syntax_error(&parse_errors, spec_statement->source_start,
+                                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
                             }
                             break;
                         }
@@ -1302,11 +1291,11 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     if (has_unclosed_block || has_unclosed_quote) res |= PARSER_TEST_INCOMPLETE;
 
     if (out_errors != NULL) {
-        out_errors->swap(parse_errors);
+        *out_errors = std::move(parse_errors);
     }
 
     if (out_tree != NULL) {
-        out_tree->swap(node_tree);
+        *out_tree = std::move(node_tree);
     }
 
     return res;

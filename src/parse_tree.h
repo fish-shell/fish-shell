@@ -20,7 +20,7 @@ typedef uint32_t node_offset_t;
 
 typedef uint32_t source_offset_t;
 
-#define SOURCE_OFFSET_INVALID (static_cast<source_offset_t>(-1))
+constexpr source_offset_t SOURCE_OFFSET_INVALID = static_cast<source_offset_t>(-1);
 
 /// A struct representing the token type that we use internally.
 struct parse_token_t {
@@ -140,8 +140,10 @@ class parse_node_t {
 class parse_node_tree_t : public std::vector<parse_node_t> {
    public:
     parse_node_tree_t() {}
-
-    parse_node_tree_t(moved_ref<parse_node_tree_t> t) { this->swap(t.val); }
+    parse_node_tree_t(parse_node_tree_t &&) = default;
+    parse_node_tree_t &operator=(parse_node_tree_t &&) = default;
+    parse_node_tree_t(const parse_node_tree_t &) = delete;             // no copying
+    parse_node_tree_t &operator=(const parse_node_tree_t &) = delete;  // no copying
 
     // Get the node corresponding to a child of the given node, or NULL if there is no such child.
     // If expected_type is provided, assert that the node has that type.

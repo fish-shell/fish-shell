@@ -17,7 +17,7 @@ function __fish_busctl
 	end
     command busctl $mode $argv --no-legend --no-pager ^/dev/null
 end
-	
+
 # Only get the arguments to the actual command, skipping all options and arguments to options
 function __fish_busctl_get_command_args
 	set -l skip
@@ -49,7 +49,7 @@ function __fish_busctl_get_command_args
 		end
 	end
 end
-				
+
 function __fish_busctl_busnames
 	__fish_busctl list --acquired | string replace -r '\s+.*$' ''
 	# Describe unique names (":1.32") with their process (e.g. `:1.32\tsteam`)
@@ -63,7 +63,7 @@ end
 function __fish_busctl_interfaces -a busname -a object
 	__fish_busctl introspect --list $busname $object | string replace -r '\s+.*$' ''
 end
-	
+
 function __fish_busctl_members -a type -a busname -a object -a interface
 	__fish_busctl introspect --list $busname $object $interface \
 	| string match -- "* $type *" | string replace -r '.(\S+) .*' '$1'
@@ -108,7 +108,7 @@ end
 set -l commands list status monitor capture tree introspect call get-property set-property help
 
 complete -f -e -c busctl
-complete -A -f -c busctl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
+complete -f -c busctl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
 
 ### Arguments to commands
 # "status" only takes a single service as argument

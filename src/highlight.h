@@ -108,7 +108,6 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background);
 /// specially recognizing the command. Returns true if we validated the command. If so, returns by
 /// reference whether the suggestion is valid or not.
 bool autosuggest_validate_from_history(const history_item_t &item,
-                                       file_detection_context_t &detector,
                                        const wcstring &working_directory,
                                        const env_vars_snapshot_t &vars);
 

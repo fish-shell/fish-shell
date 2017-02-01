@@ -4,6 +4,10 @@
 # should be running it via `make test` to ensure the environment is properly
 # setup.
 
+# Set this var to modify behavior of the code being tests. Such as avoiding running
+# `fish_update_completions` when running tests.
+set -x FISH_UNIT_TESTS_RUNNING 1
+
 # Change to directory containing this script
 cd (dirname (status -f))
 

@@ -5,9 +5,12 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <wchar.h>
+
 #include <string>
 #include <vector>
 
@@ -69,7 +72,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                 continue;
             }
             if (S_ISREG(buff.st_mode)) {
-                if (out_path) out_path->swap(nxt_path);
+                if (out_path) *out_path = std::move(nxt_path);
                 return true;
             }
             err = EACCES;
@@ -213,78 +216,101 @@ wcstring path_apply_working_directory(const wcstring &path, const wcstring &work
     return new_path;
 }
 
-static wcstring path_create_config() {
-    bool done = false;
-    wcstring res;
+/// We separate this from path_create() for two reasons. First it's only caused if there is a
+/// problem, and thus is not central to the behavior of that function. Second, we only want to issue
+/// the message once. If the current shell starts a new fish shell (e.g., by running `fish -c` from
+/// a function) we don't want that subshell to issue the same warnings.
+static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &custom_error_msg,
+                                     bool using_xdg, const wcstring &xdg_var, const wcstring &path,
+                                     int saved_errno) {
+    wcstring warning_var_name = L"_FISH_WARNED_" + which_dir;
+    if (env_exist(warning_var_name.c_str(), ENV_GLOBAL | ENV_EXPORT)) {
+        return;
+    }
+    env_set(warning_var_name, L"1", ENV_GLOBAL | ENV_EXPORT);
 
-    const env_var_t xdg_dir = env_get_string(L"XDG_CONFIG_HOME");
-    if (!xdg_dir.missing()) {
-        res = xdg_dir + L"/fish";
-        if (!create_directory(res)) {
-            done = true;
-        }
+    debug(0, custom_error_msg.c_str());
+    if (path.empty()) {
+        debug(0, _(L"Unable to locate the %ls directory."), which_dir.c_str());
+        debug(0, _(L"Please set the %ls or HOME environment variable "
+                   L"before starting fish."),
+              xdg_var.c_str());
     } else {
-        const env_var_t home = env_get_string(L"HOME");
-        if (!home.missing()) {
-            res = home + L"/.config/fish";
-            if (!create_directory(res)) {
-                done = true;
-            }
-        }
+        const wchar_t *env_var = using_xdg ? xdg_var.c_str() : L"HOME";
+        debug(0, _(L"Unable to locate %ls directory derived from $%ls: '%ls'."), which_dir.c_str(),
+              env_var, path.c_str());
+        debug(0, _(L"The error was '%s'."), strerror(saved_errno));
+        debug(0, _(L"Please set $%ls to a directory where you have write access."), env_var);
     }
-
-    if (!done) {
-        res.clear();
-
-        debug(0, _(L"Unable to create a configuration directory for fish. Your personal settings "
-                   L"will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory "
-                   L"where the current user has write access."));
-    }
-    return res;
+    fputwc(L'\n', stderr);
 }
 
-static wcstring path_create_data() {
-    bool done = false;
-    wcstring res;
+static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring &which_dir,
+                        const wcstring &custom_error_msg) {
+    bool path_done = false;
+    bool using_xdg = false;
+    int saved_errno = 0;
 
-    const env_var_t xdg_dir = env_get_string(L"XDG_DATA_HOME");
-    if (!xdg_dir.missing()) {
-        res = xdg_dir + L"/fish";
-        if (!create_directory(res)) {
-            done = true;
+    // The vars we fetch must be exported. Allowing them to be universal doesn't make sense and
+    // allowing that creates a lock inversion that deadlocks the shell since we're called before
+    // uvars are available.
+    const env_var_t xdg_dir = env_get_string(xdg_var, ENV_GLOBAL | ENV_EXPORT);
+    if (!xdg_dir.missing_or_empty()) {
+        using_xdg = true;
+        path = xdg_dir + L"/fish";
+        if (create_directory(path) != -1) {
+            path_done = true;
+        } else {
+            saved_errno = errno;
         }
     } else {
-        const env_var_t home = env_get_string(L"HOME");
-        if (!home.missing()) {
-            res = home + L"/.local/share/fish";
-            if (!create_directory(res)) {
-                done = true;
+        const env_var_t home = env_get_string(L"HOME", ENV_GLOBAL | ENV_EXPORT);
+        if (!home.missing_or_empty()) {
+            path = home + (which_dir == L"config" ? L"/.config/fish" : L"/.local/share/fish");
+            if (create_directory(path) != -1) {
+                path_done = true;
+            } else {
+                saved_errno = errno;
             }
         }
     }
 
-    if (!done) {
-        res.clear();
-
-        debug(0, _(L"Unable to create a data directory for fish. Your history will not be saved. "
-                   L"Please set the $XDG_DATA_HOME variable to a directory where the current user "
-                   L"has write access."));
+    if (!path_done) {
+        maybe_issue_path_warning(which_dir, custom_error_msg, using_xdg, xdg_var, path,
+                                 saved_errno);
+        path.clear();
     }
-    return res;
+
+    return;
 }
 
 /// Cache the config path.
 bool path_get_config(wcstring &path) {
-    static const wcstring result = path_create_config();
-    path = result;
-    return !result.empty();
+    static bool config_path_done = false;
+    static wcstring config_path(L"");
+
+    if (!config_path_done) {
+        path_create(config_path, L"XDG_CONFIG_HOME", L"config",
+                    _(L"Your personal settings will not be saved."));
+        config_path_done = true;
+    }
+
+    path = config_path;
+    return !config_path.empty();
 }
 
 /// Cache the data path.
 bool path_get_data(wcstring &path) {
-    static const wcstring result = path_create_data();
-    path = result;
-    return !result.empty();
+    static bool data_path_done = false;
+    static wcstring data_path(L"");
+
+    if (!data_path_done) {
+        data_path_done = true;
+        path_create(data_path, L"XDG_DATA_HOME", L"data", _(L"Your history will not be saved."));
+    }
+
+    path = data_path;
+    return !data_path.empty();
 }
 
 void path_make_canonical(wcstring &path) {

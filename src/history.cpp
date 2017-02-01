@@ -1,5 +1,4 @@
 // History functions, part of the user interface.
-//
 #include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>
@@ -10,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+// We need the sys/file.h for the flock() declaration on Linux but not OS X.
+#include <sys/file.h>  // IWYU pragma: keep
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -17,6 +18,7 @@
 #include <wchar.h>
 #include <wctype.h>
 #include <algorithm>
+#include <cwchar>
 #include <iterator>
 #include <map>
 
@@ -121,35 +123,41 @@ class time_profiler_t {
     }
 };
 
-/// Lock a file via fcntl; returns true on success, false on failure.
-static bool history_file_lock(int fd, short type) {
-    assert(type == F_RDLCK || type == F_WRLCK);
-    struct flock flk = {};
-    flk.l_type = type;
-    flk.l_whence = SEEK_SET;
-    int ret = fcntl(fd, F_SETLKW, (void *)&flk);
-    return ret != -1;
+/// Lock the history file.
+/// Returns true on success, false on failure.
+static bool history_file_lock(int fd, int lock_type) {
+    static bool do_locking = true;
+    if (!do_locking) return false;
+
+    double start_time = timef();
+    int retval = flock(fd, lock_type);
+    double duration = timef() - start_time;
+    if (duration > 0.25) {
+        debug(1, _(L"Locking the history file took too long (%.3f seconds)."), duration);
+        do_locking = false;
+        return false;
+    }
+    return retval != -1;
 }
 
 /// Our LRU cache is used for restricting the amount of history we have, and limiting how long we
 /// order it.
-class history_lru_node_t : public lru_node_t {
+class history_lru_item_t {
    public:
+    wcstring text;
     time_t timestamp;
     path_list_t required_paths;
-    explicit history_lru_node_t(const history_item_t &item)
-        : lru_node_t(item.str()),
+    explicit history_lru_item_t(const history_item_t &item)
+        : text(item.str()),
           timestamp(item.timestamp()),
           required_paths(item.get_required_paths()) {}
 };
 
-class history_lru_cache_t : public lru_cache_t<history_lru_node_t> {
-   protected:
-    /// Override to delete evicted nodes.
-    virtual void node_was_evicted(history_lru_node_t *node) { delete node; }
+class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_lru_item_t> {
+    typedef lru_cache_t<history_lru_cache_t, history_lru_item_t> super;
 
    public:
-    explicit history_lru_cache_t(size_t max) : lru_cache_t<history_lru_node_t>(max) {}
+    using super::super;
 
     /// Function to add a history item.
     void add_item(const history_item_t &item) {
@@ -158,10 +166,10 @@ class history_lru_cache_t : public lru_cache_t<history_lru_node_t> {
 
         // See if it's in the cache. If it is, update the timestamp. If not, we create a new node
         // and add it. Note that calling get_node promotes the node to the front.
-        history_lru_node_t *node = this->get_node(item.str());
+        wcstring key = item.str();
+        history_lru_item_t *node = this->get(key);
         if (node == NULL) {
-            node = new history_lru_node_t(item);
-            this->add_node(node);
+            this->insert(std::move(key), history_lru_item_t(item));
         } else {
             node->timestamp = std::max(node->timestamp, item.timestamp());
             // What to do about paths here? Let's just ignore them.
@@ -169,20 +177,13 @@ class history_lru_cache_t : public lru_cache_t<history_lru_node_t> {
     }
 };
 
+// The set of histories
+// Note that histories are currently immortal
 class history_collection_t {
-    pthread_mutex_t m_lock;
-    std::map<wcstring, history_t *> m_histories;
+    owning_lock<std::map<wcstring, std::unique_ptr<history_t>>> histories;
 
-   public:
-    history_collection_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_init(&m_lock, NULL)); }
-    ~history_collection_t() {
-        for (std::map<wcstring, history_t *>::const_iterator i = m_histories.begin();
-             i != m_histories.end(); ++i) {
-            delete i->second;
-        }
-        pthread_mutex_destroy(&m_lock);
-    }
-    history_t &alloc(const wcstring &name);
+    public:
+    history_t &get_creating(const wcstring &name);
     void save();
 };
 
@@ -308,16 +309,10 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
             if (timestamp_mode) {
                 const wchar_t *time_string = out.c_str();
                 while (*time_string && !iswdigit(*time_string)) time_string++;
-                errno = 0;
 
                 if (*time_string) {
-                    time_t tm;
-                    wchar_t *end;
-
-                    errno = 0;
-                    tm = (time_t)wcstol(time_string, &end, 10);
-
-                    if (tm && !errno && !*end) {
+                    time_t tm = (time_t)fish_wcstol(time_string);
+                    if (!errno && tm >= 0) {
                         timestamp = tm;
                     }
                 }
@@ -696,16 +691,21 @@ static size_t offset_of_next_item(const char *begin, size_t mmap_length,
     return result;
 }
 
-history_t &history_collection_t::alloc(const wcstring &name) {
+history_t &history_collection_t::get_creating(const wcstring &name) {
+    // Return a history for the given name, creating it if necessary
     // Note that histories are currently never deleted, so we can return a reference to them without
-    // using something like shared_ptr.
-    scoped_lock locker(m_lock);
-    history_t *&current = m_histories[name];
-    if (current == NULL) current = new history_t(name);
-    return *current;
+    // using something like shared_ptr
+    auto hs = histories.acquire();
+    std::unique_ptr<history_t> &hist = hs.value[name];
+    if (! hist) {
+        hist = make_unique<history_t>(name);
+    }
+    return *hist;
 }
 
-history_t &history_t::history_with_name(const wcstring &name) { return histories.alloc(name); }
+history_t &history_t::history_with_name(const wcstring &name) {
+    return histories.get_creating(name);
+}
 
 history_t::history_t(const wcstring &pname)
     : name(pname),
@@ -789,15 +789,6 @@ void history_t::add(const wcstring &str, history_identifier_t ident, bool pendin
     }
 
     this->add(history_item_t(str, when, ident), pending);
-}
-
-bool icompare_pred(wchar_t a, wchar_t b) { return std::tolower(a) == std::tolower(b); }
-
-bool icompare(wcstring const &a, wcstring const &b) {
-    if (a.length() != b.length()) {
-        return false;
-    }
-    return std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
 }
 
 // Remove matching history entries from our list of new items. This only supports literal,
@@ -962,20 +953,21 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
     // unlikely because we only treat an item as valid if it has a terminating newline.
     //
     // Simulate a failing lock in chaos_mode.
-    if (!chaos_mode) history_file_lock(fd, F_RDLCK);
+    if (!chaos_mode) history_file_lock(fd, LOCK_SH);
     off_t len = lseek(fd, 0, SEEK_END);
     if (len != (off_t)-1) {
         size_t mmap_length = (size_t)len;
         if (lseek(fd, 0, SEEK_SET) == 0) {
             char *mmap_start;
-            if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd,
-                                            0)) != MAP_FAILED) {
+            if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0)) !=
+                MAP_FAILED) {
                 result = true;
                 *out_map_start = mmap_start;
                 *out_map_len = mmap_length;
             }
         }
     }
+    if (!chaos_mode) history_file_lock(fd, LOCK_UN);
     close(fd);
     return result;
 }
@@ -1235,24 +1227,16 @@ bool history_t::save_internal_via_rewrite() {
 
         signal_block();
 
-        // Try to create a temporary file, up to 10 times. We don't use mkstemps because we want to
-        // open it CLO_EXEC. This should almost always succeed on the first try.
+        // Try to create a CLO_EXEC temporary file, up to 10 times.
+        // This should almost always succeed on the first try.
         int out_fd = -1;
         wcstring tmp_name;
         for (size_t attempt = 0; attempt < 10 && out_fd == -1; attempt++) {
             char *narrow_str = wcs2str(tmp_name_template.c_str());
-#if HAVE_MKOSTEMP
-            out_fd = mkostemp(narrow_str, O_CLOEXEC);
+            out_fd = fish_mkstemp_cloexec(narrow_str);
             if (out_fd >= 0) {
                 tmp_name = str2wcstring(narrow_str);
             }
-#else
-            if (narrow_str && mktemp(narrow_str)) {
-                // It was successfully templated; try opening it atomically.
-                tmp_name = str2wcstring(narrow_str);
-                out_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC, 0600);
-            }
-#endif
             free(narrow_str);
         }
 
@@ -1261,8 +1245,9 @@ bool history_t::save_internal_via_rewrite() {
             bool errored = false;
             history_output_buffer_t buffer;
             for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); ++iter) {
-                const history_lru_node_t *node = *iter;
-                append_yaml_to_buffer(node->key, node->timestamp, node->required_paths, &buffer);
+                const wcstring &text = (*iter).first;
+                const history_lru_item_t &item = (*iter).second;
+                append_yaml_to_buffer(text, item.timestamp, item.required_paths, &buffer);
                 if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE &&
                     !buffer.flush_to_fd(out_fd)) {
                     errored = true;
@@ -1353,7 +1338,7 @@ bool history_t::save_internal_via_appending() {
         // by writing with O_APPEND.
         //
         // Simulate a failing lock in chaos_mode
-        if (!chaos_mode) history_file_lock(out_fd, F_WRLCK);
+        if (!chaos_mode) history_file_lock(out_fd, LOCK_EX);
 
         // We (hopefully successfully) took the exclusive lock. Append to the file.
         // Note that this is sketchy for a few reasons:
@@ -1393,6 +1378,7 @@ bool history_t::save_internal_via_appending() {
             ok = true;
         }
 
+        if (!chaos_mode) history_file_lock(out_fd, LOCK_UN);
         close(out_fd);
     }
 
@@ -1450,7 +1436,11 @@ static bool format_history_record(const history_item_t &item, const wchar_t *sho
         streams.out.append(timestamp_string);
     }
     streams.out.append(item.str());
-    streams.out.append(null_terminate ? L'\0' : L'\n');
+    if (null_terminate) {
+        streams.out.append(L'\0');
+    } else {
+        streams.out.append(L'\n');
+    }
     return true;
 }
 
@@ -1648,17 +1638,17 @@ void history_t::incorporate_external_changes() {
         // We'll pick them up from the file (#2312)
         this->save_internal(false);
         this->new_items.clear();
+        this->first_unwritten_new_item_index = 0;
     }
 }
 
 void history_init() {}
 
 void history_collection_t::save() {
-    // Save all histories.
-    for (std::map<wcstring, history_t *>::iterator iter = m_histories.begin();
-         iter != m_histories.end(); ++iter) {
-        history_t *hist = iter->second;
-        hist->save();
+    // Save all histories
+    auto h = histories.acquire();
+    for (auto &p : h.value) {
+        p.second->save();
     }
 }
 
@@ -1668,53 +1658,25 @@ void history_sanity_check() {
     // No sanity checking implemented yet...
 }
 
-int file_detection_context_t::perform_file_detection(bool test_all) {
+path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory) {
     ASSERT_IS_BACKGROUND_THREAD();
-    valid_paths.clear();
-    // TODO: Figure out why this bothers to return a variable result since the only consumer,
-    // perform_file_detection_done(), ignores the result. It seems like either this should always
-    // return a constant or perform_file_detection_done() should use our return value.
-    int result = 1;
-    for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end();
-         ++iter) {
-        if (path_is_valid(*iter, working_directory)) {
-            // Push the original (possibly relative) path.
-            valid_paths.push_back(*iter);
-        } else {
-            // Not a valid path.
-            result = 0;
-            if (!test_all) break;
+    wcstring_list_t result;
+    for (const wcstring &path : paths) {
+        if (path_is_valid(path, working_directory)) {
+            result.push_back(path);
         }
     }
     return result;
 }
 
-bool file_detection_context_t::paths_are_valid(const path_list_t &paths) {
-    this->potential_paths = paths;
-    return perform_file_detection(false) > 0;
-}
-
-file_detection_context_t::file_detection_context_t(history_t *hist, history_identifier_t ident)
-    : history(hist), working_directory(env_get_pwd_slash()), history_item_identifier(ident) {}
-
-static int threaded_perform_file_detection(file_detection_context_t *ctx) {
+bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory) {
     ASSERT_IS_BACKGROUND_THREAD();
-    assert(ctx != NULL);
-    return ctx->perform_file_detection(true /* test all */);
-}
-
-static void perform_file_detection_done(file_detection_context_t *ctx, int success) {
-    UNUSED(success);
-    ASSERT_IS_MAIN_THREAD();
-
-    // Now that file detection is done, update the history item with the valid file paths.
-    ctx->history->set_valid_file_paths(ctx->valid_paths, ctx->history_item_identifier);
-
-    // Allow saving again.
-    ctx->history->enable_automatic_saving();
-
-    // Done with the context.
-    delete ctx;
+    for (const wcstring &path : paths) {
+        if (!path_is_valid(path, working_directory)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 static bool string_could_be_path(const wcstring &potential_path) {
@@ -1727,7 +1689,6 @@ static bool string_could_be_path(const wcstring &potential_path) {
 
 void history_t::add_pending_with_file_detection(const wcstring &str) {
     ASSERT_IS_MAIN_THREAD();
-    path_list_t potential_paths;
 
     // Find all arguments that look like they could be file paths.
     bool impending_exit = false;
@@ -1735,6 +1696,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
     parse_tree_from_string(str, parse_flag_none, &tree, NULL);
     size_t count = tree.size();
 
+    path_list_t potential_paths;
     for (size_t i = 0; i < count; i++) {
         const parse_node_t &node = tree.at(i);
         if (!node.has_source()) {
@@ -1771,16 +1733,17 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
         static history_identifier_t sLastIdentifier = 0;
         identifier = ++sLastIdentifier;
 
-        // Create a new detection context.
-        file_detection_context_t *context = new file_detection_context_t(this, identifier);
-        context->potential_paths.swap(potential_paths);
-
         // Prevent saving until we're done, so we have time to get the paths.
         this->disable_automatic_saving();
 
-        // Kick it off. Even though we haven't added the item yet, it updates the item on the main
-        // thread, so we can't race.
-        iothread_perform(threaded_perform_file_detection, perform_file_detection_done, context);
+        // Check for which paths are valid on a background thread,
+        // then on the main thread update our history item
+        const wcstring wd = env_get_pwd_slash();
+        iothread_perform([=]() { return valid_paths(potential_paths, wd); },
+                         [=](path_list_t validated_paths) {
+                             this->set_valid_file_paths(validated_paths, identifier);
+                             this->enable_automatic_saving();
+                         });
     }
 
     // Actually add the item to the history.

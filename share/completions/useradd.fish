@@ -7,7 +7,7 @@
 
 complete -c useradd -s c -l comment --description 'A comment about this user' -r
 complete -c useradd -s d -l home --description 'Home directory for the new user' -x -a '(__fish_complete_directories)'
-complete -c useradd -s G -l groups --description 'Supplementary groups' -xa '(__fish_append , (cat /etc/group|cut -d : -f 1))'
+complete -c useradd -s G -l groups --description 'Supplementary groups' -xa '(__fish_append , (cut -d : -f 1 /etc/group))'
 complete -c useradd -s h -l help --description 'Display help message and exit'
 complete -c useradd -s m -l create-home --description 'The user\'s home directory will be created if it does not exist'
 complete -c useradd -s n --description 'A group having the same name as the user being added to the system will be created by default (when -g is not specified)'

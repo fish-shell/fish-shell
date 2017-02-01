@@ -22,7 +22,7 @@ msgstr ""
 #: autoload.cpp:113
 #, c-format
 msgid "Could not autoload item '%ls', it is already being autoloaded. "
-msgstr ""
+msgstr "Chargement automatique de '%ls' impossible car il a déjà été chargé automatiquement."
 
 #: builtin.cpp:84
 #, c-format
@@ -35,11 +35,13 @@ msgid ""
 "%ls: Type 'help %ls' for related documentation\n"
 "\n"
 msgstr ""
+"%ls: Tapez 'help %ls' pour sa documentation\n"
+"\n"
 
 #: builtin.cpp:531
 #, c-format
 msgid "%ls: No key with name '%ls' found\n"
-msgstr ""
+msgstr "%ls: Aucune clef avec le nom '%ls' n'a été trouvée\n"
 
 #: builtin.cpp:537
 #, fuzzy, c-format
@@ -59,7 +61,7 @@ msgstr "%s: Aucune description pour le type %s\n"
 #: builtin.cpp:798
 #, c-format
 msgid "%ls: No binding found for sequence '%ls'\n"
-msgstr ""
+msgstr "Aucune description trouvée pour la séquence '%ls'\n"
 
 #: builtin.cpp:834
 #, fuzzy, c-format
@@ -339,7 +341,7 @@ msgstr "Définir une option de config"
 
 #: builtin.cpp:4070
 msgid "Try out the new parser"
-msgstr ""
+msgstr "Essayez le nouveau parseur"
 
 #: builtin.cpp:4071
 msgid "Execute command if previous command suceeded"
@@ -368,7 +370,7 @@ msgstr "Arrêter la boucle interne"
 #: builtin.cpp:4077
 msgid ""
 "Temporarily halt execution of a script and launch an interactive debug prompt"
-msgstr ""
+msgstr "Arrête temporairement l'exécution du script and lance une invite de débogage interactif"
 
 #: builtin.cpp:4078
 msgid "Run a builtin command instead of a function"
@@ -396,7 +398,7 @@ msgstr "Éditer les complétions spécifiques aux commandes"
 
 #: builtin.cpp:4084
 msgid "Search for a specified string in a list"
-msgstr ""
+msgstr "Rechercher une chaine de caractères donnée dans une liste"
 
 #: builtin.cpp:4085
 msgid "Skip the rest of the current lap of the innermost loop"
@@ -435,7 +437,7 @@ msgstr "Quitter le shell"
 
 #: builtin.cpp:4093
 msgid "Return an unsuccessful result"
-msgstr ""
+msgstr "Retourne un résulat d'échec"
 
 #: builtin.cpp:4094
 msgid "Send job to foreground"
@@ -455,7 +457,7 @@ msgstr "Lister ou enlever des fonctions"
 
 #: builtin.cpp:4098
 msgid "History of commands executed by user"
-msgstr ""
+msgstr "Historique des commandes exécutées par l'utilisateur"
 
 #: builtin.cpp:4099
 msgid "Evaluate block if condition is true"
@@ -475,7 +477,7 @@ msgstr "Exécuter la commande si la précédente a échoué"
 
 #: builtin.cpp:4103
 msgid "Prints formatted text"
-msgstr ""
+msgstr "Affiche le texte formaté"
 
 #: builtin.cpp:4104
 #, fuzzy
@@ -500,7 +502,7 @@ msgstr "Gérer les variables d'environnement"
 
 #: builtin.cpp:4109
 msgid "Set the terminal color"
-msgstr ""
+msgstr "Définir la couleur du terminal"
 
 #: builtin.cpp:4110
 msgid "Evaluate contents of file"
@@ -512,7 +514,7 @@ msgstr "Retourner l'information sur l'état de fish"
 
 #: builtin.cpp:4114
 msgid "Return a successful result"
-msgstr ""
+msgstr "Retourne un résultat d'échec"
 
 #: builtin.cpp:4115
 msgid "Set or get the shells resource usage limits"
@@ -574,30 +576,30 @@ msgstr ""
 #: builtin_printf.cpp:256
 #, fuzzy, c-format
 msgid "%ls: expected a numeric value"
-msgstr "%s: Un argument attendu\n"
+msgstr "%ls: valeur numérique attendue"
 
 #: builtin_printf.cpp:258
 #, c-format
 msgid "%ls: value not completely converted"
-msgstr ""
+msgstr "%ls: la valeur n'a pas été entièrement convertie"
 
 #: builtin_printf.cpp:359
 msgid "missing hexadecimal number in escape"
-msgstr ""
+msgstr "manque un nombre hexadecimal dans l'échappement"
 
 #: builtin_printf.cpp:388
 msgid "Missing hexadecimal number in Unicode escape"
-msgstr ""
+msgstr "Manque un nombre hexadecimal dans l'échappement Unicode"
 
 #: builtin_printf.cpp:402
 #, c-format
 msgid "Unicode character out of range: \\%c%0*x"
-msgstr ""
+msgstr "Caractère unicode hors limite"
 
 #: builtin_printf.cpp:670
 #, c-format
 msgid "invalid field width: %ls"
-msgstr ""
+msgstr "largeur de champ invalide: %ls"
 
 #: builtin_printf.cpp:708
 #, fuzzy, c-format
@@ -611,7 +613,7 @@ msgstr "%ls: Combinaison d'options invalide\n"
 
 #: builtin_printf.cpp:771
 msgid "printf: not enough arguments"
-msgstr ""
+msgstr "printf: pas assez d'arguments"
 
 #: builtin_set.cpp:155
 #, c-format
@@ -662,6 +664,7 @@ msgstr ""
 msgid ""
 "%ls: Warning: universal scope selected, but a global variable '%ls' exists.\n"
 msgstr ""
+"%ls: Attention: portée universelle selectionnée, mais une variable globale '%ls' existe.\n"
 
 #: builtin_set_color.cpp:144 builtin_set_color.cpp:166
 #, fuzzy, c-format
@@ -718,6 +721,9 @@ msgid ""
 "will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory "
 "where the current user has write access."
 msgstr ""
+"Impossible de créer un repertoire de configuration pour fish. Vos paramètres personnels"
+"ne seront pas enregistés. Définissez la variable $XDG_CONFIG_HOME sur un repertoire"
+"où l'utilisateur actuel a les droits d'écriture."
 
 #: event.cpp:178
 #, c-format
@@ -824,6 +830,9 @@ msgid ""
 "variable values between old and new fish sessions. For best results, restart "
 "all running instances of fish."
 msgstr ""
+"Une veille version de fish semble en fonctionnement. Vous ne pourrez pas partager"
+"des variables entre la veille et la nouvelle version de fish. Redémarrez"
+"toutes les instances de fish."
 
 #: fish.cpp:420
 #, c-format
@@ -837,8 +846,7 @@ msgstr "%s, version %s\n"
 
 #: fish.cpp:516
 msgid "Can not use the no-execute mode when running an interactive session"
-msgstr ""
-"Le mode no-execute ne peut pas être utilisé dans une session interactive"
+msgstr "Le mode no-execute ne peut pas être utilisé dans une session interactive"
 
 #: fish.cpp:619
 #, c-format
@@ -857,12 +865,12 @@ msgstr "Paramétrage du terminal impossible"
 #: input.cpp:486
 #, c-format
 msgid "Check that your terminal type, '%ls', is supported on this system"
-msgstr ""
+msgstr "Vérifiez que votre type de terminal '%ls' est supporté sur ce système"
 
 #: input.cpp:488
 #, c-format
 msgid "Attempting to use '%ls' instead"
-msgstr ""
+msgstr "Tentative d'essai avec '%ls' à la place"
 
 #: input.cpp:535
 #, fuzzy
@@ -946,17 +954,17 @@ msgstr "Définir l'architecture"
 #: pager.cpp:562
 #, c-format
 msgid "%lsand 1 more row"
-msgstr ""
+msgstr "%lset 1 ligne de plus"
 
 #: pager.cpp:566
 #, c-format
 msgid "%lsand %lu more rows"
-msgstr ""
+msgstr "%lset %lu lignes de plus"
 
 #: pager.cpp:571
 #, c-format
 msgid "rows %lu to %lu of %lu"
-msgstr ""
+msgstr "lignes %lu à %lu de %lu"
 
 #: pager.cpp:576
 #, fuzzy
@@ -1015,7 +1023,7 @@ msgstr ""
 #: parse_execution.cpp:848
 #, c-format
 msgid "The file '%ls' is not executable by this user"
-msgstr ""
+msgstr "Le fichier '%ls' n'est pas executable par cet utilisateur"
 
 #: parse_execution.cpp:1057
 #, fuzzy, c-format
@@ -1176,7 +1184,7 @@ msgstr "%ls (ligne %d): "
 
 #: parser.cpp:760
 msgid "Startup"
-msgstr ""
+msgstr "Démarrage"
 
 #: parser.cpp:803
 msgid "Job inconsistency"
@@ -1194,7 +1202,7 @@ msgstr "%ls (ligne %d): "
 #: parser.cpp:1051
 #, c-format
 msgid "%ls: "
-msgstr ""
+msgstr "%ls: "
 
 #: path.cpp:24
 #, c-format
@@ -1278,13 +1286,14 @@ msgstr "Impossible de définir le mode du terminal pour le shell"
 
 #: reader.cpp:2059
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
-msgstr ""
+msgstr "Pas de TTY pour shell interactif (tcgetpgrp a échoué)"
 
 #: reader.cpp:2074
 #, c-format
 msgid ""
 "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 msgstr ""
+"Il semblerait que je sois un processus orphelin, je m'arrête donc. Mon pid est %d."
 
 #: reader.cpp:2105
 msgid "Couldn't put the shell in its own process group"
@@ -1488,7 +1497,7 @@ msgstr "Fin de jeton inattendue"
 
 #: tokenizer.cpp:37
 msgid "Unexpected end of string, parenthesis do not match"
-msgstr ""
+msgstr "Fin de chaine inattendue, les parenthèses ne correspondent pas"
 
 #: tokenizer.cpp:42
 msgid "Unexpected end of string, square brackets do not match"
@@ -1747,7 +1756,7 @@ msgstr "Une erreur est survenue lors du paramétrage du tube"
 
 #: expand.h:135
 msgid "Array index out of bounds"
-msgstr ""
+msgstr "Indice de liste hors limite"
 
 #: parse_constants.h:185
 #, c-format
@@ -1761,6 +1770,8 @@ msgid ""
 "The function call stack limit has been exceeded. Do you have an accidental "
 "infinite loop?"
 msgstr ""
+"La taille de la pile d'appels de fonctions a atteint sa limite. Avez-vous"
+"une boucle infinie involontaire?"
 
 #: parse_constants.h:192
 #, fuzzy
@@ -2413,7 +2424,7 @@ msgstr "Ignorer les bogues dans votre système"
 
 #: share/completions/apt-listbugs.fish:7
 msgid "Ignore newer bugs than upgrade packages"
-msgstr ""
+msgstr "Ignorer les nouveaux bugs et mettre à jour les paquets"
 
 #: share/completions/apt-listbugs.fish:8
 msgid "Bugs for downgrade packages"
@@ -2511,7 +2522,7 @@ msgstr "Synchroniser les paquets installés"
 
 #: share/completions/apt-mark.fish:26
 msgid "Hold a package, prevent automatic installation or removal"
-msgstr ""
+msgstr "Mentienir un paquet, empêchant suppression ou installation automatique"
 
 #: share/completions/apt-mark.fish:27
 #, fuzzy
@@ -2847,7 +2858,7 @@ msgstr "Nettoyer les paquets ne pouvant plus être téléchargés"
 
 #: share/completions/aptitude.fish:25
 msgid "Remove all downloaded .deb files from the package cache directory"
-msgstr ""
+msgstr "Supprimer tous les fichiers .deb du cache"
 
 #: share/completions/aptitude.fish:26
 msgid "Forget all internal information about what packages are \\new"
@@ -2868,7 +2879,7 @@ msgstr "Afficher tous les paquets source avec version"
 
 #: share/completions/aptitude.fish:30
 msgid "Download and displays the Debian changelog for the packages"
-msgstr ""
+msgstr "Télécharger et afficher le changelog pour le paquet Debian"
 
 #: share/completions/aptitude.fish:31
 #, fuzzy
@@ -2877,15 +2888,15 @@ msgstr "Mettre à niveau ou installer les plus nouveaux paquets"
 
 #: share/completions/aptitude.fish:32
 msgid "Download the packages to the current directory"
-msgstr ""
+msgstr "Télécharger le paquet dans le répertoire courant"
 
 #: share/completions/aptitude.fish:33
 msgid "Forbid the upgrade to a particular version"
-msgstr ""
+msgstr "Interdir la mise à jour vers une version précise"
 
 #: share/completions/aptitude.fish:34
 msgid "Ignore the packages by future upgrade commands"
-msgstr ""
+msgstr "Ignorer le paquet pour les futures commandes de mise à jour"
 
 #: share/completions/aptitude.fish:35
 #, fuzzy
@@ -2894,7 +2905,7 @@ msgstr "Installer des paquets source"
 
 #: share/completions/aptitude.fish:36
 msgid "Cancel any scheduled actions on the packages"
-msgstr ""
+msgstr "Annuler toute action programmée pour un paquet"
 
 #: share/completions/aptitude.fish:37
 #, fuzzy
@@ -2903,7 +2914,7 @@ msgstr "Synchroniser les paquets installés"
 
 #: share/completions/aptitude.fish:38
 msgid "Remove and delete all associated configuration and data files"
-msgstr ""
+msgstr "Supprimer tous les fichiers de configuration associés"
 
 #: share/completions/aptitude.fish:39
 #, fuzzy
@@ -2936,7 +2947,7 @@ msgstr "Cherche les paquet contenant le motif"
 
 #: share/completions/aptitude.fish:45
 msgid "Display brief summary of the available commands and options"
-msgstr ""
+msgstr "Afficher un sommaire des commandes et options disponibles"
 
 #: share/completions/arp.fish:4
 msgid "Class of hw type"
@@ -2992,7 +3003,7 @@ msgstr "Afficher les tâches listées"
 
 #: share/completions/atd.fish:2
 msgid "Limiting load factor"
-msgstr ""
+msgstr "Limiter le facteur de charge"
 
 #: share/completions/atd.fish:3
 msgid "Minimum interval in seconds"

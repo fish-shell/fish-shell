@@ -3,7 +3,7 @@ function __fish_test_arg --description "Test if the token under the cursor match
     switch (commandline -ct)
         case $argv
             return 0
-        end
+    end
     return 1
 end
 

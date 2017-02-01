@@ -4,194 +4,335 @@
 
 #include <assert.h>
 #include <wchar.h>
-#include <list>
 #include <map>
-#include <set>
 
 #include "common.h"
 
-/// A predicate to compare dereferenced pointers.
-struct dereference_less_t {
-    template <typename ptr_t>
-    bool operator()(ptr_t p1, ptr_t p2) const {
-        return *p1 < *p2;
-    }
-};
-
-class lru_node_t {
-    template <class T>
-    friend class lru_cache_t;
-
-    /// Our linked list pointer.
-    lru_node_t *prev, *next;
-
-   public:
-    /// The key used to look up in the cache.
-    const wcstring key;
-
-    /// Constructor.
-    explicit lru_node_t(const wcstring &pkey) : prev(NULL), next(NULL), key(pkey) {}
-
-    /// Virtual destructor that does nothing for classes that inherit lru_node_t.
-    virtual ~lru_node_t() {}
-
-    /// operator< for std::set
-    bool operator<(const lru_node_t &other) const { return key < other.key; }
-};
-
-template <class node_type_t>
+// Least-recently-used cache class.
+//
+// This a map from wcstring to CONTENTS, that will evict entries when the count exceeds the maximum.
+// It uses CRTP to inform clients when entries are evicted. This uses the classic LRU cache
+// structure: a dictionary mapping keys to nodes, where the nodes also form a linked list. Our
+// linked list is circular and has a sentinel node (the "mouth" - picture a snake swallowing its
+// tail). This simplifies the logic: no pointer is ever NULL! It also works well with C++'s iterator
+// since the sentinel node is a natural value for end(). Our nodes also have the unusual property of
+// having a "back pointer": they store an iterator to the entry in the map containing the node. This
+// allows us, given a node, to immediately locate the node and its key in the dictionary. This
+// allows us to avoid duplicating the key in the node.
+template <class DERIVED, class CONTENTS>
 class lru_cache_t {
-   private:
-    /// Max node count. This may be (transiently) exceeded by add_node_without_eviction, which is
-    /// used from background threads.
+    struct lru_node_t;
+    typedef typename std::map<wcstring, lru_node_t>::iterator node_iter_t;
+
+    struct lru_link_t {
+        // Our doubly linked list
+        // The base class is used for the mouth only
+        lru_link_t *prev = NULL;
+        lru_link_t *next = NULL;
+    };
+
+    // The node type in our LRU cache
+    struct lru_node_t : public lru_link_t {
+        // No copying
+        lru_node_t(const lru_node_t &) = delete;
+        lru_node_t &operator=(const lru_node_t &) = delete;
+        lru_node_t(lru_node_t &&) = default;
+
+        // Our location in the map!
+        node_iter_t iter;
+
+        // The value from the client
+        CONTENTS value;
+
+        explicit lru_node_t(CONTENTS v) : value(std::move(v)) {}
+    };
+
+    // Max node count. This may be (transiently) exceeded by add_node_without_eviction, which is
+    // used from background threads.
     const size_t max_node_count;
 
-    /// Count of nodes.
-    size_t node_count;
+    // All of our nodes
+    // Note that our linked list contains pointers to these nodes in the map
+    // We are dependent on the iterator-noninvalidation guarantees of std::map
+    std::map<wcstring, lru_node_t> node_map;
 
-    /// The set of nodes.
-    typedef std::set<lru_node_t *, dereference_less_t> node_set_t;
-    node_set_t node_set;
+    // Head of the linked list
+    // The list is circular!
+    // If "empty" the mouth just points at itself.
+    lru_link_t mouth;
 
-    void promote_node(node_type_t *node) {
-        // We should never promote the mouth.
+    // Take a node and move it to the front of the list
+    void promote_node(lru_node_t *node) {
         assert(node != &mouth);
 
-        // First unhook us.
+        // First unhook us
         node->prev->next = node->next;
         node->next->prev = node->prev;
 
-        // Put us after the mouth.
+        // Put us after the mouth
         node->next = mouth.next;
         node->next->prev = node;
         node->prev = &mouth;
         mouth.next = node;
     }
 
-    void evict_node(node_type_t *condemned_node) {
+    // Remove the node
+    void evict_node(lru_node_t *node) {
+        assert(node != &mouth);
+
         // We should never evict the mouth.
-        assert(condemned_node != NULL && condemned_node != &mouth);
+        assert(node != NULL && node->iter != this->node_map.end());
 
         // Remove it from the linked list.
-        condemned_node->prev->next = condemned_node->next;
-        condemned_node->next->prev = condemned_node->prev;
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
 
-        // Remove us from the set.
-        node_set.erase(condemned_node);
-        node_count--;
+        // Pull out our key and value
+        wcstring key = std::move(node->iter->first);
+        CONTENTS value(std::move(node->value));
 
-        // Tell ourselves.
-        this->node_was_evicted(condemned_node);
+        // Remove us from the map. This deallocates node!
+        node_map.erase(node->iter);
+        node = NULL;
+
+        // Tell ourselves what we did
+        DERIVED *dthis = static_cast<DERIVED *>(this);
+        dthis->entry_was_evicted(std::move(key), std::move(value));
     }
 
-    void evict_last_node(void) { evict_node((node_type_t *)mouth.prev); }
+    // Evicts the last node
+    void evict_last_node() {
+        assert(mouth.prev != &mouth);
+        evict_node(static_cast<lru_node_t *>(mouth.prev));
+    }
 
-    static lru_node_t *get_previous(lru_node_t *node) { return node->prev; }
+    // CRTP callback for when a node is evicted.
+    // Clients can implement this
+    void entry_was_evicted(wcstring key, CONTENTS value) {
+        USE(key);
+        USE(value);
+    }
 
-   protected:
-    /// Head of the linked list.
-    lru_node_t mouth;
+    // Implementation of merge step for mergesort
+    // Given two singly linked lists left and right,
+    // and a binary func F implementing less-than, return
+    // the list in sorted order
+    template <typename F>
+    static lru_link_t *merge(lru_link_t *left, size_t left_len,
+                             lru_link_t *right, size_t right_len,
+                             const F &func) {
+        assert(left_len > 0 && right_len > 0);
 
-    /// Overridable callback for when a node is evicted.
-    virtual void node_was_evicted(node_type_t *node) { UNUSED(node); }
+        auto popleft = [&](){
+            lru_link_t *ret = left;
+            left = left->next;
+            left_len--;
+            return ret;
+        };
+
+        auto popright = [&](){
+            lru_link_t *ret = right;
+            right = right->next;
+            right_len--;
+            return ret;
+        };
+
+        lru_link_t *head;
+        lru_link_t **cursor = &head;
+        while (left_len && right_len) {
+            bool goleft = ! func(static_cast<lru_node_t *>(left)->value,
+                                 static_cast<lru_node_t *>(right)->value);
+            *cursor = goleft ? popleft() : popright();
+            cursor = &(*cursor)->next;
+        }
+        while (left_len || right_len) {
+            *cursor = left_len ? popleft() : popright();
+            cursor = &(*cursor)->next;
+        }
+        return head;
+    }
+
+    // mergesort the given list of the given length
+    // This only sets the next pointers, not the prev ones
+    template<typename F>
+    static lru_link_t *mergesort(lru_link_t *node, size_t length, const F &func) {
+        if (length <= 1) {
+            return node;
+        }
+        // divide us into two lists, left and right
+        const size_t left_len = length / 2;
+        const size_t right_len = length - left_len;
+        lru_link_t *left = node;
+
+        lru_link_t *right = node;
+        for (size_t i=0; i < left_len; i++) {
+            right = right->next;
+        }
+
+        // Recursive sorting
+        left = mergesort(left, left_len, func);
+        right = mergesort(right, right_len, func);
+
+        // Merge them
+        return merge(left, left_len, right, right_len, func);
+    }
 
    public:
-    /// Constructor
-    explicit lru_cache_t(size_t max_size = 1024)
-        : max_node_count(max_size), node_count(0), mouth(wcstring()) {
-        // Hook up the mouth to itself: a one node circularly linked list!
-        mouth.prev = mouth.next = &mouth;
+
+    // Constructor
+    // Note our linked list is always circular!
+    explicit lru_cache_t(size_t max_size = 1024) : max_node_count(max_size) {
+        mouth.next = mouth.prev = &mouth;
     }
 
-    /// Note that we do not evict nodes in our destructor (even though they typically need to be
-    /// deleted by their creator).
-    virtual ~lru_cache_t() {}
-
-    /// Returns the node for a given key, or NULL.
-    node_type_t *get_node(const wcstring &key) {
-        node_type_t *result = NULL;
-
-        // Construct a fake node as our key.
-        lru_node_t node_key(key);
-
-        // Look for it in the set.
-        node_set_t::iterator iter = node_set.find(&node_key);
-
-        // If we found a node, promote and return it.
-        if (iter != node_set.end()) {
-            result = static_cast<node_type_t *>(*iter);
-            promote_node(result);
+    // Returns the value for a given key, or NULL.
+    // This counts as a "use" and so promotes the node
+    CONTENTS *get(const wcstring &key) {
+        auto where = this->node_map.find(key);
+        if (where == this->node_map.end()) {
+            // not found
+            return NULL;
         }
-        return result;
+        promote_node(&where->second);
+        return &where->second.value;
     }
 
-    /// Evicts the node for a given key, returning true if a node was evicted.
+    // Evicts the node for a given key, returning true if a node was evicted.
     bool evict_node(const wcstring &key) {
-        // Construct a fake node as our key.
-        lru_node_t node_key(key);
-
-        // Look for it in the set.
-        node_set_t::iterator iter = node_set.find(&node_key);
-        if (iter == node_set.end()) return false;
-
-        // Evict the given node.
-        evict_node(static_cast<node_type_t *>(*iter));
+        auto where = this->node_map.find(key);
+        if (where == this->node_map.end()) return false;
+        evict_node(&where->second);
         return true;
     }
 
-    /// Adds a node under the given key. Returns true if the node was added, false if the node was
-    /// not because a node with that key is already in the set.
-    bool add_node(node_type_t *node) {
-        // Add our node without eviction.
-        if (!this->add_node_without_eviction(node)) return false;
+    // Adds a node under the given key. Returns true if the node was added, false if the node was
+    // not because a node with that key is already in the set.
+    bool insert(wcstring key, CONTENTS value) {
+        if (!this->insert_no_eviction(std::move(key), std::move(value))) {
+            return false;
+        }
 
-        while (node_count > max_node_count) evict_last_node();  // evict
+        while (this->node_map.size() > max_node_count) {
+            evict_last_node();
+        }
         return true;
     }
 
-    /// Adds a node under the given key without triggering eviction. Returns true if the node was
-    /// added, false if the node was not because a node with that key is already in the set.
-    bool add_node_without_eviction(node_type_t *node) {
-        assert(node != NULL && node != &mouth);
-
+    // Adds a node under the given key without triggering eviction. Returns true if the node was
+    // added, false if the node was not because a node with that key is already in the set.
+    bool insert_no_eviction(wcstring key, CONTENTS value) {
         // Try inserting; return false if it was already in the set.
-        if (!node_set.insert(node).second) return false;
+        auto iter_inserted = this->node_map.emplace(std::move(key), lru_node_t(std::move(value)));
+        if (!iter_inserted.second) {
+            // already present - so promote it
+            promote_node(&iter_inserted.first->second);
+            return false;
+        }
 
-        // Add the node after the mouth.
+        // Tell the node where it is in the map
+        node_iter_t iter = iter_inserted.first;
+        lru_node_t *node = &iter->second;
+        node->iter = iter;
+
         node->next = mouth.next;
         node->next->prev = node;
         node->prev = &mouth;
         mouth.next = node;
-
-        // Update the count. This may push us over the maximum node count.
-        node_count++;
         return true;
     }
 
-    /// Counts nodes.
-    size_t size(void) { return node_count; }
+    // Number of entries
+    size_t size() const {
+        return this->node_map.size();
+    }
 
-    /// Evicts all nodes.
+    // Sorting support
+    // Given a binary function F implementing less-than on the contents, place the nodes in sorted order
+    template<typename F>
+    void stable_sort(const F &func) {
+        // Perform the sort. This sets forward pointers only
+        size_t length = this->size();
+        if (length <= 1) {
+            return;
+        }
+
+        lru_link_t *sorted = mergesort(this->mouth.next, length, func);
+        mouth.next = sorted;
+        // Go through and set back back pointers
+        lru_link_t *cursor = sorted;
+        lru_link_t *prev = &mouth;
+        for (size_t i=0; i < length; i++) {
+            cursor->prev = prev;
+            prev = cursor;
+            cursor = cursor->next;
+        }
+        // prev is now last element in list
+        // make the list circular
+        prev->next = &mouth;
+        mouth.prev = prev;
+    }
+
     void evict_all_nodes(void) {
-        while (node_count > 0) {
+        while (this->size() > 0) {
             evict_last_node();
         }
     }
 
-    /// Iterator for walking nodes, from least recently used to most.
+    // Iterator for walking nodes, from least recently used to most.
     class iterator {
-        lru_node_t *node;
+        const lru_link_t *node;
 
        public:
-        explicit iterator(lru_node_t *val) : node(val) {}
-        void operator++() { node = lru_cache_t::get_previous(node); }
+        typedef std::pair<const wcstring &, const CONTENTS &> value_type;
+
+        explicit iterator(const lru_link_t *val) : node(val) {}
+        void operator++() { node = node->prev; }
         bool operator==(const iterator &other) { return node == other.node; }
         bool operator!=(const iterator &other) { return !(*this == other); }
-        node_type_t *operator*() { return static_cast<node_type_t *>(node); }
+        value_type operator*() const {
+            const lru_node_t *dnode = static_cast<const lru_node_t *>(node);
+            const wcstring &key = dnode->iter->first;
+            return {key, dnode->value};
+        }
     };
 
-    iterator begin() { return iterator(mouth.prev); }
-    iterator end() { return iterator(&mouth); }
+    iterator begin() const { return iterator(mouth.prev); };
+    iterator end() const { return iterator(&mouth); };
+
+    void check_sanity() const {
+        // Check linked list sanity
+        size_t expected_count = this->size();
+        const lru_link_t *prev = &mouth;
+        const lru_link_t *cursor = mouth.next;
+
+        size_t max = 1024 * 1024 * 64;
+        size_t count = 0;
+        while (cursor != &mouth) {
+            if (cursor->prev != prev) {
+                assert(0 && "Node busted previous link");
+            }
+            prev = cursor;
+            cursor = cursor->next;
+            if (count++ > max) {
+                assert(0 && "LRU cache unable to re-reach the mouth - not circularly linked?");
+            }
+        }
+        if (mouth.prev != prev) {
+            assert(0 && "mouth.prev does not connect to last node");
+        }
+        if (count != expected_count) {
+            assert(0 && "Linked list count mismatch from map count");
+        }
+
+        // Count iterators
+        size_t iter_dist = 0;
+        for (const auto &p : *this) {
+            iter_dist++;
+        }
+        if (iter_dist != count) {
+            assert(0 && "Linked list iterator mismatch from map count");
+        }
+    }
 };
 
 #endif

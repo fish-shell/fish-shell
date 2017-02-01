@@ -37,24 +37,15 @@ static std::set<wcstring> function_tombstones;
 /// Lock for functions.
 static pthread_mutex_t functions_lock;
 
-/// Autoloader for functions.
-class function_autoload_t : public autoload_t {
-   public:
-    function_autoload_t();
-    virtual void command_removed(const wcstring &cmd);
-};
-
-static function_autoload_t function_autoloader;
-
-/// Constructor
-function_autoload_t::function_autoload_t() : autoload_t(L"fish_function_path", NULL, 0) {}
-
 static bool function_remove_ignore_autoload(const wcstring &name, bool tombstone = true);
 
 /// Callback when an autoloaded function is removed.
-void function_autoload_t::command_removed(const wcstring &cmd) {
+void autoloaded_function_removed(const wcstring &cmd) {
     function_remove_ignore_autoload(cmd, false);
 }
+
+// Function autoloader
+static autoload_t function_autoloader(L"fish_function_path", autoloaded_function_removed);
 
 /// Kludgy flag set by the load function in order to tell function_add that the function being
 /// defined is autoloaded. There should be a better way to do this...
@@ -259,7 +250,7 @@ std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name) {
     return func ? func->inherit_vars : std::map<wcstring, env_var_t>();
 }
 
-int function_get_shadow_scope(const wcstring &name) {
+bool function_get_shadow_scope(const wcstring &name) {
     scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->shadow_scope : false;
@@ -323,6 +314,12 @@ const wchar_t *function_get_definition_file(const wcstring &name) {
     scoped_lock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->definition_file : NULL;
+}
+
+bool function_is_autoloaded(const wcstring &name) {
+    scoped_lock locker(functions_lock);
+    const function_info_t *func = function_get(name);
+    return func->is_autoload;
 }
 
 int function_get_definition_offset(const wcstring &name) {

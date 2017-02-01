@@ -35,10 +35,14 @@ for arg in $argv
         set cppcheck_args $cppcheck_args $arg
     else if string match -q -- '-I*' $arg
         set cppcheck_args $cppcheck_args $arg
-    else if string match -q -- '-iquote*' $arg
-        set cppcheck_args $cppcheck_args $arg
     end
 end
+
+# Not sure when this became necessary but without these flags cppcheck no longer works on macOS.
+# It complains that "Cppcheck cannot find all the include files." It appears that cppcheck used
+# to, but no longer, recognizes the -iquote flag. So switch to hardcoding the appropriate -I flags.
+set cppcheck_args $cppcheck_args -I . -I ./src
+
 if test "$machine_type" = "x86_64"
     set cppcheck_args -D__x86_64__ -D__LP64__ $cppcheck_args
 end
@@ -49,7 +53,8 @@ else
     # We haven't been asked to lint all the source. If there are uncommitted
     # changes lint those, else lint the files in the most recent commit.
     # Select (cached files) (modified but not cached, and untracked files)
-    set files (git diff-index --cached HEAD --name-only) (git ls-files --exclude-standard --others --modified)
+    set files (git diff-index --cached HEAD --name-only)
+    set files $files (git ls-files --exclude-standard --others --modified)
     if not set -q files[1]
         # No pending changes so lint the files in the most recent commit.
         set files (git diff-tree --no-commit-id --name-only -r HEAD)
@@ -75,9 +80,12 @@ if set -q c_files[1]
         for c_file in $c_files
             switch $kernel_name
                 case Darwin
-                    include-what-you-use -Xiwyu --no_default_mappings -Xiwyu --mapping_file=build_tools/iwyu.osx.imp $cppcheck_args --std=c++11 $c_file 2>&1
+                    include-what-you-use -Xiwyu --no_default_mappings -Xiwyu \
+                        --mapping_file=build_tools/iwyu.osx.imp --std=c++11 \
+                        $cppcheck_args $c_file 2>&1
                 case Linux
-                    include-what-you-use -Xiwyu --mapping_file=build_tools/iwyu.linux.imp $cppcheck_args $c_file 2>&1
+                    include-what-you-use -Xiwyu --mapping_file=build_tools/iwyu.linux.imp \
+                        $cppcheck_args $c_file 2>&1
                 case '*' # hope for the best
                     include-what-you-use $cppcheck_args $c_file 2>&1
             end
@@ -92,7 +100,25 @@ if set -q c_files[1]
         # The stderr to stdout redirection is because cppcheck, incorrectly IMHO, writes its
         # diagnostic messages to stderr. Anyone running this who wants to capture its output will
         # expect those messages to be written to stdout.
-        cppcheck -q --verbose --std=posix --language=c++ --template \[(set_color --bold)(set_color --underline)"{file}"(set_color normal)(set_color --bold)":{line}"(set_color normal)"] "(set_color brmagenta)"{severity}"(set_color magenta)" ({id}):"\n(set_color normal)" {message}" --suppress=missingIncludeSystem --inline-suppr --enable=$cppchecks --rule-file=.cppcheck.rule $cppcheck_args $c_files 2>&1
+        set -l cn (set_color normal)
+        set -l cb (set_color --bold)
+        set -l cu (set_color --underline)
+        set -l cm (set_color magenta)
+        set -l cbrm (set_color brmagenta)
+        set -l template "[$cb$cu{file}$cn$cb:{line}$cn] $cbrm{severity}$cm ({id}):$cn\n {message}"
+        set cppcheck_args -q --verbose --std=c++11 --std=posix --language=c++ --template $template \
+            --suppress=missingIncludeSystem --inline-suppr --enable=$cppchecks \
+            --rule-file=.cppcheck.rules --suppressions-list=.cppcheck.suppressions $cppcheck_args
+
+        cppcheck $cppcheck_args $c_files 2>&1
+
+        echo
+        echo ========================================
+        echo 'Running `cppcheck --check-config` to identify missing includes similar problems.'
+        echo 'Ignore unmatchedSuppression warnings as they are probably false positives we'
+        echo 'cannot suppress.'
+        echo ========================================
+        cppcheck $cppcheck_args --check-config $c_files 2>&1
     end
 
     if type -q oclint
@@ -109,14 +135,14 @@ if set -q c_files[1]
                 oclint-xcodebuild xcodebuild.log >/dev/null
             end
             if test $all = yes
-                oclint-json-compilation-database -e '/pcre2-10.21/' -- -enable-global-analysis 2>&1
+                oclint-json-compilation-database -e '/pcre2-10.22/' -- -enable-global-analysis 2>&1
             else
                 set i_files
                 for f in $c_files
                     set i_files $i_files -i $f
                 end
-                echo oclint-json-compilation-database -e '/pcre2-10.21/' $i_files
-                oclint-json-compilation-database -e '/pcre2-10.21/' $i_files 2>&1
+                echo oclint-json-compilation-database -e '/pcre2-10.22/' $i_files
+                oclint-json-compilation-database -e '/pcre2-10.22/' $i_files 2>&1
             end
         else
             # Presumably we're on Linux or other platform not requiring special

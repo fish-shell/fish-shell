@@ -23,6 +23,11 @@
 int fish_wcwidth(wchar_t wc);
 int fish_wcswidth(const wchar_t *str, size_t n);
 
+// Replacement for mkostemp(str, O_CLOEXEC)
+// This uses mkostemp if available,
+// otherwise it uses mkstemp followed by fcntl
+int fish_mkstemp_cloexec(char *);
+
 #ifndef WCHAR_MAX
 /// This _should_ be defined by wchar.h, but e.g. OpenBSD doesn't.
 #define WCHAR_MAX INT_MAX
@@ -63,6 +68,12 @@ char *tparm_solaris_kludge(char *str, ...);
 /// On other platforms, use what's detected at build time.
 #if __APPLE__
 #if __DARWIN_C_LEVEL >= 200809L
+// We have to explicitly redeclare these as weak,
+// since we are forced to set the MIN_REQUIRED availability macro to 10.7
+// to use libc++, which in turn exposes these as strong
+wchar_t *wcsdup(const wchar_t *) __attribute__((weak_import));
+int wcscasecmp(const wchar_t *, const wchar_t *) __attribute__((weak_import));
+int wcsncasecmp(const wchar_t *, const wchar_t *, size_t n) __attribute__((weak_import));
 wchar_t *wcsdup_use_weak(const wchar_t *);
 int wcscasecmp_use_weak(const wchar_t *, const wchar_t *);
 int wcsncasecmp_use_weak(const wchar_t *s1, const wchar_t *s2, size_t n);
@@ -75,7 +86,26 @@ int wcscasecmp(const wchar_t *a, const wchar_t *b);
 int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 wchar_t *wcsndup(const wchar_t *in, size_t c);
 #endif
-#endif  //__APPLE__
+#else  //__APPLE__
+
+/// These functions are missing from Solaris 10
+#ifndef HAVE_WCSDUP
+wchar_t *wcsdup(const wchar_t *in);
+#endif
+#ifndef HAVE_WCSCASECMP
+int wcscasecmp(const wchar_t *a, const wchar_t *b);
+#endif
+#ifndef HAVE_WCSNCASECMP
+int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
+#endif
+#ifndef HAVE_DIRFD
+#ifndef __XOPEN_OR_POSIX
+#define dirfd(d) (d->dd_fd)
+#else
+#define dirfd(d) (d->d_fd)
+#endif
+#endif
+#endif
 
 #ifndef HAVE_WCSNDUP
 /// Fallback for wcsndup function. Returns a copy of \c in, truncated to a maximum length of \c c.
@@ -123,6 +153,22 @@ char *fish_textdomain(const char *domainname);
 #ifndef HAVE_KILLPG
 /// Send specified signal to specified process group.
 int killpg(int pgr, int sig);
+#endif
+
+#ifndef HAVE_FLOCK
+/// Fallback implementation of flock in terms of fcntl
+/// Danger! The semantics of flock and fcntl locking are very different.
+/// Use with caution.
+// Ignore the cppcheck warning as this is the implementation that it is
+// warning about!
+// cppcheck-suppress flockSemanticsWarning
+int flock(int fd, int op);
+
+#define LOCK_SH 1  // Shared lock.
+#define LOCK_EX 2  // Exclusive lock.
+#define LOCK_UN 8  // Unlock.
+#define LOCK_NB 4  // Don't block when locking.
+
 #endif
 
 #endif

@@ -491,7 +491,7 @@ int main(int argc, char *argv[]) {
         case output_type_file: {
             FILE *fh = fopen(output_location, "w");
             if (fh) {
-                fputs(wcs2str(output_wtext), fh);
+                fputws(output_wtext.c_str(), fh);
                 fclose(fh);
                 exit(0);
             } else {
@@ -511,6 +511,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    fputs(colored_output.c_str(), stdout);
+    fputws(str2wcstring(colored_output).c_str(), stdout);
     return 0;
 }

@@ -70,7 +70,7 @@ extra_confdir = @extra_confdir@
 # pcre2
 #
 PCRE2_WIDTH = @WCHAR_T_BITS@
-PCRE2_DIR = pcre2-10.21
+PCRE2_DIR = pcre2-10.22
 PCRE2_LIBDIR = $(PCRE2_DIR)/.libs
 PCRE2_LIB = $(PCRE2_LIBDIR)/libpcre2-$(PCRE2_WIDTH).a
 PCRE2_H = $(PCRE2_DIR)/src/pcre2.h
@@ -181,6 +181,17 @@ PROGRAMS := fish fish_indent fish_key_reader
 # Manual pages to install
 #
 MANUALS := $(addsuffix .1, $(addprefix share/man/man1/, $(PROGRAMS)))
+HELP_MANPAGES := $(wildcard share/man/man1/*.1)
+
+# Determine which man pages we don't want to install
+# On OS X, don't install a man page for open, since we defeat fish's open
+# function on OS X.
+# This is also done in build_tools/build_documentation.sh, but because the
+# tarball includes this page, we need to skip it in the Makefile too (see
+# https://github.com/fish-shell/fish-shell/issues/2561).
+ifeq ($(shell uname), Darwin)
+	HELP_MANPAGES := $(filter-out share/man/man1/open.1, $(HELP_MANPAGES))
+endif
 
 #
 # All translation message catalogs
@@ -238,7 +249,7 @@ show-%:
 #
 all: show-CXX show-CXXFLAGS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
 ifneq (,$(findstring install,$(MAKECMDGOALS)))
-# Fish has been built, but if the goal was 'install', we aren't done yet and this output isnt't desirable 
+# Fish has been built, but if the goal was 'install', we aren't done yet and this output isnt't desirable
 	@echo "$(green)fish has now been built.$(sgr0)"
 	@echo "Run $(yellow)$(notdir $(MAKE)) install$(sgr0) to install fish.$(sgr0)"
 endif
@@ -286,7 +297,7 @@ prof: all
 # directory once Doxygen is done.
 #
 doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
-	@echo " SED doxygen  $(em)user_doc$(sgr0)"
+	@echo "  doxygen  $(em)user_doc$(sgr0)"
 	$v (cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | doxygen - && touch user_doc
 	$v rm -f $(wildcard $(addprefix ./user_doc/html/,arrow*.png bc_s.png bdwn.png closed.png doc.png folder*.png ftv2*.png nav*.png open.png splitbar.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html))
 
@@ -367,7 +378,7 @@ test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
 # builtins
 #
 doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in |
-	@echo " CAT AWK   $(em)$@$(sgr0)"
+	@echo "  CAT AWK  $(em)$@$(sgr0)"
 	$v rm -f command_list.tmp command_list_toc.tmp $@
 	$v for i in $(sort $(HELP_SRC)); do \
 		echo "<hr>" >>command_list.tmp; \
@@ -383,7 +394,7 @@ doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in |
 	$v cat $@.in | $(AWK) '{if ($$0 ~ /@command_list_toc@/) { system("cat command_list_toc.txt"); } else if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
 
 toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) | show-SED
-	@echo " SED       $(em)$@$(sgr0)"
+	@echo "  SED      $(em)$@$(sgr0)"
 	$v rm -f toc.tmp $@
 # Ugly hack to set the toc initial title for the main page
 	$v echo '- <a href="index.html" id="toc-index">fish shell documentation - $(FISH_BUILD_VERSION)</a>' > toc.tmp
@@ -400,7 +411,7 @@ toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) | show-SED
 	$v mv toc.tmp $@
 
 doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
-	@echo " AWK CAT      $(em)$@$(sgr0)"
+	@echo "  AWK CAT  $(em)$@$(sgr0)"
 	$v cat $@.in | $(AWK) '{if ($$0 ~ /@toc@/){ system("cat toc.txt");} else{ print $$0;}}' >$@
 
 #
@@ -415,7 +426,7 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
 lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED show-FGREP
 	$v rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
 # Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
-	@echo " SEDFGREP  $(em)$@$(sgr0)"
+	@echo "  SEDFGREP $(em)$@$(sgr0)"
 	$v $(SED) <command_list_toc.txt >>lexicon.tmp -n \
 		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
 		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt
@@ -454,7 +465,7 @@ lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
 	else \
 		WORDBL='\\<'; WORDBR='\\>'; \
 	fi; $(SED) <lexicon.txt >>$@.tmp -n -e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" -e '$$G;s/.*\n/b tidy/p';
-	$v mv $@.tmp $@; test -x $@ || chmod a+x $@; 
+	$v mv $@.tmp $@; test -x $@ || chmod a+x $@;
 
 
 #
@@ -474,7 +485,7 @@ doc.h: $(HDR_FILES)
 # the internal help function text.
 #
 %.doxygen:%.txt
-	@echo " cat *      $(em)$@$(sgr0)"
+	@echo "  cat *     $(em)$@$(sgr0)"
 	$v echo  "/** \page " `basename $*` >$@;
 	$v cat $*.txt >>$@;
 	$v echo "*/" >>$@
@@ -520,7 +531,7 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 messages.pot: $(wildcard src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish)
-	@echo " xgettext  $(em)$@$(sgr0)"
+	@echo "  xgettext $(em)$@$(sgr0)"
 	xgettext -k_ -kN_ $(wildcard src/*.cpp src/*.h) -o messages.pot
 	$v xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 $(wildcard share/completions/*.fish share/functions/*.fish) share/fish.config -o messages.pot
 
@@ -597,7 +608,7 @@ check-legacy-binaries:
 .PHONY: check-legacy-binaries
 
 install: all install-force | check-legacy-binaries
-	@echo 
+	@echo
 	@echo "$(bo)fish is now installed on your system.$(sgr0)"
 	@echo "To run fish, type $(bo)$(green)fish$(sgr0) in your terminal."
 	@echo "$(T_YELLOW)Even if you are already in fish, you should now start a new fish session.$(sgr0)"
@@ -666,42 +677,19 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 	@echo "Installing pkgconfig file"
 	$v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
 	@echo "Installing the $(bo)fish completion library$(sgr0)...";
-	$v for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
-	done;
+	$v $(INSTALL) -m 644 $(COMPLETIONS_DIR_FILES:%='%') $(DESTDIR)$(datadir)/fish/completions/
 	@echo "Installing $(bo)fish functions$(sgr0)";
-	$v for i in $(FUNCTIONS_DIR_FILES:%='%'); do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
-	done;
+	$v $(INSTALL) -m 644 $(FUNCTIONS_DIR_FILES:%='%') $(DESTDIR)$(datadir)/fish/functions/
 	@echo "Installing $(bo)man pages$(sgr0)";
 	$v $(INSTALL) -m 644 share/groff/* $(DESTDIR)$(datadir)/fish/groff/
-	$v for i in $(wildcard share/man/man1/*.1); do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
-	done;
+	$v test -z "$(HELP_MANPAGES)" || $(INSTALL) -m 644 $(HELP_MANPAGES) $(DESTDIR)$(datadir)/fish/man/man1/
 	@echo "Installing helper tools";
-	$v for i in $(wildcard share/tools/*.py); do\
-		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/; \
-	done;
-	$v for i in share/tools/web_config/*.*; do\
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
-		true; \
-	done;
-	$v for i in share/tools/web_config/js/*.*; do\
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/js/; \
-		true; \
-	done;
-	$v for i in share/tools/web_config/partials/*; do\
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/partials/; \
-		true; \
-	done;
-	$v for i in share/tools/web_config/sample_prompts/*.fish; do\
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts/; \
-		true; \
-	done;
-	$v for i in share/tools/web_config/*.py; do\
-		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
-		true; \
-	done;
+	$v $(INSTALL) -m 755 share/tools/*.py $(DESTDIR)$(datadir)/fish/tools/
+	$v $(INSTALL) -m 644 share/tools/web_config/*.* $(DESTDIR)$(datadir)/fish/tools/web_config/
+	$v $(INSTALL) -m 644 share/tools/web_config/js/*.* $(DESTDIR)$(datadir)/fish/tools/web_config/js/
+	$v $(INSTALL) -m 644 share/tools/web_config/partials/* $(DESTDIR)$(datadir)/fish/tools/web_config/partials/
+	$v $(INSTALL) -m 644 share/tools/web_config/sample_prompts/*.fish $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts/
+	$v $(INSTALL) -m 755 share/tools/web_config/*.py $(DESTDIR)$(datadir)/fish/tools/web_config/
 	@echo "Installing online user documentation";
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	$v for i in user_doc/html/* CHANGELOG.md; do \
@@ -733,7 +721,7 @@ uninstall: uninstall-translations | show-prefix show-bindir show-sysconfdir show
 	@echo
 	@echo "In 5 seconds, $(red)all data$(sgr0) (includes functions, completions, tools) in"
 	@echo $$"\t$(bo)$(DESTDIR)$(datadir)/fish$(sgr0) will be deleted!"
-	@echo 
+	@echo
 	@echo $$"If you put things there, $(red)stop now!$(sgr0) $(bo)\\c"
 	@echo $$"$(bo)5$(sgr0) \\c"
 	@sleep 1
@@ -766,7 +754,7 @@ uninstall: uninstall-translations | show-prefix show-bindir show-sysconfdir show
 	@echo "[ $(bo)"$(basename $(MANUALS))$(sgr0) $$"] in \\c"
 	@echo "$(em)$(mandir)/man1$(sgr0)"
 	-$v for i in $(MANUALS); do \
-		rm -rf "$(DESTDIR)$(mandir)/man1/"$$$(basename $i)$$$(wildcard .*); 
+		rm -rf "$(DESTDIR)$(mandir)/man1/"$$$(basename $i)$$$(wildcard .*);
 	done;
 	@echo
 	@echo "$(green)Fish (likely) unintalled$(sgr0)"
@@ -795,7 +783,7 @@ uninstall-translations: show-DESTDIR show-localedir
 #
 # How basic files get compiled
 #
-obj/%.o: src/%.cpp | show-CXX show-CXXFLAGS show-CPPFLAGS obj 
+obj/%.o: src/%.cpp | show-CXX show-CXXFLAGS show-CPPFLAGS obj
 	@echo "  CXX      $(em)$@$(sgr0)"
 	$v $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
@@ -818,7 +806,7 @@ $(PCRE2_LIB): $(PCRE2_H)
 	$v $(MAKE) V=$(V) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
 
 $(PCRE2_H):
-	@echo " autoconf  $(em)$@$(sgr0)"
+	@echo "  autoconf $(em)$@$(sgr0)"
 	$v (cd $(PCRE2_DIR) && ./config.status)
 
 #
@@ -836,7 +824,7 @@ fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
 	$v $(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 #
-# Build the fish_key_reader program to show input from the terminal. 
+# Build the fish_key_reader program to show input from the terminal.
 #
 fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
 	@echo "  CXX LD   $(em)$@$(sgr0)"
@@ -853,7 +841,7 @@ fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
 # exactly the files that result in objects, leaving the #include'd files
 # behind.
 #
-depend: | show-MKDIR_P 
+depend: | show-MKDIR_P
 	@echo "  CXX LD   $(em)$@$(sgr0)"
 	$v $(MKDIR_P) /tmp/fish_make_depend/src
 	# This is ran only once in a blue moon - full verbosity so we are reminded what it does.
@@ -870,9 +858,9 @@ depend: | show-MKDIR_P
 # TODO - why not have the Makefile run lint.fish on actual files itself (generate a report target?)
 #
 lint:
-	$v build_tools/lint.fish $(CXX) $(CXXFLAGS) $(CPPFLAGS)
+	$v build_tools/lint.fish "$(CXX)" $(CXXFLAGS) $(CPPFLAGS)
 lint-all:
-	$v build_tools/lint.fish $(CXX) --all $(CXXFLAGS) $(CPPFLAGS)
+	$v build_tools/lint.fish "$(CXX)" --all $(CXXFLAGS) $(CPPFLAGS)
 .PHONY: lint lint-all
 
 #
@@ -889,8 +877,9 @@ style-all:
 # Restore the source tree to the state right after extracting a tarball.
 #
 distclean: clean
-	$v $(MAKE) V=$(V) -C $(PCRE2_DIR) distclean ||:
-	$v rm -f config.status config.log config.h Makefile
+	$v test ! -f $(PCRE2_DIR)/Makefile || \
+	  $(MAKE) V=$(V) -C $(PCRE2_DIR) distclean ||:
+	$v rm -rf config.status config.log config.h Makefile autom4te.cache aclocal.m4
 .PHONY: distclean
 
 #
@@ -906,9 +895,12 @@ clean:
 # PCRE's make clean has a few slightly annoying exceptions to the V= rule. If V=0
 # send all output to /dev/null - unless there's an error, in which case run it again not silenced.
 ifeq ($(V), 0 )
-	$(MAKE) -C $(PCRE2_DIR) clean ||:
+	@test ! -f $(PCRE2_DIR)/Makefile || \
+	  $(MAKE) -C $(PCRE2_DIR) clean ||:
 else
-	@$(MAKE) -s -C $(PCRE2_DIR) clean > /dev/null || $(MAKE) -s -C $(PCRE2_DIR) clean ||:
+	@test ! -f $(PCRE2_DIR)/Makefile || \
+	  $(MAKE) -s -C $(PCRE2_DIR) clean > /dev/null || \
+	  $(MAKE) -s -C $(PCRE2_DIR) clean ||:
 endif
 	$v rm -f obj/*.o *.o doc.h doc.tmp
 	$v rm -f doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
@@ -1020,14 +1012,13 @@ obj/expand.o: src/complete.h src/env.h src/exec.h src/expand.h
 obj/expand.o: src/parse_constants.h src/iothread.h src/parse_util.h
 obj/expand.o: src/tokenizer.h src/path.h src/proc.h src/io.h src/parse_tree.h
 obj/expand.o: src/util.h src/wildcard.h src/wutil.h
-obj/fallback.o: config.h src/signal.h src/fallback.h src/util.h
+obj/fallback.o: config.h src/signal.h src/common.h src/fallback.h src/util.h
 obj/fish.o: config.h src/builtin.h src/common.h src/fallback.h src/signal.h
 obj/fish.o: src/env.h src/event.h src/expand.h src/parse_constants.h
 obj/fish.o: src/fish_version.h src/function.h src/history.h src/wutil.h
-obj/fish.o: src/input.h src/input_common.h src/io.h src/parser.h
-obj/fish.o: src/parse_tree.h src/tokenizer.h src/proc.h src/path.h
-obj/fish.o: src/reader.h src/complete.h src/highlight.h src/color.h
-obj/fish.o: src/wildcard.h
+obj/fish.o: src/input.h src/io.h src/parser.h src/parse_tree.h
+obj/fish.o: src/tokenizer.h src/proc.h src/path.h src/reader.h src/complete.h
+obj/fish.o: src/highlight.h src/color.h
 obj/fish_indent.o: config.h src/color.h src/common.h src/fallback.h
 obj/fish_indent.o: src/signal.h src/env.h src/fish_version.h src/highlight.h
 obj/fish_indent.o: src/input.h src/output.h src/parse_constants.h
@@ -1136,8 +1127,8 @@ obj/sanity.o: src/wutil.h src/kill.h src/proc.h src/io.h src/parse_tree.h
 obj/sanity.o: src/parse_constants.h src/tokenizer.h src/reader.h
 obj/sanity.o: src/complete.h src/highlight.h src/color.h src/env.h
 obj/sanity.o: src/sanity.h
-obj/screen.o: config.h src/common.h src/fallback.h src/signal.h src/env.h
-obj/screen.o: src/highlight.h src/color.h src/output.h src/pager.h
+obj/screen.o: config.h src/common.h src/fallback.h src/signal.h
+obj/screen.o: src/highlight.h src/color.h src/env.h src/output.h src/pager.h
 obj/screen.o: src/complete.h src/reader.h src/parse_constants.h src/screen.h
 obj/screen.o: src/util.h
 obj/signal.o: config.h src/signal.h src/common.h src/fallback.h src/event.h
@@ -1146,7 +1137,7 @@ obj/signal.o: src/tokenizer.h src/reader.h src/complete.h src/highlight.h
 obj/signal.o: src/color.h src/env.h src/wutil.h
 obj/tokenizer.o: config.h src/common.h src/fallback.h src/signal.h
 obj/tokenizer.o: src/tokenizer.h src/wutil.h
-obj/utf8.o: config.h src/utf8.h
+obj/utf8.o: config.h src/common.h src/fallback.h src/signal.h src/utf8.h
 obj/util.o: config.h src/common.h src/fallback.h src/signal.h src/util.h
 obj/util.o: src/wutil.h
 obj/wcstringutil.o: config.h src/common.h src/fallback.h src/signal.h

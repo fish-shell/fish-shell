@@ -39,12 +39,10 @@ static signal_list_t sig_list[2] = {{}, {}};
 /// The index of sig_list that is the list of signals currently written to.
 static volatile int active_list = 0;
 
-typedef std::vector<event_t *> event_list_t;
+typedef std::vector<shared_ptr<event_t>> event_list_t;
 
 /// List of event handlers.
 static event_list_t s_event_handlers;
-/// List of event handlers that should be removed.
-static event_list_t killme;
 
 /// List of events that have been sent but have not yet been delivered because they are blocked.
 static event_list_t blocked;
@@ -162,11 +160,11 @@ wcstring event_get_desc(const event_t &e) {
 
 #if 0
 static void show_all_handlers(void) {
-    puts("event handlers:");
+    fwprintf(stdout, L"event handlers:\n");
     for (event_list_t::const_iterator iter = events.begin(); iter != events.end(); ++iter) {
         const event_t *foo = *iter;
         wcstring tmp = event_get_desc(foo);
-        printf("    handler now %ls\n", tmp.c_str());
+        fwprintf(stdout, L"    handler now %ls\n", tmp.c_str());
     }
 }
 #endif
@@ -242,61 +240,51 @@ static wcstring event_desc_compact(const event_t &event) {
 }
 
 void event_add_handler(const event_t &event) {
-    event_t *e;
-
     if (debug_level >= 3) {
         wcstring desc = event_desc_compact(event);
         debug(3, "register: %ls\n", desc.c_str());
     }
 
-    e = new event_t(event);
+    shared_ptr<event_t> e = std::make_shared<event_t>(event);
     if (e->type == EVENT_SIGNAL) {
         signal_handle(e->param1.signal, 1);
         set_signal_observed(e->param1.signal, true);
     }
 
-    s_event_handlers.push_back(e);
+    s_event_handlers.push_back(std::move(e));
 }
 
 void event_remove(const event_t &criterion) {
-    event_list_t new_list;
-
     if (debug_level >= 3) {
         wcstring desc = event_desc_compact(criterion);
         debug(3, "unregister: %ls\n", desc.c_str());
     }
 
-    // Because of concurrency issues (env_remove could remove an event that is currently being
-    // executed), env_remove does not actually free any events - instead it simply moves all events
-    // that should be removed from the event list to the killme list, and the ones that shouldn't be
-    // killed to new_list, and then drops the empty events-list.
-    if (s_event_handlers.empty()) return;
-
-    for (size_t i = 0; i < s_event_handlers.size(); i++) {
-        event_t *n = s_event_handlers.at(i);
-        if (event_match(criterion, *n)) {
-            killme.push_back(n);
-
-            // If this event was a signal handler and no other handler handles the specified signal
-            // type, do not handle that type of signal any more.
-            if (n->type == EVENT_SIGNAL) {
-                event_t e = event_t::signal_event(n->param1.signal);
-                if (event_get(e, 0) == 1) {
-                    signal_handle(e.param1.signal, 0);
-                    set_signal_observed(e.param1.signal, 0);
-                }
-            }
-        } else {
-            new_list.push_back(n);
+    event_list_t::iterator iter = s_event_handlers.begin();
+    while (iter != s_event_handlers.end()) {
+        const event_t *n = iter->get();
+        if (!event_match(criterion, *n)) {
+            ++iter;
+            continue;
         }
+
+        // If this event was a signal handler and no other handler handles the specified signal
+        // type, do not handle that type of signal any more.
+        if (n->type == EVENT_SIGNAL) {
+            event_t e = event_t::signal_event(n->param1.signal);
+            if (event_get(e, NULL) == 1) {
+                signal_handle(e.param1.signal, 0);
+                set_signal_observed(e.param1.signal, 0);
+            }
+        }
+        iter = s_event_handlers.erase(iter);
     }
-    s_event_handlers.swap(new_list);
 }
 
-int event_get(const event_t &criterion, std::vector<event_t *> *out) {
+int event_get(const event_t &criterion, event_list_t *out) {
+    ASSERT_IS_MAIN_THREAD();
     int found = 0;
-    for (size_t i = 0; i < s_event_handlers.size(); i++) {
-        event_t *n = s_event_handlers.at(i);
+    for (const shared_ptr<event_t> &n : s_event_handlers) {
         if (event_match(criterion, *n)) {
             found++;
             if (out) out->push_back(n);
@@ -314,44 +302,15 @@ bool event_is_signal_observed(int sig) {
     return result;
 }
 
-/// Free all events in the kill list.
-static void event_free_kills() {
-    for_each(killme.begin(), killme.end(), event_free);
-    killme.resize(0);
-}
-
-/// Test if the specified event is waiting to be killed.
-static int event_is_killed(const event_t &e) {
-    return std::find(killme.begin(), killme.end(), &e) != killme.end();
-}
-
-/// Callback for firing (and then deleting) an event.
-static void fire_event_callback(void *arg) {
-    ASSERT_IS_MAIN_THREAD();
-    assert(arg != NULL);
-    event_t *event = static_cast<event_t *>(arg);
-    event_fire(event);
-    delete event;
-}
-
 /// Perform the specified event. Since almost all event firings will not be matched by even a single
 /// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
 /// allocated/initialized unless needed.
 static void event_fire_internal(const event_t &event) {
-    event_list_t fire;
-
-    // First we free all events that have been removed, but only if this invocation of
-    // event_fire_internal is not a recursive call.
-    if (is_event <= 1) event_free_kills();
-
-    if (s_event_handlers.empty()) return;
-
-    // Then we iterate over all events, adding events that should be fired to a second list. We need
+    // Iterate over all events, adding events that should be fired to a second list. We need
     // to do this in a separate step since an event handler might call event_remove or
     // event_add_handler, which will change the contents of the \c events list.
-    for (size_t i = 0; i < s_event_handlers.size(); i++) {
-        event_t *criterion = s_event_handlers.at(i);
-
+    event_list_t fire;
+    for (shared_ptr<event_t> &criterion : s_event_handlers) {
         // Check if this event is a match.
         if (event_match(*criterion, event)) {
             fire.push_back(criterion);
@@ -364,18 +323,20 @@ static void event_fire_internal(const event_t &event) {
     if (signal_is_blocked()) {
         // Fix for https://github.com/fish-shell/fish-shell/issues/608. Don't run event handlers
         // while signals are blocked.
-        event_t *heap_event = new event_t(event);
-        input_common_add_callback(fire_event_callback, heap_event);
+        input_common_add_callback([event]() {
+            ASSERT_IS_MAIN_THREAD();
+            event_fire(&event);
+        });
         return;
     }
 
     // Iterate over our list of matching events.
-    for (size_t i = 0; i < fire.size(); i++) {
-        event_t *criterion = fire.at(i);
-        int prev_status;
-
-        // Check if this event has been removed, if so, dont fire it.
-        if (event_is_killed(*criterion)) continue;
+    for (shared_ptr<event_t> &criterion : fire) {
+        // Only fire if this event is still present
+        if (std::find(s_event_handlers.begin(), s_event_handlers.end(), criterion) ==
+            s_event_handlers.end()) {
+            continue;
+        }
 
         // Fire event.
         wcstring buffer = criterion->function_name;
@@ -391,19 +352,15 @@ static void event_fire_internal(const event_t &event) {
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
         proc_push_interactive(0);
-        prev_status = proc_get_last_status();
+        int prev_status = proc_get_last_status();
         parser_t &parser = parser_t::principal_parser();
 
-        block_t *block = new event_block_t(event);
-        parser.push_block(block);
+        event_block_t *b = parser.push_block<event_block_t>(event);
         parser.eval(buffer, io_chain_t(), TOP);
-        parser.pop_block();
+        parser.pop_block(b);
         proc_pop_interactive();
         proc_set_last_status(prev_status);
     }
-
-    // Free killed events.
-    if (is_event <= 1) event_free_kills();
 }
 
 /// Handle all pending signal events.
@@ -413,18 +370,15 @@ static void event_fire_delayed() {
     // When the event handler has called a piece of code that triggers another event, we do not want
     // to fire delayed events because of concurrency problems.
     if (!blocked.empty() && is_event == 1) {
-        event_list_t new_blocked;
-
-        for (size_t i = 0; i < blocked.size(); i++) {
-            event_t *e = blocked.at(i);
+        event_list_t local_blocked;
+        local_blocked.swap(blocked);
+        for (const shared_ptr<event_t> &e : local_blocked) {
             if (event_is_blocked(*e)) {
-                new_blocked.push_back(new event_t(*e));
+                blocked.push_back(e);
             } else {
                 event_fire_internal(*e);
-                event_free(e);
             }
         }
-        blocked.swap(new_blocked);
     }
 
     int al = active_list;
@@ -440,21 +394,20 @@ static void event_fire_delayed() {
 
         // Set up.
         lst = &sig_list[1 - al];
-        event_t e = event_t::signal_event(0);
-        e.arguments.resize(1);
-
         if (lst->overflow) {
             debug(0, _(L"Signal list overflow. Signals have been ignored."));
         }
 
         // Send all signals in our private list.
         for (int i = 0; i < lst->count; i++) {
-            e.param1.signal = lst->signal[i];
-            e.arguments.at(0) = sig2wcs(e.param1.signal);
-            if (event_is_blocked(e)) {
-                blocked.push_back(new event_t(e));
+            shared_ptr<event_t> e = std::make_shared<event_t>(EVENT_SIGNAL);
+            int signal = lst->signal[i];
+            e->param1.signal = signal;
+            e->arguments.push_back(sig2wcs(signal));
+            if (event_is_blocked(*e)) {
+                blocked.push_back(e);
             } else {
-                event_fire_internal(e);
+                event_fire_internal(*e);
             }
         }
     }
@@ -480,7 +433,7 @@ void event_fire(const event_t *event) {
 
         if (event) {
             if (event_is_blocked(*event)) {
-                blocked.push_back(new event_t(*event));
+                blocked.push_back(std::make_shared<event_t>(*event));
             } else {
                 event_fire_internal(*event);
             }
@@ -491,18 +444,7 @@ void event_fire(const event_t *event) {
 
 void event_init() {}
 
-void event_destroy() {
-    for_each(s_event_handlers.begin(), s_event_handlers.end(), event_free);
-    s_event_handlers.clear();
-
-    for_each(killme.begin(), killme.end(), event_free);
-    killme.clear();
-}
-
-void event_free(event_t *e) {
-    CHECK(e, );
-    delete e;
-}
+void event_destroy() { s_event_handlers.clear(); }
 
 void event_fire_generic(const wchar_t *name, wcstring_list_t *args) {
     CHECK(name, );

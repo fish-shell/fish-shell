@@ -117,7 +117,7 @@ body {
     padding-top: 6px;
     padding-bottom: 11px;
     padding-left: 5px;
-    padding-right: 22px;    
+    padding-right: 22px;
     font-size: 12pt;
 	/* Make our border overlap the detail, even if we're unselected (so it doesn't jump when selected) */
 	position: relative;
@@ -130,10 +130,10 @@ body {
 	border: 1px solid #555;
 	border-right: none;
 	background-color: #181818;
-	
+
 	border-top-left-radius: 5;
 	border-bottom-left-radius: 5;
-	
+
 	/* Pad one less than .master_element, to accomodate our border. */
     padding-top: 5px;
     padding-bottom: 10px;
@@ -231,7 +231,7 @@ body {
 	vertical-align: top;
 	overflow:hidden;
 	border-bottom: #444 dotted 1px;
-	word-wrap: break-word;	
+	word-wrap: break-word;
 }
 
 .history_delete {

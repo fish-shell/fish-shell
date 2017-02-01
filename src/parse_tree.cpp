@@ -20,53 +20,10 @@
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-// This array provides strings for each symbol in enum parse_token_type_t in parse_constants.h.
-const wchar_t *const token_type_map[] = {
-    L"token_type_invalid",
-    L"symbol_job_list",
-    L"symbol_job",
-    L"symbol_job_continuation",
-    L"symbol_statement",
-    L"symbol_block_statement",
-    L"symbol_block_header",
-    L"symbol_for_header",
-    L"symbol_while_header",
-    L"symbol_begin_header",
-    L"symbol_function_header",
-    L"symbol_if_statement",
-    L"symbol_if_clause",
-    L"symbol_else_clause",
-    L"symbol_else_continuation",
-    L"symbol_switch_statement",
-    L"symbol_case_item_list",
-    L"symbol_case_item",
-    L"symbol_boolean_statement",
-    L"symbol_decorated_statement",
-    L"symbol_plain_statement",
-    L"symbol_arguments_or_redirections_list",
-    L"symbol_argument_or_redirection",
-    L"symbol_andor_job_list",
-    L"symbol_argument_list",
-    L"symbol_freestanding_argument_list",
-    L"symbol_argument",
-    L"symbol_redirection",
-    L"symbol_optional_background",
-    L"symbol_end_command",
-    L"parse_token_type_string",
-    L"parse_token_type_pipe",
-    L"parse_token_type_redirection",
-    L"parse_token_type_background",
-    L"parse_token_type_end",
-    L"parse_token_type_terminate",
-    L"parse_special_type_parse_error",
-    L"parse_special_type_tokenizer_error",
-    L"parse_special_type_comment",
-};
-
 using namespace parse_productions;
 
-static bool production_is_empty(const production_t *production) {
-    return (*production)[0] == token_type_invalid;
+static bool production_is_empty(const production_element_t *production) {
+    return *production == token_type_invalid;
 }
 
 /// Returns a string description of this parse error.
@@ -164,52 +121,15 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt) {
 
 /// Returns a string description for the given token type.
 const wchar_t *token_type_description(parse_token_type_t type) {
-    if (type >= 0 && type <= LAST_TOKEN_TYPE) return token_type_map[type];
-
-    // This leaks memory but it should never be run unless we have a bug elsewhere in the code.
-    const wcstring d = format_string(L"unknown_token_type_%ld", static_cast<long>(type));
-    wchar_t *d2 = new wchar_t[d.size() + 1];
-    // cppcheck-suppress memleak
-    return std::wcscpy(d2, d.c_str());
+    const wchar_t *description = enum_to_str(type, token_enum_map);
+    if (description) return description;
+    return L"unknown_token_type";
 }
-
-#define LONGIFY(x) L##x
-#define KEYWORD_MAP(x) \
-    { parse_keyword_##x, LONGIFY(#x) }
-static const struct {
-    const parse_keyword_t keyword;
-    const wchar_t *const name;
-}
-keyword_map[] =
-{
-    // Note that these must be sorted (except for the first), so that we can do binary search.
-    KEYWORD_MAP(none),
-    KEYWORD_MAP(and),
-    KEYWORD_MAP(begin),
-    KEYWORD_MAP(builtin),
-    KEYWORD_MAP(case),
-    KEYWORD_MAP(command),
-    KEYWORD_MAP(else),
-    KEYWORD_MAP(end),
-    KEYWORD_MAP(exec),
-    KEYWORD_MAP(for),
-    KEYWORD_MAP(function),
-    KEYWORD_MAP(if),
-    KEYWORD_MAP(in),
-    KEYWORD_MAP(not),
-    KEYWORD_MAP(or),
-    KEYWORD_MAP(switch),
-    KEYWORD_MAP(while)
-};
 
 const wchar_t *keyword_description(parse_keyword_t type) {
-    if (type >= 0 && type <= LAST_KEYWORD) return keyword_map[type].name;
-
-    // This leaks memory but it should never be run unless we have a bug elsewhere in the code.
-    const wcstring d = format_string(L"unknown_keyword_%ld", static_cast<long>(type));
-    wchar_t *d2 = new wchar_t[d.size() + 1];
-    // cppcheck-suppress memleak
-    return std::wcscpy(d2, d.c_str());
+    const wchar_t *keyword = enum_to_str(type, keyword_enum_map);
+    if (keyword) return keyword;
+    return L"unknown_keyword";
 }
 
 static wcstring token_type_user_presentable_description(
@@ -330,8 +250,7 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
             break;
         }
         default: {
-            fprintf(stderr, "Bad token type %d passed to %s\n", (int)tokenizer_token_type,
-                    __FUNCTION__);
+            debug(0, "Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
             DIE("bad token type");
             break;
         }
@@ -487,23 +406,22 @@ class parse_ll_t {
     }
 
     /// Pop from the top of the symbol stack, then push the given production, updating node counts.
-    /// Note that production_t has type "pointer to array" so some care is required.
-    inline void symbol_stack_pop_push_production(const production_t *production) {
+    /// Note that production_element_t has type "pointer to array" so some care is required.
+    inline void symbol_stack_pop_push_production(const production_element_t *production) {
         bool logit = false;
         if (logit) {
-            size_t count = 0;
-            fprintf(stderr, "Applying production:\n");
-            for (size_t i = 0; i < MAX_SYMBOLS_PER_PRODUCTION; i++) {
-                production_element_t elem = (*production)[i];
-                if (production_element_is_valid(elem)) {
-                    parse_token_type_t type = production_element_type(elem);
-                    parse_keyword_t keyword = production_element_keyword(elem);
-                    fprintf(stderr, "\t%ls <%ls>\n", token_type_description(type),
-                            keyword_description(keyword));
-                    count++;
-                }
+            int count = 0;
+            fwprintf(stderr, L"Applying production:\n");
+            for (int i = 0;; i++) {
+                production_element_t elem = production[i];
+                if (!production_element_is_valid(elem)) break;  // all done, bail out
+                parse_token_type_t type = production_element_type(elem);
+                parse_keyword_t keyword = production_element_keyword(elem);
+                fwprintf(stderr, L"\t%ls <%ls>\n", token_type_description(type),
+                         keyword_description(keyword));
+                count++;
             }
-            if (!count) fprintf(stderr, "\t<empty>\n");
+            if (!count) fwprintf(stderr, L"\t<empty>\n");
         }
 
         // Get the parent index. But we can't get the parent parse node yet, since it may be made
@@ -522,12 +440,9 @@ class parse_ll_t {
         representative_child.parent = parent_node_idx;
 
         node_offset_t child_count = 0;
-        for (size_t i = 0; i < MAX_SYMBOLS_PER_PRODUCTION; i++) {
-            production_element_t elem = (*production)[i];
-            if (!production_element_is_valid(elem)) {
-                break;  // all done, bail out
-            }
-
+        for (int i = 0;; i++) {
+            production_element_t elem = production[i];
+            if (!production_element_is_valid(elem)) break;  // all done, bail out
             // Append the parse node.
             representative_child.type = production_element_type(elem);
             nodes.push_back(representative_child);
@@ -550,7 +465,7 @@ class parse_ll_t {
         symbol_stack.reserve(symbol_stack.size() + child_count);
         node_offset_t idx = child_count;
         while (idx--) {
-            production_element_t elem = (*production)[idx];
+            production_element_t elem = production[idx];
             PARSE_ASSERT(production_element_is_valid(elem));
             symbol_stack.push_back(parse_stack_element_t(elem, child_start + idx));
         }
@@ -613,9 +528,9 @@ void parse_ll_t::dump_stack(void) const {
         }
     }
 
-    fprintf(stderr, "Stack dump (%zu elements):\n", symbol_stack.size());
+    fwprintf(stderr, L"Stack dump (%zu elements):\n", symbol_stack.size());
     for (size_t idx = 0; idx < stack_lines.size(); idx++) {
-        fprintf(stderr, "    %ls\n", stack_lines.at(idx).c_str());
+        fwprintf(stderr, L"    %ls\n", stack_lines.at(idx).c_str());
     }
 }
 #endif
@@ -678,15 +593,11 @@ void parse_ll_t::determine_node_ranges(void) {
 
 void parse_ll_t::acquire_output(parse_node_tree_t *output, parse_error_list_t *errors) {
     if (output != NULL) {
-        output->swap(this->nodes);
+        *output = std::move(this->nodes);
     }
-    this->nodes.clear();
-
     if (errors != NULL) {
-        errors->swap(this->errors);
+        *errors = std::move(this->errors);
     }
-    this->errors.clear();
-    this->symbol_stack.clear();
 }
 
 void parse_ll_t::parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *fmt,
@@ -1003,7 +914,7 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token) {
 void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
     bool logit = false;
     if (logit) {
-        fprintf(stderr, "Accept token %ls\n", token1.describe().c_str());
+        fwprintf(stderr, L"Accept token %ls\n", token1.describe().c_str());
     }
     PARSE_ASSERT(token1.type >= FIRST_PARSE_TOKEN_TYPE);
 
@@ -1040,7 +951,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
 
         if (top_node_handle_terminal_types(token1)) {
             if (logit) {
-                fprintf(stderr, "Consumed token %ls\n", token1.describe().c_str());
+                fwprintf(stderr, L"Consumed token %ls\n", token1.describe().c_str());
             }
             // consumed = true;
             break;
@@ -1053,7 +964,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
         parse_stack_element_t &stack_elem = symbol_stack.back();
         parse_node_t &node = nodes.at(stack_elem.node_idx);
         parse_node_tag_t tag = 0;
-        const production_t *production =
+        const production_element_t *production =
             production_for_token(stack_elem.type, token1, token2, &tag);
         node.tag = tag;
         if (production == NULL) {
@@ -1088,23 +999,8 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
 }
 
 // Given an expanded string, returns any keyword it matches.
-static parse_keyword_t keyword_with_name(const wchar_t *name) {
-    // Binary search on keyword_map. Start at 1 since 0 is keyword_none.
-    parse_keyword_t result = parse_keyword_none;
-    size_t left = 1, right = sizeof keyword_map / sizeof *keyword_map;
-    while (left < right) {
-        size_t mid = left + (right - left) / 2;
-        int cmp = wcscmp(name, keyword_map[mid].name);
-        if (cmp < 0) {
-            right = mid;  // name was smaller than mid
-        } else if (cmp > 0) {
-            left = mid + 1;  // name was larger than mid
-        } else {
-            result = keyword_map[mid].keyword;  // found it
-            break;
-        }
-    }
-    return result;
+static inline parse_keyword_t keyword_with_name(const wchar_t *name) {
+    return str_to_enum(name, keyword_enum_map, keyword_enum_map_len);
 }
 
 static bool is_keyword_char(wchar_t c) {
@@ -1275,8 +1171,8 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
 
 #if 0
     //wcstring result = dump_tree(this->parser->nodes, str);
-    //fprintf(stderr, "Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
-    fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", output->size(), sizeof(parse_node_t),
+    //fwprintf(stderr, L"Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
+    fwprintf(stderr, L"%lu nodes, node size %lu, %lu bytes\n", output->size(), sizeof(parse_node_t),
             output->size() * sizeof(parse_node_t));
 #endif
 
@@ -1420,10 +1316,12 @@ bool parse_node_tree_t::argument_list_is_root(const parse_node_t &node) const {
 enum parse_statement_decoration_t parse_node_tree_t::decoration_for_plain_statement(
     const parse_node_t &node) const {
     assert(node.type == symbol_plain_statement);
+    parse_statement_decoration_t decoration = parse_statement_decoration_none;
     const parse_node_t *decorated_statement = this->get_parent(node, symbol_decorated_statement);
-    parse_node_tag_t tag =
-        decorated_statement ? decorated_statement->tag : parse_statement_decoration_none;
-    return static_cast<parse_statement_decoration_t>(tag);
+    if (decorated_statement) {
+        decoration = static_cast<parse_statement_decoration_t>(decorated_statement->tag);
+    }
+    return decoration;
 }
 
 bool parse_node_tree_t::command_for_plain_statement(const parse_node_t &node, const wcstring &src,

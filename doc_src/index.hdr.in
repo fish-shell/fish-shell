@@ -240,6 +240,8 @@ There are a few important things that need to be noted about aliases:
 
 - If the alias has the same name as the aliased command, it is necessary to prefix the call to the program with `command` in order to tell fish that the function should not call itself, but rather a command with the same name. Failing to do so will cause infinite recursion bugs.
 
+- Autoloading isn't applicable to aliases. Since, by definition, the function is created at the time the alias command is executed. You cannot autoload aliases.
+
 To easily create a function of this form, you can use the <a href="commands.html#alias">alias</a> command.
 
 
@@ -262,6 +264,8 @@ This wide search may be confusing. If you are unsure, your functions probably be
 It is very important that function definition files only contain the definition for the specified function and nothing else. Otherwise, it is possible that autoloading a function files requires that the function already be loaded, which creates a circular dependency.
 
 Autoloading also won't work for <a href=#event>event handlers</a>, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the <a href=#event>event handlers</a> section for more information.
+
+Autoloading is not applicable to functions created by the `alias` command. For functions simple enough that you prefer to use the `alias` command to define them you'll need to put those commands in your `~/.config/fish/config.fish` script or some other script run when the shell starts.
 
 If you are developing another program, you may wish to install functions which are available for all users of the fish shell on a system. They can be installed to the "vendor" functions directory. As this path may vary from system to system, the `pkgconfig` framework should be used to discover this path with the output of `pkg-config --variable functionsdir fish`.
 
@@ -845,11 +849,9 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `FISH_VERSION`, the version of the currently running fish
 
-- `COLUMNS`, the current width of the terminal
-
-- `LINES`, the current height of the terminal
-
 - `SHLVL`, the level of nesting of shells
+
+- `COLUMNS` and `LINES`, the current size of the terminal in height and width. These values are only used by fish if the operating system does not report the size of the terminal. Both variables must be set in that case otherwise a default of 80x24 will be used. They are updated when the window size changes.
 
 The names of these variables are mostly derived from the csh family of shells and differ from the ones used by Bourne style shells such as bash.
 
@@ -864,6 +866,8 @@ Fish stores the exit status of the last process in the last job to exit in the `
 If `fish` encounters a problem while executing a command, the status variable may also be set to a specific value:
 
 - 1 is the generally the exit status from fish builtin commands if they were supplied with invalid arguments
+
+- 123 means that the command was not executed because the command name contained invalid characters
 
 - 124 means that the command was not executed because none of the wildcards in the command produced any matches
 
@@ -977,7 +981,7 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - @key{Alt,&uarr;,Up} and @key{Alt,&darr;,Down} search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the <a href='#history'>history</a> section for more information on history searching.
 
-- @key{Control,C} deletes the entire line.
+- @key{Control,C} cancels the entire line.
 
 - @key{Control,D} delete one character to the right of the cursor. If the command line is empty, @key{Control,D} will exit fish.
 
@@ -987,15 +991,21 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - @key{Control,W} moves the previous path component (everything up to the previous "/") to the <a href="#killring">killring</a>.
 
-- @key{Alt,D} moves the next word to the <a href="#killring">killring</a>.
+- @key{Control,X} copies the current buffer to the system's clipboard, @key{Control,V} inserts the clipboard contents.
 
-- @key{Alt,H} (or @key{F1}) shows the manual page for the current command, if one exists.
+- @key{Alt,d} moves the next word to the <a href="#killring">killring</a>.
 
-- @key{Alt,L} lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
+- @key{Alt,h} (or @key{F1}) shows the manual page for the current command, if one exists.
 
-- @key{Alt,P} adds the string '`| less;`' to the end of the job under the cursor. The result is that the output of the command will be paged.
+- @key{Alt,l} lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 
-- @key{Alt,W} prints a short description of the command under the cursor.
+- @key{Alt,p} adds the string '`| less;`' to the end of the job under the cursor. The result is that the output of the command will be paged.
+
+- @key{Alt,w} prints a short description of the command under the cursor.
+
+- @key{Alt,e} edit the current command line in an external editor. The editor is chosen from the first available of the `$VISUAL` or `$EDITOR` variables.
+
+- @key{Alt,v} Same as @key{Alt,e}.
 
 \subsection emacs-mode Emacs mode commands
 
@@ -1009,11 +1019,11 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - @key{Control,K} moves contents from the cursor to the end of line to the <a href="#killring">killring</a>.
 
-- @key{Alt,C} capitalizes the current word.
+- @key{Alt,c} capitalizes the current word.
 
-- @key{Alt,U} makes the current word uppercase.
+- @key{Alt,u} makes the current word uppercase.
 
-- @key{Control, t} transposes the last two characters
+- @key{Control,t} transposes the last two characters
 
 - @key{Alt,t} transposes the last two words
 
@@ -1038,7 +1048,7 @@ function fish_user_key_bindings
 end
 \endfish
 
-When in vi-mode, the <a href="fish_mode_prompt.html">`fish_mode_prompt`</a> function will display a mode indicator to the left of the prompt. The `fish_vi_cursor` function will be used to change the cursor's shape depending on the mode in supported terminals. To disable this feature, override it with an empty function.
+When in vi-mode, the <a href="fish_mode_prompt.html">`fish_mode_prompt`</a> function will display a mode indicator to the left of the prompt. The `fish_vi_cursor` function will be used to change the cursor's shape depending on the mode in supported terminals. To disable this feature, override it with an empty function. To display the mode elsewhere (like in your right prompt), use the output of the `fish_default_mode_prompt` function.
 
 \subsubsection vi-mode-command Command mode
 
@@ -1068,16 +1078,11 @@ Command mode is also known as normal mode.
 
 - @key{[} and @key{]} search the command history for the previous/next token containing the token under the cursor before the search was started. See the <a href='#history'>history</a> section for more information on history searching.
 
-- @key{Control, X} copies the current buffer to the system's clipboard, @key{Control, V} inserts the clipboard contents.
-- @key{Control,C} deletes the entire line.
-
 - @key{Backspace} moves the cursor left.
 
 \subsubsection vi-mode-insert Insert mode
 
-- @key{Escape} or @key{Control,C} enters <a href="#vi-mode-command">command mode</a>.
-
-- @key{Control,x} moves the cursor to the end of the line. If an autosuggestion is available, it will be accepted completely.
+- @key{Escape} enters <a href="#vi-mode-command">command mode</a>.
 
 - @key{Backspace} removes one character to the left.
 

@@ -21,6 +21,3 @@ complete -c mosh -f -l predict --description 'Controls use of speculative local 
 complete -c mosh -s a --description 'Synonym for --predict=always'
 complete -c mosh -s n --description 'Synonym for --predict=never'
 complete -c mosh -s p -l port --description 'Use a particular server-side UDP port or port range'
-
-# Since mosh runs subcommands, it can accept any switches
-complete -c mosh -u

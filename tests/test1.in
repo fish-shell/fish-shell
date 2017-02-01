@@ -126,7 +126,7 @@ echo -e 'abc\cdef' # won't output a newline!
 echo ''
 echo -
 
-echo -ne '\376' | xxd -p
+echo -ne '\376' | display_bytes
 
 echo -e Catch your breath
 

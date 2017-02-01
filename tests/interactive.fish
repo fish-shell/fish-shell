@@ -33,7 +33,7 @@ cat interactive.config >> $XDG_CONFIG_HOME/fish/config.fish
 say -o cyan "Testing interactive functionality"
 if not type -q expect
     say red "Tests disabled: `expect` not found"
-    exit 0
+    exit 1
 end
 
 function test_file

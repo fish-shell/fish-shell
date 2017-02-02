@@ -65,6 +65,10 @@ function __minikube_list_subcommands
     echo version\t"Print the version"
 end
 
+function __minikube_list_addons -a state
+    minikube addons list | grep $state | string replace -r -- "- ([^ :]*): $state" '$1'
+end
+
 function __minikube_config_fields
     minikube config | string match ' \* *' | string replace ' * ' ''
 end
@@ -93,6 +97,9 @@ complete -c minikube -n "__minikube_using_command addons" -l "format" -d "Go tem
 complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from open" -l "format" -d "Format to output addons URL in (default http://{{.IP}}:{{.Port}}"
 complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from open" -l "https" -d "Open the addons URL with https instead of http"
 complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from open" -l "url" -d "Display the kubernetes addons URL instead of opening it"
+
+complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from enable" -a "(__minikube_list_addons disabled)" -d "Addon"
+complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from disable" -a "(__minikube_list_addons enabled)" -d "Addon"
 
 # Sub-command: completion
 complete -c minikube -f -n "__minikube_using_command completion" -a "bash" -d "Shell"

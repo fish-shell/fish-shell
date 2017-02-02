@@ -36,11 +36,11 @@ function __minikube_using_option
     return 1
 end
 
-function __minikube_using_option_value -a option -a driver
+function __minikube_using_option_value -a option -a value
     set cmd (commandline -poc)
 
     if test (count $cmd) -gt 1
-        string match -qr -- $option"[= ]"$driver "$cmd"
+        string match -qr -- $option"[= ]"$value "$cmd"
         return $status
     end
 

@@ -1,8 +1,15 @@
+set -l systemd_version (systemctl --version | string match "systemd*" | string replace -r "\D*(\d+)"  '$1')
 set -l commands list-units list-sockets start stop reload restart try-restart reload-or-restart reload-or-try-restart \
 	isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help \
 	reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump \
 	list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment \
 	default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root
+if test $systemd_version -gt 208
+    set commands $commands cat
+    if test $systemd_version -gt 217
+        set commands $commands edit
+    end
+end
 set -l types services sockets mounts service_paths targets automounts timers
 
 function __fish_systemd_properties
@@ -45,7 +52,19 @@ complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a enabl
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a disable -d 'Disable one or more units'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a isolate -d 'Start a unit and dependencies and disable all others'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-default -d 'Set the default target to boot into'
-for command in start stop restart try-restart reload-or-restart reload-or-try-restart is-active is-failed is-enabled reenable mask loaded link list-dependencies show status
+
+set -l commands_types start stop restart try-restart reload-or-restart reload-or-try-restart is-active is-failed is-enabled reenable mask loaded link list-dependencies show status
+
+if test $systemd_version -gt 208
+    complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a cat -d 'Show a unit'
+    set commands_types $commands_types cat
+    if test $systemd_version -gt 217
+        complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a edit -d 'Edit a unit'
+        set commands_types $commands_types edit
+    end
+end
+
+for command in $commands_types
 	for t in $types
 		complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
 	end
@@ -112,6 +131,8 @@ complete -f -c systemctl -l version -d 'Print a short version and exit'
 complete -f -c systemctl -l no-pager -d 'Do not pipe output into a pager'
 
 # New options since systemd 220
-complete -f -c systemctl -l firmware-setup -n "__fish_seen_subcommand_from reboot" -d "Reboot to EFI setup"
-complete -f -c systemctl -l now -n "__fish_seen_subcommand_from enable" -d "Also start unit"
-complete -f -c systemctl -l now -n "__fish_seen_subcommand_from disable mask" -d "Also stop unit"
+if test $systemd_version -gt 219
+    complete -f -c systemctl -l firmware-setup -n "__fish_seen_subcommand_from reboot" -d "Reboot to EFI setup"
+    complete -f -c systemctl -l now -n "__fish_seen_subcommand_from enable" -d "Also start unit"
+    complete -f -c systemctl -l now -n "__fish_seen_subcommand_from disable mask" -d "Also stop unit"
+end

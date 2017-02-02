@@ -35,13 +35,15 @@ for arg in $argv
         set cppcheck_args $cppcheck_args $arg
     else if string match -q -- '-I*' $arg
         set cppcheck_args $cppcheck_args $arg
+    else if string match -q -- '-iquote*' $arg
+        set cppcheck_args $cppcheck_args $arg
     end
 end
 
 # Not sure when this became necessary but without these flags cppcheck no longer works on macOS.
-# It complains that "Cppcheck cannot find all the include files." It appears that cppcheck used
-# to, but no longer, recognizes the -iquote flag. So switch to hardcoding the appropriate -I flags.
-set cppcheck_args $cppcheck_args -I . -I ./src
+# It complains that "Cppcheck cannot find all the include files." Adding these include paths should
+# be harmless everywhere else.
+set cppcheck_args $cppcheck_args -I /usr/include -I .
 
 if test "$machine_type" = "x86_64"
     set cppcheck_args -D__x86_64__ -D__LP64__ $cppcheck_args
@@ -114,7 +116,7 @@ if set -q c_files[1]
 
         echo
         echo ========================================
-        echo 'Running `cppcheck --check-config` to identify missing includes similar problems.'
+        echo 'Running `cppcheck --check-config` to identify missing includes and similar problems.'
         echo 'Ignore unmatchedSuppression warnings as they are probably false positives we'
         echo 'cannot suppress.'
         echo ========================================

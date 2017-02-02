@@ -65,8 +65,12 @@ function __minikube_list_subcommands
     echo version\t"Print the version"
 end
 
-function __minikube_list_addons -a state
-    minikube addons list | grep $state | string replace -r -- "- ([^ :]*): $state" '$1'
+function __minikube_list_addons
+    if set -q argv[1]
+        minikube addons list | grep $argv[1] | string replace -r -- "- ([^:]*): .*" '$1'
+    else
+        minikube addons list | string replace -r -- "- ([^:]*): .*" '$1'
+    end
 end
 
 function __minikube_config_fields
@@ -100,6 +104,7 @@ complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcom
 
 complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from enable" -a "(__minikube_list_addons disabled)" -d "Addon"
 complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from disable" -a "(__minikube_list_addons enabled)" -d "Addon"
+complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from open" -a "(__minikube_list_addons)" -d "Addon"
 
 # Sub-command: completion
 complete -c minikube -f -n "__minikube_using_command completion" -a "bash" -d "Shell"

@@ -1,23 +1,15 @@
-
 function __fish_print_hostnames -d "Print a list of known hostnames"
-    # Print all hosts from /etc/hosts
-    # use 'getent hosts' on OSes that support it (OpenBSD and Cygwin do not)
-    if type -q getent; and getent hosts >/dev/null 2>&1 # test if 'getent hosts' works and redirect output so errors don't print
-        # Ignore zero ips
-        getent hosts | string match --regex --invert '^0.0.0.0' \
-            # Remove left addresses column
-            | string replace --regex '^\s*\S+\s+' '' \
-            # Tokenize remaining hostnames and aliases columnss
-            | string split ' '
+    # Print all hosts from /etc/hosts. Use 'getent hosts' on OSes that support it
+    # (OpenBSD and Cygwin do not).
+    #
+    # Test if 'getent hosts' works and redirect output so errors don't print.
+    if type -q getent
+        and getent hosts >/dev/null 2>&1
+        # Ignore zero IPs.
+        getent hosts | string match -r -v '^0.0.0.0' | string replace -r '^\s*\S+\s+' '' | string split ' '
     else if test -r /etc/hosts
-        # Ignore commented lines and functionally empty lines
-        string match --regex --invert '^\s*0.0.0.0|^\s*#|^\s*$' </etc/hosts \
-            # Strip comments
-            | string replace --regex --all '#.*$' '' \
-            # Remove left addresses column
-            | string replace --regex '^\s*\S+\s+' '' \
-            # Tokenize remaining hostnames and aliases columns
-            | string trim | string replace --regex --all '\s+' ' ' | string split ' '
+        # Ignore commented lines and functionally empty lines.
+        string match -r -v '^\s*0.0.0.0|^\s*#|^\s*$' </etc/hosts | string replace -r -a '#.*$' '' | string replace -r '^\s*\S+\s+' '' | string trim | string replace -r -a '\s+' ' ' | string split ' '
     end
 
     # Print nfs servers from /etc/fstab
@@ -61,18 +53,18 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
             for config in $argv
                 set paths $paths (cat $config ^/dev/null \
                 # Keep only Include lines
-                | string match --regex --ignore-case '^\s*Include\s+.+' \
+                | string match -r -i '^\s*Include\s+.+' \
                 # Remove Include syntax
-                | string replace --regex --ignore-case '^\s*Include\s+' '' \
+                | string replace -r -i '^\s*Include\s+' '' \
                 # Normalize whitespace
-                | string trim | string replace --regex --all '\s+' ' ')
+                | string trim | string replace -r -a '\s+' ' ')
             end
             if test -n "$paths"
                 # Expand paths which may have globbing and tokenize
                 set paths (eval "echo $paths" | string split ' ')
                 for path_index in (seq (count $paths))
                     # Resolve relative paths
-                    if string match --invert '/*' $paths[$path_index] >/dev/null
+                    if string match -v '/*' $paths[$path_index] >/dev/null
                         set paths[$path_index] $relative_path/$paths[$path_index]
                     end
                     echo $paths[$path_index]
@@ -87,16 +79,9 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     for file in $ssh_configs
         if test -r $file
             # Print hosts from system wide ssh configuration file
-            string match --regex --ignore-case '^\s*Host\s+\S+' <$file \
-                # We only want the value(s)
-                | string replace --regex --ignore-case '^\s*Host\s+' '' \
-                # Print one per line
-                | string trim | string replace --regex '\s+' ' ' | string split ' ' \
-                # Ignore hosts with a glob
-                | string match --invert '*\**'
-            # Extract known_host paths
-            set known_hosts $known_hosts (string match -ri '^\s*UserKnownHostsFile|^\s*GlobalKnownHostsFile' <$file \
-                | string replace -ri '.*KnownHostsFile\s*' '')
+            string match -r -i '^\s*Host\s+\S+' <$file | string replace -r -i '^\s*Host\s+' '' | string trim | string replace -r '\s+' ' ' | string split ' ' | string match -v '*\**'
+            # Extract known_host paths.
+            set known_hosts $known_hosts (string match -ri '^\s*UserKnownHostsFile|^\s*GlobalKnownHostsFile' <$file | string replace -ri '.*KnownHostsFile\s*' '')
         end
     end
     for file in $known_hosts

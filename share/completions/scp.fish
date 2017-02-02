@@ -1,7 +1,6 @@
 #
-# Load common ssh options
+# Load completions shared by ssh and scp.
 #
-
 __fish_complete_ssh scp
 
 #
@@ -11,11 +10,7 @@ __fish_complete_ssh scp
 #
 # Hostname
 #
-complete \
-	--command     scp \
-	--description Hostname \
-	--condition   "commandline --cut-at-cursor --current-token | string match --invert '*:*'" \
-	--arguments   "
+complete -c scp -d Hostname -n "commandline --cut-at-cursor --current-token | string match -v '*:*'" -a "
 
 (__fish_print_hostnames):
 
@@ -23,29 +18,17 @@ complete \
 	#Prepend any username specified in the completion to the hostname
 	commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
 )(__fish_print_hostnames):
-
-# Disable as username completion is not very useful
-# (__fish_print_users)@\tUsername
-
 "
 
 #
 # Local path
 #
-complete \
-	--command     scp \
-	--description "Local Path" \
-	--condition   "commandline -ct | string match ':'"
+complete -c scp -d "Local Path" -n "commandline -ct | string match ':'"
 
 #
 # Remote path
 #
-complete \
-	--command     scp \
-	--description "Remote Path" \
-	--no-files \
-	--condition   "commandline --cut-at-cursor --current-token | string match --regex '.+:'" \
-	--arguments   "
+complete -c scp -d "Remote Path" -f -n "commandline --cut-at-cursor --current-token | string match -r '.+:'" -a "
 
 (
 	#Prepend any user@host information supplied before the remote completion
@@ -56,11 +39,10 @@ complete \
 )
 
 "
-
-complete -c scp -s B --description "Batch mode"
-complete -c scp -s l -x --description "Bandwidth limit"
-complete -c scp -s P -x --description "Port"
-complete -c scp -s p --description "Preserves modification times, access times, and modes from the original file"
-complete -c scp -s q --description "Do not display progress bar"
-complete -c scp -s r --description "Recursively copy"
-complete -c scp -s S --description "Encryption program"
+complete -c scp -s B -d "Batch mode"
+complete -c scp -s l -x -d "Bandwidth limit"
+complete -c scp -s P -x -d "Port"
+complete -c scp -s p -d "Preserves modification times, access times, and modes from the original file"
+complete -c scp -s q -d "Do not display progress bar"
+complete -c scp -s r -d "Recursively copy"
+complete -c scp -s S -d "Encryption program"

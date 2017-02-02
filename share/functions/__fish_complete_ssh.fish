@@ -1,15 +1,13 @@
-
 function __fish_complete_ssh -d "common completions for ssh commands" --argument command
-
-    complete -c $command -s 1 --description "Protocol version 1 only"
-    complete -c $command -s 2 --description "Protocol version 2 only"
-    complete -c $command -s 4 --description "IPv4 addresses only"
-    complete -c $command -s 6 --description "IPv6 addresses only"
-    complete -c $command -s C --description "Compress all data"
-    complete -xc $command -s c --description "Encryption algorithm" -a "blowfish 3des des"
-    complete -r -c $command -s F --description "Configuration file"
-    complete -r -c $command -s i --description "Identity file"
-    complete -x -c $command -s o --description "Options" -a "
+    complete -c $command -s 1 -d "Protocol version 1 only"
+    complete -c $command -s 2 -d "Protocol version 2 only"
+    complete -c $command -s 4 -d "IPv4 addresses only"
+    complete -c $command -s 6 -d "IPv6 addresses only"
+    complete -c $command -s C -d "Compress all data"
+    complete -xc $command -s c -d "Encryption algorithm" -a "blowfish 3des des"
+    complete -r -c $command -s F -d "Configuration file"
+    complete -r -c $command -s i -d "Identity file"
+    complete -x -c $command -s o -d "Options" -a "
 		AddressFamily
 		BatchMode
 		BindAddress
@@ -56,6 +54,5 @@ function __fish_complete_ssh -d "common completions for ssh commands" --argument
 		UserKnownHostsFile
 		VerifyHostKeyDNS
 	"
-    complete -c $command -s v --description "Verbose mode"
+    complete -c $command -s v -d "Verbose mode"
 end
-

@@ -5,7 +5,7 @@
 #define HAVE_BACKTRACE_SYMBOLS 1
 
 /* Define to 1 if you have the `clock_gettime' function. */
-#define HAVE_CLOCK_GETTIME 1
+/* #undef HAVE_CLOCK_GETTIME */
 
 /* Define to 1 if you have the <curses.h> header file. */
 #define HAVE_CURSES_H 1
@@ -60,7 +60,7 @@
 #define HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the `mkostemp' function. */
-#define HAVE_MKOSTEMP 1
+/* #undef HAVE_MKOSTEMP */
 
 /* Define to 1 if you have the <ncurses/curses.h> header file. */
 /* #undef HAVE_NCURSES_CURSES_H */
@@ -157,6 +157,12 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
+/* Define to 1 if you have the `wcscasecmp' function. */
+#define HAVE_WCSCASECMP 1
+
+/* Define to 1 if you have the `wcsdup' function. */
+#define HAVE_WCSDUP 1
+
 /* Define to 1 if you have the `wcslcpy' function. */
 #define HAVE_WCSLCPY 1
 
@@ -191,7 +197,7 @@
 #define PACKAGE_NAME "fish"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "fish 2.4.0-git"
+#define PACKAGE_STRING "fish 2.5.0-git"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "fish"
@@ -200,7 +206,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.4.0-git"
+#define PACKAGE_VERSION "2.5.0-git"
 
 /* The size of `wchar_t', as computed by sizeof. */
 #define SIZEOF_WCHAR_T 4

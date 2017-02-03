@@ -859,7 +859,7 @@ def get_paths_from_manpath():
     import subprocess, os
     # $MANPATH takes precedence, just like with `man` on the CLI.
     if os.getenv("MANPATH"):
-        manpath = os.getenv("MANPATH")
+        parent_paths = os.getenv("MANPATH").strip().split(':')
     else:
         # Some systems have manpath, others have `man --path` (like Haiku).
         # TODO: Deal with systems that have neither (OpenBSD)
@@ -870,7 +870,7 @@ def get_paths_from_manpath():
                 continue
             break # Command exists, use it.
         manpath, err_data = proc.communicate()
-    parent_paths = manpath.decode().strip().split(':')
+        parent_paths = manpath.decode().strip().split(':')
     if not parent_paths or proc.returncode > 0:
         # HACK: Use some fallback in case we can't get anything else.
         # `mandoc` does not provide `manpath` or `man --path` and $MANPATH might not be set, so just use the default for mandoc (minus /usr/X11R6/man, because that's not relevant).

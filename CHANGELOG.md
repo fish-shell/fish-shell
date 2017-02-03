@@ -1,3 +1,11 @@
+# fish 2.5.0 (released February 3, 2017)
+
+There are no major changes between 2.5b1 and 2.5.0. If you are upgrading from version 2.4.0 or before, please also review the release notes for 2.5b1 (included below).
+
+## Notable fixes and improvements
+
+- The Home, End, Insert, Delete, Page Up and Page Down keys work in Vi-style key bindings (#3731).
+
 # fish 2.5b1 (released January 14, 2017)
 
 ## Platform Changes

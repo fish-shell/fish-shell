@@ -198,70 +198,75 @@ static bool is_csi_style_escape_seq(const wchar_t *code, size_t *resulting_lengt
     return true;
 }
 
-/// Returns the number of characters in the escape code starting at 'code' (which should initially
-/// contain \e).
-size_t escape_code_length(const wchar_t *code) {
-    assert(code != NULL);
+// Detect whether the escape sequence sets foreground/background color.
+static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
+    if (!cur_term) return false;
 
-    // The only escape codes we recognize start with \e.
-    if (code[0] != L'\e') return 0;
+    // Detect these terminfo color escapes with parameter value up to max_colors, all of which
+    // don't move the cursor.
+    char *const esc[] = {
+        set_a_foreground, set_a_background, set_foreground, set_background,
+    };
 
-    size_t resulting_length = 0;
-    bool found = false;
+    for (size_t p = 0; p < sizeof esc / sizeof *esc; p++) {
+        if (!esc[p]) continue;
 
-    if (cur_term != NULL) {
-        // Detect these terminfo color escapes with parameter value up to max_colors-1, all of which
-        // don't move
-        // the cursor.
-        char *const esc[] = {
-            set_a_foreground, set_a_background, set_foreground, set_background,
-        };
-
-        for (size_t p = 0; p < sizeof esc / sizeof *esc && !found; p++) {
-            if (!esc[p]) continue;
-
-            for (short k = 0; k < max_colors; k++) {
-                size_t len = try_sequence(tparm(esc[p], k), code);
-                if (len) {
-                    resulting_length = len;
-                    found = true;
-                    break;
-                }
-            }
-        }
-
-        // Detect these semi-common terminfo escapes without any parameter values, all of which
-        // don't move the cursor.
-        char *const esc2[] = {enter_bold_mode,        exit_attribute_mode,   enter_underline_mode,
-                              exit_underline_mode,    enter_standout_mode,   exit_standout_mode,
-                              flash_screen,           enter_subscript_mode,  exit_subscript_mode,
-                              enter_superscript_mode, exit_superscript_mode, enter_blink_mode,
-                              enter_italics_mode,     exit_italics_mode,     enter_reverse_mode,
-                              enter_shadow_mode,      exit_shadow_mode,      enter_standout_mode,
-                              exit_standout_mode,     enter_secure_mode,     enter_dim_mode,
-                              enter_blink_mode,       enter_protected_mode,  enter_alt_charset_mode,
-                              exit_alt_charset_mode};
-
-        for (size_t p = 0; p < sizeof esc2 / sizeof *esc2 && !found; p++) {
-            if (!esc2[p]) continue;
-            // Test both padded and unpadded version, just to be safe. Most versions of tparm don't
-            // actually seem to do anything these days.
-
-            size_t len = maxi(try_sequence(tparm(esc2[p]), code), try_sequence(esc2[p], code));
-            if (len) {
-                resulting_length = len;
-                found = true;
+        for (short k = 0; k < max_colors; k++) {
+            size_t esc_seq_len = try_sequence(tparm(esc[p], k), code);
+            if (esc_seq_len) {
+                *resulting_length = esc_seq_len;
+                return true;
             }
         }
     }
 
-    if (!found) found = is_screen_name_escape_seq(code, &resulting_length);
-    if (!found) found = is_iterm2_escape_seq(code, &resulting_length);
-    if (!found) found = is_single_byte_escape_seq(code, &resulting_length);
-    if (!found) found = is_csi_style_escape_seq(code, &resulting_length);
-    if (!found) is_two_byte_escape_seq(code, &resulting_length);
+    return false;
+}
 
-    return resulting_length;
+// Detect whether the escape sequence sets one of the terminal attributes that affects how text is
+// displayed other than the color.
+static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) {
+    if (!cur_term) return false;
+    char *const esc2[] = {enter_bold_mode,        exit_attribute_mode,   enter_underline_mode,
+                            exit_underline_mode,    enter_standout_mode,   exit_standout_mode,
+                            flash_screen,           enter_subscript_mode,  exit_subscript_mode,
+                            enter_superscript_mode, exit_superscript_mode, enter_blink_mode,
+                            enter_italics_mode,     exit_italics_mode,     enter_reverse_mode,
+                            enter_shadow_mode,      exit_shadow_mode,      enter_standout_mode,
+                            exit_standout_mode,     enter_secure_mode,     enter_dim_mode,
+                            enter_blink_mode,       enter_protected_mode,  enter_alt_charset_mode,
+                            exit_alt_charset_mode};
+
+    for (size_t p = 0; p < sizeof esc2 / sizeof *esc2; p++) {
+        if (!esc2[p]) continue;
+        // Test both padded and unpadded version, just to be safe. Most versions of tparm don't
+        // actually seem to do anything these days.
+        size_t esc_seq_len = maxi(try_sequence(tparm(esc2[p]), code), try_sequence(esc2[p], code));
+        if (esc_seq_len) {
+            *resulting_length = esc_seq_len;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/// Returns the number of characters in the escape code starting at 'code'. We only handle sequences
+/// that begin with \e. If it doesn't we return zero.
+size_t escape_code_length(const wchar_t *code) {
+    assert(code != NULL);
+    if (*code != L'\e') return 0;
+
+    size_t esc_seq_len;
+    if (is_color_escape_seq(code, &esc_seq_len)) return esc_seq_len;
+    if (is_visual_escape_seq(code, &esc_seq_len)) return esc_seq_len;
+    if (is_screen_name_escape_seq(code, &esc_seq_len)) return esc_seq_len;
+    if (is_iterm2_escape_seq(code, &esc_seq_len)) return esc_seq_len;
+    if (is_single_byte_escape_seq(code, &esc_seq_len)) return esc_seq_len;
+    if (is_csi_style_escape_seq(code, &esc_seq_len)) return esc_seq_len;
+    if (is_two_byte_escape_seq(code, &esc_seq_len)) return esc_seq_len;
+
+    return 0;
 }
 
 // Information about a prompt layout.
@@ -307,6 +312,7 @@ static prompt_layout_t calc_prompt_layout(const wchar_t *prompt) {
             prompt_layout.max_line_width = maxi(prompt_layout.max_line_width, current_line_width);
         }
     }
+
     prompt_layout.last_line_width = current_line_width;
     return prompt_layout;
 }

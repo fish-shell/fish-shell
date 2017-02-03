@@ -857,6 +857,7 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
 def get_paths_from_manpath():
     # Return all the paths to man(1) and man(8) files in the manpath
     import subprocess, os
+    proc = None
     # $MANPATH takes precedence, just like with `man` on the CLI.
     if os.getenv("MANPATH"):
         parent_paths = os.getenv("MANPATH").strip().split(':')
@@ -871,7 +872,7 @@ def get_paths_from_manpath():
             break # Command exists, use it.
         manpath, err_data = proc.communicate()
         parent_paths = manpath.decode().strip().split(':')
-    if not parent_paths or proc.returncode > 0:
+    if (not parent_paths) or (proc and proc.returncode > 0):
         # HACK: Use some fallback in case we can't get anything else.
         # `mandoc` does not provide `manpath` or `man --path` and $MANPATH might not be set, so just use the default for mandoc (minus /usr/X11R6/man, because that's not relevant).
         # The alternative is reading its config file (/etc/man.conf)

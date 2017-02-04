@@ -41,6 +41,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "sanity.h"
+#include "screen.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Value denoting a null string.
@@ -396,6 +397,9 @@ static void handle_curses(const wchar_t *env_var_name) {
     // if the TERM var is set.
     // input_init();
     term_has_xn = tgetflag((char *)"xn") == 1;  // does terminal have the eat_newline_glitch
+
+    // Invalidate the cached escape sequences since they may no longer be valid.
+    cached_esc_sequences.clear();
 }
 
 /// React to modifying the given variable.

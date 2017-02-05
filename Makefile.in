@@ -181,7 +181,7 @@ PROGRAMS := fish fish_indent fish_key_reader
 # Manual pages to install
 #
 MANUALS := $(addsuffix .1, $(addprefix share/man/man1/, $(PROGRAMS)))
-HELP_MANPAGES := $(wildcard share/man/man1/*.1)
+HELP_MANPAGES = $(wildcard share/man/man1/*.1)
 
 # Determine which man pages we don't want to install
 # On OS X, don't install a man page for open, since we defeat fish's open
@@ -190,7 +190,8 @@ HELP_MANPAGES := $(wildcard share/man/man1/*.1)
 # tarball includes this page, we need to skip it in the Makefile too (see
 # https://github.com/fish-shell/fish-shell/issues/2561).
 ifeq ($(shell uname), Darwin)
-	HELP_MANPAGES := $(filter-out share/man/man1/open.1, $(HELP_MANPAGES))
+	CONDEMNED_PAGES := open.1
+	HELP_MANPAGES = $(filter-out share/man/man1/open.1, $(wildcard share/man/man1/*.1))
 endif
 
 #
@@ -682,7 +683,7 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 	$v $(INSTALL) -m 644 $(FUNCTIONS_DIR_FILES:%='%') $(DESTDIR)$(datadir)/fish/functions/
 	@echo "Installing $(bo)man pages$(sgr0)";
 	$v $(INSTALL) -m 644 share/groff/* $(DESTDIR)$(datadir)/fish/groff/
-	$v test -z "$(HELP_MANPAGES)" || $(INSTALL) -m 644 $(HELP_MANPAGES) $(DESTDIR)$(datadir)/fish/man/man1/
+	$v test -z "$(wildcard share/man/man1/*.1)" || $(INSTALL) -m 644 $(filter-out $(addprefix share/man/man1/, $(CONDEMNED_PAGES)), $(wildcard share/man/man1/*.1)) $(DESTDIR)$(datadir)/fish/man/man1/
 	@echo "Installing helper tools";
 	$v $(INSTALL) -m 755 share/tools/*.py $(DESTDIR)$(datadir)/fish/tools/
 	$v $(INSTALL) -m 644 share/tools/web_config/*.* $(DESTDIR)$(datadir)/fish/tools/web_config/

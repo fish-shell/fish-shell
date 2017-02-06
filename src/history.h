@@ -178,6 +178,10 @@ class history_t {
     // Deletes duplicates in new_items.
     void compact_new_items();
 
+    // Attempts to rewrite the existing file to a target temporary file
+    // Returns false on error, true on success
+    bool rewrite_to_temporary_file(int tmp_fd, int existing_fd) const;
+
     // Saves history by rewriting the file.
     bool save_internal_via_rewrite();
 

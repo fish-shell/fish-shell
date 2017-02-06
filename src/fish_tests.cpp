@@ -25,6 +25,7 @@
 #include <wchar.h>
 #include <wctype.h>
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <memory>
 #include <set>
@@ -2705,7 +2706,7 @@ class history_tests_t {
     static void test_history_formats(void);
     // static void test_history_speed(void);
     static void test_history_races(void);
-    static void test_history_races_pound_on_history();
+    static void test_history_races_pound_on_history(size_t item_count);
 };
 
 static wcstring random_string(void) {
@@ -2830,47 +2831,46 @@ static void time_barrier(void) {
     } while (time(NULL) == start);
 }
 
-static wcstring_list_t generate_history_lines(int pid) {
+static wcstring_list_t generate_history_lines(size_t item_count, int pid) {
     wcstring_list_t result;
-    long max = 256;
-    result.reserve(max);
-    for (long i = 0; i < max; i++) {
-        result.push_back(format_string(L"%ld %ld", (long)pid, i));
+    result.reserve(item_count);
+    for (unsigned long i = 0; i < item_count; i++) {
+        result.push_back(format_string(L"%ld %lu", (long)pid, (unsigned long)i));
     }
     return result;
 }
 
-void history_tests_t::test_history_races_pound_on_history() {
+void history_tests_t::test_history_races_pound_on_history(size_t item_count) {
     // Called in child process to modify history.
-    std::unique_ptr<history_t> hist = make_unique<history_t>(L"race_test");
-    hist->chaos_mode = true;
-    const wcstring_list_t hist_lines = generate_history_lines(getpid());
-    for (size_t idx = 0; idx < hist_lines.size(); idx++) {
-        const wcstring &line = hist_lines.at(idx);
-        hist->add(line);
-        hist->save();
+    history_t hist(L"race_test");
+    hist.chaos_mode = !true;
+    const wcstring_list_t hist_lines = generate_history_lines(item_count, getpid());
+    for (const wcstring &line : hist_lines) {
+        hist.add(line);
+        hist.save();
     }
 }
 
 void history_tests_t::test_history_races(void) {
     say(L"Testing history race conditions");
 
+    // Test concurrent history writing.
+    // How many concurrent writers we have
+    constexpr size_t RACE_COUNT = 10;
+
+    // How many items each writer makes
+    constexpr size_t ITEM_COUNT = 256;
+
     // Ensure history is clear.
-    {
-        std::unique_ptr<history_t> hist = make_unique<history_t>(L"race_test");
-        hist->clear();
-    }
+    history_t(L"race_test").clear();
 
-// Test concurrent history writing.
-#define RACE_COUNT 10
     pid_t children[RACE_COUNT];
-
     for (size_t i = 0; i < RACE_COUNT; i++) {
         pid_t pid = fork();
         if (!pid) {
             // Child process.
             setup_fork_guards();
-            test_history_races_pound_on_history();
+            test_history_races_pound_on_history(ITEM_COUNT);
             exit_without_destructors(0);
         } else {
             // Parent process.
@@ -2885,50 +2885,66 @@ void history_tests_t::test_history_races(void) {
     }
 
     // Compute the expected lines.
-    wcstring_list_t expected_lines[RACE_COUNT];
+    std::array<wcstring_list_t, RACE_COUNT> expected_lines;
     for (size_t i = 0; i < RACE_COUNT; i++) {
-        expected_lines[i] = generate_history_lines(children[i]);
-    }
-
-    // Count total lines.
-    size_t line_count = 0;
-    for (size_t i = 0; i < RACE_COUNT; i++) {
-        line_count += expected_lines[i].size();
+        expected_lines[i] = generate_history_lines(ITEM_COUNT, children[i]);
     }
 
     // Ensure we consider the lines that have been outputted as part of our history.
     time_barrier();
 
     // Ensure that we got sane, sorted results.
-    std::unique_ptr<history_t> hist = make_unique<history_t>(L"race_test");
-    hist->chaos_mode = true;
+    history_t hist(L"race_test");
+    hist.chaos_mode = !true;
+
+    // History is enumerated from most recent to least
+    // Every item should be the last item in some array
     size_t hist_idx;
-    for (hist_idx = 1;; hist_idx++) {
-        history_item_t item = hist->item_at_index(hist_idx);
+    for (hist_idx = 1; ; hist_idx++) {
+        history_item_t item = hist.item_at_index(hist_idx);
         if (item.empty()) break;
 
-        // The item must be present in one of our 'lines' arrays. If it is present, then every item
-        // after it is assumed to be missed.
-        size_t i;
-        for (i = 0; i < RACE_COUNT; i++) {
-            wcstring_list_t::iterator where =
-                std::find(expected_lines[i].begin(), expected_lines[i].end(), item.str());
-            if (where != expected_lines[i].end()) {
-                // Delete everything from the found location onwards.
-                expected_lines[i].resize(where - expected_lines[i].begin());
+        bool found = false;
+        for (wcstring_list_t &list : expected_lines) {
+            auto iter = std::find(list.begin(), list.end(), item.contents);
+            if (iter != list.end()) {
+                found = true;
 
-                // Break because we found it.
+                // Remove everything from this item on
+                auto cursor = list.end();
+                if (cursor + 1 != list.end()) {
+                    while (--cursor != iter) {
+                        err(L"Item dropped from history: %ls", cursor->c_str());
+                    }
+                }
+                list.erase(iter, list.end());
                 break;
             }
         }
-        if (i >= RACE_COUNT) {
-            err(L"Line '%ls' found in history not found in some array", item.str().c_str());
+        if (! found) {
+            err(L"Line '%ls' found in history, but not found in some array", item.str().c_str());
+            for (wcstring_list_t &list : expected_lines) {
+                if (! list.empty()) {
+                    fprintf(stderr, "\tRemaining: %ls\n", list.back().c_str());
+                }
+            }
+
         }
     }
-    // Every write should add at least one item.
-    do_test(hist_idx >= RACE_COUNT);
 
-    // hist->clear();
+    // +1 to account for history's 1-based offset
+    size_t expected_idx = RACE_COUNT * ITEM_COUNT + 1;
+    if (hist_idx != expected_idx) {
+        err(L"Expected %lu items, but instead got %lu items", expected_idx, hist_idx);
+    }
+
+    // See if anything is left in the arrays
+    for (const wcstring_list_t &list : expected_lines) {
+        for (const wcstring &str : list) {
+            err(L"Line '%ls' still left in the array", str.c_str());
+        }
+    }
+    hist.clear();
 }
 
 void history_tests_t::test_history_merge(void) {

@@ -683,7 +683,7 @@ file_id_t file_id_t::file_id_from_stat(const struct stat *buf) {
 file_id_t file_id_for_fd(int fd) {
     file_id_t result = kInvalidFileID;
     struct stat buf = {};
-    if (0 == fstat(fd, &buf)) {
+    if (fd >= 0 && 0 == fstat(fd, &buf)) {
         result = file_id_t::file_id_from_stat(&buf);
     }
     return result;

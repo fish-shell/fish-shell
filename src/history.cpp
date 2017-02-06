@@ -119,7 +119,7 @@ class time_profiler_t {
 /// Lock the history file.
 /// Returns true on success, false on failure.
 static bool history_file_lock(int fd, int lock_type) {
-    static bool do_locking = true;
+    static std::atomic<bool> do_locking(true);
     if (!do_locking) return false;
 
     double start_time = timef();
@@ -127,6 +127,11 @@ static bool history_file_lock(int fd, int lock_type) {
     double duration = timef() - start_time;
     if (duration > 0.25) {
         debug(1, _(L"Locking the history file took too long (%.3f seconds)."), duration);
+        // we've decided to stop doing any locking behavior
+        // but make sure we don't leave the file locked!
+        if (retval == 0 && lock_type != LOCK_UN) {
+            flock(fd, LOCK_UN);
+        }
         do_locking = false;
         return false;
     }

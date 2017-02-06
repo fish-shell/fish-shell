@@ -64,7 +64,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Add way to kill current command line while in insert mode.
     bind -M insert \cc __fish_cancel_commandline
     # Add a way to switch from insert to normal (command) mode.
-    bind -M insert -m default \e backward-char force-repaint
+    # Note if we are paging, we want to stay in insert mode
+    # See #2871
+    bind -M insert \e "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char force-repaint; end"
 
     # Default (command) mode
     bind :q exit

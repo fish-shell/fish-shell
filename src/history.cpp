@@ -18,6 +18,7 @@
 #include <wchar.h>
 #include <wctype.h>
 #include <algorithm>
+#include <atomic>
 #include <cwchar>
 #include <iterator>
 #include <map>

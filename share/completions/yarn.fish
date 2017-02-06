@@ -52,8 +52,8 @@ complete -f -c yarn -n '__fish_seen_subcommand_from owner' -a 'add rm ls'
 
 complete -f -c yarn -n '__fish_use_subcommand' -a pack 
 
-# TODO: --access <public|restricted>
 complete -f -c yarn -n '__fish_use_subcommand' -a publish 
+complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l access -a 'public restricted' 
 complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l tag
 complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l new-version 
 complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l message 
@@ -111,8 +111,8 @@ complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l global-folder
 complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l modules-folder -d 'rather than installing modules into the node_modules folder relative to the cwd, output them here'
 complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l cache-folder -d 'specify a custom folder to store the yarn cache'
 
-# TODO: We can specify mutex, file or network
 complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l mutex -d 'use a mutex to ensure only one yarn instance is executing'
+complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l mutex -a 'file network'
 
 complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l no-emoji -d 'disable emoji in output'
 complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l proxy

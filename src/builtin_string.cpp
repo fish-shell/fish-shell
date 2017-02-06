@@ -21,9 +21,11 @@
 #include "builtin.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "history.h"
 #include "io.h"
 #include "parse_util.h"
 #include "pcre2.h"
+#include "reader.h"
 #include "wgetopt.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -1151,6 +1153,56 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
     return ntrim > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
+static int string_tok(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    const wchar_t *short_options = L":n:z";
+    const struct woption long_options[] = {{L"max", required_argument, NULL, 'n'},
+                                           {L"null", no_argument, 0, 'z'},
+                                           {0, 0, 0, 0}};
+    long max_items = LONG_MAX;
+    bool null_terminate = false;
+    wgetopter_t w;
+    for (;;) {
+        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
+
+        if (c == -1) {
+            break;
+        }
+        switch (c) {
+            case 'n': {
+                max_items = fish_wcstol(w.woptarg);
+                if (errno) {
+                    streams.err.append_format(_(L"%ls: max value '%ls' is not a valid number\n"),
+                                              argv[0], w.woptarg);
+                    return BUILTIN_STRING_ERROR;
+                }
+                break;
+            }
+            case 'z': {
+                null_terminate = true;
+                break;
+            }
+            case ':': {
+                string_error(streams, STRING_ERR_MISSING, argv[0]);
+                return BUILTIN_STRING_ERROR;
+            }
+            case '?': {
+                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+                return BUILTIN_STRING_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
+        }
+    }
+    history_t *history = reader_get_history();
+    if (!history) history = &history_t::history_with_name(L"fish");
+    if (!history->token_list(max_items, null_terminate, streams)) {
+        return BUILTIN_STRING_ERROR;
+    }
+    return BUILTIN_STRING_OK;
+}
+
 static const struct string_subcommand {
     const wchar_t *name;
     int (*handler)(parser_t &, io_streams_t &, int argc,  //!OCLINT(unused param)
@@ -1160,7 +1212,8 @@ static const struct string_subcommand {
 string_subcommands[] = {
     {L"escape", &string_escape}, {L"join", &string_join},       {L"length", &string_length},
     {L"match", &string_match},   {L"replace", &string_replace}, {L"split", &string_split},
-    {L"sub", &string_sub},       {L"trim", &string_trim},       {0, 0}};
+    {L"sub", &string_sub},       {L"trim", &string_trim},       {L"tokenize", &string_tok},
+    {0, 0}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

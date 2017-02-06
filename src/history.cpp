@@ -23,6 +23,7 @@
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <vector>
 
 #include "common.h"
 #include "env.h"
@@ -1545,6 +1546,29 @@ static bool format_history_record(const history_item_t &item, const wchar_t *sho
         streams.out.append(L'\0');
     } else {
         streams.out.append(L'\n');
+    }
+    return true;
+}
+
+bool history_t::token_list(long max_items, bool null_terminate, io_streams_t &streams) {
+    // Start at one because zero is the current command.
+    for (int i = 1; !this->item_at_index(i).empty() && max_items; ++i, --max_items) {
+        auto item = this->item_at_index(i);
+        tokenizer_t tok(item.str().c_str(), TOK_ACCEPT_UNFINISHED);
+        tok_t token;
+        std::vector<wcstring> ss;
+        while (tok.next(&token)) {
+            if (token.type == TOK_STRING) {
+                if (null_terminate) {
+                  ss.push_back(token.text + L'\0');
+                } else {
+                  ss.push_back(token.text + L'\n');
+                }
+            }
+        }
+        for (int i = ss.size() - 1; i >= 0; --i) {
+            streams.out.append(ss[i]);
+        }
     }
     return true;
 }

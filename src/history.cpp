@@ -51,7 +51,15 @@
 #define HISTORY_SAVE_MAX (1024 * 256)
 
 // Default buffer size for flushing to the history file.
-#define HISTORY_OUTPUT_BUFFER_SIZE (16 * 1024)
+#define HISTORY_OUTPUT_BUFFER_SIZE (64 * 1024)
+
+// The file access mode we use for creating history files
+static constexpr int history_file_mode = 0644;
+
+// How many times we retry to save
+// Saving may fail if the file is modified in between our opening
+// the file and taking the lock
+static constexpr int max_save_tries = 1024;
 
 namespace {
 
@@ -1314,6 +1322,8 @@ bool history_t::save_internal_via_rewrite() {
     return ok;
 }
 
+// Function called to save our unwritten history file by appending to the existing history file
+// Returns true on success, false on failure.
 bool history_t::save_internal_via_appending() {
     // This must be called while locked.
     ASSERT_IS_LOCKED(lock);
@@ -1331,12 +1341,17 @@ bool history_t::save_internal_via_appending() {
 
     signal_block();
 
-    // Open the file.
-    int out_fd = wopen_cloexec(history_path, O_WRONLY | O_APPEND);
-    if (out_fd >= 0) {
-        // Check to see if the file changed.
-        if (file_id_for_fd(out_fd) != mmap_file_id) file_changed = true;
-
+    // We are going to open the file, lock it, append to it, and then close it
+    // After locking it, we need to stat the file at the path; if there is a new file there, it means
+    // the file was replaced and we have to try again
+    // Limit our max tries so we don't do this forever
+    int history_fd = -1;
+    for (int i=0; i < max_save_tries; i++) {
+        int fd = wopen_cloexec(history_path, O_WRONLY | O_APPEND);
+        if (fd < 0) {
+            // can't open, we're hosed
+            break;
+        }
         // Exclusive lock on the entire file. This is released when we close the file (below). This
         // may fail on (e.g.) lockless NFS. If so, proceed as if it did not fail; the risk is that
         // we may get interleaved history items, which is considered better than no history, or
@@ -1344,8 +1359,23 @@ bool history_t::save_internal_via_appending() {
         // by writing with O_APPEND.
         //
         // Simulate a failing lock in chaos_mode
-        if (!chaos_mode) history_file_lock(out_fd, LOCK_EX);
+        if (!chaos_mode) history_file_lock(fd, LOCK_EX);
+        const file_id_t file_id = file_id_for_fd(fd);
+        if (file_id_for_path(history_path) != file_id) {
+            // The file has changed, we're going to retry
+            close(fd);
+        } else {
+            // File IDs match, so the file we opened is still at that path
+            // We're going to use this fd
+            if (file_id != this->mmap_file_id) {
+                file_changed = true;
+            }
+            history_fd = fd;
+            break;
+        }
+    }
 
+    if (history_fd >= 0) {
         // We (hopefully successfully) took the exclusive lock. Append to the file.
         // Note that this is sketchy for a few reasons:
         //   - Another shell may have appended its own items with a later timestamp, so our file may
@@ -1366,13 +1396,15 @@ bool history_t::save_internal_via_appending() {
         // So far so good. Write all items at or after first_unwritten_new_item_index. Note that we
         // write even a pending item - pending items are ignored by history within the command
         // itself, but should still be written to the file.
+        // TODO: consider filling the buffer ahead of time, so we can just lock, splat, and unlock?
         bool errored = false;
-        history_output_buffer_t buffer;
+        // Use a small buffer size for appending, we usually only have 1 item
+        history_output_buffer_t buffer(64);
         while (first_unwritten_new_item_index < new_items.size()) {
             const history_item_t &item = new_items.at(first_unwritten_new_item_index);
             append_yaml_to_buffer(item.str(), item.timestamp(), item.get_required_paths(), &buffer);
             if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE) {
-                errored = !buffer.flush_to_fd(out_fd);
+                errored = !buffer.flush_to_fd(history_fd);
                 if (errored) break;
             }
 
@@ -1380,12 +1412,17 @@ bool history_t::save_internal_via_appending() {
             first_unwritten_new_item_index++;
         }
 
-        if (!errored && buffer.flush_to_fd(out_fd)) {
+        if (!errored && buffer.flush_to_fd(history_fd)) {
             ok = true;
         }
 
-        if (!chaos_mode) history_file_lock(out_fd, LOCK_UN);
-        close(out_fd);
+        // Since we just modified the file, update our mmap_file_id to match its current state
+        // Otherwise we'll think the file has been changed by someone else the next time we go to write
+        // We don't update the mapping since we only appended to the file, and everything we appended
+        // remains in our new_items
+        this->mmap_file_id = file_id_for_fd(history_fd);
+
+        close(history_fd);
     }
 
     signal_unblock();
@@ -1553,7 +1590,7 @@ void history_t::populate_from_config_path() {
             // destination file descriptor, since it destroys the name and the file.
             this->clear();
 
-            int dst_fd = wopen_cloexec(new_file, O_WRONLY | O_CREAT, 0644);
+            int dst_fd = wopen_cloexec(new_file, O_WRONLY | O_CREAT, history_file_mode);
             char buf[BUFSIZ];
             ssize_t size;
             while ((size = read(src_fd, buf, BUFSIZ)) > 0) {

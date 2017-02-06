@@ -192,8 +192,11 @@ class history_t {
 
     // Do a private, read-only map of the entirety of a history file with the given name. Returns
     // true if successful. Returns the mapped memory region by reference.
-    bool map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
-                  file_id_t *file_id);
+    bool map_file(const wcstring &name, const char **out_map_start,
+                  size_t *out_map_len, file_id_t *file_id) const;
+
+    // Like map_file but takes a file descriptor
+    bool map_fd(int fd, const char **out_map_start, size_t *out_map_len) const;
 
     // Whether we're in maximum chaos mode, useful for testing.
     bool chaos_mode;

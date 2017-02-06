@@ -923,23 +923,10 @@ void history_t::populate_from_mmap(void) {
     }
 }
 
-/// Do a private, read-only map of the entirety of a history file with the given name. Returns true
-/// if successful. Returns the mapped memory region by reference.
-bool history_t::map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
-                         file_id_t *file_id) {
-    wcstring filename = history_filename(name, L"");
-    if (filename.empty()) {
+bool history_t::map_fd(int fd, const char **out_map_start, size_t *out_map_len) const {
+    if (fd < 0) {
         return false;
     }
-
-    int fd = wopen_cloexec(filename, O_RDONLY);
-    if (fd == -1) {
-        return false;
-    }
-
-    bool result = false;
-    // Get the file ID if requested.
-    if (file_id != NULL) *file_id = file_id_for_fd(fd);
 
     // Take a read lock to guard against someone else appending. This is released when the file
     // is closed (below). We will read the file after releasing the lock, but that's not a
@@ -951,6 +938,7 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
     // unlikely because we only treat an item as valid if it has a terminating newline.
     //
     // Simulate a failing lock in chaos_mode.
+    bool result = false;
     if (!chaos_mode) history_file_lock(fd, LOCK_SH);
     off_t len = lseek(fd, 0, SEEK_END);
     if (len != (off_t)-1) {
@@ -966,6 +954,26 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
         }
     }
     if (!chaos_mode) history_file_lock(fd, LOCK_UN);
+    return result;
+}
+
+/// Do a private, read-only map of the entirety of a history file with the given name. Returns true
+/// if successful. Returns the mapped memory region by reference.
+bool history_t::map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
+                         file_id_t *file_id) const {
+    wcstring filename = history_filename(name, L"");
+    if (filename.empty()) {
+        return false;
+    }
+
+    int fd = wopen_cloexec(filename, O_RDONLY);
+    if (fd < 0) {
+        return false;
+    }
+
+    // Get the file ID if requested.
+    if (file_id != NULL) *file_id = file_id_for_fd(fd);
+    bool result = this->map_fd(fd, out_map_start, out_map_len);
     close(fd);
     return result;
 }

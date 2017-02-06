@@ -21,6 +21,7 @@
 #include <cwchar>
 #include <iterator>
 #include <map>
+#include <numeric>
 
 #include "common.h"
 #include "env.h"
@@ -59,52 +60,44 @@ namespace {
 /// implement your own streambuf? Total insanity.
 static size_t safe_strlen(const char *s) { return s ? strlen(s) : 0; }
 class history_output_buffer_t {
-    // A null-terminated C string.
     std::vector<char> buffer;
-    // Offset is the offset of the null terminator.
-    size_t offset;
 
    public:
     /// Add a bit more to HISTORY_OUTPUT_BUFFER_SIZE because we flush once we've exceeded that size.
-    history_output_buffer_t() : buffer(HISTORY_OUTPUT_BUFFER_SIZE + 128, '\0'), offset(0) {}
+    explicit history_output_buffer_t(size_t reserve_amt = HISTORY_OUTPUT_BUFFER_SIZE + 128) {
+        buffer.reserve(reserve_amt);
+    }
 
     /// Append one or more strings.
     void append(const char *s1, const char *s2 = NULL, const char *s3 = NULL) {
-        const char *ptrs[4] = {s1, s2, s3, NULL};
-        const size_t lengths[4] = {safe_strlen(s1), safe_strlen(s2), safe_strlen(s3), 0};
+        constexpr size_t ptr_count = 3;
+        const char *ptrs[ptr_count] = {s1, s2, s3};
+        size_t lengths[ptr_count] = {safe_strlen(s1), safe_strlen(s2), safe_strlen(s3)};
 
         // Determine the additional size we'll need.
-        size_t additional_length = 0;
-        for (size_t i = 0; i < sizeof lengths / sizeof *lengths; i++) {
-            additional_length += lengths[i];
-        }
+        size_t additional_length = std::accumulate(std::begin(lengths), std::end(lengths), 0);
+        buffer.reserve(buffer.size() + additional_length);
 
-        // Allocate that much, plus a null terminator.
-        size_t required_size = offset + additional_length + 1;
-        if (required_size > buffer.size()) {
-            buffer.resize(required_size, '\0');
+        // Append
+        for (size_t i=0; i < ptr_count; i++) {
+            if (lengths[i] > 0) {
+                buffer.insert(buffer.end(), ptrs[i], ptrs[i] + lengths[i]);
+            }
         }
-
-        // Copy.
-        for (size_t i = 0; ptrs[i] != NULL; i++) {
-            memmove(&buffer.at(offset), ptrs[i], lengths[i]);
-            offset += lengths[i];
-        }
-
-        // Null terminator was appended by virtue of the resize() above (or in a previous
-        // invocation).
-        assert(buffer.at(buffer.size() - 1) == '\0');
     }
 
     /// Output to a given fd, resetting our buffer. Returns true on success, false on error.
     bool flush_to_fd(int fd) {
-        bool result = write_loop(fd, &buffer.at(0), offset) >= 0;
-        offset = 0;
+        if (buffer.empty()) {
+            return true;
+        }
+        bool result = write_loop(fd, &buffer.at(0), buffer.size()) >= 0;
+        buffer.clear();
         return result;
     }
 
     /// Return how much data we've accumulated.
-    size_t output_size() const { return offset; }
+    size_t output_size() const { return buffer.size(); }
 };
 
 class time_profiler_t {

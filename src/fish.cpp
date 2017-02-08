@@ -318,6 +318,14 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
 /// Various things we need to initialize at run-time that don't really fit any of the other init
 /// routines.
 static void misc_init() {
+    // If stdout is open on a tty ensure stdio is unbuffered. That's because those functions might
+    // be intermixed with `write()` calls and we need to ensure the writes are not reordered. See
+    // issue #3748.
+    if (isatty(STDOUT_FILENO)) {
+        fflush(stdout);
+        setvbuf(stdout, NULL, _IONBF, 0);
+    }
+
 #ifdef OS_IS_CYGWIN
     // MS Windows tty devices do not currently have either a read or write timestamp. Those
     // respective fields of `struct stat` are always the current time. Which means we can't

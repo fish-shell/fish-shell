@@ -689,9 +689,6 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
         // Put the cursor back at the beginning of the line (issue #2453).
         fputwc(L'\r', stdout);
     }
-
-    // TODO: This should be removed when issue #3748 is fixed.
-    fflush(stdout);
 }
 
 /// Reexecute the prompt command. The output is inserted into data->prompt_buff.

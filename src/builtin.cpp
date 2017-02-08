@@ -1997,10 +1997,11 @@ static int read_interactive(wcstring &buff, int nchars, bool shell, const wchar_
 /// they've done more extensive testing.
 #define READ_CHUNK_SIZE 128
 
-/// Read from the fd in chunks until we see newline or null, as appropriate, is seen. This is only
+/// Read from the fd in chunks until we see newline or null, as requested, is seen. This is only
 /// used when the fd is seekable (so not from a tty or pipe) and we're not reading a specific number
 /// of chars.
-/// Returns an exit status
+///
+/// Returns an exit status.
 static int read_in_chunks(int fd, wcstring &buff, bool split_null) {
     int exit_res = STATUS_BUILTIN_OK;
     std::string str;
@@ -2017,13 +2018,16 @@ static int read_in_chunks(int fd, wcstring &buff, bool split_null) {
         }
 
         const char *end = std::find(inbuf, inbuf + bytes_read, split_null ? L'\0' : L'\n');
-        long bytes_consumed = end - inbuf;  // note: must be signed for use in lseek
+        long bytes_consumed = end - inbuf;  // must be signed for use in lseek
         assert(bytes_consumed <= bytes_read);
         str.append(inbuf, bytes_consumed);
         if (bytes_consumed < bytes_read) {
-            // We found a splitter
-            // +1 because we need to treat the splitter as consumed, but not append it to the string
+            // We found a splitter. The +1 because we need to treat the splitter as consumed, but
+            // not append it to the string.
             CHECK(lseek(fd, bytes_consumed - bytes_read + 1, SEEK_CUR) != -1, STATUS_BUILTIN_ERROR)
+            finished = true;
+        } else if (str.size() > read_byte_limit) {
+            exit_res = STATUS_READ_TOO_MUCH;
             finished = true;
         }
     }
@@ -2042,6 +2046,7 @@ static int read_in_chunks(int fd, wcstring &buff, bool split_null) {
 static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool split_null) {
     int exit_res = STATUS_BUILTIN_OK;
     bool eof = false;
+    size_t nbytes = 0;
 
     while (true) {
         bool finished = false;
@@ -2055,6 +2060,7 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
                 break;
             }
 
+            nbytes++;
             if (MB_CUR_MAX == 1) {
                 res = (unsigned char)b;
                 finished = true;
@@ -2068,12 +2074,16 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
             }
         }
 
+        if (nbytes > read_byte_limit) {
+            exit_res = STATUS_READ_TOO_MUCH;
+            break;
+        }
         if (eof) break;
         if (!split_null && res == L'\n') break;
         if (split_null && res == L'\0') break;
 
         buff.push_back(res);
-        if (0 < nchars && (size_t)nchars <= buff.size()) {
+        if (nchars > 0 && (size_t)nchars <= buff.size()) {
             break;
         }
     }

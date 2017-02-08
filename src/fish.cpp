@@ -318,6 +318,8 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
 /// Various things we need to initialize at run-time that don't really fit any of the other init
 /// routines.
 static void misc_init() {
+    env_set_read_limit();
+
     // If stdout is open on a tty ensure stdio is unbuffered. That's because those functions might
     // be intermixed with `write()` calls and we need to ensure the writes are not reordered. See
     // issue #3748.

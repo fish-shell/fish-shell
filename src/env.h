@@ -10,6 +10,8 @@
 
 #include "common.h"
 
+extern size_t read_byte_limit;
+
 // Flags that may be passed as the 'mode' in env_set / env_get_string.
 enum {
     /// Default mode.
@@ -148,6 +150,9 @@ bool env_set_pwd();
 
 /// Returns the PWD with a terminating slash.
 wcstring env_get_pwd_slash();
+
+/// Update the read_byte_limit variable.
+void env_set_read_limit();
 
 class env_vars_snapshot_t {
     std::map<wcstring, wcstring> vars;

@@ -7,7 +7,7 @@ read [OPTIONS] [VARIABLES...]
 
 \subsection read-description Description
 
-`read` reads one line from standard input and stores the result in one or more shell variables.
+`read` reads from standard input and stores the result in one or more shell variables. By default it reads one line terminated by a newline but options are available to read up to a null character and to limit each "line" to a maximum number of characters.
 
 The following options are available:
 
@@ -19,7 +19,7 @@ The following options are available:
 
 - `-m NAME` or `--mode-name=NAME` specifies that the name NAME should be used to save/load the history file. If NAME is fish, the regular fish history will be available.
 
-- `-n NCHARS` or `--nchars=NCHARS` causes `read` to return after reading NCHARS characters rather than waiting for a complete line of input.
+- `-n NCHARS` or `--nchars=NCHARS` causes `read` to return after reading NCHARS characters rather than waiting for a complete line of input (either newline or null terminated).
 
 - `-p PROMPT_CMD` or `--prompt=PROMPT_CMD` uses the output of the shell command `PROMPT_CMD` as the prompt for the interactive mode. The default prompt command is <code>set_color green; echo read; set_color normal; echo "> "</code>.
 
@@ -33,7 +33,7 @@ The following options are available:
 
 - `-x` or `--export` exports the variables to child processes.
 
-- `-a` or `--array` stores the result as an array.
+- `-a` or `--array` stores the result as an array in a single variable.
 
 - `-z` or `--null` reads up to NUL instead of newline. Disables interactive mode.
 
@@ -43,7 +43,9 @@ If `-a` or `--array` is provided, only one variable name is allowed and the toke
 
 See the documentation for `set` for more details on the scoping rules for variables.
 
-When read reaches the end-of-file (EOF) instead of the separator, it returns 1. If not, it returns 0.
+When read reaches the end-of-file (EOF) instead of the separator, it sets `$status` to 1. If not, it sets it to 0.
+
+Fish has a default limit of 10 MiB on the number of characters each `read` will consume. If you attempt to read more than that `$status` is set to 122 and the variable will be empty. You can modify that limit by setting the `FISH_READ_BYTE_LIMIT` variable at any time including in the environment before fish starts running. This is a safety mechanism to keep the shell from consuming an unreasonable amount of memory if the input is malformed.
 
 \subsection read-example Example
 

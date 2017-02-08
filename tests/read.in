@@ -1,8 +1,7 @@
 # vim: set filetype=fish:
 #
-# Test read builtin and IFS
+# Test read builtin and IFS.
 #
-
 count (echo one\ntwo)
 set -l IFS \t
 count (echo one\ntwo)
@@ -128,4 +127,63 @@ and echo "Chunked reads test pass"
 or echo "Chunked reads test failure: long strings don't match!"
 rm $path
 
-true
+# ==========
+# The following tests verify that `read` correctly handles the limit on the
+# number of bytes consumed.
+#
+set FISH_READ_BYTE_LIMIT 8192
+set line abcdefghijklmnopqrstuvwxyz
+
+# Ensure the `read` command terminates if asked to read too much data. The var
+# should be empty. We throw away any data we read if it exceeds the limit on
+# what we consider reasonable.
+yes $line | dd bs=1024 count=(math "1 + $FISH_READ_BYTE_LIMIT / 1024") ^/dev/null | read --null x
+if test $status -ne 122
+    echo reading too much data did not terminate with failure status
+end
+if test (string length "$x") -ne 0
+    echo reading too much data resulted in a var with unexpected data
+end
+
+# Ensure the `read` command terminates if asked to read too much data even if
+# given an explicit limit. The var should be empty. We throw away any data we
+# read if it exceeds the limit on what we consider reasonable.
+yes $line | read --null --nchars=(math "$FISH_READ_BYTE_LIMIT + 1") x
+if test $status -ne 122
+    echo reading too much data did not terminate with failure status
+end
+if test (string length "$x") -ne 0
+    echo reading too much data resulted in a var with unexpected data
+end
+
+# Now do the opposite of the previous test and confirm we can read reasonable
+# amounts of data.
+echo $line | read x
+if test $status -ne 0
+    echo the read of a reasonable amount of data failed unexpectedly
+end
+set exp_length (string length $x)
+set act_length (string length $line)
+if test $exp_length -ne $act_length
+    echo reading a reasonable amount of data failed the length test
+    echo expected length $exp_length, actual length $act_length
+end
+
+# Confirm we can read exactly up to the limit.
+yes $line | read --null --nchars $FISH_READ_BYTE_LIMIT x
+if test $status -ne 0
+    echo the read of the max amount of data with --nchars failed unexpectedly
+end
+if test (string length "$x") -ne $FISH_READ_BYTE_LIMIT
+    echo reading the max amount of data with --nchars failed the length test
+end
+
+# Same as previous test but limit the amount of data fed to `read` rather than
+# using the `--nchars` flag.
+yes $line | dd bs=1024 count=(math "$FISH_READ_BYTE_LIMIT / 1024") ^/dev/null | read --null x
+if test $status -ne 0
+    echo the read of the max amount of data failed unexpectedly
+end
+if test (string length "$x") -ne $FISH_READ_BYTE_LIMIT
+    echo reading the max amount of data with --nchars failed the length test
+end

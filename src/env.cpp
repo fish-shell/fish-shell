@@ -56,6 +56,11 @@
 /// At init, we read all the environment variables from this array.
 extern char **environ;
 
+// Limit `read` to 10 MiB (bytes not wide chars) by default. This can be overridden by the
+// FISH_READ_BYTE_LIMIT variable.
+#define READ_BYTE_LIMIT 10 * 1024 * 1024
+size_t read_byte_limit = READ_BYTE_LIMIT;
+
 bool g_use_posix_spawn = false;  // will usually be set to true
 
 /// Does the terminal have the "eat_newline_glitch".
@@ -420,6 +425,8 @@ static void react_to_variable_change(const wcstring &key) {
         update_wait_on_escape_ms();
     } else if (key == L"LINES" || key == L"COLUMNS") {
         invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
+    } else if (key == L"FISH_READ_BYTE_LIMIT") {
+        env_set_read_limit();
     }
 }
 
@@ -481,6 +488,20 @@ bool env_set_pwd() {
     }
     env_set(L"PWD", res.c_str(), ENV_EXPORT | ENV_GLOBAL);
     return true;
+}
+
+/// Allow the user to override the limit on how much data the `read` command will process.
+/// This is primarily for testing but could be used by users in special situations.
+void env_set_read_limit() {
+    env_var_t read_byte_limit_var = env_get_string(L"FISH_READ_BYTE_LIMIT");
+    if (!read_byte_limit_var.missing_or_empty()) {
+        size_t limit = fish_wcstoull(read_byte_limit_var.c_str());
+        if (errno) {
+            debug(1, "Ignoring FISH_READ_BYTE_LIMIT since it is not valid");
+        } else {
+            read_byte_limit = limit;
+        }
+    }
 }
 
 wcstring env_get_pwd_slash(void) {
@@ -605,8 +626,9 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         free(unam_narrow);
     }
 
-    env_set_pwd();       // initialize the PWD variable
-    env_set_termsize();  // initialize the terminal size variables
+    env_set_pwd();         // initialize the PWD variable
+    env_set_termsize();    // initialize the terminal size variables
+    env_set_read_limit();  // initialize the read_byte_limit
 
     // Set up universal variables. The empty string means to use the deafult path.
     assert(s_universal_variables == NULL);

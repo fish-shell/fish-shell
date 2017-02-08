@@ -23,6 +23,7 @@
 - <a href='#faq-titlebar'>I'm seeing weird output before each prompt when using screen. What's wrong?</a>
 - <a href='#faq-greeting'>How do I change the greeting message?</a>
 - <a href='#faq-history'>Why doesn't history substitution ("!$" etc.) work?</a>
+- <a href='#faq-cd-minus'>How to make `-` a shortcut for `cd -`?</a>
 - <a href='#faq-uninstalling'>How do I uninstall fish?</a>
 - <a href='#faq-third-party'>Where can I find extra tools for fish?</a>
 
@@ -183,7 +184,7 @@ Change the value of the variable `fish_greeting` or create a `fish_greeting` fun
 set fish_greeting
 \endfish
 
-
+<hr>
 \section faq-history Why doesn't history substitution ("!$" etc.) work?
 
 Because history substitution is an awkward interface that was invented before interactive line editing was even possible.  Fish drops it in favor of perfecting the interactive history recall interface.  Switching requires a small change of habits: if you want to modify an old line/word, first recall it, then edit.  E.g. don't type "sudo !!" - first press Up, then Home, then type "sudo ".
@@ -201,6 +202,15 @@ Fish history recall is very simple yet effective:
   - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (@key{Alt,D} and @key{Alt,Backspace} are your friends).
 
 See <a href='index.html#editor'>documentation</a> for more details about line editing in fish.
+
+<hr>
+\section faq-cd-minus How to make `-` a shortcut for `cd -`?
+
+In fish versions prior to 2.5.0 it was possible to create a function named `-` that would do `cd -`. Changes in the 2.5.0 release included several bug fixes that enforce the rule that a bare hyphen is not a valid function (or variable) name. However, you can achieve the same effect via an abbreviation:
+
+\fish{cli-dark}
+abbr -a -- - 'cd -'
+\endfish
 
 <hr>
 \section faq-uninstalling Uninstalling fish

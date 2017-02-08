@@ -1180,9 +1180,7 @@ static void test_lru(void) {
     // Stable-sort ints in reverse order
     // This a/2 check ensures that some different ints compare the same
     // It also gives us a different order than we started with
-    auto comparer = [](int a, int b){
-        return a/2 > b/2;
-    };
+    auto comparer = [](int a, int b) { return a / 2 > b / 2; };
     std::vector<int> ints = cache.ints();
     std::stable_sort(ints.begin(), ints.end(), comparer);
 
@@ -1194,12 +1192,12 @@ static void test_lru(void) {
             for (int v : vs) {
                 append_format(ret, L"%d,", v);
             }
-            if (! ret.empty()) ret.pop_back();
+            if (!ret.empty()) ret.pop_back();
             return ret;
         };
-        err(L"LRU stable sort failed. Expected %ls, got %ls\n", commajoin(new_ints).c_str(), commajoin(ints).c_str());
+        err(L"LRU stable sort failed. Expected %ls, got %ls\n", commajoin(new_ints).c_str(),
+            commajoin(ints).c_str());
     }
-
 
     cache.evict_all_nodes();
     do_test(cache.evicted.size() == size_t(total_nodes));
@@ -2900,7 +2898,7 @@ void history_tests_t::test_history_races(void) {
     // History is enumerated from most recent to least
     // Every item should be the last item in some array
     size_t hist_idx;
-    for (hist_idx = 1; ; hist_idx++) {
+    for (hist_idx = 1;; hist_idx++) {
         history_item_t item = hist.item_at_index(hist_idx);
         if (item.empty()) break;
 
@@ -2921,14 +2919,13 @@ void history_tests_t::test_history_races(void) {
                 break;
             }
         }
-        if (! found) {
+        if (!found) {
             err(L"Line '%ls' found in history, but not found in some array", item.str().c_str());
             for (wcstring_list_t &list : expected_lines) {
-                if (! list.empty()) {
+                if (!list.empty()) {
                     fprintf(stderr, "\tRemaining: %ls\n", list.back().c_str());
                 }
             }
-
         }
     }
 

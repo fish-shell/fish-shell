@@ -88,7 +88,7 @@ class history_output_buffer_t {
         buffer.reserve(buffer.size() + additional_length);
 
         // Append
-        for (size_t i=0; i < ptr_count; i++) {
+        for (size_t i = 0; i < ptr_count; i++) {
             if (lengths[i] > 0) {
                 buffer.insert(buffer.end(), ptrs[i], ptrs[i] + lengths[i]);
             }
@@ -189,7 +189,7 @@ class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_lru_
 class history_collection_t {
     owning_lock<std::map<wcstring, std::unique_ptr<history_t>>> histories;
 
-    public:
+   public:
     history_t &get_creating(const wcstring &name);
     void save();
 };
@@ -704,7 +704,7 @@ history_t &history_collection_t::get_creating(const wcstring &name) {
     // using something like shared_ptr
     auto hs = histories.acquire();
     std::unique_ptr<history_t> &hist = hs.value[name];
-    if (! hist) {
+    if (!hist) {
         hist = make_unique<history_t>(name);
     }
     return *hist;
@@ -1203,15 +1203,14 @@ bool history_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
             infer_file_type(local_mmap_start, local_mmap_size);
         size_t cursor = 0;
         for (;;) {
-            size_t offset = offset_of_next_item(local_mmap_start, local_mmap_size,
-                                                local_mmap_type, &cursor, 0);
+            size_t offset =
+                offset_of_next_item(local_mmap_start, local_mmap_size, local_mmap_type, &cursor, 0);
             // If we get back -1, we're done.
             if (offset == (size_t)-1) break;
 
             // Try decoding an old item.
-            const history_item_t old_item = decode_item(local_mmap_start + offset,
-                                                        local_mmap_size - offset,
-                                                        local_mmap_type);
+            const history_item_t old_item =
+                decode_item(local_mmap_start + offset, local_mmap_size - offset, local_mmap_type);
 
             if (old_item.empty() || deleted_items.count(old_item.str()) > 0) {
                 // debug(0, L"Item is deleted : %s\n", old_item.str().c_str());
@@ -1225,15 +1224,14 @@ bool history_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
 
     // Insert any unwritten new items
     for (auto iter = new_items.cbegin() + this->first_unwritten_new_item_index;
-         iter != new_items.cend();
-         ++iter) {
+         iter != new_items.cend(); ++iter) {
         lru.add_item(*iter);
     }
 
     // Stable-sort our items by timestamp
     // This is because we may have read "old" items with a later timestamp than our "new" items
     // This is the essential step that roughly orders items by history
-    lru.stable_sort([](const history_lru_item_t &item1, const history_lru_item_t &item2){
+    lru.stable_sort([](const history_lru_item_t &item1, const history_lru_item_t &item2) {
         return item1.timestamp < item2.timestamp;
     });
 
@@ -1245,7 +1243,7 @@ bool history_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
         append_yaml_to_buffer(item.text, item.timestamp, item.required_paths, &buffer);
         if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE) {
             ok = buffer.flush_to_fd(dst_fd);
-            if (! ok) {
+            if (!ok) {
                 debug(2, L"Error %d when writing to temporary history file", errno);
                 break;
             }
@@ -1254,7 +1252,7 @@ bool history_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
 
     if (ok) {
         ok = buffer.flush_to_fd(dst_fd);
-        if (! ok) {
+        if (!ok) {
             debug(2, L"Error %d when writing to temporary history file", errno);
         }
     }
@@ -1298,15 +1296,15 @@ bool history_t::save_internal_via_rewrite() {
     }
 
     bool done = false;
-    for (int i=0; i < max_save_tries && ! done; i++) {
+    for (int i = 0; i < max_save_tries && !done; i++) {
         // Open any target file, but do not lock it right away
         int target_fd_before = wopen_cloexec(target_name, O_RDONLY | O_CREAT, history_file_mode);
-        file_id_t orig_file_id = file_id_for_fd(target_fd_before); // possibly invalid
+        file_id_t orig_file_id = file_id_for_fd(target_fd_before);  // possibly invalid
         bool wrote = this->rewrite_to_temporary_file(target_fd_before, tmp_fd);
         if (target_fd_before >= 0) {
             close(target_fd_before);
         }
-        if (! wrote) {
+        if (!wrote) {
             // Failed to write, no good
             break;
         }
@@ -1325,14 +1323,13 @@ bool history_t::save_internal_via_rewrite() {
             new_file_id = file_id_for_path(target_name);
         }
         bool can_replace_file = (new_file_id == orig_file_id || new_file_id == kInvalidFileID);
-        if (! can_replace_file) {
+        if (!can_replace_file) {
             // The file has changed, so we're going to re-read it
             // Truncate our tmp_fd so we can reuse it
             if (ftruncate(tmp_fd, 0) == -1 || lseek(tmp_fd, 0, SEEK_SET) == -1) {
                 debug(2, L"Error %d when truncating temporary history file", errno);
             }
-        }
-        else {
+        } else {
             // The file is unchanged, or the new file doesn't exist or we can't read it
             // We also attempted to take the lock, so we feel confident in replacing it
 
@@ -1404,11 +1401,12 @@ bool history_t::save_internal_via_appending() {
     signal_block();
 
     // We are going to open the file, lock it, append to it, and then close it
-    // After locking it, we need to stat the file at the path; if there is a new file there, it means
+    // After locking it, we need to stat the file at the path; if there is a new file there, it
+    // means
     // the file was replaced and we have to try again
     // Limit our max tries so we don't do this forever
     int history_fd = -1;
-    for (int i=0; i < max_save_tries; i++) {
+    for (int i = 0; i < max_save_tries; i++) {
         int fd = wopen_cloexec(history_path, O_WRONLY | O_APPEND);
         if (fd < 0) {
             // can't open, we're hosed
@@ -1479,8 +1477,10 @@ bool history_t::save_internal_via_appending() {
         }
 
         // Since we just modified the file, update our mmap_file_id to match its current state
-        // Otherwise we'll think the file has been changed by someone else the next time we go to write
-        // We don't update the mapping since we only appended to the file, and everything we appended
+        // Otherwise we'll think the file has been changed by someone else the next time we go to
+        // write
+        // We don't update the mapping since we only appended to the file, and everything we
+        // appended
         // remains in our new_items
         this->mmap_file_id = file_id_for_fd(history_fd);
 

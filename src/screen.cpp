@@ -236,15 +236,14 @@ static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
 /// displayed other than the color.
 static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) {
     if (!cur_term) return false;
-    char *const esc2[] = {enter_bold_mode,        exit_attribute_mode,   enter_underline_mode,
-                            exit_underline_mode,    enter_standout_mode,   exit_standout_mode,
-                            flash_screen,           enter_subscript_mode,  exit_subscript_mode,
-                            enter_superscript_mode, exit_superscript_mode, enter_blink_mode,
-                            enter_italics_mode,     exit_italics_mode,     enter_reverse_mode,
-                            enter_shadow_mode,      exit_shadow_mode,      enter_standout_mode,
-                            exit_standout_mode,     enter_secure_mode,     enter_dim_mode,
-                            enter_blink_mode,       enter_protected_mode,  enter_alt_charset_mode,
-                            exit_alt_charset_mode};
+    char *const esc2[] = {
+        enter_bold_mode,      exit_attribute_mode,    enter_underline_mode,  exit_underline_mode,
+        enter_standout_mode,  exit_standout_mode,     flash_screen,          enter_subscript_mode,
+        exit_subscript_mode,  enter_superscript_mode, exit_superscript_mode, enter_blink_mode,
+        enter_italics_mode,   exit_italics_mode,      enter_reverse_mode,    enter_shadow_mode,
+        exit_shadow_mode,     enter_standout_mode,    exit_standout_mode,    enter_secure_mode,
+        enter_dim_mode,       enter_blink_mode,       enter_protected_mode,  enter_alt_charset_mode,
+        exit_alt_charset_mode};
 
     for (size_t p = 0; p < sizeof esc2 / sizeof *esc2; p++) {
         if (!esc2[p]) continue;

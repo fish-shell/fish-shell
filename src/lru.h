@@ -118,19 +118,18 @@ class lru_cache_t {
     // and a binary func F implementing less-than, return
     // the list in sorted order
     template <typename F>
-    static lru_link_t *merge(lru_link_t *left, size_t left_len,
-                             lru_link_t *right, size_t right_len,
+    static lru_link_t *merge(lru_link_t *left, size_t left_len, lru_link_t *right, size_t right_len,
                              const F &func) {
         assert(left_len > 0 && right_len > 0);
 
-        auto popleft = [&](){
+        auto popleft = [&]() {
             lru_link_t *ret = left;
             left = left->next;
             left_len--;
             return ret;
         };
 
-        auto popright = [&](){
+        auto popright = [&]() {
             lru_link_t *ret = right;
             right = right->next;
             right_len--;
@@ -140,8 +139,8 @@ class lru_cache_t {
         lru_link_t *head;
         lru_link_t **cursor = &head;
         while (left_len && right_len) {
-            bool goleft = ! func(static_cast<lru_node_t *>(left)->value,
-                                 static_cast<lru_node_t *>(right)->value);
+            bool goleft = !func(static_cast<lru_node_t *>(left)->value,
+                                static_cast<lru_node_t *>(right)->value);
             *cursor = goleft ? popleft() : popright();
             cursor = &(*cursor)->next;
         }
@@ -154,7 +153,7 @@ class lru_cache_t {
 
     // mergesort the given list of the given length
     // This only sets the next pointers, not the prev ones
-    template<typename F>
+    template <typename F>
     static lru_link_t *mergesort(lru_link_t *node, size_t length, const F &func) {
         if (length <= 1) {
             return node;
@@ -165,7 +164,7 @@ class lru_cache_t {
         lru_link_t *left = node;
 
         lru_link_t *right = node;
-        for (size_t i=0; i < left_len; i++) {
+        for (size_t i = 0; i < left_len; i++) {
             right = right->next;
         }
 
@@ -178,9 +177,7 @@ class lru_cache_t {
     }
 
    public:
-
-    // Constructor
-    // Note our linked list is always circular!
+    // Constructor. Note our linked list is always circular.
     explicit lru_cache_t(size_t max_size = 1024) : max_node_count(max_size) {
         mouth.next = mouth.prev = &mouth;
     }
@@ -242,13 +239,11 @@ class lru_cache_t {
     }
 
     // Number of entries
-    size_t size() const {
-        return this->node_map.size();
-    }
+    size_t size() const { return this->node_map.size(); }
 
-    // Sorting support
-    // Given a binary function F implementing less-than on the contents, place the nodes in sorted order
-    template<typename F>
+    // Given a binary function F implementing less-than on the contents, place the nodes in sorted
+    // order.
+    template <typename F>
     void stable_sort(const F &func) {
         // Perform the sort. This sets forward pointers only
         size_t length = this->size();
@@ -261,7 +256,7 @@ class lru_cache_t {
         // Go through and set back back pointers
         lru_link_t *cursor = sorted;
         lru_link_t *prev = &mouth;
-        for (size_t i=0; i < length; i++) {
+        for (size_t i = 0; i < length; i++) {
             cursor->prev = prev;
             prev = cursor;
             cursor = cursor->next;

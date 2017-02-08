@@ -113,7 +113,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # Generating completions from man pages needs python (see issue #3588).
         # Don't do this if we're being invoked as part of running unit tests.
         if command -qs python
-        and not set -q FISH_UNIT_TESTS_RUNNING
+            and not set -q FISH_UNIT_TESTS_RUNNING
             # We cannot simply do `fish_update_completions &` because it is a function. Hence the
             # need for the convoluted `eval` to run it in a subshell.
             eval (string escape "$__fish_bin_dir/fish") "-c 'fish_update_completions >/dev/null ^/dev/null' &"

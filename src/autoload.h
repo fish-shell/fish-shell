@@ -73,8 +73,7 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
     void entry_was_evicted(wcstring key, autoload_function_t node);
 
     // Create an autoload_t for the given environment variable name.
-    autoload_t(const wcstring &env_var_name_var,
-               command_removed_function_t callback);
+    autoload_t(const wcstring &env_var_name_var, command_removed_function_t callback);
 
     ~autoload_t();
 

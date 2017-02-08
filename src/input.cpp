@@ -56,8 +56,8 @@ struct input_mapping_t {
     /// New mode that should be switched to after command evaluation.
     wcstring sets_mode;
 
-    input_mapping_t(const wcstring &s, const std::vector<wcstring> &c,
-                    const wcstring &m, const wcstring &sm)
+    input_mapping_t(const wcstring &s, const std::vector<wcstring> &c, const wcstring &m,
+                    const wcstring &sm)
         : seq(s), commands(c), mode(m), sets_mode(sm) {
         static unsigned int s_last_input_map_spec_order = 0;
         specification_order = ++s_last_input_map_spec_order;
@@ -221,7 +221,7 @@ wcstring input_get_bind_mode() {
 void input_set_bind_mode(const wcstring &bm) {
     // Only set this if it differs to not execute variable handlers all the time.
     // modes may not be empty - empty is a sentinel value meaning to not change the mode
-    assert(! bm.empty());
+    assert(!bm.empty());
     if (input_get_bind_mode() != bm.c_str()) {
         env_set(FISH_BIND_MODE_VAR, bm.c_str(), ENV_GLOBAL);
     }

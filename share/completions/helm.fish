@@ -94,6 +94,10 @@ function __helm_releases
     helm ls --short
 end
 
+function __helm_release_completions
+    helm ls | awk 'NR >= 2 { print $1"\tRelease of "$NF  }'
+end
+
 function __helm_release_revisions
     set -l cmd (commandline -poc)
 
@@ -134,7 +138,7 @@ complete -c helm -f -n 'not __helm_seen_any_subcommand_from ""' -a '(__helm_subc
 complete -c helm -f -n '__helm_using_command create' -s p -l starter -d 'The named Helm starter scaffold'
 
 # helm delete [flags] RELEASE [...]
-complete -c helm -f -n '__helm_using_command delete' -a '(__helm_releases)' -d 'Release'
+complete -c helm -f -n '__helm_using_command delete' -a '(__helm_release_completions)' -d 'Release'
 
 complete -c helm -f -n '__helm_using_command delete' -l dry-run -d 'Simulate a delete'
 complete -c helm -f -n '__helm_using_command delete' -l no-hooks -d 'Prevent hooks from running during deletion'
@@ -166,7 +170,7 @@ complete -c helm -f -n '__helm_using_command fetch' -l version -d 'Specific vers
 complete -c helm -f -n '__helm_using_command get; and not __helm_seen_any_subcommand_from get' -a '(__helm_subcommands get)'
 
 # helm get [flags] RELEASE
-complete -c helm -f -n '__helm_using_command get' -a '(__helm_releases)' -d 'Release'
+complete -c helm -f -n '__helm_using_command get' -a '(__helm_release_completions)' -d 'Release'
 
 complete -c helm -f -n '__helm_using_command get' -l revision -d 'Get the named release with revision'
 
@@ -174,7 +178,7 @@ complete -c helm -f -n '__helm_using_command get' -l revision -d 'Get the named 
 complete -c helm -f -n '__helm_using_command get values' -s a -l all -d 'Dump all (computed) values'
 
 # helm history [flags] RELEASE
-complete -c helm -f -n '__helm_using_command history' -a '(__helm_releases)' -d 'Release'
+complete -c helm -f -n '__helm_using_command history' -a '(__helm_release_completions)' -d 'Release'
 
 complete -c helm -f -n '__helm_using_command history' -l max -d 'Maximum number of revision to include in history'
 
@@ -246,7 +250,7 @@ complete -c helm -f -n '__helm_using_command repo index' -l url -d 'URL of chart
 complete -c helm -f -n '__helm_using_command repo remove' -a '(__helm_repositories)' -d 'Repository'
 
 # helm rollback [RELEASE] [REVISION] [flags]
-complete -c helm -f -n '__helm_using_command rollback; and not __fish_seen_subcommand_from (__helm_releases)' -a '(__helm_releases)' -d 'Release'
+complete -c helm -f -n '__helm_using_command rollback; and not __fish_seen_subcommand_from (__helm_releases)' -a '(__helm_release_completions)' -d 'Release'
 complete -c helm -f -n '__helm_using_command rollback' -a '(__helm_release_revisions)' -d 'Revision'
 
 complete -c helm -f -n '__helm_using_command rollback' -l dry-run -d 'Simulate a rollback'
@@ -261,12 +265,12 @@ complete -c helm -f -n '__helm_using_command serve' -l address -d 'Address to li
 complete -c helm -f -n '__helm_using_command serve' -l repo-path -d 'Path from which to serve charts'
 
 # helm status [flags] RELEASE
-complete -c helm -f -n '__helm_using_command status' -a '(__helm_releases)' -d 'Release'
+complete -c helm -f -n '__helm_using_command status' -a '(__helm_release_completions)' -d 'Release'
 
 complete -c helm -f -n '__helm_using_command status' -l revision -d 'Display the status of the named release with revision'
 
 # helm upgrade [RELEASE] [CHART] [flags]
-complete -c helm -f -n '__helm_using_command upgrade; and not __fish_seen_subcommand_from (__helm_releases)' -a '(__helm_releases)' -d 'Release'
+complete -c helm -f -n '__helm_using_command upgrade; and not __fish_seen_subcommand_from (__helm_releases)' -a '(__helm_release_completions)' -d 'Release'
 complete -c helm -n '__helm_using_command upgrade; and __fish_seen_subcommand_from (__helm_releases); and not __fish_seen_subcommand_from (__helm_charts)' -a '(__helm_charts)' -d 'Chart'
 
 complete -c helm -f -n '__helm_using_command upgrade' -l dry-run -d 'Simulate an upgrade'

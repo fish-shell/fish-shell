@@ -5,3 +5,10 @@ export HISTTIMEFORMAT='%F %T '
 #1339718298
 echo supsup
 #abcde
+echo hello \
+    second line \
+    the `echo third` line \
+    final line
+another `command
+    and arg` to skip
+sleep 123

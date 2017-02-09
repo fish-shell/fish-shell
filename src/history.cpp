@@ -1670,11 +1670,12 @@ void history_t::populate_from_config_path() {
     }
 }
 
-/// Indicate whether we ought to import the bash history file into fish.
+/// Decide whether we ought to import a bash history line into fish. This is a very crude heuristic.
 static bool should_import_bash_history_line(const std::string &line) {
     if (line.empty()) return false;
 
-    // Very naive tests! Skip export; probably should skip others.
+    // Very naive tests! Skip `export` and comments.
+    // TODO: We should probably should skip other commands.
     const char *const ignore_prefixes[] = {"export ", "#"};
 
     for (size_t i = 0; i < sizeof ignore_prefixes / sizeof *ignore_prefixes; i++) {
@@ -1687,39 +1688,40 @@ static bool should_import_bash_history_line(const std::string &line) {
     // Skip lines with backticks.
     if (line.find('`') != std::string::npos) return false;
 
+    // Skip lines that end with a backslash since we do not handle multiline commands from bash.
+    if (line.back() == '\\') return false;
+
     return true;
 }
 
+/// Import a bash command history file. Bash's history format is very simple: just lines with #s for
+/// comments. Ignore a few commands that are bash-specific. It makes no attempt to handle multiline
+/// commands. We can't actually parse bash syntax and the bash history file does not unambiguously
+/// encode multiline commands.
 void history_t::populate_from_bash(FILE *stream) {
-    // Bash's format is very simple: just lines with #s for comments. Ignore a few commands that are
-    // bash-specific. This list ought to be expanded.
-    std::string line;
-    for (;;) {
-        line.clear();
-        bool success = false;
-        bool has_newline = false;
+    bool eof = false;
 
-        // Loop until we've read a line.
-        do {
+    // Process the entire history file until EOF is observed.
+    while (!eof) {
+        auto line = std::string();
+
+        // Loop until we've read a line or EOF is observed.
+        while (true) {
             char buff[128];
-            success = (bool)fgets(buff, sizeof buff, stream);
-            if (success) {
-                // Skip the newline.
-                char *a_newline = strchr(buff, '\n');
-                if (a_newline) *a_newline = '\0';
-                has_newline = (a_newline != NULL);
-
-                // Append what we've got.
-                line.append(buff);
+            if (!fgets(buff, sizeof buff, stream)) {
+                eof = true;
+                break;
             }
-        } while (success && !has_newline);
 
-        // Maybe add this line.
-        if (should_import_bash_history_line(line)) {
-            this->add(str2wcstring(line));
+            // Deal with the newline if present.
+            char *a_newline = strchr(buff, '\n');
+            if (a_newline) *a_newline = '\0';
+            line.append(buff);
+            if (a_newline) break;
         }
 
-        if (line.empty()) break;
+        // Add this line if it doesn't contain anything we know we can't handle.
+        if (should_import_bash_history_line(line)) this->add(str2wcstring(line));
     }
 }
 

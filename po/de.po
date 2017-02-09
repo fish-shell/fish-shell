@@ -41,7 +41,7 @@ msgstr "Kindprozess"
 #: src/expand.cpp:55
 #, fuzzy
 msgid "Process"
-msgstr "Prozess\n"
+msgstr "Prozess"
 
 #: src/expand.cpp:58
 msgid "Job"
@@ -142,7 +142,7 @@ msgstr "%ls: Unbekannte Option '%ls'\n"
 #: src/wgetopt.cpp:374
 #, fuzzy, c-format
 msgid "%ls: Unrecognized option '%lc%ls'\n"
-msgstr "%ls: Unbekannte Option '%ls'\n"
+msgstr "%ls: Unbekannte Option '%lc%ls'\n"
 
 #: src/wgetopt.cpp:392
 #, fuzzy, c-format
@@ -261,13 +261,13 @@ msgstr "Job %d, '%ls' hat %ls"
 #: src/proc.cpp:599
 #, fuzzy, c-format
 msgid "%ls: %ls'%ls' terminated by signal %ls (%ls)"
-msgstr "%ls: Job %d, '%ls' durch Signal %ls (%ls) beendet"
+msgstr "%ls: %ls'%ls' durch Signal %ls (%ls) beendet"
 
 #: src/proc.cpp:606
 #, fuzzy, c-format
 msgid "%ls: Process %d, '%ls' %ls'%ls' terminated by signal %ls (%ls)"
 msgstr ""
-"%ls: Prozess %d, '%ls' aus job %d, '%ls' durch Signal %ls (%ls) beendet"
+"%ls: Prozess %d, '%ls' %ls'%ls' durch Signal %ls (%ls) beendet"
 
 #: src/proc.cpp:629
 msgid "ended"
@@ -335,7 +335,7 @@ msgstr "Hintergrundkommandos können nicht als Bedingung verwendet werden"
 #: src/wutil.cpp:137
 #, c-format
 msgid "getcwd() failed with errno %d/%s"
-msgstr "getcwd() schlug mit errno %s/%s fehl"
+msgstr "getcwd() schlug mit errno %d/%s fehl"
 
 #: src/reader.cpp:323
 msgid "Could not set terminal mode for new job"
@@ -407,7 +407,7 @@ msgstr "Fehler beim Schreiben der Ausgabe"
 #: src/exec.cpp:48
 #, fuzzy, c-format
 msgid "An error occurred while redirecting file '%s'"
-msgstr "Fehler beim Umleiten der Datei '%ls'"
+msgstr "Fehler beim Umleiten der Datei '%s'"
 
 #: src/exec.cpp:634
 #, c-format
@@ -858,7 +858,7 @@ msgstr "Unpassendes Blockende. Programm wird beendet."
 #: src/parser.cpp:777
 #, fuzzy, c-format
 msgid "%ls (line %lu): "
-msgstr "%ls (Zeile %d): "
+msgstr "%ls (Zeile %lu): "
 
 #: src/parser.cpp:780
 #, c-format
@@ -1384,7 +1384,7 @@ msgstr "%ls: Konnte PWD-Variable nicht setzen\n"
 #: src/builtin.cpp:2667
 #, fuzzy, c-format
 msgid "%ls: Key not specified\n"
-msgstr "%s: Schlüssel nicht angegeben\\n"
+msgstr "%ls: Schlüssel nicht angegeben\\n"
 
 #: src/builtin.cpp:2697 src/builtin.cpp:2705
 #, fuzzy, c-format

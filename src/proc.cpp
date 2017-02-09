@@ -586,7 +586,7 @@ int job_reap(bool allow_interactive) {
                     // We want to report the job number, unless it's the only job, in which case
                     // we don't need to.
                     const wcstring job_number_desc =
-                        (job_count == 1) ? wcstring() : format_string(L"Job %d, ", j->job_id);
+                        (job_count == 1) ? wcstring() : format_string(_(L"Job %d, "), j->job_id);
                     fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
                              program_name, job_number_desc.c_str(),
                              truncate_command(j->command()).c_str(), sig2wcs(WTERMSIG(p->status)),

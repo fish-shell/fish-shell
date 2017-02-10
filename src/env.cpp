@@ -474,9 +474,10 @@ static void setup_path() {
 /// adjusted.
 static void env_set_termsize() {
     env_var_t cols = env_get_string(L"COLUMNS");
-    if (cols.missing_or_empty()) env_set(L"COLUMNS", DFLT_TERM_COL_STR, ENV_EXPORT | ENV_GLOBAL);
+    if (cols.missing_or_empty()) env_set(L"COLUMNS", DFLT_TERM_COL_STR, ENV_GLOBAL);
+
     env_var_t rows = env_get_string(L"LINES");
-    if (rows.missing_or_empty()) env_set(L"LINES", DFLT_TERM_ROW_STR, ENV_EXPORT | ENV_GLOBAL);
+    if (rows.missing_or_empty()) env_set(L"LINES", DFLT_TERM_ROW_STR, ENV_GLOBAL);
 }
 
 bool env_set_pwd() {

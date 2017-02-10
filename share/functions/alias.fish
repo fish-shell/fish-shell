@@ -21,7 +21,7 @@ function alias --description 'Creates a function wrapping a command'
             end
             return 0
         case 1
-            set -l tmp (string replace -r "=" '\n' -- $argv) ""
+            set -l tmp (string split -m 1 "=" -- $argv) ""
             set name $tmp[1]
             set body $tmp[2]
 

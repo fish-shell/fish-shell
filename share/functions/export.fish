@@ -9,7 +9,12 @@ function export --description 'Set global variable. Alias for set -gx, made for 
             case 1
                 set -gx $v $$v
             case 2
-                set -gx $v[1] $v[2]
+                if contains -- $v[1] PATH CDPATH MANPATH
+                    set -l colonized_path (string replace -- "$$v[1]" (string join ":" -- $$v[1]) $v[2])
+                    set -gx $v[1] (string split ":" -- $colonized_path)
+                else
+                    set -gx $v[1] $v[2]
+                end
         end
     end
 end

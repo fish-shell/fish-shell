@@ -235,6 +235,8 @@ class history_t {
     // Saves history.
     void save();
 
+    bool token_list(long max_items, bool null_terminate, io_streams_t &streams);
+
     // Searches history.
     bool search(history_search_type_t search_type, wcstring_list_t search_args,
                 const wchar_t *show_time_format, long max_items, bool case_sensitive,

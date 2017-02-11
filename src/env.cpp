@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <map>
 #include <set>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -189,7 +190,6 @@ void var_stack_t::pop() {
     assert(this->top && old_top && !old_top->next);
     assert(this->top != NULL);
 
-    var_table_t::iterator iter;
     for (const auto &entry_pair : old_top->env) {
         const var_entry_t &entry = entry_pair.second;
         if (entry.exportv) {

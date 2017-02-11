@@ -12,11 +12,13 @@
 #include <wchar.h>
 #include <wctype.h>
 #include <algorithm>
+#include <functional>
 #include <list>
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "autoload.h"

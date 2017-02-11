@@ -15,6 +15,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
 #include <wchar.h>
@@ -30,6 +31,7 @@
 #endif
 #include <algorithm>
 #include <memory>  // IWYU pragma: keep
+#include <type_traits>
 
 #include "common.h"
 #include "env.h"
@@ -1783,12 +1785,11 @@ void save_term_foreground_process_group(void) {
 }
 
 void restore_term_foreground_process_group(void) {
-    if (initial_fg_process_group != -1) {
-        // This is called during shutdown and from a signal handler. We don't bother to complain on
-        // failure.
-        if (tcsetpgrp(STDIN_FILENO, initial_fg_process_group) == -1 && errno == ENOTTY) {
-            redirect_tty_output();
-        }
+    if (initial_fg_process_group == -1) return;
+    // This is called during shutdown and from a signal handler. We don't bother to complain on
+    // failure because doing so is unlikely to be noticed.
+    if (tcsetpgrp(STDIN_FILENO, initial_fg_process_group) == -1 && errno == ENOTTY) {
+        redirect_tty_output();
     }
 }
 

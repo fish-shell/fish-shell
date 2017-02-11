@@ -9,8 +9,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
+
 #include <memory>
 #include <string>
+#include <type_traits>
 
 #include "builtin.h"
 #include "common.h"

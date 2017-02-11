@@ -12,7 +12,10 @@
 #include <assert.h>
 #include <stddef.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+
 #include <algorithm>
+#include <map>
 #include <memory>
 #include <set>
 #include <vector>

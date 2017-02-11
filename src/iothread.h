@@ -3,6 +3,7 @@
 #define FISH_IOTHREAD_H
 
 #include <functional>
+#include <type_traits>
 
 /// Runs a command on a thread.
 ///

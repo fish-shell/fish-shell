@@ -11,7 +11,10 @@
 #include <sys/time.h>  // IWYU pragma: keep
 #include <termios.h>
 #include <unistd.h>
+
 #include <list>
+#include <memory>
+#include <vector>
 
 #include "common.h"
 #include "io.h"

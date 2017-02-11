@@ -15,6 +15,7 @@
 #include <wctype.h>
 #include <algorithm>
 #include <iterator>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -585,8 +586,7 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         }
     }
 
-    int rc = matcher->match_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
-    return rc;
+    return matcher->match_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
 struct replace_options_t {
@@ -819,8 +819,7 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
         }
     }
 
-    int rc = replacer->replace_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
-    return rc;
+    return replacer->replace_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
 /// Given iterators into a string (forward or reverse), splits the haystack iterators

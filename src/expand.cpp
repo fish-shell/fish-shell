@@ -2,6 +2,7 @@
 // IWYU pragma: no_include <cstddef>
 #include "config.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdarg.h>
@@ -11,23 +12,25 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <algorithm>
 #ifdef HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>  // IWYU pragma: keep
 #endif
-#include <assert.h>
-#include <vector>
 #ifdef SunOS
 #include <procfs.h>
 #endif
 #include <stdio.h>
-#include <memory>  // IWYU pragma: keep
 #if __APPLE__
 #include <sys/proc.h>
 #else
 #include <dirent.h>
 #include <sys/stat.h>
 #endif
+
+#include <algorithm>
+#include <functional>
+#include <memory>  // IWYU pragma: keep
+#include <type_traits>
+#include <vector>
 
 #include "common.h"
 #include "complete.h"

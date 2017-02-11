@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <wchar.h>
 #include <wctype.h>
+
+#include <algorithm>
 #include <map>
 #include <numeric>
 #include <vector>
@@ -43,7 +45,7 @@ static size_t divide_round_up(size_t numer, size_t denom) {
     if (numer == 0) return 0;
 
     assert(denom > 0);
-    bool has_rem = (numer % denom) > 0;
+    bool has_rem = (numer % denom) != 0;
     return numer / denom + (has_rem ? 1 : 0);
 }
 
@@ -368,9 +370,7 @@ void pager_t::set_completions(const completion_list_t &raw_completions) {
 
 void pager_t::set_prefix(const wcstring &pref) { prefix = pref; }
 
-void pager_t::set_term_size(int w, int h) {
-    assert(w > 0);
-    assert(h > 0);
+void pager_t::set_term_size(size_t w, size_t h) {
     available_term_width = w;
     available_term_height = h;
 }
@@ -426,7 +426,6 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     }
 
     bool print;
-    assert(cols >= 1);
     // Force fit if one column.
     if (cols == 1) {
         width_by_column[0] = std::min(width_by_column[0], term_width);

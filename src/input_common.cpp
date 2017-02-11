@@ -4,10 +4,6 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-#include <deque>
-#include <list>
-#include <queue>
-#include <utility>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -16,7 +12,11 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <wchar.h>
+
+#include <deque>
+#include <list>
 #include <memory>
+#include <type_traits>
 
 #include "common.h"
 #include "env.h"

@@ -6,13 +6,13 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <memory>
 #include <string>
+#include <type_traits>
 
 #include "builtin.h"
 #include "common.h"
@@ -234,7 +234,7 @@ class combining_expression : public expression {
 
     combining_expression(token_t tok, range_t where, std::vector<unique_ptr<expression>> exprs,
                          std::vector<token_t> combs)
-        : expression(tok, where), subjects(move(exprs)), combiners(move(combs)) {
+        : expression(tok, where), subjects(std::move(exprs)), combiners(std::move(combs)) {
         // We should have one more subject than combiner.
         assert(subjects.size() == combiners.size() + 1);
     }

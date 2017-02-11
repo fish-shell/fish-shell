@@ -37,6 +37,8 @@
 #include <wctype.h>
 
 #include <algorithm>
+#include <csignal>
+#include <functional>
 #include <memory>
 #include <stack>
 
@@ -791,13 +793,13 @@ void reader_init() {
 
 void reader_destroy() { pthread_key_delete(generation_count_key); }
 
+/// Restore the term mode if we own the terminal. It's important we do this before
+/// restore_foreground_process_group, otherwise we won't think we own the terminal.
 void restore_term_mode() {
-    // Restore the term mode if we own the terminal. It's important we do this before
-    // restore_foreground_process_group, otherwise we won't think we own the terminal.
-    if (getpid() == tcgetpgrp(STDIN_FILENO)) {
-        if (tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup) == -1 && errno == EIO) {
-            redirect_tty_output();
-        }
+    if (getpid() != tcgetpgrp(STDIN_FILENO)) return;
+
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup) == -1 && errno == EIO) {
+        redirect_tty_output();
     }
 }
 

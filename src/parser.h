@@ -3,7 +3,11 @@
 #define FISH_PARSER_H
 
 #include <stddef.h>
+
+#include <csignal>
 #include <list>
+#include <memory>
+#include <type_traits>
 #include <vector>
 
 #include "common.h"

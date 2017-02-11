@@ -17,12 +17,15 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+
 #include <algorithm>
 #include <atomic>
 #include <cwchar>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <type_traits>
 
 #include "common.h"
 #include "env.h"

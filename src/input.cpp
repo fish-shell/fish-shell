@@ -1,6 +1,7 @@
 // Functions for reading a character of input from stdin.
 #include "config.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

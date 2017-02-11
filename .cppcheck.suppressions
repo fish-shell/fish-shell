@@ -9,6 +9,5 @@ varFuncNullUB
 // warnings are false positives.
 unmatchedSuppression
 
-memleak:src/env_universal_common.cpp
 flockSemanticsWarning:src/env_universal_common.cpp
 flockSemanticsWarning:src/history.cpp

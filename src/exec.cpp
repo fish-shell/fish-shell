@@ -7,21 +7,23 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <algorithm>
-#include <vector>
-#ifdef HAVE_SPAWN_H
-#include <spawn.h>
-#endif
-#include <map>
-#include <memory>
-#include <string>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
+#include <signal.h>
+#ifdef HAVE_SPAWN_H
+#include <spawn.h>
+#endif
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 #include "builtin.h"
 #include "common.h"

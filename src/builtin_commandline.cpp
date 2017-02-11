@@ -3,10 +3,8 @@
 
 #include <assert.h>
 #include <errno.h>
-#include <pthread.h>
 #include <stdlib.h>
 #include <wchar.h>
-#include <cstring>
 
 #include "builtin.h"
 #include "common.h"

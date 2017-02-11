@@ -17,8 +17,8 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+
 #include <map>
-#include <memory>
 #include <string>
 
 #include "common.h"

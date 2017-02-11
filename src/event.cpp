@@ -1,12 +1,14 @@
 // Functions for handling event triggers.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <signal.h>
 #include <unistd.h>
+
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <string>
+#include <type_traits>
 
 #include "common.h"
 #include "event.h"

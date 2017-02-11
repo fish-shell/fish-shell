@@ -8,7 +8,9 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+
 #include <string>
+#include <type_traits>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep

@@ -24,12 +24,15 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "builtin.h"
@@ -1653,9 +1656,9 @@ struct pager_layout_testcase_t {
     size_t width;
     const wchar_t *expected;
 
-    // Run ourselves as a test case
-    // Set our data on the pager, and then check the rendering
-    // We should have one line, and it should have our expected text
+    // Run ourselves as a test case.
+    // Set our data on the pager, and then check the rendering.
+    // We should have one line, and it should have our expected text.
     void run(pager_t &pager) const {
         pager.set_term_size(this->width, 24);
         page_rendering_t rendering = pager.render();

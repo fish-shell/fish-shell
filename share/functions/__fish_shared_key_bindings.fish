@@ -77,7 +77,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     bind $argv \el __fish_list_current_token
     bind $argv \ew 'set tok (commandline -pt); if test $tok[1]; echo; whatis $tok[1]; commandline -f repaint; end'
-    bind $argv \cl 'clear; commandline -f repaint'
+    # ncurses > 6.0 sends a "delete scrollback" sequence along with clear.
+    # This string replace removes it.
+    bind $argv \cl 'clear | string replace \e\[3J ""; commandline -f repaint'
     bind $argv \cc __fish_cancel_commandline
     bind $argv \cu backward-kill-line
     bind $argv \cw backward-kill-path-component

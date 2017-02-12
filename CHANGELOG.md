@@ -1,6 +1,7 @@
 # fish 2.6.0 (released ???)
 
 - The `read` command now has a default limit of 10 MiB. If a line is longer than that it will fail with $status set to 122 and the var will be empty. You can set a different limit by setting the FISH_READ_BYTE_LIMIT variable.
+- The \cl binding no longer deletes the scrollback buffer with ncurses >= 6.0 (#2855).
 
 ---
 

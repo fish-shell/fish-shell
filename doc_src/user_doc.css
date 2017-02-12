@@ -215,7 +215,7 @@ tt, code, pre, .fish {
 .cli-dark .prompt { color: #999; }
 .cli-dark .cursor { border-bottom: 2px solid #3F3; }
 .cli-dark .underline { color: #00afff; text-decoration: underline; }
-.cli-dark .error, .cli-dark .error .path { color: #f33; font-weight: bold; }
+.cli-dark .error, .cli-dark .error .path { color: #f55; font-weight: bold; }
 
 
 /*Menus*/

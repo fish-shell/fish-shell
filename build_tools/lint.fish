@@ -71,7 +71,7 @@ end
 
 # We now have a list of files to check so run the linters.
 if set -q c_files[1]
-    if type -q iwyu
+    if type -q include-what-you-use
         echo
         echo ========================================
         echo Running IWYU

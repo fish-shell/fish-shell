@@ -135,9 +135,9 @@ s|<sm [^>]*>|@smtc{|
 s|</sm>|}|
 #.
 # ERrOR
-s|<error>|@eror{|
-s|<error [^>]*>|@eror{|
-s|</error>|}|
+s|<eror>|@eror{|
+s|<eror [^>]*>|@eror{|
+s|</eror>|}|
 #.
 # AsIs - protect from auto-formatting
 s|<asis>|@asis{|

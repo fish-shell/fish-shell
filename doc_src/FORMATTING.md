@@ -156,7 +156,7 @@ The following can be used in \\fish blocks to render some fish scenarios. These 
 <m>: <m>Matched</m> items, such as tab completions.
 <sm>: Matched items <sm>searched</sm> for, like grep results.
 <bs>: Render the contents with a preceding backslash. Useful when presenting output.
-<error>: <error>This would be shown as an error.</error>
+<eror>: <eror>This would be shown as an error. (Note eror, not error).</eror>
 <asis>: <asis>This text will not be parsed for fish markup.</asis>
 <outp>: <outp>This would be rendered as command/script output.</outp>
 {{ and }}: Required when wanting curly braces in regular expression example.

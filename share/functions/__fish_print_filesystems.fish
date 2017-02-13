@@ -5,6 +5,6 @@ function __fish_print_filesystems -d "Print a list of all known filesystem types
     set fs $fs reiserfs romfs smbfs sysv tmpfs udf ufs umsdos vfat xenix xfs xiafs
     # Mount has helper binaries to mount filesystems
     # These are called mount.* and are placed somewhere in $PATH
-    set -l mountfs $PATH/mount.*
-    printf '%s\n' $fs (string replace -ra '.*/mount.' '' -- $mountfs)
+    set -l mountfs $PATH/mount.* $PATH/mount_*
+    printf '%s\n' $fs (string replace -ra '.*/mount[._]' '' -- $mountfs)
 end

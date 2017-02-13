@@ -81,7 +81,7 @@ if set -q c_files[1]
         # expect those messages to be written to stdout.
         for c_file in $c_files
             switch $kernel_name
-                case Darwin
+                case Darwin FreeBSD
                     include-what-you-use -Xiwyu --no_default_mappings -Xiwyu \
                         --mapping_file=build_tools/iwyu.osx.imp --std=c++11 \
                         $cppcheck_args $c_file 2>&1
@@ -89,7 +89,7 @@ if set -q c_files[1]
                     include-what-you-use -Xiwyu --mapping_file=build_tools/iwyu.linux.imp \
                         $cppcheck_args $c_file 2>&1
                 case '*' # hope for the best
-                    include-what-you-use $cppcheck_args $c_file 2>&1
+                    include-what-you-use --std=c++11 $cppcheck_args $c_file 2>&1
             end
         end
     end

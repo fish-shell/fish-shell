@@ -6,7 +6,7 @@
 # external command by that name. That's because if we don't the parser will select our builtin.
 # However, we only want our builtin if there is no external realpath command.
 
-if command -s realpath >/dev/null
+if command -sq realpath
     function realpath -w realpath -d "print the resolved path [command realpath]"
         command realpath $argv
     end
@@ -14,7 +14,7 @@ if command -s realpath >/dev/null
 end
 
 # If there is a HomeBrew installed version of GNU realpath named grealpath use that.
-if command -s grealpath >/dev/null
+if command -sq grealpath
     function realpath -w grealpath -d "print the resolved path [command grealpath]"
         command grealpath $argv
     end

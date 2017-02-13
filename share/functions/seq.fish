@@ -1,7 +1,7 @@
 # If seq is not installed, then define a function that invokes __fish_fallback_seq
 # We can't call type here because that also calls seq
 
-if not command -s seq >/dev/null
+if not command -sq seq
     # No seq command
     function seq --description "Print sequences of numbers"
         __fish_fallback_seq $argv

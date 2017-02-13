@@ -268,7 +268,7 @@ if status --is-login
 
     if test "$TERM" = linux
         if string match -qir '\.UTF' -- $LANG
-            if command -s unicode_start >/dev/null
+            if command -sq unicode_start
                 unicode_start
             end
         end

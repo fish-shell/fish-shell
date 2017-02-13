@@ -44,7 +44,7 @@ function __fish_complete_npm --description "Complete the commandline using npm's
     # with weird output on stdout (!). But before the function is called, no npm command is defined,
     # so calling the command would fail.
     # So we'll only try if we have an npm command.
-    if command -s npm >/dev/null
+    if command -sq npm
         # npm completion is bash-centric, so we need to translate fish's "commandline" stuff to bash's $COMP_* stuff
         # COMP_LINE is an array with the words in the commandline
         set -lx COMP_LINE (commandline -o)
@@ -72,7 +72,7 @@ complete -f -c npm -n 'not __fish_npm_needs_option' -a "(__fish_complete_npm)"
 # list available npm scripts and their parial content
 function __fish_npm_run
     # Like above, only try to call npm if there's a command by that name to facilitate aliases that call nvm.
-    if command -s npm >/dev/null
+    if command -sq npm
         command npm run | string match -r -v '^[^ ]|^$' | string trim | while read -l name
             set -l trim 20
             read -l value

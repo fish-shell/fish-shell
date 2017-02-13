@@ -12,7 +12,7 @@ if command ls --version >/dev/null ^/dev/null
     end
 
     if not set -q LS_COLORS
-        if command -s dircolors >/dev/null
+        if command -sq dircolors
             set -l colorfile
             for file in ~/.dir_colors ~/.dircolors /etc/DIR_COLORS
                 if test -f $file

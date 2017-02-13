@@ -330,7 +330,7 @@ end
 function __fish_git_prompt --description "Prompt function for Git"
     # If git isn't installed, there's nothing we can do
     # Return 1 so the calling prompt can deal with it
-    if not command -s git >/dev/null
+    if not command -sq git
         return 1
     end
     set -l repo_info (command git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree HEAD ^/dev/null)

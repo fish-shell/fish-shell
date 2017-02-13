@@ -28,7 +28,7 @@ function __fish_rbenv_installed_rubies
 end
 
 function __fish_rbenv_official_rubies
-	if command -s ruby-build >/dev/null
+	if command -sq ruby-build
 		ruby-build --definitions
 	else
 		# Remove trailing spaces, otherwise completion options appear like

@@ -3,7 +3,7 @@
 # application for the file.
 #
 
-if not command -s open >/dev/null
+if not command -sq open
     function open --description "Open file in default application"
         if count $argv >/dev/null
             switch $argv[1]

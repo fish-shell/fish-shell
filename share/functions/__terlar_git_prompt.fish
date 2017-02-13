@@ -23,7 +23,7 @@ set -g fish_prompt_git_status_order added modified renamed copied deleted untrac
 function __terlar_git_prompt --description 'Write out the git prompt'
     # If git isn't installed, there's nothing we can do
     # Return 1 so the calling prompt can deal with it
-    if not command -s git >/dev/null
+    if not command -sq git
         return 1
     end
     set -l branch (git rev-parse --abbrev-ref HEAD ^/dev/null)

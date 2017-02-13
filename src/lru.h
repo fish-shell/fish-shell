@@ -93,7 +93,6 @@ class lru_cache_t {
 
         // Remove us from the map. This deallocates node!
         node_map.erase(node->iter);
-        node = NULL;
 
         // Tell ourselves what we did
         DERIVED *dthis = static_cast<DERIVED *>(this);

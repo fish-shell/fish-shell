@@ -2,12 +2,14 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+
 #include <algorithm>
 #include <iterator>
 #include <memory>

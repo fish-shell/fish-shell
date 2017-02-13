@@ -11,12 +11,14 @@
 #include <errno.h>
 #include <getopt.h>
 #include <signal.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
 #include <wchar.h>
+
 #include <memory>
 #include <string>
 #include <vector>

@@ -2,6 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <signal.h>
+#include <stddef.h>
 #include <unistd.h>
 
 #include <algorithm>

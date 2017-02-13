@@ -15,6 +15,8 @@
 #if !defined(__APPLE__) && !defined(__CYGWIN__)
 #include <pwd.h>
 #endif
+#include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef __CYGWIN__
@@ -26,9 +28,9 @@
 #include <sys/stat.h>
 #include <sys/time.h>  // IWYU pragma: keep
 #include <sys/types.h>  // IWYU pragma: keep
-
 #include <unistd.h>
 #include <wchar.h>
+
 #include <atomic>
 #include <map>
 #include <string>

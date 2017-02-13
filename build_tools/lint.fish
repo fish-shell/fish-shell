@@ -76,9 +76,6 @@ if set -q c_files[1]
         echo ========================================
         echo Running IWYU
         echo ========================================
-        # The stderr to stdout redirection is because cppcheck, incorrectly IMHO, writes its
-        # diagnostic messages to stderr. Anyone running this who wants to capture its output will
-        # expect those messages to be written to stdout.
         for c_file in $c_files
             switch $kernel_name
                 case Darwin FreeBSD

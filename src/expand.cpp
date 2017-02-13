@@ -12,13 +12,13 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+
 #ifdef HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>  // IWYU pragma: keep
 #endif
 #ifdef SunOS
 #include <procfs.h>
 #endif
-#include <stdio.h>
 #if __APPLE__
 #include <sys/proc.h>
 #else

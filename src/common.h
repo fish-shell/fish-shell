@@ -6,10 +6,10 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdarg.h>  // IWYU pragma: keep
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <termios.h>
 #include <wchar.h>
 #include <memory>

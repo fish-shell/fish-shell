@@ -5,6 +5,7 @@
 
 #include "config.h"
 
+#include <stddef.h>
 #include <unistd.h>
 #if HAVE_SPAWN_H
 #include <spawn.h>

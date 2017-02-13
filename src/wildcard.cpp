@@ -5,10 +5,12 @@
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
+#include <stddef.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
+
 #include <memory>
 #include <set>
 #include <string>

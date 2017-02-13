@@ -2,6 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <wchar.h>  // IWYU pragma: keep

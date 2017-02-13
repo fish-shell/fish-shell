@@ -7,6 +7,7 @@
 // compiling several modules that include this header because they use symbols which are defined as
 // macros in <term.h>.
 // IWYU pragma: no_include <term.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <unistd.h>
 // The following include must be kept despite what IWYU says. That's because of the interaction

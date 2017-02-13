@@ -3,6 +3,7 @@
 #define FISH_HIGHLIGHT_H
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <vector>
 

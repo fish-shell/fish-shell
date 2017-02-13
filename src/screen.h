@@ -8,13 +8,14 @@
 // of text around to handle text insertion.
 #ifndef FISH_SCREEN_H
 #define FISH_SCREEN_H
+#include "config.h"  // IWYU pragma: keep
 
 #include <assert.h>
 #include <stddef.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <set>

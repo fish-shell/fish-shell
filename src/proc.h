@@ -5,7 +5,6 @@
 #define FISH_PROC_H
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <signal.h>
 #include <stddef.h>
 #include <sys/time.h>  // IWYU pragma: keep

@@ -3,7 +3,6 @@
 // issues.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>

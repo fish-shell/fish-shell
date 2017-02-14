@@ -1,7 +1,6 @@
 // History functions, part of the user interface.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>

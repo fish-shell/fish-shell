@@ -3,13 +3,13 @@
 // Implemented from scratch (yes, really) by way of IEEE 1003.1 as reference.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
+
 #include <memory>
 #include <string>
 #include <type_traits>

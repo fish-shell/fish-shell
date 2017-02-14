@@ -453,9 +453,8 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             wchar_t *arg = argv[i];
             int slice = 0;
 
-            if (!(dest = wcsdup(arg))) {
-                DIE_MEM();
-            }
+            dest = wcsdup(arg);
+            assert(dest);
 
             if (wcschr(dest, L'[')) {
                 slice = 1;
@@ -512,9 +511,8 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return retcode;
     }
 
-    if (!(dest = wcsdup(argv[w.woptind]))) {
-        DIE_MEM();
-    }
+    dest = wcsdup(argv[w.woptind]);
+    assert(dest);
 
     if (wcschr(dest, L'[')) {
         slice = 1;

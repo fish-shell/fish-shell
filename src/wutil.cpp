@@ -2,7 +2,6 @@
 #define FISH_NO_ISW_WRAPPERS
 #include "config.h"
 
-#include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -353,7 +352,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
             if (pathsep_idx == cstring::npos) {
                 // No pathsep means a single path component relative to pwd.
                 narrow_res = realpath(".", NULL);
-                if (!narrow_res) DIE("unexpected realpath(\".\") failure");
+                assert(narrow_res != NULL);
                 pathsep_idx = 0;
             } else {
                 // Only call realpath() on the portion up to the last component.

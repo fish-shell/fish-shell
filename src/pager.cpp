@@ -1,7 +1,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 // IWYU pragma: no_include <cstddef>
-#include <assert.h>
 #include <stddef.h>
 #include <wchar.h>
 #include <wctype.h>
@@ -39,6 +38,24 @@ typedef std::vector<comp_t> comp_info_list_t;
 
 /// Text we use for the search field.
 #define SEARCH_FIELD_PROMPT _(L"search: ")
+
+inline bool selection_direction_is_cardinal(selection_direction_t dir) {
+    switch (dir) {
+        case direction_north:
+        case direction_east:
+        case direction_south:
+        case direction_west:
+        case direction_page_north:
+        case direction_page_south: {
+            return true;
+        }
+        case direction_next:
+        case direction_prev:
+        case direction_deselect: {
+            return false;
+        }
+    }
+}
 
 /// Returns numer / denom, rounding up. As a "courtesy" 0/0 is 0.
 static size_t divide_round_up(size_t numer, size_t denom) {

@@ -1,7 +1,6 @@
 // Various functions, mostly string utilities, that are used by most parts of fish.
 #include "config.h"
 
-#include <assert.h>
 #include <cxxabi.h>
 #include <dlfcn.h>
 #include <errno.h>
@@ -28,6 +27,7 @@
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
+
 #include <algorithm>
 #include <memory>  // IWYU pragma: keep
 #include <type_traits>
@@ -266,14 +266,14 @@ char *wcs2str(const wchar_t *in) {
         if (result) {
             // It converted into the local buffer, so copy it.
             result = strdup(result);
-            if (!result) DIE_MEM();
+            assert(result);
         }
         return result;
     }
 
     // Here we probably allocate a buffer probably much larger than necessary.
     char *out = (char *)malloc(MAX_UTF8_BYTES * wcslen(in) + 1);
-    if (!out) DIE_MEM();
+    assert(out);
     return wcs2str_internal(in, out);
 }
 
@@ -400,9 +400,7 @@ void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig) {
                 break;
             }
             buff = (wchar_t *)realloc((buff == static_buff ? NULL : buff), size);
-            if (buff == NULL) {
-                DIE_MEM();
-            }
+            assert(buff != NULL);
         }
 
         // Try printing.
@@ -2030,4 +2028,11 @@ void redirect_tty_output() {
     if (tcgetattr(STDOUT_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDOUT_FILENO);
     if (tcgetattr(STDERR_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDERR_FILENO);
     close(fd);
+}
+
+/// Display a failed assertion message, dump a stack trace if possible, then die.
+[[noreturn]] void __assert(const char *msg, const char *file, size_t line) {
+    debug(0, L"%s:%zu: failed assertion: %s", file, line, msg);
+    show_stackframe(L'E', 99, 1);
+    abort();
 }

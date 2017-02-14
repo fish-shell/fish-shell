@@ -7,6 +7,7 @@
 #define FISH_EVENT_H
 
 #include <unistd.h>
+
 #include <memory>
 #include <vector>
 

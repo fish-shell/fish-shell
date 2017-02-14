@@ -1,6 +1,5 @@
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <errno.h>
 #include <limits.h>
 #include <pthread.h>
@@ -9,6 +8,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include <queue>
 
 #include "common.h"
@@ -40,8 +40,7 @@ struct spawn_request_t {
 
     spawn_request_t() {}
 
-    spawn_request_t(void_function_t &&f, void_function_t &&comp)
-        : handler(f), completion(comp) {}
+    spawn_request_t(void_function_t &&f, void_function_t &&comp) : handler(f), completion(comp) {}
 
     // Move-only
     spawn_request_t &operator=(const spawn_request_t &) = delete;

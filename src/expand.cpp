@@ -2,7 +2,6 @@
 // IWYU pragma: no_include <cstddef>
 #include "config.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdarg.h>

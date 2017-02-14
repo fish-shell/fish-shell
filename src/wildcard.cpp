@@ -2,7 +2,6 @@
 // provides recursive wildcards using **.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stddef.h>
@@ -294,7 +293,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
             return false;
         }
         default: {
-            DIE("Unreachable code reached");
+            DIE("unreachable code reached");
             break;
         }
     }

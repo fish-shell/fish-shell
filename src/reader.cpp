@@ -14,7 +14,6 @@
 #include "config.h"
 
 // IWYU pragma: no_include <type_traits>
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>

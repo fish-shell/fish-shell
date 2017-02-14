@@ -1,6 +1,10 @@
 // Functions used for implementing the set_color builtin.
 #include "config.h"
 
+#include <stddef.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #if HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
@@ -14,10 +18,6 @@
 #include <ncurses/term.h>
 #endif
 
-#include <assert.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <memory>
 #include <string>
 #include <vector>

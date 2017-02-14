@@ -3,6 +3,7 @@
 #define FISH_PARSE_UTIL_H
 
 #include <stddef.h>
+
 #include <vector>
 
 #include "common.h"

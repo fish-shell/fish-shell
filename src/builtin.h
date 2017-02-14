@@ -3,6 +3,7 @@
 #define FISH_BUILTIN_H
 
 #include <stddef.h>
+
 #include <vector>
 
 #include "common.h"

@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <sys/stat.h>
 #include <unistd.h>
 #include <wchar.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -454,9 +455,9 @@ int main(int argc, char **argv) {
                 res = reader_read(fd, empty_ios);
 
                 if (res) {
-                    debug(1, _(L"Error while reading file %ls\n"), reader_current_filename()
-                                                                       ? reader_current_filename()
-                                                                       : _(L"Standard input"));
+                    debug(1, _(L"Error while reading file %ls\n"),
+                          reader_current_filename() ? reader_current_filename()
+                                                    : _(L"Standard input"));
                 }
                 reader_pop_current_filename();
             }

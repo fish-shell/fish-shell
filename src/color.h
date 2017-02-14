@@ -3,6 +3,7 @@
 #define FISH_COLOR_H
 
 #include <string.h>
+
 #include <string>
 
 #include "common.h"

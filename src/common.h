@@ -12,6 +12,7 @@
 #include <string.h>
 #include <termios.h>
 #include <wchar.h>
+
 #include <memory>
 #include <sstream>
 #include <string>
@@ -125,25 +126,6 @@ enum selection_direction_t {
     direction_deselect
 };
 
-inline bool selection_direction_is_cardinal(selection_direction_t dir) {
-    switch (dir) {
-        case direction_north:
-        case direction_east:
-        case direction_south:
-        case direction_west:
-        case direction_page_north:
-        case direction_page_south: {
-            return true;
-        }
-        case direction_next:
-        case direction_prev:
-        case direction_deselect: {
-            return false;
-        }
-        default: { abort(); }
-    }
-}
-
 /// Issue a debug message with printf-style string formating and automatic line breaking. The string
 /// will begin with the string \c program_name, followed by a colon and a whitespace.
 ///
@@ -244,20 +226,17 @@ extern bool has_working_tty_timestamps;
         exit_without_destructors(1);        \
     }
 
-/// Exit program at once after emitting an error message.
-#define DIE(msg)                                                                                  \
-    {                                                                                             \
-        debug(0, "%s on line %ld of file %s, shutting down fish", msg, (long)__LINE__, __FILE__); \
-        FATAL_EXIT();                                                                             \
-    }
-
-/// Exit program at once, leaving an error message about running out of memory.
-#define DIE_MEM()                                                                             \
-    {                                                                                         \
-        fwprintf(stderr, L"fish: Out of memory on line %ld of file %s, shutting down fish\n", \
-                 (long)__LINE__, __FILE__);                                                   \
-        FATAL_EXIT();                                                                         \
-    }
+/// Exit the program at once after emitting an error message and stack trace if possible.
+/// We use our own private implementation of `assert()` for two reasons. First, some implementations
+/// are subtly broken. For example, using `printf()` which can cause problems when mixed with wide
+/// stdio functions and should be writing the message to stderr rather than stdout. Second, if
+/// possible it is useful to provide additional context such as a stack backtrace.
+#undef assert
+#undef __assert
+//#define assert(e)  do {(void)((e) ? ((void)0) : __assert(#e, __FILE__, __LINE__)); } while(false)
+#define assert(e) (e) ? ((void)0) : __assert(#e, __FILE__, __LINE__)
+#define DIE(msg) __assert(msg, __FILE__, __LINE__)
+[[noreturn]] void __assert(const char *msg, const char *file, size_t line);
 
 /// Check if signals are blocked. If so, print an error message and return from the function
 /// performing this check.

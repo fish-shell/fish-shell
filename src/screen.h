@@ -10,12 +10,10 @@
 #define FISH_SCREEN_H
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <stddef.h>
 #include <sys/stat.h>
 
 #include <algorithm>
-#include <cstddef>
 #include <map>
 #include <memory>
 #include <set>

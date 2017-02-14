@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <wchar.h>
+
 #include <algorithm>
 #include <memory>
 #include <vector>

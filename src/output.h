@@ -6,6 +6,7 @@
 #define FISH_OUTPUT_H
 
 #include <stddef.h>
+
 #include <vector>
 
 #include "color.h"

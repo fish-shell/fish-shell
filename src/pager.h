@@ -3,6 +3,7 @@
 #define FISH_PAGER_H
 
 #include <stddef.h>
+
 #include <memory>
 #include <string>
 #include <vector>

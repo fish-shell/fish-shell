@@ -2,7 +2,6 @@
 // extended to support marks, tokenizing multiple strings and disposing of unused string segments.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <unistd.h>

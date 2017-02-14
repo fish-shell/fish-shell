@@ -2,10 +2,10 @@
 #ifndef FISH_PARSE_PRODUCTIONS_H
 #define FISH_PARSE_PRODUCTIONS_H
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/types.h>
+
 #include <memory>
 #include <vector>
 

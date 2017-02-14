@@ -1,7 +1,6 @@
 // Functions used for implementing the commandline builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>

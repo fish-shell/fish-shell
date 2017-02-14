@@ -3,7 +3,6 @@
 
 // IWYU pragma: no_include <cstring>
 // IWYU pragma: no_include <cstddef>
-#include <assert.h>
 #include <errno.h>
 #include <libgen.h>
 #include <limits.h>

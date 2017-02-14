@@ -1,7 +1,6 @@
 // Color class implementation.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -298,7 +297,7 @@ color24_t rgb_color_t::to_color24() const {
 }
 
 unsigned char rgb_color_t::to_name_index() const {
-    // XXX this should look for the nearest color
+    // TODO: This should look for the nearest color.
     assert(type == type_named || type == type_rgb);
     if (type == type_named) return data.name_idx;
     if (type == type_rgb) return term16_color_for_rgb(data.color.rgb);
@@ -342,8 +341,7 @@ wcstring rgb_color_t::description() const {
             return L"normal";
         }
         default: {
-            abort();
-            return L"";
+            DIE("unknown color type");
         }
     }
 }

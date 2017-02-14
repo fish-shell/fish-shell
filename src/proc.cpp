@@ -14,8 +14,7 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <memory>
-#include <vector>
+
 #if HAVE_TERM_H
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
@@ -29,7 +28,10 @@
 #endif
 #include <sys/time.h>  // IWYU pragma: keep
 #include <sys/types.h>
+
 #include <algorithm>  // IWYU pragma: keep
+#include <memory>
+#include <vector>
 
 #include "common.h"
 #include "event.h"

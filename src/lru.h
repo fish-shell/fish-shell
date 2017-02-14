@@ -2,8 +2,8 @@
 #ifndef FISH_LRU_H
 #define FISH_LRU_H
 
-#include <assert.h>
 #include <wchar.h>
+
 #include <map>
 
 #include "common.h"
@@ -303,19 +303,19 @@ class lru_cache_t {
         size_t count = 0;
         while (cursor != &mouth) {
             if (cursor->prev != prev) {
-                assert(0 && "Node busted previous link");
+                DIE("node busted previous link");
             }
             prev = cursor;
             cursor = cursor->next;
             if (count++ > max) {
-                assert(0 && "LRU cache unable to re-reach the mouth - not circularly linked?");
+                DIE("LRU cache unable to re-reach the mouth - not circularly linked?");
             }
         }
         if (mouth.prev != prev) {
-            assert(0 && "mouth.prev does not connect to last node");
+            DIE("mouth.prev does not connect to last node");
         }
         if (count != expected_count) {
-            assert(0 && "Linked list count mismatch from map count");
+            DIE("linked list count mismatch from map count");
         }
 
         // Count iterators
@@ -325,7 +325,7 @@ class lru_cache_t {
             iter_dist++;
         }
         if (iter_dist != count) {
-            assert(0 && "Linked list iterator mismatch from map count");
+            DIE("linked list iterator mismatch from map count");
         }
     }
 };

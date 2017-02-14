@@ -5,6 +5,7 @@
 #define FISH_READER_H
 
 #include <stddef.h>
+
 #include <string>
 #include <vector>
 

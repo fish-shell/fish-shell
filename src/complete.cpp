@@ -5,12 +5,12 @@
 ///
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <pthread.h>
 #include <pwd.h>
 #include <stddef.h>
 #include <wchar.h>
 #include <wctype.h>
+
 #include <algorithm>
 #include <functional>
 #include <list>

@@ -7,7 +7,6 @@
 
 // IWYU likes to recommend adding term.h when we want ncurses.h.
 // IWYU pragma: no_include term.h
-#include <assert.h>  // IWYU pragma: keep
 #include <dirent.h>  // IWYU pragma: keep
 #include <errno.h>   // IWYU pragma: keep
 #include <fcntl.h>   // IWYU pragma: keep

@@ -3,6 +3,7 @@
 #define INPUT_COMMON_H
 
 #include <stddef.h>
+
 #include <functional>
 
 #include "common.h"

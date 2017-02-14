@@ -4,7 +4,6 @@
 // that are somehow related to parsing the code.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <wchar.h>
@@ -300,9 +299,7 @@ static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const 
     if (a) *a = begin;
     if (b) *b = end;
     buffcpy = wcsndup(begin, end - begin);
-    if (!buffcpy) {
-        DIE_MEM();
-    }
+    assert(buffcpy != NULL);
 
     tokenizer_t tok(buffcpy, TOK_ACCEPT_UNFINISHED);
     tok_t token;
@@ -659,8 +656,9 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
     // were a case item list.
     parse_node_tree_t tree;
-    parse_tree_from_string(src, parse_flag_continue_after_error | parse_flag_include_comments |
-                                    parse_flag_accept_incomplete_tokens,
+    parse_tree_from_string(src,
+                           parse_flag_continue_after_error | parse_flag_include_comments |
+                               parse_flag_accept_incomplete_tokens,
                            &tree, NULL /* errors */);
 
     // Start indenting at the first node. If we have a parse error, we'll have to start indenting

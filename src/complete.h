@@ -6,6 +6,7 @@
 #define FISH_COMPLETE_H
 
 #include <stdint.h>
+
 #include <vector>
 
 #include "common.h"

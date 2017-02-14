@@ -4,6 +4,7 @@
 #define FISH_INPUT_H
 
 #include <stddef.h>
+
 #include <vector>
 
 #include "common.h"

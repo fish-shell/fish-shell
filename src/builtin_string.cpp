@@ -5,7 +5,6 @@
 #ifdef _WIN32
 #define PCRE2_STATIC
 #endif
-#include <assert.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
@@ -370,9 +369,7 @@ struct compiled_regex_t {
         }
 
         match = pcre2_match_data_create_from_pattern(code, 0);
-        if (match == 0) {
-            DIE_MEM();
-        }
+        assert(match);
     }
 
     ~compiled_regex_t() {
@@ -705,9 +702,8 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
 
     bool done = false;
     while (!done) {
-        if (output == NULL) {
-            DIE_MEM();
-        }
+        assert(output);
+
         PCRE2_SIZE outlen = bufsize;
         pcre2_rc = pcre2_substitute(regex.code, PCRE2_SPTR(arg), arglen,
                                     0,  // start offset

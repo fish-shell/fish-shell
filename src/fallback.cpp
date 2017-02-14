@@ -216,9 +216,9 @@ wchar_t *wcsndup(const wchar_t *in, size_t c) {
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
-    register wchar_t *d = dst;
-    register const wchar_t *s = src;
-    register size_t n = siz;
+    wchar_t *d = dst;
+    const wchar_t *s = src;
+    size_t n = siz;
 
     // Copy as many bytes as will fit.
     if (n != 0 && --n != 0) {

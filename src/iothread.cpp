@@ -40,8 +40,8 @@ struct spawn_request_t {
 
     spawn_request_t() {}
 
-    spawn_request_t(void_function_t f, void_function_t comp)
-        : handler(std::move(f)), completion(std::move(comp)) {}
+    spawn_request_t(void_function_t &&f, void_function_t &&comp)
+        : handler(f), completion(comp) {}
 
     // Move-only
     spawn_request_t &operator=(const spawn_request_t &) = delete;
@@ -54,7 +54,7 @@ struct main_thread_request_t {
     volatile bool done = false;
     void_function_t func;
 
-    main_thread_request_t(void_function_t f) : func(std::move(f)) {}
+    main_thread_request_t(void_function_t &&f) : func(f) {}
 
     // No moving OR copying
     // main_thread_requests are always stack allocated, and we deal in pointers to them
@@ -309,7 +309,7 @@ static void iothread_service_result_queue() {
 
     // Perform each completion in order
     while (!result_queue.empty()) {
-        spawn_request_t req = std::move(result_queue.front());
+        spawn_request_t req(std::move(result_queue.front()));
         result_queue.pop();
         // ensure we don't invoke empty functions, that raises an exception
         if (req.completion != nullptr) {

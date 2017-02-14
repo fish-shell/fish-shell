@@ -108,8 +108,8 @@ class lru_cache_t {
     // CRTP callback for when a node is evicted.
     // Clients can implement this
     void entry_was_evicted(wcstring key, CONTENTS value) {
-        USE(key);
-        USE(value);
+        UNUSED(key);
+        UNUSED(value);
     }
 
     // Implementation of merge step for mergesort

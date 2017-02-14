@@ -637,7 +637,7 @@ class owning_lock {
     DATA data;
 
    public:
-    owning_lock(DATA d) : data(std::move(d)) {}
+    owning_lock(DATA &&d) : data(std::move(d)) {}
     owning_lock() : data() {}
 
     acquired_lock<DATA> acquire() { return {lock, &data}; }
@@ -825,9 +825,6 @@ bool is_forked_child(void);
 void assert_is_not_forked_child(const char *who);
 #define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
 #define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
-
-/// Macro to help suppress potentially unused variable warnings.
-#define USE(var) (void)(var)
 
 extern "C" {
 __attribute__((noinline)) void debug_thread_error(void);

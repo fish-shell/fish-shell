@@ -1136,7 +1136,7 @@ class test_lru_t : public lru_cache_t<test_lru_t, int> {
 
     std::vector<value_type> evicted;
 
-    void entry_was_evicted(wcstring key, int val) { evicted.push_back({key, val}); }
+    void entry_was_evicted(const wcstring &key, int val) { evicted.push_back({key, val}); }
 
     std::vector<value_type> values() const {
         std::vector<value_type> result;

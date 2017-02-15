@@ -55,12 +55,13 @@ inline bool selection_direction_is_cardinal(selection_direction_t dir) {
             return false;
         }
     }
+
+    DIE("should never reach this statement");
 }
 
 /// Returns numer / denom, rounding up. As a "courtesy" 0/0 is 0.
 static size_t divide_round_up(size_t numer, size_t denom) {
     if (numer == 0) return 0;
-
     assert(denom > 0);
     bool has_rem = (numer % denom) != 0;
     return numer / denom + (has_rem ? 1 : 0);
@@ -449,7 +450,6 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         print = true;
     } else {
         // Compute total preferred width, plus spacing
-        assert(cols > 0);
         size_t total_width_needed = std::accumulate(width_by_column, width_by_column + cols, 0);
         total_width_needed += (cols - 1) * PAGER_SPACER_STRING_WIDTH;
         print = (total_width_needed <= term_width);
@@ -508,24 +508,24 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         print_max(progress_text, spec, term_width, true /* has_more */, &line);
     }
 
-    if (search_field_shown) {
-        // Add the search field.
-        wcstring search_field_text = search_field_line.text;
-        // Append spaces to make it at least the required width.
-        if (search_field_text.size() < PAGER_SEARCH_FIELD_WIDTH) {
-            search_field_text.append(PAGER_SEARCH_FIELD_WIDTH - search_field_text.size(), L' ');
-        }
-        line_t *search_field = &rendering->screen_data.insert_line_at_index(0);
-
-        // We limit the width to term_width - 1.
-        size_t search_field_remaining = term_width - 1;
-        search_field_remaining -= print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal,
-                                            search_field_remaining, false, search_field);
-
-        search_field_remaining -= print_max(search_field_text, highlight_modifier_force_underline,
-                                            search_field_remaining, false, search_field);
+    if (!search_field_shown) {
+        return true;
     }
 
+    // Add the search field.
+    wcstring search_field_text = search_field_line.text;
+    // Append spaces to make it at least the required width.
+    if (search_field_text.size() < PAGER_SEARCH_FIELD_WIDTH) {
+        search_field_text.append(PAGER_SEARCH_FIELD_WIDTH - search_field_text.size(), L' ');
+    }
+    line_t *search_field = &rendering->screen_data.insert_line_at_index(0);
+
+    // We limit the width to term_width - 1.
+    size_t search_field_remaining = term_width - 1;
+    search_field_remaining -= print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal,
+                                        search_field_remaining, false, search_field);
+    search_field_remaining -= print_max(search_field_text, highlight_modifier_force_underline,
+                                        search_field_remaining, false, search_field);
     return true;
 }
 

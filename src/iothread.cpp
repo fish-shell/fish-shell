@@ -1,6 +1,5 @@
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
 #include <limits.h>
 #include <pthread.h>
 #include <signal.h>
@@ -87,11 +86,11 @@ static void iothread_init(void) {
         inited = true;
 
         // Initialize some locks.
-        VOMIT_ON_FAILURE(pthread_cond_init(&s_main_thread_performer_cond, NULL));
+        DIE_ON_FAILURE(pthread_cond_init(&s_main_thread_performer_cond, NULL));
 
         // Initialize the completion pipes.
         int pipes[2] = {0, 0};
-        VOMIT_ON_FAILURE(pipe(pipes));
+        assert_with_errno(pipe(pipes) != -1);
         s_read_pipe = pipes[0];
         s_write_pipe = pipes[1];
 
@@ -133,7 +132,7 @@ static void *iothread_worker(void *unused) {
             // Enqueue the result, and tell the main thread about it.
             enqueue_thread_result(std::move(req));
             const char wakeup_byte = IO_SERVICE_RESULT_QUEUE;
-            VOMIT_ON_FAILURE(!write_loop(s_write_pipe, &wakeup_byte, sizeof wakeup_byte));
+            assert_with_errno(write_loop(s_write_pipe, &wakeup_byte, sizeof wakeup_byte) != -1);
         }
     }
 
@@ -159,7 +158,7 @@ static void iothread_spawn() {
     // it.
     sigset_t new_set, saved_set;
     sigfillset(&new_set);
-    VOMIT_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &new_set, &saved_set));
+    DIE_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &new_set, &saved_set));
 
     // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
     // unlikely that they are all on the verge of exiting, so one is likely to be ready to handle
@@ -168,10 +167,10 @@ static void iothread_spawn() {
     pthread_create(&thread, NULL, iothread_worker, NULL);
 
     // We will never join this thread.
-    VOMIT_ON_FAILURE(pthread_detach(thread));
+    DIE_ON_FAILURE(pthread_detach(thread));
     debug(5, "pthread %p spawned\n", (void *)(intptr_t)thread);
     // Restore our sigmask.
-    VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, NULL));
+    DIE_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, NULL));
 }
 
 int iothread_perform_impl(void_function_t &&func, void_function_t &&completion) {
@@ -210,7 +209,7 @@ void iothread_service_completion(void) {
     ASSERT_IS_MAIN_THREAD();
     char wakeup_byte;
 
-    VOMIT_ON_FAILURE(1 != read_loop(iothread_port(), &wakeup_byte, sizeof wakeup_byte));
+    assert_with_errno(read_loop(iothread_port(), &wakeup_byte, sizeof wakeup_byte) == 1);
     if (wakeup_byte == IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE) {
         iothread_service_main_thread_requests();
     } else if (wakeup_byte == IO_SERVICE_RESULT_QUEUE) {
@@ -296,7 +295,7 @@ static void iothread_service_main_thread_requests(void) {
         // Because the waiting thread performs step 1 under the lock, if we take the lock, we avoid
         // posting before the waiting thread is waiting.
         scoped_lock broadcast_lock(s_main_thread_performer_lock);
-        VOMIT_ON_FAILURE(pthread_cond_broadcast(&s_main_thread_performer_cond));
+        DIE_ON_FAILURE(pthread_cond_broadcast(&s_main_thread_performer_cond));
     }
 }
 
@@ -335,14 +334,14 @@ void iothread_perform_on_main(void_function_t &&func) {
 
     // Tell the pipe.
     const char wakeup_byte = IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE;
-    VOMIT_ON_FAILURE(!write_loop(s_write_pipe, &wakeup_byte, sizeof wakeup_byte));
+    assert_with_errno(write_loop(s_write_pipe, &wakeup_byte, sizeof wakeup_byte) != -1);
 
     // Wait on the condition, until we're done.
     scoped_lock perform_lock(s_main_thread_performer_lock);
     while (!req.done) {
         // It would be nice to support checking for cancellation here, but the clients need a
         // deterministic way to clean up to avoid leaks
-        VOMIT_ON_FAILURE(
+        DIE_ON_FAILURE(
             pthread_cond_wait(&s_main_thread_performer_cond, &s_main_thread_performer_lock));
     }
 

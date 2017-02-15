@@ -146,28 +146,6 @@ void __attribute__((noinline)) debug(int level, const char *msg, ...)
     __attribute__((format(printf, 2, 3)));
 void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...);
 
-/// Helper macro for errors.
-#define VOMIT_ON_FAILURE(a)         \
-    do {                            \
-        if (0 != (a)) {             \
-            VOMIT_ABORT(errno, #a); \
-        }                           \
-    } while (0)
-#define VOMIT_ON_FAILURE_NO_ERRNO(a) \
-    do {                             \
-        int err = (a);               \
-        if (0 != err) {              \
-            VOMIT_ABORT(err, #a);    \
-        }                            \
-    } while (0)
-#define VOMIT_ABORT(err, str)                                                               \
-    do {                                                                                    \
-        int code = (err);                                                                   \
-        debug(0, "%s failed on line %d in file %s: %d (%s)", str, __LINE__, __FILE__, code, \
-              strerror(code));                                                              \
-        abort();                                                                            \
-    } while (0)
-
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 [[noreturn]] void exit_without_destructors(int code);
 
@@ -234,9 +212,21 @@ extern bool has_working_tty_timestamps;
 #undef assert
 #undef __assert
 //#define assert(e)  do {(void)((e) ? ((void)0) : __assert(#e, __FILE__, __LINE__)); } while(false)
-#define assert(e) (e) ? ((void)0) : __assert(#e, __FILE__, __LINE__)
-#define DIE(msg) __assert(msg, __FILE__, __LINE__)
-[[noreturn]] void __assert(const char *msg, const char *file, size_t line);
+#define assert(e) (e) ? ((void)0) : __assert(#e, __FILE__, __LINE__, 0)
+#define assert_with_errno(e) (e) ? ((void)0) : __assert(#e, __FILE__, __LINE__, errno)
+#define DIE(msg) __assert(msg, __FILE__, __LINE__, 0)
+#define DIE_WITH_ERRNO(msg) __assert(msg, __FILE__, __LINE__, errno)
+/// This macro is meant to be used with functions that return zero on success otherwise return an
+/// errno value. Most notably the pthread family of functions which we never expect to fail.
+#define DIE_ON_FAILURE(e)                             \
+    do {                                              \
+        int status = e;                               \
+        if (status != 0) {                            \
+            __assert(#e, __FILE__, __LINE__, status); \
+        }                                             \
+    } while (0)
+
+[[noreturn]] void __assert(const char *msg, const char *file, size_t line, int error);
 
 /// Check if signals are blocked. If so, print an error message and return from the function
 /// performing this check.
@@ -513,9 +503,9 @@ void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr,
 class mutex_lock_t {
    public:
     pthread_mutex_t mutex;
-    mutex_lock_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_init(&mutex, NULL)); }
+    mutex_lock_t() { DIE_ON_FAILURE(pthread_mutex_init(&mutex, NULL)); }
 
-    ~mutex_lock_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_destroy(&mutex)); }
+    ~mutex_lock_t() { DIE_ON_FAILURE(pthread_mutex_destroy(&mutex)); }
 };
 
 // Basic scoped lock class.
@@ -544,9 +534,9 @@ class scoped_lock {
 class rwlock_t {
    public:
     pthread_rwlock_t rwlock;
-    rwlock_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_init(&rwlock, NULL)); }
+    rwlock_t() { DIE_ON_FAILURE(pthread_rwlock_init(&rwlock, NULL)); }
 
-    ~rwlock_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_destroy(&rwlock)); }
+    ~rwlock_t() { DIE_ON_FAILURE(pthread_rwlock_destroy(&rwlock)); }
 
     rwlock_t &operator=(const rwlock_t &) = delete;
     rwlock_t(const rwlock_t &) = delete;

@@ -544,16 +544,19 @@ ssize_t read_loop(int fd, void *buff, size_t count) {
     return result;
 }
 
+/// Hack to not print error messages in the tests. Do not call this from functions in this module
+/// like `debug()`. It is only intended to supress diagnostic noise from testing things like the
+/// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
 bool should_suppress_stderr_for_tests() {
-    // Hack to not print error messages in the tests.
     return program_name && !wcscmp(program_name, TESTS_PROGRAM_NAME);
 }
 
-static bool should_debug(int level) {
-    if (level > debug_level) return false;
-    if (should_suppress_stderr_for_tests()) return false;
-    return true;
-}
+/// Return true if we should emit a `debug()` message. This used to call
+/// `should_suppress_stderr_for_tests()`. It no longer does so because it can suppress legitimate
+/// errors we want to see if things go wrong. Too, calling that function is no longer necessary, if
+/// it ever was, to suppress unwanted diagnostic output that might confuse people running `make
+/// test`.
+static bool should_debug(int level) { return level <= debug_level; }
 
 static void debug_shared(const wchar_t level, const wcstring &msg) {
     pid_t current_pid = getpid();
@@ -1708,7 +1711,7 @@ void format_size_safe(char buff[128], unsigned long long sz) {
 /// the gettimeofday function and will have the same precision as that function.
 double timef() {
     struct timeval tv;
-    VOMIT_ON_FAILURE(gettimeofday(&tv, 0));
+    assert_with_errno(gettimeofday(&tv, 0) != -1);
     // return (double)tv.tv_sec + 0.000001 * tv.tv_usec;
     return (double)tv.tv_sec + 1e-6 * tv.tv_usec;
 }
@@ -1832,14 +1835,14 @@ void assert_is_locked(void *vmutex, const char *who, const char *caller) {
 void scoped_lock::lock(void) {
     assert(!locked);  //!OCLINT(multiple unary operator)
     ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_lock(lock_obj));
+    DIE_ON_FAILURE(pthread_mutex_lock(lock_obj));
     locked = true;
 }
 
 void scoped_lock::unlock(void) {
     assert(locked);
     ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_unlock(lock_obj));
+    DIE_ON_FAILURE(pthread_mutex_unlock(lock_obj));
     locked = false;
 }
 
@@ -1856,37 +1859,37 @@ scoped_lock::~scoped_lock() {
 void scoped_rwlock::lock(void) {
     assert(!(locked || locked_shared));  //!OCLINT(multiple unary operator)
     ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_rdlock(rwlock_obj));
+    DIE_ON_FAILURE(pthread_rwlock_rdlock(rwlock_obj));
     locked = true;
 }
 
 void scoped_rwlock::unlock(void) {
     assert(locked);
     ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
+    DIE_ON_FAILURE(pthread_rwlock_unlock(rwlock_obj));
     locked = false;
 }
 
 void scoped_rwlock::lock_shared(void) {
     assert(!(locked || locked_shared));  //!OCLINT(multiple unary operator)
     ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_wrlock(rwlock_obj));
+    DIE_ON_FAILURE(pthread_rwlock_wrlock(rwlock_obj));
     locked_shared = true;
 }
 
 void scoped_rwlock::unlock_shared(void) {
     assert(locked_shared);
     ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
+    DIE_ON_FAILURE(pthread_rwlock_unlock(rwlock_obj));
     locked_shared = false;
 }
 
 void scoped_rwlock::upgrade(void) {
     assert(locked_shared);
     ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
+    DIE_ON_FAILURE(pthread_rwlock_unlock(rwlock_obj));
     locked = false;
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_wrlock(rwlock_obj));
+    DIE_ON_FAILURE(pthread_rwlock_wrlock(rwlock_obj));
     locked_shared = true;
 }
 
@@ -2031,8 +2034,13 @@ void redirect_tty_output() {
 }
 
 /// Display a failed assertion message, dump a stack trace if possible, then die.
-[[noreturn]] void __assert(const char *msg, const char *file, size_t line) {
-    debug(0, L"%s:%zu: failed assertion: %s", file, line, msg);
+[[noreturn]] void __assert(const char *msg, const char *file, size_t line, int error) {
+    if (error) {
+        debug(0, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
+              strerror(error));
+    } else {
+        debug(0, L"%s:%zu: failed assertion: %s", file, line, msg);
+    }
     show_stackframe(L'E', 99, 1);
     abort();
 }

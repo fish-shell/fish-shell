@@ -6,7 +6,6 @@
 
 // IWYU pragma: no_include <type_traits>
 #include <dirent.h>
-#include <errno.h>
 #include <pthread.h>
 #include <stddef.h>
 #include <wchar.h>
@@ -113,10 +112,10 @@ void function_init() {
     // non-recursive lock but I haven't fully investigated all the call paths (for autoloading
     // functions, etc.).
     pthread_mutexattr_t a;
-    VOMIT_ON_FAILURE(pthread_mutexattr_init(&a));
-    VOMIT_ON_FAILURE(pthread_mutexattr_settype(&a, PTHREAD_MUTEX_RECURSIVE));
-    VOMIT_ON_FAILURE(pthread_mutex_init(&functions_lock, &a));
-    VOMIT_ON_FAILURE(pthread_mutexattr_destroy(&a));
+    DIE_ON_FAILURE(pthread_mutexattr_init(&a));
+    DIE_ON_FAILURE(pthread_mutexattr_settype(&a, PTHREAD_MUTEX_RECURSIVE));
+    DIE_ON_FAILURE(pthread_mutex_init(&functions_lock, &a));
+    DIE_ON_FAILURE(pthread_mutexattr_destroy(&a));
 }
 
 static std::map<wcstring, env_var_t> snapshot_vars(const wcstring_list_t &vars) {

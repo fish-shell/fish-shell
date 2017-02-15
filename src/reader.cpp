@@ -746,7 +746,7 @@ static void exec_prompt() {
 }
 
 void reader_init() {
-    VOMIT_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
+    DIE_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
 
     // Ensure this var is present even before an interactive command is run so that if it is used
     // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
@@ -1133,7 +1133,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
             return nothing;
         }
 
-        VOMIT_ON_FAILURE(
+        DIE_ON_FAILURE(
             pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
 
         // Let's make sure we aren't using the empty string.
@@ -2113,7 +2113,7 @@ static std::function<highlight_result_t(void)> get_highlight_performer(const wcs
         if (text.empty()) {
             return {};
         }
-        VOMIT_ON_FAILURE(
+        DIE_ON_FAILURE(
             pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
         std::vector<highlight_spec_t> colors(text.size(), 0);
         highlight_func(text, colors, match_highlight_pos, NULL /* error */, vars);

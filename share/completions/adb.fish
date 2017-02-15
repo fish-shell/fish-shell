@@ -2,7 +2,7 @@
 
 function __fish_adb_no_subcommand --description 'Test if adb has yet to be given the subcommand'
 	for i in (commandline -opc)
-		if contains -- $i connect disconnect devices push pull sync shell emu logcat install uninstall jdwp forward bugreport backup restore version help wait-for-device start-server kill-server remount reboot get-state get-serialno get-devpath status-window root usb tcpip ppp
+		if contains -- $i connect disconnect devices push pull sync shell emu logcat install uninstall jdwp forward bugreport backup restore version help wait-for-device start-server kill-server remount reboot get-state get-serialno get-devpath status-window root usb tcpip ppp sideload reconnect
 			return 1
 		end
 	end
@@ -52,7 +52,7 @@ function __fish_adb_run_command --description 'Runs adb with any -s parameters a
 end
 
 function __fish_adb_list_packages
-	__fish_adb_run_command pm list packages | sed s/package://
+	__fish_adb_run_command pm list packages ^/dev/null | sed s/package://
 end
 
 
@@ -98,7 +98,8 @@ complete -f -n '__fish_adb_no_subcommand' -c adb -a 'root' -d 'Restart the adbd 
 complete -f -n '__fish_adb_no_subcommand' -c adb -a 'usb' -d 'Restart the adbd daemon listening on USB'
 complete -f -n '__fish_adb_no_subcommand' -c adb -a 'tcpip' -d 'Restart the adbd daemon listening on TCP'
 complete -f -n '__fish_adb_no_subcommand' -c adb -a 'ppp' -d 'Run PPP over USB'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a 'sideload' -d 'Install zip-file on device in sideload mode'
+complete -f -n '__fish_adb_no_subcommand' -c adb -a 'sideload' -d 'Sideloads the given package'
+complete -f -n '__fish_adb_no_subcommand' -c adb -a 'reconnect' -d 'Kick current connection from host side and make it reconnect.'
 
 # install options
 complete -n '__fish_seen_subcommand_from install' -c adb -s l -d 'Forward-lock the app'
@@ -139,3 +140,9 @@ complete -n '__fish_seen_subcommand_from forward' -c adb -l 'list' -d 'List all 
 complete -n '__fish_seen_subcommand_from forward' -c adb -l 'no-rebind' -d 'Fails the forward if local is already forwarded'
 complete -n '__fish_seen_subcommand_from forward' -c adb -l 'remove' -d 'Remove a specific forward socket connection'
 complete -n '__fish_seen_subcommand_from forward' -c adb -l 'remove-all' -d 'Remove all forward socket connections'
+
+# sideload
+complete -n '__fish_seen_subcommand_from sideload' -c adb -xa '(__fish_complete_suffix .zip)'
+
+# reconnect
+complete -n '__fish_seen_subcommand_from reconnect' -c adb -x -a 'device' -d 'Kick current connection from device side and make it reconnect.'

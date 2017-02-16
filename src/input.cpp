@@ -2,19 +2,9 @@
 #include "config.h"
 
 #include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <termios.h>
-#include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
-#if HAVE_NCURSES_H
-#include <ncurses.h>
-#elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h>
-#else
-#include <curses.h>
-#endif
 #if HAVE_TERM_H
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
@@ -33,14 +23,12 @@
 #include "input.h"
 #include "input_common.h"
 #include "io.h"
-#include "output.h"
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "signal.h"  // IWYU pragma: keep
 #include "wutil.h"   // IWYU pragma: keep
 
-#define DEFAULT_TERM L"ansi"
 #define MAX_INPUT_FUNCTION_ARGS 20
 
 /// Struct representing a keybinding. Returned by input_get_mappings.
@@ -201,11 +189,11 @@ static std::vector<terminfo_mapping_t> terminfo_mappings;
 /// List of all terminfo mappings.
 static std::vector<terminfo_mapping_t> mappings;
 
-/// Set to one when the input subsytem has been initialized.
-static bool is_init = false;
+/// Set to true when the input subsytem has been initialized.
+bool input_initialized = false;
 
 /// Initialize terminfo.
-static void input_terminfo_init();
+static void init_input_terminfo();
 
 static wchar_t input_function_args[MAX_INPUT_FUNCTION_ARGS];
 static bool input_function_status;
@@ -300,87 +288,11 @@ static int interrupt_handler() {
     return R_NULL;
 }
 
-void update_fish_color_support(void) {
-    // Detect or infer term256 support. If fish_term256 is set, we respect it;
-    // otherwise infer it from the TERM variable or use terminfo.
-    env_var_t fish_term256 = env_get_string(L"fish_term256");
-    env_var_t term = env_get_string(L"TERM");
-    bool support_term256 = false;  // default to no support
-    if (!fish_term256.missing_or_empty()) {
-        support_term256 = from_string<bool>(fish_term256);
-        debug(2, L"256 color support determined by 'fish_term256'");
-    } else if (term.find(L"256color") != wcstring::npos) {
-        // TERM=*256color*: Explicitly supported.
-        support_term256 = true;
-        debug(2, L"256 color support enabled for '256color' in TERM");
-    } else if (term.find(L"xterm") != wcstring::npos) {
-        // Assume that all xterms are 256, except for OS X SnowLeopard
-        const env_var_t prog = env_get_string(L"TERM_PROGRAM");
-        const env_var_t progver = env_get_string(L"TERM_PROGRAM_VERSION");
-        if (prog == L"Apple_Terminal" && !progver.missing_or_empty()) {
-            // OS X Lion is version 300+, it has 256 color support
-            if (strtod(wcs2str(progver), NULL) > 300) {
-                support_term256 = true;
-                debug(2, L"256 color support enabled for TERM=xterm + modern Terminal.app");
-            }
-        } else {
-            support_term256 = true;
-            debug(2, L"256 color support enabled for TERM=xterm");
-        }
-    } else if (cur_term != NULL) {
-        // See if terminfo happens to identify 256 colors
-        support_term256 = (max_colors >= 256);
-        debug(2, L"256 color support: using %d colors per terminfo", max_colors);
-    } else {
-        debug(2, L"256 color support not enabled (yet)");
-    }
-
-    env_var_t fish_term24bit = env_get_string(L"fish_term24bit");
-    bool support_term24bit;
-    if (!fish_term24bit.missing_or_empty()) {
-        support_term24bit = from_string<bool>(fish_term24bit);
-        debug(2, L"'fish_term24bit' preference: 24-bit color %s",
-              support_term24bit ? L"enabled" : L"disabled");
-    } else {
-        // We don't attempt to infer term24 bit support yet.
-        support_term24bit = false;
-    }
-
-    color_support_t support = (support_term256 ? color_support_term256 : 0) |
-                              (support_term24bit ? color_support_term24bit : 0);
-    output_set_color_support(support);
-}
-
-int input_init() {
-    if (is_init) return 1;
-    is_init = true;
+/// Set up arrays used by readch to detect escape sequences for special keys and perform related
+/// initializations for our input subsystem.
+void init_input() {
     input_common_init(&interrupt_handler);
-
-    int err_ret;
-    if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
-        debug(0, _(L"Could not set up terminal"));
-        env_var_t term = env_get_string(L"TERM");
-        if (term.missing_or_empty()) {
-            debug(0, _(L"TERM environment variable not set"));
-        } else {
-            debug(0, _(L"TERM environment variable set to '%ls'"), term.c_str());
-            debug(0, _(L"Check that this terminal type is supported on this system"));
-        }
-
-        env_set(L"TERM", DEFAULT_TERM, ENV_GLOBAL | ENV_EXPORT);
-        if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
-            debug(0,
-                  _(L"Could not set up terminal using the fallback terminal type '%ls' - exiting"),
-                  DEFAULT_TERM);
-            exit_without_destructors(1);
-        } else {
-            debug(0, _(L"Using fallback terminal type '%ls'"), DEFAULT_TERM);
-        }
-        fputwc(L'\n', stderr);
-    }
-
-    input_terminfo_init();
-    update_fish_color_support();
+    init_input_terminfo();
 
     // If we have no keybindings, add a few simple defaults.
     if (mapping_list.empty()) {
@@ -393,17 +305,14 @@ int input_init() {
         input_mapping_add(L"\x5", L"bind");
     }
 
-    return 1;
+    input_initialized = true;
+    return;
 }
 
 void input_destroy() {
-    if (!is_init) return;
-    is_init = false;
+    if (!input_initialized) return;
+    input_initialized = false;
     input_common_destroy();
-
-    if (del_curterm(cur_term) == ERR) {
-        debug(0, _(L"Error while closing terminfo"));
-    }
 }
 
 void input_function_push_arg(wchar_t arg) {
@@ -678,8 +587,10 @@ bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_
     return result;
 }
 
-/// Add all terminfo mappings.
-static void input_terminfo_init() {
+/// Add all terminfo mappings and cache other terminfo facts we care about.
+static void init_input_terminfo() {
+    assert(curses_initialized);
+    if (!cur_term) return;  // setupterm() failed so we can't referency any key definitions
     const terminfo_mapping_t tinfos[] = {
         TERMINFO_ADD(key_a1),
         TERMINFO_ADD(key_a3),
@@ -843,12 +754,11 @@ static void input_terminfo_init() {
 
 bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
     ASSERT_IS_MAIN_THREAD();
+    assert(input_initialized);
+    CHECK(name, 0);
 
     const char *res = 0;
     int err = ENOENT;
-
-    CHECK(name, 0);
-    input_init();
 
     for (size_t i = 0; i < terminfo_mappings.size(); i++) {
         const terminfo_mapping_t &m = terminfo_mappings.at(i);
@@ -869,7 +779,7 @@ bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
 }
 
 bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
-    input_init();
+    assert(input_initialized);
 
     for (size_t i = 0; i < terminfo_mappings.size(); i++) {
         terminfo_mapping_t &m = terminfo_mappings.at(i);
@@ -889,10 +799,9 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
 }
 
 wcstring_list_t input_terminfo_get_names(bool skip_null) {
+    assert(input_initialized);
     wcstring_list_t result;
     result.reserve(terminfo_mappings.size());
-
-    input_init();
 
     for (size_t i = 0; i < terminfo_mappings.size(); i++) {
         terminfo_mapping_t &m = terminfo_mappings.at(i);

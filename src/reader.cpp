@@ -1539,10 +1539,10 @@ static bool check_for_orphaned_process(unsigned long loop_count, pid_t shell_pgi
 
 /// Initialize data for interactive use.
 static void reader_interactive_init() {
+    assert(input_initialized);
     // See if we are running interactively.
     pid_t shell_pgid;
 
-    input_init();
     kill_init();
     shell_pgid = getpgrp();
 

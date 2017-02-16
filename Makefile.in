@@ -972,7 +972,7 @@ obj/builtin_set.o: config.h src/builtin.h src/common.h src/fallback.h
 obj/builtin_set.o: src/signal.h src/env.h src/expand.h src/parse_constants.h
 obj/builtin_set.o: src/io.h src/proc.h src/parse_tree.h src/tokenizer.h
 obj/builtin_set.o: src/wgetopt.h src/wutil.h
-obj/builtin_set_color.o: config.h src/builtin.h src/common.h src/fallback.h
+obj/builtin_set_color.o: config.h src/builtin.h src/common.h src/env.h src/fallback.h
 obj/builtin_set_color.o: src/signal.h src/color.h src/io.h src/output.h
 obj/builtin_set_color.o: src/proc.h src/parse_tree.h src/parse_constants.h
 obj/builtin_set_color.o: src/tokenizer.h src/wgetopt.h src/wutil.h

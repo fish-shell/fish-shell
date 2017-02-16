@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <pwd.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -14,6 +15,13 @@
 #include <unistd.h>
 #include <wchar.h>
 
+#if HAVE_NCURSES_H
+#include <ncurses.h>
+#elif HAVE_NCURSES_CURSES_H
+#include <ncurses/curses.h>
+#else
+#include <curses.h>
+#endif
 #if HAVE_TERM_H
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
@@ -37,6 +45,7 @@
 #include "history.h"
 #include "input.h"
 #include "input_common.h"
+#include "output.h"
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
@@ -46,6 +55,8 @@
 
 /// Value denoting a null string.
 #define ENV_NULL L"\x1d"
+#define DEFAULT_TERM1 "ansi"
+#define DEFAULT_TERM2 "dumb"
 
 /// Some configuration path environment variables.
 #define FISH_DATADIR_VAR L"__fish_datadir"
@@ -62,19 +73,33 @@ extern char **environ;
 size_t read_byte_limit = READ_BYTE_LIMIT;
 
 bool g_use_posix_spawn = false;  // will usually be set to true
+bool curses_initialized = false;
 
 /// Does the terminal have the "eat_newline_glitch".
 bool term_has_xn = false;
 
-/// List of all locale environment variable names.
+/// This is used to ensure that we don't perform any callbacks from `react_to_variable_change()`
+/// when we're importing environment variables in `env_init()`. That's because we don't have any
+/// control over the order in which the vars are imported and some of them work in combination.
+/// For example, `TERMINFO_DIRS` and `TERM`. If the user has set `TERM` to a custom value that is
+/// found in `TERMINFO_DIRS` we don't to call `handle_curses()` before we've imported the latter.
+static bool env_initialized = false;
+
+/// List of all locale environment variable names that might trigger (re)initializing the locale
+/// subsystem.
 static const wchar_t *const locale_variable[] = {
     L"LANG",     L"LANGUAGE",          L"LC_ALL",         L"LC_ADDRESS",   L"LC_COLLATE",
     L"LC_CTYPE", L"LC_IDENTIFICATION", L"LC_MEASUREMENT", L"LC_MESSAGES",  L"LC_MONETARY",
     L"LC_NAME",  L"LC_NUMERIC",        L"LC_PAPER",       L"LC_TELEPHONE", L"LC_TIME",
     NULL};
 
-/// List of all curses environment variable names.
+/// List of all curses environment variable names that might trigger (re)initializing the curses
+/// subsystem.
 static const wchar_t *const curses_variable[] = {L"TERM", L"TERMINFO", L"TERMINFO_DIRS", NULL};
+
+// Some forward declarations to make it easy to logically group the code.
+static void init_locale();
+static void init_curses();
 
 // Struct representing one level in the function variable stack.
 // Only our variable stack should create and destroy these
@@ -105,7 +130,6 @@ class variable_entry_t {
 static pthread_mutex_t env_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static bool local_scope_exports(const env_node_t *n);
-static void handle_locale(const wchar_t *env_var_name);
 
 // A class wrapping up a variable stack
 // Currently there is only one variable stack in fish,
@@ -136,6 +160,8 @@ struct var_stack_t {
     // Pops the top node if it's not global
     void pop();
 
+    bool var_changed(wchar_t const *const vars[]);
+
     // Returns the next scope to search for a given node, respecting the new_scope lag
     // Returns NULL if we're done
     env_node_t *next_scope_to_search(env_node_t *node);
@@ -156,23 +182,24 @@ void var_stack_t::push(bool new_scope) {
     }
 }
 
+/// Return true if one of the vars in the passed list was changed in the current var scope.
+bool var_stack_t::var_changed(wchar_t const *const vars[]) {
+    for (auto v = vars; *v; v++) {
+        if (top->env.find(*v) != top->env.end()) return true;
+    }
+    return false;
+}
+
 void var_stack_t::pop() {
-    // Don't pop the global
-    if (this->top.get() == this->global_env) {
+    // Don't pop the top-most, global, level.
+    if (top.get() == this->global_env) {
         debug(0, _(L"Tried to pop empty environment stack."));
         sanity_lose();
         return;
     }
 
-    const wchar_t *locale_changed = NULL;
-
-    for (int i = 0; locale_variable[i]; i++) {
-        var_table_t::iterator result = top->env.find(locale_variable[i]);
-        if (result != top->env.end()) {
-            locale_changed = locale_variable[i];
-            break;
-        }
-    }
+    bool locale_changed = this->var_changed(locale_variable);
+    bool curses_changed = this->var_changed(curses_variable);
 
     if (top->new_scope) {  //!OCLINT(collapsible if statements)
         if (top->exportv || local_scope_exports(top->next.get())) {
@@ -196,8 +223,9 @@ void var_stack_t::pop() {
             break;
         }
     }
-    // TODO: Move this to something general.
-    if (locale_changed) handle_locale(locale_changed);
+
+    if (locale_changed) init_locale();
+    if (curses_changed) init_curses();
 }
 
 const env_node_t *var_stack_t::next_scope_to_search(const env_node_t *node) const {
@@ -303,25 +331,27 @@ static bool var_is_locale(const wcstring &key) {
     return false;
 }
 
-/// Properly sets all locale information.
-static void handle_locale(const wchar_t *env_var_name) {
-    debug(2, L"handle_locale() called in response to '%ls' changing", env_var_name);
+/// Initialize the locale subsystem.
+static void init_locale() {
     // We have to make a copy because the subsequent setlocale() call to change the locale will
     // invalidate the pointer from the this setlocale() call.
     char *old_msg_locale = strdup(setlocale(LC_MESSAGES, NULL));
-    const env_var_t val = env_get_string(env_var_name, ENV_EXPORT);
-    const std::string &value = wcs2string(val);
-    const std::string &name = wcs2string(env_var_name);
-    debug(2, L"locale var %s='%s'", name.c_str(), value.c_str());
-    if (val.empty()) {
-        unsetenv(name.c_str());
-    } else {
-        setenv(name.c_str(), value.c_str(), 1);
+
+    for (const wchar_t *const *var_name = locale_variable; *var_name; var_name++) {
+        const env_var_t val = env_get_string(*var_name, ENV_EXPORT);
+        const std::string &name = wcs2string(*var_name);
+        const std::string &value = wcs2string(val);
+        debug(2, L"locale var %s='%s'", name.c_str(), value.c_str());
+        if (val.empty()) {
+            unsetenv(name.c_str());
+        } else {
+            setenv(name.c_str(), value.c_str(), 1);
+        }
     }
 
     char *locale = setlocale(LC_ALL, "");
     fish_setlocale();
-    debug(2, L"handle_locale() setlocale(): '%s'", locale);
+    debug(2, L"init_locale() setlocale(): '%s'", locale);
 
     const char *new_msg_locale = setlocale(LC_MESSAGES, NULL);
     debug(3, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
@@ -380,39 +410,130 @@ static bool does_term_support_setting_title() {
     return true;
 }
 
-/// Handle changes to the TERM env var that do not involves the curses subsystem.
-static void handle_term() { can_set_term_title = does_term_support_setting_title(); }
-
-/// Push all curses/terminfo env vars into the global environment where they can be found by those
-/// libraries.
-static void handle_curses(const wchar_t *env_var_name) {
-    debug(2, L"handle_curses() called in response to '%ls' changing", env_var_name);
-    const env_var_t val = env_get_string(env_var_name, ENV_EXPORT);
-    const std::string &name = wcs2string(env_var_name);
-    const std::string &value = wcs2string(val);
-    debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
-    if (val.empty()) {
-        unsetenv(name.c_str());
+/// Updates our idea of whether we support term256 and term24bit (see issue #10222).
+static void update_fish_color_support() {
+    // Detect or infer term256 support. If fish_term256 is set, we respect it;
+    // otherwise infer it from the TERM variable or use terminfo.
+    env_var_t fish_term256 = env_get_string(L"fish_term256");
+    env_var_t term = env_get_string(L"TERM");
+    bool support_term256 = false;  // default to no support
+    if (!fish_term256.missing_or_empty()) {
+        support_term256 = from_string<bool>(fish_term256);
+        debug(2, L"256 color support determined by 'fish_term256'");
+    } else if (term.find(L"256color") != wcstring::npos) {
+        // TERM=*256color*: Explicitly supported.
+        support_term256 = true;
+        debug(2, L"256 color support enabled for '256color' in TERM");
+    } else if (term.find(L"xterm") != wcstring::npos) {
+        // Assume that all xterms are 256, except for OS X SnowLeopard
+        const env_var_t prog = env_get_string(L"TERM_PROGRAM");
+        const env_var_t progver = env_get_string(L"TERM_PROGRAM_VERSION");
+        if (prog == L"Apple_Terminal" && !progver.missing_or_empty()) {
+            // OS X Lion is version 300+, it has 256 color support
+            if (strtod(wcs2str(progver), NULL) > 300) {
+                support_term256 = true;
+                debug(2, L"256 color support enabled for TERM=xterm + modern Terminal.app");
+            }
+        } else {
+            support_term256 = true;
+            debug(2, L"256 color support enabled for TERM=xterm");
+        }
+    } else if (cur_term != NULL) {
+        // See if terminfo happens to identify 256 colors
+        support_term256 = (max_colors >= 256);
+        debug(2, L"256 color support: using %d colors per terminfo", max_colors);
     } else {
-        setenv(name.c_str(), value.c_str(), 1);
+        debug(2, L"256 color support not enabled (yet)");
     }
-    // TODO: Modify input_init() to allow calling it when the terminfo env vars are dynamically
-    // changed. At the present time it can be called just once. Also, we should really only do this
-    // if the TERM var is set.
-    // input_init();
-    term_has_xn = tgetflag((char *)"xn") == 1;  // does terminal have the eat_newline_glitch
 
+    env_var_t fish_term24bit = env_get_string(L"fish_term24bit");
+    bool support_term24bit;
+    if (!fish_term24bit.missing_or_empty()) {
+        support_term24bit = from_string<bool>(fish_term24bit);
+        debug(2, L"'fish_term24bit' preference: 24-bit color %s",
+              support_term24bit ? L"enabled" : L"disabled");
+    } else {
+        // We don't attempt to infer term24 bit support yet.
+        support_term24bit = false;
+    }
+
+    color_support_t support = (support_term256 ? color_support_term256 : 0) |
+                              (support_term24bit ? color_support_term24bit : 0);
+    output_set_color_support(support);
+}
+
+// Try to initialize the terminfo/curses subsystem using our fallback terminal name. Do not set
+// `TERM` to our fallback. We're only doing this in the hope of getting a minimally functional
+// shell. If we launch an external command that uses TERM it should get the same value we were
+// given, if any.
+static bool initialize_curses_using_fallback(const char *term) {
+    // If $TERM is already set to the fallback name we're about to use there isn't any point in
+    // seeing if the fallback name can be used.
+    const char *term_env = wcs2str(env_get_string(L"TERM"));
+    if (!strcmp(term_env, DEFAULT_TERM1) || !strcmp(term_env, DEFAULT_TERM2)) return false;
+
+    if (is_interactive_session) {
+        debug(1, _(L"Using fallback terminal type '%s'."), term);
+    }
+    int err_ret;
+    if (setupterm((char *)term, STDOUT_FILENO, &err_ret) == OK) return true;
+    if (is_interactive_session) {
+        debug(1, _(L"Could not set up terminal using the fallback terminal type '%s'."), term);
+    }
+    return false;
+}
+
+/// Initialize the curses subsystem.
+static void init_curses() {
+    for (const wchar_t *const *var_name = curses_variable; *var_name; var_name++) {
+        const env_var_t val = env_get_string(*var_name, ENV_EXPORT);
+        const std::string &name = wcs2string(*var_name);
+        const std::string &value = wcs2string(val);
+        debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
+        if (val.empty()) {
+            unsetenv(name.c_str());
+        } else {
+            setenv(name.c_str(), value.c_str(), 1);
+        }
+    }
+
+    int err_ret;
+    if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
+        env_var_t term = env_get_string(L"TERM");
+        if (is_interactive_session) {
+            debug(1, _(L"Could not set up terminal."));
+            if (term.missing_or_empty()) {
+                debug(1, _(L"TERM environment variable not set."));
+            } else {
+                debug(1, _(L"TERM environment variable set to '%ls'."), term.c_str());
+                debug(1, _(L"Check that this terminal type is supported on this system."));
+            }
+        }
+
+        if (!initialize_curses_using_fallback(DEFAULT_TERM1)) {
+            initialize_curses_using_fallback(DEFAULT_TERM2);
+        }
+    }
+
+    can_set_term_title = does_term_support_setting_title();
+    term_has_xn = tigetflag((char *)"xenl") == 1;  // does terminal have the eat_newline_glitch
+    update_fish_color_support();
     // Invalidate the cached escape sequences since they may no longer be valid.
     cached_esc_sequences.clear();
+    curses_initialized = true;
 }
 
 /// React to modifying the given variable.
 static void react_to_variable_change(const wcstring &key) {
+    // Don't do any of this until `env_init()` has run. We only want to do this in response to
+    // variables set by the user; e.g., in a script like *config.fish* or interactively.
+    if (!env_initialized) return;
+
     if (var_is_locale(key)) {
-        handle_locale(key.c_str());
+        init_locale();
     } else if (var_is_curses(key)) {
-        handle_curses(key.c_str());
-        if (key == L"TERM") handle_term();
+        init_curses();
+        init_input();
     } else if (var_is_timezone(key)) {
         handle_timezone(key.c_str());
     } else if (key == L"fish_term256" || key == L"fish_term24bit") {
@@ -468,7 +589,7 @@ static void setup_path() {
     }
 }
 
-/// Initialize the `COLUMNS` and `LINES` env vars if they don't already exist to reasonable
+/// If they don't already exist initialize the `COLUMNS` and `LINES` env vars to reasonable
 /// defaults. They will be updated later by the `get_current_winsize()` function if they need to be
 /// adjusted.
 static void env_set_termsize() {
@@ -533,6 +654,42 @@ static void setup_user(bool force) {
     }
 }
 
+/// Various things we need to initialize at run-time that don't really fit any of the other init
+/// routines.
+void misc_init() {
+    env_set_read_limit();
+
+    // If stdout is open on a tty ensure stdio is unbuffered. That's because those functions might
+    // be intermixed with `write()` calls and we need to ensure the writes are not reordered. See
+    // issue #3748.
+    if (isatty(STDOUT_FILENO)) {
+        fflush(stdout);
+        setvbuf(stdout, NULL, _IONBF, 0);
+    }
+
+#ifdef OS_IS_CYGWIN
+    // MS Windows tty devices do not currently have either a read or write timestamp. Those
+    // respective fields of `struct stat` are always the current time. Which means we can't
+    // use them. So we assume no external program has written to the terminal behind our
+    // back. This makes multiline promptusable. See issue #2859 and
+    // https://github.com/Microsoft/BashOnWindows/issues/545
+    has_working_tty_timestamps = false;
+#else
+    // This covers preview builds of Windows Subsystem for Linux (WSL).
+    FILE *procsyskosrel;
+    if ((procsyskosrel = wfopen(L"/proc/sys/kernel/osrelease", "r"))) {
+        wcstring osrelease;
+        fgetws2(&osrelease, procsyskosrel);
+        if (osrelease.find(L"3.4.0-Microsoft") != wcstring::npos) {
+            has_working_tty_timestamps = false;
+        }
+    }
+    if (procsyskosrel) {
+        fclose(procsyskosrel);
+    }
+#endif  // OS_IS_MS_WINDOWS
+}
+
 void env_init(const struct config_paths_t *paths /* or NULL */) {
     // These variables can not be altered directly by the user.
     const wchar_t *const ro_keys[] = {
@@ -584,6 +741,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         env_set(FISH_HELPDIR_VAR, paths->doc.c_str(), ENV_GLOBAL);
         env_set(FISH_BIN_DIR, paths->bin.c_str(), ENV_GLOBAL);
     }
+
+    init_locale();
+    init_curses();
+    init_input();
 
     // Set up the USER and PATH variables
     setup_path();
@@ -647,6 +808,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // scope will persist throughout the lifetime of the fish process, and it will ensure that `set
     // -l` commands run at the command-line don't affect the global scope.
     env_push(false);
+    env_initialized = true;
 }
 
 /// Search all visible scopes in order for the specified key. Return the first scope in which it was

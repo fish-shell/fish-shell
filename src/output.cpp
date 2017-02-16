@@ -96,6 +96,7 @@ static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
 }
 
 static bool write_foreground_color(unsigned char idx) {
+    if (!cur_term) return false;
     if (set_a_foreground && set_a_foreground[0]) {
         return write_color_escape(set_a_foreground, idx, true);
     } else if (set_foreground && set_foreground[0]) {
@@ -105,6 +106,7 @@ static bool write_foreground_color(unsigned char idx) {
 }
 
 static bool write_background_color(unsigned char idx) {
+    if (!cur_term) return false;
     if (set_a_background && set_a_background[0]) {
         return write_color_escape(set_a_background, idx, false);
     } else if (set_background && set_background[0]) {
@@ -115,6 +117,7 @@ static bool write_background_color(unsigned char idx) {
 
 // Exported for builtin_set_color's usage only.
 bool write_color(rgb_color_t color, bool is_fg) {
+    if (!cur_term) return false;
     bool supports_term24bit =
         static_cast<bool>(output_get_color_support() & color_support_term24bit);
     if (!supports_term24bit || !color.is_rgb()) {
@@ -168,6 +171,7 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
     debug(3, "set_color %ls : %ls\n", tmp.c_str(), tmp2.c_str());
 #endif
     ASSERT_IS_MAIN_THREAD();
+    if (!cur_term) return;
 
     const rgb_color_t normal = rgb_color_t::normal();
     static rgb_color_t last_color = rgb_color_t::normal();

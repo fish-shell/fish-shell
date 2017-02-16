@@ -12,6 +12,7 @@
 #include "common.h"
 
 extern size_t read_byte_limit;
+extern bool curses_initialized;
 
 // Flags that may be passed as the 'mode' in env_set / env_get_string.
 enum {
@@ -53,6 +54,10 @@ struct config_paths_t {
 
 /// Initialize environment variable data.
 void env_init(const struct config_paths_t *paths = NULL);
+
+/// Various things we need to initialize at run-time that don't really fit any of the other init
+/// routines.
+void misc_init();
 
 int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t mode);
 

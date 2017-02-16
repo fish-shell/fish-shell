@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <set>

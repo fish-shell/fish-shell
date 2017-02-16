@@ -220,7 +220,7 @@ static void handle_hup(int sig, siginfo_t *info, void *context) {
 }
 
 /// Handle sigterm. The only thing we do is restore the front process ID, then die.
-static void handle_term(int sig, siginfo_t *info, void *context) {
+static void handle_sigterm(int sig, siginfo_t *info, void *context) {
     UNUSED(sig);
     UNUSED(info);
     UNUSED(context);
@@ -286,7 +286,7 @@ static void set_interactive_handlers() {
     sigaction(SIGINT, &act, 0);
 
     // SIGTERM restores the terminal controlling process before dying.
-    act.sa_sigaction = &handle_term;
+    act.sa_sigaction = &handle_sigterm;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGTERM, &act, 0);
 

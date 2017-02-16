@@ -15,11 +15,12 @@
 
 wcstring describe_char(wint_t c);
 
-/// Initialize the terminal by calling setupterm, and set up arrays used by readch to detect escape
-/// sequences for special keys.
-///
-/// Before calling input_init, terminfo is not initialized and MUST not be used.
-int input_init();
+/// Set to true when the input subsytem has been initialized.
+extern bool input_initialized;
+
+/// Set up arrays used by readch to detect escape sequences for special keys and perform related
+/// initializations for our input subsystem.
+void init_input();
 
 /// free up memory used by terminal functions.
 void input_destroy();
@@ -100,8 +101,5 @@ wchar_t input_function_get_code(const wcstring &name);
 
 /// Returns a list of all existing input function names.
 wcstring_list_t input_function_get_names(void);
-
-/// Updates our idea of whether we support term256 and term24bit.
-void update_fish_color_support();
 
 #endif

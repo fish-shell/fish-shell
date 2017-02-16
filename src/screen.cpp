@@ -7,6 +7,7 @@
 // IWYU pragma: no_include <cstddef>
 #include "config.h"
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -552,7 +553,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
     // Note that this is required to avoid some visual glitches in iTerm (issue #1448).
     bool use_multi =
         multi_str != NULL && multi_str[0] != '\0' && abs(x_steps) * strlen(str) > strlen(multi_str);
-    if (use_multi) {
+    if (use_multi && cur_term) {
         char *multi_param = tparm(multi_str, abs(x_steps));
         writembs(multi_param);
     } else {
@@ -900,7 +901,10 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
 }
 
 /// Returns true if we are using a dumb terminal.
-static bool is_dumb(void) { return !cursor_up || !cursor_down || !cursor_left || !cursor_right; }
+static bool is_dumb(void) {
+    if (!cur_term) return true;
+    return !cursor_up || !cursor_down || !cursor_left || !cursor_right;
+}
 
 struct screen_layout_t {
     // The left prompt that we're going to use.
@@ -1232,7 +1236,7 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // We do `>` rather than `>=` because the code below might require one extra space.
         if (screen_width > non_space_width) {
             bool justgrey = true;
-            if (enter_dim_mode) {
+            if (cur_term && enter_dim_mode) {
                 std::string dim = tparm(enter_dim_mode);
                 if (!dim.empty()) {
                     // Use dim if they have it, so the color will be based on their actual normal
@@ -1241,7 +1245,7 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
                     justgrey = false;
                 }
             }
-            if (justgrey && set_a_foreground) {
+            if (cur_term && justgrey && set_a_foreground) {
                 if (max_colors >= 238) {
                     // draw the string in a particular grey
                     abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 237)));
@@ -1254,15 +1258,18 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
                     abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 0)));
                 }
             }
+
             abandon_line_string.push_back(omitted_newline_char);
 
-            if (exit_attribute_mode) {
+            if (cur_term && exit_attribute_mode) {
                 abandon_line_string.append(
                     str2wcstring(tparm(exit_attribute_mode)));  // normal text ANSI escape sequence
             }
+
             int newline_glitch_width = term_has_xn ? 0 : 1;
             abandon_line_string.append(screen_width - non_space_width - newline_glitch_width, L' ');
         }
+
         abandon_line_string.push_back(L'\r');
         abandon_line_string.push_back(omitted_newline_char);
         // Now we are certainly on a new line. But we may have dropped the omitted newline char on

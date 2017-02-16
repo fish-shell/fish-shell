@@ -921,7 +921,7 @@ static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, si
         size = utf8_to_wchar(src, slen, NULL, flags);
     } else {
         mem = (wchar_t *)malloc(dlen * sizeof(*mem));
-        if (mem == NULL) {
+        if (!mem) {
             err(L"u2w: %s: MALLOC FAILED\n", descr);
             return;
         }
@@ -969,7 +969,7 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
 
     if (dst) {
         mem = (char *)malloc(dlen);
-        if (mem == NULL) {
+        if (!mem) {
             err(L"w2u: %s: MALLOC FAILED", descr);
             return;
         }
@@ -1673,8 +1673,13 @@ struct pager_layout_testcase_t {
 
             wcstring text = sd.line(0).to_string();
             if (text != expected) {
-                fwprintf(stderr, L"width %zu got <%ls>, expected <%ls>\n", this->width,
-                         text.c_str(), expected.c_str());
+                fwprintf(stderr, L"width %zu got %d<%ls>, expected %d<%ls>\n", this->width,
+                         text.length(), text.c_str(), expected.length(), expected.c_str());
+                for (size_t i = 0; i < std::max(text.length(), expected.length()); i++) {
+                    fwprintf(stderr, L"i %zu got <%lx> expected <%lx>\n", i,
+                             i >= text.length() ? 0xffff : text[i],
+                             i >= expected.length() ? 0xffff : expected[i]);
+                }
             }
             do_test(text == expected);
         }
@@ -4178,7 +4183,7 @@ int main(int argc, char **argv) {
     function_init();
     builtin_init();
     env_init();
-
+    misc_init();
     reader_init();
 
     // Set default signal handlers, so we can ctrl-C out of this.

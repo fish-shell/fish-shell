@@ -294,7 +294,6 @@ static void setup_and_process_keys(bool continuous_mode) {
     setup_fork_guards();
     env_init();
     reader_init();
-    input_init();
     proc_push_interactive(1);
     install_our_signal_handlers();
 

@@ -44,7 +44,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "fish_version.h"
 #include "function.h"
 #include "history.h"
-#include "input.h"
 #include "io.h"
 #include "parser.h"
 #include "path.h"
@@ -318,42 +317,6 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
     return optind;
 }
 
-/// Various things we need to initialize at run-time that don't really fit any of the other init
-/// routines.
-static void misc_init() {
-    env_set_read_limit();
-
-    // If stdout is open on a tty ensure stdio is unbuffered. That's because those functions might
-    // be intermixed with `write()` calls and we need to ensure the writes are not reordered. See
-    // issue #3748.
-    if (isatty(STDOUT_FILENO)) {
-        fflush(stdout);
-        setvbuf(stdout, NULL, _IONBF, 0);
-    }
-
-#ifdef OS_IS_CYGWIN
-    // MS Windows tty devices do not currently have either a read or write timestamp. Those
-    // respective fields of `struct stat` are always the current time. Which means we can't
-    // use them. So we assume no external program has written to the terminal behind our
-    // back. This makes multiline promptusable. See issue #2859 and
-    // https://github.com/Microsoft/BashOnWindows/issues/545
-    has_working_tty_timestamps = false;
-#else
-    // This covers preview builds of Windows Subsystem for Linux (WSL).
-    FILE *procsyskosrel;
-    if ((procsyskosrel = wfopen(L"/proc/sys/kernel/osrelease", "r"))) {
-        wcstring osrelease;
-        fgetws2(&osrelease, procsyskosrel);
-        if (osrelease.find(L"3.4.0-Microsoft") != wcstring::npos) {
-            has_working_tty_timestamps = false;
-        }
-    }
-    if (procsyskosrel) {
-        fclose(procsyskosrel);
-    }
-#endif  // OS_IS_MS_WINDOWS
-}
-
 int main(int argc, char **argv) {
     int res = 1;
     int my_optind = 0;
@@ -389,17 +352,14 @@ int main(int argc, char **argv) {
     }
 
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
-
+    env_init(&paths);
     proc_init();
     event_init();
     builtin_init();
     function_init();
-    env_init(&paths);
+    misc_init();
     reader_init();
     history_init();
-    // For set_color to support term256 in config.fish (issue #1022).
-    update_fish_color_support();
-    misc_init();
 
     parser_t &parser = parser_t::principal_parser();
 

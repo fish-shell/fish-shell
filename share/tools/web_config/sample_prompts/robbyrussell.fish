@@ -7,8 +7,8 @@ function fish_prompt
         set -g __fish_robbyrussell_functions_defined
         function _git_branch_name
             set -l branch (git symbolic-ref --quiet HEAD ^/dev/null)
-            if test $branch
-                echo $branch | sed -e 's|^refs/heads/||'
+            if set -q branch[1]
+                echo (string sub -s 12 $branch)
             else
                 echo (git rev-parse --short HEAD ^/dev/null)
             end

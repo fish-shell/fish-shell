@@ -6,7 +6,12 @@ function fish_prompt
     if not set -q -g __fish_robbyrussell_functions_defined
         set -g __fish_robbyrussell_functions_defined
         function _git_branch_name
-            echo (git symbolic-ref HEAD ^/dev/null | sed -e 's|^refs/heads/||')
+            set -l branch (git symbolic-ref --quiet HEAD ^/dev/null)
+            if set -q branch[1]
+                echo (string replace -r '^refs/heads/' '' $branch)
+            else
+                echo (git rev-parse --short HEAD ^/dev/null)
+            end
         end
 
         function _is_git_dirty

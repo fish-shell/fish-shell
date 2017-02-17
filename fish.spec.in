@@ -6,7 +6,7 @@ Release:                0.%{?dist}
 
 License:                GPL-2.0
 Group:                  System/Shells
-URL:                    http://fishshell.com/
+URL:                    https://fishshell.com/
 
 Source0:                %{name}_@VERSION@.orig.tar.gz
 BuildRequires:          ncurses-devel gettext gcc-c++ autoconf

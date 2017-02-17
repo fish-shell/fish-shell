@@ -125,7 +125,7 @@ function help --description 'Show help for the fish shell'
     else
         # Go to the web. Only include one dot in the version string
         set -l version_string (echo $FISH_VERSION| cut -d . -f 1,2)
-        set page_url http://fishshell.com/docs/$version_string/$fish_help_page
+        set page_url https://fishshell.com/docs/$version_string/$fish_help_page
     end
 
     # OS X /usr/bin/open swallows fragments (anchors), so use osascript

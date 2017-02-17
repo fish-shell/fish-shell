@@ -5,7 +5,7 @@
 // all internal commands use wide characters and hence this library is useful.
 //
 // If you want to use this version of getopt in your program, download the fish sourcecode,
-// available at <a href='http://fishshell.com'>the fish homepage</a>. Extract the sourcode, copy
+// available at <a href='https://fishshell.com'>the fish homepage</a>. Extract the sourcode, copy
 // wgetopt.c and wgetopt.h into your program directory, include wgetopt.h in your program, and use
 // all the regular getopt functions, prefixing every function, global variable and structure with a
 // 'w', and use only wide character strings. There are no other functional changes in this version

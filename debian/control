@@ -6,8 +6,8 @@ Uploaders: David Adam <zanchey@ucc.gu.uwa.edu.au>
 Build-Depends: debhelper (>= 9.0.0), libncurses5-dev, autoconf, autotools-dev, dh-autoreconf, gettext
 # When libpcre2-dev is available on all supported Debian versions, add a dependency on that.
 Standards-Version: 3.9.4
-Homepage: http://fishshell.com/
-Vcs-Git: git://github.com/fish-shell/fish-shell.git
+Homepage: https://fishshell.com/
+Vcs-Git: https://github.com/fish-shell/fish-shell.git
 Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish

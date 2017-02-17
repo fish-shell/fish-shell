@@ -854,7 +854,7 @@ void history_t::get_string_representation(wcstring *result, const wcstring &sepa
 
     // Append new items. Note that in principle we could use const_reverse_iterator, but we do not
     // because reverse_iterator is not convertible to const_reverse_iterator. See
-    // http://github.com/fish-shell/fish-shell/issues/431.
+    // https://github.com/fish-shell/fish-shell/issues/431.
     for (history_item_list_t::reverse_iterator iter = new_items.rbegin(); iter < new_items.rend();
          ++iter) {
         // Skip a pending item if we have one.

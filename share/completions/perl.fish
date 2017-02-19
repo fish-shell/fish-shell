@@ -1,8 +1,15 @@
+# TODO: Remove the `begin;...;end` brackets since they're not necessary. A `set -l` at file level
+# creates a var local to the file which won't be visible elsewhere. I'm not doing so as part of
+# fixing issue #3856 because I don't want to take ownership of every line in this script.
+#
+# TODO: Whether the expensive operations
+# done by the module detection really needs to be done every time the completion is invoked is
+# unclear. See issue #3856.
 begin
     set -l unicode 'commandline | __fish_sgrep -qe "-[a-zA-Z]*C[a-zA-Z]*\$"'
     set -l noopt 'commandline | not __fish_sgrep -qe "-[a-zA-Z]*C[a-zA-Z]*\$"'
     set -l modules "(find (perl -lE'print for @INC') -name '*.pm' -printf '%P\n' ^/dev/null \
-                        | sed -e 's,/,::,g; s,\.pm$,,' | sort -u)"
+                        | sed -e 's,/,::,g; s,\.pm\$,,' | sort -u)"
     complete -c perl -s 0 -n $noopt --description 'Specify record separator'
     complete -c perl -s a -n $noopt --description 'Turn on autosplit mode'
     complete -c perl -s c -n $noopt --description 'Check syntax'

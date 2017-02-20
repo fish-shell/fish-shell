@@ -949,6 +949,88 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     return splits.size() > arg_count ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
+static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+	const wchar_t *short_options = L":t:q";
+	const struct woption long_options[] = {{L"times", required_argument, 0, 't'},
+										   {L"quiet", no_argument, 0, 'q'},
+										   {0, 0, 0, 0}};
+
+	bool quiet = false;
+	long times = 0;
+	wgetopter_t w;
+
+	for (;;) {
+		int opt;
+
+		if ((opt = w.wgetopt_long(argc, argv, short_options, long_options, 0)) == -1) {
+			break;
+		}
+
+		switch(opt) {
+		case 0: {
+			break;
+		}
+		case 't': {
+			times = fish_wcstol(w.woptarg);
+			if (times < 0 || errno == ERANGE) {
+				string_error(streams, _(L"%ls: Invalid times value '%ls'\n"), argv[0], w.woptarg);
+				return BUILTIN_STRING_ERROR;
+			} else if (errno) {
+				string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+				return BUILTIN_STRING_ERROR;
+			}
+			break;
+		}
+		case 'q': {
+			quiet = true;
+			break;
+		}
+		case ':': {
+			string_error(streams, STRING_ERR_MISSING, argv[0]);
+			return BUILTIN_STRING_ERROR;
+		}
+		case '?': {
+			string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+			return BUILTIN_STRING_ERROR;
+		}
+		default: {
+			DIE("unexpected opt");
+			break;
+		}
+		}
+	}
+
+	int i = w.woptind;
+
+	if (string_args_from_stdin(streams) && argc > i) {
+		string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
+		return BUILTIN_STRING_ERROR;
+	}
+	
+	const wchar_t *str_to_repeat;
+	wcstring storage;
+	bool is_not_empty = false;
+	
+	if ((str_to_repeat = string_get_arg(&i, argv, &storage, streams)) != 0) {
+		const wcstring word(str_to_repeat);
+		wcstring final_string;
+		
+		final_string.reserve(word.length() * times);
+
+		for (int j = 0; j < times; j++) {
+			final_string += word;
+		}
+
+		is_not_empty = !final_string.empty();
+
+		if (!quiet && is_not_empty) {
+			streams.out.append(final_string);
+			streams.out.append(L"\n");
+		}
+	}
+	return is_not_empty ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+}
+
 static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     const wchar_t *short_options = L":l:qs:";
     const struct woption long_options[] = {{L"length", required_argument, 0, 'l'},
@@ -1157,7 +1239,8 @@ static const struct string_subcommand {
 string_subcommands[] = {
     {L"escape", &string_escape}, {L"join", &string_join},       {L"length", &string_length},
     {L"match", &string_match},   {L"replace", &string_replace}, {L"split", &string_split},
-    {L"sub", &string_sub},       {L"trim", &string_trim},       {0, 0}};
+    {L"sub", &string_sub},       {L"trim", &string_trim},       {L"repeat", &string_repeat},
+    {0, 0}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

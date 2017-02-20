@@ -950,12 +950,14 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
 }
 
 static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-	const wchar_t *short_options = L":t:q";
+	const wchar_t *short_options = L":t:nq";
 	const struct woption long_options[] = {{L"times", required_argument, 0, 't'},
+										   {L"no-newline", no_argument, 0, 'n'},
 										   {L"quiet", no_argument, 0, 'q'},
 										   {0, 0, 0, 0}};
 
 	bool quiet = false;
+	bool newline = true;
 	long times = 0;
 	wgetopter_t w;
 
@@ -979,6 +981,10 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
 				string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
 				return BUILTIN_STRING_ERROR;
 			}
+			break;
+		}
+		case 'n': {
+			newline = false;
 			break;
 		}
 		case 'q': {
@@ -1023,9 +1029,12 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
 
 		is_not_empty = !final_string.empty();
 
+		if (newline) {
+			final_string += L"\n";
+		}
+
 		if (!quiet && is_not_empty) {
 			streams.out.append(final_string);
-			streams.out.append(L"\n");
 		}
 	}
 	return is_not_empty ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;

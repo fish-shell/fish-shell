@@ -240,7 +240,11 @@ void builtin_printf_state_t::append_format_output(const wchar_t *fmt, ...) {
 
 void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end, int errcode) {
     if (errcode != 0) {
-        this->fatal_error(L"%ls: %s", s, strerror(errcode));
+        if (errcode == ERANGE) {
+            this->fatal_error(L"%ls: %ls", s, _(L"Number out of range"));
+        } else {
+            this->fatal_error(L"%ls: %s", s, strerror(errcode));
+        }
     } else if (*end) {
         if (s == end)
             this->fatal_error(_(L"%ls: expected a numeric value"), s);

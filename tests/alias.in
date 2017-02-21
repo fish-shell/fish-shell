@@ -1,0 +1,7 @@
+# Avoid regressions of issue #3860 wherein the first word of the alias ends
+# with a semicolon.
+function foo
+    echo ran foo
+end
+alias my_alias "foo; and echo foo ran"
+my_alias

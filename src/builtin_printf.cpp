@@ -437,6 +437,8 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
     // Create a copy of the % directive, with an intmax_t-wide width modifier substituted for any
     // existing integer length modifier.
     switch (conversion) {
+        case L'x':
+        case L'X':
         case L'd':
         case L'i':
         case L'u': {

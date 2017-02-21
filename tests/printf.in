@@ -61,3 +61,12 @@ else
     echo '3,450000e+00'
     echo '4,560000e+00'
 end
+
+# Verify long long ints are handled correctly. See issue #3352.
+printf 'long hex1 %x\n' 498216206234
+printf 'long hex2 %X\n' 498216206234
+printf 'long hex3 %X\n' 0xABCDEF1234567890
+printf 'long hex4 %X\n' 0xABCDEF12345678901
+printf 'long decimal %d\n' 498216206594
+printf 'long signed %d\n' -498216206595
+printf 'long signed to unsigned %u\n' -498216206596

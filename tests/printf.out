@@ -18,3 +18,9 @@ a
 1.230000e+00
 3,450000e+00
 4,560000e+00
+long hex1 73ffffff9a
+long hex2 73FFFFFF9A
+long hex3 ABCDEF1234567890
+long hex4 long decimal 498216206594
+long signed -498216206595
+long signed to unsigned 18446743575493345020

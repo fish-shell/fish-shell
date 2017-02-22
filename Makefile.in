@@ -195,11 +195,16 @@ ifeq ($(shell uname), Darwin)
 endif
 
 #
-# All translation message catalogs
+# All translation message catalogs, filter files based on LINGUAS.
 #
 TRANSLATIONS_SRC := $(wildcard po/*.po)
-ifdef HAVE_GETTEXT
+ifeq ($(HAVE_GETTEXT), 1)
 	TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
+ifdef LINGUAS
+	TRANSLATIONS_ALL := $(TRANSLATIONS)
+	TRANSLATIONS_WANTED = $(patsubst %,po/%.gmo,$(LINGUAS))
+	TRANSLATIONS = $(filter $(TRANSLATIONS_WANTED),$(TRANSLATIONS_ALL))
+endif
 else
 	TRANSLATIONS :=
 endif

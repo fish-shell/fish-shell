@@ -17,7 +17,7 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 // This is a temporary var while we explore whether signal_block() and friends is needed.
-bool ignore_signal_block = false;
+bool ignore_signal_block = true;
 
 /// Struct describing an entry for the lookup table used to convert between signal names and signal
 /// ids, etc.

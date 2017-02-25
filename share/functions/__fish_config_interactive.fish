@@ -232,6 +232,23 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Load key bindings
     __fish_reload_key_bindings
 
+    if not set -q FISH_UNIT_TESTS_RUNNING
+        # Enable bracketed paste before every prompt (see __fish_shared_bindings for the bindings).
+        # Disable it for unit tests so we don't have to add the sequences to bind.expect
+        function __fish_enable_bracketed_paste --on-event fish_prompt
+            printf "\e[?2004h"
+        end
+
+        # Disable BP before every command because that might not support it.
+        function __fish_disable_bracketed_paste --on-event fish_preexec
+            printf "\e[?2004l"
+        end
+
+        # Tell the terminal we support BP. Since we are in __f_c_i, the first fish_prompt
+        # has already fired.
+        __fish_enable_bracketed_paste
+    end
+
     function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"
         commandline -f repaint
     end

@@ -105,4 +105,41 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # The [meta-e] and [meta-v] keystrokes invoke an external editor on the command buffer.
     bind \ee edit_command_buffer
     bind \ev edit_command_buffer
+
+    # Support for "bracketed paste"
+    # The way it works is that we acknowledge our support by printing
+    # \e\[?2004h
+    # then the terminal will "bracket" every paste in
+    # \e\[200~ and \e\[201~
+    # Every character in between those two will be part of the paste and should not cause a binding to execute (like \n executing commands).
+    #
+    # We enable it after every command and disable it before (in __fish_config_interactive.fish)
+    #
+    # Support for this seems to be ubiquitous - emacs enables it unconditionally (!) since 25.1 (though it only supports it since then,
+    # it seems to be the last term to gain support).
+    # TODO: Should we disable this in older emacsen?
+    #
+    # NOTE: This is more of a "security" measure than a proper feature.
+    # The better way to paste remains the `fish_clipboard_paste` function (bound to \cv by default).
+    # We don't disable highlighting here, so it will be redone after every character (which can be slow),
+    # and it doesn't handle "paste-stop" sequences in the paste (which the terminal needs to strip, but KDE konsole doesn't).
+    #
+    # See http://thejh.net/misc/website-terminal-copy-paste. The second case will not be caught in KDE konsole.
+    # Bind the starting sequence in every bind mode, even user-defined ones.
+    # HACK: We introspect `bind` here to list all modes.
+    # Re-running `bind` multiple times per mode is still faster than trying to make the list unique,
+    # even without calling `sort -u` or `uniq`, for the vi-bindings.
+    # TODO: This can be solved better once #3872 is implemented.
+    set -l allmodes default
+    set allmodes $allmodes (bind -a | string match -r -- '-M \w+' | string replace -- '-M ' '')
+    for mode in $allmodes
+        bind -M $mode -m paste \e\[200~ 'set -g __fish_last_bind_mode $fish_bind_mode'
+    end
+    # This sequence ends paste-mode and returns to the previous mode we have saved before.
+    bind -M paste \e\[201~ 'set fish_bind_mode $__fish_last_bind_mode; commandline -f force-repaint'
+    # In paste-mode, everything self-inserts except for the sequence to get out of it
+    bind -M paste "" self-insert
+    # Without this, a \r will overwrite the other text, rendering it invisible - which makes the exercise kinda pointless.
+    # TODO: Test this in windows (\r\n line endings)
+    bind -M paste \r "commandline -i \n"
 end

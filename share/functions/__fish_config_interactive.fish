@@ -244,6 +244,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
             printf "\e[?2004l"
         end
 
+        # Tell the terminal we support BP. Since we are in __f_c_i, the first fish_prompt
+        # has already fired.
         __fish_enable_bracketed_paste
     end
 

@@ -129,6 +129,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # HACK: We introspect `bind` here to list all modes.
     # Re-running `bind` multiple times per mode is still faster than trying to make the list unique,
     # even without calling `sort -u` or `uniq`, for the vi-bindings.
+    # TODO: This can be solved better once #3872 is implemented.
     set -l allmodes default
     set allmodes $allmodes (bind -a | string match -r -- '-M \w+' | string replace -- '-M ' '')
     for mode in $allmodes

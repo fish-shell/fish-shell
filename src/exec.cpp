@@ -166,7 +166,6 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
     char *const *argv = const_cast<char *const *>(cargv);
 
     execve(actual_cmd, argv, envv);
-
     err = errno;
 
     // Something went wrong with execve, check for a ":", and run /bin/sh if encountered. This is a

@@ -109,7 +109,6 @@ demangled_backtrace(int max_frames, int skip_levels) {
 
 void __attribute__((noinline))
 show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
-    ASSERT_IS_NOT_FORKED_CHILD();
     if (frame_count < 1) return;
 
     // TODO: Decide if this is still needed. I'm commenting it out because it caused me some grief

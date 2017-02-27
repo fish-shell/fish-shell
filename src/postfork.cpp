@@ -108,7 +108,9 @@ bool set_child_group(job_t *j, process_t *p, int print_errors) {
         int result = -1;
         errno = EINTR;
         while (result == -1 && errno == EINTR) {
+            signal_block(true);
             result = tcsetpgrp(STDIN_FILENO, j->pgid);
+            signal_unblock(true);
         }
         if (result == -1) {
             if (errno == ENOTTY) redirect_tty_output();

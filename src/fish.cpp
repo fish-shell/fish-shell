@@ -368,7 +368,9 @@ int main(int argc, char **argv) {
         // TODO: Remove this once we're confident that not blocking/unblocking every signal around
         // some critical sections is no longer necessary.
         env_var_t fish_no_signal_block = env_get_string(L"FISH_NO_SIGNAL_BLOCK");
-        if (!fish_no_signal_block.missing()) ignore_signal_block = true;
+        if (!fish_no_signal_block.missing_or_empty() && !from_string<bool>(fish_no_signal_block)) {
+            ignore_signal_block = false;
+        }
 
         // Stomp the exit status of any initialization commands (issue #635).
         proc_set_last_status(STATUS_BUILTIN_OK);

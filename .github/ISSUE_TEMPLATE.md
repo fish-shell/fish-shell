@@ -1,21 +1,14 @@
-<!-- check if this problem is already solved! github.com/issues?q=is:issue+user:fish-shell -->
-- [ ] Have you checked if problem occurs with [fish 2.5.0](/fish-shell/fish-shell/releases/tag/2.5.0)?
-- [ ] Tried fish without third-party customizations *(check `sh -c 'env HOME=$(mktemp -d) fish'`)*?
+<!--
+Please tell us which fish version you are using by executing the following:
 
-**fish version installed** *(`fish --version`)*:
+  fish --version
+  echo $version
 
-**OS/terminal used**:
+Please tell us which operating system and terminal you are using. The output of `uname -a` and `echo $TERM` may be helpful in this regard although other commands might be relevant in your specific situation.
 
-Talk about the the issue here.
+Please tell us if you tried fish without third-party customizations by executing this command and whether it affected the behavior you are reporting:
 
-## Reproduction steps
-1. step one
-2. …
+  sh -c 'env HOME=$(mktemp -d) fish'
 
-<!-- Hard to explain? Post a screen recording on asciinema.org then link it here -->
-
-## Results
-```console
-~ $ math 2 + 2
-5
-```
+Tell us how to reproduce the problem. Including an asciinema.org recording is useful for problems that involve the visual display of fish output such as its prompt.
+-->

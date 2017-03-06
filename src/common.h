@@ -858,18 +858,6 @@ static const wchar_t *enum_to_str(T enum_val, const enum_map<T> map[]) {
     return NULL;
 };
 
-#if !defined(HAVE_WCSDUP) && defined(HAVE_STD__WCSDUP)
-using std::wcsdup;
-#endif
-
-#if !defined(HAVE_WCSCASECMP) && defined(HAVE_STD__WCSCASECMP)
-using std::wcscasecmp;
-#endif
-
-#if !defined(HAVE_WCSNCASECMP) && defined(HAVE_STD__WCSNCASECMP)
-using std::wcsncasecmp;
-#endif
-
 void redirect_tty_output();
 
 // Minimum allowed terminal size and default size if the detected size is not reasonable.

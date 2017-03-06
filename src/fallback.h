@@ -89,16 +89,32 @@ wchar_t *wcsndup(const wchar_t *in, size_t c);
 #endif
 #else  //__APPLE__
 
-/// These functions are missing from Solaris 10
+/// These functions are missing from Solaris 10, and only accessible from
+/// Solaris 11 in the std:: namespace.
 #ifndef HAVE_WCSDUP
+#ifdef HAVE_STD__WCSDUP
+using std::wcsdup;
+#else
 wchar_t *wcsdup(const wchar_t *in);
-#endif
+#endif // HAVE_STD__WCSDUP
+#endif // HAVE_WCSDUP
+
 #ifndef HAVE_WCSCASECMP
+#ifdef HAVE_STD__WCSCASECMP
+using std::wcscasecmp;
+#else
 int wcscasecmp(const wchar_t *a, const wchar_t *b);
-#endif
+#endif // HAVE_STD__WCSCASECMP
+#endif // HAVE_WCSCASECMP
+
 #ifndef HAVE_WCSNCASECMP
+#ifdef HAVE_STD__WCSNCASECMP
+using std::wcsncasecmp;
+#else
 int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
-#endif
+#endif // HAVE_STD__WCSNCASECMP
+#endif // HAVE_WCSNCASECMP
+
 #ifndef HAVE_DIRFD
 #ifndef __XOPEN_OR_POSIX
 #define dirfd(d) (d->dd_fd)

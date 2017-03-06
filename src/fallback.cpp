@@ -171,14 +171,20 @@ int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
 #endif  // __DARWIN_C_LEVEL >= 200809L
 #else   // __APPLE__
 
-/// These functions are missing from Solaris 10
 #ifndef HAVE_WCSDUP
+#ifndef HAVE_STD__WCSDUP
 wchar_t *wcsdup(const wchar_t *in) { return wcsdup_fallback(in); }
 #endif
+#endif
+
 #ifndef HAVE_WCSCASECMP
+#ifndef HAVE_STD__WCSCASECMP
 int wcscasecmp(const wchar_t *a, const wchar_t *b) { return wcscasecmp_fallback(a, b); }
 #endif
+#endif
+
 #ifndef HAVE_WCSNCASECMP
+#ifndef HAVE_STD__WCSNCASECMP
 int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
     return wcsncasecmp_fallback(a, b, n);
 }
@@ -195,6 +201,8 @@ wchar_t *wcsndup(const wchar_t *in, size_t c) {
     return res;
 }
 #endif
+
+#endif // __APPLE__
 
 #ifndef HAVE_WCSLCPY
 /*$OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $*/

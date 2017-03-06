@@ -191,6 +191,8 @@ int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
 #endif
 #endif
 
+#endif // __APPLE__
+
 #ifndef HAVE_WCSNDUP
 wchar_t *wcsndup(const wchar_t *in, size_t c) {
     wchar_t *res = (wchar_t *)malloc(sizeof(wchar_t) * (c + 1));
@@ -201,8 +203,6 @@ wchar_t *wcsndup(const wchar_t *in, size_t c) {
     return res;
 }
 #endif
-
-#endif // __APPLE__
 
 #ifndef HAVE_WCSLCPY
 /*$OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $*/

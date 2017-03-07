@@ -90,3 +90,46 @@ string match -r -v "[dcantg].*" dog can cat diz; or echo "no regexp invert match
 string match -v "???" dog can cat diz; or echo "no glob invert match"
 
 string match -rvn a bbb
+
+# test repeat subcommand
+string repeat -n 2 'foo'
+
+string repeat --count 2 'foo'
+
+echo foo | string repeat -n 2
+
+string repeat -n2 -q 'foo'; and echo "exit 0"
+
+string repeat -n2 --quiet 'foo'; and echo "exit 0"
+
+string repeat -n0 'foo'; or echo "exit 1"
+
+string repeat -n0; or echo "exit 1"
+
+string repeat -m0; or echo "exit 1"
+
+string repeat -n1 -N 'there is '; echo "no newline"
+
+string repeat -n1 --no-newline 'there is '; echo "no newline"
+
+string repeat -n10 -m4 'foo'
+
+string repeat -n10 --max 5 'foo'
+
+string repeat -n3 -m20 'foo'
+
+string repeat -m4 'foo'
+
+string repeat -n-1 'foo'; or echo "exit 2"
+
+string repeat -m-1 'foo'; or echo "exit 2"
+
+string repeat -n notanumber 'foo'; or echo "exit 2"
+
+string repeat -m notanumber 'foo'; or echo "exit 2"
+
+echo 'stdin' | string repeat -n1 'and arg'; or echo "exit 2"
+
+string repeat -n; or echo "exit 2"
+
+string repeat -l fakearg 2>&1 | head -n1 1>&2

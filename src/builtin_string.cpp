@@ -949,6 +949,120 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     return splits.size() > arg_count ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
+static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    const wchar_t *short_options = L":n:m:Nq";
+    const struct woption long_options[] = {{L"count", required_argument, 0, 'n'},
+                                           {L"max", required_argument, 0, 'm'},
+                                           {L"no-newline", no_argument, 0, 'N'},
+                                           {L"quiet", no_argument, 0, 'q'},
+                                           {0, 0, 0, 0}};
+
+    unsigned long count = 0;
+    unsigned long max = 0;
+    bool newline = true;
+    bool quiet = false;
+    int opt;
+    wgetopter_t w;
+
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {
+            case 'n': {
+                long lcount = fish_wcstol(w.woptarg);
+                if (lcount < 0 || errno == ERANGE) {
+                    string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0], w.woptarg);
+                    return BUILTIN_STRING_ERROR;
+                } else if (errno) {
+                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+				    return BUILTIN_STRING_ERROR;
+                } else {
+                    count = static_cast<unsigned long>(lcount);
+                }
+                
+                break;
+            }
+            case 'm': {
+                long lmax = fish_wcstol(w.woptarg);
+                if (lmax < 0 || errno == ERANGE) {
+                    // error cannot be less than 0
+                    string_error(streams, _(L"%ls: Invalid max value '%ls'\n"), argv[0], w.woptarg);
+                    return BUILTIN_STRING_ERROR;
+                } else if (errno) {
+                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+				    return BUILTIN_STRING_ERROR;
+                } else {
+                    max = static_cast<unsigned long>(lmax);
+                }
+                break;
+            }
+            case 'N': {
+                newline = false;
+                break;
+            }
+            case 'q': {
+                quiet = true;
+                break;
+            }
+            case ':': {
+                string_error(streams, STRING_ERR_MISSING, argv[0]);
+			    return BUILTIN_STRING_ERROR;
+            }
+            case '?': {
+                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+			    return BUILTIN_STRING_ERROR;
+            }
+            default: {
+                DIE("unexpected opt");
+                break;
+            }
+        }
+    }
+
+    int i = w.woptind;
+
+    if (string_args_from_stdin(streams) && argc > i) {
+        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
+		return BUILTIN_STRING_ERROR;
+    }
+
+    const wchar_t *to_repeat;
+    wcstring storage;
+    bool is_empty = true;
+
+    if ((to_repeat = string_get_arg(&i, argv, &storage, streams)) != 0) {
+        const wcstring word(to_repeat);
+        wcstring full_string;
+
+        full_string.reserve(word.length() * count);
+
+        for (unsigned long j = 0; j < count; j++) {
+            full_string += word;
+        }
+
+        if (max > 0) {
+
+            if (count == 0) {
+                count = max;
+                for (unsigned long j = 0; j < count; j++) {
+                    full_string += word;
+                }
+            }
+            full_string = full_string.substr(0, max);
+        }
+
+        is_empty = full_string.empty();
+
+        if (newline) {
+            full_string += L"\n";
+        }
+
+        if (!quiet && !is_empty) {
+            streams.out.append(full_string);
+        }
+    }
+
+    return !is_empty ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+}
+
 static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     const wchar_t *short_options = L":l:qs:";
     const struct woption long_options[] = {{L"length", required_argument, 0, 'l'},
@@ -1157,7 +1271,8 @@ static const struct string_subcommand {
 string_subcommands[] = {
     {L"escape", &string_escape}, {L"join", &string_join},       {L"length", &string_length},
     {L"match", &string_match},   {L"replace", &string_replace}, {L"split", &string_split},
-    {L"sub", &string_sub},       {L"trim", &string_trim},       {0, 0}};
+    {L"sub", &string_sub},       {L"trim", &string_trim},       {L"repeat", &string_repeat},
+    {0, 0}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

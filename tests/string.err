@@ -1,0 +1,7 @@
+string repeat: Invalid count value '-1'
+string repeat: Invalid max value '-1'
+string repeat: Argument 'notanumber' is not a number
+string repeat: Argument 'notanumber' is not a number
+string repeat: Too many arguments
+string repeat: Expected argument
+string repeat: Unknown option '-l'

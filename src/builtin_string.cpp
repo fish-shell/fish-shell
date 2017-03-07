@@ -949,6 +949,29 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     return splits.size() > arg_count ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
+
+// helper function to abstract the repeat logic from string_repeat
+// returns the to_repeat string, repeated count times
+static wcstring wcsrepeat(const wcstring& to_repeat, unsigned long count) {
+    wcstring full_string;
+    full_string.reserve(to_repeat.length() * count);
+
+    for (unsigned long j = 0; j < count; j++) {
+        full_string += to_repeat;
+    }
+
+    return full_string;
+}
+
+// helper function to abstract the repeat until logic from string_repeat
+// returns the to_repeat string, repeated until max char has been reached
+static wcstring wcsrepeat_until(const wcstring& to_repeat, unsigned long max) {
+    unsigned long count = max / to_repeat.length();
+    unsigned long mod = max % to_repeat.length();
+
+    return wcsrepeat(to_repeat, count) + to_repeat.substr(0, mod);
+}
+
 static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     const wchar_t *short_options = L":n:m:Nq";
     const struct woption long_options[] = {{L"count", required_argument, 0, 'n'},
@@ -977,13 +1000,11 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
                 } else {
                     count = static_cast<unsigned long>(lcount);
                 }
-                
                 break;
             }
             case 'm': {
                 long lmax = fish_wcstol(w.woptarg);
                 if (lmax < 0 || errno == ERANGE) {
-                    // error cannot be less than 0
                     string_error(streams, _(L"%ls: Invalid max value '%ls'\n"), argv[0], w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 } else if (errno) {
@@ -1028,35 +1049,13 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
     wcstring storage;
     bool is_empty = true;
 
-    if ((to_repeat = string_get_arg(&i, argv, &storage, streams)) != 0) {
+    if ((to_repeat = string_get_arg(&i, argv, &storage, streams)) != NULL) {
         const wcstring word(to_repeat);
-        wcstring full_string;
-
-        full_string.reserve(word.length() * count);
-
-        for (unsigned long j = 0; j < count; j++) {
-            full_string += word;
-        }
-
-        if (max > 0) {
-
-            if (count == 0) {
-                count = max;
-                for (unsigned long j = 0; j < count; j++) {
-                    full_string += word;
-                }
-            }
-            full_string = full_string.substr(0, max);
-        }
-
+        const wcstring full_string = max > 0 ? wcsrepeat_until(word, max) : wcsrepeat(word, count);
         is_empty = full_string.empty();
 
-        if (newline) {
-            full_string += L"\n";
-        }
-
         if (!quiet && !is_empty) {
-            streams.out.append(full_string);
+            streams.out.append(newline ? (full_string + L"\n") : full_string);
         }
     }
 

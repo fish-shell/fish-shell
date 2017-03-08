@@ -953,14 +953,14 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
 // helper function to abstract the repeat logic from string_repeat
 // returns the to_repeat string, repeated count times
 static wcstring wcsrepeat(const wcstring& to_repeat, unsigned long count) {
-    wcstring full_string;
-    full_string.reserve(to_repeat.length() * count);
+    wcstring repeated;
+    repeated.reserve(to_repeat.length() * count);
 
     for (unsigned long j = 0; j < count; j++) {
-        full_string += to_repeat;
+        repeated += to_repeat;
     }
 
-    return full_string;
+    return repeated;
 }
 
 // helper function to abstract the repeat until logic from string_repeat
@@ -1051,11 +1051,12 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
 
     if ((to_repeat = string_get_arg(&i, argv, &storage, streams)) != NULL) {
         const wcstring word(to_repeat);
-        const wcstring full_string = max > 0 ? wcsrepeat_until(word, max) : wcsrepeat(word, count);
-        is_empty = full_string.empty();
+        const bool rep_until = (0 < max && word.length()*count > max) || !count;
+        const wcstring repeated = rep_until ? wcsrepeat_until(word, max) : wcsrepeat(word, count);
+        is_empty = repeated.empty();
 
         if (!quiet && !is_empty) {
-            streams.out.append(newline ? (full_string + L"\n") : full_string);
+            streams.out.append(newline ? (repeated + L"\n") : repeated);
         }
     }
 

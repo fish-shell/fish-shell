@@ -116,6 +116,8 @@ string repeat -n10 -m4 'foo'
 
 string repeat -n10 --max 5 'foo'
 
+string repeat -n3 -m20 'foo'
+
 string repeat -m4 'foo'
 
 string repeat -n-1 'foo'; or echo "exit 2"

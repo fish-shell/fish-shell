@@ -130,16 +130,47 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Re-running `bind` multiple times per mode is still faster than trying to make the list unique,
     # even without calling `sort -u` or `uniq`, for the vi-bindings.
     # TODO: This can be solved better once #3872 is implemented.
+
+    # We usually just pass the text through as-is to facilitate pasting code,
+    # but when the current token contains an unbalanced single-quote (`'`),
+    # we escape all single-quotes and backslashes, effectively turning the paste
+    # into one literal token, to facilitate pasting non-code (e.g. markdown or git commitishes)
     set -l allmodes default
     set allmodes $allmodes (bind -a | string match -r -- '-M \w+' | string replace -- '-M ' '')
     for mode in $allmodes
-        bind -M $mode -m paste \e\[200~ 'set -g __fish_last_bind_mode $fish_bind_mode'
+        bind -M $mode -m paste \e\[200~ '__fish_start_bracketed_paste'
     end
     # This sequence ends paste-mode and returns to the previous mode we have saved before.
-    bind -M paste \e\[201~ 'set fish_bind_mode $__fish_last_bind_mode; commandline -f force-repaint'
+    bind -M paste \e\[201~ '__fish_stop_bracketed_paste'
     # In paste-mode, everything self-inserts except for the sequence to get out of it
     bind -M paste "" self-insert
     # Without this, a \r will overwrite the other text, rendering it invisible - which makes the exercise kinda pointless.
     # TODO: Test this in windows (\r\n line endings)
     bind -M paste \r "commandline -i \n"
+    bind -M paste "'" "__fish_commandline_insert_escaped ' \$__fish_paste_quoted"
+    bind -M paste \\ "__fish_commandline_insert_escaped \\ \$__fish_paste_quoted"
+end
+
+function __fish_commandline_insert_escaped --description 'Insert the first arg escaped if a second arg is given'
+    if set -q argv[2]
+        commandline -i \\$argv[1]
+    else
+        commandline -i $argv[1]
+    end
+end
+
+function __fish_start_bracketed_paste
+    # Save the last bind mode so we can restore it.
+    set -g __fish_last_bind_mode $fish_bind_mode
+    # If the token is currently single-quoted,
+    # we escape single-quotes (and backslashes).
+    __fish_commandline_is_singlequoted
+    and set -g __fish_paste_quoted 1
+end
+
+function __fish_stop_bracketed_paste
+    # Restore the last bind mode.
+    set fish_bind_mode $__fish_last_bind_mode
+    set -e __fish_paste_quoted
+    commandline -f force-repaint
 end

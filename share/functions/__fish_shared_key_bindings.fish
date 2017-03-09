@@ -130,16 +130,48 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Re-running `bind` multiple times per mode is still faster than trying to make the list unique,
     # even without calling `sort -u` or `uniq`, for the vi-bindings.
     # TODO: This can be solved better once #3872 is implemented.
+
+    # We usually just pass the text through as-is to facilitate pasting code,
+    # but when the current token contains an unbalanced single-quote (`'`),
+    # we escape all single-quotes and backslashes, effectively turning the paste
+    # into one literal token, to facilitate pasting non-code (e.g. markdown or git commitishes)
     set -l allmodes default
     set allmodes $allmodes (bind -a | string match -r -- '-M \w+' | string replace -- '-M ' '')
     for mode in $allmodes
-        bind -M $mode -m paste \e\[200~ 'set -g __fish_last_bind_mode $fish_bind_mode'
+        bind -M $mode -m paste \e\[200~ '
+        set -g __fish_last_bind_mode $fish_bind_mode
+        # Unbalanced singlequotes cause us to escape all singlequotes,
+        # effectively handling the paste as a single literal token.
+        if __fish_commandline_is_singlequoted
+            set -g __fish_paste_quoted
+        end
+        '
     end
     # This sequence ends paste-mode and returns to the previous mode we have saved before.
-    bind -M paste \e\[201~ 'set fish_bind_mode $__fish_last_bind_mode; commandline -f force-repaint'
+    bind -M paste \e\[201~ 'set fish_bind_mode $__fish_last_bind_mode
+    set -e __fish_paste_quoted
+    commandline -f force-repaint'
     # In paste-mode, everything self-inserts except for the sequence to get out of it
     bind -M paste "" self-insert
     # Without this, a \r will overwrite the other text, rendering it invisible - which makes the exercise kinda pointless.
     # TODO: Test this in windows (\r\n line endings)
     bind -M paste \r "commandline -i \n"
+    bind -M paste "'" "
+    if set -q __fish_paste_quoted
+        # Escaped quote
+        commandline -i \"\'\"
+    else
+        # Normal quote
+        commandline -i \"'\"
+    end
+    "
+    bind -M paste \\ "
+    if set -q __fish_paste_quoted
+        # Escaped
+        commandline -i '\\\\\\\'
+    else
+        # Normal
+        commandline -i '\\\\'
+    end
+    "
 end

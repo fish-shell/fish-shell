@@ -15,6 +15,8 @@ string match [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
              [(-n | --index)] [(-q | --quiet)] [(-v | --invert)] PATTERN [STRING...]
 string replace [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
                [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
+string repeat [(-n | --count)] [(-m | --max)] [(-N | --no-newline)] 
+              [(-q | --quiet)] [STRING...]
 \endfish
 
 
@@ -47,6 +49,8 @@ The following subcommands are available:
 - `match` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported. Matching can be made case-insensitive with `-i` or `--ignore-case`. If `-n` or `--index` is given, each match is reported as a 1-based start position and a length. By default, PATTERN is interpreted as a glob pattern matched against each entire STRING argument. A glob pattern is only considered a valid match if it matches the entire STRING. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression, which does not have to match the entire STRING. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group. If --invert or -v is used the selected lines will be only those which do not match the given glob pattern or regular expression.  Exit status: 0 if at least one match was found, or 1 otherwise.
 
 - `replace` is similar to `match` but replaces non-overlapping matching substrings with a replacement string and prints the result. By default, PATTERN is treated as a literal substring to be matched. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression, and REPLACEMENT can contain C-style escape sequences like `\t` as well as references to capturing groups by number or name as `$n` or `${n}`. Exit status: 0 if at least one replacement was performed, or 1 otherwise.
+
+- `repeat` repeats the STRING `-n` or `--count` times. The `-m` or `--max` option will limit the number of outputed char (excluding the newline). This option can be used by itself or in conjuction with `--count`. If both `--count` and `--max` are present, max char will be outputed unless the final repeated string size is less than max, in that case, the string will repeat until count has been reached. Both `--count` and `--max` will accept a number greater than or equal to zero, in the case of zero, nothing will be outputed. If `-N` or `--no-newline` is given, the output won't contain a newline character at the end. Exit status: 0 if yielded string is not empty, 1 otherwise.
 
 \subsection regular-expressions Regular Expressions
 
@@ -189,4 +193,20 @@ In general, special characters are special by default, so `a+` matches one or mo
 >_ string replace -r '\\s*newline\\s*' '\\n' 'put a newline here'
 <outp>put a</outp>
 <outp>here</outp>
+\endfish
+
+\subsection string-example-repeat Repeat Examples
+
+\fish{cli-dark}
+>_ string repeat -n 2 'foo '
+<outp>foo foo</outp>
+
+>_ echo foo | string repeat -n 2
+<outp>foofoo</outp>
+
+>_ string repeat -n 2 -m 5 'foo'
+<outp>foofo</outp>
+
+>_ string repeat -m 5 'foo'
+<outp>foofo</outp>
 \endfish

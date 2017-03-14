@@ -1,6 +1,6 @@
-function export --description 'Set global variable. Alias for set -gx, made for bash compatibility'
-    if test -z "$argv"
-        set
+function export --description 'Set env variable. Alias for `set -gx` for bash compatibility.'
+    if not set -q argv[0]
+        set -x
         return 0
     end
     for arg in $argv

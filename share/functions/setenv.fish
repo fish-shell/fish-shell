@@ -1,5 +1,5 @@
 function setenv --description 'Set env variable. Alias for `set -gx` for csh compatibility.'
-    if not set -q argv[0]
+    if not set -q argv[1]
         set -x
         return 0
     end

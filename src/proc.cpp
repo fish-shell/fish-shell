@@ -304,9 +304,6 @@ static void handle_child_status(pid_t pid, int status) {
         for (process_ptr_t &p : j->processes) {
             if (pid == p->pid) {
                 mark_process_status(p.get(), status);
-                if (p->completed && prev && !prev->completed && prev->pid) {
-                    kill(prev->pid, SIGPIPE);
-                }
                 found_proc = p.get();
                 break;
             }

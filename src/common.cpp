@@ -852,7 +852,8 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
                 case L'\\':
                 case L'\'': {
                     need_escape = need_complex_escape = 1;
-                    if (escape_all) out += L'\\';
+                    //WTF if (escape_all) out += L'\\';
+                    out += L'\\';
                     out += *in;
                     break;
                 }
@@ -937,7 +938,7 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
     }
 }
 
-wcstring escape(const wchar_t *in, escape_flags_t flags) {
+wcstring escape_string(const wchar_t *in, escape_flags_t flags) {
     wcstring result;
     escape_string_internal(in, wcslen(in), &result, flags);
     return result;

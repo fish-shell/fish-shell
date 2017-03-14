@@ -137,7 +137,7 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
     wcstring storage;
     const wchar_t *arg;
     while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
-        streams.out.append(escape(arg, flags));
+        streams.out.append(escape_string(arg, flags));
         streams.out.append(L'\n');
         nesc++;
     }

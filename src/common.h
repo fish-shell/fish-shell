@@ -94,7 +94,7 @@ enum {
 };
 typedef unsigned int unescape_flags_t;
 
-// Flags for the escape() and escape_string() functions.
+// Flags for the escape_string() and escape_string() functions.
 enum {
     /// Escape all characters, including magic characters like the semicolon.
     ESCAPE_ALL = 1 << 0,
@@ -715,7 +715,7 @@ ssize_t read_loop(int fd, void *buff, size_t count);
 /// \param in The string to be escaped
 /// \param flags Flags to control the escaping
 /// \return The escaped string
-wcstring escape(const wchar_t *in, escape_flags_t flags);
+wcstring escape_string(const wchar_t *in, escape_flags_t flags);
 wcstring escape_string(const wcstring &in, escape_flags_t flags);
 
 /// Expand backslashed escapes and substitute them with their unescaped counterparts. Also

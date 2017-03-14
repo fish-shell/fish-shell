@@ -248,8 +248,9 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, 
     CHECK(mode, );
     CHECK(sets_mode, );
 
-    // debug( 0, L"Add mapping from %ls to %ls in mode %ls", escape(sequence, ESCAPE_ALL).c_str(),
-    // escape(command, ESCAPE_ALL).c_str(), mode);
+    // debug( 0, L"Add mapping from %ls to %ls in mode %ls", escape_string(sequence,
+    // ESCAPE_ALL).c_str(),
+    // escape_string(command, ESCAPE_ALL).c_str(), mode);
 
     // Remove existing mappings with this sequence.
     const wcstring_list_t commands_vector(commands, commands + commands_len);
@@ -408,7 +409,7 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
     wchar_t c = 0;
     int j;
 
-    debug(2, L"trying to match mapping %ls", escape(m.seq.c_str(), ESCAPE_ALL).c_str());
+    debug(2, L"trying to match mapping %ls", escape_string(m.seq.c_str(), ESCAPE_ALL).c_str());
     const wchar_t *str = m.seq.c_str();
     for (j = 0; str[j] != L'\0'; j++) {
         bool timed = (j > 0 && iswcntrl(str[0]));
@@ -420,7 +421,8 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
     }
 
     if (str[j] == L'\0') {
-        // debug(0, L"matched mapping %ls (%ls)\n", escape(m.seq.c_str(), ESCAPE_ALL).c_str(),
+        // debug(0, L"matched mapping %ls (%ls)\n", escape_string(m.seq.c_str(),
+        // ESCAPE_ALL).c_str(),
         // m.command.c_str());
         // We matched the entire sequence.
         return true;
@@ -446,7 +448,8 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands) {
     for (size_t i = 0; i < mapping_list.size(); i++) {
         const input_mapping_t &m = mapping_list.at(i);
 
-        // debug(0, L"trying mapping (%ls,%ls,%ls)\n", escape(m.seq.c_str(), ESCAPE_ALL).c_str(),
+        // debug(0, L"trying mapping (%ls,%ls,%ls)\n", escape_string(m.seq.c_str(),
+        // ESCAPE_ALL).c_str(),
         //           m.mode.c_str(), m.sets_mode.c_str());
 
         if (m.mode != bind_mode) {

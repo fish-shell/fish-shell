@@ -1027,8 +1027,8 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
         if (do_escape) {
             // Respect COMPLETE_DONT_ESCAPE_TILDES.
             bool no_tilde = static_cast<bool>(flags & COMPLETE_DONT_ESCAPE_TILDES);
-            wcstring escaped =
-                escape(val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
+            wcstring escaped = escape_string(
+                val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
             sb.append(escaped);
             move_cursor = escaped.size();
         } else {

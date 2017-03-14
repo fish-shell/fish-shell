@@ -296,6 +296,7 @@ static void test_escape_crazy() {
     wcstring random_string;
     wcstring escaped_string;
     wcstring unescaped_string;
+    bool unescaped_success;
     for (size_t i = 0; i < ESCAPE_TEST_COUNT; i++) {
         random_string.clear();
         while (rand() % ESCAPE_TEST_LENGTH) {
@@ -303,8 +304,7 @@ static void test_escape_crazy() {
         }
 
         escaped_string = escape_string(random_string, ESCAPE_ALL);
-        bool unescaped_success =
-            unescape_string(escaped_string, &unescaped_string, UNESCAPE_DEFAULT);
+        unescaped_success = unescape_string(escaped_string, &unescaped_string, UNESCAPE_DEFAULT);
 
         if (!unescaped_success) {
             err(L"Failed to unescape string <%ls>", escaped_string.c_str());
@@ -312,6 +312,18 @@ static void test_escape_crazy() {
             err(L"Escaped and then unescaped string '%ls', but got back a different string '%ls'",
                 random_string.c_str(), unescaped_string.c_str());
         }
+    }
+
+    // Verify that not using `ESCAPE_ALL` also escapes backslashes so we don't regress on issue
+    // #3892.
+    random_string = L"line 1\\n\nline 2";
+    escaped_string = escape_string(random_string, ESCAPE_NO_QUOTED);
+    unescaped_success = unescape_string(escaped_string, &unescaped_string, UNESCAPE_DEFAULT);
+    if (!unescaped_success) {
+        err(L"Failed to unescape string <%ls>", escaped_string.c_str());
+    } else if (unescaped_string != random_string) {
+        err(L"Escaped and then unescaped string '%ls', but got back a different string '%ls'",
+            random_string.c_str(), unescaped_string.c_str());
     }
 }
 

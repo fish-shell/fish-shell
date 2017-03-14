@@ -41,10 +41,22 @@ end
 # Verify that `functions --verbose --metadata` works as expected when given the name of a
 # function that was autoloaded.
 set x (functions -v -m abbr)
-if test (count $x) -ne 4
+if test (count $x) -ne 5
 or not string match -q '*/share/functions/abbr.fish' $x[1]
 or test $x[2] != autoloaded
 or test $x[3] != 1
 or test $x[4] != scope-shadowing
+or test $x[5] != 'Manage abbreviations'
     echo "Unexpected output for 'functions -v -m abbr': $x" >&2
+end
+
+# ==========
+# Verify that `functions --verbose --metadata` properly escapes a function
+# with a multiline description.
+function multiline_descr -d 'line 1\n
+line 2 & more; way more'
+end
+set x (functions -v -m multiline_descr)
+if test $x[5] != 'line 1\\\\n\\nline 2 & more; way more'
+    echo "Unexpected output for 'functions -v -m multiline_descr': $x" >&2
 end

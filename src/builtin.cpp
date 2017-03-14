@@ -1042,6 +1042,7 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
     const wchar_t *path = L"n/a";
     const wchar_t *autoloaded = L"n/a";
     const wchar_t *shadows_scope = L"n/a";
+    wcstring description = L"n/a";
     int line_number = 0;
 
     if (function_exists(funcname)) {
@@ -1054,6 +1055,8 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
         }
         shadows_scope =
             function_get_shadow_scope(funcname) ? L"scope-shadowing" : L"no-scope-shadowing";
+        function_get_desc(funcname, &description);
+        description = escape_string(description, ESCAPE_NO_QUOTED);
     }
 
     if (metadata_as_comments) {
@@ -1066,6 +1069,7 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
             streams.out.append_format(L"%ls\n", autoloaded);
             streams.out.append_format(L"%d\n", line_number);
             streams.out.append_format(L"%ls\n", shadows_scope);
+            streams.out.append_format(L"%ls\n", description.c_str());
         }
     }
 

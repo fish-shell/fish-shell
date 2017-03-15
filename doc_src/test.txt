@@ -30,6 +30,8 @@ This test is mostly POSIX-compatible.
 
 - `-G FILE` returns true if `FILE` exists and has the same group ID as the current user.
 
+- `-k FILE` returns true if `FILE` has the sticky bit set. If the OS does not support the concept it returns false. See https://en.wikipedia.org/wiki/Sticky_bit.
+
 - `-L FILE` returns true if `FILE` is a symbolic link.
 
 - `-O FILE` returns true if `FILE` exists and is owned by the current user.

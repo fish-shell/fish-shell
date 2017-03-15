@@ -42,6 +42,7 @@ enum token_t {
     test_filetype_G,  // "-G", for check effective group id
     test_filetype_g,  // "-g", for set-group-id
     test_filetype_h,  // "-h", for symbolic links
+    test_filetype_k,  // "-k", for sticky bit
     test_filetype_L,  // "-L", same as -h
     test_filetype_O,  // "-O", for check effective user id
     test_filetype_p,  // "-p", for FIFO
@@ -96,6 +97,7 @@ static const struct token_info_t {
                    {test_filetype_G, L"-G", UNARY_PRIMARY},
                    {test_filetype_g, L"-g", UNARY_PRIMARY},
                    {test_filetype_h, L"-h", UNARY_PRIMARY},
+                   {test_filetype_k, L"-k", UNARY_PRIMARY},
                    {test_filetype_L, L"-L", UNARY_PRIMARY},
                    {test_filetype_O, L"-O", UNARY_PRIMARY},
                    {test_filetype_p, L"-p", UNARY_PRIMARY},
@@ -683,6 +685,13 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
         case test_filetype_h:    // "-h", for symbolic links
         case test_filetype_L: {  // "-L", same as -h
             return !lwstat(arg, &buf) && S_ISLNK(buf.st_mode);
+        }
+        case test_filetype_k: {  // "-k", for sticky bit
+#ifdef S_ISVTX
+            return !lwstat(arg, &buf) && buf.st_mode & S_ISVTX;
+#else
+            return false;
+#endif
         }
         case test_filetype_O: {  // "-O", for check effective user id
             return !wstat(arg, &buf) && geteuid() == buf.st_uid;

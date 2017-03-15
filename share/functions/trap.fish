@@ -1,3 +1,4 @@
+# This defines a compatibility shim for the `trap` command found in other shells like bash and zsh.
 
 function __trap_translate_signal
     set upper (echo $argv[1]|tr a-z A-Z)
@@ -5,15 +6,13 @@ function __trap_translate_signal
 end
 
 function __trap_switch
-
     switch $argv[1]
-        case EXIT
+        case EXIT exit
             echo --on-process-exit %self
 
         case '*'
             echo --on-signal $argv[1]
     end
-
 end
 
 function trap -d 'Perform an action when the shell receives a signal'
@@ -103,12 +102,11 @@ function trap -d 'Perform an action when the shell receives a signal'
             set -e opt[1]
 
             for i in $opt
-
                 set -l sig (__trap_translate_signal $i)
                 set sw (__trap_switch $sig)
 
                 if test $sig
-                    eval "function __trap_handler_$sig $sw; $cmd; end"
+                    echo "function __trap_handler_$sig $sw; $cmd; end" | source
                 else
                     return 1
                 end

@@ -5,6 +5,7 @@
 - The \cl binding no longer deletes the scrollback buffer with ncurses >= 6.0 (#2855).
 - fish now supports "bracketed paste". Note that this is more of a security measure, the `fish_clipboard_paste` function (bound to \cv by default) still has a few advantages.
 - Fish is now more forgiving of missing or invalid $TERM values (#3850).
+- The `string` command now supports a `repeat` subcommand with the obvious behavior (#3864).
 - The `functions --metadata --verbose` output now includes the function description (#597).
 - Completions for `helm` added (#3829).
 

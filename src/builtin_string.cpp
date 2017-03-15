@@ -1046,7 +1046,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
     wcstring storage;
     bool is_empty = true;
 
-    if ((to_repeat = string_get_arg(&i, argv, &storage, streams)) != NULL) {
+    if ((to_repeat = string_get_arg(&i, argv, &storage, streams)) != NULL && *to_repeat) {
         const wcstring word(to_repeat);
         const bool rep_until = (0 < max && word.length()*count > max) || !count;
         const wcstring repeated = rep_until ? wcsrepeat_until(word, max) : wcsrepeat(word, count);

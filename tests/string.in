@@ -133,3 +133,11 @@ echo 'stdin' | string repeat -n1 'and arg'; or echo "exit 2"
 string repeat -n; or echo "exit 2"
 
 string repeat -l fakearg 2>&1 | head -n1 1>&2
+
+string repeat ''
+and echo string repeat empty string did not fail
+
+string repeat -n3 ''
+and echo string repeat empty string did not fail
+
+exit 0

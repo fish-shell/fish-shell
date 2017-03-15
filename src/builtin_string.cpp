@@ -991,7 +991,8 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
             case 'n': {
                 long lcount = fish_wcstol(w.woptarg);
                 if (lcount < 0 || errno == ERANGE) {
-                    string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0], w.woptarg);
+                    string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0],
+                                 w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 } else if (errno) {
                     string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
@@ -1022,11 +1023,11 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
             }
             case ':': {
                 string_error(streams, STRING_ERR_MISSING, argv[0]);
-			    return BUILTIN_STRING_ERROR;
+                return BUILTIN_STRING_ERROR;
             }
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-			    return BUILTIN_STRING_ERROR;
+                return BUILTIN_STRING_ERROR;
             }
             default: {
                 DIE("unexpected opt");
@@ -1039,7 +1040,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
 
     if (string_args_from_stdin(streams) && argc > i) {
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-		return BUILTIN_STRING_ERROR;
+        return BUILTIN_STRING_ERROR;
     }
 
     const wchar_t *to_repeat;
@@ -1048,7 +1049,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
 
     if ((to_repeat = string_get_arg(&i, argv, &storage, streams)) != NULL && *to_repeat) {
         const wcstring word(to_repeat);
-        const bool rep_until = (0 < max && word.length()*count > max) || !count;
+        const bool rep_until = (0 < max && word.length() * count > max) || !count;
         const wcstring repeated = rep_until ? wcsrepeat_until(word, max) : wcsrepeat(word, count);
         is_empty = repeated.empty();
 
@@ -1266,11 +1267,11 @@ static const struct string_subcommand {
                    wchar_t **argv);                       //!OCLINT(unused param)
 }
 
-string_subcommands[] = {
-    {L"escape", &string_escape}, {L"join", &string_join},       {L"length", &string_length},
-    {L"match", &string_match},   {L"replace", &string_replace}, {L"split", &string_split},
-    {L"sub", &string_sub},       {L"trim", &string_trim},       {L"repeat", &string_repeat},
-    {0, 0}};
+string_subcommands[] = {{L"escape", &string_escape},   {L"join", &string_join},
+                        {L"length", &string_length},   {L"match", &string_match},
+                        {L"replace", &string_replace}, {L"split", &string_split},
+                        {L"sub", &string_sub},         {L"trim", &string_trim},
+                        {L"repeat", &string_repeat},   {0, 0}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

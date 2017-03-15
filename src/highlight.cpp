@@ -842,9 +842,9 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node) {
             this->parse_tree.type_for_redirection(redirection_node, this->buff, NULL, &target);
 
         // We may get a TOK_NONE redirection type, e.g. if the redirection is invalid.
-        this->color_node(*redirection_primitive, redirect_type == TOK_NONE
-                                                     ? highlight_spec_error
-                                                     : highlight_spec_redirection);
+        this->color_node(
+            *redirection_primitive,
+            redirect_type == TOK_NONE ? highlight_spec_error : highlight_spec_redirection);
 
         // Check if the argument contains a command substitution. If so, highlight it as a param
         // even though it's a command redirection, and don't try to do any other validation.
@@ -941,8 +941,9 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node) {
             }
 
             if (redirection_target != NULL) {
-                this->color_node(*redirection_target, target_is_valid ? highlight_spec_redirection
-                                                                      : highlight_spec_error);
+                this->color_node(
+                    *redirection_target,
+                    target_is_valid ? highlight_spec_redirection : highlight_spec_error);
             }
         }
     }

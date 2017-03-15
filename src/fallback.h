@@ -96,24 +96,24 @@ wchar_t *wcsndup(const wchar_t *in, size_t c);
 using std::wcsdup;
 #else
 wchar_t *wcsdup(const wchar_t *in);
-#endif // HAVE_STD__WCSDUP
-#endif // HAVE_WCSDUP
+#endif  // HAVE_STD__WCSDUP
+#endif  // HAVE_WCSDUP
 
 #ifndef HAVE_WCSCASECMP
 #ifdef HAVE_STD__WCSCASECMP
 using std::wcscasecmp;
 #else
 int wcscasecmp(const wchar_t *a, const wchar_t *b);
-#endif // HAVE_STD__WCSCASECMP
-#endif // HAVE_WCSCASECMP
+#endif  // HAVE_STD__WCSCASECMP
+#endif  // HAVE_WCSCASECMP
 
 #ifndef HAVE_WCSNCASECMP
 #ifdef HAVE_STD__WCSNCASECMP
 using std::wcsncasecmp;
 #else
 int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
-#endif // HAVE_STD__WCSNCASECMP
-#endif // HAVE_WCSNCASECMP
+#endif  // HAVE_STD__WCSNCASECMP
+#endif  // HAVE_WCSNCASECMP
 
 #ifndef HAVE_DIRFD
 #ifndef __XOPEN_OR_POSIX

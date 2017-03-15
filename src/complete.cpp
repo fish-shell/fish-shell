@@ -1271,9 +1271,10 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
 
     if (!done) {
         parse_node_tree_t tree;
-        parse_tree_from_string(cmd, parse_flag_continue_after_error |
-                                        parse_flag_accept_incomplete_tokens |
-                                        parse_flag_include_comments,
+        parse_tree_from_string(cmd,
+                               parse_flag_continue_after_error |
+                                   parse_flag_accept_incomplete_tokens |
+                                   parse_flag_include_comments,
                                &tree, NULL);
 
         // Find the plain statement to operate on. The cursor may be past it (#1261), so backtrack

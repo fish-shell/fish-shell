@@ -852,7 +852,7 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
                 case L'\\':
                 case L'\'': {
                     need_escape = need_complex_escape = 1;
-                    //WTF if (escape_all) out += L'\\';
+                    // WTF if (escape_all) out += L'\\';
                     out += L'\\';
                     out += *in;
                     break;

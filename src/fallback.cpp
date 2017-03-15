@@ -191,7 +191,7 @@ int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
 #endif
 #endif
 
-#endif // __APPLE__
+#endif  // __APPLE__
 
 #ifndef HAVE_WCSNDUP
 wchar_t *wcsndup(const wchar_t *in, size_t c) {

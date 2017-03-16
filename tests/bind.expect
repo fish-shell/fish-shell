@@ -41,6 +41,14 @@ expect_prompt -re {\r\nmno pqrt\r\n} {
     puts stderr "emacs transpose words fail, default timeout: long delay"
 }
 
+# Now test that exactly the expected bind modes are defined
+send "bind --list-modes\r"
+expect_prompt -re {\r\ndefault\r\npaste} {
+    puts "emacs bind modes"
+} unmatched {
+    puts stderr "Unexpected bind modes"
+}
+
 # Test vi key bindings.
 # This should leave vi mode in the insert state.
 send "set -g fish_key_bindings fish_vi_key_bindings\r"
@@ -145,6 +153,14 @@ expect_prompt -re {\r\nTENT\r\n} {
     puts stderr "t-binding fail"
 } unmatched {
     puts stderr "Couldn't find expected output 'TENT'"
+}
+
+# Now test that exactly the expected bind modes are defined
+send "bind --list-modes\r"
+expect_prompt -re {\r\ndefault\r\ninsert\r\npaste\r\nreplace-one\r\nvisual\r\n} {
+    puts "vi bind modes"
+} unmatched {
+    puts stderr "Unexpected vi bind modes"
 }
 
 # Switch back to regular (emacs mode) key bindings.

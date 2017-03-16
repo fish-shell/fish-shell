@@ -1,6 +1,7 @@
 emacs transpose words, default timeout: no delay
 emacs transpose words, default timeout: short delay
 emacs transpose words, default timeout: long delay
+emacs bind modes
 prime vi mode, default timeout
 vi-mode default timeout set correctly
 vi replace line, default timeout: long delay
@@ -9,6 +10,7 @@ vi mode delete char, default timeout: long delay
 vi replace line, 100ms timeout: long delay
 vi replace line, 100ms timeout: short delay
 t-binding success
+vi bind modes
 default-mode custom timeout set correctly
 emacs transpose words, 100ms timeout: no delay
 emacs transpose words, 100ms timeout: short delay

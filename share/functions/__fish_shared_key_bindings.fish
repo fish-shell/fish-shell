@@ -126,18 +126,14 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     #
     # See http://thejh.net/misc/website-terminal-copy-paste. The second case will not be caught in KDE konsole.
     # Bind the starting sequence in every bind mode, even user-defined ones.
-    # HACK: We introspect `bind` here to list all modes.
-    # Re-running `bind` multiple times per mode is still faster than trying to make the list unique,
-    # even without calling `sort -u` or `uniq`, for the vi-bindings.
-    # TODO: This can be solved better once #3872 is implemented.
 
     # We usually just pass the text through as-is to facilitate pasting code,
     # but when the current token contains an unbalanced single-quote (`'`),
     # we escape all single-quotes and backslashes, effectively turning the paste
     # into one literal token, to facilitate pasting non-code (e.g. markdown or git commitishes)
-    set -l allmodes default
-    set allmodes $allmodes (bind -a | string match -r -- '-M \w+' | string replace -- '-M ' '')
-    for mode in $allmodes
+
+    # Exclude paste mode or there'll be an additional binding after switching between emacs and vi
+    for mode in (bind --list-modes | string match -v paste)
         bind -M $mode -m paste \e\[200~ '__fish_start_bracketed_paste'
     end
     # This sequence ends paste-mode and returns to the previous mode we have saved before.

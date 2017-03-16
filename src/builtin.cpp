@@ -34,6 +34,7 @@
 #include <memory>
 #include <random>
 #include <string>
+#include <set>
 #include <utility>
 
 #include "builtin.h"
@@ -445,6 +446,22 @@ static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int u
     return res;
 }
 
+/// List all current bind modes.
+static void builtin_bind_list_modes(io_streams_t &streams) {
+    const std::vector<input_mapping_name_t> lst = input_mapping_get_names();
+    // A set accomplishes two things for us here:
+    // - It removes duplicates (no twenty "default" entries).
+    // - It sorts it, which makes it nicer on the user.
+    std::set<wcstring> modes;
+
+    for (const input_mapping_name_t &binding : lst) {
+        modes.insert(binding.mode);
+    }
+    for (const auto& mode : modes) {
+        streams.out.append_format(L"%ls\n", mode.c_str());
+    }
+}
+
 /// The bind builtin, used for setting character sequences.
 static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
@@ -467,12 +484,13 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                                                   {L"key", no_argument, 0, 'k'},
                                                   {L"key-names", no_argument, 0, 'K'},
                                                   {L"mode", required_argument, 0, 'M'},
+                                                  {L"list-modes", no_argument, 0, 'L'},
                                                   {L"sets-mode", required_argument, 0, 'm'},
                                                   {0, 0, 0, 0}};
 
     while (1) {
         int opt_index = 0;
-        int opt = w.wgetopt_long_only(argc, argv, L"aehkKfM:m:", long_options, &opt_index);
+        int opt = w.wgetopt_long_only(argc, argv, L"aehkKfM:Lm:", long_options, &opt_index);
         if (opt == -1) break;
 
         switch (opt) {
@@ -515,6 +533,10 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             case 'm': {
                 sets_bind_mode = w.woptarg;
                 break;
+            }
+            case 'L': {
+                builtin_bind_list_modes(streams);
+                return STATUS_BUILTIN_OK;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);

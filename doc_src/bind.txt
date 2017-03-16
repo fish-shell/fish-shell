@@ -7,6 +7,7 @@ bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE]
 bind [(-M | --mode) MODE] [(-k | --key)] SEQUENCE
 bind (-K | --key-names) [(-a | --all)]
 bind (-f | --function-names)
+bind (-L | --list-modes)
 bind (-e | --erase) [(-M | --mode) MODE]
      (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])
 \endfish
@@ -42,6 +43,8 @@ The following parameters are available:
 - `-K` or `--key-names` Display a list of available key names. Specifying `-a` or `--all` includes keys that don't have a known mapping
 
 - `-f` or `--function-names` Display a list of available input functions
+
+- `-L` or `--list-modes` Display a list of defined bind modes
 
 - `-M MODE` or `--mode MODE` Specify a bind mode that the bind is used in. Defaults to "default"
 

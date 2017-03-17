@@ -640,21 +640,6 @@ class scoped_push {
     }
 };
 
-/// Wrapper around wcstok.
-class wcstokenizer {
-    wchar_t *buffer, *str, *state;
-    const wcstring sep;
-
-    // No copying.
-    wcstokenizer &operator=(const wcstokenizer &);
-    wcstokenizer(const wcstokenizer &);
-
-   public:
-    wcstokenizer(const wcstring &s, const wcstring &separator);
-    bool next(wcstring &result);
-    ~wcstokenizer();
-};
-
 /// Appends a path component, with a / if necessary.
 void append_path_component(wcstring &path, const wcstring &component);
 

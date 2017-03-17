@@ -9,6 +9,7 @@
 - The `string` command now supports a `repeat` subcommand with the obvious behavior (#3864).
 - The `functions --metadata --verbose` output now includes the function description (#597).
 - Completions for `helm` added (#3829).
+- Empty CDPATH elements are now equivalent to "." (#2106).
 
 ---
 

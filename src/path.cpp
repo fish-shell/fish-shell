@@ -58,21 +58,21 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
         }
     }
 
-    wcstring nxt_path;
-    wcstokenizer tokenizer(bin_path, ARRAY_SEP_STR);
-    while (tokenizer.next(nxt_path)) {
-        if (nxt_path.empty()) continue;
-        append_path_component(nxt_path, cmd);
-        if (waccess(nxt_path, X_OK) == 0) {
+    std::vector<wcstring> pathsv;
+    tokenize_variable_array(bin_path, pathsv);
+    for (auto next_path : pathsv) {
+        if (next_path.empty()) continue;
+        append_path_component(next_path, cmd);
+        if (waccess(next_path, X_OK) == 0) {
             struct stat buff;
-            if (wstat(nxt_path, &buff) == -1) {
+            if (wstat(next_path, &buff) == -1) {
                 if (errno != EACCES) {
                     wperror(L"stat");
                 }
                 continue;
             }
             if (S_ISREG(buff.st_mode)) {
-                if (out_path) *out_path = std::move(nxt_path);
+                if (out_path) *out_path = std::move(next_path);
                 return true;
             }
             err = EACCES;
@@ -85,7 +85,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                     break;
                 }
                 default: {
-                    debug(1, MISSING_COMMAND_ERR_MSG, nxt_path.c_str());
+                    debug(1, MISSING_COMMAND_ERR_MSG, next_path.c_str());
                     wperror(L"access");
                     break;
                 }
@@ -128,24 +128,22 @@ bool path_get_cdpath(const wcstring &dir, wcstring *out, const wchar_t *wd,
         paths.push_back(path);
     } else {
         // Respect CDPATH.
-        env_var_t path = env_vars.get(L"CDPATH");
-        if (path.missing_or_empty()) path = L".";  // we'll change this to the wd if we have one
+        env_var_t cdpaths = env_vars.get(L"CDPATH");
+        if (cdpaths.missing_or_empty()) cdpaths = L".";
 
-        wcstring nxt_path;
-        wcstokenizer tokenizer(path, ARRAY_SEP_STR);
-        while (tokenizer.next(nxt_path)) {
-            if (nxt_path == L"." && wd != NULL) {
-                // nxt_path is just '.', and we have a working directory, so use the wd instead.
-                // TODO: if nxt_path starts with ./ we need to replace the . with the wd.
-                nxt_path = wd;
+        std::vector<wcstring> cdpathsv;
+        tokenize_variable_array(cdpaths, cdpathsv);
+        for (auto next_path : cdpathsv) {
+            if (next_path.empty()) next_path = L".";
+            if (next_path == L"." && wd != NULL) {
+                // next_path is just '.', and we have a working directory, so use the wd instead.
+                // TODO: if next_path starts with ./ we need to replace the . with the wd.
+                next_path = wd;
             }
-            expand_tilde(nxt_path);
+            expand_tilde(next_path);
+            if (next_path.empty()) continue;
 
-            // debug( 2, L"woot %ls\n", expanded_path.c_str() );
-
-            if (nxt_path.empty()) continue;
-
-            wcstring whole_path = nxt_path;
+            wcstring whole_path = next_path;
             append_path_component(whole_path, dir);
             paths.push_back(whole_path);
         }

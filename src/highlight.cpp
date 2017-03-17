@@ -216,9 +216,10 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
         if (cdpath.missing_or_empty()) cdpath = L".";
 
         // Tokenize it into directories.
-        wcstokenizer tokenizer(cdpath, ARRAY_SEP_STR);
-        wcstring next_path;
-        while (tokenizer.next(next_path)) {
+        std::vector<wcstring> pathsv;
+        tokenize_variable_array(cdpath, pathsv);
+        for (auto next_path : pathsv) {
+            if (next_path.empty()) next_path = L".";
             // Ensure that we use the working directory for relative cdpaths like ".".
             directories.push_back(path_apply_working_directory(next_path, working_directory));
         }

@@ -1403,7 +1403,8 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
             // mostly the same. There's the following differences:
             //
             // 1. An empty CDPATH should be treated as '.', but an empty PATH should be left empty
-            // (no commands can be found).
+            // (no commands can be found). Also, an empty element of CDPATH is treated as '.' for
+            // consistency with POSIX shells.
             //
             // 2. PATH is only "one level," while CDPATH is multiple levels. That is, input like
             // 'foo/bar' should resolve against CDPATH, but not PATH.
@@ -1423,9 +1424,14 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
                 if (paths.missing_or_empty()) paths = for_cd ? L"." : L"";
 
                 // Tokenize it into directories.
-                wcstokenizer tokenizer(paths, ARRAY_SEP_STR);
-                wcstring next_path;
-                while (tokenizer.next(next_path)) {
+                std::vector<wcstring> pathsv;
+                tokenize_variable_array(paths, pathsv);
+
+                for (auto next_path : pathsv) {
+                    if (next_path.empty()) {
+                        if (!for_cd) continue;
+                        next_path = L".";
+                    }
                     // Ensure that we use the working directory for relative cdpaths like ".".
                     effective_working_dirs.push_back(
                         path_apply_working_directory(next_path, working_dir));
@@ -1574,29 +1580,29 @@ bool expand_abbreviation(const wcstring &src, wcstring *output) {
     if (src.empty()) return false;
 
     // Get the abbreviations. Return false if we have none.
-    env_var_t var = env_get_string(USER_ABBREVIATIONS_VARIABLE_NAME);
-    if (var.missing_or_empty()) return false;
+    env_var_t abbrs = env_get_string(USER_ABBREVIATIONS_VARIABLE_NAME);
+    if (abbrs.missing_or_empty()) return false;
 
     bool result = false;
-    wcstring line;
-    wcstokenizer tokenizer(var, ARRAY_SEP_STR);
-    while (tokenizer.next(line)) {
-        // Line is expected to be of the form 'foo=bar' or 'foo bar'. Parse out the first = or
-        // space. Silently skip on failure (no equals, or equals at the end or beginning). Try to
+    std::vector<wcstring> abbrsv;
+    tokenize_variable_array(abbrs, abbrsv);
+    for (auto abbr : abbrsv) {
+        // Abbreviation is expected to be of the form 'foo=bar' or 'foo bar'. Parse out the first =
+        // or space. Silently skip on failure (no equals, or equals at the end or beginning). Try to
         // avoid copying any strings until we are sure this is a match.
-        size_t equals_pos = line.find(L'=');
-        size_t space_pos = line.find(L' ');
+        size_t equals_pos = abbr.find(L'=');
+        size_t space_pos = abbr.find(L' ');
         size_t separator = mini(equals_pos, space_pos);
-        if (separator == wcstring::npos || separator == 0 || separator + 1 == line.size()) continue;
+        if (separator == wcstring::npos || separator == 0 || separator + 1 == abbr.size()) continue;
 
         // Find the character just past the end of the command. Walk backwards, skipping spaces.
         size_t cmd_end = separator;
-        while (cmd_end > 0 && iswspace(line.at(cmd_end - 1))) cmd_end--;
+        while (cmd_end > 0 && iswspace(abbr.at(cmd_end - 1))) cmd_end--;
 
         // See if this command matches.
-        if (line.compare(0, cmd_end, src) == 0) {
+        if (abbr.compare(0, cmd_end, src) == 0) {
             // Success. Set output to everything past the end of the string.
-            if (output != NULL) output->assign(line, separator + 1, wcstring::npos);
+            if (output != NULL) output->assign(abbr, separator + 1, wcstring::npos);
 
             result = true;
             break;

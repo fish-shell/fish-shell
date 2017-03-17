@@ -70,7 +70,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     # Default (command) mode
     bind :q exit
-    bind \cd exit
     bind -m insert \cc __fish_cancel_commandline
     bind -M default h backward-char
     bind -M default l forward-char

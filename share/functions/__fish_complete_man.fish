@@ -1,10 +1,9 @@
-
 function __fish_complete_man
     # Try to guess what section to search in. If we don't know, we
-    # use [^)]*, which should match any section
-
-    set section ""
-    set prev (commandline -poc)
+    # use [^)]*, which should match any section.
+    set -l section ""
+    set -l token (commandline -ct)
+    set -l prev (commandline -poc)
     set -e prev[1]
     while set -q prev[1]
         switch $prev[1]
@@ -17,8 +16,6 @@ function __fish_complete_man
     end
 
     set section $section"[^)]*"
-
-    set -l token (commandline -ct)
     # If we don't have a token but a section, list all pages for that section.
     # Don't do it for all sections because that would be overwhelming.
     if test -z "$token" -a "$section" != "[^)]*"
@@ -67,7 +64,7 @@ function __fish_complete_man
 
         # Fish commands are not given by apropos
         set -l files $__fish_datadir/man/man1/*.1
-        string replace -r '.*/([^/]+)\.1$' '$1\tFish command' -- $files
+        string replace -r '.*/([^/]+)\.1$' '$1\t1: fish command' -- $files
     else
         return 1
     end

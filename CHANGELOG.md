@@ -10,6 +10,7 @@
 - Completions for `helm` added (#3829).
 - Support for bracketed paste (#3871). This is unconditionally enabled since support seems to be ubiquitous.
 - When the current token has an open single-quote (`'`), fish will now escape any `'` and `\` in pasted text so that it can be used as a single token. Note that this requires either bracketed paste or use of the special `fish_clipboard_paste` function (bound to \cv by default).
+- Empty CDPATH elements are now equivalent to "." (#2106).
 
 ---
 

@@ -1919,22 +1919,6 @@ scoped_rwlock::~scoped_rwlock() {
     }
 }
 
-wcstokenizer::wcstokenizer(const wcstring &s, const wcstring &separator)
-    : buffer(), str(), state(), sep(separator) {
-    buffer = wcsdup(s.c_str());
-    str = buffer;
-    state = NULL;
-}
-
-bool wcstokenizer::next(wcstring &result) {
-    wchar_t *tmp = wcstok(str, sep.c_str(), &state);
-    str = NULL;
-    if (tmp) result = tmp;
-    return tmp != NULL;
-}
-
-wcstokenizer::~wcstokenizer() { free(buffer); }
-
 template <typename CharType_t>
 static CharType_t **make_null_terminated_array_helper(
     const std::vector<std::basic_string<CharType_t> > &argv) {

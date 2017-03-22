@@ -1,15 +1,14 @@
 # fish 2.6.0 (released ???)
 
-- The `export` command now supports colon-separated `PATH`, `CDPATH` and `MANPATH`.
+- The `export` and `setenv` commands now supports colon-separated `PATH`, `CDPATH` and `MANPATH`.
 - The `read` command now has a default limit of 10 MiB. If a line is longer than that it will fail with $status set to 122 and the var will be empty. You can set a different limit by setting the FISH_READ_BYTE_LIMIT variable.
 - The \cl binding no longer deletes the scrollback buffer with ncurses >= 6.0 (#2855).
-- fish now supports "bracketed paste". Note that this is more of a security measure, the `fish_clipboard_paste` function (bound to \cv by default) still has a few advantages.
+- fish now supports "bracketed paste" (#3871). Note that this is more of a security measure, the `fish_clipboard_paste` function (bound to \cv by default) still has a few advantages.
+- When the current token has an open single-quote (`'`), fish will now escape any `'` and `\` in pasted text so that it can be used as a single token. Note that this requires either bracketed paste or use of the special `fish_clipboard_paste` function (bound to \cv by default).
 - Fish is now more forgiving of missing or invalid $TERM values (#3850).
 - The `string` command now supports a `repeat` subcommand with the obvious behavior (#3864).
 - The `functions --metadata --verbose` output now includes the function description (#597).
 - Completions for `helm` added (#3829).
-- Support for bracketed paste (#3871). This is unconditionally enabled since support seems to be ubiquitous.
-- When the current token has an open single-quote (`'`), fish will now escape any `'` and `\` in pasted text so that it can be used as a single token. Note that this requires either bracketed paste or use of the special `fish_clipboard_paste` function (bound to \cv by default).
 
 ---
 

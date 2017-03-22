@@ -4,7 +4,7 @@
 //
 // 1). Create a function in builtin.c with the following signature:
 //
-//     <tt>static int builtin_NAME( parser_t &parser, wchar_t ** args )</tt>
+//     <tt>static int builtin_NAME(parser_t &parser, io_streams_t &streams, wchar_t **argv)</tt>
 //
 // where NAME is the name of the builtin, and args is a zero-terminated list of arguments.
 //

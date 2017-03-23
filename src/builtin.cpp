@@ -3058,6 +3058,86 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     return res;
 }
 
+/// Helper for builtin_disown
+static int disown_job(parser_t &parser, io_streams_t &streams, job_t *j) {
+    if (j == 0) {
+        streams.err.append_format(_(L"%ls: Unknown job '%ls'\n"), L"bg");
+        builtin_print_help(parser, streams, L"disown", streams.err);
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    // Stopped disowned jobs must be manually signalled; explain how to do so
+    if (job_is_stopped(j)) {
+            killpg(j->pgid, SIGCONT);
+            streams.err.append_format(
+                _(L"%ls: job %d ('%ls') was stopped and has been signalled to continue.\n"),
+                L"disown", j->job_id, j->command_wcstr());
+    }
+
+    if (parser.job_remove(j)) {
+        return STATUS_BUILTIN_OK;
+    } else {
+        return STATUS_BUILTIN_ERROR;
+    }
+}
+
+/// Builtin for removing jobs from the job list
+static int builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    int res = STATUS_BUILTIN_OK;
+
+    if (argv[1] == 0) {
+        job_t *j;
+        // Select last constructed job (ie first job in the job queue) that is possible to disown.
+        // Stopped jobs can be disowned (they will be continued).
+        // Foreground jobs can be disowned.
+        // Even jobs that aren't under job control can be disowned!
+        job_iterator_t jobs;
+        while ((j = jobs.next())) {
+            if (j->get_flag(JOB_CONSTRUCTED) && (!job_is_completed(j))) {
+                break;
+            }
+        }
+
+        if (j) {
+            res = disown_job(parser, streams, j);
+        } else {
+            streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), argv[0]);
+            res = STATUS_BUILTIN_ERROR;
+        }
+    } else {
+        std::set<job_t *> jobs;
+
+        // If one argument is not a valid pid (i.e. integer >= 0), fail without disowning anything,
+        // but still print errors for all of them.
+        // Non-existent jobs aren't an error, but information about them is useful.
+        // Multiple PIDs may refer to the same job; include the job only once by using a set.
+        for (int i = 1; argv[i]; i++) {
+            int pid = fish_wcstoi(argv[i]);
+            if (errno || pid < 0) {
+                streams.err.append_format(_(L"%ls: '%ls' is not a valid job specifier\n"), argv[0],
+                                          argv[i]);
+                res = STATUS_BUILTIN_ERROR;
+            } else {
+                if (job_t *j = parser.job_get_from_pid(pid)) {
+                    jobs.insert(j);
+                } else {
+                    streams.err.append_format(_(L"%ls: Could not find job '%d'\n"), argv[0], pid);
+                }
+            }
+        }
+        if (res == STATUS_BUILTIN_ERROR) {
+            return res;
+        }
+
+        // Disown all target jobs
+        for (auto j : jobs) {
+            res |= disown_job(parser, streams, j);
+        }
+    }
+
+    return res;
+}
+
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
 /// control.
 static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
@@ -3542,6 +3622,7 @@ static const builtin_data_t builtin_datas[] = {
     {L"continue", &builtin_break_continue,
      N_(L"Skip the rest of the current lap of the innermost loop")},
     {L"count", &builtin_count, N_(L"Count the number of arguments")},
+    {L"disown", &builtin_disown, N_(L"Remove job from job list")},
     {L"echo", &builtin_echo, N_(L"Print arguments")},
     {L"else", &builtin_generic, N_(L"Evaluate block if condition is false")},
     {L"emit", &builtin_emit, N_(L"Emit an event")},

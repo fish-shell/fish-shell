@@ -4,4 +4,9 @@ jobs -c
 bg -23 1
 fg 3
 bg 3
+sleep 1 &
+disown
+jobs -c
+disown foo
+disown (jobs -p)
 or exit 0

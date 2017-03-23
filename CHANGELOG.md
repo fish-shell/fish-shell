@@ -1,5 +1,11 @@
 # fish 2.6.0 (released ???)
 
+## Notable fixes and improvements
+
+- Jobs running in the background can now be removed from the list of jobs with the new `disown` builtin, which behaves like the same command in other shells (#2810).
+
+## Other significant changes
+
 - The `export` and `setenv` commands now supports colon-separated `PATH`, `CDPATH` and `MANPATH`.
 - The `read` command now has a default limit of 10 MiB. If a line is longer than that it will fail with $status set to 122 and the var will be empty. You can set a different limit by setting the FISH_READ_BYTE_LIMIT variable.
 - `read` now supports the `--silent` flag to hide the characters typed (#838).

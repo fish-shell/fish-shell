@@ -1,77 +1,58 @@
-
-function type --description "Print the type of a command"
+function type --description 'Print the type of a command'
+    # For legacy reasons, no argument simply causes an unsuccessful return.
+    if not set -q argv[1]
+        return 1
+    end
 
     # Initialize
     set -l res 1
     set -l mode normal
     set -l multi no
     set -l selection all
-    set -l IFS \n\ \t
 
     # Parse options
     set -l names
-    if test (count $argv) -gt 0
-        for i in (seq (count $argv))
-            set -l arg $argv[$i]
-            set -l needbreak 0
-            while test -n $arg
-                set -l flag $arg
-                set arg ''
-                switch $flag
-                    case '--*'
-                        # do nothing; this just prevents it matching the next case
-                    case '-??*'
-                        # combined flags
-                        set -l IFS
-                        echo -n $flag | read __ flag arg
-                        set flag -$flag
-                        set arg -$arg
+    while set -q argv[1]
+        set -l arg $argv[1]
+        set -e argv[1]
+        switch $arg
+            case -t --type
+                # This could also be an error
+                # - printing type without printing anything
+                # doesn't make sense.
+                if test $mode != quiet
+                    set mode type
                 end
-                switch $flag
-                    case -t --type
-                        if test $mode != quiet
-                            set mode type
-                        end
-
-                    case -p --path
-                        if test $mode != quiet
-                            set mode path
-                        end
-
-                    case -P --force-path
-                        if test $mode != quiet
-                            set mode path
-                        end
-                        set selection files
-
-                    case -a --all
-                        set multi yes
-
-                    case -f --no-functions
-                        set selection files
-
-                    case -q --quiet
-                        set mode quiet
-
-                    case -h --help
-                        __fish_print_help type
-                        return 0
-
-                    case --
-                        set names $argv[$i..-1]
-                        set -e names[1]
-                        set needbreak 1
-                        break
-
-                    case '*'
-                        set names $argv[$i..-1]
-                        set needbreak 1
-                        break
+            case -p --path
+                if test $mode != quiet
+                    set mode path
                 end
-            end
-            if test $needbreak -eq 1
+            case -P --force-path
+                if test $mode != quiet
+                    set mode path
+                end
+                set selection files
+            case -a --all
+                set multi yes
+            case -f --no-functions
+                set selection files
+            case -q --quiet
+                set mode quiet
+            case -h --help
+                __fish_print_help type
+                return 0
+            case --
+                set names $argv
                 break
-            end
+            case '-?' '--*'
+                printf (_ "%s: Unknown option %s\n" ) type $arg
+                return 1
+            case '-??*'
+                # Grouped options
+                set argv -(string sub -s 2 -- $arg | string split "") $argv
+            case '*'
+                set names $arg $argv
+                break
         end
     end
 

@@ -62,7 +62,6 @@ function type --description 'Print the type of a command'
         set -l found 0
 
         if test $selection != files
-
             if functions -q -- $i
                 set res 0
                 set found 1
@@ -83,7 +82,6 @@ function type --description 'Print the type of a command'
             end
 
             if contains -- $i (builtin -n)
-
                 set res 0
                 set found 1
                 switch $mode
@@ -97,7 +95,6 @@ function type --description 'Print the type of a command'
                     continue
                 end
             end
-
         end
 
         set -l paths
@@ -118,10 +115,8 @@ function type --description 'Print the type of a command'
             switch $mode
                 case normal
                     printf (_ '%s is %s\n') $i $path
-
                 case type
                     echo (_ 'file')
-
                 case path
                     echo $path
             end
@@ -130,13 +125,10 @@ function type --description 'Print the type of a command'
             end
         end
 
-        if begin
-                test $found = 0
-                and test $mode != quiet
-            end
+        if test $found = 0
+            and test $mode != quiet
             printf (_ "%s: Could not find '%s'\n") type $i >&2
         end
-
     end
 
     return $res

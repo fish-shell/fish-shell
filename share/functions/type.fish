@@ -123,7 +123,11 @@ function type --description "Print the type of a command"
         if test $multi != yes
             set paths (command -s -- $i)
         else
-            set paths (command which -a -- $i ^/dev/null)
+            # TODO: This should really be `command -sa`.
+            for file in $PATH/$i
+                test -x $file
+                and set paths $paths $file
+            end
         end
         for path in $paths
             set res 0

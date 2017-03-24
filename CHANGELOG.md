@@ -10,6 +10,7 @@
 - The `functions --metadata --verbose` output now includes the function description (#597).
 - Completions for `helm` added (#3829).
 - Empty CDPATH elements are now equivalent to "." (#2106).
+- `type` no longer needs the external command `which`, so it can be removed from dependencies.
 
 ---
 

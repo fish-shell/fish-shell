@@ -102,9 +102,15 @@ function type --description 'Print the type of a command'
             set paths (command -s -- $i)
         else
             # TODO: This should really be `command -sa`.
-            for file in $PATH/$i
-                test -x $file
-                and set paths $paths $file
+            for p in $PATH
+                # For compatibility with other utilities,
+                # an empty path component is equal to $PWD.
+                test -z "$p"
+                and set p "$PWD"
+                for file in $p/$i
+                    test -x $file -a ! -d $file
+                    and set paths $paths $file
+                end
             end
         end
         for path in $paths

@@ -10,6 +10,7 @@
 - The `functions --metadata --verbose` output now includes the function description (#597).
 - Completions for `helm` added (#3829).
 - Empty CDPATH elements are now equivalent to "." (#2106).
+- The `read` command now accepts simple strings for the prompt rather than fish script via the new `-P` and `--prompt-str` flags (#802).
 
 ---
 

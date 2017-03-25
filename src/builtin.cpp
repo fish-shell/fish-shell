@@ -2123,11 +2123,13 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
 static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wgetopter_t w;
     wcstring buff;
+    wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     int place = ENV_USER;
-    const wchar_t *prompt = DEFAULT_READ_PROMPT;
+    wcstring prompt_cmd;
+    const wchar_t *prompt = NULL;
+    const wchar_t *prompt_str = NULL;
     const wchar_t *right_prompt = L"";
     const wchar_t *commandline = L"";
     int exit_res = STATUS_BUILTIN_OK;
@@ -2137,36 +2139,28 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     bool array = false;
     bool split_null = false;
 
-    while (1) {
-        static const struct woption long_options[] = {{L"export", no_argument, 0, 'x'},
-                                                      {L"global", no_argument, 0, 'g'},
-                                                      {L"local", no_argument, 0, 'l'},
-                                                      {L"universal", no_argument, 0, 'U'},
-                                                      {L"unexport", no_argument, 0, 'u'},
-                                                      {L"prompt", required_argument, 0, 'p'},
-                                                      {L"right-prompt", required_argument, 0, 'R'},
-                                                      {L"command", required_argument, 0, 'c'},
-                                                      {L"mode-name", required_argument, 0, 'm'},
-                                                      {L"nchars", required_argument, 0, 'n'},
-                                                      {L"shell", no_argument, 0, 's'},
-                                                      {L"array", no_argument, 0, 'a'},
-                                                      {L"null", no_argument, 0, 'z'},
-                                                      {L"help", no_argument, 0, 'h'},
-                                                      {0, 0, 0, 0}};
+    const wchar_t *short_options = L"ac:ghlm:n:p:suxzP:UR:";
+    const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
+                                           {L"global", no_argument, NULL, 'g'},
+                                           {L"local", no_argument, NULL, 'l'},
+                                           {L"universal", no_argument, NULL, 'U'},
+                                           {L"unexport", no_argument, NULL, 'u'},
+                                           {L"prompt", required_argument, NULL, 'p'},
+                                           {L"prompt-str", required_argument, NULL, 'P'},
+                                           {L"right-prompt", required_argument, NULL, 'R'},
+                                           {L"command", required_argument, NULL, 'c'},
+                                           {L"mode-name", required_argument, NULL, 'm'},
+                                           {L"nchars", required_argument, NULL, 'n'},
+                                           {L"shell", no_argument, NULL, 's'},
+                                           {L"array", no_argument, NULL, 'a'},
+                                           {L"null", no_argument, NULL, 'z'},
+                                           {L"help", no_argument, NULL, 'h'},
+                                           {NULL, 0, NULL, 0}};
 
-        int opt_index = 0;
-
-        int opt = w.wgetopt_long(argc, argv, L"xglUup:R:c:hm:n:saz", long_options, &opt_index);
-        if (opt == -1) break;
-
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_BUILTIN_ERROR;
-            }
             case L'x': {
                 place |= ENV_EXPORT;
                 break;
@@ -2189,6 +2183,10 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             }
             case L'p': {
                 prompt = w.woptarg;
+                break;
+            }
+            case L'P': {
+                prompt_str = w.woptarg;
                 break;
             }
             case L'R': {
@@ -2236,20 +2234,36 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_BUILTIN_OK;
             }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_BUILTIN_ERROR;
+            }
             case L'?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
     }
 
+    if (prompt && prompt_str) {
+        streams.err.append_format(_(L"%ls: You can't specify both -p and -P\n"), argv[0]);
+        builtin_print_help(parser, streams, argv[0], streams.err);
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    if (prompt_str) {
+        prompt_cmd = L"echo " + escape_string(prompt_str, ESCAPE_ALL);
+        prompt = prompt_cmd.c_str();
+    } else if (!prompt) {
+        prompt = DEFAULT_READ_PROMPT;
+    }
+
     if ((place & ENV_UNEXPORT) && (place & ENV_EXPORT)) {
         streams.err.append_format(BUILTIN_ERR_EXPUNEXP, argv[0]);
-
         builtin_print_help(parser, streams, argv[0], streams.err);
         return STATUS_BUILTIN_ERROR;
     }

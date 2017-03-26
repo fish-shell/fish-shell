@@ -36,6 +36,7 @@
 #include <wctype.h>
 
 #include <algorithm>
+#include <atomic>
 #include <csignal>
 #include <functional>
 #include <memory>
@@ -126,15 +127,17 @@
 #define SEARCH_FORWARD 1
 
 /// Any time the contents of a buffer changes, we update the generation count. This allows for our
-/// background highlighting thread to notice it and skip doing work that it would otherwise have to
-/// do. This variable should really be of some kind of interlocked or atomic type that guarantees
-/// we're not reading stale cache values. With C++11 we should use atomics, but until then volatile
-/// should work as well, at least on x86.
-static volatile unsigned int s_generation_count;
+/// background threads to notice it and skip doing work that they would otherwise have to do.
+static std::atomic<unsigned int> s_generation_count;
 
 /// This pthreads generation count is set when an autosuggestion background thread starts up, so it
 /// can easily check if the work it is doing is no longer useful.
 static pthread_key_t generation_count_key;
+
+/// Helper to get the generation count
+static unsigned int read_generation_count() {
+    return s_generation_count.load(std::memory_order_relaxed);
+}
 
 static void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
 
@@ -658,7 +661,8 @@ int reader_reading_interrupted() {
 
 bool reader_thread_job_is_stale() {
     ASSERT_IS_BACKGROUND_THREAD();
-    return (void *)(uintptr_t)s_generation_count != pthread_getspecific(generation_count_key);
+    void *current_count = (void *)(uintptr_t)read_generation_count();
+    return current_count != pthread_getspecific(generation_count_key);
 }
 
 void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
@@ -1118,7 +1122,7 @@ struct autosuggestion_result_t {
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer(
     const wcstring &search_string, size_t cursor_pos, history_t *history) {
-    const unsigned int generation_count = s_generation_count;
+    const unsigned int generation_count = read_generation_count();
     const wcstring working_directory(env_get_pwd_slash());
     env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
     // TODO: suspicious use of 'history' here
@@ -1129,7 +1133,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         const autosuggestion_result_t nothing = {};
         // If the main thread has moved on, skip all the work.
-        if (generation_count != s_generation_count) {
+        if (generation_count != read_generation_count()) {
             return nothing;
         }
 
@@ -2103,10 +2107,10 @@ static std::function<highlight_result_t(void)> get_highlight_performer(const wcs
                                                                        long match_highlight_pos,
                                                                        bool no_io) {
     env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
-    unsigned int generation_count = s_generation_count;
+    unsigned int generation_count = read_generation_count();
     highlight_function_t highlight_func = no_io ? highlight_shell_no_io : data->highlight_function;
     return [=]() -> highlight_result_t {
-        if (generation_count != s_generation_count) {
+        if (generation_count != read_generation_count()) {
             // The gen count has changed, so don't do anything.
             return {};
         }

@@ -242,7 +242,9 @@ class cached_esc_sequences_t {
     }
 
     size_t find_entry(const wchar_t *entry) {
+        size_t entry_len = wcslen(entry);
         for (auto len : lengths) {
+            if (len > entry_len) continue;
             auto match = cache.find(wcstring(entry, len));
             if (match != cache.end()) {  // we found a matching cached sequence
                 // Periodically sort  the sequence lengths so we check for matches going from the

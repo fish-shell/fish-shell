@@ -505,10 +505,10 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
 }
 
 bool env_universal_t::load() {
-    scoped_lock locker(lock);
     callback_data_list_t callbacks;
     const wcstring vars_path =
         explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
+    scoped_lock locker(lock);
     bool success = load_from_path(vars_path, &callbacks);
     if (!success && !tried_renaming && errno == ENOENT) {
         // We failed to load, because the file was not found. Older fish used the hostname only. Try

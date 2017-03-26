@@ -143,7 +143,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Without this, a \r will overwrite the other text, rendering it invisible - which makes the exercise kinda pointless.
     # TODO: Test this in windows (\r\n line endings)
     bind -M paste \r "commandline -i \n"
-    bind -M paste "'" "__fish_commandline_insert_escaped ' \$__fish_paste_quoted"
+    bind -M paste "'" "__fish_commandline_insert_escaped \' \$__fish_paste_quoted"
     bind -M paste \\ "__fish_commandline_insert_escaped \\ \$__fish_paste_quoted"
 end
 

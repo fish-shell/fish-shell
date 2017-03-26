@@ -1,0 +1,17 @@
+# fish - the friendly interactive shell
+# Copyright © 2017
+# This file is distributed under the same license as the fish package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: fish 2.5.0\n"
+"Last-Translator: Andreas Nordal <andreas.nordal_4@hotmail.com>\n"
+"Language: nn\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: parse_constants.h:213
+#, c-format
+msgid "No matches for wildcard '%ls'. See `help expand`."
+msgstr "Inkje treff for jokerteiknmønster «%ls» Sjå `help expand`."

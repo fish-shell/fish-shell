@@ -1793,8 +1793,8 @@ msgstr "Ogiltig filidentifierare '%ls'"
 
 #: parse_constants.h:213
 #, c-format
-msgid "No matches for wildcard '%ls'."
-msgstr ""
+msgid "No matches for wildcard '%ls'. See `help expand`."
+msgstr "Ingen träff för jokerteckenmönster '%ls' Se `help expand`."
 
 #: parse_constants.h:216
 #, fuzzy

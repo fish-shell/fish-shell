@@ -1778,8 +1778,8 @@ msgstr "Illegal file descriptor in redirection “%ls”"
 
 #: parse_constants.h:213
 #, c-format
-msgid "No matches for wildcard '%ls'."
-msgstr "No matches for wildcard “%ls”."
+msgid "No matches for wildcard '%ls'. See `help expand`."
+msgstr "No matches for wildcard “%ls”. See `help expand`."
 
 #: parse_constants.h:216
 msgid "break command while not inside of loop"

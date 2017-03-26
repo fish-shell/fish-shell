@@ -1,33 +1,33 @@
-Array index out of bounds
-fish: show "$foo[2]"
-                 ^
-Array index out of bounds
-fish: show $foo[2]
-                ^
-Array index out of bounds
-fish: show "$foo[1 2]"
-                   ^
-Array index out of bounds
-fish: show $foo[1 2]
-                  ^
-Array index out of bounds
-fish: show "$foo[2 1]"
-                 ^
-Array index out of bounds
-fish: show $foo[2 1]
-                ^
-Invalid index value
-fish: echo "$foo[d]"
-                 ^
-Invalid index value
-fish: echo $foo[d]
-                ^
-Array index out of bounds
-fish: echo ()[1]
-              ^
-Invalid index value
-fish: echo ()[d]
-              ^
-$) is not a valid variable in fish.
-fish: echo $$paren
+fish: Array index out of bounds
+show "$foo[2]"
+           ^
+fish: Array index out of bounds
+show $foo[2]
+          ^
+fish: Array index out of bounds
+show "$foo[1 2]"
+             ^
+fish: Array index out of bounds
+show $foo[1 2]
             ^
+fish: Array index out of bounds
+show "$foo[2 1]"
+           ^
+fish: Array index out of bounds
+show $foo[2 1]
+          ^
+fish: Invalid index value
+echo "$foo[d]"
+           ^
+fish: Invalid index value
+echo $foo[d]
+          ^
+fish: Array index out of bounds
+echo ()[1]
+        ^
+fish: Invalid index value
+echo ()[d]
+        ^
+fish: $) is not a valid variable in fish.
+echo $$paren
+      ^

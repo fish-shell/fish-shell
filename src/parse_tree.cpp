@@ -29,7 +29,8 @@ static bool production_is_empty(const production_element_t *production) {
 /// Returns a string description of this parse error.
 wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix,
                                              bool is_interactive, bool skip_caret) const {
-    wcstring result = text;
+    wcstring result = prefix;
+    result.append(this->text);
 
     if (skip_caret || source_start >= src.size() || source_start + source_length > src.size()) {
         return result;
@@ -72,16 +73,14 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     if (!result.empty()) {
         result.push_back(L'\n');
     }
-    result.append(prefix);
     result.append(src, line_start, line_end - line_start);
 
     // Append the caret line. The input source may include tabs; for that reason we
     // construct a "caret line" that has tabs in corresponding positions.
-    const wcstring line_to_measure = prefix + wcstring(src, line_start, source_start - line_start);
     wcstring caret_space_line;
     caret_space_line.reserve(source_start - line_start);
-    for (size_t i = 0; i < line_to_measure.size(); i++) {
-        wchar_t wc = line_to_measure.at(i);
+    for (size_t i = line_start; i < source_start; i++) {
+        wchar_t wc = src.at(i);
         if (wc == L'\t') {
             caret_space_line.push_back(L'\t');
         } else if (wc == L'\n') {

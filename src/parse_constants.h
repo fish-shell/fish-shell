@@ -245,9 +245,7 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 #define ILLEGAL_FD_ERR_MSG _(L"Illegal file descriptor in redirection '%ls'")
 
 /// Error message for wildcards with no matches.
-#define WILDCARD_ERR_MSG                                                                     \
-    _(L"No matches for wildcard '%ls'.  (Tip: empty matches are allowed in 'set', 'count', " \
-      L"'for'.)")
+#define WILDCARD_ERR_MSG _(L"No matches for wildcard '%ls'. See `help expand`.")
 
 /// Error when using break outside of loop.
 #define INVALID_BREAK_ERR_MSG _(L"'break' while not inside of loop")

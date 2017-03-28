@@ -1,5 +1,5 @@
 # Test the umask command. In particular the symbolic modes since they've been
-# broken for a long time (see #438).
+# broken for four years (see issue #738) at the time I added these tests.
 
 # Establish a base line umask.
 umask 027
@@ -14,8 +14,8 @@ umask 0282
 
 # Verify that symbolic modifications and output is correct.
 #
-# When I wrote this these tests I based all of the results on the behavior of
-# bash when executing identical commands. So if bash has a bug with the umask
+# When I wrote these tests I based all of the results on the behavior of bash
+# when executing identical commands. So if bash has a bug with the umask
 # command it's possible fish will as well. However, I did verify the result of
 # each interaction and did not find any bugs in how bash or fish handled these
 # scenarios.

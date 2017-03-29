@@ -709,25 +709,26 @@ parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_er
 
 // Given a command string that might contain fish special tokens return a string without those
 // tokens.
-static wcstring reconstruct_orig_cmd(wcstring cmd_str) {
-    // TODO(krader1961): Figure out what VARIABLE_EXPAND means in this context. After looking at the
-    // code and doing various tests I couldn't figure out why that token would be present when this
-    // code is run. I was therefore unable to determine how to substitute its presence in the error
-    // message.
-    wcstring orig_cmd = cmd_str;
+//
+// TODO(krader1961): Figure out what VARIABLE_EXPAND means in this context. After looking at the
+// code and doing various tests I couldn't figure out why that token would be present when this
+// code is run. I was therefore unable to determine how to substitute its presence in the error
+// message.
+static wcstring reconstruct_orig_str(wcstring tokenized_str) {
+    wcstring orig_str = tokenized_str;
 
-    if (cmd_str.find(VARIABLE_EXPAND_SINGLE) != std::string::npos) {
+    if (tokenized_str.find(VARIABLE_EXPAND_SINGLE) != std::string::npos) {
         // Variable was quoted to force expansion of multiple elements into a single element.
         //
         // The following isn't entirely correct. For example, $abc"$def" will become "$abc$def".
         // However, anyone writing the former is asking for trouble so I don't feel bad about not
         // accurately reconstructing what they typed.
-        wcstring new_cmd_str = wcstring(cmd_str);
-        std::replace(new_cmd_str.begin(), new_cmd_str.end(), (wchar_t)VARIABLE_EXPAND_SINGLE, L'$');
-        orig_cmd = L"\"" + new_cmd_str + L"\"";
+        wcstring new_str = wcstring(tokenized_str);
+        std::replace(new_str.begin(), new_str.end(), (wchar_t)VARIABLE_EXPAND_SINGLE, L'$');
+        orig_str = L"\"" + new_str + L"\"";
     }
 
-    return orig_cmd;
+    return orig_str;
 }
 
 /// Handle the case of command not found.
@@ -760,12 +761,13 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
                                name_str.c_str(), val_str.c_str(), argument.c_str(),
                                ellipsis_str.c_str());
         } else {
+            wcstring assigned_val = reconstruct_orig_str(val_str);
             this->report_error(statement_node, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, name_str.c_str(),
-                               val_str.c_str());
+                               assigned_val.c_str());
         }
     } else if (wcschr(cmd, L'$') || wcschr(cmd, VARIABLE_EXPAND_SINGLE) ||
                wcschr(cmd, VARIABLE_EXPAND)) {
-        wcstring eval_cmd = reconstruct_orig_cmd(cmd_str);
+        wcstring eval_cmd = reconstruct_orig_str(cmd_str);
         this->report_error(statement_node, _(L"Variables may not be used as commands. In fish, "
                                              L"please define a function or use 'eval %ls'."),
                            eval_cmd.c_str());

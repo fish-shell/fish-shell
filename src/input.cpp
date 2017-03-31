@@ -409,7 +409,7 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
     wchar_t c = 0;
     int j;
 
-    debug(2, L"trying to match mapping %ls", escape_string(m.seq.c_str(), ESCAPE_ALL).c_str());
+    debug(4, L"trying to match mapping %ls", escape_string(m.seq.c_str(), ESCAPE_ALL).c_str());
     const wchar_t *str = m.seq.c_str();
     for (j = 0; str[j] != L'\0'; j++) {
         bool timed = (j > 0 && iswcntrl(str[0]));

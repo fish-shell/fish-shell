@@ -13,6 +13,7 @@
 - The `read` command now accepts simple strings for the prompt rather than fish script via the new `-P` and `--prompt-str` flags (#802).
 - `type` now no longer requires `which`, which means fish no longer uses it anywhere. Packagers should remove the dependency (#3912).
 - Using symbolic permissions with the `umask` command now works (#738).
+- Command substitutions now have access to the terminal, allowing tools like `fzf` to work in them (#1362, #3922).
 
 ---
 

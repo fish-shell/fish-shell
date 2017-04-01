@@ -22,9 +22,6 @@ fish: echo "$foo[d]"
 Invalid index value
 fish: echo $foo[d]
                 ^
-Array index out of bounds
-fish: echo ()[1]
-              ^
 Invalid index value
 fish: echo ()[d]
               ^

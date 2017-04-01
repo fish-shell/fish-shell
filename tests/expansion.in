@@ -78,7 +78,7 @@ show $foo[2 1]
 echo "$foo[d]"
 echo $foo[d]
 
-echo ()[1]
+count ()[1]
 echo ()[d]
 
 echo "Catch your breath"

@@ -1092,17 +1092,21 @@ static int expand_cmdsubst(const wcstring &input, std::vector<completion_t> *out
         tail_begin = slice_end;
         for (i = 0; i < slice_idx.size(); i++) {
             long idx = slice_idx.at(i);
-            if (idx < 1 || (size_t)idx > sub_res.size()) {
+            if (idx == 1 && sub_res.size() == 0) {
+                // Don't error out on [1], for consistency with variable expansion
+                idx = idx - 1;
+            } else if (idx < 1 || (size_t)idx > sub_res.size()) {
                 size_t pos = slice_source_positions.at(i);
                 append_syntax_error(errors, slice_begin - in + pos, ARRAY_BOUNDS_ERR);
                 return 0;
-            }
-            idx = idx - 1;
+            } else {
+                idx = idx - 1;
 
-            sub_res2.push_back(sub_res.at(idx));
-            // debug( 0, L"Pushing item '%ls' with index %d onto sliced result", al_get(
-            // sub_res, idx ), idx );
-            // sub_res[idx] = 0; // ??
+                sub_res2.push_back(sub_res.at(idx));
+                // debug( 0, L"Pushing item '%ls' with index %d onto sliced result", al_get(
+                // sub_res, idx ), idx );
+                // sub_res[idx] = 0; // ??
+            }
         }
         sub_res = sub_res2;
     }

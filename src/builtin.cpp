@@ -2988,11 +2988,8 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
 /// Helper function for builtin_bg().
 static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j, const wchar_t *name) {
-    if (j == 0) {
-        streams.err.append_format(_(L"%ls: Unknown job '%ls'\n"), L"bg", name);
-        builtin_print_help(parser, streams, L"bg", streams.err);
-        return STATUS_BUILTIN_ERROR;
-    } else if (!j->get_flag(JOB_CONTROL)) {
+    assert(j != NULL);
+    if (!j->get_flag(JOB_CONTROL)) {
         streams.err.append_format(
             _(L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n"),
             L"bg", j->job_id, j->command_wcstr());
@@ -3045,10 +3042,12 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
 
         // Background all existing jobs that match the pids.
-        // Non-existent jobs aren't an error.
+        // Non-existent jobs aren't an error, but information about them is useful.
         for (auto p : pids) {
             if (job_t* j = job_get_from_pid(p)) {
                 res |= send_to_bg(parser, streams, j, *argv);
+            } else {
+                streams.err.append_format(_(L"%ls: Could not find job '%d'\n"), argv[0], p);
             }
         }
     }

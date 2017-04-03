@@ -1,8 +1,10 @@
 # Test that using variables as command names work correctly.
+set test echo
+# This should work
+command $test external echo
 
-# Both of these should generate errors about using variables as command names.
+# Both of these should generate errors about using variables as plain command names.
 # Verify that the expected errors are written to stderr.
-exec $test
-exec "$test"
-
+$test
+"$test"
 exit 0

@@ -815,9 +815,17 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     wcstring cmd;
     bool got_cmd = tree.command_for_plain_statement(statement, src, &cmd);
     assert(got_cmd);
-
+    bool expanded;
     // Expand it as a command. Return an error on failure.
-    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
+
+    if (tree.decoration_for_plain_statement(statement) == parse_statement_decoration_none) {
+        // undecorated statement - we do not expand variables
+        expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
+
+    } else {
+        // decorated statement, e.g. "command $foo" - we expand variables
+        expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST, NULL);
+    }
     if (!expanded) {
         report_error(statement, ILLEGAL_CMD_ERR_MSG, cmd.c_str());
         proc_set_last_status(STATUS_ILLEGAL_CMD);

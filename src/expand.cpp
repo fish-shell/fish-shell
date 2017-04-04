@@ -1403,8 +1403,10 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
             // mostly the same. There's the following differences:
             //
             // 1. An empty CDPATH should be treated as '.', but an empty PATH should be left empty
-            // (no commands can be found). Also, an empty element of CDPATH is treated as '.' for
-            // consistency with POSIX shells.
+            // (no commands can be found). Also, an empty element in either is treated as '.' for
+            // consistency with POSIX shells. Note that we rely on the latter by having called
+            // `munge_colon_delimited_array()` for these special env vars. Thus we do not
+            // special-case them here.
             //
             // 2. PATH is only "one level," while CDPATH is multiple levels. That is, input like
             // 'foo/bar' should resolve against CDPATH, but not PATH.
@@ -1423,16 +1425,10 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
                 env_var_t paths = env_get_string(for_cd ? L"CDPATH" : L"PATH");
                 if (paths.missing_or_empty()) paths = for_cd ? L"." : L"";
 
-                // Tokenize it into directories.
+                // Tokenize it into path names.
                 std::vector<wcstring> pathsv;
                 tokenize_variable_array(paths, pathsv);
-
                 for (auto next_path : pathsv) {
-                    if (next_path.empty()) {
-                        if (!for_cd) continue;
-                        next_path = L".";
-                    }
-                    // Ensure that we use the working directory for relative cdpaths like ".".
                     effective_working_dirs.push_back(
                         path_apply_working_directory(next_path, working_dir));
                 }

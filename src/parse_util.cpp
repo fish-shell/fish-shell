@@ -748,8 +748,10 @@ static bool append_syntax_error(parse_error_list_t *errors, size_t source_locati
 }
 
 /// Returns 1 if the specified command is a builtin that may not be used in a pipeline.
+static const wcstring_list_t forbidden_pipe_commands({L"exec", L"case", L"break", L"return",
+                                                      L"continue"});
 static int parser_is_pipe_forbidden(const wcstring &word) {
-    return contains(word, L"exec", L"case", L"break", L"return", L"continue");
+    return contains(forbidden_pipe_commands, word);
 }
 
 bool parse_util_argument_is_help(const wchar_t *s, int min_match) {

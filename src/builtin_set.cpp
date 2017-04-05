@@ -40,7 +40,8 @@ class parser_t;
     L"%ls: The number of variable indexes does not match the number of values\n"
 
 // Test if the specified variable should be subject to path validation.
-static int is_path_variable(const wchar_t *env) { return contains(env, L"PATH", L"CDPATH"); }
+static const wcstring_list_t path_variables({L"PATH", L"CDPATH"});
+static int is_path_variable(const wchar_t *env) { return contains(path_variables, env); }
 
 /// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
@@ -71,7 +72,7 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
 
         for (i = 0; i < val.size(); i++) {
             const wcstring &dir = val.at(i);
-            if (!string_prefixes_string(L"/", dir) || list_contains_string(existing_values, dir)) {
+            if (!string_prefixes_string(L"/", dir) || contains(existing_values, dir)) {
                 any_success = true;
                 continue;
             }

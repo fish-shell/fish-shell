@@ -250,8 +250,8 @@ extern bool has_working_tty_timestamps;
 /// See https://developer.gnome.org/glib/stable/glib-I18N.html#N-:CAPS
 #define N_(wstr) wstr
 
-/// Check if the specified string element is a part of the specified string list.
-#define contains(str, ...) contains_internal(str, 0, __VA_ARGS__, NULL)
+/// Test if a list of stirngs contains a particular string.
+bool contains(const wcstring_list_t &list, const wcstring &str);
 
 /// Print a stack trace to stderr.
 void show_stackframe(const wchar_t msg_level, int frame_count = 100, int skip_levels = 0);
@@ -361,9 +361,6 @@ struct string_fuzzy_match_t {
 string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
                                                const wcstring &match_against,
                                                fuzzy_match_type_t limit_type = fuzzy_match_none);
-
-/// Test if a list contains a string using a linear search.
-bool list_contains_string(const wcstring_list_t &list, const wcstring &str);
 
 // Check if we are running in the test mode, where we should suppress error output
 #define TESTS_PROGRAM_NAME L"(ignore)"
@@ -673,15 +670,6 @@ void error_reset();
 /// This function should be called after calling `setlocale()` to perform fish specific locale
 /// initialization.
 void fish_setlocale();
-
-/// Checks if \c needle is included in the list of strings specified. A warning is printed if needle
-/// is zero.
-///
-/// \param needle the string to search for in the list.
-///
-/// \return zero if needle is not found, of if needle is null, non-zero otherwise.
-__sentinel bool contains_internal(const wchar_t *needle, int vararg_handle, ...);
-__sentinel bool contains_internal(const wcstring &needle, int vararg_handle, ...);
 
 /// Call read while blocking the SIGCHLD signal. Should only be called if you _know_ there is data
 /// available for reading, or the program will hang until there is data.

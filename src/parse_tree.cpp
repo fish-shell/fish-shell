@@ -1055,7 +1055,9 @@ static const parse_token_t kInvalidToken = {
 static const parse_token_t kTerminalToken = {
     parse_token_type_terminate, parse_keyword_none, false, false, SOURCE_OFFSET_INVALID, 0};
 
-static inline bool is_help_argument(const wcstring &txt) { return contains(txt, L"-h", L"--help"); }
+static inline bool is_help_argument(const wcstring &txt) {
+    return txt == L"-h" || txt == L"--help";
+}
 
 /// Return a new parse token, advancing the tokenizer.
 static inline parse_token_t next_parse_token(tokenizer_t *tok, tok_t *token) {

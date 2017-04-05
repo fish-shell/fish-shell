@@ -875,7 +875,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
         process_type = function_exists(L"cd") ? INTERNAL_FUNCTION : INTERNAL_BUILTIN;
     } else {
-        const globspec_t glob_behavior = contains(cmd, L"set", L"count") ? nullglob : failglob;
+        const globspec_t glob_behavior = (cmd == L"set" || cmd == L"count") ? nullglob : failglob;
         // Form the list of arguments. The command is the first argument. TODO: count hack, where we
         // treat 'count --help' as different from 'count $foo' that expands to 'count --help'. fish
         // 1.x never successfully did this, but it tried to!

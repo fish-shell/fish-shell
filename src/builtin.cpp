@@ -3605,10 +3605,11 @@ void builtin_destroy() {}
 bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_lookup(cmd)); }
 
 /// If builtin takes care of printing help itself
+static const wcstring_list_t help_builtins({L"for", L"while", L"function", L"if", L"end", L"switch",
+                                            L"case", L"count", L"printf"});
 static bool builtin_handles_help(const wchar_t *cmd) {
     CHECK(cmd, 0);
-    return contains(cmd, L"for", L"while", L"function", L"if", L"end", L"switch", L"case", L"count",
-                    L"printf");
+    return contains(help_builtins, cmd);
 }
 
 /// Execute a builtin command

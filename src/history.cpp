@@ -1830,7 +1830,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
             wcstring command;
             tree.command_for_plain_statement(node, str, &command);
             unescape_string_in_place(&command, UNESCAPE_DEFAULT);
-            if (contains(command, L"exit", L"reboot")) {
+            if (command == L"exit" || command == L"reboot") {
                 impending_exit = true;
             }
         }

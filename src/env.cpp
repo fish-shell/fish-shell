@@ -87,15 +87,15 @@ static bool env_initialized = false;
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
-static const wchar_t *const locale_variable[] = {
-    L"LANG",     L"LANGUAGE",          L"LC_ALL",         L"LC_ADDRESS",   L"LC_COLLATE",
-    L"LC_CTYPE", L"LC_IDENTIFICATION", L"LC_MEASUREMENT", L"LC_MESSAGES",  L"LC_MONETARY",
-    L"LC_NAME",  L"LC_NUMERIC",        L"LC_PAPER",       L"LC_TELEPHONE", L"LC_TIME",
-    NULL};
+static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", L"LC_ADDRESS",
+                                               L"LC_COLLATE", L"LC_CTYPE", L"LC_IDENTIFICATION",
+                                               L"LC_MEASUREMENT", L"LC_MESSAGES", L"LC_MONETARY",
+                                               L"LC_NAME", L"LC_NUMERIC", L"LC_PAPER",
+                                               L"LC_TELEPHONE", L"LC_TIME"});
 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.
-static const wchar_t *const curses_variable[] = {L"TERM", L"TERMINFO", L"TERMINFO_DIRS", NULL};
+static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
 
 /// List of all "path" like variable names that need special handling. This includes automatic
 /// splitting and joining on import/export. As well as replacing empty elements, which implicitly
@@ -165,7 +165,7 @@ struct var_stack_t {
     // Pops the top node if it's not global
     void pop();
 
-    bool var_changed(wchar_t const *const vars[]);
+    bool var_changed(const wcstring_list_t &vars);
 
     // Returns the next scope to search for a given node, respecting the new_scope lag
     // Returns NULL if we're done
@@ -188,9 +188,9 @@ void var_stack_t::push(bool new_scope) {
 }
 
 /// Return true if one of the vars in the passed list was changed in the current var scope.
-bool var_stack_t::var_changed(wchar_t const *const vars[]) {
-    for (auto v = vars; *v; v++) {
-        if (top->env.find(*v) != top->env.end()) return true;
+bool var_stack_t::var_changed(const wcstring_list_t &vars) {
+    for (auto v : vars) {
+        if (top->env.find(v) != top->env.end()) return true;
     }
     return false;
 }
@@ -203,8 +203,8 @@ void var_stack_t::pop() {
         return;
     }
 
-    bool locale_changed = this->var_changed(locale_variable);
-    bool curses_changed = this->var_changed(curses_variable);
+    bool locale_changed = this->var_changed(locale_variables);
+    bool curses_changed = this->var_changed(curses_variables);
 
     if (top->new_scope) {  //!OCLINT(collapsible if statements)
         if (top->exportv || local_scope_exports(top->next.get())) {
@@ -365,8 +365,8 @@ static void fix_colon_delimited_var(const wcstring &var_name) {
 
 /// Check if the specified variable is a locale variable.
 static bool var_is_locale(const wcstring &key) {
-    for (size_t i = 0; locale_variable[i]; i++) {
-        if (key == locale_variable[i]) {
+    for (auto var_name : locale_variables) {
+        if (key == var_name) {
             return true;
         }
     }
@@ -379,9 +379,9 @@ static void init_locale() {
     // invalidate the pointer from the this setlocale() call.
     char *old_msg_locale = strdup(setlocale(LC_MESSAGES, NULL));
 
-    for (const wchar_t *const *var_name = locale_variable; *var_name; var_name++) {
-        const env_var_t val = env_get_string(*var_name, ENV_EXPORT);
-        const std::string &name = wcs2string(*var_name);
+    for (auto var_name : locale_variables) {
+        const env_var_t val = env_get_string(var_name, ENV_EXPORT);
+        const std::string &name = wcs2string(var_name);
         const std::string &value = wcs2string(val);
         debug(2, L"locale var %s='%s'", name.c_str(), value.c_str());
         if (val.empty()) {
@@ -410,8 +410,8 @@ static void init_locale() {
 
 /// Check if the specified variable is a locale variable.
 static bool var_is_curses(const wcstring &key) {
-    for (size_t i = 0; curses_variable[i]; i++) {
-        if (key == curses_variable[i]) {
+    for (auto var_name : curses_variables) {
+        if (key == var_name) {
             return true;
         }
     }
@@ -433,17 +433,19 @@ bool term_supports_setting_title() { return can_set_term_title; }
 /// One situation in which this breaks down is with screen, since screen supports setting the
 /// terminal title if the underlying terminal does so, but will print garbage on terminals that
 /// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
+static const wcstring_list_t title_terms({L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt"});
 static bool does_term_support_setting_title() {
     const env_var_t term_str = env_get_string(L"TERM");
     if (term_str.missing()) return false;
 
     const wchar_t *term = term_str.c_str();
-    bool recognized = contains(term, L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt");
+    bool recognized = contains(title_terms, term_str);
     if (!recognized) recognized = !wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
     if (!recognized) recognized = !wcsncmp(term, L"screen-", wcslen(L"screen-"));
     if (!recognized) recognized = !wcsncmp(term, L"tmux-", wcslen(L"tmux-"));
     if (!recognized) {
-        if (contains(term, L"linux", L"dumb")) return false;
+        if (term_str == L"linux") return false;
+        if (term_str == L"dumb") return false;
 
         char *n = ttyname(STDIN_FILENO);
         if (!n || strstr(n, "tty") || strstr(n, "/vc/")) return false;
@@ -535,9 +537,9 @@ static void init_path_vars() {
 
 /// Initialize the curses subsystem.
 static void init_curses() {
-    for (const wchar_t *const *var_name = curses_variable; *var_name; var_name++) {
-        const env_var_t val = env_get_string(*var_name, ENV_EXPORT);
-        const std::string &name = wcs2string(*var_name);
+    for (auto var_name : curses_variables) {
+        const env_var_t val = env_get_string(var_name, ENV_EXPORT);
+        const std::string &name = wcs2string(var_name);
         const std::string &value = wcs2string(val);
         debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
         if (val.empty()) {
@@ -577,7 +579,7 @@ static void init_curses() {
 // outgoing back to it. This is deliberately very short - we don't want to add language-specific
 // values like CLASSPATH.
 static bool variable_is_colon_delimited_var(const wcstring &str) {
-    return list_contains_string(colon_delimited_variable, str);
+    return contains(colon_delimited_variable, str);
 }
 
 /// React to modifying the given variable.
@@ -902,7 +904,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
     bool has_changed_old = vars_stack().has_changed_exported;
     int done = 0;
 
-    if (val && contains(key, L"PWD", L"HOME")) {
+    if (val && (key == L"PWD" || key == L"HOME")) {
         // Canonicalize our path; if it changes, recurse and try again.
         wcstring val_canonical = val;
         path_make_canonical(val_canonical);

@@ -101,7 +101,7 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
 
     // Hackish fix for issue #270. Prevent wildcards from matching . or .., but we must still allow
     // literal matches.
-    if (leading_dots_fail_to_match && is_first && contains(str, L".", L"..")) {
+    if (leading_dots_fail_to_match && is_first && (!wcscmp(str, L".") || !wcscmp(str, L".."))) {
         // The string is '.' or '..'. Return true if the wildcard exactly matches.
         return wcscmp(str, wc) ? fuzzy_match_none : fuzzy_match_exact;
     }
@@ -700,7 +700,7 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
 
     while (!interrupted() && wreaddir_for_dirs(base_dir_fp, &name_str)) {
         // Don't bother with . and ..
-        if (contains(name_str, L".", L"..")) {
+        if (name_str == L"." || name_str == L"..") {
             continue;
         }
 

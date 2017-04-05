@@ -459,45 +459,6 @@ void fish_setlocale() {
     omitted_newline_char = can_be_encoded(L'\x23CE') ? L'\x23CE' : L'~';
 }
 
-bool contains_internal(const wchar_t *a, int vararg_handle, ...) {
-    const wchar_t *arg;
-    va_list va;
-    bool res = false;
-
-    CHECK(a, 0);
-
-    va_start(va, vararg_handle);
-    while ((arg = va_arg(va, const wchar_t *)) != 0) {
-        if (wcscmp(a, arg) == 0) {
-            res = true;
-            break;
-        }
-    }
-    va_end(va);
-    return res;
-}
-
-/// wcstring variant of contains_internal. The first parameter is a wcstring, the rest are const
-/// wchar_t *. vararg_handle exists only to give us a POD-value to pass to va_start.
-__sentinel bool contains_internal(const wcstring &needle, int vararg_handle, ...) {
-    const wchar_t *arg;
-    va_list va;
-    int res = 0;
-
-    const wchar_t *needle_cstr = needle.c_str();
-    va_start(va, vararg_handle);
-    while ((arg = va_arg(va, const wchar_t *)) != 0) {
-        // libc++ has an unfortunate implementation of operator== that unconditonally wcslen's the
-        // wchar_t* parameter, so prefer wcscmp directly.
-        if (!wcscmp(needle_cstr, arg)) {
-            res = 1;
-            break;
-        }
-    }
-    va_end(va);
-    return res;
-}
-
 long read_blocked(int fd, void *buf, size_t count) {
     long bytes_read = 0;
 
@@ -1588,7 +1549,7 @@ int string_fuzzy_match_t::compare(const string_fuzzy_match_t &rhs) const {
     return 0;  // equal
 }
 
-bool list_contains_string(const wcstring_list_t &list, const wcstring &str) {
+bool contains(const wcstring_list_t &list, const wcstring &str) {
     return std::find(list.begin(), list.end(), str) != list.end();
 }
 

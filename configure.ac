@@ -37,7 +37,7 @@ AC_SUBST(EXTRA_PCRE2)
 AC_MSG_CHECKING([if autoreconf needs to be run])
 if test configure -ot configure.ac; then
   AC_MSG_RESULT([yes])
-  if which autoreconf >/dev/null; then
+  if command -v autoreconf >/dev/null; then
     # No need to provide any error messages if autoreconf fails, the
     # shell and autconf should take care of that themselves
     AC_MSG_NOTICE([running autoreconf --no-recursive])
@@ -68,7 +68,7 @@ fi
 AC_MSG_CHECKING([if autoheader needs to be run])
 if test ! -f ./config.h.in -o config.h.in -ot configure.ac; then
   AC_MSG_RESULT([yes])
-  if which autoheader >/dev/null; then
+  if command -v autoheader >/dev/null; then
     AC_MSG_NOTICE([running autoheader])
     autoheader || exit 1
   else

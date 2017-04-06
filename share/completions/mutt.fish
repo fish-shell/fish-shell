@@ -1,4 +1,4 @@
-if which abook >/dev/null ^/dev/null
+if command -sq abook
     complete -c mutt -f -a '(__fish_print_abook_emails)'
     complete -c mutt -s c -x -d 'Specify a carbon-copy (CC) recipient' -a '(__fish_print_abook_emails)'
     complete -c mutt -s b -x -d 'Specify a blind-carbon-copy (BCC) recipient' -a '(__fish_print_abook_emails)'

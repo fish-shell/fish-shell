@@ -70,6 +70,7 @@ enum {
     R_KILL_SELECTION,
     R_FORWARD_JUMP,
     R_BACKWARD_JUMP,
+    R_OR,
     R_AND,
     R_CANCEL,
     R_TIMEOUT,  // we didn't get interactive input within wait_on_escape_ms

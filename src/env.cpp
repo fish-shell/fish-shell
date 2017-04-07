@@ -803,7 +803,14 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 
     // Set up the USER and PATH variables
     setup_path();
-    setup_user(false);
+
+    // Some `su`s keep $USER (and $HOME)
+    // when changing to root.
+    // This leads to issues later on (and e.g. in prompts),
+    // so we work around it by resetting $USER.
+    // TODO: Figure out if that su actually checks if username == "root"(as the man page says) or UID == 0.
+    uid_t uid = getuid();
+    setup_user(uid == 0);
 
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
@@ -824,7 +831,9 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     env_read_only.insert(L"SHLVL");
 
     // Set up the HOME variable.
-    if (env_get_string(L"HOME").missing_or_empty()) {
+    // As with $USER, some su implementations pass this along
+    // if the target user is root. Work around that.
+    if (env_get_string(L"HOME").missing_or_empty() || uid == 0) {
         const env_var_t unam = env_get_string(L"USER");
         char *unam_narrow = wcs2str(unam.c_str());
         struct passwd *pw = getpwnam(unam_narrow);

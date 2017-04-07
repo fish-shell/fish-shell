@@ -834,21 +834,13 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // As with $USER, some su implementations pass this along
     // if the target user is root. Work around that.
     if (env_get_string(L"HOME").missing_or_empty() || uid == 0) {
-        const env_var_t unam = env_get_string(L"USER");
-        char *unam_narrow = wcs2str(unam.c_str());
-        struct passwd *pw = getpwnam(unam_narrow);
-        if (pw == NULL) {
-            // Maybe USER is set but it's bogus. Reset USER from the db and try again.
-            setup_user(true);
-            const env_var_t unam = env_get_string(L"USER");
-            unam_narrow = wcs2str(unam.c_str());
-            pw = getpwnam(unam_narrow);
-        }
-        if (pw && pw->pw_dir) {
+        struct passwd *pw = getpwuid(uid);
+        // If pw is NULL, there's not much we can do here.
+        assert(pw != NULL);
+        if (pw->pw_dir) {
             const wcstring dir = str2wcstring(pw->pw_dir);
             env_set(L"HOME", dir.c_str(), ENV_GLOBAL | ENV_EXPORT);
         }
-        free(unam_narrow);
     }
 
     env_set_pwd();         // initialize the PWD variable

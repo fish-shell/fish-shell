@@ -62,6 +62,12 @@ show "$$foo"
 show $$foo
 show "prefix$$foo"
 show prefix$$foo
+show $foo[-5..2]
+show $foo[-2..-1]
+show $foo[-10..-5]
+show (printf '%s\n' $foo)[-5..2]
+show (printf '%s\n' $foo)[-2..-1]
+show (printf '%s\n' $foo)[-10..-5]
 
 set -l foo
 show "$foo[1]"

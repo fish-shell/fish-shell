@@ -796,28 +796,26 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
 
                 if (!all_vars) {
                     wcstring_list_t string_values(var_idx_list.size());
+                    int success = 0;
                     for (size_t j = 0; j < var_idx_list.size(); j++) {
                         long tmp = var_idx_list.at(j);
-                        // Check that we are within array bounds. If not, truncate the list to
-                        // exit.
-                        if (tmp < 1 || (size_t)tmp > var_item_list.size()) {
-                            size_t var_src_pos = var_pos_list.at(j);
-                            // The slice was parsed starting at stop_pos, so we have to add that
-                            // to the error position.
-                            append_syntax_error(errors, slice_start + var_src_pos,
-                                                ARRAY_BOUNDS_ERR);
-                            is_ok = false;
-                            var_idx_list.resize(j);
-                            break;
-                        } else {
-                            // Replace each index in var_idx_list inplace with the string value
-                            // at the specified index.
-                            // al_set( var_idx_list, j, wcsdup((const wchar_t *)al_get(
-                            // &var_item_list, tmp-1 ) ) );
-                            string_values.at(j) = var_item_list.at(tmp - 1);
+                        // Check that we are within array bounds. If not, skip the element.
+                        // Note: Negative indices (`echo $foo[-1]`) are already converted to
+                        // positive ones here,
+                        // so tmp < 1 means it's definitely not in.
+                        if ((size_t)tmp > var_item_list.size() || tmp < 1) {
+                            continue;
                         }
+                        // Replace each index in var_idx_list inplace with the string value
+                        // at the specified index.
+                        // al_set( var_idx_list, j, wcsdup((const wchar_t *)al_get(
+                        // &var_item_list, tmp-1 ) ) );
+                        string_values.at(success) = var_item_list.at(tmp - 1);
+                        success++;
                     }
 
+                    // Resize the list to remove invalid elements
+                    string_values.resize(success);
                     // string_values is the new var_item_list.
                     var_item_list = std::move(string_values);
                 }
@@ -892,17 +890,6 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
                 return is_ok;
             }
             stop_pos = (slice_end - in);
-
-            // Validate that the parsed indexes are valid.
-            for (size_t j = 0; j < var_idx_list.size(); j++) {
-                long tmp = var_idx_list.at(j);
-                if (tmp != 1) {
-                    size_t var_src_pos = var_pos_list.at(j);
-                    append_syntax_error(errors, slice_start + var_src_pos, ARRAY_BOUNDS_ERR);
-                    is_ok = 0;
-                    return is_ok;
-                }
-            }
         }
 
         // Expand a non-existing variable.
@@ -1090,10 +1077,8 @@ static int expand_cmdsubst(const wcstring &input, std::vector<completion_t> *out
         tail_begin = slice_end;
         for (i = 0; i < slice_idx.size(); i++) {
             long idx = slice_idx.at(i);
-            if (idx < 1 || (size_t)idx > sub_res.size()) {
-                size_t pos = slice_source_positions.at(i);
-                append_syntax_error(errors, slice_begin - in + pos, ARRAY_BOUNDS_ERR);
-                return 0;
+            if ((size_t)idx > sub_res.size() || idx < 1) {
+                continue;
             }
             idx = idx - 1;
 

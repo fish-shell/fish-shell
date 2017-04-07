@@ -2696,13 +2696,18 @@ const wchar_t *reader_readline(int nchars) {
                 // Remove the current character in the character buffer and on the screen using
                 // syntax highlighting, etc.
                 editable_line_t *el = data->active_edit_line();
+                // Return true if there was something to delete,
+                // false if the cursor was at the end of the line.
+                bool status = false;
                 if (el->position < el->size()) {
                     update_buff_pos(el, el->position + 1);
                     remove_backward();
                     if (el->position > 0 && el->position == el->size()) {
                         update_buff_pos(el, el->position - 1);
                     }
+                    status = true;
                 }
+                input_function_set_status(status);
                 break;
             }
             // Evaluate. If the current command is unfinished, or if the charater is escaped using a

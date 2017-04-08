@@ -11,7 +11,7 @@
 - Completions for `helm` added (#3829).
 - Empty CDPATH elements are now equivalent to "." (#2106).
 - The `read` command now accepts simple strings for the prompt rather than fish script via the new `-P` and `--prompt-str` flags (#802).
-- `type` now no longer requires `which`, which means it is no longer a runtime dependency (#3912).
+- `type` now no longer requires `which`, which means it is no longer a dependency (#3912, #3945).
 - Using symbolic permissions with the `umask` command now works (#738).
 - Command substitutions now have access to the terminal, allowing tools like `fzf` to work in them (#1362, #3922).
 - `bg`s argument parsing has been reworked. It now fails for invalid arguments but allows non-existent jobs (#3909).

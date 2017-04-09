@@ -1976,9 +1976,9 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
 
 /// Read from the tty. This is only valid when the stream is stdin and it is attached to a tty and
 /// we weren't asked to split on null characters.
-static int read_interactive(wcstring &buff, int nchars, bool shell, const wchar_t *mode_name,
-                            const wchar_t *prompt, const wchar_t *right_prompt,
-                            const wchar_t *commandline) {
+static int read_interactive(wcstring &buff, int nchars, bool shell, bool silent,
+                            const wchar_t *mode_name, const wchar_t *prompt,
+                            const wchar_t *right_prompt, const wchar_t *commandline) {
     int exit_res = STATUS_BUILTIN_OK;
     const wchar_t *line;
 
@@ -1994,6 +1994,7 @@ static int read_interactive(wcstring &buff, int nchars, bool shell, const wchar_
     reader_set_allow_autosuggesting(false);
     reader_set_expand_abbreviations(false);
     reader_set_exit_on_interrupt(true);
+    reader_set_silent_status(silent);
 
     reader_set_buffer(commandline, wcslen(commandline));
     proc_push_interactive(1);
@@ -2137,9 +2138,10 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     int nchars = 0;
     bool shell = false;
     bool array = false;
+    bool silent = false;
     bool split_null = false;
 
-    const wchar_t *short_options = L"ac:ghlm:n:p:suxzP:UR:";
+    const wchar_t *short_options = L"ac:ghilm:n:p:suxzP:UR:";
     const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
                                            {L"global", no_argument, NULL, 'g'},
                                            {L"local", no_argument, NULL, 'l'},
@@ -2150,6 +2152,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                                            {L"right-prompt", required_argument, NULL, 'R'},
                                            {L"command", required_argument, NULL, 'c'},
                                            {L"mode-name", required_argument, NULL, 'm'},
+                                           {L"silent", no_argument, NULL, 'i'},
                                            {L"nchars", required_argument, NULL, 'n'},
                                            {L"shell", no_argument, NULL, 's'},
                                            {L"array", no_argument, NULL, 'a'},
@@ -2224,6 +2227,10 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             }
             case 'a': {
                 array = true;
+                break;
+            }
+            case L'i': {
+                silent = true;
                 break;
             }
             case L'z': {
@@ -2302,8 +2309,8 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         // We should read interactively using reader_readline(). This does not support splitting on
         // null. The call to reader_readline may change woptind, so we save and restore it.
         int saved_woptind = w.woptind;
-        exit_res =
-            read_interactive(buff, nchars, shell, mode_name, prompt, right_prompt, commandline);
+        exit_res = read_interactive(buff, nchars, shell, silent, mode_name, prompt, right_prompt,
+                                    commandline);
         w.woptind = saved_woptind;
     } else if (!nchars && !stream_stdin_is_a_tty && lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
         exit_res = read_in_chunks(streams.stdin_fd, buff, split_null);

@@ -50,6 +50,7 @@ static bool thread_asserts_cfg_for_testing = false;
 
 wchar_t ellipsis_char;
 wchar_t omitted_newline_char;
+wchar_t obfuscation_read_char;
 bool g_profiling_active = false;
 const wchar_t *program_name;
 int debug_level = 1;         // default maximum debug output level (errors and warnings)
@@ -457,6 +458,9 @@ void fish_setlocale() {
 
     // Use the Unicode "return" symbol if it can be encoded using the current locale.
     omitted_newline_char = can_be_encoded(L'\x23CE') ? L'\x23CE' : L'~';
+
+    // solid circle unicode character if it is able, fallback to the hash character
+    obfuscation_read_char = can_be_encoded(L'\u25cf') ? L'\u25cf' : L'#';
 }
 
 long read_blocked(int fd, void *buf, size_t count) {

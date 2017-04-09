@@ -168,6 +168,8 @@ class reader_data_t {
     bool suppress_autosuggestion;
     /// Whether abbreviations are expanded.
     bool expand_abbreviations;
+    /// Silent mode used for password input on the read command
+    bool silent;
     /// The representation of the current screen contents.
     screen_t screen;
     /// The history.
@@ -256,13 +258,14 @@ class reader_data_t {
 
     /// Constructor
     reader_data_t()
-        : allow_autosuggestion(0),
-          suppress_autosuggestion(0),
-          expand_abbreviations(0),
+        : allow_autosuggestion(false),
+          suppress_autosuggestion(false),
+          expand_abbreviations(false),
+          silent(false),
           history(0),
           token_history_pos(0),
           search_pos(0),
-          sel_active(0),
+          sel_active(false),
           sel_begin_pos(0),
           sel_start_pos(0),
           sel_stop_pos(0),
@@ -270,13 +273,13 @@ class reader_data_t {
           complete_func(0),
           highlight_function(0),
           test_func(0),
-          end_loop(0),
-          prev_end_loop(0),
+          end_loop(false),
+          prev_end_loop(false),
           next(0),
           search_mode(0),
-          repaint_needed(0),
-          screen_reset_needed(0),
-          exit_on_interrupt(0) {}
+          repaint_needed(false),
+          screen_reset_needed(false),
+          exit_on_interrupt(false) {}
 };
 
 /// Sets the command line contents, without clearing the pager.
@@ -412,8 +415,13 @@ static void reader_repaint() {
     // Update the indentation.
     data->indents = parse_util_compute_indents(cmd_line->text);
 
-    // Combine the command and autosuggestion into one string.
-    wcstring full_line = combine_command_and_autosuggestion(cmd_line->text, data->autosuggestion);
+    wcstring full_line;
+    if (data->silent) {
+        full_line = wcstring(cmd_line->text.length(), obfuscation_read_char);
+    } else {
+        // Combine the command and autosuggestion into one string.
+        full_line = combine_command_and_autosuggestion(cmd_line->text, data->autosuggestion);
+    }
 
     size_t len = full_line.size();
     if (len < 1) len = 1;
@@ -439,9 +447,9 @@ static void reader_repaint() {
     bool focused_on_pager = data->active_edit_line() == &data->pager.search_field_line;
     size_t cursor_position = focused_on_pager ? data->pager.cursor_position() : cmd_line->position;
 
-    s_write(&data->screen, data->left_prompt_buff, data->right_prompt_buff, full_line,
-            cmd_line->size(), &colors[0], &indents[0], cursor_position,
-            data->current_page_rendering, focused_on_pager);
+    s_write(&data->screen, data->left_prompt_buff, data->right_prompt_buff, full_line, cmd_line->size(),
+            &colors[0], &indents[0], cursor_position, data->current_page_rendering,
+            focused_on_pager);
 
     data->repaint_needed = false;
 }
@@ -2043,6 +2051,8 @@ void reader_set_test_function(parser_test_error_bits_t (*f)(const wchar_t *)) {
 }
 
 void reader_set_exit_on_interrupt(bool i) { data->exit_on_interrupt = i; }
+
+void reader_set_silent_status(bool flag) { data->silent = flag; }
 
 void reader_import_history_if_necessary(void) {
     // Import history from older location (config path) if our current history is empty.

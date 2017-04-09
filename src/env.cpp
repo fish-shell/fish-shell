@@ -831,9 +831,11 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     env_read_only.insert(L"SHLVL");
 
     // Set up the HOME variable.
-    // As with $USER, some su implementations pass this along
-    // if the target user is root. Work around that.
-    if (env_get_string(L"HOME").missing_or_empty() || uid == 0) {
+    // Unlike $USER, it doesn't seem that `su`s pass this along
+    // if the target user is root, unless "--preserve-environment" is used.
+    // Since that is an explicit choice, we should allow it to enable e.g.
+    //     env HOME=(mktemp -d) su --preserve-environment fish
+    if (env_get_string(L"HOME").missing_or_empty()) {
         struct passwd *pw = getpwuid(uid);
         // If pw is NULL, there's not much we can do here.
         assert(pw != NULL);

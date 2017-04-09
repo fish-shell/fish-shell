@@ -533,8 +533,6 @@ static bool find_job(const wchar_t *proc, expand_flags_t flags,
 /// Searches for a job with the specified job id, or a job or process which has the string \c proc
 /// as a prefix of its commandline. Appends the name of the process as a completion in 'out'.
 ///
-/// If the ACCEPT_INCOMPLETE flag is set, the remaining string for any matches are inserted.
-///
 /// Otherwise, any job matching the specified string is matched, and the job pgid is returned. If no
 /// job matches, all child processes are searched. If no child processes match, and <tt>fish</tt>
 /// can understand the contents of the /proc filesystem, all the users processes are searched for

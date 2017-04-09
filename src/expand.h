@@ -25,10 +25,9 @@ enum {
     /// The expansion is being done for tab or auto completions. Returned completions may have the
     /// wildcard as a prefix instead of a match.
     EXPAND_FOR_COMPLETIONS = 1 << 3,
-    /// Only match files that are executable by the current user. Only applicable together with
-    /// ACCEPT_INCOMPLETE.
+    /// Only match files that are executable by the current user.
     EXECUTABLES_ONLY = 1 << 4,
-    /// Only match directories. Only applicable together with ACCEPT_INCOMPLETE.
+    /// Only match directories.
     DIRECTORIES_ONLY = 1 << 5,
     /// Don't generate descriptions.
     EXPAND_NO_DESCRIPTIONS = 1 << 6,

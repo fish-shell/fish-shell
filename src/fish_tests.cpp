@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
@@ -146,13 +147,39 @@ static wcstring comma_join(const wcstring_list_t &lst) {
     return result;
 }
 
+static std::vector<const char *> pushed_dirs;
+
 /// Helper to chdir and then update $PWD.
-static int chdir_set_pwd(const char *path) {
-    int ret = chdir(path);
-    if (ret == 0) {
-        env_set_pwd();
+static bool pushd(const char *path) {
+    char cwd[PATH_MAX] = {};
+    if (getcwd(cwd, sizeof cwd) == NULL) {
+        err(L"getcwd() from pushd() failed: errno = %d", errno);
+        return false;
     }
-    return ret;
+    pushed_dirs.push_back(strdup(cwd));
+
+    // We might need to create the directory. We don't care if this fails due to the directory
+    // already being present.
+    mkdir(path, 0770);
+
+    int ret = chdir(path);
+    if (ret != 0) {
+        err(L"chdir(\"%s\") from pushd() failed: errno = %d", path, errno);
+        return false;
+    }
+
+    env_set_pwd();
+    return true;
+}
+
+static void popd() {
+    const char *old_cwd = pushed_dirs.back();
+    if (chdir(old_cwd) == -1) {
+        err(L"chdir(\"%s\") from popd() failed: errno = %d", old_cwd, errno);
+    }
+    free((void *)old_cwd);
+    pushed_dirs.pop_back();
+    env_set_pwd();
 }
 
 // The odd formulation of these macros is to avoid "multiple unary operator" warnings from oclint
@@ -1124,7 +1151,7 @@ static void test_escape_sequences(void) {
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
 
     // iTerm2 escape sequences.
-    if (escape_code_length(L"\e]50;CurrentDir=/tmp/foo\x07NOT_PART_OF_SEQUENCE") != 25)
+    if (escape_code_length(L"\e]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE") != 25)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"\e]50;SetMark\x07NOT_PART_OF_SEQUENCE") != 13)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
@@ -1299,14 +1326,10 @@ static void test_expand() {
     say(L"Testing parameter expansion");
 
     expand_test(L"foo", 0, L"foo", 0, L"Strings do not expand to themselves");
-
     expand_test(L"a{b,c,d}e", 0, L"abe", L"ace", L"ade", 0, L"Bracket expansion is broken");
-
     expand_test(L"a*", EXPAND_SKIP_WILDCARDS, L"a*", 0, L"Cannot skip wildcard expansion");
-
     expand_test(L"/bin/l\\0", EXPAND_FOR_COMPLETIONS, 0,
                 L"Failed to handle null escape in expansion");
-
     expand_test(L"foo\\$bar", EXPAND_SKIP_VARIABLES, L"foo$bar", 0,
                 L"Failed to handle dollar sign in variable-skipping expansion");
 
@@ -1325,111 +1348,102 @@ static void test_expand() {
     // aaa
     // aaa2
     //    x
-    if (system("mkdir -p /tmp/fish_expand_test/")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/fish_expand_test/bb/")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/fish_expand_test/baz/")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/fish_expand_test/bax/")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/fish_expand_test/lol/nub/")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/fish_expand_test/aaa/")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/fish_expand_test/aaa2/")) err(L"mkdir failed");
-    if (system("touch /tmp/fish_expand_test/.foo")) err(L"touch failed");
-    if (system("touch /tmp/fish_expand_test/bb/x")) err(L"touch failed");
-    if (system("touch /tmp/fish_expand_test/bar")) err(L"touch failed");
-    if (system("touch /tmp/fish_expand_test/bax/xxx")) err(L"touch failed");
-    if (system("touch /tmp/fish_expand_test/baz/xxx")) err(L"touch failed");
-    if (system("touch /tmp/fish_expand_test/baz/yyy")) err(L"touch failed");
-    if (system("touch /tmp/fish_expand_test/lol/nub/q")) err(L"touch failed");
-    if (system("touch /tmp/fish_expand_test/aaa2/x")) err(L"touch failed");
+    if (system("mkdir -p test/fish_expand_test/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/bb/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/baz/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/bax/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/lol/nub/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/aaa/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/aaa2/")) err(L"mkdir failed");
+    if (system("touch test/fish_expand_test/.foo")) err(L"touch failed");
+    if (system("touch test/fish_expand_test/bb/x")) err(L"touch failed");
+    if (system("touch test/fish_expand_test/bar")) err(L"touch failed");
+    if (system("touch test/fish_expand_test/bax/xxx")) err(L"touch failed");
+    if (system("touch test/fish_expand_test/baz/xxx")) err(L"touch failed");
+    if (system("touch test/fish_expand_test/baz/yyy")) err(L"touch failed");
+    if (system("touch test/fish_expand_test/lol/nub/q")) err(L"touch failed");
+    if (system("touch test/fish_expand_test/aaa2/x")) err(L"touch failed");
 
     // This is checking that .* does NOT match . and ..
     // (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal
     // components (e.g. "./*" has to match the same as "*".
     const wchar_t *const wnull = NULL;
-    expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", wnull,
+    expand_test(L"test/fish_expand_test/.*", 0, L"test/fish_expand_test/.foo", wnull,
                 L"Expansion not correctly handling dotfiles");
 
-    expand_test(L"/tmp/fish_expand_test/./.*", 0, L"/tmp/fish_expand_test/./.foo", wnull,
+    expand_test(L"test/fish_expand_test/./.*", 0, L"test/fish_expand_test/./.foo", wnull,
                 L"Expansion not correctly handling literal path components in dotfiles");
 
-    expand_test(L"/tmp/fish_expand_test/*/xxx", 0, L"/tmp/fish_expand_test/bax/xxx",
-                L"/tmp/fish_expand_test/baz/xxx", wnull, L"Glob did the wrong thing 1");
+    expand_test(L"test/fish_expand_test/*/xxx", 0, L"test/fish_expand_test/bax/xxx",
+                L"test/fish_expand_test/baz/xxx", wnull, L"Glob did the wrong thing 1");
 
-    expand_test(L"/tmp/fish_expand_test/*z/xxx", 0, L"/tmp/fish_expand_test/baz/xxx", wnull,
+    expand_test(L"test/fish_expand_test/*z/xxx", 0, L"test/fish_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing 2");
 
-    expand_test(L"/tmp/fish_expand_test/**z/xxx", 0, L"/tmp/fish_expand_test/baz/xxx", wnull,
+    expand_test(L"test/fish_expand_test/**z/xxx", 0, L"test/fish_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing 3");
 
-    expand_test(L"/tmp/fish_expand_test////baz/xxx", 0, L"/tmp/fish_expand_test////baz/xxx", wnull,
+    expand_test(L"test/fish_expand_test////baz/xxx", 0, L"test/fish_expand_test////baz/xxx", wnull,
                 L"Glob did the wrong thing 3");
 
-    expand_test(L"/tmp/fish_expand_test/b**", 0, L"/tmp/fish_expand_test/bb",
-                L"/tmp/fish_expand_test/bb/x", L"/tmp/fish_expand_test/bar",
-                L"/tmp/fish_expand_test/bax", L"/tmp/fish_expand_test/bax/xxx",
-                L"/tmp/fish_expand_test/baz", L"/tmp/fish_expand_test/baz/xxx",
-                L"/tmp/fish_expand_test/baz/yyy", wnull, L"Glob did the wrong thing 4");
+    expand_test(L"test/fish_expand_test/b**", 0, L"test/fish_expand_test/bb",
+                L"test/fish_expand_test/bb/x", L"test/fish_expand_test/bar",
+                L"test/fish_expand_test/bax", L"test/fish_expand_test/bax/xxx",
+                L"test/fish_expand_test/baz", L"test/fish_expand_test/baz/xxx",
+                L"test/fish_expand_test/baz/yyy", wnull, L"Glob did the wrong thing 4");
 
     // A trailing slash should only produce directories.
-    expand_test(L"/tmp/fish_expand_test/b*/", 0, L"/tmp/fish_expand_test/bb/",
-                L"/tmp/fish_expand_test/baz/", L"/tmp/fish_expand_test/bax/", wnull,
+    expand_test(L"test/fish_expand_test/b*/", 0, L"test/fish_expand_test/bb/",
+                L"test/fish_expand_test/baz/", L"test/fish_expand_test/bax/", wnull,
                 L"Glob did the wrong thing 5");
 
-    expand_test(L"/tmp/fish_expand_test/b**/", 0, L"/tmp/fish_expand_test/bb/",
-                L"/tmp/fish_expand_test/baz/", L"/tmp/fish_expand_test/bax/", wnull,
+    expand_test(L"test/fish_expand_test/b**/", 0, L"test/fish_expand_test/bb/",
+                L"test/fish_expand_test/baz/", L"test/fish_expand_test/bax/", wnull,
                 L"Glob did the wrong thing 6");
 
-    expand_test(L"/tmp/fish_expand_test/**/q", 0, L"/tmp/fish_expand_test/lol/nub/q", wnull,
+    expand_test(L"test/fish_expand_test/**/q", 0, L"test/fish_expand_test/lol/nub/q", wnull,
                 L"Glob did the wrong thing 7");
 
-    expand_test(L"/tmp/fish_expand_test/BA", EXPAND_FOR_COMPLETIONS, L"/tmp/fish_expand_test/bar",
-                L"/tmp/fish_expand_test/bax/", L"/tmp/fish_expand_test/baz/", wnull,
+    expand_test(L"test/fish_expand_test/BA", EXPAND_FOR_COMPLETIONS, L"test/fish_expand_test/bar",
+                L"test/fish_expand_test/bax/", L"test/fish_expand_test/baz/", wnull,
                 L"Case insensitive test did the wrong thing");
 
-    expand_test(L"/tmp/fish_expand_test/BA", EXPAND_FOR_COMPLETIONS, L"/tmp/fish_expand_test/bar",
-                L"/tmp/fish_expand_test/bax/", L"/tmp/fish_expand_test/baz/", wnull,
+    expand_test(L"test/fish_expand_test/BA", EXPAND_FOR_COMPLETIONS, L"test/fish_expand_test/bar",
+                L"test/fish_expand_test/bax/", L"test/fish_expand_test/baz/", wnull,
                 L"Case insensitive test did the wrong thing");
 
-    expand_test(L"/tmp/fish_expand_test/bb/yyy", EXPAND_FOR_COMPLETIONS,
+    expand_test(L"test/fish_expand_test/bb/yyy", EXPAND_FOR_COMPLETIONS,
                 /* nothing! */ wnull, L"Wrong fuzzy matching 1");
 
-    expand_test(L"/tmp/fish_expand_test/bb/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, L"",
+    expand_test(L"test/fish_expand_test/bb/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, L"",
                 wnull,  // we just expect the empty string since this is an exact match
                 L"Wrong fuzzy matching 2");
 
     // Some vswprintfs refuse to append ANY_STRING in a format specifiers, so don't use
     // format_string here.
     const wcstring any_str_str(1, ANY_STRING);
-    expand_test(L"/tmp/fish_expand_test/b/xx*", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
-                (L"/tmp/fish_expand_test/bax/xx" + any_str_str).c_str(),
-                (L"/tmp/fish_expand_test/baz/xx" + any_str_str).c_str(), wnull,
+    expand_test(L"test/fish_expand_test/b/xx*", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
+                (L"test/fish_expand_test/bax/xx" + any_str_str).c_str(),
+                (L"test/fish_expand_test/baz/xx" + any_str_str).c_str(), wnull,
                 L"Wrong fuzzy matching 3");
 
-    expand_test(L"/tmp/fish_expand_test/b/yyy", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
-                L"/tmp/fish_expand_test/baz/yyy", wnull, L"Wrong fuzzy matching 4");
+    expand_test(L"test/fish_expand_test/b/yyy", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
+                L"test/fish_expand_test/baz/yyy", wnull, L"Wrong fuzzy matching 4");
 
-    expand_test(L"/tmp/fish_expand_test/aa/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
-                L"/tmp/fish_expand_test/aaa2/x", wnull, L"Wrong fuzzy matching 5");
+    expand_test(L"test/fish_expand_test/aa/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
+                L"test/fish_expand_test/aaa2/x", wnull, L"Wrong fuzzy matching 5");
 
-    expand_test(L"/tmp/fish_expand_test/aaa/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, wnull,
+    expand_test(L"test/fish_expand_test/aaa/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, wnull,
                 L"Wrong fuzzy matching 6 - shouldn't remove valid directory names (#3211)");
 
-    if (!expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0)) {
+    if (!expand_test(L"test/fish_expand_test/.*", 0, L"test/fish_expand_test/.foo", 0)) {
         err(L"Expansion not correctly handling dotfiles");
     }
-    if (!expand_test(L"/tmp/fish_expand_test/./.*", 0, L"/tmp/fish_expand_test/./.foo", 0)) {
+    if (!expand_test(L"test/fish_expand_test/./.*", 0, L"test/fish_expand_test/./.foo", 0)) {
         err(L"Expansion not correctly handling literal path components in dotfiles");
     }
 
-    char saved_wd[PATH_MAX] = {};
-    if (NULL == getcwd(saved_wd, sizeof saved_wd)) {
-        err(L"getcwd failed");
-        return;
-    }
-
-    if (chdir_set_pwd("/tmp/fish_expand_test")) {
-        err(L"chdir failed");
-        return;
-    }
+    if (!pushd("test/fish_expand_test")) return;
 
     expand_test(L"b/xx", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, L"bax/xxx", L"baz/xxx", wnull,
                 L"Wrong fuzzy matching 5");
@@ -1438,11 +1452,7 @@ static void test_expand() {
     expand_test(L"l///n", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, L"lol///nub/", wnull,
                 L"Wrong fuzzy matching 6");
 
-    if (chdir_set_pwd(saved_wd)) {
-        err(L"chdir failed");
-    }
-
-    if (system("rm -Rf /tmp/fish_expand_test")) err(L"rm failed");
+    popd();
 }
 
 static void test_fuzzy_match(void) {
@@ -1830,20 +1840,17 @@ static void test_word_motion() {
 /// Test is_potential_path.
 static void test_is_potential_path() {
     say(L"Testing is_potential_path");
-    if (system("rm -Rf /tmp/is_potential_path_test/")) {
-        err(L"Failed to remove /tmp/is_potential_path_test/");
-    }
 
     // Directories
-    if (system("mkdir -p /tmp/is_potential_path_test/alpha/")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/is_potential_path_test/beta/")) err(L"mkdir failed");
+    if (system("mkdir -p test/is_potential_path_test/alpha/")) err(L"mkdir failed");
+    if (system("mkdir -p test/is_potential_path_test/beta/")) err(L"mkdir failed");
 
     // Files
-    if (system("touch /tmp/is_potential_path_test/aardvark")) err(L"touch failed");
-    if (system("touch /tmp/is_potential_path_test/gamma")) err(L"touch failed");
+    if (system("touch test/is_potential_path_test/aardvark")) err(L"touch failed");
+    if (system("touch test/is_potential_path_test/gamma")) err(L"touch failed");
 
-    const wcstring wd = L"/tmp/is_potential_path_test/";
-    const wcstring_list_t wds(1, wd);
+    const wcstring wd = L"test/is_potential_path_test/";
+    const wcstring_list_t wds({L".", wd});
 
     do_test(is_potential_path(L"al", wds, PATH_REQUIRE_DIR));
     do_test(is_potential_path(L"alpha/", wds, PATH_REQUIRE_DIR));
@@ -1854,13 +1861,13 @@ static void test_is_potential_path() {
     do_test(!is_potential_path(L"aarde", wds, PATH_REQUIRE_DIR));
     do_test(!is_potential_path(L"aarde", wds, 0));
 
-    do_test(is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, 0));
-    do_test(is_potential_path(L"/tmp/is_potential_path_test/al", wds, PATH_REQUIRE_DIR));
-    do_test(is_potential_path(L"/tmp/is_potential_path_test/aardv", wds, 0));
+    do_test(is_potential_path(L"test/is_potential_path_test/aardvark", wds, 0));
+    do_test(is_potential_path(L"test/is_potential_path_test/al", wds, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"test/is_potential_path_test/aardv", wds, 0));
 
-    do_test(!is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"/tmp/is_potential_path_test/al/", wds, 0));
-    do_test(!is_potential_path(L"/tmp/is_potential_path_test/ar", wds, 0));
+    do_test(!is_potential_path(L"test/is_potential_path_test/aardvark", wds, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"test/is_potential_path_test/al/", wds, 0));
+    do_test(!is_potential_path(L"test/is_potential_path_test/ar", wds, 0));
 
     do_test(is_potential_path(L"/usr", wds, PATH_REQUIRE_DIR));
 }
@@ -2021,12 +2028,10 @@ static void test_complete(void) {
     const wchar_t *name_strs[] = {L"Foo1", L"Foo2", L"Foo3", L"Bar1", L"Bar2", L"Bar3"};
     size_t count = sizeof name_strs / sizeof *name_strs;
     const wcstring_list_t names(name_strs, name_strs + count);
-
+    std::vector<completion_t> completions;
     complete_set_variable_names(&names);
-
     const env_vars_snapshot_t &vars = env_vars_snapshot_t::current();
 
-    std::vector<completion_t> completions;
     complete(L"$", &completions, COMPLETION_REQUEST_DEFAULT, vars);
     completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 6);
@@ -2058,31 +2063,31 @@ static void test_complete(void) {
     do_test(completions.at(0).completion == L"$Bar1");
     do_test(completions.at(1).completion == L"$Foo1");
 
-    if (system("mkdir -p '/tmp/complete_test/'")) err(L"mkdir failed");
-    if (system("touch '/tmp/complete_test/testfile'")) err(L"touch failed");
-    if (system("touch '/tmp/complete_test/has space'")) err(L"touch failed");
-    if (system("chmod 700 '/tmp/complete_test/testfile'")) err(L"chmod failed");
+    if (system("mkdir -p 'test/complete_test'")) err(L"mkdir failed");
+    if (system("touch 'test/complete_test/has space'")) err(L"touch failed");
+    if (system("touch 'test/complete_test/testfile'")) err(L"touch failed");
+    if (system("chmod 700 'test/complete_test/testfile'")) err(L"chmod failed");
 
     completions.clear();
-    complete(L"echo (/tmp/complete_test/testfil", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo (test/complete_test/testfil", &completions, COMPLETION_REQUEST_DEFAULT, vars);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
     completions.clear();
-    complete(L"echo (ls /tmp/complete_test/testfil", &completions, COMPLETION_REQUEST_DEFAULT,
+    complete(L"echo (ls test/complete_test/testfil", &completions, COMPLETION_REQUEST_DEFAULT,
              vars);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
     completions.clear();
-    complete(L"echo (command ls /tmp/complete_test/testfil", &completions,
+    complete(L"echo (command ls test/complete_test/testfil", &completions,
              COMPLETION_REQUEST_DEFAULT, vars);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
     // Completing after spaces - see #2447
     completions.clear();
-    complete(L"echo (ls /tmp/complete_test/has\\ ", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo (ls test/complete_test/has\\ ", &completions, COMPLETION_REQUEST_DEFAULT, vars);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"space");
 
@@ -2129,14 +2134,22 @@ static void test_complete(void) {
     complete(L"echo \\$Foo", &completions, COMPLETION_REQUEST_DEFAULT, vars);
     do_test(completions.empty());
 
-    // File completions.
-    char saved_wd[PATH_MAX + 1] = {};
-    if (!getcwd(saved_wd, sizeof saved_wd)) {
-        perror("getcwd");
-        exit(-1);
-    }
-    if (chdir_set_pwd("/tmp/complete_test/")) err(L"chdir failed");
 
+    // File completions.
+    completions.clear();
+    complete(L"cat test/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"stfile");
+    completions.clear();
+    complete(L"echo sup > test/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"stfile");
+    completions.clear();
+    complete(L"echo sup > test/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"stfile");
+
+    if (!pushd("test/complete_test")) return;
     complete(L"cat te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
@@ -2159,22 +2172,9 @@ static void test_complete(void) {
     complete(L"something abc=stfile", &completions, COMPLETION_REQUEST_FUZZY_MATCH, vars);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"abc=testfile");
-    completions.clear();
-
-    complete(L"cat /tmp/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
-    do_test(completions.size() == 1);
-    do_test(completions.at(0).completion == L"stfile");
-    completions.clear();
-    complete(L"echo sup > /tmp/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
-    do_test(completions.size() == 1);
-    do_test(completions.at(0).completion == L"stfile");
-    completions.clear();
-    complete(L"echo sup > /tmp/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
-    do_test(completions.size() == 1);
-    do_test(completions.at(0).completion == L"stfile");
-    completions.clear();
 
     // Zero escapes can cause problems. See issue #1631.
+    completions.clear();
     complete(L"cat foo\\0", &completions, COMPLETION_REQUEST_DEFAULT, vars);
     do_test(completions.empty());
     completions.clear();
@@ -2186,11 +2186,9 @@ static void test_complete(void) {
     completions.clear();
     complete(L"cat te\\0", &completions, COMPLETION_REQUEST_DEFAULT, vars);
     do_test(completions.empty());
+
+    popd();
     completions.clear();
-
-    if (chdir_set_pwd(saved_wd)) err(L"chdir failed");
-    if (system("rm -Rf '/tmp/complete_test/'")) err(L"rm failed");
-
     complete_set_variable_names(NULL);
 
     // Test wraps.
@@ -2268,14 +2266,14 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command,
     if (comps.empty() && !expects_error) {
         fwprintf(stderr, L"line %ld: autosuggest_suggest_special() failed for command %ls\n", line,
                  command.c_str());
-        do_test(!comps.empty());
+        do_test_from(!comps.empty(), line);
         return;
     } else if (!comps.empty() && expects_error) {
         fwprintf(stderr,
                  L"line %ld: autosuggest_suggest_special() was expected to fail but did not, "
                  L"for command %ls\n",
                  line, command.c_str());
-        do_test(comps.empty());
+        do_test_from(comps.empty(), line);
     }
 
     if (!comps.empty()) {
@@ -2289,7 +2287,7 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command,
                 line, command.c_str());
             fwprintf(stderr, L"  actual: %ls\n", suggestion.completion.c_str());
             fwprintf(stderr, L"expected: %ls\n", expected.c_str());
-            do_test(suggestion.completion == expected);
+            do_test_from(suggestion.completion == expected, line);
         }
     }
 }
@@ -2297,104 +2295,90 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command,
 // Testing test_autosuggest_suggest_special, in particular for properly handling quotes and
 // backslashes.
 static void test_autosuggest_suggest_special() {
-    if (system("mkdir -p '/tmp/autosuggest_test/0foobar'")) err(L"mkdir failed");
-    if (system("mkdir -p '/tmp/autosuggest_test/1foo bar'")) err(L"mkdir failed");
-    if (system("mkdir -p '/tmp/autosuggest_test/2foo  bar'")) err(L"mkdir failed");
-    if (system("mkdir -p '/tmp/autosuggest_test/3foo\\bar'")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/autosuggest_test/4foo\\'bar"))
+    if (system("mkdir -p 'test/autosuggest_test/0foobar'")) err(L"mkdir failed");
+    if (system("mkdir -p 'test/autosuggest_test/1foo bar'")) err(L"mkdir failed");
+    if (system("mkdir -p 'test/autosuggest_test/2foo  bar'")) err(L"mkdir failed");
+    if (system("mkdir -p 'test/autosuggest_test/3foo\\bar'")) err(L"mkdir failed");
+    if (system("mkdir -p test/autosuggest_test/4foo\\'bar"))
         err(L"mkdir failed");  // a path with a single quote
-    if (system("mkdir -p /tmp/autosuggest_test/5foo\\\"bar"))
+    if (system("mkdir -p test/autosuggest_test/5foo\\\"bar"))
         err(L"mkdir failed");  // a path with a double quote
     if (system("mkdir -p ~/test_autosuggest_suggest_special/"))
         err(L"mkdir failed");  // make sure tilde is handled
-    if (system("mkdir -p /tmp/autosuggest_test/start/unique2/unique3/multi4")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/autosuggest_test/start/unique2/unique3/multi42"))
+    if (system("mkdir -p test/autosuggest_test/start/unique2/unique3/multi4")) err(L"mkdir failed");
+    if (system("mkdir -p test/autosuggest_test/start/unique2/unique3/multi42"))
         err(L"mkdir failed");
-    if (system("mkdir -p /tmp/autosuggest_test/start/unique2/.hiddenDir/moreStuff"))
+    if (system("mkdir -p test/autosuggest_test/start/unique2/.hiddenDir/moreStuff"))
         err(L"mkdir failed");
 
-    char saved_wd[PATH_MAX] = {};
-    if (NULL == getcwd(saved_wd, sizeof saved_wd)) err(L"getcwd failed");
-
-    const wcstring wd = L"/tmp/autosuggest_test/";
-    if (chdir_set_pwd(wcs2string(wd).c_str())) err(L"chdir failed");
-
-    env_set(L"AUTOSUGGEST_TEST_LOC", wd.c_str(), ENV_LOCAL);
-
+    const wcstring wd = L"test/autosuggest_test";
     const env_vars_snapshot_t &vars = env_vars_snapshot_t::current();
 
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/1", vars, L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/1", vars, L"foo bar/",
+                                       __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/1", vars, L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/2", vars, L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/2", vars, L"foo  bar/",
+                                       __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/2", vars, L"foo  bar/",
+                                       __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/3", vars, L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/3", vars, L"foo\\bar/",
+                                       __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/3", vars, L"foo\\bar/",
+                                       __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/4", vars, L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/4", vars, L"foo'bar/",
+                                       __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/4", vars, L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/5", vars, L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/5", vars, L"foo\"bar/",
+                                       __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/5", vars, L"foo\"bar/",
+                                       __LINE__);
 
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/1", vars, L"foo bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/1", vars, L"foo bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/1", vars, L"foo bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 1", vars, L"foo bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"1", vars, L"foo bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '1", vars, L"foo bar/", __LINE__);
-
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/2", vars, L"foo  bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/2", vars, L"foo  bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/2", vars, L"foo  bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 2", vars, L"foo  bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"2", vars, L"foo  bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '2", vars, L"foo  bar/", __LINE__);
-
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/3", vars, L"foo\\bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/3", vars, L"foo\\bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/3", vars, L"foo\\bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 3", vars, L"foo\\bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"3", vars, L"foo\\bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '3", vars, L"foo\\bar/", __LINE__);
-
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/4", vars, L"foo'bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/4", vars, L"foo'bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/4", vars, L"foo'bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 4", vars, L"foo'bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"4", vars, L"foo'bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '4", vars, L"foo'bar/", __LINE__);
-
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/5", vars, L"foo\"bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/5", vars, L"foo\"bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/5", vars, L"foo\"bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 5", vars, L"foo\"bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"5", vars, L"foo\"bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '5", vars, L"foo\"bar/", __LINE__);
-
+    env_set(L"AUTOSUGGEST_TEST_LOC", wd.c_str(), ENV_LOCAL);
     perform_one_autosuggestion_cd_test(L"cd $AUTOSUGGEST_TEST_LOC/0", vars, L"foobar/", __LINE__);
     perform_one_autosuggestion_cd_test(L"cd ~/test_autosuggest_suggest_specia", vars, L"l/",
                                        __LINE__);
 
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/start/", vars,
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/start/", vars,
                                        L"unique2/unique3/", __LINE__);
+
+    if (!pushd(wcs2string(wd).c_str())) return;
+    perform_one_autosuggestion_cd_test(L"cd 0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 1", vars, L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"1", vars, L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '1", vars, L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 2", vars, L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"2", vars, L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '2", vars, L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 3", vars, L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"3", vars, L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '3", vars, L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 4", vars, L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"4", vars, L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '4", vars, L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 5", vars, L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"5", vars, L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '5", vars, L"foo\"bar/", __LINE__);
 
     // A single quote should defeat tilde expansion.
     perform_one_autosuggestion_cd_test(L"cd '~/test_autosuggest_suggest_specia'", vars, L"<error>",
                                        __LINE__);
 
-    // Don't crash on ~ (issue #2696). Note this was wd dependent, hence why we set it.
-    if (chdir_set_pwd("/tmp/autosuggest_test/")) err(L"chdir failed");
-
-    if (system("mkdir -p '/tmp/autosuggest_test/~hahaha/path1/path2/'")) err(L"mkdir failed");
-
+    // Don't crash on ~ (issue #2696). Note this is cwd dependent.
+    if (system("mkdir -p '~hahaha/path1/path2/'")) err(L"mkdir failed");
     perform_one_autosuggestion_cd_test(L"cd ~haha", vars, L"ha/path1/path2/", __LINE__);
     perform_one_autosuggestion_cd_test(L"cd ~hahaha/", vars, L"path1/path2/", __LINE__);
-    if (chdir_set_pwd(saved_wd)) err(L"chdir failed");
 
-    if (system("rm -Rf '/tmp/autosuggest_test/'")) err(L"rm failed");
-    if (system("rm -Rf ~/test_autosuggest_suggest_special/")) err(L"rm failed");
+    popd();
 }
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {
@@ -2490,7 +2474,7 @@ static void test_input() {
 }
 
 #define UVARS_PER_THREAD 8
-#define UVARS_TEST_PATH L"/tmp/fish_uvars_test/varsfile.txt"
+#define UVARS_TEST_PATH L"test/fish_uvars_test/varsfile.txt"
 
 static int test_universal_helper(int x) {
     env_universal_t uvars(UVARS_TEST_PATH);
@@ -2515,7 +2499,7 @@ static int test_universal_helper(int x) {
 
 static void test_universal() {
     say(L"Testing universal variables");
-    if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
 
     const int threads = 16;
     for (int i = 0; i < threads; i++) {
@@ -2549,8 +2533,6 @@ static void test_universal() {
             }
         }
     }
-
-    if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rm failed");
 }
 
 static bool callback_data_less_than(const callback_data_t &a, const callback_data_t &b) {
@@ -2559,7 +2541,7 @@ static bool callback_data_less_than(const callback_data_t &a, const callback_dat
 
 static void test_universal_callbacks() {
     say(L"Testing universal callbacks");
-    if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
     env_universal_t uvars1(UVARS_TEST_PATH);
     env_universal_t uvars2(UVARS_TEST_PATH);
 
@@ -2604,8 +2586,6 @@ static void test_universal_callbacks() {
     do_test(callbacks.at(2).type == ERASE);
     do_test(callbacks.at(2).key == L"delta");
     do_test(callbacks.at(2).val == L"");
-
-    if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rm failed");
 }
 
 bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
@@ -2706,14 +2686,12 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
 }
 
 static void test_universal_notifiers() {
-    if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) {
+    if (system("mkdir -p test/fish_uvars_test/ && touch test/fish_uvars_test/varsfile.txt")) {
         err(L"mkdir failed");
     }
 
     auto strategy = universal_notifier_t::resolve_default_strategy();
     test_notifiers_with_strategy(strategy);
-
-    if (system("rm -Rf /tmp/fish_uvars_test/")) err(L"rm failed");
 }
 
 class history_tests_t {
@@ -3579,9 +3557,9 @@ static void test_error_messages() {
 
 static void test_highlighting(void) {
     say(L"Testing syntax highlighting");
-    if (system("mkdir -p /tmp/fish_highlight_test/")) err(L"mkdir failed");
-    if (system("touch /tmp/fish_highlight_test/foo")) err(L"touch failed");
-    if (system("touch /tmp/fish_highlight_test/bar")) err(L"touch failed");
+    if (system("mkdir -p test/fish_highlight_test/")) err(L"mkdir failed");
+    if (system("touch test/fish_highlight_test/foo")) err(L"touch failed");
+    if (system("touch test/fish_highlight_test/bar")) err(L"touch failed");
 
     // Here are the components of our source and the colors we expect those to be.
     struct highlight_component_t {
@@ -3591,7 +3569,7 @@ static void test_highlighting(void) {
 
     const highlight_component_t components1[] = {
         {L"echo", highlight_spec_command},
-        {L"/tmp/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
+        {L"test/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
         {L"&", highlight_spec_statement_terminator},
         {NULL, -1}};
 
@@ -3599,7 +3577,7 @@ static void test_highlighting(void) {
         {L"command", highlight_spec_command},
         {L"echo", highlight_spec_command},
         {L"abc", highlight_spec_param},
-        {L"/tmp/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
+        {L"test/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
         {L"&", highlight_spec_statement_terminator},
         {NULL, -1}};
 
@@ -3617,12 +3595,12 @@ static void test_highlighting(void) {
     // Verify that cd shows errors for non-directories.
     const highlight_component_t components4[] = {
         {L"cd", highlight_spec_command},
-        {L"/tmp/fish_highlight_test", highlight_spec_param | highlight_modifier_valid_path},
+        {L"test/fish_highlight_test", highlight_spec_param | highlight_modifier_valid_path},
         {NULL, -1}};
 
     const highlight_component_t components5[] = {
         {L"cd", highlight_spec_command},
-        {L"/tmp/fish_highlight_test/foo", highlight_spec_error},
+        {L"test/fish_highlight_test/foo", highlight_spec_error},
         {NULL, -1}};
 
     const highlight_component_t components6[] = {
@@ -3660,11 +3638,11 @@ static void test_highlighting(void) {
         {L"LOL", highlight_spec_error},
 
         // Just a param, not a redirection.
-        {L"/tmp/blah", highlight_spec_param},
+        {L"test/blah", highlight_spec_param},
 
         // Input redirection from directory.
         {L"<", highlight_spec_redirection},
-        {L"/tmp/", highlight_spec_error},
+        {L"test/", highlight_spec_error},
 
         // Output redirection to an invalid path.
         {L"3>", highlight_spec_redirection},
@@ -3672,7 +3650,7 @@ static void test_highlighting(void) {
 
         // Output redirection to directory.
         {L"3>", highlight_spec_redirection},
-        {L"/tmp/nope/", highlight_spec_error},
+        {L"test/nope/", highlight_spec_error},
 
         // Redirections to overflow fd.
         {L"99999999999999999999>&2", highlight_spec_error},
@@ -3683,7 +3661,7 @@ static void test_highlighting(void) {
         {L"4>", highlight_spec_redirection},
         {L"(", highlight_spec_operator},
         {L"echo", highlight_spec_command},
-        {L"/tmp/somewhere", highlight_spec_param},
+        {L"test/somewhere", highlight_spec_param},
         {L")", highlight_spec_operator},
 
         // Just another param.
@@ -3770,10 +3748,6 @@ static void test_highlighting(void) {
                     expected_colors.at(i), colors.at(i), text.c_str(), spaces.c_str());
             }
         }
-    }
-
-    if (system("rm -Rf /tmp/fish_highlight_test")) {
-        err(L"rm failed");
     }
 }
 
@@ -4126,6 +4100,11 @@ static void test_env_vars(void) {
 static void test_illegal_command_exit_code(void) {
     say(L"Testing illegal command exit code");
 
+    // We need to be in an empty directory so that none of the wildcards match a file that might be
+    // in the fish source tree. In particular we need to ensure that "?" doesn't match a file
+    // named by a single character. See issue #3852.
+    if (!pushd("test/temp")) return;
+
     struct command_result_tuple_t {
         const wchar_t *txt;
         int result;
@@ -4153,6 +4132,8 @@ static void test_illegal_command_exit_code(void) {
                 exit_status);
         }
     }
+
+    popd();
 }
 
 /// Main test.

@@ -1,17 +1,17 @@
 
 # Guidelines For Developers
 
-This document provides guidelines for making changes to the fish-shell project. This includes rules for how to format the code, naming conventions, etc. It also includes recommended best practices such as creating a Travis-CI account so you can verify your changes pass all the tests before making a pull-request.
+This document provides guidelines for making changes to the fish-shell project. This includes rules for how to format the code, naming conventions, etcetera. Generally known as the style of the code. It also includes recommended best practices such as creating a Travis-CI account so you can verify your changes pass all the tests before making a pull-request.
 
 See the bottom of this document for help on installing the linting and style reformatting tools discussed in the following sections.
 
-Fish source should limit the C++ features it uses to those available in C++03. That allows fish to use a few components from [C++TR1](https://en.wikipedia.org/wiki/C%2B%2B_Technical_Report_1) such as `shared_ptr`. It also allows fish to be built and run on OS X Snow Leopard (released in 2009); the oldest OS X release we still support.
+Fish source should limit the C++ features it uses to those available in C++11. It should not use exceptions.
 
 ## Include What You Use
 
-You should not depend on symbols being visible to a `*.cpp` module from `#include` statements inside another header file. In other words if your module does `#include "common.h"` and that header does `#include "signal.h"` your module should pretend that sub-include is not present. It should instead directly `#include "signal.h"` if it needs any symbol from that header. That makes the actual dependencies much clearer. It also makes it easy to modify the headers included by a specific header file without having to worry that will break any module (or header) that includes a particular header.
+You should not depend on symbols being visible to a `*.cpp` module from `#include` statements inside another header file. In other words if your module does `#include "common.h"` and that header does `#include "signal.h"` your module should not assume the sub-include is present. It should instead directly `#include "signal.h"` if it needs any symbol from that header. That makes the actual dependencies much clearer. It also makes it easy to modify the headers included by a specific header file without having to worry that will break any module (or header) that includes a particular header.
 
-To help enforce this rule the `make lint` (and `make lint-all`) command will run the [include-what-you-use](http://include-what-you-use.org/) tool. The IWYU you project is on [github](https://github.com/include-what-you-use/include-what-you-use).
+To help enforce this rule the `make lint` (and `make lint-all`) command will run the [include-what-you-use](http://include-what-you-use.org/) tool. You can find the IWYU project on [github](https://github.com/include-what-you-use/include-what-you-use).
 
 To install the tool on OS X you'll need to add a [formula](https://github.com/jasonmp85/homebrew-iwyu) then install it:
 
@@ -24,7 +24,7 @@ On Ubuntu you can install it via `sudo apt-get install iwyu`.
 
 ## Lint Free Code
 
-Automated analysis tools like cppcheck and oclint can point out potential bugs. They also help ensure the code has a consistent style and that it avoids patterns that tend to confuse people.
+Automated analysis tools like cppcheck and oclint can point out potential bugs or code that is extremely hard to understand. They also help ensure the code has a consistent style and that it avoids patterns that tend to confuse people.
 
 Ultimately we want lint free code. However, at the moment a lot of cleanup is required to reach that goal. For now simply try to avoid introducing new lint.
 
@@ -115,7 +115,7 @@ code to ignore
 
 ## Fish Script Style Guide
 
-1. Fish scripts such as those in the *share/functions* and *tests* directories should be formatted using the `fish_indent` command.
+1. All fish scripts, such as those in the *share/functions* and *tests* directories, should be formatted using the `fish_indent` command.
 
 1. Function names should be all lowercase with undescores separating words. Private functions should begin with an underscore. The first word should be `fish` if the function is unique to fish.
 
@@ -125,7 +125,7 @@ code to ignore
 
 1. The [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) forms the basis of the fish C++ style guide. There are two major deviations for the fish project. First, a four, rather than two, space indent. Second, line lengths up to 100, rather than 80, characters.
 
-1. The `clang-format` command is authoritative with respect to indentation, whitespace around operators, etc. **Note**: this rule should be ignored at this time. After the code is cleaned up this rule will become mandatory.
+1. The `clang-format` command is authoritative with respect to indentation, whitespace around operators, etc.
 
 1. All names in code should be `small_snake_case`. No Hungarian notation is used. Classes and structs names should be followed by `_t`.
 
@@ -135,13 +135,13 @@ code to ignore
 
 1. Comments should always use the C++ style; i.e., each line of the comment should begin with a `//` and should be limited to 100 characters. Comments that do not begin a line should be separated from the previous text by two spaces.
 
-1. Comments that document the purpose of a function or class should begin with three slashes, `///`, so that OS X Xcode (and possibly other ideas) will extract the comment and show it in the "Quick Help" window when the cursor is on the symbol.
+1. Comments that document the purpose of a function or class should begin with three slashes, `///`, so that OS X Xcode (and possibly other IDE's) will extract the comment and show it in the "Quick Help" window when the cursor is on the symbol.
 
 ## Testing
 
-The source code for fish includes a large collection of tests. If you are making any changes to fish, running these tests is highly recommended to make sure the behaviour remains consistent.
+The source code for fish includes a large collection of tests. If you are making any changes to fish, running these tests is mandatory to make sure the behaviour remains consistent and regressions are not introduced. Even if you don't run the tests they will be run via the [Travis CI](https://travis-ci.org/fish-shell/fish-shell) service.
 
-You are also strongly encouraged to add tests when changing the functionality of fish. Especially if you are fixing a bug to help ensure there are no regressions in the future (i.e., we don't reintroduce the bug).
+You are strongly encouraged to add tests when changing the functionality of fish. Especially if you are fixing a bug to help ensure there are no regressions in the future (i.e., we don't reintroduce the bug).
 
 ### Local testing
 
@@ -151,7 +151,7 @@ Running the tests is only supported from the autotools build and not xcodebuild.
 
     autoconf
     ./configure
-    make test [gmake on BSD]
+    make test # or "gmake test" on BSD
 
 ### Travis CI Build and Test
 
@@ -206,11 +206,7 @@ To install the hook, put it in .git/hooks/pre-push and make it executable.
 
 ### Coverity Scan
 
-We use Coverity's static analysis tool which offers free access to open source projects. While access to the tool itself is
-restricted, fish-shell organization members should know that they can login
-[here with their GitHub account](https://scan.coverity.com/projects/fish-shell-fish-shell?tab=overview).
-Currently, tests are triggered upon merging the `master` branch into `coverity_scan_master`.
-Even if you are not a fish developer, you can keep an eye on our statistics there.
+We use Coverity's static analysis tool which offers free access to open source projects. While access to the tool itself is restricted, fish-shell organization members should know that they can login [here](https://scan.coverity.com/projects/fish-shell-fish-shell?tab=overview) with their GitHub account. Currently, tests are triggered upon merging the `master` branch into `coverity_scan_master`. Even if you are not a fish developer, you can keep an eye on our statistics there.
 
 ## Installing the Required Tools
 
@@ -243,13 +239,12 @@ brew install clang-format
 To install the reformatting tool on Linux distros that use Apt:
 
 ```
-apt-cache search clang-format
+apt-cache install clang-format
 ```
 
-That will list the versions available. Pick the newest one available (3.6 for Ubuntu 14.04 as I write this) and install it:
+That will list the versions available. Pick the newest one available (3.9 for Ubuntu 16.10 as I write this) and install it:
 
 ```
-sudo apt-get install clang-format-3.6
-sudo ln -s /usr/bin/clang-format-3.6 /usr/bin/clang-format
-
+sudo apt-get install clang-format-3.9
+sudo ln -s /usr/bin/clang-format-3.9 /usr/bin/clang-format
 ```

@@ -258,13 +258,13 @@ class reader_data_t {
 
     /// Constructor
     reader_data_t()
-        : allow_autosuggestion(0),
-          suppress_autosuggestion(0),
-          expand_abbreviations(0),
+        : allow_autosuggestion(false),
+          suppress_autosuggestion(false),
+          expand_abbreviations(false),
           history(0),
           token_history_pos(0),
           search_pos(0),
-          sel_active(0),
+          sel_active(false),
           sel_begin_pos(0),
           sel_start_pos(0),
           sel_stop_pos(0),
@@ -272,13 +272,13 @@ class reader_data_t {
           complete_func(0),
           highlight_function(0),
           test_func(0),
-          end_loop(0),
-          prev_end_loop(0),
+          end_loop(false),
+          prev_end_loop(false),
           next(0),
           search_mode(0),
-          repaint_needed(0),
-          screen_reset_needed(0),
-          exit_on_interrupt(0) {}
+          repaint_needed(false),
+          screen_reset_needed(false),
+          exit_on_interrupt(false) {}
 };
 
 /// Sets the command line contents, without clearing the pager.
@@ -376,7 +376,9 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
     // last token of the command line contains any uppercase characters, we use its case. Otherwise
     // we use the case of the autosuggestion. This is an idea from issue #335.
     wcstring full_line;
-    if (autosuggestion.size() <= cmdline.size() || cmdline.empty()) {
+    if (data->silent) {
+        full_line = std::wstring(cmdline.length(), L'●');
+    } else if (autosuggestion.size() <= cmdline.size() || cmdline.empty()) {
         // No or useless autosuggestion, or no command line.
         full_line = cmdline;
     } else if (string_prefixes_string(cmdline, autosuggestion)) {
@@ -415,12 +417,7 @@ static void reader_repaint() {
     data->indents = parse_util_compute_indents(cmd_line->text);
 
     // Combine the command and autosuggestion into one string.
-    wcstring full_line = L"";
-    size_t line_length = 0;
-    if (!data->silent) {
-        full_line = combine_command_and_autosuggestion(cmd_line->text, data->autosuggestion);
-        line_length = cmd_line->size();
-    }
+    wcstring full_line = combine_command_and_autosuggestion(cmd_line->text, data->autosuggestion);
 
     size_t len = full_line.size();
     if (len < 1) len = 1;
@@ -446,7 +443,7 @@ static void reader_repaint() {
     bool focused_on_pager = data->active_edit_line() == &data->pager.search_field_line;
     size_t cursor_position = focused_on_pager ? data->pager.cursor_position() : cmd_line->position;
 
-    s_write(&data->screen, data->left_prompt_buff, data->right_prompt_buff, full_line, line_length,
+    s_write(&data->screen, data->left_prompt_buff, data->right_prompt_buff, full_line, cmd_line->size(),
             &colors[0], &indents[0], cursor_position, data->current_page_rendering,
             focused_on_pager);
 

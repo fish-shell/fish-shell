@@ -1100,6 +1100,8 @@ Command mode is also known as normal mode.
 
 `fish` uses an Emacs style kill ring for copy and paste functionality. Use @key{Control,K} to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed) is inserted into a linked list of kills, called the kill ring. To paste the latest value from the kill ring use @key{Control,Y}. After pasting, use @key{Alt,Y} to rotate to the previous kill.
 
+Copy and paste from outside are also supported, both via the @key{Control,X} / @key{Control,V} bindings and via the terminal's paste function, for which fish enables "Bracketed Paste Mode". When pasting inside single-quotes, pasted single-quotes and backslashes are automatically escaped so that the result can be used as a single token simply by closing the quote after.
+
 \subsection history-search Searchable history
 
 After a command has been entered, it is inserted at the end of a history list. Any duplicate history items are automatically removed. By pressing the up and down keys, the user can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.

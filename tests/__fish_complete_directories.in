@@ -1,0 +1,19 @@
+cd ..
+mkdir test/data/abc
+mkdir test/data/abcd
+touch test/data/af
+touch test/data/abcdf
+mkdir test/data/xy
+mkdir test/data/xyz
+touch test/data/xyf
+touch test/data/xyzf
+echo \# __fish_complete_directories test/z
+__fish_complete_directories test/z
+echo \# __fish_complete_directories test/d
+__fish_complete_directories test/d
+echo \# __fish_complete_directories test/data
+__fish_complete_directories test/data
+echo \# __fish_complete_directories test/data/
+__fish_complete_directories test/data/
+echo \# __fish_complete_directories test/data/abc
+__fish_complete_directories test/data/abc 'abc dirs'

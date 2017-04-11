@@ -86,6 +86,9 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -q fish_color_selection
         or set -U fish_color_selection white --bold --background=brblack
 
+        set -q fish_color_cancel
+        or set -U fish_color_cancel -r
+
         # Pager colors
         set -q fish_pager_color_prefix
         or set -U fish_pager_color_prefix white --bold --underline

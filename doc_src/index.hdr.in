@@ -918,6 +918,8 @@ The following variables are available to change the highlighting colors in fish:
 
 - `fish_color_host`, the color used to print the current host system in some of fish default prompts
 
+- `fish_color_cancel`, the color for the '^C' indicator on a canceled command
+
 Additionally, the following variables are available to change the highlighting in the completion pager:
 
 - `fish_pager_color_prefix`, the color of the prefix string, i.e. the string that is to be completed

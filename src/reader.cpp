@@ -261,6 +261,7 @@ class reader_data_t {
         : allow_autosuggestion(false),
           suppress_autosuggestion(false),
           expand_abbreviations(false),
+          silent(false),
           history(0),
           token_history_pos(0),
           search_pos(0),
@@ -416,7 +417,7 @@ static void reader_repaint() {
 
     wcstring full_line;
     if (data->silent) {
-        full_line = wcstring(cmd_line->text.length(), L'●');
+        full_line = wcstring(cmd_line->text.length(), obfuscation_read_char);
     } else {
         // Combine the command and autosuggestion into one string.
         full_line = combine_command_and_autosuggestion(cmd_line->text, data->autosuggestion);

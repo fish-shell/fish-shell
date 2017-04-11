@@ -376,9 +376,7 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
     // last token of the command line contains any uppercase characters, we use its case. Otherwise
     // we use the case of the autosuggestion. This is an idea from issue #335.
     wcstring full_line;
-    if (data->silent) {
-        full_line = std::wstring(cmdline.length(), L'●');
-    } else if (autosuggestion.size() <= cmdline.size() || cmdline.empty()) {
+    if (autosuggestion.size() <= cmdline.size() || cmdline.empty()) {
         // No or useless autosuggestion, or no command line.
         full_line = cmdline;
     } else if (string_prefixes_string(cmdline, autosuggestion)) {
@@ -416,8 +414,13 @@ static void reader_repaint() {
     // Update the indentation.
     data->indents = parse_util_compute_indents(cmd_line->text);
 
-    // Combine the command and autosuggestion into one string.
-    wcstring full_line = combine_command_and_autosuggestion(cmd_line->text, data->autosuggestion);
+    wcstring full_line;
+    if (data->silent) {
+        full_line = wcstring(cmd_line->text.length(), L'●');
+    } else {
+        // Combine the command and autosuggestion into one string.
+        full_line = combine_command_and_autosuggestion(cmd_line->text, data->autosuggestion);
+    }
 
     size_t len = full_line.size();
     if (len < 1) len = 1;

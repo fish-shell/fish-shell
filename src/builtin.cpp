@@ -2141,7 +2141,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     bool silent = false;
     bool split_null = false;
 
-    const wchar_t *short_options = L"ac:ghlm:n:p:siuxzP:UR:";
+    const wchar_t *short_options = L"ac:ghilm:n:p:suxzP:UR:";
     const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
                                            {L"global", no_argument, NULL, 'g'},
                                            {L"local", no_argument, NULL, 'l'},

@@ -2052,7 +2052,7 @@ void reader_set_test_function(parser_test_error_bits_t (*f)(const wchar_t *)) {
 
 void reader_set_exit_on_interrupt(bool i) { data->exit_on_interrupt = i; }
 
-void reader_set_silent_status(bool f) { data->silent = f; }
+void reader_set_silent_status(bool flag) { data->silent = flag; }
 
 void reader_import_history_if_necessary(void) {
     // Import history from older location (config path) if our current history is empty.

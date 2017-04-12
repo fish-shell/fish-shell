@@ -2368,6 +2368,7 @@ enum status_cmd_t {
     STATUS_IS_INTERACTIVE_JOB_CTRL,
     STATUS_IS_NO_JOB_CTRL,
     STATUS_CURRENT_FILENAME,
+    STATUS_CURRENT_FUNCTION,
     STATUS_CURRENT_LINE_NUMBER,
     STATUS_SET_JOB_CONTROL,
     STATUS_PRINT_STACK_TRACE,
@@ -2376,6 +2377,7 @@ enum status_cmd_t {
 // Must be sorted by string, not enum or random.
 const enum_map<status_cmd_t> status_enum_map[] = {
     {STATUS_CURRENT_FILENAME, L"current-filename"},
+    {STATUS_CURRENT_FUNCTION, L"current-function"},
     {STATUS_CURRENT_LINE_NUMBER, L"current-line-number"},
     {STATUS_IS_BLOCK, L"is-block"},
     {STATUS_IS_COMMAND_SUB, L"is-command-substitution"},
@@ -2605,6 +2607,14 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
             const wchar_t *fn = parser.current_filename();
 
             if (!fn) fn = _(L"Standard input");
+            streams.out.append_format(L"%ls\n", fn);
+            break;
+        }
+        case STATUS_CURRENT_FUNCTION: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
+            const wchar_t *fn = parser.get_function_name();
+
+            if (!fn) fn = _(L"Not a function");
             streams.out.append_format(L"%ls\n", fn);
             break;
         }

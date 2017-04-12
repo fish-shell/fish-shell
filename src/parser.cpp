@@ -440,6 +440,10 @@ const wchar_t *parser_t::is_function() const {
     return result;
 }
 
+const wchar_t *parser_t::get_function_name() {
+    return this->is_function();
+}
+
 int parser_t::get_lineno() const {
     int lineno = -1;
     if (!execution_contexts.empty()) {

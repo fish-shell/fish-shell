@@ -306,6 +306,9 @@ class parser_t {
     /// Return a description of the given blocktype.
     const wchar_t *get_block_desc(int block) const;
 
+    /// Return the current function name.
+    const wchar_t *get_function_name();
+
     /// Removes a job.
     bool job_remove(job_t *job);
 

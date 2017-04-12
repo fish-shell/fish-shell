@@ -39,3 +39,13 @@ status --job-control=1none
 
 # Now set it to a valid mode.
 status job-control none
+
+# Check status -u outside functions
+status current-function
+
+function test_function
+    status current-function
+end
+
+test_function
+eval test_function

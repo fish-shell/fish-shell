@@ -11,6 +11,7 @@ status is-no-job-control
 status is-full-job-control
 status is-interactive-job-control
 status current-filename
+status current-function
 status current-line-number
 status print-stack-trace
 status job-control CONTROL-TYPE
@@ -37,6 +38,8 @@ The following operations (sub-commands) are available:
 - `is-no-job-control` returns 0 if no job control is enabled. Also `--is-no-job-control` (no short flag).
 
 - `current-filename` prints the filename of the currently running script. Also `-f` or `--current-filename`.
+
+- `current-function` prints the name of the currently called function if able, when missing displays "Not a function". Also `-u` or `--current-function`.
 
 - `current-line-number` prints the line number of the currently running script. Also `-n` or `--current-line-number`.
 

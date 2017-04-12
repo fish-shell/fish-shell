@@ -349,6 +349,8 @@ class parser_t {
     wcstring stack_trace() const;
 
     ~parser_t();
+
+    const wchar_t *get_function();
 };
 
 #endif

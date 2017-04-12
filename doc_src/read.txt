@@ -15,6 +15,8 @@ The following options are available:
 
 - `-g` or `--global` makes the variables global.
 
+- `-i` or `--silent` makes the characters typed obfuscated. This is useful for reading things like passwords or other sensitive information. Note that in bash the short flag is `-s`. We can't use that due to the existing use as an alias for `--shell`.
+
 - `-l` or `--local` makes the variables local.
 
 - `-m NAME` or `--mode-name=NAME` specifies that the name NAME should be used to save/load the history file. If NAME is fish, the regular fish history will be available.

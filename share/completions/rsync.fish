@@ -113,7 +113,7 @@ complete -c rsync -d Hostname -a "
 
 (
 	#Prepend any username specified in the completion to the hostname
-	commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
+    commandline -ct | string match '*@*' | string replace -r '(.*@).*' '\$1'
 )(__fish_print_hostnames):
 
 (__fish_print_users)@\tUsername
@@ -123,12 +123,16 @@ complete -c rsync -d Hostname -a "
 #
 # Remote path
 #
-complete -c rsync -d "Remote path" -n "commandline -ct| __fish_sgrep -q :" -a "
+complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" -a "
 (
 	#Prepend any user@host:/path information supplied before the remote completion
-	commandline -ct| __fish_sgrep -Eo '.*:+(.*/)?'
+	commandline -ct | string replace -r '/[^/]*\$' '/'
 )(
 	#Get the list of remote files from the specified rsync server
-	rsync --list-only (commandline -ct| __fish_sgrep -Eo '.*:+(.*/)?') ^/dev/null | sed '/^d/ s,\$,/, ' | tr -s ' '| cut -d' ' -f 5-
+    # The string match ensures we only complete remote paths (rsync will error out if given nothing, and stderr is ignored)
+    # The string replace removes everything up to and including a time (since rsync will justify its output)
+    # The last match removes the "." line referring to the directory
+	command rsync --list-only ^/dev/null (commandline -ct | string match -r '.*:(.*/)?') | string replace -r '.*[0-9]{2}:[0-9]{2}:[0-9]{2} ' '' \
+	| string match -r '^..+\$|^[^.]\$' | string escape -n
 )
 "

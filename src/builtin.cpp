@@ -2994,7 +2994,7 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 }
 
 /// Helper function for builtin_bg().
-static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j, const wchar_t *name) {
+static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j) {
     assert(j != NULL);
     if (!j->get_flag(JOB_CONTROL)) {
         streams.err.append_format(
@@ -3016,7 +3016,8 @@ static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j, const w
 static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int res = STATUS_BUILTIN_OK;
 
-    if (argv[1] == 0) {
+    if (!argv[1]) {
+        // No jobs were specified so use the most recent (i.e., last) job.
         job_t *j;
         job_iterator_t jobs;
         while ((j = jobs.next())) {
@@ -3029,33 +3030,36 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), argv[0]);
             res = STATUS_BUILTIN_ERROR;
         } else {
-            res = send_to_bg(parser, streams, j, _(L"(default)"));
-        }
-    } else {
-        std::vector<int> pids;
-
-        // If one argument is not a valid pid (i.e. integer >= 0), fail without backgrounding anything,
-        // but still print errors for all of them.
-        for (int i = 1; argv[i]; i++) {
-            int pid = fish_wcstoi(argv[i]);
-            if (errno || pid < 0) {
-                streams.err.append_format(_(L"%ls: '%ls' is not a valid job specifier\n"), argv[0], argv[i]);
-                res = STATUS_BUILTIN_ERROR;
-            }
-            pids.push_back(pid);
-        }
-        if (res == STATUS_BUILTIN_ERROR) {
-            return res;
+            res = send_to_bg(parser, streams, j);
         }
 
-        // Background all existing jobs that match the pids.
-        // Non-existent jobs aren't an error, but information about them is useful.
-        for (auto p : pids) {
-            if (job_t* j = job_get_from_pid(p)) {
-                res |= send_to_bg(parser, streams, j, *argv);
-            } else {
-                streams.err.append_format(_(L"%ls: Could not find job '%d'\n"), argv[0], p);
-            }
+        return res;
+    }
+
+    // The user specified at least one job to be backgrounded.
+    std::vector<int> pids;
+
+    // If one argument is not a valid pid (i.e. integer >= 0), fail without backgrounding anything,
+    // but still print errors for all of them.
+    for (int i = 1; argv[i]; i++) {
+        int pid = fish_wcstoi(argv[i]);
+        if (errno || pid < 0) {
+            streams.err.append_format(_(L"%ls: '%ls' is not a valid job specifier\n"), L"bg",
+                    argv[i]);
+            res = STATUS_BUILTIN_ERROR;
+        }
+        pids.push_back(pid);
+    }
+
+    if (res == STATUS_BUILTIN_ERROR) return res;
+
+    // Background all existing jobs that match the pids.
+    // Non-existent jobs aren't an error, but information about them is useful.
+    for (auto p : pids) {
+        if (job_t* j = job_get_from_pid(p)) {
+            res |= send_to_bg(parser, streams, j);
+        } else {
+            streams.err.append_format(_(L"%ls: Could not find job '%d'\n"), argv[0], p);
         }
     }
 

@@ -440,7 +440,7 @@ const wchar_t *parser_t::is_function() const {
     return result;
 }
 
-const wchar_t *parser_t::get_function() {
+const wchar_t *parser_t::get_function_name() {
     return this->is_function();
 }
 

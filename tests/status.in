@@ -41,10 +41,10 @@ status --job-control=1none
 status job-control none
 
 # Check status -u outside functions
-status -u
+status current-function
 
 function test_function
-    status -u
+    status current-function
 end
 
 test_function

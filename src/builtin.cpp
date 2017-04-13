@@ -2453,7 +2453,7 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
     /// the non-flag subcommand form. While these flags are deprecated they must be supported at
     /// least until fish 3.0 and possibly longer to avoid breaking everyones config.fish and other
     /// scripts.
-    const wchar_t *short_options = L":bcfhij:lnut";
+    const wchar_t *short_options = L":cbilfnhj:t";
     const struct woption long_options[] = {{L"help", no_argument, 0, 'h'},
                                            {L"is-command-substitution", no_argument, 0, 'c'},
                                            {L"is-block", no_argument, 0, 'b'},
@@ -2463,7 +2463,6 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
                                            {L"is-interactive-job-control", no_argument, 0, 2},
                                            {L"is-no-job-control", no_argument, 0, 3},
                                            {L"current-filename", no_argument, 0, 'f'},
-                                           {L"current-function", no_argument, 0, 'u'},
                                            {L"current-line-number", no_argument, 0, 'n'},
                                            {L"job-control", required_argument, 0, 'j'},
                                            {L"print-stack-trace", no_argument, 0, 't'},
@@ -2533,12 +2532,6 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
                 }
                 new_job_control_mode = job_control_str_to_mode(w.woptarg, cmd, streams);
                 if (new_job_control_mode == -1) {
-                    return STATUS_BUILTIN_ERROR;
-                }
-                break;
-            }
-            case 'u': {
-                if (!set_status_cmd(cmd, &status_cmd, STATUS_CURRENT_FUNCTION, streams)) {
                     return STATUS_BUILTIN_ERROR;
                 }
                 break;
@@ -2630,7 +2623,7 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
         }
         case STATUS_CURRENT_FUNCTION: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)
-            const wchar_t *fn = parser.get_function();
+            const wchar_t *fn = parser.get_function_name();
 
             if (!fn) fn = _(L"Not a function");
             streams.out.append_format(L"%ls\n", fn);

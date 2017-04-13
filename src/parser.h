@@ -350,7 +350,7 @@ class parser_t {
 
     ~parser_t();
 
-    const wchar_t *get_function();
+    const wchar_t *get_function_name();
 };
 
 #endif

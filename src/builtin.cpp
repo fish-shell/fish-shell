@@ -33,8 +33,8 @@
 #include <map>
 #include <memory>
 #include <random>
-#include <string>
 #include <set>
+#include <string>
 #include <utility>
 
 #include "builtin.h"
@@ -457,7 +457,7 @@ static void builtin_bind_list_modes(io_streams_t &streams) {
     for (const input_mapping_name_t &binding : lst) {
         modes.insert(binding.mode);
     }
-    for (const auto& mode : modes) {
+    for (const auto &mode : modes) {
         streams.out.append_format(L"%ls\n", mode.c_str());
     }
 }
@@ -3045,7 +3045,7 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         int pid = fish_wcstoi(argv[i]);
         if (errno || pid < 0) {
             streams.err.append_format(_(L"%ls: '%ls' is not a valid job specifier\n"), L"bg",
-                    argv[i]);
+                                      argv[i]);
             res = STATUS_BUILTIN_ERROR;
         }
         pids.push_back(pid);
@@ -3056,7 +3056,7 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Background all existing jobs that match the pids.
     // Non-existent jobs aren't an error, but information about them is useful.
     for (auto p : pids) {
-        if (job_t* j = job_get_from_pid(p)) {
+        if (job_t *j = job_get_from_pid(p)) {
             res |= send_to_bg(parser, streams, j);
         } else {
             streams.err.append_format(_(L"%ls: Could not find job '%d'\n"), argv[0], p);

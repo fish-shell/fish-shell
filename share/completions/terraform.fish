@@ -190,14 +190,14 @@ complete -f -c terraform -n '__fish_terraform_using_command taint' -o state-out 
 
 ### untaint
 complete -f -c terraform -n '__fish_terraform_needs_command' -a untaint -d 'Manually unmark a resource as tainted'
-complete -f -c terraform -n '__fish_terraform_using_command taint' -o allow-missing -d 'Succeed even if resource is missing'
-complete -f -c terraform -n '__fish_terraform_using_command taint' -o backup -d 'Path to backup the existing state file'
-complete -f -c terraform -n '__fish_terraform_using_command taint' -o lock -d 'Lock the state file when locking is supported'
-complete -f -c terraform -n '__fish_terraform_using_command taint' -o lock-timeout -d 'Duration to retry a state lock'
-complete -f -c terraform -n '__fish_terraform_using_command taint' -o module -d 'The module path where the resource lives'
-complete -f -c terraform -n '__fish_terraform_using_command taint' -o no-color -d 'If specified, output won\'t contain any color'
-complete -f -c terraform -n '__fish_terraform_using_command taint' -o state -d 'Path to a Terraform state file'
-complete -f -c terraform -n '__fish_terraform_using_command taint' -o state-out -d 'Path to write state'
+complete -f -c terraform -n '__fish_terraform_using_command untaint' -o allow-missing -d 'Succeed even if resource is missing'
+complete -f -c terraform -n '__fish_terraform_using_command untaint' -o backup -d 'Path to backup the existing state file'
+complete -f -c terraform -n '__fish_terraform_using_command untaint' -o lock -d 'Lock the state file when locking is supported'
+complete -f -c terraform -n '__fish_terraform_using_command untaint' -o lock-timeout -d 'Duration to retry a state lock'
+complete -f -c terraform -n '__fish_terraform_using_command untaint' -o module -d 'The module path where the resource lives'
+complete -f -c terraform -n '__fish_terraform_using_command untaint' -o no-color -d 'If specified, output won\'t contain any color'
+complete -f -c terraform -n '__fish_terraform_using_command untaint' -o state -d 'Path to a Terraform state file'
+complete -f -c terraform -n '__fish_terraform_using_command untaint' -o state-out -d 'Path to write state'
 
 ### validate
 complete -f -c terraform -n '__fish_terraform_needs_command' -a validate -d 'Validates the Terraform files'

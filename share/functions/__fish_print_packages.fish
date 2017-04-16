@@ -4,7 +4,7 @@ function __fish_print_packages
     # apt-cache is much, much faster than rpm, and can do this in real
     # time. We use it if available.
 
-    switch (commandline -tc)
+    switch (commandline -ct)
         case '-**'
             return
     end
@@ -21,7 +21,7 @@ function __fish_print_packages
     if type -q -f apt-cache
         # Do not generate the cache as apparently sometimes this is slow.
         # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
-        apt-cache --no-generate pkgnames (commandline -tc) ^/dev/null | sed -e 's/$/'\t$package'/'
+        apt-cache --no-generate pkgnames (commandline -ct) ^/dev/null | sed -e 's/$/'\t$package'/'
         return
     end
 
@@ -125,12 +125,12 @@ function __fish_print_packages
 
     # eix is MUCH faster than emerge so use it if it is available
     if type -q -f eix
-        eix --only-names "^"(commandline -tc) | cut -d/ -f2
+        eix --only-names "^"(commandline -ct) | cut -d/ -f2
         return
     else
         # FIXME?  Seems to be broken
         if type -q -f emerge
-            emerge -s \^(commandline -tc) | __fish_sgrep "^*" | cut -d\  -f3 | cut -d/ -f2
+            emerge -s \^(commandline -ct) | string match -r "^\*.*" | cut -d' ' -f3 | cut -d/ -f2
             return
         end
     end

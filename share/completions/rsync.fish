@@ -1,3 +1,6 @@
+function __rsync_remote_target
+    commandline -ct | string match -r '.*::?(?:.*/)?'
+end
 
 complete -c rsync -s v -l verbose --description "Increase verbosity"
 complete -c rsync -s q -l quiet --description "Suppress non-error messages"
@@ -108,27 +111,25 @@ complete -c rsync -l help --description "Display help and exit"
 # Hostname completion
 #
 complete -c rsync -d Hostname -a "
-
 (__fish_print_hostnames):
 
 (
-	#Prepend any username specified in the completion to the hostname
+	# Prepend any username specified in the completion to the hostname.
 	commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
 )(__fish_print_hostnames):
 
 (__fish_print_users)@\tUsername
-
 "
 
 #
 # Remote path
 #
-complete -c rsync -d "Remote path" -n "commandline -ct| __fish_sgrep -q :" -a "
+complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" -a "
 (
-	#Prepend any user@host:/path information supplied before the remote completion
-	commandline -ct| __fish_sgrep -Eo '.*:+(.*/)?'
+	# Prepend any user@host:/path information supplied before the remote completion.
+        __rsync_remote_target
 )(
-	#Get the list of remote files from the specified rsync server
-	rsync --list-only (commandline -ct| __fish_sgrep -Eo '.*:+(.*/)?') ^/dev/null | sed '/^d/ s,\$,/, ' | tr -s ' '| cut -d' ' -f 5-
+	# Get the list of remote files from the specified rsync server.
+        rsync --list-only (__rsync_remote_target) ^/dev/null | string replace -r '^d.*' '\$0/' | tr -s ' ' | cut -d' ' -f 5-
 )
 "

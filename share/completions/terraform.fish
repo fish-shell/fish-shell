@@ -4,7 +4,7 @@ function __fish_terraform_needs_command
         return 0
     end
 
-    for arg in $cmd[2..-1]
+    for arg in $cmd[-1..2]
         switch $arg
             case '--*'
                 # ignore global flags
@@ -21,7 +21,7 @@ function __fish_terraform_using_command
         return 0
     end
 
-    for arg in $cmd[2..-1]
+    for arg in $cmd[-1..2]
         switch $arg
             case '--*'
                 # ignore global flags

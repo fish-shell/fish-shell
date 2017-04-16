@@ -780,7 +780,6 @@ static void read_try(job_t *j) {
 /// \param cont If this variable is set, we are giving back control to a job that has previously
 /// been stopped. In that case, we need to set the terminal attributes to those saved in the job.
 static bool terminal_give_to_job(job_t *j, int cont) {
-    int s = 0;
     errno = 0;
     if (j->pgid == 0) {
         debug(2, "terminal_give_to_job() returning early due to no process group");
@@ -827,7 +826,6 @@ static bool terminal_give_to_job(job_t *j, int cont) {
 /// Returns control of the terminal to the shell, and saves the terminal attribute state to the job,
 /// so that we can restore the terminal ownership to the job at a later time.
 static bool terminal_return_from_job(job_t *j) {
-    int s = 0;
     errno = 0;
     if (j->pgid == 0) {
         debug(2, "terminal_return_from_job() returning early due to no process group");

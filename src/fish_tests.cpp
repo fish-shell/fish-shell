@@ -2299,17 +2299,29 @@ static void test_autosuggest_suggest_special() {
     if (system("mkdir -p 'test/autosuggest_test/1foo bar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/2foo  bar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/3foo\\bar'")) err(L"mkdir failed");
-    if (system("mkdir -p test/autosuggest_test/4foo\\'bar"))
+    if (system("mkdir -p test/autosuggest_test/4foo\\'bar")) {
         err(L"mkdir failed");  // a path with a single quote
-    if (system("mkdir -p test/autosuggest_test/5foo\\\"bar"))
+    }
+    if (system("mkdir -p test/autosuggest_test/5foo\\\"bar")) {
         err(L"mkdir failed");  // a path with a double quote
-    if (system("mkdir -p ~/test_autosuggest_suggest_special/"))
-        err(L"mkdir failed");  // make sure tilde is handled
-    if (system("mkdir -p test/autosuggest_test/start/unique2/unique3/multi4")) err(L"mkdir failed");
-    if (system("mkdir -p test/autosuggest_test/start/unique2/unique3/multi42"))
+    }
+    // This is to ensure tilde expansion is handled. See the `cd ~/test_autosuggest_suggest_specia`
+    // test below. I really dislike this since it mucks with a persons home directory.
+    //
+    // The question is how to modify the test so that tilde expansion can be made hermetic to this
+    // test.
+    if (system("mkdir -p ~/test_autosuggest_suggest_special/")) {
         err(L"mkdir failed");
-    if (system("mkdir -p test/autosuggest_test/start/unique2/.hiddenDir/moreStuff"))
+    }
+    if (system("mkdir -p test/autosuggest_test/start/unique2/unique3/multi4")) {
         err(L"mkdir failed");
+    }
+    if (system("mkdir -p test/autosuggest_test/start/unique2/unique3/multi42")) {
+        err(L"mkdir failed");
+    }
+    if (system("mkdir -p test/autosuggest_test/start/unique2/.hiddenDir/moreStuff")) {
+        err(L"mkdir failed");
+    }
 
     const wcstring wd = L"test/autosuggest_test";
     const env_vars_snapshot_t &vars = env_vars_snapshot_t::current();
@@ -2379,6 +2391,7 @@ static void test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test(L"cd ~hahaha/", vars, L"path1/path2/", __LINE__);
 
     popd();
+    system("rmdir ~/test_autosuggest_suggest_special/");
 }
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {

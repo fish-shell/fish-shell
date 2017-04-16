@@ -6,8 +6,8 @@
 # done by the module detection really needs to be done every time the completion is invoked is
 # unclear. See issue #3856.
 begin
-    set -l unicode 'commandline | __fish_sgrep -qe "-[a-zA-Z]*C[a-zA-Z]*\$"'
-    set -l noopt 'commandline | not __fish_sgrep -qe "-[a-zA-Z]*C[a-zA-Z]*\$"'
+    set -l unicode 'commandline | string match -qr -- "-[a-zA-Z]*C[a-zA-Z]*\$"'
+    set -l noopt 'commandline | not string match -qr -- "-[a-zA-Z]*C[a-zA-Z]*\$"'
     set -l modules "(find (perl -lE'print for @INC') -name '*.pm' -printf '%P\n' ^/dev/null \
                         | sed -e 's,/,::,g; s,\.pm\$,,' | sort -u)"
     complete -c perl -s 0 -n $noopt --description 'Specify record separator'
@@ -25,7 +25,7 @@ begin
     complete -c perl -s CO -n $unicode --description 'STDOUT is UTF-8'
     complete -c perl -s CS -n $unicode --description 'STDOUT, STDIN, and STDERR are UTF-8'
     complete -c perl -s d -n $noopt --description 'Debugger'
-    complete -c perl -s dt -n 'commandline | __fish_sgrep -qe "d\$"' --description 'Debugger, with threads'
+    complete -c perl -s dt -n 'commandline | string match -qr "d\$"' --description 'Debugger, with threads'
     complete -c perl -s D -n $noopt -x --description 'Debug option'
     complete -c perl -s e -n $noopt -x --description 'Execute command'
     complete -c perl -s E -n $noopt -x --description 'Execute command, enable optional features'

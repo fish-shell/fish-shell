@@ -3,8 +3,7 @@ function __funced_md5
         # GNU systems
         md5sum $argv[1] | cut -d' ' -f1
         return 0
-    end
-    if type -q md5
+    else if type -q md5
         # BSD systems
         md5 -q $argv[1]
         return 0

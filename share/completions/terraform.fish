@@ -3,7 +3,7 @@ complete -f -c terraform -l version -d 'Print version information'
 complete -f -c terraform -l help -d 'Show help'
 
 ### apply
-complete -f -c terraform -n '__fish_use_subcommand' -a apply -d 'Builds or changes infrastructure'
+complete -f -c terraform -n '__fish_use_subcommand' -a apply -d 'Build or change infrastructure'
 complete -f -c terraform -n '__fish_seen_subcommand_from apply' -o backup -d 'Path to backup the existing state file'
 complete -f -c terraform -n '__fish_seen_subcommand_from apply' -o lock -d 'Lock the state file when locking is supported'
 complete -f -c terraform -n '__fish_seen_subcommand_from apply' -o lock-timeout -d 'Duration to retry a state lock'
@@ -46,7 +46,7 @@ complete -f -c terraform -n '__fish_seen_subcommand_from env' -a new -d 'Create 
 complete -f -c terraform -n '__fish_seen_subcommand_from env' -a delete -d 'Delete an existing environment'
 
 ### fmt
-complete -f -c terraform -n '__fish_use_subcommand' -a fmt -d 'Rewrites config files to canonical format'
+complete -f -c terraform -n '__fish_use_subcommand' -a fmt -d 'Rewrite config files to canonical format'
 complete -f -c terraform -n '__fish_seen_subcommand_from fmt' -o list -d 'List files whose formatting differs'
 complete -f -c terraform -n '__fish_seen_subcommand_from fmt' -o write -d 'Write result to source file'
 complete -f -c terraform -n '__fish_seen_subcommand_from fmt' -o diff -d 'Display diffs of formatting changes'
@@ -164,8 +164,8 @@ complete -f -c terraform -n '__fish_seen_subcommand_from untaint' -o state -d 'P
 complete -f -c terraform -n '__fish_seen_subcommand_from untaint' -o state-out -d 'Path to write state'
 
 ### validate
-complete -f -c terraform -n '__fish_use_subcommand' -a validate -d 'Validates the Terraform files'
+complete -f -c terraform -n '__fish_use_subcommand' -a validate -d 'Validate the Terraform files'
 complete -f -c terraform -n '__fish_seen_subcommand_from validate' -o no-color -d 'If specified, output won\'t contain any color'
 
 ### version
-complete -f -c terraform -n '__fish_use_subcommand' -a version -d 'Prints the Terraform version'
+complete -f -c terraform -n '__fish_use_subcommand' -a version -d 'Print the Terraform version'

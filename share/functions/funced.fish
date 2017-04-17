@@ -1,3 +1,17 @@
+function __funced_md5
+    if type -q md5sum
+        # GNU systems
+        md5sum $argv[1] | cut -d' ' -f1
+        return 0
+    end
+    if type -q md5
+        # BSD systems
+        md5 -q $argv[1]
+        return 0
+    end
+    return 1
+end
+
 function funced --description 'Edit function definition'
     set -l editor
     # Check VISUAL first since theoretically EDITOR could be ed
@@ -105,10 +119,7 @@ function funced --description 'Edit function definition'
     # If the editor command itself fails, we assume the user cancelled or the file
     # could not be edited, and we do not try again
     while true
-        set -l checksum
-        if type -q md5sum
-            set checksum (md5sum $tmpname)
-        end
+        set -l checksum (__funced_md5 "$tmpname")
 
         if not eval $editor $tmpname
             echo (_ "Editing failed or was cancelled")
@@ -116,7 +127,8 @@ function funced --description 'Edit function definition'
             # Verify the checksum (if present) to detect potential problems
             # with the editor command
             if set -q checksum[1]
-                if echo "$checksum" | md5sum --check --status
+                set -l new_checksum (__funced_md5 "$tmpname")
+                if test "$new_checksum" = "$checksum"
                     echo (_ "Editor exited but the function was not modified")
                 end
             end

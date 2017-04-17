@@ -102,14 +102,28 @@ function funced --description 'Edit function definition'
     else
         echo $init >$tmpname
     end
+
     # Repeatedly edit until it either parses successfully, or the user cancels
     # If the editor command itself fails, we assume the user cancelled or the file
     # could not be edited, and we do not try again
     while true
+        if which md5sum > /dev/null
+            set checksum (md5sum $tmpname)
+        end
+
         if not eval $editor $tmpname
             _ "Editing failed or was cancelled"
             echo
         else
+            # Verify the checksum (if present) to detect potential problems
+            # with the editor command
+            if set -q checksum
+                if echo "$checksum" | md5sum --check --status
+                    _ "Editor exited but the function was not modified"
+                    echo
+                end
+            end
+
             if not source $tmpname
                 # Failed to source the function file. Prompt to try again.
                 echo # add a line between the parse error and the prompt

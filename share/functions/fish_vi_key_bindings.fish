@@ -207,11 +207,11 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind '"*P' backward-char "commandline -i ( xsel -p; echo )[1]"
 
     #
-    # Lowercase r, enters replace-one mode
+    # Lowercase r, enters replace_one mode
     #
-    bind -m replace-one r force-repaint
-    bind -M replace-one -m default '' delete-char self-insert backward-char force-repaint
-    bind -M replace-one -m default \e cancel force-repaint
+    bind -m replace_one r force-repaint
+    bind -M replace_one -m default '' delete-char self-insert backward-char force-repaint
+    bind -M replace_one -m default \e cancel force-repaint
 
     #
     # visual mode

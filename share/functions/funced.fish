@@ -1,7 +1,7 @@
 function __funced_md5
     if type -q md5sum
         # GNU systems
-        md5sum $argv[1] | cut -d' ' -f1
+        echo (md5sum $argv[1] | string split ' ')[1]
         return 0
     else if type -q md5
         # BSD systems

@@ -105,7 +105,8 @@ function funced --description 'Edit function definition'
     # If the editor command itself fails, we assume the user cancelled or the file
     # could not be edited, and we do not try again
     while true
-        if which md5sum > /dev/null
+        set -l checksum
+        if type -q md5sum
             set checksum (md5sum $tmpname)
         end
 
@@ -114,7 +115,7 @@ function funced --description 'Edit function definition'
         else
             # Verify the checksum (if present) to detect potential problems
             # with the editor command
-            if set -q checksum
+            if set -q checksum[1]
                 if echo "$checksum" | md5sum --check --status
                     echo (_ "Editor exited but the function was not modified")
                 end

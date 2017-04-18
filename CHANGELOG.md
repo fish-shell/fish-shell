@@ -2,6 +2,8 @@
 
 - The `export` and `setenv` commands now supports colon-separated `PATH`, `CDPATH` and `MANPATH`.
 - The `read` command now has a default limit of 10 MiB. If a line is longer than that it will fail with $status set to 122 and the var will be empty. You can set a different limit by setting the FISH_READ_BYTE_LIMIT variable.
+- `read` now supports the `--silent` flag to hide the characters typed (#838).
+- The `read` command now accepts simple strings for the prompt rather than fish script via the new `-P` and `--prompt-str` flags (#802).
 - The \cl binding no longer deletes the scrollback buffer with ncurses >= 6.0 (#2855).
 - fish now supports "bracketed paste" (#3871). Note that this is more of a security measure, the `fish_clipboard_paste` function (bound to \cv by default) still has a few advantages.
 - When the current token has an open single-quote (`'`), fish will now escape any `'` and `\` in pasted text so that it can be used as a single token. Note that this requires either bracketed paste or use of the special `fish_clipboard_paste` function (bound to \cv by default).
@@ -10,12 +12,10 @@
 - The `functions --metadata --verbose` output now includes the function description (#597).
 - Completions for `helm` added (#3829).
 - Empty components in $CDPATH, $MANPATH and $PATH are now converted to "." (#2106, #3914).
-- The `read` command now accepts simple strings for the prompt rather than fish script via the new `-P` and `--prompt-str` flags (#802).
 - `type` now no longer requires `which`, which means it is no longer a dependency (#3912, #3945).
 - Using symbolic permissions with the `umask` command now works (#738).
 - Command substitutions now have access to the terminal, allowing tools like `fzf` to work in them (#1362, #3922).
 - `bg`s argument parsing has been reworked. It now fails for invalid arguments but allows non-existent jobs (#3909).
-- `read` now supports the `--silent` flag to hide the characters typed (#838).
 - fish will now reset $USER if the uid is 0. This is to workaround some su implementations that pass along $USER when switching to root (#3944).
 
 ---

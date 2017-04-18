@@ -9,7 +9,7 @@
 - The `string` command now supports a `repeat` subcommand with the obvious behavior (#3864).
 - The `functions --metadata --verbose` output now includes the function description (#597).
 - Completions for `helm` added (#3829).
-- Empty CDPATH elements are now equivalent to "." (#2106).
+- Empty components in $CDPATH, $MANPATH and $PATH are now converted to "." (#2106, #3914).
 - The `read` command now accepts simple strings for the prompt rather than fish script via the new `-P` and `--prompt-str` flags (#802).
 - `type` now no longer requires `which`, which means it is no longer a dependency (#3912, #3945).
 - Using symbolic permissions with the `umask` command now works (#738).

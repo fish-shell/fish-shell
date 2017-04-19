@@ -2709,9 +2709,6 @@ const wchar_t *reader_readline(int nchars) {
                 if (el->position < el->size()) {
                     update_buff_pos(el, el->position + 1);
                     remove_backward();
-                    if (el->position > 0 && el->position == el->size()) {
-                        update_buff_pos(el, el->position - 1);
-                    }
                 }
                 break;
             }

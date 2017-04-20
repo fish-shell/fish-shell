@@ -40,21 +40,22 @@ complete -c gradle -l exclude-task -s x -x -d 'Specify task to be excluded from 
 
 # https://github.com/hanny24/gradle-fish/blob/master/gradle.load
 function __cache_or_get_gradle_completion
-  mkdir -p "/tmp/gradle_completion_cache_for_$USER"
+  # Set up cache directory
+  if test -z "$XDG_CACHE_HOME"
+    set XDG_CACHE_HOME $HOME/.cache/
+  end
+  mkdir -m 700 -p "$XDG_CACHE_HOME/gradle-completions"
+
   set -l hashed_pwd (echo $PWD | md5sum | awk '{ print $1 }')
-  set -l gradle_cache_file "/tmp/gradle_completion_cache_for_$USER/$hashed_pwd"
-  if /usr/bin/test build.gradle -nt "$gradle_cache_file"; or not test -f "$gradle_cache_file"
-    gradle -q tasks ^ /dev/null | sed -n 's/^\([[:alpha:][:digit:]]\{1,\}\)\s-\s.*/\1/p' > "$gradle_cache_file"
+  set -l gradle_cache_file "$XDG_CACHE_HOME/gradle-completions/$hashed_pwd"
+  if not command test -f "$gradle_cache_file"; or command test build.gradle -nt "$gradle_cache_file"
+    command gradle -q tasks ^ /dev/null | sed -n 's/^\([[:alpha:][:digit:]]\{1,\}\)\s-\s.*/\1/p' > "$gradle_cache_file"
   end
   cat "$gradle_cache_file"
 end
 
-function __description_gradle_completion
-  cat "$gradle_cache_file"
-end
-
 function __run_gradle_completion
-  test -f build.gradle
+  command test -f build.gradle
 end
 
 complete -x -c gradle -a "(__cache_or_get_gradle_completion)" -n '__run_gradle_completion'

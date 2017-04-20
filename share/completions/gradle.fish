@@ -46,7 +46,7 @@ function __cache_or_get_gradle_completion
   end
   mkdir -m 700 -p "$XDG_CACHE_HOME/gradle-completions"
 
-  set -l hashed_pwd (echo $PWD | fish_md5 | awk '{ print $1 }')
+  set -l hashed_pwd (fish_md5 $PWD)
   set -l gradle_cache_file "$XDG_CACHE_HOME/gradle-completions/$hashed_pwd"
   if not command test -f "$gradle_cache_file"; or command test build.gradle -nt "$gradle_cache_file"
     command gradle -q tasks ^ /dev/null | sed -n 's/^\([[:alpha:][:digit:]]\{1,\}\)\s-\s.*/\1/p' > "$gradle_cache_file"

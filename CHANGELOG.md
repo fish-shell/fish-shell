@@ -17,6 +17,7 @@
 - Command substitutions now have access to the terminal, allowing tools like `fzf` to work in them (#1362, #3922).
 - `bg`s argument parsing has been reworked. It now fails for invalid arguments but allows non-existent jobs (#3909).
 - fish will now reset $USER if the uid is 0. This is to workaround some su implementations that pass along $USER when switching to root (#3944).
+- Our python-using functions now pick any python version (preferring python3), making dependencies on a specific python version unnecessary (#3970).
 
 ---
 

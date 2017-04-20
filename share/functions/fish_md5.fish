@@ -1,7 +1,7 @@
 function fish_md5
     if type -q md5sum
         # GNU systems
-        echo (md5sum $argv[1] | string split ' ')[1]
+        echo (echo $argv[1] | md5sum | string split ' ')[1]
         return 0
     else if type -q md5
         # BSD systems

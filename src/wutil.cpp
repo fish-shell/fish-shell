@@ -474,40 +474,6 @@ int fish_iswgraph(wint_t wc) {
     return iswgraph(wc);
 }
 
-/// Test if the given string is a valid variable name.
-///
-/// \return null if this is a valid name, and a pointer to the first invalid character otherwise.
-const wchar_t *wcsvarname(const wchar_t *str) {
-    if (str[0] == L'\0') return str;
-    while (*str) {
-        if ((!fish_iswalnum(*str)) && (*str != L'_')) {
-            return str;
-        }
-        str++;
-    }
-    return NULL;
-}
-
-/// Test if the given string is a valid variable name.
-///
-/// \return null if this is a valid name, and a pointer to the first invalid character otherwise.
-const wchar_t *wcsvarname(const wcstring &str) { return wcsvarname(str.c_str()); }
-
-/// Test if the string is a valid function name.
-///
-/// \return true if it is valid else false.
-bool wcsfuncname(const wcstring &str) {
-    if (str.size() == 0) return false;
-    if (str.at(0) == L'-') return false;
-    if (str.find_first_of(L'/') != wcstring::npos) return false;
-    return true;
-}
-
-/// Test if the given string is valid in a variable name.
-///
-/// \return true if this is a valid name, false otherwise.
-bool wcsvarchr(wchar_t chr) { return fish_iswalnum(chr) || chr == L'_'; }
-
 /// Convenience variants on fish_wcwswidth().
 ///
 /// See fallback.h for the normal definitions.

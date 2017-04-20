@@ -1121,7 +1121,7 @@ bool completer_t::try_complete_variable(const wcstring &str) {
 
     for (size_t in_pos = 0; in_pos < len; in_pos++) {
         wchar_t c = str.at(in_pos);
-        if (!wcsvarchr(c)) {
+        if (!valid_var_name_char(c)) {
             // This character cannot be in a variable, reset the dollar.
             variable_start = -1;
         }

@@ -844,7 +844,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
             if (closing_bracket != wcstring::npos) {
                 size_t var_start = dollar_pos + 2, var_end = closing_bracket;
                 var_name = wcstring(token, var_start, var_end - var_start);
-                looks_like_variable = wcsvarname(var_name) == NULL;
+                looks_like_variable = valid_var_name(var_name);
             }
             if (looks_like_variable) {
                 append_syntax_error(
@@ -1026,7 +1026,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
 
         wchar_t next_char = idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0';
         if (next_char != VARIABLE_EXPAND && next_char != VARIABLE_EXPAND_SINGLE &&
-            !wcsvarchr(next_char)) {
+            !valid_var_name_char(next_char)) {
             err = 1;
             if (out_errors) {
                 // We have something like $$$^....  Back up until we reach the first $.

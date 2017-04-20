@@ -746,7 +746,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
                 stop_pos++;
                 break;
             }
-            if (!wcsvarchr(nc)) break;
+            if (!valid_var_name_char(nc)) break;
 
             stop_pos++;
         }

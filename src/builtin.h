@@ -57,13 +57,8 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 #define BUILTIN_ERR_ARG_COUNT1 _(L"%ls: expected %d args, got %d\n")
 #define BUILTIN_ERR_ARG_COUNT2 _(L"%ls: %ls expected %d args, got %d\n")
 
-/// Error message for invalid character in variable name.
-#define BUILTIN_ERR_VARCHAR                                                                 \
-    _(L"%ls: Invalid character '%lc' in variable name. Only alphanumerical characters and " \
-      L"underscores are valid in a variable name.\n")
-
-/// Error message for invalid (empty) variable name.
-#define BUILTIN_ERR_VARNAME_ZERO _(L"%ls: Variable name can not be the empty string\n")
+/// Error message for invalid variable name.
+#define BUILTIN_ERR_VARNAME _(L"%ls: Variable name '%ls' is not valid. See `help identifiers`.\n")
 
 /// Error message when too many arguments are supplied to a builtin.
 #define BUILTIN_ERR_TOO_MANY_ARGUMENTS _(L"%ls: Too many arguments\n")
@@ -110,7 +105,6 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                         output_stream_t &b);
 int builtin_count_args(const wchar_t *const *argv);
-bool builtin_is_valid_varname(const wchar_t *varname, wcstring &errstr, const wchar_t *cmd);
 
 void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                             const wchar_t *opt);

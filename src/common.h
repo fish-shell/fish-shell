@@ -1,7 +1,7 @@
 // Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
 #ifndef FISH_COMMON_H
 #define FISH_COMMON_H
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
 #include <pthread.h>
@@ -845,4 +845,9 @@ void redirect_tty_output();
 #define DFLT_TERM_ROW_STR L"24"
 void invalidate_termsize(bool invalidate_vars = false);
 struct winsize get_current_winsize();
+
+bool valid_var_name_char(wchar_t chr);
+bool valid_var_name(const wchar_t *str);
+bool valid_var_name(const wcstring &str);
+bool valid_func_name(const wcstring &str);
 #endif

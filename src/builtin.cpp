@@ -88,20 +88,6 @@ static void builtin_append_format(wcstring &str, const wchar_t *fmt, ...) {
     va_end(ap);
 }
 
-bool builtin_is_valid_varname(const wchar_t *varname, wcstring &errstr, const wchar_t *cmd) {
-    const wchar_t *invalid_char = wcsvarname(varname);
-    if (!invalid_char) {
-        return true;
-    }
-
-    if (*invalid_char == L'\0') {
-        builtin_append_format(errstr, BUILTIN_ERR_VARNAME_ZERO, cmd);
-    } else {
-        builtin_append_format(errstr, BUILTIN_ERR_VARCHAR, cmd, *invalid_char);
-    }
-    return false;
-}
-
 /// Counts the number of arguments in the specified null-terminated array
 int builtin_count_args(const wchar_t *const *argv) {
     int argc;
@@ -1270,7 +1256,7 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
             return STATUS_BUILTIN_ERROR;
         }
 
-        if (!wcsfuncname(new_func) || parser_keywords_is_reserved(new_func)) {
+        if (!valid_func_name(new_func) || parser_keywords_is_reserved(new_func)) {
             streams.err.append_format(_(L"%ls: Illegal function name '%ls'\n"), argv[0],
                                       new_func.c_str());
             builtin_print_help(parser, streams, argv[0], streams.err);
@@ -1597,7 +1583,7 @@ static int validate_function_name(int argc, const wchar_t *const *argv, wcstring
     }
 
     function_name = argv[1];
-    if (!wcsfuncname(function_name)) {
+    if (!valid_func_name(function_name)) {
         append_format(*out_err, _(L"%ls: Illegal function name '%ls'"), cmd, function_name.c_str());
         return STATUS_BUILTIN_ERROR;
     }
@@ -1681,7 +1667,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                 break;
             }
             case 'v': {
-                if (wcsvarname(w.woptarg)) {
+                if (!valid_var_name(w.woptarg)) {
                     append_format(*out_err, _(L"%ls: Invalid variable name '%ls'"), cmd, w.woptarg);
                     return STATUS_BUILTIN_ERROR;
                 }
@@ -1751,7 +1737,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                 break;
             }
             case 'V': {
-                if (wcsvarname(w.woptarg)) {
+                if (!valid_var_name(w.woptarg)) {
                     append_format(*out_err, _(L"%ls: Invalid variable name '%ls'"), cmd, w.woptarg);
                     return STATUS_BUILTIN_ERROR;
                 }
@@ -2293,10 +2279,9 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
 
     // Verify all variable names.
-    wcstring errstr;
     for (int i = w.woptind; i < argc; i++) {
-        if (!builtin_is_valid_varname(argv[i], errstr, argv[0])) {
-            streams.err.append(errstr);
+        if (!valid_var_name(argv[i])) {
+            streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, argv[i]);
             builtin_print_help(parser, streams, argv[0], streams.err);
             return STATUS_BUILTIN_ERROR;
         }

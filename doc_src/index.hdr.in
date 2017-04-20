@@ -667,11 +667,22 @@ Example:
 If the current directory contains the files 'foo' and 'bar', the command `echo a(ls){1,2,3} ` will output 'abar1 abar2 abar3 afoo1 afoo2 afoo3'.
 
 
+\section identifiers Shell variable and function names
+
+The names given to shell objects such as variables and function names are known as "identifiers". Each type of identifier has rules that define the valid sequence of characters which compose the identifier.
+
+A variable name cannot be empty. It can contain only letters, digits, and underscores. It may begin and end with any of those characters.
+
+A function name cannot be empty. It may not begin with a hyphen ("-") and many contain a slash ("/"). All other characters, including a space, are valid.
+
+A bind mode name (e.g., `bind -m abc ...`) is restricted to the rules for valid variable names.
+
+
 \section variables Shell variables
 
 Shell variables are named pieces of data, which can be created, deleted and their values changed and used by the user.  Variables may optionally be "exported", so that a copy of the variable is available to any subprocesses the shell creates. An exported variable is referred to as an "environment variable".
 
-To set a variable value, use the <a href="commands.html#set">`set` command</a>.
+To set a variable value, use the <a href="commands.html#set">`set` command</a>. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
 Example:
 

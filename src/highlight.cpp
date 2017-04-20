@@ -393,7 +393,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
     while (in[idx] == '$') {
         // Our color depends on the next char.
         wchar_t next = in[idx + 1];
-        if (next == L'$' || wcsvarchr(next)) {
+        if (next == L'$' || valid_var_name_char(next)) {
             colors[idx] = highlight_spec_operator;
         } else {
             colors[idx] = highlight_spec_error;
@@ -403,7 +403,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
     }
 
     // Handle a sequence of variable characters.
-    while (wcsvarchr(in[idx])) {
+    while (valid_var_name_char(in[idx])) {
         colors[idx++] = highlight_spec_operator;
     }
 

@@ -315,6 +315,7 @@ static void print_variables(int include_values, int esc, bool shorten_ok, int sc
 
 /// The set builtin creates, updates, and erases (removes, deletes) variables.
 int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
     wgetopter_t w;
     // Variables used for parsing the argument list.
     const struct woption long_options[] = {{L"export", no_argument, 0, 'x'},
@@ -400,11 +401,11 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 break;
             }
             case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
+                builtin_print_help(parser, streams, cmd, streams.out);
                 return 0;
             }
             case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return 1;
             }
             default: { break; }
@@ -414,31 +415,31 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Ok, all arguments have been parsed, let's validate them. If we are checking the existance of
     // a variable (-q) we can not also specify scope.
     if (query && (erase || list)) {
-        streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
+        streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
 
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        builtin_print_help(parser, streams, cmd, streams.err);
         return 1;
     }
 
     // We can't both list and erase variables.
     if (erase && list) {
-        streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
+        streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
 
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        builtin_print_help(parser, streams, cmd, streams.err);
         return 1;
     }
 
     // Variables can only have one scope.
     if (local + global + universal > 1) {
-        streams.err.append_format(BUILTIN_ERR_GLOCAL, argv[0]);
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
         return 1;
     }
 
     // Variables can only have one export status.
     if (exportv && unexport) {
         streams.err.append_format(BUILTIN_ERR_EXPUNEXP, argv[0]);
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        builtin_print_help(parser, streams, cmd, streams.err);
         return 1;
     }
 
@@ -471,7 +472,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 if (!dest_str.missing()) tokenize_variable_array(dest_str, result);
 
                 if (!parse_index(indexes, arg, dest, result.size(), streams)) {
-                    builtin_print_help(parser, streams, argv[0], streams.err);
+                    builtin_print_help(parser, streams, cmd, streams.err);
                     retcode = 1;
                     break;
                 }
@@ -501,9 +502,9 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (w.woptind == argc) {
         // Print values of variables.
         if (erase) {
-            streams.err.append_format(_(L"%ls: Erase needs a variable name\n"), argv[0]);
+            streams.err.append_format(_(L"%ls: Erase needs a variable name\n"), cmd);
 
-            builtin_print_help(parser, streams, argv[0], streams.err);
+            builtin_print_help(parser, streams, cmd, streams.err);
             retcode = 1;
         } else {
             print_variables(1, 1, shorten_ok, scope, streams);
@@ -521,8 +522,8 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     wcstring errstr;
-    if (!builtin_is_valid_varname(dest, errstr, argv[0])) {
-        streams.err.append(errstr);
+    if (!valid_var_name(dest)) {
+        streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, dest);
         builtin_print_help(parser, streams, argv[0], streams.err);
         return STATUS_BUILTIN_ERROR;
     }

@@ -37,3 +37,24 @@ complete -c gradle -l continuous -s t -d 'Enable continuous build'
 complete -c gradle -l no-search-upward -s u -d 'Don\'t search in parent folders for settings file'
 complete -c gradle -l version -s v -d 'Print version'
 complete -c gradle -l exclude-task -s x -x -d 'Specify task to be excluded from execution'
+
+# https://github.com/hanny24/gradle-fish/blob/master/gradle.load
+function __cache_or_get_gradle_completion
+  mkdir -p "/tmp/gradle_completion_cache_for_$USER"
+  set -l hashed_pwd (echo $PWD | md5sum | awk '{ print $1 }')
+  set -l gradle_cache_file "/tmp/gradle_completion_cache_for_$USER/$hashed_pwd"
+  if /usr/bin/test build.gradle -nt "$gradle_cache_file"; or not test -f "$gradle_cache_file"
+    gradle -q tasks ^ /dev/null | sed -n 's/^\([[:alpha:][:digit:]]\{1,\}\)\s-\s.*/\1/p' > "$gradle_cache_file"
+  end
+  cat "$gradle_cache_file"
+end
+
+function __description_gradle_completion
+  cat "$gradle_cache_file"
+end
+
+function __run_gradle_completion
+  test -f build.gradle
+end
+
+complete -x -c gradle -a "(__cache_or_get_gradle_completion)" -n '__run_gradle_completion'

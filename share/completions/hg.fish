@@ -318,7 +318,7 @@ function __fish_hg_sources
 end
 
 function __fish_hg_mq_enabled
-    if set -l line (__fish_hg config | grep extensions.hgext.mq)
+    if set -l line (__fish_hg config extensions.hgext.mq)
         set -l parts (string split "=" -m 1 $line)
         not string match -r -q -- "^!" $parts[2]
         return

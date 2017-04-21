@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <paths.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -1992,4 +1993,28 @@ void redirect_tty_output() {
     }
     show_stackframe(L'E', 99, 1);
     abort();
+}
+
+/// Return a path to a directory where we can store temporary files.
+wcstring get_path_to_tmp_dir()
+{
+    env_var_t env_tmpdir = env_get_string(L"TMPDIR");
+    if (!env_tmpdir.missing()) return env_tmpdir;
+
+#if defined(_CS_DARWIN_USER_TEMP_DIR)
+    char osx_tmpdir[PATH_MAX];
+    if(confstr(_CS_DARWIN_USER_TEMP_DIR, osx_tmpdir, PATH_MAX - 1))
+    {
+        return str2wcstring(osx_tmpdir);
+    }
+
+#elif defined(P_tmpdir)
+    return str2wcstring(P_tmpdir);
+
+#elif defined(_PATH_TMP)
+    return str2wcstring(_PATH_TMP);
+
+#else
+    return str2wcstring("/tmp");
+#endif
 }

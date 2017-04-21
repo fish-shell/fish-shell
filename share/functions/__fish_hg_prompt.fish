@@ -18,6 +18,9 @@ set -g fish_prompt_hg_status_deleted '✖'
 set -g fish_prompt_hg_status_untracked '?'
 set -g fish_prompt_hg_status_unmerged '!'
 
+set -g fish_prompt_hg_upstream_ahead "↑"
+set -g fish_prompt_hg_upstream_behind "↓"
+
 set -g fish_prompt_hg_status_order added modified copied deleted untracked unmerged
 
 function __fish_hg_prompt --description 'Write out the hg prompt'
@@ -50,17 +53,32 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
         set branch "$branch|$bookmark"
     end
 
+    # Only add incoming and outgoing if hg prompt is installed
+    if command -s "hg prompt" > /dev/null
+        set tmp (command hg prompt "{incoming|count}")
+        if test -n "$tmp" -a $tmp -gt 0
+            set hg_statuses $hg_statuses "$tmp$fish_prompt_hg_upstream_ahead"
+        end
+
+        set tmp (command hg prompt "{outgoing|count}")
+        if test -n "$tmp" -a $tmp -gt 0
+            set hg_statuses $hg_statuses "$tmp$fish_prompt_hg_upstream_behind"
+        end
+    end
+
     echo -n '|'
 
     set -l repo_status (hg status | string sub -l 2 | sort -u)
 
-    # Show nice color for a clean repo
     if test -z "$repo_status"
-        set_color $fish_color_hg_clean
-        echo -n "($branch)"'✓'
+        if test "$hg_statuses" = ""
+            # Show nice color for a clean repo
+            set_color $fish_color_hg_clean
+        end
+        echo -n "($branch)$hg_statuses✓"
         set_color normal
 
-        # Handle modified or dirty (unknown state)
+    # Handle modified or dirty (unknown state)
     else
         set -l hg_statuses
 

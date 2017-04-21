@@ -23,13 +23,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
 
     if not set -q fish_greeting
-        set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell' ))
+        set -l line1 (_ 'Welcome to fish, the friendly interactive shell')
+        set -l line2 ''
         if not set -q __fish_init_2_3_0
-            set -l line2 \n(printf (_ 'Type %shelp%s for instructions on how to use fish %s') (set_color green) (set_color normal))
-        else
-            set -l line2 ''
+            set line2 \n(_ 'Type `help` for instructions on how to use fish')
         end
-        set -U fish_greeting $line1$line2
+        set -U fish_greeting "$line1$line2"
     end
 
     #

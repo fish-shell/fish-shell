@@ -1,6 +1,9 @@
 # For Solaris OS, we don't need to generate completions. Since it can hang the PC.
+# Similarly if killall doesn't exist (e.g. Cygwin)
 if test (uname) != 'SunOS'
-	__fish_make_completion_signals
+    and command -s killall > /dev/null
+
+    __fish_make_completion_signals
 
 	for i in $__kill_signals
 		set number (echo $i | cut -d " " -f 1)

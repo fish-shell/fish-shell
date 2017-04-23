@@ -53,7 +53,7 @@ struct event_t {
     /// The type-specific parameter. The int types are one of the following:
     ///
     /// signal: Signal number for signal-type events.Use EVENT_ANY_SIGNAL to match any signal
-    /// pid: Process id for process-type events. Use EVENT_ANY_PID to match any pid.
+    /// pid: Process id for process-type events. Use EVENT_ANY_PID to match any pid. (Negative values are used for PGIDs).
     /// job_id: Job id for EVENT_JOB_ID type events
     union {
         int signal;

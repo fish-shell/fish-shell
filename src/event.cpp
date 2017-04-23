@@ -128,6 +128,7 @@ wcstring event_get_desc(const event_t &e) {
             if (e.param1.pid > 0) {
                 result = format_string(_(L"exit handler for process %d"), e.param1.pid);
             } else {
+                // In events, PGIDs are stored as negative PIDs
                 job_t *j = job_get_from_pid(-e.param1.pid);
                 if (j)
                     result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id,
@@ -209,6 +210,7 @@ static wcstring event_desc_compact(const event_t &event) {
             } else if (event.param1.pid > 0) {
                 res = format_string(L"EVENT_EXIT(pid %d)", event.param1.pid);
             } else {
+                // In events, PGIDs are stored as negative PIDs
                 job_t *j = job_get_from_pid(-event.param1.pid);
                 if (j)
                     res = format_string(L"EVENT_EXIT(jobid %d: \"%ls\")", j->job_id,

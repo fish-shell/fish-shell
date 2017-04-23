@@ -319,7 +319,7 @@ class parser_t {
     job_t *job_get(job_id_t job_id);
 
     /// Returns the job with the given pid.
-    job_t *job_get_from_pid(int pid);
+    job_t *job_get_from_pid(pid_t pid);
 
     /// Returns a new profile item if profiling is active. The caller should fill it in. The
     /// parser_t will clean it up.

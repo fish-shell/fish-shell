@@ -566,7 +566,7 @@ job_t *parser_t::job_get(job_id_t id) {
     return NULL;
 }
 
-job_t *parser_t::job_get_from_pid(int pid) {
+job_t *parser_t::job_get_from_pid(pid_t pid) {
     job_iterator_t jobs;
     job_t *job;
     while ((job = jobs.next())) {

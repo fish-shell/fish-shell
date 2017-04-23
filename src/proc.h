@@ -217,6 +217,7 @@ class job_t {
     process_list_t processes;
 
     /// Process group ID for the process group that this job is running in.
+    /// Set to a nonexistent, non-return-value of getpgid() integer by the constructor
     pid_t pgid;
     /// The saved terminal modes of this job. This needs to be saved so that we can restore the
     /// terminal to the same state after temporarily taking control over the terminal when a job

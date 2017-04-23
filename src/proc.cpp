@@ -362,8 +362,13 @@ process_t::process_t()
 {
 }
 
+/// The constructor sets the pgid to -2 as a sentinel value
+/// 0 should not be used; although it is not a valid PGID in userspace,
+///   the Linux kernel will use it for kernel processes.
+/// -1 should not be used; it is a possible return value of the getpgid()
+///   function
 job_t::job_t(job_id_t jobid, const io_chain_t &bio)
-    : block_io(bio), pgid(0), tmodes(), job_id(jobid), flags(0) {}
+    : block_io(bio), pgid(-2), tmodes(), job_id(jobid), flags(0) {}
 
 job_t::~job_t() { release_job_id(job_id); }
 

@@ -70,7 +70,8 @@ bool set_child_group(job_t *j, process_t *p, int print_errors) {
     bool retval = true;
 
     if (j->get_flag(JOB_CONTROL)) {
-        if (!j->pgid) {
+        // New jobs have the pgid set to -2
+        if (j->pgid == -2) {
             j->pgid = p->pid;
         }
 
@@ -322,10 +323,12 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
     if (j->get_flag(JOB_CONTROL)) {
         should_set_process_group_id = true;
 
-        // PCA: I'm quite fuzzy on process groups, but I believe that the default value of 0 means
-        // that the process becomes its own group leader, which is what set_child_group did in this
-        // case. So we want this to be 0 if j->pgid is 0.
+        // set_child_group puts each job into its own process group
+        // do the same here if there is no PGID yet (i.e. PGID == -2)
         desired_process_group_id = j->pgid;
+        if (desired_process_group_id == -2 ) {
+            desired_process_group_id = 0;
+        }
     }
 
     // Set the handling for job control signals back to the default.

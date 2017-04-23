@@ -144,7 +144,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # TODO: Test this in windows (\r\n line endings)
     bind -M paste \r "commandline -i \n"
     bind -M paste "'" "__fish_commandline_insert_escaped \' \$__fish_paste_quoted"
-    bind -M paste \\ "__fish_commandline_insert_escaped \\ \$__fish_paste_quoted"
+    bind -M paste \\ "__fish_commandline_insert_escaped \\\ \$__fish_paste_quoted"
 end
 
 function __fish_commandline_insert_escaped --description 'Insert the first arg escaped if a second arg is given'

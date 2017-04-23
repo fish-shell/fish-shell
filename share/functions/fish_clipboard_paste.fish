@@ -20,6 +20,6 @@ function fish_clipboard_paste
         set data (string replace -ra "(['\\\])" '\\\\\\\$1' -- $data)
     end
     if test -n "$data"
-        commandline -i -- "$data"
+        commandline -i -- $data
     end
 end

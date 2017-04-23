@@ -450,86 +450,84 @@ static void builtin_bind_list_modes(io_streams_t &streams) {
 
 /// The bind builtin, used for setting character sequences.
 static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wgetopter_t w;
     enum { BIND_INSERT, BIND_ERASE, BIND_KEY_NAMES, BIND_FUNCTION_NAMES };
+    wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     int mode = BIND_INSERT;
     int res = STATUS_BUILTIN_OK;
-    int all = 0;
+    bool all = false;
+    bool use_terminfo = false;
     const wchar_t *bind_mode = DEFAULT_BIND_MODE;
     bool bind_mode_given = false;
     const wchar_t *sets_bind_mode = L"";
-    int use_terminfo = 0;
 
-    w.woptind = 0;
+    static const wchar_t *short_options = L"aehkKfM:Lm:";
+    static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
+                                                  {L"erase", no_argument, NULL, 'e'},
+                                                  {L"function-names", no_argument, NULL, 'f'},
+                                                  {L"help", no_argument, NULL, 'h'},
+                                                  {L"key", no_argument, NULL, 'k'},
+                                                  {L"key-names", no_argument, NULL, 'K'},
+                                                  {L"mode", required_argument, NULL, 'M'},
+                                                  {L"list-modes", no_argument, NULL, 'L'},
+                                                  {L"sets-mode", required_argument, NULL, 'm'},
+                                                  {NULL, 0, NULL, 0}};
 
-    static const struct woption long_options[] = {{L"all", no_argument, 0, 'a'},
-                                                  {L"erase", no_argument, 0, 'e'},
-                                                  {L"function-names", no_argument, 0, 'f'},
-                                                  {L"help", no_argument, 0, 'h'},
-                                                  {L"key", no_argument, 0, 'k'},
-                                                  {L"key-names", no_argument, 0, 'K'},
-                                                  {L"mode", required_argument, 0, 'M'},
-                                                  {L"list-modes", no_argument, 0, 'L'},
-                                                  {L"sets-mode", required_argument, 0, 'm'},
-                                                  {0, 0, 0, 0}};
-
-    while (1) {
-        int opt_index = 0;
-        int opt = w.wgetopt_long_only(argc, argv, L"aehkKfM:Lm:", long_options, &opt_index);
-        if (opt == -1) break;
-
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_BUILTIN_ERROR;
-            }
-            case 'a': {
-                all = 1;
+            case L'a': {
+                all = true;
                 break;
             }
-            case 'e': {
+            case L'e': {
                 mode = BIND_ERASE;
                 break;
             }
-            case 'h': {
+            case L'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_BUILTIN_OK;
             }
-            case 'k': {
-                use_terminfo = 1;
+            case L'k': {
+                use_terminfo = true;
                 break;
             }
-            case 'K': {
+            case L'K': {
                 mode = BIND_KEY_NAMES;
                 break;
             }
-            case 'f': {
+            case L'f': {
                 mode = BIND_FUNCTION_NAMES;
                 break;
             }
-            case 'M': {
+            case L'M': {
+                if (!valid_var_name(w.woptarg)) {
+                    streams.err.append_format(BUILTIN_ERR_BIND_MODE, cmd, w.woptarg);
+                    return STATUS_BUILTIN_ERROR;
+                }
                 bind_mode = w.woptarg;
                 bind_mode_given = true;
                 break;
             }
-            case 'm': {
+            case L'm': {
+                if (!valid_var_name(w.woptarg)) {
+                    streams.err.append_format(BUILTIN_ERR_BIND_MODE, cmd, w.woptarg);
+                    return STATUS_BUILTIN_ERROR;
+                }
                 sets_bind_mode = w.woptarg;
                 break;
             }
-            case 'L': {
+            case L'L': {
                 builtin_bind_list_modes(streams);
                 return STATUS_BUILTIN_OK;
             }
-            case '?': {
+            case L'?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long_only");
                 break;
             }
         }
@@ -1668,7 +1666,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
             }
             case 'v': {
                 if (!valid_var_name(w.woptarg)) {
-                    append_format(*out_err, _(L"%ls: Invalid variable name '%ls'"), cmd, w.woptarg);
+                    append_format(*out_err, BUILTIN_ERR_VARNAME, cmd, w.woptarg);
                     return STATUS_BUILTIN_ERROR;
                 }
 
@@ -1738,10 +1736,9 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
             }
             case 'V': {
                 if (!valid_var_name(w.woptarg)) {
-                    append_format(*out_err, _(L"%ls: Invalid variable name '%ls'"), cmd, w.woptarg);
+                    append_format(*out_err, BUILTIN_ERR_VARNAME, cmd, w.woptarg);
                     return STATUS_BUILTIN_ERROR;
                 }
-
                 inherit_vars.push_back(w.woptarg);
                 break;
             }
@@ -2110,10 +2107,10 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
 static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wcstring buff;
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     int place = ENV_USER;
+    wcstring buff;
     wcstring prompt_cmd;
     const wchar_t *prompt = NULL;
     const wchar_t *prompt_str = NULL;

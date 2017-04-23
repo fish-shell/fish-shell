@@ -60,6 +60,9 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 /// Error message for invalid variable name.
 #define BUILTIN_ERR_VARNAME _(L"%ls: Variable name '%ls' is not valid. See `help identifiers`.\n")
 
+/// Error message for invalid bind mode name.
+#define BUILTIN_ERR_BIND_MODE _(L"%ls: mode name '%ls' is not valid. See `help identifiers`.\n")
+
 /// Error message when too many arguments are supplied to a builtin.
 #define BUILTIN_ERR_TOO_MANY_ARGUMENTS _(L"%ls: Too many arguments\n")
 

@@ -569,8 +569,21 @@ job_t *parser_t::job_get(job_id_t id) {
 job_t *parser_t::job_get_from_pid(pid_t pid) {
     job_iterator_t jobs;
     job_t *job;
+
+    pid_t pgid = getpgid(pid);
+
+    if (pgid == -1) {
+        return 0;
+    }
+
     while ((job = jobs.next())) {
-        if (job->pgid == pid) return job;
+        if (job->pgid == pgid) {
+            for (const process_ptr_t &p : job->processes) {
+                if (p->pid == pid) {
+                    return job;
+                }
+            }
+        }
     }
     return 0;
 }

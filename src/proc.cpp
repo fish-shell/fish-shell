@@ -244,10 +244,10 @@ void job_t::set_flag(job_flag_t flag, bool set) {
 bool job_t::get_flag(job_flag_t flag) const { return !!(this->flags & flag); }
 
 int job_signal(job_t *j, int signal) {
-    pid_t my_pid = getpid();
+    pid_t my_pgid = getpgrp();
     int res = 0;
 
-    if (j->pgid != my_pid) {
+    if (j->pgid != my_pgid) {
         res = killpg(j->pgid, signal);
     } else {
         for (const process_ptr_t &p : j->processes) {

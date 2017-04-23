@@ -229,6 +229,28 @@ function __fish_git_reflog
 	command git reflog ^/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
 end
 
+function __fish_git_stash_using_command
+  set cmd (commandline -opc)
+  if [ (count $cmd) -gt 2 ]
+    if [ $cmd[2] = 'stash' -a $argv[1] = $cmd[3] ]
+      return 0
+    end
+  end
+  return 1
+end
+
+function __fish_git_stash_not_using_subcommand
+  set cmd (commandline -opc)
+  if [ (count $cmd) -gt 2 -a $cmd[2] = 'stash' ]
+    return 1
+  end
+  return 0
+end
+
+function __fish_git_complete_stashes
+   command git stash list --format=format:"%gd:%gs" | sed 's/:/\t/'
+end
+
 # general options
 complete -f -c git -l help -d 'Display the manual of a git command'
 complete -f -c git -n '__fish_git_needs_command' -l version -d 'Display version'

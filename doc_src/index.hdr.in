@@ -673,7 +673,7 @@ The names given to shell objects such as variables and function names are known 
 
 A variable name cannot be empty. It can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
-A function name cannot be empty. It may not begin with a hyphen ("-") and many contain a slash ("/"). All other characters, including a space, are valid.
+A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid.
 
 A bind mode name (e.g., `bind -m abc ...`) is restricted to the rules for valid variable names.
 

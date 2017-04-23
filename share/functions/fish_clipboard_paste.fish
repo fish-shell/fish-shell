@@ -11,6 +11,10 @@ function fish_clipboard_paste
             return 1
         end
     end
+    # Also split on \r to turn it into a newline,
+    # otherwise the output looks really confusing.
+    set data (string split \r -- $data)
+
     # If the current token has an unmatched single-quote,
     # escape all single-quotes (and backslashes) in the paste,
     # in order to turn it into a single literal token.

@@ -101,7 +101,7 @@ bool set_child_group(job_t *j, process_t *p, int print_errors) {
             }
         }
     } else {
-        j->pgid = getpid();
+        j->pgid = getpgrp();
     }
 
     if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {  //!OCLINT(early exit)

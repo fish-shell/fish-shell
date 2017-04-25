@@ -264,13 +264,19 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
 
 struct match_options_t {
     bool all;
+    bool filter;
     bool ignore_case;
     bool index;
     bool invert_match;
     bool quiet;
 
     match_options_t()
-        : all(false), ignore_case(false), index(false), invert_match(false), quiet(false) {}
+        : all(false),
+          filter(false),
+          ignore_case(false),
+          index(false),
+          invert_match(false),
+          quiet(false) {}
 };
 
 class string_matcher_t {
@@ -299,6 +305,12 @@ class wildcard_matcher_t : public string_matcher_t {
         if (opts.ignore_case) {
             for (size_t i = 0; i < wcpattern.length(); i++) {
                 wcpattern[i] = towlower(wcpattern[i]);
+            }
+        }
+        if (opts.filter) {
+            if (!wcpattern.empty()) {
+                if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
+                if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
             }
         }
     }
@@ -407,14 +419,17 @@ class pcre2_matcher_t : public string_matcher_t {
             // The output vector wasn't big enough. Should not happen.
             string_error(streams, _(L"%ls: Regular expression internal error\n"), argv0);
             return -1;
+        } else if (opts.invert_match) {
+            return 0;
         }
 
-        else if (opts.invert_match)
-            return 0;
+        if (opts.filter) {
+            streams.out.append(arg);
+            streams.out.push_back(L'\n');
+        }
 
         PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
-
-        for (int j = 0; j < pcre2_rc; j++) {
+        for (int j = (opts.filter ? 1 : 0); j < pcre2_rc; j++) {
             PCRE2_SIZE begin = ovector[2 * j];
             PCRE2_SIZE end = ovector[2 * j + 1];
 
@@ -422,8 +437,8 @@ class pcre2_matcher_t : public string_matcher_t {
                 if (opts.index) {
                     streams.out.append_format(L"%lu %lu", (unsigned long)(begin + 1),
                                               (unsigned long)(end - begin));
-                } else if (end > begin)  // may have end < begin if \K is used
-                {
+                } else if (end > begin) {
+                    // May have end < begin if \K is used.
                     streams.out.append(wcstring(&arg[begin], end - begin));
                 }
                 streams.out.push_back(L'\n');
@@ -501,30 +516,26 @@ class pcre2_matcher_t : public string_matcher_t {
 };
 
 static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L"ainvqr";
-    const struct woption long_options[] = {{L"all", no_argument, 0, 'a'},
-                                           {L"ignore-case", no_argument, 0, 'i'},
-                                           {L"index", no_argument, 0, 'n'},
-                                           {L"invert", no_argument, 0, 'v'},
-                                           {L"quiet", no_argument, 0, 'q'},
-                                           {L"regex", no_argument, 0, 'r'},
-                                           {0, 0, 0, 0}};
+    wchar_t *cmd = argv[0];
+    const wchar_t *short_options = L"afinqrv";
+    const struct woption long_options[] = {
+        {L"all", no_argument, NULL, 'a'},         {L"filter", no_argument, NULL, 'f'},
+        {L"ignore-case", no_argument, NULL, 'i'}, {L"index", no_argument, NULL, 'n'},
+        {L"invert", no_argument, NULL, 'v'},      {L"quiet", no_argument, NULL, 'q'},
+        {L"regex", no_argument, NULL, 'r'},       {NULL, 0, NULL, 0}};
 
     match_options_t opts;
     bool regex = false;
+    int opt;
     wgetopter_t w;
-    for (;;) {
-        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (opt == -1) {
-            break;
-        }
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                break;
-            }
             case 'a': {
                 opts.all = true;
+                break;
+            }
+            case 'f': {
+                opts.filter = true;
                 break;
             }
             case 'i': {
@@ -548,14 +559,20 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
                 break;
             }
             case '?': {
-                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+                string_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return BUILTIN_STRING_ERROR;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
+    }
+
+    if (opts.filter && opts.index) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--filter and --index are mutually exclusive"));
+        return BUILTIN_STRING_ERROR;
     }
 
     int i = w.woptind;
@@ -572,9 +589,9 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
 
     std::unique_ptr<string_matcher_t> matcher;
     if (regex) {
-        matcher = make_unique<pcre2_matcher_t>(argv[0], pattern, opts, streams);
+        matcher = make_unique<pcre2_matcher_t>(cmd, pattern, opts, streams);
     } else {
-        matcher = make_unique<wildcard_matcher_t>(argv[0], pattern, opts, streams);
+        matcher = make_unique<wildcard_matcher_t>(cmd, pattern, opts, streams);
     }
 
     const wchar_t *arg;

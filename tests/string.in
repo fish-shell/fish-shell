@@ -1,143 +1,311 @@
-# tests for string builtin
-# mostly taken from examples
+# Tests for string builtin. Mostly taken from man page examples.
 
+# We don't want syntax errors to emit command usage help. This makes the
+# stderr output considerably shorter and makes it easier to updates the tests
+# and documentation without having to make pointless changes to the test
+# output files.
+function __fish_print_help
+end
+
+echo '# string match -r -v "c.*" dog can cat diz'
 string match -r -v "c.*" dog can cat diz; and echo "exit 0"
 
+echo
+echo '# string match -q -r -v "c.*" dog can cat diz'
 string match -q -r -v "c.*" dog can cat diz; and echo "exit 0"
 
+echo
+echo '# string match -v "c*" dog can cat diz'
 string match -v "c*" dog can cat diz; and echo "exit 0"
 
+echo
+echo '# string match -q -v "c*" dog can cat diz'
 string match -q -v "c*" dog can cat diz; and echo "exit 0"
 
+echo
+echo '# string match -v "d*" dog dan dat diz'
 string match -v "d*" dog dan dat diz; or echo "exit 1"
 
+echo
+echo '# string match -q -v "d*" dog dan dat diz'
 string match -q -v "d*" dog dan dat diz; or echo "exit 1"
 
+echo
+echo '# string match -r -v x y'
 string match -r -v x y; and echo "exit 0"
 
+echo
+echo '# string match -r -v x x'
 string match -r -v x x; or echo "exit 1"
 
+echo
+echo '# string match -q -r -v x y'
 string match -q -r -v x y; and echo "exit 0"
 
+echo
+echo '# string match -q -r -v x x'
 string match -q -r -v x x; or echo "exit 1"
 
-string length 'hello, world'
+echo
+echo '# string length "hello, world"'
+string length "hello, world"
 
-string length -q ""; and echo not zero length
+echo
+echo '# string length -q ""'
+string length -q ""; and echo not zero length; or echo zero length
 
+echo
+echo '# string sub --length 2 abcde'
 string sub --length 2 abcde
 
+echo
+echo '# string sub -s 2 -l 2 abcde'
 string sub -s 2 -l 2 abcde
 
+echo
+echo '# string sub --start=-2 abcde'
 string sub --start=-2 abcde
 
+echo
+echo '# string split . example.com'
 string split . example.com
 
+echo
+echo '# string split -r -m1 / /usr/local/bin/fish'
 string split -r -m1 / /usr/local/bin/fish
 
-string split '' abc
+echo
+echo '# string split "" abc'
+string split "" abc
 
+echo
+echo '# seq 3 | string join ...'
 seq 3 | string join ...
 
-echo ' abc '
-string trim ' abc  '
+echo
+echo '# string trim " abc  "'
+string trim " abc  "
 
+echo
+echo '# string trim --right --chars=yz xyzzy zany'
 string trim --right --chars=yz xyzzy zany
 
+echo
+echo '# echo \x07 | string escape'
 echo \x07 | string escape
 
-string match '?' a
+echo
+echo '# string match "?" a'
+string match "?" a
 
-string match 'a*b' axxb
+echo
+echo '# string match "a*b" axxb'
+string match "a*b" axxb
 
-string match -i 'a??B' Axxb
+echo
+echo '# string match -i "a??B" Axxb'
+string match -i "a??B" Axxb
 
-echo 'ok?' | string match '*\?'
+echo
+echo '# echo "ok?" | string match "*\?"'
+echo "ok?" | string match "*\?"
 
-string match -r 'cat|dog|fish' 'nice dog'
+echo
+echo '# string match -r "cat|dog|fish" "nice dog"'
+string match -r "cat|dog|fish" "nice dog"
 
-string match -r '(\d\d?):(\d\d):(\d\d)' 2:34:56
+echo
+echo '# string match -r "(\d\d?):(\d\d):(\d\d)" 2:34:56'
+string match -r "(\d\d?):(\d\d):(\d\d)" 2:34:56
 
-string match -r '^(\w{2,4})\g1$' papa mud murmur
+echo
+echo '# string match -r "^(\w{2,4})\g1\$" papa mud murmur'
+string match -r "^(\w{2,4})\g1\$" papa mud murmur
 
+echo
+echo '# string match -r -a -n at ratatat'
 string match -r -a -n at ratatat
 
-string match -r -i '0x[0-9a-f]{1,8}' 'int magic = 0xBadC0de;'
+echo
+echo '# string match -r -i "0x[0-9a-f]{1,8}" "int magic = 0xBadC0de;"'
+string match -r -i "0x[0-9a-f]{1,8}" "int magic = 0xBadC0de;"
 
-string replace is was 'blue is my favorite'
+echo
+echo '# string replace is was "blue is my favorite"'
+string replace is was "blue is my favorite"
 
+echo
+echo '# string replace 3rd last 1st 2nd 3rd'
 string replace 3rd last 1st 2nd 3rd
 
-string replace -a ' ' _ 'spaces to underscores'
+echo
+echo '# string replace -a " " _ "spaces to underscores"'
+string replace -a " " _ "spaces to underscores"
 
-string replace -r -a '[^\d.]+' ' ' '0 one two 3.14 four 5x'
+echo
+echo '# string replace -r -a "[^\d.]+" " " "0 one two 3.14 four 5x"'
+string replace -r -a "[^\d.]+" " " "0 one two 3.14 four 5x"
 
-string replace -r '(\w+)\s+(\w+)' '$2 $1 $$' 'left right'
+echo
+echo '# string replace -r "(\w+)\s+(\w+)" "\$2 \$1 \$\$" "left right"'
+string replace -r "(\w+)\s+(\w+)" "\$2 \$1 \$\$" "left right"
 
-string replace -r '\s*newline\s*' '\n' 'put a newline here'
+echo
+echo '# string replace -r "\s*newline\s*" "\n" "put a newline here"'
+string replace -r "\s*newline\s*" "\n" "put a newline here"
 
-string replace -r -a '(\w)' '$1$1' ab
+echo
+echo '# string replace -r -a "(\w)" "\$1\$1" ab'
+string replace -r -a "(\w)" "\$1\$1" ab
 
 # test some failure cases
-string match -r '[' 'a[sd' 2>/dev/null; or echo "invalid expression error"
+echo '# string match -r "[" "a[sd"' >&2
+string match -r "[" "a[sd"; and echo "unexpected exit 0" >&2
 
-string invalidarg 2>/dev/null; or echo "invalid argument error"
+echo >&2
+echo '# string invalidarg' >&2
+string invalidarg; and echo "unexpected exit 0" >&2
 
-string length 2>/dev/null; or echo "missing argument returns 0"
+echo
+echo '# string length'
+string length; or echo "missing argument returns 1"
 
+echo
+echo '# string match -r -v "[dcantg].*" dog can cat diz'
 string match -r -v "[dcantg].*" dog can cat diz; or echo "no regexp invert match"
 
+echo
+echo '# string match -v "???" dog can cat diz'
 string match -v "???" dog can cat diz; or echo "no glob invert match"
 
-string match -rvn a bbb
+echo
+echo '# string match -rvn a bbb'
+string match -rvn a bbb; or echo "exit 1"
 
 # test repeat subcommand
-string repeat -n 2 'foo'
+echo
+echo '# string repeat -n 2 "foo"'
+string repeat -n 2 "foo"
 
-string repeat --count 2 'foo'
+echo
+echo '# string repeat --count 2 "foo"'
+string repeat --count 2 "foo"
 
+echo
+echo '# echo foo | string repeat -n 2'
 echo foo | string repeat -n 2
 
-string repeat -n2 -q 'foo'; and echo "exit 0"
+echo
+echo '# string repeat -n2 -q "foo"'
+string repeat -n2 -q "foo"; and echo "exit 0"
 
-string repeat -n2 --quiet 'foo'; and echo "exit 0"
+echo
+echo '# string repeat -n2 --quiet "foo"'
+string repeat -n2 --quiet "foo"; and echo "exit 0"
 
-string repeat -n0 'foo'; or echo "exit 1"
+echo
+echo '# string repeat -n0 "foo"'
+string repeat -n0 "foo"; or echo "exit 1"
 
+echo
+echo '# string repeat -n0'
 string repeat -n0; or echo "exit 1"
 
+echo
+echo '# string repeat -m0'
 string repeat -m0; or echo "exit 1"
 
-string repeat -n1 -N 'there is '; echo "no newline"
+echo
+echo '# string repeat -n1 -N "there is "'
+string repeat -n1 -N "there is "; echo "no newline"
 
-string repeat -n1 --no-newline 'there is '; echo "no newline"
+echo
+echo '# string repeat -n1 --no-newline "there is "'
+string repeat -n1 --no-newline "there is "; echo "no newline"
 
-string repeat -n10 -m4 'foo'
+echo
+echo '# string repeat -n10 -m4 "foo"'
+string repeat -n10 -m4 "foo"
 
-string repeat -n10 --max 5 'foo'
+echo
+echo '# string repeat -n10 --max 5 "foo"'
+string repeat -n10 --max 5 "foo"
 
-string repeat -n3 -m20 'foo'
+echo
+echo '# string repeat -n3 -m20 "foo"'
+string repeat -n3 -m20 "foo"
 
-string repeat -m4 'foo'
+echo
+echo '# string repeat -m4 "foo"'
+string repeat -m4 "foo"
 
-string repeat -n-1 'foo'; or echo "exit 2"
+echo >&2
+echo '# string repeat -n-1 "foo"' >&2
+string repeat -n-1 "foo"; and echo "exit 0" >&2
 
-string repeat -m-1 'foo'; or echo "exit 2"
+echo >&2
+echo '# string repeat -m-1 "foo"' >&2
+string repeat -m-1 "foo"; and echo "exit 0" >&2
 
-string repeat -n notanumber 'foo'; or echo "exit 2"
+echo >&2
+echo '# string repeat -n notanumber "foo"' >&2
+string repeat -n notanumber "foo"; and echo "exit 0" >&2
 
-string repeat -m notanumber 'foo'; or echo "exit 2"
+echo >&2
+echo '# string repeat -m notanumber "foo"' >&2
+string repeat -m notanumber "foo"; and echo "exit 0" >&2
 
-echo 'stdin' | string repeat -n1 'and arg'; or echo "exit 2"
+echo >&2
+echo '# echo "stdin" | string repeat -n1 "and arg"' >&2
+echo "stdin" | string repeat -n1 "and arg"; and echo "exit 0" >&2
 
-string repeat -n; or echo "exit 2"
+echo >&2
+echo '# string repeat -n' >&2
+string repeat -n; and echo "exit 0" >&2
 
-string repeat -l fakearg 2>&1 | head -n1 1>&2
+echo >&2
+echo '# string repeat -l fakearg 2>&1' >&2
+string repeat -l fakearg
 
-string repeat ''
-and echo string repeat empty string did not fail
+echo
+echo '# string repeat ""'
+string repeat ""
+or echo string repeat empty string failed
 
-string repeat -n3 ''
-and echo string repeat empty string did not fail
+echo
+echo '# string repeat -n3 ""'
+string repeat -n3 ""
+or echo string repeat empty string failed
+
+# Test equivalent matches with/without the --filter, --regex, and --invert flags.
+echo
+echo '# string match -f x abc dxf xyz jkx x z'
+string match -f x abc dxf xyz jkx x z
+or echo exit 1
+
+echo
+echo '# string match x abc dxf xyz jkx x z'
+string match x abc dxf xyz jkx x z
+
+echo
+echo '# string match --filter -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
+string match --filter -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
+or echo exit 1
+
+echo
+echo '# string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
+string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
+or echo exit 1
+
+# Make sure that groups are handled correct with/without --filter.
+echo
+echo '# string match --filter -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
+string match --filter -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
+or echo exit 1
+
+echo
+echo '# string match -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
+string match -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
+or echo exit 1
 
 exit 0

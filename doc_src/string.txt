@@ -11,11 +11,11 @@ string join [(-q | --quiet)] SEP [STRING...]
 string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)]
             [(-q | --quiet)] [STRING...]
 string escape [(-n | --no-quoted)] [STRING...]
-string match [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
+string match [(-a | --all)] [((-f | --filter)] [(-i | --ignore-case)] [(-r | --regex)]
              [(-n | --index)] [(-q | --quiet)] [(-v | --invert)] PATTERN [STRING...]
 string replace [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
                [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
-string repeat [(-n | --count)] [(-m | --max)] [(-N | --no-newline)] 
+string repeat [(-n | --count)] [(-m | --max)] [(-N | --no-newline)]
               [(-q | --quiet)] [STRING...]
 \endfish
 
@@ -32,25 +32,55 @@ Most subcommands accept a `-q` or `--quiet` switch, which suppresses the usual o
 
 In addition to the exit codes documented below, all the string subcommands exit with a value of 2 to indicate that an error occurred.
 
-The following subcommands are available:
+The following subcommands are available.
 
-- `length` reports the length of each string argument in characters. Exit status: 0 if at least one non-empty STRING was given, or 1 otherwise.
+\subsection string-length "length" subcommand
 
-- `sub` prints a substring of each string argument. The start of the substring can be specified with `-s` or `--start` followed by a 1-based index value. Positive index values are relative to the start of the string and negative index values are relative to the end of the string. The default start value is 1. The length of the substring can be specified with `-l` or `--length`. If the length is not specified, the substring continues to the end of each STRING. Exit status: 0 if at least one substring operation was performed, 1 otherwise.
+"`string length`" reports the length of each string argument in characters. Exit status: 0 if at least one non-empty STRING was given, or 1 otherwise.
 
-- `split` splits each STRING on the separator SEP, which can be an empty string. If `-m` or `--max` is specified, at most MAX splits are done on each STRING. If `-r` or `--right` is given, splitting is performed right-to-left. This is useful in combination with `-m` or `--max`. Exit status: 0 if at least one split was performed, or 1 otherwise.
+\subsection string-sub "sub" subcommand
 
-- `join` joins its STRING arguments into a single string separated by SEP, which can be an empty string. Exit status: 0 if at least one join was performed, or 1 otherwise.
+"`string sub`" prints a substring of each string argument. The start of the substring can be specified with `-s` or `--start` followed by a 1-based index value. Positive index values are relative to the start of the string and negative index values are relative to the end of the string. The default start value is 1. The length of the substring can be specified with `-l` or `--length`. If the length is not specified, the substring continues to the end of each STRING. Exit status: 0 if at least one substring operation was performed, 1 otherwise.
 
-- `trim` removes leading and trailing whitespace from each STRING. If `-l` or `--left` is given, only leading whitespace is removed. If `-r` or `--right` is given, only trailing whitespace is trimmed. The `-c` or `--chars` switch causes the characters in CHARS to be removed instead of whitespace. Exit status: 0 if at least one character was trimmed, or 1 otherwise.
+\subsection string-split "split" subcommand
 
-- `escape` escapes each STRING such that it can be passed back to `eval` to produce the original argument again. By default, all special characters are escaped, and quotes are used to simplify the output when possible. If `-n` or `--no-quoted` is given, the simplifying quoted format is not used. Exit status: 0 if at least one string was escaped, or 1 otherwise.
+"`string split`" splits each STRING on the separator SEP, which can be an empty string. If `-m` or `--max` is specified, at most MAX splits are done on each STRING. If `-r` or `--right` is given, splitting is performed right-to-left. This is useful in combination with `-m` or `--max`. Exit status: 0 if at least one split was performed, or 1 otherwise.
 
-- `match` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported. Matching can be made case-insensitive with `-i` or `--ignore-case`. If `-n` or `--index` is given, each match is reported as a 1-based start position and a length. By default, PATTERN is interpreted as a glob pattern matched against each entire STRING argument. A glob pattern is only considered a valid match if it matches the entire STRING. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression, which does not have to match the entire STRING. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group. If --invert or -v is used the selected lines will be only those which do not match the given glob pattern or regular expression.  Exit status: 0 if at least one match was found, or 1 otherwise.
+\subsection string-join "join" subcommand
 
-- `replace` is similar to `match` but replaces non-overlapping matching substrings with a replacement string and prints the result. By default, PATTERN is treated as a literal substring to be matched. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression, and REPLACEMENT can contain C-style escape sequences like `\t` as well as references to capturing groups by number or name as `$n` or `${n}`. Exit status: 0 if at least one replacement was performed, or 1 otherwise.
+"`string join`" joins its STRING arguments into a single string separated by SEP, which can be an empty string. Exit status: 0 if at least one join was performed, or 1 otherwise.
 
-- `repeat` repeats the STRING `-n` or `--count` times. The `-m` or `--max` option will limit the number of outputed char (excluding the newline). This option can be used by itself or in conjuction with `--count`. If both `--count` and `--max` are present, max char will be outputed unless the final repeated string size is less than max, in that case, the string will repeat until count has been reached. Both `--count` and `--max` will accept a number greater than or equal to zero, in the case of zero, nothing will be outputed. If `-N` or `--no-newline` is given, the output won't contain a newline character at the end. Exit status: 0 if yielded string is not empty, 1 otherwise.
+\subsection string-trim "trim" subcommand
+
+"`string trim`" removes leading and trailing whitespace from each STRING. If `-l` or `--left` is given, only leading whitespace is removed. If `-r` or `--right` is given, only trailing whitespace is trimmed. The `-c` or `--chars` switch causes the characters in CHARS to be removed instead of whitespace. Exit status: 0 if at least one character was trimmed, or 1 otherwise.
+
+\subsection string-escape "escape" subcommand
+
+"`string escape`" escapes each STRING such that it can be passed back to `eval` to produce the original argument again. By default, all special characters are escaped, and quotes are used to simplify the output when possible. If `-n` or `--no-quoted` is given, the simplifying quoted format is not used. Exit status: 0 if at least one string was escaped, or 1 otherwise.
+
+\subsection string-match "match" subcommand
+
+"`string match`" tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported.The default behavior is equivalent to `grep -o`.
+
+If you specify the `-f` or `--filter` then each matching string is printed including any prefix or suffix not matched by the pattern (equivalent to `grep` without the `-o` flag). You can, obviously, achieve the same result by prepending and appending `*` or `.*` depending on whether or not you have specified the `--regex` flag. The `--filter` flag is simply a way to avoid having to complicate the pattern in that fashion and make the intent of the `string match` clearer.
+
+Matching can be made case-insensitive with `--ignore-case` or `-i`.
+
+If `--index` or `-n` is given, each match is reported as a 1-based start position and a length. By default, PATTERN is interpreted as a glob pattern matched against each entire STRING argument. A glob pattern is only considered a valid match if it matches the entire STRING.
+
+If `--regex` or `-r` is given, PATTERN is interpreted as a Perl-compatible regular expression, which does not have to match the entire STRING. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group.
+
+If `--invert` or `-v` is used the selected lines will be only those which do not match the given glob pattern or regular expression.
+
+Exit status: 0 if at least one match was found, or 1 otherwise.
+
+\subsection string-replace "replace" subcommand
+
+"`string replace`" is similar to `string match` but replaces non-overlapping matching substrings with a replacement string and prints the result. By default, PATTERN is treated as a literal substring to be matched. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression, and REPLACEMENT can contain C-style escape sequences like `\t` as well as references to capturing groups by number or name as `$n` or `${n}`. Exit status: 0 if at least one replacement was performed, or 1 otherwise.
+
+\subsection string-repeat "repeat" subcommand
+
+"`string repeat`" repeats the STRING `-n` or `--count` times. The `-m` or `--max` option will limit the number of outputed char (excluding the newline). This option can be used by itself or in conjuction with `--count`. If both `--count` and `--max` are present, max char will be outputed unless the final repeated string size is less than max, in that case, the string will repeat until count has been reached. Both `--count` and `--max` will accept a number greater than or equal to zero, in the case of zero, nothing will be outputed. If `-N` or `--no-newline` is given, the output won't contain a newline character at the end. Exit status: 0 if yielded string is not empty, 1 otherwise.
 
 \subsection regular-expressions Regular Expressions
 

@@ -1,7 +1,34 @@
+# string match -r "[" "a[sd"
+string match: Regular expression compile error: missing terminating ] for character class
+string match: [
+string match: ^
+
+# string invalidarg
+string: Unknown subcommand 'invalidarg'
+Standard input (line 167): 
+string invalidarg; and echo "unexpected exit 0" >&2
+^
+
+# string repeat -n-1 "foo"
 string repeat: Invalid count value '-1'
+
+# string repeat -m-1 "foo"
 string repeat: Invalid max value '-1'
+
+# string repeat -n notanumber "foo"
 string repeat: Argument 'notanumber' is not a number
+
+# string repeat -m notanumber "foo"
 string repeat: Argument 'notanumber' is not a number
+
+# echo "stdin" | string repeat -n1 "and arg"
 string repeat: Too many arguments
+
+# string repeat -n
 string repeat: Expected argument
+
+# string repeat -l fakearg 2>&1
 string repeat: Unknown option '-l'
+Standard input (line 268): 
+string repeat -l fakearg
+^

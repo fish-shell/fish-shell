@@ -499,9 +499,9 @@ wcstring parser_t::current_line() {
             append_format(prefix, _(L"%ls (line %d): "), user_presentable_path(file).c_str(),
                           lineno);
         } else if (is_within_fish_initialization) {
-            append_format(prefix, L"%ls: ", _(L"Startup"), lineno);
+            append_format(prefix, L"%ls (line %d): ", _(L"Startup"), lineno);
         } else {
-            append_format(prefix, L"%ls: ", _(L"Standard input"), lineno);
+            append_format(prefix, L"%ls (line %d): ", _(L"Standard input"), lineno);
         }
     }
 

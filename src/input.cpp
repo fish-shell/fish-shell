@@ -110,6 +110,7 @@ static const wchar_t *const name_arr[] = {L"beginning-of-line",
                                           L"kill-selection",
                                           L"forward-jump",
                                           L"backward-jump",
+                                          L"or",
                                           L"and",
                                           L"cancel"};
 
@@ -174,6 +175,7 @@ static const wchar_t code_arr[] = {R_BEGINNING_OF_LINE,
                                    R_KILL_SELECTION,
                                    R_FORWARD_JUMP,
                                    R_BACKWARD_JUMP,
+                                   R_OR,
                                    R_AND,
                                    R_CANCEL};
 
@@ -521,8 +523,10 @@ wint_t input_readch(bool allow_commands) {
                     // common case is that this will be empty.
                     return input_read_characters_only();
                 }
+                case R_OR:
                 case R_AND: {
-                    if (input_function_status) {
+                    if ((input_function_status && c == R_AND)
+                        || (!input_function_status && c == R_OR)) {
                         return input_readch();
                     }
                     c = input_common_readch(0);

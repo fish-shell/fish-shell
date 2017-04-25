@@ -23,8 +23,6 @@
 using std::unique_ptr;
 using std::move;
 
-enum { BUILTIN_TEST_SUCCESS = STATUS_BUILTIN_OK, BUILTIN_TEST_FAIL = STATUS_BUILTIN_ERROR };
-
 int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 
 namespace test_expressions {
@@ -194,7 +192,7 @@ class expression {
 
     virtual ~expression() {}
 
-    /// Evaluate returns true if the expression is true (i.e. BUILTIN_TEST_SUCCESS).
+    /// Evaluate returns true if the expression is true (i.e. STATUS_BUILTIN_OK).
     virtual bool evaluate(wcstring_list_t &errors) = 0;
 };
 
@@ -594,7 +592,7 @@ bool combining_expression::evaluate(wcstring_list_t &errors) {
     }
 
     errors.push_back(format_string(L"Unknown token type in %s", __func__));
-    return BUILTIN_TEST_FAIL;
+    return STATUS_BUILTIN_ERROR;
 }
 
 bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
@@ -744,7 +742,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     using namespace test_expressions;
 
     // The first argument should be the name of the command ('test').
-    if (!argv[0]) return BUILTIN_TEST_FAIL;
+    if (!argv[0]) return STATUS_BUILTIN_ERROR;
 
     // Whether we are invoked with bracket '[' or not.
     wchar_t *program_name = argv[0];
@@ -761,7 +759,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             argc--;
         } else {
             streams.err.append(L"[: the last argument must be ']'\n");
-            return BUILTIN_TEST_FAIL;
+            return STATUS_BUILTIN_ERROR;
         }
     }
 
@@ -769,10 +767,10 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wcstring_list_t args(argv + 1, argv + 1 + argc);
 
     if (argc == 0) {
-        return BUILTIN_TEST_FAIL;  // Per 1003.1, exit false.
+        return STATUS_BUILTIN_ERROR;  // Per 1003.1, exit false.
     } else if (argc == 1) {
         // Per 1003.1, exit true if the arg is non-empty.
-        return args.at(0).empty() ? BUILTIN_TEST_FAIL : BUILTIN_TEST_SUCCESS;
+        return args.at(0).empty() ? STATUS_BUILTIN_ERROR : STATUS_BUILTIN_OK;
     }
 
     // Try parsing
@@ -787,7 +785,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         streams.err.append_format(L"and returned parse error: %ls\n", err.c_str());
 #endif
         streams.err.append(err);
-        return BUILTIN_TEST_FAIL;
+        return STATUS_BUILTIN_ERROR;
     }
 
     wcstring_list_t eval_errors;
@@ -798,5 +796,5 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(L"\t%ls\n", eval_errors.at(i).c_str());
         }
     }
-    return result ? BUILTIN_TEST_SUCCESS : BUILTIN_TEST_FAIL;
+    return result ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }

@@ -368,7 +368,9 @@ test_low_level: fish_tests $(call filter_up_to,test_low_level,$(active_test_goal
 	env XDG_DATA_HOME=test/data XDG_CONFIG_HOME=test/home ./fish_tests
 .PHONY: test_low_level
 
-test_high_level: test_fishscript test_interactive
+test_high_level: DESTDIR = $(PWD)/test/root/
+test_high_level: prefix = .
+test_high_level: test-prep install-force test_fishscript test_interactive
 .PHONY: test_high_level
 
 test_fishscript: $(call filter_up_to,test_fishscript,$(active_test_goals))

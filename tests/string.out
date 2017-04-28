@@ -133,6 +133,17 @@ here
 # string replace -r -a "(\w)" "\$1\$1" ab
 aabb
 
+# string replace --filter x X abc axc x def jkx
+aXc
+X
+jkX
+
+# string replace --regex -f "\d" X 1bc axc 2 d3f jk4 xyz
+Xbc
+X
+dXf
+jkX
+
 # string length
 missing argument returns 1
 

@@ -307,11 +307,9 @@ class wildcard_matcher_t : public string_matcher_t {
                 wcpattern[i] = towlower(wcpattern[i]);
             }
         }
-        if (opts.filter) {
-            if (!wcpattern.empty()) {
-                if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
-                if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
-            }
+        if (opts.filter && !wcpattern.empty()) {
+            if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
+            if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
         }
     }
 
@@ -607,10 +605,11 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
 
 struct replace_options_t {
     bool all;
+    bool filter;
     bool ignore_case;
     bool quiet;
 
-    replace_options_t() : all(false), ignore_case(false), quiet(false) {}
+    replace_options_t() : all(false), filter(false), ignore_case(false), quiet(false) {}
 };
 
 class string_replacer_t {
@@ -625,8 +624,8 @@ class string_replacer_t {
         : argv0(argv0_), opts(opts_), total_replaced(0), streams(streams_) {}
 
     virtual ~string_replacer_t() {}
-    virtual bool replace_matches(const wchar_t *arg) = 0;
     int replace_count() { return total_replaced; }
+    virtual bool replace_matches(const wchar_t *arg) = 0;
 };
 
 class literal_replacer_t : public string_replacer_t {
@@ -643,34 +642,7 @@ class literal_replacer_t : public string_replacer_t {
           patlen(wcslen(pattern)) {}
 
     virtual ~literal_replacer_t() {}
-
-    bool replace_matches(const wchar_t *arg) {
-        wcstring result;
-        if (patlen == 0) {
-            result = arg;
-        } else {
-            int replaced = 0;
-            const wchar_t *cur = arg;
-            while (*cur != L'\0') {
-                if ((opts.all || replaced == 0) &&
-                    (opts.ignore_case ? wcsncasecmp(cur, pattern, patlen)
-                                      : wcsncmp(cur, pattern, patlen)) == 0) {
-                    result += replacement;
-                    cur += patlen;
-                    replaced++;
-                    total_replaced++;
-                } else {
-                    result += *cur;
-                    cur++;
-                }
-            }
-        }
-        if (!opts.quiet) {
-            streams.out.append(result);
-            streams.out.append(L'\n');
-        }
-        return true;
-    }
+    bool replace_matches(const wchar_t *arg);
 };
 
 class regex_replacer_t : public string_replacer_t {
@@ -704,11 +676,41 @@ class regex_replacer_t : public string_replacer_t {
 
 /// A return value of true means all is well (even if no replacements were performed), false
 /// indicates an unrecoverable error.
-bool regex_replacer_t::replace_matches(const wchar_t *arg) {
-    if (regex.code == 0) {
-        // pcre2_compile() failed
-        return false;
+bool literal_replacer_t::replace_matches(const wchar_t *arg) {
+    wcstring result;
+    bool replacement_occurred = false;
+
+    if (patlen == 0) {
+        replacement_occurred = true;
+        result = arg;
+    } else {
+        auto &cmp_func = opts.ignore_case ? wcsncasecmp : wcsncmp;
+        const wchar_t *cur = arg;
+        while (*cur != L'\0') {
+            if ((opts.all || !replacement_occurred) && cmp_func(cur, pattern, patlen) == 0) {
+                result += replacement;
+                cur += patlen;
+                replacement_occurred = true;
+                total_replaced++;
+            } else {
+                result += *cur;
+                cur++;
+            }
+        }
     }
+
+    if (!opts.quiet && (!opts.filter || replacement_occurred)) {
+        streams.out.append(result);
+        streams.out.append(L'\n');
+    }
+
+    return true;
+}
+
+/// A return value of true means all is well (even if no replacements were performed), false
+/// indicates an unrecoverable error.
+bool regex_replacer_t::replace_matches(const wchar_t *arg) {
+    if (!regex.code) return false;  // pcre2_compile() failed
 
     uint32_t options = PCRE2_SUBSTITUTE_OVERFLOW_LENGTH | PCRE2_SUBSTITUTE_EXTENDED |
                        (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
@@ -744,7 +746,8 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
                      pcre2_strerror(pcre2_rc).c_str());
         rc = false;
     } else {
-        if (!opts.quiet) {
+        bool replacement_occurred = pcre2_rc > 0;
+        if (!opts.quiet && (!opts.filter || replacement_occurred)) {
             streams.out.append(output);
             streams.out.append(L'\n');
         }
@@ -756,28 +759,24 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
 }
 
 static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L"aiqr";
-    const struct woption long_options[] = {{L"all", no_argument, 0, 'a'},
-                                           {L"ignore-case", no_argument, 0, 'i'},
-                                           {L"quiet", no_argument, 0, 'q'},
-                                           {L"regex", no_argument, 0, 'r'},
-                                           {0, 0, 0, 0}};
+    const wchar_t *short_options = L"afiqr";
+    const struct woption long_options[] = {
+        {L"all", no_argument, NULL, 'a'},         {L"filter", no_argument, NULL, 'f'},
+        {L"ignore-case", no_argument, NULL, 'i'}, {L"quiet", no_argument, NULL, 'q'},
+        {L"regex", no_argument, 0, 'r'},          {NULL, 0, NULL, 0}};
 
     replace_options_t opts;
     bool regex = false;
+    int opt;
     wgetopter_t w;
-    for (;;) {
-        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (opt == -1) {
-            break;
-        }
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                break;
-            }
             case 'a': {
                 opts.all = true;
+                break;
+            }
+            case 'f': {
+                opts.filter = true;
                 break;
             }
             case 'i': {
@@ -797,7 +796,7 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
                 return BUILTIN_STRING_ERROR;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }

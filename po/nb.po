@@ -13,5 +13,5 @@ msgstr ""
 
 #: parse_constants.h:213
 #, c-format
-msgid "No matches for wildcard p'%ls'. See `help expand`."
+msgid "No matches for wildcard '%ls'. See `help expand`."
 msgstr "Ingen treff for jokertegnmønster «%ls» Se `help expand`."

@@ -158,6 +158,22 @@ echo
 echo '# string replace -r -a "(\w)" "\$1\$1" ab'
 string replace -r -a "(\w)" "\$1\$1" ab
 
+echo
+echo '# string replace --filter x X abc axc x def jkx'
+string replace --filter x X abc axc x def jkx
+or echo Unexpected exit status at line (status --current-line-number)
+
+string replace --filter y Y abc axc x def jkx
+and echo Unexpected exit status at line (status --current-line-number)
+
+echo
+echo '# string replace --regex -f "\d" X 1bc axc 2 d3f jk4 xyz'
+string replace --regex -f "\d" X 1bc axc 2 d3f jk4 xyz
+or echo Unexpected exit status at line (status --current-line-number)
+
+string replace --regex -f "Z" X 1bc axc 2 d3f jk4 xyz
+and echo Unexpected exit status at line (status --current-line-number)
+
 # test some failure cases
 echo '# string match -r "[" "a[sd"' >&2
 string match -r "[" "a[sd"; and echo "unexpected exit 0" >&2

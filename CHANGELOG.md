@@ -16,7 +16,7 @@
 - Fish is now more forgiving of missing or invalid $TERM values (#3850).
 - The `string` command now supports a `repeat` subcommand with the obvious behavior (#3864).
 - The `string match` command now supports a `--filter` flag to emit the entire string partially matched by a pattern (#3957).
-- The `functions --metadata --verbose` output now includes the function description (#597).
+- The `functions --details --verbose` output now includes the function description (#597).
 - Completions for `helm` added (#3829).
 - Empty components in $CDPATH, $MANPATH and $PATH are now converted to "." (#2106, #3914).
 - `type` now no longer requires `which`, which means it is no longer a dependency (#3912, #3945).

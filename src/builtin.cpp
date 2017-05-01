@@ -1084,50 +1084,38 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
 
 /// The functions builtin, used for listing and erasing functions.
 static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wgetopter_t w;
-    int i;
-    int erase = 0;
-    wchar_t *desc = 0;
-
+    wchar_t *desc = NULL;
     int argc = builtin_count_args(argv);
-    int list = 0;
-    int show_hidden = 0;
-    int res = STATUS_BUILTIN_OK;
-    int query = 0;
-    int copy = 0;
+    bool erase = false;
+    bool list = false;
+    bool show_hidden = false;
+    bool query = false;
+    bool copy = false;
     bool report_metadata = false;
     bool verbose = false;
+    int res = STATUS_BUILTIN_OK;
 
+    static const wchar_t *short_options = L"Dacehnqv";
     static const struct woption long_options[] = {
         {L"erase", no_argument, NULL, 'e'},   {L"description", required_argument, NULL, 'd'},
         {L"names", no_argument, NULL, 'n'},   {L"all", no_argument, NULL, 'a'},
         {L"help", no_argument, NULL, 'h'},    {L"query", no_argument, NULL, 'q'},
-        {L"copy", no_argument, NULL, 'c'},    {L"metadata", no_argument, NULL, 'm'},
+        {L"copy", no_argument, NULL, 'c'},    {L"details", no_argument, NULL, 'D'},
         {L"verbose", no_argument, NULL, 'v'}, {NULL, 0, NULL, 0}};
 
-    while (1) {
-        int opt_index = 0;
-
-        int opt = w.wgetopt_long(argc, argv, L"ed:mnahqcv", long_options, &opt_index);
-        if (opt == -1) break;
-
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_BUILTIN_ERROR;
-            }
             case 'v': {
                 verbose = true;
                 break;
             }
             case 'e': {
-                erase = 1;
+                erase = true;
                 break;
             }
-            case 'm': {
+            case 'D': {
                 report_metadata = true;
                 break;
             }
@@ -1136,11 +1124,11 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
                 break;
             }
             case 'n': {
-                list = 1;
+                list = true;
                 break;
             }
             case 'a': {
-                show_hidden = 1;
+                show_hidden = true;
                 break;
             }
             case 'h': {
@@ -1148,11 +1136,11 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
                 return STATUS_BUILTIN_OK;
             }
             case 'q': {
-                query = 1;
+                query = true;
                 break;
             }
             case 'c': {
-                copy = 1;
+                copy = true;
                 break;
             }
             case '?': {
@@ -1170,15 +1158,12 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
     int describe = desc ? 1 : 0;
     if (erase + describe + list + query + copy > 1) {
         streams.err.append_format(_(L"%ls: Invalid combination of options\n"), argv[0]);
-
         builtin_print_help(parser, streams, argv[0], streams.err);
-
         return STATUS_BUILTIN_ERROR;
     }
 
     if (erase) {
-        int i;
-        for (i = w.woptind; i < argc; i++) function_remove(argv[i]);
+        for (int i = w.woptind; i < argc; i++) function_remove(argv[i]);
         return STATUS_BUILTIN_OK;
     } else if (desc) {
         wchar_t *func;
@@ -1186,15 +1171,13 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
         if (argc - w.woptind != 1) {
             streams.err.append_format(_(L"%ls: Expected exactly one function name\n"), argv[0]);
             builtin_print_help(parser, streams, argv[0], streams.err);
-
             return STATUS_BUILTIN_ERROR;
         }
+
         func = argv[w.woptind];
         if (!function_exists(func)) {
             streams.err.append_format(_(L"%ls: Function '%ls' does not exist\n"), argv[0], func);
-
             builtin_print_help(parser, streams, argv[0], streams.err);
-
             return STATUS_BUILTIN_ERROR;
         }
 
@@ -1202,29 +1185,26 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
         return STATUS_BUILTIN_OK;
     } else if (report_metadata) {
         if (argc - w.woptind != 1) {
-            streams.err.append_format(
-                _(L"%ls: Expected exactly one function name for --metadata\n"), argv[0]);
+            streams.err.append_format(_(L"%ls: Expected exactly one function name for --details\n"),
+                                      argv[0]);
             return STATUS_BUILTIN_ERROR;
         }
 
         const wchar_t *funcname = argv[w.woptind];
         return report_function_metadata(funcname, verbose, streams, false);
     } else if (list || (argc == w.woptind)) {
-        int is_screen = !streams.out_is_redirected && isatty(STDOUT_FILENO);
-        size_t i;
         wcstring_list_t names = function_get_names(show_hidden);
         std::sort(names.begin(), names.end());
+        bool is_screen = !streams.out_is_redirected && isatty(STDOUT_FILENO);
         if (is_screen) {
             wcstring buff;
-
-            for (i = 0; i < names.size(); i++) {
+            for (size_t i = 0; i < names.size(); i++) {
                 buff.append(names.at(i));
                 buff.append(L", ");
             }
-
             streams.out.append(reformat_for_screen(buff));
         } else {
-            for (i = 0; i < names.size(); i++) {
+            for (size_t i = 0; i < names.size(); i++) {
                 streams.out.append(names.at(i).c_str());
                 streams.out.append(L"\n");
             }
@@ -1240,7 +1220,6 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
                                         L"and new function name)\n"),
                                       argv[0]);
             builtin_print_help(parser, streams, argv[0], streams.err);
-
             return STATUS_BUILTIN_ERROR;
         }
         current_func = argv[w.woptind];
@@ -1250,7 +1229,6 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
             streams.err.append_format(_(L"%ls: Function '%ls' does not exist\n"), argv[0],
                                       current_func.c_str());
             builtin_print_help(parser, streams, argv[0], streams.err);
-
             return STATUS_BUILTIN_ERROR;
         }
 
@@ -1267,7 +1245,6 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
                 _(L"%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"), argv[0],
                 new_func.c_str(), current_func.c_str());
             builtin_print_help(parser, streams, argv[0], streams.err);
-
             return STATUS_BUILTIN_ERROR;
         }
 
@@ -1275,10 +1252,10 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
         return STATUS_BUILTIN_ERROR;
     }
 
-    for (i = w.woptind; i < argc; i++) {
-        if (!function_exists(argv[i]))
+    for (int i = w.woptind; i < argc; i++) {
+        if (!function_exists(argv[i])) {
             res++;
-        else {
+        } else {
             if (!query) {
                 if (i != w.woptind) streams.out.append(L"\n");
                 const wchar_t *funcname = argv[w.woptind];

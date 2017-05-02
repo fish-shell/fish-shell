@@ -850,4 +850,31 @@ bool valid_var_name_char(wchar_t chr);
 bool valid_var_name(const wchar_t *str);
 bool valid_var_name(const wcstring &str);
 bool valid_func_name(const wcstring &str);
+
+// Return values (`$status` values for fish scripts) for various situations.
+enum {
+    /// The status code used for normal exit in a command.
+    STATUS_BUILTIN_OK = 0,
+    /// The status code used for failure exit in a command (but not if the args were invalid).
+    STATUS_BUILTIN_ERROR = 1,
+    /// The status code used when a command was not found.
+    STATUS_UNKNOWN_COMMAND = 127,
+
+    /// TODO: Figure out why we have two distinct failure codes for when an external command cannot
+    /// be run.
+    ///
+    /// The status code used when an external command can not be run.
+    STATUS_NOT_EXECUTABLE = 126,
+    /// The status code used when an external command can not be run.
+    STATUS_EXEC_FAIL = 125,
+
+    /// The status code used when a wildcard had no matches.
+    STATUS_UNMATCHED_WILDCARD = 124,
+    /// The status code used when illegal command name is encountered.
+    STATUS_ILLEGAL_CMD = 123,
+    /// The status code used when `read` is asked to consume too much data.
+    STATUS_READ_TOO_MUCH = 122,
+    /// The status code used for erroneous argument combinations in a command.
+    STATUS_INVALID_ARGS = 121,
+};
 #endif

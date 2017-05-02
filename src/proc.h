@@ -19,30 +19,6 @@
 #include "io.h"
 #include "parse_tree.h"
 
-/// The status code use when a command was not found.
-#define STATUS_UNKNOWN_COMMAND 127
-
-/// The status code used when an unknown error occured during execution of a command.
-#define STATUS_NOT_EXECUTABLE 126
-
-/// The status code used when an unknown error occured during execution of a command.
-#define STATUS_EXEC_FAIL 125
-
-/// The status code used when a wildcard had no matches.
-#define STATUS_UNMATCHED_WILDCARD 124
-
-/// The status code used when illegal command name is encountered.
-#define STATUS_ILLEGAL_CMD 123
-
-/// The status code used when `read` is asked to consume too much data.
-#define STATUS_READ_TOO_MUCH 122
-
-/// The status code used for normal exit in a  builtin.
-#define STATUS_BUILTIN_OK 0
-
-/// The status code used for erroneous argument combinations in a builtin.
-#define STATUS_BUILTIN_ERROR 1
-
 /// Types of processes.
 enum process_type_t {
     /// A regular external command.

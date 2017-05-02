@@ -34,8 +34,6 @@ class parser_t;
 
 #define STRING_ERR_MISSING _(L"%ls: Expected argument\n")
 
-enum { BUILTIN_STRING_OK = 0, BUILTIN_STRING_NONE = 1, BUILTIN_STRING_ERROR = 2 };
-
 static void string_error(io_streams_t &streams, const wchar_t *fmt, ...) {
     streams.err.append(L"string ");
     va_list va;
@@ -118,7 +116,7 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
             }
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected opt");
@@ -130,7 +128,7 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
     int i = w.woptind;
     if (string_args_from_stdin(streams) && argc > i) {
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     int nesc = 0;
@@ -142,7 +140,7 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
         nesc++;
     }
 
-    return nesc > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nesc > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
 static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -168,7 +166,7 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
             }
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected opt");
@@ -181,12 +179,12 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
     const wchar_t *sep;
     if ((sep = string_get_arg_argv(&i, argv)) == 0) {
         string_error(streams, STRING_ERR_MISSING, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     if (string_args_from_stdin(streams) && argc > i) {
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     int nargs = 0;
@@ -205,7 +203,7 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
         streams.out.push_back(L'\n');
     }
 
-    return nargs > 1 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nargs > 1 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
 static int string_length(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -230,7 +228,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
             }
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected opt");
@@ -242,7 +240,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
     int i = w.woptind;
     if (string_args_from_stdin(streams) && argc > i) {
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     const wchar_t *arg;
@@ -259,7 +257,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
         }
     }
 
-    return nnonempty > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nnonempty > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
 struct match_options_t {
@@ -558,7 +556,7 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
             }
             case '?': {
                 string_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
@@ -570,19 +568,19 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     if (opts.entire && opts.index) {
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
                                   _(L"--enter and --index are mutually exclusive"));
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     int i = w.woptind;
     const wchar_t *pattern;
     if ((pattern = string_get_arg_argv(&i, argv)) == 0) {
         string_error(streams, STRING_ERR_MISSING, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     if (string_args_from_stdin(streams) && argc > i) {
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     std::unique_ptr<string_matcher_t> matcher;
@@ -596,11 +594,11 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     wcstring storage;
     while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
         if (!matcher->report_matches(arg)) {
-            return BUILTIN_STRING_ERROR;
+            return STATUS_INVALID_ARGS;
         }
     }
 
-    return matcher->match_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return matcher->match_count() > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
 struct replace_options_t {
@@ -793,7 +791,7 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
             }
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
@@ -806,16 +804,16 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
     const wchar_t *pattern, *replacement;
     if ((pattern = string_get_arg_argv(&i, argv)) == 0) {
         string_error(streams, STRING_ERR_MISSING, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
     if ((replacement = string_get_arg_argv(&i, argv)) == 0) {
         string_error(streams, STRING_ERR_MISSING, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     if (string_args_from_stdin(streams) && argc > i) {
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     std::unique_ptr<string_replacer_t> replacer;
@@ -829,11 +827,11 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
     wcstring storage;
     while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
         if (!replacer->replace_matches(arg)) {
-            return BUILTIN_STRING_ERROR;
+            return STATUS_INVALID_ARGS;
         }
     }
 
-    return replacer->replace_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return replacer->replace_count() > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
 /// Given iterators into a string (forward or reverse), splits the haystack iterators
@@ -890,7 +888,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
                 max = fish_wcstol(w.woptarg);
                 if (errno) {
                     string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
+                    return STATUS_INVALID_ARGS;
                 }
                 break;
             }
@@ -904,11 +902,11 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
             }
             case ':': {
                 string_error(streams, STRING_ERR_MISSING, argv[0]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected opt");
@@ -921,13 +919,13 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     const wchar_t *sep;
     if ((sep = string_get_arg_argv(&i, argv)) == NULL) {
         string_error(streams, STRING_ERR_MISSING, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
     const wchar_t *sep_end = sep + wcslen(sep);
 
     if (string_args_from_stdin(streams) && argc > i) {
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     wcstring_list_t splits;
@@ -962,7 +960,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     }
 
     // We split something if we have more split values than args.
-    return splits.size() > arg_count ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return splits.size() > arg_count ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
 // Helper function to abstract the repeat logic from string_repeat
@@ -1009,10 +1007,10 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
                 if (lcount < 0 || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0],
                                  w.woptarg);
-                    return BUILTIN_STRING_ERROR;
+                    return STATUS_INVALID_ARGS;
                 } else if (errno) {
                     string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
+                    return STATUS_INVALID_ARGS;
                 }
                 count = static_cast<size_t>(lcount);
                 break;
@@ -1021,10 +1019,10 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
                 long lmax = fish_wcstol(w.woptarg);
                 if (lmax < 0 || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid max value '%ls'\n"), argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
+                    return STATUS_INVALID_ARGS;
                 } else if (errno) {
                     string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
+                    return STATUS_INVALID_ARGS;
                 }
                 max = static_cast<size_t>(lmax);
                 break;
@@ -1039,11 +1037,11 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
             }
             case ':': {
                 string_error(streams, STRING_ERR_MISSING, argv[0]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected opt");
@@ -1056,7 +1054,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
 
     if (string_args_from_stdin(streams) && argc > i) {
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     const wchar_t *to_repeat;
@@ -1075,7 +1073,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
         }
     }
 
-    return !is_empty ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return !is_empty ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
 static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -1105,10 +1103,10 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
                 if (length < 0 || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid length value '%ls'\n"), argv[0],
                                  w.woptarg);
-                    return BUILTIN_STRING_ERROR;
+                    return STATUS_INVALID_ARGS;
                 } else if (errno) {
                     string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
+                    return STATUS_INVALID_ARGS;
                 }
                 break;
             }
@@ -1121,20 +1119,20 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
                 if (start == 0 || start == LONG_MIN || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid start value '%ls'\n"), argv[0],
                                  w.woptarg);
-                    return BUILTIN_STRING_ERROR;
+                    return STATUS_INVALID_ARGS;
                 } else if (errno) {
                     string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
+                    return STATUS_INVALID_ARGS;
                 }
                 break;
             }
             case ':': {
                 string_error(streams, STRING_ERR_MISSING, argv[0]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected opt");
@@ -1146,7 +1144,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
     int i = w.woptind;
     if (string_args_from_stdin(streams) && argc > i) {
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     int nsub = 0;
@@ -1180,7 +1178,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
         nsub++;
     }
 
-    return nsub > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nsub > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
 static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -1223,11 +1221,11 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
             }
             case ':': {
                 string_error(streams, STRING_ERR_MISSING, argv[0]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected opt");
@@ -1239,7 +1237,7 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
     int i = w.woptind;
     if (string_args_from_stdin(streams) && argc > i) {
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     // If neither left or right is specified, we do both.
@@ -1274,7 +1272,7 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
         }
     }
 
-    return ntrim > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return ntrim > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
 static const struct string_subcommand {
@@ -1295,12 +1293,12 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (argc <= 1) {
         streams.err.append_format(_(L"string: Expected subcommand\n"));
         builtin_print_help(parser, streams, L"string", streams.err);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     if (wcscmp(argv[1], L"-h") == 0 || wcscmp(argv[1], L"--help") == 0) {
         builtin_print_help(parser, streams, L"string", streams.err);
-        return BUILTIN_STRING_OK;
+        return STATUS_BUILTIN_OK;
     }
 
     const string_subcommand *subcmd = &string_subcommands[0];
@@ -1310,7 +1308,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (subcmd->handler == 0) {
         streams.err.append_format(_(L"string: Unknown subcommand '%ls'\n"), argv[1]);
         builtin_print_help(parser, streams, L"string", streams.err);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     argc--;

@@ -1,4 +1,4 @@
-fishconfig = angular.module("fishconfig", ["filters", "controllers"]);
+fishconfig = angular.module("fishconfig", ["filters", "controllers", "ngSanitize"]);
 
 fishconfig.config(
     ["$routeProvider", function($routeProvider) {

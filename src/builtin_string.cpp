@@ -264,7 +264,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
 
 struct match_options_t {
     bool all;
-    bool filter;
+    bool entire;
     bool ignore_case;
     bool index;
     bool invert_match;
@@ -272,7 +272,7 @@ struct match_options_t {
 
     match_options_t()
         : all(false),
-          filter(false),
+          entire(false),
           ignore_case(false),
           index(false),
           invert_match(false),
@@ -307,7 +307,7 @@ class wildcard_matcher_t : public string_matcher_t {
                 wcpattern[i] = towlower(wcpattern[i]);
             }
         }
-        if (opts.filter && !wcpattern.empty()) {
+        if (opts.entire && !wcpattern.empty()) {
             if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
             if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
         }
@@ -421,13 +421,13 @@ class pcre2_matcher_t : public string_matcher_t {
             return 0;
         }
 
-        if (opts.filter) {
+        if (opts.entire) {
             streams.out.append(arg);
             streams.out.push_back(L'\n');
         }
 
         PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
-        for (int j = (opts.filter ? 1 : 0); j < pcre2_rc; j++) {
+        for (int j = (opts.entire ? 1 : 0); j < pcre2_rc; j++) {
             PCRE2_SIZE begin = ovector[2 * j];
             PCRE2_SIZE end = ovector[2 * j + 1];
 
@@ -515,9 +515,9 @@ class pcre2_matcher_t : public string_matcher_t {
 
 static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     wchar_t *cmd = argv[0];
-    const wchar_t *short_options = L"afinqrv";
+    const wchar_t *short_options = L"aeinqrv";
     const struct woption long_options[] = {
-        {L"all", no_argument, NULL, 'a'},         {L"filter", no_argument, NULL, 'f'},
+        {L"all", no_argument, NULL, 'a'},         {L"entire", no_argument, NULL, 'e'},
         {L"ignore-case", no_argument, NULL, 'i'}, {L"index", no_argument, NULL, 'n'},
         {L"invert", no_argument, NULL, 'v'},      {L"quiet", no_argument, NULL, 'q'},
         {L"regex", no_argument, NULL, 'r'},       {NULL, 0, NULL, 0}};
@@ -532,8 +532,8 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
                 opts.all = true;
                 break;
             }
-            case 'f': {
-                opts.filter = true;
+            case 'e': {
+                opts.entire = true;
                 break;
             }
             case 'i': {
@@ -567,9 +567,9 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         }
     }
 
-    if (opts.filter && opts.index) {
+    if (opts.entire && opts.index) {
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
-                                  _(L"--filter and --index are mutually exclusive"));
+                                  _(L"--enter and --index are mutually exclusive"));
         return BUILTIN_STRING_ERROR;
     }
 

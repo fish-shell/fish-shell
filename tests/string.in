@@ -293,10 +293,10 @@ echo '# string repeat -n3 ""'
 string repeat -n3 ""
 or echo string repeat empty string failed
 
-# Test equivalent matches with/without the --filter, --regex, and --invert flags.
+# Test equivalent matches with/without the --entire, --regex, and --invert flags.
 echo
-echo '# string match -f x abc dxf xyz jkx x z'
-string match -f x abc dxf xyz jkx x z
+echo '# string match -e x abc dxf xyz jkx x z'
+string match -e x abc dxf xyz jkx x z
 or echo exit 1
 
 echo
@@ -304,8 +304,8 @@ echo '# string match x abc dxf xyz jkx x z'
 string match x abc dxf xyz jkx x z
 
 echo
-echo '# string match --filter -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
-string match --filter -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
+echo '# string match --entire -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
+string match --entire -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 or echo exit 1
 
 echo
@@ -313,10 +313,10 @@ echo '# string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyx
 string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 or echo exit 1
 
-# Make sure that groups are handled correct with/without --filter.
+# Make sure that groups are handled correct with/without --entire.
 echo
-echo '# string match --filter -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
-string match --filter -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
+echo '# string match --entire -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
+string match --entire -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 or echo exit 1
 
 echo

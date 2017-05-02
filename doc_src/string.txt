@@ -11,7 +11,7 @@ string join [(-q | --quiet)] SEP [STRING...]
 string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)]
             [(-q | --quiet)] [STRING...]
 string escape [(-n | --no-quoted)] [STRING...]
-string match [(-a | --all)] [((-f | --filter)] [(-i | --ignore-case)] [(-r | --regex)]
+string match [(-a | --all)] [((-e | --entire)] [(-i | --ignore-case)] [(-r | --regex)]
              [(-n | --index)] [(-q | --quiet)] [(-v | --invert)] PATTERN [STRING...]
 string replace [(-a | --all)] [(-f | --filter)] [(-i | --ignore-case)] [(-r | --regex)]
                [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
@@ -62,7 +62,7 @@ The following subcommands are available.
 
 `string match` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported.The default behavior is equivalent to `grep -o`.
 
-If you specify the `-f` or `--filter` then each matching string is printed including any prefix or suffix not matched by the pattern (equivalent to `grep` without the `-o` flag). You can, obviously, achieve the same result by prepending and appending `*` or `.*` depending on whether or not you have specified the `--regex` flag. The `--filter` flag is simply a way to avoid having to complicate the pattern in that fashion and make the intent of the `string match` clearer.
+If you specify the `-e` or `--entire` then each matching string is printed including any prefix or suffix not matched by the pattern (equivalent to `grep` without the `-o` flag). You can, obviously, achieve the same result by prepending and appending `*` or `.*` depending on whether or not you have specified the `--regex` flag. The `--entire` flag is simply a way to avoid having to complicate the pattern in that fashion and make the intent of the `string match` clearer.
 
 Matching can be made case-insensitive with `--ignore-case` or `-i`.
 

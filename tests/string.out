@@ -204,7 +204,7 @@ string repeat empty string failed
 # string repeat -n3 ""
 string repeat empty string failed
 
-# string match -f x abc dxf xyz jkx x z
+# string match -e x abc dxf xyz jkx x z
 dxf
 xyz
 jkx
@@ -213,7 +213,7 @@ x
 # string match x abc dxf xyz jkx x z
 x
 
-# string match --filter -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
+# string match --entire -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 abxc
 bye
 aaabyz
@@ -229,7 +229,7 @@ aabx
 bxy
 aabxyx
 
-# string match --filter -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
+# string match --entire -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 abxc
 x
 bye

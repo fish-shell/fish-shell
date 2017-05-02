@@ -60,7 +60,7 @@ fish requires a curses implementation, such as ncurses, to run.
 
 fish requires PCRE2 due to the regular expression support contained in the `string` builtin. A bundled version will be compiled in automatically at build time if required.
 
-fish requires a number of utilities to operate, which should be present on any Unix, GNU/Linux or OS X system. These include (but are not limited to) hostname, grep, awk, sed, which, and getopt. fish also requires the bc program.
+fish requires a number of utilities to operate, which should be present on any Unix, GNU/Linux or OS X system. These include (but are not limited to) hostname, grep, awk, sed, and getopt. fish also requires the bc program.
 
 Translation support requires the gettext program.
 

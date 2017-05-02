@@ -767,10 +767,11 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
         }
     } else if (wcschr(cmd, L'$') || wcschr(cmd, VARIABLE_EXPAND_SINGLE) ||
                wcschr(cmd, VARIABLE_EXPAND)) {
+        const wchar_t *msg =
+            _(L"Variables may not be used as commands. In fish, "
+              L"please define a function or use 'eval %ls'.");
         wcstring eval_cmd = reconstruct_orig_str(cmd_str);
-        this->report_error(statement_node, _(L"Variables may not be used as commands. In fish, "
-                                             L"please define a function or use 'eval %ls'."),
-                           eval_cmd.c_str());
+        this->report_error(statement_node, msg, eval_cmd.c_str());
     } else if (err_code != ENOENT) {
         this->report_error(statement_node, _(L"The file '%ls' is not executable by this user"),
                            cmd ? cmd : L"UNKNOWN");
@@ -998,10 +999,10 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
                 } else {
                     int old_fd = fish_wcstoi(target.c_str());
                     if (errno || old_fd < 0) {
-                        errored =
-                            report_error(redirect_node, _(L"Requested redirection to '%ls', which "
-                                                          L"is not a valid file descriptor"),
-                                         target.c_str());
+                        const wchar_t *fmt =
+                            _(L"Requested redirection to '%ls', "
+                              L"which is not a valid file descriptor");
+                        errored = report_error(redirect_node, fmt, target.c_str());
                     } else {
                         new_io.reset(new io_fd_t(source_fd, old_fd, true));
                     }

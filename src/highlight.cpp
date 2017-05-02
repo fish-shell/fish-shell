@@ -41,16 +41,25 @@
 
 /// The environment variables used to specify the color of different tokens. This matches the order
 /// in highlight_spec_t.
-static const wchar_t *const highlight_var[] = {
-    L"fish_color_normal", L"fish_color_error", L"fish_color_command", L"fish_color_end",
-    L"fish_color_param", L"fish_color_comment", L"fish_color_match", L"fish_color_search_match",
-    L"fish_color_operator", L"fish_color_escape", L"fish_color_quote", L"fish_color_redirection",
-    L"fish_color_autosuggestion", L"fish_color_selection",
-
-    L"fish_pager_color_prefix", L"fish_pager_color_completion", L"fish_pager_color_description",
-    L"fish_pager_color_progress", L"fish_pager_color_secondary"
-
-};
+static const wchar_t *const highlight_var[] = {L"fish_color_normal",
+                                               L"fish_color_error",
+                                               L"fish_color_command",
+                                               L"fish_color_end",
+                                               L"fish_color_param",
+                                               L"fish_color_comment",
+                                               L"fish_color_match",
+                                               L"fish_color_search_match",
+                                               L"fish_color_operator",
+                                               L"fish_color_escape",
+                                               L"fish_color_quote",
+                                               L"fish_color_redirection",
+                                               L"fish_color_autosuggestion",
+                                               L"fish_color_selection",
+                                               L"fish_pager_color_prefix",
+                                               L"fish_pager_color_completion",
+                                               L"fish_pager_color_description",
+                                               L"fish_pager_color_progress",
+                                               L"fish_pager_color_secondary"};
 
 /// Determine if the filesystem containing the given fd is case insensitive for lookups regardless
 /// of whether it preserves the case when saving a pathname.
@@ -843,9 +852,8 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node) {
             this->parse_tree.type_for_redirection(redirection_node, this->buff, NULL, &target);
 
         // We may get a TOK_NONE redirection type, e.g. if the redirection is invalid.
-        this->color_node(
-            *redirection_primitive,
-            redirect_type == TOK_NONE ? highlight_spec_error : highlight_spec_redirection);
+        auto hl = redirect_type == TOK_NONE ? highlight_spec_error : highlight_spec_redirection;
+        this->color_node(*redirection_primitive, hl);
 
         // Check if the argument contains a command substitution. If so, highlight it as a param
         // even though it's a command redirection, and don't try to do any other validation.
@@ -942,9 +950,8 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node) {
             }
 
             if (redirection_target != NULL) {
-                this->color_node(
-                    *redirection_target,
-                    target_is_valid ? highlight_spec_redirection : highlight_spec_error);
+                auto hl = target_is_valid ? highlight_spec_redirection : highlight_spec_error;
+                this->color_node(*redirection_target, hl);
             }
         }
     }

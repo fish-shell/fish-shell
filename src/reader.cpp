@@ -447,9 +447,9 @@ static void reader_repaint() {
     bool focused_on_pager = data->active_edit_line() == &data->pager.search_field_line;
     size_t cursor_position = focused_on_pager ? data->pager.cursor_position() : cmd_line->position;
 
-    s_write(&data->screen, data->left_prompt_buff, data->right_prompt_buff, full_line, cmd_line->size(),
-            &colors[0], &indents[0], cursor_position, data->current_page_rendering,
-            focused_on_pager);
+    s_write(&data->screen, data->left_prompt_buff, data->right_prompt_buff, full_line,
+            cmd_line->size(), &colors[0], &indents[0], cursor_position,
+            data->current_page_rendering, focused_on_pager);
 
     data->repaint_needed = false;
 }
@@ -1603,9 +1603,10 @@ static void reader_interactive_init() {
             } else {
                 if (check_for_orphaned_process(loop_count, shell_pgid)) {
                     // We're orphaned, so we just die. Another sad statistic.
-                    debug(1, _(L"I appear to be an orphaned process, so I am quitting politely. My "
-                               L"pid is %d."),
-                          (int)getpid());
+                    const wchar_t *fmt =
+                        _(L"I appear to be an orphaned process, so I am quitting politely. "
+                          L"My pid is %d.");
+                    debug(1, fmt, (int)getpid());
                     exit_without_destructors(1);
                 }
 

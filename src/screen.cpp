@@ -1020,44 +1020,52 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     // the right prompt? The issue is resizing: if you resize the window smaller, then the right
     // prompt will wrap to the next line. This means that we can't go back to the line that we were
     // on, and things turn to chaos very quickly.
+    size_t calculated_width;
     bool done = false;
 
     // Case 1
-    if (!done &&
-        left_prompt_width + right_prompt_width + first_command_line_width +
-                autosuggest_total_width <
-            screen_width) {
-        result.left_prompt = left_prompt;
-        result.left_prompt_space = left_prompt_width;
-        result.right_prompt = right_prompt;
-        result.autosuggestion = autosuggestion;
-        done = true;
+    if (!done) {
+        calculated_width = left_prompt_width + right_prompt_width + first_command_line_width +
+                           autosuggest_total_width;
+        if (calculated_width < screen_width) {
+            result.left_prompt = left_prompt;
+            result.left_prompt_space = left_prompt_width;
+            result.right_prompt = right_prompt;
+            result.autosuggestion = autosuggestion;
+            done = true;
+        }
     }
 
     // Case 2. Note that we require strict inequality so that there's always at least one space
     // between the left edge and the rprompt.
-    if (!done && left_prompt_width + right_prompt_width + first_command_line_width < screen_width) {
-        result.left_prompt = left_prompt;
-        result.left_prompt_space = left_prompt_width;
-        result.right_prompt = right_prompt;
+    if (!done) {
+        calculated_width = left_prompt_width + right_prompt_width + first_command_line_width;
+        if (calculated_width < screen_width) {
+            result.left_prompt = left_prompt;
+            result.left_prompt_space = left_prompt_width;
+            result.right_prompt = right_prompt;
 
-        // Need at least two characters to show an autosuggestion.
-        size_t available_autosuggest_space =
-            screen_width - (left_prompt_width + right_prompt_width + first_command_line_width);
-        if (autosuggest_total_width > 0 && available_autosuggest_space > 2) {
-            size_t truncation_offset = truncation_offset_for_width(autosuggest_truncated_widths,
-                                                                   available_autosuggest_space - 2);
-            result.autosuggestion = wcstring(autosuggestion, truncation_offset);
-            result.autosuggestion.push_back(ellipsis_char);
+            // Need at least two characters to show an autosuggestion.
+            size_t available_autosuggest_space =
+                screen_width - (left_prompt_width + right_prompt_width + first_command_line_width);
+            if (autosuggest_total_width > 0 && available_autosuggest_space > 2) {
+                size_t truncation_offset = truncation_offset_for_width(
+                    autosuggest_truncated_widths, available_autosuggest_space - 2);
+                result.autosuggestion = wcstring(autosuggestion, truncation_offset);
+                result.autosuggestion.push_back(ellipsis_char);
+            }
+            done = true;
         }
-        done = true;
     }
 
     // Case 3
-    if (!done && left_prompt_width + first_command_line_width < screen_width) {
-        result.left_prompt = left_prompt;
-        result.left_prompt_space = left_prompt_width;
-        done = true;
+    if (!done) {
+        calculated_width = left_prompt_width + first_command_line_width;
+        if (calculated_width < screen_width) {
+            result.left_prompt = left_prompt;
+            result.left_prompt_space = left_prompt_width;
+            done = true;
+        }
     }
 
     // Case 4
@@ -1072,11 +1080,8 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
             prompt_percent_width > 33) {
             result.prompts_get_own_line = true;
         }
-
-        done = true;
     }
 
-    assert(done);
     return result;
 }
 

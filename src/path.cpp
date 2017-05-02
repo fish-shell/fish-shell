@@ -233,8 +233,7 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
     debug(0, custom_error_msg.c_str());
     if (path.empty()) {
         debug(0, _(L"Unable to locate the %ls directory."), which_dir.c_str());
-        debug(0, _(L"Please set the %ls or HOME environment variable "
-                   L"before starting fish."),
+        debug(0, _(L"Please set the %ls or HOME environment variable before starting fish."),
               xdg_var.c_str());
     } else {
         const wchar_t *env_var = using_xdg ? xdg_var.c_str() : L"HOME";

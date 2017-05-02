@@ -53,9 +53,9 @@ void io_buffer_t::read() {
                 // never block. But a broken pipe seems to cause some flags to reset, causing the
                 // EOF flag to not be set. Therefore, EAGAIN is ignored and we exit anyway.
                 if (errno != EAGAIN) {
-                    debug(1, _(L"An error occured while reading output from code block on file "
-                               L"descriptor %d"),
-                          pipe_fd[0]);
+                    const wchar_t *fmt =
+                        _(L"An error occured while reading output from code block on fd %d");
+                    debug(1, fmt, pipe_fd[0]);
                     wperror(L"io_buffer_t::read");
                 }
 

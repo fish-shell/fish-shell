@@ -326,7 +326,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
         // set_child_group puts each job into its own process group
         // do the same here if there is no PGID yet (i.e. PGID == -2)
         desired_process_group_id = j->pgid;
-        if (desired_process_group_id == -2 ) {
+        if (desired_process_group_id == -2) {
             desired_process_group_id = 0;
         }
     }

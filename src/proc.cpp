@@ -597,9 +597,9 @@ int job_reap(bool allow_interactive) {
                 } else {
                     const wcstring job_number_desc =
                         (job_count == 1) ? wcstring() : format_string(L"from job %d, ", j->job_id);
-                    fwprintf(stdout, _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' "
-                                       L"terminated by signal %ls (%ls)"),
-                             program_name, p->pid, p->argv0(), job_number_desc.c_str(),
+                    const wchar_t *fmt =
+                        _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
+                    fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
                              truncate_command(j->command()).c_str(), sig2wcs(WTERMSIG(p->status)),
                              signal_get_desc(WTERMSIG(p->status)));
                 }

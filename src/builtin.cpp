@@ -3045,10 +3045,10 @@ static int disown_job(parser_t &parser, io_streams_t &streams, job_t *j) {
 
     // Stopped disowned jobs must be manually signalled; explain how to do so
     if (job_is_stopped(j)) {
-            killpg(j->pgid, SIGCONT);
-            streams.err.append_format(
-                _(L"%ls: job %d ('%ls') was stopped and has been signalled to continue.\n"),
-                L"disown", j->job_id, j->command_wcstr());
+        killpg(j->pgid, SIGCONT);
+        const wchar_t *fmt =
+            _(L"%ls: job %d ('%ls') was stopped and has been signalled to continue.\n");
+        streams.err.append_format(fmt, L"disown", j->job_id, j->command_wcstr());
     }
 
     if (parser.job_remove(j)) {

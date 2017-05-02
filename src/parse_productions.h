@@ -44,6 +44,6 @@ inline bool production_element_is_valid(production_element_t elem) {
 const production_element_t *production_for_token(parse_token_type_t node_type,
                                                  const parse_token_t &input1,
                                                  const parse_token_t &input2, uint8_t *out_tag);
-}
+}  // namespace parse_productions
 
 #endif

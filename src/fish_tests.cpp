@@ -2134,7 +2134,6 @@ static void test_complete(void) {
     complete(L"echo \\$Foo", &completions, COMPLETION_REQUEST_DEFAULT, vars);
     do_test(completions.empty());
 
-
     // File completions.
     completions.clear();
     complete(L"cat test/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT, vars);

@@ -807,7 +807,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // Some `su`s keep $USER when changing to root.
     // This leads to issues later on (and e.g. in prompts),
     // so we work around it by resetting $USER.
-    // TODO: Figure out if that su actually checks if username == "root"(as the man page says) or UID == 0.
+    // TODO: Figure out if that su actually checks if username == "root"(as the man page says) or
+    // UID == 0.
     uid_t uid = getuid();
     setup_user(uid == 0);
 

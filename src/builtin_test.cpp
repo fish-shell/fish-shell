@@ -730,7 +730,7 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
         }
     }
 }
-};
+};  // namespace test_expressions
 
 /// Evaluate a conditional expression given the arguments. If fromtest is set, the caller is the
 /// test or [ builtin; with the pointer giving the name of the command. for POSIX conformance this

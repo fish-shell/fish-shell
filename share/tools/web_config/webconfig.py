@@ -726,7 +726,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return out
 
     def do_get_function(self, func_name):
-        out, err = run_fish_cmd('functions ' + func_name)
+        out, err = run_fish_cmd('functions ' + func_name + ' | fish_indent --html')
         return out
 
     def do_delete_history_item(self, history_item_text):

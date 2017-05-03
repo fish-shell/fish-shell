@@ -237,7 +237,7 @@ end
 function __fish_hg_help_topics
     set -l commands (__fish_hg debugcomplete)
     printf "%s\tcommand\n" $commands
-    for line in (__fish_hg help | grep "^ [a-zA-Z]")
+    for line in (__fish_hg help | string match -re '^ [a-zA-Z]')
         set -l parts (string trim $line | string split " " -m 1)
         set -l topic $parts[1]
         if not contains $topic $commands

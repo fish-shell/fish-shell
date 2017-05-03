@@ -387,6 +387,13 @@ void signal_block(bool force) {
     // debug( 0, L"signal block level increased to %d", block_count );
 }
 
+/// Ensure we did not inherit any blocked signals. See issue #3964.
+void signal_unblock_all() {
+    sigset_t iset;
+    sigemptyset(&iset);
+    sigprocmask(SIG_SETMASK, &iset, NULL);
+}
+
 void signal_unblock(bool force) {
     if (!force && ignore_signal_block) return;
 

@@ -324,7 +324,7 @@ int main(int argc, char **argv) {
     program_name = L"fish";
     set_main_thread();
     setup_fork_guards();
-
+    signal_unblock_all();
     setlocale(LC_ALL, "");
     fish_setlocale();
 

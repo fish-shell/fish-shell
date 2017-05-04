@@ -447,9 +447,9 @@ static void reader_repaint() {
     bool focused_on_pager = data->active_edit_line() == &data->pager.search_field_line;
     size_t cursor_position = focused_on_pager ? data->pager.cursor_position() : cmd_line->position;
 
-    s_write(&data->screen, data->left_prompt_buff, data->right_prompt_buff, full_line,
-            cmd_line->size(), &colors[0], &indents[0], cursor_position,
-            data->current_page_rendering, focused_on_pager);
+    s_write(&data->screen, data->left_prompt_buff, data->right_prompt_buff, full_line, cmd_line->size(),
+            &colors[0], &indents[0], cursor_position, data->current_page_rendering,
+            focused_on_pager);
 
     data->repaint_needed = false;
 }

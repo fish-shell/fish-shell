@@ -854,11 +854,11 @@ bool valid_func_name(const wcstring &str);
 // Return values (`$status` values for fish scripts) for various situations.
 enum {
     /// The status code used for normal exit in a command.
-    STATUS_BUILTIN_OK = 0,
+    STATUS_CMD_OK = 0,
     /// The status code used for failure exit in a command (but not if the args were invalid).
-    STATUS_BUILTIN_ERROR = 1,
+    STATUS_CMD_ERROR = 1,
     /// The status code used when a command was not found.
-    STATUS_UNKNOWN_COMMAND = 127,
+    STATUS_CMD_UNKNOWN = 127,
 
     /// TODO: Figure out why we have two distinct failure codes for when an external command cannot
     /// be run.

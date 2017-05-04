@@ -373,7 +373,7 @@ int main(int argc, char **argv) {
         }
 
         // Stomp the exit status of any initialization commands (issue #635).
-        proc_set_last_status(STATUS_BUILTIN_OK);
+        proc_set_last_status(STATUS_CMD_OK);
 
         // Run the commands specified as arguments, if any.
         if (!cmds.empty()) {
@@ -426,7 +426,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    int exit_status = res ? STATUS_UNKNOWN_COMMAND : proc_get_last_status();
+    int exit_status = res ? STATUS_CMD_UNKNOWN : proc_get_last_status();
 
     proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), exit_status);
 

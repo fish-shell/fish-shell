@@ -876,17 +876,21 @@ Fish stores the exit status of the last process in the last job to exit in the `
 
 If `fish` encounters a problem while executing a command, the status variable may also be set to a specific value:
 
-- 1 is the generally the exit status from fish builtin commands if they were supplied with invalid arguments
+- 0 is generally the exit status of fish commands if they successfully performed the requested operation.
 
-- 123 means that the command was not executed because the command name contained invalid characters
+- 1 is generally the exit status of fish commands if they failed to perform the requested operation.
 
-- 124 means that the command was not executed because none of the wildcards in the command produced any matches
+- 121 is generally the exit status of fish commands if they were supplied with invalid arguments.
 
-- 125 means that while an executable with the specified name was located, the operating system could not actually execute the command
+- 123 means that the command was not executed because the command name contained invalid characters.
 
-- 126 means that while a file with the specified name was located, it was not executable
+- 124 means that the command was not executed because none of the wildcards in the command produced any matches.
 
-- 127 means that no function, builtin or command with the given name could be located
+- 125 means that while an executable with the specified name was located, the operating system could not actually execute the command.
+
+- 126 means that while a file with the specified name was located, it was not executable.
+
+- 127 means that no function, builtin or command with the given name could be located.
 
 If a process exits through a signal, the exit status will be 128 plus the number of the signal.
 

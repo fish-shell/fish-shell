@@ -302,7 +302,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
         } else if (else_clause->child_count == 0) {
             // 'if' condition failed, no else clause, return 0, we're done.
             job_list_to_execute = NULL;
-            proc_set_last_status(STATUS_BUILTIN_OK);
+            proc_set_last_status(STATUS_CMD_OK);
             break;
         } else {
             // We have an 'else continuation' (either else-if or else).
@@ -325,7 +325,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
         run_job_list(*job_list_to_execute, ib);
     } else {
         // No job list means no sucessful conditions, so return 0 (issue #1443).
-        proc_set_last_status(STATUS_BUILTIN_OK);
+        proc_set_last_status(STATUS_CMD_OK);
     }
 
     // It's possible there's a last-minute cancellation (issue #1297).
@@ -797,7 +797,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
     }
 
     // Set the last proc status appropriately.
-    proc_set_last_status(err_code == ENOENT ? STATUS_UNKNOWN_COMMAND : STATUS_NOT_EXECUTABLE);
+    proc_set_last_status(err_code == ENOENT ? STATUS_CMD_UNKNOWN : STATUS_NOT_EXECUTABLE);
 
     return parse_execution_errored;
 }

@@ -209,7 +209,7 @@ void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...) {
     streams.err.append(errstr);
     if (!string_suffixes_string(L"\n", errstr)) streams.err.push_back(L'\n');
 
-    this->exit_code = STATUS_BUILTIN_ERROR;
+    this->exit_code = STATUS_CMD_ERROR;
     this->early_exit = true;
 }
 
@@ -729,7 +729,7 @@ int builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (argc <= 1) {
         state.fatal_error(_(L"printf: not enough arguments"));
-        return STATUS_BUILTIN_ERROR;
+        return STATUS_CMD_ERROR;
     }
 
     format = argv[1];

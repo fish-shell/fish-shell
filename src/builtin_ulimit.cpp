@@ -144,9 +144,9 @@ static int set_limit(int resource, int hard, int soft, rlim_t value, io_streams_
         } else {
             builtin_wperror(L"ulimit", streams);
         }
-        return STATUS_BUILTIN_ERROR;
+        return STATUS_CMD_ERROR;
     }
-    return STATUS_BUILTIN_OK;
+    return STATUS_CMD_OK;
 }
 
 /// The ulimit builtin, used for setting resource limits.
@@ -245,11 +245,11 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case ':': {
                 streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
-                return STATUS_BUILTIN_ERROR;
+                return STATUS_CMD_ERROR;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-                return STATUS_BUILTIN_ERROR;
+                return STATUS_CMD_ERROR;
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
@@ -260,18 +260,18 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (report_all) {
         print_all(hard, streams);
-        return STATUS_BUILTIN_OK;
+        return STATUS_CMD_OK;
     }
 
     int arg_count = argc - w.woptind;
     if (arg_count == 0) {
         // Show current limit value.
         print(what, hard, streams);
-        return STATUS_BUILTIN_OK;
+        return STATUS_CMD_OK;
     } else if (arg_count != 1) {
         streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
         builtin_print_help(parser, streams, cmd, streams.err);
-        return STATUS_BUILTIN_ERROR;
+        return STATUS_CMD_ERROR;
     }
 
     // Change current limit value.
@@ -284,7 +284,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (*argv[w.woptind] == L'\0') {
         streams.err.append_format(_(L"%ls: New limit cannot be an empty string\n"), cmd);
         builtin_print_help(parser, streams, cmd, streams.err);
-        return STATUS_BUILTIN_ERROR;
+        return STATUS_CMD_ERROR;
     } else if (wcscasecmp(argv[w.woptind], L"unlimited") == 0) {
         new_limit = RLIM_INFINITY;
     } else if (wcscasecmp(argv[w.woptind], L"hard") == 0) {
@@ -296,7 +296,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (errno) {
             streams.err.append_format(_(L"%ls: Invalid limit '%ls'\n"), cmd, argv[w.woptind]);
             builtin_print_help(parser, streams, cmd, streams.err);
-            return STATUS_BUILTIN_ERROR;
+            return STATUS_CMD_ERROR;
         }
         new_limit *= get_multiplier(what);
     }

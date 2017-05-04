@@ -140,7 +140,7 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
         nesc++;
     }
 
-    return nesc > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -203,7 +203,7 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
         streams.out.push_back(L'\n');
     }
 
-    return nargs > 1 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
+    return nargs > 1 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 static int string_length(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -257,7 +257,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
         }
     }
 
-    return nnonempty > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
+    return nnonempty > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 struct match_options_t {
@@ -598,7 +598,7 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         }
     }
 
-    return matcher->match_count() > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
+    return matcher->match_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 struct replace_options_t {
@@ -831,7 +831,7 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
         }
     }
 
-    return replacer->replace_count() > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
+    return replacer->replace_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 /// Given iterators into a string (forward or reverse), splits the haystack iterators
@@ -960,7 +960,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     }
 
     // We split something if we have more split values than args.
-    return splits.size() > arg_count ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
+    return splits.size() > arg_count ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 // Helper function to abstract the repeat logic from string_repeat
@@ -1073,7 +1073,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
         }
     }
 
-    return !is_empty ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
+    return !is_empty ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -1178,7 +1178,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
         nsub++;
     }
 
-    return nsub > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
+    return nsub > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -1272,7 +1272,7 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
         }
     }
 
-    return ntrim > 0 ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
+    return ntrim > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 static const struct string_subcommand {
@@ -1298,7 +1298,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (wcscmp(argv[1], L"-h") == 0 || wcscmp(argv[1], L"--help") == 0) {
         builtin_print_help(parser, streams, L"string", streams.err);
-        return STATUS_BUILTIN_OK;
+        return STATUS_CMD_OK;
     }
 
     const string_subcommand *subcmd = &string_subcommands[0];

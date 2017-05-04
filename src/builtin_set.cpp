@@ -525,7 +525,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (!valid_var_name(dest)) {
         streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, dest);
         builtin_print_help(parser, streams, argv[0], streams.err);
-        return STATUS_BUILTIN_ERROR;
+        return STATUS_CMD_ERROR;
     }
 
     // Set assignment can work in two modes, either using slices or using the whole array. We detect
@@ -619,7 +619,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     free(dest);
 
-    if (retcode == STATUS_BUILTIN_OK && preserve_failure_exit_status)
+    if (retcode == STATUS_CMD_OK && preserve_failure_exit_status)
         retcode = incoming_exit_status;
     return retcode;
 }

@@ -143,7 +143,7 @@ static const struct lookup_entry lookup[] = {
 #ifdef SIGUNUSED
     {SIGUNUSED, L"SIGUNUSED", N_(L"Unused signal")},
 #endif
-    {0, 0, 0}};
+    {0, NULL, NULL}};
 
 /// Test if \c name is a string describing the signal named \c canonical.
 static int match_signal_name(const wchar_t *canonical, const wchar_t *name) {
@@ -242,9 +242,8 @@ static void handle_chld(int sig, siginfo_t *info, void *context) {
     default_handler(sig, info, context);
 }
 
-// We have a sigalarm handler that does nothing
-// This is used in the signal torture test, to verify
-// that we behave correctly when receiving lots of irrelevant signals
+// We have a sigalarm handler that does nothing. This is used in the signal torture test, to verify
+// that we behave correctly when receiving lots of irrelevant signals.
 static void handle_sigalarm(int sig, siginfo_t *info, void *context) {
     UNUSED(sig);
     UNUSED(info);
@@ -260,49 +259,57 @@ void signal_reset_handlers() {
     act.sa_handler = SIG_DFL;
 
     for (i = 0; lookup[i].desc; i++) {
-        sigaction(lookup[i].signal, &act, 0);
+        if (lookup[i].signal == SIGHUP) {
+            struct sigaction oact;
+            sigaction(SIGHUP, NULL, &oact);
+            if (oact.sa_handler == SIG_IGN) continue;
+        }
+        sigaction(lookup[i].signal, &act, NULL);
     }
 }
 
 static void set_interactive_handlers() {
-    struct sigaction act;
+    struct sigaction act, oact;
     sigemptyset(&act.sa_mask);
 
     // Interactive mode. Ignore interactive signals.  We are a shell, we know what is best for
     // the user.
     act.sa_handler = SIG_IGN;
-    sigaction(SIGINT, &act, 0);
-    sigaction(SIGQUIT, &act, 0);
-    sigaction(SIGTSTP, &act, 0);
-    sigaction(SIGTTOU, &act, 0);
+    sigaction(SIGINT, &act, NULL);
+    sigaction(SIGQUIT, &act, NULL);
+    sigaction(SIGTSTP, &act, NULL);
+    sigaction(SIGTTOU, &act, NULL);
 
     // We don't ignore SIGTTIN because we might send it to ourself.
     act.sa_sigaction = &default_handler;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGTTIN, &act, 0);
+    sigaction(SIGTTIN, &act, NULL);
 
     act.sa_sigaction = &handle_int;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGINT, &act, 0);
+    sigaction(SIGINT, &act, NULL);
 
     // SIGTERM restores the terminal controlling process before dying.
     act.sa_sigaction = &handle_sigterm;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGTERM, &act, 0);
+    sigaction(SIGTERM, &act, NULL);
 
-    act.sa_sigaction = &handle_hup;
-    act.sa_flags = SA_SIGINFO;
-    sigaction(SIGHUP, &act, 0);
+    sigaction(SIGHUP, NULL, &oact);
+    if (oact.sa_handler == SIG_DFL) {
+        act.sa_sigaction = &handle_hup;
+        act.sa_flags = SA_SIGINFO;
+        sigaction(SIGHUP, &act, NULL);
+    }
 
     // SIGALARM as part of our signal torture test
     act.sa_sigaction = &handle_sigalarm;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGALRM, &act, 0);
+    sigaction(SIGALRM, &act, NULL);
 
 #ifdef SIGWINCH
     act.sa_sigaction = &handle_winch;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGWINCH, &act, 0);
+    sigaction(SIGWINCH, &act, NULL);
 #endif
 }
 
@@ -368,6 +375,10 @@ void get_signals_with_handlers(sigset_t *set) {
     for (int i = 0; lookup[i].desc; i++) {
         struct sigaction act = {};
         sigaction(lookup[i].signal, NULL, &act);
+        // If SIGHUP is being ignored (e.g., because were were run via `nohup`) don't reset it.
+        // We don't special case other signals because if they're being ignored that shouldn't
+        // affect processes we spawn. They should get the default behavior for those signals.
+        if (lookup[i].signal == SIGHUP && act.sa_handler == SIG_IGN) continue;
         if (act.sa_handler != SIG_DFL) sigaddset(set, lookup[i].signal);
     }
 }

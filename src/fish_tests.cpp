@@ -3980,6 +3980,9 @@ static void test_string(void) {
         {{L"string", L"replace", L"-r", L"(a)", L"$2", L"a", 0}, 2, L""},
         {{L"string", L"replace", L"-r", L"*", L".", L"a", 0}, 2, L""},
         {{L"string", L"replace", L"-r", L"^(.)", L"\t$1", L"abc", L"x", 0}, 0, L"\tabc\n\tx\n"},
+        {{L"string", L"replace", L"-r", L"x", L"\\xff", 0}, 1, L""},
+        {{L"string", L"replace", L"-r", L"x", L"\\xff", L"x", 0}, 0, L"\n"},
+        {{L"string", L"replace", L"-r", L"x", L"\\\\c", 0}, 1, L""},
 
         {{L"string", L"split", 0}, 2, L""},
         {{L"string", L"split", L":", 0}, 1, L""},

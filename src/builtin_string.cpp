@@ -654,7 +654,11 @@ class regex_replacer_t : public string_replacer_t {
 
         while (*orig != L'\0') {
             if (*orig == L'\\') {
-                orig += read_unquoted_escape(orig, &result, true, false);
+                size_t pos = read_unquoted_escape(orig, &result, true, false);
+                if (pos == 0) {
+                    break;
+                }
+                orig += pos;
             } else {
                 result += *orig;
                 orig++;

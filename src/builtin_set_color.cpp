@@ -27,7 +27,6 @@
 #include "env.h"
 #include "io.h"
 #include "output.h"
-#include "proc.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 

@@ -51,14 +51,12 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
     if (!bin_path_var.missing()) {
         bin_path = bin_path_var;
     } else {
-        // Note that PREFIX is defined in the Makefile and is defined when this module is compiled.
-        // This ensures we always default to "/bin", "/usr/bin" and the bin dir defined for the fish
-        // programs with no duplicates.
-        if (!wcscmp(PREFIX L"/bin", L"/bin") || !wcscmp(PREFIX L"/bin", L"/usr/bin")) {
-            bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
-        } else {
-            bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
-        }
+        // Note that PREFIX is defined in the `Makefile` and is thus defined when this module is
+        // compiled. This ensures we always default to "/bin", "/usr/bin" and the bin dir defined
+        // for the fish programs. Possibly with a duplicate dir if PREFIX is empty, "/", "/usr" or
+        // "/usr/". If the PREFIX duplicates /bin or /usr/bin that is harmless other than a trivial
+        // amount of time testing a path we've already tested.
+        bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
     }
 
     std::vector<wcstring> pathsv;

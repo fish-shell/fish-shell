@@ -20,7 +20,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <stdarg.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,13 +79,6 @@ bool builtin_data_t::operator<(const wcstring &other) const {
 
 bool builtin_data_t::operator<(const builtin_data_t *other) const {
     return wcscmp(this->name, other->name) < 0;
-}
-
-static void builtin_append_format(wcstring &str, const wchar_t *fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    append_formatv(str, fmt, ap);
-    va_end(ap);
 }
 
 /// Counts the number of arguments in the specified null-terminated array
@@ -2391,7 +2384,7 @@ static bool set_status_cmd(wchar_t *const cmd, status_cmd_t *status_cmd, status_
         const wchar_t *subcmd_str = enum_to_str(status_cmd, status_enum_map);               \
         if (!subcmd_str) subcmd_str = L"default";                                           \
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 0, args.size()); \
-        status = STATUS_CMD_ERROR;                                                      \
+        status = STATUS_CMD_ERROR;                                                          \
         break;                                                                              \
     }
 
@@ -3051,11 +3044,8 @@ static int disown_job(parser_t &parser, io_streams_t &streams, job_t *j) {
         streams.err.append_format(fmt, L"disown", j->job_id, j->command_wcstr());
     }
 
-    if (parser.job_remove(j)) {
-        return STATUS_CMD_OK;
-    } else {
-        return STATUS_CMD_ERROR;
-    }
+    if (parser.job_remove(j)) return STATUS_CMD_OK;
+    return STATUS_CMD_ERROR;
 }
 
 /// Builtin for removing jobs from the job list
@@ -3244,13 +3234,13 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
         const wchar_t *subcmd_str = enum_to_str(hist_cmd, hist_enum_map);                       \
         streams.err.append_format(_(L"%ls: you cannot use any options with the %ls command\n"), \
                                   cmd, subcmd_str);                                             \
-        status = STATUS_CMD_ERROR;                                                          \
+        status = STATUS_CMD_ERROR;                                                              \
         break;                                                                                  \
     }                                                                                           \
     if (args.size() != 0) {                                                                     \
         const wchar_t *subcmd_str = enum_to_str(hist_cmd, hist_enum_map);                       \
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 0, args.size());     \
-        status = STATUS_CMD_ERROR;                                                          \
+        status = STATUS_CMD_ERROR;                                                              \
         break;                                                                                  \
     }
 

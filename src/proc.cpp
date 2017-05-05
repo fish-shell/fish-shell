@@ -241,7 +241,7 @@ void job_t::set_flag(job_flag_t flag, bool set) {
     }
 }
 
-bool job_t::get_flag(job_flag_t flag) const { return !!(this->flags & flag); }
+bool job_t::get_flag(job_flag_t flag) const { return (this->flags & flag) == flag; }
 
 int job_signal(job_t *j, int signal) {
     pid_t my_pgid = getpgrp();

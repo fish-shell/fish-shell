@@ -329,6 +329,7 @@ wcstring rgb_color_t::description() const {
         case type_normal: {
             return L"normal";
         }
-        default: { DIE("unknown color type"); }
+        default: { break; }
     }
+    DIE("unknown color type");
 }

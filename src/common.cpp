@@ -1849,6 +1849,8 @@ void scoped_rwlock::unlock_shared(void) {
     locked_shared = false;
 }
 
+#if 0
+// This is not currently used.
 void scoped_rwlock::upgrade(void) {
     assert(locked_shared);
     ASSERT_IS_NOT_FORKED_CHILD();
@@ -1857,6 +1859,7 @@ void scoped_rwlock::upgrade(void) {
     DIE_ON_FAILURE(pthread_rwlock_wrlock(rwlock_obj));
     locked_shared = true;
 }
+#endif
 
 scoped_rwlock::scoped_rwlock(pthread_rwlock_t &rwlock, bool shared)
     : rwlock_obj(&rwlock), locked(false), locked_shared(false) {

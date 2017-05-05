@@ -102,12 +102,12 @@ int wrename(const wcstring &oldName, const wcstring &newName);
 // We need this because there are too many implementations that don't return the proper answer for
 // some code points. See issue #3050.
 #ifndef FISH_NO_ISW_WRAPPERS
-#define iswalnum fish_iswalnum
 #define iswalpha fish_iswalpha
+#define iswalnum fish_iswalnum
 #define iswgraph fish_iswgraph
 #endif
-int fish_iswalnum(wint_t wc);
 int fish_iswalpha(wint_t wc);
+int fish_iswalnum(wint_t wc);
 int fish_iswgraph(wint_t wc);
 
 int fish_wcswidth(const wchar_t *str);

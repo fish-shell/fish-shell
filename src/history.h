@@ -89,7 +89,7 @@ class history_item_t {
     time_t timestamp() const { return creation_timestamp; }
 
     const path_list_t &get_required_paths() const { return required_paths; }
-    void set_required_paths(path_list_t paths) { required_paths = paths; }
+    void set_required_paths(const path_list_t &paths) { required_paths = paths; }
 
     bool operator==(const history_item_t &other) const {
         return contents == other.contents && creation_timestamp == other.creation_timestamp &&

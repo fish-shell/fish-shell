@@ -65,7 +65,6 @@
 #include "builtin.h"
 #include "common.h"
 #include "io.h"
-#include "proc.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class parser_t;

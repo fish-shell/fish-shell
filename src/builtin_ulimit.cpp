@@ -9,7 +9,6 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
-#include "proc.h"
 #include "util.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep

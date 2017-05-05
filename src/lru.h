@@ -44,7 +44,7 @@ class lru_cache_t {
         // The value from the client
         CONTENTS value;
 
-        explicit lru_node_t(CONTENTS v) : value(std::move(v)) {}
+        explicit lru_node_t(const CONTENTS &v) : value(std::move(v)) {}
     };
 
     // Max node count. This may be (transiently) exceeded by add_node_without_eviction, which is

@@ -17,7 +17,6 @@
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"
-#include "proc.h"
 #include "reader.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep

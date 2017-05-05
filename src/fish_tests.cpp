@@ -3189,7 +3189,8 @@ void history_tests_t::test_history_speed(void)
         if (stop >= end)
             break;
     }
-    fwprintf(stdout, L"%lu items - %.2f msec per item\n", (unsigned long)count, (stop - start) * 1E6 / count);
+    fwprintf(stdout, L"%lu items - %.2f msec per item\n", (unsigned long)count,
+             (stop - start) * 1E6 / count);
     hist->clear();
 }
 #endif
@@ -3833,9 +3834,7 @@ static void test_string(void) {
         {{L"string", L"join", L"", 0}, STATUS_CMD_ERROR, L""},
         {{L"string", L"join", L"", L"", L"", L"", 0}, STATUS_CMD_OK, L"\n"},
         {{L"string", L"join", L"", L"a", L"b", L"c", 0}, STATUS_CMD_OK, L"abc\n"},
-        {{L"string", L"join", L".", L"fishshell", L"com", 0},
-         STATUS_CMD_OK,
-         L"fishshell.com\n"},
+        {{L"string", L"join", L".", L"fishshell", L"com", 0}, STATUS_CMD_OK, L"fishshell.com\n"},
         {{L"string", L"join", L"/", L"usr", 0}, STATUS_CMD_ERROR, L"usr\n"},
         {{L"string", L"join", L"/", L"usr", L"local", L"bin", 0},
          STATUS_CMD_OK,
@@ -3893,9 +3892,7 @@ static void test_string(void) {
         {{L"string", L"match", L"a??B", L"axxb", 0}, STATUS_CMD_ERROR, L""},
         {{L"string", L"match", L"a*b", L"axxbc", 0}, STATUS_CMD_ERROR, L""},
         {{L"string", L"match", L"*b", L"bbba", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"0x[0-9a-fA-F][0-9a-fA-F]", L"0xbad", 0},
-         STATUS_CMD_ERROR,
-         L""},
+        {{L"string", L"match", L"0x[0-9a-fA-F][0-9a-fA-F]", L"0xbad", 0}, STATUS_CMD_ERROR, L""},
 
         {{L"string", L"match", L"-a", L"*", L"ab", L"cde", 0}, STATUS_CMD_OK, L"ab\ncde\n"},
         {{L"string", L"match", L"*", L"ab", L"cde", 0}, STATUS_CMD_OK, L"ab\ncde\n"},
@@ -3912,9 +3909,7 @@ static void test_string(void) {
         {{L"string", L"match", L"-r", L"a*b", L"b", 0}, STATUS_CMD_OK, L"b\n"},
         {{L"string", L"match", L"-r", L"a*b", L"aab", 0}, STATUS_CMD_OK, L"aab\n"},
         {{L"string", L"match", L"-r", L"-i", L"a*b", L"Aab", 0}, STATUS_CMD_OK, L"Aab\n"},
-        {{L"string", L"match", L"-r", L"-a", L"a[bc]", L"abadac", 0},
-         STATUS_CMD_OK,
-         L"ab\nac\n"},
+        {{L"string", L"match", L"-r", L"-a", L"a[bc]", L"abadac", 0}, STATUS_CMD_OK, L"ab\nac\n"},
         {{L"string", L"match", L"-r", L"a", L"xaxa", L"axax", 0}, STATUS_CMD_OK, L"a\na\n"},
         {{L"string", L"match", L"-r", L"-a", L"a", L"xaxa", L"axax", 0},
          STATUS_CMD_OK,
@@ -3922,16 +3917,12 @@ static void test_string(void) {
         {{L"string", L"match", L"-r", L"a[bc]", L"abadac", 0}, STATUS_CMD_OK, L"ab\n"},
         {{L"string", L"match", L"-r", L"-q", L"a[bc]", L"abadac", 0}, STATUS_CMD_OK, L""},
         {{L"string", L"match", L"-r", L"-q", L"a[bc]", L"ad", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"-r", L"(a+)b(c)", L"aabc", 0},
-         STATUS_CMD_OK,
-         L"aabc\naa\nc\n"},
+        {{L"string", L"match", L"-r", L"(a+)b(c)", L"aabc", 0}, STATUS_CMD_OK, L"aabc\naa\nc\n"},
         {{L"string", L"match", L"-r", L"-a", L"(a)b(c)", L"abcabc", 0},
          STATUS_CMD_OK,
          L"abc\na\nc\nabc\na\nc\n"},
         {{L"string", L"match", L"-r", L"(a)b(c)", L"abcabc", 0}, STATUS_CMD_OK, L"abc\na\nc\n"},
-        {{L"string", L"match", L"-r", L"(a|(z))(bc)", L"abc", 0},
-         STATUS_CMD_OK,
-         L"abc\na\nbc\n"},
+        {{L"string", L"match", L"-r", L"(a|(z))(bc)", L"abc", 0}, STATUS_CMD_OK, L"abc\na\nbc\n"},
         {{L"string", L"match", L"-r", L"-n", L"a", L"ada", L"dad", 0},
          STATUS_CMD_OK,
          L"1 1\n2 1\n"},
@@ -3953,13 +3944,9 @@ static void test_string(void) {
         {{L"string", L"match", L"-r", L"*", L"", 0}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"match", L"-r", L"-a", L"a*", L"b", 0}, STATUS_CMD_OK, L"\n\n"},
         {{L"string", L"match", L"-r", L"foo\\Kbar", L"foobar", 0}, STATUS_CMD_OK, L"bar\n"},
-        {{L"string", L"match", L"-r", L"(foo)\\Kbar", L"foobar", 0},
-         STATUS_CMD_OK,
-         L"bar\nfoo\n"},
+        {{L"string", L"match", L"-r", L"(foo)\\Kbar", L"foobar", 0}, STATUS_CMD_OK, L"bar\nfoo\n"},
         {{L"string", L"match", L"-r", L"(?=ab\\K)", L"ab", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"match", L"-r", L"(?=ab\\K)..(?=cd\\K)", L"abcd", 0},
-         STATUS_CMD_OK,
-         L"\n"},
+        {{L"string", L"match", L"-r", L"(?=ab\\K)..(?=cd\\K)", L"abcd", 0}, STATUS_CMD_OK, L"\n"},
 
         {{L"string", L"replace", 0}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"replace", L"", 0}, STATUS_INVALID_ARGS, L""},
@@ -3981,9 +3968,7 @@ static void test_string(void) {
         {{L"string", L"replace", L"-q", L"x", L">x<", L"x", 0}, STATUS_CMD_OK, L""},
         {{L"string", L"replace", L"-a", L"x", L"", L"xxx", 0}, STATUS_CMD_OK, L"\n"},
         {{L"string", L"replace", L"-a", L"***", L"_", L"*****", 0}, STATUS_CMD_OK, L"_**\n"},
-        {{L"string", L"replace", L"-a", L"***", L"***", L"******", 0},
-         STATUS_CMD_OK,
-         L"******\n"},
+        {{L"string", L"replace", L"-a", L"***", L"***", L"******", 0}, STATUS_CMD_OK, L"******\n"},
         {{L"string", L"replace", L"-a", L"a", L"b", L"xax", L"axa", 0},
          STATUS_CMD_OK,
          L"xbx\nbxb\n"},
@@ -3991,9 +3976,7 @@ static void test_string(void) {
         {{L"string", L"replace", L"-r", 0}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"replace", L"-r", L"", 0}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"replace", L"-r", L"", L"", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"replace", L"-r", L"", L"", L"", 0},
-         STATUS_CMD_OK,
-         L"\n"},  // pcre2 behavior
+        {{L"string", L"replace", L"-r", L"", L"", L"", 0}, STATUS_CMD_OK, L"\n"},  // pcre2 behavior
         {{L"string", L"replace", L"-r", L"", L"", L" ", 0},
          STATUS_CMD_OK,
          L" \n"},  // pcre2 behavior
@@ -4001,9 +3984,7 @@ static void test_string(void) {
         {{L"string", L"replace", L"-r", L"a", L"b", L"a", 0}, STATUS_CMD_OK, L"b\n"},
         {{L"string", L"replace", L"-r", L".", L"x", L"abc", 0}, STATUS_CMD_OK, L"xbc\n"},
         {{L"string", L"replace", L"-r", L".", L"", L"abc", 0}, STATUS_CMD_OK, L"bc\n"},
-        {{L"string", L"replace", L"-r", L"(\\w)(\\w)", L"$2$1", L"ab", 0},
-         STATUS_CMD_OK,
-         L"ba\n"},
+        {{L"string", L"replace", L"-r", L"(\\w)(\\w)", L"$2$1", L"ab", 0}, STATUS_CMD_OK, L"ba\n"},
         {{L"string", L"replace", L"-r", L"(\\w)", L"$1$1", L"ab", 0}, STATUS_CMD_OK, L"aab\n"},
         {{L"string", L"replace", L"-r", L"-a", L".", L"x", L"abc", 0}, STATUS_CMD_OK, L"xxx\n"},
         {{L"string", L"replace", L"-r", L"-a", L"(\\w)", L"$1$1", L"ab", 0},
@@ -4182,10 +4163,10 @@ static void test_illegal_command_exit_code(void) {
 
     const command_result_tuple_t tests[] = {
         {L"echo -n", STATUS_CMD_OK}, {L"pwd", STATUS_CMD_OK},
-        {L")", STATUS_ILLEGAL_CMD},      {L") ", STATUS_ILLEGAL_CMD},
-        {L"*", STATUS_ILLEGAL_CMD},      {L"**", STATUS_ILLEGAL_CMD},
-        {L"%", STATUS_ILLEGAL_CMD},      {L"%test", STATUS_ILLEGAL_CMD},
-        {L"?", STATUS_ILLEGAL_CMD},      {L"abc?def", STATUS_ILLEGAL_CMD},
+        {L")", STATUS_ILLEGAL_CMD},  {L") ", STATUS_ILLEGAL_CMD},
+        {L"*", STATUS_ILLEGAL_CMD},  {L"**", STATUS_ILLEGAL_CMD},
+        {L"%", STATUS_ILLEGAL_CMD},  {L"%test", STATUS_ILLEGAL_CMD},
+        {L"?", STATUS_ILLEGAL_CMD},  {L"abc?def", STATUS_ILLEGAL_CMD},
         {L") ", STATUS_ILLEGAL_CMD}};
 
     int res = 0;

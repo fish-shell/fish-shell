@@ -107,6 +107,7 @@ int fish_mkstemp_cloexec(char *name_template) {
 /// Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g.
 /// building on Linux) these should end up just being stripped, as they are static functions that
 /// are not referenced in this file.
+// cppcheck-suppress unusedFunction
 __attribute__((unused)) static wchar_t *wcsdup_fallback(const wchar_t *in) {
     size_t len = wcslen(in);
     wchar_t *out = (wchar_t *)malloc(sizeof(wchar_t) * (len + 1));
@@ -244,6 +245,8 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
 }
 #endif
 
+#if 0
+// These are not currently used.
 #ifndef HAVE_LRAND48_R
 int lrand48_r(struct drand48_data *buffer, long int *result) {
     *result = rand_r(&buffer->seed);
@@ -254,6 +257,7 @@ int srand48_r(long int seedval, struct drand48_data *buffer) {
     buffer->seed = (unsigned int)seedval;
     return 0;
 }
+#endif
 #endif
 
 #ifndef HAVE_FUTIMES

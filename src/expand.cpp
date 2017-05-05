@@ -259,7 +259,7 @@ wcstring process_iterator_t::name_for_pid(pid_t pid) {
     }
 
     args = (char *)malloc(maxarg);
-    if (args == NULL) {
+    if (args == NULL) {  // cppcheck-suppress memleak
         return result;
     }
 

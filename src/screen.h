@@ -12,6 +12,7 @@
 
 #include <stddef.h>
 #include <sys/stat.h>
+#include <wchar.h>
 
 #include <algorithm>
 #include <cstddef>

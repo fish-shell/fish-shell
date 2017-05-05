@@ -17,7 +17,6 @@
 #include "builtin.h"
 #include "common.h"
 #include "io.h"
-#include "proc.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 using std::unique_ptr;
@@ -233,7 +232,7 @@ class combining_expression : public expression {
     const std::vector<token_t> combiners;
 
     combining_expression(token_t tok, range_t where, std::vector<unique_ptr<expression>> exprs,
-                         std::vector<token_t> combs)
+                         const std::vector<token_t> &combs)
         : expression(tok, where), subjects(std::move(exprs)), combiners(std::move(combs)) {
         // We should have one more subject than combiner.
         assert(subjects.size() == combiners.size() + 1);

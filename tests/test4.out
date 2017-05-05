@@ -31,7 +31,7 @@ Verify that set passes through exit status, except when passed -n or -q or -e
 6 0
 7 1
 8 0
-9 1
+9 121
 10 0 A
 11 1 B
 Verify set -ql behavior

@@ -60,12 +60,12 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
         long rc = read_blocked(streams.stdin_fd, &ch, 1);
 
         if (rc < 0) {  // failure
-            return 0;
+            return NULL;
         }
 
         if (rc == 0) {  // EOF
             if (arg.empty()) {
-                return 0;
+                return NULL;
             }
             break;
         }

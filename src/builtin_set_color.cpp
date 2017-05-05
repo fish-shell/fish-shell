@@ -125,7 +125,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 return STATUS_CMD_OK;
             }
             case '?': {
-                return STATUS_CMD_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected opt");
@@ -140,7 +140,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         rgb_color_t fg = rgb_color_t(argv[w.woptind]);
         if (fg.is_none()) {
             streams.err.append_format(_(L"%ls: Unknown color '%ls'\n"), argv[0], argv[w.woptind]);
-            return STATUS_CMD_ERROR;
+            return STATUS_INVALID_ARGS;
         }
         fgcolors.push_back(fg);
     }
@@ -148,7 +148,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (fgcolors.empty() && bgcolor == NULL && !bold && !underline && !italics && !dim &&
         !reverse) {
         streams.err.append_format(_(L"%ls: Expected an argument\n"), argv[0]);
-        return STATUS_CMD_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     // #1323: We may have multiple foreground colors. Choose the best one. If we had no foreground
@@ -159,7 +159,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const rgb_color_t bg = rgb_color_t(bgcolor ? bgcolor : L"");
     if (bgcolor && bg.is_none()) {
         streams.err.append_format(_(L"%ls: Unknown color '%ls'\n"), argv[0], bgcolor);
-        return STATUS_CMD_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise

@@ -728,7 +728,7 @@ int builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (argc <= 1) {
         state.fatal_error(_(L"printf: not enough arguments"));
-        return STATUS_CMD_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     format = argv[1];

@@ -344,7 +344,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     // Variables used for performing the actual work.
     wchar_t *dest = 0;
-    int retcode = 0;
+    int retcode = STATUS_CMD_OK;
     int scope;
     int slice = 0;
 
@@ -402,11 +402,11 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case 'h': {
                 builtin_print_help(parser, streams, cmd, streams.out);
-                return 0;
+                return STATUS_CMD_OK;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-                return 1;
+                return STATUS_INVALID_ARGS;
             }
             default: { break; }
         }
@@ -416,31 +416,29 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // a variable (-q) we can not also specify scope.
     if (query && (erase || list)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
-
         builtin_print_help(parser, streams, cmd, streams.err);
-        return 1;
+        return STATUS_INVALID_ARGS;
     }
 
     // We can't both list and erase variables.
     if (erase && list) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
-
         builtin_print_help(parser, streams, cmd, streams.err);
-        return 1;
+        return STATUS_INVALID_ARGS;
     }
 
     // Variables can only have one scope.
     if (local + global + universal > 1) {
         streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
         builtin_print_help(parser, streams, cmd, streams.err);
-        return 1;
+        return STATUS_INVALID_ARGS;
     }
 
     // Variables can only have one export status.
     if (exportv && unexport) {
         streams.err.append_format(BUILTIN_ERR_EXPUNEXP, argv[0]);
         builtin_print_help(parser, streams, cmd, streams.err);
-        return 1;
+        return STATUS_INVALID_ARGS;
     }
 
     // Calculate the scope value for variable assignement.
@@ -496,16 +494,15 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (list) {
         // Maybe we should issue an error if there are any other arguments?
         print_variables(0, 0, shorten_ok, scope, streams);
-        return 0;
+        return STATUS_CMD_OK;
     }
 
     if (w.woptind == argc) {
         // Print values of variables.
         if (erase) {
             streams.err.append_format(_(L"%ls: Erase needs a variable name\n"), cmd);
-
             builtin_print_help(parser, streams, cmd, streams.err);
-            retcode = 1;
+            retcode = STATUS_INVALID_ARGS;
         } else {
             print_variables(1, 1, shorten_ok, scope, streams);
         }
@@ -524,7 +521,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (!valid_var_name(dest)) {
         streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, dest);
         builtin_print_help(parser, streams, argv[0], streams.err);
-        return STATUS_CMD_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     // Set assignment can work in two modes, either using slices or using the whole array. We detect

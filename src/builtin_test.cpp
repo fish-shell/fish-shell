@@ -591,7 +591,7 @@ bool combining_expression::evaluate(wcstring_list_t &errors) {
     }
 
     errors.push_back(format_string(L"Unknown token type in %s", __func__));
-    return STATUS_CMD_ERROR;
+    return STATUS_INVALID_ARGS;
 }
 
 bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
@@ -741,7 +741,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     using namespace test_expressions;
 
     // The first argument should be the name of the command ('test').
-    if (!argv[0]) return STATUS_CMD_ERROR;
+    if (!argv[0]) return STATUS_INVALID_ARGS;
 
     // Whether we are invoked with bracket '[' or not.
     wchar_t *program_name = argv[0];
@@ -758,7 +758,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             argc--;
         } else {
             streams.err.append(L"[: the last argument must be ']'\n");
-            return STATUS_CMD_ERROR;
+            return STATUS_INVALID_ARGS;
         }
     }
 

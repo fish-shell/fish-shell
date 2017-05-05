@@ -240,15 +240,15 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 #endif
             case 'h': {
                 builtin_print_help(parser, streams, cmd, streams.out);
-                return 0;
+                return STATUS_CMD_OK;
             }
             case ':': {
                 streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
-                return STATUS_CMD_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-                return STATUS_CMD_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
@@ -270,7 +270,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     } else if (arg_count != 1) {
         streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
         builtin_print_help(parser, streams, cmd, streams.err);
-        return STATUS_CMD_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     // Change current limit value.
@@ -283,7 +283,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (*argv[w.woptind] == L'\0') {
         streams.err.append_format(_(L"%ls: New limit cannot be an empty string\n"), cmd);
         builtin_print_help(parser, streams, cmd, streams.err);
-        return STATUS_CMD_ERROR;
+        return STATUS_INVALID_ARGS;
     } else if (wcscasecmp(argv[w.woptind], L"unlimited") == 0) {
         new_limit = RLIM_INFINITY;
     } else if (wcscasecmp(argv[w.woptind], L"hard") == 0) {
@@ -295,7 +295,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (errno) {
             streams.err.append_format(_(L"%ls: Invalid limit '%ls'\n"), cmd, argv[w.woptind]);
             builtin_print_help(parser, streams, cmd, streams.err);
-            return STATUS_CMD_ERROR;
+            return STATUS_INVALID_ARGS;
         }
         new_limit *= get_multiplier(what);
     }

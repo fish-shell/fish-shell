@@ -155,11 +155,11 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
-                return 0;
+                return STATUS_CMD_OK;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return 1;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected opt");
@@ -175,7 +175,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         while ((j = jobs.next())) {
             if ((j->flags & JOB_CONSTRUCTED) && !job_is_completed(j)) {
                 builtin_jobs_print(j, mode, !streams.out_is_redirected, streams);
-                return 0;
+                return STATUS_CMD_ERROR;
             }
         }
 
@@ -187,7 +187,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 int pid = fish_wcstoi(argv[i]);
                 if (errno || pid < 0) {
                     streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), argv[0], argv[i]);
-                    return 1;
+                    return STATUS_INVALID_ARGS;
                 }
 
                 const job_t *j = job_get_from_pid(pid);
@@ -197,7 +197,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     found = 1;
                 } else {
                     streams.err.append_format(_(L"%ls: No suitable job: %d\n"), argv[0], pid);
-                    return 1;
+                    return STATUS_CMD_ERROR;
                 }
             }
         } else {
@@ -218,8 +218,8 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (!streams.out_is_redirected) {
             streams.out.append_format(_(L"%ls: There are no jobs\n"), argv[0]);
         }
-        return 1;
+        return STATUS_CMD_ERROR;
     }
 
-    return 0;
+    return STATUS_CMD_OK;
 }

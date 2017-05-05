@@ -874,7 +874,9 @@ enum {
     STATUS_ILLEGAL_CMD = 123,
     /// The status code used when `read` is asked to consume too much data.
     STATUS_READ_TOO_MUCH = 122,
-    /// The status code used for erroneous argument combinations in a command.
+    /// The status code used for invalid arguments given to a command. This is distinct from valid
+    /// arguments that might result in a command failure. An invalid args condition is something
+    /// like an unrecognized flag, missing or too many arguments, an invalid integer, etc. But
     STATUS_INVALID_ARGS = 121,
 };
 #endif

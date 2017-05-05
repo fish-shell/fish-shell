@@ -1271,7 +1271,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
     wcstring_list_t expected;
 
     va_start(va, flags);
-    while ((arg = va_arg(va, wchar_t *)) != 0) {
+    while ((arg = va_arg(va, wchar_t *)) != NULL) {
         expected.push_back(wcstring(arg));
     }
     va_end(va);
@@ -3799,7 +3799,7 @@ static void run_one_string_test(const wchar_t **argv, int expected_rc,
     streams.stdin_is_directly_redirected = false;  // read from argv instead of stdin
     int rc = builtin_string(parser, streams, const_cast<wchar_t **>(argv));
     wcstring args;
-    for (int i = 0; argv[i] != 0; i++) {
+    for (int i = 0; argv[i] != NULL; i++) {
         args += escape_string(argv[i], ESCAPE_ALL) + L' ';
     }
     args.resize(args.size() - 1);
@@ -4103,10 +4103,10 @@ static void test_string(void) {
         {{L"string", L"trim", L"-c", L"\\/", L"\\a/"}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"trim", L"-c", L"", L".a."}, STATUS_CMD_ERROR, L".a.\n"},
 
-        {{0}, STATUS_CMD_ERROR, NULL}};
+        {{NULL}, STATUS_CMD_ERROR, NULL}};
 
     struct string_test *t = string_tests;
-    while (t->argv[0] != 0) {
+    while (t->argv[0]) {
         run_one_string_test(t->argv, t->expected_rc, t->expected_out);
         t++;
     }

@@ -30,8 +30,6 @@ Arguments beginning with `-` are normally interpreted as switches; `--` causes t
 
 Most subcommands accept a `-q` or `--quiet` switch, which suppresses the usual output but exits with the documented status.
 
-In addition to the exit codes documented below, all the string subcommands exit with a value of 2 to indicate that an error occurred.
-
 The following subcommands are available.
 
 \subsection string-length "length" subcommand

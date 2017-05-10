@@ -2,6 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
+#include <limits.h>
 #include <locale.h>
 #include <pthread.h>
 #include <pwd.h>
@@ -447,8 +448,9 @@ static bool does_term_support_setting_title() {
         if (term_str == L"linux") return false;
         if (term_str == L"dumb") return false;
 
-        char *n = ttyname(STDIN_FILENO);
-        if (!n || strstr(n, "tty") || strstr(n, "/vc/")) return false;
+        char buf[PATH_MAX];
+        int retval = ttyname_r(STDIN_FILENO, buf, PATH_MAX);
+        if (retval != 0 || strstr(buf, "tty") || strstr(buf, "/vc/")) return false;
     }
 
     return true;

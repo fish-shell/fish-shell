@@ -40,12 +40,16 @@ const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, 
 /// Map used as cache by wgettext.
 static owning_lock<std::map<wcstring, wcstring>> wgettext_map;
 
-bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name,
-                        bool *out_is_dir) {
-    struct dirent *d = readdir(dir);
-    if (!d) return false;
+bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, bool *out_is_dir) {
+    struct dirent d;
+    struct dirent *result = NULL;
+    int retval = readdir_r(dir, &d, &result);
+    if (retval || !result) {
+        out_name = L"";
+        return false;
+    }
 
-    out_name = str2wcstring(d->d_name);
+    out_name = str2wcstring(d.d_name);
     if (!out_is_dir) return true;
 
     // The caller cares if this is a directory, so check.
@@ -53,11 +57,11 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &ou
     // We may be able to skip stat, if the readdir can tell us the file type directly.
     bool check_with_stat = true;
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
-    if (d->d_type == DT_DIR) {
+    if (d.d_type == DT_DIR) {
         // Known directory.
         is_dir = true;
         check_with_stat = false;
-    } else if (d->d_type == DT_LNK || d->d_type == DT_UNKNOWN) {
+    } else if (d.d_type == DT_LNK || d.d_type == DT_UNKNOWN) {
         // We want to treat symlinks to directories as directories. Use stat to resolve it.
         check_with_stat = true;
     } else {
@@ -70,7 +74,7 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &ou
         // We couldn't determine the file type from the dirent; check by stat'ing it.
         cstring fullpath = wcs2string(dir_path);
         fullpath.push_back('/');
-        fullpath.append(d->d_name);
+        fullpath.append(d.d_name);
         struct stat buf;
         if (stat(fullpath.c_str(), &buf) != 0) {
             is_dir = false;
@@ -82,39 +86,43 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &ou
     return true;
 }
 
-bool wreaddir(DIR *dir, std::wstring &out_name) {
-    struct dirent *d = readdir(dir);
-    if (!d) return false;
+bool wreaddir(DIR *dir, wcstring &out_name) {
+    struct dirent d;
+    struct dirent *result = NULL;
+    int retval = readdir_r(dir, &d, &result);
 
-    out_name = str2wcstring(d->d_name);
+    if (retval || !result) {
+        out_name = L"";
+        return false;
+    }
+    out_name = str2wcstring(d.d_name);
     return true;
 }
 
 bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
+    struct dirent d;
     struct dirent *result = NULL;
-    while (result == NULL) {
-        struct dirent *d = readdir(dir);
-        if (!d) break;
+    while (!result) {
+        int retval = readdir_r(dir, &d, &result);
+        if (retval || !result) break;
 
 #if HAVE_STRUCT_DIRENT_D_TYPE
-        switch (d->d_type) {
+        switch (d.d_type) {
             case DT_DIR:
             case DT_LNK:
             case DT_UNKNOWN: {
-                // These may be directories.
-                result = d;
-                break;
+                break;  // these may be directories
             }
             default: {
-                // Nothing else can.
-                break;
+                break;  // nothing else can
             }
         }
 #else
         // We can't determine if it's a directory or not, so just return it.
-        result = d;
+        break;
 #endif
     }
+
     if (result && out_name) {
         *out_name = str2wcstring(result->d_name);
     }

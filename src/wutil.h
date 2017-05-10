@@ -64,8 +64,8 @@ int wchdir(const wcstring &dir);
 wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path);
 
 /// Wide character version of readdir().
-bool wreaddir(DIR *dir, std::wstring &out_name);
-bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name,
+bool wreaddir(DIR *dir, wcstring &out_name);
+bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, wcstring &out_name,
                         bool *out_is_dir);
 
 /// Like wreaddir, but skip items that are known to not be directories. If this requires a stat

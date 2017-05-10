@@ -840,16 +840,19 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     if (env_get_string(L"HOME").missing_or_empty()) {
         const env_var_t unam = env_get_string(L"USER");
         char *unam_narrow = wcs2str(unam.c_str());
-        struct passwd *pw = getpwnam(unam_narrow);
-        if (pw == NULL) {
+        struct passwd userinfo;
+        struct passwd *result;
+        char buf[8192];
+        int retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);
+        if (retval || !result) {
             // Maybe USER is set but it's bogus. Reset USER from the db and try again.
             setup_user(true);
             const env_var_t unam = env_get_string(L"USER");
             unam_narrow = wcs2str(unam.c_str());
-            pw = getpwnam(unam_narrow);
+            retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);
         }
-        if (pw && pw->pw_dir) {
-            const wcstring dir = str2wcstring(pw->pw_dir);
+        if (!retval && result && userinfo.pw_dir) {
+            const wcstring dir = str2wcstring(userinfo.pw_dir);
             env_set(L"HOME", dir.c_str(), ENV_GLOBAL | ENV_EXPORT);
         }
         free(unam_narrow);

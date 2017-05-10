@@ -1178,11 +1178,14 @@ static void expand_home_directory(wcstring &input) {
         } else {
             // Some other users home directory.
             std::string name_cstr = wcs2string(username);
-            struct passwd *userinfo = getpwnam(name_cstr.c_str());
-            if (userinfo == NULL) {
+            struct passwd userinfo;
+            struct passwd *result;
+            char buf[8192];
+            int retval = getpwnam_r(name_cstr.c_str(), &userinfo, buf, sizeof(buf), &result);
+            if (retval || !result) {
                 tilde_error = true;
             } else {
-                home = str2wcstring(userinfo->pw_dir);
+                home = str2wcstring(userinfo.pw_dir);
             }
         }
 

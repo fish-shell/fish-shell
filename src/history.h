@@ -182,7 +182,7 @@ class history_t {
 
     // Attempts to rewrite the existing file to a target temporary file
     // Returns false on error, true on success
-    bool rewrite_to_temporary_file(int tmp_fd, int existing_fd) const;
+    bool rewrite_to_temporary_file(int existing_fd, int dst_fd) const;
 
     // Saves history by rewriting the file.
     bool save_internal_via_rewrite();

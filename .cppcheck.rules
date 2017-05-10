@@ -24,12 +24,3 @@
 </rule>
 <--!>
 ]]>
-
-<rule>
-    <pattern>flock \(</pattern>
-    <message>
-        <id>flockSemanticsWarning</id>
-        <severity>warning</severity>
-        <summary>flock has a fallback implemented in terms of fcntl; ensure that the fcntl semantics will apply (see http://0pointer.de/blog/projects/locking.html)</summary>
-    </message>
-</rule>

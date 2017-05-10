@@ -1520,7 +1520,12 @@ static bool check_for_orphaned_process(unsigned long loop_count, pid_t shell_pgi
     if (!we_think_we_are_orphaned && loop_count % 128 == 0) {
         // Try reading from the tty; if we get EIO we are orphaned. This is sort of bad because it
         // may block.
+#ifdef HAVE_CTERMID_R
+        char buf[L_ctermid];
+        char *tty = ctermid_r(buf);
+#else
         char *tty = ctermid(NULL);
+#endif
         if (!tty) {
             wperror(L"ctermid");
             exit_without_destructors(1);

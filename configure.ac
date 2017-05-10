@@ -417,6 +417,17 @@ fi
 # features that Autoconf doesn't tell us about
 #
 
+dnl AC_CHECK_FUNCS uses C linkage, but sometimes (Solaris!) the behaviour is
+dnl different with C++.
+AC_MSG_CHECKING([if ctermid_r() available])
+AC_TRY_LINK( [ #include <stdio.h> ],
+             [ char buf[L_ctermid]; char *foo = ctermid_r(buf); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_CTERMID_R, 1, Define to 1 if you have the `ctermid_r' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
 #
 # Check if struct winsize and TIOCGWINSZ exist
 #

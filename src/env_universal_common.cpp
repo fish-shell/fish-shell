@@ -1385,6 +1385,8 @@ std::unique_ptr<universal_notifier_t> universal_notifier_t::new_notifier_for_str
             return make_unique<universal_notifier_named_pipe_t>(test_path);
         }
     }
+    DIE("should never reach this statement");
+    return NULL;
 }
 
 // Default implementations.

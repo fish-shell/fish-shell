@@ -64,6 +64,7 @@
 #include "signal.h"
 #include "tokenizer.h"
 #include "utf8.h"
+#include "util.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -907,31 +908,97 @@ static void test_indents() {
     }
 }
 
-static void test_utils() {
-    say(L"Testing utils");
+static void test_parse_util_cmdsubst_extent() {
     const wchar_t *a = L"echo (echo (echo hi";
-
     const wchar_t *begin = NULL, *end = NULL;
+
     parse_util_cmdsubst_extent(a, 0, &begin, &end);
-    if (begin != a || end != begin + wcslen(begin))
+    if (begin != a || end != begin + wcslen(begin)) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    }
     parse_util_cmdsubst_extent(a, 1, &begin, &end);
-    if (begin != a || end != begin + wcslen(begin))
+    if (begin != a || end != begin + wcslen(begin)) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    }
     parse_util_cmdsubst_extent(a, 2, &begin, &end);
-    if (begin != a || end != begin + wcslen(begin))
+    if (begin != a || end != begin + wcslen(begin)) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    }
     parse_util_cmdsubst_extent(a, 3, &begin, &end);
-    if (begin != a || end != begin + wcslen(begin))
+    if (begin != a || end != begin + wcslen(begin)) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    }
 
     parse_util_cmdsubst_extent(a, 8, &begin, &end);
-    if (begin != a + wcslen(L"echo ("))
+    if (begin != a + wcslen(L"echo (")) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    }
 
     parse_util_cmdsubst_extent(a, 17, &begin, &end);
-    if (begin != a + wcslen(L"echo (echo ("))
+    if (begin != a + wcslen(L"echo (echo (")) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    }
+}
+
+static struct wcsfilecmp_test {
+    const wchar_t *str1;
+    const wchar_t *str2;
+    int expected_rc;
+} wcsfilecmp_tests[] = {{L"", L"", 0},
+                        {L"", L"def", -1},
+                        {L"abc", L"", 1},
+                        {L"abc", L"def", -1},
+                        {L"abc", L"DEF", -1},
+                        {L"DEF", L"abc", 1},
+                        {L"abc", L"abc", 0},
+                        {L"ABC", L"ABC", 0},
+                        {L"AbC", L"abc", -1},
+                        {L"AbC", L"ABC", 1},
+                        {L"def", L"abc", 1},
+                        {L"1ghi", L"1gHi", 1},
+                        {L"1ghi", L"2ghi", -1},
+                        {L"1ghi", L"01ghi", 1},
+                        {L"1ghi", L"02ghi", -1},
+                        {L"01ghi", L"1ghi", -1},
+                        {L"1ghi", L"002ghi", -1},
+                        {L"002ghi", L"1ghi", 1},
+                        {L"abc01def", L"abc1def", -1},
+                        {L"abc1def", L"abc01def", 1},
+                        {L"abc12", L"abc5", 1},
+                        {L"51abc", L"050abc", 1},
+                        {L"abc5", L"abc12", -1},
+                        {L"5abc", L"12ABC", -1},
+                        {L"abc0789", L"abc789", -1},
+                        {L"abc0xA789", L"abc0xA0789", 1},
+                        {L"abc002", L"abc2", -1},
+                        {L"abc002g", L"abc002", 1},
+                        {L"abc002g", L"abc02g", -1},
+                        {L"abc002.txt", L"abc02.txt", -1},
+                        {L"abc005", L"abc012", -1},
+                        {L"abc02", L"abc002", 1},
+                        {L"abc002.txt", L"abc02.txt", -1},
+                        {L"GHI1abc2.txt", L"ghi1abc2.txt", -1},
+                        {L"a0", L"a00", -1},
+                        {L"a00b", L"a0b", -1},
+                        {L"a0b", L"a00b", 1},
+                        {NULL, NULL, 0}};
+
+/// Verify the behavior of the `wcsfilecmp()` function.
+static void test_wcsfilecmp() {
+    for (auto test = wcsfilecmp_tests; test->str1; test++) {
+        int rc = wcsfilecmp(test->str1, test->str2);
+        if (rc != test->expected_rc) {
+            err(L"New failed on line %lu: [\"%ls\" <=> \"%ls\"]: "
+                L"expected return code %d but got %d",
+                __LINE__, test->str1, test->str2, test->expected_rc, rc);
+        }
+    }
+}
+
+static void test_utility_functions() {
+    say(L"Testing utility functions");
+    test_wcsfilecmp();
+    test_parse_util_cmdsubst_extent();
 }
 
 // UTF8 tests taken from Alexey Vatchenko's utf8 library. See http://www.bsdua.org/libbsdua.html.
@@ -4252,7 +4319,6 @@ int main(int argc, char **argv) {
     if (should_test_function("parser")) test_parser();
     if (should_test_function("cancellation")) test_cancellation();
     if (should_test_function("indents")) test_indents();
-    if (should_test_function("utils")) test_utils();
     if (should_test_function("utf8")) test_utf8();
     if (should_test_function("escape_sequences")) test_escape_sequences();
     if (should_test_function("lru")) test_lru();
@@ -4283,6 +4349,7 @@ int main(int argc, char **argv) {
     if (should_test_function("string")) test_string();
     if (should_test_function("env_vars")) test_env_vars();
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
+    if (should_test_function("utility_functions")) test_utility_functions();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

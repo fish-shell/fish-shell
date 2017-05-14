@@ -7,6 +7,9 @@
 /* Define to 1 if you have the `clock_gettime' function. */
 /* #undef HAVE_CLOCK_GETTIME */
 
+/* Define to 1 if you have the `ctermid_r' function. */
+#define HAVE_CTERMID_R 1
+
 /* Define to 1 if you have the <curses.h> header file. */
 #define HAVE_CURSES_H 1
 

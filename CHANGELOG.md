@@ -21,9 +21,9 @@
 - `bg` will check all of its arguments before backgrounding any jobs; any invalid arguments will cause a failure, but non-existent (eg recently exited) jobs are ignored (#3909).
 - `funced` warns if the function being edited has not been modified (#3961).
 - `printf` correctly outputs "long long" integers (#3352).
-- `set` supports the `-k` option to test for sticky bits (#733).
 - `status` supports a new `current-function` subcommand to print the current function name (#1743).
 - `string` supports a new `repeat` subcommand (#3864). `string match` supports a new `--entire` option to emit the entire line matched by a pattern (#3957). `string replace` supports a new `--filter` option to only emit lines which underwent a replacement (#3348).
+- `test` supports the `-k` option to test for sticky bits (#733).
 - `umask` understands symbolic modes (#738). 
 - Empty components in the `CDPATH`, `MANPATH` and `PATH` variables are now converted to "." (#2106, #3914).
 - New versions of ncurses (6.0 and up) wipe terminal scrollback buffers with certain commands; the `C-l` binding tries to avoid this (#2855).

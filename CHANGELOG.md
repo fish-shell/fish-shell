@@ -1,4 +1,4 @@
-# fish 2.6b1 (released ???)
+# fish 2.6b1 (released May 14, 2017)
 
 ## Notable fixes and improvements
 

@@ -38,8 +38,8 @@ class lru_cache_t {
         lru_node_t &operator=(const lru_node_t &) = delete;
         lru_node_t(lru_node_t &&) = default;
 
-        // Our location in the map!
-        node_iter_t iter;
+        // Our key in the map. This is owned by the map itself.
+        const wcstring *key;
 
         // The value from the client
         CONTENTS value;
@@ -78,21 +78,23 @@ class lru_cache_t {
 
     // Remove the node
     void evict_node(lru_node_t *node) {
-        assert(node != &mouth);
-
         // We should never evict the mouth.
-        assert(node != NULL && node->iter != this->node_map.end());
+        assert(node != &mouth && node != NULL && node->key != NULL);
+
+        auto iter = this->node_map.find(*node->key);
+        assert(iter != this->node_map.end());
 
         // Remove it from the linked list.
         node->prev->next = node->next;
         node->next->prev = node->prev;
 
         // Pull out our key and value
-        wcstring key = std::move(node->iter->first);
+        // Note we copy the key in case the map needs it to erase the node
+        wcstring key = *node->key;
         CONTENTS value(std::move(node->value));
 
         // Remove us from the map. This deallocates node!
-        node_map.erase(node->iter);
+        node_map.erase(iter);
 
         // Tell ourselves what we did
         DERIVED *dthis = static_cast<DERIVED *>(this);
@@ -228,7 +230,7 @@ class lru_cache_t {
         // Tell the node where it is in the map
         node_iter_t iter = iter_inserted.first;
         lru_node_t *node = &iter->second;
-        node->iter = iter;
+        node->key = &iter->first;
 
         node->next = mouth.next;
         node->next->prev = node;
@@ -285,8 +287,7 @@ class lru_cache_t {
         bool operator!=(const iterator &other) { return !(*this == other); }
         value_type operator*() const {
             const lru_node_t *dnode = static_cast<const lru_node_t *>(node);
-            const wcstring &key = dnode->iter->first;
-            return {key, dnode->value};
+            return {*dnode->key, dnode->value};
         }
     };
 

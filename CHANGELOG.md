@@ -1,32 +1,59 @@
-# fish 2.6.0 (released ???)
+# fish 2.6b1 (released ???)
 
 ## Notable fixes and improvements
 
 - Jobs running in the background can now be removed from the list of jobs with the new `disown` builtin, which behaves like the same command in other shells (#2810).
+- Command substitutions now have access to the terminal, like in other shells. This allows tools like `fzf` to work properly (#1362, #3922).
+- In cases where the operating system does not report the size of the terminal, the `COLUMNS` and `LINES` environment variables are used; if they are unset, a default of 80x24 is assumed.
+- New French (#3772 & #3788) and improved German (#3834) translations.
+- fish no longer depends on the `which` external command.
 
 ## Other significant changes
 
-- The `export` and `setenv` commands now supports colon-separated `PATH`, `CDPATH` and `MANPATH`.
-- The `read` command now has a default limit of 10 MiB. If a line is longer than that it will fail with $status set to 122 and the var will be empty. You can set a different limit by setting the FISH_READ_BYTE_LIMIT variable.
-- `read` now supports the `--silent` flag to hide the characters typed (#838).
-- The `read` command now accepts simple strings for the prompt rather than fish script via the new `-P` and `--prompt-str` flags (#802).
-- The \cl binding no longer deletes the scrollback buffer with ncurses >= 6.0 (#2855).
-- fish now supports "bracketed paste" (#3871). Note that this is more of a security measure, the `fish_clipboard_paste` function (bound to \cv by default) still has a few advantages.
-- When the current token has an open single-quote (`'`), fish will now escape any `'` and `\` in pasted text so that it can be used as a single token. Note that this requires either bracketed paste or use of the special `fish_clipboard_paste` function (bound to \cv by default).
-- Fish is now more forgiving of missing or invalid $TERM values (#3850).
-- The `string` command now supports a `repeat` subcommand with the obvious behavior (#3864).
-- The `string match` command now supports a `--entire` flag to emit the entire string partially matched by a pattern (#3957).
-- The `string replace` command now supports a `--filter` flag to limit output to strings which underwent a replacement (#3348).
-- The `functions --details --verbose` output now includes the function description (#597).
-- Completions for `helm` added (#3829).
-- Empty components in $CDPATH, $MANPATH and $PATH are now converted to "." (#2106, #3914).
-- `type` now no longer requires `which`, which means it is no longer a dependency (#3912, #3945).
-- Using symbolic permissions with the `umask` command now works (#738).
-- Command substitutions now have access to the terminal, allowing tools like `fzf` to work in them (#1362, #3922).
-- `bg`s argument parsing has been reworked. It now fails for invalid arguments but allows non-existent jobs (#3909).
-- fish will now reset $USER if the uid is 0. This is to workaround some su implementations that pass along $USER when switching to root (#3944).
-- Our python-using functions now pick any python version (preferring python3), making dependencies on a specific python version unnecessary (#3970).
-- The presentation of functions in the `fish_config` web UI are now syntax colored (#1432).
+- Performance improvements in launching processes, including major reductions in signal blocking. Although this has been heavily tested, it may cause problems in some circumstances; set the `FISH_NO_SIGNAL_BLOCK` variable to 0 in your fish configuration file to return to the old behaviour (#2007).
+- Performance improvements in prompts and functions that set lots of colours (#3793).
+- The Delete key no longer deletes backwards (a regression in 2.5.0).
+- `functions` supports a new `--details` option, which identifies where the function was loaded from (#3295), and a `--details --verbose` option which includes the function description (#597).
+- `read` will read up to 10 MiB by default, leaving the target variable empty and exiting with status 122 if the line is too long. You can set a different limit with the `FISH_READ_BYTE_LIMIT` variable.
+- `read` supports a new `--silent` option to hide the characters typed (#838), for when reading sensitive data from the terminal. `read` also now accepts simple strings for the prompt (rather than scripts) with the new `-P` and `--prompt-str` options (#802).
+- `export` and `setenv` now understand colon-separated `PATH`, `CDPATH` and `MANPATH` variables.
+- `bind` supports a new `--list-modes` option (#3872).
+- `bg` will check all of its arguments before backgrounding any jobs; any invalid arguments will cause a failure, but non-existent (eg recently exited) jobs are ignored (#3909).
+- `funced` warns if the function being edited has not been modified (#3961).
+- `printf` correctly outputs "long long" integers (#3352).
+- `status` supports a new `current-function` subcommand to print the current function name (#1743).
+- `string` supports a new `repeat` subcommand (#3864). `string match` supports a new `--entire` option to emit the entire line matched by a pattern (#3957). `string replace` supports a new `--filter` option to only emit lines which underwent a replacement (#3348).
+- `test` supports the `-k` option to test for sticky bits (#733).
+- `umask` understands symbolic modes (#738). 
+- Empty components in the `CDPATH`, `MANPATH` and `PATH` variables are now converted to "." (#2106, #3914).
+- New versions of ncurses (6.0 and up) wipe terminal scrollback buffers with certain commands; the `C-l` binding tries to avoid this (#2855).
+- Some systems' `su` implementations do not set the `USER` environment variable; it is now reset for root users (#3916).
+- Under terminals which support it, bracketed paste is enabled, escaping problematic characters for security and convience (#3871). Inside single quotes (`'`), single quotes and backslashes in pasted text are escaped (#967). The `fish_clipboard_paste` function (bound to `C-v` by default) is still the recommended pasting method where possible as it includes this functionality and more.
+- Processes in pipelines are no longer signalled as soon as one command in the pipeline has completed (#1926). This behaviour matches other shells mre closely.
+- All functions requiring Python work with whichever version of Python is installed (#3970). Python 3 is preferred, but Python 2.6 remains the minimum version required.
+- The color of the cancellation character can be controlled by the `fish_color_cancel` variable (#3963).
+- Added completions for:
+ - `caddy` (#4008)
+ - `castnow` (#3744)
+ - `climate` (#3760)
+ - `flatpak`
+ - `gradle` (#3859)
+ - `gsettings` (#4001)
+ - `helm` (#3829)
+ - `i3-msg` (#3787)
+ - `ipset` (#3924)
+ - `jq` (#3804)
+ - `light` (#3752)
+ - `minikube` (#3778)
+ - `mocha` (#3828)
+ - `mkdosfs` (#4017)
+ - `pv` (#3773)
+ - `setsid` (#3791)
+ - `terraform` (#3960)
+ - `usermod` (#3775)
+ - `xinput`
+ - `yarn` (#3816)
+- Improved completions for `adb` (#3853), `apt` (#3771), `bzr` (#3769), `dconf`, `git` (including #3743), `grep` (#3789), `go` (#3789), `help` (#3789), `hg` (#3975), `htop` (#3789), `killall` (#3996), `lua`, `man` (#3762), `mount` (#3764 & #3841), `obnam` (#3924), `perl` (#3856), `portmaster` (#3950), `python` (#3840), `ssh` (#3781), `scp` (#3781), `systemctl` (#3757) and `udisks` (#3764).
 
 ---
 
@@ -79,7 +106,7 @@ This is only necessary on 10.6. OS X 10.7 and later include the required library
 - A new key bindings preset, `fish_hybrid_key_bindings`, including all the Emacs-style and Vi-style bindings, which behaves like `fish_vi_key_bindings` in fish 2.3.0 (#3556).
 - `function` now returns an error when called with invalid options, rather than defining the function anyway (#3574). This was a regression present in fish 2.3 and 2.4.0.
 - fish no longer prints a warning when it identifies a running instance of an old version (2.1.0 and earlier). Changes to universal variables may not propagate between these old versions and 2.5b1.
-- Improved compatiblity with Android (#3585), MSYS/mingw (#2360), Solaris (#3456, #3340)
+- Improved compatiblity with Android (#3585), MSYS/mingw (#2360), and Solaris (#3456, #3340).
 - Like other shells, the `test` builting now returns an error for numeric operations on invalid integers (#3346, #3581).
 - `complete` no longer recognises `--authoritative` and `--unauthoritative` options, and they are marked as obsolete.
 - `status` accepts subcommands, and should be used like `status is-interactive`. The old options continue to be supported for the foreseeable future (#3526), although only one subcommand or option can be specified at a time.

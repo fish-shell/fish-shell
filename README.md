@@ -30,7 +30,7 @@ Building the documentation requires Doxygen 1.8.7 or newer.
     autoreconf --no-recursive [if building from Git]
     ./configure
     make [gmake on BSD]
-    sudo make install
+    sudo make install [sudo gmake install on BSD]
 
 ### Xcode Development Build
 

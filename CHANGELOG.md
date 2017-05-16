@@ -1,3 +1,14 @@
+# fish 2.6.0 (released ???)
+
+2.6.0 contains the following fixes since 2.6b1:
+
+- fish successfully builds on OS X 10.10 (#4029).
+- Improved completions for gphoto (#4031). 
+
+If you are upgrading from version 2.5.0 or before, please also review the release notes for 2.6b1 (included below).
+
+---
+
 # fish 2.6b1 (released May 14, 2017)
 
 ## Notable fixes and improvements

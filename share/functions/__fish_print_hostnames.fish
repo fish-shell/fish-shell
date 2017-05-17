@@ -18,7 +18,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     end
 
     # Check hosts known to ssh
-    set -l known_hosts ~/.ssh/known_hosts{,2} /etc/ssh/known_hosts{,2} # Yes, seriously - the default specifies both with and without "2"
+    set -l known_hosts ~/.ssh/known_hosts{,2} /etc/ssh/{,ssh_}known_hosts{,2} # Yes, seriously - the default specifies both with and without "2"
     # Check default ssh configs
     set -l ssh_config
     # Get alias and commandline options

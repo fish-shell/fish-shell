@@ -87,15 +87,22 @@ bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, 
 }
 
 bool wreaddir(DIR *dir, wcstring &out_name) {
-    struct dirent d;
+    // We need to use a union to ensure that the dirent struct is large enough to avoid stomping on
+    // the stack. Some platforms incorrectly defined the `d_name[]` member as being one element
+    // long when it should be at least NAME_MAX + 1.
+    union {
+        struct dirent d;
+        char c[offsetof(struct dirent, d_name) + NAME_MAX + 1]; /* NAME_MAX is POSIX. */
+    } d_u;
     struct dirent *result = NULL;
-    int retval = readdir_r(dir, &d, &result);
 
+    int retval = readdir_r(dir, &d_u.d, &result);
     if (retval || !result) {
         out_name = L"";
         return false;
     }
-    out_name = str2wcstring(d.d_name);
+
+    out_name = str2wcstring(d_u.d.d_name);
     return true;
 }
 

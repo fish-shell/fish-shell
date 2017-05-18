@@ -39,7 +39,7 @@ class lru_cache_t {
         lru_node_t(lru_node_t &&) = default;
 
         // Our key in the map. This is owned by the map itself.
-        const wcstring *key;
+        const wcstring *key = NULL;
 
         // The value from the client
         CONTENTS value;

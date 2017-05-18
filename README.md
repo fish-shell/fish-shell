@@ -86,6 +86,8 @@ Use the following command if you didn't already add your fish path to /etc/shell
 
     echo /usr/local/bin/fish | sudo tee -a /etc/shells
 
+Note: If you've used linux package managers for installation, alternatively run this one: `chsh -s /usr/bin/fish`
+
 To switch your default shell back, you can run:
 
 	chsh -s /bin/bash

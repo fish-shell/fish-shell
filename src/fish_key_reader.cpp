@@ -92,9 +92,7 @@ static char *sequence_name(wchar_t wc) {
 
 /// Return true if the character must be escaped when used in the sequence of chars to be bound in
 /// a `bind` command.
-static bool must_escape(wchar_t wc) {
-    return wcschr(L"[]()<>{}*\\?$#;&|'\"", wc) != NULL;
-}
+static bool must_escape(wchar_t wc) { return wcschr(L"[]()<>{}*\\?$#;&|'\"", wc) != NULL; }
 
 static void ctrl_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, bool bind_friendly) {
     if (ctrl_symbolic_names[wc]) {

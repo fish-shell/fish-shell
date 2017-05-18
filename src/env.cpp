@@ -702,11 +702,11 @@ wcstring env_get_pwd_slash(void) {
 /// Set up the USER variable.
 static void setup_user(bool force) {
     if (env_get_string(L"USER").missing_or_empty() || force) {
-	struct passwd userinfo;
-	struct passwd *result;
-	char buf[8192];
-	int retval = getpwuid_r(getuid(), &userinfo, buf, sizeof(buf), &result);
-	if (!retval && result) {
+        struct passwd userinfo;
+        struct passwd *result;
+        char buf[8192];
+        int retval = getpwuid_r(getuid(), &userinfo, buf, sizeof(buf), &result);
+        if (!retval && result) {
             const wcstring uname = str2wcstring(userinfo.pw_name);
             env_set(L"USER", uname.c_str(), ENV_GLOBAL | ENV_EXPORT);
         }

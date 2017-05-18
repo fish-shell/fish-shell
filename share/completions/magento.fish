@@ -144,7 +144,7 @@ end
 
 
 function __fish_print_magento_source_theme_file_types -d "Shows all available source theme file types"
-  echo less\t"Currently, LESS is the only file type supported"
+  echo less\t"Currently only LESS is supported"
 end
 
 function __fish_print_magento_deploy_modes -d "Shows all available deploy modes"
@@ -174,9 +174,9 @@ function __fish_print_magento_verbosity_levels -d "Shows all available verbosity
 end
 
 function __fish_print_magento_list_formats -d "Shows all available output formats"
-  echo txt\t"Prints as plain text"
-  echo json\t"Prints as JSON"
-  echo xml\t"Prints as XML"
+  echo txt\t"Print as plain text"
+  echo json\t"Print as JSON"
+  echo xml\t"Print as XML"
 end
 
 function __fish_print_magento_commands_list -d "Lists magento commands"
@@ -238,110 +238,110 @@ end
 ##################
 # Global options #
 ##################
-complete -x -c magento -s h -l help -d "Displays help for a command";
+complete -x -c magento -s h -l help -d "Show help for a command";
 complete -x -c magento -s q -l quiet -d "Do not output any message";
-complete -x -c magento -s v -l verbose -a "(__fish_print_magento_verbosity_levels)" -d "Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug";
+complete -x -c magento -s v -l verbose -a "(__fish_print_magento_verbosity_levels)" -d "Increase verbosity: 1 for normal, 2 for verbose and 3 for debug";
 complete -x -c magento -o -vv;
 complete -x -c magento -o vvv;
-complete -x -c magento -s V -l version -d "Display this application version";
-complete -x -c magento -l ansi -d "Force ANSI output";
-complete -x -c magento -l no-ansi -d "Disable ANSI output";
-complete -x -c magento -s n -l no-interaction -d "Do not ask any interactive question";
+complete -x -c magento -s V -l version -d "Show version";
+complete -x -c magento -l ansi -d "Force colored output";
+complete -x -c magento -l no-ansi -d "Disable colored output";
+complete -x -c magento -s n -l no-interaction -d "Don't ask any interactive question";
 
 ################
 # Sub-Commands #
 ################
-__fish_magento_register_command help -a "(__fish_print_magento_commands_list)" -d "Displays help for a command";
-__fish_magento_register_command list -d "Lists commands";
+__fish_magento_register_command help -a "(__fish_print_magento_commands_list)" -d "Show help for a command";
+__fish_magento_register_command list -d "List commands";
 
-__fish_magento_register_command admin:user:create -x -d "Creates an administrator";
-__fish_magento_register_command admin:user:unlock -x -d "Unlock Admin Account";
+__fish_magento_register_command admin:user:create -x -d "Create admin account";
+__fish_magento_register_command admin:user:unlock -x -d "Unlock admin account";
 
-__fish_magento_register_command app:config:dump -d "Create dump of application";
+__fish_magento_register_command app:config:dump -d "Create application dump";
 
-__fish_magento_register_command cache:clean -d "Cleans cache type(s)";
-__fish_magento_register_command cache:disable -d "Disables cache type(s)";
-__fish_magento_register_command cache:enable -d "Enables cache type(s)";
-__fish_magento_register_command cache:flush -d "Flushes cache storage used by cache type(s)";
-__fish_magento_register_command cache:status -d "Checks cache status";
+__fish_magento_register_command cache:clean -d "Clean cache types";
+__fish_magento_register_command cache:disable -d "Disable cache types";
+__fish_magento_register_command cache:enable -d "Enable cache types";
+__fish_magento_register_command cache:flush -d "Flush cache storage used by cache types";
+__fish_magento_register_command cache:status -d "Check cache status";
 
-__fish_magento_register_command catalog:images:resize -d "Creates resized product images";
-__fish_magento_register_command catalog:product:attributes:cleanup -d "Removes unused product attributes.";
+__fish_magento_register_command catalog:images:resize -d "Create resized product images";
+__fish_magento_register_command catalog:product:attributes:cleanup -d "Remove unused product attributes";
 
-__fish_magento_register_command cron:run -d "Runs jobs by schedule";
+__fish_magento_register_command cron:run -d "Run jobs by schedule";
 
-__fish_magento_register_command customer:hash:upgrade -d "Upgrade customer's hash according to the latest algorithm";
+__fish_magento_register_command customer:hash:upgrade -d "Upgrade customer's hashes according to latest algorithm";
 
-__fish_magento_register_command deploy:mode:set -d "Set application mode.";
-__fish_magento_register_command deploy:mode:show -d "Displays current application mode.";
+__fish_magento_register_command deploy:mode:set -d "Set application mode";
+__fish_magento_register_command deploy:mode:show -d "Show current application mode";
 
-__fish_magento_register_command dev:source-theme:deploy -d "Collects and publishes source files for theme.";
-__fish_magento_register_command dev:tests:run -d "Runs tests";
-__fish_magento_register_command dev:urn-catalog:generate -d "Generates the catalog of URNs to *.xsd mappings for the IDE to highlight xml.";
-__fish_magento_register_command dev:xml:convert -d "Converts XML file using XSL style sheets";
+__fish_magento_register_command dev:source-theme:deploy -d "Collect and publish source files for theme";
+__fish_magento_register_command dev:tests:run -d "Run tests";
+__fish_magento_register_command dev:urn-catalog:generate -d "Generate catalog of URNs to *.xsd mappings for IDEs to highlight XML";
+__fish_magento_register_command dev:xml:convert -d "Convert XML file using XSL stylesheets";
 
-__fish_magento_register_command i18n:collect-phrases -d "Discovers phrases in the codebase";
-__fish_magento_register_command i18n:pack -d "Saves language package";
-__fish_magento_register_command i18n:uninstall -d "Uninstalls language packages";
+__fish_magento_register_command i18n:collect-phrases -d "Discover phrases in the codebase";
+__fish_magento_register_command i18n:pack -d "Save language package";
+__fish_magento_register_command i18n:uninstall -d "Uninstall language packages";
 
-__fish_magento_register_command indexer:info -d "Shows allowed Indexers";
-__fish_magento_register_command indexer:reindex -d "Reindexes Data";
-__fish_magento_register_command indexer:reset -d "Resets indexer status to invalid";
-__fish_magento_register_command indexer:set-mode -d "Sets index mode type";
-__fish_magento_register_command indexer:show-mode -d "Shows Index Mode";
-__fish_magento_register_command indexer:status -d "Shows status of Indexer";
+__fish_magento_register_command indexer:info -d "Show allowed indexers";
+__fish_magento_register_command indexer:reindex -d "Reindex data";
+__fish_magento_register_command indexer:reset -d "Reset indexer status to invalid";
+__fish_magento_register_command indexer:set-mode -d "Set index mode type";
+__fish_magento_register_command indexer:show-mode -d "Show index mode";
+__fish_magento_register_command indexer:status -d "Show status of indexer";
 
-__fish_magento_register_command info:adminuri -d "Displays the Magento Admin URI";
-__fish_magento_register_command info:backups:list -d "Prints list of available backup files";
-__fish_magento_register_command info:currency:list -d "Displays the list of available currencies";
-__fish_magento_register_command info:dependencies:show-framework -d "Shows number of dependencies on Magento framework";
-__fish_magento_register_command info:dependencies:show-modules -d "Shows number of dependencies between modules";
-__fish_magento_register_command info:dependencies:show-modules-circular -d "Shows number of circular dependencies between modules";
-__fish_magento_register_command info:language:list -d "Displays the list of available language locales";
-__fish_magento_register_command info:timezone:list -d "Displays the list of available timezones";
+__fish_magento_register_command info:adminuri -d "Show Magento Admin URI";
+__fish_magento_register_command info:backups:list -d "Show available backup files";
+__fish_magento_register_command info:currency:list -d "Show available currencies";
+__fish_magento_register_command info:dependencies:show-framework -d "Show dependencies on Magento framework";
+__fish_magento_register_command info:dependencies:show-modules -d "Show dependencies between modules";
+__fish_magento_register_command info:dependencies:show-modules-circular -d "Show circular dependencies between modules";
+__fish_magento_register_command info:language:list -d "Show available languages";
+__fish_magento_register_command info:timezone:list -d "Show available timezones";
 
-__fish_magento_register_command maintenance:allow-ips -d "Sets maintenance mode exempt IPs";
-__fish_magento_register_command maintenance:disable -d "Disables maintenance mode";
-__fish_magento_register_command maintenance:enable -d "Enables maintenance mode";
-__fish_magento_register_command maintenance:status -d "Displays maintenance mode status";
+__fish_magento_register_command maintenance:allow-ips -d "Set maintenance mode exempt IPs";
+__fish_magento_register_command maintenance:disable -d "Disable maintenance mode";
+__fish_magento_register_command maintenance:enable -d "Enable maintenance mode";
+__fish_magento_register_command maintenance:status -d "Show maintenance mode status";
 
-__fish_magento_register_command module:disable -d "Disables specified modules";
-__fish_magento_register_command module:enable -d "Enables specified modules";
-__fish_magento_register_command module:status -d "Displays status of modules";
-__fish_magento_register_command module:uninstall -d "Uninstalls modules installed by composer";
+__fish_magento_register_command module:disable -d "Disable specified modules";
+__fish_magento_register_command module:enable -d "Enable specified modules";
+__fish_magento_register_command module:status -d "Show status of modules";
+__fish_magento_register_command module:uninstall -d "Uninstall modules installed by composer";
 
 __fish_magento_register_command sampledata:deploy -d "Deploy sample data modules";
-__fish_magento_register_command sampledata:remove -d "Remove all sample data packages from composer.json";
-__fish_magento_register_command sampledata:reset -d "Reset all sample data modules for re-installation";
+__fish_magento_register_command sampledata:remove -d "Remove sample data packages";
+__fish_magento_register_command sampledata:reset -d "Reset sample data modules for re-installation";
 
-__fish_magento_register_command setup:backup -d "Takes backup of Magento Application code base, media and database";
-__fish_magento_register_command setup:config:set -d "Creates or modifies the deployment configuration";
-__fish_magento_register_command setup:cron:run -d "Runs cron job scheduled for setup application";
-__fish_magento_register_command setup:db-data:upgrade -d "Installs and upgrades data in the DB";
-__fish_magento_register_command setup:db-schema:upgrade -d "Installs and upgrades the DB schema";
-__fish_magento_register_command setup:db:status -d "Checks if DB schema or data requires upgrade";
-__fish_magento_register_command setup:di:compile -d "Generates DI configuration and all missing classes that can be auto-generated";
-__fish_magento_register_command setup:install -d "Installs the Magento application";
-__fish_magento_register_command setup:performance:generate-fixtures -d "Generates fixtures";
-__fish_magento_register_command setup:rollback -d "Rolls back Magento Application codebase, media and database";
-__fish_magento_register_command setup:static-content:deploy -d "Deploys static view files";
-__fish_magento_register_command setup:store-config:set -d "Installs the store configuration";
-__fish_magento_register_command setup:uninstall -d "Uninstalls the Magento application";
-__fish_magento_register_command setup:upgrade -d "Upgrades the Magento application, DB data, and schema";
+__fish_magento_register_command setup:backup -d "Take backup of application code base, media and database";
+__fish_magento_register_command setup:config:set -d "Create or modifies the deployment configuration";
+__fish_magento_register_command setup:cron:run -d "Run cron job scheduled for setup application";
+__fish_magento_register_command setup:db-data:upgrade -d "Install and upgrades data in the DB";
+__fish_magento_register_command setup:db-schema:upgrade -d "Install and upgrade the DB schema";
+__fish_magento_register_command setup:db:status -d "Check if DB schema or data requires upgrade";
+__fish_magento_register_command setup:di:compile -d "Generate DI configuration and all missing classes that can be auto-generated";
+__fish_magento_register_command setup:install -d "Install Magento application";
+__fish_magento_register_command setup:performance:generate-fixtures -d "Generate fixtures";
+__fish_magento_register_command setup:rollback -d "Roll back Magento Application codebase, media and database";
+__fish_magento_register_command setup:static-content:deploy -d "Deploy static view files";
+__fish_magento_register_command setup:store-config:set -d "Install store configuration";
+__fish_magento_register_command setup:uninstall -d "Uninstall Magento application";
+__fish_magento_register_command setup:upgrade -d "Upgrade Magento application, DB data, and schema";
 
-__fish_magento_register_command theme:uninstall -d "Uninstalls a theme";
+__fish_magento_register_command theme:uninstall -d "Uninstall theme";
 
 #
 # help
 #
-__fish_magento_register_command_option help -x -a "(__fish_print_magento_commands_list)" -d "Displays help for a command";
+__fish_magento_register_command_option help -x -a "(__fish_print_magento_commands_list)" -d "Show help for a command";
 
 #
 # list
 #
-__fish_magento_register_command_option list -f -l xml -d "To output list as XML";
-__fish_magento_register_command_option list -f -l raw -d "To output raw command list";
-__fish_magento_register_command_option list -f -l format -a "(__fish_print_magento_list_formats)" -d "To output list in other formats (default: txt)";
+__fish_magento_register_command_option list -f -l xml -d "Output as XML";
+__fish_magento_register_command_option list -f -l raw -d "Output as plaintext";
+__fish_magento_register_command_option list -f -l format -a "(__fish_print_magento_list_formats)" -d "Output other formats (default: txt)";
 
 #
 # admin:user:create
@@ -353,7 +353,7 @@ __fish_magento_register_command_option admin:user:create -n "__fish_magento_para
 __fish_magento_register_command_option admin:user:create -n "__fish_magento_parameter_missing admin-lastname" -f -a "--admin-lastname" -d "(Required) Admin last name";
 __fish_magento_register_command_option admin:user:create -f -r -l admin-user -d "(Required) Admin user";
 __fish_magento_register_command_option admin:user:create -f -r -l admin-password -d "(Required) Admin password";
-__fish_magento_register_command_option admin:user:create -f -r -l admin-email -d "(Required) Admin email";
+__fish_magento_register_command_option admin:user:create -f -r -l admin-email "-d "(Required) Admin email";
 __fish_magento_register_command_option admin:user:create -f -r -l admin-firstname -d "(Required) Admin first name";
 __fish_magento_register_command_option admin:user:create -f -r -l admin-lastname -d "(Required) Admin last name";
 __fish_magento_register_command_option admin:user:create -f -l magento-init-params -d "Add to any command to customize Magento initialization parameters";
@@ -361,47 +361,47 @@ __fish_magento_register_command_option admin:user:create -f -l magento-init-para
 #
 # admin:user:unlock
 #
-__fish_magento_register_command_option admin:user:unlock -f -d "The admin username to unlock";
+__fish_magento_register_command_option admin:user:unlock -f -d "Admin user to unlock";
 
 #
 # cache:clean
 #
-__fish_magento_register_command_option cache:clean -f -a "(__fish_print_magento_cache_types)" -d "Space-separated list of cache types or omit to apply to all cache types.";
-__fish_magento_register_command_option cache:clean -f -l bootstrap -d "add or override parameters of the bootstrap";
+__fish_magento_register_command_option cache:clean -f -a "(__fish_print_magento_cache_types)" -d "Space-separated list of cache types or omit for all";
+__fish_magento_register_command_option cache:clean -f -l bootstrap -d "Add or override parameters of the bootstrap";
 
 #
 # cache:enable
 #
-__fish_magento_register_command_option cache:enable -f -a "(__fish_print_magento_cache_types)" -d "Space-separated list of cache types or omit to apply to all cache types.";
-__fish_magento_register_command_option cache:enable -f -l bootstrap -d "add or override parameters of the bootstrap";
+__fish_magento_register_command_option cache:enable -f -a "(__fish_print_magento_cache_types)" -d "Space-separated list of cache types or omit for all";
+__fish_magento_register_command_option cache:enable -f -l bootstrap -d "Add or override parameters of the bootstrap";
 
 #
 # cache:disable
 #
-__fish_magento_register_command_option cache:disable -f -a "(__fish_print_magento_cache_types)" -d "Space-separated list of cache types or omit to apply to all cache types.";
-__fish_magento_register_command_option cache:disable -f -l bootstrap -d "add or override parameters of the bootstrap";
+__fish_magento_register_command_option cache:disable -f -a "(__fish_print_magento_cache_types)" -d "Space-separated list of cache types or omit for all";
+__fish_magento_register_command_option cache:disable -f -l bootstrap -d "Add or override parameters of the bootstrap";
 
 #
 # cache:status
 #
-__fish_magento_register_command_option cache:status -f -l bootstrap -d "add or override parameters of the bootstrap";
+__fish_magento_register_command_option cache:status -f -l bootstrap -d "Add or override parameters of the bootstrap";
 
 #
 # cron:run
 #
 __fish_magento_register_command_option cron:run -f -l group -d "Run jobs only from specified group";
-__fish_magento_register_command_option cron:run -f -l bootstrap -d "add or override parameters of the bootstrap";
+__fish_magento_register_command_option cron:run -f -l bootstrap -d "Add or override parameters of the bootstrap";
 
 #
 # deploy:mode:set
 #
-__fish_magento_register_command_option deploy:mode:set -f -a "(__fish_print_magento_deploy_modes)" -d 'The application mode to set. Available options are "developer" or "production"';
-__fish_magento_register_command_option deploy:mode:set -f -s s -l skip-compilation -d "Skips the clearing and regeneration of static content (generated code, preprocessed CSS, and assets in pub/static/)";
+__fish_magento_register_command_option deploy:mode:set -f -a "(__fish_print_magento_deploy_modes)" -d 'Application mode to set. Available are "developer" or "production"';
+__fish_magento_register_command_option deploy:mode:set -f -s s -l skip-compilation -d "Skip clearing and regeneration of static content (generated code, preprocessed CSS, and assets in pub/static/)";
 
 #
 # dev:source-theme:deploy
 #
-__fish_magento_register_command_option dev:source-theme:deploy -d 'Files to pre-process (file should be specified without extension) (default: ["css/styles-m","css/styles-l"])';
+__fish_magento_register_command_option dev:source-theme:deploy -d 'Files to pre-process (file should be specified without extension) (default: "css/styles-m","css/styles-l")';
 __fish_magento_register_command_option dev:source-theme:deploy -f -l type -a "(__fish_print_magento_source_theme_file_types)" -d 'Type of source files (default: "less")';
 __fish_magento_register_command_option dev:source-theme:deploy -f -l locale -a "(__fish_print_magento_languages)" -d 'Locale (default: "en_US")';
 __fish_magento_register_command_option dev:source-theme:deploy -f -l area -a "(__fish_print_magento_theme_areas)" -d 'Area (default: "frontend")';
@@ -415,7 +415,7 @@ __fish_magento_register_command_option dev:tests:run -f -a "(__fish_print_magent
 #
 # dev:urn-catalog:generate
 #
-__fish_magento_register_command_option dev:urn-catalog:generate -f -l ide -a "(__fish_print_magento_available_ides)" -d 'Format in which catalog will be generated. Supported: [phpstorm] (default: "phpstorm")';
+__fish_magento_register_command_option dev:urn-catalog:generate -f -l ide -a "(__fish_print_magento_available_ides)" -d 'Catalog generation format. Supported: [phpstorm] (default: "phpstorm")';
 
 #
 # dev:xml:convert
@@ -425,14 +425,14 @@ __fish_magento_register_command_option dev:xml:convert -s o -l overwrite -d 'Ove
 #
 # i18n:collect-phrases
 #
-__fish_magento_register_command_option i18n:collect-phrases -s o -l output -d 'Path (including filename) to an output file. With no file specified, defaults to stdout.';
-__fish_magento_register_command_option i18n:collect-phrases -f -s m -l magento -d 'Use the --magento parameter to parse the current Magento codebase. Omit the parameter if a directory is specified.';
+__fish_magento_register_command_option i18n:collect-phrases -s o -l output -d 'Path (including filename) to an output file. With no file specified, defaults to stdout';
+__fish_magento_register_command_option i18n:collect-phrases -f -s m -l magento -d 'Use --magento to parse current Magento codebase. Omit parameter if a directory is specified';
 
 #
 # i18n:pack
 #
 __fish_magento_register_command_option i18n:pack -f -s m -l mode -a "(__fish_print_magento_i18n_packing_modes)" -d 'Save mode for dictionary (default: "replace")';
-__fish_magento_register_command_option i18n:pack -s d -l allow-duplicates -d 'Use the --allow-duplicates parameter to allow saving duplicates of translate. Otherwise omit the parameter.';
+__fish_magento_register_command_option i18n:pack -s d -l allow-duplicates -d 'Use --allow-duplicates to allow saving duplicates of translate. Otherwise omit parameter';
 
 #
 # i18n:uninstall
@@ -463,38 +463,38 @@ __fish_magento_register_command_option maintenance:allow-ips -l none -d 'Clear a
 #
 # maintenance:disable
 #
-__fish_magento_register_command_option maintenance:disable -l ip -d "Allowed IP addresses (use 'none' to clear allowed IP list) (multiple values allowed)";
+__fish_magento_register_command_option maintenance:disable -l ip -d "Allowed IP addresses (use 'none' to clear list)";
 
 #
 # maintenance:enable  
 # 
-__fish_magento_register_command_option maintenance:enable -l ip -d "Allowed IP addresses (use 'none' to clear allowed IP list) (multiple values allowed)";
+__fish_magento_register_command_option maintenance:enable -l ip -d "Allowed IP addresses (use 'none' to clear list)";
 
 #
 # module:disable
 #
-__fish_magento_register_command_option module:disable -f -a "(__fish_print_magento_modules)" -d "Name of the module";
+__fish_magento_register_command_option module:disable -f -a "(__fish_print_magento_modules)" -d "Module name";
 __fish_magento_register_command_option module:disable -s f -l force -d "Bypass dependencies check";
 __fish_magento_register_command_option module:disable -l all -d "Disable all modules";
-__fish_magento_register_command_option module:disable -s c -l clear-static-content -d "Clear generated static view files. Necessary, if the module(s) have static view files";
+__fish_magento_register_command_option module:disable -s c -l clear-static-content -d "Clear generated static view files. Necessary if module(s) have static view files";
 
 #
 # module:enable
 # 
-__fish_magento_register_command_option module:enable -f -a "(__fish_print_magento_modules)" -d "Name of the module";
+__fish_magento_register_command_option module:enable -f -a "(__fish_print_magento_modules)" -d "Module name";
 __fish_magento_register_command_option module:enable -f -s f -l force -d "Bypass dependencies check";
 __fish_magento_register_command_option module:enable -f -l all -d "Enable all modules";
-__fish_magento_register_command_option module:enable -f -s c -l clear-static-content -d "Clear generated static view files. Necessary, if the module(s) have static view files";
+__fish_magento_register_command_option module:enable -f -s c -l clear-static-content -d "Clear generated static view files. Necessary if module(s) have static view files";
 
 #
 # module:uninstall
 #
-__fish_magento_register_command_option module:uninstall -f -a "(__fish_print_magento_modules)" -d "Name of the module";
+__fish_magento_register_command_option module:uninstall -f -a "(__fish_print_magento_modules)" -d "Module name";
 __fish_magento_register_command_option module:uninstall -f -s r -l remove-data -d "Remove data installed by module(s)";
 __fish_magento_register_command_option module:uninstall -f -l backup-code -d "Take code and configuration files backup (excluding temporary files)";
 __fish_magento_register_command_option module:uninstall -f -l backup-media -d "Take media backup";
 __fish_magento_register_command_option module:uninstall -f -l backup-db -d "Take complete database backup";
-__fish_magento_register_command_option module:uninstall -f -s c -l clear-static-content -d "Clear generated static view files. Necessary, if the module(s) have static view files";
+__fish_magento_register_command_option module:uninstall -f -s c -l clear-static-content -d "Clear generated static view files. Necessary if module(s) have static view files";
 
 #
 # setup:backup
@@ -519,7 +519,7 @@ __fish_magento_register_command_option setup:config:set -f -l db-prefix -d "Data
 __fish_magento_register_command_option setup:config:set -f -l db-model -d "Database type";
 __fish_magento_register_command_option setup:config:set -f -l db-init-statements -d "Database initial set of commands";
 __fish_magento_register_command_option setup:config:set -f -l skip-db-validation -s s -d "If specified, then db connection validation will be skipped";
-__fish_magento_register_command_option setup:config:set -f -l http-cache-hosts -d "http Cache hosts";
+__fish_magento_register_command_option setup:config:set -f -l http-cache-hosts -d "HTTP cache hosts";
 
 #
 # setup:install
@@ -541,23 +541,23 @@ __fish_magento_register_command_option setup:install -f -l db-password -d "Datab
 __fish_magento_register_command_option setup:install -f -l db-prefix -d "Database table prefix";
 __fish_magento_register_command_option setup:install -f -l db-model -d "Database type";
 __fish_magento_register_command_option setup:install -f -l db-init-statements -d "Database initial set of commands";
-__fish_magento_register_command_option setup:install -f -l skip-db-validation -s s -d "If specified, then db connection validation will be skipped";
-__fish_magento_register_command_option setup:install -f -l http-cache-hosts -d "http Cache hosts";
+__fish_magento_register_command_option setup:install -f -l skip-db-validation -s s -d "Skip database connection validation";
+__fish_magento_register_command_option setup:install -f -l http-cache-hosts -d "HTTP cache hosts";
 __fish_magento_register_command_option setup:install -f -l base-url -a "(__fish_print_magento_url_protocols)" -d "URL the store is supposed to be available at";
 __fish_magento_register_command_option setup:install -f -l language -a "(__fish_print_magento_languages)" -d "Default language code";
 __fish_magento_register_command_option setup:install -f -l timezone -d "Default time zone code";
 __fish_magento_register_command_option setup:install -f -l currency -d "Default currency code";
 __fish_magento_register_command_option setup:install -f -l use-rewrites -d "Use rewrites";
-__fish_magento_register_command_option setup:install -f -l use-secure -d "Use secure URLs. Enable this option only if SSL is available.";
+__fish_magento_register_command_option setup:install -f -l use-secure -d "Use secure URLs. Enable only if SSL is available";
 __fish_magento_register_command_option setup:install -f -l base-url-secure -a "https://" -d "Base URL for SSL connection";
 __fish_magento_register_command_option setup:install -f -l use-secure-admin -d "Run admin interface with SSL";
-__fish_magento_register_command_option setup:install -f -l admin-use-security-key -d 'Whether to use a "security key" feature in Magento Admin URLs and forms';
+__fish_magento_register_command_option setup:install -f -l admin-use-security-key -d 'Use security key in admin urls/forms';
 __fish_magento_register_command_option setup:install -f -r -l admin-user -d "(Required) Admin user";
 __fish_magento_register_command_option setup:install -f -r -l admin-password -d "(Required) Admin password";
 __fish_magento_register_command_option setup:install -f -r -l admin-email -d "(Required) Admin email";
 __fish_magento_register_command_option setup:install -f -r -l admin-firstname -d "(Required) Admin first name";
 __fish_magento_register_command_option setup:install -f -r -l admin-lastname -d "(Required) Admin last name";
-__fish_magento_register_command_option setup:install -f -l cleanup-database -d "Cleanup the database before installation";
+__fish_magento_register_command_option setup:install -f -l cleanup-database -d "Cleanup database before installation";
 __fish_magento_register_command_option setup:install -f -l sales-order-increment-prefix -d "Sales order number prefix";
 __fish_magento_register_command_option setup:install -f -l use-sample-data -d "Use sample data";
 
@@ -576,24 +576,24 @@ __fish_magento_register_command_option setup:rollback -s d -l db-file -d "Basena
 #
 # setup:static-content:deploy
 #
-__fish_magento_register_command_option setup:static-content:deploy -x -a "(__fish_print_magento_languages)" -d "Space-separated list of ISO-636 language codes for which to output static view files.";
-__fish_magento_register_command_option setup:static-content:deploy -f -s d -l dry-run -d "If specified, then no files will be actually deployed.";
-__fish_magento_register_command_option setup:static-content:deploy -f -l no-javascript -d "Do not deploy JavaScript files"; 
-__fish_magento_register_command_option setup:static-content:deploy -f -l no-css -d "Do not deploy CSS files.";
-__fish_magento_register_command_option setup:static-content:deploy -f -l no-less -d "Do not deploy LESS files." 
-__fish_magento_register_command_option setup:static-content:deploy -f -l no-images -d "Do not deploy images.";
-__fish_magento_register_command_option setup:static-content:deploy -f -l no-fonts -d "Do not deploy font files." 
-__fish_magento_register_command_option setup:static-content:deploy -f -l no-html -d "Do not deploy HTML files." 
-__fish_magento_register_command_option setup:static-content:deploy -f -l no-misc -d "Do not deploy other types of files (.md, .jbf, .csv, etc...).";
-__fish_magento_register_command_option setup:static-content:deploy -f -l no-html-minify -d "Do not minify HTML files.";
-__fish_magento_register_command_option setup:static-content:deploy -s t -l theme -d 'Generate static view files for only the specified themes. (default: ["all"]) (multiple values allowed)';
-__fish_magento_register_command_option setup:static-content:deploy -l exclude-theme -d 'Do not generate files for the specified themes. (default: ["none"]) (multiple values allowed)';
-__fish_magento_register_command_option setup:static-content:deploy -f -s l -l language -a "(__fish_print_magento_languages)" -d 'Generate files only for the specified languages. (default: ["all"]) (multiple values allowed)';
-__fish_magento_register_command_option setup:static-content:deploy -f -l exclude-language -d 'Do not generate files for the specified languages. (default: ["none"]) (multiple values allowed)';
-__fish_magento_register_command_option setup:static-content:deploy -f -s a -l area -a "(__fish_print_magento_theme_areas)" -d 'Generate files only for the specified areas. (default: ["all"]) (multiple values allowed)';
-__fish_magento_register_command_option setup:static-content:deploy -f -l exclude-area -a "(__fish_print_magento_theme_areas)" -d 'Do not generate files for the specified areas. (default: ["none"]) (multiple values allowed)';
-__fish_magento_register_command_option setup:static-content:deploy -x -s j -l jobs -d "Enable parallel processing using the specified number of jobs. (default: 4)";
-__fish_magento_register_command_option setup:static-content:deploy -f -l symlink-locale -d "Create symlinks for the files of those locales, which are passed for deployment, but have no customizations";
+__fish_magento_register_command_option setup:static-content:deploy -x -a "(__fish_print_magento_languages)" -d "Space-separated list of ISO-636 language codes to output static view files for";
+__fish_magento_register_command_option setup:static-content:deploy -f -s d -l dry-run -d "Simulate deployment only";
+__fish_magento_register_command_option setup:static-content:deploy -f -l no-javascript -d "Don't deploy JavaScript files"; 
+__fish_magento_register_command_option setup:static-content:deploy -f -l no-css -d "Don't deploy CSS files";
+__fish_magento_register_command_option setup:static-content:deploy -f -l no-less -d "Don't deploy LESS files" 
+__fish_magento_register_command_option setup:static-content:deploy -f -l no-images -d "Don't deploy images";
+__fish_magento_register_command_option setup:static-content:deploy -f -l no-fonts -d "Don't deploy font files" 
+__fish_magento_register_command_option setup:static-content:deploy -f -l no-html -d "Don't deploy HTML files" 
+__fish_magento_register_command_option setup:static-content:deploy -f -l no-misc -d "Don't deploy other types of files (.md, .jbf, .csv, etc...)";
+__fish_magento_register_command_option setup:static-content:deploy -f -l no-html-minify -d "Don't minify HTML files";
+__fish_magento_register_command_option setup:static-content:deploy -s t -l theme -d 'Generate static view files only for specified themes (default: "all")';
+__fish_magento_register_command_option setup:static-content:deploy -l exclude-theme -d 'Do not generate files for specified themes (default: "none")';
+__fish_magento_register_command_option setup:static-content:deploy -f -s l -l language -a "(__fish_print_magento_languages)" -d 'Generate files only for specified languages (default: "all")';
+__fish_magento_register_command_option setup:static-content:deploy -f -l exclude-language -d 'Do not generate files for specified languages. (default: "none") (multiple values allowed)';
+__fish_magento_register_command_option setup:static-content:deploy -f -s a -l area -a "(__fish_print_magento_theme_areas)" -d 'Generate files only for specified areas (default: "all")';
+__fish_magento_register_command_option setup:static-content:deploy -f -l exclude-area -a "(__fish_print_magento_theme_areas)" -d 'Do not generate files for specified areas (default: "none")';
+__fish_magento_register_command_option setup:static-content:deploy -x -s j -l jobs -d "Enable parallel processing using specified number of jobs (default: 4)";
+__fish_magento_register_command_option setup:static-content:deploy -f -l symlink-locale -d "Create symlinks for files of locales which are passed for deployment but have no customizations";
 
 
 #
@@ -604,18 +604,18 @@ __fish_magento_register_command_option setup:store-config:set -f -l language -a 
 __fish_magento_register_command_option setup:store-config:set -f -l timezone -d "Default time zone code";
 __fish_magento_register_command_option setup:store-config:set -f -l currency -d "Default currency code";
 __fish_magento_register_command_option setup:store-config:set -f -l use-rewrites -d "Use rewrites";
-__fish_magento_register_command_option setup:store-config:set -f -l use-secure -d "Use secure URLs. Enable this option only if SSL is available.";
+__fish_magento_register_command_option setup:store-config:set -f -l use-secure -d "Use secure URLs. Only enable if SSL is available";
 __fish_magento_register_command_option setup:store-config:set -f -l base-url-secure -a "https://" -d "Base URL for SSL connection";
 __fish_magento_register_command_option setup:store-config:set -f -l use-secure-admin -d "Run admin interface with SSL";
-__fish_magento_register_command_option setup:store-config:set -f -l admin-use-security-key -d 'Whether to use a "security key" feature in Magento Admin URLs and forms';
+__fish_magento_register_command_option setup:store-config:set -f -l admin-use-security-key -d 'Use security key in admin urls/forms';
 
 #
 # setup:upgrade
 #
-__fish_magento_register_command_option setup:upgrade -l keep-generated -d "Prevents generated files from being deleted.";
+__fish_magento_register_command_option setup:upgrade -l keep-generated -d "Prevents generated files from being deleted";
 
 #
 # theme:uninstall
 #
 __fish_magento_register_command_option theme:uninstall -f -l backup-code -d "Take code backup (excluding temporary files)";
-__fish_magento_register_command_option theme:uninstall -f -s c -l clear-static-content -d "Clear generated static view files.";
+__fish_magento_register_command_option theme:uninstall -f -s c -l clear-static-content -d "Clear generated static view files";

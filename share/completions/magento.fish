@@ -1,34 +1,3 @@
-###
-# executes fish MySQL commands
-#
-# To make this work, you'll need to create a __fish user in your
-# database, using the following mysql commands:
-#
-#   mysql> CREATE USER '__fish'@'localhost' IDENTIFIED BY 'your random pw';
-#   mysql> GRANT SELECT, SHOW ON * . * TO '__fish'@'localhost';
-#   mysql> FLUSH PRIVILEGES;
-#
-# If no credentials are given, it will simply print nothing, so further commands
-# won't show suggestions
-###
-function __fish_print_magento_mysql_command -d "Executes a MySQL command using the fish user"
-
-### IMPORTANT: ENTER FISH CREDENTIALS HERE #####
-  set -l fish_mysql_user __fish
-  set -l fish_mysql_pass fish_12479284903518
-################################################
-
-  set -l result (mysql -u{$fish_mysql_user} -p{$fish_mysql_pass} -e $argv --skip-column-names 2>&1 | grep -v "mysql:")
-  if [ (echo $result | grep ERROR) ]
-    return 1
-  else
-    for i in $result
-      echo $i
-    end
-    return 0
-  end
-end
-
 function __fish_print_magento_url_protocols -d "Shows all available URL protocols"
   echo http://\t"HTTP"
   echo https://\t"HTTPS"
@@ -45,28 +14,6 @@ end
 
 ###
 
-###
-# Retrieves all available MySQL users
-###
-function __fish_print_magento_mysql_users -d "Shows all available MySQL users"
-    set -l users (__fish_print_magento_mysql_command 'select user from mysql.user;' | sort -u)
-
-    for i in $users
-      echo $i\t"$i"
-    end
-end
-
-###
-# Retrieves all available MySQL databases
-###
-function __fish_print_magento_mysql_databases -d "Shows all available MySQL databases"
-    set -l tables (__fish_print_magento_mysql_command 'show databases;')
-
-    for i in $tables
-      echo $i\t"$i"
-    end
-end
-
 function __fish_print_magento_modules -d "Lists all Magento modules"
   set -l modules (magento module:status)
 
@@ -80,17 +27,6 @@ end
 function __fish_magento_print_indexer_modes -d "Lists all indexer modes"
   echo realtime\t"Index in realtime"
   echo schedule\t"Index via cron jobs"
-end
-
-###
-# Retrieves all existing magento users from the mysql database
-###
-function __fish_print_magento_indexer_names -d "Shows all available magento themes"
-    set -l indexers (__fish_print_magento_mysql_command 'select indexer_id from indexer_state;')
-
-    for i in $indexers
-      echo $i\t"$i"
-    end
 end
 
 function __fish_print_magento_i18n_packing_modes -d "Shows all available packing modes"
@@ -112,17 +48,6 @@ function __fish_print_magento_available_tests -d "Shows all available magento te
   echo integrity\t"integrity tests only"
   echo legacy\t"legacy tests only"
   echo default\t"all tests"  
-end
-
-###
-# Retrieves all existing magento themes from the mysql database
-###
-function __fish_print_magento_themes -d "Shows all available magento themes"
-	  set -l themes (__fish_print_magento_mysql_command 'select theme_path from theme;')
-
-    for i in $themes
-      echo $i\t"$i"
-    end
 end
 
 function __fish_print_magento_theme_areas -d "Shows all available magento theme areas"
@@ -227,17 +152,6 @@ function __fish_print_magento_deploy_modes -d "Shows all available deploy modes"
   echo production\t"Production mode"
 end
 
-###
-# Retrieves all existing magento admin users from the mysql database
-###
-function __fish_print_magento_users -d "Shows all existing magento admin users"
-  set -l users (__fish_print_magento_mysql_command 'select username from admin_user;')
-
-  for i in $users
-    echo $i
-  end
-end
-
 function __fish_print_magento_cache_types -d "Shows all available cache types"
   echo config\t"Configuration"
   echo layout\t"Layout"
@@ -319,9 +233,9 @@ complete -x -c magento -s q -l quiet -d "Do not output any message";
 complete -x -c magento -s v -l verbose -a "(__fish_print_magento_verbosity_levels)" -d "Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug";
 complete -x -c magento -o -vv;
 complete -x -c magento -o vvv;
-complete -x -c magento -s V -l version        -d "Display this application version";
-complete -x -c magento      -l ansi           -d "Force ANSI output";
-complete -x -c magento      -l no-ansi        -d "Disable ANSI output";
+complete -x -c magento -s V -l version -d "Display this application version";
+complete -x -c magento -l ansi -d "Force ANSI output";
+complete -x -c magento -l no-ansi -d "Disable ANSI output";
 complete -x -c magento -s n -l no-interaction -d "Do not ask any interactive question";
 
 ################
@@ -422,25 +336,17 @@ __fish_magento_register_command_option list -f -l format -a "(__fish_print_magen
 #
 # admin:user:create
 #
-__fish_magento_register_command_option admin:user:create -f -r -l admin-user          -d "(Required) Admin user";
-__fish_magento_register_command_option admin:user:create -f -r -l admin-password      -d "(Required) Admin password";
-__fish_magento_register_command_option admin:user:create -f -r -l admin-email         -d "(Required) Admin email";
-__fish_magento_register_command_option admin:user:create -f -r -l admin-firstname     -d "(Required) Admin first name";
-__fish_magento_register_command_option admin:user:create -f -r -l admin-lastname      -d "(Required) Admin last name";
-__fish_magento_register_command_option admin:user:create -f    -l magento-init-params -d "Add to any command to customize Magento initialization parameters";
-
-__fish_magento_register_command_option admin:user:create -f -s h -l help           -d "Display this help message";
-__fish_magento_register_command_option admin:user:create -f -s q -l quiet          -d "Do not output any message";
-__fish_magento_register_command_option admin:user:create -f -s V                   -d "Display this application version";
-__fish_magento_register_command_option admin:user:create -f      -l ansi           -d "Force ANSI output";
-__fish_magento_register_command_option admin:user:create -f      -l no-ansi        -d "Disable ANSI output";
-__fish_magento_register_command_option admin:user:create -f -s n -l no-interaction -d "Do not ask any interactive question";
-__fish_magento_register_command_option admin:user:create -f -s v -l verbose -a "(__fish_print_magento_verbosity_levels)" -d "Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug";
+__fish_magento_register_command_option admin:user:create -f -r -l admin-user -d "(Required) Admin user";
+__fish_magento_register_command_option admin:user:create -f -r -l admin-password -d "(Required) Admin password";
+__fish_magento_register_command_option admin:user:create -f -r -l admin-email -d "(Required) Admin email";
+__fish_magento_register_command_option admin:user:create -f -r -l admin-firstname -d "(Required) Admin first name";
+__fish_magento_register_command_option admin:user:create -f -r -l admin-lastname -d "(Required) Admin last name";
+__fish_magento_register_command_option admin:user:create -f -l magento-init-params -d "Add to any command to customize Magento initialization parameters";
 
 #
 # admin:user:unlock
 #
-__fish_magento_register_command_option admin:user:unlock -f -a "(__fish_print_magento_users)" -d "The admin username to unlock";
+__fish_magento_register_command_option admin:user:unlock -f -d "The admin username to unlock";
 
 #
 # cache:clean
@@ -468,7 +374,7 @@ __fish_magento_register_command_option cache:status -f -l bootstrap -d "add or o
 #
 # cron:run
 #
-__fish_magento_register_command_option cron:run -f -l group -a "TODO" -d "Run jobs only from specified group";
+__fish_magento_register_command_option cron:run -f -l group -d "Run jobs only from specified group";
 __fish_magento_register_command_option cron:run -f -l bootstrap -d "add or override parameters of the bootstrap";
 
 #
@@ -480,11 +386,11 @@ __fish_magento_register_command_option deploy:mode:set -f -s s -l skip-compilati
 #
 # dev:source-theme:deploy
 #
-__fish_magento_register_command_option dev:source-theme:deploy -f -a "" -d 'Files to pre-process (file should be specified without extension) (default: ["css/styles-m","css/styles-l"])';
+__fish_magento_register_command_option dev:source-theme:deploy -d 'Files to pre-process (file should be specified without extension) (default: ["css/styles-m","css/styles-l"])';
 __fish_magento_register_command_option dev:source-theme:deploy -f -l type -a "(__fish_print_magento_source_theme_file_types)" -d 'Type of source files (default: "less")';
 __fish_magento_register_command_option dev:source-theme:deploy -f -l locale -a "(__fish_print_magento_languages)" -d 'Locale (default: "en_US")';
 __fish_magento_register_command_option dev:source-theme:deploy -f -l area -a "(__fish_print_magento_theme_areas)" -d 'Area (default: "frontend")';
-__fish_magento_register_command_option dev:source-theme:deploy -l theme -a "(__fish_print_magento_themes)" -d 'Theme [Vendor/theme] (default: "Magento/luma")';
+__fish_magento_register_command_option dev:source-theme:deploy -l theme -d 'Theme [Vendor/theme] (default: "Magento/luma")';
 
 #
 # dev:tests:run
@@ -519,45 +425,20 @@ __fish_magento_register_command_option i18n:pack -s d -l allow-duplicates -d 'Us
 __fish_magento_register_command_option i18n:uninstall -f -s b -l backup-code -d 'Take code and configuration files backup (excluding temporary files)';
 __fish_magento_register_command_option i18n:uninstall -f -a "(__fish_print_magento_languages)" -d 'Language package name';
 
-#
-# indexer:reindex
-#
-__fish_magento_register_command_option indexer:reindex -f -a "(__fish_print_magento_indexer_names)" -d 'Space-separated list of index types or omit to apply to all indexes.';
-
-#
-# indexer:reset
-#
-__fish_magento_register_command_option indexer:reset -f -a "(__fish_print_magento_indexer_names)" -d 'Space-separated list of index types or omit to apply to all indexes.';
-
-#
-# indexer:set-mode
-#
-__fish_magento_register_command_option indexer:set-mode -f -a "(__fish_print_magento_indexer_names)" -d "Space-separated list of index types or omit to apply to all indexes.";
-
-#
-# indexer:show-mode
-#
-__fish_magento_register_command_option indexer:show-mode -f -a "(__fish_print_magento_indexer_names)" -d "Space-separated list of index types or omit to apply to all indexes.";
-
-# 
-# indexer:status
-#
-__fish_magento_register_command_option indexer:status -f -a "(__fish_print_magento_indexer_names)" -d "Space-separated list of index types or omit to apply to all indexes.";
-
 # 
 # info:dependencies:show-framework
 #
-__fish_magento_register_command_option info:dependencies:show-framework -f -s o -l output  -d 'Report filename (default: "framework-dependencies.csv")';
+__fish_magento_register_command_option info:dependencies:show-framework -f -s o -l output -d 'Report filename (default: "framework-dependencies.csv")';
 
 #
 # info:dependencies:show-modules
 #
-__fish_magento_register_command_option info:dependencies:show-modules -f -s o -l output  -d 'Report filename (default: "modules-dependencies.csv")';
+__fish_magento_register_command_option info:dependencies:show-modules -f -s o -l output -d 'Report filename (default: "modules-dependencies.csv")';
 
 #
 # info:dependencies:show-modules-circular
 #
-__fish_magento_register_command_option info:dependencies:show-modules-circular -f -s o -l output  -d 'Report filename (default: "modules-circular-dependencies.csv")';
+__fish_magento_register_command_option info:dependencies:show-modules-circular -f -s o -l output -d 'Report filename (default: "modules-circular-dependencies.csv")';
 
 #
 # maintenance:allow-ips
@@ -578,34 +459,34 @@ __fish_magento_register_command_option maintenance:enable -l ip -d "Allowed IP a
 # module:disable
 #
 __fish_magento_register_command_option module:disable -f -a "(__fish_print_magento_modules)" -d "Name of the module";
-__fish_magento_register_command_option module:disable -s f -l force                -d "Bypass dependencies check";
-__fish_magento_register_command_option module:disable      -l all                  -d "Disable all modules";
+__fish_magento_register_command_option module:disable -s f -l force -d "Bypass dependencies check";
+__fish_magento_register_command_option module:disable -l all -d "Disable all modules";
 __fish_magento_register_command_option module:disable -s c -l clear-static-content -d "Clear generated static view files. Necessary, if the module(s) have static view files";
 
 #
 # module:enable
 # 
 __fish_magento_register_command_option module:enable -f -a "(__fish_print_magento_modules)" -d "Name of the module";
-__fish_magento_register_command_option module:enable -f -s f -l force                -d "Bypass dependencies check";
-__fish_magento_register_command_option module:enable -f      -l all                  -d "Enable all modules";
+__fish_magento_register_command_option module:enable -f -s f -l force -d "Bypass dependencies check";
+__fish_magento_register_command_option module:enable -f -l all -d "Enable all modules";
 __fish_magento_register_command_option module:enable -f -s c -l clear-static-content -d "Clear generated static view files. Necessary, if the module(s) have static view files";
 
 #
 # module:uninstall
 #
 __fish_magento_register_command_option module:uninstall -f -a "(__fish_print_magento_modules)" -d "Name of the module";
-__fish_magento_register_command_option module:uninstall -f -s r -l remove-data  -d "Remove data installed by module(s)";
-__fish_magento_register_command_option module:uninstall -f      -l backup-code  -d "Take code and configuration files backup (excluding temporary files)";
-__fish_magento_register_command_option module:uninstall -f      -l backup-media -d "Take media backup";
-__fish_magento_register_command_option module:uninstall -f      -l backup-db    -d "Take complete database backup";
+__fish_magento_register_command_option module:uninstall -f -s r -l remove-data -d "Remove data installed by module(s)";
+__fish_magento_register_command_option module:uninstall -f -l backup-code -d "Take code and configuration files backup (excluding temporary files)";
+__fish_magento_register_command_option module:uninstall -f -l backup-media -d "Take media backup";
+__fish_magento_register_command_option module:uninstall -f -l backup-db -d "Take complete database backup";
 __fish_magento_register_command_option module:uninstall -f -s c -l clear-static-content -d "Clear generated static view files. Necessary, if the module(s) have static view files";
 
 #
 # setup:backup
 #
-__fish_magento_register_command_option setup:backup -f -l code  -d "Take code and configuration files backup (excluding temporary files)";
+__fish_magento_register_command_option setup:backup -f -l code -d "Take code and configuration files backup (excluding temporary files)";
 __fish_magento_register_command_option setup:backup -f -l media -d "Take media backup";
-__fish_magento_register_command_option setup:backup -f -l db    -d "Take complete database backup";
+__fish_magento_register_command_option setup:backup -f -l db -d "Take complete database backup";
 
 #
 # setup:config:set
@@ -615,8 +496,8 @@ __fish_magento_register_command_option setup:config:set -f -l key -d "Encryption
 __fish_magento_register_command_option setup:config:set -f -l session-save -d "Session save handler";
 __fish_magento_register_command_option setup:config:set -f -l definition-format -d "Type of definitions used by Object Manager"
 __fish_magento_register_command_option setup:config:set -f -l db-host -d "Database server host";
-__fish_magento_register_command_option setup:config:set -f -l db-name -d "Database name" -a "(__fish_print_magento_mysql_databases)";
-__fish_magento_register_command_option setup:config:set -f -l db-user -d "Database server username" -a "(__fish_print_magento_mysql_users)";
+__fish_magento_register_command_option setup:config:set -f -l db-name -d "Database name";
+__fish_magento_register_command_option setup:config:set -f -l db-user -d "Database server username";
 __fish_magento_register_command_option setup:config:set -f -l db-engine -d "Database server engine" -a "(__fish_print_magento_mysql_engines)";
 __fish_magento_register_command_option setup:config:set -f -l db-password -d "Database server password";
 __fish_magento_register_command_option setup:config:set -f -l db-prefix -d "Database table prefix";
@@ -633,8 +514,8 @@ __fish_magento_register_command_option setup:install -f -l key -d "Encryption ke
 __fish_magento_register_command_option setup:install -f -l session-save -d "Session save handler";
 __fish_magento_register_command_option setup:install -f -l definition-format -d "Type of definitions used by Object Manager"
 __fish_magento_register_command_option setup:install -f -l db-host -d "Database server host";
-__fish_magento_register_command_option setup:install -f -l db-name -d "Database name" -a "(__fish_print_magento_mysql_databases)";
-__fish_magento_register_command_option setup:install -f -l db-user -d "Database server username" -a "(__fish_print_magento_mysql_users)";
+__fish_magento_register_command_option setup:install -f -l db-name -d "Database name";
+__fish_magento_register_command_option setup:install -f -l db-user -d "Database server username";
 __fish_magento_register_command_option setup:install -f -l db-engine -d "Database server engine" -a "(__fish_print_magento_mysql_engines)";
 __fish_magento_register_command_option setup:install -f -l db-password -d "Database server password";
 __fish_magento_register_command_option setup:install -f -l db-prefix -d "Database table prefix";
@@ -651,11 +532,11 @@ __fish_magento_register_command_option setup:install -f -l use-secure -d "Use se
 __fish_magento_register_command_option setup:install -f -l base-url-secure -a "https://" -d "Base URL for SSL connection";
 __fish_magento_register_command_option setup:install -f -l use-secure-admin -d "Run admin interface with SSL";
 __fish_magento_register_command_option setup:install -f -l admin-use-security-key -d 'Whether to use a "security key" feature in Magento Admin URLs and forms';
-__fish_magento_register_command_option setup:install -f -r -l admin-user          -d "(Required) Admin user";
-__fish_magento_register_command_option setup:install -f -r -l admin-password      -d "(Required) Admin password";
-__fish_magento_register_command_option setup:install -f -r -l admin-email         -d "(Required) Admin email";
-__fish_magento_register_command_option setup:install -f -r -l admin-firstname     -d "(Required) Admin first name";
-__fish_magento_register_command_option setup:install -f -r -l admin-lastname      -d "(Required) Admin last name";
+__fish_magento_register_command_option setup:install -f -r -l admin-user -d "(Required) Admin user";
+__fish_magento_register_command_option setup:install -f -r -l admin-password -d "(Required) Admin password";
+__fish_magento_register_command_option setup:install -f -r -l admin-email -d "(Required) Admin email";
+__fish_magento_register_command_option setup:install -f -r -l admin-firstname -d "(Required) Admin first name";
+__fish_magento_register_command_option setup:install -f -r -l admin-lastname -d "(Required) Admin last name";
 __fish_magento_register_command_option setup:install -f -l cleanup-database -d "Cleanup the database before installation";
 __fish_magento_register_command_option setup:install -f -l sales-order-increment-prefix -d "Sales order number prefix";
 __fish_magento_register_command_option setup:install -f -l use-sample-data -d "Use sample data";
@@ -716,5 +597,5 @@ __fish_magento_register_command_option setup:upgrade -l keep-generated -d "Preve
 #
 # theme:uninstall
 #
-__fish_magento_register_command_option theme:uninstall -f      -l backup-code -d "Take code backup (excluding temporary files)";
+__fish_magento_register_command_option theme:uninstall -f -l backup-code -d "Take code backup (excluding temporary files)";
 __fish_magento_register_command_option theme:uninstall -f -s c -l clear-static-content -d "Clear generated static view files.";

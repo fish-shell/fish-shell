@@ -86,6 +86,26 @@ end
 
 Use the `$status` variable. This replaces the `$?` variable used in some other shells.
 
+\fish{cli-dark}
+somecommand
+if test $status -eq 7
+    echo "That's my lucky number!"
+end
+\endfish
+
+If you are just interested in success or failure, you can run the command directly as the if-condition:
+
+\fish{cli-dark}
+if somecommand
+    echo "Command succeeded"
+else
+    echo "Command failed"
+end
+\endfish
+
+See the documentation for <a href="commands.html#test">`test`</a> and <a href="commands.html#if">`if`</a> for more information.
+
+Use the <a href="commands.html#fish_update_completions">`fish_update_completions`</a> command.
 <hr>
 \section faq-single-env How do I set an environment variable for just one command?
 

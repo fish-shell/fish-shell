@@ -36,6 +36,7 @@
 #include "lru.h"
 #include "parse_constants.h"
 #include "parse_tree.h"
+#include "parse_util.h"
 #include "path.h"
 #include "reader.h"
 #include "signal.h"
@@ -1677,21 +1678,30 @@ void history_t::populate_from_config_path() {
 static bool should_import_bash_history_line(const std::string &line) {
     if (line.empty()) return false;
 
-    // Very naive tests! Skip `export` and comments.
-    // TODO: We should probably should skip other commands.
-    const char *const ignore_prefixes[] = {"export ", "#"};
+    parse_node_tree_t parse_tree;
+    wcstring wide_line = str2wcstring(line);
+    if (!parse_tree_from_string(wide_line, parse_flag_none, &parse_tree, NULL)) return false;
 
-    for (size_t i = 0; i < sizeof ignore_prefixes / sizeof *ignore_prefixes; i++) {
-        const char *prefix = ignore_prefixes[i];
-        if (!line.compare(0, strlen(prefix), prefix)) {
-            return false;
-        }
-    }
+    // In doing this test do not allow incomplete strings. Hence the "false" argument.
+    parse_error_list_t errors;
+    parse_util_detect_errors(wide_line, &errors, false);
+    if (!errors.empty()) return false;
+
+    // The following are Very naive tests!
+
+    // Skip comments.
+    if (line[0] == '#') return false;
 
     // Skip lines with backticks.
     if (line.find('`') != std::string::npos) return false;
 
-    // Skip lines that end with a backslash since we do not handle multiline commands from bash.
+    // Skip lines with [[...]] and ((...)) since we don't handle those constructs.
+    if (line.find("[[") != std::string::npos) return false;
+    if (line.find("]]") != std::string::npos) return false;
+    if (line.find("((") != std::string::npos) return false;
+    if (line.find("))") != std::string::npos) return false;
+
+    // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
     if (line.back() == '\\') return false;
 
     return true;

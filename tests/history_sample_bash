@@ -1,7 +1,7 @@
 echo foo
 history --help
 #1339718290
-export HISTTIMEFORMAT='%F %T '
+export XVAR='exported'
 #1339718298
 echo supsup
 #abcde
@@ -11,4 +11,9 @@ echo hello \
     final line
 another `command
     and arg` to skip
+backticks `are not allowed`
+a && echo invalid construct
+[[ x = y ]] && echo double brackets not allowed
+(( 1 = 2 )) && echo double parens not allowed
+posix_cmd_sub $(is not supported)
 sleep 123

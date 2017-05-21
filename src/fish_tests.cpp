@@ -3139,8 +3139,13 @@ void history_tests_t::test_history_formats(void) {
     } else {
         // The results are in the reverse order that they appear in the bash history file.
         // We don't expect whitespace to be elided.
-        const wchar_t *expected[] = {L"sleep 123",      L"    final line", L"echo supsup",
-                                     L"history --help", L"echo foo",       NULL};
+        const wchar_t *expected[] = {L"sleep 123",
+                                     L"    final line",
+                                     L"echo supsup",
+                                     L"export XVAR='exported'",
+                                     L"history --help",
+                                     L"echo foo",
+                                     NULL};
         history_t &test_history = history_t::history_with_name(L"bash_import");
         test_history.populate_from_bash(f);
         if (!history_equals(test_history, expected)) {

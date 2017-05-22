@@ -12,6 +12,7 @@ This section is for changes merged to the `major` branch that are not also merge
 
 ## Other significant changes
 - `read` now requires at least one var name (#4220).
+- `abbr` has been reimplemented to be faster. This means the old `fish_user_abbreviations` variable is ignored (#4048).
 
 
 # fish 2.7b1

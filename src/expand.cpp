@@ -1572,37 +1572,39 @@ bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc
     return result;
 }
 
+std::map<const wcstring, const wcstring> abbreviations;
+void update_abbr_cache(const wchar_t *op, const wcstring varname) {
+    wcstring abbr;
+    if (!unescape_string(varname.substr(wcslen(L"_fish_abbr_")), &abbr, 0, STRING_STYLE_VAR)) {
+        debug(1, L"Abbreviation var '%ls' is not correctly encoded, ignoring it.", varname.c_str());
+        return;
+    }
+    abbreviations.erase(abbr);
+    if (wcscmp(op, L"ERASE") != 0) {
+        const env_var_t expansion = env_get_string(varname);
+        if (!expansion.missing_or_empty()) {
+            abbreviations.emplace(std::make_pair(abbr, expansion));
+        }
+    }
+}
+
 bool expand_abbreviation(const wcstring &src, wcstring *output) {
     if (src.empty()) return false;
 
-    // Get the abbreviations. Return false if we have none.
-    env_var_t abbrs = env_get_string(USER_ABBREVIATIONS_VARIABLE_NAME);
-    if (abbrs.missing_or_empty()) return false;
+    auto abbr = abbreviations.find(src);
+    if (abbr == abbreviations.end()) return false;
+    if (output != NULL) output->assign(abbr->second);
+    return true;
 
-    bool result = false;
-    std::vector<wcstring> abbrsv;
-    tokenize_variable_array(abbrs, abbrsv);
-    for (auto abbr : abbrsv) {
-        // Abbreviation is expected to be of the form 'foo=bar' or 'foo bar'. Parse out the first =
-        // or space. Silently skip on failure (no equals, or equals at the end or beginning). Try to
-        // avoid copying any strings until we are sure this is a match.
-        size_t equals_pos = abbr.find(L'=');
-        size_t space_pos = abbr.find(L' ');
-        size_t separator = mini(equals_pos, space_pos);
-        if (separator == wcstring::npos || separator == 0 || separator + 1 == abbr.size()) continue;
-
-        // Find the character just past the end of the command. Walk backwards, skipping spaces.
-        size_t cmd_end = separator;
-        while (cmd_end > 0 && iswspace(abbr.at(cmd_end - 1))) cmd_end--;
-
-        // See if this command matches.
-        if (abbr.compare(0, cmd_end, src) == 0) {
-            // Success. Set output to everything past the end of the string.
-            if (output != NULL) output->assign(abbr, separator + 1, wcstring::npos);
-
-            result = true;
-            break;
+#if 0
+    for (auto abbr : abbreviations) {
+        if (src == abbr.first) {
+            // We found a matching abbreviation. Set output to the expansion.
+            if (output != NULL) output->assign(abbr.second);
+            return true;
         }
     }
-    return result;
+
+    return false;
+#endif
 }

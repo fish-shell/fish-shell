@@ -135,11 +135,10 @@ wcstring replace_home_directory_with_tilde(const wcstring &str);
 
 /// Abbreviation support. Expand src as an abbreviation, returning true if one was found, false if
 /// not. If result is not-null, returns the abbreviation by reference.
-#define USER_ABBREVIATIONS_VARIABLE_NAME L"fish_user_abbreviations"
+void update_abbr_cache(const wchar_t *op, const wcstring varnam);
 bool expand_abbreviation(const wcstring &src, wcstring *output);
 
 // Terrible hacks
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
                                         const char *const *argv);
-
 #endif

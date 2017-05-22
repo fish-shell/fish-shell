@@ -41,6 +41,7 @@
 #include "env.h"
 #include "env_universal_common.h"
 #include "event.h"
+#include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fish_version.h"
 #include "history.h"
@@ -187,7 +188,7 @@ void var_stack_t::push(bool new_scope) {
     // i.e. not if it's just `begin; end` or "--no-scope-shadowing".
     if (new_scope) {
         if (!(top_node == this->global_env)) {
-            for (auto& var : top_node->env) {
+            for (auto &var : top_node->env) {
                 if (var.second.exportv) {
                     // This should  copy var
                     node->env.insert(var);
@@ -603,7 +604,7 @@ static bool variable_is_colon_delimited_var(const wcstring &str) {
 }
 
 /// React to modifying the given variable.
-static void react_to_variable_change(const wcstring &key) {
+static void react_to_variable_change(const wchar_t *op, const wcstring &key) {
     // Don't do any of this until `env_init()` has run. We only want to do this in response to
     // variables set by the user; e.g., in a script like *config.fish* or interactively or as part
     // of loading the universal variables for the first time.
@@ -631,37 +632,36 @@ static void react_to_variable_change(const wcstring &key) {
         env_set_read_limit();
     } else if (key == L"FISH_HISTORY") {
         reader_change_history(history_session_id().c_str());
+    } else if (wcsncmp(key.c_str(), L"_fish_abbr_", wcslen(L"_fish_abbr_")) == 0) {
+        update_abbr_cache(op, key);
     }
 }
 
 /// Universal variable callback function. This function makes sure the proper events are triggered
 /// when an event occurs.
 static void universal_callback(fish_message_type_t type, const wchar_t *name) {
-    const wchar_t *str = NULL;
+    const wchar_t *op;
 
     switch (type) {
         case SET:
         case SET_EXPORT: {
-            str = L"SET";
+            op = L"SET";
             break;
         }
         case ERASE: {
-            str = L"ERASE";
+            op = L"ERASE";
             break;
         }
     }
 
-    if (str) {
-        vars_stack().mark_changed_exported();
+    react_to_variable_change(op, name);
+    vars_stack().mark_changed_exported();
 
-        event_t ev = event_t::variable_event(name);
-        ev.arguments.push_back(L"VARIABLE");
-        ev.arguments.push_back(str);
-        ev.arguments.push_back(name);
-        event_fire(&ev);
-    }
-
-    if (name) react_to_variable_change(name);
+    event_t ev = event_t::variable_event(name);
+    ev.arguments.push_back(L"VARIABLE");
+    ev.arguments.push_back(op);
+    ev.arguments.push_back(name);
+    event_fire(&ev);
 }
 
 /// Make sure the PATH variable contains something.
@@ -1130,7 +1130,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
     event_fire(&ev);
     // debug( 1, L"env_set: return from event firing" );
 
-    react_to_variable_change(key);
+    react_to_variable_change(L"SET", key);
     return ENV_OK;
 }
 
@@ -1203,7 +1203,7 @@ int env_remove(const wcstring &key, int var_mode) {
         if (is_exported) vars_stack().mark_changed_exported();
     }
 
-    react_to_variable_change(key);
+    react_to_variable_change(L"ERASE", key);
 
     return !erased;
 }

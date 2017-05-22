@@ -52,11 +52,13 @@ matrix:
         - CXXFLAGS="-g -lstdc++"
   fast_finish: true
 
-script:
+before_script:
   - autoreconf
   - ./configure --prefix=$HOME/prefix || cat config.log
   - make -j2
   - make install
+  
+script:
   - make test DESTDIR=$HOME/prefix/ SHOW_INTERACTIVE_LOG=1
 
 notifications:

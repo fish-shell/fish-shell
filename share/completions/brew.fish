@@ -67,7 +67,8 @@ function __fish_brew_formulae
     # 'vim' for core VIM
     # 'custUser/custRepo/vim' for more prior VIM
     # more info: https://github.com/Homebrew/brew/blob/master/share/doc/homebrew/brew-tap.md#formula-duplicate-names
-    brew search
+    set -l formula_regex '[a-zA-Z0-9\-_+]'
+    brew search | sed "s|$formula_regex*/$formula_regex*/||"
 end
 
 function __fish_brew_installed_formulas

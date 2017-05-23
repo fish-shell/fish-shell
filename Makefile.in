@@ -645,7 +645,7 @@ install: all install-force | check-legacy-binaries
 xcode-install:
 	rm -Rf /tmp/fish_build
 	xcrun xcodebuild install DSTROOT=/tmp/fish_build
-	ditto /tmp/fish_build
+	ditto /tmp/fish_build /
 .PHONY: xcode-install
 
 #

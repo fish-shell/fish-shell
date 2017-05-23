@@ -651,7 +651,7 @@ xcode-install:
 #
 # Actually do the installation.
 #
-install-force: all install-translations | show-datadir show-sysconfdir show-extra_completionsdir show-extra_functionsdir show-extra_confdir show-mandir
+install-force: all install-translations install-doc | show-datadir show-sysconfdir show-extra_completionsdir show-extra_functionsdir show-extra_confdir show-mandir
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 	$v for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir);\
@@ -696,13 +696,6 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 	$v $(INSTALL) -m 644 share/tools/web_config/partials/* $(DESTDIR)$(datadir)/fish/tools/web_config/partials/
 	$v $(INSTALL) -m 644 share/tools/web_config/sample_prompts/*.fish $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts/
 	$v $(INSTALL) -m 755 share/tools/web_config/*.py $(DESTDIR)$(datadir)/fish/tools/web_config/
-	@echo "Installing online user documentation";
-	$v $(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
-	$v for i in user_doc/html/* CHANGELOG.md; do \
-		if test -f $$i; then \
-			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
-		fi; \
-	done;
 	@echo "Installing more man pages";
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;
 	$v for i in $(MANUALS); do \
@@ -781,6 +774,15 @@ endif
 uninstall-translations: show-DESTDIR show-localedir
 	$v rm -f $(DESTDIR)$(localedir)/*/LC_MESSAGES/fish.mo
 .PHONY: uninstall-translations
+
+install-doc: $(user_doc)
+	@echo "Installing online user documentation";
+	$v $(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
+	$v for i in user_doc/html/* CHANGELOG.md; do \
+		if test -f $$i; then \
+			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
+		fi; \
+	done;
 
 #
 # The build rules for all the commands

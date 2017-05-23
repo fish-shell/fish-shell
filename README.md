@@ -41,6 +41,7 @@ Building the documentation requires Doxygen 1.8.7 or newer.
 
     xcodebuild install
     sudo ditto /tmp/fish.dst /
+    sudo make install-doc
 
 ## Help, it didn't build!
 

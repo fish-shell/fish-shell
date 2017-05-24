@@ -242,7 +242,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         end
 
         # Disable BP before every command because that might not support it.
-        function __fish_disable_bracketed_paste --on-event fish_preexec
+        function __fish_disable_bracketed_paste --on-event fish_preexec --on-process-exit %self
             printf "\e[?2004l"
         end
 

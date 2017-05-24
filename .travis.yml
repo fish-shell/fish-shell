@@ -55,9 +55,7 @@ matrix:
 script:
   - autoreconf
   - ./configure --prefix=$HOME/prefix || cat config.log
-  - make -j2
-  - make install
-  - make test DESTDIR=$HOME/prefix/ SHOW_INTERACTIVE_LOG=1
+  - make -j2 && make test DESTDIR=$HOME/prefix/ SHOW_INTERACTIVE_LOG=1
 
 notifications:
   # Some items are encrypted so that notifications from other repositories

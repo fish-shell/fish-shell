@@ -40,10 +40,14 @@ function __fish_print_help --description "Print help message for the specified f
         set rLL -rLL=$cols[1]n
     end
     set -lx GROFF_TMAC_PATH $__fish_datadir/groff
+    set -l mfish
+    if test -e $GROFF_TMAC_PATH/fish.tmac
+        set mfish -mfish
+    end
     if test -e "$__fish_datadir/man/man1/$item.1"
-        set help (nroff -c -man -mfish -t $rLL "$__fish_datadir/man/man1/$item.1" ^/dev/null)
+        set help (nroff -c -man $mfish -t $rLL "$__fish_datadir/man/man1/$item.1" ^/dev/null)
     else if test -e "$__fish_datadir/man/man1/$item.1.gz"
-        set help (gunzip -c "$__fish_datadir/man/man1/$item.1.gz" ^/dev/null | nroff -c -man -mfish -t $rLL ^/dev/null)
+        set help (gunzip -c "$__fish_datadir/man/man1/$item.1.gz" ^/dev/null | nroff -c -man $mfish -t $rLL ^/dev/null)
     end
 
     # The original implementation trimmed off the top 5 lines and bottom 3 lines

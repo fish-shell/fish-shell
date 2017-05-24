@@ -249,7 +249,7 @@ sgr0 := $(shell ( tput sgr0 || tput me) 2> /dev/null )
 # Cool trick: `make show-$var` (e.g. make show-HAVE_DOXYGEN) to quickly see what $var is.
 #
 show-%:
-	@echo "  $* = $(em)$(cyan)'$(subst ',''',$($*))'$(sgr0)" ||:
+	-@echo "  $* = $(em)$(cyan)'$(subst ',''',$($*))'$(sgr0)"
 #
 # Make everything needed for installing fish
 #
@@ -645,15 +645,13 @@ install: all install-force | check-legacy-binaries
 xcode-install:
 	rm -Rf /tmp/fish_build
 	xcrun xcodebuild install DSTROOT=/tmp/fish_build
-	ditto /tmp/fish_build
+	ditto /tmp/fish_build /
 .PHONY: xcode-install
 
 #
-# Actually do the installation. These '||true', '||:' lines are to prevent installs
-# from failing for (e.g.) missing man pages or extra_dirs outside the
-# writeable prefix.
+# Actually do the installation.
 #
-install-force: all install-translations | show-datadir show-sysconfdir show-extra_completionsdir show-extra_functionsdir show-extra_confdir show-mandir
+install-force: all install-translations install-doc | show-datadir show-sysconfdir show-extra_completionsdir show-extra_functionsdir show-extra_confdir show-mandir
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 	$v for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir);\
@@ -679,9 +677,9 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 	$v $(INSTALL) -m 644 share/__fish_build_paths.fish    $(DESTDIR)$(datadir)/fish/
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/pkgconfig
 	@echo "Creating placeholder vendor/'extra_' directories"
-	$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir) ||:
-	$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir) ||:
-	$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir) ||:
+	-$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir)
+	-$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir)
+	-$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir)
 	@echo "Installing pkgconfig file"
 	$v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
 	@echo "Installing the $(bo)fish completion library$(sgr0)...";
@@ -698,13 +696,6 @@ install-force: all install-translations | show-datadir show-sysconfdir show-extr
 	$v $(INSTALL) -m 644 share/tools/web_config/partials/* $(DESTDIR)$(datadir)/fish/tools/web_config/partials/
 	$v $(INSTALL) -m 644 share/tools/web_config/sample_prompts/*.fish $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts/
 	$v $(INSTALL) -m 755 share/tools/web_config/*.py $(DESTDIR)$(datadir)/fish/tools/web_config/
-	@echo "Installing online user documentation";
-	$v $(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
-	$v for i in user_doc/html/* CHANGELOG.md; do \
-		if test -f $$i; then \
-			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
-		fi; \
-	done;
 	@echo "Installing more man pages";
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;
 	$v for i in $(MANUALS); do \
@@ -783,6 +774,15 @@ endif
 uninstall-translations: show-DESTDIR show-localedir
 	$v rm -f $(DESTDIR)$(localedir)/*/LC_MESSAGES/fish.mo
 .PHONY: uninstall-translations
+
+install-doc: $(user_doc)
+	@echo "Installing online user documentation";
+	$v $(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
+	$v for i in user_doc/html/* CHANGELOG.md; do \
+		if test -f $$i; then \
+			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
+		fi; \
+	done;
 
 #
 # The build rules for all the commands
@@ -885,8 +885,8 @@ style-all:
 # Restore the source tree to the state right after extracting a tarball.
 #
 distclean: clean
-	$v test ! -f $(PCRE2_DIR)/Makefile || \
-	  $(MAKE) V=$(V) -C $(PCRE2_DIR) distclean ||:
+	-$v test ! -f $(PCRE2_DIR)/Makefile || \
+	  $(MAKE) V=$(V) -C $(PCRE2_DIR) distclean
 	$v rm -rf config.status config.log config.h Makefile autom4te.cache aclocal.m4
 .PHONY: distclean
 
@@ -903,12 +903,12 @@ clean:
 # PCRE's make clean has a few slightly annoying exceptions to the V= rule. If V=0
 # send all output to /dev/null - unless there's an error, in which case run it again not silenced.
 ifeq ($(V), 0 )
-	@test ! -f $(PCRE2_DIR)/Makefile || \
-	  $(MAKE) -C $(PCRE2_DIR) clean ||:
+	-@test ! -f $(PCRE2_DIR)/Makefile || \
+	  $(MAKE) -C $(PCRE2_DIR) clean
 else
-	@test ! -f $(PCRE2_DIR)/Makefile || \
+	-@test ! -f $(PCRE2_DIR)/Makefile || \
 	  $(MAKE) -s -C $(PCRE2_DIR) clean > /dev/null || \
-	  $(MAKE) -s -C $(PCRE2_DIR) clean ||:
+	  $(MAKE) -s -C $(PCRE2_DIR) clean
 endif
 	$v rm -f obj/*.o *.o doc.h doc.tmp
 	$v rm -f doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr

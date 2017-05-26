@@ -300,6 +300,8 @@ Other variables, like `$PATH`, really do have multiple values. During variable e
 <outp>/usr/bin /bin /usr/sbin /sbin /usr/local/bin</outp>
 \endfish
 
+Note that there are three environment variables that are automatically split on colons to become lists when fish starts running: `PATH`, `CDPATH`, `MANPATH`. Conversely, they are joined on colons when exported to subcommands. All other environment variables (e.g., `LD_LIBRARY_PATH`) which have similar semantics are treated as simple strings.
+
 Lists cannot contain other lists: there is no recursion.  A variable is a list of strings, full stop.
 
 Get the length of a list with `count`:

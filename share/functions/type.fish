@@ -102,7 +102,7 @@ function type --description 'Print the type of a command'
             set paths (command -s -- $i)
         else
             # TODO: This should really be `command -sa`.
-            for file in $PATH/*
+            for file in $PATH/$i
                 test -x $file -a ! -d $file
                 and set paths $paths $file
             end

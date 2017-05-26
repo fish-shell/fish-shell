@@ -1781,22 +1781,14 @@ static void handle_token_history(int forward, int reset) {
             tokenizer_t tok(data->token_history_buff.c_str(), TOK_ACCEPT_UNFINISHED);
             tok_t token;
             while (tok.next(&token)) {
-                if (token.type == TOK_STRING) {
-                    if (token.text.find(data->search_buff) != wcstring::npos) {
-                        // debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
-                        if (token.offset >= current_pos) {
-                            break;
-                        }
-                        // debug( 3, L"ok pos" );
+                if (token.type != TOK_STRING) continue;
+                if (token.text.find(data->search_buff) == wcstring::npos) continue;
+                if (token.offset >= current_pos) continue;
 
-                        if (find(data->search_prev.begin(), data->search_prev.end(), token.text) ==
-                            data->search_prev.end()) {
-                            data->token_history_pos = token.offset;
-                            str = token.text;
-                        }
-                    }
-                } else {
-                    break;
+                auto found = find(data->search_prev.begin(), data->search_prev.end(), token.text);
+                if (found == data->search_prev.end()) {
+                    data->token_history_pos = token.offset;
+                    str = token.text;
                 }
             }
         }

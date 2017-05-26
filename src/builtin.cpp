@@ -560,7 +560,6 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                                                   argv[0], eseq.c_str());
                     }
                 }
-                break;
             } else {
                 if (builtin_bind_add(argv[w.woptind], argv + (w.woptind + 1),
                                      argc - (w.woptind + 1), bind_mode, sets_bind_mode,

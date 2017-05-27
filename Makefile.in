@@ -541,7 +541,7 @@ doc.h: $(HDR_FILES)
 messages.pot: $(wildcard src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish)
 	@echo "  xgettext $(em)$@$(sgr0)"
 	xgettext -k_ -kN_ $(wildcard src/*.cpp src/*.h) -o messages.pot
-	$v xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 $(wildcard share/completions/*.fish share/functions/*.fish) share/fish.config -o messages.pot
+	$v xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 $(wildcard share/completions/*.fish share/functions/*.fish) share/config.fish -o messages.pot
 
 ifdef EXTRA_PCRE2
 src/builtin_string.cpp: $(PCRE2_H)

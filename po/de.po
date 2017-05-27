@@ -248,15 +248,15 @@ msgstr "Socket"
 msgid "Directory"
 msgstr "Verzeichnis"
 
-#: src/proc.cpp:500
-#, fuzzy, c-format
-msgid "'%ls' has %ls"
-msgstr "'%ls' hat %ls"
-
-#: src/proc.cpp:502
+#: src/proc.cpp:495
 #, c-format
-msgid "Job %d, '%ls' has %ls"
-msgstr "Job %d, '%ls' hat %ls"
+msgid "Job %d, '%ls' has stopped"
+msgstr "Job %d, '%ls' hat gestoppt"
+
+#: src/proc.cpp:497
+#, c-format
+msgid "Job %d, '%ls' has ended"
+msgstr "Job %d, '%ls' hat beendet"
 
 #: src/proc.cpp:599
 #, fuzzy, c-format

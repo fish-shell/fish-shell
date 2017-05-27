@@ -485,22 +485,19 @@ static wcstring truncate_command(const wcstring &cmd) {
 }
 
 /// Format information about job status for the user to look at.
-///
-/// \param j the job to test
-/// \param status a string description of the job exit type
-static void format_job_info(const job_t *j, const wchar_t *status, size_t job_count) {
+typedef enum { JOB_STOPPED, JOB_ENDED } job_status_t;
+static void format_job_info(const job_t *j, job_status_t status) {
+    const wchar_t *msg = L"Job %d, '%ls' has ended";  // this is the most common status msg
+    if (status == JOB_STOPPED) msg = L"Job %d, '%ls' has stopped";
+
     fwprintf(stdout, L"\r");
-    if (job_count == 1) {
-        fwprintf(stdout, _(L"\'%ls\' has %ls"), truncate_command(j->command()).c_str(), status);
-    } else {
-        fwprintf(stdout, _(L"Job %d, \'%ls\' has %ls"), j->job_id,
-                 truncate_command(j->command()).c_str(), status);
-    }
+    fwprintf(stdout, _(msg), j->job_id, truncate_command(j->command()).c_str());
     fflush(stdout);
-    if (cur_term != NULL)
+    if (cur_term) {
         tputs(clr_eol, 1, &writeb);
-    else
+    } else {
         fwprintf(stdout, L"\e[K");
+    }
     fwprintf(stdout, L"\n");
 }
 
@@ -620,7 +617,7 @@ int job_reap(bool allow_interactive) {
         if (job_is_completed(j)) {
             if (!j->get_flag(JOB_FOREGROUND) && !j->get_flag(JOB_NOTIFIED) &&
                 !j->get_flag(JOB_SKIP_NOTIFICATION)) {
-                format_job_info(j, _(L"ended"), job_count);
+                format_job_info(j, JOB_ENDED);
                 found = 1;
             }
             proc_fire_event(L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0);
@@ -630,7 +627,7 @@ int job_reap(bool allow_interactive) {
         } else if (job_is_stopped(j) && !j->get_flag(JOB_NOTIFIED)) {
             // Notify the user about newly stopped jobs.
             if (!j->get_flag(JOB_SKIP_NOTIFICATION)) {
-                format_job_info(j, _(L"stopped"), job_count);
+                format_job_info(j, JOB_STOPPED);
                 found = 1;
             }
             j->set_flag(JOB_NOTIFIED, true);

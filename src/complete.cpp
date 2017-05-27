@@ -1207,14 +1207,12 @@ bool completer_t::try_complete_user(const wcstring &str) {
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
             append_completion(&this->completions, &pw_name[name_len], desc, COMPLETE_NO_SPACE);
             result = true;
-            break;
         } else if (wcsncasecmp(user_name, pw_name, name_len) == 0) {
             wcstring name = format_string(L"~%ls", pw_name);
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
             append_completion(&this->completions, name, desc,
                               COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
             result = true;
-            break;
         }
 
         // If we've spent too much time (more than 200 ms) doing this give up.

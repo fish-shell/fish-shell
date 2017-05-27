@@ -130,6 +130,12 @@ complete -c $progname -n "$files" -s o -l owns -d 'Search for packages that incl
 complete -c $progname -n "$files" -s q -l quiet -d 'Show less information' -f
 complete -c $progname -n "$files" -l machinereadable -d 'Show in machine readable format: repo\0pkgname\0pkgver\0path\n' -f
 
+# Database options
+set -l has_db_opt '__fish_contains_opt asdeps asexplicit'
+complete -c $progname -n "$database; and not $has_db_opt" -xa --asdeps -d 'Mark PACKAGE as dependency'
+complete -c $progname -n "$database; and not $has_db_opt" -xa --asexplicit -d 'Mark PACKAGE as explicitly installed'
+complete -c $progname -n "$has_db_opt; and $argument; and $database" -xa "$listinstalled"
+
 # Upgrade options
 # Theoretically, pacman reads packages in all formats that libarchive supports
 # In practice, it's going to be tar.xz or tar.gz

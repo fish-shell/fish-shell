@@ -2233,7 +2233,7 @@ static bool selection_is_at_top() {
 
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i(void) {
-    reader_push(L"fish");
+    reader_push(history_session_id().c_str());
     reader_set_complete_function(&complete);
     reader_set_highlight_function(&highlight_shell);
     reader_set_test_function(&reader_shell_test);

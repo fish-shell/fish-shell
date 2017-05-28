@@ -4,10 +4,12 @@ from __future__ import unicode_literals
 from __future__ import print_function
 import binascii
 import cgi
+from distutils.version import LooseVersion
 import glob
 import multiprocessing.pool
 import operator
 import os
+import platform
 import random
 import re
 import select
@@ -28,6 +30,12 @@ else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
     from urllib.parse import parse_qs
+
+def isMacOS10_12_5_OrLater():
+    """ Return whether this system is macOS 10.12.5 or a later version. """
+    version = platform.mac_ver()[0]
+    return version and LooseVersion(version) >= LooseVersion('10.12.5')
+
 
 # Disable CLI web browsers
 term = os.environ.pop('TERM', None)
@@ -1124,9 +1132,13 @@ f.write(redirect_template_html % (url, url))
 f.close()
 
 # Open temporary file as URL
+# Use open on macOS >= 10.12.5 to work around #4035.
 fileurl = 'file://' + filename
 print("Web config started at '%s'. Hit enter to stop." % fileurl)
-webbrowser.open(fileurl)
+if isMacOS10_12_5_OrLater():
+    subprocess.check_call(['open', fileurl])
+else:
+    webbrowser.open(fileurl)
 
 # Select on stdin and httpd
 stdin_no = sys.stdin.fileno()

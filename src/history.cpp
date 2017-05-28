@@ -1811,8 +1811,8 @@ wcstring history_session_id() {
     } else if (valid_var_name(session_id)) {
         result = session_id;
     } else {
-        // TODO: the session id is invalid. Print an error.
-		debug(1, "TODO ERROR: Wrong characters in the session ID: '%ls'. Falling back to `fish`.", session_id.c_str());
+        debug(0, "Wrong characters in the session ID: '%ls'. Using `fish`.",
+              session_id.c_str());
         result = L"fish";
     }
 

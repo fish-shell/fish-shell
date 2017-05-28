@@ -1,4 +1,3 @@
-
 # Guidelines For Developers
 
 This document provides guidelines for making changes to the fish-shell project. This includes rules for how to format the code, naming conventions, etcetera. Generally known as the style of the code. It also includes recommended best practices such as creating a Travis-CI account so you can verify your changes pass all the tests before making a pull-request.
@@ -248,3 +247,11 @@ That will list the versions available. Pick the newest one available (3.9 for Ub
 sudo apt-get install clang-format-3.9
 sudo ln -s /usr/bin/clang-format-3.9 /usr/bin/clang-format
 ```
+
+## Message Translations
+
+Fish uses the GNU gettext library to translate messages from english to other languages. To create or update a translation run `make po/[LANGUAGE CODE].po`. Where `LANGUAGE CODE` is the two letter ISO 639-1 language code of the language you are translating to. For example, `de` for German. You'll need to have the `xgettext` and `msgmerge` commands installed to do this.
+
+Be cautious about blindly updating an existing translation file. Trivial changes to an existing message (e.g., changing the punctuation) will cause existing translations to be removed. That is because the tools do literal string matching. Which means that in general you need to carefully review any recommended deletions.
+
+See the [wiki](https://github.com/fish-shell/fish-shell/wiki/Translations) for more details.

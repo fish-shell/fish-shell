@@ -131,7 +131,8 @@ function help --description 'Show help for the fish shell'
     # OS X /usr/bin/open swallows fragments (anchors), so use osascript
     # Eval is just a cheesy way of removing the hash escaping
     if test "$fish_browser" = osascript
-        osascript -e 'open location "'(eval echo $page_url)'"'
+        set -l opencmd 'open location "'(eval echo $page_url)'"'
+        osascript -e 'try' -e $opencmd -e 'on error' -e $opencmd -e 'end try'
         return
     end
 

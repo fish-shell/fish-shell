@@ -14,7 +14,7 @@ set ( -e | --erase ) [SCOPE_OPTIONS] VARIABLE_NAME[INDICES]...
 
 `set` manipulates <a href="index.html#variables">shell variables</a>.
 
-If set is called with no arguments, the names and values of all shell variables are printed. If some of the scope or export flags have been given, only the variables matching the specified scope are printed.
+If set is called with no arguments, the names and values of all shell variables are printed in sorted order. If some of the scope or export flags have been given, only the variables matching the specified scope are printed.
 
 With both variable names and values provided, `set` assigns the variable `VARIABLE_NAME` the values `VALUES...`.
 
@@ -37,7 +37,7 @@ The following options are available:
 
 - `-q` or `--query` test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
 
-- `-n` or `--names` List only the names of all defined variables, not their value
+- `-n` or `--names` List only the names of all defined variables, not their value. The names are guaranteed to be sorted.
 
 - `-L` or `--long` do not abbreviate long values when printing set variables
 

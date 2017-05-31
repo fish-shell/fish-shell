@@ -106,6 +106,16 @@ if not contains -- $__fish_datadir/completions $fish_complete_path
     set fish_complete_path $fish_complete_path $__fish_datadir/completions
 end
 
+# Tie these vars to array equivalents so that we can begin the transition to
+# using the tied array vars. That way in the next major release we can stop special-casing these env
+# vars in the fish C++ code and they can go back to always being the single element string form.
+# Note that we don't use the lowercase variant of the env var name because that is too likely to
+# cause conflicts. Especially `path` since that is already used in several functions such as the
+# `type` command.
+tie PATH fish_path
+tie MANPATH fish_manpath
+tie CDPATH fish_cdpath
+
 #
 # This is a Solaris-specific test to modify the PATH so that
 # Posix-conformant tools are used by default. It is separate from the

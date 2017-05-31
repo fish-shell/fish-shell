@@ -1,0 +1,52 @@
+\section tie tie - tie a scalar to an array variable
+
+\subsection tie-synopsis Synopsis
+\fish{synopsis}
+tie
+tie ( -U | --untie ) SCALAR_VAR
+tie [( -s | --sep) SEP] SCALAR_VAR [array_var]
+\endfish
+
+\subsection tie-description Description
+
+`tie` links a scalar <a href="index.html#variables">shell variable</a>, typically one that is exported, to an array variable. When one form is updated its alternate form is automatically updated. For example, you might tie `GOPATH` to `gopath`. This makes it easy to treat the `GOPATH` env var as an array of paths. Updating `gopath` will automatically result in the exported `GOPATH` env var being updated. And vice-versa.
+
+If `tie` is called with no arguments it will list all the tied variables as a sequence of `tie` commands.
+
+If only a scalar var name is given its lowercase form will be used as the array name. This means you don't need to type `tie GOPATH gopath`; you can simply type `tie GOPATH`.
+
+The following options are available:
+
+- `-U` or `--untie` does what the option implies: It removes the tie between the two variables. The variables themselves are not altered by this. However, once you untie them the vars are no longer kept in sync when either one is changed.
+
+- `-s` or `--sep` specifies a separator to use when converting between the scalar and array vars. The default is `:`. If you provide more than one character only the first char is used.
+
+If the scalar var exists at the time a tie is created it will be immediately split into the array var. If the array var exists and the scalar var does not then the scalar will be immediately created as a global exported (i.e., `set -gx`) var. If both exist the scalar var takes precedence.
+
+\subsection tie-example Example
+\fish
+tie GOPATH
+# Ties "GOPATH" to "gopath" with ":" as the separator.
+
+tie GOPATH gopath_array
+# Ties "GOPATH" to "gopath_arry" with ":" as the separator.
+
+tie -s . EVAR silly_var
+# Ties "EVAR" to "silly_var" with "." as the separator.
+
+\endfish
+
+\subsection tie-notes Notes
+
+If you use `set -l` on either tied var in a nested block you must do the same for its alternate form. Let's say you want to make a local modification to the array form. Then in that case you have to also create a local version of the scalar form:
+
+\fish
+tie GOPATH
+set gopath /path1 /path2
+block
+    set -l GOPATH
+    set -l gopath /path3 /path4
+end
+\endfish
+
+If you don't do that then `GOPATH` scalar form won't be properly restored to the original string when leaving the block.

@@ -1,0 +1,112 @@
+# Test tied variables.
+
+echo '# At this point we should have just the default tied vars.'
+tie
+
+echo '# Add a tied var.'
+tie XYZ
+tie
+
+echo '# Add a custom tied var using period as the separator.'
+tie -s . ABC abc_array
+tie
+
+echo '# Add a custom tied var using space as the separator.'
+tie -s ' ' SPACE
+tie
+
+echo '# Test modifying the array var by setting it to zero elements.'
+set xyz
+echo $xyz
+echo $XYZ
+
+echo '# Test modifying the array var by setting it to one element.'
+set xyz one-string
+echo $xyz
+echo $XYZ
+
+echo '# Test modifying the array var by setting it to more than one element.'
+set xyz abc def ghi
+echo $xyz
+echo $XYZ
+
+echo '# Test modifying the scalar var by setting it to zero elements.'
+set XYZ
+echo $xyz
+echo $XYZ
+
+echo '# Test modifying the scalar var by setting it to one element.'
+set XYZ ONE-STRING
+echo $xyz
+echo $XYZ
+
+
+echo '# Test modifying the scalar var by setting it to more than one element.'
+set XYZ a:b:c:d
+echo $xyz
+echo $XYZ
+
+echo '# Test modifying the scalar var with a non-standard separator.'
+set ABC a:b.c:d.e.f
+echo $abc_array
+echo $ABC
+
+echo '# Test modifying the array var with a non-standard separator.'
+set abc_array aa:bb $abc_array yy:zz
+echo $abc_array
+echo $ABC
+
+echo '# Removing a tie should leave the tied vars unchanged and no longer kept in sync.'
+tie -U ABC
+echo $abc_array
+echo $ABC
+set abc_array 1 2
+set ABC 1:2:3
+echo $abc_array
+echo $ABC
+
+echo '# Test modifying the tied var with a space separator.'
+set space s p a c e
+printf "space |%s|\n" $space
+printf "SPACE |%s|\n" $SPACE
+echo count space (count $space)
+echo count SPACE (count $SPACE)
+set SPACE 's:p a c:e'
+printf "space |%s|\n" $space
+printf "SPACE |%s|\n" $SPACE
+echo count space (count $space)
+echo count SPACE (count $SPACE)
+
+echo '# Changing a tied var in a nested block should affect the global scope.'
+begin
+    set xyz 1 3 5
+end
+echo $xyz
+echo $XYZ
+
+echo '# Changing a tied var in a nested block via `set -l` should not affect the global scope.'
+set -g not_tied xx yy
+begin
+    set -l not_tied abc def
+    set -l XYZ $XYZ
+    set -l xyz 2 4 6
+    echo $not_tied
+    echo $xyz
+    echo $XYZ
+end
+echo $not_tied
+echo $xyz
+echo $XYZ
+
+echo '# Erasing a tied var should erase it\'s mirror but should leave the tie in place.'
+set -e XYZ
+set -q XYZ
+and echo XYZ unexpectedly defined
+set -q xyz
+and echo xyz unexpectedly defined
+set XYZ salmon:tuna:cod
+echo $xyz
+echo $XYZ
+set xyz clam mollusk oyster
+echo $xyz
+echo $XYZ

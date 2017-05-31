@@ -1,0 +1,81 @@
+# At this point we should have just the default tied vars.
+tie --sep : CDPATH fish_cdpath
+tie --sep : MANPATH fish_manpath
+tie --sep : PATH fish_path
+# Add a tied var.
+tie --sep : CDPATH fish_cdpath
+tie --sep : MANPATH fish_manpath
+tie --sep : PATH fish_path
+tie --sep : XYZ xyz
+# Add a custom tied var using period as the separator.
+tie --sep . ABC abc_array
+tie --sep : CDPATH fish_cdpath
+tie --sep : MANPATH fish_manpath
+tie --sep : PATH fish_path
+tie --sep : XYZ xyz
+# Add a custom tied var using space as the separator.
+tie --sep . ABC abc_array
+tie --sep : CDPATH fish_cdpath
+tie --sep : MANPATH fish_manpath
+tie --sep : PATH fish_path
+tie --sep ' ' SPACE space
+tie --sep : XYZ xyz
+# Test modifying the array var by setting it to zero elements.
+
+
+# Test modifying the array var by setting it to one element.
+one-string
+one-string
+# Test modifying the array var by setting it to more than one element.
+abc def ghi
+abc:def:ghi
+# Test modifying the scalar var by setting it to zero elements.
+
+
+# Test modifying the scalar var by setting it to one element.
+ONE-STRING
+ONE-STRING
+# Test modifying the scalar var by setting it to more than one element.
+a b c d
+a:b:c:d
+# Test modifying the scalar var with a non-standard separator.
+a:b c:d e f
+a:b.c:d.e.f
+# Test modifying the array var with a non-standard separator.
+aa:bb a:b c:d e f yy:zz
+aa:bb.a:b.c:d.e.f.yy:zz
+# Removing a tie should leave the tied vars unchanged and no longer kept in sync.
+aa:bb a:b c:d e f yy:zz
+aa:bb.a:b.c:d.e.f.yy:zz
+1 2
+1:2:3
+# Test modifying the tied var with a space separator.
+space |s|
+space |p|
+space |a|
+space |c|
+space |e|
+SPACE |s p a c e|
+count space 5
+count SPACE 1
+space |s:p|
+space |a|
+space |c:e|
+SPACE |s:p a c:e|
+count space 3
+count SPACE 1
+# Changing a tied var in a nested block should affect the global scope.
+1 3 5
+1:3:5
+# Changing a tied var in a nested block via `set -l` should not affect the global scope.
+abc def
+2 4 6
+2:4:6
+xx yy
+1 3 5
+1:3:5
+# Erasing a tied var should erase it's mirror but should leave the tie in place.
+salmon tuna cod
+salmon:tuna:cod
+clam mollusk oyster
+clam:mollusk:oyster

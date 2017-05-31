@@ -62,14 +62,9 @@ function help --description 'Show help for the fish shell'
                 set fish_browser xdg-open
             end
 
-            # On OS X, we use osascript < 10.12.5, and open after (see #4035)
+            # On OS X, we go through osascript by default
             if test (uname) = Darwin
-                set -l version (sw_vers -productVersion | string split .) 0 0 0
-                if [ $version[1] -gt 10 ]
-                    or [ $version[1] -eq 10 -a $version[2] -gt 12 ]
-                    or [ $version[1] -eq 10 -a $version[2] -eq 12 -a $version[3] -ge 5 ]
-                    set fish_browser open
-                else
+                if type -q osascript
                     set fish_browser osascript
                 end
             end

@@ -686,7 +686,7 @@ msgstr "string: Erwartete Unterbefehl\n"
 #: src/builtin_string.cpp:1188
 #, fuzzy, c-format
 msgid "string: Unknown subcommand '%ls'\n"
-msgstr "Unbekannter Befehl '%ls'"
+msgstr "Unbekannter Befehl '%ls'\n"
 
 #: src/sanity.cpp:18
 #, fuzzy
@@ -813,12 +813,12 @@ msgstr ""
 #: src/parser.cpp:406
 #, fuzzy, c-format
 msgid "in function '%ls'\n"
-msgstr "Unbekannte Funktion '%ls'"
+msgstr "Unbekannte Funktion '%ls'\n"
 
 #: src/parser.cpp:410
 #, fuzzy
 msgid "in command substitution\n"
-msgstr "Befehlsersetzungsblock"
+msgstr "Befehlsersetzungsblock\n"
 
 #: src/parser.cpp:421
 #, c-format
@@ -1252,12 +1252,12 @@ msgstr "%ls: Funktion '%ls' existiert schon. Kann keine Kopie '%ls' anlegen\n"
 #: src/builtin.cpp:1521
 #, fuzzy, c-format
 msgid "%ls: Expected function name"
-msgstr "%ls: Erwartete einen Funktionsnamen\n"
+msgstr "%ls: Erwartete einen Funktionsnamen"
 
 #: src/builtin.cpp:1527
 #, fuzzy, c-format
 msgid "%ls: Illegal function name '%ls'"
-msgstr "%ls: Ungültiger Funktionsname '%ls'\n"
+msgstr "%ls: Ungültiger Funktionsname '%ls'"
 
 #: src/builtin.cpp:1534
 #, fuzzy, c-format
@@ -1266,27 +1266,27 @@ msgid ""
 "and can not be used as a function name"
 msgstr ""
 "%ls: Der Name '%ls' ist reserviert,\n"
-"und kann nicht als Funktionsname benutzt werden\n"
+"und kann nicht als Funktionsname benutzt werden"
 
 #: src/builtin.cpp:1603
 #, fuzzy, c-format
 msgid "%ls: Unknown signal '%ls'"
-msgstr "%ls: Unbekanntes Signal '%ls'\n"
+msgstr "%ls: Unbekanntes Signal '%ls'"
 
 #: src/builtin.cpp:1611 src/builtin.cpp:1681
 #, fuzzy, c-format
 msgid "%ls: Invalid variable name '%ls'"
-msgstr "%ls: Ungültiger Variablenname '%ls'\n"
+msgstr "%ls: Ungültiger Variablenname '%ls'"
 
 #: src/builtin.cpp:1648
 #, fuzzy, c-format
 msgid "%ls: Cannot find calling job for event handler"
-msgstr "%ls: Kann aufrufenden Job zur Ereignisbehandlung nicht finden\n"
+msgstr "%ls: Kann aufrufenden Job zur Ereignisbehandlung nicht finden"
 
 #: src/builtin.cpp:1656
 #, fuzzy, c-format
 msgid "%ls: Invalid process id '%ls'"
-msgstr "%ls: Ungültige Prozesskennung %ls\n"
+msgstr "%ls: Ungültige Prozesskennung %ls"
 
 #: src/builtin.cpp:1713
 #, fuzzy, c-format
@@ -1384,7 +1384,7 @@ msgstr "%ls: Konnte PWD-Variable nicht setzen\n"
 #: src/builtin.cpp:2667
 #, fuzzy, c-format
 msgid "%ls: Key not specified\n"
-msgstr "%ls: Schlüssel nicht angegeben\\n"
+msgstr "%ls: Schlüssel nicht angegeben\n"
 
 #: src/builtin.cpp:2697 src/builtin.cpp:2705
 #, fuzzy, c-format
@@ -1712,7 +1712,7 @@ msgstr "Signal #%d (%ls) erhalten\n"
 #: src/builtin_printf.cpp:244
 #, fuzzy, c-format
 msgid "%ls: expected a numeric value"
-msgstr "%ls: erwartete Zahl\n"
+msgstr "%ls: erwartete Zahl"
 
 #: src/builtin_printf.cpp:246
 #, c-format
@@ -1740,7 +1740,7 @@ msgstr "Ungültige Feldlänge: %ls"
 #: src/builtin_printf.cpp:666
 #, fuzzy, c-format
 msgid "invalid precision: %ls"
-msgstr "Ungültige Genauigkeit: %ls\n"
+msgstr "Ungültige Genauigkeit: %ls"
 
 #: src/builtin_printf.cpp:691
 #, fuzzy, c-format
@@ -1788,7 +1788,7 @@ msgstr "unbekannter interner Befehl '%ls'"
 #: src/parse_constants.h:239
 #, fuzzy, c-format
 msgid "Unable to expand variable name '%ls'"
-msgstr "%ls: Ungültiger Variablenname '%ls'\n"
+msgstr "%ls: Ungültiger Variablenname '%ls'"
 
 #: src/parse_constants.h:242
 #, fuzzy, c-format
@@ -1825,7 +1825,7 @@ msgstr "Internen Befehl anstatt einer Funktion ausführen"
 #: src/parse_constants.h:264
 #, fuzzy, c-format
 msgid "$%lc is not a valid variable in fish."
-msgstr "%ls: '%ls' ist kein gültiger Variablenname\n"
+msgstr "$%lc ist kein gültiger Variablenname"
 
 #: src/parse_constants.h:267
 #, c-format

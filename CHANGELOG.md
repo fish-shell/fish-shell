@@ -1,9 +1,10 @@
-# fish 2.6.0 (released ???)
+# fish 2.6.0 (released June 3, 2017)
 
-2.6.0 contains the following fixes since 2.6b1:
+Since the beta release of fish 2.6b1, fish version 2.6.0 contains a number of minor fixes, new completions for `magneto` (#4043), and improvements to the documentation.
 
-- fish successfully builds on OS X 10.10 (#4029).
-- Improved completions for gphoto (#4031). 
+## Known issues
+
+- Apple macOS Sierra 10.12.5 introduced a problem with launching web browsers from other programs using AppleScript. This affects the fish Web configuration (`fish_config`); users on these platforms will need to manually open the address displayed in the terminal, such as by copying and pasting it into a browser. This problem will be fixed with macOS 10.12.6.
 
 If you are upgrading from version 2.5.0 or before, please also review the release notes for 2.6b1 (included below).
 

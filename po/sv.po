@@ -177,7 +177,7 @@ msgstr "%ls: Argumentet '%ls' måste vara ett heltal\n"
 #: builtin.cpp:2656
 #, fuzzy, c-format
 msgid "%ls: --array option requires a single variable name.\n"
-msgstr "%ls: --array flaggan kräver ett enskilt variablenamn"
+msgstr "%ls: --array flaggan kräver ett enskilt variablenamn.\n"
 
 #: builtin.cpp:3065 fish.cpp:620 parser.cpp:764
 msgid "Standard input"
@@ -552,7 +552,7 @@ msgstr "Grupp\n"
 #: builtin_jobs.cpp:126
 #, fuzzy
 msgid "Process\n"
-msgstr "Process"
+msgstr "Process\n"
 
 #: builtin_jobs.cpp:143
 msgid "Command\n"
@@ -572,7 +572,7 @@ msgstr "varning: %ls: tecken(s) efterföljande teckenskonstant ignorerades"
 #: builtin_printf.cpp:256
 #, fuzzy, c-format
 msgid "%ls: expected a numeric value"
-msgstr "%ls: förväntade ett numeriskt värde\n"
+msgstr "%ls: förväntade ett numeriskt värde"
 
 #: builtin_printf.cpp:258
 #, c-format
@@ -668,7 +668,7 @@ msgstr "%s: Förväntade ett argument\n"
 #: builtin_set_color.cpp:173
 #, fuzzy, c-format
 msgid "%ls: Could not set up terminal\n"
-msgstr "Kunde inte initiera terminalen"
+msgstr "%ls: Kunde inte initiera terminalen\n"
 
 #: common.cpp:1917
 msgid "This is a bug. Break on bugreport to debug."
@@ -1779,7 +1779,7 @@ msgstr "Okänt inbyggt kommando '%ls'"
 #: parse_constants.h:204
 #, fuzzy, c-format
 msgid "Unable to expand variable name '%ls'"
-msgstr "%ls: Ogiltigt variabelnamn '%ls'\n"
+msgstr "Ogiltigt variabelnamn '%ls'"
 
 #: parse_constants.h:207
 #, fuzzy, c-format
@@ -8580,22 +8580,22 @@ msgstr "Manualsektion"
 #: share/functions/abbr.fish:40
 #, fuzzy
 msgid "%s: invalid option -- %s\\n"
-msgstr "%ls: Ogiltigt flagga -- %lc\n"
+msgstr "%s: Ogiltigt flagga -- %s\\n"
 
 #: share/functions/abbr.fish:47
 #, fuzzy
 msgid "%s: %s cannot be specified along with %s\\n"
-msgstr "%ls: Värden kan inte anges vid radering\n"
+msgstr "%s: Värden kan inte anges vid radering %s\\n"
 
 #: share/functions/abbr.fish:56
 #, fuzzy
 msgid "%s: option requires an argument -- %s\\n"
-msgstr "%ls: Flaggan kräver ett argument -- %lc\n"
+msgstr "%s: Flaggan kräver ett argument -- %s\\n"
 
 #: share/functions/abbr.fish:62
 #, fuzzy
 msgid "%s: Unexpected argument -- %s\\n"
-msgstr "%ls: Förväntade argument\n"
+msgstr "%ls: Förväntade argument\\n"
 
 #: share/functions/abbr.fish:75
 msgid "%s: abbreviation must have a non-empty key\\n"
@@ -8625,7 +8625,7 @@ msgstr "%ls: Förväntade ett eller två argument, fick %d"
 #: share/functions/alias.fish:42
 #, fuzzy
 msgid "%s: Name cannot be empty\\n"
-msgstr "%ls: Den tomma strängen är inte ett tillåtet variabelnamn\n"
+msgstr "%s: Den tomma strängen är inte ett tillåtet variabelnamn\\n"
 
 #: share/functions/alias.fish:45
 msgid "%s: Body cannot be empty\\n"
@@ -8713,7 +8713,7 @@ msgstr ""
 #: share/functions/funcsave.fish:11
 #, fuzzy
 msgid "%s: Expected function name\\n"
-msgstr "%ls: Förväntade ett funktionsnamn\n"
+msgstr "%s: Förväntade ett funktionsnamn\\n"
 
 #: share/functions/funcsave.fish:26
 msgid "%s: Could not create configuration directory\\n"

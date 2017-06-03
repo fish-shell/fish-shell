@@ -1,3 +1,17 @@
+# fish 2.7b1
+
+## Notable fixes and improvements
+
+## Other significant changes
+
+- `complete`'s `--no-files` option works as intended (#112).
+- `pushd +1` works as documented again (#4091).
+- Added completions for:
+ -
+- Improved completions for `killall` (#4052), `ln` (#4090) and `zypper` (#4079).
+
+---
+
 # fish 2.6.0 (released June 3, 2017)
 
 Since the beta release of fish 2.6b1, fish version 2.6.0 contains a number of minor fixes, new completions for `magneto` (#4043), and improvements to the documentation.

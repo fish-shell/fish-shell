@@ -354,7 +354,7 @@ msgstr "%ls: '%ls' ist kein Job\n"
 #: src/builtin.cpp:3023 src/builtin.cpp:3090
 #, fuzzy, c-format
 msgid "%ls: Could not find job '%d'\n"
-msgstr "%s: Konnte '%s' nicht finden"
+msgstr "%ls: Konnte '%d' nicht finden\n"
 
 #: src/builtin.cpp:3033
 #, c-format
@@ -1132,12 +1132,12 @@ msgstr "Signal #%d (%ls) erhalten\n"
 #: src/fish_key_reader.cpp:312
 #, fuzzy, c-format
 msgid "Invalid value '%s' for debug-level flag\n"
-msgstr "Ungültiger Wert '%s' für debug-level Option"
+msgstr "Ungültiger Wert '%s' für debug-level Option\n"
 
 #: src/fish_key_reader.cpp:326
 #, fuzzy, c-format
 msgid "Invalid value '%s' for debug-stack-frames flag\n"
-msgstr "Ungültiger Wert '%s' für debug-stack-frames Option"
+msgstr "Ungültiger Wert '%s' für debug-stack-frames Option\n"
 
 #: src/history.cpp:142
 #, c-format
@@ -2491,24 +2491,22 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/abbr.fish:1
 #, fuzzy
 msgid "%s: invalid option -- %s\\n"
-msgstr "%ls: Ungültige Prozesskennung %ls\n"
+msgstr "%s: Ungültige Prozesskennung -- %ls\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:2
 #, fuzzy
 msgid "%s: %s cannot be specified along with %s\\n"
 msgstr ""
-"%ls: Bei erase können keine Werte angegeben werden\n"
-"%ls\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:3
 #, fuzzy
 msgid "%s: option requires an argument -- %s\\n"
-msgstr "%ls: Erwartete ein Argument, erhielt %d\n"
+msgstr "%s: Erwartete ein Argument, erhielt %s\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
 #, fuzzy
 msgid "%s: Unexpected argument -- %s\\n"
-msgstr "%ls: Argument erwartet\n"
+msgstr "%s: Argument erwartet -- %s\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:5
 #: /tmp/fish/explicit/share/functions/abbr.fish:8
@@ -2523,7 +2521,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/abbr.fish:7
 #, fuzzy
 msgid "%s: abbreviation '%s' already exists, cannot rename\\n"
-msgstr "%ls: Funktion '%ls' existiert schon. Kann keine Kopie '%ls' anlegen\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:9
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
@@ -2534,17 +2532,17 @@ msgstr "Unbekannte Funktion '%ls'"
 #: /tmp/fish/explicit/share/functions/alias.fish:1
 #, fuzzy
 msgid "%s: Expected one or two arguments, got %d\\n"
-msgstr "%ls: Erwartete ein Argument, erhielt %d\n"
+msgstr "%s: Erwartete ein Argument, erhielt %d\\n"
 
 #: /tmp/fish/explicit/share/functions/alias.fish:2
 #, fuzzy
 msgid "%s: Name cannot be empty\\n"
-msgstr "%ls: Variablenname kann nicht leer sein\n"
+msgstr "%s: Variablenname kann nicht leer sein\\n"
 
 #: /tmp/fish/explicit/share/functions/alias.fish:3
 #, fuzzy
 msgid "%s: Body cannot be empty\\n"
-msgstr "%ls: Variablenname kann nicht leer sein\n"
+msgstr "%s: Variablenname kann nicht leer sein\\n"
 
 #: /tmp/fish/explicit/share/functions/cd.fish:1
 msgid "Too many args for cd command"
@@ -2608,12 +2606,12 @@ msgstr "Paket"
 #: /tmp/fish/explicit/share/functions/vared.fish:1
 #, fuzzy
 msgid "%s: Unknown option %s\\n"
-msgstr "%ls: Unbekannte Option '%ls'\n"
+msgstr "%s: Unbekannte Option %s\\n"
 
 #: /tmp/fish/explicit/share/functions/funced.fish:2
 #, fuzzy
 msgid "funced: You must specify one function name"
-msgstr "%ls: Erwartete genau einen Funktionsnamen\n"
+msgstr "funced: Erwartete genau einen Funktionsnamen"
 
 #: /tmp/fish/explicit/share/functions/funced.fish:4
 msgid "Editing failed or was cancelled"
@@ -2635,12 +2633,12 @@ msgstr "Funktionsdefinitonsblock"
 #: /tmp/fish/explicit/share/functions/funcsave.fish:1
 #, fuzzy
 msgid "%s: Expected function name\\n"
-msgstr "%ls: Erwartete genau einen Funktionsnamen\n"
+msgstr "%s: Erwartete genau einen Funktionsnamen\\n"
 
 #: /tmp/fish/explicit/share/functions/funcsave.fish:2
 #, fuzzy
 msgid "%s: Could not create configuration directory\\n"
-msgstr "%ls: Konnte Startverzeichnis nicht finden\n"
+msgstr "%s: Konnte Startverzeichnis nicht finden\\n"
 
 #: /tmp/fish/explicit/share/functions/funcsave.fish:3
 #, fuzzy
@@ -2663,18 +2661,18 @@ msgstr ""
 #, fuzzy
 msgid "%ls: Invalid combination of options,\\n%ls\\n"
 msgstr ""
-"%ls: Ungültige Kombination von Optionen,\n"
-"%ls\n"
+"%ls: Ungültige Kombination von Optionen,\\n"
+"%ls\\n"
 
 #: /tmp/fish/explicit/share/functions/history.fish:3
 #, fuzzy
 msgid "%ls: you cannot use any options with the %ls command\\n"
-msgstr "%ls: Sie können keine Option mit dem %ls Befehl verwenden\n"
+msgstr "%ls: Sie können keine Option mit dem %ls Befehl verwenden\\n"
 
 #: /tmp/fish/explicit/share/functions/history.fish:4
 #, fuzzy
 msgid "%ls: %ls expected %d args, got %d\\n"
-msgstr "%ls: Erwartete ein Argument, erhielt %d\n"
+msgstr "%ls: Erwartete ein Argument, erhielt %d\\n"
 
 #: /tmp/fish/explicit/share/functions/history.fish:5
 msgid "You must specify at least one search term when deleting entries\\n"
@@ -2715,12 +2713,12 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/seq.fish:1
 #, fuzzy
 msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
-msgstr "%ls: Erwartete ein Argument, erhielt %d\n"
+msgstr "%s: Erwartete ein Argument, erhielt %d\\n"
 
 #: /tmp/fish/explicit/share/functions/seq.fish:2
 #, fuzzy
 msgid "%s: '%s' is not a number\\n"
-msgstr "%ls: '%ls' ist kein Job\n"
+msgstr "%s: '%s' ist kein Job\\n"
 
 #: /tmp/fish/explicit/share/functions/setenv.fish:1
 #: /tmp/fish/explicit/share/functions/umask.fish:3
@@ -11006,7 +11004,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/sudo.fish:20
 #, fuzzy
 msgid "Command to run"
-msgstr "Befehl\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/commandline.fish:2
 msgid "Add text to the end of the selected area"
@@ -16644,7 +16642,7 @@ msgstr "Variable löschen"
 #: /tmp/fish/implicit/share/completions/time.fish:1
 #, fuzzy
 msgid "Command"
-msgstr "Befehl\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/env.fish:3
 #, fuzzy
@@ -27032,7 +27030,7 @@ msgstr "Maximale Zahl offener Datei-Deskriptoren"
 #: /tmp/fish/implicit/share/completions/godoc.fish:13
 #, fuzzy
 msgid "Regular expression matching note markers to show"
-msgstr "%ls: Fehler beim Zuordnen von Regulärem Ausdruck: %ls\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/godoc.fish:14
 msgid "Enable playground in web interface"
@@ -29713,7 +29711,7 @@ msgstr "Sortierreihenfolge umkehren"
 #: /tmp/fish/implicit/share/completions/helm.fish:58
 #, fuzzy
 msgid "Output short listing format"
-msgstr "sources.list-Datei ausgeben"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/helm.fish:59
 msgid "Name of the key to use when signing"
@@ -29758,7 +29756,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/helm.fish:71
 #, fuzzy
 msgid "Use regular expressions for searching"
-msgstr "%ls: Interner Fehler\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/helm.fish:72
 #, fuzzy
@@ -43181,7 +43179,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/node.fish:187
 #, fuzzy
 msgid "Log regular expression execution"
-msgstr "%ls: Interner Fehler\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/node.fish:188
 msgid "Update sliding state window counters"
@@ -46137,7 +46135,7 @@ msgstr "Konfigurationsdatei"
 #: /tmp/fish/implicit/share/completions/pkg.fish:10
 #, fuzzy
 msgid "Set repository configuration directory"
-msgstr "%ls: Konnte Startverzeichnis nicht finden\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkg.fish:11
 msgid "Use IPv4"
@@ -49787,7 +49785,7 @@ msgstr "Einhängepunkt"
 #: /tmp/fish/implicit/share/completions/screen.fish:17
 #, fuzzy
 msgid "Flow control off"
-msgstr "Jobsteuerung: %ls\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/screen.fish:18
 msgid "Flow control automatic"
@@ -50578,7 +50576,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/status.fish:2
 #, fuzzy
 msgid "Test if this is a login shell"
-msgstr "Dies ist eine Login-Shell\n"
+msgstr "Dies ist eine Login-Shell"
 
 #: /tmp/fish/implicit/share/completions/status.fish:3
 #, fuzzy
@@ -50764,7 +50762,7 @@ msgstr "Befehle aus dem Cache starten"
 #: /tmp/fish/implicit/share/completions/sudo.fish:12
 #, fuzzy
 msgid "Run a login shell"
-msgstr "Dies ist eine Login-Shell\n"
+msgstr "Dies ist eine Login-Shell"
 
 #: /tmp/fish/implicit/share/completions/sudo.fish:13
 msgid "Reset or ignore the credential timestamp"
@@ -50802,7 +50800,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/su.fish:1
 #, fuzzy
 msgid "Make login shell"
-msgstr "Dies ist eine Login-Shell\n"
+msgstr "Dies ist eine Login-Shell"
 
 #: /tmp/fish/implicit/share/completions/su.fish:2
 msgid "Pass command to shell"
@@ -52819,7 +52817,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/tmux.fish:6
 #, fuzzy
 msgid "Behave as a login shell"
-msgstr "Dies ist eine Login-Shell\n"
+msgstr "Dies ist eine Login-Shell"
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:7
 #, fuzzy
@@ -54608,7 +54606,7 @@ msgstr "Auswahl per Gruppe"
 #: /tmp/fish/implicit/share/completions/useradd.fish:5
 #, fuzzy
 msgid "The user's home directory will be created if it does not exist"
-msgstr "%ls: Verzeichnis '%ls' existiert nicht\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/useradd.fish:6
 msgid ""
@@ -58400,7 +58398,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/xterm.fish:71
 #, fuzzy
 msgid "The shell in xterm's window will be login shell"
-msgstr "Dies ist keine Login-Shell\n"
+msgstr "Dies ist keine Login-Shell"
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:72
 msgid "Ring bell if the user types near the end of line"

@@ -250,7 +250,7 @@ msgstr "%ls: Définition de la variable PWD impossible\n"
 #: builtin.cpp:3368
 #, fuzzy, c-format
 msgid "%ls: Key not specified\n"
-msgstr "Utiliser une étiquette spécifiée"
+msgstr "Utiliser une étiquette spécifiée\n"
 
 #: builtin.cpp:3412 builtin.cpp:3420
 #, fuzzy, c-format
@@ -556,7 +556,7 @@ msgstr "Groupe\n"
 #: builtin_jobs.cpp:126
 #, fuzzy
 msgid "Process\n"
-msgstr "Processus"
+msgstr "Processus\n"
 
 #: builtin_jobs.cpp:143
 msgid "Command\n"
@@ -604,12 +604,12 @@ msgstr "largeur de champ invalide: %ls"
 #: builtin_printf.cpp:708
 #, fuzzy, c-format
 msgid "invalid precision: %ls"
-msgstr "%ls: id de processus invalide %ls\n"
+msgstr "%ls: id de processus invalide %ls"
 
 #: builtin_printf.cpp:739
 #, fuzzy, c-format
 msgid "%.*ls: invalid conversion specification"
-msgstr "%ls: Combinaison d'options invalide\n"
+msgstr "%ls: Combinaison d'options invalide"
 
 #: builtin_printf.cpp:771
 msgid "printf: not enough arguments"
@@ -679,7 +679,7 @@ msgstr "%s: Un argument attendu\n"
 #: builtin_set_color.cpp:173
 #, fuzzy, c-format
 msgid "%ls: Could not set up terminal\n"
-msgstr "Paramétrage du terminal impossible"
+msgstr "Paramétrage du terminal impossible\n"
 
 #: common.cpp:1917
 msgid "This is a bug. Break on bugreport to debug."
@@ -1321,7 +1321,7 @@ msgstr "Raccourci clavier inconnu 0x%X"
 #: reader.cpp:4226
 #, fuzzy
 msgid "Error while reading from file descriptor"
-msgstr "Erreur lors de la lecture du fichier %ls\n"
+msgstr "Erreur lors de la lecture du fichier"
 
 #: reader.cpp:4243
 msgid "Error while closing input stream"
@@ -1808,7 +1808,7 @@ msgstr "Commande interne inconnue '%ls'"
 #: parse_constants.h:204
 #, fuzzy, c-format
 msgid "Unable to expand variable name '%ls'"
-msgstr "%ls: Nom de variable invalide '%ls'\n"
+msgstr "Nom de variable invalide '%ls'"
 
 #: parse_constants.h:207
 #, fuzzy, c-format
@@ -8372,24 +8372,22 @@ msgstr ""
 #: share/functions/abbr.fish:40
 #, fuzzy
 msgid "%s: invalid option -- %s\\n"
-msgstr "%ls: Option invalide -- %lc\n"
+msgstr "%s: Option invalide -- %s\\n"
 
 #: share/functions/abbr.fish:47
 #, fuzzy
 msgid "%s: %s cannot be specified along with %s\\n"
 msgstr ""
-"%ls: 'erase' ne peut pas spécifier des valeurs\n"
-"%ls\n"
 
 #: share/functions/abbr.fish:56
 #, fuzzy
 msgid "%s: option requires an argument -- %s\\n"
-msgstr "%ls: L'option exige un argument -- %lc\n"
+msgstr "%ls: L'option exige un argument -- %s\\n"
 
 #: share/functions/abbr.fish:62
 #, fuzzy
 msgid "%s: Unexpected argument -- %s\\n"
-msgstr "%ls: Argument attendu\n"
+msgstr "%s: Argument attendu -- %s\\n"
 
 #: share/functions/abbr.fish:75
 msgid "%s: abbreviation must have a non-empty key\\n"
@@ -8412,12 +8410,12 @@ msgstr ""
 #: share/functions/alias.fish:36
 #, fuzzy
 msgid "%s: Expected one or two arguments, got %d\\n"
-msgstr "%ls: Un argument attendu, %d obtenu(s)\n"
+msgstr "%s: Un argument attendu, %d obtenu(s)\\n"
 
 #: share/functions/alias.fish:42
 #, fuzzy
 msgid "%s: Name cannot be empty\\n"
-msgstr "%ls: Le nom de variable ne peut pas être une chaîne vide\n"
+msgstr "ls: Le nom de variable ne peut pas être une chaîne vide\\n"
 
 #: share/functions/alias.fish:45
 msgid "%s: Body cannot be empty\\n"
@@ -8504,12 +8502,12 @@ msgstr ""
 #: share/functions/funcsave.fish:11
 #, fuzzy
 msgid "%s: Expected function name\\n"
-msgstr "%ls: Exactement un nom de fonction est attendu\n"
+msgstr "%s: Exactement un nom de fonction est attendu\\n"
 
 #: share/functions/funcsave.fish:26
 #, fuzzy
 msgid "%s: Could not create configuration directory\\n"
-msgstr "%ls: Répertoire personnel introuvable\n"
+msgstr "%ls: Répertoire personnel introuvable\\n"
 
 #: share/functions/funcsave.fish:36
 #, fuzzy

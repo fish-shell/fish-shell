@@ -4,7 +4,7 @@
 #
 function __fish_complete_directories -d "Complete directory prefixes" --argument comp desc
     if not set -q desc[1]
-        set desc (_ Directory)
+        set desc (_ "Directory")
     end
 
     set -l dirs $comp*/

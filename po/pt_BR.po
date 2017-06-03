@@ -672,7 +672,7 @@ msgstr "%ls: Esperava um argumento\n"
 #: builtin_set_color.cpp:173
 #, fuzzy, c-format
 msgid "%ls: Could not set up terminal\n"
-msgstr "Could not set up terminal"
+msgstr "%ls: Could not set up terminal\n"
 
 #: common.cpp:1917
 msgid "This is a bug. Break on bugreport to debug."
@@ -9066,22 +9066,22 @@ msgstr "Manual sections"
 #: share/functions/abbr.fish:40
 #, fuzzy
 msgid "%s: invalid option -- %s\\n"
-msgstr "%ls: Opção inválida -- %lc\n"
+msgstr "%s: Opção inválida -- %s\\n"
 
 #: share/functions/abbr.fish:47
 #, fuzzy
 msgid "%s: %s cannot be specified along with %s\\n"
-msgstr "%ls: Values cannot be specfied with erase\n"
+msgstr ""
 
 #: share/functions/abbr.fish:56
 #, fuzzy
 msgid "%s: option requires an argument -- %s\\n"
-msgstr "%ls: Opção requer argumento -- %lc\n"
+msgstr "%s: Opção requer argumento -- %s\\n"
 
 #: share/functions/abbr.fish:62
 #, fuzzy
 msgid "%s: Unexpected argument -- %s\\n"
-msgstr "%ls: Esperava argumento\n"
+msgstr "%s: Esperava argumento -- %s\\n"
 
 #: share/functions/abbr.fish:75
 msgid "%s: abbreviation must have a non-empty key\\n"
@@ -9109,7 +9109,7 @@ msgstr "%s: Expected 1, 2 or 3 arguments, got %d\\n"
 #: share/functions/alias.fish:42
 #, fuzzy
 msgid "%s: Name cannot be empty\\n"
-msgstr "%ls: Nome da variável não pode ser a string vazia\n"
+msgstr "%s: Nome da variável não pode ser a string vazia\\n"
 
 #: share/functions/alias.fish:45
 msgid "%s: Body cannot be empty\\n"
@@ -9198,7 +9198,7 @@ msgstr ""
 #: share/functions/funcsave.fish:11
 #, fuzzy
 msgid "%s: Expected function name\\n"
-msgstr "%ls: Expected function name\n"
+msgstr "%s: Expected function name\\n"
 
 #: share/functions/funcsave.fish:26
 msgid "%s: Could not create configuration directory\\n"

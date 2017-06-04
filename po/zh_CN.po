@@ -20,7 +20,7 @@ msgstr "不能自动加载项目 “%ls”，它已经被自动加载了。"
 #: src/builtin_commandline.cpp:353
 #, fuzzy, c-format
 msgid "%ls: Unknown input function '%ls'"
-msgstr "%ls：未知的输入函数 “%ls”\n"
+msgstr "%ls：未知的输入函数 “%ls”"
 
 #: src/builtin_complete.cpp:177
 #, fuzzy, c-format
@@ -131,12 +131,12 @@ msgstr "%ls：函数 “%ls” 不存在\n"
 #: src/builtin.cpp:1548
 #, fuzzy, c-format
 msgid "%ls: Expected function name"
-msgstr "%ls：应有函数名\n"
+msgstr "%ls：应有函数名"
 
 #: src/builtin.cpp:1554
 #, fuzzy, c-format
 msgid "%ls: Illegal function name '%ls'"
-msgstr "%ls：函数名 “%ls” 非法\n"
+msgstr "%ls：函数名 “%ls” 非法"
 
 #: src/builtin.cpp:1561
 #, fuzzy, c-format
@@ -145,27 +145,27 @@ msgid ""
 "and can not be used as a function name"
 msgstr ""
 "%ls：名字 “%ls” 已经保留，\n"
-"不能作为函数名\n"
+"不能作为函数名"
 
 #: src/builtin.cpp:1630
 #, fuzzy, c-format
 msgid "%ls: Unknown signal '%ls'"
-msgstr "%ls：未知的信号 “%ls”\n"
+msgstr "%ls：未知的信号 “%ls”"
 
 #: src/builtin.cpp:1675
 #, fuzzy, c-format
 msgid "%ls: Cannot find calling job for event handler"
-msgstr "%ls：Cannot find calling job for event handler\n"
+msgstr ""
 
 #: src/builtin.cpp:1683
 #, fuzzy, c-format
 msgid "%ls: Invalid process id '%ls'"
-msgstr "%ls：进程id %ls 非法\n"
+msgstr "%ls：进程id %ls 非法"
 
 #: src/builtin.cpp:1739
 #, fuzzy, c-format
 msgid "%ls: Unexpected positional argument '%ls'"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%ls：应有一个参数，提供了 %ls 个"
 
 #: src/builtin.cpp:2163
 #, fuzzy, c-format
@@ -850,7 +850,7 @@ msgstr ""
 #: src/env.cpp:558
 #, fuzzy
 msgid "Could not set up terminal."
-msgstr "%ls：不能设置 PWD 变量\n"
+msgstr ""
 
 #: src/env.cpp:560
 #, fuzzy
@@ -982,7 +982,7 @@ msgstr ""
 #: src/exec.cpp:49
 #, fuzzy, c-format
 msgid "An error occurred while redirecting file '%s'"
-msgstr "%ls：读取源文件“%ls”时遇到错误：\n"
+msgstr ""
 
 #: src/exec.cpp:634
 #, fuzzy, c-format
@@ -992,7 +992,7 @@ msgstr "未知的内置命令 “%ls”"
 #: src/exec.cpp:751
 #, fuzzy, c-format
 msgid "Unknown input redirection type %d"
-msgstr "%ls：未知的输入函数 “%ls”\n"
+msgstr ""
 
 #: src/expand.cpp:54
 msgid "Child process"
@@ -1001,7 +1001,7 @@ msgstr ""
 #: src/expand.cpp:57
 #, fuzzy
 msgid "Process"
-msgstr "进程\n"
+msgstr "进程"
 
 #: src/expand.cpp:60
 msgid "Job"
@@ -1010,7 +1010,7 @@ msgstr ""
 #: src/expand.cpp:63
 #, fuzzy, c-format
 msgid "Job: %ls"
-msgstr "任务控制：%ls\n"
+msgstr "任务控制：%ls"
 
 #: src/expand.cpp:66
 msgid "Shell process"
@@ -1255,7 +1255,7 @@ msgstr ""
 #: src/parser.cpp:397
 #, fuzzy
 msgid "\tcalled on standard input\n"
-msgstr "标准输入"
+msgstr "\t标准输入\n"
 
 #: src/parser.cpp:410
 #, c-format
@@ -1289,8 +1289,6 @@ msgstr ""
 #, fuzzy, c-format
 msgid "The '%ls' command can not be used in a pipeline"
 msgstr ""
-"%ls：名字 “%ls” 已经保留，\n"
-"不能作为函数名\n"
 
 #: src/parse_util.cpp:32
 #, c-format
@@ -1304,7 +1302,7 @@ msgstr ""
 #: src/path.cpp:25
 #, fuzzy, c-format
 msgid "Error while searching for command '%ls'"
-msgstr "%ls：读取文件 “%ls” 时发生错误\n"
+msgstr ""
 
 #: src/path.cpp:233
 #, c-format
@@ -1361,12 +1359,12 @@ msgstr ""
 #: src/proc.cpp:799
 #, fuzzy, c-format
 msgid "Could not send job %d ('%ls') to foreground"
-msgstr "将任务 %d，“%ls” 发送到前台\n"
+msgstr "将任务 %d，“%ls” 发送到前台"
 
 #: src/proc.cpp:816
 #, fuzzy, c-format
 msgid "terminal_give_to_job(): Could not send job %d ('%ls') to foreground"
-msgstr "将任务 %d，“%ls” 发送到前台\n"
+msgstr "将任务 %d，“%ls” 发送到前台"
 
 #: src/proc.cpp:840 src/proc.cpp:849 src/proc.cpp:863
 msgid "Could not return shell to foreground"
@@ -1385,7 +1383,7 @@ msgstr "打印单词计数"
 #: src/proc.cpp:1007
 #, fuzzy
 msgid "Process name"
-msgstr "进程\n"
+msgstr "进程"
 
 #: src/proc.cpp:1010
 #, c-format
@@ -1443,7 +1441,7 @@ msgstr "未知的内置命令 “%ls”"
 #: src/reader.cpp:3288
 #, fuzzy
 msgid "Error while reading from file descriptor"
-msgstr "%ls：读取文件 “%ls” 时发生错误\n"
+msgstr ""
 
 #: src/reader.cpp:3302
 msgid "Error while closing input stream"
@@ -1820,7 +1818,7 @@ msgstr ""
 #: src/parse_constants.h:233
 #, fuzzy, c-format
 msgid "Illegal command name '%ls'"
-msgstr "%ls：函数名 “%ls” 非法\n"
+msgstr ""
 
 #: src/parse_constants.h:236
 #, c-format
@@ -1830,7 +1828,7 @@ msgstr "未知的内置命令 “%ls”"
 #: src/parse_constants.h:239
 #, fuzzy, c-format
 msgid "Unable to expand variable name '%ls'"
-msgstr "%ls：变量名 “%ls” 非法\n"
+msgstr ""
 
 #: src/parse_constants.h:242
 #, c-format
@@ -1850,12 +1848,12 @@ msgstr ""
 #: src/parse_constants.h:251
 #, fuzzy
 msgid "'break' while not inside of loop"
-msgstr "%ls：不在循环体内部\n"
+msgstr ""
 
 #: src/parse_constants.h:254
 #, fuzzy
 msgid "'continue' while not inside of loop"
-msgstr "%ls：不在循环体内部\n"
+msgstr ""
 
 #: src/parse_constants.h:257
 msgid "'return' outside of function definition"
@@ -1864,7 +1862,7 @@ msgstr ""
 #: src/parse_constants.h:262
 #, fuzzy, c-format
 msgid "$%lc is not a valid variable in fish."
-msgstr "%ls：变量名 “%ls” 非法\n"
+msgstr ""
 
 #: src/parse_constants.h:265
 #, c-format
@@ -2364,7 +2362,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/abbr.fish:1
 #, fuzzy
 msgid "%s: invalid option -- %s\\n"
-msgstr "%ls：进程id %ls 非法\n"
+msgstr "%s：进程id %s 非法\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:2
 msgid "%s: %s cannot be specified along with %s\\n"
@@ -2374,13 +2372,11 @@ msgstr ""
 #, fuzzy
 msgid "%s: option requires an argument -- %s\\n"
 msgstr ""
-"%ls：Erase 需要一个变量名\n"
-"%ls\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
 #, fuzzy
 msgid "%s: Unexpected argument -- %s\\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%s：应有一个参数，提供了 %s 个\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:5
 #: /tmp/fish/explicit/share/functions/abbr.fish:8
@@ -2394,7 +2390,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/abbr.fish:7
 #, fuzzy
 msgid "%s: abbreviation '%s' already exists, cannot rename\\n"
-msgstr "%ls：函数 “%ls” 不存在\n"
+msgstr "%s：函数 “%s” 不存在\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:9
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
@@ -2404,7 +2400,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/alias.fish:1
 #, fuzzy
 msgid "%s: Expected one or two arguments, got %d\\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%s：应有一个参数，提供了 %d 个\\n"
 
 #: /tmp/fish/explicit/share/functions/alias.fish:2
 msgid "%s: Name cannot be empty\\n"
@@ -2446,7 +2442,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/fish_md5.fish:2
 #, fuzzy
 msgid "%s: Too many arguments %s\\n"
-msgstr "%ls：参数过多\n"
+msgstr "%s：参数过多\\n"
 
 #: /tmp/fish/explicit/share/functions/__fish_move_last.fish:1
 msgid "Hit end of history…\\n"
@@ -2473,12 +2469,12 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/vared.fish:1
 #, fuzzy
 msgid "%s: Unknown option %s\\n"
-msgstr "%ls：未知的输入函数 “%ls”\n"
+msgstr "%s：未知的输入函数 “%s”\\n"
 
 #: /tmp/fish/explicit/share/functions/funced.fish:2
 #, fuzzy
 msgid "funced: You must specify one function name"
-msgstr "%ls：应恰好有一个函数名\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/funced.fish:4
 msgid "Editing failed or was cancelled"
@@ -2499,22 +2495,22 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/funcsave.fish:1
 #, fuzzy
 msgid "%s: Expected function name\\n"
-msgstr "%ls：应有函数名\n"
+msgstr "%s：应有函数名\\n"
 
 #: /tmp/fish/explicit/share/functions/funcsave.fish:2
 #, fuzzy
 msgid "%s: Could not create configuration directory\\n"
-msgstr "%ls：找不到home目录\n"
+msgstr "%s：找不到home目录\\n"
 
 #: /tmp/fish/explicit/share/functions/funcsave.fish:3
 #, fuzzy
 msgid "%s: Unknown function '%s'\\n"
-msgstr "%ls：未知的输入函数 “%ls”\n"
+msgstr "%s：未知的输入函数 “%s”\\n"
 
 #: /tmp/fish/explicit/share/functions/help.fish:1
 #, fuzzy
 msgid "%s: Could not find a web browser.\\n"
-msgstr "%ls：找不到home目录\n"
+msgstr "%ls：找不到home目录\\n"
 
 #: /tmp/fish/explicit/share/functions/help.fish:3
 msgid "help: Help is being displayed in your default browser.\\n"
@@ -2527,7 +2523,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/history.fish:2
 #, fuzzy
 msgid "%ls: Invalid combination of options,\\n%ls\\n"
-msgstr "%ls：非法的选项组合\n"
+msgstr "%ls：非法的选项组合\\n%ls\\n"
 
 #: /tmp/fish/explicit/share/functions/history.fish:3
 msgid "%ls: you cannot use any options with the %ls command\\n"
@@ -2536,7 +2532,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/history.fish:4
 #, fuzzy
 msgid "%ls: %ls expected %d args, got %d\\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%ls：应有一个参数，提供了 %d 个\\n"
 
 #: /tmp/fish/explicit/share/functions/history.fish:5
 msgid "You must specify at least one search term when deleting entries\\n"
@@ -2574,18 +2570,18 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/seq.fish:1
 #, fuzzy
 msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%ls：应有一个参数，提供了 %d 个\\n"
 
 #: /tmp/fish/explicit/share/functions/seq.fish:2
 #, fuzzy
 msgid "%s: '%s' is not a number\\n"
-msgstr "%ls：“%ls” 不是一个任务\n"
+msgstr "%ls：“%ls” 不是一个任务\\n"
 
 #: /tmp/fish/explicit/share/functions/setenv.fish:1
 #: /tmp/fish/explicit/share/functions/umask.fish:3
 #, fuzzy
 msgid "%s: Too many arguments\\n"
-msgstr "%ls：参数过多\n"
+msgstr "%ls：参数过多\\n"
 
 #: /tmp/fish/explicit/share/functions/setenv.fish:2
 msgid "%s: Variable name must contain alphanumeric characters\\n"
@@ -2618,13 +2614,13 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/type.fish:8
 #, fuzzy
 msgid "%s: Could not find '%s'\\n"
-msgstr "%ls：找不到home目录\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/umask.fish:1
 #: /tmp/fish/explicit/share/functions/umask.fish:2
 #, fuzzy
 msgid "%s: Invalid mask '%s'\\n"
-msgstr "%ls：变量名 “%ls” 非法\n"
+msgstr "%s：变量名 “%s” 非法\\n"
 
 #: /tmp/fish/explicit/share/functions/vared.fish:2
 msgid ""
@@ -2941,7 +2937,7 @@ msgstr "改变工作目录（当前目录）"
 #: /tmp/fish/implicit/share/completions/ack.fish:47
 #, fuzzy
 msgid "Don't ignore directory"
-msgstr "%ls：找不到home目录\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ack.fish:48
 msgid "Add filter for ignoring files"
@@ -10047,7 +10043,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/chsh.fish:1
 #, fuzzy
 msgid "Specify your login shell"
-msgstr "这是登录shell\n"
+msgstr "这是登录shell"
 
 #: /tmp/fish/implicit/share/completions/chsh.fish:2
 msgid "Display help and exit\t"
@@ -10285,7 +10281,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/sudo.fish:20
 #, fuzzy
 msgid "Command to run"
-msgstr "命令\n"
+msgstr "命令"
 
 #: /tmp/fish/implicit/share/completions/commandline.fish:2
 msgid "Add text to the end of the selected area"
@@ -15524,7 +15520,7 @@ msgstr "处理环境变量"
 #: /tmp/fish/implicit/share/completions/time.fish:1
 #, fuzzy
 msgid "Command"
-msgstr "命令\n"
+msgstr "命令"
 
 #: /tmp/fish/implicit/share/completions/env.fish:3
 msgid "Start with an empty environment"
@@ -17663,7 +17659,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/fossil.fish:233
 #, fuzzy
 msgid "PGP command"
-msgstr "命令\n"
+msgstr "命令"
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:234
 msgid "HTTP proxy URL"
@@ -17965,7 +17961,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/function.fish:4
 #, fuzzy
 msgid "Make the function a job exit event handler"
-msgstr "%ls：Cannot find calling job for event handler\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/function.fish:5
 msgid "Make the function a process exit event handler"
@@ -18041,7 +18037,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/fuser.fish:4
 #, fuzzy
 msgid "List all known signal names"
-msgstr "%ls：未知的信号 “%ls”\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fuser.fish:5
 msgid "All processes accessing files on that file system are listed"
@@ -25344,7 +25340,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/git.fish:381
 #, fuzzy
 msgid "Custom command"
-msgstr "命令\n"
+msgstr "命令"
 
 #: /tmp/fish/implicit/share/completions/godoc.fish:1
 msgid "Comma-separated list of analyses to perform"
@@ -31177,7 +31173,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/light.fish:7
 #, fuzzy
 msgid "List controllers"
-msgstr "任务控制：%ls\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/light.fish:8
 msgid "Restore brightness"
@@ -33087,7 +33083,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/man.fish:28
 #, fuzzy
 msgid "Preprocessors"
-msgstr "进程\n"
+msgstr "进程"
 
 #: /tmp/fish/implicit/share/completions/man.fish:29
 msgid "Format for printing"
@@ -46525,12 +46521,12 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/screen.fish:16
 #, fuzzy
 msgid "Flow control on"
-msgstr "任务控制：%ls\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/screen.fish:17
 #, fuzzy
 msgid "Flow control off"
-msgstr "任务控制：%ls\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/screen.fish:18
 msgid "Flow control automatic"
@@ -46597,7 +46593,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/screen.fish:37
 #, fuzzy
 msgid "Send command"
-msgstr "状态\t命令\n"
+msgstr "状态\t命令"
 
 #: /tmp/fish/implicit/share/completions/scrot.fish:2
 msgid "Display version information and exit"
@@ -47274,12 +47270,12 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/status.fish:2
 #, fuzzy
 msgid "Test if this is a login shell"
-msgstr "这是登录shell\n"
+msgstr "这是登录shell"
 
 #: /tmp/fish/implicit/share/completions/status.fish:3
 #, fuzzy
 msgid "Test if this is an interactive shell"
-msgstr "这是登录shell\n"
+msgstr "这是登录shell"
 
 #: /tmp/fish/implicit/share/completions/status.fish:4
 msgid "Test if a command substitution is currently evaluated"
@@ -47443,7 +47439,7 @@ msgstr "在当前进程下执行命令"
 #: /tmp/fish/implicit/share/completions/sudo.fish:12
 #, fuzzy
 msgid "Run a login shell"
-msgstr "这是登录shell\n"
+msgstr "这是登录shell"
 
 #: /tmp/fish/implicit/share/completions/sudo.fish:13
 msgid "Reset or ignore the credential timestamp"
@@ -47479,7 +47475,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/su.fish:1
 #, fuzzy
 msgid "Make login shell"
-msgstr "这是登录shell\n"
+msgstr "这是登录shell"
 
 #: /tmp/fish/implicit/share/completions/su.fish:2
 msgid "Pass command to shell"
@@ -49003,7 +48999,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/test.fish:15
 #, fuzzy
 msgid "File is block device"
-msgstr "%ls：没有定义区块\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/test.fish:16
 msgid "File is character device"
@@ -49366,7 +49362,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/tmux.fish:6
 #, fuzzy
 msgid "Behave as a login shell"
-msgstr "这是登录shell\n"
+msgstr "这是登录shell"
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:7
 msgid "Set the quiet server option"
@@ -49628,7 +49624,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/tmux.fish:72
 #, fuzzy
 msgid "unset variable"
-msgstr "%ls：不能设置 PWD 变量\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:77
 msgid "Open the command prompt in a client"
@@ -50867,7 +50863,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/uname.fish:14
 #, fuzzy
 msgid "Print processor"
-msgstr "进程\n"
+msgstr "进程"
 
 #: /tmp/fish/implicit/share/completions/uname.fish:15
 msgid "Print hardware platform"
@@ -50994,7 +50990,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/useradd.fish:5
 #, fuzzy
 msgid "The user's home directory will be created if it does not exist"
-msgstr "%ls：目录 “%ls” 不存在\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/useradd.fish:6
 msgid ""
@@ -54473,7 +54469,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/xterm.fish:71
 #, fuzzy
 msgid "The shell in xterm's window will be login shell"
-msgstr "这不是登录shell\n"
+msgstr "这不是登录shell"
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:72
 msgid "Ring bell if the user types near the end of line"

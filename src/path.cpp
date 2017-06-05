@@ -4,7 +4,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
-#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -240,7 +239,7 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
         debug(0, _(L"The error was '%s'."), strerror(saved_errno));
         debug(0, _(L"Please set $%ls to a directory where you have write access."), env_var);
     }
-    fputwc(L'\n', stderr);
+    write(STDERR_FILENO, "\n", 1);
 }
 
 static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring &which_dir,

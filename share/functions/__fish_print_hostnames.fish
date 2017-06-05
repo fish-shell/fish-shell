@@ -74,7 +74,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         end
         _recursive $ssh_config
     end
-    set -l ssh_configs (_ssh_include /etc/ssh/ssh_config) (_ssh_include $ssh_config)
+    set -l ssh_configs /etc/ssh/ssh_config (_ssh_include /etc/ssh/ssh_config) $ssh_config (_ssh_include $ssh_config)
 
     for file in $ssh_configs
         if test -r $file

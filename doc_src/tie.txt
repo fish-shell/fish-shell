@@ -38,15 +38,17 @@ tie -s . EVAR silly_var
 
 \subsection tie-notes Notes
 
-If you use `set -l` on either tied var in a nested block you must do the same for its alternate form. Let's say you want to make a local modification to the array form. Then in that case you have to also create a local version of the scalar form:
+If you use `set -l` on a tied var in a nested block you do not need to do anything special to its mirror. The mirror var will be automatically localized. Let's say you want to make a local modification to the array form of a tied var. Just do so and a local version of the scalar form will automatically be created and restored when the block is exited:
 
 \fish
 tie GOPATH
 set gopath /path1 /path2
+set SAVED_GOPATH $GOPATH
 block
-    set -l GOPATH
     set -l gopath /path3 /path4
+    test $GOPATH = "/path3:/path4"
+    and "Yay! The localized change to gopath was reflected in GOPATH."
 end
+test $GOPATH = $SAVED_GOPATH
+and "Yay! The localized change to GOPATH did not bleed into the global scope."
 \endfish
-
-If you don't do that then `GOPATH` scalar form won't be properly restored to the original string when leaving the block.

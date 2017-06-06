@@ -84,19 +84,32 @@ end
 echo $xyz
 echo $XYZ
 
+begin
+    set XYZ x1:y3:z5
+end
+echo $xyz
+echo $XYZ
+
 echo '# Changing a tied var in a nested block via `set -l` should not affect the global scope.'
 set -g not_tied xx yy
+tie -s - GHI
 begin
     set -l not_tied abc def
-    set -l XYZ $XYZ
     set -l xyz 2 4 6
+    set -l GHI g-h-i
     echo $not_tied
     echo $xyz
     echo $XYZ
+    echo $ghi
+    echo $GHI
 end
 echo $not_tied
 echo $xyz
 echo $XYZ
+set -q ghi
+or echo ghi not set in outer scope as expected
+set -q GHI
+or echo GHI not set in outer scope as expected
 
 echo '# Erasing a tied var should erase it\'s mirror but should leave the tie in place.'
 set -e XYZ

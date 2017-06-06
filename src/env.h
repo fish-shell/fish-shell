@@ -18,25 +18,22 @@ extern bool curses_initialized;
 enum {
     /// Default mode.
     ENV_DEFAULT = 0,
-
-    /// Flag for local (to the current block) variable.
-    ENV_LOCAL = 1,
-
-    /// Flag for exported (to commands) variable.
-    ENV_EXPORT = 2,
-
-    /// Flag for unexported variable.
-    ENV_UNEXPORT = 16,
-
+    /// Flag for setting a local (i.e., private to the current block) variable.
+    ENV_LOCAL = (1 << 0),
+    /// Flag to export the variable.
+    ENV_EXPORT = (1 << 1),
+    /// Flag to unexport the variable.
+    ENV_UNEXPORT = (1 << 2),
     /// Flag for global variable.
-    ENV_GLOBAL = 4,
-
+    ENV_GLOBAL = (1 << 3),
     /// Flag for variable update request from the user. All variable changes that are made directly
     /// by the user, such as those from the 'set' builtin must have this flag set.
-    ENV_USER = 8,
-
-    /// Flag for universal variable.
-    ENV_UNIVERSAL = 32
+    ENV_USER = (1 << 4),
+    /// Flag for setting a universal variable.
+    ENV_UNIVERSAL = (1 << 5),
+    /// Flag for inhibiting sending an event on variable change. This should only be used when
+    /// ENV_LOCAL is also specified when updating the mirror of a tied variable.
+    ENV_NO_EVENT = (1 << 6),
 };
 typedef uint32_t env_mode_flags_t;
 
@@ -59,7 +56,7 @@ void env_init(const struct config_paths_t *paths = NULL);
 /// routines.
 void misc_init();
 
-int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t mode);
+int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode);
 
 class env_var_t : public wcstring {
    private:

@@ -899,6 +899,52 @@ static env_node_t *env_get_node(const wcstring &key) {
     return env;
 }
 
+typedef struct {
+    bool found;
+    wcstring name;
+    env_var_t value;
+} tied_var_and_name_t;
+
+/// Find out if we're dealing with setting a local variable that is part of a tied pair of
+/// variables.
+void find_tied_var(const wcstring tied_var, tied_var_and_name_t *tied_partner_var) {
+    tied_partner_var->found = false;  // start by assuming it isn't found
+
+    wcstring tie_control_name(L"__fish_tied_");
+    tie_control_name.append(tied_var);
+    env_var_t tie_control_var = env_get_string(tie_control_name);
+    if (tie_control_var.missing()) {
+        return;  // it's not a tied var
+    }
+    tied_partner_var->found = true;
+
+    wcstring_list_t values;
+    tokenize_variable_array(tie_control_var, values);
+    // The tie control var has three values: type ("array" or "scalar"), name, separator.
+    if (values.size() != 3) {
+        debug(1, _(L"tied partner '%s' for '%ls' is invalid"), tied_partner_var->name.c_str(),
+              tied_var.c_str());
+        return;
+    }
+    wcstring partner_type = values[0];
+    wcstring partner_name = values[1];
+    if (partner_type != L"scalar" && partner_type != L"array") {
+        debug(1, _(L"tied partner '%s' for '%ls' is invalid"), tied_partner_var->name.c_str(),
+              tied_var.c_str());
+        return;
+    }
+
+    tied_partner_var->name = partner_name;
+    tied_partner_var->value = env_get_string(partner_name);
+    if (tied_partner_var->value.missing()) {  // it's a tied var but we can't find its counterpart
+        debug(3, _(L"tied partner '%ls' for '%ls' missing"), partner_name.c_str(),
+              tied_var.c_str());
+        return;
+    }
+
+    tied_partner_var->found = true;
+}
+
 /// Set the value of the environment variable whose name matches key to val.
 ///
 /// Memory policy: All keys and values are copied, the parameters can and should be freed by the
@@ -920,6 +966,20 @@ static env_node_t *env_get_node(const wcstring &key) {
 /// * ENV_INVALID, the variable value was invalid. This applies only to special variables.
 int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) {
     ASSERT_IS_MAIN_THREAD();
+
+    // This isn't as risky as it looks. If we're about to set a tied variable it should be
+    // impossible for the primary set in the next block to fail. Which means we shouldn't have to
+    // worry about localizing its mirror in this block. We have to localize the mirror var first
+    // because setting the primary var will trigger synchronizing the vars.
+    if (var_mode & ENV_LOCAL && !(var_mode & ENV_NO_EVENT)) {
+        tied_var_and_name_t tied_partner;
+        find_tied_var(key, &tied_partner);
+        if (tied_partner.found) {
+            const wchar_t *value = tied_partner.value.missing() ? NULL : tied_partner.value.c_str();
+            env_set(tied_partner.name, value, var_mode | ENV_NO_EVENT);
+        }
+    }
+
     bool has_changed_old = vars_stack().has_changed_exported;
     int done = 0;
 
@@ -1058,15 +1118,14 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
         }
     }
 
-    event_t ev = event_t::variable_event(key);
-    ev.arguments.reserve(3);
-    ev.arguments.push_back(L"VARIABLE");
-    ev.arguments.push_back(L"SET");
-    ev.arguments.push_back(key);
-
-    // debug( 1, L"env_set: fire events on variable %ls", key );
-    event_fire(&ev);
-    // debug( 1, L"env_set: return from event firing" );
+    if (!(var_mode & ENV_NO_EVENT)) {
+        event_t ev = event_t::variable_event(key);
+        ev.arguments.reserve(3);
+        ev.arguments.push_back(L"VARIABLE");
+        ev.arguments.push_back(L"SET");
+        ev.arguments.push_back(key);
+        event_fire(&ev);
+    }
 
     react_to_variable_change(key);
     return ENV_OK;

@@ -48,7 +48,7 @@ static int is_path_variable(const wchar_t *env) { return contains(path_variables
 static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
                       io_streams_t &streams) {
     size_t i;
-    int retcode = 0;
+    int retcode = STATUS_CMD_OK;
     const wchar_t *val_str = NULL;
 
     if (is_path_variable(key)) {
@@ -67,8 +67,9 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
         // which don't start with /.
         wcstring_list_t existing_values;
         const env_var_t existing_variable = env_get_string(key, ENV_DEFAULT);
-        if (!existing_variable.missing_or_empty())
+        if (!existing_variable.missing_or_empty()) {
             tokenize_variable_array(existing_variable, existing_values);
+        }
 
         for (i = 0; i < val.size(); i++) {
             const wcstring &dir = val.at(i);
@@ -110,7 +111,7 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
         // Fail at setting the path if we tried to set it to something non-empty, but it wound up
         // empty.
         if (!val.empty() && !any_success) {
-            return 1;
+            return STATUS_CMD_ERROR;
         }
     }
 
@@ -132,21 +133,21 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
         case ENV_PERM: {
             streams.err.append_format(_(L"%ls: Tried to change the read-only variable '%ls'\n"),
                                       L"set", key);
-            retcode = 1;
+            retcode = STATUS_CMD_ERROR;
             break;
         }
         case ENV_SCOPE: {
             streams.err.append_format(
                 _(L"%ls: Tried to set the special variable '%ls' with the wrong scope\n"), L"set",
                 key);
-            retcode = 1;
+            retcode = STATUS_CMD_ERROR;
             break;
         }
         case ENV_INVALID: {
             streams.err.append_format(
                 _(L"%ls: Tried to set the special variable '%ls' to an invalid value\n"), L"set",
                 key);
-            retcode = 1;
+            retcode = STATUS_CMD_ERROR;
             break;
         }
         default: {
@@ -343,7 +344,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const int incoming_exit_status = proc_get_last_status();
 
     // Variables used for performing the actual work.
-    wchar_t *dest = 0;
+    wchar_t *dest = NULL;
     int retcode = STATUS_CMD_OK;
     int scope;
     int slice = 0;
@@ -535,14 +536,14 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (!dest_str.missing()) {
             tokenize_variable_array(dest_str, result);
         } else if (erase) {
-            retcode = 1;
+            retcode = STATUS_CMD_ERROR;
         }
 
         if (!retcode) {
             for (; w.woptind < argc; w.woptind++) {
                 if (!parse_index(indexes, argv[w.woptind], dest, result.size(), streams)) {
                     builtin_print_help(parser, streams, argv[0], streams.err);
-                    retcode = 1;
+                    retcode = STATUS_CMD_ERROR;
                     break;
                 }
 
@@ -553,7 +554,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     if (val_count < idx_count) {
                         streams.err.append_format(_(BUILTIN_SET_ARG_COUNT), argv[0]);
                         builtin_print_help(parser, streams, argv[0], streams.err);
-                        retcode = 1;
+                        retcode = STATUS_CMD_ERROR;
                         break;
                     }
                     if (val_count == idx_count) {
@@ -593,7 +594,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 streams.err.append_format(_(L"%ls: Values cannot be specfied with erase\n"),
                                           argv[0]);
                 builtin_print_help(parser, streams, argv[0], streams.err);
-                retcode = 1;
+                retcode = STATUS_CMD_ERROR;
             } else {
                 retcode = env_remove(dest, scope);
             }

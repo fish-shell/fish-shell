@@ -67,13 +67,19 @@ count SPACE 1
 # Changing a tied var in a nested block should affect the global scope.
 1 3 5
 1:3:5
+x1 y3 z5
+x1:y3:z5
 # Changing a tied var in a nested block via `set -l` should not affect the global scope.
 abc def
 2 4 6
 2:4:6
+g h i
+g-h-i
 xx yy
-1 3 5
-1:3:5
+x1 y3 z5
+x1:y3:z5
+ghi not set in outer scope as expected
+GHI not set in outer scope as expected
 # Erasing a tied var should erase it's mirror but should leave the tie in place.
 salmon tuna cod
 salmon:tuna:cod

@@ -391,6 +391,17 @@ Command substitutions are not expanded within quotes. Instead, you can temporari
 <outp>testing_1360099791.txt</outp>
 \endfish
 
+Unlike other shells, fish does not split command substitutions on any whitespace (like spaces or tabs), only newlines. This can be an issue with commands like `pkg-config` that print what is meant to be multiple arguments on a single line. To split it on spaces too, use `string split`.
+
+\fish{cli-dark}
+>_ printf '%s\n' (pkg-config --libs gio-2.0)
+<outp>-lgio-2.0 -lgobject-2.0 -lglib-2.0</outp>
+>_ printf '%s\n' (pkg-config --libs gio-2.0 | string split " ")
+<outp>-lgio-2.0
+-lgobject-2.0
+-lglib-2.0</outp>
+\endfish
+
 
 \section tut_combiners Combiners (And, Or, Not)
 

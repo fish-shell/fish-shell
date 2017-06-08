@@ -43,6 +43,7 @@ If you are upgrading from version 2.5.0 or before, please also review the releas
 - `read` will read up to 10 MiB by default, leaving the target variable empty and exiting with status 122 if the line is too long. You can set a different limit with the `FISH_READ_BYTE_LIMIT` variable.
 - `read` supports a new `--silent` option to hide the characters typed (#838), for when reading sensitive data from the terminal. `read` also now accepts simple strings for the prompt (rather than scripts) with the new `-P` and `--prompt-str` options (#802).
 - `export` and `setenv` now understand colon-separated `PATH`, `CDPATH` and `MANPATH` variables.
+- `setenv` is no longer a simple alias for `set -gx` and will complain, just like the csh version, if given more than one value (#4103).
 - `bind` supports a new `--list-modes` option (#3872).
 - `bg` will check all of its arguments before backgrounding any jobs; any invalid arguments will cause a failure, but non-existent (eg recently exited) jobs are ignored (#3909).
 - `funced` warns if the function being edited has not been modified (#3961).

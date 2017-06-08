@@ -64,14 +64,14 @@ function psub --description "Read from stdin into a file and output the filename
         or return
         set filename $dirname/psub.fifo"$suffix"
         mkfifo $filename
-        cat >$filename &
+        command cat >$filename &
     else if test -z $suffix
         set filename (mktemp "$TMPDIR[1]"/.psub.XXXXXXXXXX)
-        cat >$filename
+        command cat >$filename
     else
         set dirname (mktemp -d "$TMPDIR[1]"/.psub.XXXXXXXXXX)
         set filename $dirname/psub"$suffix"
-        cat >$filename
+        command cat >$filename
     end
 
     # Write filename to stdout

@@ -1091,7 +1091,7 @@ Command mode is also known as normal mode.
 
 - @key{p} pastes text from the <a href="#killring">killring</a>.
 
-- @key{u} undoes the most recent action.
+- @key{u} search history backwards.
 
 - @key{[} and @key{]} search the command history for the previous/next token containing the token under the cursor before the search was started. See the <a href='#history'>history</a> section for more information on history searching.
 

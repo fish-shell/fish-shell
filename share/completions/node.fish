@@ -6,10 +6,10 @@
 #
 
 # the four main options, each with a short & long flag
-complete -x -c node -s v -n '__fish_not_contain_opt -s p -s i -s e --eval --print --interactive' -l version --description "Print node's version"
-complete -c node -n '__fish_not_contain_opt -s v -s p -s i --version --print --interactive' -r -s e -l eval --description 'Evaluate script'
-complete -c node -n '__fish_not_contain_opt -s v -s e -s i --version --eval --interactive' -r -s p -l print --description 'Print result of --eval'
-complete -c node -n '__fish_not_contain_opt -s v -s p -s e --version --print --eval' -s i -l interactive --description 'Always enter the REPL even if stdin does not appear to be a terminal'
+complete -x -c node -s v -n '__fish_not_contain_opt -s p -s i -s e eval print interactive' -l version --description "Print node's version"
+complete -c node -n '__fish_not_contain_opt -s v -s p -s i version print interactive' -r -s e -l eval --description 'Evaluate script'
+complete -c node -n '__fish_not_contain_opt -s v -s e -s i version eval interactive' -r -s p -l print --description 'Print result of --eval'
+complete -c node -n '__fish_not_contain_opt -s v -s p -s e version print eval' -s i -l interactive --description 'Always enter the REPL even if stdin does not appear to be a terminal'
 
 # longer options related to V8, ES5, logging, etc.
 complete -c node -l no-deprecation --description 'Silence deprecation warnings'

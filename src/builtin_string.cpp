@@ -94,22 +94,16 @@ static const wchar_t *string_get_arg(int *argidx, wchar_t **argv, wcstring *stor
 }
 
 static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L"n";
-    const struct woption long_options[] = {{L"no-quoted", no_argument, 0, 'n'}, {0, 0, 0, 0}};
-
     escape_flags_t flags = ESCAPE_ALL;
+
+    static const wchar_t *short_options = L"n";
+    static const struct woption long_options[] = {{L"no-quoted", no_argument, NULL, 'n'},
+                                                  {NULL, 0, NULL, 0}};
+
+    int opt;
     wgetopter_t w;
-    for (;;) {
-        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (opt == -1) {
-            break;
-        }
-
-        switch (opt) {
-            case 0: {
-                break;
-            }
+    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {  //!OCLINT(too few branches)
             case 'n': {
                 flags |= ESCAPE_NO_QUOTED;
                 break;
@@ -119,7 +113,7 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long_only");
                 break;
             }
         }
@@ -144,32 +138,26 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
 }
 
 static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L"q";
-    const struct woption long_options[] = {{L"quiet", no_argument, 0, 'q'}, {0, 0, 0, 0}};
-
     bool quiet = false;
+
+    static const wchar_t *short_options = L"q";
+    static const struct woption long_options[] = {{L"quiet", no_argument, NULL, 'q'},
+                                                  {NULL, 0, NULL, 0}};
+
+    int opt;
     wgetopter_t w;
-    for (;;) {
-        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (opt == -1) {
-            break;
-        }
-
-        switch (opt) {
-            case 0: {
-                break;
-            }
-            case 'q': {
+    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {  //!OCLINT(too few branches)
+            case L'q': {
                 quiet = true;
                 break;
             }
-            case '?': {
+            case L'?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long_only");
                 break;
             }
         }
@@ -207,31 +195,26 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
 }
 
 static int string_length(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L"q";
-    const struct woption long_options[] = {{L"quiet", no_argument, 0, 'q'}, {0, 0, 0, 0}};
-
     bool quiet = false;
-    wgetopter_t w;
-    for (;;) {
-        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
-        if (opt == -1) {
-            break;
-        }
-        switch (opt) {
-            case 0: {
-                break;
-            }
-            case 'q': {
+    static const wchar_t *short_options = L"q";
+    static const struct woption long_options[] = {{L"quiet", no_argument, NULL, 'q'},
+                                                  {NULL, 0, NULL, 0}};
+
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {  //!OCLINT(too few branches)
+            case L'q': {
                 quiet = true;
                 break;
             }
-            case '?': {
+            case L'?': {
                 string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long_only");
                 break;
             }
         }
@@ -513,15 +496,16 @@ class pcre2_matcher_t : public string_matcher_t {
 
 static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     wchar_t *cmd = argv[0];
-    const wchar_t *short_options = L"aeinqrv";
-    const struct woption long_options[] = {
+    bool regex = false;
+    match_options_t opts;
+
+    static const wchar_t *short_options = L"aeinqrv";
+    static const struct woption long_options[] = {
         {L"all", no_argument, NULL, 'a'},         {L"entire", no_argument, NULL, 'e'},
         {L"ignore-case", no_argument, NULL, 'i'}, {L"index", no_argument, NULL, 'n'},
         {L"invert", no_argument, NULL, 'v'},      {L"quiet", no_argument, NULL, 'q'},
         {L"regex", no_argument, NULL, 'r'},       {NULL, 0, NULL, 0}};
 
-    match_options_t opts;
-    bool regex = false;
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
@@ -643,24 +627,24 @@ class literal_replacer_t : public string_replacer_t {
     bool replace_matches(const wchar_t *arg);
 };
 
+static wcstring interpret_escapes(const wchar_t *orig) {
+    wcstring result;
+
+    while (*orig != L'\0') {
+        if (*orig == L'\\') {
+            orig += read_unquoted_escape(orig, &result, true, false);
+        } else {
+            result += *orig;
+            orig++;
+        }
+    }
+
+    return result;
+}
+
 class regex_replacer_t : public string_replacer_t {
     compiled_regex_t regex;
     wcstring replacement;
-
-    static wcstring interpret_escapes(const wchar_t *orig) {
-        wcstring result;
-
-        while (*orig != L'\0') {
-            if (*orig == L'\\') {
-                orig += read_unquoted_escape(orig, &result, true, false);
-            } else {
-                result += *orig;
-                orig++;
-            }
-        }
-
-        return result;
-    }
 
    public:
     regex_replacer_t(const wchar_t *argv0, const wchar_t *pattern, const wchar_t *replacement_,
@@ -757,14 +741,15 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
 }
 
 static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L"afiqr";
-    const struct woption long_options[] = {
+    bool regex = false;
+    replace_options_t opts;
+
+    static const wchar_t *short_options = L"afiqr";
+    static const struct woption long_options[] = {
         {L"all", no_argument, NULL, 'a'},         {L"filter", no_argument, NULL, 'f'},
         {L"ignore-case", no_argument, NULL, 'i'}, {L"quiet", no_argument, NULL, 'q'},
         {L"regex", no_argument, 0, 'r'},          {NULL, 0, NULL, 0}};
 
-    replace_options_t opts;
-    bool regex = false;
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
@@ -864,26 +849,20 @@ void split_about(ITER haystack_start, ITER haystack_end, ITER needle_start, ITER
 }
 
 static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L":m:qr";
-    const struct woption long_options[] = {{L"max", required_argument, 0, 'm'},
-                                           {L"quiet", no_argument, 0, 'q'},
-                                           {L"right", no_argument, 0, 'r'},
-                                           {0, 0, 0, 0}};
-
     long max = LONG_MAX;
     bool quiet = false;
     bool right = false;
-    wgetopter_t w;
-    for (;;) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
-        if (c == -1) {
-            break;
-        }
-        switch (c) {
-            case 0: {
-                break;
-            }
+    static const wchar_t *short_options = L":m:qr";
+    static const struct woption long_options[] = {{L"max", required_argument, 0, 'm'},
+                                                  {L"quiet", no_argument, 0, 'q'},
+                                                  {L"right", no_argument, 0, 'r'},
+                                                  {0, 0, 0, 0}};
+
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {
             case 'm': {
                 max = fish_wcstol(w.woptarg);
                 if (errno) {
@@ -909,7 +888,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long_only");
                 break;
             }
         }
@@ -986,20 +965,20 @@ static wcstring wcsrepeat_until(const wcstring &to_repeat, size_t max) {
 }
 
 static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L":n:m:Nq";
-    const struct woption long_options[] = {{L"count", required_argument, 0, 'n'},
-                                           {L"max", required_argument, 0, 'm'},
-                                           {L"no-newline", no_argument, 0, 'N'},
-                                           {L"quiet", no_argument, 0, 'q'},
-                                           {0, 0, 0, 0}};
-
     size_t count = 0;
     size_t max = 0;
     bool newline = true;
     bool quiet = false;
+
+    static const wchar_t *short_options = L":n:m:Nq";
+    static const struct woption long_options[] = {{L"count", required_argument, NULL, 'n'},
+                                                  {L"max", required_argument, NULL, 'm'},
+                                                  {L"no-newline", no_argument, NULL, 'N'},
+                                                  {L"quiet", no_argument, NULL, 'q'},
+                                                  {NULL, 0, NULL, 0}};
+
     int opt;
     wgetopter_t w;
-
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 'n': {
@@ -1044,7 +1023,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long_only");
                 break;
             }
         }
@@ -1077,27 +1056,20 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
 }
 
 static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L":l:qs:";
-    const struct woption long_options[] = {{L"length", required_argument, 0, 'l'},
-                                           {L"quiet", no_argument, 0, 'q'},
-                                           {L"start", required_argument, 0, 's'},
-                                           {0, 0, 0, 0}};
-
     long start = 0;
     long length = -1;
     bool quiet = false;
+
+    static const wchar_t *short_options = L":l:qs:";
+    static const struct woption long_options[] = {{L"length", required_argument, NULL, 'l'},
+                                                  {L"quiet", no_argument, NULL, 'q'},
+                                                  {L"start", required_argument, NULL, 's'},
+                                                  {NULL, 0, NULL, 0}};
+
+    int opt;
     wgetopter_t w;
-
-    for (;;) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (c == -1) {
-            break;
-        }
-        switch (c) {
-            case 0: {
-                break;
-            }
+    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {
             case 'l': {
                 length = fish_wcstol(w.woptarg);
                 if (length < 0 || errno == ERANGE) {
@@ -1135,7 +1107,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long_only");
                 break;
             }
         }
@@ -1182,27 +1154,21 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
 }
 
 static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L":c:lqr";
-    const struct woption long_options[] = {{L"chars", required_argument, 0, 'c'},
-                                           {L"left", no_argument, 0, 'l'},
-                                           {L"quiet", no_argument, 0, 'q'},
-                                           {L"right", no_argument, 0, 'r'},
-                                           {0, 0, 0, 0}};
-
     bool do_left = 0, do_right = 0;
     bool quiet = false;
     wcstring chars_to_trim = L" \f\n\r\t";
-    wgetopter_t w;
-    for (;;) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
-        if (c == -1) {
-            break;
-        }
-        switch (c) {
-            case 0: {
-                break;
-            }
+    static const wchar_t *short_options = L":c:lqr";
+    static const struct woption long_options[] = {{L"chars", required_argument, NULL, 'c'},
+                                                  {L"left", no_argument, NULL, 'l'},
+                                                  {L"quiet", no_argument, NULL, 'q'},
+                                                  {L"right", no_argument, NULL, 'r'},
+                                                  {NULL, 0, NULL, 0}};
+
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {
             case 'c': {
                 chars_to_trim = w.woptarg;
                 break;
@@ -1228,7 +1194,7 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long_only");
                 break;
             }
         }

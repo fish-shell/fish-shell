@@ -316,22 +316,6 @@ static void print_variables(int include_values, int esc, bool shorten_ok, int sc
 /// The set builtin creates, updates, and erases (removes, deletes) variables.
 int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
-    wgetopter_t w;
-    // Variables used for parsing the argument list.
-    const struct woption long_options[] = {{L"export", no_argument, 0, 'x'},
-                                           {L"global", no_argument, 0, 'g'},
-                                           {L"local", no_argument, 0, 'l'},
-                                           {L"erase", no_argument, 0, 'e'},
-                                           {L"names", no_argument, 0, 'n'},
-                                           {L"unexport", no_argument, 0, 'u'},
-                                           {L"universal", no_argument, 0, 'U'},
-                                           {L"long", no_argument, 0, 'L'},
-                                           {L"query", no_argument, 0, 'q'},
-                                           {L"help", no_argument, 0, 'h'},
-                                           {0, 0, 0, 0}};
-
-    const wchar_t *short_options = L"+xglenuULqh";
-
     int argc = builtin_count_args(argv);
 
     // Flags to set the work mode.
@@ -343,24 +327,32 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const int incoming_exit_status = proc_get_last_status();
 
     // Variables used for performing the actual work.
-    wchar_t *dest = 0;
+    wchar_t *dest = NULL;
     int retcode = STATUS_CMD_OK;
     int scope;
     int slice = 0;
 
+    // Variables used for parsing the argument list. This command is atypical in using the "+"
+    // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
+    // we stop scanning for flags when the first non-flag argument is seen.
+    static const wchar_t *short_options = L"+LUeghlnqux";
+    static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
+                                                  {L"global", no_argument, NULL, 'g'},
+                                                  {L"local", no_argument, NULL, 'l'},
+                                                  {L"erase", no_argument, NULL, 'e'},
+                                                  {L"names", no_argument, NULL, 'n'},
+                                                  {L"unexport", no_argument, NULL, 'u'},
+                                                  {L"universal", no_argument, NULL, 'U'},
+                                                  {L"long", no_argument, NULL, 'L'},
+                                                  {L"query", no_argument, NULL, 'q'},
+                                                  {L"help", no_argument, NULL, 'h'},
+                                                  {NULL, 0, NULL, 0}};
+
     // Parse options to obtain the requested operation and the modifiers.
-    w.woptind = 0;
-    while (1) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (c == -1) {
-            break;
-        }
-
-        switch (c) {
-            case 0: {
-                break;
-            }
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {
             case 'e': {
                 erase = 1;
                 preserve_failure_exit_status = false;
@@ -408,7 +400,10 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
-            default: { break; }
+            default: {
+                DIE("unexpected retval from wgetopt_long");
+                break;
+            }
         }
     }
 

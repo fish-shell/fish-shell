@@ -10,9 +10,9 @@ function man --description "Format and display the on-line manual pages"
         type -q manpath
         and set MANPATH (command manpath)
     end
-    set -l fish_manpath (dirname $__fish_datadir)/fish/man
-    if test -d "$fish_manpath" -a -n "$MANPATH"
-        set MANPATH "$fish_manpath":$MANPATH
+    set -l fish_man_path (dirname $__fish_datadir)/fish/man
+    if test -d "$fish_man_path" -a -n "$MANPATH"
+        set MANPATH "$fish_man_path":$MANPATH
 
         # Invoke man with this manpath, and we're done
         command man $argv

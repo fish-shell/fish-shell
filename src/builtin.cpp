@@ -589,7 +589,6 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
 /// The block builtin, used for temporarily blocking events.
 static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wgetopter_t w;
     enum {
         UNSET,
         GLOBAL,
@@ -600,27 +599,17 @@ static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv
     int erase = 0;
     int argc = builtin_count_args(argv);
 
-    w.woptind = 0;
+    static const wchar_t *short_options = L"eghl";
+    static const struct woption long_options[] = {{L"erase", no_argument, NULL, 'e'},
+                                                  {L"local", no_argument, NULL, 'l'},
+                                                  {L"global", no_argument, NULL, 'g'},
+                                                  {L"help", no_argument, NULL, 'h'},
+                                                  {NULL, 0, NULL, 0}};
 
-    static const struct woption long_options[] = {{L"erase", no_argument, 0, 'e'},
-                                                  {L"local", no_argument, 0, 'l'},
-                                                  {L"global", no_argument, 0, 'g'},
-                                                  {L"help", no_argument, 0, 'h'},
-                                                  {0, 0, 0, 0}};
-
-    while (1) {
-        int opt_index = 0;
-        int opt = w.wgetopt_long(argc, argv, L"elgh", long_options, &opt_index);
-        if (opt == -1) break;
-
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_CMD_ERROR;
-            }
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_CMD_OK;
@@ -642,7 +631,7 @@ static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -708,25 +697,15 @@ static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv
 static int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
     int list = 0;
-    wgetopter_t w;
 
+    static const wchar_t *short_options = L"hn";
     static const struct woption long_options[] = {
         {L"names", no_argument, 0, 'n'}, {L"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
 
-    while (1) {
-        int opt_index = 0;
-
-        int opt = w.wgetopt_long(argc, argv, L"nh", long_options, &opt_index);
-        if (opt == -1) break;
-
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_CMD_ERROR;
-            }
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_CMD_OK;
@@ -740,7 +719,7 @@ static int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -762,25 +741,15 @@ static int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **ar
 
 /// Implementation of the builtin emit command, used to create events.
 static int builtin_emit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wgetopter_t w;
     int argc = builtin_count_args(argv);
 
+    static const wchar_t *short_options = L"h";
     static const struct woption long_options[] = {{L"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
 
-    while (1) {
-        int opt_index = 0;
-
-        int opt = w.wgetopt_long(argc, argv, L"h", long_options, &opt_index);
-        if (opt == -1) break;
-
-        switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_CMD_ERROR;
-            }
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {  //!OCLINT(too few branches)
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_CMD_OK;
@@ -790,7 +759,7 @@ static int builtin_emit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -810,32 +779,20 @@ static int builtin_emit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 /// Implementation of the builtin 'command'. Actual command running is handled by the parser, this
 /// just processes the flags.
 static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wgetopter_t w;
     int argc = builtin_count_args(argv);
     bool find_path = false;
     bool quiet = false;
 
-    w.woptind = 0;
-
+    static const wchar_t *short_options = L"hqsv";
     static const struct woption long_options[] = {{L"quiet", no_argument, NULL, 'q'},
                                                   {L"search", no_argument, NULL, 's'},
                                                   {L"help", no_argument, NULL, 'h'},
                                                   {NULL, 0, NULL, 0}};
 
-    while (1) {
-        int opt_index = 0;
-
-        int opt = w.wgetopt_long(argc, argv, L"qsvh", long_options, &opt_index);
-        if (opt == -1) break;
-
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_CMD_ERROR;
-            }
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_CMD_OK;
@@ -854,7 +811,7 @@ static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -881,7 +838,6 @@ static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **ar
 /// A generic bultin that only supports showing a help message. This is only a placeholder that
 /// prints the help message. Useful for commands that live in the parser.
 static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wgetopter_t w;
     int argc = builtin_count_args(argv);
 
     // Hackish - if we have no arguments other than the command, we are a "naked invocation" and we
@@ -891,22 +847,14 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
         return STATUS_INVALID_ARGS;
     }
 
-    static const struct woption long_options[] = {{L"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
+    static const wchar_t *short_options = L"h";
+    static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
+                                                  {NULL, 0, NULL, 0}};
 
-    while (1) {
-        int opt_index = 0;
-
-        int opt = w.wgetopt_long(argc, argv, L"h", long_options, &opt_index);
-        if (opt == -1) break;
-
-        switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_CMD_ERROR;
-            }
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {  //!OCLINT(too few branches)
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_CMD_OK;
@@ -916,7 +864,7 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -1140,7 +1088,7 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -1592,22 +1540,6 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     wcstring_list_t inherit_vars;
     wcstring_list_t wrap_targets;
 
-    // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
-    // This is needed due to the semantics of the -a/--argument-names flag.
-    const wchar_t *short_options = L"+:a:d:e:hj:p:s:v:w:SV:";
-    const struct woption long_options[] = {{L"description", required_argument, NULL, 'd'},
-                                           {L"on-signal", required_argument, NULL, 's'},
-                                           {L"on-job-exit", required_argument, NULL, 'j'},
-                                           {L"on-process-exit", required_argument, NULL, 'p'},
-                                           {L"on-variable", required_argument, NULL, 'v'},
-                                           {L"on-event", required_argument, NULL, 'e'},
-                                           {L"wraps", required_argument, NULL, 'w'},
-                                           {L"help", no_argument, NULL, 'h'},
-                                           {L"argument-names", required_argument, NULL, 'a'},
-                                           {L"no-scope-shadowing", no_argument, NULL, 'S'},
-                                           {L"inherit-variable", required_argument, NULL, 'V'},
-                                           {NULL, 0, NULL, 0}};
-
     // A valid function name has to be the first argument.
     if (validate_function_name(argc, argv, function_name, cmd, out_err) == STATUS_CMD_OK) {
         argv++;
@@ -1615,6 +1547,23 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     } else {
         return STATUS_INVALID_ARGS;
     }
+
+    // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
+    // This is needed due to the semantics of the -a/--argument-names flag.
+    static const wchar_t *short_options = L"+:a:d:e:hj:p:s:v:w:SV:";
+    static const struct woption long_options[] = {
+        {L"description", required_argument, NULL, 'd'},
+        {L"on-signal", required_argument, NULL, 's'},
+        {L"on-job-exit", required_argument, NULL, 'j'},
+        {L"on-process-exit", required_argument, NULL, 'p'},
+        {L"on-variable", required_argument, NULL, 'v'},
+        {L"on-event", required_argument, NULL, 'e'},
+        {L"wraps", required_argument, NULL, 'w'},
+        {L"help", no_argument, NULL, 'h'},
+        {L"argument-names", required_argument, NULL, 'a'},
+        {L"no-scope-shadowing", no_argument, NULL, 'S'},
+        {L"inherit-variable", required_argument, NULL, 'V'},
+        {NULL, 0, NULL, 0}};
 
     int opt;
     wgetopter_t w;
@@ -1769,6 +1718,8 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
 
 /// The random builtin generates random numbers.
 static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    int argc = builtin_count_args(argv);
+
     static bool seeded = false;
     static std::minstd_rand engine;
     if (!seeded) {
@@ -1780,24 +1731,14 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
         seeded = true;
     }
 
-    wgetopter_t w;
-    int argc = builtin_count_args(argv);
+    static const wchar_t *short_options = L"h";
     static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                                   {NULL, 0, NULL, 0}};
-    while (1) {
-        int opt_index = 0;
 
-        int opt = w.wgetopt_long(argc, argv, L"h", long_options, &opt_index);
-        if (opt == -1) break;
-
-        switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_CMD_ERROR;
-            }
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {  //!OCLINT(too few branches)
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_CMD_OK;
@@ -1807,7 +1748,7 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -2093,24 +2034,24 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     bool silent = false;
     bool split_null = false;
 
-    const wchar_t *short_options = L"ac:ghilm:n:p:suxzP:UR:";
-    const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
-                                           {L"global", no_argument, NULL, 'g'},
-                                           {L"local", no_argument, NULL, 'l'},
-                                           {L"universal", no_argument, NULL, 'U'},
-                                           {L"unexport", no_argument, NULL, 'u'},
-                                           {L"prompt", required_argument, NULL, 'p'},
-                                           {L"prompt-str", required_argument, NULL, 'P'},
-                                           {L"right-prompt", required_argument, NULL, 'R'},
-                                           {L"command", required_argument, NULL, 'c'},
-                                           {L"mode-name", required_argument, NULL, 'm'},
-                                           {L"silent", no_argument, NULL, 'i'},
-                                           {L"nchars", required_argument, NULL, 'n'},
-                                           {L"shell", no_argument, NULL, 's'},
-                                           {L"array", no_argument, NULL, 'a'},
-                                           {L"null", no_argument, NULL, 'z'},
-                                           {L"help", no_argument, NULL, 'h'},
-                                           {NULL, 0, NULL, 0}};
+    static const wchar_t *short_options = L"ac:ghilm:n:p:suxzP:UR:";
+    static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
+                                                  {L"global", no_argument, NULL, 'g'},
+                                                  {L"local", no_argument, NULL, 'l'},
+                                                  {L"universal", no_argument, NULL, 'U'},
+                                                  {L"unexport", no_argument, NULL, 'u'},
+                                                  {L"prompt", required_argument, NULL, 'p'},
+                                                  {L"prompt-str", required_argument, NULL, 'P'},
+                                                  {L"right-prompt", required_argument, NULL, 'R'},
+                                                  {L"command", required_argument, NULL, 'c'},
+                                                  {L"mode-name", required_argument, NULL, 'm'},
+                                                  {L"silent", no_argument, NULL, 'i'},
+                                                  {L"nchars", required_argument, NULL, 'n'},
+                                                  {L"shell", no_argument, NULL, 's'},
+                                                  {L"array", no_argument, NULL, 'a'},
+                                                  {L"null", no_argument, NULL, 'z'},
+                                                  {L"help", no_argument, NULL, 'h'},
+                                                  {NULL, 0, NULL, 0}};
 
     int opt;
     wgetopter_t w;
@@ -2411,20 +2352,21 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
     /// the non-flag subcommand form. While these flags are deprecated they must be supported at
     /// least until fish 3.0 and possibly longer to avoid breaking everyones config.fish and other
     /// scripts.
-    const wchar_t *short_options = L":cbilfnhj:t";
-    const struct woption long_options[] = {{L"help", no_argument, 0, 'h'},
-                                           {L"is-command-substitution", no_argument, 0, 'c'},
-                                           {L"is-block", no_argument, 0, 'b'},
-                                           {L"is-interactive", no_argument, 0, 'i'},
-                                           {L"is-login", no_argument, 0, 'l'},
-                                           {L"is-full-job-control", no_argument, 0, 1},
-                                           {L"is-interactive-job-control", no_argument, 0, 2},
-                                           {L"is-no-job-control", no_argument, 0, 3},
-                                           {L"current-filename", no_argument, 0, 'f'},
-                                           {L"current-line-number", no_argument, 0, 'n'},
-                                           {L"job-control", required_argument, 0, 'j'},
-                                           {L"print-stack-trace", no_argument, 0, 't'},
-                                           {0, 0, 0, 0}};
+    static const wchar_t *short_options = L":cbilfnhj:t";
+    static const struct woption long_options[] = {
+        {L"help", no_argument, NULL, 'h'},
+        {L"is-command-substitution", no_argument, NULL, 'c'},
+        {L"is-block", no_argument, NULL, 'b'},
+        {L"is-interactive", no_argument, NULL, 'i'},
+        {L"is-login", no_argument, NULL, 'l'},
+        {L"is-full-job-control", no_argument, NULL, 1},
+        {L"is-interactive-job-control", no_argument, NULL, 2},
+        {L"is-no-job-control", no_argument, NULL, 3},
+        {L"current-filename", no_argument, NULL, 'f'},
+        {L"current-line-number", no_argument, NULL, 'n'},
+        {L"job-control", required_argument, NULL, 'j'},
+        {L"print-stack-trace", no_argument, NULL, 't'},
+        {NULL, 0, NULL, 0}};
 
     int opt;
     wgetopter_t w;
@@ -2745,31 +2687,18 @@ static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv
 /// Implementation of the builtin contains command, used to check if a specified string is part of
 /// a list.
 static int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wgetopter_t w;
-    int argc;
-    argc = builtin_count_args(argv);
+    int argc = builtin_count_args(argv);
     wchar_t *needle;
     bool should_output_index = false;
 
-    const struct woption long_options[] = {
-        {L"help", no_argument, 0, 'h'}, {L"index", no_argument, 0, 'i'}, {0, 0, 0, 0}};
+    static const wchar_t *short_options = L"+hi";
+    static const struct woption long_options[] = {
+        {L"help", no_argument, NULL, 'h'}, {L"index", no_argument, NULL, 'i'}, {NULL, 0, NULL, 0}};
 
-    while (1) {
-        int opt_index = 0;
-
-        int opt = w.wgetopt_long(argc, argv, L"+hi", long_options, &opt_index);
-        if (opt == -1) break;
-
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                assert(opt_index >= 0 &&
-                       (size_t)opt_index < sizeof long_options / sizeof *long_options);
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return STATUS_CMD_ERROR;
-            }
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_CMD_OK;
@@ -2787,7 +2716,7 @@ static int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **a
                 break;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -3255,31 +3184,31 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     bool case_sensitive = false;
     bool null_terminate = false;
 
+    // Use the default history if we have none (which happens if invoked non-interactively, e.g.
+    // from webconfig.py.
+    history_t *history = reader_get_history();
+    if (!history) history = &history_t::history_with_name(L"fish");
+
     /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
     /// the non-flag subcommand form. While many of these flags are deprecated they must be
     /// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
     /// config.fish and other scripts.
-    const wchar_t *short_options = L":Cmn:epchtz";
-    const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'},
-                                           {L"contains", no_argument, NULL, 'c'},
-                                           {L"help", no_argument, NULL, 'h'},
-                                           {L"show-time", optional_argument, NULL, 't'},
-                                           {L"with-time", optional_argument, NULL, 't'},
-                                           {L"exact", no_argument, NULL, 'e'},
-                                           {L"max", required_argument, NULL, 'n'},
-                                           {L"null", no_argument, 0, 'z'},
-                                           {L"case-sensitive", no_argument, 0, 'C'},
-                                           {L"delete", no_argument, NULL, 1},
-                                           {L"search", no_argument, NULL, 2},
-                                           {L"save", no_argument, NULL, 3},
-                                           {L"clear", no_argument, NULL, 4},
-                                           {L"merge", no_argument, NULL, 5},
-                                           {NULL, 0, NULL, 0}};
-
-    history_t *history = reader_get_history();
-    // Use the default history if we have none (which happens if invoked non-interactively, e.g.
-    // from webconfig.py.
-    if (!history) history = &history_t::history_with_name(L"fish");
+    static const wchar_t *short_options = L":Cmn:epchtz";
+    static const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'},
+                                                  {L"contains", no_argument, NULL, 'c'},
+                                                  {L"help", no_argument, NULL, 'h'},
+                                                  {L"show-time", optional_argument, NULL, 't'},
+                                                  {L"with-time", optional_argument, NULL, 't'},
+                                                  {L"exact", no_argument, NULL, 'e'},
+                                                  {L"max", required_argument, NULL, 'n'},
+                                                  {L"null", no_argument, 0, 'z'},
+                                                  {L"case-sensitive", no_argument, 0, 'C'},
+                                                  {L"delete", no_argument, NULL, 1},
+                                                  {L"search", no_argument, NULL, 2},
+                                                  {L"save", no_argument, NULL, 3},
+                                                  {L"clear", no_argument, NULL, 4},
+                                                  {L"merge", no_argument, NULL, 5},
+                                                  {NULL, 0, NULL, 0}};
 
     int opt;
     wgetopter_t w;

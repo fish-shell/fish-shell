@@ -157,22 +157,23 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     bool soft = false;
     int what = RLIMIT_FSIZE;
 
-    const wchar_t *short_options = L":HSacdflmnstuvh";
-    const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
-                                           {L"hard", no_argument, NULL, 'H'},
-                                           {L"soft", no_argument, NULL, 'S'},
-                                           {L"core-size", no_argument, NULL, 'c'},
-                                           {L"data-size", no_argument, NULL, 'd'},
-                                           {L"file-size", no_argument, NULL, 'f'},
-                                           {L"lock-size", no_argument, NULL, 'l'},
-                                           {L"resident-set-size", no_argument, NULL, 'm'},
-                                           {L"file-descriptor-count", no_argument, NULL, 'n'},
-                                           {L"stack-size", no_argument, NULL, 's'},
-                                           {L"cpu-time", no_argument, NULL, 't'},
-                                           {L"process-count", no_argument, NULL, 'u'},
-                                           {L"virtual-memory-size", no_argument, NULL, 'v'},
-                                           {L"help", no_argument, NULL, 'h'},
-                                           {NULL, 0, NULL, 0}};
+    static const wchar_t *short_options = L":HSacdflmnstuvh";
+    static const struct woption long_options[] = {
+        {L"all", no_argument, NULL, 'a'},
+        {L"hard", no_argument, NULL, 'H'},
+        {L"soft", no_argument, NULL, 'S'},
+        {L"core-size", no_argument, NULL, 'c'},
+        {L"data-size", no_argument, NULL, 'd'},
+        {L"file-size", no_argument, NULL, 'f'},
+        {L"lock-size", no_argument, NULL, 'l'},
+        {L"resident-set-size", no_argument, NULL, 'm'},
+        {L"file-descriptor-count", no_argument, NULL, 'n'},
+        {L"stack-size", no_argument, NULL, 's'},
+        {L"cpu-time", no_argument, NULL, 't'},
+        {L"process-count", no_argument, NULL, 'u'},
+        {L"virtual-memory-size", no_argument, NULL, 'v'},
+        {L"help", no_argument, NULL, 'h'},
+        {NULL, 0, NULL, 0}};
 
     int opt;
     wgetopter_t w;

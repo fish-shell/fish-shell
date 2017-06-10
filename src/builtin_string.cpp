@@ -102,7 +102,7 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {  //!OCLINT(too few branches)
             case 'n': {
                 flags |= ESCAPE_NO_QUOTED;
@@ -113,7 +113,7 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected retval from wgetopt_long_only");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -146,7 +146,7 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {  //!OCLINT(too few branches)
             case L'q': {
                 quiet = true;
@@ -157,7 +157,7 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected retval from wgetopt_long_only");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -203,7 +203,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {  //!OCLINT(too few branches)
             case L'q': {
                 quiet = true;
@@ -214,7 +214,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected retval from wgetopt_long_only");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -861,7 +861,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 'm': {
                 max = fish_wcstol(w.woptarg);
@@ -888,7 +888,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected retval from wgetopt_long_only");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -1023,7 +1023,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected retval from wgetopt_long_only");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -1068,7 +1068,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 'l': {
                 length = fish_wcstol(w.woptarg);
@@ -1107,7 +1107,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected retval from wgetopt_long_only");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -1167,7 +1167,7 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 'c': {
                 chars_to_trim = w.woptarg;
@@ -1194,7 +1194,7 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected retval from wgetopt_long_only");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }

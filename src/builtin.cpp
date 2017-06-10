@@ -468,7 +468,7 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long_only(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case L'a': {
                 all = true;
@@ -520,7 +520,7 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected retval from wgetopt_long_only");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }

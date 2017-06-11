@@ -450,6 +450,16 @@ else
 end
 \endfish
 
+<a href="#tut_combiners">Combiners</a> can also be used to make more complex conditions, like
+
+\fish
+if grep fish /etc/shells; and command -sq fish
+    echo fish is installed and configured
+end
+\endfish
+
+For even more complex conditions, use `begin` and `end` to group parts of them.
+
 There is also a `switch` command:
 
 \fish{cli-dark}

@@ -19,6 +19,7 @@
 - <a href="#tut_exports">Shell Variables</a>
 - <a href="#tut_lists">Lists</a>
 - <a href="#tut_command_substitutions">Command Substitutions</a>
+- <a href="#tut_semicolon">Separating Commands (Semicolon)</a>
 - <a href="#tut_combiners">Combiners (And, Or, Not)</a>
 - <a href="#tut_conditionals">Conditionals (If, Else, Switch)</a>
 - <a href="#tut_functions">Functions</a>
@@ -403,6 +404,20 @@ Unlike other shells, fish does not split command substitutions on any whitespace
 \endfish
 
 
+\section tut_semicolon Separating Commands (Semicolon)
+Like other shells, fish allows multiple commands either on separate lines or the same line.
+
+To write them on the same line, use the semicolon (";"). That means the following two examples are equivalent:
+
+\fish
+echo fish; echo chips
+
+# or
+echo fish
+echo chips
+\endfish
+
+
 \section tut_combiners Combiners (And, Or, Not)
 
 Unlike other shells, `fish` does not have special syntax like &amp;&amp; or || to combine commands. Instead it has commands `and`, `or`, and `not`.
@@ -410,6 +425,14 @@ Unlike other shells, `fish` does not have special syntax like &amp;&amp; or || t
 \fish{cli-dark}
 >_ cp file1.txt file1_bak.txt; and echo "Backup successful"; or echo "Backup failed"
 <outp>Backup failed</outp>
+\endfish
+
+As mentioned in <a href="#tut_semicolon">the section on the semicolon</a>, this can also be written in multiple lines, like so:
+
+\fish
+cp file1.txt file1_bak.txt
+and echo "Backup successful"
+or echo "Backup failed"
 \endfish
 
 

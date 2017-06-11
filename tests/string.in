@@ -324,4 +324,31 @@ echo '# string match -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabx
 string match -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 or echo exit 1
 
+# Test `string lower` and `string upper`.
+set x (string lower abc DEF gHi)
+or echo string lower exit 1
+test $x[1] = 'abc' -a $x[2] = 'def' -a $x[3] = 'ghi'
+or echo strings not converted to lowercase
+
+set x (echo abc DEF gHi | string lower)
+or echo string lower exit 1
+test $x[1] = 'abc def ghi'
+or echo strings not converted to lowercase
+
+string lower -q abc
+and echo lowercasing a lowercase string did not fail as expected
+
+set x (string upper abc DEF gHi)
+or echo string upper exit 1
+test $x[1] = 'ABC' -a $x[2] = 'DEF' -a $x[3] = 'GHI'
+or echo strings not converted to uppercase
+
+set x (echo abc DEF gHi | string upper)
+or echo string upper exit 1
+test $x[1] = 'ABC DEF GHI'
+or echo strings not converted to uppercase
+
+string upper -q ABC DEF
+and echo uppercasing a uppercase string did not fail as expected
+
 exit 0

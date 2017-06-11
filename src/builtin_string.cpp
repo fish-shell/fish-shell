@@ -82,7 +82,7 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
 }
 
 static const wchar_t *string_get_arg_argv(int *argidx, wchar_t **argv) {
-    return argv && argv[*argidx] ? argv[(*argidx)++] : 0;
+    return argv && argv[*argidx] ? argv[(*argidx)++] : NULL;
 }
 
 static const wchar_t *string_get_arg(int *argidx, wchar_t **argv, wcstring *storage,
@@ -1241,17 +1241,111 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
     return ntrim > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
+static int string_lower(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    bool quiet = false;
+
+    static const wchar_t *short_options = L"q";
+    static const struct woption long_options[] = {{L"quiet", no_argument, NULL, 'q'},
+                                                  {NULL, 0, NULL, 0}};
+
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {  //!OCLINT(too few branches)
+            case L'q': {
+                quiet = true;
+                break;
+            }
+            case L'?': {
+                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
+            }
+            default: {
+                DIE("unexpected retval from wgetopt_long");
+                break;
+            }
+        }
+    }
+
+    int i = w.woptind;
+    if (string_args_from_stdin(streams) && argc > i) {
+        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
+        return STATUS_INVALID_ARGS;
+    }
+
+    int n_transformed = 0;
+    wcstring storage;
+    while (const wchar_t *arg = string_get_arg(&i, argv, &storage, streams)) {
+        wcstring transformed(arg);
+        std::transform(transformed.begin(), transformed.end(), transformed.begin(), std::towlower);
+        if (wcscmp(transformed.c_str(), arg)) n_transformed++;
+        if (!quiet) {
+            streams.out.append(transformed);
+            streams.out.append(L'\n');
+        }
+    }
+
+    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+static int string_upper(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    bool quiet = false;
+
+    static const wchar_t *short_options = L"q";
+    static const struct woption long_options[] = {{L"quiet", no_argument, NULL, 'q'},
+                                                  {NULL, 0, NULL, 0}};
+
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {  //!OCLINT(too few branches)
+            case L'q': {
+                quiet = true;
+                break;
+            }
+            case L'?': {
+                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
+            }
+            default: {
+                DIE("unexpected retval from wgetopt_long");
+                break;
+            }
+        }
+    }
+
+    int i = w.woptind;
+    if (string_args_from_stdin(streams) && argc > i) {
+        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
+        return STATUS_INVALID_ARGS;
+    }
+
+    int n_transformed = 0;
+    wcstring storage;
+    while (const wchar_t *arg = string_get_arg(&i, argv, &storage, streams)) {
+        wcstring transformed(arg);
+        std::transform(transformed.begin(), transformed.end(), transformed.begin(), std::towupper);
+        if (wcscmp(transformed.c_str(), arg)) n_transformed++;
+        if (!quiet) {
+            streams.out.append(transformed);
+            streams.out.append(L'\n');
+        }
+    }
+
+    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
 static const struct string_subcommand {
     const wchar_t *name;
     int (*handler)(parser_t &, io_streams_t &, int argc,  //!OCLINT(unused param)
                    wchar_t **argv);                       //!OCLINT(unused param)
 }
 
-string_subcommands[] = {{L"escape", &string_escape},   {L"join", &string_join},
-                        {L"length", &string_length},   {L"match", &string_match},
-                        {L"replace", &string_replace}, {L"split", &string_split},
-                        {L"sub", &string_sub},         {L"trim", &string_trim},
-                        {L"repeat", &string_repeat},   {0, 0}};
+string_subcommands[] = {
+    {L"escape", &string_escape}, {L"join", &string_join},       {L"length", &string_length},
+    {L"match", &string_match},   {L"replace", &string_replace}, {L"split", &string_split},
+    {L"sub", &string_sub},       {L"trim", &string_trim},       {L"lower", &string_lower},
+    {L"upper", &string_upper},   {L"repeat", &string_repeat},   {NULL, NULL}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

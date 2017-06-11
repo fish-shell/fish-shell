@@ -130,6 +130,24 @@ function __fish_git_needs_command
     return 1
 end
 
+
+# HACK: Aliases
+# Git allows aliases, so we need to see what command the current command-token corresponds to
+# (so we can complete e.g. `lg` like `log`).
+# Checking `git config` for a lot of aliases can be quite slow if it is called
+# for every possible command.
+# Ideally, we'd `complete --wraps` this, but that is not currently possible, as is
+# using `complete -C` like
+# complete -c git -n '__fish_git_using_command lg' -a '(complete -C"git log ")'
+#
+# So instead, we store the aliases in global variables, named after the alias, containing the command.
+# This is because alias:command is an n:1 mapping (an alias can only have one corresponding command,
+#                                                  but a command can be aliased multiple times)
+git config -z --get-regexp 'alias\..*' | while read -lz alias command _
+    set alias (string replace 'alias.' '' -- $alias)
+    set -g __fish_git_alias_$alias $command
+end
+
 function __fish_git_using_command
     set -l cmd (__fish_git_needs_command)
     test -z "$cmd"
@@ -137,9 +155,9 @@ function __fish_git_using_command
     contains -- $cmd $argv
     and return 0
 
-    # aliased command
-    set -l aliased (command git config --get "alias.$cmd" ^/dev/null | string split " ")
-    contains -- "$aliased[1]" $argv
+    # Check aliases.
+    set -l varname __fish_git_alias_$cmd
+    contains -- "$$varname" $argv
     and return 0
     return 1
 end

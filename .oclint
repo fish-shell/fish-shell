@@ -26,6 +26,16 @@ rule-configurations:
     - key: RAII_CUSTOM_CLASSES
       value: scoped_lock scoped_buffer_t builtin_commandline_scoped_transient_t scoped_push
 
+    # We're slightly more persmissive regarding the total number of lines in a
+    # function. Default is 50.
+    - key: LONG_METHOD
+      value: 60
+
+    # We're slightly more persmissive regarding the number of non-comment
+    # lines in a function. Default is 30.
+    - key: NCSS_METHOD
+      value: 40
+
 disable-rules:
     #
     # A few instances of "useless parentheses" errors are meaningful. Mostly

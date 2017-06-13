@@ -19,7 +19,7 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 enum { BIND_INSERT, BIND_ERASE, BIND_KEY_NAMES, BIND_FUNCTION_NAMES };
-struct bind_opts {
+struct cmd_opts {
     int mode = BIND_INSERT;
     int res = STATUS_CMD_OK;
     bool all = false;
@@ -212,7 +212,7 @@ static bool builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int 
     return res;
 }
 
-static bool builtin_bind_insert(struct bind_opts *opts, int optind, int argc, wchar_t **argv,
+static bool builtin_bind_insert(struct cmd_opts *opts, int optind, int argc, wchar_t **argv,
                                 io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int arg_count = argc - optind;
@@ -267,8 +267,8 @@ static void builtin_bind_list_modes(io_streams_t &streams) {
     }
 }
 
-static int parse_bind_opts(struct bind_opts *opts, int *optind,  //!OCLINT(high ncss method)
-                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     static const wchar_t *short_options = L"aehkKfM:Lm:";
     static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
@@ -350,10 +350,10 @@ static int parse_bind_opts(struct bind_opts *opts, int *optind,  //!OCLINT(high 
 int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct bind_opts opts;
+    struct cmd_opts opts;
 
     int optind;
-    int retval = parse_bind_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.list_modes) {

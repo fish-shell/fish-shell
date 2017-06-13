@@ -70,7 +70,7 @@ int job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd, io_streams_t &str
     return -1;
 }
 
-struct status_opts {
+struct cmd_opts {
     bool print_help = false;
     status_cmd_t status_cmd = STATUS_UNDEF;
     int new_job_control_mode = -1;
@@ -113,8 +113,8 @@ static bool set_status_cmd(wchar_t *const cmd, status_cmd_t *status_cmd, status_
     return true;
 }
 
-static int parse_status_opts(struct status_opts *opts, int *optind,  //!OCLINT(high ncss method)
-                             int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -218,10 +218,10 @@ static int parse_status_opts(struct status_opts *opts, int *optind,  //!OCLINT(h
 int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct status_opts opts;
+    struct cmd_opts opts;
 
     int optind;
-    int retval = parse_status_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

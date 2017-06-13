@@ -14,14 +14,14 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 enum { UNSET, GLOBAL, LOCAL };
-struct block_opts {
+struct cmd_opts {
     int scope = UNSET;
     bool erase = false;
     bool print_help = false;
 };
 
-static int parse_block_opts(struct block_opts *opts, int *optind,  //!OCLINT(high ncss method)
-                            int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     static const wchar_t *short_options = L"eghl";
     static const struct woption long_options[] = {{L"erase", no_argument, NULL, 'e'},
@@ -69,10 +69,10 @@ static int parse_block_opts(struct block_opts *opts, int *optind,  //!OCLINT(hig
 int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct block_opts opts;
+    struct cmd_opts opts;
 
     int optind;
-    int retval = parse_block_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

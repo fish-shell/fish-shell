@@ -17,7 +17,7 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-struct random_opts {
+struct cmd_opts {
     bool print_help = false;
 };
 
@@ -25,8 +25,8 @@ static const wchar_t *short_options = L"h";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
 
-static int parse_random_opts(struct random_opts *opts, int *optind,  //!OCLINT(high ncss method)
-                             int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -55,10 +55,10 @@ static int parse_random_opts(struct random_opts *opts, int *optind,  //!OCLINT(h
 int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct random_opts opts;
+    struct cmd_opts opts;
 
     int optind;
-    int retval = parse_random_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

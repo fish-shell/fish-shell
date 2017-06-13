@@ -12,17 +12,16 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-struct emit_opts {
+struct cmd_opts {
     bool print_help = false;
 };
+static const wchar_t *short_options = L"h";
+static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
+                                              {NULL, 0, NULL, 0}};
 
-static int parse_emit_opts(struct emit_opts *opts, int *optind,  //!OCLINT(high ncss method)
-                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
-    static const wchar_t *short_options = L"h";
-    static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
-                                                  {NULL, 0, NULL, 0}};
-
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
@@ -50,10 +49,10 @@ static int parse_emit_opts(struct emit_opts *opts, int *optind,  //!OCLINT(high 
 int builtin_emit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct emit_opts opts;
+    struct cmd_opts opts;
 
     int optind;
-    int retval = parse_emit_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

@@ -26,7 +26,7 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-struct functions_opts {
+struct cmd_opts {
     bool print_help = false;
     bool erase = false;
     bool list = false;
@@ -38,9 +38,9 @@ struct functions_opts {
     wchar_t *description = NULL;
 };
 
-static int parse_functions_opts(struct functions_opts *opts,
-                                int *optind,  //!OCLINT(high ncss method)
-                                int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int parse_cmd_opts(struct cmd_opts *opts,
+                          int *optind,  //!OCLINT(high ncss method)
+                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     static const wchar_t *short_options = L"Dacehnqv";
     static const struct woption long_options[] = {
@@ -258,10 +258,10 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
 int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct functions_opts opts;
+    struct cmd_opts opts;
 
     int optind;
-    int retval = parse_functions_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

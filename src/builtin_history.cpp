@@ -27,7 +27,7 @@ const enum_map<hist_cmd_t> hist_enum_map[] = {{HIST_CLEAR, L"clear"},   {HIST_DE
                                               {HIST_SEARCH, L"search"}, {HIST_UNDEF, NULL}};
 #define hist_enum_map_len (sizeof hist_enum_map / sizeof *hist_enum_map)
 
-struct history_opts {
+struct cmd_opts {
     bool print_help = false;
     hist_cmd_t hist_cmd = HIST_UNDEF;
     history_search_type_t search_type = (history_search_type_t)-1;
@@ -92,8 +92,8 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
         break;                                                                                  \
     }
 
-static int parse_history_opts(struct history_opts *opts, int *optind,  //!OCLINT(high ncss method)
-                              int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -198,10 +198,10 @@ static int parse_history_opts(struct history_opts *opts, int *optind,  //!OCLINT
 int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct history_opts opts;
+    struct cmd_opts opts;
 
     int optind;
-    int retval = parse_history_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

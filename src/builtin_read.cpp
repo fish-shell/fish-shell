@@ -29,7 +29,7 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-struct read_opts {
+struct cmd_opts {
     bool print_help = false;
     int place = ENV_USER;
     wcstring prompt_cmd;
@@ -64,8 +64,8 @@ static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'
                                               {L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
 
-static int parse_read_opts(struct read_opts *opts, int *optind,  //!OCLINT(high ncss method)
-                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -321,10 +321,10 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
     wcstring buff;
     int exit_res = STATUS_CMD_OK;
-    struct read_opts opts;
+    struct cmd_opts opts;
 
     int optind;
-    int retval = parse_read_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

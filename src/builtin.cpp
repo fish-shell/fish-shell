@@ -42,6 +42,7 @@
 #include "builtin_block.h"
 #include "builtin_commandline.h"
 #include "builtin_complete.h"
+#include "builtin_emit.h"
 #include "builtin_jobs.h"
 #include "builtin_printf.h"
 #include "builtin_set.h"
@@ -290,43 +291,6 @@ static int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **ar
             streams.out.append(L"\n");
         }
     }
-    return STATUS_CMD_OK;
-}
-
-/// Implementation of the builtin emit command, used to create events.
-static int builtin_emit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int argc = builtin_count_args(argv);
-
-    static const wchar_t *short_options = L"h";
-    static const struct woption long_options[] = {{L"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
-
-    int opt;
-    wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
-        switch (opt) {  //!OCLINT(too few branches)
-            case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
-                return STATUS_CMD_OK;
-            }
-            case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return STATUS_INVALID_ARGS;
-            }
-            default: {
-                DIE("unexpected retval from wgetopt_long");
-                break;
-            }
-        }
-    }
-
-    if (!argv[w.woptind]) {
-        streams.err.append_format(L"%ls: expected event name\n", argv[0]);
-        return STATUS_INVALID_ARGS;
-    }
-    const wchar_t *eventname = argv[w.woptind];
-    wcstring_list_t args(argv + w.woptind + 1, argv + argc);
-    event_fire_generic(eventname, &args);
-
     return STATUS_CMD_OK;
 }
 

@@ -99,7 +99,7 @@ HAVE_DOXYGEN=@HAVE_DOXYGEN@
 # All objects that the system needs to build fish, except fish.o
 #
 FISH_OBJS := obj/autoload.o obj/builtin.o obj/builtin_bind.o obj/builtin_block.o \
-	obj/builtin_commandline.o \
+	obj/builtin_commandline.o obj/builtin_emit.o \
 	obj/builtin_complete.o obj/builtin_jobs.o obj/builtin_printf.o \
 	obj/builtin_set.o obj/builtin_set_color.o obj/builtin_string.o \
 	obj/builtin_test.o obj/builtin_ulimit.o obj/color.o obj/common.o \
@@ -945,20 +945,25 @@ v = $(V$(V))
 obj/autoload.o: config.h src/autoload.h src/common.h src/fallback.h
 obj/autoload.o: src/signal.h src/lru.h src/env.h src/exec.h src/wutil.h
 obj/builtin.o: config.h src/signal.h src/builtin.h src/common.h
-obj/builtin.o: src/fallback.h src/builtin_bind.h src/builtin_commandline.h
-obj/builtin.o: src/builtin_complete.h src/builtin_jobs.h src/builtin_printf.h
+obj/builtin.o: src/fallback.h src/builtin_bind.h src/builtin_block.h
+obj/builtin.o: src/builtin_commandline.h src/builtin_complete.h
+obj/builtin.o: src/builtin_emit.h src/builtin_jobs.h src/builtin_printf.h
 obj/builtin.o: src/builtin_set.h src/builtin_set_color.h src/builtin_string.h
 obj/builtin.o: src/builtin_test.h src/builtin_ulimit.h src/complete.h
 obj/builtin.o: src/env.h src/event.h src/exec.h src/expand.h
 obj/builtin.o: src/parse_constants.h src/function.h src/highlight.h
-obj/builtin.o: src/color.h src/history.h src/wutil.h src/input.h src/intern.h
-obj/builtin.o: src/io.h src/parse_util.h src/tokenizer.h src/parser.h
-obj/builtin.o: src/parse_tree.h src/proc.h src/parser_keywords.h src/path.h
-obj/builtin.o: src/reader.h src/wcstringutil.h src/wgetopt.h
+obj/builtin.o: src/color.h src/history.h src/wutil.h src/intern.h src/io.h
+obj/builtin.o: src/parse_util.h src/tokenizer.h src/parser.h src/parse_tree.h
+obj/builtin.o: src/proc.h src/parser_keywords.h src/path.h src/reader.h
+obj/builtin.o: src/wcstringutil.h src/wgetopt.h
 obj/builtin_bind.o: config.h src/builtin.h src/common.h src/fallback.h
-obj/builtin_bind.o: src/signal.h src/builtin_bind.h src/env.h src/input.h
-obj/builtin_bind.o: src/io.h src/tokenizer.h src/wcstringutil.h src/wgetopt.h
-obj/builtin_bind.o: src/wutil.h
+obj/builtin_bind.o: src/signal.h src/builtin_bind.h src/input.h src/env.h
+obj/builtin_bind.o: src/io.h src/wgetopt.h src/wutil.h
+obj/builtin_block.o: config.h src/builtin.h src/common.h src/fallback.h
+obj/builtin_block.o: src/signal.h src/builtin_block.h src/event.h src/io.h
+obj/builtin_block.o: src/parser.h src/expand.h src/parse_constants.h
+obj/builtin_block.o: src/parse_tree.h src/tokenizer.h src/proc.h
+obj/builtin_block.o: src/wgetopt.h src/wutil.h
 obj/builtin_commandline.o: config.h src/builtin.h src/common.h src/fallback.h
 obj/builtin_commandline.o: src/signal.h src/input.h src/builtin_bind.h
 obj/builtin_commandline.o: src/env.h src/io.h src/parse_util.h
@@ -972,6 +977,11 @@ obj/builtin_complete.o: src/parse_constants.h src/parse_util.h
 obj/builtin_complete.o: src/tokenizer.h src/parser.h src/event.h src/expand.h
 obj/builtin_complete.o: src/parse_tree.h src/proc.h src/reader.h
 obj/builtin_complete.o: src/highlight.h src/color.h src/wgetopt.h src/wutil.h
+obj/builtin_emit.o: config.h src/builtin.h src/common.h src/fallback.h
+obj/builtin_emit.o: src/signal.h src/builtin_emit.h src/event.h src/io.h
+obj/builtin_emit.o: src/parser.h src/expand.h src/parse_constants.h
+obj/builtin_emit.o: src/parse_tree.h src/tokenizer.h src/proc.h
+obj/builtin_emit.o: src/wgetopt.h src/wutil.h
 obj/builtin_jobs.o: config.h src/builtin.h src/common.h src/fallback.h
 obj/builtin_jobs.o: src/signal.h src/io.h src/proc.h src/parse_tree.h
 obj/builtin_jobs.o: src/parse_constants.h src/tokenizer.h src/wgetopt.h

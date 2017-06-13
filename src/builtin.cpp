@@ -3050,53 +3050,6 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     return status;
 }
 
-#if 0
-// Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
-int builtin_parse(parser_t &parser, io_streams_t &streams, wchar_t **argv)
-{
-    struct sigaction act;
-    sigemptyset(& act.sa_mask);
-    act.sa_flags=0;
-    act.sa_handler=SIG_DFL;
-    sigaction(SIGINT, &act, 0);
-
-    std::vector<char> txt;
-    for (;;)
-    {
-        char buff[256];
-        ssize_t amt = read_loop(streams.stdin_fd, buff, sizeof buff);
-        if (amt <= 0) break;
-        txt.insert(txt.end(), buff, buff + amt);
-    }
-    if (! txt.empty())
-    {
-        const wcstring src = str2wcstring(&txt.at(0), txt.size());
-        parse_node_tree_t parse_tree;
-        parse_error_list_t errors;
-        bool success = parse_tree_from_string(src, parse_flag_include_comments, &parse_tree,
-                                              &errors);
-        if (! success)
-        {
-            streams.out.append(L"Parsing failed:\n");
-            for (size_t i=0; i < errors.size(); i++)
-            {
-                streams.out.append(errors.at(i).describe(src));
-                streams.out.push_back(L'\n');
-            }
-
-            streams.out.append(L"(Reparsed with continue after error)\n");
-            parse_tree.clear();
-            errors.clear();
-            parse_tree_from_string(src, parse_flag_continue_after_error |
-                                   parse_flag_include_comments, &parse_tree, &errors);
-        }
-        const wcstring dump = parse_dump_tree(parse_tree, src);
-        streams.out.append(dump);
-    }
-    return STATUS_CMD_OK;
-}
-#endif
-
 int builtin_true(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
@@ -3152,10 +3105,6 @@ int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 // NOTE: These must be kept in sorted order!
 static const builtin_data_t builtin_datas[] = {
     {L"[", &builtin_test, N_(L"Test a condition")},
-#if 0
-    // Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
-    {       L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
-#endif
     {L"and", &builtin_generic, N_(L"Execute command if previous command suceeded")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},
     {L"bg", &builtin_bg, N_(L"Send job to background")},

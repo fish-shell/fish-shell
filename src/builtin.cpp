@@ -39,6 +39,7 @@
 
 #include "builtin.h"
 #include "builtin_bind.h"
+#include "builtin_block.h"
 #include "builtin_commandline.h"
 #include "builtin_complete.h"
 #include "builtin_jobs.h"
@@ -242,110 +243,6 @@ void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wch
                               const wchar_t *opt) {
     streams.err.append_format(BUILTIN_ERR_MISSING, cmd, opt);
     builtin_print_help(parser, streams, cmd, streams.err);
-}
-
-/// The block builtin, used for temporarily blocking events.
-static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    enum {
-        UNSET,
-        GLOBAL,
-        LOCAL,
-    };
-
-    int scope = UNSET;
-    int erase = 0;
-    int argc = builtin_count_args(argv);
-
-    static const wchar_t *short_options = L"eghl";
-    static const struct woption long_options[] = {{L"erase", no_argument, NULL, 'e'},
-                                                  {L"local", no_argument, NULL, 'l'},
-                                                  {L"global", no_argument, NULL, 'g'},
-                                                  {L"help", no_argument, NULL, 'h'},
-                                                  {NULL, 0, NULL, 0}};
-
-    int opt;
-    wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
-        switch (opt) {
-            case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
-                return STATUS_CMD_OK;
-            }
-            case 'g': {
-                scope = GLOBAL;
-                break;
-            }
-            case 'l': {
-                scope = LOCAL;
-                break;
-            }
-            case 'e': {
-                erase = 1;
-                break;
-            }
-            case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return STATUS_INVALID_ARGS;
-            }
-            default: {
-                DIE("unexpected retval from wgetopt_long");
-                break;
-            }
-        }
-    }
-
-    if (erase) {
-        if (scope != UNSET) {
-            streams.err.append_format(_(L"%ls: Can not specify scope when removing block\n"),
-                                      argv[0]);
-            return STATUS_INVALID_ARGS;
-        }
-
-        if (parser.global_event_blocks.empty()) {
-            streams.err.append_format(_(L"%ls: No blocks defined\n"), argv[0]);
-            return STATUS_CMD_ERROR;
-        }
-        parser.global_event_blocks.pop_front();
-    } else {
-        size_t block_idx = 0;
-        block_t *block = parser.block_at_index(block_idx);
-
-        event_blockage_t eb = {};
-        eb.typemask = (1 << EVENT_ANY);
-
-        switch (scope) {
-            case LOCAL: {
-                // If this is the outermost block, then we're global
-                if (block_idx + 1 >= parser.block_count()) {
-                    block = NULL;
-                }
-                break;
-            }
-            case GLOBAL: {
-                block = NULL;
-                break;
-            }
-            case UNSET: {
-                while (block != NULL && block->type() != FUNCTION_CALL &&
-                       block->type() != FUNCTION_CALL_NO_SHADOW) {
-                    // Set it in function scope
-                    block = parser.block_at_index(++block_idx);
-                }
-                break;
-            }
-            default: {
-                DIE("unexpected scope");
-                break;
-            }
-        }
-        if (block) {
-            block->event_blocks.push_front(eb);
-        } else {
-            parser.global_event_blocks.push_front(eb);
-        }
-    }
-
-    return STATUS_CMD_OK;
 }
 
 /// The builtin builtin, used for giving builtins precedence over functions. Mostly handled by the

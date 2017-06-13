@@ -1,4 +1,4 @@
-// Prototypes for functions for executing builtin_bind functions.
+// Prototypes for executing builtin_bind function.
 #ifndef FISH_BUILTIN_BIND_H
 #define FISH_BUILTIN_BIND_H
 

@@ -21,7 +21,6 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <signal.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,7 +30,6 @@
 
 #include <algorithm>
 #include <memory>
-#include <random>
 #include <set>
 #include <string>
 
@@ -45,6 +43,7 @@
 #include "builtin_history.h"
 #include "builtin_jobs.h"
 #include "builtin_printf.h"
+#include "builtin_random.h"
 #include "builtin_read.h"
 #include "builtin_set.h"
 #include "builtin_set_color.h"
@@ -894,157 +893,6 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
         complete_add_wrapper(function_name, wrap_targets.at(w));
     }
 
-    return STATUS_CMD_OK;
-}
-
-/// The random builtin generates random numbers.
-static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int argc = builtin_count_args(argv);
-
-    static bool seeded = false;
-    static std::minstd_rand engine;
-    if (!seeded) {
-        // seed engine with 2*32 bits of random data
-        // for the 64 bits of internal state of minstd_rand
-        std::random_device rd;
-        std::seed_seq seed{rd(), rd()};
-        engine.seed(seed);
-        seeded = true;
-    }
-
-    static const wchar_t *short_options = L"h";
-    static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
-                                                  {NULL, 0, NULL, 0}};
-
-    int opt;
-    wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
-        switch (opt) {  //!OCLINT(too few branches)
-            case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
-                return STATUS_CMD_OK;
-            }
-            case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return STATUS_INVALID_ARGS;
-            }
-            default: {
-                DIE("unexpected retval from wgetopt_long");
-                break;
-            }
-        }
-    }
-
-    int arg_count = argc - w.woptind;
-    long long start, end;
-    unsigned long long step;
-    bool choice = false;
-    if (arg_count >= 1 && !wcscmp(argv[w.woptind], L"choice")) {
-        if (arg_count == 1) {
-            streams.err.append_format(L"%ls: nothing to choose from\n", argv[0]);
-            return STATUS_INVALID_ARGS;
-        }
-        choice = true;
-        start = 1;
-        step = 1;
-        end = arg_count - 1;
-    } else {
-        bool parse_error = false;
-        auto parse_ll = [&](const wchar_t *str) {
-            long long ll = fish_wcstoll(str);
-            if (errno) {
-                streams.err.append_format(L"%ls: %ls is not a valid integer\n", argv[0], str);
-                parse_error = true;
-            }
-            return ll;
-        };
-        auto parse_ull = [&](const wchar_t *str) {
-            unsigned long long ull = fish_wcstoull(str);
-            if (errno) {
-                streams.err.append_format(L"%ls: %ls is not a valid integer\n", argv[0], str);
-                parse_error = true;
-            }
-            return ull;
-        };
-        if (arg_count == 0) {
-            start = 0;
-            end = 32767;
-            step = 1;
-        } else if (arg_count == 1) {
-            long long seed = parse_ll(argv[w.woptind]);
-            if (parse_error) return STATUS_INVALID_ARGS;
-            engine.seed(static_cast<uint32_t>(seed));
-            return STATUS_CMD_OK;
-        } else if (arg_count == 2) {
-            start = parse_ll(argv[w.woptind]);
-            step = 1;
-            end = parse_ll(argv[w.woptind + 1]);
-        } else if (arg_count == 3) {
-            start = parse_ll(argv[w.woptind]);
-            step = parse_ull(argv[w.woptind + 1]);
-            end = parse_ll(argv[w.woptind + 2]);
-        } else {
-            streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-            return STATUS_INVALID_ARGS;
-        }
-
-        if (parse_error) {
-            return STATUS_INVALID_ARGS;
-        } else if (start >= end) {
-            streams.err.append_format(L"%ls: END must be greater than START\n", argv[0]);
-            return STATUS_INVALID_ARGS;
-        } else if (step == 0) {
-            streams.err.append_format(L"%ls: STEP must be a positive integer\n", argv[0]);
-            return STATUS_INVALID_ARGS;
-        }
-    }
-
-    // only for negative argument
-    auto safe_abs = [](long long ll) -> unsigned long long {
-        return -static_cast<unsigned long long>(ll);
-    };
-    long long real_end;
-    if (start >= 0 || end < 0) {
-        // 0 <= start <= end
-        long long diff = end - start;
-        // 0 <= diff <= LL_MAX
-        real_end = start + static_cast<long long>(diff / step);
-    } else {
-        // start < 0 <= end
-        unsigned long long abs_start = safe_abs(start);
-        unsigned long long diff = (end + abs_start);
-        real_end = diff / step - abs_start;
-    }
-
-    if (!choice && start == real_end) {
-        streams.err.append_format(L"%ls: range contains only one possible value\n", argv[0]);
-        return STATUS_INVALID_ARGS;
-    }
-
-    std::uniform_int_distribution<long long> dist(start, real_end);
-    long long random = dist(engine);
-    long long result;
-    if (start >= 0) {
-        // 0 <= start <= random <= end
-        long long diff = random - start;
-        // 0 < step * diff <= end - start <= LL_MAX
-        result = start + static_cast<long long>(diff * step);
-    } else if (random < 0) {
-        // start <= random < 0
-        long long diff = random - start;
-        result = diff * step - safe_abs(start);
-    } else {
-        // start < 0 <= random
-        unsigned long long abs_start = safe_abs(start);
-        unsigned long long diff = (random + abs_start);
-        result = diff * step - abs_start;
-    }
-
-    if (choice) {
-        streams.out.append_format(L"%ls\n", argv[w.woptind + result]);
-    } else {
-        streams.out.append_format(L"%lld\n", result);
-    }
     return STATUS_CMD_OK;
 }
 

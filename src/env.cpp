@@ -36,6 +36,7 @@
 #include <utility>
 #include <vector>
 
+#include "builtin_bind.h"
 #include "common.h"
 #include "env.h"
 #include "env_universal_common.h"

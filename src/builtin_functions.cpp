@@ -264,9 +264,9 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int retval = parse_functions_opts(&opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    if (opts.print_help || !argv[optind]) {
+    if (opts.print_help) {
         builtin_print_help(parser, streams, cmd, streams.out);
-        return STATUS_INVALID_ARGS;
+        return STATUS_CMD_OK;
     }
 
     // Erase, desc, query, copy and list are mutually exclusive.

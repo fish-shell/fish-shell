@@ -37,7 +37,7 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind, int argc, wchar_t 
                 return STATUS_CMD_OK;
             }
             case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {

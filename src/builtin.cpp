@@ -44,6 +44,7 @@
 #include "builtin_history.h"
 #include "builtin_jobs.h"
 #include "builtin_printf.h"
+#include "builtin_pwd.h"
 #include "builtin_random.h"
 #include "builtin_read.h"
 #include "builtin_set.h"
@@ -276,24 +277,6 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
     }
 
     return STATUS_CMD_ERROR;
-}
-
-/// The pwd builtin. We don't respect -P to resolve symbolic links because we
-/// try to always resolve them.
-static int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    UNUSED(parser);
-    if (argv[1] != NULL) {
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv));
-        return STATUS_INVALID_ARGS;
-    }
-
-    wcstring res = wgetcwd();
-    if (res.empty()) {
-        return STATUS_CMD_ERROR;
-    }
-    streams.out.append(res);
-    streams.out.push_back(L'\n');
-    return STATUS_CMD_OK;
 }
 
 /// The exit builtin. Calls reader_exit to exit and returns the value specified.

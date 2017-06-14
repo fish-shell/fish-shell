@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <wchar.h>
 
@@ -32,6 +31,7 @@
 #include "builtin.h"
 #include "builtin_bind.h"
 #include "builtin_block.h"
+#include "builtin_cd.h"
 #include "builtin_commandline.h"
 #include "builtin_complete.h"
 #include "builtin_disown.h"
@@ -425,76 +425,6 @@ static int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
     reader_exit(1, 0);
     return (int)ec;
-}
-
-/// The cd builtin. Changes the current directory to the one specified or to $HOME if none is
-/// specified. The directory can be relative to any directory in the CDPATH variable.
-/// The cd builtin. Changes the current directory to the one specified or to $HOME if none is
-/// specified. The directory can be relative to any directory in the CDPATH variable.
-static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    env_var_t dir_in;
-    wcstring dir;
-
-    if (argv[1] == NULL) {
-        dir_in = env_get_string(L"HOME");
-        if (dir_in.missing_or_empty()) {
-            streams.err.append_format(_(L"%ls: Could not find home directory\n"), argv[0]);
-            return STATUS_CMD_ERROR;
-        }
-    } else {
-        dir_in = env_var_t(argv[1]);
-    }
-
-    bool got_cd_path = false;
-    if (!dir_in.missing()) {
-        got_cd_path = path_get_cdpath(dir_in, &dir);
-    }
-
-    if (!got_cd_path) {
-        if (errno == ENOTDIR) {
-            streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), argv[0],
-                                      dir_in.c_str());
-        } else if (errno == ENOENT) {
-            streams.err.append_format(_(L"%ls: The directory '%ls' does not exist\n"), argv[0],
-                                      dir_in.c_str());
-        } else if (errno == EROTTEN) {
-            streams.err.append_format(_(L"%ls: '%ls' is a rotten symlink\n"), argv[0],
-                                      dir_in.c_str());
-        } else {
-            streams.err.append_format(_(L"%ls: Unknown error trying to locate directory '%ls'\n"),
-                                      argv[0], dir_in.c_str());
-        }
-
-        if (!shell_is_interactive()) streams.err.append(parser.current_line());
-
-        return STATUS_CMD_ERROR;
-    }
-
-    if (wchdir(dir) != 0) {
-        struct stat buffer;
-        int status;
-
-        status = wstat(dir, &buffer);
-        if (!status && S_ISDIR(buffer.st_mode)) {
-            streams.err.append_format(_(L"%ls: Permission denied: '%ls'\n"), argv[0], dir.c_str());
-
-        } else {
-            streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), argv[0], dir.c_str());
-        }
-
-        if (!shell_is_interactive()) {
-            streams.err.append(parser.current_line());
-        }
-
-        return STATUS_CMD_ERROR;
-    }
-
-    if (!env_set_pwd()) {
-        streams.err.append_format(_(L"%ls: Could not set PWD variable\n"), argv[0]);
-        return STATUS_CMD_ERROR;
-    }
-
-    return STATUS_CMD_OK;
 }
 
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.

@@ -18,7 +18,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -40,6 +39,7 @@
 #include "builtin_disown.h"
 #include "builtin_echo.h"
 #include "builtin_emit.h"
+#include "builtin_fg.h"
 #include "builtin_functions.h"
 #include "builtin_history.h"
 #include "builtin_jobs.h"
@@ -56,7 +56,6 @@
 #include "builtin_ulimit.h"
 #include "common.h"
 #include "complete.h"
-#include "env.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "intern.h"
@@ -66,7 +65,6 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
-#include "tokenizer.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -311,89 +309,6 @@ static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv
     int argc = builtin_count_args(argv);
     streams.out.append_format(L"%d\n", argc - 1);
     return argc - 1 == 0 ? STATUS_CMD_ERROR : STATUS_CMD_OK;
-}
-
-/// Builtin for putting a job in the foreground.
-static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    job_t *j = NULL;
-
-    if (argv[1] == 0) {
-        // Select last constructed job (I.e. first job in the job que) that is possible to put in
-        // the foreground.
-        job_iterator_t jobs;
-        while ((j = jobs.next())) {
-            if (j->get_flag(JOB_CONSTRUCTED) && (!job_is_completed(j)) &&
-                ((job_is_stopped(j) || (!j->get_flag(JOB_FOREGROUND))) &&
-                 j->get_flag(JOB_CONTROL))) {
-                break;
-            }
-        }
-        if (!j) {
-            streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), argv[0]);
-        }
-    } else if (argv[2] != 0) {
-        // Specifying more than one job to put to the foreground is a syntax error, we still
-        // try to locate the job argv[1], since we want to know if this is an ambigous job
-        // specification or if this is an malformed job id.
-        int pid;
-        int found_job = 0;
-
-        pid = fish_wcstoi(argv[1]);
-        if (!(errno || pid < 0)) {
-            j = job_get_from_pid(pid);
-            if (j) found_job = 1;
-        }
-
-        if (found_job) {
-            streams.err.append_format(_(L"%ls: Ambiguous job\n"), argv[0]);
-        } else {
-            streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), argv[0], argv[1]);
-        }
-
-        builtin_print_help(parser, streams, argv[0], streams.err);
-
-        j = 0;
-
-    } else {
-        int pid = abs(fish_wcstoi(argv[1]));
-        if (errno) {
-            streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, argv[0], argv[1]);
-            builtin_print_help(parser, streams, argv[0], streams.err);
-        } else {
-            j = job_get_from_pid(pid);
-            if (!j || !j->get_flag(JOB_CONSTRUCTED) || job_is_completed(j)) {
-                streams.err.append_format(_(L"%ls: No suitable job: %d\n"), argv[0], pid);
-                j = 0;
-            } else if (!j->get_flag(JOB_CONTROL)) {
-                streams.err.append_format(_(L"%ls: Can't put job %d, '%ls' to foreground because "
-                                            L"it is not under job control\n"),
-                                          argv[0], pid, j->command_wcstr());
-                j = 0;
-            }
-        }
-    }
-
-    if (!j) {
-        return STATUS_INVALID_ARGS;
-    }
-
-    if (streams.err_is_redirected) {
-        streams.err.append_format(FG_MSG, j->job_id, j->command_wcstr());
-    } else {
-        // If we aren't redirecting, send output to real stderr, since stuff in sb_err won't get
-        // printed until the command finishes.
-        fwprintf(stderr, FG_MSG, j->job_id, j->command_wcstr());
-    }
-
-    const wcstring ft = tok_first(j->command());
-    if (!ft.empty()) env_set(L"_", ft.c_str(), ENV_EXPORT);
-    reader_write_title(j->command());
-
-    job_promote(j);
-    j->set_flag(JOB_FOREGROUND, true);
-
-    job_continue(j, job_is_stopped(j));
-    return STATUS_CMD_OK;
 }
 
 /// Helper function for builtin_bg().

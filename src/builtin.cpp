@@ -19,7 +19,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <limits.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,8 +37,8 @@
 #include "builtin_block.h"
 #include "builtin_commandline.h"
 #include "builtin_complete.h"
+#include "builtin_echo.h"
 #include "builtin_emit.h"
-#include "builtin_function.h"
 #include "builtin_functions.h"
 #include "builtin_history.h"
 #include "builtin_jobs.h"
@@ -55,20 +54,16 @@
 #include "common.h"
 #include "complete.h"
 #include "env.h"
-#include "event.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "function.h"
 #include "intern.h"
 #include "io.h"
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"
-#include "parser_keywords.h"
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
 #include "tokenizer.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -387,269 +382,6 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
     }
 
     return STATUS_CMD_ERROR;
-}
-
-// Convert a octal or hex character to its binary value. Surprisingly a version
-// of this function using a lookup table is only ~1.5% faster than the `switch`
-// statement version below. Since that requires initializing a table statically
-// (which is problematic if we run on an EBCDIC system) we don't use that
-// solution. Also, we relax the style rule that `case` blocks should always be
-// enclosed in parentheses given the nature of this code.
-static unsigned int builtin_echo_digit(wchar_t wc, unsigned int base) {
-    assert(base == 8 || base == 16);  // base must be hex or octal
-    switch (wc) {
-        case L'0':
-            return 0;
-        case L'1':
-            return 1;
-        case L'2':
-            return 2;
-        case L'3':
-            return 3;
-        case L'4':
-            return 4;
-        case L'5':
-            return 5;
-        case L'6':
-            return 6;
-        case L'7':
-            return 7;
-        default: { break; }
-    }
-
-    if (base != 16) return UINT_MAX;
-
-    switch (wc) {
-        case L'8':
-            return 8;
-        case L'9':
-            return 9;
-        case L'a':
-        case L'A':
-            return 10;
-        case L'b':
-        case L'B':
-            return 11;
-        case L'c':
-        case L'C':
-            return 12;
-        case L'd':
-        case L'D':
-            return 13;
-        case L'e':
-        case L'E':
-            return 14;
-        case L'f':
-        case L'F':
-            return 15;
-        default: { break; }
-    }
-
-    return UINT_MAX;
-}
-
-/// Parse a numeric escape sequence in str, returning whether we succeeded. Also return the number
-/// of characters consumed and the resulting value. Supported escape sequences:
-///
-/// \0nnn: octal value, zero to three digits
-/// \nnn: octal value, one to three digits
-/// \xhh: hex value, one to two digits
-static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *consumed,
-                                                unsigned char *out_val) {
-    bool success = false;
-    unsigned int start = 0;  // the first character of the numeric part of the sequence
-
-    unsigned int base = 0, max_digits = 0;
-    if (builtin_echo_digit(str[0], 8) != UINT_MAX) {
-        // Octal escape
-        base = 8;
-
-        // If the first digit is a 0, we allow four digits (including that zero); otherwise, we
-        // allow 3.
-        max_digits = (str[0] == L'0' ? 4 : 3);
-    } else if (str[0] == L'x') {
-        // Hex escape
-        base = 16;
-        max_digits = 2;
-
-        // Skip the x
-        start = 1;
-    }
-
-    if (base == 0) {
-        return success;
-    }
-
-    unsigned int idx;
-    unsigned char val = 0;  // resulting character
-    for (idx = start; idx < start + max_digits; idx++) {
-        unsigned int digit = builtin_echo_digit(str[idx], base);
-        if (digit == UINT_MAX) break;
-        val = val * base + digit;
-    }
-
-    // We succeeded if we consumed at least one digit.
-    if (idx > start) {
-        *consumed = idx;
-        *out_val = val;
-        success = true;
-    }
-    return success;
-}
-
-/// The echo builtin.
-///
-/// Bash only respects -n if it's the first argument. We'll do the same. We also support a new
-/// option -s to mean "no spaces"
-static int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    UNUSED(parser);
-    // Skip first arg
-    if (!*argv++) return STATUS_INVALID_ARGS;
-
-    // Process options. Options must come at the beginning - the first non-option kicks us out.
-    bool print_newline = true, print_spaces = true, interpret_special_chars = false;
-    size_t option_idx = 0;
-    for (option_idx = 0; argv[option_idx] != NULL; option_idx++) {
-        const wchar_t *arg = argv[option_idx];
-        assert(arg != NULL);
-        bool arg_is_valid_option = false;
-        if (arg[0] == L'-') {
-            // We have a leading dash. Ensure that every subseqnent character is a valid option.
-            size_t i = 1;
-            while (arg[i] != L'\0' && wcschr(L"nesE", arg[i]) != NULL) {
-                i++;
-            }
-            // We must have at least two characters to be a valid option, and have consumed the
-            // whole string.
-            arg_is_valid_option = (i >= 2 && arg[i] == L'\0');
-        }
-
-        if (!arg_is_valid_option) {
-            // This argument is not an option, so there are no more options.
-            break;
-        }
-
-        // Ok, we are sure the argument is an option. Parse it.
-        assert(arg_is_valid_option);
-        for (size_t i = 1; arg[i] != L'\0'; i++) {
-            switch (arg[i]) {
-                case L'n': {
-                    print_newline = false;
-                    break;
-                }
-                case L'e': {
-                    interpret_special_chars = true;
-                    break;
-                }
-                case L's': {
-                    print_spaces = false;
-                    break;
-                }
-                case L'E': {
-                    interpret_special_chars = false;
-                    break;
-                }
-                default: {
-                    DIE("unexpected character in builtin_echo argument");
-                    break;
-                }
-            }
-        }
-    }
-
-    // The special character \c can be used to indicate no more output.
-    bool continue_output = true;
-
-    /* Skip over the options */
-    const wchar_t *const *args_to_echo = argv + option_idx;
-    for (size_t idx = 0; continue_output && args_to_echo[idx] != NULL; idx++) {
-        if (print_spaces && idx > 0) {
-            streams.out.push_back(' ');
-        }
-
-        const wchar_t *str = args_to_echo[idx];
-        for (size_t j = 0; continue_output && str[j]; j++) {
-            if (!interpret_special_chars || str[j] != L'\\') {
-                // Not an escape.
-                streams.out.push_back(str[j]);
-            } else {
-                // Most escapes consume one character in addition to the backslash; the numeric
-                // sequences may consume more, while an unrecognized escape sequence consumes none.
-                wchar_t wc;
-                size_t consumed = 1;
-                switch (str[j + 1]) {
-                    case L'a': {
-                        wc = L'\a';
-                        break;
-                    }
-                    case L'b': {
-                        wc = L'\b';
-                        break;
-                    }
-                    case L'e': {
-                        wc = L'\e';
-                        break;
-                    }
-                    case L'f': {
-                        wc = L'\f';
-                        break;
-                    }
-                    case L'n': {
-                        wc = L'\n';
-                        break;
-                    }
-                    case L'r': {
-                        wc = L'\r';
-                        break;
-                    }
-                    case L't': {
-                        wc = L'\t';
-                        break;
-                    }
-                    case L'v': {
-                        wc = L'\v';
-                        break;
-                    }
-                    case L'\\': {
-                        wc = L'\\';
-                        break;
-                    }
-                    case L'c': {
-                        wc = 0;
-                        continue_output = false;
-                        break;
-                    }
-                    default: {
-                        // Octal and hex escape sequences.
-                        unsigned char narrow_val = 0;
-                        if (builtin_echo_parse_numeric_sequence(str + j + 1, &consumed,
-                                                                &narrow_val)) {
-                            // Here consumed must have been set to something. The narrow_val is a
-                            // literal byte that we want to output (#1894).
-                            wc = ENCODE_DIRECT_BASE + narrow_val % 256;
-                        } else {
-                            // Not a recognized escape. We consume only the backslash.
-                            wc = L'\\';
-                            consumed = 0;
-                        }
-                        break;
-                    }
-                }
-
-                // Skip over characters that were part of this escape sequence (but not the
-                // backslash, which will be handled by the loop increment.
-                j += consumed;
-
-                if (continue_output) {
-                    streams.out.push_back(wc);
-                }
-            }
-        }
-    }
-    if (print_newline && continue_output) {
-        streams.out.push_back('\n');
-    }
-    return STATUS_CMD_OK;
 }
 
 /// The pwd builtin. We don't respect -P to resolve symbolic links because we

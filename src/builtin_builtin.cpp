@@ -1,14 +1,16 @@
 // Implementation of the builtin builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <unistd.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <string>
 
 #include "builtin.h"
 #include "builtin_builtin.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
-#include "path.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -69,7 +71,7 @@ int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (opts.list_names) {
         wcstring_list_t names = builtin_get_names();
-        sort(names.begin(), names.end());
+        std::sort(names.begin(), names.end());
 
         for (size_t i = 0; i < names.size(); i++) {
             const wchar_t *el = names.at(i).c_str();

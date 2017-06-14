@@ -65,7 +65,7 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd, streams.out);
-        return STATUS_INVALID_ARGS;
+        return STATUS_CMD_OK;
     }
 
     int fd;

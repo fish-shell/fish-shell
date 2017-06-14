@@ -9,7 +9,6 @@
 
 #include "builtin_bind.h"
 #include "common.h"
-#include "env.h"
 
 #define FISH_BIND_MODE_VAR L"fish_bind_mode"
 

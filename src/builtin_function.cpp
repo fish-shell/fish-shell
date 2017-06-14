@@ -3,11 +3,11 @@
 
 #include <errno.h>
 #include <stddef.h>
-#include <stdint.h>
-#include <wchar.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-#include <algorithm>
-#include <random>
+#include <memory>
+#include <vector>
 
 #include "builtin.h"
 #include "builtin_function.h"
@@ -19,6 +19,8 @@
 #include "io.h"
 #include "parser.h"
 #include "parser_keywords.h"
+#include "proc.h"
+#include "signal.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 

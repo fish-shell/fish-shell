@@ -36,7 +36,7 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind, int argc, wchar_t 
                 return STATUS_CMD_OK;
             }
             case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -64,7 +64,7 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd, streams.out);
-        return STATUS_INVALID_ARGS;
+        return STATUS_CMD_OK;
     }
 
     env_var_t dir_in;

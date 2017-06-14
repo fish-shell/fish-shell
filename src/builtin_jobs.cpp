@@ -109,6 +109,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
 
 /// The jobs builtin. Used fopr printing running jobs. Defined in builtin_jobs.c.
 int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     int found = 0;
     int mode = JOBS_DEFAULT;
@@ -141,11 +142,11 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 break;
             }
             case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
+                builtin_print_help(parser, streams, cmd, streams.out);
                 return STATUS_CMD_OK;
             }
             case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -173,7 +174,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             for (i = w.woptind; i < argc; i++) {
                 int pid = fish_wcstoi(argv[i]);
                 if (errno || pid < 0) {
-                    streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), argv[0], argv[i]);
+                    streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), cmd, argv[i]);
                     return STATUS_INVALID_ARGS;
                 }
 
@@ -183,7 +184,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     builtin_jobs_print(j, mode, false, streams);
                     found = 1;
                 } else {
-                    streams.err.append_format(_(L"%ls: No suitable job: %d\n"), argv[0], pid);
+                    streams.err.append_format(_(L"%ls: No suitable job: %d\n"), cmd, pid);
                     return STATUS_CMD_ERROR;
                 }
             }

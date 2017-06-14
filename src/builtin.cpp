@@ -31,6 +31,7 @@
 #include "builtin.h"
 #include "builtin_bind.h"
 #include "builtin_block.h"
+#include "builtin_builtin.h"
 #include "builtin_cd.h"
 #include "builtin_command.h"
 #include "builtin_commandline.h"
@@ -236,54 +237,6 @@ void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wch
                               const wchar_t *opt) {
     streams.err.append_format(BUILTIN_ERR_MISSING, cmd, opt);
     builtin_print_help(parser, streams, cmd, streams.err);
-}
-
-/// The builtin builtin, used for giving builtins precedence over functions. Mostly handled by the
-/// parser. All this code does is some additional operational modes, such as printing a list of all
-/// builtins, printing help, etc.
-static int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int argc = builtin_count_args(argv);
-    int list = 0;
-
-    static const wchar_t *short_options = L"hn";
-    static const struct woption long_options[] = {
-        {L"names", no_argument, 0, 'n'}, {L"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
-
-    int opt;
-    wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
-        switch (opt) {
-            case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
-                return STATUS_CMD_OK;
-            }
-            case 'n': {
-                list = 1;
-                break;
-            }
-            case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return STATUS_INVALID_ARGS;
-            }
-            default: {
-                DIE("unexpected retval from wgetopt_long");
-                break;
-            }
-        }
-    }
-
-    if (list) {
-        wcstring_list_t names = builtin_get_names();
-        sort(names.begin(), names.end());
-
-        for (size_t i = 0; i < names.size(); i++) {
-            const wchar_t *el = names.at(i).c_str();
-
-            streams.out.append(el);
-            streams.out.append(L"\n");
-        }
-    }
-    return STATUS_CMD_OK;
 }
 
 /// A generic bultin that only supports showing a help message. This is only a placeholder that

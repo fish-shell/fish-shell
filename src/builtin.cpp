@@ -19,7 +19,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,7 +28,6 @@
 
 #include <algorithm>
 #include <memory>
-#include <set>
 #include <string>
 
 #include "builtin.h"
@@ -37,6 +35,7 @@
 #include "builtin_block.h"
 #include "builtin_commandline.h"
 #include "builtin_complete.h"
+#include "builtin_disown.h"
 #include "builtin_echo.h"
 #include "builtin_emit.h"
 #include "builtin_functions.h"
@@ -501,10 +500,9 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.
 static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
-    int argc;
-    argc = builtin_count_args(argv);
+    int argc = builtin_count_args(argv);
     streams.out.append_format(L"%d\n", argc - 1);
-    return !(argc - 1);
+    return argc - 1 == 0 ? STATUS_CMD_ERROR : STATUS_CMD_OK;
 }
 
 /// Implementation of the builtin contains command, used to check if a specified string is part of
@@ -773,83 +771,6 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             res |= send_to_bg(parser, streams, j);
         } else {
             streams.err.append_format(_(L"%ls: Could not find job '%d'\n"), argv[0], p);
-        }
-    }
-
-    return res;
-}
-
-/// Helper for builtin_disown
-static int disown_job(parser_t &parser, io_streams_t &streams, job_t *j) {
-    if (j == 0) {
-        streams.err.append_format(_(L"%ls: Unknown job '%ls'\n"), L"bg");
-        builtin_print_help(parser, streams, L"disown", streams.err);
-        return STATUS_INVALID_ARGS;
-    }
-
-    // Stopped disowned jobs must be manually signalled; explain how to do so
-    if (job_is_stopped(j)) {
-        killpg(j->pgid, SIGCONT);
-        const wchar_t *fmt =
-            _(L"%ls: job %d ('%ls') was stopped and has been signalled to continue.\n");
-        streams.err.append_format(fmt, L"disown", j->job_id, j->command_wcstr());
-    }
-
-    if (parser.job_remove(j)) return STATUS_CMD_OK;
-    return STATUS_CMD_ERROR;
-}
-
-/// Builtin for removing jobs from the job list
-static int builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int res = STATUS_CMD_OK;
-
-    if (argv[1] == 0) {
-        job_t *j;
-        // Select last constructed job (ie first job in the job queue) that is possible to disown.
-        // Stopped jobs can be disowned (they will be continued).
-        // Foreground jobs can be disowned.
-        // Even jobs that aren't under job control can be disowned!
-        job_iterator_t jobs;
-        while ((j = jobs.next())) {
-            if (j->get_flag(JOB_CONSTRUCTED) && (!job_is_completed(j))) {
-                break;
-            }
-        }
-
-        if (j) {
-            res = disown_job(parser, streams, j);
-        } else {
-            streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), argv[0]);
-            res = STATUS_CMD_ERROR;
-        }
-    } else {
-        std::set<job_t *> jobs;
-
-        // If one argument is not a valid pid (i.e. integer >= 0), fail without disowning anything,
-        // but still print errors for all of them.
-        // Non-existent jobs aren't an error, but information about them is useful.
-        // Multiple PIDs may refer to the same job; include the job only once by using a set.
-        for (int i = 1; argv[i]; i++) {
-            int pid = fish_wcstoi(argv[i]);
-            if (errno || pid < 0) {
-                streams.err.append_format(_(L"%ls: '%ls' is not a valid job specifier\n"), argv[0],
-                                          argv[i]);
-                res = STATUS_INVALID_ARGS;
-            } else {
-                if (job_t *j = parser.job_get_from_pid(pid)) {
-                    jobs.insert(j);
-                } else {
-                    streams.err.append_format(_(L"%ls: Could not find job '%d'\n"), argv[0], pid);
-                }
-            }
-        }
-        if (res != STATUS_CMD_OK) {
-            return res;
-        }
-
-        // Disown all target jobs
-        for (auto j : jobs) {
-            res |= disown_job(parser, streams, j);
         }
     }
 

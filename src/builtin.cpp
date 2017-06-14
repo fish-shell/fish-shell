@@ -18,7 +18,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,6 +45,7 @@
 #include "builtin_read.h"
 #include "builtin_set.h"
 #include "builtin_set_color.h"
+#include "builtin_source.h"
 #include "builtin_status.h"
 #include "builtin_string.h"
 #include "builtin_test.h"
@@ -555,70 +555,6 @@ static int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **a
         }
     }
     return STATUS_CMD_ERROR;
-}
-
-/// The  . (dot) builtin, sometimes called source. Evaluates the contents of a file.
-static int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    ASSERT_IS_MAIN_THREAD();
-    int fd;
-    int res = STATUS_CMD_OK;
-    struct stat buf;
-    int argc;
-
-    argc = builtin_count_args(argv);
-
-    const wchar_t *fn, *fn_intern;
-
-    if (argc < 2 || (wcscmp(argv[1], L"-") == 0)) {
-        fn = L"-";
-        fn_intern = fn;
-        fd = dup(streams.stdin_fd);
-    } else {
-        if ((fd = wopen_cloexec(argv[1], O_RDONLY)) == -1) {
-            streams.err.append_format(_(L"%ls: Error encountered while sourcing file '%ls':\n"),
-                                      argv[0], argv[1]);
-            builtin_wperror(L"source", streams);
-            return STATUS_CMD_ERROR;
-        }
-
-        if (fstat(fd, &buf) == -1) {
-            close(fd);
-            streams.err.append_format(_(L"%ls: Error encountered while sourcing file '%ls':\n"),
-                                      argv[0], argv[1]);
-            builtin_wperror(L"source", streams);
-            return STATUS_CMD_ERROR;
-        }
-
-        if (!S_ISREG(buf.st_mode)) {
-            close(fd);
-            streams.err.append_format(_(L"%ls: '%ls' is not a file\n"), argv[0], argv[1]);
-            return STATUS_CMD_ERROR;
-        }
-
-        fn_intern = intern(argv[1]);
-    }
-
-    const source_block_t *sb = parser.push_block<source_block_t>(fn_intern);
-    reader_push_current_filename(fn_intern);
-
-    env_set_argv(argc > 1 ? argv + 2 : argv + 1);
-
-    res = reader_read(fd, streams.io_chain ? *streams.io_chain : io_chain_t());
-
-    parser.pop_block(sb);
-
-    if (res) {
-        streams.err.append_format(_(L"%ls: Error while reading file '%ls'\n"), argv[0],
-                                  fn_intern == intern_static(L"-") ? L"<stdin>" : fn_intern);
-    } else {
-        res = proc_get_last_status();
-    }
-
-    // Do not close fd after calling reader_read. reader_read automatically closes it before calling
-    // eval.
-    reader_pop_current_filename();
-
-    return res;
 }
 
 /// Builtin for putting a job in the foreground.

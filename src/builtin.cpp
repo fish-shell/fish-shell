@@ -32,6 +32,7 @@
 #include "builtin_bind.h"
 #include "builtin_block.h"
 #include "builtin_cd.h"
+#include "builtin_command.h"
 #include "builtin_commandline.h"
 #include "builtin_complete.h"
 #include "builtin_disown.h"
@@ -60,7 +61,6 @@
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"
-#include "path.h"
 #include "proc.h"
 #include "reader.h"
 #include "tokenizer.h"
@@ -284,65 +284,6 @@ static int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **ar
         }
     }
     return STATUS_CMD_OK;
-}
-
-/// Implementation of the builtin 'command'. Actual command running is handled by the parser, this
-/// just processes the flags.
-static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int argc = builtin_count_args(argv);
-    bool find_path = false;
-    bool quiet = false;
-
-    static const wchar_t *short_options = L"hqsv";
-    static const struct woption long_options[] = {{L"quiet", no_argument, NULL, 'q'},
-                                                  {L"search", no_argument, NULL, 's'},
-                                                  {L"help", no_argument, NULL, 'h'},
-                                                  {NULL, 0, NULL, 0}};
-
-    int opt;
-    wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
-        switch (opt) {
-            case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
-                return STATUS_CMD_OK;
-            }
-            case 's':
-            case 'v': {
-                find_path = true;
-                break;
-            }
-            case 'q': {
-                quiet = true;
-                break;
-            }
-            case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return STATUS_INVALID_ARGS;
-            }
-            default: {
-                DIE("unexpected retval from wgetopt_long");
-                break;
-            }
-        }
-    }
-
-    if (!find_path) {
-        builtin_print_help(parser, streams, argv[0], streams.out);
-        return STATUS_INVALID_ARGS;
-    }
-
-    int found = 0;
-
-    for (int idx = w.woptind; argv[idx]; ++idx) {
-        const wchar_t *command_name = argv[idx];
-        wcstring path;
-        if (path_get_path(command_name, &path)) {
-            if (!quiet) streams.out.append_format(L"%ls\n", path.c_str());
-            ++found;
-        }
-    }
-    return found ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 /// A generic bultin that only supports showing a help message. This is only a placeholder that

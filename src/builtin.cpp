@@ -36,6 +36,7 @@
 #include "builtin_command.h"
 #include "builtin_commandline.h"
 #include "builtin_complete.h"
+#include "builtin_contains.h"
 #include "builtin_disown.h"
 #include "builtin_echo.h"
 #include "builtin_emit.h"
@@ -327,58 +328,6 @@ static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv
     int argc = builtin_count_args(argv);
     streams.out.append_format(L"%d\n", argc - 1);
     return argc - 1 == 0 ? STATUS_CMD_ERROR : STATUS_CMD_OK;
-}
-
-/// Implementation of the builtin contains command, used to check if a specified string is part of
-/// a list.
-static int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int argc = builtin_count_args(argv);
-    wchar_t *needle;
-    bool should_output_index = false;
-
-    static const wchar_t *short_options = L"+hi";
-    static const struct woption long_options[] = {
-        {L"help", no_argument, NULL, 'h'}, {L"index", no_argument, NULL, 'i'}, {NULL, 0, NULL, 0}};
-
-    int opt;
-    wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
-        switch (opt) {
-            case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
-                return STATUS_CMD_OK;
-            }
-            case ':': {
-                builtin_missing_argument(parser, streams, argv[0], argv[w.woptind - 1]);
-                return STATUS_INVALID_ARGS;
-            }
-            case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return STATUS_INVALID_ARGS;
-            }
-            case 'i': {
-                should_output_index = true;
-                break;
-            }
-            default: {
-                DIE("unexpected retval from wgetopt_long");
-                break;
-            }
-        }
-    }
-
-    needle = argv[w.woptind];
-    if (!needle) {
-        streams.err.append_format(_(L"%ls: Key not specified\n"), argv[0]);
-    } else {
-        for (int i = w.woptind + 1; i < argc; i++) {
-            if (!wcscmp(needle, argv[i])) {
-                if (should_output_index) streams.out.append_format(L"%d\n", i - w.woptind);
-                return STATUS_CMD_OK;
-            }
-        }
-    }
-    return STATUS_CMD_ERROR;
 }
 
 /// Builtin for putting a job in the foreground.

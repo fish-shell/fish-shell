@@ -193,7 +193,7 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
             }
             case 'h': {
                 opts->print_help = true;
-                return STATUS_CMD_OK;
+                break;
             }
             case ':': {
                 builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);

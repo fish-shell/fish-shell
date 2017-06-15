@@ -36,7 +36,7 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
         switch (opt) {
             case 'h': {
                 opts->print_help = true;
-                return STATUS_CMD_OK;
+                break;
             }
             case 'g': {
                 opts->scope = GLOBAL;

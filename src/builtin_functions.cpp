@@ -37,19 +37,18 @@ struct cmd_opts {
     bool verbose = false;
     wchar_t *description = NULL;
 };
+static const wchar_t *short_options = L"Dacehnqv";
+static const struct woption long_options[] = {
+    {L"erase", no_argument, NULL, 'e'},   {L"description", required_argument, NULL, 'd'},
+    {L"names", no_argument, NULL, 'n'},   {L"all", no_argument, NULL, 'a'},
+    {L"help", no_argument, NULL, 'h'},    {L"query", no_argument, NULL, 'q'},
+    {L"copy", no_argument, NULL, 'c'},    {L"details", no_argument, NULL, 'D'},
+    {L"verbose", no_argument, NULL, 'v'}, {NULL, 0, NULL, 0}};
 
 static int parse_cmd_opts(struct cmd_opts *opts,
                           int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
-    static const wchar_t *short_options = L"Dacehnqv";
-    static const struct woption long_options[] = {
-        {L"erase", no_argument, NULL, 'e'},   {L"description", required_argument, NULL, 'd'},
-        {L"names", no_argument, NULL, 'n'},   {L"all", no_argument, NULL, 'a'},
-        {L"help", no_argument, NULL, 'h'},    {L"query", no_argument, NULL, 'q'},
-        {L"copy", no_argument, NULL, 'c'},    {L"details", no_argument, NULL, 'D'},
-        {L"verbose", no_argument, NULL, 'v'}, {NULL, 0, NULL, 0}};
-
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
@@ -80,7 +79,7 @@ static int parse_cmd_opts(struct cmd_opts *opts,
             }
             case 'h': {
                 opts->print_help = true;
-                return STATUS_CMD_OK;
+                break;
             }
             case 'q': {
                 opts->query = true;

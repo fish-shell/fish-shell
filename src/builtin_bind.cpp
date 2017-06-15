@@ -296,7 +296,7 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
             }
             case L'h': {
                 opts->print_help = true;
-                return STATUS_CMD_OK;
+                break;
             }
             case L'k': {
                 opts->use_terminfo = true;

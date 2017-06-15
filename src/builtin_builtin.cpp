@@ -31,7 +31,7 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind, int argc, wchar_t 
         switch (opt) {
             case 'h': {
                 opts->print_help = true;
-                return STATUS_CMD_OK;
+                break;
             }
             case 'n': {
                 opts->list_names = true;

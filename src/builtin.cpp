@@ -276,36 +276,23 @@ void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wch
 /// A generic bultin that only supports showing a help message. This is only a placeholder that
 /// prints the help message. Useful for commands that live in the parser.
 static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
+    struct cmd_opts_help_only opts;
+    int optind;
+    int retval = parse_cmd_opts_help_only(&opts, &optind, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    if (opts.print_help) {
+        builtin_print_help(parser, streams, cmd, streams.out);
+        return STATUS_CMD_OK;
+    }
 
     // Hackish - if we have no arguments other than the command, we are a "naked invocation" and we
     // just print help.
     if (argc == 1) {
-        builtin_print_help(parser, streams, argv[0], streams.out);
+        builtin_print_help(parser, streams, cmd, streams.out);
         return STATUS_INVALID_ARGS;
-    }
-
-    static const wchar_t *short_options = L"h";
-    static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
-                                                  {NULL, 0, NULL, 0}};
-
-    int opt;
-    wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
-        switch (opt) {  //!OCLINT(too few branches)
-            case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
-                return STATUS_CMD_OK;
-            }
-            case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return STATUS_INVALID_ARGS;
-            }
-            default: {
-                DIE("unexpected retval from wgetopt_long");
-                break;
-            }
-        }
     }
 
     return STATUS_CMD_ERROR;

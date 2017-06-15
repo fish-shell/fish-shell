@@ -2556,6 +2556,9 @@ const wchar_t *reader_readline(int nchars) {
                     // current token.
                     size_t end_of_token_offset = token_end - buff;
 
+                    // Store the current position so we can return to it if there are no completions
+                    size_t original_position = el->position;
+
                     // Move the cursor to the end.
                     if (el->position != end_of_token_offset) {
                         update_buff_pos(el, end_of_token_offset);
@@ -2582,6 +2585,11 @@ const wchar_t *reader_readline(int nchars) {
 
                     bool cont_after_prefix_insertion = (c == R_COMPLETE_AND_SEARCH);
                     comp_empty = handle_completions(comp, cont_after_prefix_insertion);
+
+                    if (comp.empty()) {
+                        update_buff_pos(el, original_position);
+                        reader_repaint();
+                    }
 
                     // Show the search field if requested and if we printed a list of completions.
                     if (c == R_COMPLETE_AND_SEARCH && !comp_empty && !data->pager.empty()) {

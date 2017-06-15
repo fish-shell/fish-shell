@@ -2338,7 +2338,7 @@ const wchar_t *reader_readline(int nchars) {
     int last_char = 0;
     size_t yank_len = 0;
     const wchar_t *yank_str;
-    bool comp_empty = true;
+    bool comp_inserted_text = true;
     std::vector<completion_t> comp;
     int finished = 0;
     struct termios old_modes;
@@ -2512,7 +2512,7 @@ const wchar_t *reader_readline(int nchars) {
                 // Use the command line only; it doesn't make sense to complete in any other line.
                 editable_line_t *el = &data->command_line;
                 if (data->is_navigating_pager_contents() ||
-                    (!comp_empty && last_char == R_COMPLETE)) {
+                    (!comp_inserted_text && last_char == R_COMPLETE)) {
                     // The user typed R_COMPLETE more than once in a row. If we are not yet fully
                     // disclosed, then become so; otherwise cycle through our available completions.
                     if (data->current_page_rendering.remaining_to_disclose > 0) {
@@ -2584,7 +2584,7 @@ const wchar_t *reader_readline(int nchars) {
                     data->cycle_cursor_pos = el->position;
 
                     bool cont_after_prefix_insertion = (c == R_COMPLETE_AND_SEARCH);
-                    comp_empty = handle_completions(comp, cont_after_prefix_insertion);
+                    comp_inserted_text = handle_completions(comp, cont_after_prefix_insertion);
 
                     if (comp.empty()) {
                         update_buff_pos(el, original_position);
@@ -2592,7 +2592,7 @@ const wchar_t *reader_readline(int nchars) {
                     }
 
                     // Show the search field if requested and if we printed a list of completions.
-                    if (c == R_COMPLETE_AND_SEARCH && !comp_empty && !data->pager.empty()) {
+                    if (c == R_COMPLETE_AND_SEARCH && !comp_inserted_text && !data->pager.empty()) {
                         data->pager.set_search_field_shown(true);
                         select_completion_in_direction(direction_next);
                         reader_repaint_needed();

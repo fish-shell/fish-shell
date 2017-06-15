@@ -48,6 +48,7 @@
 #include "builtin_pwd.h"
 #include "builtin_random.h"
 #include "builtin_read.h"
+#include "builtin_return.h"
 #include "builtin_set.h"
 #include "builtin_set_color.h"
 #include "builtin_source.h"
@@ -395,50 +396,6 @@ static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t *
     parser.pop_block(bpb);
 
     return proc_get_last_status();
-}
-
-/// Function for handling the \c return builtin.
-static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int argc = builtin_count_args(argv);
-
-    if (argc > 2) {
-        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        builtin_print_help(parser, streams, argv[0], streams.err);
-        return STATUS_INVALID_ARGS;
-    }
-
-    int status;
-    if (argc == 2) {
-        status = fish_wcstoi(argv[1]);
-        if (errno) {
-            streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), argv[0],
-                                      argv[1]);
-            builtin_print_help(parser, streams, argv[0], streams.err);
-            return STATUS_INVALID_ARGS;
-        }
-    } else {
-        status = proc_get_last_status();
-    }
-
-    // Find the function block.
-    size_t function_block_idx;
-    for (function_block_idx = 0; function_block_idx < parser.block_count(); function_block_idx++) {
-        const block_t *b = parser.block_at_index(function_block_idx);
-        if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) break;
-    }
-
-    if (function_block_idx >= parser.block_count()) {
-        streams.err.append_format(_(L"%ls: Not inside of function\n"), argv[0]);
-        builtin_print_help(parser, streams, argv[0], streams.err);
-        return STATUS_CMD_ERROR;
-    }
-
-    // Skip everything up to and including the function block.
-    for (size_t i = 0; i <= function_block_idx; i++) {
-        block_t *b = parser.block_at_index(i);
-        b->skip = true;
-    }
-    return status;
 }
 
 int builtin_true(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

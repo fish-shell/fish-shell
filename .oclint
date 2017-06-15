@@ -36,6 +36,18 @@ rule-configurations:
     - key: NCSS_METHOD
       value: 40
 
+    # We're willing to allow slighly more linearly independent paths through a
+    # function. Most of our code has a lot of `switch` blocks or consecutive
+    # `if` tests that are straightforward to interpret but which increase this
+    # metric. Default is 10.
+    - key: CYCLOMATIC_COMPLEXITY
+      value: 14
+
+    # We're willing to allow slighly more execution paths through a function.
+    # Default is 300.
+    - key: HighNPathComplexity
+      value: 300
+
 disable-rules:
     #
     # A few instances of "useless parentheses" errors are meaningful. Mostly

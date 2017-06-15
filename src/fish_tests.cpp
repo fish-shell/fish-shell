@@ -1762,7 +1762,7 @@ struct pager_layout_testcase_t {
 
             wcstring text = sd.line(0).to_string();
             if (text != expected) {
-                fwprintf(stderr, L"width %zu got %d<%ls>, expected %d<%ls>\n", this->width,
+                fwprintf(stderr, L"width %zu got %zu<%ls>, expected %zu<%ls>\n", this->width,
                          text.length(), text.c_str(), expected.length(), expected.c_str());
                 for (size_t i = 0; i < std::max(text.length(), expected.length()); i++) {
                     fwprintf(stderr, L"i %zu got <%lx> expected <%lx>\n", i,

@@ -40,6 +40,7 @@
 #include "builtin_disown.h"
 #include "builtin_echo.h"
 #include "builtin_emit.h"
+#include "builtin_exit.h"
 #include "builtin_fg.h"
 #include "builtin_functions.h"
 #include "builtin_history.h"
@@ -48,6 +49,7 @@
 #include "builtin_pwd.h"
 #include "builtin_random.h"
 #include "builtin_read.h"
+#include "builtin_realpath.h"
 #include "builtin_return.h"
 #include "builtin_set.h"
 #include "builtin_set_color.h"
@@ -117,7 +119,7 @@ int parse_cmd_opts_help_only(struct cmd_opts_help_only *opts, int *optind, int a
         switch (opt) {  //!OCLINT(too few branches)
             case 'h': {
                 opts->print_help = true;
-                return STATUS_CMD_OK;
+                break;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
@@ -309,32 +311,6 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
     return STATUS_CMD_ERROR;
 }
 
-/// The exit builtin. Calls reader_exit to exit and returns the value specified.
-static int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int argc = builtin_count_args(argv);
-
-    if (argc > 2) {
-        streams.err.append_format(_(L"%ls: Too many arguments\n"), argv[0]);
-        builtin_print_help(parser, streams, argv[0], streams.err);
-        return STATUS_INVALID_ARGS;
-    }
-
-    long ec;
-    if (argc == 1) {
-        ec = proc_get_last_status();
-    } else {
-        ec = fish_wcstol(argv[1]);
-        if (errno) {
-            streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), argv[0],
-                                      argv[1]);
-            builtin_print_help(parser, streams, argv[0], streams.err);
-            return STATUS_INVALID_ARGS;
-        }
-    }
-    reader_exit(1, 0);
-    return (int)ec;
-}
-
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.
 static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
@@ -416,32 +392,6 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_INVALID_ARGS;
     }
     return STATUS_CMD_ERROR;
-}
-
-/// An implementation of the external realpath command that doesn't support any options. It's meant
-/// to be used only by scripts which need to be portable. In general scripts shouldn't invoke this
-/// directly. They should just use `realpath` which will fallback to this builtin if an external
-/// command cannot be found. This behaves like the external `realpath --canonicalize-existing`;
-/// that is, it requires all path components, including the final, to exist.
-int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int argc = builtin_count_args(argv);
-
-    if (argc != 2) {
-        builtin_print_help(parser, streams, argv[0], streams.out);
-        return STATUS_INVALID_ARGS;
-    }
-
-    wchar_t *real_path = wrealpath(argv[1], NULL);
-    if (real_path) {
-        streams.out.append(real_path);
-        free((void *)real_path);
-    } else {
-        // We don't actually know why it failed. We should check errno.
-        streams.err.append_format(_(L"%ls: Invalid path: %ls\n"), argv[0], argv[1]);
-        return STATUS_CMD_ERROR;
-    }
-    streams.out.append(L"\n");
-    return STATUS_CMD_OK;
 }
 
 // END OF BUILTIN COMMANDS

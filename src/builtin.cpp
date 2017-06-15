@@ -28,6 +28,7 @@
 #include <string>
 
 #include "builtin.h"
+#include "builtin_bg.h"
 #include "builtin_bind.h"
 #include "builtin_block.h"
 #include "builtin_builtin.h"
@@ -100,6 +101,36 @@ void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
         streams.err.append(werr);
         streams.err.push_back(L'\n');
     }
+}
+
+static const wchar_t *short_options = L"h";
+static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
+                                              {NULL, 0, NULL, 0}};
+
+int parse_cmd_opts_help_only(struct cmd_opts_help_only *opts, int *optind, int argc, wchar_t **argv,
+                             parser_t &parser, io_streams_t &streams) {
+    wchar_t *cmd = argv[0];
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {  //!OCLINT(too few branches)
+            case 'h': {
+                opts->print_help = true;
+                return STATUS_CMD_OK;
+            }
+            case '?': {
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
+            }
+            default: {
+                DIE("unexpected retval from wgetopt_long");
+                break;
+            }
+        }
+    }
+
+    *optind = w.woptind;
+    return STATUS_CMD_OK;
 }
 
 /// Count the number of times the specified character occurs in the specified string.
@@ -309,79 +340,6 @@ static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv
     int argc = builtin_count_args(argv);
     streams.out.append_format(L"%d\n", argc - 1);
     return argc - 1 == 0 ? STATUS_CMD_ERROR : STATUS_CMD_OK;
-}
-
-/// Helper function for builtin_bg().
-static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j) {
-    assert(j != NULL);
-    if (!j->get_flag(JOB_CONTROL)) {
-        streams.err.append_format(
-            _(L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n"),
-            L"bg", j->job_id, j->command_wcstr());
-        builtin_print_help(parser, streams, L"bg", streams.err);
-        return STATUS_CMD_ERROR;
-    }
-
-    streams.err.append_format(_(L"Send job %d '%ls' to background\n"), j->job_id,
-                              j->command_wcstr());
-    job_promote(j);
-    j->set_flag(JOB_FOREGROUND, false);
-    job_continue(j, job_is_stopped(j));
-    return STATUS_CMD_OK;
-}
-
-/// Builtin for putting a job in the background.
-static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int res = STATUS_CMD_OK;
-
-    if (!argv[1]) {
-        // No jobs were specified so use the most recent (i.e., last) job.
-        job_t *j;
-        job_iterator_t jobs;
-        while ((j = jobs.next())) {
-            if (job_is_stopped(j) && j->get_flag(JOB_CONTROL) && (!job_is_completed(j))) {
-                break;
-            }
-        }
-
-        if (!j) {
-            streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), argv[0]);
-            res = STATUS_CMD_ERROR;
-        } else {
-            res = send_to_bg(parser, streams, j);
-        }
-
-        return res;
-    }
-
-    // The user specified at least one job to be backgrounded.
-    std::vector<int> pids;
-
-    // If one argument is not a valid pid (i.e. integer >= 0), fail without backgrounding anything,
-    // but still print errors for all of them.
-    for (int i = 1; argv[i]; i++) {
-        int pid = fish_wcstoi(argv[i]);
-        if (errno || pid < 0) {
-            streams.err.append_format(_(L"%ls: '%ls' is not a valid job specifier\n"), L"bg",
-                                      argv[i]);
-            res = STATUS_INVALID_ARGS;
-        }
-        pids.push_back(pid);
-    }
-
-    if (res != STATUS_CMD_OK) return res;
-
-    // Background all existing jobs that match the pids.
-    // Non-existent jobs aren't an error, but information about them is useful.
-    for (auto p : pids) {
-        if (job_t *j = job_get_from_pid(p)) {
-            res |= send_to_bg(parser, streams, j);
-        } else {
-            streams.err.append_format(_(L"%ls: Could not find job '%d'\n"), argv[0], p);
-        }
-    }
-
-    return res;
 }
 
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop

@@ -1,4 +1,32 @@
-# fish 2.6b1 (released ???)
+# fish 2.7b1
+
+## Notable fixes and improvements
+
+## Other significant changes
+
+- `complete`'s `--no-files` option works as intended (#112).
+- `pushd +1` works as documented again (#4091).
+- Added completions for:
+ -
+- Improved completions for `killall` (#4052), `ln` (#4090) and `zypper` (#4079).
+- Implemented `string lower` and `string upper` (#4080).
+- `help` can now open the tutorial.
+
+---
+
+# fish 2.6.0 (released June 3, 2017)
+
+Since the beta release of fish 2.6b1, fish version 2.6.0 contains a number of minor fixes, new completions for `magneto` (#4043), and improvements to the documentation.
+
+## Known issues
+
+- Apple macOS Sierra 10.12.5 introduced a problem with launching web browsers from other programs using AppleScript. This affects the fish Web configuration (`fish_config`); users on these platforms will need to manually open the address displayed in the terminal, such as by copying and pasting it into a browser. This problem will be fixed with macOS 10.12.6.
+
+If you are upgrading from version 2.5.0 or before, please also review the release notes for 2.6b1 (included below).
+
+---
+
+# fish 2.6b1 (released May 14, 2017)
 
 ## Notable fixes and improvements
 
@@ -17,6 +45,7 @@
 - `read` will read up to 10 MiB by default, leaving the target variable empty and exiting with status 122 if the line is too long. You can set a different limit with the `FISH_READ_BYTE_LIMIT` variable.
 - `read` supports a new `--silent` option to hide the characters typed (#838), for when reading sensitive data from the terminal. `read` also now accepts simple strings for the prompt (rather than scripts) with the new `-P` and `--prompt-str` options (#802).
 - `export` and `setenv` now understand colon-separated `PATH`, `CDPATH` and `MANPATH` variables.
+- `setenv` is no longer a simple alias for `set -gx` and will complain, just like the csh version, if given more than one value (#4103).
 - `bind` supports a new `--list-modes` option (#3872).
 - `bg` will check all of its arguments before backgrounding any jobs; any invalid arguments will cause a failure, but non-existent (eg recently exited) jobs are ignored (#3909).
 - `funced` warns if the function being edited has not been modified (#3961).

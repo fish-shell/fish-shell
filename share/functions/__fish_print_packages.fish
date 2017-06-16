@@ -10,7 +10,7 @@ function __fish_print_packages
     end
 
     #Get the word 'Package' in the current language
-    set -l package (_ Package)
+    set -l package (_ "Package")
 
     # Set up cache directory
     if test -z "$XDG_CACHE_HOME"

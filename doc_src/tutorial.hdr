@@ -19,6 +19,7 @@
 - <a href="#tut_exports">Shell Variables</a>
 - <a href="#tut_lists">Lists</a>
 - <a href="#tut_command_substitutions">Command Substitutions</a>
+- <a href="#tut_semicolon">Separating Commands (Semicolon)</a>
 - <a href="#tut_combiners">Combiners (And, Or, Not)</a>
 - <a href="#tut_conditionals">Conditionals (If, Else, Switch)</a>
 - <a href="#tut_functions">Functions</a>
@@ -391,6 +392,31 @@ Command substitutions are not expanded within quotes. Instead, you can temporari
 <outp>testing_1360099791.txt</outp>
 \endfish
 
+Unlike other shells, fish does not split command substitutions on any whitespace (like spaces or tabs), only newlines. This can be an issue with commands like `pkg-config` that print what is meant to be multiple arguments on a single line. To split it on spaces too, use `string split`.
+
+\fish{cli-dark}
+>_ printf '%s\n' (pkg-config --libs gio-2.0)
+<outp>-lgio-2.0 -lgobject-2.0 -lglib-2.0</outp>
+>_ printf '%s\n' (pkg-config --libs gio-2.0 | string split " ")
+<outp>-lgio-2.0
+-lgobject-2.0
+-lglib-2.0</outp>
+\endfish
+
+
+\section tut_semicolon Separating Commands (Semicolon)
+Like other shells, fish allows multiple commands either on separate lines or the same line.
+
+To write them on the same line, use the semicolon (";"). That means the following two examples are equivalent:
+
+\fish
+echo fish; echo chips
+
+# or
+echo fish
+echo chips
+\endfish
+
 
 \section tut_combiners Combiners (And, Or, Not)
 
@@ -399,6 +425,14 @@ Unlike other shells, `fish` does not have special syntax like &amp;&amp; or || t
 \fish{cli-dark}
 >_ cp file1.txt file1_bak.txt; and echo "Backup successful"; or echo "Backup failed"
 <outp>Backup failed</outp>
+\endfish
+
+As mentioned in <a href="#tut_semicolon">the section on the semicolon</a>, this can also be written in multiple lines, like so:
+
+\fish
+cp file1.txt file1_bak.txt
+and echo "Backup successful"
+or echo "Backup failed"
 \endfish
 
 
@@ -415,6 +449,16 @@ else
     echo Got nothing
 end
 \endfish
+
+<a href="#tut_combiners">Combiners</a> can also be used to make more complex conditions, like
+
+\fish
+if grep fish /etc/shells; and command -sq fish
+    echo fish is installed and configured
+end
+\endfish
+
+For even more complex conditions, use `begin` and `end` to group parts of them.
 
 There is also a `switch` command:
 

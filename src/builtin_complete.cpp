@@ -129,25 +129,25 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wcstring_list_t path;
     wcstring_list_t wrap_targets;
 
-    const wchar_t *short_options = L":a:c:p:s:l:o:d:frxeuAn:C::w:h";
-    const struct woption long_options[] = {{L"exclusive", no_argument, NULL, 'x'},
-                                           {L"no-files", no_argument, NULL, 'f'},
-                                           {L"require-parameter", no_argument, NULL, 'r'},
-                                           {L"path", required_argument, NULL, 'p'},
-                                           {L"command", required_argument, NULL, 'c'},
-                                           {L"short-option", required_argument, NULL, 's'},
-                                           {L"long-option", required_argument, NULL, 'l'},
-                                           {L"old-option", required_argument, NULL, 'o'},
-                                           {L"description", required_argument, NULL, 'd'},
-                                           {L"arguments", required_argument, NULL, 'a'},
-                                           {L"erase", no_argument, NULL, 'e'},
-                                           {L"unauthoritative", no_argument, NULL, 'u'},
-                                           {L"authoritative", no_argument, NULL, 'A'},
-                                           {L"condition", required_argument, NULL, 'n'},
-                                           {L"wraps", required_argument, NULL, 'w'},
-                                           {L"do-complete", optional_argument, NULL, 'C'},
-                                           {L"help", no_argument, NULL, 'h'},
-                                           {NULL, 0, NULL, 0}};
+    static const wchar_t *short_options = L":a:c:p:s:l:o:d:frxeuAn:C::w:h";
+    static const struct woption long_options[] = {{L"exclusive", no_argument, NULL, 'x'},
+                                                  {L"no-files", no_argument, NULL, 'f'},
+                                                  {L"require-parameter", no_argument, NULL, 'r'},
+                                                  {L"path", required_argument, NULL, 'p'},
+                                                  {L"command", required_argument, NULL, 'c'},
+                                                  {L"short-option", required_argument, NULL, 's'},
+                                                  {L"long-option", required_argument, NULL, 'l'},
+                                                  {L"old-option", required_argument, NULL, 'o'},
+                                                  {L"description", required_argument, NULL, 'd'},
+                                                  {L"arguments", required_argument, NULL, 'a'},
+                                                  {L"erase", no_argument, NULL, 'e'},
+                                                  {L"unauthoritative", no_argument, NULL, 'u'},
+                                                  {L"authoritative", no_argument, NULL, 'A'},
+                                                  {L"condition", required_argument, NULL, 'n'},
+                                                  {L"wraps", required_argument, NULL, 'w'},
+                                                  {L"do-complete", optional_argument, NULL, 'C'},
+                                                  {L"help", no_argument, NULL, 'h'},
+                                                  {NULL, 0, NULL, 0}};
 
     int opt;
     wgetopter_t w;

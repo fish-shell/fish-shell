@@ -59,22 +59,28 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
                 # Normalize whitespace
                 | string trim | string replace -r -a '\s+' ' ')
             end
-            if test -n "$paths"
-                # Expand paths which may have globbing and tokenize
-                set paths (eval "echo $paths" | string split ' ')
-                for path_index in (seq (count $paths))
-                    # Resolve relative paths
-                    if string match -v '/*' $paths[$path_index] >/dev/null
-                        set paths[$path_index] $relative_path/$paths[$path_index]
+
+            set -l new_paths
+            for path in $paths
+                set -l expanded_path
+                eval set expanded_path (echo $path)
+                for path in $expanded_path
+                    # Resolve "relative" paths in accordance to ssh path resolution
+                    if string match -qv '/*' $path
+                        set path $relative_path/$path
                     end
-                    echo $paths[$path_index]
+                    echo $path
+                    set new_paths $new_paths $path
                 end
-                _recursive $paths
+            end
+
+            if test -n "$new_paths";
+                _recursive $new_paths
             end
         end
         _recursive $ssh_config
     end
-    set -l ssh_configs (_ssh_include /etc/ssh/ssh_config) (_ssh_include $ssh_config)
+    set -l ssh_configs /etc/ssh/ssh_config (_ssh_include /etc/ssh/ssh_config) $ssh_config (_ssh_include $ssh_config)
 
     for file in $ssh_configs
         if test -r $file

@@ -516,13 +516,12 @@ doc.h: $(HDR_FILES)
 		-e "s,@prefix\@,$(prefix),g" \
 		-e "s,@fish_build_version\@,$(FISH_BUILD_VERSION),g" \
 
-
 #
-# Compile translation files to binary format
+# Compile translation files to binary format.
 #
 %.gmo:
 	@echo "  msgfmt   $(em)$@$(sgr0)"
-	$v msgfmt -o $@ $*.po
+	$v msgfmt --use-fuzzy -o $@ $*.po
 
 #
 # Update existing po file or copy messages.pot
@@ -538,10 +537,14 @@ doc.h: $(HDR_FILES)
 #
 # Create a template translation object
 #
-messages.pot: $(wildcard src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish)
+messages.pot: fish $(wildcard src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish)
 	@echo "  xgettext $(em)$@$(sgr0)"
-	xgettext -k_ -kN_ $(wildcard src/*.cpp src/*.h) -o messages.pot
-	$v xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 $(wildcard share/completions/*.fish share/functions/*.fish) share/config.fish -o messages.pot
+	$v xgettext -k -k_ -kN_ -LC++ --no-wrap -o messages.pot src/*.cpp src/*.h
+	$v rm -rf /tmp/fish
+	$v ./fish build_tools/fish_xgettext.fish
+	$v xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap -o messages.pot /tmp/fish/explicit/share/*.fish /tmp/fish/explicit/share/*/*.fish
+	$v xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap -o messages.pot /tmp/fish/implicit/share/*.fish /tmp/fish/implicit/share/*/*.fish
+	$v rm -rf /tmp/fish
 
 ifdef EXTRA_PCRE2
 src/builtin_string.cpp: $(PCRE2_H)

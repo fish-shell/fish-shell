@@ -216,26 +216,21 @@ static int read_init(const struct config_paths_t &paths) {
 
 /// Parse the argument list, return the index of the first non-flag arguments.
 static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds) {
-    const char *short_opts = "+hilnvc:p:d:D:";
-    const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
-                                       {"debug-level", required_argument, NULL, 'd'},
-                                       {"debug-stack-frames", required_argument, NULL, 'D'},
-                                       {"interactive", no_argument, NULL, 'i'},
-                                       {"login", no_argument, NULL, 'l'},
-                                       {"no-execute", no_argument, NULL, 'n'},
-                                       {"profile", required_argument, NULL, 'p'},
-                                       {"help", no_argument, NULL, 'h'},
-                                       {"version", no_argument, NULL, 'v'},
-                                       {NULL, 0, NULL, 0}};
+    static const char *short_opts = "+hilnvc:p:d:D:";
+    static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
+                                              {"debug-level", required_argument, NULL, 'd'},
+                                              {"debug-stack-frames", required_argument, NULL, 'D'},
+                                              {"interactive", no_argument, NULL, 'i'},
+                                              {"login", no_argument, NULL, 'l'},
+                                              {"no-execute", no_argument, NULL, 'n'},
+                                              {"profile", required_argument, NULL, 'p'},
+                                              {"help", no_argument, NULL, 'h'},
+                                              {"version", no_argument, NULL, 'v'},
+                                              {NULL, 0, NULL, 0}};
 
     int opt;
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                fwprintf(stderr, _(L"getopt_long() unexpectedly returned zero\n"));
-                exit(127);
-                break;
-            }
             case 'c': {
                 cmds->push_back(optarg);
                 break;

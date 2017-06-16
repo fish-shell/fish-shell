@@ -342,6 +342,14 @@ complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l no-recommends        
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l recommends                    --description 'Install also recommended packages in addition to the required'
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l from                          --description 'Restrict upgrade to specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l download                      --description 'Set the download-install mode. Available modes: only, in-advance, in-heaps, as-needed'
+complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l no-allow-downgrade            --description 'Do not allow installed resolvables to be downgraded'
+complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l allow-downgrade               --description 'Allow installed resolvables to be downgraded'
+complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l no-allow-name-change          --description 'Do not allow installed resolvables to change name'
+complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l allow-name-change             --description 'Allow installed resolvables to change name'
+complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l no-allow-arch-change          --description 'Do not allow installed resolvables to change architectures'
+complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l allow-arch-change             --description 'Allow installed resolvables to change architectures'
+complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l no-allow-vendor-change        --description 'Do not allow installed resolvables to switch vendors'
+complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l allow-vendor-change           --description 'Allow installed resolvables to switch vendors'
 
 function __fish_zypper_is_subcommand_pchk
         __fish_zypper_cmd_in_array patch-check pchk

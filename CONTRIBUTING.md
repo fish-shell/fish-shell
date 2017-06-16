@@ -1,4 +1,3 @@
-
 # Guidelines For Developers
 
 This document provides guidelines for making changes to the fish-shell project. This includes rules for how to format the code, naming conventions, etcetera. Generally known as the style of the code. It also includes recommended best practices such as creating a Travis-CI account so you can verify your changes pass all the tests before making a pull-request.
@@ -248,3 +247,27 @@ That will list the versions available. Pick the newest one available (3.9 for Ub
 sudo apt-get install clang-format-3.9
 sudo ln -s /usr/bin/clang-format-3.9 /usr/bin/clang-format
 ```
+
+## Message Translations
+
+Fish uses the GNU gettext library to translate messages from english to other languages. To create or update a translation run `make po/[LANGUAGE CODE].po`. Where `LANGUAGE CODE` is the two letter ISO 639-1 language code of the language you are translating to. For example, `de` for German. You'll need to have the `xgettext`, `msgfmt` and `msgmerge` commands installed to do this.
+
+All messages in fish script must be enclosed in single or double quote characters. They must also be translated via a subcommand. This means that the following are not valid:
+
+```
+echo (_ hello)
+_ "goodbye"
+```
+
+Those should be written like this:
+
+```
+echo (_ "hello")
+echo (_ "goodbye")
+```
+
+Note that you can use either single or double quotes to enclose the message to be translated. You can also optionally include spaces after the opening parentheses and before the closing paren.
+
+Be cautious about blindly updating an existing translation file. Trivial changes to an existing message (e.g., changing the punctuation) will cause existing translations to be removed. That is because the tools do literal string matching. Which means that in general you need to carefully review any recommended deletions.
+
+See the [wiki](https://github.com/fish-shell/fish-shell/wiki/Translations) for more details.

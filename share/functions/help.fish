@@ -89,8 +89,6 @@ function help --description 'Show help for the fish shell'
     set -l fish_help_item $argv[1]
 
     switch "$fish_help_item"
-        case ""
-            set fish_help_page index.html
         case "."
             set fish_help_page "commands.html\#source"
         case globbing
@@ -99,7 +97,13 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "commands.html\#$fish_help_item"
         case $help_topics
             set fish_help_page "index.html\#$fish_help_item"
+        case 'tut_*'
+            set fish_help_page "tutorial.html\#$fish_help_item"
+        case tutorial
+            set fish_help_page "tutorial.html"
         case "*"
+            # If $fish_help_item is empty, this will fail,
+            # and $fish_help_page will end up as index.html
             if type -q -f $fish_help_item
                 # Prefer to use fish's man pages, to avoid
                 # the annoying useless "builtin" man page bash
@@ -131,7 +135,8 @@ function help --description 'Show help for the fish shell'
     # OS X /usr/bin/open swallows fragments (anchors), so use osascript
     # Eval is just a cheesy way of removing the hash escaping
     if test "$fish_browser" = osascript
-        osascript -e 'open location "'(eval echo $page_url)'"'
+        set -l opencmd 'open location "'(eval echo $page_url)'"'
+        osascript -e 'try' -e $opencmd -e 'on error' -e $opencmd -e 'end try'
         return
     end
 

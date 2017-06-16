@@ -123,12 +123,16 @@ class wgetopter_t {
           ordering(),
           first_nonopt(0),
           last_nonopt(0) {}
-
     int wgetopt_long(int argc, wchar_t **argv, const wchar_t *options,
                      const struct woption *long_options, int *opt_index);
+#if 0
+    // This function should never be used by fish. We keep the signature just in case we find a
+    // need to use it in the future.
     int wgetopt_long_only(int argc, wchar_t **argv, const wchar_t *options,
-                          const struct woption *long_options, int *opt_index);
+                         const struct woption *long_options, int *opt_index);
+#endif
 };
+
 
 /// Describe the long-named options requested by the application. The LONG_OPTIONS argument to
 /// getopt_long or getopt_long_only is a vector of `struct option' terminated by an element

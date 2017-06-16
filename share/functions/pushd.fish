@@ -1,4 +1,7 @@
 function pushd --description 'Push directory to stack'
+    set -l rot_r
+    set -l rot_l
+
     if count $argv >/dev/null
         # check for --help
         switch $argv[1]
@@ -8,8 +11,6 @@ function pushd --description 'Push directory to stack'
         end
 
         # emulate bash by checking if argument of form +n or -n
-        set -l rot_r
-        set -l rot_l
         if string match -qr '^-[0-9]+$' -- $argv[1]
             set rot_r (string sub -s 2 -- $argv[1])
         else if string match -qr '^\+[0-9]+$' -- $argv[1]

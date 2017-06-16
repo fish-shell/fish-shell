@@ -353,7 +353,7 @@ __fish_magento_register_command_option admin:user:create -n "__fish_magento_para
 __fish_magento_register_command_option admin:user:create -n "__fish_magento_parameter_missing admin-lastname" -f -a "--admin-lastname" -d "(Required) Admin last name";
 __fish_magento_register_command_option admin:user:create -f -r -l admin-user -d "(Required) Admin user";
 __fish_magento_register_command_option admin:user:create -f -r -l admin-password -d "(Required) Admin password";
-__fish_magento_register_command_option admin:user:create -f -r -l admin-email "-d "(Required) Admin email";
+__fish_magento_register_command_option admin:user:create -f -r -l admin-email -d "(Required) Admin email";
 __fish_magento_register_command_option admin:user:create -f -r -l admin-firstname -d "(Required) Admin first name";
 __fish_magento_register_command_option admin:user:create -f -r -l admin-lastname -d "(Required) Admin last name";
 __fish_magento_register_command_option admin:user:create -f -l magento-init-params -d "Add to any command to customize Magento initialization parameters";

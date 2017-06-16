@@ -19,15 +19,14 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 enum { BIND_INSERT, BIND_ERASE, BIND_KEY_NAMES, BIND_FUNCTION_NAMES };
-struct cmd_opts {
-    int mode = BIND_INSERT;
-    int res = STATUS_CMD_OK;
-    bool all = false;
-    bool use_terminfo = false;
-    const wchar_t *bind_mode = DEFAULT_BIND_MODE;
+struct bind_cmd_opts_t {
+    bool print_help = false;
     bool bind_mode_given = false;
     bool list_modes = false;
-    bool print_help = false;
+    bool all = false;
+    bool use_terminfo = false;
+    int mode = BIND_INSERT;
+    const wchar_t *bind_mode = DEFAULT_BIND_MODE;
     const wchar_t *sets_bind_mode = L"";
 };
 
@@ -212,16 +211,16 @@ static bool builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int 
     return res;
 }
 
-static bool builtin_bind_insert(struct cmd_opts *opts, int optind, int argc, wchar_t **argv,
+static bool builtin_bind_insert(bind_cmd_opts_t &opts, int optind, int argc, wchar_t **argv,
                                 io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int arg_count = argc - optind;
 
     if (arg_count == 0) {
-        builtin_bind_list(opts->bind_mode_given ? opts->bind_mode : NULL, streams);
+        builtin_bind_list(opts.bind_mode_given ? opts.bind_mode : NULL, streams);
     } else if (arg_count == 1) {
         wcstring seq;
-        if (opts->use_terminfo) {
+        if (opts.use_terminfo) {
             if (!get_terminfo_sequence(argv[optind], &seq, streams)) {
                 // get_terminfo_sequence already printed the error.
                 return true;
@@ -230,9 +229,9 @@ static bool builtin_bind_insert(struct cmd_opts *opts, int optind, int argc, wch
             seq = argv[optind];
         }
 
-        if (!builtin_bind_list_one(seq, opts->bind_mode, streams)) {
+        if (!builtin_bind_list_one(seq, opts.bind_mode, streams)) {
             wcstring eseq = escape_string(argv[optind], 0);
-            if (opts->use_terminfo) {
+            if (opts.use_terminfo) {
                 streams.err.append_format(_(L"%ls: No binding found for key '%ls'\n"), cmd,
                                           eseq.c_str());
             } else {
@@ -243,7 +242,7 @@ static bool builtin_bind_insert(struct cmd_opts *opts, int optind, int argc, wch
         }
     } else {
         if (builtin_bind_add(argv[optind], argv + (optind + 1), argc - (optind + 1),
-                             opts->bind_mode, opts->sets_bind_mode, opts->use_terminfo, streams)) {
+                             opts.bind_mode, opts.sets_bind_mode, opts.use_terminfo, streams)) {
             return true;
         }
     }
@@ -267,7 +266,7 @@ static void builtin_bind_list_modes(io_streams_t &streams) {
     }
 }
 
-static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     static const wchar_t *short_options = L"aehkKfM:Lm:";
@@ -287,27 +286,27 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case L'a': {
-                opts->all = true;
+                opts.all = true;
                 break;
             }
             case L'e': {
-                opts->mode = BIND_ERASE;
+                opts.mode = BIND_ERASE;
                 break;
             }
             case L'h': {
-                opts->print_help = true;
+                opts.print_help = true;
                 break;
             }
             case L'k': {
-                opts->use_terminfo = true;
+                opts.use_terminfo = true;
                 break;
             }
             case L'K': {
-                opts->mode = BIND_KEY_NAMES;
+                opts.mode = BIND_KEY_NAMES;
                 break;
             }
             case L'f': {
-                opts->mode = BIND_FUNCTION_NAMES;
+                opts.mode = BIND_FUNCTION_NAMES;
                 break;
             }
             case L'M': {
@@ -315,8 +314,8 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
                     streams.err.append_format(BUILTIN_ERR_BIND_MODE, cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
-                opts->bind_mode = w.woptarg;
-                opts->bind_mode_given = true;
+                opts.bind_mode = w.woptarg;
+                opts.bind_mode_given = true;
                 break;
             }
             case L'm': {
@@ -324,11 +323,11 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
                     streams.err.append_format(BUILTIN_ERR_BIND_MODE, cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
-                opts->sets_bind_mode = w.woptarg;
+                opts.sets_bind_mode = w.woptarg;
                 break;
             }
             case L'L': {
-                opts->list_modes = true;
+                opts.list_modes = true;
                 return STATUS_CMD_OK;
             }
             case L'?': {
@@ -350,10 +349,10 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
 int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct cmd_opts opts;
+    bind_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.list_modes) {
@@ -375,7 +374,7 @@ int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             break;
         }
         case BIND_INSERT: {
-            if (builtin_bind_insert(&opts, optind, argc, argv, streams)) {
+            if (builtin_bind_insert(opts, optind, argc, argv, streams)) {
                 return STATUS_CMD_ERROR;
             }
             break;

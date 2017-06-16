@@ -27,7 +27,7 @@ const enum_map<hist_cmd_t> hist_enum_map[] = {{HIST_CLEAR, L"clear"},   {HIST_DE
                                               {HIST_SEARCH, L"search"}, {HIST_UNDEF, NULL}};
 #define hist_enum_map_len (sizeof hist_enum_map / sizeof *hist_enum_map)
 
-struct cmd_opts {
+struct history_cmd_opts_t {
     bool print_help = false;
     hist_cmd_t hist_cmd = HIST_UNDEF;
     history_search_type_t search_type = (history_search_type_t)-1;
@@ -92,7 +92,7 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
         break;                                                                                  \
     }
 
-static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
@@ -100,60 +100,60 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 1: {
-                if (!set_hist_cmd(cmd, &opts->hist_cmd, HIST_DELETE, streams)) {
+                if (!set_hist_cmd(cmd, &opts.hist_cmd, HIST_DELETE, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 2: {
-                if (!set_hist_cmd(cmd, &opts->hist_cmd, HIST_SEARCH, streams)) {
+                if (!set_hist_cmd(cmd, &opts.hist_cmd, HIST_SEARCH, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 3: {
-                if (!set_hist_cmd(cmd, &opts->hist_cmd, HIST_SAVE, streams)) {
+                if (!set_hist_cmd(cmd, &opts.hist_cmd, HIST_SAVE, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 4: {
-                if (!set_hist_cmd(cmd, &opts->hist_cmd, HIST_CLEAR, streams)) {
+                if (!set_hist_cmd(cmd, &opts.hist_cmd, HIST_CLEAR, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 5: {
-                if (!set_hist_cmd(cmd, &opts->hist_cmd, HIST_MERGE, streams)) {
+                if (!set_hist_cmd(cmd, &opts.hist_cmd, HIST_MERGE, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 'C': {
-                opts->case_sensitive = true;
+                opts.case_sensitive = true;
                 break;
             }
             case 'p': {
-                opts->search_type = HISTORY_SEARCH_TYPE_PREFIX;
-                opts->history_search_type_defined = true;
+                opts.search_type = HISTORY_SEARCH_TYPE_PREFIX;
+                opts.history_search_type_defined = true;
                 break;
             }
             case 'c': {
-                opts->search_type = HISTORY_SEARCH_TYPE_CONTAINS;
-                opts->history_search_type_defined = true;
+                opts.search_type = HISTORY_SEARCH_TYPE_CONTAINS;
+                opts.history_search_type_defined = true;
                 break;
             }
             case 'e': {
-                opts->search_type = HISTORY_SEARCH_TYPE_EXACT;
-                opts->history_search_type_defined = true;
+                opts.search_type = HISTORY_SEARCH_TYPE_EXACT;
+                opts.history_search_type_defined = true;
                 break;
             }
             case 't': {
-                opts->show_time_format = w.woptarg ? w.woptarg : L"# %c%n";
+                opts.show_time_format = w.woptarg ? w.woptarg : L"# %c%n";
                 break;
             }
             case 'n': {
-                opts->max_items = fish_wcstol(w.woptarg);
+                opts.max_items = fish_wcstol(w.woptarg);
                 if (errno) {
                     streams.err.append_format(_(L"%ls: max value '%ls' is not a valid number\n"),
                                               cmd, w.woptarg);
@@ -162,11 +162,11 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
                 break;
             }
             case 'z': {
-                opts->null_terminate = true;
+                opts.null_terminate = true;
                 break;
             }
             case 'h': {
-                opts->print_help = true;
+                opts.print_help = true;
                 break;
             }
             case ':': {
@@ -175,7 +175,7 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
             }
             case '?': {
                 // Try to parse it as a number; e.g., "-123".
-                opts->max_items = fish_wcstol(argv[w.woptind - 1] + 1);
+                opts.max_items = fish_wcstol(argv[w.woptind - 1] + 1);
                 if (errno) {
                     builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                     return STATUS_INVALID_ARGS;
@@ -198,10 +198,10 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
 int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct cmd_opts opts;
+    history_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

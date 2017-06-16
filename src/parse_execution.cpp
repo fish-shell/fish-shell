@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "builtin.h"
+#include "builtin_function.h"
 #include "common.h"
 #include "complete.h"
 #include "env.h"

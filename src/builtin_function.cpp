@@ -24,10 +24,10 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-struct cmd_opts {
+struct function_cmd_opts_t {
     bool print_help = false;
     bool shadow_scope = true;
-    wchar_t *desc = NULL;
+    wcstring description = L"";
     std::vector<event_t> events;
     wcstring_list_t named_arguments;
     wcstring_list_t inherit_vars;
@@ -51,7 +51,7 @@ static const struct woption long_options[] = {
     {L"inherit-variable", required_argument, NULL, 'V'},
     {NULL, 0, NULL, 0}};
 
-static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams,
                           wcstring *out_err) {
     wchar_t *cmd = argv[0];
@@ -60,7 +60,7 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 'd': {
-                opts->desc = w.woptarg;
+                opts.description = w.woptarg;
                 break;
             }
             case 's': {
@@ -69,7 +69,7 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
                     append_format(*out_err, _(L"%ls: Unknown signal '%ls'"), cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
-                opts->events.push_back(event_t::signal_event(sig));
+                opts.events.push_back(event_t::signal_event(sig));
                 break;
             }
             case 'v': {
@@ -78,11 +78,11 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
                     return STATUS_INVALID_ARGS;
                 }
 
-                opts->events.push_back(event_t::variable_event(w.woptarg));
+                opts.events.push_back(event_t::variable_event(w.woptarg));
                 break;
             }
             case 'e': {
-                opts->events.push_back(event_t::generic_event(w.woptarg));
+                opts.events.push_back(event_t::generic_event(w.woptarg));
                 break;
             }
             case 'j':
@@ -127,19 +127,19 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
                     e.type = EVENT_EXIT;
                     e.param1.pid = (opt == 'j' ? -1 : 1) * abs(pid);
                 }
-                opts->events.push_back(e);
+                opts.events.push_back(e);
                 break;
             }
             case 'a': {
-                opts->named_arguments.push_back(w.woptarg);
+                opts.named_arguments.push_back(w.woptarg);
                 break;
             }
             case 'S': {
-                opts->shadow_scope = false;
+                opts.shadow_scope = false;
                 break;
             }
             case 'w': {
-                opts->wrap_targets.push_back(w.woptarg);
+                opts.wrap_targets.push_back(w.woptarg);
                 break;
             }
             case 'V': {
@@ -147,11 +147,11 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
                     append_format(*out_err, BUILTIN_ERR_VARNAME, cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
-                opts->inherit_vars.push_back(w.woptarg);
+                opts.inherit_vars.push_back(w.woptarg);
                 break;
             }
             case 'h': {
-                opts->print_help = true;
+                opts.print_help = true;
                 break;
             }
             case ':': {
@@ -217,7 +217,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     wcstring function_name;
-    struct cmd_opts opts;
+    function_cmd_opts_t opts;
 
     // A valid function name has to be the first argument.
     int retval = validate_function_name(argc, argv, function_name, cmd, out_err);
@@ -226,7 +226,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     argc--;
 
     int optind;
-    retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams, out_err);
+    retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams, out_err);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
@@ -249,7 +249,8 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     // We have what we need to actually define the function.
     function_data_t d;
     d.name = function_name;
-    if (opts.desc) d.description = opts.desc;
+    if (!opts.description.empty()) d.description = opts.description;
+    //d.description = opts.description;
     d.events.swap(opts.events);
     d.shadow_scope = opts.shadow_scope;
     d.named_arguments.swap(opts.named_arguments);

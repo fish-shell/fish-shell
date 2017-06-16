@@ -29,7 +29,7 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-struct cmd_opts {
+struct read_cmd_opts_t {
     bool print_help = false;
     int place = ENV_USER;
     wcstring prompt_cmd;
@@ -64,7 +64,7 @@ static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'
                                               {L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
 
-static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
@@ -72,47 +72,47 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case L'x': {
-                opts->place |= ENV_EXPORT;
+                opts.place |= ENV_EXPORT;
                 break;
             }
             case L'g': {
-                opts->place |= ENV_GLOBAL;
+                opts.place |= ENV_GLOBAL;
                 break;
             }
             case L'l': {
-                opts->place |= ENV_LOCAL;
+                opts.place |= ENV_LOCAL;
                 break;
             }
             case L'U': {
-                opts->place |= ENV_UNIVERSAL;
+                opts.place |= ENV_UNIVERSAL;
                 break;
             }
             case L'u': {
-                opts->place |= ENV_UNEXPORT;
+                opts.place |= ENV_UNEXPORT;
                 break;
             }
             case L'p': {
-                opts->prompt = w.woptarg;
+                opts.prompt = w.woptarg;
                 break;
             }
             case L'P': {
-                opts->prompt_str = w.woptarg;
+                opts.prompt_str = w.woptarg;
                 break;
             }
             case L'R': {
-                opts->right_prompt = w.woptarg;
+                opts.right_prompt = w.woptarg;
                 break;
             }
             case L'c': {
-                opts->commandline = w.woptarg;
+                opts.commandline = w.woptarg;
                 break;
             }
             case L'm': {
-                opts->mode_name = w.woptarg;
+                opts.mode_name = w.woptarg;
                 break;
             }
             case L'n': {
-                opts->nchars = fish_wcstoi(w.woptarg);
+                opts.nchars = fish_wcstoi(w.woptarg);
                 if (errno) {
                     if (errno == ERANGE) {
                         streams.err.append_format(_(L"%ls: Argument '%ls' is out of range\n"), cmd,
@@ -129,23 +129,23 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
                 break;
             }
             case 's': {
-                opts->shell = true;
+                opts.shell = true;
                 break;
             }
             case 'a': {
-                opts->array = true;
+                opts.array = true;
                 break;
             }
             case L'i': {
-                opts->silent = true;
+                opts.silent = true;
                 break;
             }
             case L'z': {
-                opts->split_null = true;
+                opts.split_null = true;
                 break;
             }
             case 'h': {
-                opts->print_help = true;
+                opts.print_help = true;
                 break;
             }
             case ':': {
@@ -321,10 +321,10 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
     wcstring buff;
     int exit_res = STATUS_CMD_OK;
-    struct cmd_opts opts;
+    read_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

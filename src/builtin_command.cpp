@@ -12,7 +12,7 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-struct cmd_opts {
+struct command_cmd_opts_t {
     bool print_help = false;
     bool find_path = false;
     bool quiet = false;
@@ -23,7 +23,7 @@ static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {L"search", no_argument, NULL, 's'},
                                               {NULL, 0, NULL, 0}};
 
-static int parse_cmd_opts(struct cmd_opts *opts, int *optind, int argc, wchar_t **argv,
+static int parse_cmd_opts(command_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
@@ -31,16 +31,16 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind, int argc, wchar_t 
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 'h': {
-                opts->print_help = true;
+                opts.print_help = true;
                 break;
             }
             case 'q': {
-                opts->quiet = true;
+                opts.quiet = true;
                 break;
             }
             case 's':  // -s and -v are aliases
             case 'v': {
-                opts->find_path = true;
+                opts.find_path = true;
                 break;
             }
             case '?': {
@@ -63,10 +63,10 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind, int argc, wchar_t 
 int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct cmd_opts opts;
+    command_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

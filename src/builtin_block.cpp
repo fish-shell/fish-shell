@@ -14,13 +14,13 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 enum { UNSET, GLOBAL, LOCAL };
-struct cmd_opts {
+struct block_cmd_opts_t {
     int scope = UNSET;
     bool erase = false;
     bool print_help = false;
 };
 
-static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+static int parse_cmd_opts(block_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     static const wchar_t *short_options = L"eghl";
@@ -35,19 +35,19 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 'h': {
-                opts->print_help = true;
+                opts.print_help = true;
                 break;
             }
             case 'g': {
-                opts->scope = GLOBAL;
+                opts.scope = GLOBAL;
                 break;
             }
             case 'l': {
-                opts->scope = LOCAL;
+                opts.scope = LOCAL;
                 break;
             }
             case 'e': {
-                opts->erase = true;
+                opts.erase = true;
                 break;
             }
             case '?': {
@@ -69,10 +69,10 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
 int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct cmd_opts opts;
+    block_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

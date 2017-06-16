@@ -70,7 +70,7 @@ int job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd, io_streams_t &str
     return -1;
 }
 
-struct cmd_opts {
+struct status_cmd_opts_t {
     bool print_help = false;
     status_cmd_t status_cmd = STATUS_UNDEF;
     int new_job_control_mode = -1;
@@ -96,11 +96,11 @@ static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
 
 /// Remember the status subcommand and disallow selecting more than one status subcommand.
-static bool set_status_cmd(wchar_t *const cmd, status_cmd_t *status_cmd, status_cmd_t sub_cmd,
+static bool set_status_cmd(wchar_t *const cmd, status_cmd_opts_t &opts, status_cmd_t sub_cmd,
                            io_streams_t &streams) {
-    if (*status_cmd != STATUS_UNDEF) {
+    if (opts.status_cmd != STATUS_UNDEF) {
         wchar_t err_text[1024];
-        const wchar_t *subcmd_str1 = enum_to_str(*status_cmd, status_enum_map);
+        const wchar_t *subcmd_str1 = enum_to_str(opts.status_cmd, status_enum_map);
         const wchar_t *subcmd_str2 = enum_to_str(sub_cmd, status_enum_map);
         swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
                  _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
@@ -109,11 +109,11 @@ static bool set_status_cmd(wchar_t *const cmd, status_cmd_t *status_cmd, status_
         return false;
     }
 
-    *status_cmd = sub_cmd;
+    opts.status_cmd = sub_cmd;
     return true;
 }
 
-static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high ncss method)
+static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
@@ -121,78 +121,78 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 1: {
-                if (!set_status_cmd(cmd, &opts->status_cmd, STATUS_IS_FULL_JOB_CTRL, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_IS_FULL_JOB_CTRL, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 2: {
-                if (!set_status_cmd(cmd, &opts->status_cmd, STATUS_IS_INTERACTIVE_JOB_CTRL,
+                if (!set_status_cmd(cmd, opts, STATUS_IS_INTERACTIVE_JOB_CTRL,
                                     streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 3: {
-                if (!set_status_cmd(cmd, &opts->status_cmd, STATUS_IS_NO_JOB_CTRL, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_IS_NO_JOB_CTRL, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 'c': {
-                if (!set_status_cmd(cmd, &opts->status_cmd, STATUS_IS_COMMAND_SUB, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_IS_COMMAND_SUB, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 'b': {
-                if (!set_status_cmd(cmd, &opts->status_cmd, STATUS_IS_BLOCK, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_IS_BLOCK, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 'i': {
-                if (!set_status_cmd(cmd, &opts->status_cmd, STATUS_IS_INTERACTIVE, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_IS_INTERACTIVE, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 'l': {
-                if (!set_status_cmd(cmd, &opts->status_cmd, STATUS_IS_LOGIN, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_IS_LOGIN, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 'f': {
-                if (!set_status_cmd(cmd, &opts->status_cmd, STATUS_CURRENT_FILENAME, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_CURRENT_FILENAME, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 'n': {
-                if (!set_status_cmd(cmd, &opts->status_cmd, STATUS_CURRENT_LINE_NUMBER, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_CURRENT_LINE_NUMBER, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 'j': {
-                if (!set_status_cmd(cmd, &opts->status_cmd, STATUS_SET_JOB_CONTROL, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_SET_JOB_CONTROL, streams)) {
                     return STATUS_CMD_ERROR;
                 }
-                opts->new_job_control_mode = job_control_str_to_mode(w.woptarg, cmd, streams);
-                if (opts->new_job_control_mode == -1) {
+                opts.new_job_control_mode = job_control_str_to_mode(w.woptarg, cmd, streams);
+                if (opts.new_job_control_mode == -1) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 't': {
-                if (!set_status_cmd(cmd, &opts->status_cmd, STATUS_PRINT_STACK_TRACE, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_PRINT_STACK_TRACE, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 'h': {
-                opts->print_help = true;
+                opts.print_help = true;
                 break;
             }
             case ':': {
@@ -218,10 +218,10 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind,  //!OCLINT(high nc
 int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct cmd_opts opts;
+    status_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
@@ -234,7 +234,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (optind < argc) {
         status_cmd_t subcmd = str_to_enum(argv[optind], status_enum_map, status_enum_map_len);
         if (subcmd != STATUS_UNDEF) {
-            if (!set_status_cmd(cmd, &opts.status_cmd, subcmd, streams)) {
+            if (!set_status_cmd(cmd, opts, subcmd, streams)) {
                 return STATUS_CMD_ERROR;
             }
             optind++;

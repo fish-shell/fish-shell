@@ -38,7 +38,7 @@ static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j) {
 int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct cmd_opts_help_only opts;
+    cmd_opts_help_only opts;
 
     int optind;
     int retval = parse_cmd_opts_help_only(&opts, &optind, argc, argv, parser, streams);

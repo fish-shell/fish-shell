@@ -12,7 +12,7 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-struct cmd_opts {
+struct echo_cmd_opts_t {
     bool print_help = false;
     bool print_newline = true;
     bool print_spaces = true;
@@ -21,7 +21,7 @@ struct cmd_opts {
 static const wchar_t *short_options = L"+Eens";
 static const struct woption *long_options = NULL;
 
-static int parse_cmd_opts(struct cmd_opts *opts, int *optind, int argc, wchar_t **argv,
+static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
     UNUSED(parser);
     UNUSED(streams);
@@ -30,19 +30,19 @@ static int parse_cmd_opts(struct cmd_opts *opts, int *optind, int argc, wchar_t 
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 'n': {
-                opts->print_newline = false;
+                opts.print_newline = false;
                 break;
             }
             case 'e': {
-                opts->interpret_special_chars = true;
+                opts.interpret_special_chars = true;
                 break;
             }
             case 's': {
-                opts->print_spaces = false;
+                opts.print_spaces = false;
                 break;
             }
             case 'E': {
-                opts->interpret_special_chars = false;
+                opts.interpret_special_chars = false;
                 break;
             }
             case '?': {
@@ -175,9 +175,9 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
 int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct cmd_opts opts;
+    echo_cmd_opts_t opts;
     int optind;
-    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     // The special character \c can be used to indicate no more output.

@@ -26,7 +26,7 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-struct cmd_opts {
+struct functions_cmd_opts_t {
     bool print_help = false;
     bool erase = false;
     bool list = false;
@@ -45,8 +45,7 @@ static const struct woption long_options[] = {
     {L"copy", no_argument, NULL, 'c'},    {L"details", no_argument, NULL, 'D'},
     {L"verbose", no_argument, NULL, 'v'}, {NULL, 0, NULL, 0}};
 
-static int parse_cmd_opts(struct cmd_opts *opts,
-                          int *optind,  //!OCLINT(high ncss method)
+static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
@@ -54,39 +53,39 @@ static int parse_cmd_opts(struct cmd_opts *opts,
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 'v': {
-                opts->verbose = true;
+                opts.verbose = true;
                 break;
             }
             case 'e': {
-                opts->erase = true;
+                opts.erase = true;
                 break;
             }
             case 'D': {
-                opts->report_metadata = true;
+                opts.report_metadata = true;
                 break;
             }
             case 'd': {
-                opts->description = w.woptarg;
+                opts.description = w.woptarg;
                 break;
             }
             case 'n': {
-                opts->list = true;
+                opts.list = true;
                 break;
             }
             case 'a': {
-                opts->show_hidden = true;
+                opts.show_hidden = true;
                 break;
             }
             case 'h': {
-                opts->print_help = true;
+                opts.print_help = true;
                 break;
             }
             case 'q': {
-                opts->query = true;
+                opts.query = true;
                 break;
             }
             case 'c': {
-                opts->copy = true;
+                opts.copy = true;
                 break;
             }
             case '?': {
@@ -257,10 +256,10 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
 int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct cmd_opts opts;
+    functions_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

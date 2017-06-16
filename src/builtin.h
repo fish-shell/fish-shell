@@ -102,9 +102,6 @@ class builtin_commandline_scoped_transient_t {
 
 wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
 
-int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
-                     const wcstring &contents, int definition_line_offset, wcstring *out_err);
-
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                         output_stream_t &b);
 int builtin_count_args(const wchar_t *const *argv);

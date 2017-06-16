@@ -650,7 +650,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         }
         // debug( 0, L"Push idx %d", tmp );
 
-        long i1 = tmp > -1 ? tmp : (long)array_size + tmp + 1;
+        long i1 = tmp > -1 ? tmp : size + tmp + 1;
         pos = end - in;
         while (in[pos] == INTERNAL_SEPARATOR) pos++;
         if (in[pos] == L'.' && in[pos + 1] == L'.') {
@@ -667,6 +667,13 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
 
             // debug( 0, L"Push range %d %d", tmp, tmp1 );
             long i2 = tmp1 > -1 ? tmp1 : size + tmp1 + 1;
+            // Clamp to array size, but only when doing a range,
+            // and only when just one is too high.
+            if (i1 > size && i2 > size) {
+                continue;
+            }
+            i1 = i1 < size ? i1 : size;
+            i2 = i2 < size ? i2 : size;
             // debug( 0, L"Push range idx %d %d", i1, i2 );
             short direction = i2 < i1 ? -1 : 1;
             for (long jjj = i1; jjj * direction <= i2 * direction; jjj += direction) {

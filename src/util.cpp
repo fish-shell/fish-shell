@@ -47,8 +47,8 @@ static int wcsfilecmp_leading_digits(const wchar_t **a, const wchar_t **b) {
 ///
 /// Returns: -1 if a < b, 0 if a == b, 1 if a > b.
 int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
-    CHECK(a, NULL);
-    CHECK(b, NULL);
+    CHECK(a, 0);
+    CHECK(b, 0);
     const wchar_t *orig_a = a;
     const wchar_t *orig_b = b;
     int retval = 0;  // assume the strings will be equal

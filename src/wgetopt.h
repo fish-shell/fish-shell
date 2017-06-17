@@ -45,16 +45,22 @@ Cambridge, MA 02139, USA.  */
 
 class wgetopter_t {
    private:
+    bool initialized;
+    bool missing_arg_return_colon = false;
+
     void exchange(wchar_t **argv);
-    const wchar_t *_wgetopt_initialize(const wchar_t *optstring);
+    void _wgetopt_initialize(const wchar_t *optstring);
     int _wgetopt_internal(int argc, wchar_t **argv, const wchar_t *optstring,
                           const struct woption *longopts, int *longind, int long_only);
+    int _advance_to_next_argv(int argc, wchar_t **argv, const struct woption *longopts);
 
    public:
     // For communication from `getopt' to the caller. When `getopt' finds an option that takes an
     // argument, the argument value is returned here. Also, when `ordering' is RETURN_IN_ORDER, each
     // non-option ARGV-element is returned here.
     wchar_t *woptarg;
+
+    const wchar_t *shortopts;
 
     // Index in ARGV of the next element to be scanned. This is used for communication to and from
     // the caller and for communication between successive calls to `getopt'.
@@ -115,9 +121,12 @@ class wgetopter_t {
     int last_nonopt;
 
     wgetopter_t()
-        : woptarg(NULL),
+        : initialized(false),
+          missing_arg_return_colon(false),
+          woptarg(NULL),
+          shortopts(NULL),
           woptind(0),
-          nextchar(0),
+          nextchar(NULL),
           wopterr(0),
           woptopt('?'),
           ordering(),

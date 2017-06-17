@@ -1811,7 +1811,8 @@ wcstring history_session_id() {
     } else if (valid_var_name(session_id)) {
         result = session_id;
     } else {
-        debug(0, _(L"History session IDs must be valid fish variable names. Falling back to `fish`."));
+        debug(0, _(L"History session ID '%ls' is not a valid variable name. Falling back to `fish`."),
+			  session_id.c_str());
         result = L"fish";
     }
 

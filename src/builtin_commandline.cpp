@@ -167,6 +167,7 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
 
 /// The commandline builtin. It is used for specifying a new value for the commandline.
 int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
     int buffer_part = 0;
     int cut_at_cursor = 0;
 
@@ -205,7 +206,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
         streams.err.append(argv[0]);
         streams.err.append(L": Can not set commandline in non-interactive mode\n");
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_CMD_ERROR;
     }
 
@@ -299,11 +300,11 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 break;
             }
             case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
+                builtin_print_help(parser, streams, cmd, streams.out);
                 return STATUS_CMD_OK;
             }
             case L'?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -320,13 +321,13 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         if (buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || line_mode ||
             search_mode || paging_mode) {
             streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
-            builtin_print_help(parser, streams, argv[0], streams.err);
+            builtin_print_help(parser, streams, cmd, streams.err);
             return STATUS_INVALID_ARGS;
         }
 
         if (argc == w.woptind) {
             streams.err.append_format(BUILTIN_ERR_MISSING, argv[0]);
-            builtin_print_help(parser, streams, argv[0], streams.err);
+            builtin_print_help(parser, streams, cmd, streams.err);
             return STATUS_INVALID_ARGS;
         }
 
@@ -337,9 +338,8 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 // the queue of unused keypresses.
                 input_queue_ch(c);
             } else {
-                streams.err.append_format(_(L"%ls: Unknown input function '%ls'"), argv[0],
-                                          argv[i]);
-                builtin_print_help(parser, streams, argv[0], streams.err);
+                streams.err.append_format(_(L"%ls: Unknown input function '%ls'"), cmd, argv[i]);
+                builtin_print_help(parser, streams, cmd, streams.err);
                 return STATUS_INVALID_ARGS;
             }
         }
@@ -359,30 +359,30 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     // Check for invalid switch combinations.
     if ((search_mode || line_mode || cursor_mode || paging_mode) && (argc - w.woptind > 1)) {
         streams.err.append_format(L"%ls: Too many arguments", argv[0]);
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_INVALID_ARGS;
     }
 
     if ((buffer_part || tokenize || cut_at_cursor) &&
         (cursor_mode || line_mode || search_mode || paging_mode)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_INVALID_ARGS;
     }
 
     if ((tokenize || cut_at_cursor) && (argc - w.woptind)) {
         streams.err.append_format(
-            BUILTIN_ERR_COMBO2, argv[0],
+            BUILTIN_ERR_COMBO2, cmd,
             L"--cut-at-cursor and --tokenize can not be used when setting the commandline");
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_INVALID_ARGS;
     }
 
     if (append_mode && !(argc - w.woptind)) {
         streams.err.append_format(
-            BUILTIN_ERR_COMBO2, argv[0],
+            BUILTIN_ERR_COMBO2, cmd,
             L"insertion mode switches can not be used when not in insertion mode");
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_INVALID_ARGS;
     }
 
@@ -399,8 +399,8 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         if (argc - w.woptind) {
             long new_pos = fish_wcstol(argv[w.woptind]);
             if (errno) {
-                streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, argv[0], argv[w.woptind]);
-                builtin_print_help(parser, streams, argv[0], streams.err);
+                streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[w.woptind]);
+                builtin_print_help(parser, streams, cmd, streams.err);
             }
 
             current_buffer = reader_get_buffer();

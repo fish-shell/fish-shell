@@ -102,9 +102,6 @@ class builtin_commandline_scoped_transient_t {
 
 wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
 
-int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
-                     const wcstring &contents, int definition_line_offset, wcstring *out_err);
-
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                         output_stream_t &b);
 int builtin_count_args(const wchar_t *const *argv);
@@ -116,4 +113,10 @@ void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wch
                               const wchar_t *opt);
 
 void builtin_wperror(const wchar_t *s, io_streams_t &streams);
+
+struct help_only_cmd_opts_t {
+    bool print_help = false;
+};
+int parse_help_only_cmd_opts(help_only_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
+                             parser_t &parser, io_streams_t &streams);
 #endif

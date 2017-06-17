@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "builtin.h"
+#include "builtin_function.h"
 #include "common.h"
 #include "complete.h"
 #include "env.h"
@@ -774,7 +775,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
         this->report_error(statement_node, msg, eval_cmd.c_str());
     } else if (err_code != ENOENT) {
         this->report_error(statement_node, _(L"The file '%ls' is not executable by this user"),
-                           cmd ? cmd : L"UNKNOWN");
+                           cmd);
     } else {
         // Handle unrecognized commands with standard command not found handler that can make better
         // error messages.

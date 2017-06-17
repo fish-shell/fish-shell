@@ -254,7 +254,7 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
     return result;
 }
 
-#if 0
+#if 1
 // Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
 
 /// Helper function for parse_dump_tree().

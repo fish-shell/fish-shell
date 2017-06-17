@@ -7,10 +7,9 @@
 
 #include <vector>
 
+#include "builtin_bind.h"
 #include "common.h"
-#include "env.h"
 
-#define DEFAULT_BIND_MODE L"default"
 #define FISH_BIND_MODE_VAR L"fish_bind_mode"
 
 wcstring describe_char(wint_t c);

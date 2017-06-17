@@ -355,8 +355,7 @@ static std::map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
     {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
     {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
-    {'v', handle_flag_v}
-};
+    {'v', handle_flag_v}};
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
 static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wchar_t **argv,
@@ -514,38 +513,38 @@ class wildcard_matcher_t : public string_matcher_t {
             if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
             if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
         }
+    }
+
+    virtual ~wildcard_matcher_t() {}
+
+    bool report_matches(const wchar_t *arg) {
+        // Note: --all is a no-op for glob matching since the pattern is always matched
+        // against the entire argument.
+        bool match;
+
+        if (opts.ignore_case) {
+            wcstring s = arg;
+            for (size_t i = 0; i < s.length(); i++) {
+                s[i] = towlower(s[i]);
             }
-
-            virtual ~wildcard_matcher_t() {}
-
-            bool report_matches(const wchar_t *arg) {
-                // Note: --all is a no-op for glob matching since the pattern is always matched
-                // against the entire argument.
-                bool match;
-
-                if (opts.ignore_case) {
-                    wcstring s = arg;
-                    for (size_t i = 0; i < s.length(); i++) {
-                        s[i] = towlower(s[i]);
-                    }
-                    match = wildcard_match(s, wcpattern, false);
-                } else {
-                    match = wildcard_match(arg, wcpattern, false);
-                }
-                if (match ^ opts.invert_match) {
-                    total_matched++;
-
-                    if (!opts.quiet) {
-                        if (opts.index) {
-                            streams.out.append_format(L"1 %lu\n", wcslen(arg));
-                        } else {
-                            streams.out.append(arg);
-                            streams.out.append(L'\n');
-                        }
-                    }
-                }
-                return true;
+            match = wildcard_match(s, wcpattern, false);
+        } else {
+            match = wildcard_match(arg, wcpattern, false);
         }
+        if (match ^ opts.invert_match) {
+            total_matched++;
+
+            if (!opts.quiet) {
+                if (opts.index) {
+                    streams.out.append_format(L"1 %lu\n", wcslen(arg));
+                } else {
+                    streams.out.append(arg);
+                    streams.out.append(L'\n');
+                }
+            }
+        }
+        return true;
+    }
 };
 
 static wcstring pcre2_strerror(int err_code) {

@@ -127,8 +127,7 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
                 break;
             }
             case 2: {
-                if (!set_status_cmd(cmd, opts, STATUS_IS_INTERACTIVE_JOB_CTRL,
-                                    streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_IS_INTERACTIVE_JOB_CTRL, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;

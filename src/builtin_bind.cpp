@@ -241,8 +241,8 @@ static bool builtin_bind_insert(bind_cmd_opts_t &opts, int optind, int argc, wch
             return true;
         }
     } else {
-        if (builtin_bind_add(argv[optind], argv + (optind + 1), argc - (optind + 1),
-                             opts.bind_mode, opts.sets_bind_mode, opts.use_terminfo, streams)) {
+        if (builtin_bind_add(argv[optind], argv + (optind + 1), argc - (optind + 1), opts.bind_mode,
+                             opts.sets_bind_mode, opts.use_terminfo, streams)) {
             return true;
         }
     }

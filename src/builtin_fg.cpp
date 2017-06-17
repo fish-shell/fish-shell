@@ -15,7 +15,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "tokenizer.h"
-#include "wutil.h"      // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 
 /// Builtin for putting a job in the foreground.
 int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

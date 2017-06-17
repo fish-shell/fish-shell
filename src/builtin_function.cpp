@@ -37,19 +37,18 @@ struct function_cmd_opts_t {
 // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
 // This is needed due to the semantics of the -a/--argument-names flag.
 static const wchar_t *short_options = L"+:a:d:e:hj:p:s:v:w:SV:";
-static const struct woption long_options[] = {
-    {L"description", required_argument, NULL, 'd'},
-    {L"on-signal", required_argument, NULL, 's'},
-    {L"on-job-exit", required_argument, NULL, 'j'},
-    {L"on-process-exit", required_argument, NULL, 'p'},
-    {L"on-variable", required_argument, NULL, 'v'},
-    {L"on-event", required_argument, NULL, 'e'},
-    {L"wraps", required_argument, NULL, 'w'},
-    {L"help", no_argument, NULL, 'h'},
-    {L"argument-names", required_argument, NULL, 'a'},
-    {L"no-scope-shadowing", no_argument, NULL, 'S'},
-    {L"inherit-variable", required_argument, NULL, 'V'},
-    {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"description", required_argument, NULL, 'd'},
+                                              {L"on-signal", required_argument, NULL, 's'},
+                                              {L"on-job-exit", required_argument, NULL, 'j'},
+                                              {L"on-process-exit", required_argument, NULL, 'p'},
+                                              {L"on-variable", required_argument, NULL, 'v'},
+                                              {L"on-event", required_argument, NULL, 'e'},
+                                              {L"wraps", required_argument, NULL, 'w'},
+                                              {L"help", no_argument, NULL, 'h'},
+                                              {L"argument-names", required_argument, NULL, 'a'},
+                                              {L"no-scope-shadowing", no_argument, NULL, 'S'},
+                                              {L"inherit-variable", required_argument, NULL, 'V'},
+                                              {NULL, 0, NULL, 0}};
 
 static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams,
@@ -250,7 +249,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     function_data_t d;
     d.name = function_name;
     if (!opts.description.empty()) d.description = opts.description;
-    //d.description = opts.description;
+    // d.description = opts.description;
     d.events.swap(opts.events);
     d.shadow_scope = opts.shadow_scope;
     d.named_arguments.swap(opts.named_arguments);

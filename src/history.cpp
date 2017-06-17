@@ -1801,19 +1801,20 @@ void history_sanity_check() {
 }
 
 wcstring history_session_id() {
-    wcstring result;
+    wcstring result = L"fish";
 
     const env_var_t session_id = env_get_string(L"FISH_HISTFILE");
-    if (session_id.missing() || session_id.compare(L"default") == 0) {
-        result = L"fish";
-    } else if (session_id.empty()) {
-        result = L"";
-    } else if (valid_var_name(session_id)) {
-        result = session_id;
-    } else {
-        debug(0, _(L"History session ID '%ls' is not a valid variable name. Falling back to `fish`."),
-			  session_id.c_str());
-        result = L"fish";
+    if (!session_id.missing()) {
+        if (session_id.empty()) {
+            result = L"";
+        } else if (session_id == L"default") {
+            // Using the default value
+        } else if (valid_var_name(session_id)) {
+            result = session_id;
+        } else {
+            debug(0, _(L"History session ID '%ls' is not a valid variable name. Falling back to `fish`."),
+                  session_id.c_str());
+        }
     }
 
     return result;

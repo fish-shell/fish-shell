@@ -3,8 +3,8 @@
 
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <unistd.h>  // for NULL, close, dup
-#include <wchar.h>   // for wcscmp
+#include <unistd.h>
+#include <wchar.h>
 
 #include "builtin.h"
 #include "builtin_source.h"
@@ -24,9 +24,10 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     ASSERT_IS_MAIN_THREAD();
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct cmd_opts_help_only opts;
+    help_only_cmd_opts_t opts;
+
     int optind;
-    int retval = parse_cmd_opts_help_only(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

@@ -14,17 +14,17 @@
 #include "io.h"
 #include "proc.h"
 #include "reader.h"
-#include "tokenizer.h"  // for tok_first
-#include "wutil.h"  // IWYU pragma: keep
+#include "tokenizer.h"
+#include "wutil.h"      // IWYU pragma: keep
 
 /// Builtin for putting a job in the foreground.
 int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    struct cmd_opts_help_only opts;
+    help_only_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts_help_only(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

@@ -114,9 +114,9 @@ void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wch
 
 void builtin_wperror(const wchar_t *s, io_streams_t &streams);
 
-struct cmd_opts_help_only {
+struct help_only_cmd_opts_t {
     bool print_help = false;
 };
-int parse_cmd_opts_help_only(struct cmd_opts_help_only *opts, int *optind, int argc, wchar_t **argv,
+int parse_help_only_cmd_opts(help_only_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                              parser_t &parser, io_streams_t &streams);
 #endif

@@ -800,6 +800,10 @@ void reader_init() {
     if (is_interactive_session) {
         tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes);
     }
+
+    // We do this not because we actually need the window size but for its side-effect of correctly
+    // setting the COLUMNS and LINES env vars.
+    get_current_winsize();
 }
 
 void reader_destroy() { pthread_key_delete(generation_count_key); }

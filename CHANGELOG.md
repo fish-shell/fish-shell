@@ -1,6 +1,7 @@
 # fish 2.7b1
 
 ## Notable fixes and improvements
+- The `COLUMNS` and `LINES` env vars are now correctly set the first time `fish_prompt` is run (#4141).
 
 ## Other significant changes
 

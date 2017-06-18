@@ -388,14 +388,13 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     const wcstring contents_str =
         wcstring(this->src, contents_start, contents_end - contents_start);
     int definition_line_offset = this->line_offset_of_character_at_offset(contents_start);
-    wcstring error_str;
     io_streams_t streams;
     int err = builtin_function(*parser, streams, argument_list, contents_str,
-                               definition_line_offset, &error_str);
+                               definition_line_offset);
     proc_set_last_status(err);
 
-    if (!error_str.empty()) {
-        this->report_error(header, L"%ls", error_str.c_str());
+    if (!streams.err.empty()) {
+        this->report_error(header, L"%ls", streams.err.buffer().c_str());
         result = parse_execution_errored;
     }
 
@@ -690,7 +689,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(
 
         // Get a backtrace.
         wcstring backtrace_and_desc;
-        parser->get_backtrace(src, error_list, &backtrace_and_desc);
+        parser->get_backtrace(src, error_list, backtrace_and_desc);
 
         // Print it.
         if (!should_suppress_stderr_for_tests()) {

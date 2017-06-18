@@ -1966,7 +1966,7 @@ parser_test_error_bits_t reader_shell_test(const wchar_t *b) {
 
     if (res & PARSER_TEST_ERROR) {
         wcstring error_desc;
-        parser_t::principal_parser().get_backtrace(bstr, errors, &error_desc);
+        parser_t::principal_parser().get_backtrace(bstr, errors, error_desc);
 
         // Ensure we end with a newline. Also add an initial newline, because it's likely the user
         // just hit enter and so there's junk on the current line.
@@ -3315,7 +3315,7 @@ static int read_ni(int fd, const io_chain_t &io) {
             parser.eval(str, io, TOP, std::move(tree));
         } else {
             wcstring sb;
-            parser.get_backtrace(str, errors, &sb);
+            parser.get_backtrace(str, errors, sb);
             fwprintf(stderr, L"%ls", sb.c_str());
             res = 1;
         }

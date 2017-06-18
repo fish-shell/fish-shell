@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "builtin.h"
@@ -51,9 +52,8 @@ static const struct woption long_options[] = {{L"description", required_argument
                                               {NULL, 0, NULL, 0}};
 
 static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams,
-                          wcstring *out_err) {
-    wchar_t *cmd = argv[0];
+                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = L"function";
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
@@ -65,7 +65,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
             case 's': {
                 int sig = wcs2sig(w.woptarg);
                 if (sig == -1) {
-                    append_format(*out_err, _(L"%ls: Unknown signal '%ls'"), cmd, w.woptarg);
+                    streams.err.append_format(_(L"%ls: Unknown signal '%ls'"), cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
                 opts.events.push_back(event_t::signal_event(sig));
@@ -73,7 +73,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
             }
             case 'v': {
                 if (!valid_var_name(w.woptarg)) {
-                    append_format(*out_err, BUILTIN_ERR_VARNAME, cmd, w.woptarg);
+                    streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
 
@@ -109,8 +109,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     }
 
                     if (job_id == -1) {
-                        append_format(*out_err,
-                                      _(L"%ls: Cannot find calling job for event handler"), cmd);
+                        streams.err.append_format(_(L"%ls: Cannot find calling job for event handler"), cmd);
                         return STATUS_INVALID_ARGS;
                     }
                     e.type = EVENT_JOB_ID;
@@ -118,7 +117,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 } else {
                     pid = fish_wcstoi(w.woptarg);
                     if (errno || pid < 0) {
-                        append_format(*out_err, _(L"%ls: Invalid process id '%ls'"), cmd,
+                        streams.err.append_format(_(L"%ls: Invalid process id '%ls'"), cmd,
                                       w.woptarg);
                         return STATUS_INVALID_ARGS;
                     }
@@ -143,7 +142,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
             }
             case 'V': {
                 if (!valid_var_name(w.woptarg)) {
-                    append_format(*out_err, BUILTIN_ERR_VARNAME, cmd, w.woptarg);
+                    streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
                 opts.inherit_vars.push_back(w.woptarg);
@@ -173,22 +172,21 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
 }
 
 static int validate_function_name(int argc, const wchar_t *const *argv, wcstring &function_name,
-                                  const wchar_t *cmd, wcstring *out_err) {
+                                  const wchar_t *cmd, io_streams_t &streams) {
     if (argc < 2) {
         // This is currently impossible but let's be paranoid.
-        append_format(*out_err, _(L"%ls: Expected function name"), cmd);
+        streams.err.append_format(_(L"%ls: Expected function name"), cmd);
         return STATUS_INVALID_ARGS;
     }
 
     function_name = argv[1];
     if (!valid_func_name(function_name)) {
-        append_format(*out_err, _(L"%ls: Illegal function name '%ls'"), cmd, function_name.c_str());
+        streams.err.append_format(_(L"%ls: Illegal function name '%ls'"), cmd, function_name.c_str());
         return STATUS_INVALID_ARGS;
     }
 
     if (parser_keywords_is_reserved(function_name)) {
-        append_format(
-            *out_err,
+        streams.err.append_format(
             _(L"%ls: The name '%ls' is reserved,\nand can not be used as a function name"), cmd,
             function_name.c_str());
         return STATUS_INVALID_ARGS;
@@ -200,14 +198,11 @@ static int validate_function_name(int argc, const wchar_t *const *argv, wcstring
 /// Define a function. Calls into `function.cpp` to perform the heavy lifting of defining a
 /// function.
 int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
-                     const wcstring &contents, int definition_line_offset, wcstring *out_err) {
-    assert(out_err != NULL);
-
+                     const wcstring &contents, int definition_line_offset) {
     // The wgetopt function expects 'function' as the first argument. Make a new wcstring_list with
     // that property. This is needed because this builtin has a different signature than the other
     // builtins.
-    wcstring_list_t args;
-    args.push_back(L"function");
+    wcstring_list_t args = {L"function"};
     args.insert(args.end(), c_args.begin(), c_args.end());
 
     // Hackish const_cast matches the one in builtin_run.
@@ -215,21 +210,21 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     wchar_t **argv = const_cast<wchar_t **>(argv_array.get());
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    wcstring function_name;
-    function_cmd_opts_t opts;
 
     // A valid function name has to be the first argument.
-    int retval = validate_function_name(argc, argv, function_name, cmd, out_err);
+    wcstring function_name;
+    int retval = validate_function_name(argc, argv, function_name, cmd, streams);
     if (retval != STATUS_CMD_OK) return retval;
     argv++;
     argc--;
 
+    function_cmd_opts_t opts;
     int optind;
-    retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams, out_err);
+    retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_CMD_OK;
     }
 
@@ -239,7 +234,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                 opts.named_arguments.push_back(argv[i]);
             }
         } else {
-            append_format(*out_err, _(L"%ls: Unexpected positional argument '%ls'"), cmd,
+            streams.err.append_format(_(L"%ls: Unexpected positional argument '%ls'"), cmd,
                           argv[optind]);
             return STATUS_INVALID_ARGS;
         }

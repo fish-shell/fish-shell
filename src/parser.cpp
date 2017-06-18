@@ -602,7 +602,7 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
     if (!parse_tree_from_string(cmd, parse_flag_none, &tree, &error_list)) {
         // Get a backtrace. This includes the message.
         wcstring backtrace_and_desc;
-        this->get_backtrace(cmd, error_list, &backtrace_and_desc);
+        this->get_backtrace(cmd, error_list, backtrace_and_desc);
 
         // Print it.
         fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
@@ -725,8 +725,7 @@ bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcst
 }
 
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
-                             wcstring *output) const {
-    assert(output != NULL);
+                             wcstring &output) const {
     if (!errors.empty()) {
         const parse_error_t &err = errors.at(0);
 
@@ -762,10 +761,10 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         const wcstring description =
             err.describe_with_prefix(src, prefix, is_interactive, skip_caret);
         if (!description.empty()) {
-            output->append(description);
-            output->push_back(L'\n');
+            output.append(description);
+            output.push_back(L'\n');
         }
-        output->append(this->stack_trace());
+        output.append(this->stack_trace());
     }
 }
 

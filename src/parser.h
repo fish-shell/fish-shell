@@ -327,7 +327,7 @@ class parser_t {
     profile_item_t *create_profile_item();
 
     void get_backtrace(const wcstring &src, const parse_error_list_t &errors,
-                       wcstring *output) const;
+                       wcstring &output) const;
 
     /// Detect errors in the specified string when parsed as an argument list. Returns true if an
     /// error occurred.

@@ -8,7 +8,7 @@
 - `complete`'s `--no-files` option works as intended (#112).
 - `pushd +1` works as documented again (#4091).
 - Added completions for:
- -
+ - `as` (#4130).
 - Improved completions for `killall` (#4052), `ln` (#4090) and `zypper` (#4079).
 - Implemented `string lower` and `string upper` (#4080).
 - `help` can now open the tutorial.

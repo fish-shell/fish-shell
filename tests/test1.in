@@ -114,7 +114,8 @@ begin ; echo is_stdout ; end 2>| cat > /dev/null
 begin ; echo is_stderr 1>&2 ; end 2>| cat > /dev/null
 
 # echo tests
-
+echo
+echo '# echo tests'
 echo 'abc\ndef'
 echo -e 'abc\ndef'
 echo -e 'abc\zdef'
@@ -125,11 +126,9 @@ echo -e 'abc\1212def'
 echo -e 'abc\cdef' # won't output a newline!
 echo ''
 echo -
-
+echo -h
 echo -ne '\376' | display_bytes
-
 echo -e Catch your breath
-
 echo -e 'abc\x21def'
 echo -e 'abc\x211def'
 

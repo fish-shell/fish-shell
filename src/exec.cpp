@@ -1064,7 +1064,7 @@ void exec_job(parser_t &parser, job_t *j) {
                         // safe_launch_process _never_ returns...
                         DIE("safe_launch_process should not have returned");
                     } else {
-                        debug(2, L"Fork #%d, pid %d: external command '%s' from '%ls'\n",
+                        debug(2, L"Fork #%d, pid %d: external command '%s' from '%ls'",
                               g_fork_count, pid, p->argv0(), file ? file : L"<no file>");
                         if (pid < 0) {
                             job_mark_process_as_failed(j, p);

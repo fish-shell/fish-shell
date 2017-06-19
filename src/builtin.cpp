@@ -474,11 +474,10 @@ void builtin_destroy() {}
 /// Is there a builtin command with the given name?
 bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_lookup(cmd)); }
 
-/// If builtin takes care of printing help itself
+/// Is the command a keyword or a builtin we need to special-case the handling of `-h` and `--help`.
 static const wcstring_list_t help_builtins({L"for", L"while", L"function", L"if", L"end", L"switch",
                                             L"case", L"count", L"printf"});
-static bool builtin_handles_help(const wchar_t *cmd) {
-    CHECK(cmd, 0);
+static bool cmd_needs_help(const wchar_t *cmd) {
     return contains(help_builtins, cmd);
 }
 
@@ -488,14 +487,16 @@ int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &stre
     UNUSED(streams);
     if (argv == NULL || argv[0] == NULL) return STATUS_INVALID_ARGS;
 
-    const builtin_data_t *data = builtin_lookup(argv[0]);
-    if (argv[1] != NULL && !builtin_handles_help(argv[0]) && argv[2] == NULL &&
-        parse_util_argument_is_help(argv[1], 0)) {
+    // We can be handed a keyword by the parser as if it was a command. This happens when the user
+    // follows the keyword by `-h` or `--help`. Since it isn't really a builtin command we need to
+    // handle displaying help for it here.
+    if (argv[1] && !argv[2] && parse_util_argument_is_help(argv[1]) && cmd_needs_help(argv[0])) {
         builtin_print_help(parser, streams, argv[0], streams.out);
         return STATUS_CMD_OK;
     }
 
-    if (data != NULL) {
+    const builtin_data_t *data = builtin_lookup(argv[0]);
+    if (data) {
         // Warning: layering violation and naughty cast. The code originally had a much more
         // complicated solution to achieve exactly the same result: lie about the constness of argv.
         // Some of the builtins we call do mutate the array via their calls to wgetopt() which could

@@ -12,6 +12,7 @@
 - Improved completions for `killall` (#4052), `ln` (#4090) and `zypper` (#4079).
 - Implemented `string lower` and `string upper` (#4080).
 - `help` can now open the tutorial.
+- `echo -h` now correctly echoes `-h` (#4120).
 
 ---
 

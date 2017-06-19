@@ -247,7 +247,7 @@ static wcstring event_desc_compact(const event_t &event) {
 void event_add_handler(const event_t &event) {
     if (debug_level >= 3) {
         wcstring desc = event_desc_compact(event);
-        debug(3, "register: %ls\n", desc.c_str());
+        debug(3, "register: %ls", desc.c_str());
     }
 
     shared_ptr<event_t> e = std::make_shared<event_t>(event);
@@ -262,7 +262,7 @@ void event_add_handler(const event_t &event) {
 void event_remove(const event_t &criterion) {
     if (debug_level >= 3) {
         wcstring desc = event_desc_compact(criterion);
-        debug(3, "unregister: %ls\n", desc.c_str());
+        debug(3, "unregister: %ls", desc.c_str());
     }
 
     event_list_t::iterator iter = s_event_handlers.begin();

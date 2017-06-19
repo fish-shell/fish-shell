@@ -99,12 +99,7 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset);
 wcstring parse_util_unescape_wildcards(const wcstring &in);
 
 /// Checks if the specified string is a help option.
-///
-/// \param s the string to test
-/// \param min_match is the minimum number of characters that must match in a long style option,
-/// i.e. the longest common prefix between --help and any other option. If less than 3, 3 will be
-/// assumed.
-bool parse_util_argument_is_help(const wchar_t *s, int min_match);
+bool parse_util_argument_is_help(const wchar_t *s);
 
 /// Calculates information on the parameter at the specified index.
 ///

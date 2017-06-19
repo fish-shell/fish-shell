@@ -436,7 +436,7 @@ const production_element_t *parse_productions::production_for_token(parse_token_
                                                                     const parse_token_t &input1,
                                                                     const parse_token_t &input2,
                                                                     parse_node_tag_t *out_tag) {
-    debug(5, "Resolving production for %ls with input token <%ls>\n",
+    debug(5, "Resolving production for %ls with input token <%ls>",
           token_type_description(node_type), input1.describe().c_str());
 
     // Fetch the function to resolve the list of productions.
@@ -504,7 +504,7 @@ const production_element_t *parse_productions::production_for_token(parse_token_
 
     const production_element_t *result = resolver(input1, input2, out_tag);
     if (result == NULL) {
-        debug(5, "Node type '%ls' has no production for input '%ls' (in %s)\n",
+        debug(5, "Node type '%ls' has no production for input '%ls' (in %s)",
               token_type_description(node_type), input1.describe().c_str(), __FUNCTION__);
     }
 

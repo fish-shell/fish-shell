@@ -168,7 +168,7 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 #if 0
     wcstring tmp = c.description();
     wcstring tmp2 = c2.description();
-    debug(3, "set_color %ls : %ls\n", tmp.c_str(), tmp2.c_str());
+    debug(3, "set_color %ls : %ls", tmp.c_str(), tmp2.c_str());
 #endif
     ASSERT_IS_MAIN_THREAD();
     if (!cur_term) return;

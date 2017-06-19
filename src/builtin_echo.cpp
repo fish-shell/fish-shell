@@ -13,7 +13,6 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 struct echo_cmd_opts_t {
-    bool print_help = false;
     bool print_newline = true;
     bool print_spaces = true;
     bool interpret_special_chars = false;

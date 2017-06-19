@@ -718,7 +718,7 @@ static int select_try(job_t *j) {
             // fwprintf( stderr, L"fd %d on job %ls\n", fd, j->command );
             FD_SET(fd, &fds);
             maxfd = maxi(maxfd, fd);
-            debug(3, L"select_try on %d\n", fd);
+            debug(3, L"select_try on %d", fd);
         }
     }
 
@@ -731,7 +731,7 @@ static int select_try(job_t *j) {
 
         retval = select(maxfd + 1, &fds, 0, 0, &tv);
         if (retval == 0) {
-            debug(3, L"select_try hit timeout\n");
+            debug(3, L"select_try hit timeout");
         }
         return retval > 0;
     }
@@ -755,7 +755,7 @@ static void read_try(job_t *j) {
     }
 
     if (buff) {
-        debug(3, L"proc::read_try('%ls')\n", j->command_wcstr());
+        debug(3, L"proc::read_try('%ls')", j->command_wcstr());
         while (1) {
             char b[BUFFER_SIZE];
             long l;

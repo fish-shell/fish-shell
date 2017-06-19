@@ -121,7 +121,7 @@ static void *iothread_worker(void *unused) {
     UNUSED(unused);
     struct spawn_request_t req;
     while (dequeue_spawn_request(&req)) {
-        debug(5, "pthread %p dequeued\n", this_thread());
+        debug(5, "pthread %p dequeued", this_thread());
 
         // Perform the work
         req.handler();
@@ -146,7 +146,7 @@ static void *iothread_worker(void *unused) {
     int new_thread_count = --s_spawn_requests.acquire().value.thread_count;
     assert(new_thread_count >= 0);
 
-    debug(5, "pthread %p exiting\n", this_thread());
+    debug(5, "pthread %p exiting", this_thread());
     // We're done.
     return NULL;
 }
@@ -168,7 +168,7 @@ static void iothread_spawn() {
 
     // We will never join this thread.
     DIE_ON_FAILURE(pthread_detach(thread));
-    debug(5, "pthread %p spawned\n", (void *)(intptr_t)thread);
+    debug(5, "pthread %p spawned", (void *)(intptr_t)thread);
     // Restore our sigmask.
     DIE_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, NULL));
 }

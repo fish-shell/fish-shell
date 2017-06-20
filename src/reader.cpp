@@ -92,6 +92,9 @@
 /// The name of the function that prints the fish right prompt (RPROMPT).
 #define RIGHT_PROMPT_FUNCTION_NAME L"fish_right_prompt"
 
+/// The name of the function to use in place of the left prompt if we're in the debugger context.
+#define DEBUG_PROMPT_FUNCTION_NAME L"fish_breakpoint_prompt"
+
 /// The name of the function for getting the input mode indicator.
 #define MODE_PROMPT_FUNCTION_NAME L"fish_mode_prompt"
 
@@ -2251,15 +2254,20 @@ static int read_i(void) {
 
     while ((!data->end_loop) && (!sanity_check())) {
         event_fire_generic(L"fish_prompt");
-        if (function_exists(LEFT_PROMPT_FUNCTION_NAME))
-            reader_set_left_prompt(LEFT_PROMPT_FUNCTION_NAME);
-        else
-            reader_set_left_prompt(DEFAULT_PROMPT);
 
-        if (function_exists(RIGHT_PROMPT_FUNCTION_NAME))
+        if (is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME)) {
+            reader_set_left_prompt(DEBUG_PROMPT_FUNCTION_NAME);
+        } else if (function_exists(LEFT_PROMPT_FUNCTION_NAME)) {
+            reader_set_left_prompt(LEFT_PROMPT_FUNCTION_NAME);
+        } else {
+            reader_set_left_prompt(DEFAULT_PROMPT);
+        }
+
+        if (function_exists(RIGHT_PROMPT_FUNCTION_NAME)) {
             reader_set_right_prompt(RIGHT_PROMPT_FUNCTION_NAME);
-        else
+        } else {
             reader_set_right_prompt(L"");
+        }
 
         // Put buff in temporary string and clear buff, so that we can handle a call to
         // reader_set_buffer during evaluation.
@@ -2287,6 +2295,7 @@ static int read_i(void) {
             }
         }
     }
+
     reader_pop();
     return 0;
 }

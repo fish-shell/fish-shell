@@ -83,6 +83,7 @@ show $foo[2 1]
 set -l foo a b c
 show $foo[17]
 show $foo[-17]
+show $foo[17..18]
 
 echo "$foo[d]"
 echo $foo[d]

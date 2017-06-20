@@ -1208,9 +1208,10 @@ string_subcommands[] = {
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     if (argc <= 1) {
-        streams.err.append_format(_(L"string: Expected subcommand\n"));
+        streams.err.append_format(BUILTIN_ERR_MISSING_SUBCMD, cmd);
         builtin_print_help(parser, streams, L"string", streams.err);
         return STATUS_INVALID_ARGS;
     }
@@ -1224,8 +1225,8 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     while (subcmd->name != 0 && wcscmp(subcmd->name, argv[1]) != 0) {
         subcmd++;
     }
-    if (subcmd->handler == 0) {
-        streams.err.append_format(_(L"string: Unknown subcommand '%ls'\n"), argv[1]);
+    if (!subcmd->handler) {
+        streams.err.append_format(BUILTIN_ERR_INVALID_SUBCMD, cmd, argv[1]);
         builtin_print_help(parser, streams, L"string", streams.err);
         return STATUS_INVALID_ARGS;
     }

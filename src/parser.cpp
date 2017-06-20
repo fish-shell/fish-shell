@@ -148,9 +148,13 @@ void parser_t::push_block_int(block_t *new_current) {
     // Push it onto our stack. This acquires ownership because of unique_ptr.
     this->block_stack.emplace_back(new_current);
 
-    // Types TOP and SUBST are not considered blocks for the purposes of `status -b`.
+    // Types TOP and SUBST are not considered blocks for the purposes of `status is-block`.
     if (type != TOP && type != SUBST) {
-        is_block = 1;
+        is_block = true;
+    }
+
+    if (type == BREAKPOINT) {
+        is_breakpoint = true;
     }
 
     if (new_current->type() != TOP) {
@@ -174,16 +178,27 @@ void parser_t::pop_block(const block_t *expected) {
 
     if (old->wants_pop_env) env_pop();
 
-    // Figure out if `status -b` should consider us to be in a block now.
-    int new_is_block = 0;
+    // Figure out if `status is-block` should consider us to be in a block now.
+    bool new_is_block = false;
     for (const auto &b : block_stack) {
         const enum block_type_t type = b->type();
         if (type != TOP && type != SUBST) {
-            new_is_block = 1;
+            new_is_block = true;
             break;
         }
     }
     is_block = new_is_block;
+
+    // Are we still in a breakpoint?
+    bool new_is_breakpoint = false;
+    for (const auto &b : block_stack) {
+        const enum block_type_t type = b->type();
+        if (type == BREAKPOINT) {
+            new_is_breakpoint = true;
+            break;
+        }
+    }
+    is_breakpoint = new_is_breakpoint;
 }
 
 const wchar_t *parser_t::get_block_desc(int block) const {

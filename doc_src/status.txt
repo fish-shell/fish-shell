@@ -6,6 +6,7 @@ status
 status is-login
 status is-interactive
 status is-block
+status is-breakpoint
 status is-command-substitution
 status is-no-job-control
 status is-full-job-control
@@ -26,6 +27,8 @@ The following operations (sub-commands) are available:
 - `is-command-sub` returns 0 if fish is currently executing a command substitution. Also `-c` or `--is-command-substitution`.
 
 - `is-block` returns 0 if fish is currently executing a block of code. Also `-b` or `--is-block`.
+
+- `is-breakpoint` returns 0 if fish is currently showing a prompt in the context of a `breakpoint` command. See also the `fish_breakpoint_prompt` function.
 
 - `is-interactive` returns 0 if fish is interactive - that is, connected to a keyboard. Also `-i` or `--is-interactive`.
 

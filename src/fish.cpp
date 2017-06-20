@@ -255,11 +255,11 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
                 break;
             }
             case 'i': {
-                is_interactive_session = 1;
+                is_interactive_session = true;
                 break;
             }
             case 'l': {
-                is_login = 1;
+                is_login = true;
                 break;
             }
             case 'n': {

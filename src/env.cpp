@@ -182,6 +182,18 @@ struct var_stack_t {
 
 void var_stack_t::push(bool new_scope) {
     std::unique_ptr<env_node_t> node(new env_node_t(new_scope));
+
+    // Copy local-exported variables
+    auto top_node = top.get();
+    if (!(top_node == this->global_env)) {
+        for (auto& var : top_node->env) {
+            if (var.second.exportv) {
+                // This should copy var
+                node->env.insert(var);
+            }
+        }
+    }
+
     node->next = std::move(this->top);
     this->top = std::move(node);
     if (new_scope && local_scope_exports(this->top.get())) {

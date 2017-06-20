@@ -4,7 +4,7 @@ string match: [
 string match: ^
 
 # string invalidarg
-string: Unknown subcommand 'invalidarg'
+string: Subcommand 'invalidarg' is not valid
 Standard input (line 183): 
 string invalidarg; and echo "unexpected exit 0" >&2
 ^

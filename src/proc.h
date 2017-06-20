@@ -217,22 +217,26 @@ class job_t {
     io_chain_t all_io_redirections() const;
 };
 
-/// Whether we are running a subshell command.
-extern int is_subshell;
-
-/// Whether we are running a block of commands.
-extern int is_block;
-
 /// Whether we are reading from the keyboard right now.
 bool shell_is_interactive(void);
 
+/// Whether we are running a subshell command.
+extern bool is_subshell;
+
+/// Whether we are running a block of commands.
+extern bool is_block;
+
+/// Whether we are running due to a `breakpoint` command.
+extern bool is_breakpoint;
+
 /// Whether this shell is attached to the keyboard at all.
-extern int is_interactive_session;
+extern bool is_interactive_session;
 
 /// Whether we are a login shell.
-extern int is_login;
+extern bool is_login;
 
-/// Whether we are running an event handler.
+/// Whether we are running an event handler. This is not a bool because we keep count of the event
+/// nesting level.
 extern int is_event;
 
 // List of jobs. We sometimes mutate this while iterating - hence it must be a list, not a vector

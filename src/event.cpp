@@ -444,6 +444,7 @@ void event_fire(const event_t *event) {
             }
         }
         is_event--;
+        assert(is_event >= 0);
     }
 }
 

@@ -20,6 +20,7 @@ enum status_cmd_t {
     STATUS_IS_LOGIN = 1,
     STATUS_IS_INTERACTIVE,
     STATUS_IS_BLOCK,
+    STATUS_IS_BREAKPOINT,
     STATUS_IS_COMMAND_SUB,
     STATUS_IS_FULL_JOB_CTRL,
     STATUS_IS_INTERACTIVE_JOB_CTRL,
@@ -38,6 +39,7 @@ const enum_map<status_cmd_t> status_enum_map[] = {
     {STATUS_CURRENT_FUNCTION, L"current-function"},
     {STATUS_CURRENT_LINE_NUMBER, L"current-line-number"},
     {STATUS_IS_BLOCK, L"is-block"},
+    {STATUS_IS_BREAKPOINT, L"is-breakpoint"},
     {STATUS_IS_COMMAND_SUB, L"is-command-substitution"},
     {STATUS_IS_FULL_JOB_CTRL, L"is-full-job-control"},
     {STATUS_IS_INTERACTIVE, L"is-interactive"},
@@ -237,6 +239,9 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 return STATUS_CMD_ERROR;
             }
             optind++;
+        } else {
+            streams.err.append_format(BUILTIN_ERR_INVALID_SUBCMD, cmd, argv[1]);
+            return STATUS_INVALID_ARGS;
         }
     }
 
@@ -313,6 +318,11 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         case STATUS_IS_BLOCK: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             retval = !is_block;
+            break;
+        }
+        case STATUS_IS_BREAKPOINT: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
+            retval = !is_breakpoint;
             break;
         }
         case STATUS_IS_LOGIN: {

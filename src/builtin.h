@@ -69,6 +69,10 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 /// Error message when number expected
 #define BUILTIN_ERR_NOT_NUMBER _(L"%ls: Argument '%ls' is not a number\n")
 
+/// Command that requires a subcommand was invoked without a recognized subcommand.
+#define BUILTIN_ERR_MISSING_SUBCMD _(L"%ls: Expected a subcommand to follow the command\n")
+#define BUILTIN_ERR_INVALID_SUBCMD _(L"%ls: Subcommand '%ls' is not valid\n")
+
 /// The send stuff to foreground message.
 #define FG_MSG _(L"Send job %d, '%ls' to foreground\n")
 

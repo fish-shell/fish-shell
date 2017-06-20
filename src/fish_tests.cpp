@@ -805,7 +805,7 @@ static void test_cancellation() {
     // Test for #3780
     // Ugly hack - temporarily set is_interactive_session
     // else we will SIGINT ourselves in response to our child death
-    scoped_push<int> iis(&is_interactive_session, 1);
+    scoped_push<bool> iis(&is_interactive_session, true);
     const wchar_t *child_self_destructor = L"while true ; sh -c 'sleep .25; kill -s INT $$' ; end";
     parser_t::principal_parser().eval(child_self_destructor, io_chain_t(), TOP);
     iis.restore();

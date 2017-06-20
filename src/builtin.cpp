@@ -347,17 +347,28 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
 
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
 static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
     if (argv[1] != NULL) {
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv));
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, cmd, 0, builtin_count_args(argv) - 1);
         return STATUS_INVALID_ARGS;
     }
 
+    // If we're not interactive then we can't enter the debugger. So treat this command as a no-op.
+    if (!shell_is_interactive()) {
+        return STATUS_CMD_ERROR;
+    }
+
+    // Ensure we don't allow creating a breakpoint at an interactive prompt. There may be a simpler
+    // or clearer way to do this but this works.
+    const block_t *block1 = parser.block_at_index(1);
+    if (!block1 || block1->type() == BREAKPOINT) {
+        streams.err.append_format(_(L"%ls: Command not valid at an interactive prompt\n"), cmd);
+        return STATUS_ILLEGAL_CMD;
+    }
+
     const breakpoint_block_t *bpb = parser.push_block<breakpoint_block_t>();
-
     reader_read(STDIN_FILENO, streams.io_chain ? *streams.io_chain : io_chain_t());
-
     parser.pop_block(bpb);
-
     return proc_get_last_status();
 }
 

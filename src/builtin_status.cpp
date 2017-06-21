@@ -25,19 +25,21 @@ enum status_cmd_t {
     STATUS_IS_FULL_JOB_CTRL,
     STATUS_IS_INTERACTIVE_JOB_CTRL,
     STATUS_IS_NO_JOB_CTRL,
-    STATUS_CURRENT_FILENAME,
-    STATUS_CURRENT_FUNCTION,
-    STATUS_CURRENT_LINE_NUMBER,
+    STATUS_FILENAME,
+    STATUS_FUNCTION,
+    STATUS_LINE_NUMBER,
     STATUS_SET_JOB_CONTROL,
-    STATUS_PRINT_STACK_TRACE,
+    STATUS_STACK_TRACE,
     STATUS_UNDEF
 };
 
 // Must be sorted by string, not enum or random.
 const enum_map<status_cmd_t> status_enum_map[] = {
-    {STATUS_CURRENT_FILENAME, L"current-filename"},
-    {STATUS_CURRENT_FUNCTION, L"current-function"},
-    {STATUS_CURRENT_LINE_NUMBER, L"current-line-number"},
+    {STATUS_FILENAME, L"current-filename"},
+    {STATUS_FUNCTION, L"current-function"},
+    {STATUS_LINE_NUMBER, L"current-line-number"},
+    {STATUS_FILENAME, L"filename"},
+    {STATUS_FUNCTION, L"function"},
     {STATUS_IS_BLOCK, L"is-block"},
     {STATUS_IS_BREAKPOINT, L"is-breakpoint"},
     {STATUS_IS_COMMAND_SUB, L"is-command-substitution"},
@@ -47,7 +49,9 @@ const enum_map<status_cmd_t> status_enum_map[] = {
     {STATUS_IS_LOGIN, L"is-login"},
     {STATUS_IS_NO_JOB_CTRL, L"is-no-job-control"},
     {STATUS_SET_JOB_CONTROL, L"job-control"},
-    {STATUS_PRINT_STACK_TRACE, L"print-stack-trace"},
+    {STATUS_LINE_NUMBER, L"line-number"},
+    {STATUS_STACK_TRACE, L"print-stack-trace"},
+    {STATUS_STACK_TRACE, L"stack-trace"},
     {STATUS_UNDEF, NULL}};
 #define status_enum_map_len (sizeof status_enum_map / sizeof *status_enum_map)
 
@@ -76,13 +80,14 @@ struct status_cmd_opts_t {
     bool print_help = false;
     status_cmd_t status_cmd = STATUS_UNDEF;
     int new_job_control_mode = -1;
+    bool breakpoint_context = false;
 };
 
 /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
 /// the non-flag subcommand form. While these flags are deprecated they must be supported at
 /// least until fish 3.0 and possibly longer to avoid breaking everyones config.fish and other
 /// scripts.
-static const wchar_t *short_options = L":cbilfnhj:t";
+static const wchar_t *short_options = L":Bcbilfnhj:t";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {L"is-command-substitution", no_argument, NULL, 'c'},
                                               {L"is-block", no_argument, NULL, 'b'},
@@ -91,10 +96,14 @@ static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {L"is-full-job-control", no_argument, NULL, 1},
                                               {L"is-interactive-job-control", no_argument, NULL, 2},
                                               {L"is-no-job-control", no_argument, NULL, 3},
+                                              {L"filename", no_argument, NULL, 'f'},
                                               {L"current-filename", no_argument, NULL, 'f'},
+                                              {L"line", no_argument, NULL, 'n'},
+                                              {L"line-number", no_argument, NULL, 'n'},
                                               {L"current-line-number", no_argument, NULL, 'n'},
                                               {L"job-control", required_argument, NULL, 'j'},
                                               {L"print-stack-trace", no_argument, NULL, 't'},
+                                              {L"breakpoint", no_argument, NULL, 'B'},
                                               {NULL, 0, NULL, 0}};
 
 /// Remember the status subcommand and disallow selecting more than one status subcommand.
@@ -140,6 +149,10 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
                 }
                 break;
             }
+            case 'B': {
+                opts.breakpoint_context = true;
+                break;
+            }
             case 'c': {
                 if (!set_status_cmd(cmd, opts, STATUS_IS_COMMAND_SUB, streams)) {
                     return STATUS_CMD_ERROR;
@@ -165,13 +178,13 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
                 break;
             }
             case 'f': {
-                if (!set_status_cmd(cmd, opts, STATUS_CURRENT_FILENAME, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_FILENAME, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
             case 'n': {
-                if (!set_status_cmd(cmd, opts, STATUS_CURRENT_LINE_NUMBER, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_LINE_NUMBER, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
@@ -187,7 +200,7 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
                 break;
             }
             case 't': {
-                if (!set_status_cmd(cmd, opts, STATUS_PRINT_STACK_TRACE, streams)) {
+                if (!set_status_cmd(cmd, opts, STATUS_STACK_TRACE, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
@@ -284,7 +297,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             job_control_mode = opts.new_job_control_mode;
             break;
         }
-        case STATUS_CURRENT_FILENAME: {
+        case STATUS_FILENAME: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             const wchar_t *fn = parser.current_filename();
 
@@ -292,7 +305,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.out.append_format(L"%ls\n", fn);
             break;
         }
-        case STATUS_CURRENT_FUNCTION: {
+        case STATUS_FUNCTION: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             const wchar_t *fn = parser.get_function_name();
 
@@ -300,7 +313,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.out.append_format(L"%ls\n", fn);
             break;
         }
-        case STATUS_CURRENT_LINE_NUMBER: {
+        case STATUS_LINE_NUMBER: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             streams.out.append_format(L"%d\n", parser.get_lineno());
             break;
@@ -345,7 +358,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             retval = job_control_mode != JOB_CONTROL_NONE;
             break;
         }
-        case STATUS_PRINT_STACK_TRACE: {
+        case STATUS_STACK_TRACE: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             streams.out.append(parser.stack_trace());
             break;

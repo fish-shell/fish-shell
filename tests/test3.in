@@ -238,6 +238,16 @@ __fish_test_shadow
 # Test that the variable is still exported (#2611)
 env | string match '__fish_test_env17=*'
 
+# Test that local exported variables are copied to functions (#1091)
+function __fish_test_local_export
+         echo $var
+         set var boo
+         echo $var
+end
+set -lx var wuwuwu
+__fish_test_local_export
+echo $var
+
 # clear for other shells
 set -eU __fish_test_universal_variables_variable_foo
 

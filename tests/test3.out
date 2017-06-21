@@ -19,6 +19,7 @@ count:5 content:[functionblock function global universal blocklocal]
 Test 16 pass
 __fish_test_env17=UNSHADOWED
 SHADOWED
+__fish_test_env17=UNSHADOWED
 Testing Universal Startup
 1
 1

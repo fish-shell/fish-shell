@@ -18,6 +18,7 @@ Foo change detected
 Test 16 pass
 __fish_test_env17=UNSHADOWED
 SHADOWED
+__fish_test_env17=UNSHADOWED
 Testing Universal Startup
 1
 1

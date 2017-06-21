@@ -235,6 +235,8 @@ function __fish_test_shadow
   env | string match -q '__fish_test_env17=*' ; or echo SHADOWED
 end
 __fish_test_shadow
+# Test that the variable is still exported (#2611)
+env | string match '__fish_test_env17=*'
 
 # clear for other shells
 set -eU __fish_test_universal_variables_variable_foo

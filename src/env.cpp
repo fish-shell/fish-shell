@@ -118,7 +118,8 @@ class env_node_t {
     /// in the stack are invisible. If new_scope is set for the global variable node, the universe
     /// will explode.
     bool new_scope;
-    /// Does this node contain any variables which are exported to subshells.
+    /// Does this node contain any variables which are exported to subshells
+    /// or does it redefine any variables to not be exported?
     bool exportv = false;
     /// Pointer to next level.
     std::unique_ptr<env_node_t> next;
@@ -1109,6 +1110,9 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
                 has_changed_new = true;
             } else {
                 entry.exportv = false;
+                // Set the node's exportv when it changes something about exports
+                // (also when it redefines a variable to not be exported).
+                node->exportv = has_changed_old != has_changed_new;
             }
 
             if (has_changed_old || has_changed_new) vars_stack().mark_changed_exported();

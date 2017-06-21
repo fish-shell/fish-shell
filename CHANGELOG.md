@@ -3,6 +3,7 @@
 ## Notable fixes and improvements
 - The `COLUMNS` and `LINES` env vars are now correctly set the first time `fish_prompt` is run (#4141).
 - New `status is-breakpoint` command that is true when a prompt is displayed in response to a `breakpoint` command (#1310).
+- Invalid array indexes are now silently ignored (#826, #4127).
 
 ## Other significant changes
 

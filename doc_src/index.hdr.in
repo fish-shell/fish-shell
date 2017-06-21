@@ -580,7 +580,7 @@ Be careful when you try to use braces to separate variable names from text. The 
 
 \subsection expand-index-range Index range expansion
 
-Both command substitution and shell variable expansion support accessing only specific items by providing a set of indices in square brackets. It's often needed to access a sequence of elements. To do this, use the range operator '`..`' for this. A range '`a..b`', where range limits 'a' and 'b' are integer numbers, is expanded into a sequence of indices '`a a+1 a+2 ... b`' or '`a a-1 a-2 ... b`' depending on which of 'a' or 'b' is higher. The negative range limits are calculated from the end of the array or command substitution.
+Both command substitution and shell variable expansion support accessing only specific items by providing a set of indices in square brackets. It's often needed to access a sequence of elements. To do this, use the range operator '`..`' for this. A range '`a..b`', where range limits 'a' and 'b' are integer numbers, is expanded into a sequence of indices '`a a+1 a+2 ... b`' or '`a a-1 a-2 ... b`' depending on which of 'a' or 'b' is higher. The negative range limits are calculated from the end of the array or command substitution. Note that invalid indexes for either end are silently clamped to one or the size of the array as appropriate.
 
 Some examples:
 
@@ -778,7 +778,7 @@ Variables can be explicitly set to be exported with the `-x` or `--export` switc
 
 `echo $PATH[3]`
 
-Note that array indices start at 1 in `fish`, not 0, as is more common in other languages. This is because many common Unix tools like `seq` are more suited to such use.
+Note that array indices start at 1 in `fish`, not 0, as is more common in other languages. This is because many common Unix tools like `seq` are more suited to such use. An invalid index is silently ignored resulting in no value being substituted (not an empty string).
 
 If you do not use any brackets, all the elements of the array will be written as separate items. This means you can easily iterate over an array using this syntax:
 

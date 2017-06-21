@@ -95,6 +95,38 @@ echo '# echo \x07 | string escape'
 echo \x07 | string escape
 
 echo
+echo '# string escape --style=script \'a b#c"\\\'d\''
+string escape --style=script 'a b#c"\'d'
+
+echo
+echo '# string escape --style=url \'a b#c"\\\'d\''
+string escape --style=url 'a b#c"\'d'
+
+echo
+echo '# string escape --style=url \\na\\nb%c~d\\n'
+string escape --style=url \na\nb%c~d\n
+
+echo
+echo '# string escape --style=var \'a b#c"\\\'d\''
+string escape --style=var 'a b#c"\'d'
+
+echo
+echo '# string escape --style=script a\nghi_'
+string escape --style=var a\nghi_
+
+echo
+echo '# string escape --style=var \'abc\''
+string escape --style=var 'abc'
+
+echo
+echo '# string escape --style=var \'_a_b_c_\''
+string escape --style=var '_a_b_c_'
+
+echo
+echo '# string escape --style=var -- -'
+string escape --style=var -- -
+
+echo
 echo '# string match "?" a'
 string match "?" a
 

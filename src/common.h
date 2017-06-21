@@ -89,6 +89,12 @@ typedef std::vector<wcstring> wcstring_list_t;
 #define INPUT_COMMON_BASE (wchar_t)0xF700
 #define INPUT_COMMON_END (INPUT_COMMON_BASE + 64)
 
+enum escape_string_style_t {
+    STRING_STYLE_SCRIPT,
+    STRING_STYLE_URL,
+    STRING_STYLE_VAR
+};
+
 // Flags for unescape_string functions.
 enum {
     UNESCAPE_DEFAULT = 0,         // default behavior
@@ -97,15 +103,14 @@ enum {
 };
 typedef unsigned int unescape_flags_t;
 
-// Flags for the escape_string() and escape_string() functions.
+// Flags for the escape_string() and escape_string() functions. These are only applicable when the
+// escape style is "script" (i.e., STRING_STYLE_SCRIPT).
 enum {
     /// Escape all characters, including magic characters like the semicolon.
     ESCAPE_ALL = 1 << 0,
-
     /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty
     /// string.
     ESCAPE_NO_QUOTED = 1 << 1,
-
     /// Do not escape tildes.
     ESCAPE_NO_TILDE = 1 << 2
 };
@@ -692,8 +697,10 @@ ssize_t read_loop(int fd, void *buff, size_t count);
 /// \param in The string to be escaped
 /// \param flags Flags to control the escaping
 /// \return The escaped string
-wcstring escape_string(const wchar_t *in, escape_flags_t flags);
-wcstring escape_string(const wcstring &in, escape_flags_t flags);
+wcstring escape_string(const wchar_t *in, escape_flags_t flags,
+                      escape_string_style_t style=STRING_STYLE_SCRIPT);
+wcstring escape_string(const wcstring &in, escape_flags_t flags,
+                       escape_string_style_t style=STRING_STYLE_SCRIPT);
 
 /// Expand backslashed escapes and substitute them with their unescaped counterparts. Also
 /// optionally change the wildcards, the tilde character and a few more into constants which are

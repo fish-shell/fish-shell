@@ -1,6 +1,7 @@
 // Various functions, mostly string utilities, that are used by most parts of fish.
 #include "config.h"
 
+#include <ctype.h>
 #include <cxxabi.h>
 #include <dlfcn.h>
 #include <errno.h>
@@ -745,11 +746,62 @@ wcstring reformat_for_screen(const wcstring &msg) {
     return buff;
 }
 
-/// Escape a string, storing the result in out_str.
-static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstring *out_str,
-                                   escape_flags_t flags) {
-    assert(orig_in != NULL);
+/// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
+static void escape_string_url(const wchar_t *orig_in, wcstring &out) {
+    const std::string &in = wcs2string(orig_in);
+    for (auto c1 : in) {
+        // This silliness is so we get the correct result whether chars are signed or unsigned.
+        unsigned int c2 = (unsigned int)c1 & 0xFF;
+        if (!(c2 & 0x80) &&
+            (isalnum(c2) || c2 == '/' || c2 == '.' || c2 == '~' || c2 == '-' || c2 == '_')) {
+            // The above characters don't need to be encoded.
+            out.push_back((wchar_t)c2);
+        } else {
+            // All other chars need to have their UTF-8 representation encoded in hex.
+            wchar_t buf[4];
+            swprintf(buf, sizeof buf / sizeof buf[0], L"%%%02X", c2);
+            out.append(buf);
+        }
+    }
+}
 
+static bool is_hex_digit(int c) { return strchr("0123456789abcdefABCDEF", c) != NULL; }
+
+/// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
+static void escape_string_var(const wchar_t *orig_in, wcstring &out) {
+    bool prev_was_hex_encoded = false;
+    bool maybe_encode_next_char = false;
+    const std::string &in = wcs2string(orig_in);
+    for (auto c1 : in) {
+        // This silliness is so we get the correct result whether chars are signed or unsigned.
+        unsigned int c2 = (unsigned int)c1 & 0xFF;
+        if (!(c2 & 0x80) && isalnum(c2) && (!prev_was_hex_encoded || !is_hex_digit(c2))) {
+            // ASCII alphanumerics don't need to be encoded.
+            if (prev_was_hex_encoded) {
+                out.push_back(L'_');
+                prev_was_hex_encoded = false;
+            }
+            out.push_back((wchar_t)c2);
+        } else if (c2 == '_') {
+            // Underscores are encoded by doubling them.
+            out.append(L"__");
+            prev_was_hex_encoded = false;
+        } else {
+            // All other chars need to have their UTF-8 representation encoded in hex.
+            wchar_t buf[4];
+            swprintf(buf, sizeof buf / sizeof buf[0], L"_%02X", c2);
+            out.append(buf);
+            prev_was_hex_encoded = true;
+        }
+    }
+    if (prev_was_hex_encoded) {
+        out.push_back(L'_');
+    }
+}
+
+/// Escape a string in a fashion suitable for using in fish script. Store the result in out_str.
+static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring &out,
+                                 escape_flags_t flags) {
     const wchar_t *in = orig_in;
     bool escape_all = static_cast<bool>(flags & ESCAPE_ALL);
     bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
@@ -757,9 +809,6 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
 
     int need_escape = 0;
     int need_complex_escape = 0;
-
-    // Avoid dereferencing all over the place.
-    wcstring &out = *out_str;
 
     if (!no_quoted && in_len == 0) {
         out.assign(L"''");
@@ -903,15 +952,45 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
     }
 }
 
-wcstring escape_string(const wchar_t *in, escape_flags_t flags) {
+wcstring escape_string(const wchar_t *in, escape_flags_t flags, escape_string_style_t style) {
     wcstring result;
-    escape_string_internal(in, wcslen(in), &result, flags);
+
+    switch (style) {
+        case STRING_STYLE_SCRIPT: {
+            escape_string_script(in, wcslen(in), result, flags);
+            break;
+        }
+        case STRING_STYLE_URL: {
+            escape_string_url(in, result);
+            break;
+        }
+        case STRING_STYLE_VAR: {
+            escape_string_var(in, result);
+            break;
+        }
+    }
+
     return result;
 }
 
-wcstring escape_string(const wcstring &in, escape_flags_t flags) {
+wcstring escape_string(const wcstring &in, escape_flags_t flags, escape_string_style_t style) {
     wcstring result;
-    escape_string_internal(in.c_str(), in.size(), &result, flags);
+
+    switch (style) {
+        case STRING_STYLE_SCRIPT: {
+            escape_string_script(in.c_str(), in.size(), result, flags);
+            break;
+        }
+        case STRING_STYLE_URL: {
+            DIE("STRING_STYLE_URL not implemented");
+            break;
+        }
+        case STRING_STYLE_VAR: {
+            escape_string_var(in.c_str(), result);
+            break;
+        }
+    }
+
     return result;
 }
 

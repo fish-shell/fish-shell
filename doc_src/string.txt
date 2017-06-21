@@ -2,7 +2,7 @@
 
 \subsection string-synopsis Synopsis
 \fish{synopsis}
-string escape [(-n | --no-quoted)] [STRING...]
+string escape [(-n | --no-quoted)] [--style=xxx] [STRING...]
 string join [(-q | --quiet)] SEP [STRING...]
 string length [(-q | --quiet)] [STRING...]
 string lower [(-q | --quiet)] [STRING...]
@@ -36,7 +36,11 @@ The following subcommands are available.
 
 \subsection string-escape "escape" subcommand
 
-`string escape` escapes each STRING such that it can be passed back to `eval` to produce the original argument again. By default, all special characters are escaped, and quotes are used to simplify the output when possible. If `-n` or `--no-quoted` is given, the simplifying quoted format is not used. Exit status: 0 if at least one string was escaped, or 1 otherwise.
+`string escape` escapes each STRING in one of three ways. The first is `--style=script`. This is the default. It alters the string such that it can be passed back to `eval` to produce the original argument again. By default, all special characters are escaped, and quotes are used to simplify the output when possible. If `-n` or `--no-quoted` is given, the simplifying quoted format is not used. Exit status: 0 if at least one string was escaped, or 1 otherwise.
+
+The second is `--style=var` which ensures the string can be used as a variable name by hex encoding any non-alphanumeric characters. The string is first converted to UTF-8 before being encoded.
+
+The third is `--style=url` which ensures the string can be used as a URL by hex encoding any character which is not legal in a URL. The string is first converted to UTF-8 before being encoded.
 
 \subsection string-join "join" subcommand
 
@@ -157,6 +161,11 @@ In general, special characters are special by default, so `a+` matches one or mo
 \fish{cli-dark}
 >_ echo \\x07 | string escape
 <bs>cg</bs>
+\endfish
+
+\fish{cli-dark}
+>_ string escape --style=var 'a1 b2'\u6161
+<bs>a1_20b2__c_E6_85_A1</bs>
 \endfish
 
 \subsection string-example-match-glob Match Glob Examples

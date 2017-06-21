@@ -185,11 +185,13 @@ void var_stack_t::push(bool new_scope) {
 
     // Copy local-exported variables
     auto top_node = top.get();
-    if (!(top_node == this->global_env)) {
-        for (auto& var : top_node->env) {
-            if (var.second.exportv) {
-                // This should copy var
-                node->env.insert(var);
+    if (new_scope) {
+        if (!(top_node == this->global_env)) {
+            for (auto& var : top_node->env) {
+                if (var.second.exportv) {
+                    // This should  copy var
+                    node->env.insert(var);
+                }
             }
         }
     }

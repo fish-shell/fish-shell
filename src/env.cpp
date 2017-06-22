@@ -183,6 +183,8 @@ void var_stack_t::push(bool new_scope) {
 
     // Copy local-exported variables
     auto top_node = top.get();
+    // Only if we introduce a new shadowing scope
+    // i.e. not if it's just `begin; end` or "--no-scope-shadowing".
     if (new_scope) {
         if (!(top_node == this->global_env)) {
             for (auto& var : top_node->env) {

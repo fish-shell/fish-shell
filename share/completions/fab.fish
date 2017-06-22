@@ -1,14 +1,13 @@
-# tasks 
-for task in (fab -l)
-    set -l _matched (string match -r "^ +([^ ]*) *([^ ]?.*)" $task)
+function __fish_complete_fab_tasks
+    for task in (fab -l)
+        set -l _matched (string match -r "^ +([^ ]*) *([^ ]?.*)" $task)
 
-    if test -n "$_matched"
-        set -l _task_name $_matched[2]
-        set -l _task_desc $_matched[3]
-        test -n "$task_desc"; or set -l _task_desc "No description"
-        complete -f -c fab -a "$_task_name" -d "$_task_desc"
+        printf "%s\t%s\n" "$_matched[2]" "$_matched[3]"
     end
 end
+
+# tasks 
+complete -x -c fab -a "(__fish_complete_fab_tasks)"
 
 # options
 complete -c fab -s h -l help -d "show this help message and exit"
@@ -27,7 +26,7 @@ complete -x -c fab -s c -l config -d "specify location of config file to use"
 complete -c fab -l colorize-errors -d "Color error output"
 complete -c fab -s D -l disable-known-host -d "do not load user known_hosts file"
 complete -c fab -s e -l eagerly-disconnect -d "disconnect from hosts as soon as possible"
-complete -x -c fab -s f -l fabfile -d "python module file to import, e.g. '../other.py'"
+complete -c fab -s f -l fabfile -d "python module file to import, e.g. '../other.py'"
 complete -x -c fab -s g -l gateway -a "
 (__fish_print_hostnames)
 (

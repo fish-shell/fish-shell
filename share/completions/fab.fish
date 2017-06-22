@@ -27,23 +27,13 @@ complete -c fab -l colorize-errors -d "Color error output"
 complete -c fab -s D -l disable-known-host -d "do not load user known_hosts file"
 complete -c fab -s e -l eagerly-disconnect -d "disconnect from hosts as soon as possible"
 complete -r -c fab -s f -l fabfile -d "python module file to import, e.g. '../other.py'"
-complete -x -c fab -s g -l gateway -a "
-(__fish_print_hostnames)
-(
-	echo (commandline -ct)|sed -ne 's/\(.*@\).*/\1/p'
-)(__fish_print_hostnames)
-" -d "gateway host to connect through"
+complete -x -c fab -s g -l gateway -a "(__fish_complete_user_at_hosts)" -d "gateway host to connect through"
 complete -c fab -l gss-auth -d "Use GSS-API authentication"
 complete -c fab -l gss-deleg -d "Delegate GSS-API client credentials or not"
 complete -c fab -l gss-kex -d "Perform GSS-API Key Exchange and user authentication"
 complete -x -c fab -l hide -d "comma-separated list of output levels to hide"
-complete -x -c fab -s H -l hosts -a "
-(__fish_print_hostnames)
-(
-	echo (commandline -ct)|sed -ne 's/\(.*@\).*/\1/p'
-)(__fish_print_hostnames)
-" -d "comma-separated list of hosts to operate on"
-complete -x -c fab -s i -d "path to SSH private key file. May be repeated."
+complete -x -c fab -s H -l hosts -a "(__fish_complete_user_at_hosts)" -d "comma-separated list of hosts to operate on"
+complete -r -c fab -s i -d "path to SSH private key file. May be repeated."
 complete -c fab -s k -l no-keys -d "don't load private key files from ~/.ssh/"
 complete -x -c fab -l keepaplive -d "enables a keepalive every N seconds"
 complete -c fab -l linewise -d "print line-by-line instead of byte-by-byte"
@@ -65,10 +55,5 @@ complete -x -c fab -s t -l timeout -d "set connection timeout to N seconds"
 complete -x -c fab -s T -l command-timeout -d "set remote command timeout to N seconds"
 complete -x -c fab -s u -l user -d "username to use when connecting to remote hosts"
 complete -c fab -s w -l warn-only -d "warn, instead of abort, when commands fail"
-complete -x -c fab -s x -l exclude-hosts -a "
-(__fish_print_hostnames)
-(
-	echo (commandline -ct)|sed -ne 's/\(.*@\).*/\1/p'
-)(__fish_print_hostnames)
-" -d "comma-separated list of hosts to exclude"
+complete -x -c fab -s x -l exclude-hosts -a "(__fish_complete_user_at_hosts)" -d "comma-separated list of hosts to exclude"
 complete -x -c fab -s z -l pool-size -d "number of concurrent processes to use in parallel mode"

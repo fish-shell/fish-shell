@@ -248,6 +248,15 @@ set -lx var wuwuwu
 __fish_test_local_export
 echo $var
 
+# Test that we don't copy local-exports to blocks.
+set -lx var foo
+begin
+    echo $var
+    set var bar
+    echo $var
+end
+echo $var # should be "bar"
+
 # clear for other shells
 set -eU __fish_test_universal_variables_variable_foo
 

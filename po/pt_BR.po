@@ -61774,11 +61774,6 @@ msgstr ""
 msgid "Update man-page based completions"
 msgstr "Edit command specific completions"
 
-#: /tmp/fish/implicit/share/functions/__fish_urlencode.fish:1
-#, fuzzy
-msgid "URL-encode stdin"
-msgstr "Rename stdin"
-
 #: /tmp/fish/implicit/share/functions/__fish_use_subcommand.fish:1
 #, fuzzy
 msgid "Test if a non-switch argument has been given in the current commandline"

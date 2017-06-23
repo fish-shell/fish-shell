@@ -13,6 +13,8 @@ The following options are available:
 
 - `-c CMD` or `--command=CMD` sets the initial string in the interactive mode command buffer to `CMD`.
 
+- `-d DELIMITER` or `--delimiter=DELIMITER` specifies where the string should be split. An empty delimiter means every character is its own element.
+
 - `-g` or `--global` makes the variables global.
 
 - `-i` or `--silent` makes the characters typed obfuscated. This is useful for reading things like passwords or other sensitive information. Note that in bash the short flag is `-s`. We can't use that due to the existing use as an alias for `--shell`.
@@ -41,7 +43,7 @@ The following options are available:
 
 - `-z` or `--null` reads up to NUL instead of newline. Disables interactive mode.
 
-`read` reads a single line of input from stdin, breaks it into tokens based on the `IFS` shell variable, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable. As a special case, if `IFS` is set to the empty string, each character of the input is considered a separate token.
+`read` reads a single line of input from stdin, breaks it into tokens based on the delimiter set via `-d`/`--delimiter` or the `IFS` shell variable, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable. As a special case, if `IFS` is set to the empty string, each character of the input is considered a separate token.
 
 If `-a` or `--array` is provided, only one variable name is allowed and the tokens are stored as an array in this variable.
 

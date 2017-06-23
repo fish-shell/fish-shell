@@ -58,3 +58,25 @@ newline
 
 # chunked read tests
 Chunked reads test pass
+a=b
+
+Delimiter =
+a
+b
+Delimiter empty
+a
+=
+b
+IFS empty string
+a
+=
+b
+IFS unset
+a=b
+
+
+Delimiter =
+a
+b
+
+

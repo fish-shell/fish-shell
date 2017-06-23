@@ -187,3 +187,35 @@ end
 if test (string length "$x") -ne $FISH_READ_BYTE_LIMIT
     echo reading the max amount of data with --nchars failed the length test
 end
+
+### Test --delimiter (and $IFS, for now)
+echo a=b | read -l foo bar
+echo $foo
+echo $bar
+echo Delimiter =
+echo a=b | read -l -d = foo bar
+echo $foo
+echo $bar
+echo Delimiter empty
+echo a=b | read -l -d '' foo bar baz
+echo $foo
+echo $bar
+echo $baz
+echo IFS empty string
+set -l IFS ''
+echo a=b | read -l foo bar baz
+echo $foo
+echo $bar
+echo $baz
+echo IFS unset
+set -e IFS
+echo a=b | read -l foo bar baz
+echo $foo
+echo $bar
+echo $baz
+echo Delimiter =
+echo a=b | read -l -d = foo bar baz
+echo $foo
+echo $bar
+echo $baz
+echo

@@ -3,6 +3,8 @@
 
 #include <unistd.h>
 
+#include <string>
+
 #include "builtin.h"
 #include "builtin_command.h"
 #include "common.h"
@@ -16,9 +18,11 @@ struct command_cmd_opts_t {
     bool print_help = false;
     bool find_path = false;
     bool quiet = false;
+    bool all_paths = false;
 };
-static const wchar_t *short_options = L"hqsv";
+static const wchar_t *short_options = L":ahqsv";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
+                                              {L"all", no_argument, NULL, 'a'},
                                               {L"quiet", no_argument, NULL, 'q'},
                                               {L"search", no_argument, NULL, 's'},
                                               {NULL, 0, NULL, 0}};
@@ -30,6 +34,10 @@ static int parse_cmd_opts(command_cmd_opts_t &opts, int *optind, int argc, wchar
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
+            case 'a': {
+                opts.all_paths = true;
+                break;
+            }
             case 'h': {
                 opts.print_help = true;
                 break;
@@ -74,7 +82,7 @@ int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_OK;
     }
 
-    if (!opts.find_path) {
+    if (!opts.find_path && !opts.all_paths) {
         builtin_print_help(parser, streams, cmd, streams.out);
         return STATUS_INVALID_ARGS;
     }
@@ -82,10 +90,18 @@ int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int found = 0;
     for (int idx = optind; argv[idx]; ++idx) {
         const wchar_t *command_name = argv[idx];
-        wcstring path;
-        if (path_get_path(command_name, &path)) {
-            if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
-            ++found;
+        if (opts.all_paths) {
+            wcstring_list_t paths = path_get_paths(command_name);
+            for (auto path : paths) {
+                if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
+                ++found;
+            }
+        } else {
+            wcstring path;
+            if (path_get_path(command_name, &path)) {
+                if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
+                ++found;
+            }
         }
     }
 

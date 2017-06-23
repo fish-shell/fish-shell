@@ -29,15 +29,21 @@ bool path_get_config(wcstring &path);
 /// \return whether the directory was returned successfully
 bool path_get_data(wcstring &path);
 
-/// Finds the full path of an executable. Returns YES if successful.
+/// Finds the full path of an executable.
 ///
-/// \param cmd The name of the executable.
-/// \param output_or_NULL If non-NULL, store the full path.
-/// \param vars The environment variables snapshot to use
-/// \return 0 if the command can not be found, the path of the command otherwise. The result should
-/// be freed with free().
+/// Args:
+/// cmd - The name of the executable.
+/// output_or_NULL - If non-NULL, store the full path.
+/// vars - The environment variables snapshot to use
+///
+/// Returns:
+/// false if the command can not be found else true. The result
+/// should be freed with free().
 bool path_get_path(const wcstring &cmd, wcstring *output_or_NULL,
                    const env_vars_snapshot_t &vars = env_vars_snapshot_t::current());
+
+/// Return all the paths that match the given command.
+wcstring_list_t path_get_paths(const wcstring &cmd);
 
 /// Returns the full path of the specified directory, using the CDPATH variable as a list of base
 /// directories for relative paths. The returned string is allocated using halloc and the specified

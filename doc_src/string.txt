@@ -167,7 +167,7 @@ In general, special characters are special by default, so `a+` matches one or mo
 \endfish
 
 \fish{cli-dark}
->_ string escape --style=var 'a1 b2'\u6161
+>_ string escape --style=var 'a1 b2'\\u6161
 <bs>a1_20b2__c_E6_85_A1</bs>
 \endfish
 

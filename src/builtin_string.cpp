@@ -484,6 +484,64 @@ static int string_escape_var(options_t &opts, int optind, wchar_t **argv, io_str
     return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
+/// Unescape a string encoded so it can be used in fish script.
+static int string_unescape_script(options_t &opts, int optind, wchar_t **argv,
+                                  io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    unescape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        wcstring result;
+        if (unescape_string(arg, &result, flags, STRING_STYLE_SCRIPT)) {
+            streams.out.append(result);
+            streams.out.append(L'\n');
+            nesc++;
+        }
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Unescape an encoded URL.
+static int string_unescape_url(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    unescape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        wcstring result;
+        if (unescape_string(arg, &result, flags, STRING_STYLE_URL)) {
+            streams.out.append(result);
+            streams.out.append(L'\n');
+            nesc++;
+        }
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Unescape an encoded var name.
+static int string_unescape_var(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    unescape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        wcstring result;
+        if (unescape_string(arg, &result, flags, STRING_STYLE_VAR)) {
+            streams.out.append(result);
+            streams.out.append(L'\n');
+            nesc++;
+        }
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
 static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     options_t opts;
     opts.no_quoted_valid = true;
@@ -501,6 +559,29 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
         }
         case STRING_STYLE_VAR: {
             return string_escape_var(opts, optind, argv, streams);
+        }
+    }
+
+    DIE("should never reach this statement");
+}
+
+static int string_unescape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    options_t opts;
+    opts.no_quoted_valid = true;
+    opts.style_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    switch (opts.escape_style) {
+        case STRING_STYLE_SCRIPT: {
+            return string_unescape_script(opts, optind, argv, streams);
+        }
+        case STRING_STYLE_URL: {
+            return string_unescape_url(opts, optind, argv, streams);
+        }
+        case STRING_STYLE_VAR: {
+            return string_unescape_var(opts, optind, argv, streams);
         }
     }
 
@@ -1277,11 +1358,19 @@ static const struct string_subcommand {
                    wchar_t **argv);                       //!OCLINT(unused param)
 }
 
-string_subcommands[] = {
-    {L"escape", &string_escape}, {L"join", &string_join},       {L"length", &string_length},
-    {L"match", &string_match},   {L"replace", &string_replace}, {L"split", &string_split},
-    {L"sub", &string_sub},       {L"trim", &string_trim},       {L"lower", &string_lower},
-    {L"upper", &string_upper},   {L"repeat", &string_repeat},   {NULL, NULL}};
+string_subcommands[] = {{L"escape", &string_escape},
+                        {L"join", &string_join},
+                        {L"length", &string_length},
+                        {L"match", &string_match},
+                        {L"replace", &string_replace},
+                        {L"split", &string_split},
+                        {L"sub", &string_sub},
+                        {L"trim", &string_trim},
+                        {L"lower", &string_lower},
+                        {L"upper", &string_upper},
+                        {L"repeat", &string_repeat},
+                        {L"unescape", &string_unescape},
+                        {NULL, NULL}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

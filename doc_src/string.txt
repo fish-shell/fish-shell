@@ -18,6 +18,7 @@ string sub [(-s | --start) START] [(-l | --length) LENGTH] [(-q | --quiet)]
            [STRING...]
 string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)]
             [(-q | --quiet)] [STRING...]
+string unescape [--style=xxx] [STRING...]
 string upper [(-q | --quiet)] [STRING...]
 \endfish
 
@@ -41,6 +42,8 @@ The following subcommands are available.
 The second is `--style=var` which ensures the string can be used as a variable name by hex encoding any non-alphanumeric characters. The string is first converted to UTF-8 before being encoded.
 
 The third is `--style=url` which ensures the string can be used as a URL by hex encoding any character which is not legal in a URL. The string is first converted to UTF-8 before being encoded.
+
+`string unescape` performs the inverse of the `string escape` command. If the string to be unescaped is not properly formatted it is ignored. For example, doing `string unescape --style=var (string escape --style=var $str)` will return the original string.
 
 \subsection string-join "join" subcommand
 

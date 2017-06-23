@@ -5,6 +5,7 @@
 - New `status is-breakpoint` command that is true when a prompt is displayed in response to a `breakpoint` command (#1310).
 - Invalid array indexes are now silently ignored (#826, #4127).
 - `string escape` has a new `--style=xxx` flag where `xxx` can be `script`, `var`, or `url` (#4150)
+- `string unescape` has been implemented to reverse the effects of `string escape` (#3543)
 
 ## Other significant changes
 

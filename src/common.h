@@ -715,10 +715,13 @@ size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_i
 /// indicates the string was unmodified.
 bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special);
 
-/// Unescapes a string, returning the unescaped value by reference. On failure, the output is set to
-/// an empty string.
-bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special);
-bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special);
+/// Reverse the effects of calling `escape_string`. Returns the unescaped value by reference. On
+/// failure, the output is set to an empty string.
+bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special,
+                     escape_string_style_t style = STRING_STYLE_SCRIPT);
+
+bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special,
+                     escape_string_style_t style = STRING_STYLE_SCRIPT);
 
 /// Returns the width of the terminal window, so that not all functions that use these values
 /// continually have to keep track of it separately.

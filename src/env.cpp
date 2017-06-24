@@ -99,9 +99,9 @@ static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", 
 /// subsystem.
 static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
 
-/// List of all "path" like variable names that need special handling. This includes automatic
+/// List of "path" like variable names that need special handling. This includes automatic
 /// splitting and joining on import/export. As well as replacing empty elements, which implicitly
-/// refer to the CWD, with an explicit '.'.
+/// refer to the CWD, with an explicit '.' in the case of PATH and CDPATH.
 static const wcstring_list_t colon_delimited_variable({L"PATH", L"MANPATH", L"CDPATH"});
 
 // Some forward declarations to make it easy to logically group the code.
@@ -332,6 +332,9 @@ static void handle_timezone(const wchar_t *env_var_name) {
 /// Unfortunately that convention causes problems for fish scripts. So this function replaces the
 /// empty path element with an explicit ".". See issue #3914.
 static void fix_colon_delimited_var(const wcstring &var_name) {
+    // While we auto split/join MANPATH we do not want to replace empty elements with "." (#4158).
+    if (var_name == L"MANPATH") return;
+
     const env_var_t paths = env_get_string(var_name);
     if (paths.missing_or_empty()) return;
 

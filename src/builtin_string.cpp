@@ -155,8 +155,7 @@ static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams
             opts->escape_style = STRING_STYLE_URL;
         } else if (wcscmp(w.woptarg, L"var") == 0) {
             opts->escape_style = STRING_STYLE_VAR;
-        }
-        else {
+        } else {
             string_error(streams, _(L"%ls: Invalid escape style '%ls'\n"), cmd, w.woptarg);
             return STATUS_INVALID_ARGS;
         }
@@ -367,17 +366,25 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
-static const struct woption long_options[] = {
-    {L"all", no_argument, NULL, 'a'},         {L"chars", required_argument, NULL, 'c'},
-    {L"count", required_argument, NULL, 'n'}, {L"entire", no_argument, NULL, 'e'},
-    {L"filter", no_argument, NULL, 'f'},      {L"ignore-case", no_argument, NULL, 'i'},
-    {L"index", no_argument, NULL, 'n'},       {L"invert", no_argument, NULL, 'v'},
-    {L"left", no_argument, NULL, 'l'},        {L"length", required_argument, NULL, 'l'},
-    {L"max", required_argument, NULL, 'm'},   {L"no-newline", no_argument, NULL, 'N'},
-    {L"no-quoted", no_argument, NULL, 'n'},   {L"quiet", no_argument, NULL, 'q'},
-    {L"regex", no_argument, NULL, 'r'},       {L"right", no_argument, NULL, 'r'},
-    {L"start", required_argument, NULL, 's'}, {L"style", required_argument, NULL, 1},
-    {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
+                                              {L"chars", required_argument, NULL, 'c'},
+                                              {L"count", required_argument, NULL, 'n'},
+                                              {L"entire", no_argument, NULL, 'e'},
+                                              {L"filter", no_argument, NULL, 'f'},
+                                              {L"ignore-case", no_argument, NULL, 'i'},
+                                              {L"index", no_argument, NULL, 'n'},
+                                              {L"invert", no_argument, NULL, 'v'},
+                                              {L"left", no_argument, NULL, 'l'},
+                                              {L"length", required_argument, NULL, 'l'},
+                                              {L"max", required_argument, NULL, 'm'},
+                                              {L"no-newline", no_argument, NULL, 'N'},
+                                              {L"no-quoted", no_argument, NULL, 'n'},
+                                              {L"quiet", no_argument, NULL, 'q'},
+                                              {L"regex", no_argument, NULL, 'r'},
+                                              {L"right", no_argument, NULL, 'r'},
+                                              {L"start", required_argument, NULL, 's'},
+                                              {L"style", required_argument, NULL, 1},
+                                              {NULL, 0, NULL, 0}};
 
 static std::map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
@@ -437,7 +444,8 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wc
 }
 
 /// Escape a string so that it can be used in a fish script without further word splitting.
-static int string_escape_script(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+static int string_escape_script(options_t &opts, int optind, wchar_t **argv,
+                                io_streams_t &streams) {
     wcstring storage;
     int nesc = 0;
     escape_flags_t flags = ESCAPE_ALL;

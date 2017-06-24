@@ -109,7 +109,8 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     }
 
                     if (job_id == -1) {
-                        streams.err.append_format(_(L"%ls: Cannot find calling job for event handler"), cmd);
+                        streams.err.append_format(
+                            _(L"%ls: Cannot find calling job for event handler"), cmd);
                         return STATUS_INVALID_ARGS;
                     }
                     e.type = EVENT_JOB_ID;
@@ -118,7 +119,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     pid = fish_wcstoi(w.woptarg);
                     if (errno || pid < 0) {
                         streams.err.append_format(_(L"%ls: Invalid process id '%ls'"), cmd,
-                                      w.woptarg);
+                                                  w.woptarg);
                         return STATUS_INVALID_ARGS;
                     }
 
@@ -181,7 +182,8 @@ static int validate_function_name(int argc, const wchar_t *const *argv, wcstring
 
     function_name = argv[1];
     if (!valid_func_name(function_name)) {
-        streams.err.append_format(_(L"%ls: Illegal function name '%ls'"), cmd, function_name.c_str());
+        streams.err.append_format(_(L"%ls: Illegal function name '%ls'"), cmd,
+                                  function_name.c_str());
         return STATUS_INVALID_ARGS;
     }
 
@@ -235,7 +237,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
             }
         } else {
             streams.err.append_format(_(L"%ls: Unexpected positional argument '%ls'"), cmd,
-                          argv[optind]);
+                                      argv[optind]);
             return STATUS_INVALID_ARGS;
         }
     }

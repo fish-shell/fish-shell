@@ -152,7 +152,8 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
             case 'L': {
                 opts.level = fish_wcstoi(w.woptarg);
                 if (opts.level < 0 || errno == ERANGE) {
-                    streams.err.append_format(_(L"%ls: Invalid level value '%ls'\n"), argv[0], w.woptarg);
+                    streams.err.append_format(_(L"%ls: Invalid level value '%ls'\n"), argv[0],
+                                              w.woptarg);
                     return STATUS_INVALID_ARGS;
                 } else if (errno) {
                     streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);

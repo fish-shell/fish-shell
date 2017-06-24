@@ -89,11 +89,7 @@ typedef std::vector<wcstring> wcstring_list_t;
 #define INPUT_COMMON_BASE (wchar_t)0xF700
 #define INPUT_COMMON_END (INPUT_COMMON_BASE + 64)
 
-enum escape_string_style_t {
-    STRING_STYLE_SCRIPT,
-    STRING_STYLE_URL,
-    STRING_STYLE_VAR
-};
+enum escape_string_style_t { STRING_STYLE_SCRIPT, STRING_STYLE_URL, STRING_STYLE_VAR };
 
 // Flags for unescape_string functions.
 enum {
@@ -227,12 +223,12 @@ extern bool has_working_tty_timestamps;
 #define DIE_WITH_ERRNO(msg) __fish_assert(msg, __FILE__, __LINE__, errno)
 /// This macro is meant to be used with functions that return zero on success otherwise return an
 /// errno value. Most notably the pthread family of functions which we never expect to fail.
-#define DIE_ON_FAILURE(e)                             \
-    do {                                              \
-        int status = e;                               \
-        if (status != 0) {                            \
+#define DIE_ON_FAILURE(e)                                  \
+    do {                                                   \
+        int status = e;                                    \
+        if (status != 0) {                                 \
             __fish_assert(#e, __FILE__, __LINE__, status); \
-        }                                             \
+        }                                                  \
     } while (0)
 
 [[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error);
@@ -698,9 +694,9 @@ ssize_t read_loop(int fd, void *buff, size_t count);
 /// \param flags Flags to control the escaping
 /// \return The escaped string
 wcstring escape_string(const wchar_t *in, escape_flags_t flags,
-                      escape_string_style_t style=STRING_STYLE_SCRIPT);
+                       escape_string_style_t style = STRING_STYLE_SCRIPT);
 wcstring escape_string(const wcstring &in, escape_flags_t flags,
-                       escape_string_style_t style=STRING_STYLE_SCRIPT);
+                       escape_string_style_t style = STRING_STYLE_SCRIPT);
 
 /// Expand backslashed escapes and substitute them with their unescaped counterparts. Also
 /// optionally change the wildcards, the tilde character and a few more into constants which are

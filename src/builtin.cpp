@@ -488,9 +488,7 @@ bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_look
 /// Is the command a keyword or a builtin we need to special-case the handling of `-h` and `--help`.
 static const wcstring_list_t help_builtins({L"for", L"while", L"function", L"if", L"end", L"switch",
                                             L"case", L"count", L"printf"});
-static bool cmd_needs_help(const wchar_t *cmd) {
-    return contains(help_builtins, cmd);
-}
+static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command
 int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &streams) {

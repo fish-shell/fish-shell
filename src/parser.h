@@ -217,7 +217,7 @@ class parser_t {
     /// Returns the name of the currently evaluated function if we are currently evaluating a
     /// function, null otherwise. This is tested by moving down the block-scope-stack, checking
     /// every block if it is of type FUNCTION_CALL.
-    const wchar_t *is_function(size_t idx=0) const;
+    const wchar_t *is_function(size_t idx = 0) const;
 
     /// Helper for stack_trace().
     void stack_trace_internal(size_t block_idx, wcstring *out) const;
@@ -308,7 +308,7 @@ class parser_t {
     const wchar_t *get_block_desc(int block) const;
 
     /// Return the function name for the specified stack frame. Default is one (current frame).
-    const wchar_t *get_function_name(int level=1);
+    const wchar_t *get_function_name(int level = 1);
 
     /// Removes a job.
     bool job_remove(job_t *job);

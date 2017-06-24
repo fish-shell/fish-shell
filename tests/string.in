@@ -95,6 +95,81 @@ echo '# echo \x07 | string escape'
 echo \x07 | string escape
 
 echo
+echo '# string escape --style=script \'a b#c"\\\'d\''
+string escape --style=script 'a b#c"\'d'
+
+echo
+echo '# string escape --style=url \'a b#c"\\\'d\''
+string escape --style=url 'a b#c"\'d'
+
+echo
+echo '# string escape --style=url \\na\\nb%c~d\\n'
+string escape --style=url \na\nb%c~d\n
+
+echo
+echo '# string escape --style=var \'a b#c"\\\'d\''
+string escape --style=var 'a b#c"\'d'
+
+echo
+echo '# string escape --style=script a\nghi_'
+string escape --style=var a\nghi_
+
+echo
+echo '# string escape --style=var \'abc\''
+string escape --style=var 'abc'
+
+echo
+echo '# string escape --style=var \'_a_b_c_\''
+string escape --style=var '_a_b_c_'
+
+echo
+echo '# string escape --style=var -- -'
+string escape --style=var -- -
+
+# The following tests verify that we can correctly unescape the same strings
+# we tested escaping above.
+
+echo
+echo '# set x (string unescape (echo \x07 | string escape))'
+set x (string unescape (echo \x07 | string escape))
+test $x = \x07
+and echo success
+
+echo
+echo '# string unescape --style=script (string escape --style=script \'a b#c"\\\'d\')'
+string unescape --style=script (string escape --style=script 'a b#c"\'d')
+
+echo
+echo '# string unescape --style=url (string escape --style=url \'a b#c"\\\'d\')'
+string unescape --style=url (string escape --style=url 'a b#c"\'d')
+
+echo
+echo '# string unescape --style=url (string escape --style=url \na\nb%c~d\n)'
+string unescape --style=url (string escape --style=url \na\nb%c~d\n)
+
+echo
+echo '# string unescape --style=var (string escape --style=var \'a b#c"\\\'d\')'
+string unescape --style=var (string escape --style=var 'a b#c"\'d')
+
+echo
+echo '# string unescape --style=var (string escape --style=var a\nghi_)'
+string unescape --style=var (string escape --style=var a\nghi_)
+
+echo
+echo '# string unescape --style=var (string escape --style=var \'abc\')'
+string unescape --style=var (string escape --style=var 'abc')
+
+echo
+echo '# string unescape --style=var (string escape --style=var \'_a_b_c_\')'
+string unescape --style=var (string escape --style=var '_a_b_c_')
+
+echo
+echo '# string unescape --style=var (string escape --style=var -- -)'
+string unescape --style=var -- (string escape --style=var -- -)
+
+# The following tests verify that we can correctly match strings.
+
+echo
 echo '# string match "?" a'
 string match "?" a
 

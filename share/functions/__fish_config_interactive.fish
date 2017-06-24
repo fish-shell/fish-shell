@@ -262,7 +262,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
             status --is-command-substitution
             or test -n "$INSIDE_EMACS"
             and return
-            printf \e\]7\;file://\%s\%s\a (hostname) (echo -n $PWD | __fish_urlencode)
+            printf \e\]7\;file://\%s\%s\a (hostname) (string escape --style=url $PWD)
         end
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end

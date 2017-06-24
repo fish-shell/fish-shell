@@ -74,6 +74,61 @@ zan
 # echo \x07 | string escape
 \cg
 
+# string escape --style=script 'a b#c"\'d'
+a\ b\#c\"\'d
+
+# string escape --style=url 'a b#c"\'d'
+a%20b%23c%22%27d
+
+# string escape --style=url \na\nb%c~d\n
+%0Aa%0Ab%25c~d%0A
+
+# string escape --style=var 'a b#c"\'d'
+a_20_b_23_c_22_27_d
+
+# string escape --style=script a\nghi_
+a_0A_ghi__
+
+# string escape --style=var 'abc'
+abc
+
+# string escape --style=var '_a_b_c_'
+__a__b__c__
+
+# string escape --style=var -- -
+_2D_
+
+# set x (string unescape (echo \x07 | string escape))
+success
+
+# string unescape --style=script (string escape --style=script 'a b#c"\'d')
+a b#c"'d
+
+# string unescape --style=url (string escape --style=url 'a b#c"\'d')
+a b#c"'d
+
+# string unescape --style=url (string escape --style=url \na\nb%c~d\n)
+
+a
+b%c~d
+
+
+# string unescape --style=var (string escape --style=var 'a b#c"\'d')
+a b#c"'d
+
+# string unescape --style=var (string escape --style=var a\nghi_)
+a
+ghi_
+
+# string unescape --style=var (string escape --style=var 'abc')
+abc
+
+# string unescape --style=var (string escape --style=var '_a_b_c_')
+_a_b_c_
+
+# string unescape --style=var (string escape --style=var -- -)
+-
+
 # string match "?" a
 a
 

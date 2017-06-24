@@ -116,6 +116,7 @@ typedef struct {  //!OCLINT(too many fields)
     bool regex_valid = false;
     bool right_valid = false;
     bool start_valid = false;
+    bool style_valid = false;
 
     bool all = false;
     bool entire = false;
@@ -138,7 +139,33 @@ typedef struct {  //!OCLINT(too many fields)
     const wchar_t *chars_to_trim = L" \f\n\r\t";
     const wchar_t *arg1 = NULL;
     const wchar_t *arg2 = NULL;
+
+    escape_string_style_t escape_style = STRING_STYLE_SCRIPT;
 } options_t;
+
+/// This handles the `--style=xxx` flag.
+static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    const wchar_t *cmd = argv[0];
+
+    if (opts->style_valid) {
+        if (wcscmp(w.woptarg, L"script") == 0) {
+            opts->escape_style = STRING_STYLE_SCRIPT;
+        } else if (wcscmp(w.woptarg, L"url") == 0) {
+            opts->escape_style = STRING_STYLE_URL;
+        } else if (wcscmp(w.woptarg, L"var") == 0) {
+            opts->escape_style = STRING_STYLE_VAR;
+        }
+        else {
+            string_error(streams, _(L"%ls: Invalid escape style '%ls'\n"), cmd, w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        return STATUS_CMD_OK;
+    }
+
+    string_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
 
 static int handle_flag_N(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
                          options_t *opts) {
@@ -349,13 +376,14 @@ static const struct woption long_options[] = {
     {L"max", required_argument, NULL, 'm'},   {L"no-newline", no_argument, NULL, 'N'},
     {L"no-quoted", no_argument, NULL, 'n'},   {L"quiet", no_argument, NULL, 'q'},
     {L"regex", no_argument, NULL, 'r'},       {L"right", no_argument, NULL, 'r'},
-    {L"start", required_argument, NULL, 's'}, {NULL, 0, NULL, 0}};
+    {L"start", required_argument, NULL, 's'}, {L"style", required_argument, NULL, 1},
+    {NULL, 0, NULL, 0}};
 
 static std::map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
     {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
     {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
-    {'v', handle_flag_v}};
+    {'v', handle_flag_v}, {1, handle_flag_1}};
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
 static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wchar_t **argv,
@@ -408,26 +436,156 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wc
     return STATUS_CMD_OK;
 }
 
-static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    options_t opts;
-    opts.no_quoted_valid = true;
-    int optind;
-    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
-
+/// Escape a string so that it can be used in a fish script without further word splitting.
+static int string_escape_script(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+    wcstring storage;
+    int nesc = 0;
     escape_flags_t flags = ESCAPE_ALL;
     if (opts.no_quoted) flags |= ESCAPE_NO_QUOTED;
 
-    int nesc = 0;
-    wcstring storage;
-    const wchar_t *arg;
-    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != 0) {
-        streams.out.append(escape_string(arg, flags));
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        streams.out.append(escape_string(arg, flags, STRING_STYLE_SCRIPT));
         streams.out.append(L'\n');
         nesc++;
     }
 
     return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Escape a string so that it can be used as a URL.
+static int string_escape_url(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    escape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        streams.out.append(escape_string(arg, flags, STRING_STYLE_URL));
+        streams.out.append(L'\n');
+        nesc++;
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Escape a string so that it can be used as a fish var name.
+static int string_escape_var(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    escape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        streams.out.append(escape_string(arg, flags, STRING_STYLE_VAR));
+        streams.out.append(L'\n');
+        nesc++;
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Unescape a string encoded so it can be used in fish script.
+static int string_unescape_script(options_t &opts, int optind, wchar_t **argv,
+                                  io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    unescape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        wcstring result;
+        if (unescape_string(arg, &result, flags, STRING_STYLE_SCRIPT)) {
+            streams.out.append(result);
+            streams.out.append(L'\n');
+            nesc++;
+        }
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Unescape an encoded URL.
+static int string_unescape_url(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    unescape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        wcstring result;
+        if (unescape_string(arg, &result, flags, STRING_STYLE_URL)) {
+            streams.out.append(result);
+            streams.out.append(L'\n');
+            nesc++;
+        }
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Unescape an encoded var name.
+static int string_unescape_var(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    unescape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        wcstring result;
+        if (unescape_string(arg, &result, flags, STRING_STYLE_VAR)) {
+            streams.out.append(result);
+            streams.out.append(L'\n');
+            nesc++;
+        }
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    options_t opts;
+    opts.no_quoted_valid = true;
+    opts.style_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    switch (opts.escape_style) {
+        case STRING_STYLE_SCRIPT: {
+            return string_escape_script(opts, optind, argv, streams);
+        }
+        case STRING_STYLE_URL: {
+            return string_escape_url(opts, optind, argv, streams);
+        }
+        case STRING_STYLE_VAR: {
+            return string_escape_var(opts, optind, argv, streams);
+        }
+    }
+
+    DIE("should never reach this statement");
+}
+
+static int string_unescape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    options_t opts;
+    opts.no_quoted_valid = true;
+    opts.style_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    switch (opts.escape_style) {
+        case STRING_STYLE_SCRIPT: {
+            return string_unescape_script(opts, optind, argv, streams);
+        }
+        case STRING_STYLE_URL: {
+            return string_unescape_url(opts, optind, argv, streams);
+        }
+        case STRING_STYLE_VAR: {
+            return string_unescape_var(opts, optind, argv, streams);
+        }
+    }
+
+    DIE("should never reach this statement");
 }
 
 static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -1200,11 +1358,19 @@ static const struct string_subcommand {
                    wchar_t **argv);                       //!OCLINT(unused param)
 }
 
-string_subcommands[] = {
-    {L"escape", &string_escape}, {L"join", &string_join},       {L"length", &string_length},
-    {L"match", &string_match},   {L"replace", &string_replace}, {L"split", &string_split},
-    {L"sub", &string_sub},       {L"trim", &string_trim},       {L"lower", &string_lower},
-    {L"upper", &string_upper},   {L"repeat", &string_repeat},   {NULL, NULL}};
+string_subcommands[] = {{L"escape", &string_escape},
+                        {L"join", &string_join},
+                        {L"length", &string_length},
+                        {L"match", &string_match},
+                        {L"replace", &string_replace},
+                        {L"split", &string_split},
+                        {L"sub", &string_sub},
+                        {L"trim", &string_trim},
+                        {L"lower", &string_lower},
+                        {L"upper", &string_upper},
+                        {L"repeat", &string_repeat},
+                        {L"unescape", &string_unescape},
+                        {NULL, NULL}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

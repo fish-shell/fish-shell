@@ -57143,10 +57143,6 @@ msgstr ""
 msgid "Update man-page based completions"
 msgstr "Edytuj sugestie do określonej komendy"
 
-#: /tmp/fish/implicit/share/functions/__fish_urlencode.fish:1
-msgid "URL-encode stdin"
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/__fish_use_subcommand.fish:1
 msgid "Test if a non-switch argument has been given in the current commandline"
 msgstr ""

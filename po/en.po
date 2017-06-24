@@ -8114,10 +8114,6 @@ msgstr "Show current path"
 msgid "Test if the token under the cursor matches the specified wildcard"
 msgstr "Test if the token under the cursor matches the specified wildcard"
 
-#: share/functions/__fish_urlencode.fish:1
-msgid "URL-encode stdin"
-msgstr "URL-encode stdin"
-
 #: share/functions/__terlar_git_prompt.fish:23
 msgid "Write out the git prompt"
 msgstr "Write out the git prompt"

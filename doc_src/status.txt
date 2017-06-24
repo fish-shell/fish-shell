@@ -42,7 +42,7 @@ The following operations (sub-commands) are available:
 
 - `filename` prints the filename of the currently running script. Also `current-filename`, `-f` or `--current-filename`.
 
-- `function` prints the name of the currently called function if able, when missing displays "Not a function". Also `current-function`, `-u` or `--current-function`.
+- `function` prints the name of the currently called function if able, when missing displays "N/A". Also `current-function`, `-u` or `--current-function`.
 
 - `line-number` prints the line number of the currently running script. Also `current-line-number`, `-n` or `--current-line-number`.
 

@@ -434,14 +434,15 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
 }
 
 /// Returns the name of the currently evaluated function if we are currently evaluating a function,
-/// null otherwise. This is tested by moving down the block-scope-stack, checking every block if it
-/// is of type FUNCTION_CALL.
-const wchar_t *parser_t::is_function() const {
+/// NULL otherwise. This is tested by moving down the block-scope-stack, checking every block if it
+/// is of type FUNCTION_CALL. If the caller doesn't specify a starting position in the stack we
+/// begin with the current block.
+const wchar_t *parser_t::is_function(size_t idx) const {
     // PCA: Have to make this a string somehow.
     ASSERT_IS_MAIN_THREAD();
 
     const wchar_t *result = NULL;
-    for (size_t block_idx = 0; block_idx < this->block_count(); block_idx++) {
+    for (size_t block_idx = idx; block_idx < this->block_count(); block_idx++) {
         const block_t *b = this->block_at_index(block_idx);
         if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
@@ -455,7 +456,37 @@ const wchar_t *parser_t::is_function() const {
     return result;
 }
 
-const wchar_t *parser_t::get_function_name() { return this->is_function(); }
+/// Return the function name for the specified stack frame. Default is zero (current frame).
+/// The special value zero means the function frame immediately above the closest breakpoint frame.
+const wchar_t *parser_t::get_function_name(int level) {
+    if (level == 0) {
+        // Return the function name for the level preceding the most recent breakpoint. If there
+        // isn't one return the function name for the current level.
+        int idx = 0;
+        for (const auto &b : block_stack) {
+            const enum block_type_t type = b->type();
+            if (type == BREAKPOINT) {
+                return this->is_function(idx);
+            }
+            idx++;
+        }
+        return NULL;  // couldn't find a breakpoint frame
+    } else if (level == 1) {
+        // Return the function name for the current level.
+        return this->is_function();
+    }
+
+    // Return the function name for the specific function stack frame.
+    int idx = 0;
+    for (const auto &b : block_stack) {
+        const enum block_type_t type = b->type();
+        if (type == FUNCTION_CALL || type == FUNCTION_CALL_NO_SHADOW) {
+            if (--level == 0) return this->is_function(idx);
+        }
+        idx++;
+    }
+    return NULL;  // couldn't find that function level
+}
 
 int parser_t::get_lineno() const {
     int lineno = -1;

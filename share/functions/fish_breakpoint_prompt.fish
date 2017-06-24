@@ -1,11 +1,11 @@
 # Define the default debugging prompt command.
 function fish_breakpoint_prompt --description "A right prompt to be used when `breakpoint` is executed"
     set -l saved_status $status
-    set -l function (status current-function)
-    set -l line (status current-line-number)
+    set -l function (status -L0 function)
+    set -l line (status -L0 line-number)
     # At the moment we don't include the filename because, even if we truncate it, it makes the
     # prompt too long.
-    #set -l filename (status current-filename)
+    #set -l filename (status filename)
     #set -l prompt "$filename:$function:$line >"
     set -l prompt "$function:$line"
     if test $saved_status -ne 0

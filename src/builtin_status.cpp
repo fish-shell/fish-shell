@@ -78,16 +78,16 @@ int job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd, io_streams_t &str
 
 struct status_cmd_opts_t {
     bool print_help = false;
-    status_cmd_t status_cmd = STATUS_UNDEF;
+    int level = 1;
     int new_job_control_mode = -1;
-    bool breakpoint_context = false;
+    status_cmd_t status_cmd = STATUS_UNDEF;
 };
 
 /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
 /// the non-flag subcommand form. While these flags are deprecated they must be supported at
 /// least until fish 3.0 and possibly longer to avoid breaking everyones config.fish and other
 /// scripts.
-static const wchar_t *short_options = L":Bcbilfnhj:t";
+static const wchar_t *short_options = L":L:cbilfnhj:t";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {L"is-command-substitution", no_argument, NULL, 'c'},
                                               {L"is-block", no_argument, NULL, 'b'},
@@ -98,12 +98,12 @@ static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {L"is-no-job-control", no_argument, NULL, 3},
                                               {L"filename", no_argument, NULL, 'f'},
                                               {L"current-filename", no_argument, NULL, 'f'},
+                                              {L"level", required_argument, NULL, 'L'},
                                               {L"line", no_argument, NULL, 'n'},
                                               {L"line-number", no_argument, NULL, 'n'},
                                               {L"current-line-number", no_argument, NULL, 'n'},
                                               {L"job-control", required_argument, NULL, 'j'},
                                               {L"print-stack-trace", no_argument, NULL, 't'},
-                                              {L"breakpoint", no_argument, NULL, 'B'},
                                               {NULL, 0, NULL, 0}};
 
 /// Remember the status subcommand and disallow selecting more than one status subcommand.
@@ -149,8 +149,15 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
                 }
                 break;
             }
-            case 'B': {
-                opts.breakpoint_context = true;
+            case 'L': {
+                opts.level = fish_wcstoi(w.woptarg);
+                if (opts.level < 0 || errno == ERANGE) {
+                    streams.err.append_format(_(L"%ls: Invalid level value '%ls'\n"), argv[0], w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                } else if (errno) {
+                    streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                }
                 break;
             }
             case 'c': {
@@ -301,20 +308,23 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             const wchar_t *fn = parser.current_filename();
 
-            if (!fn) fn = _(L"Standard input");
+            if (!fn) fn = _(L"stdin");
             streams.out.append_format(L"%ls\n", fn);
             break;
         }
         case STATUS_FUNCTION: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            const wchar_t *fn = parser.get_function_name();
+            const wchar_t *fn = parser.get_function_name(opts.level);
 
-            if (!fn) fn = _(L"Not a function");
+            if (!fn) fn = _(L"N/A");
             streams.out.append_format(L"%ls\n", fn);
             break;
         }
         case STATUS_LINE_NUMBER: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
+            // TBD is how to interpret the level argument when fetching the line number.
+            // See issue #4161.
+            // streams.out.append_format(L"%d\n", parser.get_lineno(opts.level));
             streams.out.append_format(L"%d\n", parser.get_lineno());
             break;
         }

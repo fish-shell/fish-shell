@@ -144,7 +144,8 @@ end
 # This is because alias:command is an n:1 mapping (an alias can only have one corresponding command,
 #                                                  but a command can be aliased multiple times)
 git config -z --get-regexp 'alias\..*' | while read -lz alias command _
-    set alias (string replace 'alias.' '' -- $alias)
+    # Git aliases can contain chars that variable names can't - escape them.
+    set alias (string replace 'alias.' '' -- $alias | string escape --style=var)
     set -g __fish_git_alias_$alias $command
 end
 
@@ -156,7 +157,7 @@ function __fish_git_using_command
     and return 0
 
     # Check aliases.
-    set -l varname __fish_git_alias_$cmd
+    set -l varname __fish_git_alias_(string escape --style=var -- $cmd)
     contains -- "$$varname" $argv
     and return 0
     return 1

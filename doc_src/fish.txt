@@ -13,6 +13,8 @@ The following options are available:
 
 - `-c` or `--command=COMMANDS` evaluate the specified commands instead of reading from the commandline
 
+- `-C` or `--init-command=COMMANDS` evaluate the specified commands after reading the configuration, before running the command specified by `-c` or reading interactive input
+
 - `-d` or `--debug-level=DEBUG_LEVEL` specify the verbosity level of fish. A higher number means higher verbosity. The default level is 1.
 
 - `-i` or `--interactive` specify that fish is to run in interactive mode

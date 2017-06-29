@@ -350,14 +350,14 @@ test: test-prep install-force test_low_level test_high_level
 # We want the various tests to run serially so their output doesn't mix
 # We can do that by adding ordering dependencies based on what goals are being used.
 #
-test_goals := test_low_level test_fishscript test_interactive
+test_goals := test_low_level test_invocation test_fishscript test_interactive
 
 #
 # The following variables define targets that depend on the tests. If any more targets
 # are added that depend, directly or indirectly, on tests, they need to be recorded here.
 #
 test_test_deps = test_low_level $(test_high_level_test_deps)
-test_high_level_test_deps = test_fishscript test_interactive
+test_high_level_test_deps = test_invocation test_fishscript test_interactive
 
 active_test_goals = $(filter $(test_goals),$(foreach a,$(or $(MAKECMDGOALS),$(.DEFAULT_GOAL)),$(a) $($(a)_test_deps)))
 filter_up_to = $(eval b:=1)$(foreach a,$(2),$(and $(b),$(if $(subst $(1),,$(a)),$(a),$(eval b:=))))
@@ -371,8 +371,12 @@ test_low_level: fish_tests $(call filter_up_to,test_low_level,$(active_test_goal
 
 test_high_level: DESTDIR = $(PWD)/test/root/
 test_high_level: prefix = .
-test_high_level: test-prep install-force test_fishscript test_interactive
+test_high_level: test-prep install-force test_invocation test_fishscript test_interactive
 .PHONY: test_high_level
+
+test_invocation: $(call filter_up_to,test_invocation,$(active_test_goals))
+	cd tests; ./invocation.sh
+.PHONY: test_invocation
 
 test_fishscript: $(call filter_up_to,test_fishscript,$(active_test_goals))
 	cd tests; ../test/root/bin/fish test.fish
@@ -381,6 +385,7 @@ test_fishscript: $(call filter_up_to,test_fishscript,$(active_test_goals))
 test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
 	cd tests; ../test/root/bin/fish interactive.fish
 .PHONY: test_interactive
+
 
 #
 # commands.hdr collects documentation on all commands, functions and

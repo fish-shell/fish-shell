@@ -7,7 +7,44 @@
 #
 # We are testing fish's invocation itself, so this is not written in
 # fish itself - if the invocation wasn't working, we'd never even
-# be able to this test to check that the invocation wasn't working.
+# be able to use this test to check that the invocation wasn't working.
+#
+# What we test...
+#
+# * The environment is cleaned so that (hopefully) differences in
+#   the host terminal, language or user settings do not affect the
+#   tests.
+#
+# * The files 'tests/invocation/*.invoke' contain the arguments that
+#   will be passed to the 'fish' command under test. The arguments
+#   may be split over multiple lines for clarity.
+#
+# * Before execution, if the file 'tests/invocation/<name>.config'
+#   exists, it will be copied as the 'config.fish' file in the
+#   configuration directory.
+#
+# * The stdout and stderr are captured into files and will be
+#   processed before comparison with the
+#   'tests/invocation/<name>.(out|err)' files. A missing file is
+#   considered to be no output.
+#
+# * The file 'tests/invocation/<name>.grep' is used to select the
+#   sections of the file we are interested in within the stdout.
+#   Only the parts that match will be compared to the '*.out' file.
+#   This can be used to filter out changeable parts of the output
+#   leaving just the parts we are interested in.
+#
+# * The stderr output will have the 'RC: <return code>' appended
+#   if the command returned a non-zero value.
+#   The stderr output will have the 'XDG_CONFIG_HOME' location
+#   substituted, to allow error reports to be compared consistently.
+#
+# * If the processed output differs from the supplied output,
+#   the test will fail, and the differences will be shown on the
+#   console.
+#
+# * If anything fails, the return code for this script will be
+#   non-zero.
 #
 
 # Errors will be fatal
@@ -89,9 +126,9 @@ function say() {
 
 
 ##
-# Actual testing of a .invocation file.
+# Actual testing of a .invoke file.
 function test_file() {
-    local file="$*"
+    local file="$1"
     local dir="$(dirname "$file")"
     local base="$(basename "$file" .invoke)"
     local test_config="${dir}/${base}.config"

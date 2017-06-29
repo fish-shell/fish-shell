@@ -19,6 +19,7 @@
 - Added completions for:
  - `as` (#4130).
  - `jest` (#4142).
+- `--init-command`/`-C` added to the command line switches, to allow execution of commands before starting the interactive shell.
 
 ---
 

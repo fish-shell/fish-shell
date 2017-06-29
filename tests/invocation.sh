@@ -84,6 +84,15 @@ term_white="$(tput setaf 7)"
 term_reset="$(tput sgr0)"
 
 
+# Check whether we have the 'colordiff' tool - if not, we'll revert to
+# boring regular 'diff'.
+if [ "$(type -t colordiff)" != '' ] ; then
+    difftool='colordiff'
+else
+    difftool='diff'
+fi
+
+
 ##
 # Set variables to known values so that they will not affect the
 # execution of the test.
@@ -237,11 +246,11 @@ function test_file() {
 
         if [ "$out_status" != '0' ] ; then
             say yellow "Output differs for file $file. Diff follows:"
-            colordiff -u "${test_stdout}" "${want_stdout}"
+            "$difftool" -u "${test_stdout}" "${want_stdout}"
         fi
         if [ "$err_status" != '0' ] ; then
             say yellow "Error output differs for file $file. Diff follows:"
-            colordiff -u "${test_stderr}" "${want_stderr}"
+            "$difftool" -u "${test_stderr}" "${want_stderr}"
         fi
         rc=1
     fi

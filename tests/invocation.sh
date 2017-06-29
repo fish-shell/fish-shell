@@ -27,6 +27,13 @@
 #   processed before comparison with the
 #   'tests/invocation/<name>.(out|err)' files. A missing file is
 #   considered to be no output.
+#   Either file may be given a further suffix of '.<system name>'
+#   which will be used in preference to the default. This allows
+#   the expected output to change depending on the system being
+#   used - to allow for differences in behaviour.
+#   The '<system name>' can be found with 'uname -s'.
+#   This facility should be used sparingly as system differences
+#   will confuse users.
 #
 # * The file 'tests/invocation/<name>.grep' is used to select the
 #   sections of the file we are interested in within the stdout.
@@ -83,6 +90,12 @@ term_cyan="$(tput setaf 6)"
 term_white="$(tput setaf 7)"
 term_reset="$(tput sgr0)"
 
+# Which system are we on.
+# fish has slightly different behaviour depending on the system it is
+# running on (and the libraries that it is linked with), so for special
+# cases, we'll use a suffixed file.
+system_name="$(uname -s)"
+
 
 # Check whether we have the 'colordiff' tool - if not, we'll revert to
 # boring regular 'diff'.
@@ -117,7 +130,7 @@ function clean_environment() {
 ##
 # Fail completely :-(
 function fail() {
-    say red "FAIL: $@" >&2
+    say red "FAIL: $*" >&2
     exit 1
 }
 
@@ -159,6 +172,25 @@ function test_file() {
     # Read the test arguments, escaping things that might be processed by us
     test_args="$(sed 's/\$/\$/' "$file" | tr '\n' ' ')"
 
+    # Select system-specific files if they are present.
+    system_specific=
+    if [ -f "${test_config}.${system_name}" ] ; then
+        test_config="${test_config}.${system_name}"
+        system_specific=true
+    fi
+    if [ -f "${want_stdout}.${system_name}" ] ; then
+        want_stdout="${want_stdout}.${system_name}"
+        system_specific=true
+    fi
+    if [ -f "${want_stderr}.${system_name}" ] ; then
+        want_stderr="${want_stderr}.${system_name}"
+        system_specific=true
+    fi
+    if [ -f "${grep_stdout}.${system_name}" ] ; then
+        grep_stdout="${grep_stdout}.${system_name}"
+        system_specific=true
+    fi
+
     # Create an empty file so that we can compare against it if needed
     echo -n > "${empty}"
 
@@ -179,7 +211,7 @@ function test_file() {
         filter=('cat')
     fi
 
-    echo -n "Testing file $file ... "
+    echo -n "Testing file $file ${system_specific:+($system_name specific) }... "
 
     # The hoops we are jumping through here, with changing directory are
     # so that we always execute fish as './fish', which means that any
@@ -268,7 +300,7 @@ fi
 
 clean_environment
 
-say cyan "Testing shell invocation funtionality"
+say cyan "Testing shell invocation functionality"
 
 passed=0
 failed=0

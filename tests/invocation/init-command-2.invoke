@@ -1,0 +1,1 @@
+-C 'echo init-command' -C 'echo 2nd init-command'

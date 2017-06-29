@@ -58,10 +58,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #endif
 
 // container to hold the options specified within the command line
-class command_line_switches_t {
+class fish_cmd_opts_t {
 public:
-    std::vector<std::string> cmds;              // commands to be executed in place of interactive shell
-    std::vector<std::string> cmds_postconfig;   // commands to execute after the shell's config has been read
+    std::vector<std::string> batch_cmds;        // commands to be executed in place of interactive shell
+    std::vector<std::string> postconfig_cmds;   // commands to execute after the shell's config has been read
 };
 
 
@@ -235,7 +235,7 @@ int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
 }
 
 /// Parse the argument list, return the index of the first non-flag arguments.
-static int fish_parse_opt(int argc, char **argv, command_line_switches_t *switches) {
+static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
     static const char *short_opts = "+hilnvc:C:p:d:D:";
     static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
                                               {"init-command", required_argument, NULL, 'C'},
@@ -253,11 +253,11 @@ static int fish_parse_opt(int argc, char **argv, command_line_switches_t *switch
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
         switch (opt) {
             case 'c': {
-                switches->cmds.push_back(optarg);
+                opts->batch_cmds.push_back(optarg);
                 break;
             }
             case 'C': {
-                switches->cmds_postconfig.push_back(optarg);
+                opts->postconfig_cmds.push_back(optarg);
                 break;
             }
             case 'd': {
@@ -276,7 +276,7 @@ static int fish_parse_opt(int argc, char **argv, command_line_switches_t *switch
                 break;
             }
             case 'h': {
-                switches->cmds.push_back("__fish_print_help fish");
+                opts->batch_cmds.push_back("__fish_print_help fish");
                 break;
             }
             case 'i': {
@@ -330,7 +330,7 @@ static int fish_parse_opt(int argc, char **argv, command_line_switches_t *switch
     // We are an interactive session if we have not been given an explicit
     // command or file to execute and stdin is a tty. Note that the -i or
     // --interactive options also force interactive mode.
-    if (switches->cmds.size() == 0 && optind == argc && isatty(STDIN_FILENO)) {
+    if (opts->batch_cmds.size() == 0 && optind == argc && isatty(STDIN_FILENO)) {
         is_interactive_session = 1;
     }
 
@@ -356,8 +356,8 @@ int main(int argc, char **argv) {
         argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
         argc = 1;                    //!OCLINT(parameter reassignment)
     }
-    command_line_switches_t switches;
-    my_optind = fish_parse_opt(argc, argv, &switches);
+    fish_cmd_opts_t opts;
+    my_optind = fish_parse_opt(argc, argv, &opts);
 
     // No-exec is prohibited when in interactive mode.
     if (is_interactive_session && no_exec) {
@@ -396,17 +396,17 @@ int main(int argc, char **argv) {
         proc_set_last_status(STATUS_CMD_OK);
 
         // Run post-config commands specified as arguments, if any.
-        if (!switches.cmds_postconfig.empty()) {
-            res = run_command_list(&switches.cmds_postconfig, empty_ios);
+        if (!opts.postconfig_cmds.empty()) {
+            res = run_command_list(&opts.postconfig_cmds, empty_ios);
         }
 
         // Run the commands specified as arguments, if any.
-        if (!switches.cmds.empty()) {
+        if (!opts.batch_cmds.empty()) {
             // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
             if (is_login) {
-                fish_xdm_login_hack_hack_hack_hack(&switches.cmds, argc - my_optind, argv + my_optind);
+                fish_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind, argv + my_optind);
             }
-            res = run_command_list(&switches.cmds, empty_ios);
+            res = run_command_list(&opts.batch_cmds, empty_ios);
             reader_exit(0, 0);
         } else if (my_optind == argc) {
             // Interactive mode

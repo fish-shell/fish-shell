@@ -1,0 +1,7 @@
+fish: Unknown command 'syntax-error'
+$XDG_CONFIG_HOME/fish/config.fish (line 2): 
+syntax-error
+^
+from sourcing file $XDG_CONFIG_HOME/fish/config.fish
+	called during startup
+

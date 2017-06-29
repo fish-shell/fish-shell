@@ -1,3 +1,4 @@
+//
 // The main loop of the fish program.
 /*
 Copyright (C) 2005-2008 Axel Liljencrantz
@@ -56,6 +57,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #ifndef PATH_MAX
 #define PATH_MAX 4096
 #endif
+
+// container to hold the options specified within the command line
+class fish_cmd_opts_t {
+public:
+    // Commands to be executed in place of interactive shell.
+    std::vector<std::string> batch_cmds;
+    // Commands to execute after the shell's config has been read.
+    std::vector<std::string> postconfig_cmds;
+};
+
 
 /// If we are doing profiling, the filename to output to.
 static const char *s_profiling_output_filename = NULL;
@@ -214,10 +225,23 @@ static int read_init(const struct config_paths_t &paths) {
     return 1;
 }
 
+int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
+    int res = 1;
+    parser_t &parser = parser_t::principal_parser();
+
+    for (size_t i = 0; i < cmds->size(); i++) {
+        const wcstring cmd_wcs = str2wcstring(cmds->at(i));
+        res = parser.eval(cmd_wcs, io, TOP);
+    }
+
+    return res;
+}
+
 /// Parse the argument list, return the index of the first non-flag arguments.
-static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds) {
-    static const char *short_opts = "+hilnvc:p:d:D:";
+static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
+    static const char *short_opts = "+hilnvc:C:p:d:D:";
     static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
+                                              {"init-command", required_argument, NULL, 'C'},
                                               {"debug-level", required_argument, NULL, 'd'},
                                               {"debug-stack-frames", required_argument, NULL, 'D'},
                                               {"interactive", no_argument, NULL, 'i'},
@@ -232,7 +256,11 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
         switch (opt) {
             case 'c': {
-                cmds->push_back(optarg);
+                opts->batch_cmds.push_back(optarg);
+                break;
+            }
+            case 'C': {
+                opts->postconfig_cmds.push_back(optarg);
                 break;
             }
             case 'd': {
@@ -251,7 +279,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
                 break;
             }
             case 'h': {
-                cmds->push_back("__fish_print_help fish");
+                opts->batch_cmds.push_back("__fish_print_help fish");
                 break;
             }
             case 'i': {
@@ -305,7 +333,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
     // We are an interactive session if we have not been given an explicit
     // command or file to execute and stdin is a tty. Note that the -i or
     // --interactive options also force interactive mode.
-    if (cmds->size() == 0 && optind == argc && isatty(STDIN_FILENO)) {
+    if (opts->batch_cmds.size() == 0 && optind == argc && isatty(STDIN_FILENO)) {
         is_interactive_session = 1;
     }
 
@@ -331,8 +359,8 @@ int main(int argc, char **argv) {
         argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
         argc = 1;                    //!OCLINT(parameter reassignment)
     }
-    std::vector<std::string> cmds;
-    my_optind = fish_parse_opt(argc, argv, &cmds);
+    fish_cmd_opts_t opts;
+    my_optind = fish_parse_opt(argc, argv, &opts);
 
     // No-exec is prohibited when in interactive mode.
     if (is_interactive_session && no_exec) {
@@ -370,19 +398,22 @@ int main(int argc, char **argv) {
         // Stomp the exit status of any initialization commands (issue #635).
         proc_set_last_status(STATUS_CMD_OK);
 
-        // Run the commands specified as arguments, if any.
-        if (!cmds.empty()) {
-            // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
+        // Run post-config commands specified as arguments, if any.
+        if (!opts.postconfig_cmds.empty()) {
+            res = run_command_list(&opts.postconfig_cmds, empty_ios);
+        }
+
+        if (!opts.batch_cmds.empty()) {
+            // Run the commands specified as arguments, if any.
             if (is_login) {
-                fish_xdm_login_hack_hack_hack_hack(&cmds, argc - my_optind, argv + my_optind);
+                // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
+                fish_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind,
+                                                   argv + my_optind);
             }
-            for (size_t i = 0; i < cmds.size(); i++) {
-                const wcstring cmd_wcs = str2wcstring(cmds.at(i));
-                res = parser.eval(cmd_wcs, empty_ios, TOP);
-            }
+            res = run_command_list(&opts.batch_cmds, empty_ios);
             reader_exit(0, 0);
         } else if (my_optind == argc) {
-            // Interactive mode
+            // Implicitly interactive mode.
             res = reader_read(STDIN_FILENO, empty_ios);
         } else {
             char *file = *(argv + (my_optind++));

@@ -62,7 +62,7 @@ Examples:
 
 - Fish allows the user to set various syntax highlighting colors. This is needed because fish does not know what colors the terminal uses by default, which might make some things unreadable. The proper solution would be for text color preferences to be defined centrally by the user for all programs, and for the terminal emulator to send these color properties to fish.
 
-- Fish does not allow you to set the history filename, the number of history entries, different language substyles or any number of other common shell configuration options.
+- Fish does not allow you to set the number of history entries, different language substyles or any number of other common shell configuration options.
 
 A special note on the evils of configurability is the long list of very useful features found in some shells, that are not turned on by default. Both zsh and bash support command-specific completions, but no such completions are shipped with bash by default, and they are turned off by default in zsh. Other features that zsh supports that are disabled by default include tab-completion of strings containing wildcards, a sane completion pager and a history file.
 

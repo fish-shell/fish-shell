@@ -212,7 +212,7 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
     // from webconfig.py.
     history_t *history = reader_get_history();
-    if (!history) history = &history_t::history_with_name(L"fish");
+    if (!history) history = &history_t::history_with_name(history_session_id());
 
     // If a history command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.

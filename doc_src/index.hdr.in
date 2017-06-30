@@ -846,6 +846,8 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `history`, an array containing the last commands that were entered.
 
+- `FISH_HISTFILE`: Name of the history session. It defaults to `fish` (which typically means the history will be saved in `~/.local/share/fish/fish_history`). This variable can be changed by the user. It does not have to be an environment variable. You can change it at will within an interactive fish session to change where subsequent commands are logged.
+
 - `HOME`, the user's home directory. This variable can be changed by the user.
 
 - `IFS`, the internal field separator that is used for word splitting with the <a href="commands.html#read">read builtin</a>. Setting this to the empty string will also disable line splitting in <a href="#expand-command-substitution">command substitution</a>. This variable can be changed by the user.
@@ -1129,7 +1131,7 @@ History searches can be aborted by pressing the escape key.
 
 Prefixing the commandline with a space will prevent the entire line from being stored in the history.
 
-The history is stored in the file `~/.local/share/fish/fish_history` (or `$XDG_DATA_HOME/fish/fish_history` if that variable is set).
+The command history is stored in the file `~/.local/share/fish/fish_history` (or `$XDG_DATA_HOME/fish/fish_history` if that variable is set) by default. However, you can set the `FISH_HISTFILE` environment variable to change the name of the history session (resulting in a `<session>_history` file); both before starting the shell and while the shell is running.
 
 Examples:
 

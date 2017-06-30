@@ -16,7 +16,7 @@ struct contains_cmd_opts_t {
     bool print_help = false;
     bool print_index = false;
 };
-static const wchar_t *short_options = L"+hi";
+static const wchar_t *short_options = L"+:hi";
 static const struct woption long_options[] = {
     {L"help", no_argument, NULL, 'h'}, {L"index", no_argument, NULL, 'i'}, {NULL, 0, NULL, 0}};
 
@@ -34,6 +34,10 @@ static int parse_cmd_opts(contains_cmd_opts_t &opts, int *optind, int argc, wcha
             case 'i': {
                 opts.print_index = true;
                 break;
+            }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);

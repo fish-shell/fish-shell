@@ -269,7 +269,7 @@ static void builtin_bind_list_modes(io_streams_t &streams) {
 static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
-    static const wchar_t *short_options = L"aehkKfM:Lm:";
+    static const wchar_t *short_options = L":aehkKfM:Lm:";
     static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
                                                   {L"erase", no_argument, NULL, 'e'},
                                                   {L"function-names", no_argument, NULL, 'f'},
@@ -329,6 +329,10 @@ static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
             case L'L': {
                 opts.list_modes = true;
                 return STATUS_CMD_OK;
+            }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case L'?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);

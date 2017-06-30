@@ -115,7 +115,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int mode = JOBS_DEFAULT;
     int print_last = 0;
 
-    static const wchar_t *short_options = L"cghlp";
+    static const wchar_t *short_options = L":cghlp";
     static const struct woption long_options[] = {
         {L"pid", no_argument, NULL, 'p'},   {L"command", no_argument, NULL, 'c'},
         {L"group", no_argument, NULL, 'g'}, {L"last", no_argument, NULL, 'l'},
@@ -144,6 +144,10 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             case 'h': {
                 builtin_print_help(parser, streams, cmd, streams.out);
                 return STATUS_CMD_OK;
+            }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);

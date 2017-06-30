@@ -49,24 +49,25 @@ static int set_color_builtin_outputter(char c) {
     return 0;
 }
 
+static const wchar_t *short_options = L":b:hvoidrcu";
+static const struct woption long_options[] = {{L"background", required_argument, NULL, 'b'},
+                                              {L"help", no_argument, NULL, 'h'},
+                                              {L"bold", no_argument, NULL, 'o'},
+                                              {L"underline", no_argument, NULL, 'u'},
+                                              {L"italics", no_argument, NULL, 'i'},
+                                              {L"dim", no_argument, NULL, 'd'},
+                                              {L"reverse", no_argument, NULL, 'r'},
+                                              {L"version", no_argument, NULL, 'v'},
+                                              {L"print-colors", no_argument, NULL, 'c'},
+                                              {NULL, 0, NULL, 0}};
+
 /// set_color builtin.
 int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // By the time this is called we should have initialized the curses subsystem.
     assert(curses_initialized);
 
     // Variables used for parsing the argument list.
-    static const wchar_t *short_options = L"b:hvoidrcu";
-    static const struct woption long_options[] = {{L"background", required_argument, NULL, 'b'},
-                                                  {L"help", no_argument, NULL, 'h'},
-                                                  {L"bold", no_argument, NULL, 'o'},
-                                                  {L"underline", no_argument, NULL, 'u'},
-                                                  {L"italics", no_argument, NULL, 'i'},
-                                                  {L"dim", no_argument, NULL, 'd'},
-                                                  {L"reverse", no_argument, NULL, 'r'},
-                                                  {L"version", no_argument, NULL, 'v'},
-                                                  {L"print-colors", no_argument, NULL, 'c'},
-                                                  {NULL, 0, NULL, 0}};
-
+    wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
 
     // Some code passes variables to set_color that don't exist, like $fish_user_whatever. As a
@@ -114,6 +115,10 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             case 'c': {
                 print_colors(streams);
                 return STATUS_CMD_OK;
+            }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 return STATUS_INVALID_ARGS;

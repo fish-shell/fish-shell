@@ -17,13 +17,14 @@ struct echo_cmd_opts_t {
     bool print_spaces = true;
     bool interpret_special_chars = false;
 };
-static const wchar_t *short_options = L"+Eens";
+static const wchar_t *short_options = L"+:Eens";
 static const struct woption *long_options = NULL;
 
 static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
     UNUSED(parser);
     UNUSED(streams);
+    wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
@@ -43,6 +44,10 @@ static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, wchar_t 
             case 'E': {
                 opts.interpret_special_chars = false;
                 break;
+            }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 *optind = w.woptind - 1;

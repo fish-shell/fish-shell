@@ -106,7 +106,7 @@ void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
     }
 }
 
-static const wchar_t *short_options = L"h";
+static const wchar_t *short_options = L":h";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
 
@@ -120,6 +120,10 @@ int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int
             case 'h': {
                 opts.print_help = true;
                 break;
+            }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);

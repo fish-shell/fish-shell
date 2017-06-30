@@ -37,7 +37,7 @@ struct functions_cmd_opts_t {
     bool verbose = false;
     wchar_t *description = NULL;
 };
-static const wchar_t *short_options = L"Dacehnqv";
+static const wchar_t *short_options = L":Dacehnqv";
 static const struct woption long_options[] = {
     {L"erase", no_argument, NULL, 'e'},   {L"description", required_argument, NULL, 'd'},
     {L"names", no_argument, NULL, 'n'},   {L"all", no_argument, NULL, 'a'},
@@ -87,6 +87,10 @@ static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(hi
             case 'c': {
                 opts.copy = true;
                 break;
+            }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);

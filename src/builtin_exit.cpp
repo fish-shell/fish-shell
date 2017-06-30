@@ -17,7 +17,7 @@
 struct exit_cmd_opts_t {
     bool print_help = false;
 };
-static const wchar_t *short_options = L"h";
+static const wchar_t *short_options = L":h";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
 
@@ -33,6 +33,10 @@ static int parse_cmd_opts(exit_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
             case 'h': {
                 opts.print_help = true;
                 break;
+            }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 // We would normally invoke builtin_unknown_option() and return an error.

@@ -18,7 +18,7 @@ struct builtin_cmd_opts_t {
     bool print_help = false;
     bool list_names = false;
 };
-static const wchar_t *short_options = L"hn";
+static const wchar_t *short_options = L":hn";
 static const struct woption long_options[] = {
     {L"help", no_argument, NULL, 'h'}, {L"names", no_argument, NULL, 'n'}, {NULL, 0, NULL, 0}};
 
@@ -36,6 +36,10 @@ static int parse_cmd_opts(builtin_cmd_opts_t &opts, int *optind, int argc, wchar
             case 'n': {
                 opts.list_names = true;
                 break;
+            }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);

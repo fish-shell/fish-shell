@@ -45,7 +45,7 @@ struct read_cmd_opts_t {
     int nchars = 0;
 };
 
-static const wchar_t *short_options = L"ac:ghilm:n:p:suxzP:UR:";
+static const wchar_t *short_options = L":ac:ghilm:n:p:suxzP:UR:";
 static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
                                               {L"global", no_argument, NULL, 'g'},
                                               {L"local", no_argument, NULL, 'l'},

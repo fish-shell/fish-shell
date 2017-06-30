@@ -335,7 +335,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Variables used for parsing the argument list. This command is atypical in using the "+"
     // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
     // we stop scanning for flags when the first non-flag argument is seen.
-    static const wchar_t *short_options = L"+LUeghlnqux";
+    static const wchar_t *short_options = L"+:LUeghlnqux";
     static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
                                                   {L"global", no_argument, NULL, 'g'},
                                                   {L"local", no_argument, NULL, 'l'},
@@ -395,6 +395,10 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             case 'h': {
                 builtin_print_help(parser, streams, cmd, streams.out);
                 return STATUS_CMD_OK;
+            }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);

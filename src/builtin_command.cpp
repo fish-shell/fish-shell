@@ -51,6 +51,10 @@ static int parse_cmd_opts(command_cmd_opts_t &opts, int *optind, int argc, wchar
                 opts.find_path = true;
                 break;
             }
+            case ':': {
+                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
+            }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;

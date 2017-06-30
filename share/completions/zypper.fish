@@ -1,7 +1,7 @@
 # completion for zypper
 
 set -g __fish_zypper_all_commands shell sh repos lr addrepo ar removerepo rr renamerepo nr modifyrepo mr refresh ref clean services ls addservice as modifyservice ms removeservice rs refresh-services refs install in remove rm verify ve source-install si install-new-recommends inr update up list-updates lu patch list-patches lp dist-upgrade dup patch-check pchk search se info if patch-info pattern-info product-info patches pch packages pa patterns pt products pd what-provides wp addlock al removelock rl locks ll cleanlocks cl versioncmp vcmp targetos tos licenses source-download
-set -g __fish_zypper_pkg_commands in install rm remove info in addlock al removelock rl source-install si
+set -g __fish_zypper_pkg_commands in install rm remove info if addlock al removelock rl source-install si
 
 function __fish_zypper_cmd_in_array
         for i in (commandline -pco)

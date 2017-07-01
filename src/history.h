@@ -350,6 +350,8 @@ void history_destroy();
 // Perform sanity checks.
 void history_sanity_check();
 
+wcstring history_session_id();
+
 // Given a list of paths and a working directory, return the paths that are valid
 // This does disk I/O and may only be called in a background thread
 path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory);

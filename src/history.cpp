@@ -1139,16 +1139,20 @@ static void unescape_yaml(std::string *str) {
     }
 }
 
-static wcstring history_filename(const wcstring &name, const wcstring &suffix) {
-    wcstring path;
-    if (!path_get_data(path)) return L"";
+static wcstring history_filename(const wcstring &session_id, const wcstring &suffix) {
+    if (session_id.empty()) {
+        return L"";
+    } else {
+        wcstring path;
+        if (!path_get_data(path)) return L"";
 
-    wcstring result = path;
-    result.append(L"/");
-    result.append(name);
-    result.append(L"_history");
-    result.append(suffix);
-    return result;
+        wcstring result = path;
+        result.append(L"/");
+        result.append(session_id);
+        result.append(L"_history");
+        result.append(suffix);
+        return result;
+    }
 }
 
 void history_t::clear_file_state() {
@@ -1401,6 +1405,9 @@ bool history_t::save_internal_via_appending() {
 
     // Get the path to the real history file.
     wcstring history_path = history_filename(name, wcstring());
+    if (history_path.empty()) {
+        return true;
+    }
 
     signal_block();
 
@@ -1507,6 +1514,13 @@ void history_t::save_internal(bool vacuum) {
 
     // Nothing to do if there's no new items.
     if (first_unwritten_new_item_index >= new_items.size() && deleted_items.empty()) return;
+
+    if (history_filename(name, L"").empty()) {
+        // We're in the "incognito" mode. Pretend we've saved the history.
+        this->first_unwritten_new_item_index = new_items.size();
+        this->deleted_items.clear();
+        this->clear_file_state();
+    }
 
     // Compact our new items so we don't have duplicates.
     this->compact_new_items();
@@ -1627,6 +1641,10 @@ bool history_t::is_empty(void) {
         // If we have not loaded old items, don't actually load them (which may be expensive); just
         // stat the file and see if it exists and is nonempty.
         const wcstring where = history_filename(name, L"");
+        if (where.empty()) {
+            return true;
+        }
+
         struct stat buf = {};
         if (wstat(where, &buf) != 0) {
             // Access failed, assume missing.
@@ -1643,6 +1661,11 @@ bool history_t::is_empty(void) {
 /// clearing ourselves, and copying the contents of the old history file to the new history file.
 /// The new contents will automatically be re-mapped later.
 void history_t::populate_from_config_path() {
+    wcstring new_file = history_filename(name, wcstring());
+    if (new_file.empty()) {
+        return;
+    }
+
     wcstring old_file;
     if (path_get_config(old_file)) {
         old_file.append(L"/");
@@ -1650,8 +1673,6 @@ void history_t::populate_from_config_path() {
         old_file.append(L"_history");
         int src_fd = wopen_cloexec(old_file, O_RDONLY, 0);
         if (src_fd != -1) {
-            wcstring new_file = history_filename(name, wcstring());
-
             // Clear must come after we've retrieved the new_file name, and before we open
             // destination file descriptor, since it destroys the name and the file.
             this->clear();
@@ -1776,6 +1797,28 @@ void history_destroy() { histories.save(); }
 
 void history_sanity_check() {
     // No sanity checking implemented yet...
+}
+
+wcstring history_session_id() {
+    wcstring result = L"fish";
+
+    const env_var_t session_id = env_get_string(L"FISH_HISTFILE");
+    if (!session_id.missing()) {
+        if (session_id.empty()) {
+            result = L"";
+        } else if (session_id == L"default") {
+            ;  // using the default value
+        } else if (valid_var_name(session_id)) {
+            result = session_id;
+        } else {
+            debug(0,
+                  _(L"History session ID '%ls' is not a valid variable name. "
+                    L"Falling back to `%ls`."),
+                  session_id.c_str(), result.c_str());
+        }
+    }
+
+    return result;
 }
 
 path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory) {

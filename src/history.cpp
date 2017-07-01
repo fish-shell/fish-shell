@@ -1143,19 +1143,16 @@ static void unescape_yaml(std::string *str) {
 }
 
 static wcstring history_filename(const wcstring &session_id, const wcstring &suffix) {
-    if (session_id.empty()) {
-        return L"";
-    } else {
-        wcstring path;
-        if (!path_get_data(path)) return L"";
+    if (session_id.empty()) return L"";
 
-        wcstring result = path;
-        result.append(L"/");
-        result.append(session_id);
-        result.append(L"_history");
-        result.append(suffix);
-        return result;
-    }
+    wcstring result;
+    if (!path_get_data(result)) return L"";
+
+    result.append(L"/");
+    result.append(session_id);
+    result.append(L"_history");
+    result.append(suffix);
+    return result;
 }
 
 void history_t::clear_file_state() {
@@ -1804,6 +1801,7 @@ void history_sanity_check() {
     // No sanity checking implemented yet...
 }
 
+/// Return the prefix for the files to be used for command and read history.
 wcstring history_session_id() {
     wcstring result = DFLT_FISH_HISTORY_SESSION_ID;
 

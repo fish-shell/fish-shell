@@ -29,9 +29,6 @@ struct builtin_data_t {
 /// The default prompt for the read command.
 #define DEFAULT_READ_PROMPT L"set_color green; echo -n read; set_color normal; echo -n \"> \""
 
-/// The mode name to pass to history and input.
-#define READ_MODE_NAME L"fish_read"
-
 enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 
 /// Error message on missing argument.

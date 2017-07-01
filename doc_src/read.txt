@@ -19,8 +19,6 @@ The following options are available:
 
 - `-l` or `--local` makes the variables local.
 
-- `-m NAME` or `--mode-name=NAME` specifies that the name NAME should be used to save/load the history file. If NAME is fish, the regular fish history will be available.
-
 - `-n NCHARS` or `--nchars=NCHARS` causes `read` to return after reading NCHARS characters rather than waiting for a complete line of input (either newline or null terminated).
 
 - `-p PROMPT_CMD` or `--prompt=PROMPT_CMD` uses the output of the shell command `PROMPT_CMD` as the prompt for the interactive mode. The default prompt command is <code>set_color green; echo read; set_color normal; echo "> "</code>.
@@ -50,6 +48,10 @@ See the documentation for `set` for more details on the scoping rules for variab
 When read reaches the end-of-file (EOF) instead of the separator, it sets `$status` to 1. If not, it sets it to 0.
 
 Fish has a default limit of 10 MiB on the number of characters each `read` will consume. If you attempt to read more than that `$status` is set to 122 and the variable will be empty. You can modify that limit by setting the `FISH_READ_BYTE_LIMIT` variable at any time including in the environment before fish starts running. This is a safety mechanism to keep the shell from consuming an unreasonable amount of memory if the input is malformed.
+
+\subsection read-history Using another read history file
+
+The `read` command supported the `-m` and `--mode-name` flags in fish versions prior to 2.7.0 to specify an alternative read history file. Those flags are now deprecated and ignored. Instead, set the `FISH_HISTORY` variable to specify a history session ID. That will affect both the `read` history file and the fish command history file. You can set it to an empty string to specify that no history should be read or written. This is useful for presentations where you do not want possibly private or sensitive history to be exposed to the audience but do want history relevant to the presentation to be available.
 
 \subsection read-example Example
 

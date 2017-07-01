@@ -340,24 +340,25 @@ class history_search_t {
         : history(), term(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), case_sensitive(true) {}
 };
 
-// Init history library. The history file won't actually be loaded until the first time a history
-// search is performed.
+/// Init history library. The history file won't actually be loaded until the first time a history
+/// search is performed.
 void history_init();
 
-// Saves the new history to disk.
+/// Saves the new history to disk.
 void history_destroy();
 
-// Perform sanity checks.
+/// Perform sanity checks.
 void history_sanity_check();
 
+/// Return the prefix for the files to be used for command and read history.
 wcstring history_session_id();
 
-// Given a list of paths and a working directory, return the paths that are valid
-// This does disk I/O and may only be called in a background thread
+/// Given a list of paths and a working directory, return the paths that are valid
+/// This does disk I/O and may only be called in a background thread
 path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory);
 
-// Given a list of paths and a working directory,
-// return true if all paths in the list are valid
-// Returns true for if paths is empty
+/// Given a list of paths and a working directory,
+/// return true if all paths in the list are valid
+/// Returns true for if paths is empty
 bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory);
 #endif

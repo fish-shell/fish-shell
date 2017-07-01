@@ -22,6 +22,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "highlight.h"
+#include "history.h"
 #include "io.h"
 #include "proc.h"
 #include "reader.h"
@@ -41,7 +42,6 @@ struct read_cmd_opts_t {
     bool array = false;
     bool silent = false;
     bool split_null = false;
-    const wchar_t *mode_name = READ_MODE_NAME;
     int nchars = 0;
 };
 
@@ -108,7 +108,9 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 break;
             }
             case L'm': {
-                opts.mode_name = w.woptarg;
+                streams.err.append_format(_(L"%ls: flags '--mode-name' / '-m' are now ignored. "
+                                            L"Set FISH_HISTORY instead.\n"),
+                                          cmd);
                 break;
             }
             case L'n': {
@@ -170,12 +172,13 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
 /// Read from the tty. This is only valid when the stream is stdin and it is attached to a tty and
 /// we weren't asked to split on null characters.
 static int read_interactive(wcstring &buff, int nchars, bool shell, bool silent,
-                            const wchar_t *mode_name, const wchar_t *prompt,
-                            const wchar_t *right_prompt, const wchar_t *commandline) {
+                            const wchar_t *prompt, const wchar_t *right_prompt,
+                            const wchar_t *commandline) {
     int exit_res = STATUS_CMD_OK;
     const wchar_t *line;
 
-    reader_push(mode_name);
+    wcstring read_history_ID = history_session_id() + L"_read";
+    reader_push(read_history_ID.c_str());
     reader_set_left_prompt(prompt);
     reader_set_right_prompt(right_prompt);
     if (shell) {
@@ -381,8 +384,8 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (stream_stdin_is_a_tty && !opts.split_null) {
         // We should read interactively using reader_readline(). This does not support splitting on
         // null.
-        exit_res = read_interactive(buff, opts.nchars, opts.shell, opts.silent, opts.mode_name,
-                                    opts.prompt, opts.right_prompt, opts.commandline);
+        exit_res = read_interactive(buff, opts.nchars, opts.shell, opts.silent, opts.prompt,
+                                    opts.right_prompt, opts.commandline);
     } else if (!opts.nchars && !stream_stdin_is_a_tty &&
                lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
         exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null);

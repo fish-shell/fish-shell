@@ -7,6 +7,7 @@
 - `string escape` has a new `--style=xxx` flag where `xxx` can be `script`, `var`, or `url` (#4150).
 - `string unescape` has been implemented to reverse the effects of `string escape` (#3543).
 - The history file can now be specified by setting the `FISH_HISTORY` variable (#102).
+- Read history is now controlled by the `FISH_HISTORY` variable rather than the `--mode-name` flag (#1504).
 
 ## Other significant changes
 

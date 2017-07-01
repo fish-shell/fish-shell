@@ -64,11 +64,11 @@ history delete --prefix "foo"
 
 By default interactive commands are logged to `$XDG_DATA_HOME/fish/fish_history` (typically `~/.local/share/fish/fish_history`).
 
-You can set the `FISH_HISTFILE` variable to another name for the current shell session. The default value (when the variable is unset) is `fish` which corresponds to `$XDG_DATA_HOME/fish/fish_history`. If you set it to e.g. `fun`, the history would be written to `$XDG_DATA_HOME/fish/fun_history`. An empty string means history will not be stored at all. This is similar to the private session features in web browsers.
+You can set the `FISH_HISTORY` variable to another name for the current shell session. The default value (when the variable is unset) is `fish` which corresponds to `$XDG_DATA_HOME/fish/fish_history`. If you set it to e.g. `fun`, the history would be written to `$XDG_DATA_HOME/fish/fun_history`. An empty string means history will not be stored at all. This is similar to the private session features in web browsers.
 
-You can change `FISH_HISTFILE` at any time (by using `set -x FISH_HISTFILE "session_name"`) and it will take effect right away. If you set it to `"default"`, it will use the default session name (which is `"fish"`).
+You can change `FISH_HISTORY` at any time (by using `set -x FISH_HISTORY "session_name"`) and it will take effect right away. If you set it to `"default"`, it will use the default session name (which is `"fish"`).
 
-Other shells such as bash and zsh use a variable named `HISTFILE` for a similar purpose. Fish uses a different name to avoid conflicts and signal that the behavior is different (session name instead of a file path).
+Other shells such as bash and zsh use a variable named `HISTFILE` for a similar purpose. Fish uses a different name to avoid conflicts and signal that the behavior is different (session name instead of a file path). Also, if you set the var to anything other than `fish` or `default` it will inhibit importing the bash history. That's because the most common use case for this feature is to avoid leaking private or sensitive history when giving a presentation.
 
 \subsection history-notes Notes
 

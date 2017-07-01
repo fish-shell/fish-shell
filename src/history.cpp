@@ -52,6 +52,9 @@
 //
 //   Newlines are replaced by \n. Backslashes are replaced by \\.
 
+// This is the history session ID we use by default if the user has not set env var FISH_HISTORY.
+#define DFLT_FISH_HISTORY_SESSION_ID L"fish"
+
 // When we rewrite the history, the number of items we keep.
 #define HISTORY_SAVE_MAX (1024 * 256)
 
@@ -1733,9 +1736,11 @@ static bool should_import_bash_history_line(const std::string &line) {
 /// commands. We can't actually parse bash syntax and the bash history file does not unambiguously
 /// encode multiline commands.
 void history_t::populate_from_bash(FILE *stream) {
-    bool eof = false;
+    // We do not import bash history if an alternative fish history file is being used.
+    if (history_session_id() != DFLT_FISH_HISTORY_SESSION_ID) return;
 
     // Process the entire history file until EOF is observed.
+    bool eof = false;
     while (!eof) {
         auto line = std::string();
 
@@ -1800,9 +1805,9 @@ void history_sanity_check() {
 }
 
 wcstring history_session_id() {
-    wcstring result = L"fish";
+    wcstring result = DFLT_FISH_HISTORY_SESSION_ID;
 
-    const env_var_t session_id = env_get_string(L"FISH_HISTFILE");
+    const env_var_t session_id = env_get_string(L"FISH_HISTORY");
     if (!session_id.missing()) {
         if (session_id.empty()) {
             result = L"";

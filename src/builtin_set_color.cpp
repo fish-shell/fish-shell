@@ -117,7 +117,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 return STATUS_CMD_OK;
             }
             case ':': {
-                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {

@@ -304,7 +304,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 return STATUS_CMD_OK;
             }
             case ':': {
-                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case L'?': {
@@ -330,8 +330,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
 
         if (argc == w.woptind) {
-            streams.err.append_format(BUILTIN_ERR_MISSING, argv[0]);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_missing_argument(parser, streams, cmd, argv[0]);
             return STATUS_INVALID_ARGS;
         }
 

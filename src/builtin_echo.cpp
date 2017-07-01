@@ -46,7 +46,7 @@ static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, wchar_t 
                 break;
             }
             case ':': {
-                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {

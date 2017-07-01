@@ -177,8 +177,10 @@ static int read_interactive(wcstring &buff, int nchars, bool shell, bool silent,
     int exit_res = STATUS_CMD_OK;
     const wchar_t *line;
 
-    wcstring read_history_ID = history_session_id() + L"_read";
+    wcstring read_history_ID = history_session_id();
+    if (!read_history_ID.empty()) read_history_ID += L"_read";
     reader_push(read_history_ID.c_str());
+
     reader_set_left_prompt(prompt);
     reader_set_right_prompt(right_prompt);
     if (shell) {

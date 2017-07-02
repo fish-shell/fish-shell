@@ -712,7 +712,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
 /// actually starts operating on last_idx-1. As such, to process a string fully, pass string.size()
 /// as last_idx instead of string.size()-1.
 static int expand_variables(const wcstring &instr, std::vector<completion_t> *out, long last_idx,
-                            parse_error_list_t *errors) {
+                            bool undef_okay, parse_error_list_t *errors) {
     const size_t insize = instr.size();
 
     // last_idx may be 1 past the end of the string, but no further.
@@ -778,7 +778,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
             var_val = expand_var(var_tmp.c_str());
         }
 
-        if (var_val.undef()) {
+        if (var_val.undef() && !undef_okay) {
             append_syntax_error(errors, start_pos, _(L"Undefined variable"));
             is_ok = false;
             break;
@@ -853,7 +853,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
                 }
                 assert(stop_pos <= insize);
                 res.append(instr, stop_pos, insize - stop_pos);
-                is_ok &= expand_variables(res, out, i, errors);
+                is_ok &= expand_variables(res, out, i, undef_okay, errors);
             } else {
                 for (size_t j = 0; j < var_item_list.size(); j++) {
                     const wcstring &next = var_item_list.at(j);
@@ -874,7 +874,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
                             assert(stop_pos <= insize);
                             new_in.append(next);
                             new_in.append(instr, stop_pos, insize - stop_pos);
-                            is_ok &= expand_variables(new_in, out, i, errors);
+                            is_ok &= expand_variables(new_in, out, i, undef_okay, errors);
                         }
                     }
                 }
@@ -914,7 +914,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
             assert(stop_pos <= insize);
             res.append(instr, stop_pos, insize - stop_pos);
 
-            is_ok &= expand_variables(res, out, i, errors);
+            is_ok &= expand_variables(res, out, i, undef_okay, errors);
             return is_ok;
         }
     }
@@ -1321,6 +1321,7 @@ static expand_error_t expand_stage_variables(const wcstring &input, std::vector<
                                              expand_flags_t flags, parse_error_list_t *errors) {
     // We accept incomplete strings here, since complete uses expand_string to expand incomplete
     // strings from the commandline.
+    bool undef_okay = flags & EXPAND_UNDEF_VAR_OK;
     wcstring next;
     unescape_string(input, &next, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
 
@@ -1332,7 +1333,7 @@ static expand_error_t expand_stage_variables(const wcstring &input, std::vector<
         }
         append_completion(out, next);
     } else {
-        if (!expand_variables(next, out, next.size(), errors)) {
+        if (!expand_variables(next, out, next.size(), undef_okay, errors)) {
             return EXPAND_ERROR;
         }
     }

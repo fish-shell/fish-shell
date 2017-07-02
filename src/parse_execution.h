@@ -107,9 +107,11 @@ class parse_execution_context_t {
                                                  const parse_node_t &contents);
 
     enum globspec_t { failglob, nullglob };
+    enum undef_var_t { undef_var_valid, undef_var_invalid };
     parse_execution_result_t determine_arguments(const parse_node_t &parent,
                                                  wcstring_list_t *out_arguments,
-                                                 globspec_t glob_behavior);
+                                                 globspec_t glob_behavior,
+                                                 undef_var_t undef_var_behavior);
 
     // Determines the IO chain. Returns true on success, false on error.
     bool determine_io_chain(const parse_node_t &statement, io_chain_t *out_chain);

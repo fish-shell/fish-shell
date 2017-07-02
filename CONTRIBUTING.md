@@ -93,7 +93,25 @@ If you use Emacs: TBD
 
 ### Configuring Your Editor for Fish Scripts
 
-If you use ViM: TBD
+If you use ViM: Install [vim-fish](https://github.com/dag/vim-fish), make sure you have syntax and filetype functionality in `~/.vimrc`:
+
+```
+syntax enable
+filetype plugin indent on
+```
+
+Then turn on some options for nicer display of fish scripts in `~/.vim/ftplugin/fish.vim`:
+
+```
+" Set up :make to use fish for syntax checking.
+compiler fish
+
+" Set this to have long lines wrap inside comments.
+setlocal textwidth=79
+
+" Enable folding of block structures in fish.
+setlocal foldmethod=expr
+```
 
 If you use Emacs: Install [fish-mode](https://github.com/wwwjfy/emacs-fish) (also available in melpa and melpa-stable) and `(setq-default indent-tabs-mode nil)` for it (via a hook or in `use-package`s ":init" block). It can also be made to run fish_indent via e.g.
 

@@ -273,7 +273,7 @@ env_universal_t::env_universal_t(const wcstring &path)
 env_universal_t::~env_universal_t() { pthread_mutex_destroy(&lock); }
 
 env_var_t env_universal_t::get(const wcstring &name) const {
-    env_var_t result = env_var_t::missing_var();
+    env_var_t result = env_var_t::undef_var();
     var_table_t::const_iterator where = vars.find(name);
     if (where != vars.end()) {
         result = env_var_t(where->second.val);

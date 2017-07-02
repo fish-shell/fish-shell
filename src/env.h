@@ -64,27 +64,37 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t mode);
 class env_var_t : public wcstring {
    private:
     bool is_missing;
+    bool is_undef;
 
    public:
     static env_var_t missing_var() {
         env_var_t result((wcstring()));
         result.is_missing = true;
+        result.is_undef = false;
         return result;
     }
 
-    env_var_t(const env_var_t &x) : wcstring(x), is_missing(x.is_missing) {}
-    env_var_t(const wcstring &x) : wcstring(x), is_missing(false) {}
-    env_var_t(const wchar_t *x) : wcstring(x), is_missing(false) {}
-    env_var_t() : wcstring(L""), is_missing(false) {}
+    static env_var_t undef_var() {
+        env_var_t result((wcstring()));
+        result.is_missing = true;
+        result.is_undef = true;
+        return result;
+    }
 
+    env_var_t(const env_var_t &x) : wcstring(x), is_missing(x.is_missing), is_undef(x.is_undef) {}
+    env_var_t(const wcstring &x) : wcstring(x), is_missing(false), is_undef(false) {}
+    env_var_t(const wchar_t *x) : wcstring(x), is_missing(false), is_undef(false)  {}
+    env_var_t() : wcstring(L""), is_missing(false), is_undef(false)  {}
+
+    bool undef(void) const { return is_undef; }
     bool missing(void) const { return is_missing; }
-
     bool missing_or_empty(void) const { return missing() || empty(); }
 
     const wchar_t *c_str(void) const;
 
     env_var_t &operator=(const env_var_t &s) {
         is_missing = s.is_missing;
+        is_undef = s.is_undef;
         wcstring::operator=(s);
         return *this;
     }
@@ -109,8 +119,8 @@ class env_var_t : public wcstring {
     bool operator!=(const wchar_t *s) const { return !(*this == s); }
 };
 
-/// Gets the variable with the specified name, or env_var_t::missing_var if it does not exist or is
-/// an empty array.
+/// Gets the variable with the specified name, or env_var_t::undef_var if it does not exist or
+/// env_var_t::missing_var if it is an empty array.
 ///
 /// \param key The name of the variable to get
 /// \param mode An optional scope to search in. All scopes are searched if unset

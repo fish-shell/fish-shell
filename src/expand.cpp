@@ -778,6 +778,12 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
             var_val = expand_var(var_tmp.c_str());
         }
 
+        if (var_val.undef()) {
+            append_syntax_error(errors, start_pos, _(L"Undefined variable"));
+            is_ok = false;
+            break;
+        }
+
         if (!var_val.missing()) {
             int all_vars = 1;
             wcstring_list_t var_item_list;
@@ -794,7 +800,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
                     bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list,
                                           var_item_list.size());
                     if (bad_pos != 0) {
-                        append_syntax_error(errors, stop_pos + bad_pos, L"Invalid index value");
+                        append_syntax_error(errors, stop_pos + bad_pos, _(L"Invalid index value"));
                         is_ok = false;
                         break;
                     }

@@ -10,6 +10,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
 
     set -g __fish_config_interactive_done
+    set -g __fish_active_key_bindings
 
     # Set the correct configuration directory
     set -l configdir ~/.config
@@ -185,16 +186,16 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
-        # do nothing if the key bindings didn't actually change
+        # Do nothing if the key bindings didn't actually change.
         # This could be because the variable was set to the existing value
-        # or because it was a local variable
-        # If fish_key_bindings is empty on the first run, we still need to set the defaults
+        # or because it was a local variable.
+        # If fish_key_bindings is empty on the first run, we still need to set the defaults.
         if test "$fish_key_bindings" = "$__fish_active_key_bindings" -a -n "$fish_key_bindings"
             return
         end
-        # Check if fish_key_bindings is a valid function
-        # If not, either keep the previous bindings (if any) or revert to default
-        # Also print an error so the user knows
+        # Check if fish_key_bindings is a valid function.
+        # If not, either keep the previous bindings (if any) or revert to default.
+        # Also print an error so the user knows.
         if not functions -q "$fish_key_bindings"
             echo "There is no fish_key_bindings function called: '$fish_key_bindings'" >&2
             # We need to see if this is a defined function, otherwise we'd be in an endless loop.

@@ -194,6 +194,7 @@ function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" -
             set local_path $x $local_path
         end
     end
+
     set -xg PATH $local_path
 end
 

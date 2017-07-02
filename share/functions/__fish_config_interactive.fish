@@ -255,13 +255,18 @@ function __fish_config_interactive -d "Initializations that should be performed 
         commandline -f repaint
     end
 
-    # Notify terminals when $PWD changes (issue #906)
-    # VTE and Terminal.app support this in practice.
-    if test "0$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
+    # Notify terminals when $PWD changes (issue #906).
+    # VTE based terminals, Terminal.app, and iTerm.app support this.
+    set -q VTE_VERSION
+    or set -l VTE_VERSION 0
+    set -q TERM_PROGRAM
+    or set -l TERM_PROGRAM
+    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal" -o "$TERM_PROGRAM" = "iTerm.app"
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
-            status --is-command-substitution
-            or test -n "$INSIDE_EMACS"
-            and return
+            if status --is-command-substitution
+            or set -q INSIDE_EMACS
+                return
+            end
             printf \e\]7\;file://\%s\%s\a (hostname) (string escape --style=url $PWD)
         end
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab

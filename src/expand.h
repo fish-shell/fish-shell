@@ -154,4 +154,5 @@ bool expand_abbreviation(const wcstring &src, wcstring *output);
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
                                         const char *const *argv);
 
+void update_fish_undef_var_behavior();
 #endif

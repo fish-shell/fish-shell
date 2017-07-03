@@ -50,6 +50,16 @@
 #include "tokenizer.h"
 #endif
 
+/// TODO(krader1961): Remove this var before fish 3.1 is released. It's solely for assisting in the
+/// transition to always making dereferencing an undef var an error.
+///
+/// Valid values:
+/// -1 : allow undef vars (fish 2.x behavior)
+///  0 : allow undef vars but warn when they are seen
+///  1 : disallow undef vars except in `test` commands
+///  2 : disallow undef vars in all situations
+int undef_var_behavior = 0;
+
 /// Description for child process.
 #define COMPLETE_CHILD_PROCESS_DESC _(L"Child process")
 
@@ -81,6 +91,21 @@
 #define UNCLEAN L"$*?\\\"'({})"
 
 static void remove_internal_separator(wcstring *s, bool conv);
+
+/// Set the `undef_var_behavior` in response to the `fish_undef_var` being changed.
+void update_fish_undef_var_behavior() {
+    const env_var_t undef_var = env_get_string(L"fish_undef_var");
+    if (undef_var.missing_or_empty()) {
+        undef_var_behavior = 0;  // warn when undef var is dereferenced
+        return;
+    }
+
+    undef_var_behavior = fish_wcstoi(undef_var.c_str());
+    if (errno || undef_var_behavior < -1 || undef_var_behavior > 2) {
+        debug(1, "%ls is not a valid value for 'fish_undef_var'", undef_var.c_str());
+        undef_var_behavior = 0;  // warn when undef var is dereferenced
+    }
+}
 
 /// Test if the specified argument is clean, i.e. it does not contain any tokens which need to be
 /// expanded or otherwise altered. Clean strings can be passed through expand_string and expand_one
@@ -259,7 +284,7 @@ wcstring process_iterator_t::name_for_pid(pid_t pid) {
     }
 
     args = (char *)malloc(maxarg);
-    if (args == NULL) {  // cppcheck-suppress memleak
+    if (!args) {
         return result;
     }
 
@@ -778,10 +803,29 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
             var_val = expand_var(var_tmp.c_str());
         }
 
-        if (var_val.undef() && !undef_okay) {
-            append_syntax_error(errors, start_pos, _(L"Undefined variable"));
-            is_ok = false;
-            break;
+        // Without the configurable behavior the following block simplifies to this:
+        // if (var_val.undef() && !undef_okay) {
+        //     if (errors) {
+        //         append_syntax_error(errors, start_pos, _(L"Undefined variable '%ls'"),
+        //         var_tmp.c_str());
+        //     }
+        //     is_ok = false;
+        //     break;
+        // }
+        if (undef_var_behavior >= 0) {
+            if (var_val.undef()) {
+                if (errors) {
+                    append_syntax_error(errors, start_pos, _(L"Undefined variable '%ls'"),
+                                        var_tmp.c_str());
+                }
+                if (undef_var_behavior == 2 || (undef_var_behavior == 1 && !undef_okay)) {
+                    is_ok = false;
+                    break;
+                }
+                if (errors && undef_var_behavior == 0 && !undef_okay) {
+                    debug(1, errors->back().text.c_str());
+                }
+            }
         }
 
         if (!var_val.missing()) {

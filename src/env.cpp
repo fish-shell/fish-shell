@@ -617,6 +617,8 @@ static void react_to_variable_change(const wcstring &key) {
     } else if (key == L"FISH_HISTORY") {
         history_destroy();
         reader_push(history_session_id().c_str());
+    } else if (key == L"fish_undef_var") {
+        update_fish_undef_var_behavior();
     }
 }
 
@@ -754,6 +756,8 @@ void misc_init() {
         fclose(procsyskosrel);
     }
 #endif  // OS_IS_MS_WINDOWS
+
+    update_fish_undef_var_behavior();
 }
 
 void env_init(const struct config_paths_t *paths /* or NULL */) {

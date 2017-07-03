@@ -24,8 +24,6 @@ end
 set TERM xterm
 set -e ITERM_PROFILE
 
-set -q argv
-or set argv
 source test_util.fish (status -f) $argv
 or exit
 

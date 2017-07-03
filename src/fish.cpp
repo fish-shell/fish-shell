@@ -434,6 +434,8 @@ int main(int argc, char **argv) {
                     }
 
                     env_set(L"argv", sb.c_str(), 0);
+                } else {
+                    env_set(L"argv", NULL, 0);
                 }
 
                 const wcstring rel_filename = str2wcstring(file);

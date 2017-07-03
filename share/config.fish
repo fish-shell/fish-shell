@@ -254,11 +254,13 @@ end
 # This needs to be in share/config.fish because __fish_config_interactive is called after sourcing
 # config.fish, which might contain abbr calls.
 if not set -q __fish_init_2_3_0
-    set -l fab
-    for abb in $fish_user_abbreviations
-        set fab $fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abb)
+    if set -q fish_user_abbreviations
+        set -l fab
+        for abbr in $fish_user_abbreviations
+            set fab $fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abbr)
+        end
+        set fish_user_abbreviations $fab
     end
-    set fish_user_abbreviations $fab
     set -U __fish_init_2_3_0
 end
 

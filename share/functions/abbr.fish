@@ -96,8 +96,10 @@ function abbr --description "Manage abbreviations"
             end
 
             # Bail out early if the exact abbr is already in
-            contains -- "$mode_arg" $fish_user_abbreviations
+            set -q fish_user_abbreviations
+            and contains -- "$mode_arg" $fish_user_abbreviations
             and return 0
+
             set -l key $mode_arg[1]
             set -e mode_arg[1]
             set -l value "$mode_arg"
@@ -186,6 +188,10 @@ function __fish_abbr_get_by_key
         echo "__fish_abbr_get_by_key: expected one argument, got none" >&2
         return 2
     end
+
+    set -q fish_user_abbreviations
+    or return 1
+
     # Going through all entries is still quicker than calling `seq`
     set -l keys
     for kv in $fish_user_abbreviations

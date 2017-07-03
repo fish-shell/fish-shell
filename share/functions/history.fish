@@ -29,7 +29,6 @@ function __fish_unexpected_hist_args --no-scope-shadowing
 end
 
 function history --description "display or manipulate interactive command history"
-    set -l cmd $_
     set -l cmd history
     set -l hist_cmd
     set -l search_mode

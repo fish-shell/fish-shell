@@ -220,7 +220,6 @@ begin
 
     set -q __fish_test_universal_variables_variable_foo
     and echo __fish_test_universal_variables_variable_foo should set after test16 inner begin..end
-    #set -e __fish_test_universal_variables_variable_foo
   end
 
   test16

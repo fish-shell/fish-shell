@@ -1493,7 +1493,7 @@ bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special) {
 
 bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special,
                      escape_string_style_t style) {
-    bool success;
+    bool success = false;
     switch (style) {
         case STRING_STYLE_SCRIPT: {
             success = unescape_string_internal(input, wcslen(input), output, escape_special);
@@ -1514,7 +1514,7 @@ bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t es
 
 bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special,
                      escape_string_style_t style) {
-    bool success;
+    bool success = false;
     switch (style) {
         case STRING_STYLE_SCRIPT: {
             success = unescape_string_internal(input.c_str(), input.size(), output, escape_special);

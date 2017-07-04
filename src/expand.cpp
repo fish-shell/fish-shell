@@ -948,8 +948,8 @@ static expand_error_t expand_brackets(const wcstring &instr, expand_flags_t flag
                     syntax_error = true;
                 } else if (bracket_count == 0) {
                     bracket_end = pos;
-                    break;
                 }
+                break;
             }
             case BRACKET_SEP: {
                 if (bracket_count == 1) last_sep = pos;

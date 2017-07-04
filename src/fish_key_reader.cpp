@@ -26,6 +26,7 @@
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fish_version.h"
 #include "input.h"
 #include "input_common.h"
 #include "print_help.h"
@@ -331,11 +332,12 @@ static bool parse_debug_frames_flag() {
 }
 
 static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
-    const char *short_opts = "+cd:D:h";
+    const char *short_opts = "+cd:D:hv";
     const struct option long_opts[] = {{"continuous", no_argument, NULL, 'c'},
                                        {"debug-level", required_argument, NULL, 'd'},
                                        {"debug-stack-frames", required_argument, NULL, 'D'},
                                        {"help", no_argument, NULL, 'h'},
+                                       {"version", no_argument, NULL, 'v'},
                                        {NULL, 0, NULL, 0}};
     int opt;
     bool error = false;
@@ -357,6 +359,10 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
             case 'D': {
                 error = !parse_debug_frames_flag();
                 break;
+            }
+            case 'v': {
+                fwprintf(stdout, L"%s\n", get_fish_version());
+                return false;
             }
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.

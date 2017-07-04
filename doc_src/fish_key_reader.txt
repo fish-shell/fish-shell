@@ -21,6 +21,8 @@ The following options are available:
 
 - `-h` or `--help` prints usage information.
 
+- `-v` or `--version` prints fish_key_reader's version and exits.
+
 \subsection fish_key_reader-usage-notes Usage Notes
 
 The delay in milliseconds since the previous character was received is included in the diagnostic information written to stderr. This information may be useful to determine the optimal `fish_escape_delay_ms` setting or learn the amount of lag introduced by tools like `ssh`, `mosh` or `tmux`.

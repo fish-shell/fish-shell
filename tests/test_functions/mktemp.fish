@@ -81,13 +81,10 @@ function mktemp
             exit 1
         end
 
-        switch "$TMPDIR"
-        case ''
-            set template /tmp/$template
-        case '*/'
-            set template $TMPDIR$template
-        case '*'
+        if set -q TMPDIR[1]
             set template $TMPDIR/$template
+        else
+            set template /tmp/$template
         end
     end
     set args $args $template

@@ -14,7 +14,7 @@ If `DIRECTORY` is a relative path, the paths found in the `CDPATH` environment v
 
 Note that the shell will attempt to change directory without requiring `cd` if the name of a directory is provided (starting with `.`, `/` or `~`, or ending with `/`).
 
-Fish also ships a wrapper function around the builtin `cd` that understands `cd -` as changing to the previous directory. See also <a href="commands.html#prevd">`prevd`</a>. This wrapper function maintains a history of the 25 most recently visited directories in the `$dirprev` and `$dirnext` global variables.
+Fish also ships a wrapper function around the builtin `cd` that understands `cd -` as changing to the previous directory. See also <a href="commands.html#prevd">`prevd`</a>. This wrapper function maintains a history of the 25 most recently visited directories in the `$dirprev` and `$dirnext` global variables. If you make those universal variables your `cd` history is shared among all fish instances.
 
 \subsection cd-example Examples
 
@@ -25,3 +25,7 @@ cd
 cd /usr/src/fish-shell
 # changes the working directory to /usr/src/fish-shell
 \endfish
+
+\subsection cd-see-also See Also
+
+See also the <a href="commands.html#cdh">`cdh`</a> command for changing to a recently visited directory.

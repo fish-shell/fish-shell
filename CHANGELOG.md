@@ -8,6 +8,7 @@
 - `string unescape` has been implemented to reverse the effects of `string escape` (#3543).
 - The history file can now be specified by setting the `FISH_HISTORY` variable (#102).
 - Read history is now controlled by the `FISH_HISTORY` variable rather than the `--mode-name` flag (#1504).
+- Implement a `cdh` (change directory using recent history) command to provide a more friendly alternative to prevd/nextd and pushd/popd (#2847).
 
 ## Other significant changes
 

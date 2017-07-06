@@ -362,7 +362,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
 
     // Get arguments.
     wcstring_list_t argument_list;
-    parse_execution_result_t result = this->determine_arguments(header, &argument_list, failglob);
+    parse_execution_result_t result = this->determine_arguments(header, &argument_list, failglob, undef_var_invalid);
 
     if (result != parse_execution_success) {
         return result;
@@ -457,7 +457,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
 
     // Get the contents to iterate over.
     wcstring_list_t argument_sequence;
-    parse_execution_result_t ret = this->determine_arguments(header, &argument_sequence, nullglob);
+    parse_execution_result_t ret = this->determine_arguments(header, &argument_sequence, nullglob, undef_var_invalid);
     if (ret != parse_execution_success) {
         return ret;
     }
@@ -572,7 +572,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
         // contains an unexpandable process will report and then fail to match.
         wcstring_list_t case_args;
         parse_execution_result_t case_result =
-            this->determine_arguments(arg_list, &case_args, failglob);
+            this->determine_arguments(arg_list, &case_args, failglob, undef_var_invalid);
         if (case_result == parse_execution_success) {
             for (size_t i = 0; i < case_args.size(); i++) {
                 const wcstring &arg = case_args.at(i);
@@ -781,7 +781,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
         wcstring_list_t event_args;
         {
             parse_execution_result_t arg_result =
-                this->determine_arguments(statement_node, &event_args, failglob);
+                this->determine_arguments(statement_node, &event_args, failglob, undef_var_invalid);
 
             if (arg_result != parse_execution_success) {
                 return arg_result;
@@ -877,9 +877,10 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         process_type = function_exists(L"cd") ? INTERNAL_FUNCTION : INTERNAL_BUILTIN;
     } else {
         const globspec_t glob_behavior = (cmd == L"set" || cmd == L"count") ? nullglob : failglob;
+        const undef_var_t undef_var_behavior = cmd == L"test" ? undef_var_valid : undef_var_invalid;
         // Form the list of arguments. The command is the first argument.
         parse_execution_result_t arg_result =
-            this->determine_arguments(statement, &argument_list, glob_behavior);
+            this->determine_arguments(statement, &argument_list, glob_behavior, undef_var_behavior);
         if (arg_result != parse_execution_success) {
             return arg_result;
         }
@@ -905,7 +906,8 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
 // Determine the list of arguments, expanding stuff. Reports any errors caused by expansion. If we
 // have a wildcard that could not be expanded, report the error and continue.
 parse_execution_result_t parse_execution_context_t::determine_arguments(
-    const parse_node_t &parent, wcstring_list_t *out_arguments, globspec_t glob_behavior) {
+    const parse_node_t &parent, wcstring_list_t *out_arguments, const globspec_t glob_behavior,
+    const undef_var_t undef_var_behavior) {
     // Get all argument nodes underneath the statement. We guess we'll have that many arguments (but
     // may have more or fewer, if there are wildcards involved).
     const parse_node_tree_t::parse_node_list_t argument_nodes =
@@ -922,6 +924,8 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(
         // Expand this string.
         parse_error_list_t errors;
         arg_expanded.clear();
+        expand_flags_t flags = EXPAND_NO_DESCRIPTIONS;
+        if (undef_var_behavior == undef_var_valid) flags |= EXPAND_UNDEF_VAR_OK;
         int expand_ret = expand_string(arg_str, &arg_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
         parse_error_offset_source_start(&errors, arg_node.source_start);
         switch (expand_ret) {

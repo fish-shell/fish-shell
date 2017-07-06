@@ -617,6 +617,8 @@ static void react_to_variable_change(const wcstring &key) {
     } else if (key == L"FISH_HISTORY") {
         history_destroy();
         reader_push(history_session_id().c_str());
+    } else if (key == L"fish_undef_var") {
+        update_fish_undef_var_behavior();
     }
 }
 
@@ -754,6 +756,8 @@ void misc_init() {
         fclose(procsyskosrel);
     }
 #endif  // OS_IS_MS_WINDOWS
+
+    update_fish_undef_var_behavior();
 }
 
 void env_init(const struct config_paths_t *paths /* or NULL */) {
@@ -1163,7 +1167,6 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
     const bool search_local = !has_scope || (mode & ENV_LOCAL);
     const bool search_global = !has_scope || (mode & ENV_GLOBAL);
     const bool search_universal = !has_scope || (mode & ENV_UNIVERSAL);
-
     const bool search_exported = (mode & ENV_EXPORT) || !(mode & ENV_UNEXPORT);
     const bool search_unexported = (mode & ENV_UNEXPORT) || !(mode & ENV_EXPORT);
 
@@ -1218,7 +1221,9 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
         }
     }
 
-    if (!search_universal) return env_var_t::missing_var();
+    if (!search_universal) {
+        return env_var_t::undef_var();
+    }
 
     // Another hack. Only do a universal barrier on the main thread (since it can change variable
     // values). Make sure we do this outside the env_lock because it may itself call env_get_string.
@@ -1235,7 +1240,8 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
         }
         return env_var;
     }
-    return env_var_t::missing_var();
+
+    return env_var_t::undef_var();
 }
 
 bool env_exist(const wchar_t *key, env_mode_flags_t mode) {
@@ -1517,7 +1523,7 @@ env_var_t env_vars_snapshot_t::get(const wcstring &key) const {
         return env_get_string(key);
     }
     std::map<wcstring, wcstring>::const_iterator iter = vars.find(key);
-    return iter == vars.end() ? env_var_t::missing_var() : env_var_t(iter->second);
+    return iter == vars.end() ? env_var_t::undef_var() : env_var_t(iter->second);
 }
 
 const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH",

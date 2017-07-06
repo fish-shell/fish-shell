@@ -46,7 +46,9 @@ enum {
     EXPAND_SPECIAL_FOR_CD = 1 << 11,
     /// Do expansions specifically to support external command completions. This means using PATH as
     /// a list of potential working directories.
-    EXPAND_SPECIAL_FOR_COMMAND = 1 << 12
+    EXPAND_SPECIAL_FOR_COMMAND = 1 << 12,
+    /// Dereferencing an undefined variable is not an error.
+    EXPAND_UNDEF_VAR_OK = 1 << 13
 };
 typedef int expand_flags_t;
 
@@ -152,4 +154,5 @@ bool expand_abbreviation(const wcstring &src, wcstring *output);
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
                                         const char *const *argv);
 
+void update_fish_undef_var_behavior();
 #endif

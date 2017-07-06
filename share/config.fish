@@ -37,6 +37,16 @@ if status --is-interactive
     else
         # Enable truecolor/24-bit support for select terminals
         # Ignore Neovim (in 0.1.4 at least), Screen and emacs' ansi-term as they swallow the sequences, rendering the text white.
+
+        # Make sure these env vars are defined. This sucks but so does the subsequent complicated
+        # `if` conditional.
+        set -q ITERM_SESSION_ID
+        or set -l ITERM_SESSION_ID
+        set -q VTE_VERSION
+        or set -l VTE_VERSION
+        set -q COLORTERM
+        or set -l COLORTERM
+
         if not set -q NVIM_LISTEN_ADDRESS
             and not set -q STY
             and not string match -q -- 'eterm*' $TERM

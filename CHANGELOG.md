@@ -19,6 +19,7 @@
 - `help` can now open the tutorial.
 - `echo -h` now correctly echoes `-h` (#4120).
 - Stop converting empty elements in MANPATH to "." (#4158). The behavior being changed was introduced in fish 2.6.0.
+- `count -h` and `count --help` now return one (#4189).
 - Added completions for:
  - `as` (#4130).
  - `jest` (#4142).

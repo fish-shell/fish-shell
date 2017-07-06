@@ -1,0 +1,12 @@
+# no args
+0
+# one args
+1
+# two args
+2
+# args that look like flags or are otherwise special
+1
+1
+1
+2
+3

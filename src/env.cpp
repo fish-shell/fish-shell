@@ -41,7 +41,6 @@
 #include "env.h"
 #include "env_universal_common.h"
 #include "event.h"
-#include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fish_version.h"
 #include "history.h"
@@ -55,8 +54,6 @@
 #include "screen.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// Value denoting a null string.
-#define ENV_NULL L"\x1d"
 #define DEFAULT_TERM1 "ansi"
 #define DEFAULT_TERM2 "dumb"
 
@@ -1524,3 +1521,11 @@ const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPA
                                                                  L"fish_function_path", NULL};
 
 const wchar_t *const env_vars_snapshot_t::completing_keys[] = {L"PATH", L"CDPATH", NULL};
+
+wcstring *list_to_array_val(const wcstring_list_t &list) {
+    return new wcstring();
+}
+
+wcstring *list_to_array_val(const wchar_t **list) {
+    return new wcstring();
+}

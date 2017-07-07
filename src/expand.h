@@ -89,13 +89,6 @@ enum expand_error_t {
     EXPAND_WILDCARD_MATCH
 };
 
-/// Character for separating two array elements. We use 30, i.e. the ascii record separator since
-/// that seems logical.
-#define ARRAY_SEP ((wchar_t)(0x1e))
-
-/// String containing the character for separating two array elements.
-#define ARRAY_SEP_STR L"\x1e"
-
 /// Error issued on array out of bounds.
 #define ARRAY_BOUNDS_ERR _(L"Array index out of bounds")
 

@@ -1,6 +1,7 @@
 # fish 2.7b1
 
 ## Notable fixes and improvements
+- A new `argparse` command is available to allow fish script to parse arguments with the same behavior as builtin commands. This also includes the `fish_opt` helper command. (#4190).
 - The `COLUMNS` and `LINES` env vars are now correctly set the first time `fish_prompt` is run (#4141).
 - New `status is-breakpoint` command that is true when a prompt is displayed in response to a `breakpoint` command (#1310).
 - Invalid array indexes are now silently ignored (#826, #4127).

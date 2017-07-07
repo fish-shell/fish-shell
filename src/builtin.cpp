@@ -28,6 +28,7 @@
 #include <string>
 
 #include "builtin.h"
+#include "builtin_argparse.h"
 #include "builtin_bg.h"
 #include "builtin_bind.h"
 #include "builtin_block.h"
@@ -406,6 +407,7 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 static const builtin_data_t builtin_datas[] = {
     {L"[", &builtin_test, N_(L"Test a condition")},
     {L"and", &builtin_generic, N_(L"Execute command if previous command suceeded")},
+    {L"argparse", &builtin_argparse, N_(L"Parse options in fish script")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},
     {L"bg", &builtin_bg, N_(L"Send job to background")},
     {L"bind", &builtin_bind, N_(L"Handle fish key bindings")},

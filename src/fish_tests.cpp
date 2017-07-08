@@ -940,6 +940,57 @@ static void test_parse_util_cmdsubst_extent() {
     }
 }
 
+/// Verify the behavior of the `list_to_aray_val()` family of functions.
+static void test_list_to_array() {
+    auto list = wcstring_list_t();
+    auto val = list_to_array_val(list);
+    if (*val != ENV_NULL) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    list.push_back(L"abc");
+    val = list_to_array_val(list);
+    if (*val != list[0]) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    list.push_back(L"def");
+    val = list_to_array_val(list);
+    if (*val != L"abc" ARRAY_SEP_STR L"def") {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    list.push_back(L"ghi");
+    val = list_to_array_val(list);
+    if (*val != L"abc" ARRAY_SEP_STR L"def" ARRAY_SEP_STR L"ghi") {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    const wchar_t *array1[] = {NULL};
+    val = list_to_array_val(array1);
+    if (*val != ENV_NULL) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    const wchar_t *array2[] = {L"abc", NULL};
+    val = list_to_array_val(array2);
+    if (wcscmp(val->c_str(), L"abc") != 0) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    const wchar_t *array3[] = {L"abc", L"def", NULL};
+    val = list_to_array_val(array3);
+    if (wcscmp(val->c_str(), L"abc" ARRAY_SEP_STR L"def") != 0) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    const wchar_t *array4[] = {L"abc", L"def", L"ghi", NULL};
+    val = list_to_array_val(array4);
+    if (wcscmp(val->c_str(), L"abc" ARRAY_SEP_STR L"def" ARRAY_SEP_STR L"ghi") != 0) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+}
+
 static struct wcsfilecmp_test {
     const wchar_t *str1;
     const wchar_t *str2;
@@ -997,6 +1048,7 @@ static void test_wcsfilecmp() {
 
 static void test_utility_functions() {
     say(L"Testing utility functions");
+    test_list_to_array();
     test_wcsfilecmp();
     test_parse_util_cmdsubst_extent();
 }

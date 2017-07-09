@@ -150,7 +150,7 @@ end
 
 function umask --description "Set default file permission mask"
     set -l options 'h/help' 'p/as-command' 'S/symbolic'
-    argparse $options -- $argv
+    argparse -n umask $options -- $argv
     or return
 
     if set -q _flag_help

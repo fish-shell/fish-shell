@@ -1,6 +1,6 @@
 function isatty -d "Tests if a file descriptor is a tty"
     set -l options 'h/help'
-    argparse $options -- $argv
+    argparse -n isatty $options -- $argv
     or return
 
     if set -q _flag_help

@@ -1,6 +1,6 @@
 function nextd --description "Move forward in the directory history"
     set -l options 'h/help' 'l/list'
-    argparse $options -- $argv
+    argparse -n nextd $options -- $argv
     or return
 
     if set -q _flag_help

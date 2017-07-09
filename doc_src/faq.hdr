@@ -24,7 +24,7 @@
 - <a href='#faq-greeting'>How do I change the greeting message?</a>
 - <a href='#faq-history'>Why doesn't history substitution ("!$" etc.) work?</a>
 - <a href='#faq-find-braces'>Why do I get a missing argument error with `find ... {}`?</a>
-- <a href='#faq-cd-minus'>How to make `-` a shortcut for `cd -`?</a>
+- <a href='#faq-cd-minus'>How can I use `-` as a shortcut for `cd -`?</a>
 - <a href='#faq-uninstalling'>How do I uninstall fish?</a>
 - <a href='#faq-third-party'>Where can I find extra tools for fish?</a>
 
@@ -240,7 +240,7 @@ find ... -exec ... '{{}}'
 \endfish
 
 <hr>
-\section faq-cd-minus How to make `-` a shortcut for `cd -`?
+\section faq-cd-minus How can I use `-` as a shortcut for `cd -`?
 
 In fish versions prior to 2.5.0 it was possible to create a function named `-` that would do `cd -`. Changes in the 2.5.0 release included several bug fixes that enforce the rule that a bare hyphen is not a valid function (or variable) name. However, you can achieve the same effect via an abbreviation:
 

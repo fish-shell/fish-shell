@@ -1532,8 +1532,13 @@ std::unique_ptr<wcstring> list_to_array_val(const wcstring_list_t &list) {
         // Zero element arrays are internally encoded as this placeholder string.
         val->append(ENV_NULL);
     } else {
+        bool need_sep = false;
         for (auto it : list) {
-            if (!val->empty()) val->push_back(ARRAY_SEP);
+            if (need_sep) {
+                val->push_back(ARRAY_SEP);
+            } else {
+                need_sep = true;
+            }
             val->append(it);
         }
     }

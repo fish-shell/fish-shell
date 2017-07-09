@@ -948,21 +948,34 @@ static void test_list_to_array() {
         err(L"test_list_to_array failed on line %lu", __LINE__);
     }
 
-    list.push_back(L"abc");
+    list.push_back(L"");
     val = list_to_array_val(list);
     if (*val != list[0]) {
         err(L"test_list_to_array failed on line %lu", __LINE__);
     }
 
-    list.push_back(L"def");
+    list.push_back(L"abc");
     val = list_to_array_val(list);
-    if (*val != L"abc" ARRAY_SEP_STR L"def") {
+    if (*val != L"" ARRAY_SEP_STR L"abc") {
         err(L"test_list_to_array failed on line %lu", __LINE__);
     }
 
-    list.push_back(L"ghi");
+    list.insert(list.begin(), L"ghi");
     val = list_to_array_val(list);
-    if (*val != L"abc" ARRAY_SEP_STR L"def" ARRAY_SEP_STR L"ghi") {
+    if (*val != L"ghi" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"abc") {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    list.push_back(L"");
+    val = list_to_array_val(list);
+    if (*val != L"ghi" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"abc" ARRAY_SEP_STR L"") {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    list.push_back(L"def");
+    val = list_to_array_val(list);
+    if (*val !=
+        L"ghi" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"abc" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"def") {
         err(L"test_list_to_array failed on line %lu", __LINE__);
     }
 

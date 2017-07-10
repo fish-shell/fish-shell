@@ -1,0 +1,11 @@
+# no args is an error
+fish_opt: The --short flag is required and must be a single character
+# no short flag or an invalid short flag is an error
+fish_opt: The --short flag is required and must be a single character
+fish_opt: The --short flag is required and must be a single character
+# a required and optional arg makes no sense
+fish_opt: Mutually exclusive flags 'o/optional-val' and `r/required-val` seen
+# a repeated and optional arg makes no sense
+fish_opt: Mutually exclusive flags 'multiple-vals' and `o/optional-val` seen
+# an unexpected arg not associated with a flag is an error
+fish_opt: Expected at most 0 args, got 1

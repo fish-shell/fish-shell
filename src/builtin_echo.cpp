@@ -178,7 +178,7 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
 /// fish specific, option -s to mean "no spaces".
 int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
-    (void)cmd;
+    UNUSED(cmd);
     int argc = builtin_count_args(argv);
     echo_cmd_opts_t opts;
     int optind;

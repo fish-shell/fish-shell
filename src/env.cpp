@@ -41,7 +41,6 @@
 #include "env.h"
 #include "env_universal_common.h"
 #include "event.h"
-#include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fish_version.h"
 #include "history.h"
@@ -55,8 +54,6 @@
 #include "screen.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// Value denoting a null string.
-#define ENV_NULL L"\x1d"
 #define DEFAULT_TERM1 "ansi"
 #define DEFAULT_TERM2 "dumb"
 
@@ -964,7 +961,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
         return ENV_INVALID;
     }
 
-    // Zero element arrays are internaly not coded as null but as this placeholder string.
+    // Zero element arrays are internally not coded as an empty string but this placeholder string.
     if (!val) {
         val = ENV_NULL;  //!OCLINT(parameter reassignment)
     }
@@ -1524,3 +1521,61 @@ const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPA
                                                                  L"fish_function_path", NULL};
 
 const wchar_t *const env_vars_snapshot_t::completing_keys[] = {L"PATH", L"CDPATH", NULL};
+
+// The next set of functions convert between a flat string and an actual list of strings using
+// the encoding employed by fish internally for "arrays".
+
+std::unique_ptr<wcstring> list_to_array_val(const wcstring_list_t &list) {
+    auto val = std::unique_ptr<wcstring>(new wcstring());
+
+    if (list.size() == 0) {
+        // Zero element arrays are internally encoded as this placeholder string.
+        val->append(ENV_NULL);
+    } else {
+        bool need_sep = false;
+        for (auto it : list) {
+            if (need_sep) {
+                val->push_back(ARRAY_SEP);
+            } else {
+                need_sep = true;
+            }
+            val->append(it);
+        }
+    }
+
+    return val;
+}
+
+std::unique_ptr<wcstring> list_to_array_val(const wchar_t **list) {
+    auto val = std::unique_ptr<wcstring>(new wcstring());
+
+    if (!*list) {
+        // Zero element arrays are internally encoded as this placeholder string.
+        val->append(ENV_NULL);
+    } else {
+        for (auto it = list; *it; it++) {
+            if (it != list) val->push_back(ARRAY_SEP);
+            val->append(*it);
+        }
+    }
+
+    return val;
+}
+
+void tokenize_variable_array(const wcstring &val, wcstring_list_t &out) {
+    out.clear();  // ensure the output var is empty -- this will normally be a no-op
+
+    // Zero element arrays are internally encoded as this placeholder string.
+    if (val == ENV_NULL) return;
+
+    size_t pos = 0, end = val.size();
+    while (pos <= end) {
+        size_t next_pos = val.find(ARRAY_SEP, pos);
+        if (next_pos == wcstring::npos) {
+            next_pos = end;
+        }
+        out.resize(out.size() + 1);
+        out.back().assign(val, pos, next_pos - pos);
+        pos = next_pos + 1;  // skip the separator, or skip past the end
+    }
+}

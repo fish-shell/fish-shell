@@ -258,8 +258,8 @@ class history_t {
     // Incorporates the history of other shells into this history.
     void incorporate_external_changes();
 
-    // Gets all the history into a string with ARRAY_SEP_STR. This is intended for the $history
-    // environment variable. This may be long!
+    // Gets all the history into a string. This is intended for the $history environment variable.
+    // This may be long!
     void get_string_representation(wcstring *result, const wcstring &separator);
 
     // Sets the valid file paths for the history item with the given identifier.

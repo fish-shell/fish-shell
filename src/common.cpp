@@ -1633,19 +1633,6 @@ int common_get_width() { return get_current_winsize().ws_col; }
 
 int common_get_height() { return get_current_winsize().ws_row; }
 
-void tokenize_variable_array(const wcstring &val, std::vector<wcstring> &out) {
-    size_t pos = 0, end = val.size();
-    while (pos <= end) {
-        size_t next_pos = val.find(ARRAY_SEP, pos);
-        if (next_pos == wcstring::npos) {
-            next_pos = end;
-        }
-        out.resize(out.size() + 1);
-        out.back().assign(val, pos, next_pos - pos);
-        pos = next_pos + 1;  // skip the separator, or skip past the end
-    }
-}
-
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value) {
     size_t prefix_size = wcslen(proposed_prefix);
     return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;

@@ -45,12 +45,8 @@ static int is_path_variable(const wchar_t *env) { return contains(path_variables
 
 /// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
-static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
+static int my_env_set(const wchar_t *key, const wcstring_list_t &list, int scope,
                       io_streams_t &streams) {
-    size_t i;
-    int retcode = 0;
-    const wchar_t *val_str = NULL;
-
     if (is_path_variable(key)) {
         // Fix for https://github.com/fish-shell/fish-shell/issues/199 . Return success if any path
         // setting succeeds.
@@ -70,8 +66,8 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
         if (!existing_variable.missing_or_empty())
             tokenize_variable_array(existing_variable, existing_values);
 
-        for (i = 0; i < val.size(); i++) {
-            const wcstring &dir = val.at(i);
+        for (size_t i = 0; i < list.size(); i++) {
+            const wcstring &dir = list.at(i);
             if (!string_prefixes_string(L"/", dir) || contains(existing_values, dir)) {
                 any_success = true;
                 continue;
@@ -109,44 +105,38 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
 
         // Fail at setting the path if we tried to set it to something non-empty, but it wound up
         // empty.
-        if (!val.empty() && !any_success) {
-            return 1;
+        if (!list.empty() && !any_success) {
+            return STATUS_CMD_ERROR;
         }
     }
 
-    wcstring sb;
-    if (!val.empty()) {
-        for (i = 0; i < val.size(); i++) {
-            sb.append(val[i]);
-            if (i < val.size() - 1) {
-                sb.append(ARRAY_SEP_STR);
-            }
-        }
-        val_str = sb.c_str();
-    }
-
-    switch (env_set(key, val_str, scope | ENV_USER)) {
+    // We don't check `val->empty()` because an array var with a single empty string will be
+    // "empty". A truly empty array var is set to the special value `ENV_NULL`.
+    auto val = list_to_array_val(list);
+    int retcode = env_set(key, *val == ENV_NULL ? NULL : val->c_str(), scope | ENV_USER);
+    switch (retcode) {
         case ENV_OK: {
+            retcode = STATUS_CMD_OK;
             break;
         }
         case ENV_PERM: {
             streams.err.append_format(_(L"%ls: Tried to change the read-only variable '%ls'\n"),
                                       L"set", key);
-            retcode = 1;
+            retcode = STATUS_CMD_ERROR;
             break;
         }
         case ENV_SCOPE: {
             streams.err.append_format(
                 _(L"%ls: Tried to set the special variable '%ls' with the wrong scope\n"), L"set",
                 key);
-            retcode = 1;
+            retcode = STATUS_CMD_ERROR;
             break;
         }
         case ENV_INVALID: {
             streams.err.append_format(
                 _(L"%ls: Tried to set the special variable '%ls' to an invalid value\n"), L"set",
                 key);
-            retcode = 1;
+            retcode = STATUS_CMD_ERROR;
             break;
         }
         default: {

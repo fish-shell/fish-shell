@@ -9,6 +9,8 @@
 - The history file can now be specified by setting the `FISH_HISTORY` variable (#102).
 - Read history is now controlled by the `FISH_HISTORY` variable rather than the `--mode-name` flag (#1504).
 - Implement a `cdh` (change directory using recent history) command to provide a more friendly alternative to prevd/nextd and pushd/popd (#2847).
+- `command` now supports a `-a` flag to report all directories with the command. This means that `which -a $cmd` is no longer necessary (#2778).
+- `--init-command`/`-C` added to the command line switches, to allow execution of commands before starting the interactive shell (#4164).
 
 ## Other significant changes
 
@@ -19,11 +21,12 @@
 - `help` can now open the tutorial.
 - `echo -h` now correctly echoes `-h` (#4120).
 - Stop converting empty elements in MANPATH to "." (#4158). The behavior being changed was introduced in fish 2.6.0.
-- `count -h` and `count --help` now return one (#4189).
+- `count -h` and `count --help` now return one rather than produce command help output (#4189).
+- Fix setting `$COLUMNS` and `$LINES` before first prompt is displayed (#4141).
+- `read` failures due to too much data should define the var (#4180).
 - Added completions for:
  - `as` (#4130).
  - `jest` (#4142).
-- `--init-command`/`-C` added to the command line switches, to allow execution of commands before starting the interactive shell.
 
 ---
 

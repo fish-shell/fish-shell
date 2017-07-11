@@ -117,6 +117,9 @@
 		9C7A557D1DCD71890049C25D /* fish_key_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C7A557C1DCD717C0049C25D /* fish_key_reader.cpp */; };
 		9C7A557E1DCD71CD0049C25D /* print_help.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855613B3ACEE0099B651 /* print_help.cpp */; };
 		9C7A55811DCD739C0049C25D /* fish_key_reader in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9C7A55721DCD71330049C25D /* fish_key_reader */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		CB0F034C1F156FE3001827D3 /* builtin_argparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB0F034A1F156FE3001827D3 /* builtin_argparse.cpp */; };
+		CB0F034D1F156FE3001827D3 /* builtin_argparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB0F034A1F156FE3001827D3 /* builtin_argparse.cpp */; };
+		CB0F034E1F156FE3001827D3 /* builtin_argparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB0F034A1F156FE3001827D3 /* builtin_argparse.cpp */; };
 		D001B5EE1F041CBD000838CC /* builtin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D05F592F1F041AE4003EE978 /* builtin.cpp */; };
 		D001B5F01F041CBD000838CC /* builtin_ulimit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D05F59311F041AE4003EE978 /* builtin_ulimit.cpp */; };
 		D001B5F21F041CBD000838CC /* builtin_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D05F59331F041AE4003EE978 /* builtin_test.cpp */; };
@@ -647,8 +650,10 @@
 		63A2C0E81CC5F9FB00973404 /* pcre2_find_bracket.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pcre2_find_bracket.c; sourceTree = "<group>"; };
 		9C7A55721DCD71330049C25D /* fish_key_reader */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fish_key_reader; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C7A557C1DCD717C0049C25D /* fish_key_reader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fish_key_reader.cpp; sourceTree = "<group>"; };
-		CBB772591F11F93F00780A21 /* builtin_argparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_argparse.cpp; sourceTree = "<group>"; };
-		CBB7725A1F11F93F00780A21 /* builtin_argparse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin_argparse.h; sourceTree = "<group>"; };
+		CB0F034A1F156FE3001827D3 /* builtin_argparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_argparse.cpp; sourceTree = "<group>"; };
+		CB0F034B1F156FE3001827D3 /* builtin_argparse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin_argparse.h; sourceTree = "<group>"; };
+		CBB7725B1F14964100780A21 /* fish-shell */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "fish-shell"; sourceTree = "<group>"; };
+		CBB7725C1F1496AF00780A21 /* fish-shell */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "fish-shell"; sourceTree = "<group>"; };
 		D00769421990137800CA4627 /* fish_tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fish_tests; sourceTree = BUILT_PRODUCTS_DIR; };
 		D00F63F019137E9D00FCCDEC /* fish_version.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fish_version.cpp; sourceTree = "<group>"; };
 		D01A2D23169B730A00767098 /* man1 */ = {isa = PBXFileReference; lastKnownFileType = text; name = man1; path = pages_for_manpath/man1; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -964,6 +969,8 @@
 		D0A084F013B3AC130099B651 = {
 			isa = PBXGroup;
 			children = (
+				CBB7725C1F1496AF00780A21 /* fish-shell */,
+				CBB7725B1F14964100780A21 /* fish-shell */,
 				D0D02A91159845EF008E62BD /* Sources */,
 				D0D02AFC159871BF008E62BD /* Launcher */,
 				D0D02A8E15983D5F008E62BD /* Libraries */,
@@ -986,8 +993,8 @@
 		D0D02A91159845EF008E62BD /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				CBB772591F11F93F00780A21 /* builtin_argparse.cpp */,
-				CBB7725A1F11F93F00780A21 /* builtin_argparse.h */,
+				CB0F034A1F156FE3001827D3 /* builtin_argparse.cpp */,
+				CB0F034B1F156FE3001827D3 /* builtin_argparse.h */,
 				9C7A557C1DCD717C0049C25D /* fish_key_reader.cpp */,
 				4E142D731B56B5D7008783C8 /* config.h */,
 				D0C6FCCB14CFA4B7004CE8AD /* autoload.h */,
@@ -1684,6 +1691,7 @@
 				D007692D1990137800CA4627 /* proc.cpp in Sources */,
 				D007692E1990137800CA4627 /* reader.cpp in Sources */,
 				D007692F1990137800CA4627 /* sanity.cpp in Sources */,
+				CB0F034E1F156FE3001827D3 /* builtin_argparse.cpp in Sources */,
 				D05F597F1F041AE4003EE978 /* builtin_source.cpp in Sources */,
 				D05F59B51F041AE4003EE978 /* builtin_contains.cpp in Sources */,
 				D05F59911F041AE4003EE978 /* builtin_random.cpp in Sources */,
@@ -1771,6 +1779,7 @@
 				D05F59AB1F041AE4003EE978 /* builtin_emit.cpp in Sources */,
 				D05F59961F041AE4003EE978 /* builtin_printf.cpp in Sources */,
 				D030FC001A4A38F300F7ADA0 /* function.cpp in Sources */,
+				CB0F034D1F156FE3001827D3 /* builtin_argparse.cpp in Sources */,
 				D05F59C61F041AE4003EE978 /* builtin_block.cpp in Sources */,
 				D05F59C91F041AE4003EE978 /* builtin_bind.cpp in Sources */,
 				D05F599C1F041AE4003EE978 /* builtin_history.cpp in Sources */,
@@ -1880,6 +1889,7 @@
 				D0D02A7015983842008E62BD /* proc.cpp in Sources */,
 				D0D02A7115983848008E62BD /* reader.cpp in Sources */,
 				D0D02A721598384C008E62BD /* sanity.cpp in Sources */,
+				CB0F034C1F156FE3001827D3 /* builtin_argparse.cpp in Sources */,
 				D05F597D1F041AE4003EE978 /* builtin_source.cpp in Sources */,
 				D05F59B31F041AE4003EE978 /* builtin_contains.cpp in Sources */,
 				D05F598F1F041AE4003EE978 /* builtin_random.cpp in Sources */,

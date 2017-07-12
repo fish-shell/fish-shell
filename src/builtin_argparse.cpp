@@ -50,6 +50,8 @@ class argparse_cmd_opts_t {
    public:
     bool print_help = false;
     bool require_order = false;
+    size_t min_args = 0;
+    size_t max_args = SIZE_T_MAX;
     wcstring name = L"argparse";
     wcstring_list_t raw_exclusive_flags;
     wcstring_list_t argv;
@@ -64,11 +66,13 @@ class argparse_cmd_opts_t {
     }
 };
 
-static const wchar_t *short_options = L"+:hn:rx:";
+static const wchar_t *short_options = L"+:hn:rx:N:X:";
 static const struct woption long_options[] = {{L"require-order", no_argument, NULL, 'r'},
                                               {L"name", required_argument, NULL, 'n'},
                                               {L"exclusive", required_argument, NULL, 'x'},
                                               {L"help", no_argument, NULL, 'h'},
+                                              {L"min-args", required_argument, NULL, 'N'},
+                                              {L"max-args", required_argument, NULL, 'X'},
                                               {NULL, 0, NULL, 0}};
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
@@ -273,6 +277,26 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 opts.print_help = true;
                 break;
             }
+            case 'N': {
+                long x = fish_wcstol(w.woptarg);
+                if (errno || x < 0) {
+                    streams.err.append_format(_(L"%ls: Invalid --min-args value '%ls'\n"), cmd,
+                                              w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                }
+                opts.min_args = x;
+                break;
+            }
+            case 'X': {
+                long x = fish_wcstol(w.woptarg);
+                if (errno || x < 0) {
+                    streams.err.append_format(_(L"%ls: Invalid --max-args value '%ls'\n"), cmd,
+                                              w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                }
+                opts.max_args = x;
+                break;
+            }
             case ':': {
                 builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
@@ -404,6 +428,14 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     update_bool_flag_counts(opts);
 
     for (int i = optind; argv[i]; i++) opts.argv.push_back(argv[i]);
+    if (opts.min_args > 0 && opts.argv.size() < opts.min_args) {
+        streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, opts.min_args, opts.argv.size());
+        return STATUS_CMD_ERROR;
+    }
+    if (opts.max_args != SIZE_T_MAX && opts.argv.size() > opts.max_args) {
+        streams.err.append_format(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, opts.max_args, opts.argv.size());
+        return STATUS_CMD_ERROR;
+    }
     return STATUS_CMD_OK;
 }
 

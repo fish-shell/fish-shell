@@ -51,7 +51,7 @@ class argparse_cmd_opts_t {
     bool print_help = false;
     bool stop_nonopt = false;
     size_t min_args = 0;
-    size_t max_args = SIZE_T_MAX;
+    size_t max_args = SIZE_MAX;
     wcstring name = L"argparse";
     wcstring_list_t raw_exclusive_flags;
     wcstring_list_t argv;
@@ -437,7 +437,7 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
         streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, opts.min_args, opts.argv.size());
         return STATUS_CMD_ERROR;
     }
-    if (opts.max_args != SIZE_T_MAX && opts.argv.size() > opts.max_args) {
+    if (opts.max_args != SIZE_MAX && opts.argv.size() > opts.max_args) {
         streams.err.append_format(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, opts.max_args, opts.argv.size());
         return STATUS_CMD_ERROR;
     }

@@ -441,6 +441,7 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
         streams.err.append_format(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, opts.max_args, opts.argv.size());
         return STATUS_CMD_ERROR;
     }
+
     return STATUS_CMD_OK;
 }
 

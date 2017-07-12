@@ -44,8 +44,8 @@ rule-configurations:
       value: 14
 
     # We're willing to allow slighly more execution paths through a function.
-    # Default is 300.
-    - key: HighNPathComplexity
+    # Default is 200.
+    - key: NPATH_COMPLEXITY
       value: 300
 
 disable-rules:

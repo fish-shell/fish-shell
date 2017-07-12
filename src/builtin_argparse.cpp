@@ -4,8 +4,8 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
-#include <limits.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <wchar.h>
 
 #include <algorithm>
@@ -49,7 +49,7 @@ class option_spec_t {
 class argparse_cmd_opts_t {
    public:
     bool print_help = false;
-    bool require_order = false;
+    bool stop_nonopt = false;
     size_t min_args = 0;
     size_t max_args = SIZE_T_MAX;
     wcstring name = L"argparse";
@@ -66,8 +66,8 @@ class argparse_cmd_opts_t {
     }
 };
 
-static const wchar_t *short_options = L"+:hn:rx:N:X:";
-static const struct woption long_options[] = {{L"require-order", no_argument, NULL, 'r'},
+static const wchar_t *short_options = L"+:hn:sx:N:X:";
+static const struct woption long_options[] = {{L"stop-nonopt", no_argument, NULL, 's'},
                                               {L"name", required_argument, NULL, 'n'},
                                               {L"exclusive", required_argument, NULL, 'x'},
                                               {L"help", no_argument, NULL, 'h'},
@@ -173,13 +173,13 @@ static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams
 static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
                                  const wcstring &option_spec, const wchar_t *s,
                                  io_streams_t &streams) {
-    if (*s == '+') {
-        opt_spec->num_allowed = 2;  // mandatory arg and can appear more than once
+    if (*s == '=') {
         s++;
-    } else if (*s == ':') {
-        s++;
-        if (*s == ':') {
+        if (*s == '?') {
             opt_spec->num_allowed = -1;  // optional arg
+            s++;
+        } else if (*s == '+') {
+            opt_spec->num_allowed = 2;  // mandatory arg and can appear more than once
             s++;
         } else {
             opt_spec->num_allowed = 1;  // mandatory arg and can appear only once
@@ -220,7 +220,7 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
     }
 
     const wchar_t *e = s;
-    while (*e && *e != '+' && *e != ':') e++;
+    while (*e && *e != '+' && *e != '=') e++;
     if (e == s) {
         streams.err.append_format(BUILTIN_ERR_INVALID_OPT_SPEC, opts.name.c_str(),
                                   option_spec.c_str(), *(s - 1));
@@ -235,21 +235,26 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
 static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                                 io_streams_t &streams) {
     wchar_t *cmd = argv[0];
-    while (true) {
+
+    while (*optind < argc) {
         if (wcscmp(L"--", argv[*optind]) == 0) {
             ++*optind;
-            return STATUS_CMD_OK;
+            break;
         }
 
         if (!parse_option_spec(opts, argv[*optind], streams)) {
             return STATUS_CMD_ERROR;
         }
 
-        if (++*optind == argc) {
-            streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, cmd, 2, 0);
-            return STATUS_INVALID_ARGS;
-        }
+        ++*optind;
     }
+
+    if (opts.options.empty()) {
+        streams.err.append_format(_(L"%ls: No option specs were provided\n"), cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    return STATUS_CMD_OK;
 }
 
 static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
@@ -263,8 +268,8 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 opts.name = w.woptarg;
                 break;
             }
-            case 'r': {
-                opts.require_order = true;
+            case 's': {
+                opts.stop_nonopt = true;
                 break;
             }
             case 'x': {
@@ -401,7 +406,7 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
                                parser_t &parser, io_streams_t &streams) {
     if (args.empty()) return STATUS_CMD_OK;
 
-    wcstring short_options = opts.require_order ? L"+:" : L":";
+    wcstring short_options = opts.stop_nonopt ? L"+:" : L":";
     size_t nflags = opts.options.size();
     // This assumes every option has a long flag. Which is the worst case and isn't worth optimizing
     // since the number of options is always quite small.

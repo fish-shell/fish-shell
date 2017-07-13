@@ -1,24 +1,20 @@
 function math --description "Perform math calculations in bc"
-    set -l scale 0 # default is integer arithmetic
+    set -l options 'h/help' 's/scale='
+    argparse -n math --min-args=1 $options -- $argv
+    or return
 
-    if set -q argv[1]
-        switch $argv[1]
-            case '-s*' # user wants to specify the scale of the output
-                set scale (string replace -- '-s' '' $argv[1])
-                if not string match -q -r '^\d+$' "$scale"
-                    echo 'Expected an integer to follow -s' >&2
-                    return 2 # missing argument is an error
-                end
-                set -e argv[1]
-
-            case -h --h --he --hel --help
-                __fish_print_help math
-                return 0
-        end
+    if set -q _flag_help
+        __fish_print_help math
+        return 0
     end
 
-    if not set -q argv[1]
-        return 2 # no arguments is an error
+    set -l scale 0  # default is integer arithmetic
+    if set -q _flag_scale
+        set scale $_flag_scale
+        if not string match -q -r '^\d+$' "$scale"
+            printf (_ "%s: Expected an integer to follow --scale") math >&2
+            return 2 # missing argument is an error
+        end
     end
 
     # Set BC_LINE_LENGTH to a ridiculously high number so it only uses one line for most results.

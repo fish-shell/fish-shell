@@ -173,12 +173,12 @@ static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams
 static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
                                  const wcstring &option_spec, const wchar_t *s,
                                  io_streams_t &streams) {
-    if (*s == '=') {
+    if (*s == L'=') {
         s++;
-        if (*s == '?') {
+        if (*s == L'?') {
             opt_spec->num_allowed = -1;  // optional arg
             s++;
-        } else if (*s == '+') {
+        } else if (*s == L'+') {
             opt_spec->num_allowed = 2;  // mandatory arg and can appear more than once
             s++;
         } else {
@@ -208,9 +208,9 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
     const wchar_t *s = option_spec.c_str();
     option_spec_t *opt_spec = new option_spec_t(*s++);
 
-    if (*s == '/') {
+    if (*s == L'/') {
         s++;  // the struct is initialized assuming short_flag_valid should be true
-    } else if (*s == '-') {
+    } else if (*s == L'-') {
         opt_spec->short_flag_valid = false;
         s++;
     } else {
@@ -219,16 +219,17 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
         return parse_flag_modifiers(opts, opt_spec, option_spec, s, streams);
     }
 
+    // Collect the long flag name.
     const wchar_t *e = s;
-    while (*e && *e != '+' && *e != '=') e++;
+    while (*e && (*e == L'-' || *e == L'_' || iswalnum(*e))) e++;
     if (e == s) {
         streams.err.append_format(BUILTIN_ERR_INVALID_OPT_SPEC, opts.name.c_str(),
                                   option_spec.c_str(), *(s - 1));
         return false;
     }
-
     opt_spec->long_flag = wcstring(s, e - s);
     opts.long_to_short_flag.emplace(opt_spec->long_flag, opt_spec->short_flag);
+
     return parse_flag_modifiers(opts, opt_spec, option_spec, e, streams);
 }
 
@@ -236,7 +237,7 @@ static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc
                                 io_streams_t &streams) {
     wchar_t *cmd = argv[0];
 
-    while (*optind < argc) {
+    while (true) {
         if (wcscmp(L"--", argv[*optind]) == 0) {
             ++*optind;
             break;
@@ -246,7 +247,10 @@ static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc
             return STATUS_CMD_ERROR;
         }
 
-        ++*optind;
+        if (++*optind == argc) {
+            streams.err.append_format(_(L"%ls: Missing -- separator\n"), cmd);
+            return STATUS_INVALID_ARGS;
+        }
     }
 
     if (opts.options.empty()) {
@@ -315,6 +319,12 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 break;
             }
         }
+    }
+
+    if (argc == w.woptind || wcscmp(L"--", argv[w.woptind - 1]) == 0) {
+        // The user didn't specify any option specs.
+        streams.err.append_format(_(L"%ls: No option specs were provided\n"), cmd);
+        return STATUS_INVALID_ARGS;
     }
 
     *optind = w.woptind;
@@ -417,9 +427,8 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     const wchar_t *cmd = opts.name.c_str();
     int argc = static_cast<int>(args.size());
 
-    // This is awful but we need to convert our wcstring_list_t to a <wchar_t **> that can be passed
-    // to w.wgetopt_long(). Furthermore, because we're dynamically allocating the array of pointers
-    // we need to ensure the memory for the data structure is freed when we leave this scope.
+    // We need to convert our wcstring_list_t to a <wchar_t **> that can be used by wgetopt_long().
+    // This ensures the memory for the data structure is freed when we leave this scope.
     null_terminated_array_t<wchar_t> argv_container(args);
     auto argv = (wchar_t **)argv_container.get();
 
@@ -433,7 +442,17 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     update_bool_flag_counts(opts);
 
     for (int i = optind; argv[i]; i++) opts.argv.push_back(argv[i]);
-    if (opts.min_args > 0 && opts.argv.size() < opts.min_args) {
+
+    return STATUS_CMD_OK;
+}
+
+static int check_min_max_args_constraints(argparse_cmd_opts_t &opts, const wcstring_list_t &args,
+                                          parser_t &parser, io_streams_t &streams) {
+    UNUSED(parser);
+    const wchar_t *cmd = opts.name.c_str();
+    int argc = static_cast<int>(args.size());
+
+    if (opts.argv.size() < opts.min_args) {
         streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, opts.min_args, opts.argv.size());
         return STATUS_CMD_ERROR;
     }
@@ -466,11 +485,13 @@ int builtin_argparse(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_OK;
     }
 
+#if 0
     if (optind == argc) {
         // Apparently we weren't handed any arguments to be parsed according to the option specs we
         // just collected. So there isn't anything for us to do.
         return STATUS_CMD_OK;
     }
+#endif
 
     wcstring_list_t args;
     args.push_back(opts.name);
@@ -480,6 +501,9 @@ int builtin_argparse(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     retval = argparse_parse_args(opts, args, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    retval = check_min_max_args_constraints(opts, args, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     for (auto it : opts.options) {

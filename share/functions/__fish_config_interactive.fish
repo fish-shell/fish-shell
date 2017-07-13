@@ -289,7 +289,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # First check if we are on OpenSUSE since SUSE's handler has no options
         # but the same name and path as Ubuntu's.
         if contains -- suse $os
-            and type -q -p command-not-found
+            and type -q command-not-found
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 /usr/bin/command-not-found $argv[1]
             end
@@ -309,7 +309,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
                 /run/current-system/sw/bin/command-not-found $argv
             end
             # Ubuntu Feisty places this command in the regular path instead
-        else if type -q -p command-not-found
+        else if type -q command-not-found
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 command-not-found -- $argv[1]
             end

@@ -1,0 +1,66 @@
+# Test the `argparse` builtin.
+
+##########
+# Start by verifying a bunch of error conditions.
+
+echo '# No args is an error' >&2
+argparse
+
+echo '# Missing -- is an error' >&2
+argparse h/help
+
+echo '# Flags but no option specs is an error' >&2
+argparse -s -- hello
+
+echo '# Invalid option specs' >&2
+argparse h-
+argparse +help
+argparse h/help:
+argparse h-help::
+argparse h-help=x
+
+echo '# --max-args and --min-args work' >&2
+begin
+    argparse --name min-max --min-args 1 h/help --
+    argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1
+    argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1 arg2
+    argparse --name min-max --min-args 1 --max-args 3 h/help -- --help arg1 arg2 arg3
+    argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1 arg2 -h arg3 arg4
+    argparse --name min-max --max-args 1 h/help --
+    argparse --name min-max --max-args 1 h/help -- arg1
+    argparse --name min-max --max-args 1 h/help -- arg1 arg2
+end
+
+##########
+# Now verify that validly formed invocations work as expected.
+
+echo '# No args'
+argparse h/help --
+
+echo '# One arg and no matching flags'
+begin
+    argparse h/help -- help
+    set -l
+    show $argv
+end
+
+echo '# Five args with two matching a flag'
+begin
+    argparse h/help -- help --help me -h 'a lot more'
+    set -l
+    show $argv
+end
+
+echo '# Required, optional, and multiple flags'
+begin
+    argparse 'h/help' 'a/abc=' 'd/def=?' 'g/ghk=+' -- help --help me --ghk=g1 --abc=ABC --ghk g2 --d -g g3
+    set -l
+    show $argv
+end
+
+echo '# --stop-nonopt works'
+begin
+    argparse --stop-nonopt 'h/help' 'a/abc=' -- -a A1 -h --abc A2 non-opt 'second non-opt' --help
+    set -l
+    show $argv
+end

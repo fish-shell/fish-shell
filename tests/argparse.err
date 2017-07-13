@@ -1,0 +1,16 @@
+# No args is an error
+argparse: No option specs were provided
+# Missing -- is an error
+argparse: Missing -- separator
+# Flags but no option specs is an error
+argparse: No option specs were provided
+# Invalid option specs
+argparse: Invalid option spec 'h-' at char '-'
+argparse: Invalid option spec '+help' at char 'h'
+argparse: Invalid option spec 'h/help:' at char ':'
+argparse: Invalid option spec 'h-help::' at char ':'
+argparse: Invalid option spec 'h-help=x' at char 'x'
+# --max-args and --min-args work
+min-max: Expected at least 1 args, got only 0
+min-max: Expected at most 3 args, got 4
+min-max: Expected at most 1 args, got 2

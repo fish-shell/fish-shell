@@ -1,0 +1,36 @@
+# No args
+# One arg and no matching flags
+argv help
+count=1
+|help|
+# Five args with two matching a flag
+_flag_h 2
+_flag_help 2
+argv 'help'  'me'  'a lot more'
+count=3
+|help|
+|me|
+|a lot more|
+# Required, optional, and multiple flags
+_flag_a ABC
+_flag_abc ABC
+_flag_d
+_flag_def
+_flag_g 'g1'  'g2'  'g3'
+_flag_ghk 'g1'  'g2'  'g3'
+_flag_h 1
+_flag_help 1
+argv 'help'  'me'
+count=2
+|help|
+|me|
+# --stop-nonopt works
+_flag_a A2
+_flag_abc A2
+_flag_h 1
+_flag_help 1
+argv 'non-opt'  'second non-opt'  '--help'
+count=3
+|non-opt|
+|second non-opt|
+|--help|

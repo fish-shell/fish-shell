@@ -1,53 +1,19 @@
-
 function psub --description "Read from stdin into a file and output the filename. Remove the file when the command that called psub exits."
+    set -l options 'h/help' 'f/file' 's/suffix='
+    argparse -n psub --max-args=0 $options -- $argv
+    or return
+
+    if set -q _flag_help
+        __fish_print_help psub
+        return 0
+    end
 
     set -l dirname
     set -l filename
     set -l funcname
-    set -l suffix
-    set -l use_fifo 1
-
-    while count $argv >/dev/null
-
-        switch $argv[1]
-            case -h --help
-                __fish_print_help psub
-                return 0
-
-            case -f --file
-                set use_fifo 0
-                set -e argv[1]
-
-            case -s --suffix
-                if not set -q argv[2]
-                    printf "psub: missing operand\n"
-                    return 1
-                end
-                set suffix $argv[2]
-                set -e argv[1..2]
-
-            case --
-                set -e argv[1]
-                break
-
-            case "-?" "--*"
-                printf "psub: invalid option: '%s'\n" $argv[1]
-                return 1
-
-            case "-*"
-                # Ungroup short options: -hfs => -h -f -s
-                set opts "-"(string sub -s 2 -- $argv[1] | string split "")
-                set -e argv[1]
-                set argv $opts $argv
-
-            case "*"
-                printf "psub: extra operand: '%s'\n" $argv[1]
-                return 1
-        end
-    end
 
     if not status --is-command-substitution
-        echo psub: Not inside of command substitution >&2
+        printf (_ "%s: Not inside of command substitution") psub >&2
         return 1
     end
 
@@ -55,21 +21,21 @@ function psub --description "Read from stdin into a file and output the filename
     set -q TMPDIR
     and set tmpdir $TMPDIR
 
-    if test use_fifo = 1
+    if not set -q _flag_file
         # Write output to pipe. This needs to be done in the background so
         # that the command substitution exits without needing to wait for
         # all the commands to exit
         set dirname (mktemp -d $tmpdir/.psub.XXXXXXXXXX)
         or return
-        set filename $dirname/psub.fifo"$suffix"
+        set filename $dirname/psub.fifo"$_flag_suffix"
         mkfifo $filename
         cat >$filename &
-    else if test -z $suffix
+    else if test -z "$_flag_suffix"
         set filename (mktemp $tmpdir/.psub.XXXXXXXXXX)
         cat >$filename
     else
         set dirname (mktemp -d $tmpdir/.psub.XXXXXXXXXX)
-        set filename $dirname/psub"$suffix"
+        set filename $dirname/psub"$_flag_suffix"
         cat >$filename
     end
 
@@ -79,10 +45,8 @@ function psub --description "Read from stdin into a file and output the filename
     # Find unique function name
     while true
         set funcname __fish_psub_(random)
-
         if not functions $funcname >/dev/null ^/dev/null
             break
-
         end
     end
 

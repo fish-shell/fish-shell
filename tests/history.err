@@ -1,5 +1,4 @@
-history: Invalid combination of options,
-you cannot do both 'search' and 'merge' in the same invocation
+history: Mutually exclusive flags 'merge' and `search` seen
 history: you cannot use any options with the clear command
 history: you cannot use any options with the merge command
 history: save expected 0 args, got 1

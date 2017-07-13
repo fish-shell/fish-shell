@@ -11,7 +11,7 @@ history --save xyz
 
 # Now with the history builtin.
 builtin history --save --prefix
-builtin history --clear --with-time
+builtin history --clear --show-time
 builtin history --merge xyz
 builtin history --clear abc def
 
@@ -27,13 +27,13 @@ history clear --contains
 history merge -t
 history save xyz
 history --prefix clear
-history --with-time merge
+history --show-time merge
 echo >&2
 
 # Now with the history builtin.
 builtin history --search --merge
 builtin history save --prefix
-builtin history clear --with-time
+builtin history clear --show-time
 builtin history merge xyz
 builtin history clear abc def
 builtin history --contains save

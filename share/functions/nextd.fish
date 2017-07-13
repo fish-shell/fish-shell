@@ -1,6 +1,6 @@
 function nextd --description "Move forward in the directory history"
     set -l options 'h/help' 'l/list'
-    argparse -n nextd $options -- $argv
+    argparse -n nextd --max-args=1 $options -- $argv
     or return
 
     if set -q _flag_help
@@ -8,13 +8,8 @@ function nextd --description "Move forward in the directory history"
         return 0
     end
 
-    if set -q argv[2]
-        printf (_ "%s: Too many arguments") nextd >&2
-        return 1
-    end
-
     set -l times 1
-    if set -q $argv[1]
+    if set -q argv[1]
         if test $argv[1] -ge 0 ^/dev/null
             set times $argv[1]
         else

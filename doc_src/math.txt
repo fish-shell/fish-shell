@@ -2,7 +2,7 @@
 
 \subsection math-synopsis Synopsis
 \fish{synopsis}
-math [-sN] EXPRESSION
+math [-sN | --scale=N] [--] EXPRESSION
 \endfish
 
 \subsection math-description Description
@@ -13,7 +13,7 @@ For a description of the syntax supported by math, see the manual for the bc pro
 
 The following options are available:
 
-- `-sN` Sets the scale of the result. `N` must be an integer and defaults to zero. This simply sets bc's `scale` variable to the provided value. Note that you cannot put a space between `-s` and `N`.
+- `-sN` or `--scale=N` sets the scale of the result. `N` must be an integer and defaults to zero. This simply sets bc's `scale` variable to the provided value.
 
 \subsection return-values Return Values
 
@@ -32,5 +32,7 @@ If invalid options or no expression is provided the return `status` is two. If t
 `math -s3 10 / 6` outputs `1.666`.
 
 \subsection math-cautions Cautions
+
+You should always place a `--` flag separator before the expression. 99.99% of the time you'll get the desired result without the separator. Something like `math -10.0 / 2` will fail because the negative floating point value gets treated as an invalid flag. But `math -10 / 2` will work because negative integers are special-cased.
 
 Note that the modulo operator (`x % y`) is not well defined for floating point arithmetic. The `bc` command produces a nonsensical result rather than emit an error and fail in that case. It doesn't matter if the arguments are integers; e.g., `10 % 4`. You'll still get an incorrect result. Do not use the `-sN` flag with N greater than zero if you want sensible answers when using the modulo operator.

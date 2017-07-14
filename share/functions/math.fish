@@ -1,6 +1,11 @@
 function math --description "Perform math calculations in bc"
-    set -l options 'h/help' 's/scale='
-    argparse -n math --min-args=1 $options -- $argv
+    if not set -q argv[2]
+        # Make sure an invocation like `math "-1 + 1"` doesn't treat the string as an option.
+        set argv -- $argv
+    end
+
+    set -l options 'h/help' 's/scale=' '#-val'
+    argparse -n math --stop-nonopt --min-args=1 $options -- $argv
     or return
 
     if set -q _flag_help
@@ -8,13 +13,20 @@ function math --description "Perform math calculations in bc"
         return 0
     end
 
-    set -l scale 0  # default is integer arithmetic
+    set -l scale 0 # default is integer arithmetic
     if set -q _flag_scale
         set scale $_flag_scale
         if not string match -q -r '^\d+$' "$scale"
             printf (_ "%s: Expected an integer to follow --scale") math >&2
             return 2 # missing argument is an error
         end
+    end
+
+    if set -q _flag_val
+        # The expression began with a negative number. Put it back in the expression.
+        # The correct thing is for the person calling us to insert a `--` separator before the
+        # expression to stop parsing flags. But we'll work around that missing token here.
+        set argv -$_flag_val $argv
     end
 
     # Set BC_LINE_LENGTH to a ridiculously high number so it only uses one line for most results.

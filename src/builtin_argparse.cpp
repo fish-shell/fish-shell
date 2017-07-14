@@ -173,6 +173,12 @@ static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams
 static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
                                  const wcstring &option_spec, const wchar_t *s,
                                  io_streams_t &streams) {
+    if (opt_spec->short_flag == L'#' && *s) {
+        streams.err.append_format(_(L"%ls: Short flag '#' does not allow modifiers like '%lc'\n"),
+                                  opts.name.c_str(), *s);
+        return false;
+    }
+
     if (*s == L'=') {
         s++;
         if (*s == L'?') {
@@ -200,19 +206,33 @@ static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_s
 static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
                               io_streams_t &streams) {
     if (option_spec.empty()) {
-        streams.err.append_format(_(L"%s: An option spec must have a short flag letter\n"),
+        streams.err.append_format(_(L"%ls: An option spec must have a short flag letter\n"),
                                   opts.name.c_str());
         return false;
     }
 
     const wchar_t *s = option_spec.c_str();
+    if (!iswalnum(*s) && *s != L'#') {
+        streams.err.append_format(_(L"%ls: Short flag '%lc' invalid, must be alphanum or '#'\n"),
+                                  opts.name.c_str(), *s);
+        return false;
+    }
     option_spec_t *opt_spec = new option_spec_t(*s++);
 
-    if (*s == L'/') {
-        s++;  // the struct is initialized assuming short_flag_valid should be true
+    if (*(s - 1) == L'#') {
+        if (*s != L'-') {
+            streams.err.append_format(
+                    _(L"%ls: Short flag '#' must be followed by '-' and a long name\n"),
+                    opts.name.c_str());
+            return false;
+        }
+        opt_spec->short_flag_valid = false;
+        s++;
     } else if (*s == L'-') {
         opt_spec->short_flag_valid = false;
         s++;
+    } else if (*s == L'/') {
+        s++;  // the struct is initialized assuming short_flag_valid should be true
     } else {
         // Long flag name not allowed if second char isn't '/' or '-' so just check for
         // behavior modifier chars.
@@ -361,6 +381,8 @@ static void populate_option_strings(
 static void update_bool_flag_counts(argparse_cmd_opts_t &opts) {
     for (auto it : opts.options) {
         auto opt_spec = it.second;
+        // The '#' short flag is special. It doesn't take any values but isn't a boolean arg.
+        if (opt_spec->short_flag == L'#') continue;
         if (opt_spec->num_allowed != 0 || opt_spec->num_seen == 0) continue;
         wchar_t count[20];
         swprintf(count, sizeof count / sizeof count[0], L"%d", opt_spec->num_seen);
@@ -380,6 +402,21 @@ static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_
             return STATUS_INVALID_ARGS;
         }
         if (opt == '?') {
+            auto found = opts.options.find(L'#');
+            if (found != opts.options.end()) {
+                // Try to parse it as a number; e.g., "-123".
+                long x = fish_wcstol(argv[w.woptind - 1] + 1);
+                if (!errno) {
+                    wchar_t val[20];
+                    swprintf(val, sizeof val / sizeof val[0], L"%ld", x);
+                    auto opt_spec = found->second;
+                    opt_spec->vals.clear();
+                    opt_spec->vals.push_back(wcstring(val));
+                    opt_spec->num_seen++;
+                    w.nextchar = NULL;
+                    continue;
+                }
+            }
             builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
             return STATUS_INVALID_ARGS;
         }
@@ -446,11 +483,10 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     return STATUS_CMD_OK;
 }
 
-static int check_min_max_args_constraints(argparse_cmd_opts_t &opts, const wcstring_list_t &args,
-                                          parser_t &parser, io_streams_t &streams) {
+static int check_min_max_args_constraints(argparse_cmd_opts_t &opts, parser_t &parser,
+                                          io_streams_t &streams) {
     UNUSED(parser);
     const wchar_t *cmd = opts.name.c_str();
-    int argc = static_cast<int>(args.size());
 
     if (opts.argv.size() < opts.min_args) {
         streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, opts.min_args, opts.argv.size());
@@ -462,6 +498,34 @@ static int check_min_max_args_constraints(argparse_cmd_opts_t &opts, const wcstr
     }
 
     return STATUS_CMD_OK;
+}
+
+/// Put the result of parsing the supplied args into the caller environment as local vars.
+static void set_argparse_result_vars(argparse_cmd_opts_t &opts) {
+    for (auto it : opts.options) {
+        option_spec_t *opt_spec = it.second;
+        if (!opt_spec->num_seen) continue;
+
+        wcstring var_name_prefix = L"_flag_";
+        auto val = list_to_array_val(opt_spec->vals);
+        if (opt_spec->short_flag_valid) {
+            env_set(var_name_prefix + opt_spec->short_flag, *val == ENV_NULL ? NULL : val->c_str(),
+                    ENV_LOCAL);
+        }
+        if (!opt_spec->long_flag.empty()) {
+            // We do a simple replacement of all non alphanum chars rather than calling
+            // escape_string(long_flag, 0, STRING_STYLE_VAR).
+            wcstring long_flag = opt_spec->long_flag;
+            for (size_t pos = 0; pos < long_flag.size(); pos++) {
+                if (!iswalnum(long_flag[pos])) long_flag[pos] = L'_';
+            }
+            env_set(var_name_prefix + long_flag, *val == ENV_NULL ? NULL : val->c_str(),
+                    ENV_LOCAL);
+        }
+    }
+
+    auto val = list_to_array_val(opts.argv);
+    env_set(L"argv", *val == ENV_NULL ? NULL : val->c_str(), ENV_LOCAL);
 }
 
 /// The argparse builtin. This is explicitly not compatible with the BSD or GNU version of this
@@ -485,14 +549,6 @@ int builtin_argparse(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_OK;
     }
 
-#if 0
-    if (optind == argc) {
-        // Apparently we weren't handed any arguments to be parsed according to the option specs we
-        // just collected. So there isn't anything for us to do.
-        return STATUS_CMD_OK;
-    }
-#endif
-
     wcstring_list_t args;
     args.push_back(opts.name);
     while (optind < argc) args.push_back(argv[optind++]);
@@ -503,31 +559,9 @@ int builtin_argparse(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     retval = argparse_parse_args(opts, args, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    retval = check_min_max_args_constraints(opts, args, parser, streams);
+    retval = check_min_max_args_constraints(opts, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    for (auto it : opts.options) {
-        option_spec_t *opt_spec = it.second;
-        if (!opt_spec->num_seen) continue;
-
-        wcstring var_name_prefix = L"_flag_";
-        auto val = list_to_array_val(opt_spec->vals);
-        env_set(var_name_prefix + opt_spec->short_flag, *val == ENV_NULL ? NULL : val->c_str(),
-                ENV_LOCAL);
-        if (!opt_spec->long_flag.empty()) {
-            // We do a simple replacement of all non alphanum chars rather than calling
-            // escape_string(long_flag, 0, STRING_STYLE_VAR).
-            wcstring long_flag = opt_spec->long_flag;
-            for (size_t pos = 0; pos < long_flag.size(); pos++) {
-                if (!iswalnum(long_flag[pos])) long_flag[pos] = L'_';
-            }
-            env_set(var_name_prefix + long_flag, *val == ENV_NULL ? NULL : val->c_str(),
-                    ENV_LOCAL);
-        }
-    }
-
-    auto val = list_to_array_val(opts.argv);
-    env_set(L"argv", *val == ENV_NULL ? NULL : val->c_str(), ENV_LOCAL);
-
+    set_argparse_result_vars(opts);
     return retval;
 }

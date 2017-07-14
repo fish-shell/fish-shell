@@ -6,7 +6,7 @@ argparse: Missing -- separator
 argparse: No option specs were provided
 # Invalid option specs
 argparse: Invalid option spec 'h-' at char '-'
-argparse: Invalid option spec '+help' at char 'h'
+argparse: Short flag '+' invalid, must be alphanum or '#'
 argparse: Invalid option spec 'h/help:' at char ':'
 argparse: Invalid option spec 'h-help::' at char ':'
 argparse: Invalid option spec 'h-help=x' at char 'x'
@@ -14,3 +14,10 @@ argparse: Invalid option spec 'h-help=x' at char 'x'
 min-max: Expected at least 1 args, got only 0
 min-max: Expected at most 3 args, got 4
 min-max: Expected at most 1 args, got 2
+# Invalid "#-val" spec
+argparse: Short flag '#' does not allow modifiers like '='
+# Invalid arg in the face of a "#-val" spec
+argparse: Unknown option '-x'
+Standard input (line 38): 
+argparse '#-val' -- abc -x def
+^

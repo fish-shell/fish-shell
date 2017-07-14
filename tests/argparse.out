@@ -34,3 +34,12 @@ count=3
 |non-opt|
 |second non-opt|
 |--help|
+# A "#-val" spec works
+_flag_val 123
+argv 'abc'  'def'
+_flag_t woohoo
+_flag_token woohoo
+_flag_v 2
+_flag_val -234
+_flag_verbose 2
+argv 'a1'  'a2'

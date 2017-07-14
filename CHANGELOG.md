@@ -26,6 +26,7 @@
 - Fix setting `$COLUMNS` and `$LINES` before first prompt is displayed (#4141).
 - `read` failures due to too much data should define the var (#4180).
 - multiple `read` commands in non-interactive scripts were broken in fish 2.6.0 (#4206).
+- Fix regression involving universal variables with side-effects at startup such as `set -U fish_escape_delay_ms 10` (#4196).
 - Added completions for:
  - `as` (#4130).
  - `jest` (#4142).

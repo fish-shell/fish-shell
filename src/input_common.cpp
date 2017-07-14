@@ -60,7 +60,6 @@ static int (*interrupt_handler)();
 
 void input_common_init(int (*ih)()) {
     interrupt_handler = ih;
-    update_wait_on_escape_ms();
 }
 
 void input_common_destroy() {}

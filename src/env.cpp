@@ -588,7 +588,8 @@ static bool variable_is_colon_delimited_var(const wcstring &str) {
 /// React to modifying the given variable.
 static void react_to_variable_change(const wcstring &key) {
     // Don't do any of this until `env_init()` has run. We only want to do this in response to
-    // variables set by the user; e.g., in a script like *config.fish* or interactively.
+    // variables set by the user; e.g., in a script like *config.fish* or interactively or as part
+    // of loading the universal variables for the first time.
     if (!env_initialized) return;
 
     if (var_is_locale(key)) {
@@ -753,6 +754,26 @@ void misc_init() {
 #endif  // OS_IS_MS_WINDOWS
 }
 
+static void env_universal_callbacks(callback_data_list_t &callbacks) {
+    for (size_t i = 0; i < callbacks.size(); i++) {
+        const callback_data_t &data = callbacks.at(i);
+        universal_callback(data.type, data.key.c_str());
+    }
+}
+
+void env_universal_barrier() {
+    ASSERT_IS_MAIN_THREAD();
+    if (!uvars()) return;
+
+    callback_data_list_t callbacks;
+    bool changed = uvars()->sync(callbacks);
+    if (changed) {
+        universal_notifier_t::default_notifier().post_notification();
+    }
+
+    env_universal_callbacks(callbacks);
+}
+
 void env_init(const struct config_paths_t *paths /* or NULL */) {
     // These variables can not be altered directly by the user.
     const wchar_t *const ro_keys[] = {
@@ -869,11 +890,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     env_set_termsize();    // initialize the terminal size variables
     env_set_read_limit();  // initialize the read_byte_limit
 
-    // Set up universal variables. The empty string means to use the deafult path.
-    assert(s_universal_variables == NULL);
-    s_universal_variables = new env_universal_t(L"");
-    s_universal_variables->load();
-
     // Set g_use_posix_spawn. Default to true.
     env_var_t use_posix_spawn = env_get_string(L"fish_use_posix_spawn");
     g_use_posix_spawn =
@@ -882,11 +898,23 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // Set fish_bind_mode to "default".
     env_set(FISH_BIND_MODE_VAR, DEFAULT_BIND_MODE, ENV_GLOBAL);
 
+    // This is somewhat subtle. At this point we consider our environment to be sufficiently
+    // initialized that we can react to changes to variables. Prior to doing this we expect that the
+    // code for setting vars that might have side-effects will do whatever
+    // `react_to_variable_change()` would do for that var.
+    env_initialized = true;
+
+    // Set up universal variables. The empty string means to use the default path.
+    assert(s_universal_variables == NULL);
+    s_universal_variables = new env_universal_t(L"");
+    callback_data_list_t callbacks;
+    s_universal_variables->load(callbacks);
+    env_universal_callbacks(callbacks);
+
     // Now that the global scope is fully initialized, add a toplevel local scope. This same local
     // scope will persist throughout the lifetime of the fish process, and it will ensure that `set
     // -l` commands run at the command-line don't affect the global scope.
     env_push(false);
-    env_initialized = true;
 }
 
 /// Search all visible scopes in order for the specified key. Return the first scope in which it was
@@ -1478,23 +1506,6 @@ env_vars_snapshot_t::env_vars_snapshot_t(const wchar_t *const *keys) {
         const env_var_t val = env_get_string(key);
         if (!val.missing()) {
             vars[key] = val;
-        }
-    }
-}
-
-void env_universal_barrier() {
-    ASSERT_IS_MAIN_THREAD();
-    if (uvars()) {
-        callback_data_list_t changes;
-        bool changed = uvars()->sync(&changes);
-        if (changed) {
-            universal_notifier_t::default_notifier().post_notification();
-        }
-
-        // Post callbacks.
-        for (size_t i = 0; i < changes.size(); i++) {
-            const callback_data_t &data = changes.at(i);
-            universal_callback(data.type, data.key.c_str());
         }
     }
 }

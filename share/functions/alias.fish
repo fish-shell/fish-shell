@@ -25,7 +25,6 @@ function alias --description 'Creates a function wrapping a command'
     else if not set -q argv[2]
         # Alias definition of the form "name=value".
         set -l tmp (string split -m 1 "=" -- $argv) ""
-        show $tmp
         set name $tmp[1]
         set body $tmp[2]
     else

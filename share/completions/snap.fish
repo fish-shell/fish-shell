@@ -70,6 +70,36 @@ function __fish_snap_aliases --description 'List aliases'
     snap aliases | tr -s ' ' | cut -d ' ' -f 2 | grep -v Alias
 end
 
+function __fish_snap_no_assertion --description 'Check that no assertion type is used yet'
+	for i in (commandline -opc)
+		if contains -- $i account account-key model serial snap-declaration snap-build snap-revision\
+            system-user validation
+			return 1
+		end
+	end
+	return 0
+end
+
+function __fish_snap_using_assertion --description 'Check if certain assertion type is used'
+    if __fish_snap_using_subcommand known
+        if __fish_snap_using_subcommand $argv[1]
+            return 0
+        end
+    end
+    return 1
+end
+
+function __fish_snap_assertion
+    set assertion $argv[1]; set -e argv[1]
+    complete -f -c snap -n '__fish_snap_using_subcommand known; and __fish_snap_no_assertion' -a $assertion
+    complete -f -c snap -n "__fish_snap_using_assertion $assertion" -a "(__fish_snap_filters $assertion)"\
+        --description "Filter"
+end
+
+function __fish_snap_filters --description 'List assertion filters'
+    snap known $argv[1] | grep : | grep -v 'type: ' | sed -e 's/: /=/1'
+end
+
 # Enable when __fish_print_packages supports snaps
 #complete -c snap -n '__fish_snap_use_package' -a '(__fish_print_packages)' --description 'Package'
 
@@ -164,10 +194,18 @@ __fish_snap_subcommand install -l dangerous     --description "Install the given
 __fish_snap_subcommand interfaces               --description "Lists interfaces in the system"
 __fish_snap_subcommand interfaces -s i          --description "Constrain listing to specific interfaces"
 
-# TODO Provide a list of assertions
 # Known
 __fish_snap_subcommand known -r                 --description "Shows known assertions of the provided type"
 __fish_snap_subcommand known -l remote          --description "Shows known assertions of the provided type"
+__fish_snap_assertion account                   --description 'Assertion type'
+__fish_snap_assertion account-key               --description 'Assertion type'
+__fish_snap_assertion model                     --description 'Assertion type'
+__fish_snap_assertion serial                    --description 'Assertion type'
+__fish_snap_assertion snap-declaration          --description 'Assertion type'
+__fish_snap_assertion snap-build                --description 'Assertion type'
+__fish_snap_assertion snap-revision             --description 'Assertion type'
+__fish_snap_assertion system-user               --description 'Assertion type'
+__fish_snap_assertion validation                --description 'Assertion type'
 
 # List
 __fish_snap_subcommand list                     --description "List installed snaps"

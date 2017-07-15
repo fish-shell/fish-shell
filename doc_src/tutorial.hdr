@@ -581,6 +581,12 @@ To prepend /usr/local/bin and /usr/sbin to `$PATH`, you can write:
 >_ set PATH /usr/local/bin /usr/sbin $PATH
 \endfish
 
+To remove /usr/local/bin from `$PATH`, you can write:
+
+\fish{cli-dark}
+>_ set PATH (string match -v /usr/local/bin $PATH)
+\end{fish}
+
 You can do so directly in `config.fish`, like you might do in other shells with `.profile`. See [this example](#path_example).
 
 A faster way is to modify the `$fish_user_paths` [universal variable](#tut_universal), which is automatically prepended to `$PATH`. For example, to permanently add `/usr/local/bin` to your `$PATH`, you could write:

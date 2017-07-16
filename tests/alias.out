@@ -1,2 +1,5 @@
 ran foo
 foo ran
+# bare `alias` should list the aliases we have created and nothing else
+alias a-2 'echo "hello there"'
+alias my_alias 'foo; and echo foo ran'

@@ -1,5 +1,5 @@
 #
-#Test aliases, loops, conditionals and some basic elements
+#Test function, loops, conditionals and some basic elements
 #
 
 for i in 1 2 #Comment on same line as command
@@ -30,7 +30,7 @@ for i in \
 end
 
 
-# Simple alias tests
+# Simple function tests
 
 function foo
     echo >../test/temp/fish_foo.txt $argv

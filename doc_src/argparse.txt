@@ -9,13 +9,13 @@ argparse [OPTIONS] OPTION_SPEC... -- [ARG...]
 
 This command makes it easy for fish scripts and functions to handle arguments in a manner 100% identical to how fish builtin commands handle their arguments. You pass a sequence of arguments that define the options recognized, followed by a literal `--`, then the arguments to be parsed (which might also include a literal `--`). More on this in the <a href="#argparse-usage">usage</a> section below.
 
-Each OPTION_SPEC can be written in the domain specific language <a href="#argparse-option-specs">described below</a> or created using the companion <a href="#fish-opt">`fish_opt`</a> command.
+Each OPTION_SPEC can be written in the domain specific language <a href="#argparse-option-specs">described below</a> or created using the companion <a href="#fish-opt">`fish_opt`</a> command. All OPTION_SPECs must appear after any argparse flags and before the `--` that separates them from the arguments to be parsed.
 
 Each option that is seen in the ARG list will result in a var name of the form `_flag_X`, where `X` is the short flag letter and the long flag name. The OPTION_SPEC always requires a short flag even if it can't be used. So there will always be `_flag_X` var set using the short flag letter if the corresponding short or long flag is seen. The long flag name var (e.g., `_flag_help`) will only be defined, obviously, if the OPTION_SPEC includes a long flag name.
 
 For example `_flag_h` and `_flag_help` if `-h` or `--help` is seen. The var will be set with local scope (i.e., as if the script had done `set -l _flag_X`). If the flag is a boolean (that is, does not have an associated value) the value is a count of how many times the flag was seen. If the option can have zero or more values the flag var will have zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag var will not be set.
 
-The following `argparse` options are available:
+The following `argparse` options are available. They must appear before all OPTION_SPECs:
 
 - `-n` or `--name` is the command name to insert into any error messages. If you don't provide this value `argparse` will be used.
 
@@ -106,4 +106,4 @@ If an error occurs during argparse processing it will exit with a non-zero statu
 
 \subsection argparse-notes Notes
 
-Prior to the addition of this builtin command in the 2.7.0 release there were two main ways to parse the arguments passed to a fish script or function. One way was to use the OS provided `getopt` command. The problem with that is that the GNU and BSD implementations are not compatible. Which makes using that external command difficult other than trivial situations. The other way is to iterate over `$argv` and use the fish `switch` statement to decide how to handle the argument. That, however, involves a huge amount of boilerplate code. It is also borderline impossible to implement the same behavior as the builtin commands using either approach.
+Prior to the addition of this builtin command in the 2.7.0 release there were two main ways to parse the arguments passed to a fish script or function. One way was to use the OS provided `getopt` command. The problem with that is that the GNU and BSD implementations are not compatible. Which makes using that external command difficult other than in trivial situations. The other way is to iterate over `$argv` and use the fish `switch` statement to decide how to handle the argument. That, however, involves a huge amount of boilerplate code. It is also borderline impossible to implement the same behavior as builtin commands.

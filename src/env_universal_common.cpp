@@ -346,9 +346,7 @@ wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexpor
 // Given a variable table, generate callbacks representing the difference between our vars and the
 // new vars.
 void env_universal_t::generate_callbacks(const var_table_t &new_vars,
-                                         callback_data_list_t *callbacks) const {
-    assert(callbacks != NULL);
-
+                                         callback_data_list_t &callbacks) const {
     // Construct callbacks for erased values.
     for (var_table_t::const_iterator iter = this->vars.begin(); iter != this->vars.end(); ++iter) {
         const wcstring &key = iter->first;
@@ -360,7 +358,7 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
 
         // If the value is not present in new_vars, it has been erased.
         if (new_vars.find(key) == new_vars.end()) {
-            callbacks->push_back(callback_data_t(ERASE, key, L""));
+            callbacks.push_back(callback_data_t(ERASE, key, L""));
         }
     }
 
@@ -379,7 +377,7 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
         if (existing == this->vars.end() || existing->second.exportv != new_entry.exportv ||
             existing->second.val != new_entry.val) {
             // Value has changed.
-            callbacks->push_back(
+            callbacks.push_back(
                 callback_data_t(new_entry.exportv ? SET_EXPORT : SET, key, new_entry.val));
         }
     }
@@ -408,7 +406,7 @@ void env_universal_t::acquire_variables(var_table_t *vars_to_acquire) {
     this->vars = std::move(*vars_to_acquire);
 }
 
-void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks) {
+void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
     ASSERT_IS_LOCKED(lock);
     assert(fd >= 0);
     // Get the dev / inode.
@@ -420,9 +418,7 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks) {
         var_table_t new_vars = this->read_message_internal(fd);
 
         // Announce changes.
-        if (callbacks != NULL) {
-            this->generate_callbacks(new_vars, callbacks);
-        }
+        this->generate_callbacks(new_vars, callbacks);
 
         // Acquire the new variables.
         this->acquire_variables(&new_vars);
@@ -430,7 +426,7 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks) {
     }
 }
 
-bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t *callbacks) {
+bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t &callbacks) {
     ASSERT_IS_LOCKED(lock);
 
     // Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids
@@ -507,12 +503,11 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
     return ret == 0;
 }
 
-bool env_universal_t::load() {
-    callback_data_list_t callbacks;
+bool env_universal_t::load(callback_data_list_t &callbacks) {
     const wcstring vars_path =
         explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
     scoped_lock locker(lock);
-    bool success = load_from_path(vars_path, &callbacks);
+    bool success = load_from_path(vars_path, callbacks);
     if (!success && !tried_renaming && errno == ENOENT) {
         // We failed to load, because the file was not found. Older fish used the hostname only. Try
         // moving the filename based on the hostname into place; if that succeeds try again.
@@ -523,10 +518,11 @@ bool env_universal_t::load() {
             const wcstring hostname_path = wdirname(vars_path) + L'/' + hostname_id;
             if (0 == wrename(hostname_path, vars_path)) {
                 // We renamed - try again.
-                success = this->load();
+                success = this->load(callbacks);
             }
         }
     }
+
     return success;
 }
 
@@ -645,7 +641,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
 
 // Returns true if modified variables were written, false if not. (There may still be variable
 // changes due to other processes on a false return).
-bool env_universal_t::sync(callback_data_list_t *callbacks) {
+bool env_universal_t::sync(callback_data_list_t &callbacks) {
     debug(5, L"universal log sync");
     scoped_lock locker(lock);
     // Our saving strategy:

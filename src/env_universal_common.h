@@ -41,8 +41,8 @@ class env_universal_t {
 
     mutable pthread_mutex_t lock;
     bool tried_renaming;
-    bool load_from_path(const wcstring &path, callback_data_list_t *callbacks);
-    void load_from_fd(int fd, callback_data_list_t *callbacks);
+    bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
+    void load_from_fd(int fd, callback_data_list_t &callbacks);
 
     void set_internal(const wcstring &key, const wcstring &val, bool exportv, bool overwrite);
     bool remove_internal(const wcstring &name);
@@ -58,7 +58,7 @@ class env_universal_t {
 
     // Given a variable table, generate callbacks representing the difference between our vars and
     // the new vars.
-    void generate_callbacks(const var_table_t &new_vars, callback_data_list_t *callbacks) const;
+    void generate_callbacks(const var_table_t &new_vars, callback_data_list_t &callbacks) const;
 
     // Given a variable table, copy unmodified values into self. May destructively modified
     // vars_to_acquire.
@@ -87,11 +87,11 @@ class env_universal_t {
     wcstring_list_t get_names(bool show_exported, bool show_unexported) const;
 
     /// Loads variables at the correct path.
-    bool load();
+    bool load(callback_data_list_t &callbacks);
 
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.
-    bool sync(callback_data_list_t *callbacks);
+    bool sync(callback_data_list_t &callbacks);
 };
 
 /// The "universal notifier" is an object responsible for broadcasting and receiving universal

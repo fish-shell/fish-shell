@@ -191,3 +191,6 @@ end
 if test (string length "$x") -ne $FISH_READ_BYTE_LIMIT
     echo reading the max amount of data with --nchars failed the length test
 end
+
+echo '# Confirm reading non-interactively works (#4206 regression)'
+echo abc\ndef | ../test/root/bin/fish -i -c 'read a; read b; show $a; show $b'

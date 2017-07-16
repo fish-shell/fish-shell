@@ -25,6 +25,7 @@
 - `count -h` and `count --help` now return one rather than produce command help output (#4189).
 - Fix setting `$COLUMNS` and `$LINES` before first prompt is displayed (#4141).
 - `read` failures due to too much data should define the var (#4180).
+- multiple `read` commands in non-interactive scripts were broken in fish 2.6.0 (#4206).
 - Added completions for:
  - `as` (#4130).
  - `jest` (#4142).

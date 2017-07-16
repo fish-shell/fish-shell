@@ -189,7 +189,7 @@ static std::vector<terminfo_mapping_t> terminfo_mappings;
 /// List of all terminfo mappings.
 static std::vector<terminfo_mapping_t> mappings;
 
-/// Set to true when the input subsytem has been initialized.
+/// Set to true when the input subsystem has been initialized.
 bool input_initialized = false;
 
 /// Initialize terminfo.
@@ -307,7 +307,6 @@ void init_input() {
     }
 
     input_initialized = true;
-    return;
 }
 
 void input_destroy() {

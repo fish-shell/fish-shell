@@ -58,3 +58,8 @@ newline
 
 # chunked read tests
 Chunked reads test pass
+# Confirm reading non-interactively works (#4206 regression)
+count=1
+|abc|
+count=1
+|def|

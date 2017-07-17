@@ -7,7 +7,7 @@ cat ../test/temp/file_truncation_test.txt
 echo -n > ../test/temp/file_truncation_test.txt
 cat ../test/temp/file_truncation_test.txt
 
-# Test events. 
+# Test events.
 
 
 # This pattern caused a crash; github issue #449
@@ -84,39 +84,6 @@ echo
 eval 'status -n
 status -n
 status -n'
-
-# Test psub
-cat (echo foo | psub)
-cat (echo bar | psub)
-cat (echo baz | psub)
-
-set -l filename (echo foo | psub)
-if test -e $filename
-    echo 'psub file was not deleted'
-else
-    echo 'psub file was deleted'
-end
-
-if count (echo foo | psub -s .cc | grep -o '\.cc$') >/dev/null
-    echo 'psub filename ends with .cc'
-else
-    echo 'psub filename does not end with .cc'
-end
-
-if count (echo foo | psub -f -s .cc | grep -o '\.cc$') >/dev/null
-    echo 'psub filename ends with .cc'
-else
-    echo 'psub filename does not end with .cc'
-end
-
-set -l filename (echo foo | psub -s .fish)
-if test -e (dirname $filename)
-    echo 'psub directory was not deleted'
-else
-    echo 'psub directory was deleted'
-end
-
-diff -q (__fish_print_help psub | psub) (psub -hs banana | psub)
 
 # Test support for unbalanced blocks
 function try_unbalanced_block

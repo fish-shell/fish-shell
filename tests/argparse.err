@@ -15,9 +15,17 @@ min-max: Expected at least 1 args, got only 0
 min-max: Expected at most 3 args, got 4
 min-max: Expected at most 1 args, got 2
 # Invalid "#-val" spec
-argparse: Short flag '#' does not allow modifiers like '='
+argparse: Implicit int short flag '#' does not allow modifiers like '='
 # Invalid arg in the face of a "#-val" spec
 argparse: Unknown option '-x'
 Standard input (line 38): 
 argparse '#-val' -- abc -x def
 ^
+# Defining a short flag more than once
+argparse: Short flag 's' already defined
+# Defining a long flag more than once
+argparse: Long flag 'short' already defined
+# Defining an implicit int flag more than once
+argparse: Implicit int flag '#' already defined
+# Defining an implicit int flag with modifiers
+argparse: Implicit int short flag 'v' does not allow modifiers like '='

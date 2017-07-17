@@ -52,6 +52,7 @@ class argparse_cmd_opts_t {
     bool stop_nonopt = false;
     size_t min_args = 0;
     size_t max_args = SIZE_MAX;
+    wchar_t implicit_int_flag = L'\0';
     wcstring name = L"argparse";
     wcstring_list_t raw_exclusive_flags;
     wcstring_list_t argv;
@@ -173,9 +174,9 @@ static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams
 static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
                                  const wcstring &option_spec, const wchar_t *s,
                                  io_streams_t &streams) {
-    if (opt_spec->short_flag == L'#' && *s) {
-        streams.err.append_format(_(L"%ls: Short flag '#' does not allow modifiers like '%lc'\n"),
-                                  opts.name.c_str(), *s);
+    if (opt_spec->short_flag == opts.implicit_int_flag && *s) {
+        streams.err.append_format(_(L"%ls: Implicit int short flag '%lc' does not allow modifiers like '%lc'\n"),
+                                  opts.name.c_str(), opt_spec->short_flag, *s);
         return false;
     }
 
@@ -195,6 +196,12 @@ static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_s
     if (*s) {
         streams.err.append_format(BUILTIN_ERR_INVALID_OPT_SPEC, opts.name.c_str(),
                                   option_spec.c_str(), *s);
+        return false;
+    }
+
+    if (opts.options.find(opt_spec->short_flag) != opts.options.end()) {
+        streams.err.append_format(L"%ls: Short flag '%lc' already defined\n", opts.name.c_str(),
+                                  opt_spec->short_flag);
         return false;
     }
 
@@ -226,12 +233,27 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
                     opts.name.c_str());
             return false;
         }
+        if (opts.implicit_int_flag) {
+            streams.err.append_format(
+                    _(L"%ls: Implicit int flag '%lc' already defined\n"), opts.name.c_str(), opts.implicit_int_flag);
+            return false;
+        }
+        opts.implicit_int_flag = opt_spec->short_flag;
         opt_spec->short_flag_valid = false;
         s++;
     } else if (*s == L'-') {
         opt_spec->short_flag_valid = false;
         s++;
     } else if (*s == L'/') {
+        s++;  // the struct is initialized assuming short_flag_valid should be true
+    } else if (*s == L'#') {
+        if (opts.implicit_int_flag) {
+            streams.err.append_format(
+                    _(L"%ls: Implicit int flag '%lc' already defined\n"), opts.name.c_str(), opts.implicit_int_flag);
+            return false;
+        }
+        opts.implicit_int_flag = opt_spec->short_flag;
+        opt_spec->num_allowed = 1;  // mandatory arg and can appear only once
         s++;  // the struct is initialized assuming short_flag_valid should be true
     } else {
         // Long flag name not allowed if second char isn't '/' or '-' so just check for
@@ -248,6 +270,11 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
         return false;
     }
     opt_spec->long_flag = wcstring(s, e - s);
+    if (opts.long_to_short_flag.find(opt_spec->long_flag) != opts.long_to_short_flag.end()) {
+        streams.err.append_format(L"%ls: Long flag '%ls' already defined\n", opts.name.c_str(),
+                                opt_spec->long_flag.c_str());
+        return false;
+    }
     opts.long_to_short_flag.emplace(opt_spec->long_flag, opt_spec->short_flag);
 
     return parse_flag_modifiers(opts, opt_spec, option_spec, e, streams);
@@ -402,7 +429,7 @@ static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_
             return STATUS_INVALID_ARGS;
         }
         if (opt == '?') {
-            auto found = opts.options.find(L'#');
+            auto found = opts.options.find(opts.implicit_int_flag);
             if (found != opts.options.end()) {
                 // Try to parse it as a number; e.g., "-123".
                 long x = fish_wcstol(argv[w.woptind - 1] + 1);

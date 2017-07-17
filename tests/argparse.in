@@ -37,6 +37,18 @@ argparse '#-val=' -- abc -x def
 echo '# Invalid arg in the face of a "#-val" spec' >&2
 argparse '#-val' -- abc -x def
 
+echo '# Defining a short flag more than once' >&2
+argparse 's/short' 'x/xray' 's/long' -- -s -x --long
+
+echo '# Defining a long flag more than once' >&2
+argparse 's/short' 'x/xray' 'l/short' -- -s -x --long
+
+echo '# Defining an implicit int flag more than once' >&2
+argparse '#-val' 'x/xray' 'v#val' -- -s -x --long
+
+echo '# Defining an implicit int flag with modifiers' >&2
+argparse 'v#val=' --
+
 ##########
 # Now verify that validly formed invocations work as expected.
 
@@ -71,8 +83,18 @@ begin
     show $argv
 end
 
-echo '# A "#-val" spec works'
+echo '# Implicit int flags work'
+for v in (set -l -n); set -e $v; end
 argparse '#-val' -- abc -123 def
 set -l
+for v in (set -l -n); set -e $v; end
 argparse 'v/verbose' '#-val' 't/token=' -- -123 a1 --token woohoo --234 -v a2 --verbose
+set -l
+echo '# Should be set to 987'
+for v in (set -l -n); set -e $v; end
+argparse 'm#max' -- argle -987 bargle
+set -l
+echo '# Should be set to 765'
+for v in (set -l -n); set -e $v; end
+argparse 'm#max' -- argle -987 bargle --max 765
 set -l

@@ -20,7 +20,7 @@ function history --description "display or manipulate interactive command histor
 
     set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,C' --exclusive 't,T'
     set options $options 'h/help' 'c/contains' 'e/exact' 'p/prefix'
-    set options $options 'C/case-sensitive' 'z/null' 't/show-time=?' 'n/max=' '#-max'
+    set options $options 'C/case-sensitive' 'z/null' 't/show-time=?' 'n#max'
     # This long option is deprecated and here solely for legacy compatibility. People should use
     # -t or --show-time now.
     set options $options 'T-with-time=?'
@@ -37,6 +37,7 @@ function history --description "display or manipulate interactive command histor
 
     set -l hist_cmd
     set -l show_time
+
     set -l max_count $_flag_max
 
     set -q _flag_with_time

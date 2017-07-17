@@ -34,7 +34,7 @@ count=3
 |non-opt|
 |second non-opt|
 |--help|
-# A "#-val" spec works
+# Implicit int flags work
 _flag_val 123
 argv 'abc'  'def'
 _flag_t woohoo
@@ -43,3 +43,11 @@ _flag_v 2
 _flag_val -234
 _flag_verbose 2
 argv 'a1'  'a2'
+# Should be set to 987
+_flag_m 987
+_flag_max 987
+argv 'argle'  'bargle'
+# Should be set to 765
+_flag_m 765
+_flag_max 765
+argv 'argle'  'bargle'

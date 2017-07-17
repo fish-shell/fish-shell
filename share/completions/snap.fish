@@ -60,39 +60,36 @@ function __fish_snap_option
 end
 
 function __fish_snap_disabled_snaps --description 'List disabled snaps'
-    snap list | grep disabled | cut -d ' ' -f 1
+    snap list | string match "*disabled" | string replace -r '(.+?) .*disabled' '$1'
 end
 
 function __fish_snap_enabled_snaps --description 'List disabled snaps'
-    # Hack until fish supports array[2..-1]
-    snap list | grep -v disabled | cut -d ' ' -f 1 | grep -v Name
+    snap list | string match -vr "disabled|Name" | string replace -r '(.+?) .*' '$1'
 end
 
 function __fish_snap_installed_snaps --description 'List installed snaps'
-    # Hack until fish supports array[2..-1]
-    snap list | cut -d ' ' -f 1 | grep -v Name
+    snap list | string replace -r '(.+?) .*' '$1' | string match -v 'Name*'
 end
 
 function __fish_snap_connectable_snaps --description 'List installed snaps'
-    # Hack until fish supports array[2..-1]
-    snap list | cut -d ' ' -f 1 | grep -v Name | sed -e 's/$/:/'
+    snap list | string replace -r '(.+?) .*' '$1:' | string match -v 'Name*'
 end
 
 function __fish_snap_disconnectable_snaps --description 'List connected snaps'
-    snap interfaces | tr -s ' ' | cut -d ' ' -f 2 | sort -u | grep -v -E '^-|Plug' | sed -e 's/$/:/'
+    snap interfaces | string match -r -v ' -|Plug' | string replace -r '.* (.*)' '$1:' | sort -u
 end
 
 function __fish_snap_interfaces --description 'List of interfaces'
-    snap interfaces | grep -v Slot | cut -d ' ' -f 1 | cut -c 2-
+    snap interfaces | string replace -r ':(.+?) .*' '$1' | string match -v "Slot*"
 end
 
 function __fish_snap_change_id --description 'List change IDs'
-    snap changes | cut -d ' ' -f 1 | grep -v 'ID'
+    snap changes | string match -v 'ID*' | string replace -r '([0-9]*) .*' '$1'
 end
 
 function __fish_snap_aliases --description 'List aliases'
-    snap aliases | cut -d ' ' -f 1 | grep -v Command
-    snap aliases | tr -s ' ' | cut -d ' ' -f 2 | grep -v Alias
+    snap aliases | string match -v 'Command*' | string replace -r '.* (.+?) .*$' '$1'
+    snap aliases | string match -v 'Command*' | string replace -r '(.*?) .*$' '$1'
 end
 
 function __fish_snap_no_assertion --description 'Check that no assertion type is used yet'
@@ -122,7 +119,7 @@ function __fish_snap_assertion
 end
 
 function __fish_snap_filters --description 'List assertion filters'
-    snap known $argv[1] | grep : | grep -v 'type: ' | sed -e 's/: /=/1'
+    snap known $argv[1] | string match -v 'type:*' | string match '*: *' | string replace -r '(.*): (.*)' '$1=$2'
 end
 
 # Enable when __fish_print_packages supports snaps

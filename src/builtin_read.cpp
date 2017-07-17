@@ -398,7 +398,9 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (optind == argc || exit_res != STATUS_CMD_OK) {
         // Define the var without any data. We do this because when this happens we want the user to
         // be able to use the var but have it expand to nothing.
-        env_set(argv[optind], NULL, opts.place);
+        //
+        // TODO: For fish 3.0 we should mandate at least one var name.
+        if (argv[optind]) env_set(argv[optind], NULL, opts.place);
         return exit_res;
     }
 

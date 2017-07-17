@@ -98,3 +98,30 @@ echo '# Should be set to 765'
 for v in (set -l -n); set -e $v; end
 argparse 'm#max' -- argle -987 bargle --max 765
 set -l
+
+##########
+# Verify that flag value validation works.
+
+echo '# Implicit int flag validation fails' >&2
+argparse 'm#max' -- argle --max 765x bargle
+and echo unxpected argparse return status >&2
+argparse 'm#max' -- argle -ma1 bargle
+and echo unxpected argparse return status >&2
+
+echo '# Check the exit status from argparse validation'
+argparse 'm#max!set | grep _flag_; function x; return 57; end; x' -- argle --max=83 bargle 2>&1
+set -l saved_status $status
+test $saved_status -eq 57
+and echo expected argparse return status $saved_status
+
+echo '# Explicit int flag validation' >&2
+# These should fail
+argparse 'm#max!_validate_int --min 1 --max 1' -- argle -m2 bargle
+and echo unexpected argparse return status $status >&2
+argparse 'm#max!_validate_int --min 0 --max 1' -- argle --max=-1 bargle
+and echo unexpected argparse return status $status >&2
+# These should succeed
+argparse 'm/max=!_validate_int --min 0 --max 1' -- argle --max=0 bargle
+or echo unexpected argparse return status $status >&2
+argparse 'm/max=!_validate_int --min 0 --max 1' -- argle --max=1 bargle
+or echo unexpected argparse return status $status >&2

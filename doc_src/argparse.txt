@@ -74,9 +74,27 @@ Each option specification is a string composed of
 
 - `=+` if it requires a value each instance of the flag is saved.
 
+- Optionally a `!` followed by fish script to validate the value. Typically this will be a function to run. If the return status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on <a href="#arparse-validation">Flag Value Validation</a> for more information.
+
 See the <a href="#fish-opt">`fish_opt`</a> command for a friendlier but more verbose way to create option specifications.
 
 In the following examples if a flag is not seen when parsing the arguments then the corresponding _flag_X var(s) will not be set.
+
+\subsection argparse-validation Flag Value Validation
+
+It is common to want to validate the the value provided for an option satisfies some criteria. For example, that it is a valid integer within a specific range. You can always do this after `argparse` returns but you can also request that `argparse` perform the validation by executing arbitrary fish script. To do so simply append an `!` (exclamation-mark) then the fish script to be run. When that code is executed three vars will be defined:
+
+- `_argparse_cmd` will be set to the value of the value of the `argparse --name` value.
+
+- `_flag_name` will be set to the short or long flag that being processed.
+
+- `_flag_value` will be set to the value associated with the flag being processed.
+
+If you do this via a function it should be defined with the `--no-scope-shadowing` flag. Otherwise it won't have access to those variables.
+
+The script should write any error messages to stdout, not stderr. It should return a status of zero if the flag value is valid otherwise a non-zero status to indicate it is invalid.
+
+Fish ships with a `_validate_int` function that accepts a `--min` and `--max` flag. Let's say your command accepts a `-m` or `--max` flag and the minimum allowable value is zero and the maximum is 5. You would define the option like this: `m/max=!_validate_int --min 0 --max 5`. The default if you just call `_validate_int` without those flags is to simply check that the value is a valid integer with no limits on the min or max value allowed.
 
 \subsection argparse-optspec-examples Example OPTION_SPECs
 

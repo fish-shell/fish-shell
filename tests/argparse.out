@@ -51,3 +51,7 @@ argv 'argle'  'bargle'
 _flag_m 765
 _flag_max 765
 argv 'argle'  'bargle'
+# Check the exit status from argparse validation
+_flag_name max
+_flag_value 83
+expected argparse return status 57

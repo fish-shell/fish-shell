@@ -29,3 +29,9 @@ argparse: Long flag 'short' already defined
 argparse: Implicit int flag '#' already defined
 # Defining an implicit int flag with modifiers
 argparse: Implicit int short flag 'v' does not allow modifiers like '='
+# Implicit int flag validation fails
+argparse: Value '765x' for flag 'max' is not an integer
+argparse: Value 'a1' for flag 'm' is not an integer
+# Explicit int flag validation
+argparse: Value '2' for flag 'm' greater than max allowed of '1'
+argparse: Value '-1' for flag 'max' less than min allowed of '0'

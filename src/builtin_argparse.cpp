@@ -24,12 +24,14 @@
 #include "builtin_argparse.h"
 #include "common.h"
 #include "env.h"
+#include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
 #include "wgetopt.h"  // IWYU pragma: keep
 #include "wutil.h"    // IWYU pragma: keep
 
 class parser_t;
+const wcstring var_name_prefix = L"_flag_";
 
 #define BUILTIN_ERR_INVALID_OPT_SPEC _(L"%ls: Invalid option spec '%ls' at char '%lc'\n")
 
@@ -37,13 +39,20 @@ class option_spec_t {
    public:
     wchar_t short_flag;
     wcstring long_flag;
+    wcstring validation_command;
     wcstring_list_t vals;
     bool short_flag_valid;
     int num_allowed;
     int num_seen;
 
     option_spec_t(wchar_t s)
-        : short_flag(s), long_flag(), vals(), short_flag_valid(true), num_allowed(0), num_seen(0) {}
+        : short_flag(s),
+          long_flag(),
+          validation_command(),
+          vals(),
+          short_flag_valid(true),
+          num_allowed(0),
+          num_seen(0) {}
 };
 
 class argparse_cmd_opts_t {
@@ -174,9 +183,10 @@ static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams
 static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
                                  const wcstring &option_spec, const wchar_t *s,
                                  io_streams_t &streams) {
-    if (opt_spec->short_flag == opts.implicit_int_flag && *s) {
-        streams.err.append_format(_(L"%ls: Implicit int short flag '%lc' does not allow modifiers like '%lc'\n"),
-                                  opts.name.c_str(), opt_spec->short_flag, *s);
+    if (opt_spec->short_flag == opts.implicit_int_flag && *s && *s != L'!') {
+        streams.err.append_format(
+            _(L"%ls: Implicit int short flag '%lc' does not allow modifiers like '%lc'\n"),
+            opts.name.c_str(), opt_spec->short_flag, *s);
         return false;
     }
 
@@ -193,10 +203,18 @@ static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_s
         }
     }
 
-    if (*s) {
+    if (*s == L'!') {
+        s++;
+        opt_spec->validation_command = wcstring(s);
+    } else if (*s) {
         streams.err.append_format(BUILTIN_ERR_INVALID_OPT_SPEC, opts.name.c_str(),
                                   option_spec.c_str(), *s);
         return false;
+    }
+
+    // Make sure we have some validation for implicit int flags.
+    if (opt_spec->short_flag == opts.implicit_int_flag && opt_spec->validation_command.empty()) {
+        opt_spec->validation_command = L"_validate_int";
     }
 
     if (opts.options.find(opt_spec->short_flag) != opts.options.end()) {
@@ -234,8 +252,8 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
             return false;
         }
         if (opts.implicit_int_flag) {
-            streams.err.append_format(
-                    _(L"%ls: Implicit int flag '%lc' already defined\n"), opts.name.c_str(), opts.implicit_int_flag);
+            streams.err.append_format(_(L"%ls: Implicit int flag '%lc' already defined\n"),
+                                      opts.name.c_str(), opts.implicit_int_flag);
             return false;
         }
         opts.implicit_int_flag = opt_spec->short_flag;
@@ -248,8 +266,8 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
         s++;  // the struct is initialized assuming short_flag_valid should be true
     } else if (*s == L'#') {
         if (opts.implicit_int_flag) {
-            streams.err.append_format(
-                    _(L"%ls: Implicit int flag '%lc' already defined\n"), opts.name.c_str(), opts.implicit_int_flag);
+            streams.err.append_format(_(L"%ls: Implicit int flag '%lc' already defined\n"),
+                                      opts.name.c_str(), opts.implicit_int_flag);
             return false;
         }
         opts.implicit_int_flag = opt_spec->short_flag;
@@ -417,37 +435,91 @@ static void update_bool_flag_counts(argparse_cmd_opts_t &opts) {
     }
 }
 
+static int validate_arg(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, bool is_long_flag,
+                        const wchar_t *woptarg, io_streams_t &streams) {
+    // Obviously if there is no arg validation command we assume the arg is okay.
+    if (opt_spec->validation_command.empty()) return STATUS_CMD_OK;
+
+    wcstring_list_t cmd_output;
+
+    env_push(true);
+    env_set(L"_argparse_cmd", opts.name.c_str(), ENV_LOCAL);
+    if (is_long_flag) {
+        env_set(var_name_prefix + L"name", opt_spec->long_flag.c_str(), ENV_LOCAL);
+    } else {
+        env_set(var_name_prefix + L"name", wcstring(1, opt_spec->short_flag).c_str(), ENV_LOCAL);
+    }
+    env_set(var_name_prefix + L"value", woptarg, ENV_LOCAL);
+
+    int retval = exec_subshell(opt_spec->validation_command, cmd_output, false);
+    for (auto it : cmd_output) {
+        streams.err.append(it);
+        streams.err.push_back(L'\n');
+    }
+    env_pop();
+    return retval;
+}
+
+// Check if it is an implicit integer option. Try to parse and validate it as a valid integer. The
+// code that parses option specs has already ensured that implicit integers have either an explicit
+// or implicit validation function.
+static int check_for_implicit_int(argparse_cmd_opts_t &opts, const wchar_t *val, const wchar_t *cmd,
+                                  const wchar_t *const *argv, wgetopter_t &w, int opt, int long_idx,
+                                  parser_t &parser, io_streams_t &streams) {
+    if (opts.implicit_int_flag == L'\0') {
+        // There is no implicit integer option so report an error.
+        builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (opt == '?') {
+        // It's a flag that might be an implicit integer flag. Try to parse it as an integer to
+        // decide if it is in fact something like `-NNN` or an invalid flag.
+        (void)fish_wcstol(val);
+        if (errno) {
+            builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+            return STATUS_INVALID_ARGS;
+        }
+    }
+
+    // Okay, it looks like an integer. See if it passes the validation checks.
+    auto found = opts.options.find(opts.implicit_int_flag);
+    assert(found != opts.options.end());
+    auto opt_spec = found->second;
+    int retval = validate_arg(opts, opt_spec, long_idx != -1, val, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    // It's a valid integer so store it and return success.
+    opt_spec->vals.clear();
+    opt_spec->vals.push_back(wcstring(val));
+    opt_spec->num_seen++;
+    w.nextchar = NULL;
+    return STATUS_CMD_OK;
+}
+
 static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_options,
                                 const woption *long_options, const wchar_t *cmd, int argc,
                                 wchar_t **argv, int *optind, parser_t &parser,
                                 io_streams_t &streams) {
     int opt;
+    int long_idx = -1;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, &long_idx)) != -1) {
         if (opt == ':') {
             builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
             return STATUS_INVALID_ARGS;
         }
+
         if (opt == '?') {
-            auto found = opts.options.find(opts.implicit_int_flag);
-            if (found != opts.options.end()) {
-                // Try to parse it as a number; e.g., "-123".
-                long x = fish_wcstol(argv[w.woptind - 1] + 1);
-                if (!errno) {
-                    wchar_t val[20];
-                    swprintf(val, sizeof val / sizeof val[0], L"%ld", x);
-                    auto opt_spec = found->second;
-                    opt_spec->vals.clear();
-                    opt_spec->vals.push_back(wcstring(val));
-                    opt_spec->num_seen++;
-                    w.nextchar = NULL;
-                    continue;
-                }
-            }
-            builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-            return STATUS_INVALID_ARGS;
+            // It's not a recognized flag. See if it's an implicit int flag.
+            int retval = check_for_implicit_int(opts, argv[w.woptind - 1] + 1, cmd, argv, w, opt,
+                                                long_idx, parser, streams);
+            if (retval != STATUS_CMD_OK) return retval;
+            long_idx = -1;
+            continue;
         }
 
+        // It's a recognized flag.
         auto found = opts.options.find(opt);
         assert(found != opts.options.end());
 
@@ -455,7 +527,16 @@ static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_
         opt_spec->num_seen++;
         if (opt_spec->num_allowed == 0) {
             assert(!w.woptarg);
-        } else if (opt_spec->num_allowed == -1 || opt_spec->num_allowed == 1) {
+            long_idx = -1;
+            continue;
+        }
+
+        if (w.woptarg) {
+            int retval = validate_arg(opts, opt_spec, long_idx != -1, w.woptarg, streams);
+            if (retval != STATUS_CMD_OK) return retval;
+        }
+
+        if (opt_spec->num_allowed == -1 || opt_spec->num_allowed == 1) {
             // We're depending on `wgetopt_long()` to report that a mandatory value is missing if
             // `opt_spec->num_allowed == 1` and thus return ':' so that we don't take this branch if
             // the mandatory arg is missing.
@@ -467,6 +548,8 @@ static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_
             assert(w.woptarg);
             opt_spec->vals.push_back(w.woptarg);
         }
+
+        long_idx = -1;
     }
 
     *optind = w.woptind;
@@ -533,7 +616,6 @@ static void set_argparse_result_vars(argparse_cmd_opts_t &opts) {
         option_spec_t *opt_spec = it.second;
         if (!opt_spec->num_seen) continue;
 
-        wcstring var_name_prefix = L"_flag_";
         auto val = list_to_array_val(opt_spec->vals);
         if (opt_spec->short_flag_valid) {
             env_set(var_name_prefix + opt_spec->short_flag, *val == ENV_NULL ? NULL : val->c_str(),

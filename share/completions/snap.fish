@@ -4,7 +4,7 @@ function __fish_snap_no_subcommand --description 'Test if snap has yet to be giv
 	for i in (commandline -opc)
 		if contains -- $i abort ack alias aliases buy changes connect disable disconnect download\
             enable find get help info install interfaces known list login logout prefer refresh remove\
-            revert run set tasks try unalias version watch 
+            revert run set tasks try unalias version watch
 			return 1
 		end
 	end
@@ -15,6 +15,17 @@ function __fish_snap_using_subcommand --description 'Test if given subcommand is
     for i in (commandline -opc)
         if contains -- $i $argv[1]
             return 0
+        end
+    end
+    return 1
+end
+
+function __fish_snap_use_interface --description 'Test if command should have interfaces as potential completion'
+    if __fish_snap_using_subcommand connect; or __fish_snap_using_subcommand disconnect
+        for i in (commandline -opc)
+            if string match -r '.*:' $i
+                return 0
+            end
         end
     end
     return 1
@@ -43,6 +54,11 @@ function __fish_snap_subcommand
     complete -f -c snap -n '__fish_snap_no_subcommand' -a $subcommand $argv
 end
 
+function __fish_snap_option
+    set subcommand $argv[1]; set -e argv[1]
+    complete -f -c snap -n "__fish_snap_using_subcommand $subcommand" $argv
+end
+
 function __fish_snap_disabled_snaps --description 'List disabled snaps'
     snap list | grep disabled | cut -d ' ' -f 1
 end
@@ -57,8 +73,17 @@ function __fish_snap_installed_snaps --description 'List installed snaps'
     snap list | cut -d ' ' -f 1 | grep -v Name
 end
 
-function __fish_snap_connected_snaps --description 'List connected snaps'
-    snap interfaces | tr -s ' ' | cut -d ' ' -f 2 | sort -u | grep -v -E '^-|Plug'
+function __fish_snap_connectable_snaps --description 'List installed snaps'
+    # Hack until fish supports array[2..-1]
+    snap list | cut -d ' ' -f 1 | grep -v Name | sed -e 's/$/:/'
+end
+
+function __fish_snap_disconnectable_snaps --description 'List connected snaps'
+    snap interfaces | tr -s ' ' | cut -d ' ' -f 2 | sort -u | grep -v -E '^-|Plug' | sed -e 's/$/:/'
+end
+
+function __fish_snap_interfaces --description 'List of interfaces'
+    snap interfaces | grep -v Slot | cut -d ' ' -f 1 | cut -c 2-
 end
 
 function __fish_snap_change_id --description 'List change IDs'
@@ -129,28 +154,29 @@ __fish_snap_subcommand buy -r                   --description "Buys a snap"
 # Changes
 __fish_snap_subcommand changes                  --description "List system changes"
 
-# TODO connect to interface
 # Connect
 __fish_snap_subcommand connect -r               --description "Connects a plug to a slot"
-complete -f -c snap -n '__fish_snap_using_subcommand connect' -a '(__fish_snap_installed_snaps)' --description "Snap"
+complete -f -c snap -n '__fish_snap_using_subcommand connect' -a '(__fish_snap_connectable_snaps)' --description "Snap"
+complete -f -c snap -n '__fish_snap_use_interface' -a '(__fish_snap_interfaces)' --description 'Interface'
 
 # Disable
 __fish_snap_subcommand disable -r               --description "Disables a snap in the system"
 complete -f -c snap -n '__fish_snap_using_subcommand disable' -a '(__fish_snap_enabled_snaps)' --description "Enabled snap"
 
-# TODO disconnect from interface
 # Disconnect
 __fish_snap_subcommand disconnect -r            --description "Disconnects a plug from a slot"
-complete -f -c snap -n '__fish_snap_using_subcommand disconnect' -a '(__fish_snap_connected_snaps)' --description "Snap"
+complete -f -c snap -n '__fish_snap_using_subcommand disconnect' -a '(__fish_snap_disconnectable_snaps)' --description "Snap"
+complete -f -c snap -n '__fish_snap_use_interface' -a '(__fish_snap_interfaces)' --description 'Interface'
+
 
 # Downloads
 __fish_snap_subcommand download -r              --description "Downloads the given snap"
-__fish_snap_subcommand download -l channel      --description "Use this channel instead of stable"
-__fish_snap_subcommand download -l edge         --description "Install from the edge channel"
-__fish_snap_subcommand download -l beta         --description "Install from the beta channel"
-__fish_snap_subcommand download -l candidate    --description "Install from the candidate channel"
-__fish_snap_subcommand download -l stable       --description "Install from the stable channel"
-__fish_snap_subcommand download -l revision     --description "Download the given revision of snap, to which you must have developer access"
+__fish_snap_option download -l channel          --description "Use this channel instead of stable"
+__fish_snap_option download -l edge             --description "Install from the edge channel"
+__fish_snap_option download -l beta             --description "Install from the beta channel"
+__fish_snap_option download -l candidate        --description "Install from the candidate channel"
+__fish_snap_option download -l stable           --description "Install from the stable channel"
+__fish_snap_option download -l revision         --description "Download the given revision of snap, to which you must have developer access"
 
 # Enable
 __fish_snap_subcommand enable -r                --description "Enables a snap in the system"
@@ -158,45 +184,45 @@ complete -f -c snap -n '__fish_snap_using_subcommand enable' -a '(__fish_snap_di
 
 # Find
 __fish_snap_subcommand find -r                  --description "Finds packages to install"
-__fish_snap_subcommand find -l private          --description "Search private snaps"
-__fish_snap_subcommand find -l section          --description "Restrict the search to a given section"
+__fish_snap_option find -l private              --description "Search private snaps"
+__fish_snap_option find -l section              --description "Restrict the search to a given section"
 
-# TODO Get a list of configuration options
+# There seems to be no programmatic way of getting configuration options
 # Get
 __fish_snap_subcommand get -r                   --description "Prints configuration options"
-__fish_snap_subcommand get -s t                 --description "Strict typing with nulls and quoted strings"
-__fish_snap_subcommand get -s d                 --description "Always return documents, even with single key"
+__fish_snap_option get -s t                     --description "Strict typing with nulls and quoted strings"
+__fish_snap_option get -s d                     --description "Always return documents, even with single key"
 complete -f -c snap -n '__fish_snap_using_subcommand get' -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Help
 __fish_snap_subcommand help                     --description "The help command shows useful information"
-__fish_snap_subcommand help -l man              --description "Generates the manpage"
+__fish_snap_option help -l man                  --description "Generates the manpage"
 
 # Info
 __fish_snap_subcommand info -r                  --description "Show detailed information about a snap"
-__fish_snap_subcommand info -l verbose          --description "Include a verbose list of snap's notes"
+__fish_snap_option info -l verbose              --description "Include a verbose list of snap's notes"
 complete -f -c snap -n '__fish_snap_using_subcommand info' -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Install
 __fish_snap_subcommand install -r               --description "Installs a snap to the system"
-__fish_snap_subcommand install -l channel       --description "Use this channel instead of stable"
-__fish_snap_subcommand install -l edge          --description "Install from the edge channel"
-__fish_snap_subcommand install -l beta          --description "Install from the beta channel"
-__fish_snap_subcommand install -l candidate     --description "Install from the candidate channel"
-__fish_snap_subcommand install -l stable        --description "Install from the stable channel"
-__fish_snap_subcommand install -l revision      --description "Install the given revision of snap, to which you must have developer access"
-__fish_snap_subcommand install -l devmode       --description "Put snap in development mode and disable security confinement"
-__fish_snap_subcommand install -l jailmode      --description "Put snap in enforced confinement mode"
-__fish_snap_subcommand install -l classic       --description "Put snap in classic mode and disable security confinement"
-__fish_snap_subcommand install -l dangerous     --description "Install the given snap file even if there are no pre-acknowledged signatures for it, meaning it was not  verified and could be dangerous"
+__fish_snap_option install -l channel           --description "Use this channel instead of stable"
+__fish_snap_option install -l edge              --description "Install from the edge channel"
+__fish_snap_option install -l beta              --description "Install from the beta channel"
+__fish_snap_option install -l candidate         --description "Install from the candidate channel"
+__fish_snap_option install -l stable            --description "Install from the stable channel"
+__fish_snap_option install -l revision          --description "Install the given revision of snap, to which you must have developer access"
+__fish_snap_option install -l devmode           --description "Put snap in development mode and disable security confinement"
+__fish_snap_option install -l jailmode          --description "Put snap in enforced confinement mode"
+__fish_snap_option install -l classic           --description "Put snap in classic mode and disable security confinement"
+__fish_snap_option install -l dangerous         --description "Install the given snap file even if there are no pre-acknowledged signatures for it, meaning it was not  verified and could be dangerous"
 
 # Interfaces
 __fish_snap_subcommand interfaces               --description "Lists interfaces in the system"
-__fish_snap_subcommand interfaces -s i          --description "Constrain listing to specific interfaces"
+__fish_snap_option interfaces -s i              --description "Constrain listing to specific interfaces"
 
 # Known
 __fish_snap_subcommand known -r                 --description "Shows known assertions of the provided type"
-__fish_snap_subcommand known -l remote          --description "Shows known assertions of the provided type"
+__fish_snap_option known -l remote              --description "Shows known assertions of the provided type"
 __fish_snap_assertion account                   --description 'Assertion type'
 __fish_snap_assertion account-key               --description 'Assertion type'
 __fish_snap_assertion model                     --description 'Assertion type'
@@ -209,7 +235,7 @@ __fish_snap_assertion validation                --description 'Assertion type'
 
 # List
 __fish_snap_subcommand list                     --description "List installed snaps"
-__fish_snap_subcommand list -l all              --description "Show all revisions"
+__fish_snap_option list -l all                  --description "Show all revisions"
 
 # Login
 __fish_snap_subcommand login                    --description "Authenticates on snapd and the store"
@@ -223,37 +249,37 @@ complete -f -c snap -n '__fish_snap_using_subcommand prefer' -a '(__fish_snap_in
 
 # Refresh
 __fish_snap_subcommand refresh -r               --description "Refreshes a snap in the system"
-__fish_snap_subcommand refresh -l channel       --description "Use this channel instead of stable"
-__fish_snap_subcommand refresh -l edge          --description "Install from the edge channel"
-__fish_snap_subcommand refresh -l beta          --description "Install from the beta channel"
-__fish_snap_subcommand refresh -l candidate     --description "Install from the candidate channel"
-__fish_snap_subcommand refresh -l stable        --description "Install from the stable channel"
-__fish_snap_subcommand refresh -l revision      --description "Refresh to the given revision"
-__fish_snap_subcommand refresh -l devmode       --description "Put snap in development mode and disable security confinement"
-__fish_snap_subcommand refresh -l jailmode      --description "Put snap in enforced confinement mode"
-__fish_snap_subcommand refresh -l classic       --description "Put snap in classic mode and disable security confinement"
-__fish_snap_subcommand refresh -l ignore-validation --description "Ignore validation by other snaps blocking the refresh"
+__fish_snap_option refresh -l channel           --description "Use this channel instead of stable"
+__fish_snap_option refresh -l edge              --description "Install from the edge channel"
+__fish_snap_option refresh -l beta              --description "Install from the beta channel"
+__fish_snap_option refresh -l candidate         --description "Install from the candidate channel"
+__fish_snap_option refresh -l stable            --description "Install from the stable channel"
+__fish_snap_option refresh -l revision          --description "Refresh to the given revision"
+__fish_snap_option refresh -l devmode           --description "Put snap in development mode and disable security confinement"
+__fish_snap_option refresh -l jailmode          --description "Put snap in enforced confinement mode"
+__fish_snap_option refresh -l classic           --description "Put snap in classic mode and disable security confinement"
+__fish_snap_option refresh -l ignore-validation     --description "Ignore validation by other snaps blocking the refresh"
 complete -f -c snap -n '__fish_snap_using_subcommand refresh' -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Remove
 __fish_snap_subcommand remove -r                --description "Removes a snap from the system"
-__fish_snap_subcommand remove -l revision       --description "Removes only the given revision"
+__fish_snap_option remove -l revision           --description "Removes only the given revision"
 complete -f -c snap -n '__fish_snap_using_subcommand remove' -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Revert
 __fish_snap_subcommand revert -r                --description "Revert the given snap to the previous state"
-__fish_snap_subcommand refresh -l revision      --description "Revert to the given revision"
-__fish_snap_subcommand refresh -l devmode       --description "Put snap in development mode and disable security confinement"
-__fish_snap_subcommand refresh -l jailmode      --description "Put snap in enforced confinement mode"
-__fish_snap_subcommand refresh -l classic       --description "Put snap in classic mode and disable security confinement"
+__fish_snap_option refresh -l revision          --description "Revert to the given revision"
+__fish_snap_option refresh -l devmode           --description "Put snap in development mode and disable security confinement"
+__fish_snap_option refresh -l jailmode          --description "Put snap in enforced confinement mode"
+__fish_snap_option refresh -l classic           --description "Put snap in classic mode and disable security confinement"
 complete -f -c snap -n '__fish_snap_using_subcommand revert' -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Run
 __fish_snap_subcommand run -r                   --description "Run the given snap command"
-__fish_snap_subcommand run -l shell             --description "Run a shell instead of the command (useful for debugging)"
+__fish_snap_option run -l shell                 --description "Run a shell instead of the command (useful for debugging)"
 complete -f -c snap -n '__fish_snap_using_subcommand run' -a '(__fish_snap_installed_snaps)' --description "Snap"
 
-# TODO Get a list of config values
+# There seems to be no programmatic way of getting configuration options
 # Set
 __fish_snap_subcommand set -r                   --description "Changes configuration options"
 complete -f -c snap -n '__fish_snap_using_subcommand set' -a '(__fish_snap_installed_snaps)' --description "Snap"
@@ -264,9 +290,9 @@ complete -f -c snap -n '__fish_snap_using_subcommand tasks' -a '(__fish_snap_cha
 
 # Try
 __fish_snap_subcommand try -r                   --description "Tests a snap in the system"
-__fish_snap_subcommand try -l devmode           --description "Put snap in development mode and disable security confinement"
-__fish_snap_subcommand try -l jailmode          --description "Put snap in enforced confinement mode"
-__fish_snap_subcommand try -l classic           --description "Put snap in classic mode and disable security confinement"
+__fish_snap_option try -l devmode               --description "Put snap in development mode and disable security confinement"
+__fish_snap_option try -l jailmode              --description "Put snap in enforced confinement mode"
+__fish_snap_option try -l classic               --description "Put snap in classic mode and disable security confinement"
 
 # Unalias
 __fish_snap_subcommand unalias -r               --description "Unalias a manual alias or an entire snap"

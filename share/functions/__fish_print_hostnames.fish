@@ -17,13 +17,15 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         string match -r '^\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3]:|^[a-zA-Z\.]*:' </etc/fstab | string replace -r ':.*' ''
     end
 
-    # Check hosts known to ssh
-    set -l known_hosts ~/.ssh/known_hosts{,2} /etc/ssh/{,ssh_}known_hosts{,2} # Yes, seriously - the default specifies both with and without "2"
-    # Check default ssh configs
+    # Check hosts known to ssh.
+    # Yes, seriously - the default specifies both with and without "2".
+    set -l known_hosts ~/.ssh/known_hosts{,2} /etc/ssh/{,ssh_}known_hosts{,2}
+    # Check default ssh configs.
     set -l ssh_config
-    # Get alias and commandline options
-    set -l ssh_command (functions ssh | string split ' ') (commandline -cpo)
-    # Extract ssh config path from last -F short option
+    # Get alias and commandline options.
+    set -l ssh_func_tokens (functions ssh | string match '*command ssh *' | string split ' ')
+    set -l ssh_command $ssh_func_tokens (commandline -cpo)
+    # Extract ssh config path from last -F short option.
     if contains -- '-F' $ssh_command
         set -l ssh_config_path_is_next 1
         for token in $ssh_command

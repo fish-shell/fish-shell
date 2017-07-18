@@ -4,7 +4,7 @@ function math --description "Perform math calculations in bc"
         set argv -- $argv
     end
 
-    set -l options 'h/help' 's/scale=' '#-val'
+    set -l options 'h/help' 's/scale=!_validate_int --min=0' '#-val'
     argparse -n math --stop-nonopt --min-args=1 $options -- $argv
     or return
 
@@ -14,13 +14,8 @@ function math --description "Perform math calculations in bc"
     end
 
     set -l scale 0 # default is integer arithmetic
-    if set -q _flag_scale
-        set scale $_flag_scale
-        if not string match -q -r '^\d+$' "$scale"
-            printf (_ "%s: Expected an integer to follow --scale") math >&2
-            return 2 # missing argument is an error
-        end
-    end
+    set -q _flag_scale
+    and set scale $_flag_scale
 
     if set -q _flag_val
         # The expression began with a negative number. Put it back in the expression.

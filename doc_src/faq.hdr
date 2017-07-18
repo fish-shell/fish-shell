@@ -14,6 +14,7 @@
 - <a href='#faq-subcommand'>How do I run a subcommand? The backtick doesn't work!</a>
 - <a href='#faq-exit-status'>How do I get the exit status of a command?</a>
 - <a href='#faq-single-env'>How do I set an environment variable for just one command?</a>
+- <a href='#faq-exported-uvar'>Why doesn't `set -Ux` (exported universal vars) seem to work?</a>
 - <a href='#faq-customize-colors'>How do I customize my syntax highlighting colors?</a>
 - <a href='#faq-update-manpage-completions'>How do I update man page completions?</a>
 - <a href='#faq-cwd-symlink'>Why does cd, pwd and other fish commands always resolve symlinked directories to their canonical path?</a>
@@ -125,6 +126,18 @@ begin
 end
 \endfish
 
+\section faq-exported-uvar Why doesn't `set -Ux` (exported universal vars) seem to work?
+
+Lots of users try to set exported environment variables like `EDITOR` and `TZ` as universal variables; e.g., `set -Ux`. That works but the behavior can be surprising. Keep in mind that when resolving a variable reference (e.g., `echo $EDITOR`) fish first looks in local scope, then global scope, and finally universal scope. Also keep in mind that environment vars imported when fish starts running are placed in the global scope. So if `EDITOR` or `TZ` is already in the environment when fish starts running your universal var by the same name is not used.
+
+The recommended practice is to not export universal variables in the hope they will be present in all future shells. Instead place statements like the following example in your config.fish file:
+
+\fish{cli-dark}
+set -q EDITOR
+or set -gx EDITOR vim
+\endfish
+
+Now when fish starts it will use the existing value for the variable if it was in the environment. Otherwise it will be set to your preferred default. This allows programs like emacs or an IDE to start a fish shell with a different value for the var. This is effectively the same behavior seen when setting it as a uvar but is explicit and therefore easier to reason about and debug. If you don't want to allow using the existing environment value just unconditionally `set -gx` the var in your config.fish file.
 
 \section faq-customize-colors How do I customize my syntax highlighting colors?
 

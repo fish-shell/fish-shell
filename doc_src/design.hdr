@@ -68,7 +68,7 @@ A special note on the evils of configurability is the long list of very useful f
 
 \section user The law of user focus
 
-When designing a program, one should first think about how to make a intuitive and powerful program. Implementation issues should only be considered once a user interface has been designed.
+When designing a program, one should first think about how to make an intuitive and powerful program. Implementation issues should only be considered once a user interface has been designed.
 
 Rationale:
 

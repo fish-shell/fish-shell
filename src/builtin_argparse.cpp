@@ -227,23 +227,11 @@ static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_s
     return true;
 }
 
-// This parses an option spec string into a struct option_spec.
-static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
-                              io_streams_t &streams) {
-    if (option_spec.empty()) {
-        streams.err.append_format(_(L"%ls: An option spec must have a short flag letter\n"),
-                                  opts.name.c_str());
-        return false;
-    }
-
-    const wchar_t *s = option_spec.c_str();
-    if (!iswalnum(*s) && *s != L'#') {
-        streams.err.append_format(_(L"%ls: Short flag '%lc' invalid, must be alphanum or '#'\n"),
-                                  opts.name.c_str(), *s);
-        return false;
-    }
-    option_spec_t *opt_spec = new option_spec_t(*s++);
-
+/// Parse the text following the short flag letter.
+static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
+                                  wcstring &option_spec, const wchar_t **opt_spec_str,
+                                  io_streams_t &streams) {
+    const wchar_t *s = *opt_spec_str;
     if (*(s - 1) == L'#') {
         if (*s != L'-') {
             streams.err.append_format(
@@ -279,6 +267,29 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
         return parse_flag_modifiers(opts, opt_spec, option_spec, s, streams);
     }
 
+    *opt_spec_str = s;
+    return true;
+}
+
+/// This parses an option spec string into a struct option_spec.
+static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
+                              io_streams_t &streams) {
+    if (option_spec.empty()) {
+        streams.err.append_format(_(L"%ls: An option spec must have a short flag letter\n"),
+                                  opts.name.c_str());
+        return false;
+    }
+
+    const wchar_t *s = option_spec.c_str();
+    if (!iswalnum(*s) && *s != L'#') {
+        streams.err.append_format(_(L"%ls: Short flag '%lc' invalid, must be alphanum or '#'\n"),
+                                  opts.name.c_str(), *s);
+        return false;
+    }
+
+    option_spec_t *opt_spec = new option_spec_t(*s++);
+    if (!parse_option_spec_sep(opts, opt_spec, option_spec, &s, streams)) return false;
+
     // Collect the long flag name.
     const wchar_t *e = s;
     while (*e && (*e == L'-' || *e == L'_' || iswalnum(*e))) e++;
@@ -290,7 +301,7 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
     opt_spec->long_flag = wcstring(s, e - s);
     if (opts.long_to_short_flag.find(opt_spec->long_flag) != opts.long_to_short_flag.end()) {
         streams.err.append_format(L"%ls: Long flag '%ls' already defined\n", opts.name.c_str(),
-                                opt_spec->long_flag.c_str());
+                                  opt_spec->long_flag.c_str());
         return false;
     }
     opts.long_to_short_flag.emplace(opt_spec->long_flag, opt_spec->short_flag);

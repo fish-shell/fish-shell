@@ -57,7 +57,6 @@ class option_spec_t {
 
 class argparse_cmd_opts_t {
    public:
-    bool print_help = false;
     bool stop_nonopt = false;
     size_t min_args = 0;
     size_t max_args = SIZE_MAX;
@@ -80,7 +79,6 @@ static const wchar_t *short_options = L"+:hn:sx:N:X:";
 static const struct woption long_options[] = {{L"stop-nonopt", no_argument, NULL, 's'},
                                               {L"name", required_argument, NULL, 'n'},
                                               {L"exclusive", required_argument, NULL, 'x'},
-                                              {L"help", no_argument, NULL, 'h'},
                                               {L"min-args", required_argument, NULL, 'N'},
                                               {L"max-args", required_argument, NULL, 'X'},
                                               {NULL, 0, NULL, 0}};
@@ -356,10 +354,6 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 // Just save the raw string here. Later, when we have all the short and long flag
                 // definitions we'll parse these strings into a more useful data structure.
                 opts.raw_exclusive_flags.push_back(w.woptarg);
-                break;
-            }
-            case 'h': {
-                opts.print_help = true;
                 break;
             }
             case 'N': {
@@ -662,11 +656,6 @@ int builtin_argparse(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
-
-    if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
-        return STATUS_CMD_OK;
-    }
 
     wcstring_list_t args;
     args.push_back(opts.name);

@@ -397,6 +397,8 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
         }
     }
 
+    if (opts.print_help) return STATUS_CMD_OK;
+
     if (argc == w.woptind || wcscmp(L"--", argv[w.woptind - 1]) == 0) {
         // The user didn't specify any option specs.
         streams.err.append_format(_(L"%ls: No option specs were provided\n"), cmd);

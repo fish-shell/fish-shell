@@ -107,7 +107,7 @@ void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
     }
 }
 
-static const wchar_t *short_options = L":h";
+static const wchar_t *short_options = L"+:h";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
 
@@ -491,9 +491,9 @@ void builtin_destroy() {}
 /// Is there a builtin command with the given name?
 bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_lookup(cmd)); }
 
-/// Is the command a keyword or a builtin we need to special-case the handling of `-h` and `--help`.
+/// Is the command a keyword we need to special-case the handling of `-h` and `--help`.
 static const wcstring_list_t help_builtins({L"for", L"while", L"function", L"if", L"end", L"switch",
-                                            L"case", L"printf"});
+                                            L"case"});
 static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command

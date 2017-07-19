@@ -148,10 +148,10 @@ static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams
         // This is an advanced technique that leverages the C++ STL to split the string on commas.
         std::wistringstream iss(raw_xflags);
         wcstring_list_t xflags((std::istream_iterator<WordDelimitedByComma, wchar_t>(iss)),
-                std::istream_iterator<WordDelimitedByComma, wchar_t>());
+                               std::istream_iterator<WordDelimitedByComma, wchar_t>());
         if (xflags.size() < 2) {
             streams.err.append_format(_(L"%ls: exclusive flag string '%ls' is not valid\n"),
-                    opts.name.c_str(), raw_xflags.c_str());
+                                      opts.name.c_str(), raw_xflags.c_str());
             return STATUS_CMD_ERROR;
         }
 
@@ -167,7 +167,7 @@ static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams
                     exclusive_set.push_back(x->second);
                 } else {
                     streams.err.append_format(_(L"%ls: exclusive flag '%ls' is not valid\n"),
-                            opts.name.c_str(), flag.c_str());
+                                              opts.name.c_str(), flag.c_str());
                     return STATUS_CMD_ERROR;
                 }
             }
@@ -235,8 +235,8 @@ static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, option_spec_t *opt_
     if (*(s - 1) == L'#') {
         if (*s != L'-') {
             streams.err.append_format(
-                    _(L"%ls: Short flag '#' must be followed by '-' and a long name\n"),
-                    opts.name.c_str());
+                _(L"%ls: Short flag '#' must be followed by '-' and a long name\n"),
+                opts.name.c_str());
             return false;
         }
         if (opts.implicit_int_flag) {
@@ -639,8 +639,7 @@ static void set_argparse_result_vars(argparse_cmd_opts_t &opts) {
             for (size_t pos = 0; pos < long_flag.size(); pos++) {
                 if (!iswalnum(long_flag[pos])) long_flag[pos] = L'_';
             }
-            env_set(var_name_prefix + long_flag, *val == ENV_NULL ? NULL : val->c_str(),
-                    ENV_LOCAL);
+            env_set(var_name_prefix + long_flag, *val == ENV_NULL ? NULL : val->c_str(), ENV_LOCAL);
         }
     }
 

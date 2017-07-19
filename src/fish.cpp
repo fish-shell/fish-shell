@@ -60,13 +60,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 // container to hold the options specified within the command line
 class fish_cmd_opts_t {
-public:
+   public:
     // Commands to be executed in place of interactive shell.
     std::vector<std::string> batch_cmds;
     // Commands to execute after the shell's config has been read.
     std::vector<std::string> postconfig_cmds;
 };
-
 
 /// If we are doing profiling, the filename to output to.
 static const char *s_profiling_output_filename = NULL;

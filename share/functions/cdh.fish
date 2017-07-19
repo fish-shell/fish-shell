@@ -46,7 +46,8 @@ function cdh --description "Menu based cd command"
     for i in (seq $dirc -1 1)
         set -l dir $uniq_dirs[$i]
         set -l label_color normal
-        set -q fish_color_cwd; and set label_color $fish_color_cwd
+        set -q fish_color_cwd
+        and set label_color $fish_color_cwd
         set -l dir_color_reset (set_color normal)
         set -l dir_color
         if test "$dir" = "$PWD"
@@ -57,8 +58,7 @@ function cdh --description "Menu based cd command"
         if set -q home_dir[2]
             set dir "~$home_dir[2]"
         end
-        printf '%s %s %2d) %s %s%s%s\n' (set_color $label_color) $letters[$i] \
-            $i (set_color normal) $dir_color $dir $dir_color_reset
+        printf '%s %s %2d) %s %s%s%s\n' (set_color $label_color) $letters[$i] $i (set_color normal) $dir_color $dir $dir_color_reset
     end
 
     # Ask the user which directory from their history they want to cd to.

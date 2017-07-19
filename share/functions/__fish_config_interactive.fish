@@ -265,7 +265,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal" -o "$TERM_PROGRAM" = "iTerm.app"
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             if status --is-command-substitution
-            or set -q INSIDE_EMACS
+                or set -q INSIDE_EMACS
                 return
             end
             printf \e\]7\;file://\%s\%s\a (hostname) (string escape --style=url $PWD)

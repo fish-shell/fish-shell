@@ -867,28 +867,34 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     //     env HOME=(mktemp -d) su --preserve-environment fish
     if (env_get_string(L"HOME").missing_or_empty()) {
         const env_var_t unam = env_get_string(L"USER");
-        char *unam_narrow = wcs2str(unam.c_str());
-        struct passwd userinfo;
-        struct passwd *result;
-        char buf[8192];
-        int retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);
-        if (retval || !result) {
-            // Maybe USER is set but it's bogus. Reset USER from the db and try again.
-            setup_user(true);
-            const env_var_t unam = env_get_string(L"USER");
-            unam_narrow = wcs2str(unam.c_str());
-            retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);
-        }
-        if (!retval && result && userinfo.pw_dir) {
-            const wcstring dir = str2wcstring(userinfo.pw_dir);
-            env_set(L"HOME", dir.c_str(), ENV_GLOBAL | ENV_EXPORT);
+        if (!unam.missing_or_empty()) {
+            char *unam_narrow = wcs2str(unam.c_str());
+            struct passwd userinfo;
+            struct passwd *result;
+            char buf[8192];
+            int retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);
+            if (retval || !result) {
+                // Maybe USER is set but it's bogus. Reset USER from the db and try again.
+                setup_user(true);
+                const env_var_t unam = env_get_string(L"USER");
+                unam_narrow = wcs2str(unam.c_str());
+                retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);
+            }
+            if (!retval && result && userinfo.pw_dir) {
+                const wcstring dir = str2wcstring(userinfo.pw_dir);
+                env_set(L"HOME", dir.c_str(), ENV_GLOBAL | ENV_EXPORT);
+            } else {
+                // We cannot get $HOME, set it to the empty list.
+                // This triggers warnings for history and config.fish already,
+                // so it isn't necessary to warn here as well.
+                env_set(L"HOME", ENV_NULL, ENV_GLOBAL | ENV_EXPORT);
+            }
+            free(unam_narrow);
         } else {
-            // We cannot get $HOME, set it to the empty list.
-            // This triggers warnings for history and config.fish already,
-            // so it isn't necessary to warn here as well.
+            // If $USER is empty as well (which we tried to set above),
+            // we can't get $HOME.
             env_set(L"HOME", ENV_NULL, ENV_GLOBAL | ENV_EXPORT);
         }
-        free(unam_narrow);
     }
 
     env_set_pwd();         // initialize the PWD variable

@@ -1,5 +1,8 @@
 # Test expansion of variables
 
+# We don't use the test utility function of the same name because we want
+# different behavior. Specifically, that the expansion of any variables or
+# other strings before we are invoked produce the expected expansion.
 function show --description 'Prints argument count followed by arguments'
     echo (count $argv) $argv
 end

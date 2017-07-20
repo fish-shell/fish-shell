@@ -1157,10 +1157,22 @@ static void expand_home_directory(wcstring &input) {
         wcstring username = get_home_directory_name(input, &tail_idx);
 
         bool tilde_error = false;
-        wcstring home;
+        env_var_t home;
         if (username.empty()) {
             // Current users home directory.
             home = env_get_string(L"HOME");
+            // If home is either missing or empty,
+            // treat it like an empty list.
+            // $HOME is defined to be a _path_,
+            // and those cannot be empty.
+            //
+            // We do not expand a string-empty var differently,
+            // because that results in bogus paths
+            // - ~/foo turns into /foo.
+            if (home.missing_or_empty()) {
+                input = ENV_NULL;
+                return;
+            }
             tail_idx = 1;
         } else {
             // Some other users home directory.

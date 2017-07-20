@@ -882,6 +882,11 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         if (!retval && result && userinfo.pw_dir) {
             const wcstring dir = str2wcstring(userinfo.pw_dir);
             env_set(L"HOME", dir.c_str(), ENV_GLOBAL | ENV_EXPORT);
+        } else {
+            // We cannot get $HOME, set it to the empty list.
+            // This triggers warnings for history and config.fish already,
+            // so it isn't necessary to warn here as well.
+            env_set(L"HOME", ENV_NULL, ENV_GLOBAL | ENV_EXPORT);
         }
         free(unam_narrow);
     }

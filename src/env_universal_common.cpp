@@ -140,14 +140,11 @@ static wcstring get_runtime_path() {
         result = str2wcstring(dir);
     } else {
         const char *uname = getenv("USER");
-        if (uname == NULL) {
-            struct passwd userinfo;
-            struct passwd *result;
-            char buf[8192];
-            int retval = getpwuid_r(getuid(), &userinfo, buf, sizeof(buf), &result);
-            if (!retval && result) uname = userinfo.pw_name;
+        // $USER should already have been set (in setup_path()).
+        // If it still isn't, there's something wrong.
+        if (!uname) {
+            return result;
         }
-
         // /tmp/fish.user
         std::string tmpdir = "/tmp/fish.";
         tmpdir.append(uname);

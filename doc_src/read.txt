@@ -2,12 +2,12 @@
 
 \subsection read-synopsis Synopsis
 \fish{synopsis}
-read [OPTIONS] [VARIABLES...]
+read [OPTIONS] VARIABLES...
 \endfish
 
 \subsection read-description Description
 
-`read` reads from standard input and stores the result in one or more shell variables. By default it reads one line terminated by a newline but options are available to read up to a null character and to limit each "line" to a maximum number of characters.
+`read` reads from standard input and stores the result in one or more shell variables. By default it reads one line terminated by a newline but options are available to read up to a null character and to limit each "line" to a maximum number of characters. At least one variable name must be given. This command does not default to populating a var named `REPLY` like other shells do.
 
 The following options are available:
 

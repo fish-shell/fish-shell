@@ -11,6 +11,7 @@ two]
 two
 ]
 
+# Test splitting input
 1 'hello' 1 'there'
 1 'hello there'
 1 ''
@@ -19,6 +20,7 @@ two
 1 'foo' 1 'bar' 1 '  baz'
 0 a
 
+# Test splitting input with IFS empty
 1 'hello'
 1 'h' 1 'ello'
 1 'h' 1 'e' 1 'llo'

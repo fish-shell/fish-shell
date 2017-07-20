@@ -59,7 +59,7 @@ newline
 # chunked read tests
 Chunked reads test pass
 # Confirm reading non-interactively works (#4206 regression)
-count=1
-|abc|
-count=1
-|def|
+$a count=1
+$a[1]=|abc|
+$b count=1
+$b[1]=|def|

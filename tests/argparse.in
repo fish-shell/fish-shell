@@ -59,28 +59,24 @@ echo '# One arg and no matching flags'
 begin
     argparse h/help -- help
     set -l
-    show $argv
 end
 
 echo '# Five args with two matching a flag'
 begin
     argparse h/help -- help --help me -h 'a lot more'
     set -l
-    show $argv
 end
 
 echo '# Required, optional, and multiple flags'
 begin
     argparse 'h/help' 'a/abc=' 'd/def=?' 'g/ghk=+' -- help --help me --ghk=g1 --abc=ABC --ghk g2 --d -g g3
     set -l
-    show $argv
 end
 
 echo '# --stop-nonopt works'
 begin
     argparse --stop-nonopt 'h/help' 'a/abc=' -- -a A1 -h --abc A2 non-opt 'second non-opt' --help
     set -l
-    show $argv
 end
 
 echo '# Implicit int flags work'

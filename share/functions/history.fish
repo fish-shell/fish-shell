@@ -48,12 +48,6 @@ function history --description "display or manipulate interactive command histor
         set show_time --show-time
     end
 
-    set -q _flag_null
-    and set -l null --null
-
-    set -q _flag_case_sensitive
-    and set -l case_sensitive --case-sensitive
-
     set -q _flag_prefix
     and set -l search_mode --prefix
     set -q _flag_contains
@@ -96,9 +90,9 @@ function history --description "display or manipulate interactive command histor
                 set -l pager less
                 set -q PAGER
                 and set pager $PAGER
-                builtin history search $search_mode $show_time $max_count $case_sensitive $null -- $argv | eval $pager
+                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_null -- $argv | eval $pager
             else
-                builtin history search $search_mode $show_time $max_count $case_sensitive $null -- $argv
+                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_null -- $argv
             end
 
         case delete # interactively delete history
@@ -112,14 +106,14 @@ function history --description "display or manipulate interactive command histor
             and set search_mode "--contains"
 
             if test $search_mode = "--exact"
-                builtin history delete $search_mode $case_sensitive $argv
+                builtin history delete $search_mode $_flag_case_sensitive $argv
                 return
             end
 
             # TODO: Fix this so that requesting history entries with a timestamp works:
             #   set -l found_items (builtin history search $search_mode $show_time -- $argv)
             set -l found_items
-            builtin history search $search_mode $case_sensitive --null -- $argv | while read -lz x
+            builtin history search $search_mode $_flag_case_sensitive --null -- $argv | while read -lz x
                 set found_items $found_items $x
             end
             if set -q found_items[1]

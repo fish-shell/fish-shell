@@ -86,13 +86,40 @@ set -l
 for v in (set -l -n); set -e $v; end
 argparse 'v/verbose' '#-val' 't/token=' -- -123 a1 --token woohoo --234 -v a2 --verbose
 set -l
+
 echo '# Should be set to 987'
 for v in (set -l -n); set -e $v; end
 argparse 'm#max' -- argle -987 bargle
 set -l
+
 echo '# Should be set to 765'
 for v in (set -l -n); set -e $v; end
 argparse 'm#max' -- argle -987 bargle --max 765
+set -l
+
+echo '# Bool short flag only'
+for v in (set -l -n); set -e $v; end
+argparse 'C' 'v' -- -C -v arg1 -v arg2
+set -l
+
+echo '# Value taking short flag only'
+for v in (set -l -n); set -e $v; end
+argparse 'x=' 'v/verbose' -- --verbose arg1 -v -x arg2
+set -l
+
+echo '# Implicit int short flag only'
+for v in (set -l -n); set -e $v; end
+argparse 'x#' 'v/verbose' -- -v -v argle -v -x 321 bargle
+set -l
+
+echo '# Implicit int short flag only with custom validation passes'
+for v in (set -l -n); set -e $v; end
+argparse 'x#!_validate_int --max 500' 'v/verbose' -- -v -v -x 499 -v
+set -l
+
+echo '# Implicit int short flag only with custom validation fails' >&2
+for v in (set -l -n); set -e $v; end
+argparse 'x#!_validate_int --min 500' 'v/verbose' -- -v -v -x 499 -v
 set -l
 
 ##########

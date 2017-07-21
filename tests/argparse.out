@@ -2,8 +2,8 @@
 # One arg and no matching flags
 argv help
 # Five args with two matching a flag
-_flag_h 2
-_flag_help 2
+_flag_h '--help'  '-h'
+_flag_help '--help'  '-h'
 argv 'help'  'me'  'a lot more'
 # Required, optional, and multiple flags
 _flag_a ABC
@@ -12,23 +12,23 @@ _flag_d
 _flag_def
 _flag_g 'g1'  'g2'  'g3'
 _flag_ghk 'g1'  'g2'  'g3'
-_flag_h 1
-_flag_help 1
+_flag_h --help
+_flag_help --help
 argv 'help'  'me'
 # --stop-nonopt works
 _flag_a A2
 _flag_abc A2
-_flag_h 1
-_flag_help 1
+_flag_h -h
+_flag_help -h
 argv 'non-opt'  'second non-opt'  '--help'
 # Implicit int flags work
 _flag_val 123
 argv 'abc'  'def'
 _flag_t woohoo
 _flag_token woohoo
-_flag_v 2
+_flag_v '-v'  '--verbose'
 _flag_val -234
-_flag_verbose 2
+_flag_verbose '-v'  '--verbose'
 argv 'a1'  'a2'
 # Should be set to 987
 _flag_m 987

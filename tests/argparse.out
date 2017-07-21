@@ -38,6 +38,25 @@ argv 'argle'  'bargle'
 _flag_m 765
 _flag_max 765
 argv 'argle'  'bargle'
+# Bool short flag only
+_flag_C -C
+_flag_v '-v'  '-v'
+argv 'arg1'  'arg2'
+# Value taking short flag only
+_flag_v '--verbose'  '-v'
+_flag_verbose '--verbose'  '-v'
+_flag_x arg2
+argv arg1
+# Implicit int short flag only
+_flag_v '-v'  '-v'  '-v'
+_flag_verbose '-v'  '-v'  '-v'
+_flag_x 321
+argv 'argle'  'bargle'
+# Implicit int short flag only with custom validation passes
+_flag_v '-v'  '-v'  '-v'
+_flag_verbose '-v'  '-v'  '-v'
+_flag_x 499
+argv
 # Check the exit status from argparse validation
 _flag_name max
 _flag_value 83

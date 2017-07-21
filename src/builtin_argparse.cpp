@@ -181,8 +181,9 @@ static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams
 }
 
 static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
-                                 const wcstring &option_spec, const wchar_t *s,
+                                 const wcstring &option_spec, const wchar_t **opt_spec_str,
                                  io_streams_t &streams) {
+    const wchar_t *s = *opt_spec_str;
     if (opt_spec->short_flag == opts.implicit_int_flag && *s && *s != L'!') {
         streams.err.append_format(
             _(L"%ls: Implicit int short flag '%lc' does not allow modifiers like '%lc'\n"),
@@ -224,6 +225,7 @@ static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_s
     }
 
     opts.options.emplace(opt_spec->short_flag, opt_spec);
+    *opt_spec_str = s;
     return true;
 }
 
@@ -250,8 +252,18 @@ static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, option_spec_t *opt_
     } else if (*s == L'-') {
         opt_spec->short_flag_valid = false;
         s++;
+        if (!*s) {
+            streams.err.append_format(BUILTIN_ERR_INVALID_OPT_SPEC, opts.name.c_str(),
+                                      option_spec.c_str(), *(s - 1));
+            return false;
+        }
     } else if (*s == L'/') {
         s++;  // the struct is initialized assuming short_flag_valid should be true
+        if (!*s) {
+            streams.err.append_format(BUILTIN_ERR_INVALID_OPT_SPEC, opts.name.c_str(),
+                                      option_spec.c_str(), *(s - 1));
+            return false;
+        }
     } else if (*s == L'#') {
         if (opts.implicit_int_flag) {
             streams.err.append_format(_(L"%ls: Implicit int flag '%lc' already defined\n"),
@@ -261,10 +273,11 @@ static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, option_spec_t *opt_
         opts.implicit_int_flag = opt_spec->short_flag;
         opt_spec->num_allowed = 1;  // mandatory arg and can appear only once
         s++;  // the struct is initialized assuming short_flag_valid should be true
+        if (!*s) opts.options.emplace(opt_spec->short_flag, opt_spec);
     } else {
-        // Long flag name not allowed if second char isn't '/' or '-' so just check for
+        // Long flag name not allowed if second char isn't '/', '-' or '#' so just check for
         // behavior modifier chars.
-        return parse_flag_modifiers(opts, opt_spec, option_spec, s, streams);
+        if (!parse_flag_modifiers(opts, opt_spec, option_spec, &s, streams)) return false;
     }
 
     *opt_spec_str = s;
@@ -272,8 +285,8 @@ static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, option_spec_t *opt_
 }
 
 /// This parses an option spec string into a struct option_spec.
-static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
-                              io_streams_t &streams) {
+static bool parse_option_spec(argparse_cmd_opts_t &opts,  //!OCLINT(high npath complexity)
+                              wcstring option_spec, io_streams_t &streams) {
     if (option_spec.empty()) {
         streams.err.append_format(_(L"%ls: An option spec must have a short flag letter\n"),
                                   opts.name.c_str());
@@ -288,25 +301,28 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts, wcstring option_spec,
     }
 
     option_spec_t *opt_spec = new option_spec_t(*s++);
+    if (!*s) {
+        // Bool short flag only.
+        opts.options.emplace(opt_spec->short_flag, opt_spec);
+        return true;
+    }
     if (!parse_option_spec_sep(opts, opt_spec, option_spec, &s, streams)) return false;
+    if (!*s) return true;  // parsed the entire string so the option spec doesn't have a long flag
 
     // Collect the long flag name.
     const wchar_t *e = s;
     while (*e && (*e == L'-' || *e == L'_' || iswalnum(*e))) e++;
-    if (e == s) {
-        streams.err.append_format(BUILTIN_ERR_INVALID_OPT_SPEC, opts.name.c_str(),
-                                  option_spec.c_str(), *(s - 1));
-        return false;
+    if (e != s) {
+        opt_spec->long_flag = wcstring(s, e - s);
+        if (opts.long_to_short_flag.find(opt_spec->long_flag) != opts.long_to_short_flag.end()) {
+            streams.err.append_format(L"%ls: Long flag '%ls' already defined\n", opts.name.c_str(),
+                                      opt_spec->long_flag.c_str());
+            return false;
+        }
+        opts.long_to_short_flag.emplace(opt_spec->long_flag, opt_spec->short_flag);
     }
-    opt_spec->long_flag = wcstring(s, e - s);
-    if (opts.long_to_short_flag.find(opt_spec->long_flag) != opts.long_to_short_flag.end()) {
-        streams.err.append_format(L"%ls: Long flag '%ls' already defined\n", opts.name.c_str(),
-                                  opt_spec->long_flag.c_str());
-        return false;
-    }
-    opts.long_to_short_flag.emplace(opt_spec->long_flag, opt_spec->short_flag);
 
-    return parse_flag_modifiers(opts, opt_spec, option_spec, e, streams);
+    return parse_flag_modifiers(opts, opt_spec, option_spec, &e, streams);
 }
 
 static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
@@ -434,21 +450,6 @@ static void populate_option_strings(
     long_options.get()[i] = {NULL, 0, NULL, 0};
 }
 
-// Add a count for how many times we saw each boolean flag but only if we saw the flag at least
-// once.
-static void update_bool_flag_counts(argparse_cmd_opts_t &opts) {
-    return;
-    for (auto it : opts.options) {
-        auto opt_spec = it.second;
-        // The '#' short flag is special. It doesn't take any values but isn't a boolean arg.
-        if (opt_spec->short_flag == L'#') continue;
-        if (opt_spec->num_allowed != 0 || opt_spec->num_seen == 0) continue;
-        wchar_t count[20];
-        swprintf(count, sizeof count / sizeof count[0], L"%d", opt_spec->num_seen);
-        opt_spec->vals.push_back(wcstring(count));
-    }
-}
-
 static int validate_arg(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, bool is_long_flag,
                         const wchar_t *woptarg, io_streams_t &streams) {
     // Obviously if there is no arg validation command we assume the arg is okay.
@@ -511,6 +512,42 @@ static int check_for_implicit_int(argparse_cmd_opts_t &opts, const wchar_t *val,
     return STATUS_CMD_OK;
 }
 
+static int handle_flag(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, int long_idx,
+                       const wchar_t *woptarg, io_streams_t &streams) {
+    opt_spec->num_seen++;
+    if (opt_spec->num_allowed == 0) {
+        // It's a boolean flag. Save the flag we saw since it might be useful to know if the
+        // short or long flag was given.
+        assert(!woptarg);
+        if (long_idx == -1) {
+            opt_spec->vals.push_back(wcstring(1, L'-') + opt_spec->short_flag);
+        } else {
+            opt_spec->vals.push_back(L"--" + opt_spec->long_flag);
+        }
+        return STATUS_CMD_OK;
+    }
+
+    if (woptarg) {
+        int retval = validate_arg(opts, opt_spec, long_idx != -1, woptarg, streams);
+        if (retval != STATUS_CMD_OK) return retval;
+    }
+
+    if (opt_spec->num_allowed == -1 || opt_spec->num_allowed == 1) {
+        // We're depending on `wgetopt_long()` to report that a mandatory value is missing if
+        // `opt_spec->num_allowed == 1` and thus return ':' so that we don't take this branch if
+        // the mandatory arg is missing.
+        opt_spec->vals.clear();
+        if (woptarg) {
+            opt_spec->vals.push_back(woptarg);
+        }
+    } else {
+        assert(woptarg);
+        opt_spec->vals.push_back(woptarg);
+    }
+
+    return STATUS_CMD_OK;
+}
+
 static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_options,
                                 const woption *long_options, const wchar_t *cmd, int argc,
                                 wchar_t **argv, int *optind, parser_t &parser,
@@ -538,38 +575,8 @@ static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_
         assert(found != opts.options.end());
 
         option_spec_t *opt_spec = found->second;
-        opt_spec->num_seen++;
-        if (opt_spec->num_allowed == 0) {
-            // It's a boolean flag. Save the flag we saw since it might be useful to know if the
-            // short or long flag was given.
-            if (long_idx == -1) {
-                opt_spec->vals.push_back(wcstring(1, L'-') + opt_spec->short_flag);
-            } else {
-                opt_spec->vals.push_back(L"--" + opt_spec->long_flag);
-            }
-            assert(!w.woptarg);
-            long_idx = -1;
-            continue;
-        }
-
-        if (w.woptarg) {
-            int retval = validate_arg(opts, opt_spec, long_idx != -1, w.woptarg, streams);
-            if (retval != STATUS_CMD_OK) return retval;
-        }
-
-        if (opt_spec->num_allowed == -1 || opt_spec->num_allowed == 1) {
-            // We're depending on `wgetopt_long()` to report that a mandatory value is missing if
-            // `opt_spec->num_allowed == 1` and thus return ':' so that we don't take this branch if
-            // the mandatory arg is missing.
-            opt_spec->vals.clear();
-            if (w.woptarg) {
-                opt_spec->vals.push_back(w.woptarg);
-            }
-        } else {
-            assert(w.woptarg);
-            opt_spec->vals.push_back(w.woptarg);
-        }
-
+        int retval = handle_flag(opts, opt_spec, long_idx, w.woptarg, streams);
+        if (retval != STATUS_CMD_OK) return retval;
         long_idx = -1;
     }
 
@@ -607,7 +614,6 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
 
     retval = check_for_mutually_exclusive_flags(opts, streams);
     if (retval != STATUS_CMD_OK) return retval;
-    update_bool_flag_counts(opts);
 
     for (int i = optind; argv[i]; i++) opts.argv.push_back(argv[i]);
 

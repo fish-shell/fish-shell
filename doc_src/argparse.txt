@@ -13,7 +13,7 @@ Each OPTION_SPEC can be written in the domain specific language <a href="#argpar
 
 Each option that is seen in the ARG list will result in a var name of the form `_flag_X`, where `X` is the short flag letter and the long flag name. The OPTION_SPEC always requires a short flag even if it can't be used. So there will always be `_flag_X` var set using the short flag letter if the corresponding short or long flag is seen. The long flag name var (e.g., `_flag_help`) will only be defined, obviously, if the OPTION_SPEC includes a long flag name.
 
-For example `_flag_h` and `_flag_help` if `-h` or `--help` is seen. The var will be set with local scope (i.e., as if the script had done `set -l _flag_X`). If the flag is a boolean (that is, does not have an associated value) the value is a count of how many times the flag was seen. If the option can have zero or more values the flag var will have zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag var will not be set.
+For example `_flag_h` and `_flag_help` if `-h` or `--help` is seen. The var will be set with local scope (i.e., as if the script had done `set -l _flag_X`). If the flag is a boolean (that is, does not have an associated value) the values are the short and long flags seen. If the option is not a boolean flag the values will be zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag var will not be set.
 
 The following `argparse` options are available. They must appear before all OPTION_SPECs:
 

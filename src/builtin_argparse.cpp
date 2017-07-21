@@ -437,6 +437,7 @@ static void populate_option_strings(
 // Add a count for how many times we saw each boolean flag but only if we saw the flag at least
 // once.
 static void update_bool_flag_counts(argparse_cmd_opts_t &opts) {
+    return;
     for (auto it : opts.options) {
         auto opt_spec = it.second;
         // The '#' short flag is special. It doesn't take any values but isn't a boolean arg.
@@ -539,6 +540,13 @@ static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_
         option_spec_t *opt_spec = found->second;
         opt_spec->num_seen++;
         if (opt_spec->num_allowed == 0) {
+            // It's a boolean flag. Save the flag we saw since it might be useful to know if the
+            // short or long flag was given.
+            if (long_idx == -1) {
+                opt_spec->vals.push_back(wcstring(1, L'-') + opt_spec->short_flag);
+            } else {
+                opt_spec->vals.push_back(L"--" + opt_spec->long_flag);
+            }
             assert(!w.woptarg);
             long_idx = -1;
             continue;

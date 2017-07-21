@@ -1,3 +1,13 @@
+# fish 3.0b1
+This section is for changes merged to the `major` branch that are not also merged to 2.7.
+
+## Notable fixes and improvements
+- `read` now requires at least one var name (#4220).
+- Local exported (`set -lx`) vars are now visible to functions (#1091).
+
+## Other significant changes
+
+
 # fish 2.7b1
 
 ## Notable fixes and improvements

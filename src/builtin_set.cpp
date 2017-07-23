@@ -29,6 +29,36 @@
 
 class parser_t;
 
+struct set_cmd_opts_t {
+    bool print_help = false;
+    bool local = false;
+    bool global = false;
+    bool exportv = false;
+    bool erase = false;
+    bool list = false;
+    bool unexport = false;
+    bool universal = false;
+    bool query = false;
+    bool shorten_ok = true;
+    bool preserve_failure_exit_status = true;
+};
+
+// Variables used for parsing the argument list. This command is atypical in using the "+"
+// (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
+// we stop scanning for flags when the first non-flag argument is seen.
+static const wchar_t *short_options = L"+:LUeghlnqux";
+static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
+                                              {L"global", no_argument, NULL, 'g'},
+                                              {L"local", no_argument, NULL, 'l'},
+                                              {L"erase", no_argument, NULL, 'e'},
+                                              {L"names", no_argument, NULL, 'n'},
+                                              {L"unexport", no_argument, NULL, 'u'},
+                                              {L"universal", no_argument, NULL, 'U'},
+                                              {L"long", no_argument, NULL, 'L'},
+                                              {L"query", no_argument, NULL, 'q'},
+                                              {L"help", no_argument, NULL, 'h'},
+                                              {NULL, 0, NULL, 0}};
+
 // Error message for invalid path operations.
 #define BUILTIN_SET_PATH_ERROR L"%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n"
 
@@ -42,6 +72,115 @@ class parser_t;
 // Test if the specified variable should be subject to path validation.
 static const wcstring_list_t path_variables({L"PATH", L"CDPATH"});
 static int is_path_variable(const wchar_t *env) { return contains(path_variables, env); }
+
+static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
+                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    wchar_t *cmd = argv[0];
+
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        switch (opt) {
+            case 'e': {
+                opts.erase = true;
+                opts.preserve_failure_exit_status = false;
+                break;
+            }
+            case 'n': {
+                opts.list = true;
+                opts.preserve_failure_exit_status = false;
+                break;
+            }
+            case 'x': {
+                opts.exportv = true;
+                break;
+            }
+            case 'l': {
+                opts.local = true;
+                break;
+            }
+            case 'g': {
+                opts.global = true;
+                break;
+            }
+            case 'u': {
+                opts.unexport = true;
+                break;
+            }
+            case 'U': {
+                opts.universal = true;
+                break;
+            }
+            case 'L': {
+                opts.shorten_ok = false;
+                break;
+            }
+            case 'q': {
+                opts.query = true;
+                opts.preserve_failure_exit_status = false;
+                break;
+            }
+            case 'h': {
+                opts.print_help = true;
+                break;
+            }
+            case ':': {
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
+            }
+            case '?': {
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
+            }
+            default: {
+                DIE("unexpected retval from wgetopt_long");
+                break;
+            }
+        }
+    }
+
+    *optind = w.woptind;
+    return STATUS_CMD_OK;
+}
+
+static int validate_cmd_opts(const wchar_t *cmd, set_cmd_opts_t &opts, int optind, int argc,
+                             parser_t &parser, io_streams_t &streams) {
+    // Can't query and erase or list.
+    if (opts.query && (opts.erase || opts.list)) {
+        streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_INVALID_ARGS;
+    }
+
+    // We can't both list and erase variables.
+    if (opts.erase && opts.list) {
+        streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_INVALID_ARGS;
+    }
+
+    // Variables can only have one scope.
+    if (opts.local + opts.global + opts.universal > 1) {
+        streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_INVALID_ARGS;
+    }
+
+    // Variables can only have one export status.
+    if (opts.exportv && opts.unexport) {
+        streams.err.append_format(BUILTIN_ERR_EXPUNEXP, cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (optind == argc && opts.erase) {
+        streams.err.append_format(_(L"%ls: Erase needs a variable name\n"), cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_INVALID_ARGS;
+    }
+
+    return STATUS_CMD_OK;
+}
 
 /// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
@@ -265,308 +404,192 @@ static void erase_values(wcstring_list_t &list, const std::vector<long> &indexes
     }
 }
 
+static int compute_scope(set_cmd_opts_t &opts) {
+    int scope = ENV_USER;
+    if (opts.local) scope |= ENV_LOCAL;
+    if (opts.global) scope |= ENV_GLOBAL;
+    if (opts.exportv) scope |= ENV_EXPORT;
+    if (opts.unexport) scope |= ENV_UNEXPORT;
+    if (opts.universal) scope |= ENV_UNIVERSAL;
+    return scope;
+}
+
 /// Print the names of all environment variables in the scope, with or without shortening, with or
 /// without values, with or without escaping
-static void print_variables(int include_values, int esc, bool shorten_ok, int scope,
-                            io_streams_t &streams) {
-    wcstring_list_t names = env_get_names(scope);
+static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int optind, int argc,
+                            wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    bool names_only = opts.list;
+    wcstring_list_t names = env_get_names(compute_scope(opts));
     sort(names.begin(), names.end());
 
     for (size_t i = 0; i < names.size(); i++) {
         const wcstring key = names.at(i);
         const wcstring e_key = escape_string(key, 0);
-
         streams.out.append(e_key);
 
-        if (include_values) {
-            env_var_t value = env_get_string(key, scope);
+        if (!names_only) {
+            env_var_t value = env_get_string(key, compute_scope(opts));
             if (!value.missing()) {
-                int shorten = 0;
-
-                if (shorten_ok && value.length() > 64) {
-                    shorten = 1;
+                bool shorten = false;
+                if (opts.shorten_ok && value.length() > 64) {
+                    shorten = true;
                     value.resize(60);
                 }
 
-                wcstring e_value = esc ? expand_escape_variable(value) : value;
-
+                wcstring e_value = expand_escape_variable(value);
                 streams.out.append(L" ");
                 streams.out.append(e_value);
 
-                if (shorten) {
-                    streams.out.push_back(ellipsis_char);
-                }
+                if (shorten) streams.out.push_back(ellipsis_char);
             }
         }
 
         streams.out.append(L"\n");
     }
+
+    return STATUS_CMD_OK;
+}
+
+// Query mode. Return the number of variables that do not exist out of the specified variables.
+static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int optind, int argc,
+                             wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    int retval = 0;
+
+    for (int i = optind; i < argc; i++) {
+        wchar_t *arg = argv[i];
+        bool slice = false;
+
+        wchar_t *dest = wcsdup(arg);
+        assert(dest);
+
+        if (wchar_t *p = wcschr(dest, L'[')) {
+            *p = L'\0';
+            slice = true;
+        }
+
+        if (slice) {
+            std::vector<long> indexes;
+            wcstring_list_t result;
+            size_t j;
+
+            env_var_t dest_str = env_get_string(dest, compute_scope(opts));
+            if (!dest_str.missing()) tokenize_variable_array(dest_str, result);
+
+            if (!parse_index(indexes, arg, dest, result.size(), streams)) {
+                builtin_print_help(parser, streams, cmd, streams.err);
+                return STATUS_CMD_ERROR;
+            }
+
+            for (j = 0; j < indexes.size(); j++) {
+                long idx = indexes[j];
+                if (idx < 1 || (size_t)idx > result.size()) {
+                    retval++;
+                }
+            }
+        } else if (!env_exist(arg, compute_scope(opts))) {
+            retval++;
+        }
+
+        free(dest);
+    }
+
+    return retval;
 }
 
 /// The set builtin creates, updates, and erases (removes, deletes) variables.
 int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    const int incoming_exit_status = proc_get_last_status();
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
+    set_cmd_opts_t opts;
 
-    // Flags to set the work mode.
-    int local = 0, global = 0, exportv = 0;
-    int erase = 0, list = 0, unexport = 0;
-    int universal = 0, query = 0;
-    bool shorten_ok = true;
-    bool preserve_failure_exit_status = true;
-    const int incoming_exit_status = proc_get_last_status();
+    int optind;
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
 
-    // Variables used for performing the actual work.
-    wchar_t *dest = NULL;
-    int retcode = STATUS_CMD_OK;
-    int scope;
-    int slice = 0;
-
-    // Variables used for parsing the argument list. This command is atypical in using the "+"
-    // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
-    // we stop scanning for flags when the first non-flag argument is seen.
-    static const wchar_t *short_options = L"+:LUeghlnqux";
-    static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
-                                                  {L"global", no_argument, NULL, 'g'},
-                                                  {L"local", no_argument, NULL, 'l'},
-                                                  {L"erase", no_argument, NULL, 'e'},
-                                                  {L"names", no_argument, NULL, 'n'},
-                                                  {L"unexport", no_argument, NULL, 'u'},
-                                                  {L"universal", no_argument, NULL, 'U'},
-                                                  {L"long", no_argument, NULL, 'L'},
-                                                  {L"query", no_argument, NULL, 'q'},
-                                                  {L"help", no_argument, NULL, 'h'},
-                                                  {NULL, 0, NULL, 0}};
-
-    // Parse options to obtain the requested operation and the modifiers.
-    int opt;
-    wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
-        switch (opt) {
-            case 'e': {
-                erase = 1;
-                preserve_failure_exit_status = false;
-                break;
-            }
-            case 'n': {
-                list = 1;
-                preserve_failure_exit_status = false;
-                break;
-            }
-            case 'x': {
-                exportv = 1;
-                break;
-            }
-            case 'l': {
-                local = 1;
-                break;
-            }
-            case 'g': {
-                global = 1;
-                break;
-            }
-            case 'u': {
-                unexport = 1;
-                break;
-            }
-            case 'U': {
-                universal = 1;
-                break;
-            }
-            case 'L': {
-                shorten_ok = false;
-                break;
-            }
-            case 'q': {
-                query = 1;
-                preserve_failure_exit_status = false;
-                break;
-            }
-            case 'h': {
-                builtin_print_help(parser, streams, cmd, streams.out);
-                return STATUS_CMD_OK;
-            }
-            case ':': {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
-                return STATUS_INVALID_ARGS;
-            }
-            case '?': {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-                return STATUS_INVALID_ARGS;
-            }
-            default: {
-                DIE("unexpected retval from wgetopt_long");
-                break;
-            }
-        }
-    }
-
-    // Ok, all arguments have been parsed, let's validate them. If we are checking the existance of
-    // a variable (-q) we can not also specify scope.
-    if (query && (erase || list)) {
-        streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
-        return STATUS_INVALID_ARGS;
-    }
-
-    // We can't both list and erase variables.
-    if (erase && list) {
-        streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
-        return STATUS_INVALID_ARGS;
-    }
-
-    // Variables can only have one scope.
-    if (local + global + universal > 1) {
-        streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
-        return STATUS_INVALID_ARGS;
-    }
-
-    // Variables can only have one export status.
-    if (exportv && unexport) {
-        streams.err.append_format(BUILTIN_ERR_EXPUNEXP, argv[0]);
-        builtin_print_help(parser, streams, cmd, streams.err);
-        return STATUS_INVALID_ARGS;
-    }
-
-    // Calculate the scope value for variable assignement.
-    scope = (local ? ENV_LOCAL : 0) | (global ? ENV_GLOBAL : 0) | (exportv ? ENV_EXPORT : 0) |
-            (unexport ? ENV_UNEXPORT : 0) | (universal ? ENV_UNIVERSAL : 0) | ENV_USER;
-
-    if (query) {
-        // Query mode. Return the number of variables that do not exist out of the specified
-        // variables.
-        int i;
-        for (i = w.woptind; i < argc; i++) {
-            wchar_t *arg = argv[i];
-            int slice = 0;
-
-            dest = wcsdup(arg);
-            assert(dest);
-
-            if (wcschr(dest, L'[')) {
-                slice = 1;
-                *wcschr(dest, L'[') = 0;
-            }
-
-            if (slice) {
-                std::vector<long> indexes;
-                wcstring_list_t result;
-                size_t j;
-
-                env_var_t dest_str = env_get_string(dest, scope);
-                if (!dest_str.missing()) tokenize_variable_array(dest_str, result);
-
-                if (!parse_index(indexes, arg, dest, result.size(), streams)) {
-                    builtin_print_help(parser, streams, cmd, streams.err);
-                    retcode = 1;
-                    break;
-                }
-                for (j = 0; j < indexes.size(); j++) {
-                    long idx = indexes[j];
-                    if (idx < 1 || (size_t)idx > result.size()) {
-                        retcode++;
-                    }
-                }
-            } else {
-                if (!env_exist(arg, scope)) {
-                    retcode++;
-                }
-            }
-
-            free(dest);
-        }
-        return retcode;
-    }
-
-    if (list) {
-        // Maybe we should issue an error if there are any other arguments?
-        print_variables(0, 0, shorten_ok, scope, streams);
+    if (opts.print_help) {
+        builtin_print_help(parser, streams, cmd, streams.out);
         return STATUS_CMD_OK;
     }
 
-    if (w.woptind == argc) {
-        // Print values of variables.
-        if (erase) {
-            streams.err.append_format(_(L"%ls: Erase needs a variable name\n"), cmd);
-            builtin_print_help(parser, streams, cmd, streams.err);
-            retcode = STATUS_INVALID_ARGS;
-        } else {
-            print_variables(1, 1, shorten_ok, scope, streams);
-        }
+    retval = validate_cmd_opts(cmd, opts, optind, argc, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
 
-        return retcode;
+    if (opts.query) return builtin_set_query(cmd, opts, optind, argc, argv, parser, streams);
+    if (opts.list || optind == argc) {
+        return builtin_set_list(cmd, opts, optind, argc, argv, parser, streams);
     }
 
-    dest = wcsdup(argv[w.woptind]);
+    // Variables used for performing the actual work.
+    int scope = compute_scope(opts);  // calculate the variable scope based on the provided options
+    wchar_t *dest = wcsdup(argv[optind]);
     assert(dest);
 
-    if (wcschr(dest, L'[')) {
-        slice = 1;
-        *wcschr(dest, L'[') = 0;
+    bool slice = false;
+    if (wchar_t *p = wcschr(dest, L'[')) {
+        *p = L'\0';
+        slice = true;
     }
 
     if (!valid_var_name(dest)) {
         streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, dest);
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_INVALID_ARGS;
     }
 
     // Set assignment can work in two modes, either using slices or using the whole array. We detect
     // which mode is used here.
     if (slice) {
-        // Slice mode.
         std::vector<long> indexes;
         wcstring_list_t result;
 
         const env_var_t dest_str = env_get_string(dest, scope);
         if (!dest_str.missing()) {
             tokenize_variable_array(dest_str, result);
-        } else if (erase) {
-            retcode = 1;
+        } else if (opts.erase) {
+            retval = STATUS_CMD_ERROR;
         }
 
-        if (!retcode) {
-            for (; w.woptind < argc; w.woptind++) {
-                if (!parse_index(indexes, argv[w.woptind], dest, result.size(), streams)) {
-                    builtin_print_help(parser, streams, argv[0], streams.err);
-                    retcode = 1;
+        if (retval == STATUS_CMD_OK) {
+            for (; optind < argc; optind++) {
+                if (!parse_index(indexes, argv[optind], dest, result.size(), streams)) {
+                    builtin_print_help(parser, streams, cmd, streams.err);
+                    retval = STATUS_CMD_ERROR;
                     break;
                 }
 
                 size_t idx_count = indexes.size();
-                size_t val_count = argc - w.woptind - 1;
+                size_t val_count = argc - optind - 1;
 
-                if (!erase) {
+                if (!opts.erase) {
                     if (val_count < idx_count) {
-                        streams.err.append_format(_(BUILTIN_SET_ARG_COUNT), argv[0]);
-                        builtin_print_help(parser, streams, argv[0], streams.err);
-                        retcode = 1;
+                        streams.err.append_format(_(BUILTIN_SET_ARG_COUNT), cmd);
+                        builtin_print_help(parser, streams, cmd, streams.err);
+                        retval = STATUS_CMD_ERROR;
                         break;
                     }
                     if (val_count == idx_count) {
-                        w.woptind++;
+                        optind++;
                         break;
                     }
                 }
             }
         }
 
-        if (!retcode) {
+        if (retval == STATUS_CMD_OK) {
             // Slice indexes have been calculated, do the actual work.
-            if (erase) {
+            if (opts.erase) {
                 erase_values(result, indexes);
                 my_env_set(dest, result, scope, streams);
             } else {
                 wcstring_list_t value;
 
-                while (w.woptind < argc) {
-                    value.push_back(argv[w.woptind++]);
+                while (optind < argc) {
+                    value.push_back(argv[optind++]);
                 }
 
                 if (update_values(result, indexes, value)) {
-                    streams.err.append_format(L"%ls: ", argv[0]);
+                    streams.err.append_format(L"%ls: ", cmd);
                     streams.err.append_format(ARRAY_BOUNDS_ERR);
                     streams.err.push_back(L'\n');
                 }
@@ -575,28 +598,27 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
         }
     } else {
-        w.woptind++;
+        optind++;
         // No slicing.
-        if (erase) {
-            if (w.woptind != argc) {
-                streams.err.append_format(_(L"%ls: Values cannot be specfied with erase\n"),
-                                          argv[0]);
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                retcode = 1;
+        if (opts.erase) {
+            if (optind != argc) {
+                streams.err.append_format(_(L"%ls: Values cannot be specfied with erase\n"), cmd);
+                builtin_print_help(parser, streams, cmd, streams.err);
+                retval = STATUS_CMD_ERROR;
             } else {
-                retcode = env_remove(dest, scope);
+                retval = env_remove(dest, scope);
             }
         } else {
             wcstring_list_t val;
-            for (int i = w.woptind; i < argc; i++) val.push_back(argv[i]);
-            retcode = my_env_set(dest, val, scope, streams);
+            for (int i = optind; i < argc; i++) val.push_back(argv[i]);
+            retval = my_env_set(dest, val, scope, streams);
         }
     }
 
     // Check if we are setting variables above the effective scope. See
     // https://github.com/fish-shell/fish-shell/issues/806
     env_var_t global_dest = env_get_string(dest, ENV_GLOBAL);
-    if (universal && !global_dest.missing()) {
+    if (opts.universal && !global_dest.missing()) {
         streams.err.append_format(
             _(L"%ls: Warning: universal scope selected, but a global variable '%ls' exists.\n"),
             L"set", dest);
@@ -604,6 +626,6 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     free(dest);
 
-    if (retcode == STATUS_CMD_OK && preserve_failure_exit_status) retcode = incoming_exit_status;
-    return retcode;
+    if (retval == STATUS_CMD_OK && opts.preserve_failure_exit_status) retval = incoming_exit_status;
+    return retval;
 }

@@ -41,7 +41,9 @@ enum {
     /// This completion should be inserted as-is, without escaping.
     COMPLETE_DONT_ESCAPE = 1 << 4,
     /// If you do escape, don't escape tildes.
-    COMPLETE_DONT_ESCAPE_TILDES = 1 << 5
+    COMPLETE_DONT_ESCAPE_TILDES = 1 << 5,
+    /// Do not sort supplied completions
+    COMPLETE_DONT_SORT = 1 << 6
 };
 typedef int complete_flags_t;
 
@@ -80,7 +82,10 @@ class completion_t {
     // "Naturally less than" means in a natural ordering, where digits are treated as numbers. For
     // example, foo10 is naturally greater than foo2 (but alphabetically less than it).
     static bool is_naturally_less_than(const completion_t &a, const completion_t &b);
-    static bool is_alphabetically_equal_to(const completion_t &a, const completion_t &b);
+
+    // Deduplicate a potentially-unsorted vector, preserving the order
+    template <class Iterator, class HashFunction>
+    static Iterator unique_unsorted(Iterator begin, Iterator end, HashFunction hash);
 
     // If this completion replaces the entire token, prepend a prefix. Otherwise do nothing.
     void prepend_token_prefix(const wcstring &prefix);

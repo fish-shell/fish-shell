@@ -8,6 +8,7 @@ complete ( -c | --command | -p | --path ) COMMAND
         [( -s | --short-option ) SHORT_OPTION]...
         [( -l | --long-option | -o | --old-option ) LONG_OPTION]...
         [( -a | --arguments ) OPTION_ARGUMENTS]
+        [( -k | --keep-order )]
         [( -f | --no-files )]
         [( -r | --require-parameter )]
         [( -x | --exclusive )]
@@ -46,6 +47,8 @@ the fish manual.
 - `-o LONG_OPTION` or `--old-option=LONG_OPTION` adds an old style long option to the completions list (See below for details).
 
 - `-a OPTION_ARGUMENTS` or `--arguments=OPTION_ARGUMENTS` adds the specified option arguments to the completions list.
+
+- `-k` or `--keep-order` preserves the order of the `OPTION_ARGUMENTS` specified via `-a` or `--arguments` instead of sorting alphabetically.
 
 - `-f` or `--no-files` specifies that the options specified by this completion may not be followed by a filename.
 

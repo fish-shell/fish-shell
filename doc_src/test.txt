@@ -14,6 +14,8 @@ The first form (`test`) is preferred. For compatibility with other shells, the s
 
 This test is mostly POSIX-compatible.
 
+When using a variable as an argument for a test operator you should almost always enclose it in double-quotes. There are only two situations it is safe to omit the quote marks. The first is when the argument is a literal string with no whitespace or other characters special to the shell (e.g., semicolon). For example, `test -b /my/file`. The second is using a variable that expands to exactly one element including if that element is the empty string (e.g., `set x ''`). If the variable is not set, set but with no value, or set to more than one value you must enclose it in double-quotes. For example, `test "$x" = "$y"`. Since it is always safe to enclose variables in double-quotes when used as `test` arguments that is the recommended practice.
+
 \subsection test-files Operators for files and directories
 
 - `-b FILE` returns true if `FILE` is a block device.

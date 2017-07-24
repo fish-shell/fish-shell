@@ -4,6 +4,7 @@ This section is for changes merged to the `major` branch that are not also merge
 ## Notable fixes and improvements
 - `read` now requires at least one var name (#4220).
 - Local exported (`set -lx`) vars are now visible to functions (#1091).
+- `set x[1] x[2] a b` is no longer valid syntax (#4236).
 
 ## Other significant changes
 

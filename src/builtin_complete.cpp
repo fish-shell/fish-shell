@@ -128,8 +128,9 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wcstring_list_t cmd_to_complete;
     wcstring_list_t path;
     wcstring_list_t wrap_targets;
+    bool preserve_order = false;
 
-    static const wchar_t *short_options = L":a:c:p:s:l:o:d:frxeuAn:C::w:h";
+    static const wchar_t *short_options = L":a:c:p:s:l:o:d:frxeuAn:C::w:hk";
     static const struct woption long_options[] = {{L"exclusive", no_argument, NULL, 'x'},
                                                   {L"no-files", no_argument, NULL, 'f'},
                                                   {L"require-parameter", no_argument, NULL, 'r'},
@@ -147,6 +148,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                                   {L"wraps", required_argument, NULL, 'w'},
                                                   {L"do-complete", optional_argument, NULL, 'C'},
                                                   {L"help", no_argument, NULL, 'h'},
+                                                  {L"keep-order", no_argument, NULL, 'k'},
                                                   {NULL, 0, NULL, 0}};
 
     int opt;
@@ -163,6 +165,10 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case 'r': {
                 result_mode |= NO_COMMON;
+                break;
+            }
+            case 'k': {
+                preserve_order = true;
                 break;
             }
             case 'p':
@@ -355,6 +361,9 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         streams.out.append(complete_print());
     } else {
         int flags = COMPLETE_AUTO_SPACE;
+        if (preserve_order) {
+            flags |= COMPLETE_DONT_SORT;
+        }
 
         if (remove) {
             builtin_complete_remove(cmd_to_complete, path, short_opt.c_str(), gnu_opt, old_opt);

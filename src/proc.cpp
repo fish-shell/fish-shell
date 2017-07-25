@@ -835,13 +835,12 @@ static bool terminal_return_from_job(job_t *j) {
         return true;
     }
 
-    // HACK: Only return if this was the last foreground jobid
-    // See issue #4238.
-    job_iterator_t jobs;
-    for (auto job = jobs.next(); job; jobs.next()) {
-        if (job != j && job->get_flag(JOB_TERMINAL) && job->get_flag(JOB_FOREGROUND)) {
-            return false;
-        }
+    // HACK: If the job did not have control over the terminal, someone else should have.
+    // This fixes `cat | while read` (#4238).
+    // The real solution is to not have two jobs there in the first place.
+    if (tcgetpgrp(STDIN_FILENO) != j->pgid) {
+        debug(2, L"Job %d didn't have control", j->job_id);
+        return true;
     }
 
     signal_block(true);

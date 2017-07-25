@@ -231,10 +231,6 @@ bool completion_t::is_naturally_less_than(const completion_t &a, const completio
     return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;
 }
 
-int completion_t::is_alphabetically_less_than(const completion_t &a, const completion_t &b) {
-    return a.completion.compare(b.completion);
-}
-
 void completion_t::prepend_token_prefix(const wcstring &prefix) {
     if (this->flags & COMPLETE_REPLACES_TOKEN) {
         this->completion.insert(0, prefix);
@@ -245,29 +241,14 @@ static bool compare_completions_by_match_type(const completion_t &a, const compl
     return a.match.type < b.match.type;
 }
 
-template <class Iterator, class BinaryPredicate>
-static Iterator unique_unsorted(Iterator begin, Iterator end, BinaryPredicate p) {
+template <class Iterator, class HashFunction>
+static Iterator unique_unsorted(Iterator begin, Iterator end, HashFunction hash) {
     typedef typename std::iterator_traits<Iterator>::value_type T;
 
-    // first sort and deduplicate a copy of the original vector
-    auto temp = std::vector<T>(begin, end);
-    std::sort(temp.begin(), temp.end(),
-              [&](const T& val1, const T& val2) { return p(val1, val2) < 0; });
-    auto new_end = std::unique(temp.begin(), temp.end(),
-                               [&](const T& val1, const T& val2) { return p(val1, val2) == 0; });
-
-    // match the source list against the de-duplicated copy to keep, and each time a match is found,
-    // remove that element from the deduplicated list.
+    std::set<size_t> temp;
     return std::remove_if(begin, end, [&](const T& val) {
-        for (auto i = temp.begin(); temp.begin() != new_end && i != new_end; ++i) {
-            if (p(*i, val) == 0) {
-                --new_end;
-                std::iter_swap(i, new_end);
-                return false;
-            }
-        }
-        return true;
-    });
+            return !temp.insert(hash(val)).second;
+            });
 }
 
 void completions_sort_and_prioritize(std::vector<completion_t> *comps) {
@@ -293,7 +274,9 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps) {
     // Sort, provided COMPLETION_DONT_SORT isn't set
     stable_sort(comps->begin(), comps->end(), completion_t::is_naturally_less_than);
     // Deduplicate both sorted and unsorted results
-    comps->erase(unique_unsorted(comps->begin(), comps->end(), completion_t::is_alphabetically_less_than), comps->end());
+    comps->erase(unique_unsorted(comps->begin(), comps->end(), [](const completion_t &c) {
+                return std::hash<wcstring>{}(c.completion);
+             }), comps->end());
 
     // Sort the remainder by match type. They're already sorted alphabetically.
     stable_sort(comps->begin(), comps->end(), compare_completions_by_match_type);

@@ -82,11 +82,10 @@ class completion_t {
     // "Naturally less than" means in a natural ordering, where digits are treated as numbers. For
     // example, foo10 is naturally greater than foo2 (but alphabetically less than it).
     static bool is_naturally_less_than(const completion_t &a, const completion_t &b);
-    static int is_alphabetically_less_than(const completion_t &a, const completion_t &b);
 
     // Deduplicate a potentially-unsorted vector, preserving the order
-    template<class Iterator, typename BinaryPredicate>
-    static Iterator unique_unsorted(Iterator begin, Iterator end, BinaryPredicate p);
+    template <class Iterator, class HashFunction>
+    static Iterator unique_unsorted(Iterator begin, Iterator end, HashFunction hash);
 
     // If this completion replaces the entire token, prepend a prefix. Otherwise do nothing.
     void prepend_token_prefix(const wcstring &prefix);

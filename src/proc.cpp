@@ -835,6 +835,15 @@ static bool terminal_return_from_job(job_t *j) {
         return true;
     }
 
+    // HACK: Only return if this was the last foreground jobid
+    // See issue #4238.
+    job_iterator_t jobs;
+    for (auto &job = jobs.next(); job; jobs.next()) {
+        if (job != j && job->get_flag(JOB_TERMINAL) && job->get_flag(JOB_FOREGROUND)) {
+            return false;
+        }
+    }
+
     signal_block(true);
     if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
         if (errno == ENOTTY) redirect_tty_output();

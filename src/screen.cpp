@@ -1287,7 +1287,7 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // line above your prompt. This doesn't make a difference in normal usage, but copying and
         // pasting your terminal log becomes a pain. This commit clears that line, making it an
         // actual empty line.
-        abandon_line_string.append(L"\e[2K");
+        abandon_line_string.append(L"\e[K");
 
         const std::string narrow_abandon_line_string = wcs2string(abandon_line_string);
         write_loop(STDOUT_FILENO, narrow_abandon_line_string.c_str(),

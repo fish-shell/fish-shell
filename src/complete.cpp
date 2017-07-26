@@ -20,6 +20,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <unordered_set>
 
 #include "autoload.h"
 #include "builtin.h"
@@ -224,11 +225,11 @@ completion_t &completion_t::operator=(const completion_t &him) {
 }
 
 bool completion_t::is_naturally_less_than(const completion_t &a, const completion_t &b) {
+    //for this to work, stable_sort must be used because results aren't interchangeable
+    if (a.flags & b.flags & COMPLETE_DONT_SORT) {
+       return false;
+    }
     return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;
-}
-
-bool completion_t::is_alphabetically_equal_to(const completion_t &a, const completion_t &b) {
-    return a.completion == b.completion;
 }
 
 void completion_t::prepend_token_prefix(const wcstring &prefix) {
@@ -239,6 +240,16 @@ void completion_t::prepend_token_prefix(const wcstring &prefix) {
 
 static bool compare_completions_by_match_type(const completion_t &a, const completion_t &b) {
     return a.match.type < b.match.type;
+}
+
+template <class Iterator, class HashFunction>
+static Iterator unique_unsorted(Iterator begin, Iterator end, HashFunction hash) {
+    typedef typename std::iterator_traits<Iterator>::value_type T;
+
+    std::unordered_set<size_t> temp;
+    return std::remove_if(begin, end, [&](const T& val) {
+            return !temp.insert(hash(val)).second;
+            });
 }
 
 void completions_sort_and_prioritize(std::vector<completion_t> *comps) {
@@ -261,11 +272,12 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps) {
         }
     }
 
-    // Remove duplicates.
-    sort(comps->begin(), comps->end(), completion_t::is_naturally_less_than);
-    comps->erase(
-        std::unique(comps->begin(), comps->end(), completion_t::is_alphabetically_equal_to),
-        comps->end());
+    // Sort, provided COMPLETION_DONT_SORT isn't set
+    stable_sort(comps->begin(), comps->end(), completion_t::is_naturally_less_than);
+    // Deduplicate both sorted and unsorted results
+    comps->erase(unique_unsorted(comps->begin(), comps->end(), [](const completion_t &c) {
+                return std::hash<wcstring>{}(c.completion);
+             }), comps->end());
 
     // Sort the remainder by match type. They're already sorted alphabetically.
     stable_sort(comps->begin(), comps->end(), compare_completions_by_match_type);

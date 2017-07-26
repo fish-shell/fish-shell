@@ -696,14 +696,14 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
         for (size_t i = 0; i < lst.size(); i++) {
             fputws(lst.at(i).c_str(), stdout);
         }
-        write(STDOUT_FILENO, "\a", 1);
+        write_ignore(STDOUT_FILENO, "\a", 1);
     }
 
     proc_pop_interactive();
     set_color(rgb_color_t::reset(), rgb_color_t::reset());
     if (reset_cursor_position && !lst.empty()) {
         // Put the cursor back at the beginning of the line (issue #2453).
-        write(STDOUT_FILENO, "\r", 1);
+        write_ignore(STDOUT_FILENO, "\r", 1);
     }
 }
 
@@ -1291,7 +1291,7 @@ static void reader_flash() {
     }
 
     reader_repaint();
-    write(STDOUT_FILENO, "\a", 1);
+    write_ignore(STDOUT_FILENO, "\a", 1);
 
     pollint.tv_sec = 0;
     pollint.tv_nsec = 100 * 1000000;
@@ -3229,7 +3229,7 @@ const wchar_t *reader_readline(int nchars) {
         reader_repaint_if_needed();
     }
 
-    write(STDOUT_FILENO, "\n", 1);
+    write_ignore(STDOUT_FILENO, "\n", 1);
 
     // Ensure we have no pager contents when we exit.
     if (!data->pager.empty()) {

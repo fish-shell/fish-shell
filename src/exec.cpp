@@ -1059,13 +1059,13 @@ void exec_job(parser_t &parser, job_t *j) {
                     if (pid == 0) {
                         // This is the child process.
                         p->pid = getpid();
-                        // the process will be resumed by the shell when the next command in the
-                        // chain is started
                         setup_child_process(j, p, process_net_io_chain);
 
-                        // start child processes that are part of a job in a stopped state
+                        // Start child processes that are part of a chain in a stopped state
                         // to ensure that they are still running when the next command in the
                         // chain is started.
+                        // The process will be resumed when the next command in the chain is started.
+                        // Note that this may span multiple jobs, as jobs can read from each other.
                         if (pipes_to_next_command) {
                             kill(p->pid, SIGSTOP);
                         }
@@ -1076,7 +1076,7 @@ void exec_job(parser_t &parser, job_t *j) {
                     } else {
                         if (pipes_to_next_command) {
                             //it actually blocked itself after forking above, but print in here for output
-                            //synchronization and so we can assign blocked_pid in the correct address space
+                            //synchronization & so we can assign command_blocked in the correct address space
                             debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
                             command_blocked = true;
                         }
@@ -1110,6 +1110,8 @@ void exec_job(parser_t &parser, job_t *j) {
             blocked_pid = -1;
         }
         if (command_blocked) {
+            //store the newly-blocked command's PID so that it can be SIGCONT'd once the next process
+            //in the chain is started. That may be in this job or in another job.
             blocked_pid = p->pid;
         }
 

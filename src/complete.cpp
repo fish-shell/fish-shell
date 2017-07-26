@@ -226,7 +226,7 @@ completion_t &completion_t::operator=(const completion_t &him) {
 
 bool completion_t::is_naturally_less_than(const completion_t &a, const completion_t &b) {
     //for this to work, stable_sort must be used because results aren't interchangeable
-    if ((a.flags & COMPLETE_DONT_SORT) != 0 && (b.flags & COMPLETE_DONT_SORT) != 0) {
+    if (a.flags & b.flags & COMPLETE_DONT_SORT) {
        return false;
     }
     return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;

@@ -2,12 +2,12 @@
 This section is for changes merged to the `major` branch that are not also merged to 2.7.
 
 ## Notable fixes and improvements
-- `read` now requires at least one var name (#4220).
 - Local exported (`set -lx`) vars are now visible to functions (#1091).
 - `set x[1] x[2] a b` is no longer valid syntax (#4236).
-- `complete` now has a `-k`/`--keep` flag to keep the order of the OPTION_ARGUMENTS (#361).
+- `complete` now has a `-k`/`--keep-order` flag to keep the order of the OPTION_ARGUMENTS (#361).
 
 ## Other significant changes
+- `read` now requires at least one var name (#4220).
 
 
 # fish 2.7b1

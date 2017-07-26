@@ -513,10 +513,6 @@ void exec_job(parser_t &parser, job_t *j) {
         const bool pipes_to_next_command = !p->is_last_in_job;
         bool command_blocked = false;
 
-        //these semaphores will be used to make sure the first process lives long enough for the
-        //next process in the chain to open its handles, process group, etc.
-        //this child will block on this one, the next child will have to call sem_post against it.
-
         // The pipes the current process write to and read from. Unfortunately these can't be just
         // allocated on the stack, since j->io wants shared_ptr.
         //

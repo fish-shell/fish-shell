@@ -1066,8 +1066,9 @@ void exec_job(parser_t &parser, job_t *j) {
                 {
                     pid = execute_fork(false);
                     if (pid == 0) {
-                        // a hack that fixes any tcsetpgrp errors caused by race conditions
+                        // usleep is a hack that fixes any tcsetpgrp errors caused by race conditions
                         // usleep(20 * 1000);
+                        // it should no longer be needed with the chained_wait_next code below.
                         if (chained_wait_next != nullptr) {
                             debug(3, L"Waiting for next command in chain to start.\n");
                             sem_wait(chained_wait_next);
@@ -1121,6 +1122,7 @@ void exec_job(parser_t &parser, job_t *j) {
             debug(3, L"Unblocking previous command in chain.\n");
             sem_post(chained_wait_prev);
             munmap(chained_wait_prev, sizeof(sem_t));
+            chained_wait_prev = nullptr;
         }
         if (chained_wait_next != nullptr) {
             chained_wait_prev = chained_wait_next;

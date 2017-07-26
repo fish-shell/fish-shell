@@ -20,6 +20,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <unordered_set>
 
 #include "autoload.h"
 #include "builtin.h"
@@ -245,7 +246,7 @@ template <class Iterator, class HashFunction>
 static Iterator unique_unsorted(Iterator begin, Iterator end, HashFunction hash) {
     typedef typename std::iterator_traits<Iterator>::value_type T;
 
-    std::set<size_t> temp;
+    std::unordered_set<size_t> temp;
     return std::remove_if(begin, end, [&](const T& val) {
             return !temp.insert(hash(val)).second;
             });

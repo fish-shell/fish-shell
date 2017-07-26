@@ -23,8 +23,6 @@
 #include <string>
 #include <type_traits>
 #include <vector>
-#include <sys/mman.h>
-#include <semaphore.h>
 
 #include "builtin.h"
 #include "common.h"
@@ -495,7 +493,7 @@ void exec_job(parser_t &parser, job_t *j) {
     //
     // We are careful to set these to -1 when closed, so if we exit the loop abruptly, we can still
     // close them.
-    sem_t *chained_wait_prev = nullptr;
+    int last_pid = -1;
     int pipe_current_read = -1, pipe_current_write = -1, pipe_next_read = -1;
     for (std::unique_ptr<process_t> &unique_p : j->processes) {
         if (exec_error) {
@@ -517,10 +515,6 @@ void exec_job(parser_t &parser, job_t *j) {
         //these semaphores will be used to make sure the first process lives long enough for the
         //next process in the chain to open its handles, process group, etc.
         //this child will block on this one, the next child will have to call sem_post against it.
-        sem_t *chained_wait_next = !pipes_to_next_command ? nullptr : (sem_t*)mmap(NULL, sizeof(sem_t*), PROT_READ|PROT_WRITE,MAP_SHARED|MAP_ANONYMOUS,-1, 0);
-        if (chained_wait_next != nullptr) {
-            sem_init(chained_wait_next, 1, 0);
-        }
 
         // The pipes the current process write to and read from. Unfortunately these can't be just
         // allocated on the stack, since j->io wants shared_ptr.
@@ -1071,17 +1065,17 @@ void exec_job(parser_t &parser, job_t *j) {
                 {
                     pid = execute_fork(false);
                     if (pid == 0) {
-                        // usleep is a hack that fixes any tcsetpgrp errors caused by race conditions
-                        // usleep(20 * 1000);
-                        // it should no longer be needed with the chained_wait_next code below.
-                        if (chained_wait_next != nullptr) {
-                            debug(3, L"Waiting for next command in chain to start.\n");
-                            sem_wait(chained_wait_next);
-                            sem_destroy(chained_wait_next);
-                            munmap(chained_wait_next, sizeof(sem_t));
-                        }
                         // This is the child process.
                         p->pid = getpid();
+                        // start child processes that are part of a job in a stopped state
+                        // to ensure that they are still running when the next command in the
+                        // chain is started.
+                        if (pipes_to_next_command) {
+                            debug(3, L"Blocking process %d waiting for next command in chain.\n", p->pid);
+                            kill(p->pid, SIGSTOP);
+                        }
+                        // the process will be resumed by the shell when the next command in the
+                        // chain is started
                         setup_child_process(j, p, process_net_io_chain);
                         safe_launch_process(p, actual_cmd, argv, envv);
                         // safe_launch_process _never_ returns...
@@ -1123,14 +1117,12 @@ void exec_job(parser_t &parser, job_t *j) {
         }
 
         //now that next command in the chain has been started, unblock the previous command
-        if (chained_wait_prev != nullptr) {
-            debug(3, L"Unblocking previous command in chain.\n");
-            sem_post(chained_wait_prev);
-            munmap(chained_wait_prev, sizeof(sem_t));
-            chained_wait_prev = nullptr;
+        if (last_pid != -1) {
+            debug(3, L"Unblocking process %d.\n", last_pid);
+            kill(last_pid, SIGCONT);
         }
-        if (chained_wait_next != nullptr) {
-            chained_wait_prev = chained_wait_next;
+        if (pid != 0) {
+            last_pid = pid;
         }
     }
 

@@ -491,7 +491,7 @@ void exec_job(parser_t &parser, job_t *j) {
     //
     // We are careful to set these to -1 when closed, so if we exit the loop abruptly, we can still
     // close them.
-    int last_pid = -1;
+    static pid_t blocked_pid = -1;
     int pipe_current_read = -1, pipe_current_write = -1, pipe_next_read = -1;
     for (std::unique_ptr<process_t> &unique_p : j->processes) {
         if (exec_error) {
@@ -509,6 +509,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
         // See if we need a pipe.
         const bool pipes_to_next_command = !p->is_last_in_job;
+        bool command_blocked = false;
 
         //these semaphores will be used to make sure the first process lives long enough for the
         //next process in the chain to open its handles, process group, etc.
@@ -1062,20 +1063,27 @@ void exec_job(parser_t &parser, job_t *j) {
                     if (pid == 0) {
                         // This is the child process.
                         p->pid = getpid();
+                        // the process will be resumed by the shell when the next command in the
+                        // chain is started
+                        setup_child_process(j, p, process_net_io_chain);
+
                         // start child processes that are part of a job in a stopped state
                         // to ensure that they are still running when the next command in the
                         // chain is started.
                         if (pipes_to_next_command) {
-                            debug(3, L"Blocking process %d waiting for next command in chain.\n", p->pid);
                             kill(p->pid, SIGSTOP);
                         }
-                        // the process will be resumed by the shell when the next command in the
-                        // chain is started
-                        setup_child_process(j, p, process_net_io_chain);
+
                         safe_launch_process(p, actual_cmd, argv, envv);
                         // safe_launch_process _never_ returns...
                         DIE("safe_launch_process should not have returned");
                     } else {
+                        if (pipes_to_next_command) {
+                            //it actually blocked itself after forking above, but print in here for output
+                            //synchronization and so we can assign blocked_pid in the correct address space
+                            debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
+                            command_blocked = true;
+                        }
                         debug(2, L"Fork #%d, pid %d: external command '%s' from '%ls'",
                               g_fork_count, pid, p->argv0(), file ? file : L"<no file>");
                         if (pid < 0) {
@@ -1099,6 +1107,16 @@ void exec_job(parser_t &parser, job_t *j) {
             }
         }
 
+        if (blocked_pid != -1) {
+            //now that next command in the chain has been started, unblock the previous command
+            debug(2, L"Unblocking process %d.\n", blocked_pid);
+            kill(blocked_pid, SIGCONT);
+            blocked_pid = -1;
+        }
+        if (command_blocked) {
+            blocked_pid = p->pid;
+        }
+
         // Close the pipe the current process uses to read from the previous process_t.
         if (pipe_current_read >= 0) {
             exec_close(pipe_current_read);
@@ -1109,15 +1127,6 @@ void exec_job(parser_t &parser, job_t *j) {
         if (pipe_current_write >= 0) {
             exec_close(pipe_current_write);
             pipe_current_write = -1;
-        }
-
-        //now that next command in the chain has been started, unblock the previous command
-        if (last_pid != -1) {
-            debug(3, L"Unblocking process %d.\n", last_pid);
-            kill(last_pid, SIGCONT);
-        }
-        if (pid != 0) {
-            last_pid = pid;
         }
     }
 

@@ -106,24 +106,33 @@ bool set_child_group(job_t *j, process_t *p, int print_errors) {
     }
 
     if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {  //!OCLINT(early exit)
-        int result = -1;
-        errno = EINTR;
-        while (result == -1 && errno == EINTR) {
-            signal_block(true);
-            result = tcsetpgrp(STDIN_FILENO, j->pgid);
-            signal_unblock(true);
+        if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
+            debug(4, L"Process group %d already has control of terminal\n", j->pgid);
         }
-        if (result == -1) {
-            if (errno == ENOTTY) redirect_tty_output();
-            if (print_errors) {
-                char job_id_buff[64];
-                char command_buff[64];
-                format_long_safe(job_id_buff, j->job_id);
-                narrow_string_safe(command_buff, j->command_wcstr());
-                debug_safe(1, "Could not send job %s ('%s') to foreground", job_id_buff,
-                           command_buff);
-                safe_perror("tcsetpgrp");
-                retval = false;
+        else {
+            debug(4, L"Attempting bring process group to foreground via tcsetpgrp for job->pgid %d\n", j->pgid);
+            debug(4, L"caller session id: %d, pgid %d has session id: %d\n", getsid(0), j->pgid, getsid(j->pgid));
+            int result = -1;
+            errno = EINTR;
+            while (result == -1 && errno == EINTR) {
+                signal_block(true);
+                result = tcsetpgrp(STDIN_FILENO, j->pgid);
+                signal_unblock(true);
+            }
+            if (result == -1) {
+                if (errno == ENOTTY) redirect_tty_output();
+                if (print_errors) {
+                    char job_id_buff[64];
+                    char command_buff[64];
+                    char job_pgid_buff[128];
+                    format_long_safe(job_id_buff, j->job_id);
+                    narrow_string_safe(command_buff, j->command_wcstr());
+                    format_long_safe(job_pgid_buff, j->pgid);
+                    debug_safe(1, "Could not send job %s ('%s') with pgid %s to foreground", job_id_buff,
+                               command_buff, job_pgid_buff);
+                    safe_perror("tcsetpgrp");
+                    retval = false;
+                }
             }
         }
     }

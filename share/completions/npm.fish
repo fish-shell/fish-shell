@@ -80,7 +80,6 @@ function __fish_parse_npm_run_completions
     end
 end
 
-
 function __fish_npm_run
     # Like above, only try to call npm if there's a command by that name to facilitate aliases that call nvm.
     if command -sq jq; and test -e package.json

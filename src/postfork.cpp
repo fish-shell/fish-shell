@@ -109,9 +109,9 @@ bool set_child_group(job_t *j, process_t *p, int print_errors) {
         int result = -1;
         errno = EINTR;
         while (result == -1 && errno == EINTR) {
-            signal_block(true);
+            signal_block();
             result = tcsetpgrp(STDIN_FILENO, j->pgid);
-            signal_unblock(true);
+            signal_unblock();
         }
         if (result == -1) {
             if (errno == ENOTTY) redirect_tty_output();
@@ -250,8 +250,6 @@ int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain) {
         // Set the handling for job control signals back to the default.
         signal_reset_handlers();
     }
-
-    signal_unblock();  // remove all signal blocks
 
     return ok ? 0 : -1;
 }

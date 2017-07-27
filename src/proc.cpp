@@ -789,6 +789,9 @@ bool terminal_give_to_job(job_t *j, int cont) {
         return true;
     }
 
+    //Previously, terminal_give_to_job was being called for each process in a job, hence all the comments
+    //and warnings below. It is now only called for the first process in a job.t d
+
     //it may not be safe to call tcsetpgrp if we've already done so, as at that point we are no longer
     //the controlling process group for the terminal and no longer have permission to set the process
     //group that is in control, causing tcsetpgrp to return EPERM, even though that's not the documented
@@ -798,18 +801,27 @@ bool terminal_give_to_job(job_t *j, int cont) {
     //for SIGTTOU are installed. Read: http://curiousthing.org/sigttin-sigttou-deep-dive-linux
     //In all cases, our goal here was just to hand over control of the terminal to this process group,
     //which is a no-op if it's already been done.
-    if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
+    auto previous_owner = tcgetpgrp(STDIN_FILENO);
+    if (previous_owner == j->pgid) {
         debug(2, L"Process group %d already has control of terminal\n", j->pgid);
         return true;
     }
-
     debug(4, L"Attempting bring process group to foreground via tcsetpgrp for job->pgid %d\n", j->pgid);
     debug(4, L"caller session id: %d, pgid %d has session id: %d\n", getsid(0), j->pgid, getsid(j->pgid));
+
+    //the tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but is not the
+    //process group ID of a process in the same session as the calling process."
+    //Since we _guarantee_ that this isn't the case (the child calls setpgid before it calls SIGSTOP, and
+    //the child was created in the same session as us), it seems that EPERM is being thrown because of an
+    //caching issue - the call to tcsetpgrp isn't seeing the newly-created process group just yet. On this
+    //developer's test machine (WSL running Linux 4.4.0), EPERM does indeed disappear on retry. The important
+    //thing is that we can guarantee the process isn't going to exit while we wait (which would cause us to
+    //possibly block indefinitely).
 
     signal_block(true);
     int result = -1;
     errno = EINTR;
-    while (result == -1 && errno == EINTR) {
+    while (result == -1 && (errno == EINTR || errno == EPERM)) {
         result = tcsetpgrp(STDIN_FILENO, j->pgid);
     }
     if (result == -1) {

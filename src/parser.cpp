@@ -724,7 +724,6 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
     this->pop_block(scope_block);
 
     job_reap(0);  // reap again
-
     return result;
 }
 

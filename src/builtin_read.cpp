@@ -2,6 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -37,6 +38,10 @@ struct read_cmd_opts_t {
     const wchar_t *prompt_str = NULL;
     const wchar_t *right_prompt = L"";
     const wchar_t *commandline = L"";
+    // If a delimiter was given. Used to distinguish between the default
+    // empty string and a given empty delimiter.
+    bool have_delimiter = false;
+    wcstring delimiter;
     bool shell = false;
     bool array = false;
     bool silent = false;
@@ -44,7 +49,7 @@ struct read_cmd_opts_t {
     int nchars = 0;
 };
 
-static const wchar_t *short_options = L":ac:ghilm:n:p:suxzP:UR:";
+static const wchar_t *short_options = L":ac:ghilm:n:p:d:suxzP:UR:";
 static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
                                               {L"global", no_argument, NULL, 'g'},
                                               {L"local", no_argument, NULL, 'l'},
@@ -57,6 +62,7 @@ static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'
                                               {L"mode-name", required_argument, NULL, 'm'},
                                               {L"silent", no_argument, NULL, 'i'},
                                               {L"nchars", required_argument, NULL, 'n'},
+                                              {L"delimiter", required_argument, NULL, 'd'},
                                               {L"shell", no_argument, NULL, 's'},
                                               {L"array", no_argument, NULL, 'a'},
                                               {L"null", no_argument, NULL, 'z'},
@@ -127,6 +133,11 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                     builtin_print_help(parser, streams, cmd, streams.err);
                     return STATUS_INVALID_ARGS;
                 }
+                break;
+            }
+            case 'd': {
+                opts.have_delimiter = true;
+                opts.delimiter = w.woptarg;
                 break;
             }
             case 's': {
@@ -415,8 +426,13 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return exit_res;
     }
 
-    env_var_t ifs = env_get_string(L"IFS");
-    if (ifs.missing_or_empty()) {
+    if (!opts.have_delimiter) {
+        env_var_t ifs = env_get_string(L"IFS");
+        if (!ifs.missing_or_empty()) {
+            opts.delimiter = ifs;
+        }
+    }
+    if (opts.delimiter.empty()) {
         // Every character is a separate token.
         size_t bufflen = buff.size();
         if (opts.array) {
@@ -446,23 +462,42 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             if (i < argc) env_set(argv[i], &buff[j], opts.place);
         }
     } else if (opts.array) {
-        wcstring tokens;
-        tokens.reserve(buff.size());
-        bool empty = true;
+        if (!opts.have_delimiter) {
+            // We're using IFS, so well split on every character in that,
+            // not on the entire thing at once.
+            wcstring tokens;
+            tokens.reserve(buff.size());
+            bool empty = true;
 
-        for (wcstring_range loc = wcstring_tok(buff, ifs); loc.first != wcstring::npos;
-             loc = wcstring_tok(buff, ifs, loc)) {
-            if (!empty) tokens.push_back(ARRAY_SEP);
-            tokens.append(buff, loc.first, loc.second);
-            empty = false;
+            for (wcstring_range loc = wcstring_tok(buff, opts.delimiter); loc.first != wcstring::npos;
+                 loc = wcstring_tok(buff, opts.delimiter, loc)) {
+                if (!empty) tokens.push_back(ARRAY_SEP);
+                tokens.append(buff, loc.first, loc.second);
+                empty = false;
+            }
+            env_set(argv[0], empty ? NULL : tokens.c_str(), opts.place);
+        } else {
+            wcstring_list_t splits;
+            split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(), &splits, LONG_MAX);
+            auto val = list_to_array_val(splits);
+            env_set(argv[0], *val == ENV_NULL ? NULL : val->c_str(), opts.place);
         }
-        env_set(argv[0], empty ? NULL : tokens.c_str(), opts.place);
     } else {  // not array
-        wcstring_range loc = wcstring_range(0, 0);
-        for (int i = 0; i < argc; i++) {
-            loc = wcstring_tok(buff, (i + 1 < argc) ? ifs : wcstring(), loc);
-            env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first],
-                    opts.place);
+        if (!opts.have_delimiter) {
+            wcstring_range loc = wcstring_range(0, 0);
+            for (int i = 0; i < argc; i++) {
+                loc = wcstring_tok(buff, (i + 1 < argc) ? opts.delimiter : wcstring(), loc);
+                env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first],
+                        opts.place);
+            }
+        } else {
+            wcstring_list_t splits;
+            // We're making at most argc - 1 splits so the last variable
+            // is set to the remaining string.
+            split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(), &splits, argc - 1);
+            for (size_t i = 0; i < (size_t)argc && i < splits.size(); i++) {
+                env_set(argv[i], splits[i].c_str(), opts.place);
+            }
         }
     }
 

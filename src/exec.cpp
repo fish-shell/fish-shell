@@ -935,11 +935,10 @@ void exec_job(parser_t &parser, job_t *j) {
                 // output, so that we can truncate the file. Does not apply to /dev/null.
                 bool must_fork = redirection_is_to_real_file(stdout_io.get()) ||
                                  redirection_is_to_real_file(stderr_io.get());
-                if (!must_fork) {
-                    //we are handling reads directly in the main loop. Make sure source is unblocked.
-                    unblock_previous();
-                }
                 if (!must_fork && p->is_last_in_job) {
+                    //we are handling reads directly in the main loop. Make sure source is unblocked.
+                    //Note that we may still end up forking.
+                    unblock_previous();
                     const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
                     const bool no_stdout_output = stdout_buffer.empty();
                     const bool no_stderr_output = stderr_buffer.empty();

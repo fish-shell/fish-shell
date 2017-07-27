@@ -62,7 +62,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
                 | string trim | string replace -r -a '\s+' ' ')
             end
 
-            cd $relative_path
+            builtin cd $relative_path
             set -l new_paths
             for path in $paths
                 set -l expanded_path
@@ -76,7 +76,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
                     set new_paths $new_paths $path
                 end
             end
-            cd $orig_dir
+            builtin cd $orig_dir
 
             if test -n "$new_paths"
                 _recursive $new_paths

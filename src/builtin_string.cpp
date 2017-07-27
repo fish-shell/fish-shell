@@ -29,6 +29,7 @@
 #include "io.h"
 #include "parse_util.h"
 #include "pcre2.h"
+#include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -1094,35 +1095,6 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
     }
 
     return replacer->replace_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-/// Given iterators into a string (forward or reverse), splits the haystack iterators
-/// about the needle sequence, up to max times. Inserts splits into the output array.
-/// If the iterators are forward, this does the normal thing.
-/// If the iterators are backward, this returns reversed strings, in reversed order!
-/// If the needle is empty, split on individual elements (characters).
-template <typename ITER>
-void split_about(ITER haystack_start, ITER haystack_end, ITER needle_start, ITER needle_end,
-                 wcstring_list_t *output, long max) {
-    long remaining = max;
-    ITER haystack_cursor = haystack_start;
-    while (remaining > 0 && haystack_cursor != haystack_end) {
-        ITER split_point;
-        if (needle_start == needle_end) {  // empty needle, we split on individual elements
-            split_point = haystack_cursor + 1;
-        } else {
-            split_point = std::search(haystack_cursor, haystack_end, needle_start, needle_end);
-        }
-        if (split_point == haystack_end) {  // not found
-            break;
-        }
-        output->push_back(wcstring(haystack_cursor, split_point));
-        remaining--;
-        // Need to skip over the needle for the next search note that the needle may be empty.
-        haystack_cursor = split_point + std::distance(needle_start, needle_end);
-    }
-    // Trailing component, possibly empty.
-    output->push_back(wcstring(haystack_cursor, haystack_end));
 }
 
 static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {

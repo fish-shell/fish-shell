@@ -13,6 +13,8 @@ The following options are available:
 
 - `-c CMD` or `--command=CMD` sets the initial string in the interactive mode command buffer to `CMD`.
 
+- `-d DELIMITER` or `--delimiter=DELIMITER` splits on DELIMITER.
+
 - `-g` or `--global` makes the variables global.
 
 - `-i` or `--silent` makes the characters typed obfuscated. This is useful for reading things like passwords or other sensitive information. Note that in bash the short flag is `-s`. We can't use that due to the existing use as an alias for `--shell`.
@@ -39,7 +41,7 @@ The following options are available:
 
 - `-z` or `--null` reads up to NUL instead of newline. Disables interactive mode.
 
-`read` reads a single line of input from stdin, breaks it into tokens based on the `IFS` shell variable, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable. As a special case, if `IFS` is set to the empty string, each character of the input is considered a separate token.
+`read` reads a single line of input from stdin, breaks it into tokens based on the delimiter set via `-d`/`--delimiter` as a complete string (like `string split` or, if that has not been given the (deprecated) `IFS` shell variable as a set of characters, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable. As a special case, if `IFS` is set to the empty string, each character of the input is considered a separate token.
 
 If `-a` or `--array` is provided, only one variable name is allowed and the tokens are stored as an array in this variable.
 
@@ -64,4 +66,11 @@ echo hello|read foo
 printf '%s\n' line1 line2 line3 line4 | while read -l foo
                   echo "This is another line: $foo"
               end
+
+# Delimiters given via "-d" are taken as one string
+echo a==b==c | read -d == -l a b c
+echo $a # a
+echo $b # b
+echo $c # c
+
 \endfish

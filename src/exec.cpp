@@ -1168,6 +1168,7 @@ void exec_job(parser_t &parser, job_t *j) {
             if (!pgrp_set) {
                 set_child_group(j, p->pid);
                 //only once per job, and only once we've executed an external command for real
+                //we can't rely on p->is_first_in_job because a builtin may have been the first
                 pgrp_set = true;
             }
         }

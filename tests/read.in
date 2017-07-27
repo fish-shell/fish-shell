@@ -239,3 +239,15 @@ echo $foo
 echo $bar
 echo $baz
 echo
+
+echo 'Multi-char delimiters with -d'
+echo a...b...c | read -l -d "..." a b c
+echo $a
+echo $b
+echo $c
+echo 'Multi-char delimiters with IFS'
+begin
+    set IFS "..."
+    echo a...b...c | read -l a b c
+    echo $a; echo $b; echo $c
+end

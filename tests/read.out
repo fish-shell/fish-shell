@@ -87,3 +87,11 @@ a
 b
 
 
+Multi-char delimiters with -d
+a
+b
+c
+Multi-char delimiters with IFS
+a
+b
+..c

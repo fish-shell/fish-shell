@@ -1194,13 +1194,6 @@ void exec_job(parser_t &parser, job_t *j) {
         }
     }
 
-    //unblock the last process in the group
-    if (blocked_pid != -1)
-    {
-        kill(blocked_pid, SIGCONT);
-        blocked_pid = -1;
-    }
-
     // Clean up any file descriptors we left open.
     if (pipe_current_read >= 0) exec_close(pipe_current_read);
     if (pipe_current_write >= 0) exec_close(pipe_current_write);

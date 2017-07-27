@@ -515,6 +515,7 @@ void exec_job(parser_t &parser, job_t *j) {
         const bool pipes_to_next_command = !p->is_last_in_job;
         //set to true if we end up forking for this process
         bool child_forked = false;
+        bool child_spawned = false;
 
         // The pipes the current process write to and read from. Unfortunately these can't be just
         // allocated on the stack, since j->io wants shared_ptr.
@@ -1092,6 +1093,9 @@ void exec_job(parser_t &parser, job_t *j) {
                         job_mark_process_as_failed(j, p);
                         exec_error = true;
                     }
+                    else {
+                        child_spawned = true;
+                    }
                 } else
 #endif
                 {
@@ -1133,7 +1137,11 @@ void exec_job(parser_t &parser, job_t *j) {
             }
         }
 
-        if (child_forked) {
+        if (child_spawned) {
+            child_set_group(j, p);
+            set_child_group(j, p->pid);
+        }
+        else if (child_forked) {
             //we have to wait to ensure the child has set their progress group and is in SIGSTOP state
             //otherwise, we can later call SIGCONT before they call SIGSTOP and they'll be blocked indefinitely.
             pid_t pid_status{};

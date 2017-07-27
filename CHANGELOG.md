@@ -2,7 +2,7 @@
 This section is for changes merged to the `major` branch that are not also merged to 2.7.
 
 ## Deprecations
-- The `IFS` variable (#4156).
+- The `IFS` variable is deprecated and will be removed in fish 4.0 (#4156).
 
 ## Notable fixes and improvements
 - Local exported (`set -lx`) vars are now visible to functions (#1091).
@@ -10,6 +10,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `complete` now has a `-k`/`--keep-order` flag to keep the order of the OPTION_ARGUMENTS (#361).
 - A "--delimiter" option to `read` as a better alternative to the `IFS` variable (#4256).
 - `set` has a new `--show` option to show lots of information about variables (#4265).
+- Command substitution output is now limited to 10 MB by default (#3822).
 
 ## Other significant changes
 - `read` now requires at least one var name (#4220).

@@ -1,0 +1,35 @@
+# This tests various corner cases involving command substitution. Most
+# importantly the limits on the amount of data we'll substitute.
+
+set FISH_READ_BYTE_LIMIT 512
+
+function subme
+    set -l x (string repeat -n $argv x)
+    echo $x
+end
+
+echo '# Command sub just under the limit should succeed.'
+set a (subme 511)
+show a
+
+echo '# Command sub at the limit should fail.'
+echo '# Command sub at the limit should fail.' >&2
+set b (string repeat -n 512 x)
+set saved_status $status
+test $saved_status -eq 122
+or echo expected status 122, saw $saved_status >&2
+show b
+
+echo '# Command sub over the limit should fail.'
+echo '# Command sub over the limit should fail.' >&2
+set c (subme 513)
+show c
+
+echo '# Make sure output from builtins outside of command substitution is not affected'
+string repeat --max 513 a
+
+echo '# Same builtin in a command substitution is affected' >&2
+echo this will fail (string repeat --max 513 b) to output anything
+set saved_status $status
+test $saved_status -eq 122
+or echo expected status 122, saw $saved_status >&2

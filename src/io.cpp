@@ -75,10 +75,11 @@ bool io_buffer_t::avoid_conflicts_with_io_chain(const io_chain_t &ios) {
     return result;
 }
 
-shared_ptr<io_buffer_t> io_buffer_t::create(int fd, const io_chain_t &conflicts) {
+shared_ptr<io_buffer_t> io_buffer_t::create(int fd, const io_chain_t &conflicts,
+                                            size_t buffer_limit) {
     bool success = true;
     assert(fd >= 0);
-    shared_ptr<io_buffer_t> buffer_redirect(new io_buffer_t(fd));
+    shared_ptr<io_buffer_t> buffer_redirect(new io_buffer_t(fd, buffer_limit));
 
     if (exec_pipe(buffer_redirect->pipe_fd) == -1) {
         debug(1, PIPE_ERROR);

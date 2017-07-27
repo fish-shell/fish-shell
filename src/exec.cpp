@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -383,21 +384,6 @@ void exec_job(parser_t &parser, job_t *j) {
         return;
     }
 
-    auto unblock_pid = [] (pid_t blocked_pid) {
-        //this is correct, except there's a race condition if the child hasn't yet SIGSTOP'd
-        //in that case, they never receive the SIGCONT
-        pid_t pid_status{};
-        if (waitpid(blocked_pid, &pid_status, WUNTRACED) != -1) {
-            // if (WIFSTOPPED(pid_status)) {
-                debug(2, L"Unblocking process %d.\n", blocked_pid);
-                kill(blocked_pid, SIGCONT);
-                return true;
-            // }
-        }
-        debug(2, L"waitpid call in unblock_pid failed!\n");
-        return false;
-    };
-
     debug(4, L"Exec job '%ls' with id %d", j->command_wcstr(), j->job_id);
 
     // Verify that all IO_BUFFERs are output. We used to support a (single, hacked-in) magical input
@@ -485,14 +471,14 @@ void exec_job(parser_t &parser, job_t *j) {
         if (keepalive.pid == 0) {
             // Child
             keepalive.pid = getpid();
-            set_child_group(j, &keepalive, 1);
+            child_set_group(j, &keepalive);
             pause();
             exit_without_destructors(0);
         } else {
             // Parent
             debug(2, L"Fork #%d, pid %d: keepalive fork for '%ls'", g_fork_count, keepalive.pid,
                   j->command_wcstr());
-            set_child_group(j, &keepalive, 0);
+            set_child_group(j, keepalive.pid);
         }
     }
 
@@ -527,7 +513,8 @@ void exec_job(parser_t &parser, job_t *j) {
 
         // See if we need a pipe.
         const bool pipes_to_next_command = !p->is_last_in_job;
-        bool command_blocked = false;
+        //set to true if we end up forking for this process
+        bool child_forked = false;
 
         // The pipes the current process write to and read from. Unfortunately these can't be just
         // allocated on the stack, since j->io wants shared_ptr.
@@ -632,12 +619,16 @@ void exec_job(parser_t &parser, job_t *j) {
         // This is the IO buffer we use for storing the output of a block or function when it is in
         // a pipeline.
         shared_ptr<io_buffer_t> block_output_io_buffer;
-        auto unblock_previous = [&] () {
+
+        auto unblock_previous = [&j] () {
+            //we've already called waitpid after forking the child, so we've guaranteed that they're
+            //already SIGSTOP'd. Otherwise we'd be risking a deadlock because we can call SIGCONT before
+            //they've actually stopped, and they'll remain suspended indefinitely.
             if (blocked_pid != -1) {
-                //now that next command in the chain has been started, unblock the previous command
-                unblock_pid(blocked_pid);
-                blocked_pid = -1;
+                debug(2, L"Unblocking process %d.\n", blocked_pid);
+                kill(blocked_pid, SIGCONT);
             }
+            blocked_pid = -1;
         };
 
         // This is the io_streams we pass to internal builtins.
@@ -893,14 +884,10 @@ void exec_job(parser_t &parser, job_t *j) {
                         // This is the child process. Write out the contents of the pipeline.
                         p->pid = getpid();
                         setup_child_process(j, p, process_net_io_chain);
-                        // Start child processes that are part of a chain in a stopped state
-                        // to ensure that they are still running when the next command in the
-                        // chain is started.
+                        // Make child processes pause after executing setup_child_process() to give down-chain
+                        // commands in the job a chance to join their process group and read their pipes.
                         // The process will be resumed when the next command in the chain is started.
-                        // Note that this may span multiple jobs, as jobs can read from each other.
-                        if (pipes_to_next_command) {
-                            kill(p->pid, SIGSTOP);
-                        }
+                        kill(p->pid, SIGSTOP);
 
                         exec_write_and_exit(block_output_io_buffer->fd, buffer, count, status);
                     } else {
@@ -908,14 +895,9 @@ void exec_job(parser_t &parser, job_t *j) {
                         // possibly give it control over the terminal.
                         debug(2, L"Fork #%d, pid %d: internal block or function for '%ls'",
                               g_fork_count, pid, p->argv0());
-                        if (pipes_to_next_command) {
-                            //it actually blocked itself after forking above, but print in here for output
-                            //synchronization & so we can assign command_blocked in the correct address space
-                            debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
-                            command_blocked = true;
-                        }
+                        child_forked = true;
+                        debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
                         p->pid = pid;
-                        set_child_group(j, p, 0);
                     }
 
                 } else {
@@ -1030,14 +1012,11 @@ void exec_job(parser_t &parser, job_t *j) {
                         // stdout and stderr, and then exit.
                         p->pid = getpid();
                         setup_child_process(j, p, process_net_io_chain);
-                        // Start child processes that are part of a chain in a stopped state
-                        // to ensure that they are still running when the next command in the
-                        // chain is started.
+                        // Make child processes pause after executing setup_child_process() to give down-chain
+                        // commands in the job a chance to join their process group and read their pipes.
                         // The process will be resumed when the next command in the chain is started.
-                        // Note that this may span multiple jobs, as jobs can read from each other.
-                        if (pipes_to_next_command) {
-                            kill(p->pid, SIGSTOP);
-                        }
+                        kill(p->pid, SIGSTOP);
+
                         do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
                         exit_without_destructors(p->status);
                     } else {
@@ -1045,15 +1024,9 @@ void exec_job(parser_t &parser, job_t *j) {
                         // possibly give it control over the terminal.
                         debug(2, L"Fork #%d, pid %d: internal builtin for '%ls'", g_fork_count, pid,
                               p->argv0());
-                        if (pipes_to_next_command) {
-                            //it actually blocked itself after forking above, but print in here for output
-                            //synchronization & so we can assign command_blocked in the correct address space
-                            debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
-                            command_blocked = true;
-                        }
+                        child_forked = true;
+                        debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
                         p->pid = pid;
-
-                        set_child_group(j, p, 0);
                     }
                 }
 
@@ -1127,15 +1100,10 @@ void exec_job(parser_t &parser, job_t *j) {
                         // This is the child process.
                         p->pid = getpid();
                         setup_child_process(j, p, process_net_io_chain);
-
-                        // Start child processes that are part of a chain in a stopped state
-                        // to ensure that they are still running when the next command in the
-                        // chain is started.
+                        // Make child processes pause after executing setup_child_process() to give down-chain
+                        // commands in the job a chance to join their process group and read their pipes.
                         // The process will be resumed when the next command in the chain is started.
-                        // Note that this may span multiple jobs, as jobs can read from each other.
-                        if (pipes_to_next_command) {
-                            kill(p->pid, SIGSTOP);
-                        }
+                        kill(p->pid, SIGSTOP);
 
                         safe_launch_process(p, actual_cmd, argv, envv);
                         // safe_launch_process _never_ returns...
@@ -1147,19 +1115,14 @@ void exec_job(parser_t &parser, job_t *j) {
                             job_mark_process_as_failed(j, p);
                             exec_error = true;
                         }
-                        if (pipes_to_next_command) {
-                            //it actually blocked itself after forking above, but print in here for output
-                            //synchronization & so we can assign command_blocked in the correct address space
-                            debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
-                            command_blocked = true;
-                        }
+                        child_forked = true;
+                        debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
                     }
                 }
 
                 // This is the parent process. Store away information on the child, and possibly
                 // fice it control over the terminal.
                 p->pid = pid;
-                set_child_group(j, p, 0);
                 break;
             }
 
@@ -1170,10 +1133,31 @@ void exec_job(parser_t &parser, job_t *j) {
             }
         }
 
-
-        //if the command we ran before this one was SIGSTOP'd to let this one catch up, unblock it now.
+        if (child_forked) {
+            //we have to wait to ensure the child has set their progress group and is in SIGSTOP state
+            //otherwise, we can later call SIGCONT before they call SIGSTOP and they'll be blocked indefinitely.
+            pid_t pid_status{};
+            if (waitpid(p->pid, &pid_status, WUNTRACED) != -1) {
+                //the child is SIGSTOP'd and is guaranteed to have called child_set_group() at this point.
+                set_child_group(j, p->pid); //update our own process group info to match
+                //we are not unblocking the child via SIGCONT just yet to give the next process a chance to open
+                //the pipes and join the process group. We only unblock the last process in the job chain because
+                //no one awaits it.
+                if (!pipes_to_next_command)
+                {
+                    kill(p->pid, SIGCONT);
+                }
+            }
+            else {
+                debug(2, L"waitpid(%d) call in unblock_pid failed:!\n", p->pid);
+                wperror(L"waitpid");
+            }
+        }
+        //if the command we ran _before_ this one was SIGSTOP'd to let this one catch up, unblock it now.
+        //this must be after the wait_pid on the process we just started, if any.
         unblock_previous();
-        if (command_blocked) {
+
+        if (child_forked) {
             //store the newly-blocked command's PID so that it can be SIGCONT'd once the next process
             //in the chain is started. That may be in this job or in another job.
             blocked_pid = p->pid;

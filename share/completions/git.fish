@@ -161,7 +161,7 @@ function __fish_git_using_command
 
     # Check aliases.
     set -l varname __fish_git_alias_(string escape --style=var -- $cmd)
-    set -q $$varname
+    set -q $varname
     and contains -- $$varname $argv
     and return 0
     return 1

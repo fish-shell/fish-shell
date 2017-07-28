@@ -317,8 +317,6 @@ class completer_t {
     void complete_param_expand(const wcstring &str, bool do_file,
                                bool handle_as_special_cd = false);
 
-    void complete_special_cd(const wcstring &str);
-
     void complete_cmd(const wcstring &str, bool use_function, bool use_builtin, bool use_command,
                       bool use_implicit_cd);
 

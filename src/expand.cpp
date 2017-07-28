@@ -492,7 +492,7 @@ static bool find_job(const wchar_t *proc, expand_flags_t flags,
     while (const job_t *j = jobs.next()) {
         if (j->command_is_empty()) continue;
 
-        size_t offset;
+        size_t offset = 0;
         if (match_pid(j->command(), proc, &offset)) {
             if (flags & EXPAND_FOR_COMPLETIONS) {
                 append_completion(completions, j->command_wcstr() + offset + wcslen(proc),
@@ -514,7 +514,7 @@ static bool find_job(const wchar_t *proc, expand_flags_t flags,
         for (const process_ptr_t &p : j->processes) {
             if (p->actual_cmd.empty()) continue;
 
-            size_t offset;
+            size_t offset = 0;
             if (match_pid(p->actual_cmd, proc, &offset)) {
                 if (flags & EXPAND_FOR_COMPLETIONS) {
                     append_completion(completions, wcstring(p->actual_cmd, offset + wcslen(proc)),
@@ -552,7 +552,7 @@ static void find_process(const wchar_t *proc, expand_flags_t flags,
     pid_t process_pid;
     process_iterator_t iterator;
     while (iterator.next_process(&process_name, &process_pid)) {
-        size_t offset;
+        size_t offset = 0;
         if (match_pid(process_name, proc, &offset)) {
             if (flags & EXPAND_FOR_COMPLETIONS) {
                 append_completion(out, process_name.c_str() + offset + wcslen(proc),

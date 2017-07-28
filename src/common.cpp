@@ -598,16 +598,6 @@ void __attribute__((noinline)) debug(int level, const char *msg, ...) {
     errno = errno_old;
 }
 
-void read_ignore(int fd, void *buff, size_t count) {
-    size_t ignore __attribute__((unused));
-    ignore = read(fd, buff, count);
-}
-
-void write_ignore(int fd, const void *buff, size_t count) {
-    size_t ignore __attribute__((unused));
-    ignore = write(fd, buff, count);
-}
-
 void debug_safe(int level, const char *msg, const char *param1, const char *param2,
                 const char *param3, const char *param4, const char *param5, const char *param6,
                 const char *param7, const char *param8, const char *param9, const char *param10,
@@ -626,14 +616,14 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
         const char *end = strchr(cursor, '%');
         if (end == NULL) end = cursor + strlen(cursor);
 
-        write_ignore(STDERR_FILENO, cursor, end - cursor);
+        (void)write(STDERR_FILENO, cursor, end - cursor);
 
         if (end[0] == '%' && end[1] == 's') {
             // Handle a format string.
             assert(param_idx < sizeof params / sizeof *params);
             const char *format = params[param_idx++];
             if (!format) format = "(null)";
-            write_ignore(STDERR_FILENO, format, strlen(format));
+            (void)write(STDERR_FILENO, format, strlen(format));
             cursor = end + 2;
         } else if (end[0] == '\0') {
             // Must be at the end of the string.
@@ -645,7 +635,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     }
 
     // We always append a newline.
-    write_ignore(STDERR_FILENO, "\n", 1);
+    (void)write(STDERR_FILENO, "\n", 1);
 
     errno = errno_old;
 }

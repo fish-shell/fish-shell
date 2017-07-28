@@ -44,14 +44,14 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     function _ssh_include --argument-names ssh_config
         # Relative paths in Include directive use /etc/ssh or ~/.ssh depending on
         # system or user level config. -F will not override this behaviour
-        if test $ssh_config = '/etc/ssh/ssh_config'
+        set -l relative_path $HOME/.ssh
+        if string match '/etc/ssh/*' -- $ssh_config
             set relative_path '/etc/ssh'
-        else
-            set relative_path $HOME/.ssh
         end
 
         function _recursive --no-scope-shadowing
-            set paths
+            set -l orig_dir $PWD
+            set -l paths
             for config in $argv
                 set paths $paths (cat $config ^/dev/null \
                 # Keep only Include lines
@@ -62,10 +62,11 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
                 | string trim | string replace -r -a '\s+' ' ')
             end
 
+            builtin cd $relative_path
             set -l new_paths
             for path in $paths
                 set -l expanded_path
-                eval set expanded_path (echo $path)
+                eval "set expanded_path (printf \"%s\n\" $path)"
                 for path in $expanded_path
                     # Resolve "relative" paths in accordance to ssh path resolution
                     if string match -qv '/*' $path
@@ -75,9 +76,9 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
                     set new_paths $new_paths $path
                 end
             end
+            builtin cd $orig_dir
 
             if test -n "$new_paths"
-
                 _recursive $new_paths
             end
         end

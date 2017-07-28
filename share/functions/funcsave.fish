@@ -22,16 +22,16 @@ function funcsave --description "Save the current definition of all specified fu
         end
     end
 
-    set -l res 0
+    set -l retval 0
     for funcname in $argv
         if functions -q -- $funcname
-            functions -- $i >$configdir/fish/functions/$funcname
+            functions -- $funcname >$configdir/fish/functions/$funcname.fish
         else
             printf (_ "%s: Unknown function '%s'\n") funcsave $funcname
-            set res 1
+            set retval 1
         end
     end
 
-    return $res
+    return $retval
 end
 

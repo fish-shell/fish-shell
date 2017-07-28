@@ -179,10 +179,6 @@ extern bool g_profiling_active;
 /// Name of the current program. Should be set at startup. Used by the debug function.
 extern const wchar_t *program_name;
 
-// Variants of read() and write() that ignores return values, defeating a warning.
-void read_ignore(int fd, void *buff, size_t count);
-void write_ignore(int fd, const void *buff, size_t count);
-
 /// Set to false at run-time if it's been determined we can't trust the last modified timestamp on
 /// the tty.
 extern bool has_working_tty_timestamps;
@@ -207,7 +203,7 @@ extern bool has_working_tty_timestamps;
     {                                       \
         char exit_read_buff;                \
         show_stackframe(L'E');              \
-        read_ignore(0, &exit_read_buff, 1); \
+        (void)read(0, &exit_read_buff, 1); \
         exit_without_destructors(1);        \
     }
 

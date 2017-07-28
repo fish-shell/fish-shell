@@ -1,0 +1,5 @@
+# Read with no vars is an error
+read: Expected at least 1 args, got only 0
+# Read with -a and anything other than exactly on var name is an error
+read: Expected 1 args, got 0
+read: Expected 1 args, got 2

@@ -35,8 +35,9 @@ if not set -q __fish_is_running_tests
     end
 
     begin
-        set -l IFS  # clear IFS so cmd substitution doesn't split
-        cd (dirname $script); or die
+        dirname $script | read -l dir
+        cd $dir
+        or die
     end
 
     set -lx XDG_DATA_HOME ../test/data

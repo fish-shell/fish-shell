@@ -2,6 +2,18 @@
 #
 # Test read builtin and IFS.
 #
+
+###########
+# Start by testing that invocation errors are handled correctly.
+echo '# Read with no vars is an error' >&2
+read
+echo '# Read with -a and anything other than exactly on var name is an error' >&2
+read -a
+read -a v1 v2
+read -a v1
+
+###########
+# Verify correct behavior of subcommands and splitting of input.
 count (echo one\ntwo)
 set -l IFS \t
 count (echo one\ntwo)
@@ -25,6 +37,7 @@ function print_vars --no-scope-shadowing
 end
 
 echo
+echo '# Test splitting input'
 echo 'hello there' | read -l one two
 print_vars one two
 echo 'hello there' | read -l one
@@ -41,6 +54,7 @@ echo -n 'a' | read -l one
 echo "$status $one"
 
 echo
+echo '# Test splitting input with IFS empty'
 set -l IFS
 echo 'hello' | read -l one
 print_vars one
@@ -194,3 +208,46 @@ end
 
 echo '# Confirm reading non-interactively works (#4206 regression)'
 echo abc\ndef | ../test/root/bin/fish -i -c 'read a; read b; show a; show b'
+### Test --delimiter (and $IFS, for now)
+echo a=b | read -l foo bar
+echo $foo
+echo $bar
+echo Delimiter =
+echo a=b | read -l -d = foo bar
+echo $foo
+echo $bar
+echo Delimiter empty
+echo a=b | read -l -d '' foo bar baz
+echo $foo
+echo $bar
+echo $baz
+echo IFS empty string
+set -l IFS ''
+echo a=b | read -l foo bar baz
+echo $foo
+echo $bar
+echo $baz
+echo IFS unset
+set -e IFS
+echo a=b | read -l foo bar baz
+echo $foo
+echo $bar
+echo $baz
+echo Delimiter =
+echo a=b | read -l -d = foo bar baz
+echo $foo
+echo $bar
+echo $baz
+echo
+
+echo 'Multi-char delimiters with -d'
+echo a...b...c | read -l -d "..." a b c
+echo $a
+echo $b
+echo $c
+echo 'Multi-char delimiters with IFS'
+begin
+    set IFS "..."
+    echo a...b...c | read -l a b c
+    echo $a; echo $b; echo $c
+end

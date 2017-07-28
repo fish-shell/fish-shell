@@ -4,8 +4,8 @@ history: you cannot use any options with the merge command
 history: save expected 0 args, got 1
 history: you cannot use any options with the save command
 history: you cannot use any options with the clear command
-history: merge expected 0 args, got 1
-history: clear expected 0 args, got 2
+history merge: Expected 0 args, got 1
+history clear: Expected 0 args, got 2
 
 history: you cannot use any options with the clear command
 history: you cannot use any options with the merge command
@@ -17,7 +17,7 @@ history: Invalid combination of options,
 you cannot do both 'search' and 'merge' in the same invocation
 history: you cannot use any options with the save command
 history: you cannot use any options with the clear command
-history: merge expected 0 args, got 1
-history: clear expected 0 args, got 2
+history merge: Expected 0 args, got 1
+history clear: Expected 0 args, got 2
 history: you cannot use any options with the save command
 history: you cannot use any options with the merge command

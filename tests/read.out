@@ -11,6 +11,7 @@ two]
 two
 ]
 
+# Test splitting input
 1 'hello' 1 'there'
 1 'hello there'
 1 ''
@@ -19,6 +20,7 @@ two
 1 'foo' 1 'bar' 1 '  baz'
 0 a
 
+# Test splitting input with IFS empty
 1 'hello'
 1 'h' 1 'ello'
 1 'h' 1 'e' 1 'llo'
@@ -63,3 +65,33 @@ $a count=1
 $a[1]=|abc|
 $b count=1
 $b[1]=|def|
+a=b
+
+Delimiter =
+a
+b
+Delimiter empty
+a
+=
+b
+IFS empty string
+a
+=
+b
+IFS unset
+a=b
+
+
+Delimiter =
+a
+b
+
+
+Multi-char delimiters with -d
+a
+b
+c
+Multi-char delimiters with IFS
+a
+b
+..c

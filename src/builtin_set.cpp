@@ -170,6 +170,13 @@ static int validate_cmd_opts(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
         return STATUS_INVALID_ARGS;
     }
 
+    // Trying to erase and (un)export at the same time doesn't make sense.
+    if (opts.erase && (opts.exportv || opts.unexport)) {
+        streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_INVALID_ARGS;
+    }
+
     if (argc == 0 && opts.erase) {
         streams.err.append_format(BUILTIN_SET_ERASE_NO_VAR, cmd);
         builtin_print_help(parser, streams, cmd, streams.err);

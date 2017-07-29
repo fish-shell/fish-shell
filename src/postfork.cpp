@@ -83,7 +83,7 @@ bool child_set_group(job_t *j, process_t *p) {
         //times to get the kernel to see the new group. (Linux 4.4.0)
         int failure = setpgid(p->pid, j->pgid);
         while (failure == -1 && (errno == EPERM || errno == EINTR)) {
-            debug_safe(2, "Retrying setpgid in child process");
+            debug_safe(1, "Retrying setpgid in child process");
             failure = setpgid(p->pid, j->pgid);
         }
         // TODO: Figure out why we're testing whether the pgid is correct after attempting to
@@ -149,7 +149,8 @@ bool set_child_group(job_t *j, pid_t child_pid) {
             //handle it)..
             debug(4, L"Process group %d already has control of terminal\n", j->pgid);
         }
-        else {
+        else
+        {
             //no need to duplicate the code here, a function already exists that does just this
             retval = terminal_give_to_job(j, false /*new job, so not continuing*/);
         }
@@ -266,7 +267,7 @@ int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain) {
         //In the case of IO_FILE, this can hang until data is available to read/write!
         ok = (0 == handle_child_io(io_chain));
         if (p != 0 && !ok) {
-            debug_safe(0, "p!=0 && !ok");
+            debug_safe(4, "handle_child_io failed in setup_child_process");
             exit_without_destructors(1);
         }
     }
@@ -293,6 +294,7 @@ pid_t execute_fork(bool wait_for_threads_to_die) {
         // Make sure we have no outstanding threads before we fork. This is a pretty sketchy thing
         // to do here, both because exec.cpp shouldn't have to know about iothreads, and because the
         // completion handlers may do unexpected things.
+        debug_safe(4, "waiting for threads to drain.");
         iothread_drain_all();
     }
 

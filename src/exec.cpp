@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <type_traits>
 #include <vector>

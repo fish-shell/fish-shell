@@ -1200,6 +1200,11 @@ void exec_job(parser_t &parser, job_t *j) {
             exec_close(pipe_current_write);
             pipe_current_write = -1;
         }
+
+        //unblock the last process because there's no need for it to stay SIGSTOP'd for anything
+        if (p->is_last_in_job) {
+            unblock_previous();
+        }
     }
 
     // Clean up any file descriptors we left open.

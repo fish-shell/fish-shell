@@ -260,7 +260,7 @@ static int handle_child_io(const io_chain_t &io_chain) {
     return 0;
 }
 
-int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain) {
+int setup_child_process(process_t *p, const io_chain_t &io_chain) {
     bool ok = true;
 
     if (ok) {

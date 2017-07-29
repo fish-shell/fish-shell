@@ -517,8 +517,6 @@ void exec_job(parser_t &parser, job_t *j) {
         //set to true if we end up forking for this process
         bool child_forked = false;
         bool child_spawned = false;
-        // bool block_child = !needs_keepalive;
-        // bool block_child = pipes_to_next_command;
         bool block_child = true;
 
         // The pipes the current process write to and read from. Unfortunately these can't be just

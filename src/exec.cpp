@@ -494,6 +494,8 @@ void exec_job(parser_t &parser, job_t *j) {
     // We are careful to set these to -1 when closed, so if we exit the loop abruptly, we can still
     // close them.
     bool pgrp_set = false;
+    //this is static since processes can block on input/output across jobs
+    //the main exec_job loop is only ever run in a single thread, so this is OK
     static pid_t blocked_pid = -1;
     int pipe_current_read = -1, pipe_current_write = -1, pipe_next_read = -1;
     for (std::unique_ptr<process_t> &unique_p : j->processes) {

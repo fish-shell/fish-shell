@@ -789,6 +789,8 @@ bool terminal_give_to_job(job_t *j, int cont) {
         return true;
     }
 
+    signal_block(true);
+
     //Previously, terminal_give_to_job was being called for each process in a job, hence all the comments
     //and warnings below. It is now only called for the first process in a job.t d
 
@@ -801,35 +803,50 @@ bool terminal_give_to_job(job_t *j, int cont) {
     //for SIGTTOU are installed. Read: http://curiousthing.org/sigttin-sigttou-deep-dive-linux
     //In all cases, our goal here was just to hand over control of the terminal to this process group,
     //which is a no-op if it's already been done.
-    auto previous_owner = tcgetpgrp(STDIN_FILENO);
-    if (previous_owner == j->pgid) {
+    if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
         debug(2, L"Process group %d already has control of terminal\n", j->pgid);
-        return true;
     }
-    debug(4, L"Attempting bring process group to foreground via tcsetpgrp for job->pgid %d\n", j->pgid);
-    debug(4, L"caller session id: %d, pgid %d has session id: %d\n", getsid(0), j->pgid, getsid(j->pgid));
+    else {
+        debug(4, L"Attempting bring process group to foreground via tcsetpgrp for job->pgid %d\n", j->pgid);
+        debug(4, L"caller session id: %d, pgid %d has session id: %d\n", getsid(0), j->pgid, getsid(j->pgid));
 
-    //the tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but is not the
-    //process group ID of a process in the same session as the calling process."
-    //Since we _guarantee_ that this isn't the case (the child calls setpgid before it calls SIGSTOP, and
-    //the child was created in the same session as us), it seems that EPERM is being thrown because of an
-    //caching issue - the call to tcsetpgrp isn't seeing the newly-created process group just yet. On this
-    //developer's test machine (WSL running Linux 4.4.0), EPERM does indeed disappear on retry. The important
-    //thing is that we can guarantee the process isn't going to exit while we wait (which would cause us to
-    //possibly block indefinitely).
+        //the tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but is not the
+        //process group ID of a process in the same session as the calling process."
+        //Since we _guarantee_ that this isn't the case (the child calls setpgid before it calls SIGSTOP, and
+        //the child was created in the same session as us), it seems that EPERM is being thrown because of an
+        //caching issue - the call to tcsetpgrp isn't seeing the newly-created process group just yet. On this
+        //developer's test machine (WSL running Linux 4.4.0), EPERM does indeed disappear on retry. The important
+        //thing is that we can guarantee the process isn't going to exit while we wait (which would cause us to
+        //possibly block indefinitely).
 
-    signal_block(true);
-    int result = -1;
-    errno = EINTR;
-    while (result == -1 && (errno == EINTR || errno == EPERM)) {
-        result = tcsetpgrp(STDIN_FILENO, j->pgid);
-    }
-    if (result == -1) {
-        if (errno == ENOTTY) redirect_tty_output();
-        debug(1, _(L"terminal_give_to_job(): Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id, j->command_wcstr(), j->pgid);
-        wperror(L"tcsetpgrp");
-        signal_unblock(true);
-        return false;
+        while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
+            if (errno == EINTR) {
+                //always retry on EINTR
+            }
+            else if (errno == EPERM) {
+                //so long as this isn't because the process group is dead
+                int wait_result = waitpid(-1 * j->pgid, &wait_result, WNOHANG);
+                if (wait_result == -1) {
+                    //everyone in the process group has exited
+                    //The only way that can happen is if the very last process in the group terminated, and didn't need
+                    //to access the terminal, otherwise it would have hung waiting for terminal IO. We can ignore this.
+                    //Note that -1 is technically an "error" for waitpid in the sense that an invalid argument was specified
+                    //because no such process group exists any longer.
+                    //a "success" result would mean processes from the group still exist but is still running in some state
+                    //or the other.
+                    debug(3, L"terminal_give_to_job(): tcsetpgrp called but process group %d has terminated.\n", j->pgid);
+                    break;
+                }
+                debug(2, L"terminal_give_to_job(): EPERM.\n", j->pgid);
+            }
+            else {
+                if (errno == ENOTTY) redirect_tty_output();
+                debug(1, _(L"terminal_give_to_job(): Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id, j->command_wcstr(), j->pgid);
+                wperror(L"tcsetpgrp");
+                signal_unblock(true);
+                return false;
+            }
+        }
     }
 
     if (cont) {

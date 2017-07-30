@@ -1108,7 +1108,7 @@ void exec_job(parser_t &parser, job_t *j) {
                 } else
 #endif
                 {
-                    if (!do_fork(false, "internal builtin", [&] {
+                    if (!do_fork(false, "external command", [&] {
                             safe_launch_process(p, actual_cmd, argv, envv);
                         })) {
                         break;

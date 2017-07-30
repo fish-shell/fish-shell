@@ -129,7 +129,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wcstring_list_t path;
     wcstring_list_t wrap_targets;
 
-    static const wchar_t *short_options = L":a:c:p:s:l:o:d:frxeuAn:C::w:h";
+    static const wchar_t *short_options = L":a:c:kp:s:l:o:d:frxeuAn:C::w:h";
     static const struct woption long_options[] = {{L"exclusive", no_argument, NULL, 'x'},
                                                   {L"no-files", no_argument, NULL, 'f'},
                                                   {L"require-parameter", no_argument, NULL, 'r'},
@@ -147,6 +147,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                                   {L"wraps", required_argument, NULL, 'w'},
                                                   {L"do-complete", optional_argument, NULL, 'C'},
                                                   {L"help", no_argument, NULL, 'h'},
+                                                  {L"keep-order", no_argument, NULL, 'k'},
                                                   {NULL, 0, NULL, 0}};
 
     int opt;
@@ -163,6 +164,11 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case 'r': {
                 result_mode |= NO_COMMON;
+                break;
+            }
+            case 'k': {
+                // This is a no-op in fish 2.7. It is implemented in fish 3.0. We want it to be
+                // silently ignored if someone happens to use a completion that uses this flag.
                 break;
             }
             case 'p':

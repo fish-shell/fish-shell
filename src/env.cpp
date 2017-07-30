@@ -630,8 +630,7 @@ static void react_to_variable_change(const wcstring &key) {
     } else if (key == L"FISH_READ_BYTE_LIMIT") {
         env_set_read_limit();
     } else if (key == L"FISH_HISTORY") {
-        history_destroy();
-        reader_push(history_session_id().c_str());
+        reader_change_history(history_session_id().c_str());
     }
 }
 

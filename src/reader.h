@@ -72,6 +72,9 @@ const wchar_t *reader_current_filename();
 /// \param fn The fileanme to push
 void reader_push_current_filename(const wchar_t *fn);
 
+/// Change the history file for the current command reading context.
+void reader_change_history(const wchar_t *fn);
+
 /// Pop the current filename from the stack of read files.
 void reader_pop_current_filename();
 

@@ -71,16 +71,12 @@ function __fish_snap_installed_snaps --description 'List installed snaps'
     snap list | string replace -r '(.+?) .*' '$1' | string match -v 'Name*'
 end
 
-function __fish_snap_connectable_snaps --description 'List installed snaps'
-    snap list | string replace -r '(.+?) .*' '$1:' | string match -v 'Name*'
-end
-
-function __fish_snap_disconnectable_snaps --description 'List connected snaps'
-    snap interfaces | string match -r -v ' -|Plug' | string replace -r '.* (.*)' '$1:' | sort -u
-end
-
 function __fish_snap_interfaces --description 'List of interfaces'
-    snap interfaces | string replace -r ':(.+?) .*' '$1' | string match -v "Slot*"
+    for snap in (__fish_snap_installed_snaps)
+        if test $snap != core
+            snap interfaces $snap | string replace -r '[- ]*([^ ]*)[ ]+([^ ]+)' '$2$1' | string match -v "*Slot*"
+        end
+    end
 end
 
 function __fish_snap_change_id --description 'List change IDs'
@@ -153,8 +149,7 @@ __fish_snap_subcommand changes                  --description "List system chang
 
 # Connect
 __fish_snap_subcommand connect -r               --description "Connects a plug to a slot"
-complete -f -c snap -n '__fish_snap_using_subcommand connect' -a '(__fish_snap_connectable_snaps)' --description "Snap"
-complete -f -c snap -n '__fish_snap_use_interface' -a '(__fish_snap_interfaces)' --description 'Interface'
+complete -f -c snap -n '__fish_snap_using_subcommand connect' -a '(__fish_snap_interfaces)' --description "Snap:Plug or Slot"
 
 # Disable
 __fish_snap_subcommand disable -r               --description "Disables a snap in the system"
@@ -162,9 +157,7 @@ complete -f -c snap -n '__fish_snap_using_subcommand disable' -a '(__fish_snap_e
 
 # Disconnect
 __fish_snap_subcommand disconnect -r            --description "Disconnects a plug from a slot"
-complete -f -c snap -n '__fish_snap_using_subcommand disconnect' -a '(__fish_snap_disconnectable_snaps)' --description "Snap"
-complete -f -c snap -n '__fish_snap_use_interface' -a '(__fish_snap_interfaces)' --description 'Interface'
-
+complete -f -c snap -n '__fish_snap_using_subcommand disconnect' -a '(__fish_snap_interfaces)' --description "Snap:Plug or Slot"
 
 # Downloads
 __fish_snap_subcommand download -r              --description "Downloads the given snap"
@@ -215,6 +208,7 @@ __fish_snap_option install -l dangerous         --description "Install the given
 
 # Interfaces
 __fish_snap_subcommand interfaces               --description "Lists interfaces in the system"
+complete -f -c snap -n '__fish_snap_using_subcommand interfaces' -a '(__fish_snap_installed_snaps)' --description "Snap"
 __fish_snap_option interfaces -s i              --description "Constrain listing to specific interfaces"
 
 # Known

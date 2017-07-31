@@ -20,17 +20,6 @@ function __fish_snap_using_subcommand --description 'Test if given subcommand is
     return 1
 end
 
-function __fish_snap_use_interface --description 'Test if command should have interfaces as potential completion'
-    if __fish_snap_using_subcommand connect; or __fish_snap_using_subcommand disconnect
-        for i in (commandline -opc)
-            if string match -r '.*:' $i
-                return 0
-            end
-        end
-    end
-    return 1
-end
-
 function __fish_snap_use_package --description 'Test if snap command should have packages as potential completion'
 	for i in (commandline -opc)
 		if contains -- $i alias buy disable download enable info install refresh remove revert run try
@@ -136,7 +125,7 @@ __fish_snap_subcommand ack -r                   --description "Adds an assertion
 
 # Alias
 __fish_snap_subcommand alias -r                 --description "Sets up a manual alias"
-complete -f -c snap -n '__fish_snap_using_subcommand alias' -a '(__fish_snap_installed_snaps)' --description "Snap"
+__fish_snap_option alias -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Aliases
 __fish_snap_subcommand aliases                  --description "Lists aliases in the system"
@@ -149,15 +138,15 @@ __fish_snap_subcommand changes                  --description "List system chang
 
 # Connect
 __fish_snap_subcommand connect -r               --description "Connects a plug to a slot"
-complete -f -c snap -n '__fish_snap_using_subcommand connect' -a '(__fish_snap_interfaces)' --description "Snap:Plug or Slot"
+__fish_snap_option connect -a '(__fish_snap_interfaces)' --description "Snap:Plug or Slot"
 
 # Disable
 __fish_snap_subcommand disable -r               --description "Disables a snap in the system"
-complete -f -c snap -n '__fish_snap_using_subcommand disable' -a '(__fish_snap_enabled_snaps)' --description "Enabled snap"
+__fish_snap_option disable -a '(__fish_snap_enabled_snaps)' --description "Enabled snap"
 
 # Disconnect
 __fish_snap_subcommand disconnect -r            --description "Disconnects a plug from a slot"
-complete -f -c snap -n '__fish_snap_using_subcommand disconnect' -a '(__fish_snap_interfaces)' --description "Snap:Plug or Slot"
+__fish_snap_option disconnect -a '(__fish_snap_interfaces)' --description "Snap:Plug or Slot"
 
 # Downloads
 __fish_snap_subcommand download -r              --description "Downloads the given snap"
@@ -170,7 +159,7 @@ __fish_snap_option download -l revision         --description "Download the give
 
 # Enable
 __fish_snap_subcommand enable -r                --description "Enables a snap in the system"
-complete -f -c snap -n '__fish_snap_using_subcommand enable' -a '(__fish_snap_disabled_snaps)' --description "Disabled snap"
+__fish_snap_option enable -a '(__fish_snap_disabled_snaps)' --description "Disabled snap"
 
 # Find
 __fish_snap_subcommand find -r                  --description "Finds packages to install"
@@ -182,7 +171,7 @@ __fish_snap_option find -l section              --description "Restrict the sear
 __fish_snap_subcommand get -r                   --description "Prints configuration options"
 __fish_snap_option get -s t                     --description "Strict typing with nulls and quoted strings"
 __fish_snap_option get -s d                     --description "Always return documents, even with single key"
-complete -f -c snap -n '__fish_snap_using_subcommand get' -a '(__fish_snap_installed_snaps)' --description "Snap"
+__fish_snap_option get -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Help
 __fish_snap_subcommand help                     --description "The help command shows useful information"
@@ -191,7 +180,7 @@ __fish_snap_option help -l man                  --description "Generates the man
 # Info
 __fish_snap_subcommand info -r                  --description "Show detailed information about a snap"
 __fish_snap_option info -l verbose              --description "Include a verbose list of snap's notes"
-complete -f -c snap -n '__fish_snap_using_subcommand info' -a '(__fish_snap_installed_snaps)' --description "Snap"
+__fish_snap_option info -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Install
 __fish_snap_subcommand install -r               --description "Installs a snap to the system"
@@ -236,7 +225,7 @@ __fish_snap_subcommand logout                   --description "Log out of the st
 
 # Prefer
 __fish_snap_subcommand prefer -r                --description "Prefes aliases from a snap and disable conflicts"
-complete -f -c snap -n '__fish_snap_using_subcommand prefer' -a '(__fish_snap_installed_snaps)' --description "Snap"
+__fish_snap_option prefer -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Refresh
 __fish_snap_subcommand refresh -r               --description "Refreshes a snap in the system"
@@ -250,12 +239,12 @@ __fish_snap_option refresh -l devmode           --description "Put snap in devel
 __fish_snap_option refresh -l jailmode          --description "Put snap in enforced confinement mode"
 __fish_snap_option refresh -l classic           --description "Put snap in classic mode and disable security confinement"
 __fish_snap_option refresh -l ignore-validation     --description "Ignore validation by other snaps blocking the refresh"
-complete -f -c snap -n '__fish_snap_using_subcommand refresh' -a '(__fish_snap_installed_snaps)' --description "Snap"
+__fish_snap_option refresh -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Remove
 __fish_snap_subcommand remove -r                --description "Removes a snap from the system"
 __fish_snap_option remove -l revision           --description "Removes only the given revision"
-complete -f -c snap -n '__fish_snap_using_subcommand remove' -a '(__fish_snap_installed_snaps)' --description "Snap"
+__fish_snap_option remove -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Revert
 __fish_snap_subcommand revert -r                --description "Revert the given snap to the previous state"
@@ -263,21 +252,21 @@ __fish_snap_option refresh -l revision          --description "Revert to the giv
 __fish_snap_option refresh -l devmode           --description "Put snap in development mode and disable security confinement"
 __fish_snap_option refresh -l jailmode          --description "Put snap in enforced confinement mode"
 __fish_snap_option refresh -l classic           --description "Put snap in classic mode and disable security confinement"
-complete -f -c snap -n '__fish_snap_using_subcommand revert' -a '(__fish_snap_installed_snaps)' --description "Snap"
+__fish_snap_option revert -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Run
 __fish_snap_subcommand run -r                   --description "Run the given snap command"
 __fish_snap_option run -l shell                 --description "Run a shell instead of the command (useful for debugging)"
-complete -f -c snap -n '__fish_snap_using_subcommand run' -a '(__fish_snap_installed_snaps)' --description "Snap"
+__fish_snap_option run -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # There seems to be no programmatic way of getting configuration options
 # Set
 __fish_snap_subcommand set -r                   --description "Changes configuration options"
-complete -f -c snap -n '__fish_snap_using_subcommand set' -a '(__fish_snap_installed_snaps)' --description "Snap"
+__fish_snap_option set -a '(__fish_snap_installed_snaps)' --description "Snap"
 
 # Tasks
 __fish_snap_subcommand tasks                    --description "List a change's tasks"
-complete -f -c snap -n '__fish_snap_using_subcommand tasks' -a '(__fish_snap_change_id)' --description "ID"
+__fish_snap_option tasks -a '(__fish_snap_change_id)' --description "ID"
 
 # Try
 __fish_snap_subcommand try -r                   --description "Tests a snap in the system"
@@ -287,11 +276,11 @@ __fish_snap_option try -l classic               --description "Put snap in class
 
 # Unalias
 __fish_snap_subcommand unalias -r               --description "Unalias a manual alias or an entire snap"
-complete -f -c snap -n '__fish_snap_using_subcommand unalias' -a '(__fish_snap_aliases)' --description "Alias or snap"
+__fish_snap_option unalias -a '(__fish_snap_aliases)' --description "Alias or snap"
 
 # Version
 __fish_snap_subcommand version                  --description "Shows version details"
 
 # Watch
 __fish_snap_subcommand watch                    --description "Watch a change in progress"
-complete -f -c snap -n '__fish_snap_using_subcommand watch' -a '(__fish_snap_change_id)' --description "ID"
+__fish_snap_option watch -a '(__fish_snap_change_id)' --description "ID"

@@ -470,9 +470,11 @@ end
 
 The output of a series of commands can be used as the parameters to another command. If a parameter contains a set of parenthesis, the text enclosed by the parenthesis will be interpreted as a list of commands. On expansion, this list is executed, and substituted by the output. If the output is more than one line long, each line will be expanded to a new parameter. Setting `IFS` to the empty string will disable line splitting.
 
-The exit status of the last run command substitution is available in the <a href='#variables-status'>status</a> variable.
+The exit status of the last run command substitution is available in the <a href='#variables-status'>status</a> variable if the substitution occurs in the context of a `set` command.
 
 Only part of the output can be used, see <a href='#expand-index-range'>index range expansion</a> for details.
+
+Fish has a default limit of 10 MiB on the amount of data a command substitution can output. If the limit is exceeded the entire command, not just the substitution, is failed and `$status` is set to 122. You can modify the limit by setting the `FISH_READ_BYTE_LIMIT` variable at any time including in the environment before fish starts running. This is a safety mechanism to keep the shell from consuming an too much memory if a command outputs an unreasonable amount of data. Note that this limit also affects how much data the `read` command will process.
 
 Examples:
 

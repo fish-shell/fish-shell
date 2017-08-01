@@ -46,6 +46,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Added completions for:
  - `as` (#4130).
  - `jest` (#4142).
+ - `subl` (Sublime Text 3 editor, #4277)
 
 ---
 

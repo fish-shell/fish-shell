@@ -49,7 +49,7 @@ See the documentation for `set` for more details on the scoping rules for variab
 
 When read reaches the end-of-file (EOF) instead of the separator, it sets `$status` to 1. If not, it sets it to 0.
 
-Fish has a default limit of 10 MiB on the number of characters each `read` will consume. If you attempt to read more than that `$status` is set to 122 and the variable will be empty. You can modify that limit by setting the `FISH_READ_BYTE_LIMIT` variable at any time including in the environment before fish starts running. This is a safety mechanism to keep the shell from consuming an unreasonable amount of memory if the input is malformed.
+Fish has a default limit of 10 MiB on the number of characters each `read` will consume. If you attempt to read more than that `$status` is set to 122 and the variable will be empty. You can modify that limit by setting the `FISH_READ_BYTE_LIMIT` variable at any time including in the environment before fish starts running. This is a safety mechanism to keep the shell from consuming an unreasonable amount of memory if the input is malformed. Note that this limit also affects how much data a command substitution is allowed to output.
 
 \subsection read-history Using another read history file
 

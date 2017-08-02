@@ -685,6 +685,28 @@ void exec_job(parser_t &parser, job_t *j) {
             return true;
         };
 
+
+        //helper routine executed by INTERNAL_FUNCTION and INTERNAL_BLOCK_NODE to make sure
+        //an output buffer exists in case there is another command in the job chain that will
+        //be reading from this command's output.
+        auto verify_buffer_output = [&] () {
+            if (!p->is_last_in_job) {
+                // Be careful to handle failure, e.g. too many open fds.
+                block_output_io_buffer = io_buffer_t::create(STDOUT_FILENO, all_ios);
+                if (block_output_io_buffer.get() == NULL) {
+                    exec_error = true;
+                    job_mark_process_as_failed(j, p);
+                } else {
+                    // This looks sketchy, because we're adding this io buffer locally - they
+                    // aren't in the process or job redirection list. Therefore select_try won't
+                    // be able to read them. However we call block_output_io_buffer->read()
+                    // below, which reads until EOF. So there's no need to select on this.
+                    process_net_io_chain.push_back(block_output_io_buffer);
+                }
+            }
+        };
+
+
         switch (p->type) {
             case INTERNAL_FUNCTION: {
                 // Calls to function_get_definition might need to source a file as a part of
@@ -715,20 +737,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 parser.forbid_function(func_name);
 
-                if (!p->is_last_in_job) {
-                    // Be careful to handle failure, e.g. too many open fds.
-                    block_output_io_buffer = io_buffer_t::create(STDOUT_FILENO, all_ios);
-                    if (block_output_io_buffer.get() == NULL) {
-                        exec_error = true;
-                        job_mark_process_as_failed(j, p);
-                    } else {
-                        // This looks sketchy, because we're adding this io buffer locally - they
-                        // aren't in the process or job redirection list. Therefore select_try won't
-                        // be able to read them. However we call block_output_io_buffer->read()
-                        // below, which reads until EOF. So there's no need to select on this.
-                        process_net_io_chain.push_back(block_output_io_buffer);
-                    }
-                }
+                verify_buffer_output();
 
                 if (!exec_error) {
                     internal_exec_helper(parser, def, NODE_OFFSET_INVALID, TOP,
@@ -742,18 +751,7 @@ void exec_job(parser_t &parser, job_t *j) {
             }
 
             case INTERNAL_BLOCK_NODE: {
-                if (!p->is_last_in_job) {
-                    block_output_io_buffer = io_buffer_t::create(STDOUT_FILENO, all_ios);
-                    if (block_output_io_buffer.get() == NULL) {
-                        // We failed (e.g. no more fds could be created).
-                        exec_error = true;
-                        job_mark_process_as_failed(j, p);
-                    } else {
-                        // See the comment above about it's OK to add an IO redirection to this
-                        // local buffer, even though it won't be handled in select_try.
-                        process_net_io_chain.push_back(block_output_io_buffer);
-                    }
-                }
+                verify_buffer_output();
 
                 if (!exec_error) {
                     internal_exec_helper(parser, wcstring(), p->internal_block_node, TOP,
@@ -862,7 +860,7 @@ void exec_job(parser_t &parser, job_t *j) {
                     const int fg = j->get_flag(JOB_FOREGROUND);
                     j->set_flag(JOB_FOREGROUND, false);
 
-                    //main loop is performing a blocking read from previous command's output
+                    //main loop may need to perform a blocking read from previous command's output.
                     //make sure read source is not blocked
                     unblock_previous();
 

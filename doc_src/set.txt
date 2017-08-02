@@ -8,6 +8,7 @@ set [OPTIONS] VARIABLE_NAME[INDICES]... VALUES...
 set ( -q | --query ) [SCOPE_OPTIONS] VARIABLE_NAMES...
 set ( -e | --erase ) [SCOPE_OPTIONS] VARIABLE_NAME
 set ( -e | --erase ) [SCOPE_OPTIONS] VARIABLE_NAME[INDICES]...
+set ( -S | --show ) [SCOPE_OPTIONS] [VARIABLE_NAME]...
 \endfish
 
 \subsection set-description Description
@@ -38,6 +39,8 @@ The following options are available:
 - `-q` or `--query` test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
 
 - `-n` or `--names` List only the names of all defined variables, not their value. The names are guaranteed to be sorted.
+
+- `-S` or `--show` Shows information about the given variables. If no variable names are given then all variables are shown in sorted order. No other flags can be used with this option. The information shown includes whether or not it is set in each of the local, global, and universal scopes. If it is set in one of those scopes whether or not it is exported is reported. The individual elements are also shown along with the length of each element.
 
 - `-L` or `--long` do not abbreviate long values when printing set variables
 

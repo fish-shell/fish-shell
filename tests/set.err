@@ -1,0 +1,2 @@
+# Verify behavior of `set --show` given an invalid var name
+$argle bargle: invalid var name

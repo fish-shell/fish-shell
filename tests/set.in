@@ -1,0 +1,15 @@
+# Test various behaviors of the `set` command.
+
+logmsg Verify behavior of `set --show` given an invalid var name
+set --show 'argle bargle'
+
+echo '# Verify behavior of `set --show`'
+set -U var1 hello
+set --show var1
+
+set -l var1
+set -g var1 goodbye "and don't come back"
+set --show var1
+
+set -g var2
+set --show _unset_var var2

@@ -388,7 +388,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     const wcstring contents_str =
         wcstring(this->src, contents_start, contents_end - contents_start);
     int definition_line_offset = this->line_offset_of_character_at_offset(contents_start);
-    io_streams_t streams;
+    io_streams_t streams(0);  // no limit on the amount of output from builtin_function()
     int err =
         builtin_function(*parser, streams, argument_list, contents_str, definition_line_offset);
     proc_set_last_status(err);

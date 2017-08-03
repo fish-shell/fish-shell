@@ -102,37 +102,43 @@ static bool expand_is_clean(const wcstring &in) {
 /// Append a syntax error to the given error list.
 static void append_syntax_error(parse_error_list_t *errors, size_t source_start, const wchar_t *fmt,
                                 ...) {
-    if (errors != NULL) {
-        parse_error_t error;
-        error.source_start = source_start;
-        error.source_length = 0;
-        error.code = parse_error_syntax;
+    if (!errors) return;
 
-        va_list va;
-        va_start(va, fmt);
-        error.text = vformat_string(fmt, va);
-        va_end(va);
+    parse_error_t error;
+    error.source_start = source_start;
+    error.source_length = 0;
+    error.code = parse_error_syntax;
 
-        errors->push_back(error);
-    }
+    va_list va;
+    va_start(va, fmt);
+    error.text = vformat_string(fmt, va);
+    va_end(va);
+
+    errors->push_back(error);
 }
 
-/// Append a cmdsub error to the given error list.
+/// Append a cmdsub error to the given error list. But only do so if the error hasn't already been
+/// recorded. This is needed because command substitution is a recursive process and some errors
+/// could consequently be recorded more than once.
 static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start, const wchar_t *fmt,
                                 ...) {
-    if (errors != NULL) {
-        parse_error_t error;
-        error.source_start = source_start;
-        error.source_length = 0;
-        error.code = parse_error_cmdsubst;
+    if (!errors) return;
 
-        va_list va;
-        va_start(va, fmt);
-        error.text = vformat_string(fmt, va);
-        va_end(va);
+    parse_error_t error;
+    error.source_start = source_start;
+    error.source_length = 0;
+    error.code = parse_error_cmdsubst;
 
-        errors->push_back(error);
+    va_list va;
+    va_start(va, fmt);
+    error.text = vformat_string(fmt, va);
+    va_end(va);
+
+    for (auto it : *errors) {
+        if (error.text == it.text) return;
     }
+
+    errors->push_back(error);
 }
 
 /// Return the environment variable value for the string starting at \c in.
@@ -1024,24 +1030,23 @@ static expand_error_t expand_brackets(const wcstring &instr, expand_flags_t flag
 }
 
 /// Perform cmdsubst expansion.
-static int expand_cmdsubst(const wcstring &input, std::vector<completion_t> *out_list,
-                           parse_error_list_t *errors) {
-    wchar_t *paran_begin = 0, *paran_end = 0;
-    std::vector<wcstring> sub_res;
+static bool expand_cmdsubst(const wcstring &input, std::vector<completion_t> *out_list,
+                            parse_error_list_t *errors) {
+    wchar_t *paren_begin = nullptr, *paren_end = nullptr;
+    wchar_t *tail_begin = nullptr;
     size_t i, j;
-    wchar_t *tail_begin = 0;
 
     const wchar_t *const in = input.c_str();
 
     int parse_ret;
-    switch (parse_ret = parse_util_locate_cmdsubst(in, &paran_begin, &paran_end, false)) {
+    switch (parse_ret = parse_util_locate_cmdsubst(in, &paren_begin, &paren_end, false)) {
         case -1: {
             append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, L"Mismatched parenthesis");
-            return 0;
+            return false;
         }
         case 0: {
             append_completion(out_list, input);
-            return 1;
+            return true;
         }
         case 1: {
             break;
@@ -1052,15 +1057,22 @@ static int expand_cmdsubst(const wcstring &input, std::vector<completion_t> *out
         }
     }
 
-    const wcstring subcmd(paran_begin + 1, paran_end - paran_begin - 1);
-
-    if (exec_subshell(subcmd, sub_res, true /* do apply exit status */) == -1) {
+    wcstring_list_t sub_res;
+    const wcstring subcmd(paren_begin + 1, paren_end - paren_begin - 1);
+    if (exec_subshell(subcmd, sub_res, true /* apply_exit_status */, true /* is_subcmd */) == -1) {
         append_cmdsub_error(errors, SOURCE_LOCATION_UNKNOWN,
                             L"Unknown error while evaulating command substitution");
-        return 0;
+        return false;
     }
 
-    tail_begin = paran_end + 1;
+    if (proc_get_last_status() == STATUS_READ_TOO_MUCH) {
+        append_cmdsub_error(
+            errors, in - paren_begin,
+            _(L"Too much data emitted by command substitution so it was discarded\n"));
+        return false;
+    }
+
+    tail_begin = paren_end + 1;
     if (*tail_begin == L'[') {
         std::vector<long> slice_idx;
         std::vector<size_t> slice_source_positions;
@@ -1072,7 +1084,7 @@ static int expand_cmdsubst(const wcstring &input, std::vector<completion_t> *out
             parse_slice(slice_begin, &slice_end, slice_idx, slice_source_positions, sub_res.size());
         if (bad_pos != 0) {
             append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
-            return 0;
+            return false;
         }
 
         wcstring_list_t sub_res2;
@@ -1110,7 +1122,7 @@ static int expand_cmdsubst(const wcstring &input, std::vector<completion_t> *out
             const wcstring &tail_item = tail_expand.at(j).completion;
 
             // sb_append_substring( &whole_item, in, len1 );
-            whole_item.append(in, paran_begin - in);
+            whole_item.append(in, paren_begin - in);
 
             // sb_append_char( &whole_item, INTERNAL_SEPARATOR );
             whole_item.push_back(INTERNAL_SEPARATOR);
@@ -1129,7 +1141,8 @@ static int expand_cmdsubst(const wcstring &input, std::vector<completion_t> *out
         }
     }
 
-    return 1;
+    if (proc_get_last_status() == STATUS_READ_TOO_MUCH) return false;
+    return true;
 }
 
 // Given that input[0] is HOME_DIRECTORY or tilde (ugh), return the user's name. Return the empty
@@ -1304,7 +1317,6 @@ typedef expand_error_t (*expand_stage_t)(const wcstring &input,           //!OCL
 
 static expand_error_t expand_stage_cmdsubst(const wcstring &input, std::vector<completion_t> *out,
                                             expand_flags_t flags, parse_error_list_t *errors) {
-    expand_error_t result = EXPAND_OK;
     if (EXPAND_SKIP_CMDSUBST & flags) {
         wchar_t *begin, *end;
         if (parse_util_locate_cmdsubst(input.c_str(), &begin, &end, true) == 0) {
@@ -1312,15 +1324,14 @@ static expand_error_t expand_stage_cmdsubst(const wcstring &input, std::vector<c
         } else {
             append_cmdsub_error(errors, SOURCE_LOCATION_UNKNOWN,
                                 L"Command substitutions not allowed");
-            result = EXPAND_ERROR;
+            return EXPAND_ERROR;
         }
     } else {
-        int cmdsubst_ok = expand_cmdsubst(input, out, errors);
-        if (!cmdsubst_ok) {
-            result = EXPAND_ERROR;
-        }
+        bool cmdsubst_ok = expand_cmdsubst(input, out, errors);
+        if (!cmdsubst_ok) return EXPAND_ERROR;
     }
-    return result;
+
+    return EXPAND_OK;
 }
 
 static expand_error_t expand_stage_variables(const wcstring &input, std::vector<completion_t> *out,

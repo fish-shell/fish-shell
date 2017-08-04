@@ -1,3 +1,6 @@
+
+####################
+# Test scoping rules for functions
 Test 1 pass
 Test 2 pass
 Test 3 pass
@@ -20,8 +23,12 @@ Test 19 pass
 Test 20 pass
 Test 21 pass
 Test 22 pass
+
+####################
 # Verify subcommand statuses
 1 0 1
+
+####################
 # Verify that set passes through exit status, except when passed -n or -q or -e
 1 1
 2 0
@@ -34,5 +41,7 @@ Test 22 pass
 9 121
 10 0 A
 11 1 B
-# Verify set -ql behavior
+
+####################
+# Verify set -ql behavior (#2502)
 Pass

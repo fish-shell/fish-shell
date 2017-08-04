@@ -1,15 +1,15 @@
 # Validate the behavior of the `count` command.
 
-echo '# no args'
+logmsg no args
 count
 
-echo '# one args'
+logmsg one args
 count x
 
-echo '# two args'
+logmsg two args
 count x y
 
-echo '# args that look like flags or are otherwise special'
+logmsg args that look like flags or are otherwise special
 count -h
 count --help
 count --

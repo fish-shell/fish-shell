@@ -31,6 +31,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Implement a `cdh` (change directory using recent history) command to provide a more friendly alternative to prevd/nextd and pushd/popd (#2847).
 - `command` now supports a `-a` flag to report all directories with the command. This means that `which -a $cmd` is no longer necessary (#2778).
 - `--init-command`/`-C` added to the command line switches, to allow execution of commands before starting the interactive shell (#4164).
+- `set` has a new `--show` option to show lots of information about variables (#4265).
 
 ## Other significant changes
 

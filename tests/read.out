@@ -47,6 +47,7 @@ two
 1 'h'
 0
 
+####################
 # read -n tests
 tes
 test
@@ -55,6 +56,7 @@ tes
 tin
 t
 
+####################
 # read -z tests
 testing
 test ing

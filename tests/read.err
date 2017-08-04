@@ -15,6 +15,12 @@ read: Expected 1 args, got 2
 # Test splitting input with IFS empty
 
 ####################
+# read -n tests
+
+####################
+# read -z tests
+
+####################
 # Chunked read tests
 
 ####################

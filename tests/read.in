@@ -95,8 +95,7 @@ set -le IFS
 
 # read -n tests
 
-echo
-echo '# read -n tests'
+logmsg read -n tests
 echo 'testing' | read -n 3 foo
 echo $foo
 echo 'test' | read -n 10 foo
@@ -111,8 +110,7 @@ echo $foo
 
 # read -0 tests
 
-echo
-echo '# read -z tests'
+logmsg read -z tests
 echo -n 'testing' | read -lz foo
 echo $foo
 echo -n 'test ing' | read -lz foo

@@ -9,6 +9,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `set x[1] x[2] a b` is no longer valid syntax (#4236).
 - `complete` now has a `-k`/`--keep-order` flag to keep the order of the OPTION_ARGUMENTS (#361).
 - A "--delimiter" option to `read` as a better alternative to the `IFS` variable (#4256).
+- `set` has a new `--show` option to show lots of information about variables (#4265).
 
 ## Other significant changes
 - `read` now requires at least one var name (#4220).

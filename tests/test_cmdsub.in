@@ -8,27 +8,25 @@ function subme
     echo $x
 end
 
-echo '# Command sub just under the limit should succeed.'
+logmsg Command sub just under the limit should succeed
 set a (subme 511)
-show a
+set --show a
 
-echo '# Command sub at the limit should fail.'
-echo '# Command sub at the limit should fail.' >&2
+logmsg Command sub at the limit should fail
 set b (string repeat -n 512 x)
 set saved_status $status
 test $saved_status -eq 122
 or echo expected status 122, saw $saved_status >&2
-show b
+set --show b
 
-echo '# Command sub over the limit should fail.'
-echo '# Command sub over the limit should fail.' >&2
+logmsg Command sub over the limit should fail
 set c (subme 513)
-show c
+set --show c
 
-echo '# Make sure output from builtins outside of command substitution is not affected'
+logmsg Make sure output from builtins outside of command substitution is not affected
 string repeat --max 513 a
 
-echo '# Same builtin in a command substitution is affected' >&2
+logmsg Same builtin in a command substitution is affected
 echo this will fail (string repeat --max 513 b) to output anything
 set saved_status $status
 test $saved_status -eq 122

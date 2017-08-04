@@ -7,6 +7,12 @@ echo $foo[d]
 fish: Invalid index value
 echo ()[d]
         ^
+
+####################
+# Catch your breath
 fish: $) is not a valid variable in fish.
 echo $$paren
       ^
+
+####################
+# Test tilde expansion

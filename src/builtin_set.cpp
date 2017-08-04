@@ -40,19 +40,22 @@ struct set_cmd_opts_t {
     bool universal = false;
     bool query = false;
     bool shorten_ok = true;
+    bool append = false;
+    bool prepend = false;
     bool preserve_failure_exit_status = true;
 };
 
 // Variables used for parsing the argument list. This command is atypical in using the "+"
 // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
 // we stop scanning for flags when the first non-flag argument is seen.
-static const wchar_t *short_options = L"+:LSUeghlnqux";
+static const wchar_t *short_options = L"+:LSUaeghlnpqux";
 static const struct woption long_options[] = {
     {L"export", no_argument, NULL, 'x'},    {L"global", no_argument, NULL, 'g'},
     {L"local", no_argument, NULL, 'l'},     {L"erase", no_argument, NULL, 'e'},
     {L"names", no_argument, NULL, 'n'},     {L"unexport", no_argument, NULL, 'u'},
     {L"universal", no_argument, NULL, 'U'}, {L"long", no_argument, NULL, 'L'},
     {L"query", no_argument, NULL, 'q'},     {L"show", no_argument, NULL, 'S'},
+    {L"append", no_argument, NULL, 'a'},    {L"prepend", no_argument, NULL, 'p'},
     {L"help", no_argument, NULL, 'h'},      {NULL, 0, NULL, 0}};
 
 // Error message for invalid path operations.
@@ -75,9 +78,25 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
+            case 'a': {
+                opts.append = true;
+                break;
+            }
             case 'e': {
                 opts.erase = true;
                 opts.preserve_failure_exit_status = false;
+                break;
+            }
+            case 'g': {
+                opts.global = true;
+                break;
+            }
+            case 'h': {
+                opts.print_help = true;
+                break;
+            }
+            case 'l': {
+                opts.local = true;
                 break;
             }
             case 'n': {
@@ -85,16 +104,17 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
                 opts.preserve_failure_exit_status = false;
                 break;
             }
+            case 'p': {
+                opts.prepend = true;
+                break;
+            }
+            case 'q': {
+                opts.query = true;
+                opts.preserve_failure_exit_status = false;
+                break;
+            }
             case 'x': {
                 opts.exportv = true;
-                break;
-            }
-            case 'l': {
-                opts.local = true;
-                break;
-            }
-            case 'g': {
-                opts.global = true;
                 break;
             }
             case 'u': {
@@ -109,18 +129,9 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
                 opts.shorten_ok = false;
                 break;
             }
-            case 'q': {
-                opts.query = true;
-                opts.preserve_failure_exit_status = false;
-                break;
-            }
             case 'S': {
                 opts.show = true;
                 opts.preserve_failure_exit_status = false;
-                break;
-            }
-            case 'h': {
-                opts.print_help = true;
                 break;
             }
             case ':': {
@@ -429,8 +440,8 @@ static int compute_scope(set_cmd_opts_t &opts) {
 
 /// Print the names of all environment variables in the scope. It will include the values unless the
 /// `set --list` flag was used.
-static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
-                            wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, wchar_t **argv,
+                            parser_t &parser, io_streams_t &streams) {
     UNUSED(cmd);
     UNUSED(argc);
     UNUSED(argv);
@@ -469,8 +480,8 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 }
 
 // Query mode. Return the number of variables that do not exist out of the specified variables.
-static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
-                             wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, wchar_t **argv,
+                             parser_t &parser, io_streams_t &streams) {
     int retval = 0;
     int scope = compute_scope(opts);
 
@@ -593,8 +604,8 @@ static int builtin_set_show(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
 }
 
 /// Erase a variable.
-static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
-                             wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, wchar_t **argv,
+                             parser_t &parser, io_streams_t &streams) {
     if (argc != 1) {
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, L"--erase", 1, argc);
         builtin_print_help(parser, streams, cmd, streams.err);
@@ -633,75 +644,111 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
     return check_global_scope_exists(cmd, opts, dest, streams);
 }
 
-/// This handles the more difficult case of setting individual slices of a var.
-static int set_slices(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_t *dest,
-                      std::vector<long> &indexes, int argc, wchar_t **argv, parser_t &parser,
-                      io_streams_t &streams) {
+/// This handles the common case of setting the entire var to a set of values.
+static int set_var_array(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_t *varname,
+                         wcstring_list_t &new_values, int argc, wchar_t **argv, parser_t &parser,
+                         io_streams_t &streams) {
+    UNUSED(cmd);
     UNUSED(parser);
+    UNUSED(streams);
+
+    if (opts.prepend || opts.append) {
+        int scope = compute_scope(opts);
+        if (opts.prepend) {
+            for (int i = 0; i < argc; i++) new_values.push_back(argv[i]);
+        }
+
+        env_var_t var_str = env_get_string(varname, scope);
+        wcstring_list_t var_array;
+        if (!var_str.missing()) tokenize_variable_array(var_str, var_array);
+        new_values.insert(new_values.end(), var_array.begin(), var_array.end());
+
+        if (opts.append) {
+            for (int i = 0; i < argc; i++) new_values.push_back(argv[i]);
+        }
+    } else {
+        for (int i = 0; i < argc; i++) new_values.push_back(argv[i]);
+    }
+
+    return STATUS_CMD_OK;
+}
+
+/// This handles the more difficult case of setting individual slices of a var.
+static int set_var_slices(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_t *varname,
+                          wcstring_list_t &new_values, std::vector<long> &indexes, int argc,
+                          wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    UNUSED(parser);
+
+    if (opts.append || opts.prepend) {
+        streams.err.append_format(
+            L"%ls: Cannot use --append or --prepend when assigning to a slice", cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_INVALID_ARGS;
+    }
 
     if (indexes.size() != static_cast<size_t>(argc)) {
         streams.err.append_format(BUILTIN_SET_MISMATCHED_ARGS, cmd, indexes.size(), argc);
     }
 
     int scope = compute_scope(opts);  // calculate the variable scope based on the provided options
-    wcstring_list_t result;
-    const env_var_t dest_str = env_get_string(dest, scope);
-    if (!dest_str.missing()) tokenize_variable_array(dest_str, result);
+    const env_var_t var_str = env_get_string(varname, scope);
+    if (!var_str.missing()) tokenize_variable_array(var_str, new_values);
 
     // Slice indexes have been calculated, do the actual work.
-    wcstring_list_t new_values;
-    for (int i = 0; i < argc; i++) new_values.push_back(argv[i]);
+    wcstring_list_t result;
+    for (int i = 0; i < argc; i++) result.push_back(argv[i]);
 
-    int retval = update_values(result, indexes, new_values);
+    int retval = update_values(new_values, indexes, result);
     if (retval != STATUS_CMD_OK) {
         streams.err.append_format(BUILTIN_SET_ARRAY_BOUNDS_ERR, cmd);
         return retval;
     }
 
-    retval = my_env_set(cmd, dest, result, scope, streams);
-    if (retval != STATUS_CMD_OK) return retval;
-    return check_global_scope_exists(cmd, opts, dest, streams);
+    return STATUS_CMD_OK;
 }
 
 /// Set a variable.
-static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
-                           wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, wchar_t **argv,
+                           parser_t &parser, io_streams_t &streams) {
     if (argc == 0) {
         streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1);
         builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_INVALID_ARGS;
     }
 
-    int retval;
     int scope = compute_scope(opts);  // calculate the variable scope based on the provided options
-    wchar_t *dest = argv[0];
+    wchar_t *varname = argv[0];
     argv++;
     argc--;
 
     std::vector<long> indexes;
-    int idx_count = parse_index(indexes, dest, scope, streams);
+    int idx_count = parse_index(indexes, varname, scope, streams);
     if (idx_count == -1) {
         builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_INVALID_ARGS;
     }
 
-    if (!valid_var_name(dest)) {
-        streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, dest);
+    if (!valid_var_name(varname)) {
+        streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, varname);
         builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_INVALID_ARGS;
     }
 
-    if (idx_count != 0) {
+    int retval;
+    wcstring_list_t new_values;
+    if (idx_count == 0) {
+        // Handle the simple, common, case. Set the var to the specified values.
+        retval = set_var_array(cmd, opts, varname, new_values, argc, argv, parser, streams);
+    } else {
         // Handle the uncommon case of setting specific slices of a var.
-        return set_slices(cmd, opts, dest, indexes, argc, argv, parser, streams);
+        retval =
+            set_var_slices(cmd, opts, varname, new_values, indexes, argc, argv, parser, streams);
     }
-
-    // This is the simple, common, case. Set the var to the specified values.
-    wcstring_list_t values;
-    for (int i = 0; i < argc; i++) values.push_back(argv[i]);
-    retval = my_env_set(cmd, dest, values, scope, streams);
     if (retval != STATUS_CMD_OK) return retval;
-    return check_global_scope_exists(cmd, opts, dest, streams);
+
+    retval = my_env_set(cmd, varname, new_values, scope, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+    return check_global_scope_exists(cmd, opts, varname, streams);
 }
 
 /// The set builtin creates, updates, and erases (removes, deletes) variables.

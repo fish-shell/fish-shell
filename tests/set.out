@@ -24,3 +24,62 @@ $var2: not set in local scope
 $var2: set in global scope, unexported, with 0 elements
 $var2: not set in universal scope
 
+
+####################
+# Appending works
+$var3a: not set in local scope
+$var3a: set in global scope, unexported, with 6 elements
+$var3a[1]: length=1 value=|a|
+$var3a[2]: length=1 value=|b|
+$var3a[3]: length=1 value=|c|
+$var3a[4]: length=1 value=|d|
+$var3a[5]: length=1 value=|e|
+$var3a[6]: length=1 value=|f|
+$var3a: not set in universal scope
+
+$var3b: not set in local scope
+$var3b: set in global scope, unexported, with 0 elements
+$var3b: not set in universal scope
+
+$var3c: not set in local scope
+$var3c: set in global scope, unexported, with 1 elements
+$var3c[1]: length=10 value=|one string|
+$var3c: not set in universal scope
+
+
+####################
+# Prepending works
+$var4a: not set in local scope
+$var4a: set in global scope, unexported, with 6 elements
+$var4a[1]: length=1 value=|e|
+$var4a[2]: length=1 value=|f|
+$var4a[3]: length=1 value=|d|
+$var4a[4]: length=1 value=|a|
+$var4a[5]: length=1 value=|b|
+$var4a[6]: length=1 value=|c|
+$var4a: not set in universal scope
+
+$var4b: not set in local scope
+$var4b: set in global scope, unexported, with 0 elements
+$var4b: not set in universal scope
+
+$var4c: not set in local scope
+$var4c: set in global scope, unexported, with 1 elements
+$var4c[1]: length=10 value=|one string|
+$var4c: not set in universal scope
+
+
+####################
+# Appending and prepending at same time works
+$var5: not set in local scope
+$var5: set in global scope, unexported, with 8 elements
+$var5[1]: length=1 value=|0|
+$var5[2]: length=1 value=|x|
+$var5[3]: length=1 value=|0|
+$var5[4]: length=3 value=|abc|
+$var5[5]: length=3 value=|def|
+$var5[6]: length=1 value=|0|
+$var5[7]: length=1 value=|x|
+$var5[8]: length=1 value=|0|
+$var5: not set in universal scope
+

@@ -3,7 +3,7 @@
 logmsg Verify behavior of `set --show` given an invalid var name
 set --show 'argle bargle'
 
-echo '# Verify behavior of `set --show`'
+logmsg Verify behavior of `set --show`
 set -U var1 hello
 set --show var1
 

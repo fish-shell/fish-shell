@@ -5,9 +5,10 @@
 
 ###########
 # Start by testing that invocation errors are handled correctly.
-echo '# Read with no vars is an error' >&2
+logmsg Read with no vars is an error
 read
-echo '# Read with -a and anything other than exactly on var name is an error' >&2
+
+logmsg Read with -a and anything other than exactly on var name is an error
 read -a
 read -a v1 v2
 read -a v1
@@ -36,8 +37,7 @@ function print_vars --no-scope-shadowing
 	echo
 end
 
-echo
-echo '# Test splitting input'
+logmsg Test splitting input
 echo 'hello there' | read -l one two
 print_vars one two
 echo 'hello there' | read -l one
@@ -53,8 +53,7 @@ print_vars one two three
 echo -n 'a' | read -l one
 echo "$status $one"
 
-echo
-echo '# Test splitting input with IFS empty'
+logmsg Test splitting input with IFS empty
 set -l IFS
 echo 'hello' | read -l one
 print_vars one
@@ -130,8 +129,7 @@ echo -ne 'foo\nbar\0baz\nquux' | while read -lza foo
     print_vars foo
 end
 
-echo
-echo '# chunked read tests'
+logmsg Chunked read tests
 set -l path /tmp/fish_chunked_read_test.txt
 set -l longstr (seq 1024 | string join ',')
 echo -n $longstr > $path
@@ -206,34 +204,40 @@ if test (string length "$x") -ne $FISH_READ_BYTE_LIMIT
     echo reading the max amount of data with --nchars failed the length test
 end
 
-echo '# Confirm reading non-interactively works (#4206 regression)'
-echo abc\ndef | ../test/root/bin/fish -i -c 'read a; read b; show a; show b'
-### Test --delimiter (and $IFS, for now)
+logmsg Confirm reading non-interactively works -- \#4206 regression
+echo abc\ndef | ../test/root/bin/fish -i -c 'read a; read b; set --show a; set --show b'
+
+logmsg Test --delimiter '(and $IFS, for now)'
 echo a=b | read -l foo bar
 echo $foo
 echo $bar
-echo Delimiter =
+
+logmsg Delimiter =
 echo a=b | read -l -d = foo bar
 echo $foo
 echo $bar
-echo Delimiter empty
+
+logmsg Delimiter empty
 echo a=b | read -l -d '' foo bar baz
 echo $foo
 echo $bar
 echo $baz
-echo IFS empty string
+
+logmsg IFS empty string
 set -l IFS ''
 echo a=b | read -l foo bar baz
 echo $foo
 echo $bar
 echo $baz
-echo IFS unset
+
+logmsg IFS unset
 set -e IFS
 echo a=b | read -l foo bar baz
 echo $foo
 echo $bar
 echo $baz
-echo Delimiter =
+
+logmsg Delimiter =
 echo a=b | read -l -d = foo bar baz
 echo $foo
 echo $bar

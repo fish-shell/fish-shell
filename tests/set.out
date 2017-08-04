@@ -1,4 +1,8 @@
+
+####################
 # Verify behavior of `set --show` given an invalid var name
+
+####################
 # Verify behavior of `set --show`
 $var1: not set in local scope
 $var1: not set in global scope

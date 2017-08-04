@@ -1,3 +1,9 @@
+
+####################
+# Read with no vars is an error
+
+####################
+# Read with -a and anything other than exactly on var name is an error
 2
 2
 1
@@ -11,6 +17,7 @@ two]
 two
 ]
 
+####################
 # Test splitting input
 1 'hello' 1 'there'
 1 'hello there'
@@ -20,6 +27,7 @@ two
 1 'foo' 1 'bar' 1 '  baz'
 0 a
 
+####################
 # Test splitting input with IFS empty
 1 'hello'
 1 'h' 1 'ello'
@@ -58,31 +66,53 @@ newline
 2 'foo' 'bar'
 2 'baz' 'quux'
 
-# chunked read tests
+####################
+# Chunked read tests
 Chunked reads test pass
-# Confirm reading non-interactively works (#4206 regression)
-$a count=1
-$a[1]=|abc|
-$b count=1
-$b[1]=|def|
-a=b
 
-Delimiter =
-a
-b
-Delimiter empty
-a
-=
-b
-IFS empty string
-a
-=
-b
-IFS unset
+####################
+# Confirm reading non-interactively works -- #4206 regression
+$a: not set in local scope
+$a: set in global scope, unexported, with 1 elements
+$a[0]: length=3 value=|abc|
+$a: not set in universal scope
+
+$b: not set in local scope
+$b: set in global scope, unexported, with 1 elements
+$b[0]: length=3 value=|def|
+$b: not set in universal scope
+
+
+####################
+# Test --delimiter (and $IFS, for now)
 a=b
 
 
-Delimiter =
+####################
+# Delimiter =
+a
+b
+
+####################
+# Delimiter empty
+a
+=
+b
+
+####################
+# IFS empty string
+a
+=
+b
+
+####################
+# IFS unset
+a=b
+
+
+
+####################
+# Delimiter =
 a
 b
 

@@ -1,9 +1,15 @@
+
+####################
 # Command sub just under the limit should succeed
+
+####################
 # Command sub at the limit should fail
 fish: Too much data emitted by command substitution so it was discarded
 
 set b (string repeat -n 512 x)
       ^
+
+####################
 # Command sub over the limit should fail
 fish: Too much data emitted by command substitution so it was discarded
 
@@ -16,7 +22,11 @@ in function 'subme'
 in command substitution
 	called on standard input
 
+
+####################
 # Make sure output from builtins outside of command substitution is not affected
+
+####################
 # Same builtin in a command substitution is affected
 fish: Too much data emitted by command substitution so it was discarded
 

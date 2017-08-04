@@ -1,61 +1,61 @@
 # Start by testing a bunch of error conditions.
 
-echo '# no args is an error' >&2
+logmsg No args is an error
 fish_opt
 and echo unexpected status $status
 
-echo '# no short flag or an invalid short flag is an error' >&2
+logmsg No short flag or an invalid short flag is an error
 fish_opt -l help
 and echo unexpected status $status
 fish_opt -s help
 and echo unexpected status $status
 
-echo '# a required and optional arg makes no sense' >&2
+logmsg A required and optional arg makes no sense
 fish_opt -s h -l help -r --optional-val
 and echo unexpected status $status
 
-echo '# a repeated and optional arg makes no sense' >&2
+logmsg A repeated and optional arg makes no sense
 fish_opt -s h -l help --multiple-vals --optional-val
 and echo unexpected status $status
 
-echo '# an unexpected arg not associated with a flag is an error' >&2
+logmsg An unexpected arg not associated with a flag is an error
 fish_opt -s h -l help hello
 and echo unexpected status $status
 
 # Now verify that valid combinations of options produces the correct output.
 
-echo '# bool, short only'
+logmsg Bool, short only
 fish_opt -s h
 or echo unexpected status $status
 
-echo '# bool, short and long'
+logmsg Bool, short and long
 fish_opt --short h --long help
 or echo unexpected status $status
 
-echo '# bool, short and long but the short var cannot be used'
+logmsg Bool, short and long but the short var cannot be used
 fish_opt --short h --long help --long-only
 
-echo '# required val, short and long but the short var cannot be used'
+logmsg Required val, short and long but the short var cannot be used
 fish_opt --short h --long help -r --long-only
 or echo unexpected status $status
 
-echo '# optional val, short and long valid'
+logmsg Optional val, short and long valid
 fish_opt --short h -l help --optional-val
 or echo unexpected status $status
 
-echo '# optional val, short and long but the short var cannot be used'
+logmsg Optional val, short and long but the short var cannot be used
 fish_opt --short h -l help --optional-val --long-only
 or echo unexpected status $status
 
-echo '# repeated val, short and long valid'
+logmsg Repeated val, short and long valid
 fish_opt --short h -l help --multiple-vals
 or echo unexpected status $status
 
-echo '# repeated val, short and long but short not valid'
+logmsg Repeated val, short and long but short not valid
 fish_opt --short h -l help --multiple-vals --long-only
 or echo unexpected status $status
 
-echo '# repeated val, short only'
+logmsg Repeated val, short only
 fish_opt -s h --multiple-vals
 or echo unexpected status $status
 fish_opt -s h --multiple-vals --long-only

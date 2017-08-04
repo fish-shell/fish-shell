@@ -1,19 +1,52 @@
-# bool, short only
+
+####################
+# No args is an error
+
+####################
+# No short flag or an invalid short flag is an error
+
+####################
+# A required and optional arg makes no sense
+
+####################
+# A repeated and optional arg makes no sense
+
+####################
+# An unexpected arg not associated with a flag is an error
+
+####################
+# Bool, short only
 h
-# bool, short and long
+
+####################
+# Bool, short and long
 h/help
-# bool, short and long but the short var cannot be used
+
+####################
+# Bool, short and long but the short var cannot be used
 h-help
-# required val, short and long but the short var cannot be used
+
+####################
+# Required val, short and long but the short var cannot be used
 h-help=
-# optional val, short and long valid
+
+####################
+# Optional val, short and long valid
 h/help=?
-# optional val, short and long but the short var cannot be used
+
+####################
+# Optional val, short and long but the short var cannot be used
 h-help=?
-# repeated val, short and long valid
+
+####################
+# Repeated val, short and long valid
 h/help=+
-# repeated val, short and long but short not valid
+
+####################
+# Repeated val, short and long but short not valid
 h-help=+
-# repeated val, short only
+
+####################
+# Repeated val, short only
 h=+
 h=+

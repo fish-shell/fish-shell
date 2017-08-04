@@ -3,7 +3,7 @@ function abbr --description "Manage abbreviations using new fish 3.0 scheme."
     set options $options 'h/help' 'a/add' 'r/rename' 'e/erase' 'l/list' 's/show'
     set options $options 'g/global' 'U/universal'
 
-    argparse -n $cmd $options -- $argv
+    argparse -n abbr $options -- $argv
     or return
 
     if set -q _flag_help

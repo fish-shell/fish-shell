@@ -37,7 +37,7 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wcstring dir;
 
     if (argv[optind]) {
-        dir_in = env_var_t(argv[optind]);
+        dir_in = env_var_t(L"", argv[optind]);  // unamed var
     } else {
         dir_in = env_get(L"HOME");
         if (dir_in.missing_or_empty()) {
@@ -53,15 +53,17 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (!got_cd_path) {
         if (errno == ENOTDIR) {
-            streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd, dir_in.c_str());
+            streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd,
+                                      dir_in.as_string().c_str());
         } else if (errno == ENOENT) {
             streams.err.append_format(_(L"%ls: The directory '%ls' does not exist\n"), cmd,
-                                      dir_in.c_str());
+                                      dir_in.as_string().c_str());
         } else if (errno == EROTTEN) {
-            streams.err.append_format(_(L"%ls: '%ls' is a rotten symlink\n"), cmd, dir_in.c_str());
+            streams.err.append_format(_(L"%ls: '%ls' is a rotten symlink\n"), cmd,
+                                      dir_in.as_string().c_str());
         } else {
             streams.err.append_format(_(L"%ls: Unknown error trying to locate directory '%ls'\n"),
-                                      cmd, dir_in.c_str());
+                                      cmd, dir_in.as_string().c_str());
         }
 
         if (!shell_is_interactive()) streams.err.append(parser.current_line());

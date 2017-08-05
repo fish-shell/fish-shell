@@ -222,7 +222,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
     } else {
         // Get the CDPATH.
         env_var_t cdpath = env_get(L"CDPATH");
-        if (cdpath.missing_or_empty()) cdpath = env_var_t(L".");
+        if (cdpath.missing_or_empty()) cdpath = env_var_t(cdpath.get_name(), L".");
 
         // Tokenize it into directories.
         std::vector<wcstring> pathsv;
@@ -359,7 +359,8 @@ bool autosuggest_validate_from_history(const history_item_t &item,
                 string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
             if (!is_help) {
                 wcstring path;
-                bool can_cd = path_get_cdpath(dir, &path, working_directory.c_str(), vars);
+                env_var_t dir_var(L"n/a", dir);
+                bool can_cd = path_get_cdpath(dir_var, &path, working_directory.c_str(), vars);
                 if (can_cd && !paths_are_same_file(working_directory, path)) {
                     suggestionOK = true;
                 }

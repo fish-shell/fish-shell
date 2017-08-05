@@ -10,8 +10,9 @@
 #include <vector>
 
 #include "color.h"
-#include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+
+class env_var_t;
 
 /// Constants for various colors as used by the set_color function.
 enum {

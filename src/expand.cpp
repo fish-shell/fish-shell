@@ -142,12 +142,6 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
     errors->push_back(error);
 }
 
-/// Return the environment variable value for the string starting at \c in.
-static env_var_t expand_var(const wchar_t *in) {
-    if (!in) return missing_var;
-    return env_get(in);
-}
-
 /// Test if the specified string does not contain character which can not be used inside a quoted
 /// string.
 static int is_quotable(const wchar_t *str) {
@@ -779,7 +773,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
         if (var_len == 1 && var_tmp[0] == VARIABLE_EXPAND_EMPTY) {
             var = missing_var;
         } else {
-            var = expand_var(var_tmp.c_str());
+            var = env_get(var_tmp);
         }
 
         if (!var.missing()) {
@@ -1187,7 +1181,7 @@ static void expand_home_directory(wcstring &input) {
             if (retval || !result) {
                 tilde_error = true;
             } else {
-                home = str2wcstring(userinfo.pw_dir);
+                home = env_var_t(L"HOME", str2wcstring(userinfo.pw_dir));
             }
         }
 
@@ -1421,15 +1415,14 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
                 (for_command && path_to_expand.find(L'/') != wcstring::npos)) {
                 effective_working_dirs.push_back(working_dir);
             } else {
-                // Get the PATH/CDPATH and cwd. Perhaps these should be passed in. An empty CDPATH
+                // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
                 // implies just the current directory, while an empty PATH is left empty.
                 env_var_t paths = env_get(for_cd ? L"CDPATH" : L"PATH");
-                if (paths.missing_or_empty()) paths = for_cd ? L"." : L"";
+                if (paths.missing_or_empty()) {
+                    paths = env_var_t(paths.get_name(), for_cd ? L"." : L"");
+                }
 
-                // Tokenize it into path names.
-                std::vector<wcstring> pathsv;
-                paths.to_list(pathsv);
-                for (auto next_path : pathsv) {
+                for (auto next_path : paths.as_list()) {
                     effective_working_dirs.push_back(
                         path_apply_working_directory(next_path, working_dir));
                 }

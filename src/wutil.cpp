@@ -398,7 +398,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
 }
 
 wcstring wdirname(const wcstring &path) {
-    char *tmp = wcs2str(path.c_str());
+    char *tmp = wcs2str(path);
     char *narrow_res = dirname(tmp);
     wcstring result = format_string(L"%s", narrow_res);
     free(tmp);
@@ -406,7 +406,7 @@ wcstring wdirname(const wcstring &path) {
 }
 
 wcstring wbasename(const wcstring &path) {
-    char *tmp = wcs2str(path.c_str());
+    char *tmp = wcs2str(path);
     char *narrow_res = basename(tmp);
     wcstring result = format_string(L"%s", narrow_res);
     free(tmp);

@@ -91,8 +91,6 @@ echo '' | read -la ary
 print_vars ary
 set -le IFS
 
-# read -n tests
-
 logmsg read -n tests
 echo 'testing' | read -n 3 foo
 echo $foo
@@ -105,8 +103,6 @@ echo $foo
 echo $bar
 echo 'test' | read -n 1 foo
 echo $foo
-
-# read -0 tests
 
 logmsg read -z tests
 echo -n 'testing' | read -lz foo

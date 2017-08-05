@@ -423,7 +423,7 @@ static void test_convert() {
 
         o = &sb.at(0);
         const wcstring w = str2wcstring(o);
-        n = wcs2str(w.c_str());
+        n = wcs2str(w);
 
         if (!o || !n) {
             err(L"Line %d - Conversion cycle of string %s produced null pointer on %s", __LINE__, o,
@@ -941,70 +941,6 @@ static void test_parse_util_cmdsubst_extent() {
     }
 }
 
-/// Verify the behavior of the `list_to_aray_val()` family of functions.
-static void test_list_to_array() {
-    auto list = wcstring_list_t();
-    auto val = list_to_array_val(list);
-    if (*val != ENV_NULL) {
-        err(L"test_list_to_array failed on line %lu", __LINE__);
-    }
-
-    list.push_back(L"");
-    val = list_to_array_val(list);
-    if (*val != list[0]) {
-        err(L"test_list_to_array failed on line %lu", __LINE__);
-    }
-
-    list.push_back(L"abc");
-    val = list_to_array_val(list);
-    if (*val != L"" ARRAY_SEP_STR L"abc") {
-        err(L"test_list_to_array failed on line %lu", __LINE__);
-    }
-
-    list.insert(list.begin(), L"ghi");
-    val = list_to_array_val(list);
-    if (*val != L"ghi" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"abc") {
-        err(L"test_list_to_array failed on line %lu", __LINE__);
-    }
-
-    list.push_back(L"");
-    val = list_to_array_val(list);
-    if (*val != L"ghi" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"abc" ARRAY_SEP_STR L"") {
-        err(L"test_list_to_array failed on line %lu", __LINE__);
-    }
-
-    list.push_back(L"def");
-    val = list_to_array_val(list);
-    if (*val !=
-        L"ghi" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"abc" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"def") {
-        err(L"test_list_to_array failed on line %lu", __LINE__);
-    }
-
-    const wchar_t *array1[] = {NULL};
-    val = list_to_array_val(array1);
-    if (*val != ENV_NULL) {
-        err(L"test_list_to_array failed on line %lu", __LINE__);
-    }
-
-    const wchar_t *array2[] = {L"abc", NULL};
-    val = list_to_array_val(array2);
-    if (wcscmp(val->c_str(), L"abc") != 0) {
-        err(L"test_list_to_array failed on line %lu", __LINE__);
-    }
-
-    const wchar_t *array3[] = {L"abc", L"def", NULL};
-    val = list_to_array_val(array3);
-    if (wcscmp(val->c_str(), L"abc" ARRAY_SEP_STR L"def") != 0) {
-        err(L"test_list_to_array failed on line %lu", __LINE__);
-    }
-
-    const wchar_t *array4[] = {L"abc", L"def", L"ghi", NULL};
-    val = list_to_array_val(array4);
-    if (wcscmp(val->c_str(), L"abc" ARRAY_SEP_STR L"def" ARRAY_SEP_STR L"ghi") != 0) {
-        err(L"test_list_to_array failed on line %lu", __LINE__);
-    }
-}
-
 static struct wcsfilecmp_test {
     const wchar_t *str1;
     const wchar_t *str2;
@@ -1062,7 +998,6 @@ static void test_wcsfilecmp() {
 
 static void test_utility_functions() {
     say(L"Testing utility functions");
-    test_list_to_array();
     test_wcsfilecmp();
     test_parse_util_cmdsubst_extent();
 }
@@ -1617,7 +1552,7 @@ static void test_abbreviations(void) {
         {L"gc", L"git checkout"}, {L"foo", L"bar"}, {L"gx", L"git checkout"},
     };
     for (auto it : abbreviations) {
-        int ret = env_set(L"_fish_abbr_" + it.first, ENV_LOCAL, it.second.c_str());
+        int ret = env_set_one(L"_fish_abbr_" + it.first, ENV_LOCAL, it.second);
         if (ret != 0) err(L"Unable to set abbreviation variable");
     }
 
@@ -2479,7 +2414,7 @@ static void test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/5", vars, L"foo\"bar/",
                                        __LINE__);
 
-    env_set(L"AUTOSUGGEST_TEST_LOC", ENV_LOCAL, wd.c_str());
+    env_set_one(L"AUTOSUGGEST_TEST_LOC", ENV_LOCAL, wd);
     perform_one_autosuggestion_cd_test(L"cd $AUTOSUGGEST_TEST_LOC/0", vars, L"foobar/", __LINE__);
     perform_one_autosuggestion_cd_test(L"cd ~/test_autosuggest_suggest_specia", vars, L"l/",
                                        __LINE__);
@@ -2621,7 +2556,11 @@ static int test_universal_helper(int x) {
     for (int j = 0; j < UVARS_PER_THREAD; j++) {
         const wcstring key = format_string(L"key_%d_%d", x, j);
         const wcstring val = format_string(L"val_%d_%d", x, j);
-        uvars.set(key, val, false);
+        uvars.set(key,
+                  wcstring_list_t({
+                      val,
+                  }),
+                  false);
         bool synced = uvars.sync(callbacks);
         if (!synced) {
             err(L"Failed to sync universal variables after modification");
@@ -2660,17 +2599,15 @@ static void test_universal() {
             if (j == 0) {
                 expected_val = missing_var;
             } else {
-                expected_val = format_string(L"val_%d_%d", i, j);
+                expected_val = env_var_t(L"", format_string(L"val_%d_%d", i, j));
             }
             const env_var_t var = uvars.get(key);
-            if (j == 0) {
-                assert(expected_val.missing());
-            }
+            if (j == 0) assert(expected_val.missing());
             if (var != expected_val) {
                 const wchar_t *missing_desc = L"<missing>";
                 err(L"Wrong value for key %ls: expected %ls, got %ls\n", key.c_str(),
-                    (expected_val.missing() ? missing_desc : expected_val.c_str()),
-                    (var.missing() ? missing_desc : var.c_str()));
+                    (expected_val.missing() ? missing_desc : expected_val.as_string().c_str()),
+                    (var.missing() ? missing_desc : var.as_string().c_str()));
             }
         }
     }
@@ -2689,27 +2626,75 @@ static void test_universal_callbacks() {
     env_universal_t uvars2(UVARS_TEST_PATH);
 
     // Put some variables into both.
-    uvars1.set(L"alpha", L"1", false);
-    uvars1.set(L"beta", L"1", false);
-    uvars1.set(L"delta", L"1", false);
-    uvars1.set(L"epsilon", L"1", false);
-    uvars1.set(L"lambda", L"1", false);
-    uvars1.set(L"kappa", L"1", false);
-    uvars1.set(L"omicron", L"1", false);
+    uvars1.set(L"alpha",
+               wcstring_list_t({
+                   L"1",
+               }),
+               false);
+    uvars1.set(L"beta",
+               wcstring_list_t({
+                   L"1",
+               }),
+               false);
+    uvars1.set(L"delta",
+               wcstring_list_t({
+                   L"1",
+               }),
+               false);
+    uvars1.set(L"epsilon",
+               wcstring_list_t({
+                   L"1",
+               }),
+               false);
+    uvars1.set(L"lambda",
+               wcstring_list_t({
+                   L"1",
+               }),
+               false);
+    uvars1.set(L"kappa",
+               wcstring_list_t({
+                   L"1",
+               }),
+               false);
+    uvars1.set(L"omicron",
+               wcstring_list_t({
+                   L"1",
+               }),
+               false);
 
     uvars1.sync(callbacks);
     uvars2.sync(callbacks);
 
     // Change uvars1.
-    uvars1.set(L"alpha", L"2", false);    // changes value
-    uvars1.set(L"beta", L"1", true);      // changes export
-    uvars1.remove(L"delta");              // erases value
-    uvars1.set(L"epsilon", L"1", false);  // changes nothing
+    uvars1.set(L"alpha",
+               wcstring_list_t({
+                   L"2",
+               }),
+               false);  // changes value
+    uvars1.set(L"beta",
+               wcstring_list_t({
+                   L"1",
+               }),
+               true);         // changes export
+    uvars1.remove(L"delta");  // erases value
+    uvars1.set(L"epsilon",
+               wcstring_list_t({
+                   L"1",
+               }),
+               false);  // changes nothing
     uvars1.sync(callbacks);
 
     // Change uvars2. It should treat its value as correct and ignore changes from uvars1.
-    uvars2.set(L"lambda", L"1", false);  // same value
-    uvars2.set(L"kappa", L"2", false);   // different value
+    uvars2.set(L"lambda",
+               wcstring_list_t({
+                   L"1",
+               }),
+               false);  // same value
+    uvars2.set(L"kappa",
+               wcstring_list_t({
+                   L"2",
+               }),
+               false);  // different value
 
     // Now see what uvars2 sees.
     callbacks.clear();
@@ -4255,7 +4240,10 @@ long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
     char *str_ptr;
     size_t n;
 
-    env_set(L"TZ", ENV_EXPORT, timezone);
+    env_set_one(L"TZ", ENV_EXPORT, timezone);
+
+    const env_var_t var = env_get(L"TZ", ENV_DEFAULT);
+
     localtime_r(&tstamp, &ltime);
     n = strftime(ltime_str, 3, "%H", &ltime);
     if (n != 2) {

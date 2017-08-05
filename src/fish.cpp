@@ -420,8 +420,7 @@ int main(int argc, char **argv) {
                 for (char **ptr = argv + my_optind; *ptr; ptr++) {
                     list.push_back(str2wcstring(*ptr));
                 }
-                auto val = list_to_array_val(list);
-                env_set(L"argv", ENV_DEFAULT, val->c_str());
+                env_set(L"argv", ENV_DEFAULT, list);
 
                 const wcstring rel_filename = str2wcstring(file);
 

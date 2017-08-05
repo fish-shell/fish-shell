@@ -293,8 +293,7 @@ static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope,
         if (retval != STATUS_CMD_OK) return retval;
     }
 
-    auto val = list_to_array_val(list);
-    retval = env_set(key, scope | ENV_USER, val->c_str());
+    retval = env_set(key, scope | ENV_USER, list);
     switch (retval) {
         case ENV_OK: {
             retval = STATUS_CMD_OK;
@@ -502,8 +501,9 @@ static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
             for (auto idx : indexes) {
                 if (idx < 1 || (size_t)idx > result.size()) retval++;
             }
-        } else if (!env_exist(arg, scope)) {
-            retval++;
+        } else {
+            env_var_t var = env_get(arg, scope);
+            if (var.missing()) retval++;
         }
 
         free(dest);
@@ -533,29 +533,26 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
         }
     }
 
-    if (env_exist(var_name, scope)) {
-        const env_var_t evar = env_get(var_name, scope | ENV_EXPORT | ENV_USER);
-        const wchar_t *exportv = evar.missing() ? _(L"unexported") : _(L"exported");
-
-        const env_var_t var = env_get(var_name, scope | ENV_USER);
-        wcstring_list_t result;
-        var.to_list(result);
-
-        streams.out.append_format(_(L"$%ls: set in %ls scope, %ls, with %d elements\n"), var_name,
-                                  scope_name, exportv, result.size());
-        for (size_t i = 0; i < result.size(); i++) {
-            if (result.size() > 100) {
-                if (i == 50) streams.out.append(L"...\n");
-                if (i >= 50 && i < result.size() - 50) continue;
-            }
-            const wcstring value = result[i];
-            const wcstring escaped_val =
-                escape_string(value.c_str(), ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
-            streams.out.append_format(_(L"$%ls[%d]: length=%d value=|%ls|\n"), var_name, i + 1,
-                                      value.size(), escaped_val.c_str());
-        }
-    } else {
+    const env_var_t var = env_get(var_name, scope);
+    if (var.missing()) {
         streams.out.append_format(_(L"$%ls: not set in %ls scope\n"), var_name, scope_name);
+        return;
+    }
+
+    const wchar_t *exportv = var.exportv ? _(L"exported") : _(L"unexported");
+    wcstring_list_t vals = var.as_const_list();
+    streams.out.append_format(_(L"$%ls: set in %ls scope, %ls, with %d elements\n"), var_name,
+                              scope_name, exportv, vals.size());
+    for (size_t i = 0; i < vals.size(); i++) {
+        if (vals.size() > 100) {
+            if (i == 50) streams.out.append(L"...\n");
+            if (i >= 50 && i < vals.size() - 50) continue;
+        }
+        const wcstring value = vals[i];
+        const wcstring escaped_val =
+            escape_string(value.c_str(), ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
+        streams.out.append_format(_(L"$%ls[%d]: length=%d value=|%ls|\n"), var_name, i + 1,
+                                  value.size(), escaped_val.c_str());
     }
 }
 

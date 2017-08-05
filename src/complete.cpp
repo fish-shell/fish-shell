@@ -12,7 +12,9 @@
 #include <wctype.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <functional>
+#include <iterator>
 #include <list>
 #include <map>
 #include <memory>
@@ -1108,7 +1110,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
             env_var_t var = env_get(env_name);
             if (var.missing()) continue;
 
-            wcstring value = expand_escape_variable(var.as_string());
+            wcstring value = expand_escape_variable(var);
             if (this->type() != COMPLETE_AUTOSUGGEST) {
                 desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());
             }
@@ -1445,7 +1447,6 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                             if (i == 0) {
                                 assert(wrap_chain.at(i) == current_command_unescape);
                             } else if (!(flags & COMPLETION_REQUEST_AUTOSUGGESTION)) {
-                                assert(cmd_node != NULL);
                                 wcstring faux_cmdline = cmd;
                                 faux_cmdline.replace(cmd_node->source_start,
                                                      cmd_node->source_length, wrap_chain.at(i));

@@ -458,13 +458,14 @@ static int validate_arg(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, bool
     wcstring_list_t cmd_output;
 
     env_push(true);
-    env_set(L"_argparse_cmd", ENV_LOCAL, opts.name.c_str());
+    env_set_one(L"_argparse_cmd", ENV_LOCAL, opts.name);
     if (is_long_flag) {
-        env_set(var_name_prefix + L"name", ENV_LOCAL, opt_spec->long_flag.c_str());
+        env_set_one(var_name_prefix + L"name", ENV_LOCAL, opt_spec->long_flag);
     } else {
-        env_set(var_name_prefix + L"name", ENV_LOCAL, wcstring(1, opt_spec->short_flag).c_str());
+        env_set_one(var_name_prefix + L"name", ENV_LOCAL,
+                    wcstring(1, opt_spec->short_flag).c_str());
     }
-    env_set(var_name_prefix + L"value", ENV_LOCAL, woptarg);
+    env_set_one(var_name_prefix + L"value", ENV_LOCAL, woptarg);
 
     int retval = exec_subshell(opt_spec->validation_command, cmd_output, false);
     for (auto it : cmd_output) {
@@ -643,9 +644,8 @@ static void set_argparse_result_vars(argparse_cmd_opts_t &opts) {
         option_spec_t *opt_spec = it.second;
         if (!opt_spec->num_seen) continue;
 
-        auto val = list_to_array_val(opt_spec->vals);
         if (opt_spec->short_flag_valid) {
-            env_set(var_name_prefix + opt_spec->short_flag, ENV_LOCAL, val->c_str());
+            env_set(var_name_prefix + opt_spec->short_flag, ENV_LOCAL, opt_spec->vals);
         }
         if (!opt_spec->long_flag.empty()) {
             // We do a simple replacement of all non alphanum chars rather than calling
@@ -654,12 +654,11 @@ static void set_argparse_result_vars(argparse_cmd_opts_t &opts) {
             for (size_t pos = 0; pos < long_flag.size(); pos++) {
                 if (!iswalnum(long_flag[pos])) long_flag[pos] = L'_';
             }
-            env_set(var_name_prefix + long_flag, ENV_LOCAL, val->c_str());
+            env_set(var_name_prefix + long_flag, ENV_LOCAL, opt_spec->vals);
         }
     }
 
-    auto val = list_to_array_val(opts.argv);
-    env_set(L"argv", ENV_LOCAL, val->c_str());
+    env_set(L"argv", ENV_LOCAL, opts.argv);
 }
 
 /// The argparse builtin. This is explicitly not compatible with the BSD or GNU version of this

@@ -211,7 +211,7 @@ static void launch_process_nofork(process_t *p) {
     convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
 
     const char *const *envv = env_export_arr();
-    char *actual_cmd = wcs2str(p->actual_cmd.c_str());
+    char *actual_cmd = wcs2str(p->actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
     restore_term_mode();
@@ -379,12 +379,12 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
         const env_var_t shlvl_var = env_get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
         if (!shlvl_var.missing()) {
-            long shlvl = fish_wcstol(shlvl_var.c_str());
+            long shlvl = fish_wcstol(shlvl_var.as_string().c_str());
             if (!errno && shlvl > 0) {
                 shlvl_str = to_string<long>(shlvl - 1);
             }
         }
-        env_set(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, shlvl_str.c_str());
+        env_set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, shlvl_str);
 
         // launch_process _never_ returns.
         launch_process_nofork(j->processes.front().get());

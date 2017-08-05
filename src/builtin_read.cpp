@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "builtin.h"
 #include "builtin_read.h"
@@ -422,81 +423,104 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (exit_res != STATUS_CMD_OK) {
         // Define the var(s) without any data. We do this because when this happens we want the user
         // to be able to use the var but have it expand to nothing.
-        for (int i = 0; i < argc; i++) env_set(argv[i], opts.place, NULL);
+        for (int i = 0; i < argc; i++) env_set_empty(argv[i], opts.place);
         return exit_res;
     }
 
     if (!opts.have_delimiter) {
         env_var_t ifs = env_get(L"IFS");
-        if (!ifs.missing_or_empty()) {
-            opts.delimiter = ifs.as_string();
-        }
+        if (!ifs.missing_or_empty()) opts.delimiter = ifs.as_string();
     }
+
     if (opts.delimiter.empty()) {
-        // Every character is a separate token.
-        size_t bufflen = buff.size();
-        if (opts.array) {
-            if (bufflen > 0) {
-                wcstring chars(bufflen + (bufflen - 1), ARRAY_SEP);
-                wcstring::iterator out = chars.begin();
-                for (wcstring::const_iterator it = buff.begin(), end = buff.end(); it != end;
-                     ++it) {
-                    *out = *it;
-                    out += 2;
-                }
-                env_set(argv[0], opts.place, chars.c_str());
+        // Every character is a separate token with one wrinkle involving non-array mode where the
+        // final var gets the remaining characters as a single string.
+        size_t x = std::max(static_cast<size_t>(1), buff.size());
+        size_t n_splits = (opts.array || static_cast<size_t>(argc) > x) ? x : argc;
+        wcstring_list_t chars;
+        chars.reserve(n_splits);
+        x = x - n_splits + 1;
+        int i = 0;
+        for (auto it = buff.begin(), end = buff.end(); it != end; ++i, ++it) {
+            if (opts.array || i < argc) {
+                chars.emplace_back(wcstring(1, *it));
             } else {
-                env_set(argv[0], opts.place, NULL);
+                if (x) {
+                    chars.back().reserve(x);
+                    x = 0;
+                }
+                chars.back().push_back(*it);
             }
-        } else {  // not array mode
+        }
+
+        if (opts.array) {
+            // Array mode: assign each char as a separate element of the sole var.
+            env_set(argv[0], opts.place, chars);
+        } else {
+            // Not array mode: assign each char to a separate var with the remainder being assigned
+            // to the last var.
             int i = 0;
             size_t j = 0;
             for (; i + 1 < argc; ++i) {
-                if (j < bufflen) {
-                    wchar_t buffer[2] = {buff[j++], 0};
-                    env_set(argv[i], opts.place, buffer);
+                if (j < chars.size()) {
+                    env_set_one(argv[i], opts.place, chars[j]);
+                    j++;
                 } else {
-                    env_set(argv[i], opts.place, L"");
+                    env_set_one(argv[i], opts.place, L"");
                 }
             }
-            if (i < argc) env_set(argv[i], opts.place, &buff[j]);
+
+            if (i < argc) {
+                wcstring val = chars.size() == static_cast<size_t>(argc) ? chars[i] : L"";
+                env_set_one(argv[i], opts.place, val);
+            } else {
+                env_set_empty(argv[i], opts.place);
+            }
         }
     } else if (opts.array) {
+        // The user has requested the input be split into a sequence of tokens and all the tokens
+        // assigned to a single var. How we do the tokenizing depends on whether the user specified
+        // the delimiter string or we're using IFS.
         if (!opts.have_delimiter) {
-            // We're using IFS, so well split on every character in that,
-            // not on the entire thing at once.
-            wcstring tokens;
-            tokens.reserve(buff.size());
+            // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
+            // compatibility with old versions of fish.
+            wcstring_list_t tokens;
 
             for (wcstring_range loc = wcstring_tok(buff, opts.delimiter);
                  loc.first != wcstring::npos; loc = wcstring_tok(buff, opts.delimiter, loc)) {
-                if (!tokens.empty()) tokens.push_back(ARRAY_SEP);
-                tokens.append(buff, loc.first, loc.second);
+                tokens.emplace_back(wcstring(buff, loc.first, loc.second));
             }
-            env_set(argv[0], opts.place, tokens.empty() ? NULL : tokens.c_str());
+            env_set(argv[0], opts.place, tokens);
         } else {
+            // We're using a delimiter provided by the user so use the `string split` behavior.
             wcstring_list_t splits;
             split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                         &splits, LONG_MAX);
-            auto val = list_to_array_val(splits);
-            env_set(argv[0], opts.place, val->c_str());
+            env_set(argv[0], opts.place, splits);
         }
-    } else {  // not array
+    } else {
+        // Not array mode. Split the input into tokens and assign each to the vars in sequence.
         if (!opts.have_delimiter) {
+            // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
+            // compatibility with old versions of fish.
             wcstring_range loc = wcstring_range(0, 0);
             for (int i = 0; i < argc; i++) {
+                wcstring substr;
                 loc = wcstring_tok(buff, (i + 1 < argc) ? opts.delimiter : wcstring(), loc);
-                env_set(argv[i], opts.place,
-                        loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first]);
+                if (loc.first != wcstring::npos) {
+                    substr = wcstring(buff, loc.first, loc.second);
+                }
+                env_set_one(argv[i], opts.place, substr);
             }
         } else {
+            // We're using a delimiter provided by the user so use the `string split` behavior.
             wcstring_list_t splits;
             // We're making at most argc - 1 splits so the last variable
             // is set to the remaining string.
             split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                         &splits, argc - 1);
             for (size_t i = 0; i < (size_t)argc && i < splits.size(); i++) {
-                env_set(argv[i], opts.place, splits[i].c_str());
+                env_set_one(argv[i], opts.place, splits[i]);
             }
         }
     }

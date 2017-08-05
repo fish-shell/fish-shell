@@ -558,6 +558,6 @@ void writembs_check(char *mbs, const char *mbs_name, const char *file, long line
         const wchar_t *fmt =
             _(L"Tried to use terminfo string %s on line %ld of %s, which is "
               L"undefined in terminal of type \"%ls\". Please report this error to %s");
-        debug(0, fmt, mbs_name, line, file, term.c_str(), PACKAGE_BUGREPORT);
+        debug(0, fmt, mbs_name, line, file, term.as_string().c_str(), PACKAGE_BUGREPORT);
     }
 }

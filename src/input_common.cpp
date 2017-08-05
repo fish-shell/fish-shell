@@ -164,12 +164,12 @@ void update_wait_on_escape_ms() {
         return;
     }
 
-    long tmp = fish_wcstol(escape_time_ms.c_str());
+    long tmp = fish_wcstol(escape_time_ms.as_string().c_str());
     if (errno || tmp < 10 || tmp >= 5000) {
         fwprintf(stderr,
                  L"ignoring fish_escape_delay_ms: value '%ls' "
                  L"is not an integer or is < 10 or >= 5000 ms\n",
-                 escape_time_ms.c_str());
+                 escape_time_ms.as_string().c_str());
     } else {
         wait_on_escape_ms = (int)tmp;
     }

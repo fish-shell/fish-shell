@@ -1557,9 +1557,9 @@ static void validate_new_termsize(struct winsize *new_termsize) {
         env_var_t row_var = env_get(L"LINES");
         if (!col_var.missing_or_empty() && !row_var.missing_or_empty()) {
             // Both vars have to have valid values.
-            int col = fish_wcstoi(col_var.c_str());
+            int col = fish_wcstoi(col_var.as_string().c_str());
             bool col_ok = errno == 0 && col > 0 && col <= USHRT_MAX;
-            int row = fish_wcstoi(row_var.c_str());
+            int row = fish_wcstoi(row_var.as_string().c_str());
             bool row_ok = errno == 0 && row > 0 && row <= USHRT_MAX;
             if (col_ok && row_ok) {
                 new_termsize->ws_col = col;
@@ -1584,11 +1584,11 @@ static void export_new_termsize(struct winsize *new_termsize) {
 
     env_var_t cols = env_get(L"COLUMNS", ENV_EXPORT);
     swprintf(buf, 64, L"%d", (int)new_termsize->ws_col);
-    env_set(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? 0 : ENV_EXPORT), buf);
+    env_set_one(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
 
     env_var_t lines = env_get(L"LINES", ENV_EXPORT);
     swprintf(buf, 64, L"%d", (int)new_termsize->ws_row);
-    env_set(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? 0 : ENV_EXPORT), buf);
+    env_set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
 
 #ifdef HAVE_WINSIZE
     ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);

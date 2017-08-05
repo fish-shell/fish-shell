@@ -13,8 +13,9 @@
 #include <vector>
 
 #include "common.h"
-#include "env.h"
 #include "parse_constants.h"
+
+class env_var_t;
 
 enum {
     /// Flag specifying that cmdsubst expansion should be skipped.

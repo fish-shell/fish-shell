@@ -696,7 +696,7 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
         for (size_t i = 0; i < lst.size(); i++) {
             fputws(lst.at(i).c_str(), stdout);
         }
-       ignore_result(write(STDOUT_FILENO, "\a", 1));
+        ignore_result(write(STDOUT_FILENO, "\a", 1));
     }
 
     proc_pop_interactive();
@@ -766,7 +766,7 @@ void reader_init() {
     // Ensure this var is present even before an interactive command is run so that if it is used
     // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
     // prompt is written.
-    env_set(ENV_CMD_DURATION, ENV_UNEXPORT, L"0");
+    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, L"0");
 
     // Save the initial terminal mode.
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
@@ -1650,7 +1650,7 @@ static void reader_interactive_init() {
         wperror(L"tcsetattr");
     }
 
-    env_set(L"_", ENV_GLOBAL, L"fish");
+    env_set_one(L"_", ENV_GLOBAL, L"fish");
 }
 
 /// Destroy data for interactive use.
@@ -1917,7 +1917,7 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before) {
     }
 
     swprintf(buf, 16, L"%d", (secs * 1000) + (usecs / 1000));
-    env_set(ENV_CMD_DURATION, ENV_UNEXPORT, buf);
+    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, buf);
 }
 
 void reader_run_command(parser_t &parser, const wcstring &cmd) {
@@ -1925,7 +1925,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     wcstring ft = tok_first(cmd);
 
-    if (!ft.empty()) env_set(L"_", ENV_GLOBAL, ft.c_str());
+    if (!ft.empty()) env_set_one(L"_", ENV_GLOBAL, ft);
 
     reader_write_title(cmd);
 
@@ -1941,7 +1941,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     term_steal();
 
-    env_set(L"_", ENV_GLOBAL, program_name);
+    env_set_one(L"_", ENV_GLOBAL, program_name);
 
 #ifdef HAVE__PROC_SELF_STAT
     proc_update_jiffies();

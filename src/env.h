@@ -1,4 +1,4 @@
-// Prototypes for functions for setting and getting environment variables.
+// Prototypes for functions for manipulating fish script variables.
 #ifndef FISH_ENV_H
 #define FISH_ENV_H
 
@@ -8,6 +8,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "common.h"
 
@@ -26,27 +27,24 @@ extern bool curses_initialized;
 
 // Flags that may be passed as the 'mode' in env_set / env_get.
 enum {
-    /// Default mode.
+    /// Default mode. Used with `env_get()` to indicate the caller doesn't care what scope the var
+    /// is in or whether it is exported or unexported.
     ENV_DEFAULT = 0,
-
     /// Flag for local (to the current block) variable.
-    ENV_LOCAL = 1,
-
-    /// Flag for exported (to commands) variable.
-    ENV_EXPORT = 2,
-
-    /// Flag for unexported variable.
-    ENV_UNEXPORT = 16,
-
+    ENV_LOCAL = 1 << 0,
     /// Flag for global variable.
-    ENV_GLOBAL = 4,
-
-    /// Flag for variable update request from the user. All variable changes that are made directly
-    /// by the user, such as those from the 'set' builtin must have this flag set.
-    ENV_USER = 8,
-
+    ENV_GLOBAL = 1 << 1,
     /// Flag for universal variable.
-    ENV_UNIVERSAL = 32
+    ENV_UNIVERSAL = 1 << 2,
+    /// Flag for exported (to commands) variable.
+    ENV_EXPORT = 1 << 3,
+    /// Flag for unexported variable.
+    ENV_UNEXPORT = 1 << 4,
+    /// Flag for variable update request from the user. All variable changes that are made directly
+    /// by the user, such as those from the `read` and `set` builtin must have this flag set. It
+    /// serves one purpose: to indicate that an error should be returned if the user is attempting
+    /// to modify a var that should not be modified by direct user action; e.g., a read-only var.
+    ENV_USER = 1 << 5,
 };
 typedef uint32_t env_mode_flags_t;
 
@@ -56,10 +54,10 @@ enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID };
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
 struct config_paths_t {
-    wcstring data;     // e.g. /usr/local/share
-    wcstring sysconf;  // e.g. /usr/local/etc
-    wcstring doc;      // e.g. /usr/local/share/doc/fish
-    wcstring bin;      // e.g. /usr/local/bin
+    wcstring data;     // e.g., /usr/local/share
+    wcstring sysconf;  // e.g., /usr/local/etc
+    wcstring doc;      // e.g., /usr/local/share/doc/fish
+    wcstring bin;      // e.g., /usr/local/bin
 };
 
 /// Initialize environment variable data.
@@ -71,68 +69,101 @@ void misc_init();
 
 class env_var_t {
    private:
-    wcstring val;
-    bool is_missing;
+    wcstring name;         // name of the var
+    wcstring_list_t vals;  // list of values assigned to the var
+    bool is_missing;       // true if the var is not set in the requested scope
 
    public:
     bool exportv;  // whether the variable should be exported
 
-    env_var_t(const wcstring &x) : val(x), is_missing(false), exportv(false) {}
-    env_var_t(const wchar_t *x) : val(x), is_missing(false), exportv(false) {}
-    env_var_t() : val(L""), is_missing(false), exportv(false) {}
-
     void set_missing(void) { is_missing = true; }
 
-    bool empty(void) const { return val.empty() || val == ENV_NULL; }
+    // Constructors.
+    env_var_t(const env_var_t &v)
+        : name(v.name), vals(v.vals), is_missing(v.is_missing), exportv(v.exportv) {}
+    env_var_t(const wcstring &our_name, const wcstring_list_t &l)
+        : name(our_name), vals(l), is_missing(false), exportv(false) {}
+    env_var_t(const wcstring &our_name, const wcstring &s)
+        : name(our_name),
+          vals({
+              s,
+          }),
+          is_missing(false),
+          exportv(false) {}
+    env_var_t(const wcstring &our_name, const wchar_t *s)
+        : name(our_name),
+          vals({
+              wcstring(s),
+          }),
+          is_missing(false),
+          exportv(false) {}
+    env_var_t() : name(), vals(), is_missing(false), exportv(false) {}
+
+    bool empty(void) const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
     bool missing(void) const { return is_missing; }
     bool missing_or_empty(void) const { return missing() || empty(); }
 
-    const wchar_t *c_str(void) const;
-    void to_list(wcstring_list_t &out) const;
+    bool matches_string(const wcstring &str) {
+        if (is_missing) return false;
+        if (vals.size() > 1) return false;
+        return vals[0] == str;
+    }
+
     wcstring as_string() const;
+    void to_list(wcstring_list_t &out) const;
+    wcstring_list_t &as_list();
+    const wcstring_list_t &as_const_list() const;
 
-    // You cannot convert a missing var to a non-missing var. You can only change the value of a var
-    // that is not missing.
+    const wcstring get_name() const { return name; }
+
     void set_val(const wcstring &s) {
-        assert(!is_missing);
-        val = s;
+        vals = {
+            s,
+        };
     }
-    void set_val(const wchar_t *s) {
-        assert(!is_missing);
-        val = s;
+    void set_vals(const wcstring_list_t &l) { vals = l; }
+
+    env_var_t &operator=(const env_var_t &var) {
+        this->vals = var.vals;
+        this->exportv = var.exportv;
+        this->is_missing = var.is_missing;
+        return *this;
     }
 
-    bool operator==(const env_var_t &s) const { return is_missing == s.is_missing && val == s.val; }
+    /// Compare a simple string to the var. Returns true iff the var is not missing, has a single
+    /// value and that value matches the string being compared to.
+    bool operator==(const wcstring &str) const {
+        if (is_missing) return false;
+        if (vals.size() > 1) return false;
+        return vals[0] == str;
+    }
 
-    bool operator==(const wcstring &s) const { return !is_missing && val == s; }
+    bool operator==(const env_var_t &var) const {
+        return this->is_missing == var.is_missing && vals == var.vals;
+    }
 
-    bool operator==(const wchar_t *s) const { return !is_missing && val == s; }
+    bool operator==(const wcstring_list_t &values) const { return !is_missing && vals == values; }
 
-    bool operator!=(const env_var_t &v) const { return val != v.val; }
-
-    bool operator!=(const wcstring &s) const { return val != s; }
-
-    bool operator!=(const wchar_t *s) const { return val != s; }
+    bool operator!=(const env_var_t &var) const { return vals != var.vals; }
 };
 
 env_var_t create_missing_var();
 extern env_var_t missing_var;
 
-/// Gets the variable with the specified name, or env_var_t::missing_var if it does not exist or is
-/// an empty array.
-///
-/// \param key The name of the variable to get
-/// \param mode An optional scope to search in. All scopes are searched if unset
+/// This is used to convert a serialized env_var_t back into a list.
+wcstring_list_t decode_serialized(const wcstring &s);
+
+/// Gets the variable with the specified name, or env_var_t::missing_var if it does not exist.
 env_var_t env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
 
-int env_set(const wcstring &key, env_mode_flags_t mode, const wchar_t *val);
+/// Sets the variable with the specified name to the given values.
+int env_set(const wcstring &key, env_mode_flags_t mode, const wcstring_list_t &vals);
 
-/// Returns true if the specified key exists. This can't be reliably done using env_get, since
-/// env_get returns null for 0-element arrays.
-///
-/// \param key The name of the variable to remove
-/// \param mode the scope to search in. All scopes are searched if set to default
-bool env_exist(const wchar_t *key, env_mode_flags_t mode);
+/// Sets the variable with the specified name to a single value.
+int env_set_one(const wcstring &key, env_mode_flags_t mode, const wcstring &val);
+
+/// Sets the variable with the specified name to no values.
+int env_set_empty(const wcstring &key, env_mode_flags_t mode);
 
 /// Remove environment variable.
 ///
@@ -172,7 +203,7 @@ wcstring env_get_pwd_slash();
 void env_set_read_limit();
 
 class env_vars_snapshot_t {
-    std::map<wcstring, wcstring> vars;
+    std::map<wcstring, env_var_t> vars;
     bool is_current() const;
 
    public:
@@ -203,8 +234,4 @@ extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
 
 /// Returns true if we think the terminal supports setting its title.
 bool term_supports_setting_title();
-
-/// Returns the fish internal representation for an array of strings.
-std::unique_ptr<wcstring> list_to_array_val(const wcstring_list_t &list);
-std::unique_ptr<wcstring> list_to_array_val(const wchar_t **list);
 #endif

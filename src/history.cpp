@@ -1266,7 +1266,7 @@ bool history_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
 static int create_temporary_file(const wcstring &name_template, wcstring *out_path) {
     int out_fd = -1;
     for (size_t attempt = 0; attempt < 10 && out_fd == -1; attempt++) {
-        char *narrow_str = wcs2str(name_template.c_str());
+        char *narrow_str = wcs2str(name_template);
         out_fd = fish_mkstemp_cloexec(narrow_str);
         if (out_fd >= 0) {
             *out_path = str2wcstring(narrow_str);

@@ -284,7 +284,7 @@ bool env_universal_t::get_export(const wcstring &name) const {
     return result;
 }
 
-void env_universal_t::set_internal(const wcstring &key, const wcstring &val, bool exportv,
+void env_universal_t::set_internal(const wcstring &key, const wcstring_list_t &vals, bool exportv,
                                    bool overwrite) {
     ASSERT_IS_LOCKED(lock);
     if (!overwrite && this->modified.find(key) != this->modified.end()) {
@@ -293,8 +293,8 @@ void env_universal_t::set_internal(const wcstring &key, const wcstring &val, boo
     }
 
     env_var_t &entry = vars[key];
-    if (entry.exportv != exportv || entry.as_string() != val) {
-        entry.set_val(val);
+    if (entry.exportv != exportv || entry.as_list() != vals) {
+        entry.set_vals(vals);
         entry.exportv = exportv;
 
         // If we are overwriting, then this is now modified.
@@ -304,9 +304,9 @@ void env_universal_t::set_internal(const wcstring &key, const wcstring &val, boo
     }
 }
 
-void env_universal_t::set(const wcstring &key, const wcstring &val, bool exportv) {
+void env_universal_t::set(const wcstring &key, const wcstring_list_t &vals, bool exportv) {
     scoped_lock locker(lock);
-    this->set_internal(key, val, exportv, true /* overwrite */);
+    this->set_internal(key, vals, exportv, true /* overwrite */);
 }
 
 bool env_universal_t::remove_internal(const wcstring &key) {
@@ -391,8 +391,7 @@ void env_universal_t::acquire_variables(var_table_t &vars_to_acquire) {
             // source entry in vars since we are about to get rid of this->vars entirely.
             env_var_t &src = src_iter->second;
             env_var_t &dst = vars_to_acquire[key];
-            dst.set_val(src.as_string());
-            dst.exportv = src.exportv;
+            dst = src;
         }
     }
 
@@ -533,7 +532,7 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
     const wcstring tmp_name_template = directory + L"/fishd.tmp.XXXXXX";
 
     for (size_t attempt = 0; attempt < 10 && !success; attempt++) {
-        char *narrow_str = wcs2str(tmp_name_template.c_str());
+        char *narrow_str = wcs2str(tmp_name_template);
         int result_fd = fish_mkstemp_cloexec(narrow_str);
         saved_errno = errno;
         success = result_fd != -1;
@@ -845,7 +844,8 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t
             if (unescape_string(tmp + 1, &val, 0)) {
                 env_var_t &entry = (*vars)[key];
                 entry.exportv = exportv;
-                entry.set_val(val);  // acquire the value
+                wcstring_list_t values = decode_serialized(val);
+                entry.set_vals(values);
             }
         } else {
             debug(1, PARSE_ERR, msg);

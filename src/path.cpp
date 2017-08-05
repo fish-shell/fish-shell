@@ -24,6 +24,13 @@
 /// Unexpected error in path_get_path().
 #define MISSING_COMMAND_ERR_MSG _(L"Error while searching for command '%ls'")
 
+// Note that PREFIX is defined in the `Makefile` and is thus defined when this module is compiled.
+// This ensures we always default to "/bin", "/usr/bin" and the bin dir defined for the fish
+// programs. Possibly with a duplicate dir if PREFIX is empty, "/", "/usr" or "/usr/". If the PREFIX
+// duplicates /bin or /usr/bin that is harmless other than a trivial amount of time testing a path
+// we've already tested.
+const wcstring_list_t dflt_pathsv({L"/bin", L"/usr/bin", PREFIX L"/bin"});
+
 static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                                const env_var_t &bin_path_var) {
     debug(3, L"path_get_path( '%ls' )", cmd.c_str());
@@ -47,20 +54,15 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
         return false;
     }
 
-    int err = ENOENT;
-    wcstring_list_t pathsv;
+    const wcstring_list_t *pathsv;
     if (!bin_path_var.missing()) {
-        bin_path_var.to_list(pathsv);
+        pathsv = &bin_path_var.as_const_list();
     } else {
-        // Note that PREFIX is defined in the `Makefile` and is thus defined when this module is
-        // compiled. This ensures we always default to "/bin", "/usr/bin" and the bin dir defined
-        // for the fish programs. Possibly with a duplicate dir if PREFIX is empty, "/", "/usr" or
-        // "/usr/". If the PREFIX duplicates /bin or /usr/bin that is harmless other than a trivial
-        // amount of time testing a path we've already tested.
-        pathsv = wcstring_list_t({L"/bin", L"/usr/bin", PREFIX L"/bin"});
+        pathsv = &dflt_pathsv;
     }
 
-    for (auto next_path : pathsv) {
+    int err = ENOENT;
+    for (auto next_path : *pathsv) {
         if (next_path.empty()) continue;
         append_path_component(next_path, cmd);
         if (waccess(next_path, X_OK) == 0) {
@@ -164,7 +166,7 @@ bool path_get_cdpath(const env_var_t &dir_var, wcstring *out, const wchar_t *wd,
     } else {
         // Respect CDPATH.
         env_var_t cdpaths = env_vars.get(L"CDPATH");
-        if (cdpaths.missing_or_empty()) cdpaths = L".";
+        if (cdpaths.missing_or_empty()) cdpaths = env_var_t(cdpaths.get_name(), L".");
 
         std::vector<wcstring> cdpathsv;
         cdpaths.to_list(cdpathsv);
@@ -214,7 +216,8 @@ bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path, const wch
         exp_path == L"..") {
         // These paths can be implicit cd, so see if you cd to the path. Note that a single period
         // cannot (that's used for sourcing files anyways).
-        result = path_get_cdpath(exp_path, out_path, wd, vars);
+        env_var_t path_var(L"n/a", exp_path);
+        result = path_get_cdpath(path_var, out_path, wd, vars);
     }
     return result;
 }
@@ -257,10 +260,9 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
                                      bool using_xdg, const wcstring &xdg_var, const wcstring &path,
                                      int saved_errno) {
     wcstring warning_var_name = L"_FISH_WARNED_" + which_dir;
-    if (env_exist(warning_var_name.c_str(), ENV_GLOBAL | ENV_EXPORT)) {
-        return;
-    }
-    env_set(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
+    env_var_t var = env_get(warning_var_name, ENV_GLOBAL | ENV_EXPORT);
+    if (var.missing()) return;
+    env_set_one(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
 
     debug(0, custom_error_msg.c_str());
     if (path.empty()) {

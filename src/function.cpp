@@ -327,28 +327,35 @@ int function_get_definition_offset(const wcstring &name) {
     return func ? func->definition_offset : -1;
 }
 
+// Setup the environment for the function. There are three components of the environment:
+// 1. argv
+// 2. named arguments
+// 3. inherited variables
 void function_prepare_environment(const wcstring &name, const wchar_t *const *argv,
                                   const std::map<wcstring, env_var_t> &inherited_vars) {
-    // Three components of the environment:
-    // 1. argv
-    // 2. named arguments
-    // 3. inherited variables
     env_set_argv(argv);
 
     const wcstring_list_t named_arguments = function_get_named_arguments(name);
     if (!named_arguments.empty()) {
-        const wchar_t *const *arg;
-        size_t i;
-        for (i = 0, arg = argv; i < named_arguments.size(); i++) {
-            env_set(named_arguments.at(i).c_str(), ENV_LOCAL | ENV_USER, *arg);
-
-            if (*arg) arg++;
+        const wchar_t *const *arg = argv;
+        for (size_t i = 0; i < named_arguments.size(); i++) {
+            if (*arg) {
+                env_set_one(named_arguments.at(i), ENV_LOCAL | ENV_USER, *arg);
+                arg++;
+            } else {
+                env_set_empty(named_arguments.at(i), ENV_LOCAL | ENV_USER);
+            }
         }
     }
 
-    for (std::map<wcstring, env_var_t>::const_iterator it = inherited_vars.begin(),
-                                                       end = inherited_vars.end();
-         it != end; ++it) {
-        env_set(it->first, ENV_LOCAL | ENV_USER, it->second.missing() ? NULL : it->second.c_str());
+    for (auto it = inherited_vars.begin(), end = inherited_vars.end(); it != end; ++it) {
+        // Note: Prior to my rewrite to address issue #4200 this code did the equivalent of this:
+        // if (it->second.missing()) {
+        //    env_set_empty(it->first, ENV_LOCAL | ENV_USER);
+        // } else {
+        // It should be impossible for the var to be missing since we're inheriting it from an outer
+        // scope. So we now die horribly if it is missing.
+        assert(!it->second.missing());
+        env_set(it->first, ENV_LOCAL | ENV_USER, it->second.as_const_list());
     }
 }

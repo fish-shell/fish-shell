@@ -105,7 +105,6 @@ static const wcstring_list_t colon_delimited_variable({L"PATH", L"MANPATH", L"CD
 // Some forward declarations to make it easy to logically group the code.
 static void init_locale();
 static void init_curses();
-static void tokenize_variable_array(const wcstring &val, wcstring_list_t &out);
 
 /// Construct a missing var object
 env_var_t create_missing_var() {
@@ -115,6 +114,33 @@ env_var_t create_missing_var() {
 }
 
 env_var_t missing_var = create_missing_var();
+
+/// This is used to convert a serialized env_var_t back into a list. It is used when reading legacy
+/// (fish 2.x) encoded vars stored in the universal variable file and the environment.
+static void tokenize_variable_array(const wcstring &val, wcstring_list_t &out) {
+    out.clear();  // ensure the output var is empty -- this will normally be a no-op
+
+    // Zero element arrays are externally encoded as this placeholder string.
+    if (val == ENV_NULL) return;
+
+    size_t pos = 0, end = val.size();
+    while (pos <= end) {
+        size_t next_pos = val.find(ARRAY_SEP, pos);
+        if (next_pos == wcstring::npos) {
+            next_pos = end;
+        }
+        out.resize(out.size() + 1);
+        out.back().assign(val, pos, next_pos - pos);
+        pos = next_pos + 1;  // skip the separator, or skip past the end
+    }
+}
+
+/// This is used to convert a serialized env_var_t back into a list.
+wcstring_list_t decode_serialized(const wcstring &s) {
+    wcstring_list_t values;
+    tokenize_variable_array(s, values);
+    return values;
+}
 
 // Struct representing one level in the function variable stack.
 // Only our variable stack should create and destroy these
@@ -137,10 +163,6 @@ class env_node_t {
 
     /// Returns the given entry if present else env_var_t::missing_var.
     const env_var_t find_entry(const wcstring &key);
-};
-
-class variable_entry_t {
-    wcstring value; /**< Value of the variable */
 };
 
 static pthread_mutex_t env_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -331,10 +353,11 @@ static bool var_is_timezone(const wcstring &key) { return key == L"TZ"; }
 
 /// Properly sets all timezone information.
 static void handle_timezone(const wchar_t *env_var_name) {
-    debug(2, L"handle_timezone() called in response to '%ls' changing", env_var_name);
-    const env_var_t var = env_get(env_var_name, ENV_EXPORT);
+    // const env_var_t var = env_get(env_var_name, ENV_EXPORT);
+    const env_var_t var = env_get(env_var_name, ENV_DEFAULT);
+    debug(2, L"handle_timezone() current timezone var: |%ls| => |%ls|", env_var_name,
+          var.missing() ? L"MISSING" : var.as_string().c_str());
     const std::string &name = wcs2string(env_var_name);
-    debug(2, L"timezone var %s='%s'", name.c_str(), var.c_str());
     if (var.missing_or_empty()) {
         unsetenv(name.c_str());
     } else {
@@ -370,17 +393,9 @@ static void fix_colon_delimited_var(const wcstring &var_name) {
         return;
     }
 
-    wcstring new_val;
-    for (size_t i = 0; i < new_pathsv.size(); i++) {
-        new_val.append(new_pathsv[i]);
-        if (i < new_pathsv.size() - 1) {
-            new_val.append(ARRAY_SEP_STR);
-        }
-    }
-
-    int scope = env_set(var_name, ENV_USER, new_val.c_str());
-    if (scope != ENV_OK) {
-        debug(0, L"fix_colon_delimited_var failed unexpectedly with retval %d", scope);
+    int retval = env_set(var_name, ENV_DEFAULT | ENV_USER, new_pathsv);
+    if (retval != ENV_OK) {
+        debug(0, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
     }
 }
 
@@ -460,7 +475,7 @@ static bool does_term_support_setting_title() {
     const env_var_t term_var = env_get(L"TERM");
     if (term_var.missing_or_empty()) return false;
 
-    const wchar_t *term = term_var.c_str();
+    const wchar_t *term = term_var.as_string().c_str();
     bool recognized = contains(title_terms, term_var.as_string());
     if (!recognized) recognized = !wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
     if (!recognized) recognized = !wcsncmp(term, L"screen-", wcslen(L"screen-"));
@@ -585,7 +600,7 @@ static void init_curses() {
             if (term.missing_or_empty()) {
                 debug(1, _(L"TERM environment variable not set."));
             } else {
-                debug(1, _(L"TERM environment variable set to '%ls'."), term.c_str());
+                debug(1, _(L"TERM environment variable set to '%ls'."), term.as_string().c_str());
                 debug(1, _(L"Check that this terminal type is supported on this system."));
             }
         }
@@ -675,7 +690,7 @@ static void universal_callback(fish_message_type_t type, const wchar_t *name) {
 static void setup_path() {
     const env_var_t path = env_get(L"PATH");
     if (path.missing_or_empty()) {
-        const wchar_t *value = L"/usr/bin" ARRAY_SEP_STR L"/bin";
+        wcstring_list_t value({L"/usr/bin", L"/bin"});
         env_set(L"PATH", ENV_GLOBAL | ENV_EXPORT, value);
     }
 }
@@ -685,20 +700,20 @@ static void setup_path() {
 /// adjusted.
 static void env_set_termsize() {
     env_var_t cols = env_get(L"COLUMNS");
-    if (cols.missing_or_empty()) env_set(L"COLUMNS", ENV_GLOBAL, DFLT_TERM_COL_STR);
+    if (cols.missing_or_empty()) env_set_one(L"COLUMNS", ENV_GLOBAL, DFLT_TERM_COL_STR);
 
     env_var_t rows = env_get(L"LINES");
-    if (rows.missing_or_empty()) env_set(L"LINES", ENV_GLOBAL, DFLT_TERM_ROW_STR);
+    if (rows.missing_or_empty()) env_set_one(L"LINES", ENV_GLOBAL, DFLT_TERM_ROW_STR);
 }
 
 bool env_set_pwd() {
-    wcstring res = wgetcwd();
-    if (res.empty()) {
+    wcstring cwd = wgetcwd();
+    if (cwd.empty()) {
         debug(0,
               _(L"Could not determine current working directory. Is your locale set correctly?"));
         return false;
     }
-    env_set(L"PWD", ENV_EXPORT | ENV_GLOBAL, res.c_str());
+    env_set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, cwd);
     return true;
 }
 
@@ -707,7 +722,7 @@ bool env_set_pwd() {
 void env_set_read_limit() {
     env_var_t read_byte_limit_var = env_get(L"FISH_READ_BYTE_LIMIT");
     if (!read_byte_limit_var.missing_or_empty()) {
-        size_t limit = fish_wcstoull(read_byte_limit_var.c_str());
+        size_t limit = fish_wcstoull(read_byte_limit_var.as_string().c_str());
         if (errno) {
             debug(1, "Ignoring FISH_READ_BYTE_LIMIT since it is not valid");
         } else {
@@ -730,14 +745,14 @@ wcstring env_get_pwd_slash(void) {
 
 /// Set up the USER variable.
 static void setup_user(bool force) {
-    if (env_get(L"USER").missing_or_empty() || force) {
+    if (force || env_get(L"USER").missing_or_empty()) {
         struct passwd userinfo;
         struct passwd *result;
         char buf[8192];
         int retval = getpwuid_r(getuid(), &userinfo, buf, sizeof(buf), &result);
         if (!retval && result) {
             const wcstring uname = str2wcstring(userinfo.pw_name);
-            env_set(L"USER", ENV_GLOBAL | ENV_EXPORT, uname.c_str());
+            env_set_one(L"USER", ENV_GLOBAL | ENV_EXPORT, uname);
         }
     }
 }
@@ -820,34 +835,35 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     wcstring key, val;
     const char *const *envp = environ;
     size_t i = 0;
-    while (envp && envp[i]) {
-        i++;
-    }
+    while (envp && envp[i]) i++;
     while (i--) {
         const wcstring key_and_val = str2wcstring(envp[i]);  // like foo=bar
         size_t eql = key_and_val.find(L'=');
         if (eql == wcstring::npos) {
-            // No equals found.
+            // No equal-sign found so treat it as a defined var that has no value(s).
             if (is_read_only(key_and_val) || is_electric(key_and_val)) continue;
-            env_set(key_and_val, ENV_EXPORT | ENV_GLOBAL, L"");
+            env_set_empty(key_and_val, ENV_EXPORT | ENV_GLOBAL);
         } else {
             key.assign(key_and_val, 0, eql);
             if (is_read_only(key) || is_electric(key)) continue;
             val.assign(key_and_val, eql + 1, wcstring::npos);
             if (variable_is_colon_delimited_var(key)) {
                 std::replace(val.begin(), val.end(), L':', ARRAY_SEP);
+                wcstring_list_t values = decode_serialized(val);
+                env_set(key, ENV_EXPORT | ENV_GLOBAL, values);
+            } else {
+                wcstring_list_t values = decode_serialized(val);
+                env_set(key, ENV_EXPORT | ENV_GLOBAL, values);
             }
-
-            env_set(key, ENV_EXPORT | ENV_GLOBAL, val.c_str());
         }
     }
 
     // Set the given paths in the environment, if we have any.
     if (paths != NULL) {
-        env_set(FISH_DATADIR_VAR, ENV_GLOBAL, paths->data.c_str());
-        env_set(FISH_SYSCONFDIR_VAR, ENV_GLOBAL, paths->sysconf.c_str());
-        env_set(FISH_HELPDIR_VAR, ENV_GLOBAL, paths->doc.c_str());
-        env_set(FISH_BIN_DIR, ENV_GLOBAL, paths->bin.c_str());
+        env_set_one(FISH_DATADIR_VAR, ENV_GLOBAL, paths->data);
+        env_set_one(FISH_SYSCONFDIR_VAR, ENV_GLOBAL, paths->sysconf);
+        env_set_one(FISH_HELPDIR_VAR, ENV_GLOBAL, paths->doc);
+        env_set_one(FISH_BIN_DIR, ENV_GLOBAL, paths->bin);
     }
 
     init_locale();
@@ -868,7 +884,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
-    env_set(L"FISH_VERSION", ENV_GLOBAL, version.c_str());
+    env_set_one(L"FISH_VERSION", ENV_GLOBAL, version);
 
     // Set up SHLVL variable.
     const env_var_t shlvl_var = env_get(L"SHLVL");
@@ -876,12 +892,12 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     if (!shlvl_var.missing_or_empty()) {
         const wchar_t *end;
         // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a diagnostic?
-        long shlvl_i = fish_wcstol(shlvl_var.c_str(), &end);
+        long shlvl_i = fish_wcstol(shlvl_var.as_string().c_str(), &end);
         if (!errno && shlvl_i >= 0) {
             nshlvl_str = to_string<long>(shlvl_i + 1);
         }
     }
-    env_set(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str.c_str());
+    env_set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
     env_read_only.insert(L"SHLVL");
 
     // Set up the HOME variable.
@@ -892,7 +908,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     if (env_get(L"HOME").missing_or_empty()) {
         env_var_t user_var = env_get(L"USER");
         if (!user_var.missing_or_empty()) {
-            char *unam_narrow = wcs2str(user_var.c_str());
+            char *unam_narrow = wcs2str(user_var.as_string());
             struct passwd userinfo;
             struct passwd *result;
             char buf[8192];
@@ -902,24 +918,22 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
                 setup_user(true);
                 user_var = env_get(L"USER");
                 if (!user_var.missing_or_empty()) {
-                    unam_narrow = wcs2str(user_var.c_str());
+                    unam_narrow = wcs2str(user_var.as_string());
                     retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);
                 }
             }
             if (!retval && result && userinfo.pw_dir) {
                 const wcstring dir = str2wcstring(userinfo.pw_dir);
-                env_set(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir.c_str());
+                env_set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir);
             } else {
-                // We cannot get $HOME, set it to the empty list.
-                // This triggers warnings for history and config.fish already,
+                // We cannot get $HOME. This triggers warnings for history and config.fish already,
                 // so it isn't necessary to warn here as well.
-                env_set(L"HOME", ENV_GLOBAL | ENV_EXPORT, ENV_NULL);
+                env_set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
             }
             free(unam_narrow);
         } else {
-            // If $USER is empty as well (which we tried to set above),
-            // we can't get $HOME.
-            env_set(L"HOME", ENV_GLOBAL | ENV_EXPORT, ENV_NULL);
+            // If $USER is empty as well (which we tried to set above), we can't get $HOME.
+            env_set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
         }
     }
 
@@ -933,7 +947,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         use_posix_spawn.missing_or_empty() ? true : from_string<bool>(use_posix_spawn.as_string());
 
     // Set fish_bind_mode to "default".
-    env_set(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);
+    env_set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);
 
     // This is somewhat subtle. At this point we consider our environment to be sufficiently
     // initialized that we can react to changes to variables. Prior to doing this we expect that the
@@ -966,6 +980,19 @@ static env_node_t *env_get_node(const wcstring &key) {
     return env;
 }
 
+/// Sets the variable with the specified name to a single value.
+int env_set_one(const wcstring &key, env_mode_flags_t mode, const wcstring &val) {
+    wcstring_list_t vals({
+        val,
+    });
+    return env_set(key, mode, vals);
+}
+
+/// Sets the variable with the specified name to no (i.e., zero) values.
+int env_set_empty(const wcstring &key, env_mode_flags_t mode) {
+    return env_set(key, mode, wcstring_list_t());
+}
+
 /// Set the value of the environment variable whose name matches key to val.
 ///
 /// Memory policy: All keys and values are copied, the parameters can and should be freed by the
@@ -974,8 +1001,8 @@ static env_node_t *env_get_node(const wcstring &key) {
 /// \param key The key
 /// \param val The value
 /// \param var_mode The type of the variable. Can be any combination of ENV_GLOBAL, ENV_LOCAL,
-/// ENV_EXPORT and ENV_USER. If mode is zero, the current variable space is searched and the current
-/// mode is used. If no current variable with the same name is found, ENV_LOCAL is assumed.
+/// ENV_EXPORT and ENV_USER. If mode is ENV_DEFAULT, the current variable space is searched and the
+/// current mode is used. If no current variable with the same name is found, ENV_LOCAL is assumed.
 ///
 /// Returns:
 ///
@@ -985,21 +1012,23 @@ static env_node_t *env_get_node(const wcstring &key) {
 /// * ENV_SCOPE, the variable cannot be set in the given scope. This applies to readonly/electric
 /// variables set from the local or universal scopes, or set as exported.
 /// * ENV_INVALID, the variable value was invalid. This applies only to special variables.
-int env_set(const wcstring &key, env_mode_flags_t var_mode, const wchar_t *val) {
+int env_set(const wcstring &key, env_mode_flags_t var_mode, const wcstring_list_t &vals) {
     ASSERT_IS_MAIN_THREAD();
     bool has_changed_old = vars_stack().has_changed_exported;
     int done = 0;
 
-    if (val && (key == L"PWD" || key == L"HOME")) {
+    if (!vals.empty() && (key == L"PWD" || key == L"HOME")) {
         // Canonicalize our path; if it changes, recurse and try again.
-        wcstring val_canonical = val;
+        assert(vals.size() == 1);
+        wcstring val_canonical = vals[0];
         path_make_canonical(val_canonical);
-        if (val != val_canonical) {
-            return env_set(key, var_mode, val_canonical.c_str());
+        if (vals[0] != val_canonical) {
+            return env_set_one(key, var_mode, val_canonical);
         }
     }
 
-    if ((var_mode & (ENV_LOCAL | ENV_UNIVERSAL)) && (is_read_only(key) || is_electric(key))) {
+    if ((var_mode & ENV_LOCAL || var_mode & ENV_UNIVERSAL) &&
+        (is_read_only(key) || is_electric(key))) {
         return ENV_SCOPE;
     }
     if ((var_mode & ENV_EXPORT) && is_electric(key)) {
@@ -1011,8 +1040,8 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wchar_t *val) 
 
     if (key == L"umask") {
         // Set the new umask.
-        if (val && wcslen(val)) {
-            long mask = fish_wcstol(val, NULL, 8);
+        if (!vals.empty() && vals[0].size()) {
+            long mask = fish_wcstol(vals[0].c_str(), NULL, 8);
             if (!errno && mask <= 0777 && mask >= 0) {
                 umask(mask);
                 // Do not actually create a umask variable, on env_get, it will be calculated
@@ -1020,13 +1049,7 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wchar_t *val) 
                 return ENV_OK;
             }
         }
-
         return ENV_INVALID;
-    }
-
-    // Zero element arrays are internally not coded as an empty string but this placeholder string.
-    if (!val) {
-        val = ENV_NULL;  //!OCLINT(parameter reassignment)
     }
 
     if (var_mode & ENV_UNIVERSAL) {
@@ -1043,7 +1066,7 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wchar_t *val) 
             new_export = old_export;
         }
         if (uvars()) {
-            uvars()->set(key, val, new_export);
+            uvars()->set(key, vals, new_export);
             env_universal_barrier();
             if (old_export || new_export) {
                 vars_stack().mark_changed_exported();
@@ -1092,7 +1115,7 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wchar_t *val) 
                     exportv = uvars()->get_export(key);
                 }
 
-                uvars()->set(key, val, exportv);
+                uvars()->set(key, vals, exportv);
                 env_universal_barrier();
 
                 done = 1;
@@ -1112,7 +1135,7 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wchar_t *val) 
                 has_changed_new = true;
             }
 
-            var.set_val(val);
+            var.set_vals(vals);
             if (var_mode & ENV_EXPORT) {
                 // The new variable is exported.
                 var.exportv = true;
@@ -1135,9 +1158,9 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wchar_t *val) 
     ev.arguments.push_back(L"SET");
     ev.arguments.push_back(key);
 
-    // debug( 1, L"env_set: fire events on variable %ls", key );
+    // debug(1, L"env_set: fire events on variable |%ls|", key);
     event_fire(&ev);
-    // debug( 1, L"env_set: return from event firing" );
+    // debug(1, L"env_set: return from event firing");
 
     react_to_variable_change(L"SET", key);
     return ENV_OK;
@@ -1217,19 +1240,29 @@ int env_remove(const wcstring &key, int var_mode) {
     return !erased;
 }
 
-wcstring env_var_t::as_string(void) const {
-    assert(!is_missing);
-    return val;
-}
+wcstring_list_t &env_var_t::as_list(void) { return vals; }
 
-const wchar_t *env_var_t::c_str(void) const {
-    assert(!is_missing);
-    return val.c_str();
+const wcstring_list_t &env_var_t::as_const_list(void) const { return vals; }
+
+/// Return a string representation of the var. At the present time this uses the legacy 2.x
+/// encoding.
+wcstring env_var_t::as_string(void) const {
+    assert(!this->is_missing);
+    if (this->vals.empty()) return wcstring(ENV_NULL);
+
+    wchar_t sep = variable_is_colon_delimited_var(this->name) ? L':' : ARRAY_SEP;
+    auto it = this->vals.cbegin();
+    wcstring result(*it);
+    while (++it != vals.end()) {
+        result.push_back(sep);
+        result.append(*it);
+    }
+    return result;
 }
 
 void env_var_t::to_list(wcstring_list_t &out) const {
     assert(!is_missing);
-    tokenize_variable_array(val, out);
+    out = vals;
 }
 
 env_var_t env_get(const wcstring &key, env_mode_flags_t mode) {
@@ -1258,34 +1291,33 @@ env_var_t env_get(const wcstring &key, env_mode_flags_t mode) {
             }
             wcstring result;
             if (history) history->get_string_representation(&result, ARRAY_SEP_STR);
-            return env_var_t(result);
+            return env_var_t(L"history", result);
         } else if (key == L"status") {
-            return env_var_t(to_string(proc_get_last_status()));
+            return env_var_t(L"status", to_string(proc_get_last_status()));
         } else if (key == L"umask") {
-            return env_var_t(format_string(L"0%0.3o", get_umask()));
+            return env_var_t(L"umask", format_string(L"0%0.3o", get_umask()));
         }
         // We should never get here unless the electric var list is out of sync with the above code.
         DIE("unerecognized electric var name");
     }
 
     if (search_local || search_global) {
-        /* Lock around a local region */
-        scoped_lock locker(env_lock);
-
+        scoped_lock locker(env_lock);  // lock around a local region
         env_node_t *env = search_local ? vars_stack().top.get() : vars_stack().global_env;
 
         while (env != NULL) {
-            const env_var_t var = env->find_entry(key);
-            if (!var.missing() && (var.exportv ? search_exported : search_unexported)) {
-                return var;
+            if (env == vars_stack().global_env && !search_global) {
+                break;
             }
 
-            if (has_scope) {
-                if (!search_global || env == vars_stack().global_env) break;
-                env = vars_stack().global_env;
-            } else {
-                env = vars_stack().next_scope_to_search(env);
+            var_table_t::const_iterator result = env->env.find(key);
+            if (result != env->env.end()) {
+                const env_var_t var = result->second;
+                if (!var.missing() && (var.exportv ? search_exported : search_unexported)) {
+                    return var;
+                }
             }
+            env = vars_stack().next_scope_to_search(env);
         }
     }
 
@@ -1301,64 +1333,13 @@ env_var_t env_get(const wcstring &key, env_mode_flags_t mode) {
     // Okay, we couldn't find a local or global var given the requirements. If there is a matching
     // universal var return that.
     if (uvars()) {
-        env_var_t env_var = uvars()->get(key);
-        if (!env_var.missing() &&
-            (uvars()->get_export(key) ? search_exported : search_unexported)) {
-            return env_var;
+        env_var_t var = uvars()->get(key);
+        if (!var.missing() && (uvars()->get_export(key) ? search_exported : search_unexported)) {
+            return var;
         }
     }
 
     return missing_var;
-}
-
-bool env_exist(const wchar_t *key, env_mode_flags_t mode) {
-    CHECK(key, false);
-
-    const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
-    const bool test_local = !has_scope || (mode & ENV_LOCAL);
-    const bool test_global = !has_scope || (mode & ENV_GLOBAL);
-    const bool test_universal = !has_scope || (mode & ENV_UNIVERSAL);
-
-    const bool test_exported = (mode & ENV_EXPORT) || !(mode & ENV_UNEXPORT);
-    const bool test_unexported = (mode & ENV_UNEXPORT) || !(mode & ENV_EXPORT);
-
-    if (is_electric(key)) {
-        // Electric variables all exist, and they are all global. A local or universal version can
-        // not exist. They are also never exported.
-        if (test_global && test_unexported) {
-            return true;
-        }
-        return false;
-    }
-
-    if (test_local || test_global) {
-        const env_node_t *env = test_local ? vars_stack().top.get() : vars_stack().global_env;
-        while (env != NULL) {
-            if (env == vars_stack().global_env && !test_global) {
-                break;
-            }
-
-            var_table_t::const_iterator result = env->env.find(key);
-            if (result != env->env.end()) {
-                const env_var_t var = result->second;
-                return var.exportv ? test_exported : test_unexported;
-            }
-            env = vars_stack().next_scope_to_search(env);
-        }
-    }
-
-    if (test_universal) {
-        if (!get_proc_had_barrier()) {
-            set_proc_had_barrier(true);
-            env_universal_barrier();
-        }
-
-        if (uvars() && !uvars()->get(key).missing()) {
-            return uvars()->get_export(key) ? test_exported : test_unexported;
-        }
-    }
-
-    return 0;
 }
 
 /// Returns true if the specified scope or any non-shadowed non-global subscopes contain an exported
@@ -1506,10 +1487,10 @@ void var_stack_t::update_export_array_if_necessary() {
             const wcstring &key = uni.at(i);
             const env_var_t var = uvars()->get(key);
 
-            if (!var.missing() && var.as_string() != ENV_NULL) {
+            if (!var.missing() && !var.empty()) {
                 // Note that std::map::insert does NOT overwrite a value already in the map,
                 // which we depend on here.
-                vals.insert(std::pair<wcstring, wcstring>(key, var.as_string()));
+                vals.insert(std::pair<wcstring, env_var_t>(key, var));
             }
         }
     }
@@ -1528,20 +1509,15 @@ const char *const *env_export_arr() {
 }
 
 void env_set_argv(const wchar_t *const *argv) {
-    if (*argv) {
-        const wchar_t *const *arg;
-        wcstring sb;
-
-        for (arg = argv; *arg; arg++) {
-            if (arg != argv) {
-                sb.append(ARRAY_SEP_STR);
-            }
-            sb.append(*arg);
+    if (argv && *argv) {
+        wcstring_list_t list;
+        for (auto arg = argv; *arg; arg++) {
+            list.push_back(*arg);
         }
 
-        env_set(L"argv", ENV_LOCAL, sb.c_str());
+        env_set(L"argv", ENV_LOCAL, list);
     } else {
-        env_set(L"argv", ENV_LOCAL, NULL);
+        env_set_empty(L"argv", ENV_LOCAL);
     }
 }
 
@@ -1552,7 +1528,7 @@ env_vars_snapshot_t::env_vars_snapshot_t(const wchar_t *const *keys) {
         key.assign(keys[i]);
         const env_var_t var = env_get(key);
         if (!var.missing()) {
-            vars[key] = var.as_string();
+            vars[key] = var;
         }
     }
 }
@@ -1571,7 +1547,7 @@ env_var_t env_vars_snapshot_t::get(const wcstring &key) const {
     if (this->is_current()) {
         return env_get(key);
     }
-    std::map<wcstring, wcstring>::const_iterator iter = vars.find(key);
+    std::map<wcstring, env_var_t>::const_iterator iter = vars.find(key);
     return iter == vars.end() ? missing_var : env_var_t(iter->second);
 }
 
@@ -1579,61 +1555,3 @@ const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPA
                                                                  L"fish_function_path", NULL};
 
 const wchar_t *const env_vars_snapshot_t::completing_keys[] = {L"PATH", L"CDPATH", NULL};
-
-// The next set of functions convert between a flat string and an actual list of strings using
-// the encoding employed by fish internally for "arrays".
-
-std::unique_ptr<wcstring> list_to_array_val(const wcstring_list_t &list) {
-    auto val = std::unique_ptr<wcstring>(new wcstring());
-
-    if (list.size() == 0) {
-        // Zero element arrays are internally encoded as this placeholder string.
-        val->append(ENV_NULL);
-    } else {
-        bool need_sep = false;
-        for (auto it : list) {
-            if (need_sep) {
-                val->push_back(ARRAY_SEP);
-            } else {
-                need_sep = true;
-            }
-            val->append(it);
-        }
-    }
-
-    return val;
-}
-
-std::unique_ptr<wcstring> list_to_array_val(const wchar_t **list) {
-    auto val = std::unique_ptr<wcstring>(new wcstring());
-
-    if (!*list) {
-        // Zero element arrays are internally encoded as this placeholder string.
-        val->append(ENV_NULL);
-    } else {
-        for (auto it = list; *it; it++) {
-            if (it != list) val->push_back(ARRAY_SEP);
-            val->append(*it);
-        }
-    }
-
-    return val;
-}
-
-static void tokenize_variable_array(const wcstring &val, wcstring_list_t &out) {
-    out.clear();  // ensure the output var is empty -- this will normally be a no-op
-
-    // Zero element arrays are internally encoded as this placeholder string.
-    if (val == ENV_NULL) return;
-
-    size_t pos = 0, end = val.size();
-    while (pos <= end) {
-        size_t next_pos = val.find(ARRAY_SEP, pos);
-        if (next_pos == wcstring::npos) {
-            next_pos = end;
-        }
-        out.resize(out.size() + 1);
-        out.back().assign(val, pos, next_pos - pos);
-        pos = next_pos + 1;  // skip the separator, or skip past the end
-    }
-}

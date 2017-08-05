@@ -360,7 +360,7 @@ test_goals := test_low_level test_fishscript test_interactive test_invocation
 # are added that depend, directly or indirectly, on tests, they need to be recorded here.
 #
 test_test_deps = test_low_level $(test_high_level_test_deps)
-test_high_level_test_deps = test_invocation test_fishscript test_interactive
+test_high_level_test_deps = test_fishscript test_interactive test_invocation
 
 active_test_goals = $(filter $(test_goals),$(foreach a,$(or $(MAKECMDGOALS),$(.DEFAULT_GOAL)),$(a) $($(a)_test_deps)))
 filter_up_to = $(eval b:=1)$(foreach a,$(2),$(and $(b),$(if $(subst $(1),,$(a)),$(a),$(eval b:=))))

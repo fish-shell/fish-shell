@@ -301,7 +301,8 @@ env DISPLAY="localhost:0.0" ../test/root/bin/fish -c 'echo Elements in DISPLAY: 
 # We can't use PATH for this because the global configuration will modify PATH
 # based on /etc/paths and /etc/paths.d.
 # Exported arrays should use record separator, with a few exceptions. So we can use an arbitrary variable for this.
-env FOO=one\x1etwo\x1ethree\x1efour ../test/root/bin/fish -c 'echo Elements in FOO: (count $FOO)'
+set -gx FOO one two three four
+../test/root/bin/fish -c 'echo Elements in FOO: (count $FOO)'
 # some must use colon separators!
 set -lx MANPATH man1 man2 man3 ; env | grep '^MANPATH='
 

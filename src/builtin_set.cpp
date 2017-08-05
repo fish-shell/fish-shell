@@ -342,7 +342,7 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
             const wcstring value = result[i];
             const wcstring escaped_val =
                 escape_string(value.c_str(), ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
-            streams.out.append_format(_(L"$%ls[%d]: length=%d value=|%ls|\n"), var_name, i,
+            streams.out.append_format(_(L"$%ls[%d]: length=%d value=|%ls|\n"), var_name, i + 1,
                                       value.size(), escaped_val.c_str());
         }
     } else {

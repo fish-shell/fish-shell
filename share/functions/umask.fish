@@ -87,9 +87,9 @@ function __fish_umask_parse
         string match -q '*u*' $scope
         and set scopes_to_modify 1
         string match -q '*g*' $scope
-        and set scopes_to_modify $scopes_to_modify 2
+        and set -a scopes_to_modify 2
         string match -q '*o*' $scope
-        and set scopes_to_modify $scopes_to_modify 3
+        and set -a scopes_to_modify 3
         string match -q '*a*' $scope
         and set scopes_to_modify 1 2 3
 

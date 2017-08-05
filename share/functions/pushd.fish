@@ -77,6 +77,6 @@ function pushd --description 'Push directory to stack'
     end
 
     # argv[1] is a directory
-    set -g dirstack $PWD $dirstack
+    set -g -p dirstack $PWD
     cd $argv[1]
 end

@@ -10,9 +10,9 @@ function help --description 'Show help for the fish shell'
 
     set -l fish_help_item $argv[1]
     set -l help_topics syntax completion editor job-control todo bugs history killring help
-    set help_topics $help_topics color prompt title variables builtin-overview changes expand
-    set help_topics $help_topics expand-variable expand-home expand-brace expand-wildcard
-    set help_topics $help_topics expand-command-substitution expand-process
+    set -a help_topics color prompt title variables builtin-overview changes expand
+    set -a help_topics expand-variable expand-home expand-brace expand-wildcard
+    set -a help_topics expand-command-substitution expand-process
 
     #
     # Find a suitable browser for viewing the help pages. This is needed

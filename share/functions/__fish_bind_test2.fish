@@ -1,4 +1,3 @@
-
 function __fish_bind_test2
     set -l args
     for i in (commandline -poc)
@@ -6,7 +5,7 @@ function __fish_bind_test2
             case "-*"
 
             case "*"
-                set args $args $i
+                set -a args $i
         end
     end
 

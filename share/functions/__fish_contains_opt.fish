@@ -6,7 +6,7 @@ function __fish_contains_opt -d "Checks if a specific option has been given in t
     for i in $argv
         if test -n "$next_short"
             set next_short
-            set short_opt $short_opt $i
+            set -a short_opt $i
         else
             switch $i
                 case -s
@@ -15,7 +15,7 @@ function __fish_contains_opt -d "Checks if a specific option has been given in t
                     echo __fish_contains_opt: Unknown option $i >&2
                     return 1
                 case '*'
-                    set long_opt $long_opt $i
+                    set -a long_opt $i
             end
         end
     end

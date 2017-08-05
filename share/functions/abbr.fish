@@ -1,7 +1,7 @@
 function abbr --description "Manage abbreviations using new fish 3.0 scheme."
     set -l options --stop-nonopt --exclusive 'a,r,e,l,s' --exclusive 'g,U'
-    set options $options 'h/help' 'a/add' 'r/rename' 'e/erase' 'l/list' 's/show'
-    set options $options 'g/global' 'U/universal'
+    set -a options 'h/help' 'a/add' 'r/rename' 'e/erase' 'l/list' 's/show'
+    set -a options 'g/global' 'U/universal'
 
     argparse -n abbr $options -- $argv
     or return

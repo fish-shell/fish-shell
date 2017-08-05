@@ -145,13 +145,13 @@ function __fish_complete_mount_opts
 
     switch (string replace -r '=.*' '=' -- $last_arg)
         case uid=
-            set fish_mount_opts $fish_mount_opts uid=(__fish_print_user_ids)
+            set -a fish_mount_opts uid=(__fish_print_user_ids)
         case gid=
-            set fish_mount_opts $fish_mount_opts gid=(__fish_print_group_ids)
+            set -a fish_mount_opts gid=(__fish_print_group_ids)
         case setuid=
-            set fish_mount_opts $fish_mount_opts setuid=(__fish_print_user_ids)
+            set -a fish_mount_opts setuid=(__fish_print_user_ids)
         case setgid=
-            set fish_mount_opts $fish_mount_opts setgid=(__fish_print_group_ids)
+            set -a fish_mount_opts setgid=(__fish_print_group_ids)
     end
 
 

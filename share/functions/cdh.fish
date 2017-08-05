@@ -26,7 +26,7 @@ function cdh --description "Menu based cd command"
     set -l uniq_dirs
     for dir in $all_dirs[-1..1]
         if not contains $dir $uniq_dirs
-            set uniq_dirs $uniq_dirs $dir
+            set -a uniq_dirs $dir
         end
     end
 

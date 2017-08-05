@@ -5,23 +5,23 @@
 ####################
 # Testing -V
 $foo: set in local scope, unexported, with 1 elements
-$foo[0]: length=9 value=|local foo|
+$foo[1]: length=9 value=|local foo|
 $foo: set in global scope, unexported, with 1 elements
-$foo[0]: length=10 value=|global foo|
+$foo[1]: length=10 value=|global foo|
 $foo: not set in universal scope
 
 $bar: set in local scope, unexported, with 5 elements
-$bar[0]: length=3 value=|one|
-$bar[1]: length=8 value=|two    2|
-$bar[2]: length=1 value=|\t|
-$bar[3]: length=0 value=||
-$bar[4]: length=1 value=|3|
+$bar[1]: length=3 value=|one|
+$bar[2]: length=8 value=|two    2|
+$bar[3]: length=1 value=|\t|
+$bar[4]: length=0 value=||
+$bar[5]: length=1 value=|3|
 $bar: set in global scope, unexported, with 5 elements
-$bar[0]: length=3 value=|one|
-$bar[1]: length=8 value=|two    2|
-$bar[2]: length=1 value=|\t|
-$bar[3]: length=0 value=||
-$bar[4]: length=1 value=|3|
+$bar[1]: length=3 value=|one|
+$bar[2]: length=8 value=|two    2|
+$bar[3]: length=1 value=|\t|
+$bar[4]: length=0 value=||
+$bar[5]: length=1 value=|3|
 $bar: not set in universal scope
 
 $baz: set in local scope, unexported, with 0 elements
@@ -32,24 +32,24 @@ $baz: not set in universal scope
 ####################
 # Testing -V with changed variables
 $foo: set in local scope, unexported, with 1 elements
-$foo[0]: length=9 value=|local foo|
+$foo[1]: length=9 value=|local foo|
 $foo: set in global scope, unexported, with 1 elements
-$foo[0]: length=10 value=|global foo|
+$foo[1]: length=10 value=|global foo|
 $foo: not set in universal scope
 
 $bar: set in local scope, unexported, with 5 elements
-$bar[0]: length=3 value=|one|
-$bar[1]: length=8 value=|two    2|
-$bar[2]: length=1 value=|\t|
-$bar[3]: length=0 value=||
-$bar[4]: length=1 value=|3|
+$bar[1]: length=3 value=|one|
+$bar[2]: length=8 value=|two    2|
+$bar[3]: length=1 value=|\t|
+$bar[4]: length=0 value=||
+$bar[5]: length=1 value=|3|
 $bar: set in global scope, unexported, with 1 elements
-$bar[0]: length=7 value=|bad bar|
+$bar[1]: length=7 value=|bad bar|
 $bar: not set in universal scope
 
 $baz: set in local scope, unexported, with 0 elements
 $baz: set in global scope, unexported, with 1 elements
-$baz[0]: length=7 value=|bad baz|
+$baz[1]: length=7 value=|bad baz|
 $baz: not set in universal scope
 
 Function name1 found

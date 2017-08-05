@@ -76,12 +76,12 @@ Chunked reads test pass
 # Confirm reading non-interactively works -- #4206 regression
 $a: not set in local scope
 $a: set in global scope, unexported, with 1 elements
-$a[0]: length=3 value=|abc|
+$a[1]: length=3 value=|abc|
 $a: not set in universal scope
 
 $b: not set in local scope
 $b: set in global scope, unexported, with 1 elements
-$b[0]: length=3 value=|def|
+$b[1]: length=3 value=|def|
 $b: not set in universal scope
 
 

@@ -193,7 +193,7 @@ static wcstring functions_def(const wcstring &name) {
          it != end; ++it) {
         wcstring_list_t lst;
         if (!it->second.missing()) {
-            tokenize_variable_array(it->second, lst);
+            it->second.to_list(lst);
         }
 
         // This forced tab is crummy, but we don't know what indentation style the function uses.

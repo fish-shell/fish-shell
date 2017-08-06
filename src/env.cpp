@@ -331,13 +331,13 @@ static bool var_is_timezone(const wcstring &key) { return key == L"TZ"; }
 /// Properly sets all timezone information.
 static void handle_timezone(const wchar_t *env_var_name) {
     debug(2, L"handle_timezone() called in response to '%ls' changing", env_var_name);
-    const env_var_t val = env_get_string(env_var_name, ENV_EXPORT);
-    const std::string &value = wcs2string(val);
+    const env_var_t var = env_get(env_var_name, ENV_EXPORT);
     const std::string &name = wcs2string(env_var_name);
-    debug(2, L"timezone var %s='%s'", name.c_str(), value.c_str());
-    if (val.empty()) {
+    debug(2, L"timezone var %s='%s'", name.c_str(), var.c_str());
+    if (var.missing_or_empty()) {
         unsetenv(name.c_str());
     } else {
+        const std::string &value = wcs2string(var.as_string());
         setenv(name.c_str(), value.c_str(), 1);
     }
     tzset();
@@ -350,13 +350,13 @@ static void fix_colon_delimited_var(const wcstring &var_name) {
     // While we auto split/join MANPATH we do not want to replace empty elements with "." (#4158).
     if (var_name == L"MANPATH") return;
 
-    const env_var_t paths = env_get_string(var_name);
+    const env_var_t paths = env_get(var_name);
     if (paths.missing_or_empty()) return;
 
     bool modified = false;
     wcstring_list_t pathsv;
     wcstring_list_t new_pathsv;
-    tokenize_variable_array(paths, pathsv);
+    paths.to_list(pathsv);
     for (auto next_path : pathsv) {
         if (next_path.empty()) {
             next_path = L".";
@@ -400,13 +400,14 @@ static void init_locale() {
     char *old_msg_locale = strdup(setlocale(LC_MESSAGES, NULL));
 
     for (auto var_name : locale_variables) {
-        const env_var_t val = env_get_string(var_name, ENV_EXPORT);
+        const env_var_t var = env_get(var_name, ENV_EXPORT);
         const std::string &name = wcs2string(var_name);
-        const std::string &value = wcs2string(val);
-        debug(2, L"locale var %s='%s'", name.c_str(), value.c_str());
-        if (val.empty()) {
+        if (var.missing_or_empty()) {
+            debug(2, L"locale var %s missing or empty", name.c_str());
             unsetenv(name.c_str());
         } else {
+            const std::string &value = wcs2string(var.as_string());
+            debug(2, L"locale var %s='%s'", name.c_str(), value.c_str());
             setenv(name.c_str(), value.c_str(), 1);
         }
     }
@@ -455,17 +456,17 @@ bool term_supports_setting_title() { return can_set_term_title; }
 /// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
 static const wcstring_list_t title_terms({L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt"});
 static bool does_term_support_setting_title() {
-    const env_var_t term_str = env_get_string(L"TERM");
-    if (term_str.missing()) return false;
+    const env_var_t term_var = env_get(L"TERM");
+    if (term_var.missing_or_empty()) return false;
 
-    const wchar_t *term = term_str.c_str();
-    bool recognized = contains(title_terms, term_str);
+    const wchar_t *term = term_var.c_str();
+    bool recognized = contains(title_terms, term_var.as_string());
     if (!recognized) recognized = !wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
     if (!recognized) recognized = !wcsncmp(term, L"screen-", wcslen(L"screen-"));
     if (!recognized) recognized = !wcsncmp(term, L"tmux-", wcslen(L"tmux-"));
     if (!recognized) {
-        if (term_str == L"linux") return false;
-        if (term_str == L"dumb") return false;
+        if (wcscmp(term, L"linux") == 0) return false;
+        if (wcscmp(term, L"dumb") == 0) return false;
 
         char buf[PATH_MAX];
         int retval = ttyname_r(STDIN_FILENO, buf, PATH_MAX);
@@ -479,11 +480,12 @@ static bool does_term_support_setting_title() {
 static void update_fish_color_support() {
     // Detect or infer term256 support. If fish_term256 is set, we respect it;
     // otherwise infer it from the TERM variable or use terminfo.
-    env_var_t fish_term256 = env_get_string(L"fish_term256");
-    env_var_t term = env_get_string(L"TERM");
+    env_var_t fish_term256 = env_get(L"fish_term256");
+    env_var_t term_var = env_get(L"TERM");
+    wcstring term = term_var.missing_or_empty() ? L"" : term_var.as_string();
     bool support_term256 = false;  // default to no support
     if (!fish_term256.missing_or_empty()) {
-        support_term256 = from_string<bool>(fish_term256);
+        support_term256 = from_string<bool>(fish_term256.as_string());
         debug(2, L"256 color support determined by 'fish_term256'");
     } else if (term.find(L"256color") != wcstring::npos) {
         // TERM=*256color*: Explicitly supported.
@@ -491,11 +493,12 @@ static void update_fish_color_support() {
         debug(2, L"256 color support enabled for '256color' in TERM");
     } else if (term.find(L"xterm") != wcstring::npos) {
         // Assume that all xterms are 256, except for OS X SnowLeopard
-        const env_var_t prog = env_get_string(L"TERM_PROGRAM");
-        const env_var_t progver = env_get_string(L"TERM_PROGRAM_VERSION");
-        if (prog == L"Apple_Terminal" && !progver.missing_or_empty()) {
+        const env_var_t prog_var = env_get(L"TERM_PROGRAM");
+        const env_var_t progver_var = env_get(L"TERM_PROGRAM_VERSION");
+        wcstring term_program = prog_var.missing_or_empty() ? L"" : prog_var.as_string();
+        if (term_program == L"Apple_Terminal" && !progver_var.missing_or_empty()) {
             // OS X Lion is version 300+, it has 256 color support
-            if (strtod(wcs2str(progver), NULL) > 300) {
+            if (strtod(wcs2str(progver_var.as_string()), NULL) > 300) {
                 support_term256 = true;
                 debug(2, L"256 color support enabled for TERM=xterm + modern Terminal.app");
             }
@@ -511,10 +514,10 @@ static void update_fish_color_support() {
         debug(2, L"256 color support not enabled (yet)");
     }
 
-    env_var_t fish_term24bit = env_get_string(L"fish_term24bit");
+    env_var_t fish_term24bit = env_get(L"fish_term24bit");
     bool support_term24bit;
     if (!fish_term24bit.missing_or_empty()) {
-        support_term24bit = from_string<bool>(fish_term24bit);
+        support_term24bit = from_string<bool>(fish_term24bit.as_string());
         debug(2, L"'fish_term24bit' preference: 24-bit color %s",
               support_term24bit ? L"enabled" : L"disabled");
     } else {
@@ -534,12 +537,14 @@ static void update_fish_color_support() {
 static bool initialize_curses_using_fallback(const char *term) {
     // If $TERM is already set to the fallback name we're about to use there isn't any point in
     // seeing if the fallback name can be used.
-    const char *term_env = wcs2str(env_get_string(L"TERM"));
+    env_var_t term_var = env_get(L"TERM");
+    if (term_var.missing_or_empty()) return false;
+
+    const char *term_env = wcs2str(term_var.as_string());
     if (!strcmp(term_env, DEFAULT_TERM1) || !strcmp(term_env, DEFAULT_TERM2)) return false;
 
-    if (is_interactive_session) {
-        debug(1, _(L"Using fallback terminal type '%s'."), term);
-    }
+    if (is_interactive_session) debug(1, _(L"Using fallback terminal type '%s'."), term);
+
     int err_ret;
     if (setupterm((char *)term, STDOUT_FILENO, &err_ret) == OK) return true;
     if (is_interactive_session) {
@@ -559,20 +564,21 @@ static void init_path_vars() {
 /// Initialize the curses subsystem.
 static void init_curses() {
     for (auto var_name : curses_variables) {
-        const env_var_t val = env_get_string(var_name, ENV_EXPORT);
+        const env_var_t var = env_get(var_name, ENV_EXPORT);
         const std::string &name = wcs2string(var_name);
-        const std::string &value = wcs2string(val);
-        debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
-        if (val.empty()) {
+        if (var.missing_or_empty()) {
+            debug(2, L"curses var %s missing or empty", name.c_str());
             unsetenv(name.c_str());
         } else {
+            const std::string &value = wcs2string(var.as_string());
+            debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
             setenv(name.c_str(), value.c_str(), 1);
         }
     }
 
     int err_ret;
     if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
-        env_var_t term = env_get_string(L"TERM");
+        env_var_t term = env_get(L"TERM");
         if (is_interactive_session) {
             debug(1, _(L"Could not set up terminal."));
             if (term.missing_or_empty()) {
@@ -666,7 +672,7 @@ static void universal_callback(fish_message_type_t type, const wchar_t *name) {
 
 /// Make sure the PATH variable contains something.
 static void setup_path() {
-    const env_var_t path = env_get_string(L"PATH");
+    const env_var_t path = env_get(L"PATH");
     if (path.missing_or_empty()) {
         const wchar_t *value = L"/usr/bin" ARRAY_SEP_STR L"/bin";
         env_set(L"PATH", value, ENV_GLOBAL | ENV_EXPORT);
@@ -677,10 +683,10 @@ static void setup_path() {
 /// defaults. They will be updated later by the `get_current_winsize()` function if they need to be
 /// adjusted.
 static void env_set_termsize() {
-    env_var_t cols = env_get_string(L"COLUMNS");
+    env_var_t cols = env_get(L"COLUMNS");
     if (cols.missing_or_empty()) env_set(L"COLUMNS", DFLT_TERM_COL_STR, ENV_GLOBAL);
 
-    env_var_t rows = env_get_string(L"LINES");
+    env_var_t rows = env_get(L"LINES");
     if (rows.missing_or_empty()) env_set(L"LINES", DFLT_TERM_ROW_STR, ENV_GLOBAL);
 }
 
@@ -698,7 +704,7 @@ bool env_set_pwd() {
 /// Allow the user to override the limit on how much data the `read` command will process.
 /// This is primarily for testing but could be used by users in special situations.
 void env_set_read_limit() {
-    env_var_t read_byte_limit_var = env_get_string(L"FISH_READ_BYTE_LIMIT");
+    env_var_t read_byte_limit_var = env_get(L"FISH_READ_BYTE_LIMIT");
     if (!read_byte_limit_var.missing_or_empty()) {
         size_t limit = fish_wcstoull(read_byte_limit_var.c_str());
         if (errno) {
@@ -710,10 +716,11 @@ void env_set_read_limit() {
 }
 
 wcstring env_get_pwd_slash(void) {
-    env_var_t pwd = env_get_string(L"PWD");
-    if (pwd.missing_or_empty()) {
+    env_var_t pwd_var = env_get(L"PWD");
+    if (pwd_var.missing_or_empty()) {
         return L"";
     }
+    wcstring pwd = pwd_var.as_string();
     if (!string_suffixes_string(L"/", pwd)) {
         pwd.push_back(L'/');
     }
@@ -722,7 +729,7 @@ wcstring env_get_pwd_slash(void) {
 
 /// Set up the USER variable.
 static void setup_user(bool force) {
-    if (env_get_string(L"USER").missing_or_empty() || force) {
+    if (env_get(L"USER").missing_or_empty() || force) {
         struct passwd userinfo;
         struct passwd *result;
         char buf[8192];
@@ -863,12 +870,12 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 
     // Set up SHLVL variable.
-    const env_var_t shlvl_str = env_get_string(L"SHLVL");
+    const env_var_t shlvl_var = env_get(L"SHLVL");
     wcstring nshlvl_str = L"1";
-    if (!shlvl_str.missing()) {
+    if (!shlvl_var.missing_or_empty()) {
         const wchar_t *end;
         // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a diagnostic?
-        long shlvl_i = fish_wcstol(shlvl_str.c_str(), &end);
+        long shlvl_i = fish_wcstol(shlvl_var.c_str(), &end);
         if (!errno && shlvl_i >= 0) {
             nshlvl_str = to_string<long>(shlvl_i + 1);
         }
@@ -881,10 +888,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // if the target user is root, unless "--preserve-environment" is used.
     // Since that is an explicit choice, we should allow it to enable e.g.
     //     env HOME=(mktemp -d) su --preserve-environment fish
-    if (env_get_string(L"HOME").missing_or_empty()) {
-        const env_var_t unam = env_get_string(L"USER");
-        if (!unam.missing_or_empty()) {
-            char *unam_narrow = wcs2str(unam.c_str());
+    if (env_get(L"HOME").missing_or_empty()) {
+        env_var_t user_var = env_get(L"USER");
+        if (!user_var.missing_or_empty()) {
+            char *unam_narrow = wcs2str(user_var.c_str());
             struct passwd userinfo;
             struct passwd *result;
             char buf[8192];
@@ -892,9 +899,11 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
             if (retval || !result) {
                 // Maybe USER is set but it's bogus. Reset USER from the db and try again.
                 setup_user(true);
-                const env_var_t unam = env_get_string(L"USER");
-                unam_narrow = wcs2str(unam.c_str());
-                retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);
+                user_var = env_get(L"USER");
+                if (!user_var.missing_or_empty()) {
+                    unam_narrow = wcs2str(user_var.c_str());
+                    retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);
+                }
             }
             if (!retval && result && userinfo.pw_dir) {
                 const wcstring dir = str2wcstring(userinfo.pw_dir);
@@ -918,9 +927,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     env_set_read_limit();  // initialize the read_byte_limit
 
     // Set g_use_posix_spawn. Default to true.
-    env_var_t use_posix_spawn = env_get_string(L"fish_use_posix_spawn");
-    g_use_posix_spawn =
-        (use_posix_spawn.missing_or_empty() ? true : from_string<bool>(use_posix_spawn));
+    env_var_t use_posix_spawn = env_get(L"fish_use_posix_spawn");
+    g_use_posix_spawn = use_posix_spawn.missing_or_empty() ? true : from_string<bool>(use_posix_spawn.as_string());
 
     // Set fish_bind_mode to "default".
     env_set(FISH_BIND_MODE_VAR, DEFAULT_BIND_MODE, ENV_GLOBAL);
@@ -1208,12 +1216,22 @@ int env_remove(const wcstring &key, int var_mode) {
     return !erased;
 }
 
-const wchar_t *env_var_t::c_str(void) const {
-    assert(!is_missing);  //!OCLINT(multiple unary operator)
-    return wcstring::c_str();
+wcstring env_var_t::as_string(void) const {
+    assert(!is_missing);
+    return val;
 }
 
-env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
+const wchar_t *env_var_t::c_str(void) const {
+    assert(!is_missing);
+    return val.c_str();
+}
+
+void env_var_t::to_list(wcstring_list_t &out) const {
+    assert(!is_missing);
+    tokenize_variable_array(val, out);
+}
+
+env_var_t env_get(const wcstring &key, env_mode_flags_t mode) {
     const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
     const bool search_local = !has_scope || (mode & ENV_LOCAL);
     const bool search_global = !has_scope || (mode & ENV_GLOBAL);
@@ -1232,18 +1250,18 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
             if (!is_main_thread()) {
                 return env_var_t::missing_var();
             }
-            env_var_t result;
 
             history_t *history = reader_get_history();
             if (!history) {
                 history = &history_t::history_with_name(history_session_id());
             }
+            wcstring result;
             if (history) history->get_string_representation(&result, ARRAY_SEP_STR);
-            return result;
+            return env_var_t(result);
         } else if (key == L"status") {
-            return to_string(proc_get_last_status());
+            return env_var_t(to_string(proc_get_last_status()));
         } else if (key == L"umask") {
-            return format_string(L"0%0.3o", get_umask());
+            return env_var_t(format_string(L"0%0.3o", get_umask()));
         }
         // We should never get here unless the electric var list is out of sync with the above code.
         DIE("unerecognized electric var name");
@@ -1276,7 +1294,7 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
     if (!search_universal) return env_var_t::missing_var();
 
     // Another hack. Only do a universal barrier on the main thread (since it can change variable
-    // values). Make sure we do this outside the env_lock because it may itself call env_get_string.
+    // values). Make sure we do this outside the env_lock because it may itself call `env_get()`.
     if (is_main_thread() && !get_proc_had_barrier()) {
         set_proc_had_barrier(true);
         env_universal_barrier();
@@ -1487,12 +1505,12 @@ void var_stack_t::update_export_array_if_necessary() {
         const wcstring_list_t uni = uvars()->get_names(true, false);
         for (size_t i = 0; i < uni.size(); i++) {
             const wcstring &key = uni.at(i);
-            const env_var_t val = uvars()->get(key);
+            const env_var_t var = uvars()->get(key);
 
-            if (!val.missing() && val != ENV_NULL) {
+            if (!var.missing() && var.as_string() != ENV_NULL) {
                 // Note that std::map::insert does NOT overwrite a value already in the map,
                 // which we depend on here.
-                vals.insert(std::pair<wcstring, wcstring>(key, val));
+                vals.insert(std::pair<wcstring, wcstring>(key, var.as_string()));
             }
         }
     }
@@ -1533,16 +1551,16 @@ env_vars_snapshot_t::env_vars_snapshot_t(const wchar_t *const *keys) {
     wcstring key;
     for (size_t i = 0; keys[i]; i++) {
         key.assign(keys[i]);
-        const env_var_t val = env_get_string(key);
-        if (!val.missing()) {
-            vars[key] = val;
+        const env_var_t var = env_get(key);
+        if (!var.missing()) {
+            vars[key] = var.as_string();
         }
     }
 }
 
 env_vars_snapshot_t::env_vars_snapshot_t() {}
 
-// The "current" variables are not a snapshot at all, but instead trampoline to env_get_string, etc.
+// The "current" variables are not a snapshot at all, but instead trampoline to env_get, etc.
 // We identify the current snapshot based on pointer values.
 static const env_vars_snapshot_t sCurrentSnapshot;
 const env_vars_snapshot_t &env_vars_snapshot_t::current() { return sCurrentSnapshot; }
@@ -1550,9 +1568,9 @@ const env_vars_snapshot_t &env_vars_snapshot_t::current() { return sCurrentSnaps
 bool env_vars_snapshot_t::is_current() const { return this == &sCurrentSnapshot; }
 
 env_var_t env_vars_snapshot_t::get(const wcstring &key) const {
-    // If we represent the current state, bounce to env_get_string.
+    // If we represent the current state, bounce to env_get.
     if (this->is_current()) {
-        return env_get_string(key);
+        return env_get(key);
     }
     std::map<wcstring, wcstring>::const_iterator iter = vars.find(key);
     return iter == vars.end() ? env_var_t::missing_var() : env_var_t(iter->second);

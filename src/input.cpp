@@ -201,8 +201,8 @@ static int input_function_args_index = 0;
 
 /// Return the current bind mode.
 wcstring input_get_bind_mode() {
-    env_var_t mode = env_get_string(FISH_BIND_MODE_VAR);
-    return mode.missing() ? DEFAULT_BIND_MODE : mode;
+    env_var_t mode = env_get(FISH_BIND_MODE_VAR);
+    return mode.missing() ? DEFAULT_BIND_MODE : mode.as_string();
 }
 
 /// Set the current bind mode.

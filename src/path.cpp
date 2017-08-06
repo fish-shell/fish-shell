@@ -50,7 +50,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
     int err = ENOENT;
     wcstring bin_path;
     if (!bin_path_var.missing()) {
-        bin_path = bin_path_var;
+        bin_path = bin_path_var.as_string();
     } else {
         // Note that PREFIX is defined in the `Makefile` and is thus defined when this module is
         // compiled. This ensures we always default to "/bin", "/usr/bin" and the bin dir defined
@@ -104,7 +104,7 @@ bool path_get_path(const wcstring &cmd, wcstring *out_path, const env_vars_snaps
 }
 
 bool path_get_path(const wcstring &cmd, wcstring *out_path) {
-    return path_get_path_core(cmd, out_path, env_get_string(L"PATH"));
+    return path_get_path_core(cmd, out_path, env_get(L"PATH"));
 }
 
 wcstring_list_t path_get_paths(const wcstring &cmd) {
@@ -122,9 +122,9 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
         return paths;
     }
 
-    wcstring env_path = env_get_string(L"PATH");
+    env_var_t path_var = env_get(L"PATH");
     std::vector<wcstring> pathsv;
-    tokenize_variable_array(env_path, pathsv);
+    path_var.to_list(pathsv);
     for (auto path : pathsv) {
         if (path.empty()) continue;
         append_path_component(path, cmd);
@@ -141,10 +141,11 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
     return paths;
 }
 
-bool path_get_cdpath(const wcstring &dir, wcstring *out, const wchar_t *wd,
+bool path_get_cdpath(const env_var_t &dir_var, wcstring *out, const wchar_t *wd,
                      const env_vars_snapshot_t &env_vars) {
     int err = ENOENT;
-    if (dir.empty()) return false;
+    if (dir_var.missing_or_empty()) return false;
+    wcstring dir = dir_var.as_string();
 
     if (wd) {
         size_t len = wcslen(wd);
@@ -168,7 +169,7 @@ bool path_get_cdpath(const wcstring &dir, wcstring *out, const wchar_t *wd,
         if (cdpaths.missing_or_empty()) cdpaths = L".";
 
         std::vector<wcstring> cdpathsv;
-        tokenize_variable_array(cdpaths, cdpathsv);
+        cdpaths.to_list(cdpathsv);
         for (auto next_path : cdpathsv) {
             if (next_path.empty()) next_path = L".";
             if (next_path == L"." && wd != NULL) {
@@ -287,19 +288,20 @@ static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring 
     // The vars we fetch must be exported. Allowing them to be universal doesn't make sense and
     // allowing that creates a lock inversion that deadlocks the shell since we're called before
     // uvars are available.
-    const env_var_t xdg_dir = env_get_string(xdg_var, ENV_GLOBAL | ENV_EXPORT);
+    const env_var_t xdg_dir = env_get(xdg_var, ENV_GLOBAL | ENV_EXPORT);
     if (!xdg_dir.missing_or_empty()) {
         using_xdg = true;
-        path = xdg_dir + L"/fish";
+        path = xdg_dir.as_string() + L"/fish";
         if (create_directory(path) != -1) {
             path_done = true;
         } else {
             saved_errno = errno;
         }
     } else {
-        const env_var_t home = env_get_string(L"HOME", ENV_GLOBAL | ENV_EXPORT);
+        const env_var_t home = env_get(L"HOME", ENV_GLOBAL | ENV_EXPORT);
         if (!home.missing_or_empty()) {
-            path = home + (which_dir == L"config" ? L"/.config/fish" : L"/.local/share/fish");
+            path = home.as_string() +
+                   (which_dir == L"config" ? L"/.config/fish" : L"/.local/share/fish");
             if (create_directory(path) != -1) {
                 path_done = true;
             } else {

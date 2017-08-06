@@ -2063,8 +2063,8 @@ void reader_import_history_if_necessary(void) {
         // Try opening a bash file. We make an effort to respect $HISTFILE; this isn't very complete
         // (AFAIK it doesn't have to be exported), and to really get this right we ought to ask bash
         // itself. But this is better than nothing.
-        const env_var_t var = env_get_string(L"HISTFILE");
-        wcstring path = (var.missing() ? L"~/.bash_history" : var);
+        const env_var_t var = env_get(L"HISTFILE");
+        wcstring path = (var.missing() ? L"~/.bash_history" : var.as_string());
         expand_tilde(path);
         FILE *f = wfopen(path, "r");
         if (f) {

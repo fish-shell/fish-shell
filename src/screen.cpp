@@ -120,8 +120,8 @@ static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_len
 #if 0
     // TODO: Decide if this should be removed or modified to also test for TERM values that begin
     // with "tmux". See issue #3512.
-    const env_var_t term_name = env_get_string(L"TERM");
-    if (term_name.missing() || !string_prefixes_string(L"screen", term_name)) {
+    const env_var_t term_name = env_get(L"TERM");
+    if (term_name.missing_or_empty() || !string_prefixes_string(L"screen", term_name)) {
         return false;
     }
 #endif

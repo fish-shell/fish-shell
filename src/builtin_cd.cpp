@@ -39,7 +39,7 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (argv[optind]) {
         dir_in = env_var_t(argv[optind]);
     } else {
-        dir_in = env_get_string(L"HOME");
+        dir_in = env_get(L"HOME");
         if (dir_in.missing_or_empty()) {
             streams.err.append_format(_(L"%ls: Could not find home directory\n"), cmd);
             return STATUS_CMD_ERROR;

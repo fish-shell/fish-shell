@@ -39,7 +39,6 @@
 #include "parse_util.h"
 #include "path.h"
 #include "reader.h"
-#include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // Our history format is intended to be valid YAML. Here it is:
@@ -998,9 +997,6 @@ bool history_t::load_old_if_needed(void) {
     if (loaded_old) return true;
     loaded_old = true;
 
-    // PCA not sure why signals were blocked here
-    // signal_block();
-
     bool ok = false;
     if (map_file(name, &mmap_start, &mmap_length, &mmap_file_id)) {
         // Here we've mapped the file.
@@ -1009,7 +1005,6 @@ bool history_t::load_old_if_needed(void) {
         this->populate_from_mmap();
     }
 
-    // signal_unblock();
     return ok;
 }
 
@@ -1409,8 +1404,6 @@ bool history_t::save_internal_via_appending() {
         return true;
     }
 
-    signal_block();
-
     // We are going to open the file, lock it, append to it, and then close it
     // After locking it, we need to stat the file at the path; if there is a new file there, it
     // means
@@ -1497,8 +1490,6 @@ bool history_t::save_internal_via_appending() {
 
         close(history_fd);
     }
-
-    signal_unblock();
 
     // If someone has replaced the file, forget our file state.
     if (file_changed) {

@@ -37,7 +37,6 @@
 #include "postfork.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// File descriptor redirection error message.
@@ -323,15 +322,11 @@ static void internal_exec_helper(parser_t &parser, const wcstring &def, node_off
         return;
     }
 
-    signal_unblock();
-
     if (node_offset == NODE_OFFSET_INVALID) {
         parser.eval(def, morphed_chain, block_type);
     } else {
         parser.eval_block_node(node_offset, morphed_chain, block_type);
     }
-
-    signal_block();
 
     morphed_chain.clear();
     io_cleanup_fds(opened_fds);
@@ -453,8 +448,6 @@ void exec_job(parser_t &parser, job_t *j) {
             }
         }
     }
-
-    signal_block();
 
     // See if we need to create a group keepalive process. This is a process that we create to make
     // sure that the process group doesn't die accidentally, and is often needed when a
@@ -709,17 +702,12 @@ void exec_job(parser_t &parser, job_t *j) {
 
         switch (p->type) {
             case INTERNAL_FUNCTION: {
-                // Calls to function_get_definition might need to source a file as a part of
-                // autoloading, hence there must be no blocks.
-                signal_unblock();
                 const wcstring func_name = p->argv0();
                 wcstring def;
                 bool function_exists = function_get_definition(func_name, &def);
                 bool shadow_scope = function_get_shadow_scope(func_name);
                 const std::map<wcstring, env_var_t> inherit_vars =
                     function_get_inherit_vars(func_name);
-
-                signal_block();
 
                 if (!function_exists) {
                     debug(0, _(L"Unknown function '%ls'"), p->argv0());
@@ -728,13 +716,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 function_block_t *fb =
                     parser.push_block<function_block_t>(p, func_name, shadow_scope);
-
-                // Setting variables might trigger an event handler, hence we need to unblock
-                // signals.
-                signal_unblock();
                 function_prepare_environment(func_name, p->get_argv() + 1, inherit_vars);
-                signal_block();
-
                 parser.forbid_function(func_name);
 
                 verify_buffer_output();
@@ -863,12 +845,7 @@ void exec_job(parser_t &parser, job_t *j) {
                     //main loop may need to perform a blocking read from previous command's output.
                     //make sure read source is not blocked
                     unblock_previous();
-
-                    signal_unblock();
-
                     p->status = builtin_run(parser, p->get_argv(), *builtin_io_streams);
-
-                    signal_block();
 
                     // Restore the fg flag, which is temporarily set to false during builtin
                     // execution so as not to confuse some job-handling builtins.
@@ -1203,9 +1180,7 @@ void exec_job(parser_t &parser, job_t *j) {
         kill(keepalive.pid, SIGKILL);
     }
 
-    signal_unblock();
     debug(3, L"Job is constructed");
-
     j->set_flag(JOB_CONSTRUCTED, true);
     if (!j->get_flag(JOB_FOREGROUND)) {
         proc_last_bg_pid = j->pgid;

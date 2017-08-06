@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "common.h"
+#include "env.h"
 #include "parse_constants.h"
 
 enum {
@@ -120,10 +121,10 @@ __warn_unused expand_error_t expand_string(const wcstring &input, std::vector<co
 bool expand_one(wcstring &inout_str, expand_flags_t flags, parse_error_list_t *errors = NULL);
 
 /// Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc.
-/// Suitable for pretty-printing. The result must be free'd!
+/// Suitable for pretty-printing.
 ///
 /// \param in the value to escape
-wcstring expand_escape_variable(const wcstring &in);
+wcstring expand_escape_variable(const env_var_t &var);
 
 /// Perform tilde expansion and nothing else on the specified string, which is modified in place.
 ///

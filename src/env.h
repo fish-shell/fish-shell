@@ -69,12 +69,6 @@ void env_init(const struct config_paths_t *paths = NULL);
 /// routines.
 void misc_init();
 
-/// Tokenize the specified string into the specified wcstring_list_t.
-///
-/// \param val the input string. The contents of this string is not changed.
-/// \param out the list in which to place the elements.
-void tokenize_variable_array(const wcstring &val, wcstring_list_t &out);
-
 class env_var_t {
    private:
     bool is_missing;

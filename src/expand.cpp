@@ -168,11 +168,11 @@ static int is_quotable(const wchar_t *str) {
 
 static int is_quotable(const wcstring &str) { return is_quotable(str.c_str()); }
 
-wcstring expand_escape_variable(const wcstring &in) {
+wcstring expand_escape_variable(const env_var_t &var) {
     wcstring_list_t lst;
     wcstring buff;
 
-    tokenize_variable_array(in, lst);
+    var.to_list(lst);
 
     size_t size = lst.size();
     if (size == 0) {

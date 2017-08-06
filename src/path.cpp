@@ -60,8 +60,8 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
         bin_path = *list_to_array_val(wcstring_list_t({L"/bin", L"/usr/bin", PREFIX L"/bin"}));
     }
 
-    std::vector<wcstring> pathsv;
-    tokenize_variable_array(bin_path, pathsv);
+    wcstring_list_t pathsv;
+    bin_path_var.to_list(pathsv);
     for (auto next_path : pathsv) {
         if (next_path.empty()) continue;
         append_path_component(next_path, cmd);

@@ -395,7 +395,6 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
     }
 }
 
-
 void exec_job(parser_t &parser, job_t *j) {
     pid_t pid = 0;
 
@@ -640,8 +639,9 @@ void exec_job(parser_t &parser, job_t *j) {
         // This is the io_streams we pass to internal builtins.
         std::unique_ptr<io_streams_t> builtin_io_streams(new io_streams_t(stdout_read_limit));
 
-        auto do_fork = [&j, &p, &pid, &exec_error, &process_net_io_chain, &block_child, &child_forked]
-            (bool drain_threads, const char *fork_type, std::function<void()> child_action) -> bool {
+        auto do_fork = [&j, &p, &pid, &exec_error, &process_net_io_chain, &block_child,
+                        &child_forked](bool drain_threads, const char *fork_type,
+                                       std::function<void()> child_action) -> bool {
             pid = execute_fork(drain_threads);
             if (pid == 0) {
                 // This is the child process. Setup redirections, print correct output to
@@ -649,9 +649,10 @@ void exec_job(parser_t &parser, job_t *j) {
                 p->pid = getpid();
                 blocked_pid = -1;
                 child_set_group(j, p);
-                // Make child processes pause after executing setup_child_process() to give down-chain
-                // commands in the job a chance to join their process group and read their pipes.
-                // The process will be resumed when the next command in the chain is started.
+                // Make child processes pause after executing setup_child_process() to give
+                // down-chain commands in the job a chance to join their process group and read
+                // their pipes. The process will be resumed when the next command in the chain is
+                // started.
                 if (block_child) {
                     kill(p->pid, SIGSTOP);
                 }
@@ -659,8 +660,7 @@ void exec_job(parser_t &parser, job_t *j) {
                 setup_child_process(p, process_net_io_chain);
                 child_action();
                 DIE("Child process returned control to do_fork lambda!");
-            }
-            else {
+            } else {
                 if (pid < 0) {
                     debug(1, L"Failed to fork %s!\n", fork_type);
                     job_mark_process_as_failed(j, p);
@@ -669,7 +669,8 @@ void exec_job(parser_t &parser, job_t *j) {
                 }
                 // This is the parent process. Store away information on the child, and
                 // possibly give it control over the terminal.
-                debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
+                debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type,
+                      p->argv0());
                 child_forked = true;
                 if (block_child) {
                     debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
@@ -683,7 +684,7 @@ void exec_job(parser_t &parser, job_t *j) {
         // Helper routine executed by INTERNAL_FUNCTION and INTERNAL_BLOCK_NODE to make sure an
         // output buffer exists in case there is another command in the job chain that will be
         // reading from this command's output.
-        auto verify_buffer_output = [&] () {
+        auto verify_buffer_output = [&]() {
             if (!p->is_last_in_job) {
                 // Be careful to handle failure, e.g. too many open fds.
                 block_output_io_buffer = io_buffer_t::create(STDOUT_FILENO, all_ios);
@@ -699,7 +700,6 @@ void exec_job(parser_t &parser, job_t *j) {
                 }
             }
         };
-
 
         switch (p->type) {
             case INTERNAL_FUNCTION: {
@@ -1082,16 +1082,14 @@ void exec_job(parser_t &parser, job_t *j) {
                     if (pid == 0) {
                         job_mark_process_as_failed(j, p);
                         exec_error = true;
-                    }
-                    else {
+                    } else {
                         child_spawned = true;
                     }
                 } else
 #endif
                 {
-                    if (!do_fork(false, "external command", [&] {
-                            safe_launch_process(p, actual_cmd, argv, envv);
-                        })) {
+                    if (!do_fork(false, "external command",
+                                 [&] { safe_launch_process(p, actual_cmd, argv, envv); })) {
                         break;
                     }
                 }

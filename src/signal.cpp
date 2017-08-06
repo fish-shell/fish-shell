@@ -417,6 +417,4 @@ void signal_unblock() {
     }
 }
 
-bool signal_is_blocked() {
-    return static_cast<bool>(block_count);
-}
+bool signal_is_blocked() { return static_cast<bool>(block_count); }

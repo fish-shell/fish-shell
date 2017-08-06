@@ -58,9 +58,7 @@ static wint_t lookahead_front(void) { return lookahead_list.front(); }
 /// Callback function for handling interrupts on reading.
 static int (*interrupt_handler)();
 
-void input_common_init(int (*ih)()) {
-    interrupt_handler = ih;
-}
+void input_common_init(int (*ih)()) { interrupt_handler = ih; }
 
 void input_common_destroy() {}
 

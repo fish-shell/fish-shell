@@ -199,12 +199,12 @@ extern bool has_working_tty_timestamps;
 // from within a `switch` block. As of the time I'm writing this oclint doesn't recognize the
 // `__attribute__((noreturn))` on the exit_without_destructors() function.
 // TODO: we use C++11 [[noreturn]] now, does that change things?
-#define FATAL_EXIT()                        \
-    {                                       \
-        char exit_read_buff;                \
-        show_stackframe(L'E');              \
+#define FATAL_EXIT()                       \
+    {                                      \
+        char exit_read_buff;               \
+        show_stackframe(L'E');             \
         (void)read(0, &exit_read_buff, 1); \
-        exit_without_destructors(1);        \
+        exit_without_destructors(1);       \
     }
 
 /// Exit the program at once after emitting an error message and stack trace if possible.

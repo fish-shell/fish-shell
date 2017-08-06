@@ -27,7 +27,6 @@ bool child_set_group(job_t *j, process_t *p); //called by child
 /// inside the exec function, which blocks all signals), and all IO redirections and other file
 /// descriptor actions are performed.
 ///
-/// \param j the job to set up the IO for
 /// \param p the child process to set up
 /// \param io_chain the IO chain to use
 ///

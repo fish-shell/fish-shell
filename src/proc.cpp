@@ -845,7 +845,7 @@ bool terminal_give_to_job(job_t *j, int cont) {
                 if (errno == ENOTTY) redirect_tty_output();
                 debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id, j->command_wcstr(), j->pgid);
                 wperror(L"tcsetpgrp");
-                signal_unblock(true);
+                signal_unblock();
                 return false;
             }
 

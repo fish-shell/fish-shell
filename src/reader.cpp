@@ -1575,12 +1575,20 @@ static void reader_interactive_init() {
     // Check if we are in control of the terminal, so that we don't do semi-expensive things like
     // reset signal handlers unless we really have to, which we often don't.
     if (tcgetpgrp(STDIN_FILENO) != shell_pgid) {
+        int block_count = 0;
+        int i;
+
         // Bummer, we are not in control of the terminal. Stop until parent has given us control of
-        // it.
+        // it. Stopping in fish is a bit of a challange, what with all the signal fidgeting, we need
+        // to reset a bunch of signal state, making this coda a but unobvious.
         //
         // In theory, reseting signal handlers could cause us to miss signal deliveries. In
-        // practice, this code should only be run during startup, when we're not waiting for any
+        // practice, this code should only be run suring startup, when we're not waiting for any
         // signals.
+        while (signal_is_blocked()) {
+            signal_unblock();
+            block_count++;
+        }
         signal_reset_handlers();
 
         // Ok, signal handlers are taken out of the picture. Stop ourself in a loop until we are in
@@ -1624,6 +1632,10 @@ static void reader_interactive_init() {
         }
 
         signal_set_handlers();
+
+        for (i = 0; i < block_count; i++) {
+            signal_block();
+        }
     }
 
     // Put ourselves in our own process group.

@@ -65,6 +65,8 @@ static const struct woption long_options[] = {
 #define BUILTIN_SET_MISMATCHED_ARGS _(L"%ls: You provided %d indexes but %d values\n")
 #define BUILTIN_SET_ERASE_NO_VAR _(L"%ls: Erase needs a variable name\n")
 #define BUILTIN_SET_ARRAY_BOUNDS_ERR _(L"%ls: Array index out of bounds\n")
+#define BUILTIN_SET_UVAR_ERR \
+    _(L"%ls: Universal var '%ls' created but shadowed by global var of the same name.\n")
 
 // Test if the specified variable should be subject to path validation.
 static const wcstring_list_t path_variables({L"PATH", L"CDPATH"});
@@ -213,10 +215,8 @@ static int check_global_scope_exists(const wchar_t *cmd, set_cmd_opts_t &opts, c
                                      io_streams_t &streams) {
     if (opts.universal) {
         env_var_t global_dest = env_get(dest, ENV_GLOBAL);
-        if (!global_dest.missing()) {
-            streams.err.append_format(
-                _(L"%ls: Warning: universal scope selected, but a global variable '%ls' exists.\n"),
-                cmd, dest);
+        if (!global_dest.missing() && shell_is_interactive()) {
+            streams.err.append_format(BUILTIN_SET_UVAR_ERR, cmd, dest);
         }
     }
 

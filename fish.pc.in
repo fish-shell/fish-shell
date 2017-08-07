@@ -6,5 +6,5 @@ confdir=@extra_confdir@
 
 Name: fish
 Description: fish, the friendly interactive shell
-URL: https://fishshell.com/
+URL: https://fish.sh/
 Version: @fish_build_version@

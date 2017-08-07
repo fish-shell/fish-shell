@@ -3975,7 +3975,7 @@ static void test_string(void) {
         {{L"string", L"join", L"", 0}, STATUS_CMD_ERROR, L""},
         {{L"string", L"join", L"", L"", L"", L"", 0}, STATUS_CMD_OK, L"\n"},
         {{L"string", L"join", L"", L"a", L"b", L"c", 0}, STATUS_CMD_OK, L"abc\n"},
-        {{L"string", L"join", L".", L"fishshell", L"com", 0}, STATUS_CMD_OK, L"fishshell.com\n"},
+        {{L"string", L"join", L".", L"fishshell", L"com", 0}, STATUS_CMD_OK, L"fish.sh\n"},
         {{L"string", L"join", L"/", L"usr", 0}, STATUS_CMD_ERROR, L"usr\n"},
         {{L"string", L"join", L"/", L"usr", L"local", L"bin", 0},
          STATUS_CMD_OK,

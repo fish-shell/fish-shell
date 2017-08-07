@@ -6,5 +6,5 @@ complete -c functions -s d -l description --description "Set function descriptio
 complete -c functions -s q -l query --description "Test if function is defined"
 complete -c functions -s n -l names --description "List the names of the functions, but not their definition"
 complete -c functions -s c -l copy --description "Copy the specified function to the specified new name"
-complete -c functions -s m -l metadata --description "Display data about the function"
+complete -c functions -s D -l details --description "Display information about the function"
 complete -c functions -s v -l verbose --description "Print more output"

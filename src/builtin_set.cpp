@@ -694,9 +694,9 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Check if we are setting variables above the effective scope. See
     // https://github.com/fish-shell/fish-shell/issues/806
     env_var_t global_dest = env_get_string(dest, ENV_GLOBAL);
-    if (universal && !global_dest.missing()) {
+    if (universal && !global_dest.missing() && shell_is_interactive()) {
         streams.err.append_format(
-            _(L"%ls: Warning: universal scope selected, but a global variable '%ls' exists.\n"),
+            _(L"%ls: Universal var '%ls' created but shadowed by global var of the same name.\n"),
             L"set", dest);
     }
 

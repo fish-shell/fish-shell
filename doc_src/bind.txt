@@ -28,7 +28,7 @@ When `COMMAND` is a shellscript command, it is a good practice to put the actual
 
 If such a script produces output, the script needs to finish by calling `commandline -f repaint` in order to tell fish that a repaint is in order.
 
-When multiple `COMMAND`s are provided, they are all run in the specified order when the key is pressed.
+When multiple `COMMAND`s are provided, they are all run in the specified order when the key is pressed. Note that special input functions cannot be combined with ordinary shellscript commands; only all special input functions or all shellscript commands may be used.
 
 If no `SEQUENCE` is provided, all bindings (or just the bindings in the specified `MODE`) are printed. If `SEQUENCE` is provided without `COMMAND`, just the binding matching that sequence is printed.
 

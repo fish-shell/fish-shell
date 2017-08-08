@@ -20,11 +20,50 @@ function __fish_composer_using_command
   return 1
 end
 
+function __fish_composer_required_packages
+    test -f composer.json; or return
+    echo "
+import json
+json_data = open('composer.json')
+data = json.load(json_data)
+json_data.close()
+packages = data['require'].keys() + data['require-dev'].keys()
+print \"\n\".join(packages)
+      " | python
+end
+
+function __fish_composer_installed_packages
+    test -f composer.lock; or return
+    echo "
+import json
+json_data = open('composer.lock')
+data = json.load(json_data)
+json_data.close()
+installed_packages = []
+for package in data['packages']:
+    installed_packages.append(package['name'])
+for package in data['packages-dev']:
+    installed_packages.append(package['name'])
+print \"\n\".join(installed_packages)
+" | python
+end
+
 #add cmds list
 set --local composer_cmds 'about' 'archive' 'browse' 'clear-cache' 'clearcache' 'config' 'create-project' 'depends' 'diagnose' 'dump-autoload' 'dumpautoload' 'global' 'help' 'home' 'init' 'install' 'licenses' 'list' 'remove' 'require' 'run-script' 'search' 'self-update' 'selfupdate' 'show' 'status' 'update' 'validate'
 
 #help
 complete -f -c composer -n '__fish_composer_using_command help' -a "$composer_cmds"
+
+#update
+complete -f -c composer -n '__fish_composer_using_command update' -a "(__fish_composer_required_packages)"
+
+#remove
+complete -f -c composer -n '__fish_composer_using_command remove' -a "(__fish_composer_required_packages)"
+
+#diagnostics on installed commands
+complete -f -c composer -n '__fish_composer_using_command why' -a "(__fish_composer_installed_packages)"
+complete -f -c composer -n '__fish_composer_using_command why-not' -a "(__fish_composer_installed_packages)"
+complete -f -c composer -n '__fish_composer_using_command depends' -a "(__fish_composer_installed_packages)"
 
 #popisky
 complete -f -c composer -n '__fish_composer_needs_command' -a 'about' -d 'Short information about Composer'
@@ -55,6 +94,8 @@ complete -f -c composer -n '__fish_composer_needs_command' -a 'show' -d 'Show in
 complete -f -c composer -n '__fish_composer_needs_command' -a 'status' -d 'Show a list of locally modified packages'
 complete -f -c composer -n '__fish_composer_needs_command' -a 'update' -d 'Updates your dependencies to the latest version according to composer.json, and updates the composer.lock file.'
 complete -f -c composer -n '__fish_composer_needs_command' -a 'validate' -d 'Validates a composer.json'
+complete -f -c composer -n '__fish_composer_needs_command' -a 'why' -d 'Shows which packages cause the given package to be installed'
+complete -f -c composer -n '__fish_composer_needs_command' -a 'why-not' -d 'Shows which packages prevent the given package from being installed'
 
 complete -f -c composer -n '__fish_composer_needs_command' -s 'h' -l 'help' -d 'Displays composer\'s help.'
 complete -f -c composer -n '__fish_composer_needs_command' -s 'q' -l 'quiet' -d 'Do not output any message.'

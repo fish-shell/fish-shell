@@ -29,9 +29,10 @@ static bool production_is_empty(const production_element_t *production) {
 /// Returns a string description of this parse error.
 wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix,
                                              bool is_interactive, bool skip_caret) const {
+    if (skip_caret && this->text.empty()) return L"";
+
     wcstring result = prefix;
     result.append(this->text);
-
     if (skip_caret || source_start >= src.size() || source_start + source_length > src.size()) {
         return result;
     }

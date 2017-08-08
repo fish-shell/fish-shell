@@ -30,7 +30,7 @@ function fish_prompt --description 'Write out the prompt, prepending the Debian 
         echo -n -s "$__fish_prompt_chroot_env" "$__fish_debian_chroot_prompt" "$__fish_prompt_normal" ' '
     end
 
-    switch $USER
+    switch "$USER"
 
         case root toor
 

@@ -312,6 +312,7 @@ static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const 
                     break;
                 }
             }
+            /* FALLTHROUGH */
             case TOK_END:
             case TOK_BACKGROUND: {
                 if (tok_begin >= pos) {

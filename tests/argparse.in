@@ -1,0 +1,150 @@
+# Test the `argparse` builtin.
+
+##########
+# Start by verifying a bunch of error conditions.
+
+echo '# No args is an error' >&2
+argparse
+
+echo '# Missing -- is an error' >&2
+argparse h/help
+
+echo '# Flags but no option specs is an error' >&2
+argparse -s -- hello
+
+echo '# Invalid option specs' >&2
+argparse h-
+argparse +help
+argparse h/help:
+argparse h-help::
+argparse h-help=x
+
+echo '# --max-args and --min-args work' >&2
+begin
+    argparse --name min-max --min-args 1 h/help --
+    argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1
+    argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1 arg2
+    argparse --name min-max --min-args 1 --max-args 3 h/help -- --help arg1 arg2 arg3
+    argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1 arg2 -h arg3 arg4
+    argparse --name min-max --max-args 1 h/help --
+    argparse --name min-max --max-args 1 h/help -- arg1
+    argparse --name min-max --max-args 1 h/help -- arg1 arg2
+end
+
+echo '# Invalid "#-val" spec' >&2
+argparse '#-val=' -- abc -x def
+
+echo '# Invalid arg in the face of a "#-val" spec' >&2
+argparse '#-val' -- abc -x def
+
+echo '# Defining a short flag more than once' >&2
+argparse 's/short' 'x/xray' 's/long' -- -s -x --long
+
+echo '# Defining a long flag more than once' >&2
+argparse 's/short' 'x/xray' 'l/short' -- -s -x --long
+
+echo '# Defining an implicit int flag more than once' >&2
+argparse '#-val' 'x/xray' 'v#val' -- -s -x --long
+
+echo '# Defining an implicit int flag with modifiers' >&2
+argparse 'v#val=' --
+
+##########
+# Now verify that validly formed invocations work as expected.
+
+echo '# No args'
+argparse h/help --
+
+echo '# One arg and no matching flags'
+begin
+    argparse h/help -- help
+    set -l
+end
+
+echo '# Five args with two matching a flag'
+begin
+    argparse h/help -- help --help me -h 'a lot more'
+    set -l
+end
+
+echo '# Required, optional, and multiple flags'
+begin
+    argparse 'h/help' 'a/abc=' 'd/def=?' 'g/ghk=+' -- help --help me --ghk=g1 --abc=ABC --ghk g2 --d -g g3
+    set -l
+end
+
+echo '# --stop-nonopt works'
+begin
+    argparse --stop-nonopt 'h/help' 'a/abc=' -- -a A1 -h --abc A2 non-opt 'second non-opt' --help
+    set -l
+end
+
+echo '# Implicit int flags work'
+for v in (set -l -n); set -e $v; end
+argparse '#-val' -- abc -123 def
+set -l
+for v in (set -l -n); set -e $v; end
+argparse 'v/verbose' '#-val' 't/token=' -- -123 a1 --token woohoo --234 -v a2 --verbose
+set -l
+
+echo '# Should be set to 987'
+for v in (set -l -n); set -e $v; end
+argparse 'm#max' -- argle -987 bargle
+set -l
+
+echo '# Should be set to 765'
+for v in (set -l -n); set -e $v; end
+argparse 'm#max' -- argle -987 bargle --max 765
+set -l
+
+echo '# Bool short flag only'
+for v in (set -l -n); set -e $v; end
+argparse 'C' 'v' -- -C -v arg1 -v arg2
+set -l
+
+echo '# Value taking short flag only'
+for v in (set -l -n); set -e $v; end
+argparse 'x=' 'v/verbose' -- --verbose arg1 -v -x arg2
+set -l
+
+echo '# Implicit int short flag only'
+for v in (set -l -n); set -e $v; end
+argparse 'x#' 'v/verbose' -- -v -v argle -v -x 321 bargle
+set -l
+
+echo '# Implicit int short flag only with custom validation passes'
+for v in (set -l -n); set -e $v; end
+argparse 'x#!_validate_int --max 500' 'v/verbose' -- -v -v -x 499 -v
+set -l
+
+echo '# Implicit int short flag only with custom validation fails' >&2
+for v in (set -l -n); set -e $v; end
+argparse 'x#!_validate_int --min 500' 'v/verbose' -- -v -v -x 499 -v
+set -l
+
+##########
+# Verify that flag value validation works.
+
+echo '# Implicit int flag validation fails' >&2
+argparse 'm#max' -- argle --max 765x bargle
+and echo unxpected argparse return status >&2
+argparse 'm#max' -- argle -ma1 bargle
+and echo unxpected argparse return status >&2
+
+echo '# Check the exit status from argparse validation'
+argparse 'm#max!set | grep _flag_; function x; return 57; end; x' -- argle --max=83 bargle 2>&1
+set -l saved_status $status
+test $saved_status -eq 57
+and echo expected argparse return status $saved_status
+
+echo '# Explicit int flag validation' >&2
+# These should fail
+argparse 'm#max!_validate_int --min 1 --max 1' -- argle -m2 bargle
+and echo unexpected argparse return status $status >&2
+argparse 'm#max!_validate_int --min 0 --max 1' -- argle --max=-1 bargle
+and echo unexpected argparse return status $status >&2
+# These should succeed
+argparse 'm/max=!_validate_int --min 0 --max 1' -- argle --max=0 bargle
+or echo unexpected argparse return status $status >&2
+argparse 'm/max=!_validate_int --min 0 --max 1' -- argle --max=1 bargle
+or echo unexpected argparse return status $status >&2

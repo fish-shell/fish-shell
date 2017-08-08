@@ -60,13 +60,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 // container to hold the options specified within the command line
 class fish_cmd_opts_t {
-public:
+   public:
     // Commands to be executed in place of interactive shell.
     std::vector<std::string> batch_cmds;
     // Commands to execute after the shell's config has been read.
     std::vector<std::string> postconfig_cmds;
 };
-
 
 /// If we are doing profiling, the filename to output to.
 static const char *s_profiling_output_filename = NULL;
@@ -424,17 +423,12 @@ int main(int argc, char **argv) {
                 // OK to not do this atomically since we cannot have gone multithreaded yet.
                 set_cloexec(fd);
 
-                if (*(argv + my_optind)) {
-                    wcstring sb;
-                    char **ptr;
-                    int i;
-                    for (i = 1, ptr = argv + my_optind; *ptr; i++, ptr++) {
-                        if (i != 1) sb.append(ARRAY_SEP_STR);
-                        sb.append(str2wcstring(*ptr));
-                    }
-
-                    env_set(L"argv", sb.c_str(), 0);
+                wcstring_list_t list;
+                for (char **ptr = argv + my_optind; *ptr; ptr++) {
+                    list.push_back(str2wcstring(*ptr));
                 }
+                auto val = list_to_array_val(list);
+                env_set(L"argv", *val == ENV_NULL ? NULL : val->c_str(), 0);
 
                 const wcstring rel_filename = str2wcstring(file);
 

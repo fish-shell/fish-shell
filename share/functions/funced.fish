@@ -12,49 +12,29 @@ function __funced_md5
 end
 
 function funced --description 'Edit function definition'
+    set -l options 'h/help' 'e/editor=' 'i/interactive'
+    argparse -n funced --min-args=1 --max-args=1 $options -- $argv
+    or return
+
+    if set -q _flag_help
+        __fish_print_help funced
+        return 0
+    end
+
+    set funcname $argv[1]
+
+    # Check VISUAL first since theoretically EDITOR could be ed.
     set -l editor
-    # Check VISUAL first since theoretically EDITOR could be ed
-    if set -q VISUAL
+    if set -q _flag_interactive
+        set editor fish
+    else if set -q _flag_editor
+        set editor $_flag_editor
+    else if set -q VISUAL
         set editor $VISUAL
     else if set -q EDITOR
         set editor $EDITOR
-    end
-    set -l interactive
-    set -l funcname
-    while set -q argv[1]
-        switch $argv[1]
-            case -h --help
-                __fish_print_help funced
-                return 0
-
-            case -e --editor
-                set editor $argv[2]
-                set -e argv[2]
-
-            case -i --interactive
-                set interactive 1
-
-            case --
-                set funcname $funcname $argv[2]
-                set -e argv[2]
-
-            case '-*'
-                set_color red
-                printf (_ "%s: Unknown option %s\n") funced $argv[1]
-                set_color normal
-                return 1
-
-            case '*' '.*'
-                set funcname $funcname $argv[1]
-        end
-        set -e argv[1]
-    end
-
-    if test (count $funcname) -ne 1
-        set_color red
-        echo (_ "funced: You must specify one function name")
-        set_color normal
-        return 1
+    else
+        set editor fish
     end
 
     set -l init
@@ -75,15 +55,7 @@ function funced --description 'Edit function definition'
         end
     end
 
-    # If no editor is specified, use fish
-    if test -z "$editor"
-        set editor fish
-    end
-
-    if begin
-            set -q interactive[1]
-            or test "$editor" = fish
-        end
+    if test "$editor" = fish
         set -l IFS
         if functions -q -- $funcname
             # Shadow IFS here to avoid array splitting in command substitution

@@ -45,12 +45,8 @@ static int is_path_variable(const wchar_t *env) { return contains(path_variables
 
 /// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
-static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
+static int my_env_set(const wchar_t *key, const wcstring_list_t &list, int scope,
                       io_streams_t &streams) {
-    size_t i;
-    int retcode = 0;
-    const wchar_t *val_str = NULL;
-
     if (is_path_variable(key)) {
         // Fix for https://github.com/fish-shell/fish-shell/issues/199 . Return success if any path
         // setting succeeds.
@@ -70,8 +66,8 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
         if (!existing_variable.missing_or_empty())
             tokenize_variable_array(existing_variable, existing_values);
 
-        for (i = 0; i < val.size(); i++) {
-            const wcstring &dir = val.at(i);
+        for (size_t i = 0; i < list.size(); i++) {
+            const wcstring &dir = list.at(i);
             if (!string_prefixes_string(L"/", dir) || contains(existing_values, dir)) {
                 any_success = true;
                 continue;
@@ -109,44 +105,38 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
 
         // Fail at setting the path if we tried to set it to something non-empty, but it wound up
         // empty.
-        if (!val.empty() && !any_success) {
-            return 1;
+        if (!list.empty() && !any_success) {
+            return STATUS_CMD_ERROR;
         }
     }
 
-    wcstring sb;
-    if (!val.empty()) {
-        for (i = 0; i < val.size(); i++) {
-            sb.append(val[i]);
-            if (i < val.size() - 1) {
-                sb.append(ARRAY_SEP_STR);
-            }
-        }
-        val_str = sb.c_str();
-    }
-
-    switch (env_set(key, val_str, scope | ENV_USER)) {
+    // We don't check `val->empty()` because an array var with a single empty string will be
+    // "empty". A truly empty array var is set to the special value `ENV_NULL`.
+    auto val = list_to_array_val(list);
+    int retcode = env_set(key, *val == ENV_NULL ? NULL : val->c_str(), scope | ENV_USER);
+    switch (retcode) {
         case ENV_OK: {
+            retcode = STATUS_CMD_OK;
             break;
         }
         case ENV_PERM: {
             streams.err.append_format(_(L"%ls: Tried to change the read-only variable '%ls'\n"),
                                       L"set", key);
-            retcode = 1;
+            retcode = STATUS_CMD_ERROR;
             break;
         }
         case ENV_SCOPE: {
             streams.err.append_format(
                 _(L"%ls: Tried to set the special variable '%ls' with the wrong scope\n"), L"set",
                 key);
-            retcode = 1;
+            retcode = STATUS_CMD_ERROR;
             break;
         }
         case ENV_INVALID: {
             streams.err.append_format(
                 _(L"%ls: Tried to set the special variable '%ls' to an invalid value\n"), L"set",
                 key);
-            retcode = 1;
+            retcode = STATUS_CMD_ERROR;
             break;
         }
         default: {
@@ -313,6 +303,91 @@ static void print_variables(int include_values, int esc, bool shorten_ok, int sc
     }
 }
 
+static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams) {
+    const wchar_t *scope_name;
+    switch (scope) {
+        case ENV_LOCAL: {
+            scope_name = L"local";
+            break;
+        }
+        case ENV_GLOBAL: {
+            scope_name = L"global";
+            break;
+        }
+        case ENV_UNIVERSAL: {
+            scope_name = L"universal";
+            break;
+        }
+        default: {
+            DIE("invalid scope");
+            break;
+        }
+    }
+
+    if (env_exist(var_name, scope)) {
+        const env_var_t evar = env_get_string(var_name, scope | ENV_EXPORT | ENV_USER);
+        const wchar_t *exportv = evar.missing() ? _(L"unexported") : _(L"exported");
+
+        const env_var_t var = env_get_string(var_name, scope | ENV_USER);
+        wcstring_list_t result;
+        if (!var.empty()) tokenize_variable_array(var, result);
+
+        streams.out.append_format(_(L"$%ls: set in %ls scope, %ls, with %d elements\n"), var_name,
+                                  scope_name, exportv, result.size());
+        for (size_t i = 0; i < result.size(); i++) {
+            if (result.size() > 100) {
+                if (i == 50) streams.out.append(L"...\n");
+                if (i >= 50 && i < result.size() - 50) continue;
+            }
+            const wcstring value = result[i];
+            const wcstring escaped_val =
+                escape_string(value.c_str(), ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
+            streams.out.append_format(_(L"$%ls[%d]: length=%d value=|%ls|\n"), var_name, i + 1,
+                                      value.size(), escaped_val.c_str());
+        }
+    } else {
+        streams.out.append_format(_(L"$%ls: not set in %ls scope\n"), var_name, scope_name);
+    }
+}
+
+/// Show mode. Show information about the named variable(s).
+static int builtin_set_show(const wchar_t *cmd, int argc, wchar_t **argv,
+                            parser_t &parser, io_streams_t &streams) {
+    if (argc == 0) {  // show all vars
+        wcstring_list_t names = env_get_names(ENV_USER);
+        sort(names.begin(), names.end());
+        for (auto it : names) {
+            show_scope(it.c_str(), ENV_LOCAL, streams);
+            show_scope(it.c_str(), ENV_GLOBAL, streams);
+            show_scope(it.c_str(), ENV_UNIVERSAL, streams);
+            streams.out.push_back(L'\n');
+        }
+    } else {
+        for (int i = 0; i < argc; i++) {
+            wchar_t *arg = argv[i];
+
+            if (!valid_var_name(arg)) {
+                streams.err.append_format(_(L"$%ls: invalid var name\n"), arg);
+                continue;
+            }
+
+            if (wcschr(arg, L'[')) {
+                streams.err.append_format(
+                    _(L"%ls: `set --show` does not allow slices with the var names\n"), cmd);
+                builtin_print_help(parser, streams, cmd, streams.err);
+                return STATUS_CMD_ERROR;
+            }
+
+            show_scope(arg, ENV_LOCAL, streams);
+            show_scope(arg, ENV_GLOBAL, streams);
+            show_scope(arg, ENV_UNIVERSAL, streams);
+            streams.out.push_back(L'\n');
+        }
+    }
+
+    return STATUS_CMD_OK;
+}
+
 /// The set builtin creates, updates, and erases (removes, deletes) variables.
 int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
@@ -322,6 +397,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int local = 0, global = 0, exportv = 0;
     int erase = 0, list = 0, unexport = 0;
     int universal = 0, query = 0;
+    bool show = false;
     bool shorten_ok = true;
     bool preserve_failure_exit_status = true;
     const int incoming_exit_status = proc_get_last_status();
@@ -335,7 +411,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Variables used for parsing the argument list. This command is atypical in using the "+"
     // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
     // we stop scanning for flags when the first non-flag argument is seen.
-    static const wchar_t *short_options = L"+:LUeghlnqux";
+    static const wchar_t *short_options = L"+:LSUeghlnqux";
     static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
                                                   {L"global", no_argument, NULL, 'g'},
                                                   {L"local", no_argument, NULL, 'l'},
@@ -345,6 +421,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                                   {L"universal", no_argument, NULL, 'U'},
                                                   {L"long", no_argument, NULL, 'L'},
                                                   {L"query", no_argument, NULL, 'q'},
+                                                  {L"show", no_argument, NULL, 'S'},
                                                   {L"help", no_argument, NULL, 'h'},
                                                   {NULL, 0, NULL, 0}};
 
@@ -392,6 +469,11 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 preserve_failure_exit_status = false;
                 break;
             }
+            case 'S': {
+                show = true;
+                preserve_failure_exit_status = false;
+                break;
+            }
             case 'h': {
                 builtin_print_help(parser, streams, cmd, streams.out);
                 return STATUS_CMD_OK;
@@ -409,6 +491,12 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 break;
             }
         }
+    }
+
+    if (show) {
+        argc -= w.woptind;
+        argv += w.woptind;
+        return builtin_set_show(cmd, argc, argv, parser, streams);
     }
 
     // Ok, all arguments have been parsed, let's validate them. If we are checking the existance of
@@ -606,9 +694,9 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Check if we are setting variables above the effective scope. See
     // https://github.com/fish-shell/fish-shell/issues/806
     env_var_t global_dest = env_get_string(dest, ENV_GLOBAL);
-    if (universal && !global_dest.missing()) {
+    if (universal && !global_dest.missing() && shell_is_interactive()) {
         streams.err.append_format(
-            _(L"%ls: Warning: universal scope selected, but a global variable '%ls' exists.\n"),
+            _(L"%ls: Universal var '%ls' created but shadowed by global var of the same name.\n"),
             L"set", dest);
     }
 

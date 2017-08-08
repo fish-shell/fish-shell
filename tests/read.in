@@ -141,9 +141,12 @@ yes $line | dd bs=1024 count=(math "1 + $FISH_READ_BYTE_LIMIT / 1024") ^/dev/nul
 if test $status -ne 122
     echo reading too much data did not terminate with failure status
 end
-if test (string length "$x") -ne 0
-    echo reading too much data resulted in a var with unexpected data
-end
+# The read var should be defined but not have any elements when the read
+# aborts due to too much data.
+set -q x
+or echo reading too much data did not define the var
+set -q x[1]
+and echo reading too much data resulted in a var with unexpected data
 
 # Ensure the `read` command terminates if asked to read too much data even if
 # given an explicit limit. The var should be empty. We throw away any data we
@@ -152,9 +155,10 @@ yes $line | read --null --nchars=(math "$FISH_READ_BYTE_LIMIT + 1") x
 if test $status -ne 122
     echo reading too much data did not terminate with failure status
 end
-if test (string length "$x") -ne 0
-    echo reading too much data resulted in a var with unexpected data
-end
+set -q x
+or echo reading too much data with --nchars did not define the var
+set -q x[1]
+and echo reading too much data with --nchars resulted in a var with unexpected data
 
 # Now do the opposite of the previous test and confirm we can read reasonable
 # amounts of data.
@@ -187,3 +191,6 @@ end
 if test (string length "$x") -ne $FISH_READ_BYTE_LIMIT
     echo reading the max amount of data with --nchars failed the length test
 end
+
+echo '# Confirm reading non-interactively works (#4206 regression)'
+echo abc\ndef | ../test/root/bin/fish -i -c 'read a; read b; show a; show b'

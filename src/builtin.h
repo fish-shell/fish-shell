@@ -53,6 +53,8 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 /// Error message for unexpected args.
 #define BUILTIN_ERR_ARG_COUNT1 _(L"%ls: expected %d args, got %d\n")
 #define BUILTIN_ERR_ARG_COUNT2 _(L"%ls: %ls expected %d args, got %d\n")
+#define BUILTIN_ERR_MIN_ARG_COUNT1 _(L"%ls: Expected at least %d args, got only %d\n")
+#define BUILTIN_ERR_MAX_ARG_COUNT1 _(L"%ls: Expected at most %d args, got %d\n")
 
 /// Error message for invalid variable name.
 #define BUILTIN_ERR_VARNAME _(L"%ls: Variable name '%ls' is not valid. See `help identifiers`.\n")

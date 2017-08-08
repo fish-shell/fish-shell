@@ -1,0 +1,19 @@
+# bool, short only
+h
+# bool, short and long
+h/help
+# bool, short and long but the short var cannot be used
+h-help
+# required val, short and long but the short var cannot be used
+h-help=
+# optional val, short and long valid
+h/help=?
+# optional val, short and long but the short var cannot be used
+h-help=?
+# repeated val, short and long valid
+h/help=+
+# repeated val, short and long but short not valid
+h-help=+
+# repeated val, short only
+h=+
+h=+

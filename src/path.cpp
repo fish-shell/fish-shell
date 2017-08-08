@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <wchar.h>
 
+#include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -56,7 +57,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
         // for the fish programs. Possibly with a duplicate dir if PREFIX is empty, "/", "/usr" or
         // "/usr/". If the PREFIX duplicates /bin or /usr/bin that is harmless other than a trivial
         // amount of time testing a path we've already tested.
-        bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
+        bin_path = *list_to_array_val(wcstring_list_t({L"/bin", L"/usr/bin", PREFIX L"/bin"}));
     }
 
     std::vector<wcstring> pathsv;
@@ -274,7 +275,7 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
         debug(0, _(L"The error was '%s'."), strerror(saved_errno));
         debug(0, _(L"Please set $%ls to a directory where you have write access."), env_var);
     }
-    write(STDERR_FILENO, "\n", 1);
+    (void)write(STDERR_FILENO, "\n", 1);
 }
 
 static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring &which_dir,

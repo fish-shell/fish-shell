@@ -598,16 +598,6 @@ void __attribute__((noinline)) debug(int level, const char *msg, ...) {
     errno = errno_old;
 }
 
-void read_ignore(int fd, void *buff, size_t count) {
-    size_t ignore __attribute__((unused));
-    ignore = read(fd, buff, count);
-}
-
-void write_ignore(int fd, const void *buff, size_t count) {
-    size_t ignore __attribute__((unused));
-    ignore = write(fd, buff, count);
-}
-
 void debug_safe(int level, const char *msg, const char *param1, const char *param2,
                 const char *param3, const char *param4, const char *param5, const char *param6,
                 const char *param7, const char *param8, const char *param9, const char *param10,
@@ -626,14 +616,14 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
         const char *end = strchr(cursor, '%');
         if (end == NULL) end = cursor + strlen(cursor);
 
-        write_ignore(STDERR_FILENO, cursor, end - cursor);
+        (void)write(STDERR_FILENO, cursor, end - cursor);
 
         if (end[0] == '%' && end[1] == 's') {
             // Handle a format string.
             assert(param_idx < sizeof params / sizeof *params);
             const char *format = params[param_idx++];
             if (!format) format = "(null)";
-            write_ignore(STDERR_FILENO, format, strlen(format));
+            (void)write(STDERR_FILENO, format, strlen(format));
             cursor = end + 2;
         } else if (end[0] == '\0') {
             // Must be at the end of the string.
@@ -645,7 +635,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     }
 
     // We always append a newline.
-    write_ignore(STDERR_FILENO, "\n", 1);
+    (void)write(STDERR_FILENO, "\n", 1);
 
     errno = errno_old;
 }
@@ -1493,7 +1483,7 @@ bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special) {
 
 bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special,
                      escape_string_style_t style) {
-    bool success;
+    bool success = false;
     switch (style) {
         case STRING_STYLE_SCRIPT: {
             success = unescape_string_internal(input, wcslen(input), output, escape_special);
@@ -1514,7 +1504,7 @@ bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t es
 
 bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special,
                      escape_string_style_t style) {
-    bool success;
+    bool success = false;
     switch (style) {
         case STRING_STYLE_SCRIPT: {
             success = unescape_string_internal(input.c_str(), input.size(), output, escape_special);
@@ -1632,19 +1622,6 @@ struct winsize get_current_winsize() {
 int common_get_width() { return get_current_winsize().ws_col; }
 
 int common_get_height() { return get_current_winsize().ws_row; }
-
-void tokenize_variable_array(const wcstring &val, std::vector<wcstring> &out) {
-    size_t pos = 0, end = val.size();
-    while (pos <= end) {
-        size_t next_pos = val.find(ARRAY_SEP, pos);
-        if (next_pos == wcstring::npos) {
-            next_pos = end;
-        }
-        out.resize(out.size() + 1);
-        out.back().assign(val, pos, next_pos - pos);
-        pos = next_pos + 1;  // skip the separator, or skip past the end
-    }
-}
 
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value) {
     size_t prefix_size = wcslen(proposed_prefix);

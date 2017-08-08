@@ -10,6 +10,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
 
     set -g __fish_config_interactive_done
+    set -g __fish_active_key_bindings
 
     # Set the correct configuration directory
     set -l configdir ~/.config
@@ -185,16 +186,16 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
-        # do nothing if the key bindings didn't actually change
+        # Do nothing if the key bindings didn't actually change.
         # This could be because the variable was set to the existing value
-        # or because it was a local variable
-        # If fish_key_bindings is empty on the first run, we still need to set the defaults
+        # or because it was a local variable.
+        # If fish_key_bindings is empty on the first run, we still need to set the defaults.
         if test "$fish_key_bindings" = "$__fish_active_key_bindings" -a -n "$fish_key_bindings"
             return
         end
-        # Check if fish_key_bindings is a valid function
-        # If not, either keep the previous bindings (if any) or revert to default
-        # Also print an error so the user knows
+        # Check if fish_key_bindings is a valid function.
+        # If not, either keep the previous bindings (if any) or revert to default.
+        # Also print an error so the user knows.
         if not functions -q "$fish_key_bindings"
             echo "There is no fish_key_bindings function called: '$fish_key_bindings'" >&2
             # We need to see if this is a defined function, otherwise we'd be in an endless loop.
@@ -255,13 +256,18 @@ function __fish_config_interactive -d "Initializations that should be performed 
         commandline -f repaint
     end
 
-    # Notify terminals when $PWD changes (issue #906)
-    # VTE and Terminal.app support this in practice.
-    if test "0$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
+    # Notify terminals when $PWD changes (issue #906).
+    # VTE based terminals, Terminal.app, and iTerm.app support this.
+    set -q VTE_VERSION
+    or set -l VTE_VERSION 0
+    set -q TERM_PROGRAM
+    or set -l TERM_PROGRAM
+    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal" -o "$TERM_PROGRAM" = "iTerm.app"
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
-            status --is-command-substitution
-            or test -n "$INSIDE_EMACS"
-            and return
+            if status --is-command-substitution
+                or set -q INSIDE_EMACS
+                return
+            end
             printf \e\]7\;file://\%s\%s\a (hostname) (string escape --style=url $PWD)
         end
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
@@ -283,7 +289,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # First check if we are on OpenSUSE since SUSE's handler has no options
         # but the same name and path as Ubuntu's.
         if contains -- suse $os
-            and type -q -p command-not-found
+            and type -q command-not-found
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 /usr/bin/command-not-found $argv[1]
             end
@@ -303,7 +309,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
                 /run/current-system/sw/bin/command-not-found $argv
             end
             # Ubuntu Feisty places this command in the regular path instead
-        else if type -q -p command-not-found
+        else if type -q command-not-found
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 command-not-found -- $argv[1]
             end

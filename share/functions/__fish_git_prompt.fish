@@ -73,7 +73,7 @@
 #     default       exactly matching tag
 #
 # If you would like a colored hint about the current dirty state, set
-# __fish_git_prompt_showcolorhints to a nonempty value.  The default colors are
+# __fish_git_prompt_showcolorhints.  The default colors are
 # based on the colored output of "git status -sb"
 
 
@@ -169,6 +169,8 @@
 #     flags             Defaults to --bold blue
 
 function __fish_git_prompt_show_upstream --description "Helper function for __fish_git_prompt"
+    set -q __fish_git_prompt_showupstream
+    or set -l __fish_git_prompt_showupstream
     set -l show_upstream $__fish_git_prompt_showupstream
     set -l svn_prefix # For better SVN upstream information
     set -l informative
@@ -180,7 +182,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
     set -l name
 
     # Default to informative if __fish_git_prompt_show_informative_status is set
-    if test -n "$__fish_git_prompt_show_informative_status"
+    if set -q __fish_git_prompt_show_informative_status
         set informative 1
     end
 
@@ -362,10 +364,10 @@ function __fish_git_prompt --description "Prompt function for Git"
     set -l space "$___fish_git_prompt_color$___fish_git_prompt_char_stateseparator$___fish_git_prompt_color_done"
 
     if test "true" = $inside_worktree
-        if test -n "$__fish_git_prompt_show_informative_status"
+        if set -q __fish_git_prompt_show_informative_status
             set informative_status "$space"(__fish_git_prompt_informative_status)
         else
-            if test -n "$__fish_git_prompt_showdirtystate"
+            if set -q __fish_git_prompt_showdirtystate
                 set -l config (command git config --bool bash.showDirtyState)
                 if test "$config" != "false"
                     set w (__fish_git_prompt_dirty)
@@ -373,28 +375,30 @@ function __fish_git_prompt --description "Prompt function for Git"
                 end
             end
 
-            if test -n "$__fish_git_prompt_showstashstate" -a -r $git_dir/refs/stash
+            if set -q __fish_git_prompt_showstashstate
+                and test -r $git_dir/refs/stash
                 set s $___fish_git_prompt_char_stashstate
             end
 
-            if test -n "$__fish_git_prompt_showuntrackedfiles"
+            if set -q __fish_git_prompt_showuntrackedfiles
                 set -l config (command git config --bool bash.showUntrackedFiles)
                 if test "$config" != false
-                    if command git ls-files --others --exclude-standard --error-unmatch -- '*' >/dev/null ^/dev/null
+                    if command git ls-files --others --exclude-standard --directory --no-empty-directory --error-unmatch -- '*' >/dev/null ^/dev/null
                         set u $___fish_git_prompt_char_untrackedfiles
                     end
                 end
             end
         end
 
-        if test -n "$__fish_git_prompt_showupstream" -o "$__fish_git_prompt_show_informative_status"
+        if set -q __fish_git_prompt_showupstream
+            or set -q __fish_git_prompt_show_informative_status
             set p (__fish_git_prompt_show_upstream)
         end
     end
 
     set -l branch_color $___fish_git_prompt_color_branch
     set -l branch_done $___fish_git_prompt_color_branch_done
-    if test -n "$__fish_git_prompt_showcolorhints"
+    if set -q __fish_git_prompt_showcolorhints
         if test $detached = yes
             set branch_color $___fish_git_prompt_color_branch_detached
             set branch_done $___fish_git_prompt_color_branch_detached_done
@@ -437,7 +441,7 @@ function __fish_git_prompt --description "Prompt function for Git"
         set format " (%s)"
     end
 
-    printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$informative_status$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
+    printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$informative_status$___fish_git_prompt_color_suffix" "$___fish_git_prompt_color_suffix_done"
 end
 
 ### helper functions
@@ -611,12 +615,14 @@ end
 function __fish_git_prompt_set_char
     set -l user_variable_name "$argv[1]"
     set -l char $argv[2]
-    set -l user_variable $$user_variable_name
+    set -l user_variable
+    if set -q $user_variable_name
+        set user_variable $$user_variable_name
+    end
 
-    if test (count $argv) -ge 3
-        if test -n "$__fish_git_prompt_show_informative_status"
-            set char $argv[3]
-        end
+    if set -q argv[3]
+        and set -q __fish_git_prompt_show_informative_status
+        set char $argv[3]
     end
 
     set -l variable _$user_variable_name
@@ -646,7 +652,10 @@ end
 
 function __fish_git_prompt_set_color
     set -l user_variable_name "$argv[1]"
-    set -l user_variable $$user_variable_name
+    set -l user_variable
+    if set -q $user_variable_name
+        set user_variable $$user_variable_name
+    end
     set -l user_variable_bright
 
     set -l default default_done
@@ -693,7 +702,7 @@ function __fish_git_prompt_validate_colors --description "__fish_git_prompt help
     __fish_git_prompt_set_color __fish_git_prompt_color_upstream
 
     # Colors with defaults with showcolorhints
-    if test -n "$__fish_git_prompt_showcolorhints"
+    if set -q __fish_git_prompt_showcolorhints
         __fish_git_prompt_set_color __fish_git_prompt_color_flags (set_color --bold blue)
         __fish_git_prompt_set_color __fish_git_prompt_color_branch (set_color green)
         __fish_git_prompt_set_color __fish_git_prompt_color_dirtystate (set_color red)

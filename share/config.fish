@@ -5,6 +5,8 @@
 # Set default field separators
 #
 set -g IFS \n\ \t
+set -qg __fish_added_user_paths
+or set -g __fish_added_user_paths
 
 #
 # Create the default command_not_found handler
@@ -175,23 +177,27 @@ end
 # Invoke it immediately to apply the current value of fish_user_path
 function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
     set -l local_path $PATH
-    set -l x
+
     for x in $__fish_added_user_paths
         set -l idx (contains --index -- $x $local_path)
         and set -e local_path[$idx]
     end
 
-    set -e __fish_added_user_paths
-    for x in $fish_user_paths[-1..1]
-        if set -l idx (contains --index -- $x $local_path)
-            set -e local_path[$idx]
-        else
-            set -g __fish_added_user_paths $__fish_added_user_paths $x
+    set -g __fish_added_user_paths
+    if set -q fish_user_paths
+        for x in $fish_user_paths[-1..1]
+            if set -l idx (contains --index -- $x $local_path)
+                set -e local_path[$idx]
+            else
+                set -g __fish_added_user_paths $__fish_added_user_paths $x
+            end
+            set local_path $x $local_path
         end
-        set local_path $x $local_path
     end
+
     set -xg PATH $local_path
 end
+
 __fish_reconstruct_path
 
 #
@@ -230,28 +236,31 @@ end
 # in UTF-8 (with non-ASCII characters).
 __fish_set_locale
 
-# As last part of initialization, source the conf directories
-# Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename"
+# As last part of initialization, source the conf directories.
+# Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename".
 set -l sourcelist
 for file in $configdir/fish/conf.d/*.fish $__fish_sysconfdir/conf.d/*.fish $__extra_confdir/*.fish
     set -l basename (string replace -r '^.*/' '' -- $file)
     contains -- $basename $sourcelist
     and continue
     set sourcelist $sourcelist $basename
-    # Also skip non-files or unreadable files
-    # This allows one to use e.g. symlinks to /dev/null to "mask" something (like in systemd)
+    # Also skip non-files or unreadable files.
+    # This allows one to use e.g. symlinks to /dev/null to "mask" something (like in systemd).
     [ -f $file -a -r $file ]
     and source $file
 end
 
-# Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax
-# This needs to be in share/config.fish because __fish_config_interactive is called after 2sourcing config.fish, which might contain abbr calls
+# Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax.
+# This needs to be in share/config.fish because __fish_config_interactive is called after sourcing
+# config.fish, which might contain abbr calls.
 if not set -q __fish_init_2_3_0
-    set -l fab
-    for abb in $fish_user_abbreviations
-        set fab $fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abb)
+    if set -q fish_user_abbreviations
+        set -l fab
+        for abbr in $fish_user_abbreviations
+            set fab $fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abbr)
+        end
+        set fish_user_abbreviations $fab
     end
-    set fish_user_abbreviations $fab
     set -U __fish_init_2_3_0
 end
 
@@ -261,11 +270,9 @@ end
 #
 
 if status --is-login
-
     #
     # Put linux consoles in unicode mode.
     #
-
     if test "$TERM" = linux
         if string match -qir '\.UTF' -- $LANG
             if command -sq unicode_start

@@ -696,14 +696,14 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
         for (size_t i = 0; i < lst.size(); i++) {
             fputws(lst.at(i).c_str(), stdout);
         }
-        write(STDOUT_FILENO, "\a", 1);
+        (void)write(STDOUT_FILENO, "\a", 1);
     }
 
     proc_pop_interactive();
     set_color(rgb_color_t::reset(), rgb_color_t::reset());
     if (reset_cursor_position && !lst.empty()) {
         // Put the cursor back at the beginning of the line (issue #2453).
-        write(STDOUT_FILENO, "\r", 1);
+        (void)write(STDOUT_FILENO, "\r", 1);
     }
 }
 
@@ -1291,7 +1291,7 @@ static void reader_flash() {
     }
 
     reader_repaint();
-    write(STDOUT_FILENO, "\a", 1);
+    (void)write(STDOUT_FILENO, "\a", 1);
 
     pollint.tv_sec = 0;
     pollint.tv_nsec = 100 * 1000000;
@@ -1563,10 +1563,10 @@ static bool check_for_orphaned_process(unsigned long loop_count, pid_t shell_pgi
 
 /// Initialize data for interactive use.
 static void reader_interactive_init() {
-    assert(input_initialized);
     // See if we are running interactively.
     pid_t shell_pgid;
 
+    if (!input_initialized) init_input();
     kill_init();
     shell_pgid = getpgrp();
 
@@ -1993,6 +1993,11 @@ parser_test_error_bits_t reader_shell_test(const wchar_t *b) {
 static parser_test_error_bits_t default_test(const wchar_t *b) {
     UNUSED(b);
     return 0;
+}
+
+void reader_change_history(const wchar_t *name) {
+    data->history->save();
+    data->history = &history_t::history_with_name(name);
 }
 
 void reader_push(const wchar_t *name) {
@@ -3229,7 +3234,7 @@ const wchar_t *reader_readline(int nchars) {
         reader_repaint_if_needed();
     }
 
-    write(STDOUT_FILENO, "\n", 1);
+    (void)write(STDOUT_FILENO, "\n", 1);
 
     // Ensure we have no pager contents when we exit.
     if (!data->pager.empty()) {

@@ -1,9 +1,11 @@
 function prompt_pwd --description "Print the current working directory, shortened to fit the prompt"
-    set -q argv[1]
-    and switch $argv[1]
-        case -h --help
-            __fish_print_help prompt_pwd
-            return 0
+    set -l options 'h/help'
+    argparse -n prompt_pwd --max-args=0 $options -- $argv
+    or return
+
+    if set -q _flag_help
+        __fish_print_help prompt_pwd
+        return 0
     end
 
     # This allows overriding fish_prompt_pwd_dir_length from the outside (global or universal) without leaking it

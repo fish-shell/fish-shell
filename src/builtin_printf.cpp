@@ -719,21 +719,31 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
 
 /// The printf builtin.
 int builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    UNUSED(parser);
-    builtin_printf_state_t state(streams);
-
-    wchar_t *format;
-    int args_used;
+    const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
+    help_only_cmd_opts_t opts;
 
-    if (argc <= 1) {
-        state.fatal_error(_(L"printf: not enough arguments"));
+    int optind;
+    int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    if (opts.print_help) {
+        builtin_print_help(parser, streams, cmd, streams.out);
+        return STATUS_CMD_OK;
+    }
+
+    argc -= optind;
+    argv += optind;
+    if (argc < 1) {
+        streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc);
         return STATUS_INVALID_ARGS;
     }
 
-    format = argv[1];
-    argc -= 2;
-    argv += 2;
+    builtin_printf_state_t state(streams);
+    int args_used;
+    wchar_t *format = argv[0];
+    argc--;
+    argv++;
 
     do {
         args_used = state.print_formatted(format, argc, argv);

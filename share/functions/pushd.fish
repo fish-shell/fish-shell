@@ -1,15 +1,16 @@
 function pushd --description 'Push directory to stack'
+    set -l options 'h/help'
+    argparse -n pushd --max-args=1 $options -- $argv
+    or return
+
+    if set -q _flag_help
+        __fish_print_help pushd
+        return 0
+    end
+
     set -l rot_r
     set -l rot_l
-
-    if count $argv >/dev/null
-        # check for --help
-        switch $argv[1]
-            case -h --h --he --hel --help
-                __fish_print_help pushd
-                return 0
-        end
-
+    if set -q argv[1]
         # emulate bash by checking if argument of form +n or -n
         if string match -qr '^-[0-9]+$' -- $argv[1]
             set rot_r (string sub -s 2 -- $argv[1])
@@ -18,10 +19,13 @@ function pushd --description 'Push directory to stack'
         end
     end
 
+    set -q dirstack
+    or set -g dirstack
+
     # emulate bash: an empty pushd should switch the top of dirs
-    if test (count $argv) -eq 0
+    if not set -q argv[1]
         # check that the stack isn't empty
-        if test (count $dirstack) -eq 0
+        if not set -q dirstack[1]
             echo "pushd: no other directory"
             return 1
         end

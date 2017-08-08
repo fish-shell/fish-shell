@@ -1,26 +1,24 @@
 function help --description 'Show help for the fish shell'
+    set -l options 'h/help'
+    argparse -n help --max-args=1 $options -- $argv
+    or return
 
-    # Declare variables to set correct scope
-    set -l fish_browser
-
-    set -l h syntax completion editor job-control todo bugs history killring help
-    set h $h color prompt title variables builtin-overview changes expand
-    set h $h expand-variable expand-home expand-brace expand-wildcard
-    set -l help_topics $h expand-command-substitution expand-process
-
-    # 'help -h' should launch 'help help'
-    if count $argv >/dev/null
-        switch $argv[1]
-            case -h --h --he --hel --help
-                __fish_print_help help
-                return 0
-        end
+    if set -q _flag_help
+        __fish_print_help help
+        return 0
     end
+
+    set -l fish_help_item $argv[1]
+    set -l help_topics syntax completion editor job-control todo bugs history killring help
+    set help_topics $help_topics color prompt title variables builtin-overview changes expand
+    set help_topics $help_topics expand-variable expand-home expand-brace expand-wildcard
+    set help_topics $help_topics expand-command-substitution expand-process
 
     #
     # Find a suitable browser for viewing the help pages. This is needed
     # by the help function defined below.
     #
+    set -l fish_browser
     set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape rekonq google-chrome chromium-browser
 
     if set -q fish_help_browser[1]
@@ -85,8 +83,6 @@ function help --description 'Show help for the fish shell'
             set fish_browser cygstart \"$fish_browser\"
         end
     end
-
-    set -l fish_help_item $argv[1]
 
     switch "$fish_help_item"
         case "."

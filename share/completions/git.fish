@@ -145,6 +145,9 @@ end
 #                                                  but a command can be aliased multiple times)
 git config -z --get-regexp 'alias\..*' | while read -lz alias command _
     # Git aliases can contain chars that variable names can't - escape them.
+    if test (count $command) -ne 1
+        printf (_ "Warning: alias '%s' has more than one command: '%s'") $alias "$command" >&2
+    end
     set alias (string replace 'alias.' '' -- $alias | string escape --style=var)
     set -g __fish_git_alias_$alias $command
 end
@@ -158,7 +161,8 @@ function __fish_git_using_command
 
     # Check aliases.
     set -l varname __fish_git_alias_(string escape --style=var -- $cmd)
-    contains -- "$$varname" $argv
+    set -q $varname
+    and contains -- $$varname $argv
     and return 0
     return 1
 end

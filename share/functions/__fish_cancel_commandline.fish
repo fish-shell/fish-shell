@@ -3,7 +3,11 @@ function __fish_cancel_commandline
     set -l cmd (commandline)
     if test -n "$cmd"
         commandline -C 1000000
-        echo -ns (set_color $fish_color_cancel) "^C" (set_color normal)
+        if set -q fish_color_cancel
+            echo -ns (set_color $fish_color_cancel) "^C" (set_color normal)
+        else
+            echo -ns "^C"
+        end
         if command -sq tput
             # Clear to EOL (to erase any autosuggestion).
             echo -n (tput el; or tput ce)

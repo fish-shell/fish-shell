@@ -2,22 +2,9 @@
 # Wrap the builtin history command to provide additional functionality.
 #
 
-# This function is meant to mimic the `set_hist_cmd` function in *src/builtin.cpp*.
-# In particular the error message should be identical in both locations.
-function __fish_set_hist_cmd --no-scope-shadowing
-    if set -q hist_cmd[1]
-        set -l msg (printf (_ "you cannot do both '%ls' and '%ls' in the same invocation") \
-            $hist_cmd $argv[1])
-        printf (_ "%ls: Invalid combination of options,\n%ls\n") $cmd $msg >&2
-        return 1
-    end
-    set hist_cmd $argv[1]
-    return 0
-end
-
 function __fish_unexpected_hist_args --no-scope-shadowing
     if test -n "$search_mode"
-        or test -n "$show_time"
+        or set -q show_time[1]
         printf (_ "%ls: you cannot use any options with the %ls command\n") $cmd $hist_cmd >&2
         return 0
     end
@@ -29,92 +16,64 @@ function __fish_unexpected_hist_args --no-scope-shadowing
 end
 
 function history --description "display or manipulate interactive command history"
-    set -l cmd $_
     set -l cmd history
-    set -l hist_cmd
-    set -l search_mode
-    set -l show_time
-    set -l max_count
-    set -l case_sensitive
-    set -l null
 
-    # Check for a recognized subcommand as the first argument.
-    if set -q argv[1]
-        and not string match -q -- '-*' $argv[1]
-        switch $argv[1]
-            case search delete merge save clear
-                set hist_cmd $argv[1]
-                set -e argv[1]
-        end
+    set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,C' --exclusive 't,T'
+    set options $options 'h/help' 'c/contains' 'e/exact' 'p/prefix'
+    set options $options 'C/case-sensitive' 'z/null' 't/show-time=?' 'n#max'
+    # This long option is deprecated and here solely for legacy compatibility. People should use
+    # -t or --show-time now.
+    set options $options 'T-with-time=?'
+    # The following options are deprecated and will be removed in the next major release.
+    # Note that they do not have usable short flags.
+    set options $options 'S-search' 'D-delete' 'M-merge' 'V-save' 'R-clear'
+    argparse -n $cmd $options -- $argv
+    or return
+
+    if set -q _flag_help
+        __fish_print_help history
+        return 0
     end
 
-    # The "set cmd $cmd xyz" lines are to make it easy to detect if the user specifies more than one
-    # subcommand.
-    #
-    # TODO: Remove the long options that correspond to subcommands (e.g., '--delete') on or after
-    # 2017-10 (which will be a full year after these flags have been deprecated).
-    while set -q argv[1]
-        switch $argv[1]
-            case --delete
-                __fish_set_hist_cmd delete
-                or return
-            case --save
-                __fish_set_hist_cmd save
-                or return
-            case --clear
-                __fish_set_hist_cmd clear
-                or return
-            case --search
-                __fish_set_hist_cmd search
-                or return
-            case --merge
-                __fish_set_hist_cmd merge
-                or return
-            case -C --case_sensitive
-                set case_sensitive --case-sensitive
-            case -h --help
-                builtin history --help
-                return
-            case -t --show-time '--show-time=*' --with-time '--with-time=*'
-                set show_time $argv[1]
-            case -p --prefix
-                set search_mode --prefix
-            case -c --contains
-                set search_mode --contains
-            case -e --exact
-                set search_mode --exact
-            case -z --null
-                set null --null
-            case -n --max
-                if string match -- '-n?*' $argv[1]
-                    or string match -- '--max=*' $argv[1]
-                    set max_count $argv[1]
-                else
-                    set max_count $argv[1] $argv[2]
-                    set -e argv[1]
-                end
-            case --
-                set -e argv[1]
-                break
-            case '*'
-                if string match -r -- '-\d+' $argv[1]
-                    set max_count $argv[1]
-                    set -e argv[1]
-                else
-                    break
-                end
-        end
-        set -e argv[1]
+    set -l hist_cmd
+    set -l show_time
+
+    set -l max_count $_flag_max
+
+    set -q _flag_with_time
+    and set -l _flag_show_time $_flag_with_time
+    if set -q _flag_show_time[1]
+        set show_time --show-time=$_flag_show_time
+    else if set -q _flag_show_time
+        set show_time --show-time
+    end
+
+    set -q _flag_prefix
+    and set -l search_mode --prefix
+    set -q _flag_contains
+    and set -l search_mode --contains
+    set -q _flag_exact
+    and set -l search_mode --exact
+
+    if set -q _flag_delete
+        set hist_cmd delete
+    else if set -q _flag_save
+        set hist_cmd save
+    else if set -q _flag_clear
+        set hist_cmd clear
+    else if set -q _flag_search
+        set hist_cmd search
+    else if set -q _flag_merge
+        set hist_cmd merge
     end
 
     # If a history command has not already been specified check the first non-flag argument for a
     # command. This allows the flags to appear before or after the subcommand.
     if not set -q hist_cmd[1]
         and set -q argv[1]
-        switch $argv[1]
-            case search delete merge save clear
-                set hist_cmd $argv[1]
-                set -e argv[1]
+        if contains $argv[1] search delete merge save clear
+            set hist_cmd $argv[1]
+            set -e argv[1]
         end
     end
 
@@ -131,9 +90,9 @@ function history --description "display or manipulate interactive command histor
                 set -l pager less
                 set -q PAGER
                 and set pager $PAGER
-                builtin history search $search_mode $show_time $max_count $case_sensitive $null -- $argv | eval $pager
+                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_null -- $argv | eval $pager
             else
-                builtin history search $search_mode $show_time $max_count $case_sensitive $null -- $argv
+                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_null -- $argv
             end
 
         case delete # interactively delete history
@@ -147,14 +106,14 @@ function history --description "display or manipulate interactive command histor
             and set search_mode "--contains"
 
             if test $search_mode = "--exact"
-                builtin history delete $search_mode $case_sensitive $argv
+                builtin history delete $search_mode $_flag_case_sensitive $argv
                 return
             end
 
             # TODO: Fix this so that requesting history entries with a timestamp works:
             #   set -l found_items (builtin history search $search_mode $show_time -- $argv)
             set -l found_items
-            builtin history search $search_mode $case_sensitive --null -- $argv | while read -lz x
+            builtin history search $search_mode $_flag_case_sensitive --null -- $argv | while read -lz x
                 set found_items $found_items $x
             end
             if set -q found_items[1]

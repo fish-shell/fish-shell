@@ -15,6 +15,7 @@ Test 14 pass
 Test 15 pass
 Foo change detected
 Foo change detected
+count:5 content:[functionblock function global universal blocklocal]
 Test 16 pass
 __fish_test_env17=UNSHADOWED
 SHADOWED
@@ -23,8 +24,8 @@ Testing Universal Startup
 1
 2
 2
-Missing:
-Missing:
+testu undef in top level shell
+testu undef in sub shell
 SHLVL: 1
 SHLVL: 2
 SHLVL: 1

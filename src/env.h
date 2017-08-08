@@ -14,6 +14,16 @@
 extern size_t read_byte_limit;
 extern bool curses_initialized;
 
+/// Character for separating two array elements. We use 30, i.e. the ascii record separator since
+/// that seems logical.
+#define ARRAY_SEP (wchar_t)0x1e
+
+/// String containing the character for separating two array elements.
+#define ARRAY_SEP_STR L"\x1e"
+
+/// Value denoting a null string.
+#define ENV_NULL L"\x1d"
+
 // Flags that may be passed as the 'mode' in env_set / env_get_string.
 enum {
     /// Default mode.
@@ -200,4 +210,14 @@ extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
 
 /// Returns true if we think the terminal supports setting its title.
 bool term_supports_setting_title();
+
+/// Returns the fish internal representation for an array of strings.
+std::unique_ptr<wcstring> list_to_array_val(const wcstring_list_t &list);
+std::unique_ptr<wcstring> list_to_array_val(const wchar_t **list);
+
+/// Tokenize the specified string into the specified wcstring_list_t.
+///
+/// \param val the input string. The contents of this string is not changed.
+/// \param out the list in which to place the elements.
+void tokenize_variable_array(const wcstring &val, wcstring_list_t &out);
 #endif

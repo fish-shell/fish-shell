@@ -11,7 +11,7 @@ abbr __abbr1 alpha beta gamma
 abbr | grep __abbr1
 
 # Replacing
-abbr __abbr1 delta 
+abbr __abbr1 delta
 abbr | grep __abbr1
 
 # -s and --show tests

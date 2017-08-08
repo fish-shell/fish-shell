@@ -492,7 +492,7 @@ static bool find_job(const wchar_t *proc, expand_flags_t flags,
     while (const job_t *j = jobs.next()) {
         if (j->command_is_empty()) continue;
 
-        size_t offset;
+        size_t offset = 0;
         if (match_pid(j->command(), proc, &offset)) {
             if (flags & EXPAND_FOR_COMPLETIONS) {
                 append_completion(completions, j->command_wcstr() + offset + wcslen(proc),
@@ -514,7 +514,7 @@ static bool find_job(const wchar_t *proc, expand_flags_t flags,
         for (const process_ptr_t &p : j->processes) {
             if (p->actual_cmd.empty()) continue;
 
-            size_t offset;
+            size_t offset = 0;
             if (match_pid(p->actual_cmd, proc, &offset)) {
                 if (flags & EXPAND_FOR_COMPLETIONS) {
                     append_completion(completions, wcstring(p->actual_cmd, offset + wcslen(proc)),
@@ -552,7 +552,7 @@ static void find_process(const wchar_t *proc, expand_flags_t flags,
     pid_t process_pid;
     process_iterator_t iterator;
     while (iterator.next_process(&process_name, &process_pid)) {
-        size_t offset;
+        size_t offset = 0;
         if (match_pid(process_name, proc, &offset)) {
             if (flags & EXPAND_FOR_COMPLETIONS) {
                 append_completion(out, process_name.c_str() + offset + wcslen(proc),
@@ -948,8 +948,8 @@ static expand_error_t expand_brackets(const wcstring &instr, expand_flags_t flag
                     syntax_error = true;
                 } else if (bracket_count == 0) {
                     bracket_end = pos;
-                    break;
                 }
+                break;
             }
             case BRACKET_SEP: {
                 if (bracket_count == 1) last_sep = pos;
@@ -1157,10 +1157,22 @@ static void expand_home_directory(wcstring &input) {
         wcstring username = get_home_directory_name(input, &tail_idx);
 
         bool tilde_error = false;
-        wcstring home;
+        env_var_t home;
         if (username.empty()) {
             // Current users home directory.
             home = env_get_string(L"HOME");
+            // If home is either missing or empty,
+            // treat it like an empty list.
+            // $HOME is defined to be a _path_,
+            // and those cannot be empty.
+            //
+            // We do not expand a string-empty var differently,
+            // because that results in bogus paths
+            // - ~/foo turns into /foo.
+            if (home.missing_or_empty()) {
+                input = ENV_NULL;
+                return;
+            }
             tail_idx = 1;
         } else {
             // Some other users home directory.

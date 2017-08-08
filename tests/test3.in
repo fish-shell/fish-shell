@@ -13,8 +13,7 @@ end
 # Test if variables can be erased
 
 set -e smurf
-
-if test $smurf
+if set -q smurf
 	echo Test 2 fail
 else
 	echo Test 2 pass
@@ -27,7 +26,7 @@ if true
 	set -l t3 bar
 end
 
-if test $t3
+if set -q t3
 	echo Test 3 fail
 else
 	echo Test 3 pass
@@ -105,7 +104,7 @@ end
 
 # Test if exported variables go out of scope
 
-if test (../test/root/bin/fish -c "echo $t8")
+if ../test/root/bin/fish -c "set -q t8; and exit 0; or exit 1"
 	echo Test 9 fail
 else
 	echo Test 9 pass
@@ -138,7 +137,6 @@ end
 # Test combinations of export and scope
 
 set -ge __fish_test_universal_variables_variable_foo
-
 set -Ue __fish_test_universal_variables_variable_foo
 set -Ux __fish_test_universal_variables_variable_foo bar
 set __fish_test_universal_variables_variable_foo baz
@@ -184,6 +182,7 @@ end
 
 set -U __fish_test_universal_variables_variable_foo 1234
 set -eU __fish_test_universal_variables_variable_foo
+# WTF set -eg __fish_test_universal_variables_variable_foo
 
 functions -e watch_foo
 
@@ -191,37 +190,47 @@ functions -e watch_foo
 # test erasing variables without a specified scope
 
 set -g test16res
-
 set -U __fish_test_universal_variables_variable_foo universal
 set -g __fish_test_universal_variables_variable_foo global
+
 begin
   set -l __fish_test_universal_variables_variable_foo blocklocal
+
   function test16
     set -l __fish_test_universal_variables_variable_foo function
     begin
       set -l __fish_test_universal_variables_variable_foo functionblock
+      set test16res $test16res $__fish_test_universal_variables_variable_foo
 
-      set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
+      # This sequence seems pointless but it's really verifying that we
+      # succesfully expose higher scopes as we erase the closest scope.
       set -e __fish_test_universal_variables_variable_foo
-      set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
+      set test16res $test16res $__fish_test_universal_variables_variable_foo
+
       set -e __fish_test_universal_variables_variable_foo
-      set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
+      set test16res $test16res $__fish_test_universal_variables_variable_foo
+
       set -e __fish_test_universal_variables_variable_foo
-      set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
+      set test16res $test16res $__fish_test_universal_variables_variable_foo
+
       set -e __fish_test_universal_variables_variable_foo
-      set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
+      set -q __fish_test_universal_variables_variable_foo
+      and set test16res $test16res $__fish_test_universal_variables_variable_foo
     end
-    set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
-    set -e __fish_test_universal_variables_variable_foo
+
+    set -q __fish_test_universal_variables_variable_foo
+    and echo __fish_test_universal_variables_variable_foo should set after test16 inner begin..end
   end
+
   test16
-  set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
+  set test16res $test16res $__fish_test_universal_variables_variable_foo
 end
-set test16res $test16res (echo $__fish_test_universal_variables_variable_food)
 
-#echo count: (count $test16res) "content:[$test16res]"
+set -q __fish_test_universal_variables_variable_foo
+and echo __fish_test_universal_variables_variable_foo should set after test16 outer begin..end
 
-if test (count $test16res) = 8 -a "$test16res" = "functionblock function global universal   blocklocal "
+echo count:(count $test16res) "content:[$test16res]"
+if test (count $test16res) = 5 -a "$test16res" = "functionblock function global universal blocklocal"
   echo Test 16 pass
 else
   echo Test 16 fail
@@ -244,15 +253,16 @@ echo Testing Universal Startup
 set -U testu 0
 ../test/root/bin/fish -c 'set -U testu 1'
 echo $testu
-../test/root/bin/fish -c 'echo $testu'
+../test/root/bin/fish -c 'set -q testu; and echo $testu'
 
 ../test/root/bin/fish -c 'set -U testu 2'
 echo $testu
-../test/root/bin/fish -c 'echo $testu'
+../test/root/bin/fish -c 'set -q testu; and echo $testu'
 
 ../test/root/bin/fish -c 'set -e testu';
-echo Missing: $testu
-../test/root/bin/fish -c 'echo Missing: $testu'
+set -q testu
+or echo testu undef in top level shell
+../test/root/bin/fish -c 'set -q testu; or echo testu undef in sub shell'
 
 # test SHLVL
 # use a subshell to ensure a clean slate

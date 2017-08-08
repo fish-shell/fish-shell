@@ -28,6 +28,7 @@
 #include <string>
 
 #include "builtin.h"
+#include "builtin_argparse.h"
 #include "builtin_bg.h"
 #include "builtin_bind.h"
 #include "builtin_block.h"
@@ -106,7 +107,7 @@ void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
     }
 }
 
-static const wchar_t *short_options = L":h";
+static const wchar_t *short_options = L"+:h";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
 
@@ -406,6 +407,7 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 static const builtin_data_t builtin_datas[] = {
     {L"[", &builtin_test, N_(L"Test a condition")},
     {L"and", &builtin_generic, N_(L"Execute command if previous command suceeded")},
+    {L"argparse", &builtin_argparse, N_(L"Parse options in fish script")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},
     {L"bg", &builtin_bg, N_(L"Send job to background")},
     {L"bind", &builtin_bind, N_(L"Handle fish key bindings")},
@@ -489,9 +491,9 @@ void builtin_destroy() {}
 /// Is there a builtin command with the given name?
 bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_lookup(cmd)); }
 
-/// Is the command a keyword or a builtin we need to special-case the handling of `-h` and `--help`.
+/// Is the command a keyword we need to special-case the handling of `-h` and `--help`.
 static const wcstring_list_t help_builtins({L"for", L"while", L"function", L"if", L"end", L"switch",
-                                            L"case", L"count", L"printf"});
+                                            L"case"});
 static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command

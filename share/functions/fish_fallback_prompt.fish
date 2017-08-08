@@ -5,7 +5,7 @@
 function fish_fallback_prompt --description "A simple fallback prompt without too much color or special characters for linux VTs"
     set -l color_cwd
     set -l suffix
-    switch $USER
+    switch "$USER"
         case root toor
             if set -q fish_color_cwd_root
                 set color_cwd $fish_color_cwd_root

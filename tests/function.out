@@ -1,23 +1,23 @@
 Testing -V
-$foo: (1)
-1: 'local foo'
-$bar: (5)
-1: 'one'
-2: 'two    2'
-3: '	'
-4: ''
-5: '3'
-$baz: (0)
+$foo count=1
+$foo[1]=|local foo|
+$bar count=5
+$bar[1]=|one|
+$bar[2]=|two    2|
+$bar[3]=|	|
+$bar[4]=||
+$bar[5]=|3|
+$baz count=0
 Testing -V with changed variables
-$foo: (1)
-1: 'local foo'
-$bar: (5)
-1: 'one'
-2: 'two    2'
-3: '	'
-4: ''
-5: '3'
-$baz: (0)
+$foo count=1
+$foo[1]=|local foo|
+$bar count=5
+$bar[1]=|one|
+$bar[2]=|two    2|
+$bar[3]=|	|
+$bar[4]=||
+$bar[5]=|3|
+$baz count=0
 Function name1 found
 Function name2 not found as expected
 Function name3 found

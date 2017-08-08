@@ -940,6 +940,70 @@ static void test_parse_util_cmdsubst_extent() {
     }
 }
 
+/// Verify the behavior of the `list_to_aray_val()` family of functions.
+static void test_list_to_array() {
+    auto list = wcstring_list_t();
+    auto val = list_to_array_val(list);
+    if (*val != ENV_NULL) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    list.push_back(L"");
+    val = list_to_array_val(list);
+    if (*val != list[0]) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    list.push_back(L"abc");
+    val = list_to_array_val(list);
+    if (*val != L"" ARRAY_SEP_STR L"abc") {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    list.insert(list.begin(), L"ghi");
+    val = list_to_array_val(list);
+    if (*val != L"ghi" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"abc") {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    list.push_back(L"");
+    val = list_to_array_val(list);
+    if (*val != L"ghi" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"abc" ARRAY_SEP_STR L"") {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    list.push_back(L"def");
+    val = list_to_array_val(list);
+    if (*val !=
+        L"ghi" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"abc" ARRAY_SEP_STR L"" ARRAY_SEP_STR L"def") {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    const wchar_t *array1[] = {NULL};
+    val = list_to_array_val(array1);
+    if (*val != ENV_NULL) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    const wchar_t *array2[] = {L"abc", NULL};
+    val = list_to_array_val(array2);
+    if (wcscmp(val->c_str(), L"abc") != 0) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    const wchar_t *array3[] = {L"abc", L"def", NULL};
+    val = list_to_array_val(array3);
+    if (wcscmp(val->c_str(), L"abc" ARRAY_SEP_STR L"def") != 0) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+
+    const wchar_t *array4[] = {L"abc", L"def", L"ghi", NULL};
+    val = list_to_array_val(array4);
+    if (wcscmp(val->c_str(), L"abc" ARRAY_SEP_STR L"def" ARRAY_SEP_STR L"ghi") != 0) {
+        err(L"test_list_to_array failed on line %lu", __LINE__);
+    }
+}
+
 static struct wcsfilecmp_test {
     const wchar_t *str1;
     const wchar_t *str2;
@@ -997,6 +1061,7 @@ static void test_wcsfilecmp() {
 
 static void test_utility_functions() {
     say(L"Testing utility functions");
+    test_list_to_array();
     test_wcsfilecmp();
     test_parse_util_cmdsubst_extent();
 }
@@ -2556,12 +2621,13 @@ static void test_input() {
 #define UVARS_TEST_PATH L"test/fish_uvars_test/varsfile.txt"
 
 static int test_universal_helper(int x) {
+    callback_data_list_t callbacks;
     env_universal_t uvars(UVARS_TEST_PATH);
     for (int j = 0; j < UVARS_PER_THREAD; j++) {
         const wcstring key = format_string(L"key_%d_%d", x, j);
         const wcstring val = format_string(L"val_%d_%d", x, j);
         uvars.set(key, val, false);
-        bool synced = uvars.sync(NULL);
+        bool synced = uvars.sync(callbacks);
         if (!synced) {
             err(L"Failed to sync universal variables after modification");
         }
@@ -2569,7 +2635,7 @@ static int test_universal_helper(int x) {
 
     // Last step is to delete the first key.
     uvars.remove(format_string(L"key_%d_%d", x, 0));
-    bool synced = uvars.sync(NULL);
+    bool synced = uvars.sync(callbacks);
     if (!synced) {
         err(L"Failed to sync universal variables after deletion");
     }
@@ -2587,7 +2653,8 @@ static void test_universal() {
     iothread_drain_all();
 
     env_universal_t uvars(UVARS_TEST_PATH);
-    bool loaded = uvars.load();
+    callback_data_list_t callbacks;
+    bool loaded = uvars.load(callbacks);
     if (!loaded) {
         err(L"Failed to load universal variables");
     }
@@ -2620,6 +2687,8 @@ static bool callback_data_less_than(const callback_data_t &a, const callback_dat
 
 static void test_universal_callbacks() {
     say(L"Testing universal callbacks");
+    callback_data_list_t callbacks;
+
     if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
     env_universal_t uvars1(UVARS_TEST_PATH);
     env_universal_t uvars2(UVARS_TEST_PATH);
@@ -2633,23 +2702,23 @@ static void test_universal_callbacks() {
     uvars1.set(L"kappa", L"1", false);
     uvars1.set(L"omicron", L"1", false);
 
-    uvars1.sync(NULL);
-    uvars2.sync(NULL);
+    uvars1.sync(callbacks);
+    uvars2.sync(callbacks);
 
     // Change uvars1.
     uvars1.set(L"alpha", L"2", false);    // changes value
     uvars1.set(L"beta", L"1", true);      // changes export
     uvars1.remove(L"delta");              // erases value
     uvars1.set(L"epsilon", L"1", false);  // changes nothing
-    uvars1.sync(NULL);
+    uvars1.sync(callbacks);
 
     // Change uvars2. It should treat its value as correct and ignore changes from uvars1.
     uvars2.set(L"lambda", L"1", false);  // same value
     uvars2.set(L"kappa", L"2", false);   // different value
 
     // Now see what uvars2 sees.
-    callback_data_list_t callbacks;
-    uvars2.sync(&callbacks);
+    callbacks.clear();
+    uvars2.sync(callbacks);
 
     // Sort them to get them in a predictable order.
     std::sort(callbacks.begin(), callbacks.end(), callback_data_less_than);

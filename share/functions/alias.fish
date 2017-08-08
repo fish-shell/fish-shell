@@ -1,10 +1,11 @@
 function alias --description 'Creates a function wrapping a command'
-    if count $argv >/dev/null
-        switch $argv[1]
-            case -h --h --he --hel --help
-                __fish_print_help alias
-                return 0
-        end
+    set -l options 'h/help'
+    argparse -n alias --max-args=2 $options -- $argv
+    or return
+
+    if set -q _flag_help
+        __fish_print_help alias
+        return 0
     end
 
     set -l name
@@ -12,27 +13,26 @@ function alias --description 'Creates a function wrapping a command'
     set -l prefix
     set -l first_word
     set -l wrapped_cmd
-    switch (count $argv)
 
-        case 0
-            for func in (functions -n)
-                set -l output (functions $func | string match -r -- "function .* --description '(alias .*)'" | string split \n)
-                set -q output[2]
-                and echo $output[2]
+    if not set -q argv[1]
+        # Print the known aliases.
+        for func in (functions -n)
+            set -l output (functions $func | string match -r -- "^function .* --description 'alias (.*)'")
+            if set -q output[2]
+                set output (string replace -r '^'$func'[= ]' '' -- $output[2])
+                echo alias $func (string escape -- $output[1])
             end
-            return 0
-        case 1
-            set -l tmp (string split -m 1 "=" -- $argv) ""
-            set name $tmp[1]
-            set body $tmp[2]
-
-        case 2
-            set name $argv[1]
-            set body $argv[2]
-
-        case \*
-            printf ( _ "%s: Expected one or two arguments, got %d\n") alias (count $argv)
-            return 1
+        end
+        return 0
+    else if not set -q argv[2]
+        # Alias definition of the form "name=value".
+        set -l tmp (string split -m 1 "=" -- $argv) ""
+        set name $tmp[1]
+        set body $tmp[2]
+    else
+        # Alias definition of the form "name value".
+        set name $argv[1]
+        set body $argv[2]
     end
 
     # sanity check

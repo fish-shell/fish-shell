@@ -2,26 +2,13 @@
 #
 # Test the `function` builtin
 
-# utility function
-function show_ary -a name --no-scope-shadowing
-    set -l count (count $$name)
-    echo "\$$name: ($count)"
-    if test $count -gt 0
-        for i in (seq $count)
-            echo "$i: '$$name[1][$i]'"
-        end
-    end
-end
-
 # Test the -V flag
 set -g foo 'global foo'
 set -l foo 'local foo'
 set bar one 'two    2' \t '' 3
 set baz
 function frob -V foo -V bar -V baz
-    show_ary foo
-    show_ary bar
-    show_ary baz
+    show foo bar baz
 end
 echo "Testing -V"
 frob

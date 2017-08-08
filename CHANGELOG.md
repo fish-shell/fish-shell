@@ -1,6 +1,7 @@
 # fish 2.7b1
 
 ## Notable fixes and improvements
+- A new `argparse` command is available to allow fish script to parse arguments with the same behavior as builtin commands. This also includes the `fish_opt` helper command. (#4190).
 - The `COLUMNS` and `LINES` env vars are now correctly set the first time `fish_prompt` is run (#4141).
 - New `status is-breakpoint` command that is true when a prompt is displayed in response to a `breakpoint` command (#1310).
 - Invalid array indexes are now silently ignored (#826, #4127).
@@ -8,6 +9,10 @@
 - `string unescape` has been implemented to reverse the effects of `string escape` (#3543).
 - The history file can now be specified by setting the `FISH_HISTORY` variable (#102).
 - Read history is now controlled by the `FISH_HISTORY` variable rather than the `--mode-name` flag (#1504).
+- Implement a `cdh` (change directory using recent history) command to provide a more friendly alternative to prevd/nextd and pushd/popd (#2847).
+- `command` now supports a `-a` flag to report all directories with the command. This means that `which -a $cmd` is no longer necessary (#2778).
+- `--init-command`/`-C` added to the command line switches, to allow execution of commands before starting the interactive shell (#4164).
+- `set` has a new `--show` option to show lots of information about variables (#4265).
 
 ## Other significant changes
 
@@ -18,11 +23,16 @@
 - `help` can now open the tutorial.
 - `echo -h` now correctly echoes `-h` (#4120).
 - Stop converting empty elements in MANPATH to "." (#4158). The behavior being changed was introduced in fish 2.6.0.
+- `count -h` and `count --help` now return one rather than produce command help output (#4189).
+- Fix setting `$COLUMNS` and `$LINES` before first prompt is displayed (#4141).
+- `read` failures due to too much data should define the var (#4180).
+- multiple `read` commands in non-interactive scripts were broken in fish 2.6.0 (#4206).
+- Fix regression involving universal variables with side-effects at startup such as `set -U fish_escape_delay_ms 10` (#4196).
 - Added completions for:
  - `as` (#4130).
  - `jest` (#4142).
+ - `subl` (Sublime Text 3 editor, #4277)
  - `snap` (#4215)
-- `--init-command`/`-C` added to the command line switches, to allow execution of commands before starting the interactive shell.
 
 ---
 

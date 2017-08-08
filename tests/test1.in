@@ -1,5 +1,5 @@
 #
-#Test aliases, loops, conditionals and some basic elements
+#Test function, loops, conditionals and some basic elements
 #
 
 for i in 1 2 #Comment on same line as command
@@ -30,7 +30,7 @@ for i in \
 end
 
 
-# Simple alias tests
+# Simple function tests
 
 function foo
     echo >../test/temp/fish_foo.txt $argv
@@ -47,17 +47,17 @@ else
 end
 
 function foo
-    printf 'Test %s' $1; echo ' pass'
+    printf 'Test %s' $argv[1]; echo ' pass'
 end
 
-foo 3
+foo 3a
 
 for i in Test for continue break and switch builtins problems;
 	switch $i
 		case Test
 			printf "%s " $i
 		case "f??"
-			printf "%s " 3
+			printf "%s " 3b
 		case "c*"
 			echo pass
 		case break

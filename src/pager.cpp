@@ -320,18 +320,20 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
     size_t prefix_len = fish_wcswidth(prefix.c_str());
     for (size_t i = 0; i < infos->size(); i++) {
         comp_t *comp = &infos->at(i);
-
-        // Compute comp_width.
         const wcstring_list_t &comp_strings = comp->comp;
+
         for (size_t j = 0; j < comp_strings.size(); j++) {
             // If there's more than one, append the length of ', '.
             if (j >= 1) comp->comp_width += 2;
 
-            comp->comp_width += prefix_len + fish_wcswidth(comp_strings.at(j).c_str());
+            // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
+            int comp_width = fish_wcswidth(comp_strings.at(j).c_str());
+            if (comp_width > 0) comp->comp_width += prefix_len + comp_width;
         }
 
-        // Compute desc_width.
-        comp->desc_width = fish_wcswidth(comp->desc.c_str());
+        // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
+        int desc_width = fish_wcswidth(comp->desc.c_str());
+        comp->desc_width = desc_width > 0 ? desc_width : 0;
     }
 }
 

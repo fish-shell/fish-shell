@@ -1,64 +1,45 @@
 function type --description 'Print the type of a command'
     # For legacy reasons, no argument simply causes an unsuccessful return.
-    if not set -q argv[1]
-        return 1
+    set -q argv[1]
+    or return 1
+
+    set -l options 'h/help' 'a/all' 'f/no-functions' 't/type' 'p/path' 'P/force-path' 'q/quiet'
+    argparse -n type --min-args=1 -x t,p,P $options -- $argv
+    or return
+
+    if set -q _flag_help
+        __fish_print_help type
+        return 0
     end
 
-    # Initialize
     set -l res 1
     set -l mode normal
     set -l multi no
     set -l selection all
 
-    # Parse options
-    set -l names
-    while set -q argv[1]
-        set -l arg $argv[1]
-        set -e argv[1]
-        switch $arg
-            case -t --type
-                # This could also be an error
-                # - printing type without printing anything
-                # doesn't make sense.
-                if test $mode != quiet
-                    set mode type
-                end
-            case -p --path
-                if test $mode != quiet
-                    set mode path
-                end
-            case -P --force-path
-                if test $mode != quiet
-                    set mode path
-                end
-                set selection files
-            case -a --all
-                set multi yes
-            case -f --no-functions
-                set selection files
-            case -q --quiet
-                set mode quiet
-            case -h --help
-                __fish_print_help type
-                return 0
-            case --
-                set names $argv
-                break
-            case '-?' '--*'
-                printf (_ "%s: Unknown option %s\n" ) type $arg
-                return 1
-            case '-??*'
-                # Grouped options
-                set argv -(string sub -s 2 -- $arg | string split "") $argv
-            case '*'
-                set names $arg $argv
-                break
-        end
+    # Technically all four of these flags are mutually exclusive. However, we allow -q to be used
+    # with the other three because old versions of this function explicitly allowed it by making
+    # --quiet have precedence.
+    if set -q _flag_quiet
+        set mode quiet
+    else if set -q _flag_type
+        set mode type
+    else if set -q _flag_path
+        set mode path
+    else if set -q _flag_force_path
+        set mode path
+        set selection files
     end
 
-    # Check all possible types for the remaining arguments
-    for i in $names
-        # Found will be set to 1 if a match is found
+    set -q _flag_all
+    and set multi yes
+
+    set -q _flag_no_functions
+    and set selection files
+
+    # Check all possible types for the remaining arguments.
+    for i in $argv
+        # Found will be set to 1 if a match is found.
         set -l found 0
 
         if test $selection != files

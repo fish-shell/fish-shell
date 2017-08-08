@@ -4,17 +4,20 @@ This section is for changes merged to the `major` branch that are not also merge
 ## Deprecations
 - The `IFS` variable is deprecated and will be removed in fish 4.0 (#4156).
 
+## Notable non-backward compatible changes
+- `.` command no longer exists -- use `source` (#4294).
+- `read` now requires at least one var name (#4220).
+- `set x[1] x[2] a b` is no longer valid syntax (#4236).
+
 ## Notable fixes and improvements
 - `read` has a new `--delimiter` option as a better alternative to the `IFS` variable (#4256).
 - `set` has a new `--append` and `--prepend` option (#1326).
 - `set` has a new `--show` option to show lots of information about variables (#4265).
-- `set x[1] x[2] a b` is no longer valid syntax (#4236).
 - `complete` now has a `-k` and `--keep-order` option to keep the order of the OPTION_ARGUMENTS (#361).
 - Local exported (`set -lx`) vars are now visible to functions (#1091).
+- `abbr` has been reimplemented to be faster. This means the old `fish_user_abbreviations` variable is ignored (#4048).
 
 ## Other significant changes
-- `read` now requires at least one var name (#4220).
-- `abbr` has been reimplemented to be faster. This means the old `fish_user_abbreviations` variable is ignored (#4048).
 - Command substitution output is now limited to 10 MB by default (#3822).
 
 

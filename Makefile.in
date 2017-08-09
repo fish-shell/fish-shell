@@ -353,7 +353,7 @@ test: test-prep install-force test_low_level test_high_level
 # We want the various tests to run serially so their output doesn't mix
 # We can do that by adding ordering dependencies based on what goals are being used.
 #
-test_goals := test_low_level test_invocation test_fishscript test_interactive
+test_goals := test_low_level test_fishscript test_interactive test_invocation
 
 #
 # The following variables define targets that depend on the tests. If any more targets
@@ -374,7 +374,7 @@ test_low_level: fish_tests $(call filter_up_to,test_low_level,$(active_test_goal
 
 test_high_level: DESTDIR = $(PWD)/test/root/
 test_high_level: prefix = .
-test_high_level: test-prep install-force test_invocation test_fishscript test_interactive
+test_high_level: test-prep install-force test_fishscript test_interactive test_invocation
 .PHONY: test_high_level
 
 test_invocation: $(call filter_up_to,test_invocation,$(active_test_goals))

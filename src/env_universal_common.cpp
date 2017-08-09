@@ -273,7 +273,7 @@ env_var_t env_universal_t::get(const wcstring &name) const {
     env_var_t result = env_var_t::missing_var();
     var_table_t::const_iterator where = vars.find(name);
     if (where != vars.end()) {
-        result = env_var_t(where->second.val);
+        result = where->second;
     }
     return result;
 }
@@ -295,10 +295,10 @@ void env_universal_t::set_internal(const wcstring &key, const wcstring &val, boo
         return;
     }
 
-    var_entry_t *entry = &vars[key];
-    if (entry->exportv != exportv || entry->val != val) {
-        entry->val = val;
-        entry->exportv = exportv;
+    env_var_t &entry = vars[key];
+    if (entry.exportv != exportv || entry.as_string() != val) {
+        entry.set_val(val);
+        entry.exportv = exportv;
 
         // If we are overwriting, then this is now modified.
         if (overwrite) {
@@ -332,8 +332,8 @@ wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexpor
     var_table_t::const_iterator iter;
     for (iter = vars.begin(); iter != vars.end(); ++iter) {
         const wcstring &key = iter->first;
-        const var_entry_t &e = iter->second;
-        if ((e.exportv && show_exported) || (!e.exportv && show_unexported)) {
+        const env_var_t &var = iter->second;
+        if ((var.exportv && show_exported) || (!var.exportv && show_unexported)) {
             result.push_back(key);
         }
     }
@@ -369,18 +369,18 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
         }
 
         // See if the value has changed.
-        const var_entry_t &new_entry = iter->second;
+        const env_var_t &new_entry = iter->second;
         var_table_t::const_iterator existing = this->vars.find(key);
         if (existing == this->vars.end() || existing->second.exportv != new_entry.exportv ||
-            existing->second.val != new_entry.val) {
+            existing->second != new_entry) {
             // Value has changed.
             callbacks.push_back(
-                callback_data_t(new_entry.exportv ? SET_EXPORT : SET, key, new_entry.val));
+                callback_data_t(new_entry.exportv ? SET_EXPORT : SET, key, new_entry.as_string()));
         }
     }
 }
 
-void env_universal_t::acquire_variables(var_table_t *vars_to_acquire) {
+void env_universal_t::acquire_variables(var_table_t &vars_to_acquire) {
     // Copy modified values from existing vars to vars_to_acquire.
     for (std::set<wcstring>::iterator iter = this->modified.begin(); iter != this->modified.end();
          ++iter) {
@@ -388,19 +388,19 @@ void env_universal_t::acquire_variables(var_table_t *vars_to_acquire) {
         var_table_t::iterator src_iter = this->vars.find(key);
         if (src_iter == this->vars.end()) {
             /* The value has been deleted. */
-            vars_to_acquire->erase(key);
+            vars_to_acquire.erase(key);
         } else {
             // The value has been modified. Copy it over. Note we can destructively modify the
             // source entry in vars since we are about to get rid of this->vars entirely.
-            var_entry_t &src = src_iter->second;
-            var_entry_t &dst = (*vars_to_acquire)[key];
-            dst.val = std::move(src.val);
+            env_var_t &src = src_iter->second;
+            env_var_t &dst = vars_to_acquire[key];
+            dst.set_val(src.as_string());
             dst.exportv = src.exportv;
         }
     }
 
     // We have constructed all the callbacks and updated vars_to_acquire. Acquire it!
-    this->vars = std::move(*vars_to_acquire);
+    this->vars = std::move(vars_to_acquire);
 }
 
 void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
@@ -418,7 +418,7 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
         this->generate_callbacks(new_vars, callbacks);
 
         // Acquire the new variables.
-        this->acquire_variables(&new_vars);
+        this->acquire_variables(new_vars);
         last_read_file = current_file;
     }
 }
@@ -464,8 +464,8 @@ bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
         // Append the entry. Note that append_file_entry may fail, but that only affects one
         // variable; soldier on.
         const wcstring &key = iter->first;
-        const var_entry_t &entry = iter->second;
-        append_file_entry(entry.exportv ? SET_EXPORT : SET, key, entry.val, &contents, &storage);
+        const env_var_t &var = iter->second;
+        append_file_entry(var.exportv ? SET_EXPORT : SET, key, var.as_string(), &contents, &storage);
 
         // Go to next.
         ++iter;
@@ -845,9 +845,9 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t
 
             wcstring val;
             if (unescape_string(tmp + 1, &val, 0)) {
-                var_entry_t &entry = (*vars)[key];
+                env_var_t &entry = (*vars)[key];
                 entry.exportv = exportv;
-                entry.val = std::move(val);  // acquire the value
+                entry.set_val(val);  // acquire the value
             }
         } else {
             debug(1, PARSE_ERR, msg);

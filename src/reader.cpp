@@ -2190,6 +2190,21 @@ bool shell_is_exiting() {
     return end_loop;
 }
 
+static void bg_job_warning() {
+    fputws(_(L"There are still jobs active:\n"), stdout);
+    fputws(_(L"\n   PID  Command\n"), stdout);
+
+    job_iterator_t jobs;
+    while (job_t *j = jobs.next()) {
+        if (!job_is_completed(j)) {
+            fwprintf(stdout, L"%6d  %ls\n", j->pgid, j->command_wcstr());
+        }
+    }
+    fputws(L"\n", stdout);
+    fputws(_(L"Use `disown PID` to let them live independently from fish.\n"), stdout);
+    fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
+}
+
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
 static void handle_end_loop() {
@@ -2214,8 +2229,7 @@ static void handle_end_loop() {
         }
 
         if (!data->prev_end_loop && bg_jobs) {
-            fputws(_(L"There are still jobs active (use the jobs command to see them).\n"), stdout);
-            fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
+            bg_job_warning();
             reader_exit(0, 0);
             data->prev_end_loop = 1;
             return;

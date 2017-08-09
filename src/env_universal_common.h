@@ -60,9 +60,9 @@ class env_universal_t {
     // the new vars.
     void generate_callbacks(const var_table_t &new_vars, callback_data_list_t &callbacks) const;
 
-    // Given a variable table, copy unmodified values into self. May destructively modified
+    // Given a variable table, copy unmodified values into self. May destructively modify
     // vars_to_acquire.
-    void acquire_variables(var_table_t *vars_to_acquire);
+    void acquire_variables(var_table_t &vars_to_acquire);
 
     static void parse_message_internal(const wcstring &msg, var_table_t *vars, wcstring *storage);
     static var_table_t read_message_internal(int fd);

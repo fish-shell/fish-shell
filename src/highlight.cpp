@@ -279,7 +279,6 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) 
     // Handle modifiers.
     if (highlight & highlight_modifier_valid_path) {
         env_var_t var2 = env_get(L"fish_color_valid_path");
-        const wcstring val2 = var2.missing() ? L"" : var2.c_str();
 
         rgb_color_t result2 = parse_color(var2, is_background);
         if (result.is_normal())
@@ -1014,8 +1013,9 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
     if (!is_valid && command_ok) is_valid = path_get_path(cmd, NULL, vars);
 
     // Implicit cd
-    if (!is_valid && implicit_cd_ok)
+    if (!is_valid && implicit_cd_ok) {
         is_valid = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str(), vars);
+    }
 
     // Return what we got.
     return is_valid;

@@ -3,8 +3,6 @@
 # Test read builtin and IFS.
 #
 
-###########
-# Start by testing that invocation errors are handled correctly.
 logmsg Read with no vars is an error
 read
 
@@ -13,19 +11,19 @@ read -a
 read -a v1 v2
 read -a v1
 
-###########
-# Verify correct behavior of subcommands and splitting of input.
-count (echo one\ntwo)
-set -l IFS \t
-count (echo one\ntwo)
-set -l IFS
-count (echo one\ntwo)
-echo [(echo -n one\ntwo)]
-count (echo one\ntwo\n)
-echo [(echo -n one\ntwo\n)]
-count (echo one\ntwo\n\n)
-echo [(echo -n one\ntwo\n\n)]
-set -le IFS
+logmsg Verify correct behavior of subcommands and splitting of input.
+begin
+    count (echo one\ntwo)
+    set -l IFS \t
+    count (echo one\ntwo)
+    set -l IFS
+    count (echo one\ntwo)
+    echo [(echo -n one\ntwo)]
+    count (echo one\ntwo\n)
+    echo [(echo -n one\ntwo\n)]
+    count (echo one\ntwo\n\n)
+    echo [(echo -n one\ntwo\n\n)]
+end
 
 function print_vars --no-scope-shadowing
 	set -l space

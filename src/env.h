@@ -75,16 +75,19 @@ class env_var_t {
     bool is_missing;
 
    public:
+    bool exportv;  // whether the variable should be exported
+
     static env_var_t missing_var() {
         env_var_t result((wcstring()));
         result.is_missing = true;
+        result.exportv = false;
         return result;
     }
 
-    env_var_t(const env_var_t &x) : val(x.val), is_missing(x.is_missing) {}
-    env_var_t(const wcstring &x) : val(x), is_missing(false) {}
-    env_var_t(const wchar_t *x) : val(x), is_missing(false) {}
-    env_var_t() : val(L""), is_missing(false) {}
+    env_var_t(const env_var_t &x) : val(x.val), is_missing(x.is_missing), exportv(x.exportv) {}
+    env_var_t(const wcstring &x) : val(x), is_missing(false), exportv(false) {}
+    env_var_t(const wchar_t *x) : val(x), is_missing(false), exportv(false) {}
+    env_var_t() : val(L""), is_missing(false), exportv(false) {}
 
     bool empty(void) const { return val.empty(); };
     bool missing(void) const { return is_missing; }
@@ -96,9 +99,13 @@ class env_var_t {
 
     env_var_t &operator=(const env_var_t &v) {
         is_missing = v.is_missing;
+        exportv = v.exportv;
         val = v.val;
         return *this;
     }
+
+    void set_val(const wcstring &s) { val = s; is_missing = false; }
+    void set_val(const wchar_t *s) { val = s; is_missing = false; }
 
     bool operator==(const env_var_t &s) const { return is_missing == s.is_missing && val == s.val; }
 
@@ -192,15 +199,7 @@ class env_vars_snapshot_t {
 extern int g_fork_count;
 extern bool g_use_posix_spawn;
 
-/// A variable entry. Stores the value of a variable and whether it should be exported.
-struct var_entry_t {
-    wcstring val;  // the value of the variable
-    bool exportv;  // whether the variable should be exported
-
-    var_entry_t() : exportv(false) {}
-};
-
-typedef std::map<wcstring, var_entry_t> var_table_t;
+typedef std::map<wcstring, env_var_t> var_table_t;
 
 extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
 

@@ -645,8 +645,7 @@ static void set_argparse_result_vars(argparse_cmd_opts_t &opts) {
 
         auto val = list_to_array_val(opt_spec->vals);
         if (opt_spec->short_flag_valid) {
-            env_set(var_name_prefix + opt_spec->short_flag, *val == ENV_NULL ? NULL : val->c_str(),
-                    ENV_LOCAL);
+            env_set(var_name_prefix + opt_spec->short_flag, val->c_str(), ENV_LOCAL);
         }
         if (!opt_spec->long_flag.empty()) {
             // We do a simple replacement of all non alphanum chars rather than calling
@@ -655,12 +654,12 @@ static void set_argparse_result_vars(argparse_cmd_opts_t &opts) {
             for (size_t pos = 0; pos < long_flag.size(); pos++) {
                 if (!iswalnum(long_flag[pos])) long_flag[pos] = L'_';
             }
-            env_set(var_name_prefix + long_flag, *val == ENV_NULL ? NULL : val->c_str(), ENV_LOCAL);
+            env_set(var_name_prefix + long_flag, val->c_str(), ENV_LOCAL);
         }
     }
 
     auto val = list_to_array_val(opts.argv);
-    env_set(L"argv", *val == ENV_NULL ? NULL : val->c_str(), ENV_LOCAL);
+    env_set(L"argv", val->c_str(), ENV_LOCAL);
 }
 
 /// The argparse builtin. This is explicitly not compatible with the BSD or GNU version of this

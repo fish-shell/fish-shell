@@ -457,17 +457,15 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
 
         if (!names_only) {
             env_var_t var = env_get(key, compute_scope(opts));
-            if (!var.missing()) {
+            if (!var.missing_or_empty()) {
                 bool shorten = false;
-                wcstring val = var.as_string();
+                wcstring val = expand_escape_variable(var);
                 if (opts.shorten_ok && val.length() > 64) {
                     shorten = true;
                     val.resize(60);
                 }
-
-                wcstring e_value = expand_escape_variable(val);
                 streams.out.append(L" ");
-                streams.out.append(e_value);
+                streams.out.append(val);
 
                 if (shorten) streams.out.push_back(ellipsis_char);
             }

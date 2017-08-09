@@ -109,4 +109,5 @@ end
 
 \subsection set-notes Notes
 
-Fish versions prior to 3.0 allowed you to write `set PATH[1 4] /bin /sbin` as `set PATH[1] PATH[4] /bin /sbin`. That alternative syntax is ambiguous and inconsistent. Also, no fish script in the fish project used it. Nor could we find any 3rd-party scripts in the Oh-My-Fish or Fisherman package managers that used that alternative syntax. So it was removed in the 3.0 release.
+Fish versions prior to 3.0 supported the syntax `set PATH[1] PATH[4] /bin /sbin`, which worked like
+`set PATH[1 4] /bin /sbin`. This syntax was not widely used, and was ambiguous and inconsistent.

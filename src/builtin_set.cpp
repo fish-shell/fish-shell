@@ -66,7 +66,7 @@ static const struct woption long_options[] = {
 #define BUILTIN_SET_ERASE_NO_VAR _(L"%ls: Erase needs a variable name\n")
 #define BUILTIN_SET_ARRAY_BOUNDS_ERR _(L"%ls: Array index out of bounds\n")
 #define BUILTIN_SET_UVAR_ERR \
-    _(L"%ls: Universal var '%ls' created but shadowed by global var of the same name.\n")
+    _(L"%ls: Universal variable '%ls' is shadowed by the global variable of the same name.\n"),
 
 // Test if the specified variable should be subject to path validation.
 static const wcstring_list_t path_variables({L"PATH", L"CDPATH"});

@@ -696,7 +696,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     env_var_t global_dest = env_get_string(dest, ENV_GLOBAL);
     if (universal && !global_dest.missing() && shell_is_interactive()) {
         streams.err.append_format(
-            _(L"%ls: Universal var '%ls' created but shadowed by global var of the same name.\n"),
+            _(L"%ls: Universal variable '%ls' is shadowed by the global variable of the same name.\n"),
             L"set", dest);
     }
 

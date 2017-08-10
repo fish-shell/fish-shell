@@ -293,8 +293,6 @@ static int my_env_set(const wchar_t *cmd, const wchar_t *key, const wcstring_lis
         if (retval != STATUS_CMD_OK) return retval;
     }
 
-    // We don't check `val->empty()` because an array var with a single empty string will be
-    // "empty". A truly empty array var is set to the special value `ENV_NULL`.
     auto val = list_to_array_val(list);
     retval = env_set(key, val->c_str(), scope | ENV_USER);
     switch (retval) {

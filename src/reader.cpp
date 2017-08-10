@@ -2229,7 +2229,6 @@ static void handle_end_loop() {
             }
             fputws(_(L"Use `disown [PID]` to let them live independently from fish.\n"), stdout);
             fputws(_(L"A further attempt to exit will terminate them.\n"), stdout);
-            fputws(_(L"See `man 1 jobs` and `man 1 disown` for more details.\n"), stdout);
             reader_exit(0, 0);
             data->prev_end_loop = 1;
             return;

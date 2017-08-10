@@ -2214,8 +2214,21 @@ static void handle_end_loop() {
         }
 
         if (!data->prev_end_loop && bg_jobs) {
-            fputws(_(L"There are still jobs active (use the jobs command to see them).\n"), stdout);
-            fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
+            fputws(_(L"There are still jobs active:\n"), stdout);
+            // listing active jobs
+            {
+                fputws(_(L"  PID\tCommand\n"), stdout);
+
+                jobs.reset();
+                while (job_t *j = jobs.next()) {
+                    if (!job_is_completed(j)) {
+                        fwprintf(stdout, L"  %d\t%ls\n", j->pgid, j->command_wcstr());
+                    }
+                }
+                fputws(L"\n", stdout);
+            }
+            fputws(_(L"Use `disown [PID]` to let them live independently from fish.\n"), stdout);
+            fputws(_(L"A further attempt to exit will terminate them.\n"), stdout);
             reader_exit(0, 0);
             data->prev_end_loop = 1;
             return;

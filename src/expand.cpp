@@ -1172,16 +1172,8 @@ static void expand_home_directory(wcstring &input) {
         if (username.empty()) {
             // Current users home directory.
             home = env_get(L"HOME");
-            // If home is either missing or empty,
-            // treat it like an empty list.
-            // $HOME is defined to be a _path_,
-            // and those cannot be empty.
-            //
-            // We do not expand a string-empty var differently,
-            // because that results in bogus paths
-            // - ~/foo turns into /foo.
             if (home.missing_or_empty()) {
-                input = ENV_NULL;
+                input.clear();
                 return;
             }
             tail_idx = 1;

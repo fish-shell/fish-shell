@@ -100,7 +100,7 @@ function help --description 'Show help for the fish shell'
         case "*"
             # If $fish_help_item is empty, this will fail,
             # and $fish_help_page will end up as index.html
-            if type -q -f $fish_help_item
+            if type -q -f "$fish_help_item"
                 # Prefer to use fish's man pages, to avoid
                 # the annoying useless "builtin" man page bash
                 # installs on OS X

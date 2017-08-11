@@ -1581,6 +1581,7 @@ static void validate_new_termsize(struct winsize *new_termsize) {
 /// Export the new terminal size as env vars and to the kernel if possible.
 static void export_new_termsize(struct winsize *new_termsize) {
     wchar_t buf[64];
+
     env_var_t cols = env_get(L"COLUMNS", ENV_EXPORT);
     swprintf(buf, 64, L"%d", (int)new_termsize->ws_col);
     env_set(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? 0 : ENV_EXPORT), buf);

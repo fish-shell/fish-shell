@@ -38,15 +38,14 @@ At runtime, fish requires:
     * sed
 * bc, the "basic calculator" program.
 
-Optional functionality should degrade gracefully. If fish ever threw an error about missing dependencies for an optional feature, it would be a bug in fish and should be reported on our GitHub. Optional features and dependencies include:
+Optional functionality should degrade gracefully. (If fish ever threw a syntax error or a core dump due to missing dependencies for an optional feature, it would be a bug in fish and should be reported on our GitHub.) Optional features and dependencies include:
 
-* fish's builtin `test` syntax, which requires `diff` and `expect`. You don't need these, though, if you don't want to use our tests.
 * dynamically generating usage tips for builtin functions, which requires man, apropos, nroff, and ul.
 * manual page parsing for auto-completion for external commands, which also requires the above man tools, plus Python 2.6+ or Python 3.3+. Python 2 will also need the backports.lzma package; Python 3.3+ should include the required module by default.
 * the web configuration tool, which requires Python 2.6+ or 3.3+.
 * the fish_clipboard_* functions (bound to \cv and \cx), which require xsel or pbcopy/pbpaste.
 
-fish can also show VCS information in the prompt, when the current working directory is in a VCS-tracked project. This is one of the weakest dependencies, though: if you don't use git, you don't need git information in the prompt, and if you do use git, you already have it.
+fish can also show VCS information in the prompt, when the current working directory is in a VCS-tracked project, with support for Git, Mercurial, and Subversion. This is one of the weakest dependencies, though: if you don't use git, for example, you don't need git information in the prompt, and if you do use git, you already have it. Similarly, fish comes with a variety of auto-completion scripts to help with command-line usage of a variety of applications; these scripts call the application in question, but you should only need these applications if you use them.
 
 ### Autotools Build
 

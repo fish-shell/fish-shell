@@ -1617,7 +1617,7 @@ static void test_abbreviations(void) {
         {L"gc", L"git checkout"}, {L"foo", L"bar"}, {L"gx", L"git checkout"},
     };
     for (auto it : abbreviations) {
-        int ret = env_set(L"_fish_abbr_" + it.first, it.second.c_str(), ENV_LOCAL);
+        int ret = env_set(L"_fish_abbr_" + it.first, ENV_LOCAL, it.second.c_str());
         if (ret != 0) err(L"Unable to set abbreviation variable");
     }
 
@@ -2479,7 +2479,7 @@ static void test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/5", vars, L"foo\"bar/",
                                        __LINE__);
 
-    env_set(L"AUTOSUGGEST_TEST_LOC", wd.c_str(), ENV_LOCAL);
+    env_set(L"AUTOSUGGEST_TEST_LOC", ENV_LOCAL, wd.c_str());
     perform_one_autosuggestion_cd_test(L"cd $AUTOSUGGEST_TEST_LOC/0", vars, L"foobar/", __LINE__);
     perform_one_autosuggestion_cd_test(L"cd ~/test_autosuggest_suggest_specia", vars, L"l/",
                                        __LINE__);
@@ -4255,7 +4255,7 @@ long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
     char *str_ptr;
     size_t n;
 
-    env_set(L"TZ", timezone, ENV_EXPORT);
+    env_set(L"TZ", ENV_EXPORT, timezone);
     localtime_r(&tstamp, &ltime);
     n = strftime(ltime_str, 3, "%H", &ltime);
     if (n != 2) {

@@ -421,7 +421,7 @@ int main(int argc, char **argv) {
                     list.push_back(str2wcstring(*ptr));
                 }
                 auto val = list_to_array_val(list);
-                env_set(L"argv", val->c_str(), ENV_DEFAULT);
+                env_set(L"argv", ENV_DEFAULT, val->c_str());
 
                 const wcstring rel_filename = str2wcstring(file);
 

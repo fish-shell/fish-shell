@@ -13,17 +13,31 @@ Detailed user documentation is available by running `help` within fish, and also
 
 ## Building
 
-fish requires a C++11 compiler. It builds successfully with g++ 4.8 or later, or with clang 3.3 or later.
+### Dependencies
 
-fish can be built using autotools or Xcode. autoconf 2.60 or later, as well as automake 1.13 or later, are required to build from git versions. These are not required to build from released tarballs.
+Compiling fish requires:
 
-fish depends on a curses implementation, such as ncurses. The headers and libraries are required for building.
+* a C++11 compiler. It builds successfully with g++ 4.8 or later, or with clang 3.3 or later. fish can be built using autotools or Xcode. autoconf 2.60 or later, as well as automake 1.13 or later, are required to build from git versions, but these are not required to build from the officially released tarballs.
+* the headers and libraries of a curses implementation such as ncurses.
+* gettext, for translation support.
+* Doxygen 1.8.7 or newer, for building the documentation.
 
-fish requires PCRE2 due to the regular expression support contained in the `string` builtin. A copy is included with the source code, and will be used automatically if it does not already exist on your system.
+At runtime, fish requires:
 
-fish requires gettext for translation support.
+* a curses implementation, such as ncurses.
+* gettext, if you need the localizations.
+* PCRE2, due to the regular expression support contained in the `string` builtin. A copy is included with the source code, and will be used automatically if it does not already exist on your system.
+* a number of common UNIX utilities: coreutils (at least ls, seq, rm, mktemp), hostname, grep, awk, sed, and getopt.
+* bc, the "basic calculator" program.
 
-Building the documentation requires Doxygen 1.8.7 or newer.
+Optional functionality should degrade gracefully. (If fish ever threw a syntax error or a core dump due to missing dependencies for an optional feature, it would be a bug in fish and should be reported on our GitHub.) Optional features and dependencies include:
+
+* dynamically generating usage tips for builtin functions, which requires man, apropos, nroff, and ul.
+* manual page parsing for auto-completion for external commands, which also requires the above man tools, plus Python 2.6+ or Python 3.3+. Python 2 will also need the backports.lzma package; Python 3.3+ should include the required module by default.
+* the web configuration tool, which requires Python 2.6+ or 3.3+.
+* the fish_clipboard_* functions (bound to \cv and \cx), which require xsel or pbcopy/pbpaste.
+
+fish can also show VCS information in the prompt, when the current working directory is in a VCS-tracked project, with support for Git, Mercurial, and Subversion. This is one of the weakest dependencies, though: if you don't use git, for example, you don't need git information in the prompt, and if you do use git, you already have it. Similarly, fish comes with a variety of auto-completion scripts to help with command-line usage of a variety of applications; these scripts call the application in question, but you should only need these applications if you use them.
 
 ### Autotools Build
 
@@ -54,22 +68,6 @@ On Debian or Ubuntu you want:
 On RedHat, CentOS, or Amazon EC2:
 
     sudo yum install ncurses-devel
-
-## Runtime Dependencies
-
-fish requires a curses implementation, such as ncurses, to run.
-
-fish requires PCRE2 due to the regular expression support contained in the `string` builtin. A bundled version will be compiled in automatically at build time if required.
-
-fish requires a number of utilities to operate, which should be present on any Unix, GNU/Linux or OS X system. These include (but are not limited to) hostname, grep, awk, sed, and getopt. fish also requires the bc program.
-
-Translation support requires the gettext program.
-
-Usage output for builtin functions is generated on-demand from the installed manpages using `nroff` and `ul`.
-
-Some optional features of fish, such as the manual page completion parser and the web configuration tool, require Python.
-
-In order to generate completions from man pages compressed with either lzma or xz, you may need to install an extra Python package. Python versions prior to 2.6 are not supported.  To process lzma-compresed manpages, backports.lzma is needed for Python 3.2 or older. From version 3.3 onwards, Python already includes the required module.
 
 ## Packages for Linux
 

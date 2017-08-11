@@ -222,7 +222,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
     } else {
         // Get the CDPATH.
         env_var_t cdpath = env_get(L"CDPATH");
-        if (cdpath.missing_or_empty()) cdpath = L".";
+        if (cdpath.missing_or_empty()) cdpath = env_var_t(L".");
 
         // Tokenize it into directories.
         std::vector<wcstring> pathsv;

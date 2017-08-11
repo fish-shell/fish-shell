@@ -77,19 +77,13 @@ class env_var_t {
    public:
     bool exportv;  // whether the variable should be exported
 
-    static env_var_t missing_var() {
-        env_var_t result((wcstring()));
-        result.is_missing = true;
-        result.exportv = false;
-        return result;
-    }
-
-    env_var_t(const env_var_t &x) : val(x.val), is_missing(x.is_missing), exportv(x.exportv) {}
     env_var_t(const wcstring &x) : val(x), is_missing(false), exportv(false) {}
     env_var_t(const wchar_t *x) : val(x), is_missing(false), exportv(false) {}
     env_var_t() : val(L""), is_missing(false), exportv(false) {}
 
-    bool empty(void) const { return val.empty() || val == ENV_NULL; };
+    void set_missing(void) { is_missing = true; }
+
+    bool empty(void) const { return val.empty() || val == ENV_NULL; }
     bool missing(void) const { return is_missing; }
     bool missing_or_empty(void) const { return missing() || empty(); }
 
@@ -97,28 +91,32 @@ class env_var_t {
     void to_list(wcstring_list_t &out) const;
     wcstring as_string() const;
 
-    env_var_t &operator=(const env_var_t &v) {
-        is_missing = v.is_missing;
-        exportv = v.exportv;
-        val = v.val;
-        return *this;
+    // You cannot convert a missing var to a non-missing var. You can only change the value of a var
+    // that is not missing.
+    void set_val(const wcstring &s) {
+        assert(!is_missing);
+        val = s;
     }
-
-    void set_val(const wcstring &s) { val = s; is_missing = false; }
-    void set_val(const wchar_t *s) { val = s; is_missing = false; }
+    void set_val(const wchar_t *s) {
+        assert(!is_missing);
+        val = s;
+    }
 
     bool operator==(const env_var_t &s) const { return is_missing == s.is_missing && val == s.val; }
 
     bool operator==(const wcstring &s) const { return !is_missing && val == s; }
+
+    bool operator==(const wchar_t *s) const { return !is_missing && val == s; }
 
     bool operator!=(const env_var_t &v) const { return val != v.val; }
 
     bool operator!=(const wcstring &s) const { return val != s; }
 
     bool operator!=(const wchar_t *s) const { return val != s; }
-
-    bool operator==(const wchar_t *s) const { return !is_missing && val == s; }
 };
+
+env_var_t create_missing_var();
+extern env_var_t missing_var;
 
 /// Gets the variable with the specified name, or env_var_t::missing_var if it does not exist or is
 /// an empty array.

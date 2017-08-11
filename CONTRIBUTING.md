@@ -31,6 +31,8 @@ To make linting the code easy there are two make targets: `lint` and `lint-all`.
 
 Fish has custom cppcheck rules in the file `.cppcheck.rule`. These help catch mistakes such as using `wcwidth()` rather than `fish_wcwidth()`. Please add a new rule if you find similar mistakes being made.
 
+Fish also depends on `diff` and `expect` for its tests.
+
 ### Dealing With Lint Warnings
 
 You are strongly encouraged to address a lint warning by refactoring the code, changing variable names, or whatever action is implied by the warning.

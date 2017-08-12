@@ -199,12 +199,12 @@ extern bool has_working_tty_timestamps;
 // from within a `switch` block. As of the time I'm writing this oclint doesn't recognize the
 // `__attribute__((noreturn))` on the exit_without_destructors() function.
 // TODO: we use C++11 [[noreturn]] now, does that change things?
-#define FATAL_EXIT()                        \
-    {                                       \
-        char exit_read_buff;                \
-        show_stackframe(L'E');              \
-        (void)read(0, &exit_read_buff, 1); \
-        exit_without_destructors(1);        \
+#define FATAL_EXIT()                       \
+    {                                      \
+        char exit_read_buff;               \
+        show_stackframe(L'E');             \
+        ignore_result(read(0, &exit_read_buff, 1)); \
+        exit_without_destructors(1);       \
     }
 
 /// Exit the program at once after emitting an error message and stack trace if possible.
@@ -876,4 +876,17 @@ enum {
     /// like an unrecognized flag, missing or too many arguments, an invalid integer, etc. But
     STATUS_INVALID_ARGS = 121,
 };
+
+/* Normally casting an expression to void discards its value, but GCC
+   versions 3.4 and newer have __attribute__ ((__warn_unused_result__))
+   which may cause unwanted diagnostics in that case.  Use __typeof__
+   and __extension__ to work around the problem, if the workaround is
+   known to be needed.  */
+#if 3 < __GNUC__ + (4 <= __GNUC_MINOR__)
+# define ignore_result(x) \
+    (__extension__ ({ __typeof__ (x) __x = (x); (void) __x; }))
+#else
+# define ignore_result(x) ((void) (x))
+#endif
+
 #endif

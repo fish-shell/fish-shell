@@ -24,10 +24,20 @@ Compiling fish requires:
 
 At runtime, fish requires:
 
-* a curses implementation, such as ncurses.
+* a curses implementation such as ncurses (which should provide the `tput` command).
 * gettext, if you need the localizations.
 * PCRE2, due to the regular expression support contained in the `string` builtin. A copy is included with the source code, and will be used automatically if it does not already exist on your system.
-* a number of common UNIX utilities: coreutils (at least ls, seq, rm, mktemp), hostname, grep, awk, sed, and getopt.
+* a number of common UNIX utilities:
+    * an awk implementation, such as gawk, mawk, etc
+    * coreutils --- at least basename, cat, cut, date, dircolors, dirname, ls, mkdir, mkfifo, mktemp, rm, seq, sort, stat, stty, tail, tr, tty, uname, uniq, wc, whoami
+    * find
+    * getent (part of glibc)
+    * getopt
+    * grep
+    * hostname
+    * kill
+    * ps
+    * sed
 * bc, the "basic calculator" program.
 
 Optional functionality should degrade gracefully. (If fish ever threw a syntax error or a core dump due to missing dependencies for an optional feature, it would be a bug in fish and should be reported on our GitHub.) Optional features and dependencies include:

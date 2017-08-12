@@ -616,14 +616,14 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
         const char *end = strchr(cursor, '%');
         if (end == NULL) end = cursor + strlen(cursor);
 
-        (void)write(STDERR_FILENO, cursor, end - cursor);
+        ignore_result(write(STDERR_FILENO, cursor, end - cursor));
 
         if (end[0] == '%' && end[1] == 's') {
             // Handle a format string.
             assert(param_idx < sizeof params / sizeof *params);
             const char *format = params[param_idx++];
             if (!format) format = "(null)";
-            (void)write(STDERR_FILENO, format, strlen(format));
+            ignore_result(write(STDERR_FILENO, format, strlen(format)));
             cursor = end + 2;
         } else if (end[0] == '\0') {
             // Must be at the end of the string.
@@ -635,7 +635,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     }
 
     // We always append a newline.
-    (void)write(STDERR_FILENO, "\n", 1);
+    ignore_result(write(STDERR_FILENO, "\n", 1));
 
     errno = errno_old;
 }

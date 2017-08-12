@@ -1207,7 +1207,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         // would cause us to hang!
         size_t read_amt = 64 * 1024;
         void *buff = malloc(read_amt);
-        (void)read(this->pipe_fd, buff, read_amt);
+        ignore_result(read(this->pipe_fd, buff, read_amt));
         free(buff);
     }
 
@@ -1306,7 +1306,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
             while (this->readback_amount > 0) {
                 char buff[64];
                 size_t amt_to_read = mini(this->readback_amount, sizeof buff);
-                (void)read(this->pipe_fd, buff, amt_to_read);
+                ignore_result(read(this->pipe_fd, buff, amt_to_read));
                 this->readback_amount -= amt_to_read;
             }
             assert(this->readback_amount == 0);

@@ -338,7 +338,7 @@ void safe_perror(const char *message) {
     safe_append(buff, safe_strerror(err), sizeof buff);
     safe_append(buff, "\n", sizeof buff);
 
-    (void)write(STDERR_FILENO, buff, strlen(buff));
+    ignore_result(write(STDERR_FILENO, buff, strlen(buff)));
     errno = err;
 }
 

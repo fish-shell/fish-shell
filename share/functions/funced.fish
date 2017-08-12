@@ -105,10 +105,8 @@ function funced --description 'Edit function definition'
                 echo # add a line between the parse error and the prompt
                 set -l repeat
                 set -l prompt (_ 'Edit the file again\? [Y/n]')
-                while test -z "$repeat"
-                    read -p "echo $prompt\  " repeat
-                end
-                if not contains $repeat n N no NO No nO
+                read -p "echo $prompt\  " repeat
+                if test -z $repeat; or contains $repeat {Y,y}{E,e,}{S,s,}
                     continue
                 end
                 echo (_ "Cancelled function editing")

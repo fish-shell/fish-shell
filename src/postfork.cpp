@@ -250,9 +250,8 @@ static int handle_child_io(const io_chain_t &io_chain) {
 }
 
 int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain) {
-    bool ok = true;
+    bool ok = false;
 
-    //p is zero when EXEC_INTERNAL
     if (p) {
         ok = child_set_group(j, p);
     }

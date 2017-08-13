@@ -1,7 +1,8 @@
 # completion for zypper
 
-set -g __fish_zypper_all_commands shell sh repos lr addrepo ar removerepo rr renamerepo nr modifyrepo mr refresh ref clean services ls addservice as modifyservice ms removeservice rs refresh-services refs install in remove rm verify ve source-install si install-new-recommends inr update up list-updates lu patch list-patches lp dist-upgrade dup patch-check pchk search se info if patch-info pattern-info product-info patches pch packages pa patterns pt products pd what-provides wp addlock al removelock rl locks ll cleanlocks cl versioncmp vcmp targetos tos licenses source-download
+set -g __fish_zypper_all_commands shell sh repos lr addrepo ar removerepo rr renamerepo nr modifyrepo mr refresh ref clean cc services ls addservice as modifyservice ms removeservice rs refresh-services refs install in remove rm verify ve source-install si install-new-recommends inr update up list-updates lu patch list-patches lp dist-upgrade dup patch-check pchk search se info if patch-info pattern-info product-info patches pch packages pa patterns pt products pd what-provides wp addlock al removelock rl locks ll cleanlocks cl versioncmp vcmp targetos tos licenses source-download
 set -g __fish_zypper_pkg_commands in install rm remove info if addlock al removelock rl source-install si
+set -g __fish_zypper_repo_commands repos lr addrepo ar removerepo rr renamerepo nr modifyrepo mr refresh ref clean cc
 
 function __fish_zypper_cmd_in_array
         for i in (commandline -pco)
@@ -23,7 +24,12 @@ function __fish_zypper_use_pkg
         __fish_zypper_cmd_in_array $__fish_zypper_pkg_commands
 end
 
+function __fish_zypper_use_repo
+        __fish_zypper_cmd_in_array $__fish_zypper_repo_commands
+end
+
 complete -n '__fish_zypper_use_pkg' -c zypper -a '(__fish_print_packages)' --description 'Package'
+complete -f -n '__fish_zypper_use_repo' -c zypper -a '(__fish_print_zypp_repos)' --description 'Repo'
 
 complete -n '__fish_zypper_no_subcommand' -c zypper -a 'install in' --description 'Install packages'
 
@@ -35,7 +41,7 @@ complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'removerepo rr'       
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'renamerepo nr'              --description 'Rename specified repository'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'modifyrepo mr'              --description 'Modify specified repository'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'refresh ref'                --description 'Refresh all repositories'
-complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'clean'                      --description 'Clean local caches'
+complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'clean cc'                   --description 'Clean local caches'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'services ls'                --description 'List all defined services'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'addservice as'              --description 'Add a new service'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'modifyservice ms'           --description 'Modify specified service'

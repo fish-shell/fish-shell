@@ -125,9 +125,6 @@ bool child_set_group(job_t *j, process_t *p) {
 /// and we can give the new process group control of the terminal if it's to run in the foreground. Note that
 /// we can guarantee the child won't try to read from the terminal before we've had a chance to run this code,
 /// because we haven't woken them up with a SIGCONT yet.
-/// This musn't be called as a part of setup_child_process because that can hang indefinitely until data is
-/// available to read/write in the case of IO_FILE, which means we'll never reach our SIGSTOP and everything
-/// hangs.
 bool set_child_group(job_t *j, pid_t child_pid) {
     bool retval = true;
 
@@ -262,11 +259,14 @@ static int handle_child_io(const io_chain_t &io_chain) {
 int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain) {
     bool ok = true;
 
+    //p is zero when EXEC_INTERNAL
+    if (p) {
+        ok = child_set_group(j, p);
+    }
+
     if (ok) {
-        //In the case of IO_FILE, this can hang until data is available to read/write!
         ok = (0 == handle_child_io(io_chain));
         if (p != 0 && !ok) {
-            debug_safe(0, "p!=0 && !ok");
             exit_without_destructors(1);
         }
     }

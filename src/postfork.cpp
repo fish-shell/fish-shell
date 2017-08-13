@@ -277,6 +277,8 @@ int setup_child_process(process_t *p, const io_chain_t &io_chain) {
         signal_reset_handlers();
     }
 
+    signal_unblock();  // remove all signal blocks
+
     return ok ? 0 : -1;
 }
 

@@ -789,7 +789,7 @@ bool terminal_give_to_job(job_t *j, int cont) {
         return true;
     }
 
-    signal_block();
+    signal_block(true);
 
     //It may not be safe to call tcsetpgrp if we've already done so, as at that point we are no longer
     //the controlling process group for the terminal and no longer have permission to set the process
@@ -872,12 +872,12 @@ bool terminal_give_to_job(job_t *j, int cont) {
             if (errno == ENOTTY) redirect_tty_output();
             debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
             wperror(L"tcsetattr");
-            signal_unblock();
+            signal_unblock(true);
             return false;
         }
     }
 
-    signal_unblock();
+    signal_unblock(true);
     return true;
 }
 
@@ -890,12 +890,12 @@ static bool terminal_return_from_job(job_t *j) {
         return true;
     }
 
-    signal_block();
+    signal_block(true);
     if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
         if (errno == ENOTTY) redirect_tty_output();
         debug(1, _(L"Could not return shell to foreground"));
         wperror(L"tcsetpgrp");
-        signal_unblock();
+        signal_unblock(true);
         return false;
     }
 
@@ -904,7 +904,7 @@ static bool terminal_return_from_job(job_t *j) {
         if (errno == EIO) redirect_tty_output();
         debug(1, _(L"Could not return shell to foreground"));
         wperror(L"tcgetattr");
-        signal_unblock();
+        signal_unblock(true);
         return false;
     }
 
@@ -922,7 +922,7 @@ static bool terminal_return_from_job(job_t *j) {
     }
 #endif
 
-    signal_unblock();
+    signal_unblock(true);
     return true;
 }
 

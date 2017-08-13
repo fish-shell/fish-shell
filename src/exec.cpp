@@ -374,15 +374,15 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
     // really make sense, so I'm not trying to fix it here.
     if (!setup_child_process(0, all_ios)) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
-        const env_var_t shlvl_var = env_get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
-        wcstring shlvl_str = L"0";
-        if (!shlvl_var.missing()) {
-            long shlvl = fish_wcstol(shlvl_var.c_str());
-            if (!errno && shlvl > 0) {
-                shlvl_str = to_string<long>(shlvl - 1);
+        const env_var_t shlvl_str = env_get_string(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
+        wcstring nshlvl_str = L"0";
+        if (!shlvl_str.missing()) {
+            long shlvl_i = fish_wcstol(shlvl_str.c_str());
+            if (!errno && shlvl_i > 0) {
+                nshlvl_str = to_string<long>(shlvl_i - 1);
             }
         }
-        env_set(L"SHLVL", shlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT);
+        env_set(L"SHLVL", nshlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT);
 
         // launch_process _never_ returns.
         launch_process_nofork(j->processes.front().get());

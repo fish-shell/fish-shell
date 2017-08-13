@@ -2658,7 +2658,7 @@ static void test_universal() {
             const wcstring key = format_string(L"key_%d_%d", i, j);
             env_var_t expected_val;
             if (j == 0) {
-                expected_val = missing_var;
+                expected_val = env_var_t::missing_var();
             } else {
                 expected_val = format_string(L"val_%d_%d", i, j);
             }

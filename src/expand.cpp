@@ -144,7 +144,7 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
 
 /// Return the environment variable value for the string starting at \c in.
 static env_var_t expand_var(const wchar_t *in) {
-    if (!in) return missing_var;
+    if (!in) return env_var_t::missing_var();
     return env_get(in);
 }
 
@@ -777,7 +777,7 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
         var_tmp.append(instr, start_pos, var_len);
         env_var_t var;
         if (var_len == 1 && var_tmp[0] == VARIABLE_EXPAND_EMPTY) {
-            var = missing_var;
+            var = env_var_t::missing_var();
         } else {
             var = expand_var(var_tmp.c_str());
         }

@@ -270,9 +270,12 @@ env_universal_t::env_universal_t(const wcstring &path)
 env_universal_t::~env_universal_t() { pthread_mutex_destroy(&lock); }
 
 env_var_t env_universal_t::get(const wcstring &name) const {
+    env_var_t result = env_var_t::missing_var();
     var_table_t::const_iterator where = vars.find(name);
-    if (where != vars.end()) return where->second;
-    return missing_var;
+    if (where != vars.end()) {
+        result = where->second;
+    }
+    return result;
 }
 
 bool env_universal_t::get_export(const wcstring &name) const {
@@ -462,8 +465,7 @@ bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
         // variable; soldier on.
         const wcstring &key = iter->first;
         const env_var_t &var = iter->second;
-        append_file_entry(var.exportv ? SET_EXPORT : SET, key, var.as_string(), &contents,
-                          &storage);
+        append_file_entry(var.exportv ? SET_EXPORT : SET, key, var.as_string(), &contents, &storage);
 
         // Go to next.
         ++iter;

@@ -107,15 +107,6 @@ static void init_locale();
 static void init_curses();
 static void tokenize_variable_array(const wcstring &val, wcstring_list_t &out);
 
-/// Construct a missing var object
-env_var_t create_missing_var() {
-    env_var_t var;
-    var.set_missing();
-    return var;
-}
-
-env_var_t missing_var = create_missing_var();
-
 // Struct representing one level in the function variable stack.
 // Only our variable stack should create and destroy these
 class env_node_t {
@@ -315,7 +306,7 @@ static bool is_electric(const wcstring &key) {
 const env_var_t env_node_t::find_entry(const wcstring &key) {
     var_table_t::const_iterator entry = env.find(key);
     if (entry != env.end()) return entry->second;
-    return missing_var;
+    return env_var_t::missing_var();
 }
 
 /// Return the current umask value.
@@ -1218,7 +1209,7 @@ int env_remove(const wcstring &key, int var_mode) {
 }
 
 wcstring env_var_t::as_string(void) const {
-    assert(!is_missing);
+    //assert(!is_missing);
     return val;
 }
 
@@ -1244,12 +1235,12 @@ env_var_t env_get(const wcstring &key, env_mode_flags_t mode) {
     // Make the assumption that electric keys can't be shadowed elsewhere, since we currently block
     // that in env_set().
     if (is_electric(key)) {
-        if (!search_global) return missing_var;
+        if (!search_global) return env_var_t::missing_var();
         if (key == L"history") {
             // Big hack. We only allow getting the history on the main thread. Note that history_t
             // may ask for an environment variable, so don't take the lock here (we don't need it).
             if (!is_main_thread()) {
-                return missing_var;
+                return env_var_t::missing_var();
             }
 
             history_t *history = reader_get_history();
@@ -1289,7 +1280,7 @@ env_var_t env_get(const wcstring &key, env_mode_flags_t mode) {
         }
     }
 
-    if (!search_universal) return missing_var;
+    if (!search_universal) return env_var_t::missing_var();
 
     // Another hack. Only do a universal barrier on the main thread (since it can change variable
     // values). Make sure we do this outside the env_lock because it may itself call `env_get()`.
@@ -1298,17 +1289,15 @@ env_var_t env_get(const wcstring &key, env_mode_flags_t mode) {
         env_universal_barrier();
     }
 
-    // Okay, we couldn't find a local or global var given the requirements. If there is a matching
-    // universal var return that.
     if (uvars()) {
         env_var_t env_var = uvars()->get(key);
-        if (!env_var.missing() &&
-            (uvars()->get_export(key) ? search_exported : search_unexported)) {
-            return env_var;
+        if (env_var == ENV_NULL ||
+            !(uvars()->get_export(key) ? search_exported : search_unexported)) {
+            env_var = env_var_t::missing_var();
         }
+        return env_var;
     }
-
-    return missing_var;
+    return env_var_t::missing_var();
 }
 
 bool env_exist(const wchar_t *key, env_mode_flags_t mode) {
@@ -1572,7 +1561,7 @@ env_var_t env_vars_snapshot_t::get(const wcstring &key) const {
         return env_get(key);
     }
     std::map<wcstring, wcstring>::const_iterator iter = vars.find(key);
-    return iter == vars.end() ? missing_var : env_var_t(iter->second);
+    return iter == vars.end() ? env_var_t::missing_var() : env_var_t(iter->second);
 }
 
 const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH",

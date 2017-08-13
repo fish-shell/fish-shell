@@ -70,17 +70,17 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
             # Add a character for each file status if we have one
             switch $line
                 case 'A '
-                    set -a hg_statuses added
+                    set hg_statuses $hg_statuses added
                 case 'M ' ' M'
-                    set -a hg_statuses modified
+                    set hg_statuses $hg_statuses modified
                 case 'C '
-                    set -a hg_statuses copied
+                    set hg_statuses $hg_statuses copied
                 case 'D ' ' D'
-                    set -a hg_statuses deleted
+                    set hg_statuses $hg_statuses deleted
                 case '\? '
-                    set -a hg_statuses untracked
+                    set hg_statuses $hg_statuses untracked
                 case 'U*' '*U' 'DD' 'AA'
-                    set -a hg_statuses unmerged
+                    set hg_statuses $hg_statuses unmerged
             end
         end
 

@@ -19,14 +19,14 @@ function history --description "display or manipulate interactive command histor
     set -l cmd history
 
     set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,C' --exclusive 't,T'
-    set -a options 'h/help' 'c/contains' 'e/exact' 'p/prefix'
-    set -a options 'C/case-sensitive' 'z/null' 't/show-time=?' 'n#max'
+    set options $options 'h/help' 'c/contains' 'e/exact' 'p/prefix'
+    set options $options 'C/case-sensitive' 'z/null' 't/show-time=?' 'n#max'
     # This long option is deprecated and here solely for legacy compatibility. People should use
     # -t or --show-time now.
-    set -a options 'T-with-time=?'
+    set options $options 'T-with-time=?'
     # The following options are deprecated and will be removed in the next major release.
     # Note that they do not have usable short flags.
-    set -a options 'S-search' 'D-delete' 'M-merge' 'V-save' 'R-clear'
+    set options $options 'S-search' 'D-delete' 'M-merge' 'V-save' 'R-clear'
     argparse -n $cmd $options -- $argv
     or return
 

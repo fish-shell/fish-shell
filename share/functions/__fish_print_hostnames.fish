@@ -53,7 +53,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
             set -l orig_dir $PWD
             set -l paths
             for config in $argv
-                set -a paths (cat $config ^/dev/null \
+                set paths $paths (cat $config ^/dev/null \
                 # Keep only Include lines
                 | string match -r -i '^\s*Include\s+.+' \
                 # Remove Include syntax
@@ -91,7 +91,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
             # Print hosts from system wide ssh configuration file
             string match -r -i '^\s*Host\s+\S+' <$file | string replace -r -i '^\s*Host\s+' '' | string trim | string replace -r '\s+' ' ' | string split ' ' | string match -v '*\**'
             # Extract known_host paths.
-            set -a known_hosts (string match -ri '^\s*UserKnownHostsFile|^\s*GlobalKnownHostsFile' <$file | string replace -ri '.*KnownHostsFile\s*' '')
+            set known_hosts $known_hosts (string match -ri '^\s*UserKnownHostsFile|^\s*GlobalKnownHostsFile' <$file | string replace -ri '.*KnownHostsFile\s*' '')
         end
     end
     for file in $known_hosts

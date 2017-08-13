@@ -52,19 +52,19 @@ function __terlar_git_prompt --description 'Write out the git prompt'
 
         switch $i
             case 'A '
-                set -a gs added
+                set gs $gs added
             case 'M ' ' M'
-                set -a gs modified
+                set gs $gs modified
             case 'R '
-                set -a gs renamed
+                set gs $gs renamed
             case 'C '
-                set -a gs copied
+                set gs $gs copied
             case 'D ' ' D'
-                set -a gs deleted
+                set gs $gs deleted
             case '\?\?'
-                set -a gs untracked
+                set gs $gs untracked
             case 'U*' '*U' 'DD' 'AA'
-                set -a gs unmerged
+                set gs $gs unmerged
         end
     end
 

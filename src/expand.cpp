@@ -144,7 +144,7 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
 /// Return the environment variable value for the string starting at \c in.
 static env_var_t expand_var(const wchar_t *in) {
     if (!in) return env_var_t::missing_var();
-    return env_get(in);
+    return env_get_string(in);
 }
 
 /// Test if the specified string does not contain character which can not be used inside a quoted
@@ -777,19 +777,19 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
         }
 
         var_tmp.append(instr, start_pos, var_len);
-        env_var_t var;
+        env_var_t var_val;
         if (var_len == 1 && var_tmp[0] == VARIABLE_EXPAND_EMPTY) {
-            var = env_var_t::missing_var();
+            var_val = env_var_t::missing_var();
         } else {
-            var = expand_var(var_tmp.c_str());
+            var_val = expand_var(var_tmp.c_str());
         }
 
-        if (!var.missing()) {
+        if (!var_val.missing()) {
             int all_vars = 1;
             wcstring_list_t var_item_list;
 
             if (is_ok) {
-                var.to_list(var_item_list);
+                tokenize_variable_array(var_val, var_item_list);
 
                 const size_t slice_start = stop_pos;
                 if (slice_start < insize && instr.at(slice_start) == L'[') {
@@ -1173,7 +1173,7 @@ static void expand_home_directory(wcstring &input) {
         env_var_t home;
         if (username.empty()) {
             // Current users home directory.
-            home = env_get(L"HOME");
+            home = env_get_string(L"HOME");
             // If home is either missing or empty,
             // treat it like an empty list.
             // $HOME is defined to be a _path_,
@@ -1201,7 +1201,7 @@ static void expand_home_directory(wcstring &input) {
             }
         }
 
-        wchar_t *realhome = wrealpath(home.as_string(), NULL);
+        wchar_t *realhome = wrealpath(home, NULL);
 
         if (!tilde_error && realhome) {
             input.replace(input.begin(), input.begin() + tail_idx, realhome);
@@ -1433,12 +1433,12 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
             } else {
                 // Get the PATH/CDPATH and cwd. Perhaps these should be passed in. An empty CDPATH
                 // implies just the current directory, while an empty PATH is left empty.
-                env_var_t paths = env_get(for_cd ? L"CDPATH" : L"PATH");
+                env_var_t paths = env_get_string(for_cd ? L"CDPATH" : L"PATH");
                 if (paths.missing_or_empty()) paths = for_cd ? L"." : L"";
 
                 // Tokenize it into path names.
                 std::vector<wcstring> pathsv;
-                paths.to_list(pathsv);
+                tokenize_variable_array(paths, pathsv);
                 for (auto next_path : pathsv) {
                     effective_working_dirs.push_back(
                         path_apply_working_directory(next_path, working_dir));
@@ -1592,9 +1592,9 @@ void update_abbr_cache(const wchar_t *op, const wcstring varname) {
     }
     abbreviations.erase(abbr);
     if (wcscmp(op, L"ERASE") != 0) {
-        const env_var_t expansion = env_get(varname);
+        const env_var_t expansion = env_get_string(varname);
         if (!expansion.missing_or_empty()) {
-            abbreviations.emplace(std::make_pair(abbr, expansion.as_string()));
+            abbreviations.emplace(std::make_pair(abbr, expansion));
         }
     }
 }

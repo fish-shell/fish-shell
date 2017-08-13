@@ -78,7 +78,7 @@ static int load(const wcstring &name) {
 static void autoload_names(std::set<wcstring> &names, int get_hidden) {
     size_t i;
 
-    const env_var_t path_var_wstr = env_get(L"fish_function_path");
+    const env_var_t path_var_wstr = env_get_string(L"fish_function_path");
     if (path_var_wstr.missing()) return;
     const wchar_t *path_var = path_var_wstr.c_str();
 
@@ -121,7 +121,7 @@ void function_init() {
 static std::map<wcstring, env_var_t> snapshot_vars(const wcstring_list_t &vars) {
     std::map<wcstring, env_var_t> result;
     for (wcstring_list_t::const_iterator it = vars.begin(), end = vars.end(); it != end; ++it) {
-        result.insert(std::make_pair(*it, env_get(*it)));
+        result.insert(std::make_pair(*it, env_get_string(*it)));
     }
     return result;
 }

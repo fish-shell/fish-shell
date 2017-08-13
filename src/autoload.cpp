@@ -69,7 +69,7 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
     CHECK_BLOCK(0);
     ASSERT_IS_MAIN_THREAD();
 
-    env_var_t path_var = env_get(env_var_name);
+    env_var_t path_var = env_get_string(env_var_name);
 
     // Do we know where to look?
     if (path_var.empty()) return 0;
@@ -79,7 +79,7 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
     if (path_var != this->last_path) {
         this->last_path = path_var;
         this->last_path_tokenized.clear();
-        this->last_path.to_list(this->last_path_tokenized);
+        tokenize_variable_array(this->last_path, this->last_path_tokenized);
 
         scoped_lock locker(lock);
         this->evict_all_nodes();
@@ -115,7 +115,7 @@ bool autoload_t::can_load(const wcstring &cmd, const env_vars_snapshot_t &vars) 
     if (path_var.missing_or_empty()) return false;
 
     std::vector<wcstring> path_list;
-    path_var.to_list(path_list);
+    tokenize_variable_array(path_var, path_list);
     return this->locate_file_and_maybe_load_it(cmd, false, false, path_list);
 }
 

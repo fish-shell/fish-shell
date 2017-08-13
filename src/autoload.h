@@ -8,7 +8,6 @@
 #include <set>
 
 #include "common.h"
-#include "env.h"
 #include "lru.h"
 
 /// Record of an attempt to access a file.
@@ -51,7 +50,7 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
     /// The environment variable name.
     const wcstring env_var_name;
     /// The path from which we most recently autoloaded.
-    env_var_t last_path;
+    wcstring last_path;
     /// the most reecently autoloaded path, tokenized (split on separators).
     wcstring_list_t last_path_tokenized;
     /// A table containing all the files that are currently being loaded.

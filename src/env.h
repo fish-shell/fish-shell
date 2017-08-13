@@ -24,7 +24,7 @@ extern bool curses_initialized;
 /// Value denoting a null string.
 #define ENV_NULL L"\x1d"
 
-// Flags that may be passed as the 'mode' in env_set / env_get.
+// Flags that may be passed as the 'mode' in env_set / env_get_string.
 enum {
     /// Default mode.
     ENV_DEFAULT = 0,
@@ -69,16 +69,11 @@ void env_init(const struct config_paths_t *paths = NULL);
 /// routines.
 void misc_init();
 
-/// Tokenize the specified string into the specified wcstring_list_t.
-///
-/// \param val the input string. The contents of this string is not changed.
-/// \param out the list in which to place the elements.
-void tokenize_variable_array(const wcstring &val, wcstring_list_t &out);
+int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t mode);
 
-class env_var_t {
+class env_var_t : public wcstring {
    private:
     bool is_missing;
-    wcstring val;
 
    public:
     static env_var_t missing_var() {
@@ -87,36 +82,41 @@ class env_var_t {
         return result;
     }
 
-    env_var_t(const env_var_t &x) : val(x.val), is_missing(x.is_missing) {}
-    env_var_t(const wcstring &x) : val(x), is_missing(false) {}
-    env_var_t(const wchar_t *x) : val(x), is_missing(false) {}
-    env_var_t() : val(L""), is_missing(false) {}
+    env_var_t(const env_var_t &x) : wcstring(x), is_missing(x.is_missing) {}
+    env_var_t(const wcstring &x) : wcstring(x), is_missing(false) {}
+    env_var_t(const wchar_t *x) : wcstring(x), is_missing(false) {}
+    env_var_t() : wcstring(L""), is_missing(false) {}
 
-    bool empty(void) const { return val.empty(); };
     bool missing(void) const { return is_missing; }
-    bool missing_or_empty(void) const { return missing() || val.empty(); }
+
+    bool missing_or_empty(void) const { return missing() || empty(); }
 
     const wchar_t *c_str(void) const;
-    void to_list(wcstring_list_t &out) const;
-    wcstring as_string() const;
 
-    env_var_t &operator=(const env_var_t &v) {
-        is_missing = v.is_missing;
-        val = v.val;
+    env_var_t &operator=(const env_var_t &s) {
+        is_missing = s.is_missing;
+        wcstring::operator=(s);
         return *this;
     }
 
-    bool operator==(const env_var_t &s) const { return is_missing == s.is_missing && val == s.val; }
+    bool operator==(const env_var_t &s) const {
+        return is_missing == s.is_missing &&
+               static_cast<const wcstring &>(*this) == static_cast<const wcstring &>(s);
+    }
 
-    bool operator==(const wcstring &s) const { return !is_missing && val == s; }
+    bool operator==(const wcstring &s) const {
+        return !is_missing && static_cast<const wcstring &>(*this) == s;
+    }
 
-    bool operator!=(const env_var_t &v) const { return val != v.val; }
+    bool operator!=(const env_var_t &s) const { return !(*this == s); }
 
-    bool operator!=(const wcstring &s) const { return val != s; }
+    bool operator!=(const wcstring &s) const { return !(*this == s); }
 
-    bool operator!=(const wchar_t *s) const { return val != s; }
+    bool operator==(const wchar_t *s) const {
+        return !is_missing && static_cast<const wcstring &>(*this) == s;
+    }
 
-    bool operator==(const wchar_t *s) const { return !is_missing && val == s; }
+    bool operator!=(const wchar_t *s) const { return !(*this == s); }
 };
 
 /// Gets the variable with the specified name, or env_var_t::missing_var if it does not exist or is
@@ -124,9 +124,7 @@ class env_var_t {
 ///
 /// \param key The name of the variable to get
 /// \param mode An optional scope to search in. All scopes are searched if unset
-env_var_t env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
-
-int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t mode);
+env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
 
 /// Returns true if the specified key exists. This can't be reliably done using env_get, since
 /// env_get returns null for 0-element arrays.
@@ -216,4 +214,10 @@ bool term_supports_setting_title();
 /// Returns the fish internal representation for an array of strings.
 std::unique_ptr<wcstring> list_to_array_val(const wcstring_list_t &list);
 std::unique_ptr<wcstring> list_to_array_val(const wchar_t **list);
+
+/// Tokenize the specified string into the specified wcstring_list_t.
+///
+/// \param val the input string. The contents of this string is not changed.
+/// \param out the list in which to place the elements.
+void tokenize_variable_array(const wcstring &val, wcstring_list_t &out);
 #endif

@@ -427,9 +427,9 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (!opts.have_delimiter) {
-        env_var_t ifs = env_get(L"IFS");
+        env_var_t ifs = env_get_string(L"IFS");
         if (!ifs.missing_or_empty()) {
-            opts.delimiter = ifs.as_string();
+            opts.delimiter = ifs;
         }
     }
     if (opts.delimiter.empty()) {

@@ -239,8 +239,9 @@ static int my_env_path_setup(const wchar_t *cmd, const wchar_t *key,  //!OCLINT(
     // not the (missing) local value. Also don't bother to complain about relative paths, which
     // don't start with /.
     wcstring_list_t existing_values;
-    const env_var_t existing_variable = env_get(key, ENV_DEFAULT);
-    if (!existing_variable.missing_or_empty()) existing_variable.to_list(existing_values);
+    const env_var_t existing_variable = env_get_string(key, ENV_DEFAULT);
+    if (!existing_variable.missing_or_empty())
+        tokenize_variable_array(existing_variable, existing_values);
 
     for (size_t i = 0; i < list.size(); i++) {
         const wcstring &dir = list.at(i);
@@ -345,9 +346,9 @@ static int parse_index(std::vector<long> &indexes, wchar_t *src, int scope, io_s
     *p = L'\0';        // split the var name from the indexes/slices
     p++;
 
-    env_var_t var_str = env_get(src, scope);
+    env_var_t var_str = env_get_string(src, scope);
     wcstring_list_t var;
-    if (!var_str.missing()) var_str.to_list(var);
+    if (!var_str.missing()) tokenize_variable_array(var_str, var);
 
     int count = 0;
 
@@ -456,16 +457,15 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
         streams.out.append(e_key);
 
         if (!names_only) {
-            env_var_t var = env_get(key, compute_scope(opts));
-            if (!var.missing()) {
+            env_var_t value = env_get_string(key, compute_scope(opts));
+            if (!value.missing()) {
                 bool shorten = false;
-                wcstring val = var.as_string();
-                if (opts.shorten_ok && val.length() > 64) {
+                if (opts.shorten_ok && value.length() > 64) {
                     shorten = true;
-                    val.resize(60);
+                    value.resize(60);
                 }
 
-                wcstring e_value = expand_escape_variable(val);
+                wcstring e_value = expand_escape_variable(value);
                 streams.out.append(L" ");
                 streams.out.append(e_value);
 
@@ -500,8 +500,8 @@ static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 
         if (idx_count) {
             wcstring_list_t result;
-            env_var_t dest_str = env_get(dest, scope);
-            if (!dest_str.missing()) dest_str.to_list(result);
+            env_var_t dest_str = env_get_string(dest, scope);
+            if (!dest_str.missing()) tokenize_variable_array(dest_str, result);
 
             for (auto idx : indexes) {
                 if (idx < 1 || (size_t)idx > result.size()) retval++;
@@ -538,12 +538,12 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
     }
 
     if (env_exist(var_name, scope)) {
-        const env_var_t evar = env_get(var_name, scope | ENV_EXPORT | ENV_USER);
+        const env_var_t evar = env_get_string(var_name, scope | ENV_EXPORT | ENV_USER);
         const wchar_t *exportv = evar.missing() ? _(L"unexported") : _(L"exported");
 
-        const env_var_t var = env_get(var_name, scope | ENV_USER);
+        const env_var_t var = env_get_string(var_name, scope | ENV_USER);
         wcstring_list_t result;
-        if (!var.empty()) var.to_list(result);
+        if (!var.empty()) tokenize_variable_array(var, result);
 
         streams.out.append_format(_(L"$%ls: set in %ls scope, %ls, with %d elements\n"), var_name,
                                   scope_name, exportv, result.size());
@@ -632,10 +632,10 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
     if (idx_count == 0) {  // unset the var
         retval = env_remove(dest, scope);
     } else {  // remove just the specified indexes of the var
-        const env_var_t dest_var = env_get(dest, scope);
+        const env_var_t dest_var = env_get_string(dest, scope);
         if (dest_var.missing()) return STATUS_CMD_ERROR;
         wcstring_list_t result;
-        dest_var.to_list(result);
+        tokenize_variable_array(dest_var, result);
         erase_values(result, indexes);
         retval = my_env_set(cmd, dest, result, scope, streams);
     }
@@ -658,9 +658,9 @@ static int set_var_array(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_t
             for (int i = 0; i < argc; i++) new_values.push_back(argv[i]);
         }
 
-        env_var_t var_str = env_get(varname, scope);
+        env_var_t var_str = env_get_string(varname, scope);
         wcstring_list_t var_array;
-        if (!var_str.missing()) var_str.to_list(var_array);
+        if (!var_str.missing()) tokenize_variable_array(var_str, var_array);
         new_values.insert(new_values.end(), var_array.begin(), var_array.end());
 
         if (opts.append) {
@@ -691,8 +691,8 @@ static int set_var_slices(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_
     }
 
     int scope = compute_scope(opts);  // calculate the variable scope based on the provided options
-    const env_var_t var_str = env_get(varname, scope);
-    if (!var_str.missing()) var_str.to_list(new_values);
+    const env_var_t var_str = env_get_string(varname, scope);
+    if (!var_str.missing()) tokenize_variable_array(var_str, new_values);
 
     // Slice indexes have been calculated, do the actual work.
     wcstring_list_t result;

@@ -13,34 +13,3 @@ set --show var1
 
 set -g var2
 set --show _unset_var var2
-
-logmsg Appending works
-set -g var3a a b c
-set -a var3a
-set -a var3a d
-set -a var3a e f
-set --show var3a
-set -g var3b
-set -a var3b
-set --show var3b
-set -g var3c
-set -a var3c 'one string'
-set --show var3c
-
-logmsg Prepending works
-set -g var4a a b c
-set -p var4a
-set -p var4a d
-set -p var4a e f
-set --show var4a
-set -g var4b
-set -p var4b
-set --show var4b
-set -g var4c
-set -p var4c 'one string'
-set --show var4c
-
-logmsg Appending and prepending at same time works
-set -g var5 abc def
-set -a -p var5 0 x 0
-set --show var5

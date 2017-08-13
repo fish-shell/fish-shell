@@ -21,10 +21,6 @@ With both variable names and values provided, `set` assigns the variable `VARIAB
 
 The following options control variable scope:
 
-- `-a` or `--append` causes the values to be appended to the current set of values for the variable. This can be used with `--prepend` to both append and prepend at the same time. This cannot be used when assigning to a variable slice.
-
-- `-p` or `--prepend` causes the values to be prepended to the current set of values for the variable. This can be used with `--append` to both append and prepend at the same time. This cannot be used when assigning to a variable slice.
-
 - `-l` or `--local` forces the specified shell variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
 
 - `-g` or `--global` causes the specified shell variable to be given a global scope. Non-global variables disappear when the block they belong to ends
@@ -80,31 +76,24 @@ In erase mode, if variable indices are specified, only the specified slices of t
 In assignment mode, `set` does not modify the exit status. This allows simultaneous capture of the output and exit status of a subcommand, e.g. `if set output (command)`. In query mode, the exit status is the number of variables that were not found. In erase mode, `set` exits with a zero exit status in case of success, with a non-zero exit status if the commandline was invalid, if the variable was write-protected or if the variable did not exist.
 
 
-\subsection set-examples Examples
+\subsection set-example Example
 \fish
-# Prints all global, exported variables.
 set -xg
+# Prints all global, exported variables.
 
+set foo hi
 # Sets the value of the variable $foo to be 'hi'.
-set foo hi
 
-# Appends the value "there" to the variable $foo.
-set -a foo there
-
-# Does the same thing as the previous two commands the way it would be done pre-fish 3.0.
-set foo hi
-set foo $foo there
-
-# Removes the variable $smurf
 set -e smurf
+# Removes the variable $smurf
 
-# Changes the fourth element of the $PATH array to ~/bin
 set PATH[4] ~/bin
+# Changes the fourth element of the $PATH array to ~/bin
 
-# Outputs the path to Python if `type -p` returns true.
 if set python_path (type -p python)
     echo "Python is at $python_path"
 end
+# Outputs the path to Python if `type -p` returns true.
 \endfish
 
 \subsection set-notes Notes

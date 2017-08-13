@@ -1,6 +1,6 @@
 # Test index ranges
 
-logmsg Test variable expand
+echo Test variable expand
 set n 10
 set test (seq $n)
 echo $test[1..$n]      # normal range
@@ -9,26 +9,26 @@ echo $test[2..5 8..6]  # several ranges
 echo $test[-1..-2]     # range with negative limits
 echo $test[-1..1]      # range with mixed limits
 
-logmsg Test variable set
+echo Test variable set
 set test1 $test
 set test1[-1..1] $test; echo $test1
 set test1[1..$n] $test; echo $test1
 set test1[$n..1] $test; echo $test1
 set test1[2..4 -2..-4] $test1[4..2 -4..-2]; echo $test1
 
-logmsg Test using slices of command substitution
+echo Test using slices of command substitution
 echo (seq 5)[-1..1]
 echo (seq $n)[3..5 -2..2]
 
-logmsg Test more
+echo Test more
 echo $test[(count $test)..1]
 echo $test[1..(count $test)]
 
 # See issue 1061
-logmsg Verify that if statements swallow failure
+echo "Verify that if statements swallow failure"
 if false ; end ; echo $status
 
-logmsg Verify and/or behavior with if and while statements
+# Verify and/or behavior with if and while statements
 if false ; or true ; echo "success1" ; end
 if false ; and false ; echo "failure1" ; end
 while false ; and false ; or true ; echo "success2"; break ; end
@@ -37,5 +37,5 @@ if false ; else if false ; and true ; else if false ; and false ; else if false;
 if false ; else if false ; and true ; else if false ; or false ; else if false; echo "failure 4"; end
 if false ; or true | false ; echo "failure5" ; end
 
-logmsg Catch this corner case, which should produce an error
+# Catch this corner case, which should produce an error
 if false ; or --help ; end

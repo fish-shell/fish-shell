@@ -5,12 +5,3 @@ $argle bargle: invalid var name
 
 ####################
 # Verify behavior of `set --show`
-
-####################
-# Appending works
-
-####################
-# Prepending works
-
-####################
-# Appending and prepending at same time works

@@ -71,8 +71,8 @@ void misc_init();
 
 class env_var_t {
    private:
-    wcstring val;
     bool is_missing;
+    wcstring val;
 
    public:
     static env_var_t missing_var() {

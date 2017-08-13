@@ -19,7 +19,6 @@
 #include <unistd.h>
 
 #include <algorithm>
-#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -38,7 +37,6 @@
 #include "postfork.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// File descriptor redirection error message.
@@ -495,8 +493,8 @@ void exec_job(parser_t &parser, job_t *j) {
     // We are careful to set these to -1 when closed, so if we exit the loop abruptly, we can still
     // close them.
     bool pgrp_set = false;
-    // This is static since processes can block on input/output across jobs the main exec_job loop
-    // is only ever run in a single thread, so this is OK.
+    //this is static since processes can block on input/output across jobs
+    //the main exec_job loop is only ever run in a single thread, so this is OK
     static pid_t blocked_pid = -1;
     int pipe_current_read = -1, pipe_current_write = -1, pipe_next_read = -1;
     for (std::unique_ptr<process_t> &unique_p : j->processes) {
@@ -515,7 +513,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
         // See if we need a pipe.
         const bool pipes_to_next_command = !p->is_last_in_job;
-        // Set to true if we end up forking for this process.
+        //set to true if we end up forking for this process
         bool child_forked = false;
         bool child_spawned = false;
         bool block_child = true;
@@ -624,12 +622,12 @@ void exec_job(parser_t &parser, job_t *j) {
         // a pipeline.
         shared_ptr<io_buffer_t> block_output_io_buffer;
 
-        // Used to SIGCONT the previously SIGSTOP'd process so the main loop or next command in job
-        // can read from its output.
-        auto unblock_previous = [&j]() {
-            // We've already called waitpid after forking the child, so we've guaranteed that
-            // they're already SIGSTOP'd. Otherwise we'd be risking a deadlock because we can call
-            // SIGCONT before they've actually stopped, and they'll remain suspended indefinitely.
+        //used to SIGCONT the previously SIGSTOP'd process so the main loop or next command in job can read
+        //from its output.
+        auto unblock_previous = [&j] () {
+            //we've already called waitpid after forking the child, so we've guaranteed that they're
+            //already SIGSTOP'd. Otherwise we'd be risking a deadlock because we can call SIGCONT before
+            //they've actually stopped, and they'll remain suspended indefinitely.
             if (blocked_pid != -1) {
                 debug(2, L"Unblocking process %d.\n", blocked_pid);
                 kill(blocked_pid, SIGCONT);
@@ -655,7 +653,7 @@ void exec_job(parser_t &parser, job_t *j) {
                 if (block_child) {
                     kill(p->pid, SIGSTOP);
                 }
-                // The parent will wake us up when we're ready to execute.
+                //the parent will wake us up when we're ready to execute
                 setup_child_process(p, process_net_io_chain);
                 child_action();
                 DIE("Child process returned control to do_fork lambda!");
@@ -680,9 +678,10 @@ void exec_job(parser_t &parser, job_t *j) {
             return true;
         };
 
-        // Helper routine executed by INTERNAL_FUNCTION and INTERNAL_BLOCK_NODE to make sure an
-        // output buffer exists in case there is another command in the job chain that will be
-        // reading from this command's output.
+
+        //helper routine executed by INTERNAL_FUNCTION and INTERNAL_BLOCK_NODE to make sure
+        //an output buffer exists in case there is another command in the job chain that will
+        //be reading from this command's output.
         auto verify_buffer_output = [&] () {
             if (!p->is_last_in_job) {
                 // Be careful to handle failure, e.g. too many open fds.
@@ -843,8 +842,8 @@ void exec_job(parser_t &parser, job_t *j) {
                     const int fg = j->get_flag(JOB_FOREGROUND);
                     j->set_flag(JOB_FOREGROUND, false);
 
-                    // Main loop may need to perform a blocking read from previous command's output.
-                    // Make sure read source is not blocked.
+                    //main loop may need to perform a blocking read from previous command's output.
+                    //make sure read source is not blocked
                     unblock_previous();
                     p->status = builtin_run(parser, p->get_argv(), *builtin_io_streams);
 
@@ -940,8 +939,8 @@ void exec_job(parser_t &parser, job_t *j) {
                 bool must_fork = redirection_is_to_real_file(stdout_io.get()) ||
                                  redirection_is_to_real_file(stderr_io.get());
                 if (!must_fork && p->is_last_in_job) {
-                    // We are handling reads directly in the main loop. Make sure source is
-                    // unblocked. Note that we may still end up forking.
+                    //we are handling reads directly in the main loop. Make sure source is unblocked.
+                    //Note that we may still end up forking.
                     unblock_previous();
                     const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
                     const bool no_stdout_output = stdout_buffer.empty();
@@ -1111,19 +1110,18 @@ void exec_job(parser_t &parser, job_t *j) {
 
         bool child_blocked = block_child && child_forked;
         if (child_blocked) {
-            // We have to wait to ensure the child has set their progress group and is in SIGSTOP
-            // state otherwise, we can later call SIGCONT before they call SIGSTOP and they'll be
-            // blocked indefinitely. The child is SIGSTOP'd and is guaranteed to have called
-            // child_set_group() at this point. but we only need to call set_child_group for the
-            // first process in the group. If needs_keepalive is set, this has already been called
-            // for the keepalive process.
+            //we have to wait to ensure the child has set their progress group and is in SIGSTOP state
+            //otherwise, we can later call SIGCONT before they call SIGSTOP and they'll be blocked indefinitely.
+            //The child is SIGSTOP'd and is guaranteed to have called child_set_group() at this point.
+            //but we only need to call set_child_group for the first process in the group.
+            //If needs_keepalive is set, this has already been called for the keepalive process
             pid_t pid_status{};
             int result;
             while ((result = waitpid(p->pid, &pid_status, WUNTRACED)) == -1 && errno == EINTR) {
-                // This could be a superfluous interrupt or Ctrl+C at the terminal In all cases, it
-                // is OK to retry since the forking code above is specifically designed to never,
-                // ever hang/block in a child process before the SIGSTOP call is reached.
-                ;  // do nothing
+                //This could be a superfluous interrupt or Ctrl+C at the terminal
+                //In all cases, it is OK to retry since the forking code above is specifically designed
+                //to never, ever hang/block in a child process before the SIGSTOP call is reached.
+                continue;
             }
             if (result == -1) {
                 exec_error = true;
@@ -1131,26 +1129,26 @@ void exec_job(parser_t &parser, job_t *j) {
                 wperror(L"waitpid");
                 break;
             }
-            // We are not unblocking the child via SIGCONT just yet to give the next process a
-            // chance to open the pipes and join the process group. We only unblock the last process
-            // in the job chain because no one awaits it.
+            //we are not unblocking the child via SIGCONT just yet to give the next process a chance to open
+            //the pipes and join the process group. We only unblock the last process in the job chain because
+            //no one awaits it.
         }
-        // Regardless of whether the child blocked or not: only once per job, and only once we've
-        // actually executed an external command.
+        //regardless of whether the child blocked or not:
+        //only once per job, and only once we've actually executed an external command
         if ((child_spawned || child_forked) && !pgrp_set) {
-            // This should be called after waitpid if child_forked and pipes_to_next_command it can
-            // be called at any time if child_spawned.
+            //this should be called after waitpid if child_forked && pipes_to_next_command
+            //it can be called at any time if child_spawned
             set_child_group(j, p->pid);
-            // we can't rely on p->is_first_in_job because a builtin may have been the first.
+            //we can't rely on p->is_first_in_job because a builtin may have been the first
             pgrp_set = true;
         }
-        // If the command we ran _before_ this one was SIGSTOP'd to let this one catch up, unblock
-        // it now. this must be after the wait_pid on the process we just started, if any.
+        //if the command we ran _before_ this one was SIGSTOP'd to let this one catch up, unblock it now.
+        //this must be after the wait_pid on the process we just started, if any.
         unblock_previous();
 
         if (child_blocked) {
-            // Store the newly-blocked command's PID so that it can be SIGCONT'd once the next
-            // process in the chain is started. That may be in this job or in another job.
+            //store the newly-blocked command's PID so that it can be SIGCONT'd once the next process
+            //in the chain is started. That may be in this job or in another job.
             blocked_pid = p->pid;
         }
 
@@ -1166,7 +1164,7 @@ void exec_job(parser_t &parser, job_t *j) {
             pipe_current_write = -1;
         }
 
-        // Unblock the last process because there's no need for it to stay SIGSTOP'd for anything.
+        //unblock the last process because there's no need for it to stay SIGSTOP'd for anything
         if (p->is_last_in_job) {
             unblock_previous();
         }

@@ -122,6 +122,8 @@ bool expand_one(wcstring &inout_str, expand_flags_t flags, parse_error_list_t *e
 
 /// Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc.
 /// Suitable for pretty-printing.
+///
+/// \param in the value to escape
 wcstring expand_escape_variable(const env_var_t &var);
 
 /// Perform tilde expansion and nothing else on the specified string, which is modified in place.

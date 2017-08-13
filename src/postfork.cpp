@@ -78,9 +78,9 @@ bool child_set_group(job_t *j, process_t *p) {
         if (j->pgid == -2) {
             j->pgid = p->pid;
         }
-        // Retry on EPERM because there's no way that a child cannot join an existing progress group
-        // because we are SIGSTOPing the previous job in the chain. Sometimes we have to try a few
-        // times to get the kernel to see the new group. (Linux 4.4.0)
+        //retry on EPERM because there's no way that a child cannot join an existing progress group
+        //because we are SIGSTOPing the previous job in the chain. Sometimes we have to try a few
+        //times to get the kernel to see the new group. (Linux 4.4.0)
         int failure = setpgid(p->pid, j->pgid);
         while (failure == -1 && (errno == EPERM || errno == EINTR)) {
             debug_safe(4, "Retrying setpgid in child process");
@@ -112,7 +112,7 @@ bool child_set_group(job_t *j, process_t *p) {
             retval = false;
         }
     } else {
-        // This is probably stays unused in the child.
+        //this is probably stays unused in the child
         j->pgid = getpgrp();
     }
 
@@ -142,16 +142,16 @@ bool set_child_group(job_t *j, pid_t child_pid) {
 
     if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {  //!OCLINT(early exit)
         if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
-            // We've already assigned the process group control of the terminal when the first
-            // process in the job was started. There's no need to do so again, and on some platforms
-            // this can cause an EPERM error. In addition, if we've given control of the terminal to
-            // a process group, attempting to call tcsetpgrp from the background will cause SIGTTOU
-            // to be sent to everything in our process group (unless we handle it).
+            //we've already assigned the process group control of the terminal when the first process in the job
+            //was started. There's no need to do so again, and on some platforms this can cause an EPERM error.
+            //In addition, if we've given control of the terminal to a process group, attempting to call tcsetpgrp
+            //from the background will cause SIGTTOU to be sent to everything in our process group (unless we
+            //handle it)..
             debug(4, L"Process group %d already has control of terminal\n", j->pgid);
         }
         else
         {
-            // No need to duplicate the code here, a function already exists that does just this.
+            //no need to duplicate the code here, a function already exists that does just this
             retval = terminal_give_to_job(j, false /*new job, so not continuing*/);
         }
     }
@@ -264,7 +264,7 @@ int setup_child_process(process_t *p, const io_chain_t &io_chain) {
     bool ok = true;
 
     if (ok) {
-        // In the case of IO_FILE, this can hang until data is available to read/write!
+        //In the case of IO_FILE, this can hang until data is available to read/write!
         ok = (0 == handle_child_io(io_chain));
         if (p != 0 && !ok) {
             debug_safe(4, "handle_child_io failed in setup_child_process");

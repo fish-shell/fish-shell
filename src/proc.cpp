@@ -791,7 +791,10 @@ bool terminal_give_to_job(job_t *j, int cont) {
 
     signal_block(true);
 
-    //It may not be safe to call tcsetpgrp if we've already done so, as at that point we are no longer
+    //Previously, terminal_give_to_job was being called for each process in a job, hence all the comments
+    //and warnings below. It is now only called for the first process in a job.t d
+
+    //it may not be safe to call tcsetpgrp if we've already done so, as at that point we are no longer
     //the controlling process group for the terminal and no longer have permission to set the process
     //group that is in control, causing tcsetpgrp to return EPERM, even though that's not the documented
     //behavior in tcsetpgrp(3), which instead says other bad things will happen (it says SIGTTOU will be
@@ -804,7 +807,8 @@ bool terminal_give_to_job(job_t *j, int cont) {
         debug(2, L"Process group %d already has control of terminal\n", j->pgid);
     }
     else {
-        debug(4, L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d\n", j->pgid);
+        debug(4, L"Attempting bring process group to foreground via tcsetpgrp for job->pgid %d\n", j->pgid);
+        debug(4, L"caller session id: %d, pgid %d has session id: %d\n", getsid(0), j->pgid, getsid(j->pgid));
 
         //the tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but is not the
         //process group ID of a process in the same session as the calling process."
@@ -815,15 +819,22 @@ bool terminal_give_to_job(job_t *j, int cont) {
         //thing is that we can guarantee the process isn't going to exit while we wait (which would cause us to
         //possibly block indefinitely).
 
+        auto pgroupTerminated = [&j]() {
+            //everyone in the process group has exited
+            //The only way that can happen is if the very last process in the group terminated, and didn't need
+            //to access the terminal, otherwise it would have hung waiting for terminal IO. We can ignore this.
+            debug(3, L"terminal_give_to_job(): tcsetpgrp called but process group %d has terminated.\n", j->pgid);
+        };
+
         while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
-            bool pgroup_terminated = false;
             if (errno == EINTR) {
-                //always retry on EINTR, see comments in tcsetattr EINTR code below.
+                //always retry on EINTR
             }
             else if (errno == EINVAL) {
                 //OS X returns EINVAL if the process group no longer lives. Probably other OSes, too.
-                //Unlike EPERM below, EINVAL can only happen if the process group has terminated
-                pgroup_terminated = true;
+                //See comments in pgroupTerminated() above.
+                pgroupTerminated();
+                break;
             }
             else if (errno == EPERM) {
                 //retry so long as this isn't because the process group is dead
@@ -833,28 +844,18 @@ bool terminal_give_to_job(job_t *j, int cont) {
                     //because no such process group exists any longer. This is the observed behavior on Linux 4.4.0.
                     //a "success" result would mean processes from the group still exist but is still running in some state
                     //or the other.
-                    pgroup_terminated = true;
+                    //See comments in pgroupTerminated() above.
+                    pgroupTerminated();
+                    break;
                 }
-                else {
-                    //debug the original tcsetpgrp error (not the waitpid errno) to the log, and then retry until not EPERM
-                    //or the process group has exited.
-                    debug(2, L"terminal_give_to_job(): EPERM.\n", j->pgid);
-                }
+                debug(2, L"terminal_give_to_job(): EPERM.\n", j->pgid);
             }
             else {
                 if (errno == ENOTTY) redirect_tty_output();
-                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id, j->command_wcstr(), j->pgid);
+                debug(1, _(L"terminal_give_to_job(): Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id, j->command_wcstr(), j->pgid);
                 wperror(L"tcsetpgrp");
                 signal_unblock(true);
                 return false;
-            }
-
-            if (pgroup_terminated) {
-                //all processes in the process group has exited. Since we force all child procs to SIGSTOP on startup,
-                //the only way that can happen is if the very last process in the group terminated, and didn't need
-                //to access the terminal, otherwise it would have hung waiting for terminal IO (SIGTTIN). We can ignore this.
-                debug(3, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
-                break;
             }
         }
     }
@@ -870,7 +871,8 @@ bool terminal_give_to_job(job_t *j, int cont) {
         }
         if (result == -1) {
             if (errno == ENOTTY) redirect_tty_output();
-            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
+            debug(1, _(L"terminal_give_to_job(): Could not send job %d ('%ls') to foreground"),
+                  j->job_id, j->command_wcstr());
             wperror(L"tcsetattr");
             signal_unblock(true);
             return false;

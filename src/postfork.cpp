@@ -82,9 +82,8 @@ bool child_set_group(job_t *j, process_t *p) {
         //because we are SIGSTOPing the previous job in the chain. Sometimes we have to try a few
         //times to get the kernel to see the new group. (Linux 4.4.0)
         int failure = setpgid(p->pid, j->pgid);
-        while (failure == -1 && (errno == EPERM || errno == EINTR)) {
+        while (failure == -1 && errno == EPERM) {
             debug_safe(2, "Retrying setpgid in child process");
-            failure = setpgid(p->pid, j->pgid);
         }
         // TODO: Figure out why we're testing whether the pgid is correct after attempting to
         // set it failed. This was added in commit 4e912ef8 from 2012-02-27.

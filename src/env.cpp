@@ -105,7 +105,6 @@ static const wcstring_list_t colon_delimited_variable({L"PATH", L"MANPATH", L"CD
 // Some forward declarations to make it easy to logically group the code.
 static void init_locale();
 static void init_curses();
-static void tokenize_variable_array(const wcstring &val, wcstring_list_t &out);
 
 // Struct representing one level in the function variable stack.
 // Only our variable stack should create and destroy these
@@ -1622,7 +1621,7 @@ std::unique_ptr<wcstring> list_to_array_val(const wchar_t **list) {
     return val;
 }
 
-static void tokenize_variable_array(const wcstring &val, wcstring_list_t &out) {
+void tokenize_variable_array(const wcstring &val, wcstring_list_t &out) {
     out.clear();  // ensure the output var is empty -- this will normally be a no-op
 
     // Zero element arrays are internally encoded as this placeholder string.

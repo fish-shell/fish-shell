@@ -274,14 +274,14 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) 
 
     if (var.missing()) var = env_get(highlight_var[0]);
 
-    if (!var.missing()) result = parse_color(var, treat_as_background);
+    if (!var.missing()) result = parse_color(var.as_string(), treat_as_background);
 
     // Handle modifiers.
     if (highlight & highlight_modifier_valid_path) {
-        env_var_t var2 = env_get(L"fish_color_valid_path");
-        const wcstring val2 = var2.missing() ? L"" : var2.c_str();
+        env_var_t val2_wstr = env_get(L"fish_color_valid_path");
+        const wcstring val2 = val2_wstr.missing() ? L"" : val2_wstr.c_str();
 
-        rgb_color_t result2 = parse_color(var2, is_background);
+        rgb_color_t result2 = parse_color(val2, is_background);
         if (result.is_normal())
             result = result2;
         else {

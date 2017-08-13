@@ -486,8 +486,8 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
 }
 
 /// Return the internal color code representing the specified color.
-/// TODO: This code should be refactored to enable sharing with builtin_set_color.
-rgb_color_t parse_color(const env_var_t &var, bool is_background) {
+/// XXX This code should be refactored to enable sharing with builtin_set_color.
+rgb_color_t parse_color(const wcstring &val, bool is_background) {
     int is_bold = 0;
     int is_underline = 0;
     int is_italics = 0;
@@ -497,7 +497,7 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
     std::vector<rgb_color_t> candidates;
 
     wcstring_list_t el;
-    var.to_list(el);
+    tokenize_variable_array(val, el);
 
     for (size_t j = 0; j < el.size(); j++) {
         const wcstring &next = el.at(j);

@@ -78,12 +78,13 @@ static int load(const wcstring &name) {
 static void autoload_names(std::set<wcstring> &names, int get_hidden) {
     size_t i;
 
-    const env_var_t path_var = env_get(L"fish_function_path");
-    if (path_var.missing_or_empty()) return;
+    const env_var_t path_var_wstr = env_get(L"fish_function_path");
+    if (path_var_wstr.missing()) return;
+    const wchar_t *path_var = path_var_wstr.c_str();
 
     wcstring_list_t path_list;
-    path_var.to_list(path_list);
 
+    tokenize_variable_array(path_var, path_list);
     for (i = 0; i < path_list.size(); i++) {
         const wcstring &ndir_str = path_list.at(i);
         const wchar_t *ndir = (wchar_t *)ndir_str.c_str();

@@ -36,7 +36,7 @@ int writech(wint_t ch);
 
 void writestr(const wchar_t *str);
 
-rgb_color_t parse_color(const env_var_t &val, bool is_background);
+rgb_color_t parse_color(const wcstring &val, bool is_background);
 
 int writeb(tputs_arg_t b);
 

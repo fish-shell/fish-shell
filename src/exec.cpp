@@ -366,39 +366,6 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
     return result;
 }
 
-void internal_exec(job_t *j, const io_chain_t &&all_ios) {
-    // Do a regular launch -  but without forking first...
-    signal_block();
-
-    // setup_child_process makes sure signals are properly set up. It will also call
-    // signal_unblock.
-
-    // PCA This is for handling exec. Passing all_ios here matches what fish 2.0.0 and 1.x did.
-    // It's known to be wrong - for example, it means that redirections bound for subsequent
-    // commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't
-    // really make sense, so I'm not trying to fix it here.
-    if (!setup_child_process(0, all_ios)) {
-        // Decrement SHLVL as we're removing ourselves from the shell "stack".
-        const env_var_t shlvl_str = env_get_string(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
-        wcstring nshlvl_str = L"0";
-        if (!shlvl_str.missing()) {
-            long shlvl_i = fish_wcstol(shlvl_str.c_str());
-            if (!errno && shlvl_i > 0) {
-                nshlvl_str = to_string<long>(shlvl_i - 1);
-            }
-        }
-        env_set(L"SHLVL", nshlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT);
-
-        // launch_process _never_ returns.
-        launch_process_nofork(j->processes.front().get());
-    } else {
-        j->set_flag(JOB_CONSTRUCTED, true);
-        j->processes.front()->completed = 1;
-        return;
-    }
-}
-
-
 void exec_job(parser_t &parser, job_t *j) {
     pid_t pid = 0;
 
@@ -434,7 +401,35 @@ void exec_job(parser_t &parser, job_t *j) {
     }
 
     if (j->processes.front()->type == INTERNAL_EXEC) {
-        internal_exec(j, std::move(all_ios));
+        // Do a regular launch -  but without forking first...
+        signal_block();
+
+        // setup_child_process makes sure signals are properly set up. It will also call
+        // signal_unblock.
+
+        // PCA This is for handling exec. Passing all_ios here matches what fish 2.0.0 and 1.x did.
+        // It's known to be wrong - for example, it means that redirections bound for subsequent
+        // commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't
+        // really make sense, so I'm not trying to fix it here.
+        if (!setup_child_process(0, all_ios)) {
+            // Decrement SHLVL as we're removing ourselves from the shell "stack".
+            const env_var_t shlvl_str = env_get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
+            wcstring nshlvl_str = L"0";
+            if (!shlvl_str.missing()) {
+                long shlvl_i = fish_wcstol(shlvl_str.c_str());
+                if (!errno && shlvl_i > 0) {
+                    nshlvl_str = to_string<long>(shlvl_i - 1);
+                }
+            }
+            env_set(L"SHLVL", nshlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT);
+
+            // launch_process _never_ returns.
+            launch_process_nofork(j->processes.front().get());
+        } else {
+            j->set_flag(JOB_CONSTRUCTED, true);
+            j->processes.front()->completed = 1;
+            return;
+        }
         DIE("this should be unreachable");
     }
 

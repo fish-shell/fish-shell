@@ -19,8 +19,8 @@
 #include <set>
 #include <string>
 #include <type_traits>
-#include <unordered_set>
 #include <utility>
+#include <unordered_set>
 
 #include "autoload.h"
 #include "builtin.h"
@@ -248,7 +248,9 @@ static Iterator unique_unsorted(Iterator begin, Iterator end, HashFunction hash)
     typedef typename std::iterator_traits<Iterator>::value_type T;
 
     std::unordered_set<size_t> temp;
-    return std::remove_if(begin, end, [&](const T &val) { return !temp.insert(hash(val)).second; });
+    return std::remove_if(begin, end, [&](const T& val) {
+            return !temp.insert(hash(val)).second;
+            });
 }
 
 void completions_sort_and_prioritize(std::vector<completion_t> *comps) {
@@ -274,10 +276,9 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps) {
     // Sort, provided COMPLETION_DONT_SORT isn't set
     stable_sort(comps->begin(), comps->end(), completion_t::is_naturally_less_than);
     // Deduplicate both sorted and unsorted results
-    comps->erase(
-        unique_unsorted(comps->begin(), comps->end(),
-                        [](const completion_t &c) { return std::hash<wcstring>{}(c.completion); }),
-        comps->end());
+    comps->erase(unique_unsorted(comps->begin(), comps->end(), [](const completion_t &c) {
+                return std::hash<wcstring>{}(c.completion);
+             }), comps->end());
 
     // Sort the remainder by match type. They're already sorted alphabetically.
     stable_sort(comps->begin(), comps->end(), compare_completions_by_match_type);

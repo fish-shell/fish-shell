@@ -28,7 +28,7 @@ wcstring_range wcstring_tok(wcstring& str, const wcstring& needle,
 /// If the needle is empty, split on individual elements (characters).
 template <typename ITER>
 void split_about(ITER haystack_start, ITER haystack_end, ITER needle_start, ITER needle_end,
-                 wcstring_list_t* output, long max) {
+                 wcstring_list_t *output, long max) {
     long remaining = max;
     ITER haystack_cursor = haystack_start;
     while (remaining > 0 && haystack_cursor != haystack_end) {

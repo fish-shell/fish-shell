@@ -803,10 +803,9 @@ bool terminal_give_to_job(job_t *j, int cont) {
     // been done.
     if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
         debug(2, L"Process group %d already has control of terminal\n", j->pgid);
-    } else {
-        debug(4,
-              L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d\n",
-              j->pgid);
+    }
+    else {
+        debug(4, L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d\n", j->pgid);
 
         // The tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but
         // is not the process group ID of a process in the same session as the calling process."
@@ -820,13 +819,15 @@ bool terminal_give_to_job(job_t *j, int cont) {
         while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
             bool pgroup_terminated = false;
             if (errno == EINTR) {
-                ;  // Always retry on EINTR, see comments in tcsetattr EINTR code below.
-            } else if (errno == EINVAL) {
+                ; // Always retry on EINTR, see comments in tcsetattr EINTR code below.
+            }
+            else if (errno == EINVAL) {
                 // OS X returns EINVAL if the process group no longer lives. Probably other OSes,
                 // too. Unlike EPERM below, EINVAL can only happen if the process group has
                 // terminated.
                 pgroup_terminated = true;
-            } else if (errno == EPERM) {
+            }
+            else if (errno == EPERM) {
                 // Retry so long as this isn't because the process group is dead.
                 int wait_result = waitpid(-1 * j->pgid, &wait_result, WNOHANG);
                 if (wait_result == -1) {
@@ -836,15 +837,16 @@ bool terminal_give_to_job(job_t *j, int cont) {
                     // would mean processes from the group still exist but is still running in some
                     // state or the other.
                     pgroup_terminated = true;
-                } else {
+                }
+                else {
                     // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                     // then retry until not EPERM or the process group has exited.
                     debug(2, L"terminal_give_to_job(): EPERM.\n", j->pgid);
                 }
-            } else {
+            }
+            else {
                 if (errno == ENOTTY) redirect_tty_output();
-                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id,
-                      j->command_wcstr(), j->pgid);
+                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id, j->command_wcstr(), j->pgid);
                 wperror(L"tcsetpgrp");
                 signal_unblock();
                 return false;
@@ -872,8 +874,7 @@ bool terminal_give_to_job(job_t *j, int cont) {
         }
         if (result == -1) {
             if (errno == ENOTTY) redirect_tty_output();
-            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id,
-                  j->command_wcstr());
+            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
             wperror(L"tcsetattr");
             signal_unblock();
             return false;
@@ -935,8 +936,10 @@ void job_continue(job_t *j, bool cont) {
     j->set_flag(JOB_NOTIFIED, false);
 
     CHECK_BLOCK();
-    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", cont ? L"Continue" : L"Start", j->job_id,
-          j->pgid, j->command_wcstr(), job_is_completed(j) ? L"COMPLETED" : L"UNCOMPLETED",
+    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls",
+          cont ? L"Continue" : L"Start",
+          j->job_id, j->pgid, j->command_wcstr(),
+          job_is_completed(j) ? L"COMPLETED" : L"UNCOMPLETED",
           is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
     if (!job_is_completed(j)) {

@@ -412,7 +412,7 @@ void exec_job(parser_t &parser, job_t *j) {
         // It's known to be wrong - for example, it means that redirections bound for subsequent
         // commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't
         // really make sense, so I'm not trying to fix it here.
-        if (!setup_child_process(0, all_ios)) {
+        if (!setup_child_process(j, 0, all_ios)) {
             // Decrement SHLVL as we're removing ourselves from the shell "stack".
             const env_var_t shlvl_str = env_get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
             wcstring nshlvl_str = L"0";
@@ -893,7 +893,7 @@ void exec_job(parser_t &parser, job_t *j) {
                         if (block_child) {
                             kill(p->pid, SIGSTOP);
                         }
-                        setup_child_process(p, process_net_io_chain);
+                        setup_child_process(j, p, process_net_io_chain);
 
                         exec_write_and_exit(block_output_io_buffer->fd, buffer, count, status);
                     } else {
@@ -1026,7 +1026,7 @@ void exec_job(parser_t &parser, job_t *j) {
                         if (block_child) {
                             kill(p->pid, SIGSTOP);
                         }
-                        setup_child_process(p, process_net_io_chain);
+                        setup_child_process(j, p, process_net_io_chain);
 
                         do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
                         exit_without_destructors(p->status);
@@ -1123,7 +1123,7 @@ void exec_job(parser_t &parser, job_t *j) {
                         if (block_child) {
                             kill(p->pid, SIGSTOP);
                         }
-                        setup_child_process(p, process_net_io_chain);
+                        setup_child_process(j, p, process_net_io_chain);
 
                         safe_launch_process(p, actual_cmd, argv, envv);
                         // safe_launch_process _never_ returns...

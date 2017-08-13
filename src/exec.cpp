@@ -592,6 +592,16 @@ void exec_job(parser_t &parser, job_t *j) {
             }
             env_export_arr();
         }
+        else {
+            // Since the main loop itself is going to be (potentially) reading from the previous
+            // process, we need to unblock it here instead of after "executing" the next process
+            // in the chain.
+            if (blocked_pid != -1) {
+                //now that next command in the chain has been started, unblock the previous command
+                unblock_pid(blocked_pid);
+                blocked_pid = -1;
+            }
+        }
 
         // Set up fds that will be used in the pipe.
         if (pipes_to_next_command) {
@@ -632,23 +642,12 @@ void exec_job(parser_t &parser, job_t *j) {
         // This is the IO buffer we use for storing the output of a block or function when it is in
         // a pipeline.
         shared_ptr<io_buffer_t> block_output_io_buffer;
-        auto unblock_previous = [&] () {
-            if (blocked_pid != -1) {
-                //now that next command in the chain has been started, unblock the previous command
-                unblock_pid(blocked_pid);
-                blocked_pid = -1;
-            }
-        };
 
         // This is the io_streams we pass to internal builtins.
         std::unique_ptr<io_streams_t> builtin_io_streams(new io_streams_t(stdout_read_limit));
 
         switch (p->type) {
             case INTERNAL_FUNCTION: {
-                //internal function never forks
-                //unblock previous (if any) to prevent hang
-                unblock_previous();
-
                 // Calls to function_get_definition might need to source a file as a part of
                 // autoloading, hence there must be no blocks.
                 signal_unblock();
@@ -826,9 +825,6 @@ void exec_job(parser_t &parser, job_t *j) {
 
                     signal_unblock();
 
-                    //main loop is performing a blocking read from previous command's output
-                    //make sure read source is not blocked
-                    unblock_previous();
                     p->status = builtin_run(parser, p->get_argv(), *builtin_io_streams);
 
                     signal_block();
@@ -949,10 +945,6 @@ void exec_job(parser_t &parser, job_t *j) {
                 // output, so that we can truncate the file. Does not apply to /dev/null.
                 bool must_fork = redirection_is_to_real_file(stdout_io.get()) ||
                                  redirection_is_to_real_file(stderr_io.get());
-                if (!must_fork) {
-                    //we are handling reads directly in the main loop. Make sure source is unblocked.
-                    unblock_previous();
-                }
                 if (!must_fork && p->is_last_in_job) {
                     const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
                     const bool no_stdout_output = stdout_buffer.empty();
@@ -1170,9 +1162,12 @@ void exec_job(parser_t &parser, job_t *j) {
             }
         }
 
+        if (blocked_pid != -1) {
+            //now that next command in the chain has been started, unblock the previous command
+            unblock_pid(blocked_pid);
+            blocked_pid = -1;
+        }
 
-        //if the command we ran before this one was SIGSTOP'd to let this one catch up, unblock it now.
-        unblock_previous();
         if (command_blocked) {
             //store the newly-blocked command's PID so that it can be SIGCONT'd once the next process
             //in the chain is started. That may be in this job or in another job.

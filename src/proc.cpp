@@ -906,9 +906,7 @@ void job_continue(job_t *j, bool cont) {
     j->set_flag(JOB_NOTIFIED, false);
 
     CHECK_BLOCK();
-    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls",
-          cont ? L"Continue" : L"Start",
-          j->job_id, j->pgid, j->command_wcstr(),
+    debug(4, L"Continue job %d, gid %d (%ls), %ls, %ls", j->job_id, j->pgid, j->command_wcstr(),
           job_is_completed(j) ? L"COMPLETED" : L"UNCOMPLETED",
           is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 

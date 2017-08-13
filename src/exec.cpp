@@ -629,8 +629,6 @@ void exec_job(parser_t &parser, job_t *j) {
         // a pipeline.
         shared_ptr<io_buffer_t> block_output_io_buffer;
 
-        //used to SIGCONT the previously SIGSTOP'd process so the main loop or next command in job can read
-        //from its output.
         auto unblock_previous = [&j] () {
             //we've already called waitpid after forking the child, so we've guaranteed that they're
             //already SIGSTOP'd. Otherwise we'd be risking a deadlock because we can call SIGCONT before
@@ -644,46 +642,6 @@ void exec_job(parser_t &parser, job_t *j) {
 
         // This is the io_streams we pass to internal builtins.
         std::unique_ptr<io_streams_t> builtin_io_streams(new io_streams_t(stdout_read_limit));
-
-        auto do_fork = [&j, &p, &pid, &exec_error, &process_net_io_chain, &block_child, &child_forked]
-            (bool drain_threads, const char *fork_type, std::function<void()> child_action) -> bool {
-            pid = execute_fork(drain_threads);
-            if (pid == 0) {
-                // This is the child process. Setup redirections, print correct output to
-                // stdout and stderr, and then exit.
-                p->pid = getpid();
-                blocked_pid = -1;
-                child_set_group(j, p);
-                // Make child processes pause after executing setup_child_process() to give down-chain
-                // commands in the job a chance to join their process group and read their pipes.
-                // The process will be resumed when the next command in the chain is started.
-                if (block_child) {
-                    kill(p->pid, SIGSTOP);
-                }
-                //the parent will wake us up when we're ready to execute
-                setup_child_process(p, process_net_io_chain);
-                child_action();
-                DIE("Child process returned control to do_fork lambda!");
-            }
-            else {
-                if (pid < 0) {
-                    debug(1, L"Failed to fork %s!\n", fork_type);
-                    job_mark_process_as_failed(j, p);
-                    exec_error = true;
-                    return false;
-                }
-                // This is the parent process. Store away information on the child, and
-                // possibly give it control over the terminal.
-                debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
-                child_forked = true;
-                if (block_child) {
-                    debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
-                }
-                p->pid = pid;
-            }
-
-            return true;
-        };
 
         switch (p->type) {
             case INTERNAL_FUNCTION: {
@@ -927,11 +885,33 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 if (block_output_io_buffer->out_buffer_size() > 0) {
                     // We don't have to drain threads here because our child process is simple.
-                    if (!do_fork(false, "internal block or function", [&] {
-                            exec_write_and_exit(block_output_io_buffer->fd, buffer, count, status);
-                        })) {
-                        break;
+                    pid = execute_fork(false);
+                    if (pid == 0) {
+                        // This is the child process. Write out the contents of the pipeline.
+                        p->pid = getpid();
+                        blocked_pid = -1;
+                        child_set_group(j, p);
+                        // Make child processes pause after executing setup_child_process() to give down-chain
+                        // commands in the job a chance to join their process group and read their pipes.
+                        // The process will be resumed when the next command in the chain is started.
+                        if (block_child) {
+                            kill(p->pid, SIGSTOP);
+                        }
+                        setup_child_process(p, process_net_io_chain);
+
+                        exec_write_and_exit(block_output_io_buffer->fd, buffer, count, status);
+                    } else {
+                        // This is the parent process. Store away information on the child, and
+                        // possibly give it control over the terminal.
+                        debug(2, L"Fork #%d, pid %d: internal block or function for '%ls'",
+                              g_fork_count, pid, p->argv0());
+                        child_forked = true;
+                        if (block_child) {
+                            debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
+                        }
+                        p->pid = pid;
                     }
+
                 } else {
                     if (p->is_last_in_job) {
                         proc_set_last_status(j->get_flag(JOB_NEGATE) ? (!status) : status);
@@ -1037,11 +1017,33 @@ void exec_job(parser_t &parser, job_t *j) {
 
                     fflush(stdout);
                     fflush(stderr);
-                    if (!do_fork(false, "internal builtin", [&] {
-                            do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
-                            exit_without_destructors(p->status);
-                        })) {
-                        break;
+                    pid = execute_fork(false);
+                    if (pid == 0) {
+                        // This is the child process. Setup redirections, print correct output to
+                        // stdout and stderr, and then exit.
+                        p->pid = getpid();
+                        blocked_pid = -1;
+                        child_set_group(j, p);
+                        // Make child processes pause after executing setup_child_process() to give down-chain
+                        // commands in the job a chance to join their process group and read their pipes.
+                        // The process will be resumed when the next command in the chain is started.
+                        if (block_child) {
+                            kill(p->pid, SIGSTOP);
+                        }
+                        setup_child_process(p, process_net_io_chain);
+
+                        do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
+                        exit_without_destructors(p->status);
+                    } else {
+                        // This is the parent process. Store away information on the child, and
+                        // possibly give it control over the terminal.
+                        debug(2, L"Fork #%d, pid %d: internal builtin for '%ls'", g_fork_count, pid,
+                              p->argv0());
+                        child_forked = true;
+                        if (block_child) {
+                            debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
+                        }
+                        p->pid = pid;
                     }
                 }
 
@@ -1113,10 +1115,34 @@ void exec_job(parser_t &parser, job_t *j) {
                 } else
 #endif
                 {
-                    if (!do_fork(false, "internal builtin", [&] {
-                            safe_launch_process(p, actual_cmd, argv, envv);
-                        })) {
-                        break;
+                    pid = execute_fork(false);
+                    if (pid == 0) {
+                        // This is the child process.
+                        p->pid = getpid();
+                        blocked_pid = -1;
+                        child_set_group(j, p);
+                        // Make child processes pause after executing setup_child_process() to give down-chain
+                        // commands in the job a chance to join their process group and read their pipes.
+                        // The process will be resumed when the next command in the chain is started.
+                        if (block_child) {
+                            kill(p->pid, SIGSTOP);
+                        }
+                        setup_child_process(p, process_net_io_chain);
+
+                        safe_launch_process(p, actual_cmd, argv, envv);
+                        // safe_launch_process _never_ returns...
+                        DIE("safe_launch_process should not have returned");
+                    } else {
+                        debug(2, L"Fork #%d, pid %d: external command '%s' from '%ls'",
+                              g_fork_count, pid, p->argv0(), file ? file : L"<no file>");
+                        if (pid < 0) {
+                            job_mark_process_as_failed(j, p);
+                            exec_error = true;
+                        }
+                        child_forked = true;
+                        if (block_child) {
+                            debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
+                        }
                     }
                 }
 

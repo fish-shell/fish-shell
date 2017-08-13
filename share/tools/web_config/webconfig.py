@@ -538,11 +538,16 @@ class BindingParser:
 class FishConfigTCPServer(SocketServer.TCPServer):
     """TCPServer that only accepts connections from localhost (IPv4/IPv6)."""
     WHITELIST = set(['::1', '::ffff:127.0.0.1', '127.0.0.1'])
+    PREFER_ALLOWED_CLIENT = ''
 
     address_family = socket.AF_INET6 if socket.has_ipv6 else socket.AF_INET
 
     def verify_request(self, request, client_address):
-        return client_address[0] in FishConfigTCPServer.WHITELIST
+        if FishConfigTCPServer.PREFER_ALLOWED_CLIENT != '':
+            return FishConfigTCPServer.PREFER_ALLOWED_CLIENT == '*' or \
+                client_address[0] == FishConfigTCPServer.PREFER_ALLOWED_CLIENT
+        else:
+            return client_address[0] in FishConfigTCPServer.WHITELIST
 
 
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -1072,9 +1077,43 @@ os.chdir(where)
 # Generate a 16-byte random key as a hexadecimal string
 authkey = binascii.b2a_hex(os.urandom(16)).decode('ascii')
 
+# Get any initial tab (functions, colors, etc)
+# Just look at the first letter
+initial_tab = ''
+argv_start = 1
+if len(sys.argv) > 1:
+    for tab in ['functions', 'prompt', 'colors', 'variables', 'history',
+                'bindings', 'abbreviations']:
+        if tab.startswith(sys.argv[1]):
+            initial_tab = '#' + tab
+            argv_start = 2
+            break
+
+# Parse argv of server config:
+#     fish_config [tabname] [4|6 host allowed_client]
+prefer_ipfamily = ''
+prefer_host = ''
+prefer_allowed_client = ''
+use_prefer = False
+
+if len(sys.argv) > 2 + argv_start:
+    if sys.argv[argv_start] in ['4', '6']:
+        use_prefer = True
+        prefer_ipfamily = sys.argv[argv_start]
+        prefer_host = sys.argv[argv_start + 1]
+        prefer_allowed_client = sys.argv[argv_start + 2]
+
+if use_prefer:
+    FishConfigTCPServer.address_family = socket.AF_INET6 if prefer_ipfamily == '6' else socket.AF_INET
+    FishConfigTCPServer.PREFER_ALLOWED_CLIENT = prefer_allowed_client
+
 # Try to find a suitable port
+if use_prefer:
+    HOST = prefer_host
+else:
+    HOST = "::" if socket.has_ipv6 else "localhost"
+
 PORT = 8000
-HOST = "::" if socket.has_ipv6 else "localhost"
 while PORT <= 9000:
     try:
         Handler = FishConfigHTTPRequestHandler
@@ -1094,17 +1133,10 @@ if PORT > 9000:
     print("Unable to find an open port between 8000 and 9000")
     sys.exit(-1)
 
-# Get any initial tab (functions, colors, etc)
-# Just look at the first letter
-initial_tab = ''
-if len(sys.argv) > 1:
-    for tab in ['functions', 'prompt', 'colors', 'variables', 'history',
-                'bindings', 'abbreviations']:
-        if tab.startswith(sys.argv[1]):
-            initial_tab = '#' + tab
-            break
-
-url = 'http://localhost:%d/%s/%s' % (PORT, authkey, initial_tab)
+if use_prefer:
+    url = 'http://%s:%d/%s/%s' % (prefer_host, PORT, authkey, initial_tab) 
+else:
+    url = 'http://localhost:%d/%s/%s' % (PORT, authkey, initial_tab)
 
 # Create temporary file to hold redirect to real server. This prevents exposing
 # the URL containing the authentication key on the command line (see
@@ -1135,10 +1167,16 @@ f.close()
 # Use open on macOS >= 10.12.5 to work around #4035.
 fileurl = 'file://' + filename
 print("Web config started at '%s'. Hit enter to stop." % fileurl)
-if isMacOS10_12_5_OrLater():
-    subprocess.check_call(['open', fileurl])
-else:
-    webbrowser.open(fileurl)
+
+# Display prefered info:
+if use_prefer:
+    print("URL: %s" % url)
+
+if not use_prefer:
+    if isMacOS10_12_5_OrLater():
+        subprocess.check_call(['open', fileurl])
+    else:
+        webbrowser.open(fileurl)
 
 # Select on stdin and httpd
 stdin_no = sys.stdin.fileno()

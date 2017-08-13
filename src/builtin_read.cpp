@@ -479,7 +479,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                         &splits, LONG_MAX);
             auto val = list_to_array_val(splits);
-            env_set(argv[0], val->c_str(), opts.place);
+            env_set(argv[0], *val == ENV_NULL ? NULL : val->c_str(), opts.place);
         }
     } else {  // not array
         if (!opts.have_delimiter) {

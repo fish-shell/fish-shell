@@ -27,10 +27,8 @@
 
 #include <algorithm>
 #include <functional>
-#include <map>
 #include <memory>  // IWYU pragma: keep
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 #include "common.h"
@@ -44,6 +42,7 @@
 #include "parse_util.h"
 #include "path.h"
 #include "proc.h"
+#include "util.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 #ifdef KERN_PROCARGS2
@@ -170,13 +169,15 @@ static int is_quotable(const wchar_t *str) {
 static int is_quotable(const wcstring &str) { return is_quotable(str.c_str()); }
 
 wcstring expand_escape_variable(const env_var_t &var) {
-    wcstring buff;
     wcstring_list_t lst;
+    wcstring buff;
 
     var.to_list(lst);
-    if (lst.size() == 0) {
-        ;  // empty list expands to nothing
-    } else if (lst.size() == 1) {
+
+    size_t size = lst.size();
+    if (size == 0) {
+        buff.append(L"''");
+    } else if (size == 1) {
         const wcstring &el = lst.at(0);
 
         if (el.find(L' ') != wcstring::npos && is_quotable(el)) {
@@ -200,7 +201,6 @@ wcstring expand_escape_variable(const env_var_t &var) {
             }
         }
     }
-
     return buff;
 }
 
@@ -265,7 +265,9 @@ wcstring process_iterator_t::name_for_pid(pid_t pid) {
     }
 
     args = (char *)malloc(maxarg);
-    if (!args) return result;
+    if (args == NULL) {  // cppcheck-suppress memleak
+        return result;
+    }
 
     mib[0] = CTL_KERN;
     mib[1] = KERN_PROCARGS2;
@@ -1582,7 +1584,7 @@ bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc
 }
 
 std::map<const wcstring, const wcstring> abbreviations;
-void update_abbr_cache(const wchar_t *op, const wcstring &varname) {
+void update_abbr_cache(const wchar_t *op, const wcstring varname) {
     wcstring abbr;
     if (!unescape_string(varname.substr(wcslen(L"_fish_abbr_")), &abbr, 0, STRING_STYLE_VAR)) {
         debug(1, L"Abbreviation var '%ls' is not correctly encoded, ignoring it.", varname.c_str());

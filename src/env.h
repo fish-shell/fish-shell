@@ -89,9 +89,9 @@ class env_var_t {
     env_var_t(const wchar_t *x) : val(x), is_missing(false), exportv(false) {}
     env_var_t() : val(L""), is_missing(false), exportv(false) {}
 
-    bool empty(void) const { return val.empty() || val == ENV_NULL; };
+    bool empty(void) const { return val.empty(); };
     bool missing(void) const { return is_missing; }
-    bool missing_or_empty(void) const { return missing() || empty(); }
+    bool missing_or_empty(void) const { return missing() || val.empty(); }
 
     const wchar_t *c_str(void) const;
     void to_list(wcstring_list_t &out) const;

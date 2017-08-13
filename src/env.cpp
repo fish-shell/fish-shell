@@ -1268,6 +1268,12 @@ env_var_t env_get(const wcstring &key, env_mode_flags_t mode) {
         while (env != NULL) {
             const env_var_t var = env->find_entry(key);
             if (!var.missing() && (var.exportv ? search_exported : search_unexported)) {
+                // The following statement is wrong because ENV_NULL is supposed to mean the var is
+                // set but has zero elements. Therefore we should not return missing_var. However,
+                // If this is changed to return `var` without the special-case then unit tests fail.
+                // Note that tokenize_variable_array() explicitly handles a var whose string
+                // representation contains only ENV_NULL.
+                if (var.as_string() == ENV_NULL) return env_var_t::missing_var();
                 return var;
             }
 

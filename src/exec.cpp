@@ -632,8 +632,8 @@ void exec_job(parser_t &parser, job_t *j) {
             if (blocked_pid != -1) {
                 debug(2, L"Unblocking process %d.\n", blocked_pid);
                 kill(blocked_pid, SIGCONT);
-                blocked_pid = -1;
             }
+            blocked_pid = -1;
         };
 
         // This is the io_streams we pass to internal builtins.
@@ -1174,13 +1174,15 @@ void exec_job(parser_t &parser, job_t *j) {
             //no one awaits it.
         }
         //regardless of whether the child blocked or not:
-        //only once per job, and only once we've actually executed an external command
-        if ((child_spawned || child_forked) && !pgrp_set) {
+        if (child_spawned || child_forked) {
             //this should be called after waitpid if child_forked && pipes_to_next_command
             //it can be called at any time if child_spawned
-            set_child_group(j, p->pid);
-            //we can't rely on p->is_first_in_job because a builtin may have been the first
-            pgrp_set = true;
+            if (!pgrp_set) {
+                set_child_group(j, p->pid);
+                //only once per job, and only once we've executed an external command for real
+                //we can't rely on p->is_first_in_job because a builtin may have been the first
+                pgrp_set = true;
+            }
         }
         //if the command we ran _before_ this one was SIGSTOP'd to let this one catch up, unblock it now.
         //this must be after the wait_pid on the process we just started, if any.

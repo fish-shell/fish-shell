@@ -365,5 +365,3 @@ void proc_pop_interactive();
 int proc_format_status(int status);
 
 #endif
-
-bool terminal_give_to_job(job_t *j, int cont);

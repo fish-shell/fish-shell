@@ -203,7 +203,7 @@ static int validate_cmd_opts(const wchar_t *cmd, set_cmd_opts_t &opts,  //!OCLIN
 static int check_global_scope_exists(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_t *dest,
                                      io_streams_t &streams) {
     if (opts.universal) {
-        env_var_t global_dest = env_get(dest, ENV_GLOBAL);
+        env_var_t global_dest = env_get_string(dest, ENV_GLOBAL);
         if (!global_dest.missing() && shell_is_interactive()) {
             streams.err.append_format(BUILTIN_SET_UVAR_ERR, cmd, dest);
         }

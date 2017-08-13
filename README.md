@@ -28,8 +28,6 @@ fish requires PCRE2 due to the regular expression support contained in the `stri
     * an awk implementation, such as gawk, mawk, etc
     * coreutils --- at least basename, cat, cut, date, dircolors, dirname, ls, mkdir, mkfifo, mktemp, rm, seq, sort, stat, stty, tail, tr, tty, uname, uniq, wc, whoami
     * find
-    * getent (part of glibc)
-    * getopt
     * grep
     * hostname
     * kill

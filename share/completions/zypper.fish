@@ -28,8 +28,14 @@ function __fish_zypper_use_repo
         __fish_zypper_cmd_in_array $__fish_zypper_repo_commands
 end
 
+function __fish_zypper_print_repos
+    for repofile in /etc/zypp/repos.d/*.repo
+        string replace -f -r '\[(.+)\]' '$1' < $repofile
+    end
+end
+
 complete -n '__fish_zypper_use_pkg' -c zypper -a '(__fish_print_packages)' --description 'Package'
-complete -f -n '__fish_zypper_use_repo' -c zypper -a '(__fish_print_zypp_repos)' --description 'Repo'
+complete -f -n '__fish_zypper_use_repo' -c zypper -a '(__fish_zypper_print_repos)' --description 'Repo'
 
 complete -n '__fish_zypper_no_subcommand' -c zypper -a 'install in' --description 'Install packages'
 

@@ -819,33 +819,22 @@ bool terminal_give_to_job(job_t *j, int cont) {
         //thing is that we can guarantee the process isn't going to exit while we wait (which would cause us to
         //possibly block indefinitely).
 
-        auto pgroupTerminated = [&j]() {
-            //everyone in the process group has exited
-            //The only way that can happen is if the very last process in the group terminated, and didn't need
-            //to access the terminal, otherwise it would have hung waiting for terminal IO. We can ignore this.
-            debug(3, L"terminal_give_to_job(): tcsetpgrp called but process group %d has terminated.\n", j->pgid);
-        };
-
         while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
             if (errno == EINTR) {
                 //always retry on EINTR
             }
-            else if (errno == EINVAL) {
-                //OS X returns EINVAL if the process group no longer lives. Probably other OSes, too.
-                //See comments in pgroupTerminated() above.
-                pgroupTerminated();
-                break;
-            }
             else if (errno == EPERM) {
-                //retry so long as this isn't because the process group is dead
+                //so long as this isn't because the process group is dead
                 int wait_result = waitpid(-1 * j->pgid, &wait_result, WNOHANG);
                 if (wait_result == -1) {
+                    //everyone in the process group has exited
+                    //The only way that can happen is if the very last process in the group terminated, and didn't need
+                    //to access the terminal, otherwise it would have hung waiting for terminal IO. We can ignore this.
                     //Note that -1 is technically an "error" for waitpid in the sense that an invalid argument was specified
-                    //because no such process group exists any longer. This is the observed behavior on Linux 4.4.0.
+                    //because no such process group exists any longer.
                     //a "success" result would mean processes from the group still exist but is still running in some state
                     //or the other.
-                    //See comments in pgroupTerminated() above.
-                    pgroupTerminated();
+                    debug(3, L"terminal_give_to_job(): tcsetpgrp called but process group %d has terminated.\n", j->pgid);
                     break;
                 }
                 debug(2, L"terminal_give_to_job(): EPERM.\n", j->pgid);

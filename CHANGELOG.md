@@ -2,7 +2,7 @@
 This section is for changes merged to the `major` branch that are not also merged to 2.7.
 
 ## Deprecations
-- The `IFS` variable is deprecated and will be removed in fish 4.0 (#4156).
+- The `IFS` variable (#4156).
 
 ## Notable non-backward compatible changes
 - `.` command no longer exists -- use `source` (#4294).

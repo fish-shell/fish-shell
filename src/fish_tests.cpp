@@ -2013,7 +2013,7 @@ static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) 
         i++;
     }
     argv[i + 1] = NULL;
-    io_streams_t streams(0);
+    io_streams_t streams;
     int result = builtin_test(parser, streams, argv);
     delete[] argv;
     return expected == result;
@@ -2040,7 +2040,7 @@ static bool run_test_test(int expected, const wcstring &str) {
 static void test_test_brackets() {
     // Ensure [ knows it needs a ].
     parser_t parser;
-    io_streams_t streams(0);
+    io_streams_t streams;
 
     const wchar_t *argv1[] = {L"[", L"foo", NULL};
     do_test(builtin_test(parser, streams, (wchar_t **)argv1) != 0);
@@ -3930,7 +3930,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 static void run_one_string_test(const wchar_t **argv, int expected_rc,
                                 const wchar_t *expected_out) {
     parser_t parser;
-    io_streams_t streams(0);
+    io_streams_t streams;
     streams.stdin_is_directly_redirected = false;  // read from argv instead of stdin
     int rc = builtin_string(parser, streams, const_cast<wchar_t **>(argv));
     wcstring args;

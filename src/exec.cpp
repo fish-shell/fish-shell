@@ -382,15 +382,13 @@ void exec_job(parser_t &parser, job_t *j) {
     // Verify that all IO_BUFFERs are output. We used to support a (single, hacked-in) magical input
     // IO_BUFFER used by fish_pager, but now the claim is that there are no more clients and it is
     // removed. This assertion double-checks that.
-    size_t stdout_read_limit = 0;
     const io_chain_t all_ios = j->all_io_redirections();
     for (size_t idx = 0; idx < all_ios.size(); idx++) {
         const shared_ptr<io_data_t> &io = all_ios.at(idx);
 
         if ((io->io_mode == IO_BUFFER)) {
             io_buffer_t *io_buffer = static_cast<io_buffer_t *>(io.get());
-            assert(!io_buffer->is_input);
-            stdout_read_limit = io_buffer->get_buffer_limit();
+            assert(!io_buffer->is_input);  //!OCLINT(multiple unary operator)
         }
     }
 
@@ -607,7 +605,7 @@ void exec_job(parser_t &parser, job_t *j) {
         shared_ptr<io_buffer_t> block_output_io_buffer;
 
         // This is the io_streams we pass to internal builtins.
-        std::unique_ptr<io_streams_t> builtin_io_streams(new io_streams_t(stdout_read_limit));
+        std::unique_ptr<io_streams_t> builtin_io_streams;
 
         switch (p->type) {
             case INTERNAL_FUNCTION: {
@@ -756,6 +754,7 @@ void exec_job(parser_t &parser, job_t *j) {
                         stdin_is_directly_redirected = stdin_io && stdin_io->io_mode != IO_CLOSE;
                     }
 
+                    builtin_io_streams.reset(new io_streams_t());
                     builtin_io_streams->stdin_fd = local_builtin_stdin;
                     builtin_io_streams->out_is_redirected =
                         has_fd(process_net_io_chain, STDOUT_FILENO);
@@ -883,9 +882,8 @@ void exec_job(parser_t &parser, job_t *j) {
                     const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
                     const bool no_stdout_output = stdout_buffer.empty();
                     const bool no_stderr_output = stderr_buffer.empty();
-                    const bool stdout_discarded = builtin_io_streams->out.output_discarded();
 
-                    if (!stdout_discarded && no_stdout_output && no_stderr_output) {
+                    if (no_stdout_output && no_stderr_output) {
                         // The builtin produced no output and is not inside of a pipeline. No
                         // need to fork or even output anything.
                         debug(3, L"Skipping fork: no output for internal builtin '%ls'",
@@ -899,15 +897,13 @@ void exec_job(parser_t &parser, job_t *j) {
                               p->argv0());
 
                         io_buffer_t *io_buffer = static_cast<io_buffer_t *>(stdout_io.get());
-                        if (stdout_discarded) {
-                            io_buffer->set_discard();
-                        } else {
-                            const std::string res = wcs2string(builtin_io_streams->out.buffer());
-                            io_buffer->out_buffer_append(res.data(), res.size());
-                        }
+                        const std::string res = wcs2string(builtin_io_streams->out.buffer());
+
+                        io_buffer->out_buffer_append(res.data(), res.size());
                         fork_was_skipped = true;
                     } else if (stdout_io.get() == NULL && stderr_io.get() == NULL) {
-                        // We are writing to normal stdout and stderr. Just do it - no need to fork.
+                        // We are writing to normal stdout and stderr. Just do it - no need to
+                        // fork.
                         debug(3, L"Skipping fork: ordinary output for internal builtin '%ls'",
                               p->argv0());
                         const std::string outbuff = wcs2string(stdout_buffer);
@@ -919,7 +915,6 @@ void exec_job(parser_t &parser, job_t *j) {
                             debug(0, "!builtin_io_done and errno != EPIPE");
                             show_stackframe(L'E');
                         }
-                        if (stdout_discarded) p->status = STATUS_READ_TOO_MUCH;
                         fork_was_skipped = true;
                     }
                 }
@@ -1104,8 +1099,8 @@ void exec_job(parser_t &parser, job_t *j) {
     }
 }
 
-static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, bool apply_exit_status,
-                                  bool is_subcmd) {
+static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst,
+                                  bool apply_exit_status) {
     ASSERT_IS_MAIN_THREAD();
     bool prev_subshell = is_subshell;
     const int prev_status = proc_get_last_status();
@@ -1121,8 +1116,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.
-    const shared_ptr<io_buffer_t> io_buffer(
-        io_buffer_t::create(STDOUT_FILENO, io_chain_t(), is_subcmd ? read_byte_limit : 0));
+    const shared_ptr<io_buffer_t> io_buffer(io_buffer_t::create(STDOUT_FILENO, io_chain_t()));
     if (io_buffer.get() != NULL) {
         parser_t &parser = parser_t::principal_parser();
         if (parser.eval(cmd, io_chain_t(io_buffer), SUBST) == 0) {
@@ -1131,8 +1125,6 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
 
         io_buffer->read();
     }
-
-    if (io_buffer->output_discarded()) subcommand_status = STATUS_READ_TOO_MUCH;
 
     // If the caller asked us to preserve the exit status, restore the old status. Otherwise set the
     // status of the subcommand.
@@ -1174,13 +1166,12 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     return subcommand_status;
 }
 
-int exec_subshell(const wcstring &cmd, std::vector<wcstring> &outputs, bool apply_exit_status,
-                  bool is_subcmd) {
+int exec_subshell(const wcstring &cmd, std::vector<wcstring> &outputs, bool apply_exit_status) {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, &outputs, apply_exit_status, is_subcmd);
+    return exec_subshell_internal(cmd, &outputs, apply_exit_status);
 }
 
-int exec_subshell(const wcstring &cmd, bool apply_exit_status, bool is_subcmd) {
+int exec_subshell(const wcstring &cmd, bool apply_exit_status) {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, NULL, apply_exit_status, is_subcmd);
+    return exec_subshell_internal(cmd, NULL, apply_exit_status);
 }

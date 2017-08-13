@@ -1138,7 +1138,7 @@ void exec_job(parser_t &parser, job_t *j) {
         }
 
         if (child_spawned) {
-            //posix_spawn'd processes won't SIGSTOP
+            child_set_group(j, p);
             set_child_group(j, p->pid);
         }
         else if (child_forked) {
@@ -1147,17 +1147,17 @@ void exec_job(parser_t &parser, job_t *j) {
             pid_t pid_status{};
             if (waitpid(p->pid, &pid_status, WUNTRACED) != -1) {
                 //the child is SIGSTOP'd and is guaranteed to have called child_set_group() at this point.
-                //but we only need to call set_child_group for the first process in the group.
-                //If needs_keepalive is set, this has already been called for the keepalive process
-                if (p->is_first_in_job) {
-                    set_child_group(j, p->pid);
-                }
+                set_child_group(j, p->pid); //update our own process group info to match
                 //we are not unblocking the child via SIGCONT just yet to give the next process a chance to open
                 //the pipes and join the process group. We only unblock the last process in the job chain because
                 //no one awaits it.
+                if (!pipes_to_next_command)
+                {
+                    kill(p->pid, SIGCONT);
+                }
             }
             else {
-                debug(1, L"waitpid(%d) call in unblock_pid failed:!\n", p->pid);
+                debug(2, L"waitpid(%d) call in unblock_pid failed:!\n", p->pid);
                 wperror(L"waitpid");
             }
         }
@@ -1182,13 +1182,6 @@ void exec_job(parser_t &parser, job_t *j) {
             exec_close(pipe_current_write);
             pipe_current_write = -1;
         }
-    }
-
-    //unblock the last process in the group
-    if (blocked_pid != -1)
-    {
-        kill(blocked_pid, SIGCONT);
-        blocked_pid = -1;
     }
 
     // Clean up any file descriptors we left open.

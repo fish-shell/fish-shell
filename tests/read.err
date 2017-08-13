@@ -9,9 +9,6 @@ read: Expected 1 args, got 0
 read: Expected 1 args, got 2
 
 ####################
-# Verify correct behavior of subcommands and splitting of input.
-
-####################
 # Test splitting input
 
 ####################

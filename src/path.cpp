@@ -48,18 +48,20 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
     }
 
     int err = ENOENT;
-    wcstring_list_t pathsv;
+    wcstring bin_path;
     if (!bin_path_var.missing()) {
-        bin_path_var.to_list(pathsv);
+        bin_path = bin_path_var.as_string();
     } else {
         // Note that PREFIX is defined in the `Makefile` and is thus defined when this module is
         // compiled. This ensures we always default to "/bin", "/usr/bin" and the bin dir defined
         // for the fish programs. Possibly with a duplicate dir if PREFIX is empty, "/", "/usr" or
         // "/usr/". If the PREFIX duplicates /bin or /usr/bin that is harmless other than a trivial
         // amount of time testing a path we've already tested.
-        pathsv = wcstring_list_t({L"/bin", L"/usr/bin", PREFIX L"/bin"});
+        bin_path = *list_to_array_val(wcstring_list_t({L"/bin", L"/usr/bin", PREFIX L"/bin"}));
     }
 
+    wcstring_list_t pathsv;
+    bin_path_var.to_list(pathsv);
     for (auto next_path : pathsv) {
         if (next_path.empty()) continue;
         append_path_component(next_path, cmd);

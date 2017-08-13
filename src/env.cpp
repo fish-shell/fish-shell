@@ -126,8 +126,8 @@ class env_node_t {
     /// Pointer to next level.
     std::unique_ptr<env_node_t> next;
 
-    /// Returns the given entry if present else env_var_t::missing_var.
-    const env_var_t find_entry(const wcstring &key);
+    /// Returns a pointer to the given entry if present, or NULL.
+    const var_entry_t *find_entry(const wcstring &key);
 };
 
 class variable_entry_t {
@@ -174,21 +174,27 @@ struct var_stack_t {
     env_node_t *next_scope_to_search(env_node_t *node);
     const env_node_t *next_scope_to_search(const env_node_t *node) const;
 
-    // Returns the scope used for unspecified scopes. An unspecified scope is either the topmost
-    // shadowing scope, or the global scope if none. This implements the default behavior of `set`.
+    // Returns the scope used for unspecified scopes
+    // An unspecified scope is either the topmost shadowing scope, or the global scope if none
+    // This implements the default behavior of 'set'
     env_node_t *resolve_unspecified_scope();
 };
 
 void var_stack_t::push(bool new_scope) {
     std::unique_ptr<env_node_t> node(new env_node_t(new_scope));
 
-    // Copy local-exported variables.
+    // Copy local-exported variables
     auto top_node = top.get();
-    // Only if we introduce a new shadowing scope; i.e. not if it's just `begin; end` or
-    // "--no-scope-shadowing".
-    if (new_scope && top_node != this->global_env) {
-        for (auto &var : top_node->env) {
-            if (var.second.exportv) node->env.insert(var);
+    // Only if we introduce a new shadowing scope
+    // i.e. not if it's just `begin; end` or "--no-scope-shadowing".
+    if (new_scope) {
+        if (!(top_node == this->global_env)) {
+            for (auto &var : top_node->env) {
+                if (var.second.exportv) {
+                    // This should  copy var
+                    node->env.insert(var);
+                }
+            }
         }
     }
 
@@ -234,8 +240,8 @@ void var_stack_t::pop() {
     assert(this->top != NULL);
 
     for (const auto &entry_pair : old_top->env) {
-        const env_var_t &var = entry_pair.second;
-        if (var.exportv) {
+        const var_entry_t &entry = entry_pair.second;
+        if (entry.exportv) {
             this->mark_changed_exported();
             break;
         }
@@ -303,10 +309,13 @@ static bool is_electric(const wcstring &key) {
     return env_electric.find(key.c_str()) != env_electric.end();
 }
 
-const env_var_t env_node_t::find_entry(const wcstring &key) {
-    var_table_t::const_iterator entry = env.find(key);
-    if (entry != env.end()) return entry->second;
-    return env_var_t::missing_var();
+const var_entry_t *env_node_t::find_entry(const wcstring &key) {
+    const var_entry_t *result = NULL;
+    var_table_t::const_iterator where = env.find(key);
+    if (where != env.end()) {
+        result = &where->second;
+    }
+    return result;
 }
 
 /// Return the current umask value.
@@ -950,8 +959,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 static env_node_t *env_get_node(const wcstring &key) {
     env_node_t *env = vars_stack().top.get();
     while (env != NULL) {
-        env_var_t var = env->find_entry(key);
-        if (!var.missing()) break;
+        if (env->find_entry(key) != NULL) {
+            break;
+        }
+
         env = vars_stack().next_scope_to_search(env);
     }
     return env;
@@ -1048,8 +1059,8 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
         if (preexisting_node != NULL) {
             var_table_t::const_iterator result = preexisting_node->env.find(key);
             assert(result != preexisting_node->env.end());
-            const env_var_t &var = result->second;
-            if (var.exportv) {
+            const var_entry_t &entry = result->second;
+            if (entry.exportv) {
                 preexisting_entry_exportv = true;
                 has_changed_new = true;
             }
@@ -1063,7 +1074,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
         } else if (preexisting_node != NULL) {
             node = preexisting_node;
             if ((var_mode & (ENV_EXPORT | ENV_UNEXPORT)) == 0) {
-                // Use existing entry's exportv status.
+                // use existing entry's exportv
                 var_mode =  //!OCLINT(parameter reassignment)
                     preexisting_entry_exportv ? ENV_EXPORT : 0;
             }
@@ -1097,21 +1108,20 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
         if (!done) {
             // Set the entry in the node. Note that operator[] accesses the existing entry, or
             // creates a new one.
-            env_var_t &var = node->env[key];
-            if (var.exportv) {
+            var_entry_t &entry = node->env[key];
+            if (entry.exportv) {
                 // This variable already existed, and was exported.
                 has_changed_new = true;
             }
-
-            var.set_val(val);
+            entry.val = val;
             if (var_mode & ENV_EXPORT) {
                 // The new variable is exported.
-                var.exportv = true;
+                entry.exportv = true;
                 node->exportv = true;
                 has_changed_new = true;
             } else {
-                var.exportv = false;
-                // Set the node's exported when it changes something about exports
+                entry.exportv = false;
+                // Set the node's exportv when it changes something about exports
                 // (also when it redefines a variable to not be exported).
                 node->exportv = has_changed_old != has_changed_new;
             }
@@ -1209,7 +1219,7 @@ int env_remove(const wcstring &key, int var_mode) {
 }
 
 wcstring env_var_t::as_string(void) const {
-    //assert(!is_missing);
+    assert(!is_missing);
     return val;
 }
 
@@ -1266,15 +1276,12 @@ env_var_t env_get(const wcstring &key, env_mode_flags_t mode) {
         env_node_t *env = search_local ? vars_stack().top.get() : vars_stack().global_env;
 
         while (env != NULL) {
-            const env_var_t var = env->find_entry(key);
-            if (!var.missing() && (var.exportv ? search_exported : search_unexported)) {
-                // The following statement is wrong because ENV_NULL is supposed to mean the var is
-                // set but has zero elements. Therefore we should not return missing_var. However,
-                // If this is changed to return `var` without the special-case then unit tests fail.
-                // Note that tokenize_variable_array() explicitly handles a var whose string
-                // representation contains only ENV_NULL.
-                if (var.as_string() == ENV_NULL) return env_var_t::missing_var();
-                return var;
+            const var_entry_t *entry = env->find_entry(key);
+            if (entry != NULL && (entry->exportv ? search_exported : search_unexported)) {
+                if (entry->val == ENV_NULL) {
+                    return env_var_t::missing_var();
+                }
+                return entry->val;
             }
 
             if (has_scope) {
@@ -1335,8 +1342,8 @@ bool env_exist(const wchar_t *key, env_mode_flags_t mode) {
 
             var_table_t::const_iterator result = env->env.find(key);
             if (result != env->env.end()) {
-                const env_var_t var = result->second;
-                return var.exportv ? test_exported : test_unexported;
+                const var_entry_t &res = result->second;
+                return res.exportv ? test_exported : test_unexported;
             }
             env = vars_stack().next_scope_to_search(env);
         }
@@ -1378,9 +1385,9 @@ static void add_key_to_string_set(const var_table_t &envs, std::set<wcstring> *s
                                   bool show_exported, bool show_unexported) {
     var_table_t::const_iterator iter;
     for (iter = envs.begin(); iter != envs.end(); ++iter) {
-        const env_var_t &var = iter->second;
+        const var_entry_t &e = iter->second;
 
-        if ((var.exportv && show_exported) || (!var.exportv && show_unexported)) {
+        if ((e.exportv && show_exported) || (!e.exportv && show_unexported)) {
             // Insert this key.
             str_set->insert(iter->first);
         }
@@ -1433,39 +1440,39 @@ wcstring_list_t env_get_names(int flags) {
 }
 
 /// Get list of all exported variables.
-static void get_exported(const env_node_t *n, var_table_t &h) {
+static void get_exported(const env_node_t *n, std::map<wcstring, wcstring> *h) {
     if (!n) return;
 
-    if (n->new_scope) {
+    if (n->new_scope)
         get_exported(vars_stack().global_env, h);
-    } else {
+    else
         get_exported(n->next.get(), h);
-    }
 
     var_table_t::const_iterator iter;
     for (iter = n->env.begin(); iter != n->env.end(); ++iter) {
         const wcstring &key = iter->first;
-        const env_var_t var = iter->second;
+        const var_entry_t &val_entry = iter->second;
 
-        if (!var.missing() && var.exportv) {
+        if (val_entry.exportv && val_entry.val != ENV_NULL) {
             // Export the variable. Don't use std::map::insert here, since we need to overwrite
             // existing values from previous scopes.
-            h[key] = var;
+            (*h)[key] = val_entry.val;
         } else {
             // We need to erase from the map if we are not exporting, since a lower scope may have
             // exported. See #2132.
-            h.erase(key);
+            h->erase(key);
         }
     }
 }
 
 // Given a map from key to value, add values to out of the form key=value.
-static void export_func(const var_table_t &envs, std::vector<std::string> &out) {
+static void export_func(const std::map<wcstring, wcstring> &envs, std::vector<std::string> &out) {
     out.reserve(out.size() + envs.size());
-    for (auto iter = envs.begin(); iter != envs.end(); ++iter) {
+    std::map<wcstring, wcstring>::const_iterator iter;
+    for (iter = envs.begin(); iter != envs.end(); ++iter) {
         const wcstring &key = iter->first;
         const std::string &ks = wcs2string(key);
-        std::string vs = wcs2string(iter->second.as_string());
+        std::string vs = wcs2string(iter->second);
 
         // Arrays in the value are ASCII record separator (0x1e) delimited. But some variables
         // should have colons. Add those.
@@ -1490,10 +1497,11 @@ void var_stack_t::update_export_array_if_necessary() {
     if (!this->has_changed_exported) {
         return;
     }
+    std::map<wcstring, wcstring> vals;
 
     debug(4, L"env_export_arr() recalc");
-    var_table_t vals;
-    get_exported(this->top.get(), vals);
+
+    get_exported(this->top.get(), &vals);
 
     if (uvars()) {
         const wcstring_list_t uni = uvars()->get_names(true, false);
@@ -1536,7 +1544,7 @@ void env_set_argv(const wchar_t *const *argv) {
 
         env_set(L"argv", sb.c_str(), ENV_LOCAL);
     } else {
-        env_set(L"argv", NULL, ENV_LOCAL);
+        env_set(L"argv", 0, ENV_LOCAL);
     }
 }
 

@@ -215,7 +215,6 @@ static void popd() {
 
 /// Test that the fish functions for converting strings to numbers work.
 static void test_str_to_num() {
-    say(L"Testing str_to_num");
     const wchar_t *end;
     int i;
     long l;
@@ -4369,9 +4368,6 @@ int main(int argc, char **argv) {
     // Set default signal handlers, so we can ctrl-C out of this.
     signal_reset_handlers();
 
-    if (should_test_function("utility_functions")) test_utility_functions();
-    if (should_test_function("wcstring_tok")) test_wcstring_tok();
-    if (should_test_function("env_vars")) test_env_vars();
     if (should_test_function("str_to_num")) test_str_to_num();
     if (should_test_function("highlighting")) test_highlighting();
     if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
@@ -4413,12 +4409,15 @@ int main(int argc, char **argv) {
     if (should_test_function("autosuggestion_ignores")) test_autosuggestion_ignores();
     if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
+    if (should_test_function("wcstring_tok")) test_wcstring_tok();
     if (should_test_function("history")) history_tests_t::test_history();
     if (should_test_function("history_merge")) history_tests_t::test_history_merge();
     if (should_test_function("history_races")) history_tests_t::test_history_races();
     if (should_test_function("history_formats")) history_tests_t::test_history_formats();
     if (should_test_function("string")) test_string();
+    if (should_test_function("env_vars")) test_env_vars();
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
+    if (should_test_function("utility_functions")) test_utility_functions();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

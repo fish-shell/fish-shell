@@ -4,9 +4,6 @@
 
 ####################
 # Read with -a and anything other than exactly on var name is an error
-
-####################
-# Verify correct behavior of subcommands and splitting of input.
 2
 2
 1

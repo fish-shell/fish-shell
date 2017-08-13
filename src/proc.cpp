@@ -789,23 +789,6 @@ static bool terminal_give_to_job(job_t *j, int cont) {
         return true;
     }
 
-    //it may not be safe to call tcsetpgrp if we've already done so, as at that point we are no longer
-    //the controlling process group for the terminal and no longer have permission to set the process
-    //group that is in control, causing tcsetpgrp to return EPERM, even though that's not the documented
-    //behavior in tcsetpgrp(3), which instead says other bad things will happen (it says SIGTTOU will be
-    //sent to all members of the background *calling* process group, but it's more complicated than that,
-    //SIGTTOU may or may not be sent depending on the TTY configuration and whether or not signal handlers
-    //for SIGTTOU are installed. Read: http://curiousthing.org/sigttin-sigttou-deep-dive-linux
-    //In all cases, our goal here was just to hand over control of the terminal to this process group,
-    //which is a no-op if it's already been done.
-    if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
-        debug(2, L"Process group %d already has control of terminal\n", j->pgid);
-        return true;
-    }
-
-    debug(4, L"Attempting bring process group to foreground via tcsetpgrp for job->pgid %d\n", j->pgid);
-    debug(4, L"caller session id: %d, pgid %d has session id: %d\n", getsid(0), j->pgid, getsid(j->pgid));
-
     signal_block(true);
     int result = -1;
     errno = EINTR;
@@ -814,7 +797,7 @@ static bool terminal_give_to_job(job_t *j, int cont) {
     }
     if (result == -1) {
         if (errno == ENOTTY) redirect_tty_output();
-        debug(1, _(L"terminal_give_to_job(): Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id, j->command_wcstr(), j->pgid);
+        debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->command_wcstr());
         wperror(L"tcsetpgrp");
         signal_unblock(true);
         return false;

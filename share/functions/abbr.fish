@@ -1,201 +1,206 @@
-function abbr --description "Manage abbreviations using new fish 3.0 scheme."
-    set -l options --stop-nonopt --exclusive 'a,r,e,l,s' --exclusive 'g,U'
-    set options $options 'h/help' 'a/add' 'r/rename' 'e/erase' 'l/list' 's/show'
-    set options $options 'g/global' 'U/universal'
+function abbr --description "Manage abbreviations"
+    # parse arguments
+    set -l mode
+    set -l mode_flag # the flag that was specified, for better errors
+    set -l mode_arg
+    set -l needs_arg no
+    while set -q argv[1]
+        set -l new_mode
+        switch $argv[1]
+            case '-h' '--help'
+                __fish_print_help abbr
+                return 0
+            case '-a' '--add'
+                set new_mode add
+                set needs_arg multi
+            case '-r' '--rename'
+                set new_mode rename
+                set needs_arg double
+            case '-e' '--erase'
+                set new_mode erase
+                set needs_arg single
+            case '-l' '--list'
+                set new_mode list
+            case '-s' '--show'
+                set new_mode show
+            case '--'
+                set -e argv[1]
+                break
+            case '-*'
+                printf ( _ "%s: invalid option -- %s\n" ) abbr $argv[1] >&2
+                return 1
+            case '*'
+                break
+        end
+        if test -n "$mode" -a -n "$new_mode"
+            # we're trying to set two different modes
+            printf ( _ "%s: %s cannot be specified along with %s\n" ) abbr $argv[1] $mode_flag >&2
+            return 1
+        end
+        set mode $new_mode
+        set mode_flag $argv[1]
+        set -e argv[1]
+    end
 
-    argparse -n abbr $options -- $argv
-    or return
+    # If run with no options, treat it like --add if we have an argument, or
+    # --show if we do not have an argument
+    if not set -q mode[1]
+        if set -q argv[1]
+            set mode add
+            set needs_arg multi
+        else
+            set mode show
+        end
+    end
 
-    if set -q _flag_help
-        __fish_print_help abbr
+    if test $needs_arg = single
+        set mode_arg $argv[1]
+        set needs_arg no
+        set -e argv[1]
+    else if test $needs_arg = double
+        # Pull the two parameters from argv.
+        # * leave argv non-empty, if there are more than two arguments
+        # * leave needs_arg set to double if there is not enough arguments
+        if set -q argv[1]
+            set param1 $argv[1]
+            set -e argv[1]
+            if set -q argv[1]
+                set param2 $argv[1]
+                set needs_arg no
+                set -e argv[1]
+            end
+        end
+    else if test $needs_arg = multi
+        set mode_arg $argv
+        set needs_arg no
+        set -e argv
+    end
+    if test $needs_arg != no
+        printf ( _ "%s: option requires an argument -- %s\n" ) abbr $mode_flag >&2
+        return 1
+    end
+
+    # none of our modes want any excess arguments
+    if set -q argv[1]
+        printf ( _ "%s: Unexpected argument -- %s\n" ) abbr $argv[1] >&2
+        return 1
+    end
+
+    switch $mode
+        case 'add'
+            # Convert from old "key=value" syntax
+            # TODO: This should be removed later
+            if not set -q mode_arg[2]
+                and string match -qr '^[^ ]+=' -- $mode_arg
+                set mode_arg (string split "=" -- $mode_arg)
+            end
+
+            # Bail out early if the exact abbr is already in
+            set -q fish_user_abbreviations
+            and contains -- "$mode_arg" $fish_user_abbreviations
+            and return 0
+
+            set -l key $mode_arg[1]
+            set -e mode_arg[1]
+            set -l value "$mode_arg"
+            # Because we later store "$key $value", there can't be any spaces in the key
+            if string match -q "* *" -- $key
+                printf ( _ "%s: abbreviation cannot have spaces in the key\n" ) abbr >&2
+                return 1
+            end
+            if test -z "$value"
+                printf ( _ "%s: abbreviation must have a value\n" ) abbr >&2
+                return 1
+            end
+            if set -l idx (__fish_abbr_get_by_key $key)
+                # erase the existing abbreviation
+                set -e fish_user_abbreviations[$idx]
+            end
+            if not set -q fish_user_abbreviations
+                # initialize as a universal variable, so we can skip the -U later
+                # and therefore work properly if someone sets this as a global variable
+                set -U fish_user_abbreviations
+            end
+            set fish_user_abbreviations $fish_user_abbreviations "$key $value"
+            return 0
+
+        case 'rename'
+            set -l old_name $param1
+            set -l new_name $param2
+
+            # if the target name already exists, throw an error
+            if set -l idx (__fish_abbr_get_by_key $new_name)
+                printf ( _ "%s: abbreviation '%s' already exists, cannot rename\n" ) abbr $new_name >&2
+                return 2
+            end
+
+            # Because we later store "$key $value", there can't be any spaces in the key
+            if string match -q "* *" -- $new_name
+                printf ( _ "%s: abbreviation cannot have spaces in the key\n" ) abbr >&2
+                return 1
+            end
+
+            set -l idx (__fish_abbr_get_by_key $old_name)
+            or begin
+                printf ( _ "%s: no such abbreviation '%s'\n" ) abbr $old_name >&2
+                return 2
+            end
+
+            set -l value (string split " " -m 1 -- $fish_user_abbreviations[$idx])[2]
+            set fish_user_abbreviations[$idx] "$new_name $value"
+            return 0
+
+        case 'erase'
+            if set -l idx (__fish_abbr_get_by_key $mode_arg)
+                set -e fish_user_abbreviations[$idx]
+                return 0
+            else
+                printf ( _ "%s: no such abbreviation '%s'\n" ) abbr $mode_arg >&2
+                return 2
+            end
+
+        case 'show'
+            for i in $fish_user_abbreviations
+                set -l opt_double_dash
+                set -l kv (string split " " -m 1 -- $i)
+                set -l key $kv[1]
+                set -l value $kv[2]
+
+                # Check to see if either key or value has a leading dash
+                # If so, we need to write --
+                string match -q -- '-*' $key $value
+                and set opt_double_dash '--'
+                echo abbr $opt_double_dash (string escape -- $key $value)
+            end
+            return 0
+
+        case 'list'
+            for i in $fish_user_abbreviations
+                set -l key (string split " " -m 1 -- $i)[1]
+                printf "%s\n" $key
+            end
+            return 0
+    end
+end
+
+function __fish_abbr_get_by_key
+    if not set -q argv[1]
+        echo "__fish_abbr_get_by_key: expected one argument, got none" >&2
+        return 2
+    end
+
+    set -q fish_user_abbreviations
+    or return 1
+
+    # Going through all entries is still quicker than calling `seq`
+    set -l keys
+    for kv in $fish_user_abbreviations
+        # If this does not match, we have screwed up before and the error should be reported
+        set keys $keys (string split " " -m 1 -- $kv)[1]
+    end
+    if set -l idx (contains -i -- $argv[1] $keys)
+        echo $idx
         return 0
     end
-
-    # If run with no options, treat it like --add if we have arguments, or
-    # --show if we do not have any arguments.
-    set -l _flag_add
-    set -l _flag_show
-    if not set -q _flag_add[1]
-        and not set -q _flag_rename[1]
-        and not set -q _flag_erase[1]
-        and not set -q _flag_list[1]
-        and not set -q _flag_show[1]
-        if set -q argv[1]
-            set _flag_add --add
-        else
-            set _flag_show --show
-        end
-    end
-
-    set -l abbr_scope
-    if set -q _flag_global
-        set abbr_scope --global
-    else if set -q _flag_universal
-        set abbr_scope --universal
-    end
-
-    if set -q _flag_add[1]
-        __fish_abbr_add $argv
-        return
-    else if set -q _flag_erase[1]
-        __fish_abbr_erase $argv
-        return
-    else if set -q _flag_rename[1]
-        __fish_abbr_rename $argv
-        return
-    else if set -q _flag_list[1]
-        __fish_abbr_list $argv
-        return
-    else if set -q _flag_show[1]
-        __fish_abbr_show $argv
-        return
-    else
-        printf ( _ "%s: Could not figure out what to do!\n" ) abbr >&2
-        return 127
-    end
-end
-
-function __fish_abbr_add --no-scope-shadowing
-    if not set -q argv[2]
-        printf ( _ "%s %s: Requires at least two arguments\n" ) abbr --add >&2
-        return 1
-    end
-
-    # Because of the way abbreviations are expanded there can't be any spaces in the key.
-    set -l abbr_name $argv[1]
-    set -l escaped_abbr_name (string escape -- $abbr_name)
-    if string match -q "* *" -- $abbr_name
-        set -l msg ( _ "%s %s: Abbreviation %s cannot have spaces in the word\n" )
-        printf $msg abbr --add $escaped_abbr_name >&2
-        return 1
-    end
-
-    set -l abbr_val "$argv[2..-1]"
-    set -l abbr_var_name _fish_abbr_(string escape --style=var -- $abbr_name)
-
-    if not set -q $abbr_var_name
-        # We default to the universal scope if the user didn't explicitly specify a scope and the
-        # abbreviation isn't already defined.
-        set -q abbr_scope[1]
-        or set abbr_scope --universal
-    end
-    true # make sure the next `set` command doesn't leak the previous status
-    set $abbr_scope $abbr_var_name $abbr_val
-end
-
-function __fish_abbr_erase --no-scope-shadowing
-    if set -q argv[2]
-        printf ( _ "%s %s: Expected one argument\n" ) abbr --erase >&2
-        return 1
-    end
-
-    # Because of the way abbreviations are expanded there can't be any spaces in the key.
-    set -l abbr_name $argv[1]
-    set -l escaped_name (string escape -- $abbr_name)
-    if string match -q "* *" -- $abbr_old_name
-        set -l msg ( _ "%s %s: Abbreviation %s cannot have spaces in the word\n" )
-        printf $msg abbr --erase $escaped_name >&2
-        return 1
-    end
-
-    set -l abbr_var_name _fish_abbr_(string escape --style=var -- $abbr_name)
-
-    if not set -q $abbr_var_name
-        printf ( _ "%s %s: No abbreviation named %s\n" ) abbr --erase $escaped_name >&2
-        return 121
-    end
-
-    set -e $abbr_var_name
-end
-
-function __fish_abbr_rename --no-scope-shadowing
-    if test (count $argv) -ne 2
-        printf ( _ "%s %s: Requires exactly two arguments\n" ) abbr --rename >&2
-        return 1
-    end
-
-    set -l old_name $argv[1]
-    set -l new_name $argv[2]
-    set -l escaped_old_name (string escape -- $old_name)
-    set -l escaped_new_name (string escape -- $new_name)
-    if string match -q "* *" -- $old_name
-        set -l msg ( _ "%s %s: Abbreviation %s cannot have spaces in the word\n" )
-        printf $msg abbr --rename $escaped_old_name >&2
-        return 1
-    end
-    if string match -q "* *" -- $new_name
-        set -l msg ( _ "%s %s: Abbreviation %s cannot have spaces in the word\n" )
-        printf $msg abbr --rename $escaped_new_name >&2
-        return 1
-    end
-
-    set -l old_var_name _fish_abbr_(string escape --style=var -- $old_name)
-    set -l new_var_name _fish_abbr_(string escape --style=var -- $new_name)
-
-    if not set -q $old_var_name
-        printf ( _ "%s %s: No abbreviation named %s\n" ) abbr --rename $escaped_old_name >&2
-        return 1
-    end
-    if set -q $new_var_name
-        set -l msg ( _ "%s %s: Abbreviation %s already exists, cannot rename %s\n" )
-        printf $msg abbr --rename $escaped_new_name $escaped_old_name >&2
-        return 1
-    end
-
-    set -l old_var_val $$old_var_name
-
-    if not set -q abbr_scope[1]
-        # User isn't forcing the scope so use the existing scope.
-        if set -ql $old_var_name
-            set abbr_scope --global
-        else
-            set abbr_scope --universal
-        end
-    end
-
-    set -e $old_var_name
-    set $abbr_scope $new_var_name $old_var_val
-end
-
-function __fish_abbr_list --no-scope-shadowing
-    if set -q argv[1]
-        printf ( _ "%s %s: Unexpected argument -- '%s'\n" ) abbr --erase $argv[1] >&2
-        return 1
-    end
-
-    for var_name in (set --names)
-        string match -q '_fish_abbr_*' $var_name
-        or continue
-
-        set -l abbr_name (string unescape --style=var (string sub -s 12 $var_name))
-        echo $abbr_name
-    end
-end
-
-function __fish_abbr_show --no-scope-shadowing
-    if set -q argv[1]
-        printf ( _ "%s %s: Unexpected argument -- '%s'\n" ) abbr --erase $argv[1] >&2
-        return 1
-    end
-
-    for var_name in (set --names)
-        string match -q '_fish_abbr_*' $var_name
-        or continue
-
-        set -l abbr_var_name $var_name
-        set -l abbr_name (string unescape --style=var -- (string sub -s 12 $abbr_var_name))
-        set -l abbr_name (string escape --style=script -- $abbr_name)
-        set -l abbr_val $$abbr_var_name
-        set -l abbr_val (string escape --style=script -- $abbr_val)
-
-        if set -ql $abbr_var_name
-            printf 'abbr -a %s -- %s %s\n' -l $abbr_name $abbr_val
-        end
-        if set -qg $abbr_var_name
-            printf 'abbr -a %s -- %s %s\n' -g $abbr_name $abbr_val
-        end
-        if set -qU $abbr_var_name
-            printf 'abbr -a %s -- %s %s\n' -U $abbr_name $abbr_val
-        end
-    end
+    return 1
 end

@@ -1610,15 +1610,21 @@ static void test_fuzzy_match(void) {
 
 static void test_abbreviations(void) {
     say(L"Testing abbreviations");
+
+    const wchar_t *abbreviations =
+        L"gc=git checkout" ARRAY_SEP_STR
+        L"foo=" ARRAY_SEP_STR
+        L"gc=something else" ARRAY_SEP_STR
+        L"=" ARRAY_SEP_STR
+        L"=foo" ARRAY_SEP_STR
+        L"foo" ARRAY_SEP_STR
+        L"foo=bar" ARRAY_SEP_STR
+        L"gx git checkout";
+
     env_push(true);
 
-    const std::vector<std::pair<const wcstring, const wcstring>> abbreviations = {
-        {L"gc", L"git checkout"}, {L"foo", L"bar"}, {L"gx", L"git checkout"},
-    };
-    for (auto it : abbreviations) {
-        int ret = env_set(L"_fish_abbr_" + it.first, it.second.c_str(), ENV_LOCAL);
-        if (ret != 0) err(L"Unable to set abbreviation variable");
-    }
+    int ret = env_set(USER_ABBREVIATIONS_VARIABLE_NAME, abbreviations, ENV_LOCAL);
+    if (ret != 0) err(L"Unable to set abbreviation variable");
 
     wcstring result;
     if (expand_abbreviation(L"", &result)) err(L"Unexpected success with empty abbreviation");

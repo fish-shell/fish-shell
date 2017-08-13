@@ -340,7 +340,7 @@ void function_prepare_environment(const wcstring &name, const wchar_t *const *ar
         const wchar_t *const *arg;
         size_t i;
         for (i = 0, arg = argv; i < named_arguments.size(); i++) {
-            env_set(named_arguments.at(i).c_str(), ENV_LOCAL | ENV_USER, *arg);
+            env_set(named_arguments.at(i).c_str(), *arg, ENV_LOCAL | ENV_USER);
 
             if (*arg) arg++;
         }
@@ -349,6 +349,6 @@ void function_prepare_environment(const wcstring &name, const wchar_t *const *ar
     for (std::map<wcstring, env_var_t>::const_iterator it = inherited_vars.begin(),
                                                        end = inherited_vars.end();
          it != end; ++it) {
-        env_set(it->first, ENV_LOCAL | ENV_USER, it->second.missing() ? NULL : it->second.c_str());
+        env_set(it->first, it->second.missing() ? NULL : it->second.c_str(), ENV_LOCAL | ENV_USER);
     }
 }

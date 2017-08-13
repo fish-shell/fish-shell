@@ -422,7 +422,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (exit_res != STATUS_CMD_OK) {
         // Define the var(s) without any data. We do this because when this happens we want the user
         // to be able to use the var but have it expand to nothing.
-        for (int i = 0; i < argc; i++) env_set(argv[i], opts.place, NULL);
+        for (int i = 0; i < argc; i++) env_set(argv[i], NULL, opts.place);
         return exit_res;
     }
 
@@ -444,9 +444,9 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     *out = *it;
                     out += 2;
                 }
-                env_set(argv[0], opts.place, chars.c_str());
+                env_set(argv[0], chars.c_str(), opts.place);
             } else {
-                env_set(argv[0], opts.place, NULL);
+                env_set(argv[0], NULL, opts.place);
             }
         } else {  // not array mode
             int i = 0;
@@ -454,12 +454,12 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             for (; i + 1 < argc; ++i) {
                 if (j < bufflen) {
                     wchar_t buffer[2] = {buff[j++], 0};
-                    env_set(argv[i], opts.place, buffer);
+                    env_set(argv[i], buffer, opts.place);
                 } else {
-                    env_set(argv[i], opts.place, L"");
+                    env_set(argv[i], L"", opts.place);
                 }
             }
-            if (i < argc) env_set(argv[i], opts.place, &buff[j]);
+            if (i < argc) env_set(argv[i], &buff[j], opts.place);
         }
     } else if (opts.array) {
         if (!opts.have_delimiter) {
@@ -473,21 +473,21 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 if (!tokens.empty()) tokens.push_back(ARRAY_SEP);
                 tokens.append(buff, loc.first, loc.second);
             }
-            env_set(argv[0], opts.place, tokens.empty() ? NULL : tokens.c_str());
+            env_set(argv[0], tokens.empty() ? NULL : tokens.c_str(), opts.place);
         } else {
             wcstring_list_t splits;
             split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                         &splits, LONG_MAX);
             auto val = list_to_array_val(splits);
-            env_set(argv[0], opts.place, val->c_str());
+            env_set(argv[0], val->c_str(), opts.place);
         }
     } else {  // not array
         if (!opts.have_delimiter) {
             wcstring_range loc = wcstring_range(0, 0);
             for (int i = 0; i < argc; i++) {
                 loc = wcstring_tok(buff, (i + 1 < argc) ? opts.delimiter : wcstring(), loc);
-                env_set(argv[i], opts.place,
-                        loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first]);
+                env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first],
+                        opts.place);
             }
         } else {
             wcstring_list_t splits;
@@ -496,7 +496,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                         &splits, argc - 1);
             for (size_t i = 0; i < (size_t)argc && i < splits.size(); i++) {
-                env_set(argv[i], opts.place, splits[i].c_str());
+                env_set(argv[i], splits[i].c_str(), opts.place);
             }
         }
     }

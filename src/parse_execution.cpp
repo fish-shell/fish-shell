@@ -473,7 +473,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         }
 
         const wcstring &val = argument_sequence.at(i);
-        env_set(for_var_name, ENV_LOCAL, val.c_str());
+        env_set(for_var_name, val.c_str(), ENV_LOCAL);
         fb->loop_status = LOOP_NORMAL;
 
         this->run_job_list(block_contents, fb);

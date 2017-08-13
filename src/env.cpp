@@ -369,7 +369,7 @@ static void fix_colon_delimited_var(const wcstring &var_name) {
         }
     }
 
-    int scope = env_set(var_name, ENV_USER, new_val.c_str());
+    int scope = env_set(var_name, new_val.c_str(), ENV_USER);
     if (scope != ENV_OK) {
         debug(0, L"fix_colon_delimited_var failed unexpectedly with retval %d", scope);
     }
@@ -667,7 +667,7 @@ static void setup_path() {
     const env_var_t path = env_get(L"PATH");
     if (path.missing_or_empty()) {
         const wchar_t *value = L"/usr/bin" ARRAY_SEP_STR L"/bin";
-        env_set(L"PATH", ENV_GLOBAL | ENV_EXPORT, value);
+        env_set(L"PATH", value, ENV_GLOBAL | ENV_EXPORT);
     }
 }
 
@@ -676,10 +676,10 @@ static void setup_path() {
 /// adjusted.
 static void env_set_termsize() {
     env_var_t cols = env_get(L"COLUMNS");
-    if (cols.missing_or_empty()) env_set(L"COLUMNS", ENV_GLOBAL, DFLT_TERM_COL_STR);
+    if (cols.missing_or_empty()) env_set(L"COLUMNS", DFLT_TERM_COL_STR, ENV_GLOBAL);
 
     env_var_t rows = env_get(L"LINES");
-    if (rows.missing_or_empty()) env_set(L"LINES", ENV_GLOBAL, DFLT_TERM_ROW_STR);
+    if (rows.missing_or_empty()) env_set(L"LINES", DFLT_TERM_ROW_STR, ENV_GLOBAL);
 }
 
 bool env_set_pwd() {
@@ -689,7 +689,7 @@ bool env_set_pwd() {
               _(L"Could not determine current working directory. Is your locale set correctly?"));
         return false;
     }
-    env_set(L"PWD", ENV_EXPORT | ENV_GLOBAL, res.c_str());
+    env_set(L"PWD", res.c_str(), ENV_EXPORT | ENV_GLOBAL);
     return true;
 }
 
@@ -728,7 +728,7 @@ static void setup_user(bool force) {
         int retval = getpwuid_r(getuid(), &userinfo, buf, sizeof(buf), &result);
         if (!retval && result) {
             const wcstring uname = str2wcstring(userinfo.pw_name);
-            env_set(L"USER", ENV_GLOBAL | ENV_EXPORT, uname.c_str());
+            env_set(L"USER", uname.c_str(), ENV_GLOBAL | ENV_EXPORT);
         }
     }
 }
@@ -820,7 +820,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         if (eql == wcstring::npos) {
             // No equals found.
             if (is_read_only(key_and_val) || is_electric(key_and_val)) continue;
-            env_set(key_and_val, ENV_EXPORT | ENV_GLOBAL, L"");
+            env_set(key_and_val, L"", ENV_EXPORT | ENV_GLOBAL);
         } else {
             key.assign(key_and_val, 0, eql);
             if (is_read_only(key) || is_electric(key)) continue;
@@ -829,16 +829,16 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
                 std::replace(val.begin(), val.end(), L':', ARRAY_SEP);
             }
 
-            env_set(key, ENV_EXPORT | ENV_GLOBAL, val.c_str());
+            env_set(key, val.c_str(), ENV_EXPORT | ENV_GLOBAL);
         }
     }
 
     // Set the given paths in the environment, if we have any.
     if (paths != NULL) {
-        env_set(FISH_DATADIR_VAR, ENV_GLOBAL, paths->data.c_str());
-        env_set(FISH_SYSCONFDIR_VAR, ENV_GLOBAL, paths->sysconf.c_str());
-        env_set(FISH_HELPDIR_VAR, ENV_GLOBAL, paths->doc.c_str());
-        env_set(FISH_BIN_DIR, ENV_GLOBAL, paths->bin.c_str());
+        env_set(FISH_DATADIR_VAR, paths->data.c_str(), ENV_GLOBAL);
+        env_set(FISH_SYSCONFDIR_VAR, paths->sysconf.c_str(), ENV_GLOBAL);
+        env_set(FISH_HELPDIR_VAR, paths->doc.c_str(), ENV_GLOBAL);
+        env_set(FISH_BIN_DIR, paths->bin.c_str(), ENV_GLOBAL);
     }
 
     init_locale();
@@ -859,7 +859,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
-    env_set(L"FISH_VERSION", ENV_GLOBAL, version.c_str());
+    env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 
     // Set up SHLVL variable.
     const env_var_t shlvl_var = env_get(L"SHLVL");
@@ -872,7 +872,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
             nshlvl_str = to_string<long>(shlvl_i + 1);
         }
     }
-    env_set(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str.c_str());
+    env_set(L"SHLVL", nshlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT);
     env_read_only.insert(L"SHLVL");
 
     // Set up the HOME variable.
@@ -899,18 +899,18 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
             }
             if (!retval && result && userinfo.pw_dir) {
                 const wcstring dir = str2wcstring(userinfo.pw_dir);
-                env_set(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir.c_str());
+                env_set(L"HOME", dir.c_str(), ENV_GLOBAL | ENV_EXPORT);
             } else {
                 // We cannot get $HOME, set it to the empty list.
                 // This triggers warnings for history and config.fish already,
                 // so it isn't necessary to warn here as well.
-                env_set(L"HOME", ENV_GLOBAL | ENV_EXPORT, ENV_NULL);
+                env_set(L"HOME", ENV_NULL, ENV_GLOBAL | ENV_EXPORT);
             }
             free(unam_narrow);
         } else {
             // If $USER is empty as well (which we tried to set above),
             // we can't get $HOME.
-            env_set(L"HOME", ENV_GLOBAL | ENV_EXPORT, ENV_NULL);
+            env_set(L"HOME", ENV_NULL, ENV_GLOBAL | ENV_EXPORT);
         }
     }
 
@@ -924,7 +924,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         use_posix_spawn.missing_or_empty() ? true : from_string<bool>(use_posix_spawn.as_string());
 
     // Set fish_bind_mode to "default".
-    env_set(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);
+    env_set(FISH_BIND_MODE_VAR, DEFAULT_BIND_MODE, ENV_GLOBAL);
 
     // This is somewhat subtle. At this point we consider our environment to be sufficiently
     // initialized that we can react to changes to variables. Prior to doing this we expect that the
@@ -976,7 +976,7 @@ static env_node_t *env_get_node(const wcstring &key) {
 /// * ENV_SCOPE, the variable cannot be set in the given scope. This applies to readonly/electric
 /// variables set from the local or universal scopes, or set as exported.
 /// * ENV_INVALID, the variable value was invalid. This applies only to special variables.
-int env_set(const wcstring &key, env_mode_flags_t var_mode, const wchar_t *val) {
+int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) {
     ASSERT_IS_MAIN_THREAD();
     bool has_changed_old = vars_stack().has_changed_exported;
     int done = 0;
@@ -986,7 +986,7 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wchar_t *val) 
         wcstring val_canonical = val;
         path_make_canonical(val_canonical);
         if (val != val_canonical) {
-            return env_set(key, var_mode, val_canonical.c_str());
+            return env_set(key, val_canonical.c_str(), var_mode);
         }
     }
 
@@ -1528,9 +1528,9 @@ void env_set_argv(const wchar_t *const *argv) {
             sb.append(*arg);
         }
 
-        env_set(L"argv", ENV_LOCAL, sb.c_str());
+        env_set(L"argv", sb.c_str(), ENV_LOCAL);
     } else {
-        env_set(L"argv", ENV_LOCAL, NULL);
+        env_set(L"argv", NULL, ENV_LOCAL);
     }
 }
 

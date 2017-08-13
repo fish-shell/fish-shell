@@ -1583,11 +1583,11 @@ static void export_new_termsize(struct winsize *new_termsize) {
     wchar_t buf[64];
     env_var_t cols = env_get(L"COLUMNS", ENV_EXPORT);
     swprintf(buf, 64, L"%d", (int)new_termsize->ws_col);
-    env_set(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? 0 : ENV_EXPORT), buf);
+    env_set(L"COLUMNS", buf, ENV_GLOBAL | (cols.missing_or_empty() ? 0 : ENV_EXPORT));
 
     env_var_t lines = env_get(L"LINES", ENV_EXPORT);
     swprintf(buf, 64, L"%d", (int)new_termsize->ws_row);
-    env_set(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? 0 : ENV_EXPORT), buf);
+    env_set(L"LINES", buf, ENV_GLOBAL | (lines.missing_or_empty() ? 0 : ENV_EXPORT));
 
 #ifdef HAVE_WINSIZE
     ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);

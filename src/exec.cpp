@@ -384,7 +384,7 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
                 shlvl_str = to_string<long>(shlvl - 1);
             }
         }
-        env_set(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, shlvl_str.c_str());
+        env_set(L"SHLVL", shlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT);
 
         // launch_process _never_ returns.
         launch_process_nofork(j->processes.front().get());

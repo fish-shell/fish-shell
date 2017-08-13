@@ -127,7 +127,7 @@ class env_var_t {
 /// \param mode An optional scope to search in. All scopes are searched if unset
 env_var_t env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
 
-int env_set(const wcstring &key, env_mode_flags_t mode, const wchar_t *val);
+int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t mode);
 
 /// Returns true if the specified key exists. This can't be reliably done using env_get, since
 /// env_get returns null for 0-element arrays.

@@ -211,7 +211,7 @@ void input_set_bind_mode(const wcstring &bm) {
     // modes may not be empty - empty is a sentinel value meaning to not change the mode
     assert(!bm.empty());
     if (input_get_bind_mode() != bm.c_str()) {
-        env_set(FISH_BIND_MODE_VAR, ENV_GLOBAL, bm.c_str());
+        env_set(FISH_BIND_MODE_VAR, bm.c_str(), ENV_GLOBAL);
     }
 }
 

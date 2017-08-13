@@ -260,7 +260,7 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
     if (env_exist(warning_var_name.c_str(), ENV_GLOBAL | ENV_EXPORT)) {
         return;
     }
-    env_set(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
+    env_set(warning_var_name, L"1", ENV_GLOBAL | ENV_EXPORT);
 
     debug(0, custom_error_msg.c_str());
     if (path.empty()) {

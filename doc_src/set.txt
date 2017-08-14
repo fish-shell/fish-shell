@@ -95,3 +95,8 @@ if set python_path (type -p python)
 end
 # Outputs the path to Python if `type -p` returns true.
 \endfish
+
+\subsection set-notes Notes
+
+Fish versions prior to 3.0 supported the syntax `set PATH[1] PATH[4] /bin /sbin`, which worked like
+`set PATH[1 4] /bin /sbin`. This syntax was not widely used, and was ambiguous and inconsistent.

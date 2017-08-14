@@ -56,25 +56,21 @@ function funced --description 'Edit function definition'
     end
 
     if test "$editor" = fish
-        set -l IFS
         if functions -q -- $funcname
-            # Shadow IFS here to avoid array splitting in command substitution
-            set init (functions -- $funcname | fish_indent --no-indent)
+            functions -- $funcname | fish_indent --no-indent | read -z init
         end
 
         set -l prompt 'printf "%s%s%s> " (set_color green) '$funcname' (set_color normal)'
-        # Unshadow IFS since the fish_title breaks otherwise
-        set -e IFS
         if read -p $prompt -c "$init" -s cmd
-            # Shadow IFS _again_ to avoid array splitting in command substitution
-            set -l IFS
-            eval (echo -n $cmd | fish_indent)
+            echo -n $cmd | fish_indent | read -lz cmd
+            eval "$cmd"
         end
         return 0
     end
 
-    # OSX mktemp is rather restricted - no suffix, no way to automatically use TMPDIR
-    # Create a directory so we can use a ".fish" suffix for the file - makes editors pick up that it's a fish file
+    # OS X (macOS) `mktemp` is rather restricted - no suffix, no way to automatically use TMPDIR.
+    # Create a directory so we can use a ".fish" suffix for the file - makes editors pick up that
+    # it's a fish file.
     set -q TMPDIR
     or set -l TMPDIR /tmp
     set -l tmpdir (mktemp -d $TMPDIR/fish.XXXXXX)
@@ -109,10 +105,13 @@ function funced --description 'Edit function definition'
                 echo # add a line between the parse error and the prompt
                 set -l repeat
                 set -l prompt (_ 'Edit the file again\? [Y/n]')
-                while test -z "$repeat"
-                    read -p "echo $prompt\  " repeat
-                end
-                if not contains $repeat n N no NO No nO
+                read -p "echo $prompt\  " response
+                if test -z "$response"
+                    or contains $response {Y,y}{E,e,}{S,s,}
+                    continue
+                else if not contains $response {N,n}{O,o,}
+                    echo "I don't understand '$response', assuming 'Yes'"
+                    sleep 2
                     continue
                 end
                 echo (_ "Cancelled function editing")

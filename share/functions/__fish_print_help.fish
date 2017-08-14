@@ -15,8 +15,6 @@ function __fish_print_help --description "Print help message for the specified f
         return
     end
 
-    set -l IFS \n\ \t
-
     # Render help output, save output into the variable 'help'
     set -l help
     set -l cols

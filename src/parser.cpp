@@ -89,7 +89,7 @@ static const struct block_lookup_entry block_lookup[] = {
     {TOP, 0, TOP_BLOCK},
     {SUBST, 0, SUBST_BLOCK},
     {BEGIN, L"begin", BEGIN_BLOCK},
-    {SOURCE, L".", SOURCE_BLOCK},
+    {SOURCE, L"source", SOURCE_BLOCK},
     {EVENT, 0, EVENT_BLOCK},
     {BREAKPOINT, L"breakpoint", BREAKPOINT_BLOCK},
     {(block_type_t)0, 0, 0}};

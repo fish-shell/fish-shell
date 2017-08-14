@@ -118,7 +118,8 @@ class env_node_t {
     /// in the stack are invisible. If new_scope is set for the global variable node, the universe
     /// will explode.
     bool new_scope;
-    /// Does this node contain any variables which are exported to subshells.
+    /// Does this node contain any variables which are exported to subshells
+    /// or does it redefine any variables to not be exported?
     bool exportv = false;
     /// Pointer to next level.
     std::unique_ptr<env_node_t> next;
@@ -179,6 +180,22 @@ struct var_stack_t {
 
 void var_stack_t::push(bool new_scope) {
     std::unique_ptr<env_node_t> node(new env_node_t(new_scope));
+
+    // Copy local-exported variables
+    auto top_node = top.get();
+    // Only if we introduce a new shadowing scope
+    // i.e. not if it's just `begin; end` or "--no-scope-shadowing".
+    if (new_scope) {
+        if (!(top_node == this->global_env)) {
+            for (auto& var : top_node->env) {
+                if (var.second.exportv) {
+                    // This should  copy var
+                    node->env.insert(var);
+                }
+            }
+        }
+    }
+
     node->next = std::move(this->top);
     this->top = std::move(node);
     if (new_scope && local_scope_exports(this->top.get())) {
@@ -1094,6 +1111,9 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode) 
                 has_changed_new = true;
             } else {
                 entry.exportv = false;
+                // Set the node's exportv when it changes something about exports
+                // (also when it redefines a variable to not be exported).
+                node->exportv = has_changed_old != has_changed_new;
             }
 
             if (has_changed_old || has_changed_new) vars_stack().mark_changed_exported();

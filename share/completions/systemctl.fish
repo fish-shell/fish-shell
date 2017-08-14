@@ -1,9 +1,5 @@
 set -l systemd_version (systemctl --version | string match "systemd*" | string replace -r "\D*(\d+)"  '$1')
-set -l commands list-units list-sockets start stop reload restart try-restart reload-or-restart reload-or-try-restart \
-	isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help \
-	reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump \
-	list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment \
-	default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root
+set -l commands list-units list-sockets start stop reload restart try-restart reload-or-restart reload-or-try-restart isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root
 if test $systemd_version -gt 208
     set commands $commands cat
     if test $systemd_version -gt 217
@@ -13,21 +9,17 @@ end
 set -l types services sockets mounts service_paths targets automounts timers
 
 function __fish_systemd_properties
-	if type -q /usr/lib/systemd/systemd
-		set IFS "="
-		/usr/lib/systemd/systemd --dump-configuration-items | while read key value
-			if not test -z $value
-				echo $key
-			end
-		end
-	else if type -q /lib/systemd/systemd # Debian has not merged /lib and /usr/lib
-		set IFS "="
-		/lib/systemd/systemd --dump-configuration-items | while read key value
-			if not test -z $value
-				echo $key
-			end
-		end
-	end
+    if type -q /usr/lib/systemd/systemd
+        /usr/lib/systemd/systemd --dump-configuration-items | string split -m1 = | while read key value
+            test -n "$value"
+            and echo $key
+        end
+    else if type -q /lib/systemd/systemd # Debian has not merged /lib and /usr/lib
+        /lib/systemd/systemd --dump-configuration-items | string split -m1 = | while read key value
+            test -n "$value"
+            and echo $key
+        end
+    end
 end
 
 function __fish_systemctl_failed
@@ -65,9 +57,9 @@ if test $systemd_version -gt 208
 end
 
 for command in $commands_types
-	for t in $types
-		complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
-	end
+    for t in $types
+        complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
+    end
 end
 
 # Handle reset-failed specially because it doesn't apply to unit-files (only units that have been tried can have failed) and a second "--state=" argument doesn't override the earlier one.
@@ -75,16 +67,16 @@ complete -f -c systemctl -n "__fish_seen_subcommand_from reset-failed" -a "(__fi
 
 # Enable/Disable: Only show units with matching state
 for t in services sockets timers service_paths
-		complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a "(eval __fish_systemctl_$t --state=disabled)"
-		complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a "(eval __fish_systemctl_$t --state=enabled)"
+    complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a "(eval __fish_systemctl_$t --state=disabled)"
+    complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a "(eval __fish_systemctl_$t --state=enabled)"
 end
 
 # These are useless for the other commands
 # .device in particular creates too much noise
 for t in devices slices scopes swaps
-	for command in status show list-dependencies
-		complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
-	end
+    for command in status show list-dependencies
+        complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
+    end
 end
 
 complete -f -c systemctl -n "__fish_seen_subcommand_from isolate" -a '(__fish_systemctl_targets)' -d 'Target'

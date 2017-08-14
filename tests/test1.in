@@ -1,21 +1,22 @@
 #
-#Test function, loops, conditionals and some basic elements
+# Test function, loops, conditionals and some basic elements
 #
 
-for i in 1 2 #Comment on same line as command
-#Comment inside loop
+logmsg "Comments in odd places don't cause problems"
+for i in 1 2 # Comment on same line as command
+# Comment inside loop
     for j in a b
-		#Double loop
+		# Double loop
         echo $i$j
 	end;
 end
 
-# Bracket expansion
+logmsg Bracket expansion
 echo x-{1}
 echo x-{1,2}
 echo foo-{1,2{3,4}}
 
-# Escaped newlines
+logmsg Escaped newlines
 echo foo\ bar
 echo foo\
 bar
@@ -30,7 +31,7 @@ for i in \
 end
 
 
-# Simple function tests
+logmsg Simple function tests
 
 function foo
     echo >../test/temp/fish_foo.txt $argv
@@ -83,7 +84,7 @@ else
 end
 echo Test 4 $sta
 
-# Ensure eval doesn't unnecessarily mess with the exit status
+logmsg "Ensure eval doesn't unnecessarily mess with the exit status"
 function empty_func ; end
 false ; eval empty_func ; echo $status
 true ; eval empty_func ; echo $status
@@ -99,23 +100,21 @@ else
 end
 echo Test 5 $sta
 
-# Verify that we can turn stderr into stdout and then pipe it.
+logmsg Verify that we can turn stderr into stdout and then pipe it
 # Note that the order here seems unspecified - 'errput' appears before 'output', why?
-echo Test redirections
 begin ; echo output ; echo errput 1>&2  ; end 2>&1 | tee ../test/temp/tee_test.txt ; cat ../test/temp/tee_test.txt
 
-# Test that trailing ^ doesn't trigger redirection, see #1873
+logmsg "Test that trailing ^ doesn't trigger redirection, see #1873"
 echo caret_no_redirect 12345^
 
-# Verify that we can pipe something other than stdout
+logmsg Verify that we can pipe something other than stdout
 # The first line should be printed, since we output to stdout but pipe stderr to /dev/null
 # The second line should not be printed, since we output to stderr and pipe it to /dev/null
 begin ; echo is_stdout ; end 2>| cat > /dev/null
 begin ; echo is_stderr 1>&2 ; end 2>| cat > /dev/null
 
-# echo tests
-echo
-echo '# echo tests'
+####################
+logmsg echo tests
 echo 'abc\ndef'
 echo -e 'abc\ndef'
 echo -e 'abc\zdef'
@@ -132,7 +131,7 @@ echo -e Catch your breath
 echo -e 'abc\x21def'
 echo -e 'abc\x211def'
 
-# Verify that pipes don’t conflict with fd redirections
+logmsg "Verify that pipes don't conflict with fd redirections"
 # This code is very similar to eval. We go over a bunch of fads
 # to make it likely that we will nominally conflict with a pipe
 # fish is supposed to detect this case and dup the pipe to something else
@@ -148,16 +147,16 @@ echo "/bin/echo pipe 11 <&11 11<&-" | source 11<&0
 echo "/bin/echo pipe 12 <&12 12<&-" | source 12<&0
 
 
-# Make sure while loops don't run forever with no-exec (#1543)
+logmsg "Make sure while loops don't run forever with no-exec (#1543)"
 echo "Checking for infinite loops in no-execute"
 echo "while true; end" | ../test/root/bin/fish --no-execute
 
-# Comments allowed in between lines (#1987)
+logmsg 'Comments allowed in between lines (#1987)'
 echo before comment \
   # comment
   after comment
 
-# Backslashes are part of comments and do not join lines (#1255)
+logmsg 'Backslashes are part of comments and do not join lines (#1255)'
 # This should execute false, not echo it
 echo -n # comment\
 false
@@ -168,11 +167,11 @@ function always_fails
     end
 end
 
-# Verify $argv set correctly in sourced scripts.
-# Issue #139
+logmsg 'Verify $argv set correctly in sourced scripts (#139)'
 echo 'echo "source argv {$argv}"' | source
 echo 'echo "source argv {$argv}"' | source -
 echo 'echo "source argv {$argv}"' | source - abc
 echo 'echo "source argv {$argv}"' | source - abc def
 
-always_fails ; echo $status
+always_fails
+echo $status

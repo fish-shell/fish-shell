@@ -169,7 +169,7 @@ TEST_IN := $(wildcard tests/test*.in)
 #
 # Files in ./share/completions/
 #
-COMPLETIONS_DIR_FILES := $(wildcard share/completions/*.fish) share/completions/..fish
+COMPLETIONS_DIR_FILES := $(wildcard share/completions/*.fish)
 
 #
 # Files in ./share/functions/

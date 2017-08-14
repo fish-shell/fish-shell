@@ -265,8 +265,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
                     # Use fetch config to fix upstream
                     set -l fetch_val (command git config "$cur_prefix".fetch)
                     if test -n "$fetch_val"
-                        set -l IFS :
-                        echo "$fetch_val" | read -l trunk pattern
+                        string split -m1 : -- "$fetch_val" | read -l trunk pattern
                         set upstream (string replace -r -- "/$trunk\$" '' $pattern) /$upstream
                     end
                 end

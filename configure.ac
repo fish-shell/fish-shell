@@ -579,34 +579,6 @@ else
   AC_MSG_RESULT(no)
 fi
 
-# Check that threads actually work on Solaris
-AC_MSG_CHECKING([for threadsafe errno])
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
-    #include <errno.h>
-    #include <pthread.h>
-    #include <signal.h>
-
-    void *thread1_func(void *p_arg)
-    {
-            errno = 1;
-            return 0;
-    }
-    ],[
-    errno = 0;
-    pthread_t t1;
-    pthread_create(&t1, NULL, thread1_func, NULL);
-    pthread_join(t1, NULL);
-    return errno;
-  ])],
-  [AC_MSG_RESULT(yes)],
-  [
-    AC_MSG_RESULT(no)
-    AC_MSG_FAILURE([errno is not threadsafe - check your compiler settings])
-  ],
-  [AC_MSG_RESULT(crosscompiling, skipped)]
-)
-
 pcre2_min_version=10.21
 EXTRA_PCRE2=
 AC_ARG_WITH(

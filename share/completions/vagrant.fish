@@ -1,30 +1,32 @@
 # vagrant autocompletion
 
 function __fish_vagrant_no_command --description 'Test if vagrant has yet to be given the main command'
-  set -l cmd (commandline -opc)
-  test (count $cmd) -eq 1
+    set -l cmd (commandline -opc)
+    test (count $cmd) -eq 1
 end
 
 function __fish_vagrant_using_command
-  set -l cmd (commandline -opc)
-  set -q cmd[2]; and test "$argv[1]" = $cmd[2]
+    set -l cmd (commandline -opc)
+    set -q cmd[2]
+    and test "$argv[1]" = $cmd[2]
 end
 
 function __fish_vagrant_using_command_and_no_subcommand
-  set -l cmd (commandline -opc)
-  test (count $cmd) -eq 2; and test "$argv[1]" = "$cmd[2]"
+    set -l cmd (commandline -opc)
+    test (count $cmd) -eq 2
+    and test "$argv[1]" = "$cmd[2]"
 end
 
 function __fish_vagrant_using_subcommand --argument-names cmd_main cmd_sub
     set -l cmd (commandline -opc)
-    set -q cmd[3]; and test "$cmd_main" = $cmd[2] -a "$cmd_sub" = $cmd[3]
+    set -q cmd[3]
+    and test "$cmd_main" = $cmd[2] -a "$cmd_sub" = $cmd[3]
 end
 
 function __fish_vagrant_boxes --description 'Lists all available Vagrant boxes'
-  set -l IFS \n\ \t
-  command vagrant box list | while read -l name _
-    echo $name
-  end
+    command vagrant box list | while read -l name _
+        echo $name
+    end
 end
 
 # --version and --help are always active

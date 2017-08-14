@@ -1,0 +1,42 @@
+
+####################
+# Comments in odd places don't cause problems
+
+####################
+# Bracket expansion
+
+####################
+# Escaped newlines
+
+####################
+# Simple function tests
+
+####################
+# Ensure eval doesn't unnecessarily mess with the exit status
+
+####################
+# Verify that we can turn stderr into stdout and then pipe it
+
+####################
+# Test that trailing ^ doesn't trigger redirection, see #1873
+
+####################
+# Verify that we can pipe something other than stdout
+
+####################
+# echo tests
+
+####################
+# Verify that pipes don't conflict with fd redirections
+
+####################
+# Make sure while loops don't run forever with no-exec (#1543)
+
+####################
+# Comments allowed in between lines (#1987)
+
+####################
+# Backslashes are part of comments and do not join lines (#1255)
+
+####################
+# Verify $argv set correctly in sourced scripts (#139)

@@ -51,8 +51,8 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 #define BUILTIN_ERR_UNKNOWN _(L"%ls: Unknown option '%ls'\n")
 
 /// Error message for unexpected args.
-#define BUILTIN_ERR_ARG_COUNT1 _(L"%ls: expected %d args, got %d\n")
-#define BUILTIN_ERR_ARG_COUNT2 _(L"%ls: %ls expected %d args, got %d\n")
+#define BUILTIN_ERR_ARG_COUNT1 _(L"%ls: Expected %d args, got %d\n")
+#define BUILTIN_ERR_ARG_COUNT2 _(L"%ls %ls: Expected %d args, got %d\n")
 #define BUILTIN_ERR_MIN_ARG_COUNT1 _(L"%ls: Expected at least %d args, got only %d\n")
 #define BUILTIN_ERR_MAX_ARG_COUNT1 _(L"%ls: Expected at most %d args, got %d\n")
 

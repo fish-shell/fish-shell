@@ -1,103 +1,99 @@
 set -l __fish_iptables_tables filter nat mangle raw security
 
 function __fish_iptables_current_table
-	set -l next_is_table 1
-	for token in (commandline -oc)
-		switch $token
-			case "--table=*"
-				set -l IFS "="
-				echo $token | while read a b
-					echo $b
-				end
-				return 0
-			case "--table"
-				set next_is_table 0
-			case "-*t*"
-				set next_is_table 0
-			case "*"
-				if [ $next_is_table -eq 0 ]
-					echo $token
-					return 0
-				end
-		end
-	end
-	return 1
+    set -l next_is_table 1
+    for token in (commandline -oc)
+        switch $token
+            case "--table=*"
+                echo (string split -m1 = -- $token)[2]
+                return 0
+            case "--table"
+                set next_is_table 0
+            case "-*t*"
+                set next_is_table 0
+            case "*"
+                if [ $next_is_table -eq 0 ]
+                    echo $token
+                    return 0
+                end
+        end
+    end
+    return 1
 end
 
 function __fish_iptables_user_chains
-	# There can be user-defined chains so we need iptables' help
-	set -l tablearg
-	set -l table (__fish_iptables_current_table)
-	if __fish_iptables_current_table
-		set tablearg "--table=$table"
-	end
-	# This only works as root, so ignore errors
-	iptables $tablearg -L ^/dev/null | grep Chain | while read a b c
-		echo $b
-	end
+    # There can be user-defined chains so we need iptables' help
+    set -l tablearg
+    set -l table (__fish_iptables_current_table)
+    if __fish_iptables_current_table
+        set tablearg "--table=$table"
+    end
+    # This only works as root, so ignore errors
+    iptables $tablearg -L ^/dev/null | grep Chain | while read a b c
+        echo $b
+    end
 end
 
 
 function __fish_iptables_chains
-	set -l table (__fish_iptables_current_table)
-	[ -z $table ]; and set -l table "*"
-	set -l prerouting "PREROUTING	For packets that are coming in"
-	set -l input "INPUT	For packets destined to local sockets"
-	set -l output "OUTPUT	For locally-generated packets"
-	set -l forward "FORWARD	For packets being routed through"
-	set -l postrouting "POSTROUTING	For packets that are about to go out"
-	switch $table
-		case "filter"
-			echo $input
-			echo $forward
-			echo $output
-		case "nat"
-			echo $prerouting
-			echo $output
-			echo $postrouting
-		case "mangle"
-			echo $prerouting
-			echo $input
-			echo $output
-			echo $forward
-			echo $postrouting
-		case "raw"
-			echo $prerouting
-			echo $output
-		case "security"
-			echo $input
-			echo $output
-			echo $forward
-		case '*'
-			echo $prerouting
-			echo $input
-			echo $output
-			echo $forward
-			echo $postrouting
-	end
-	__fish_iptables_user_chains
+    set -l table (__fish_iptables_current_table)
+    [ -z $table ]
+    and set -l table "*"
+    set -l prerouting "PREROUTING	For packets that are coming in"
+    set -l input "INPUT	For packets destined to local sockets"
+    set -l output "OUTPUT	For locally-generated packets"
+    set -l forward "FORWARD	For packets being routed through"
+    set -l postrouting "POSTROUTING	For packets that are about to go out"
+    switch $table
+        case "filter"
+            echo $input
+            echo $forward
+            echo $output
+        case "nat"
+            echo $prerouting
+            echo $output
+            echo $postrouting
+        case "mangle"
+            echo $prerouting
+            echo $input
+            echo $output
+            echo $forward
+            echo $postrouting
+        case "raw"
+            echo $prerouting
+            echo $output
+        case "security"
+            echo $input
+            echo $output
+            echo $forward
+        case '*'
+            echo $prerouting
+            echo $input
+            echo $output
+            echo $forward
+            echo $postrouting
+    end
+    __fish_iptables_user_chains
 end
 
 function __fish_iptables_has_chain
-	# Remove descriptions
-	set -l IFS "	"
-	set -l chains (__fish_iptables_chains | while read a b; echo $a; end)
-	set -e IFS
-	set -l cmdline (commandline -op)
-	for c in $chains
-		if contains -- $c $cmdline
-			return 0
-		end
-	end
-	return 1
+    # Remove descriptions
+    set -l chains (__fish_iptables_chains | string split -m1 "    " | while read a b; echo $a; end)
+    set -l cmdline (commandline -op)
+    for c in $chains
+        if contains -- $c $cmdline
+            return 0
+        end
+    end
+    return 1
 end
 
 # A target is a user-defined chain, one of "ACCEPT DROP RETURN" or an extension (TODO)
 function __fish_iptables_targets
-	echo "ACCEPT"
-	echo "DROP"
-	echo "RETURN"
-	__fish_iptables_chains
+    echo "ACCEPT"
+    echo "DROP"
+    echo "RETURN"
+    __fish_iptables_chains
 end
 
 ### Commands

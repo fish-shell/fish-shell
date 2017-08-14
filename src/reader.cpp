@@ -696,14 +696,14 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
         for (size_t i = 0; i < lst.size(); i++) {
             fputws(lst.at(i).c_str(), stdout);
         }
-        (void)write(STDOUT_FILENO, "\a", 1);
+       ignore_result(write(STDOUT_FILENO, "\a", 1));
     }
 
     proc_pop_interactive();
     set_color(rgb_color_t::reset(), rgb_color_t::reset());
     if (reset_cursor_position && !lst.empty()) {
         // Put the cursor back at the beginning of the line (issue #2453).
-        (void)write(STDOUT_FILENO, "\r", 1);
+        ignore_result(write(STDOUT_FILENO, "\r", 1));
     }
 }
 
@@ -1291,7 +1291,7 @@ static void reader_flash() {
     }
 
     reader_repaint();
-    (void)write(STDOUT_FILENO, "\a", 1);
+    ignore_result(write(STDOUT_FILENO, "\a", 1));
 
     pollint.tv_sec = 0;
     pollint.tv_nsec = 100 * 1000000;
@@ -1575,20 +1575,12 @@ static void reader_interactive_init() {
     // Check if we are in control of the terminal, so that we don't do semi-expensive things like
     // reset signal handlers unless we really have to, which we often don't.
     if (tcgetpgrp(STDIN_FILENO) != shell_pgid) {
-        int block_count = 0;
-        int i;
-
         // Bummer, we are not in control of the terminal. Stop until parent has given us control of
-        // it. Stopping in fish is a bit of a challange, what with all the signal fidgeting, we need
-        // to reset a bunch of signal state, making this coda a but unobvious.
+        // it.
         //
         // In theory, reseting signal handlers could cause us to miss signal deliveries. In
-        // practice, this code should only be run suring startup, when we're not waiting for any
+        // practice, this code should only be run during startup, when we're not waiting for any
         // signals.
-        while (signal_is_blocked()) {
-            signal_unblock();
-            block_count++;
-        }
         signal_reset_handlers();
 
         // Ok, signal handlers are taken out of the picture. Stop ourself in a loop until we are in
@@ -1632,10 +1624,6 @@ static void reader_interactive_init() {
         }
 
         signal_set_handlers();
-
-        for (i = 0; i < block_count; i++) {
-            signal_block();
-        }
     }
 
     // Put ourselves in our own process group.
@@ -2190,6 +2178,21 @@ bool shell_is_exiting() {
     return end_loop;
 }
 
+static void bg_job_warning() {
+    fputws(_(L"There are still jobs active:\n"), stdout);
+    fputws(_(L"\n   PID  Command\n"), stdout);
+
+    job_iterator_t jobs;
+    while (job_t *j = jobs.next()) {
+        if (!job_is_completed(j)) {
+            fwprintf(stdout, L"%6d  %ls\n", j->pgid, j->command_wcstr());
+        }
+    }
+    fputws(L"\n", stdout);
+    fputws(_(L"Use `disown PID` to let them live independently from fish.\n"), stdout);
+    fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
+}
+
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
 static void handle_end_loop() {
@@ -2214,8 +2217,7 @@ static void handle_end_loop() {
         }
 
         if (!data->prev_end_loop && bg_jobs) {
-            fputws(_(L"There are still jobs active (use the jobs command to see them).\n"), stdout);
-            fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
+            bg_job_warning();
             reader_exit(0, 0);
             data->prev_end_loop = 1;
             return;
@@ -3234,7 +3236,7 @@ const wchar_t *reader_readline(int nchars) {
         reader_repaint_if_needed();
     }
 
-    (void)write(STDOUT_FILENO, "\n", 1);
+    ignore_result(write(STDOUT_FILENO, "\n", 1));
 
     // Ensure we have no pager contents when we exit.
     if (!data->pager.empty()) {

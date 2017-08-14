@@ -2,6 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,7 +20,6 @@
 #include "complete.h"
 #include "env.h"
 #include "event.h"
-#include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "highlight.h"
 #include "history.h"
@@ -38,6 +38,10 @@ struct read_cmd_opts_t {
     const wchar_t *prompt_str = NULL;
     const wchar_t *right_prompt = L"";
     const wchar_t *commandline = L"";
+    // If a delimiter was given. Used to distinguish between the default
+    // empty string and a given empty delimiter.
+    bool have_delimiter = false;
+    wcstring delimiter;
     bool shell = false;
     bool array = false;
     bool silent = false;
@@ -45,7 +49,7 @@ struct read_cmd_opts_t {
     int nchars = 0;
 };
 
-static const wchar_t *short_options = L":ac:ghilm:n:p:suxzP:UR:";
+static const wchar_t *short_options = L":ac:ghilm:n:p:d:suxzP:UR:";
 static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
                                               {L"global", no_argument, NULL, 'g'},
                                               {L"local", no_argument, NULL, 'l'},
@@ -58,6 +62,7 @@ static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'
                                               {L"mode-name", required_argument, NULL, 'm'},
                                               {L"silent", no_argument, NULL, 'i'},
                                               {L"nchars", required_argument, NULL, 'n'},
+                                              {L"delimiter", required_argument, NULL, 'd'},
                                               {L"shell", no_argument, NULL, 's'},
                                               {L"array", no_argument, NULL, 'a'},
                                               {L"null", no_argument, NULL, 'z'},
@@ -128,6 +133,11 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                     builtin_print_help(parser, streams, cmd, streams.err);
                     return STATUS_INVALID_ARGS;
                 }
+                break;
+            }
+            case 'd': {
+                opts.have_delimiter = true;
+                opts.delimiter = w.woptarg;
                 break;
             }
             case 's': {
@@ -320,23 +330,9 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
     return exit_res;
 }
 
-/// The read builtin. Reads from stdin and stores the values in environment variables.
-int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
-    int argc = builtin_count_args(argv);
-    wcstring buff;
-    int exit_res = STATUS_CMD_OK;
-    read_cmd_opts_t opts;
-
-    int optind;
-    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
-
-    if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
-        return STATUS_CMD_OK;
-    }
-
+/// Validate the arguments given to `read` and provide defaults where needed.
+static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int argc,
+                              const wchar_t *const *argv, parser_t &parser, io_streams_t &streams) {
     if (opts.prompt && opts.prompt_str) {
         streams.err.append_format(_(L"%ls: You can't specify both -p and -P\n"), cmd);
         builtin_print_help(parser, streams, cmd, streams.err);
@@ -364,21 +360,49 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_INVALID_ARGS;
     }
 
-    if (opts.array && optind + 1 != argc) {
-        streams.err.append_format(_(L"%ls: --array option requires a single variable name.\n"),
-                                  cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+    if (!opts.array && argc < 1) {
+        streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (opts.array && argc != 1) {
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc);
         return STATUS_INVALID_ARGS;
     }
 
     // Verify all variable names.
-    for (int i = optind; i < argc; i++) {
+    for (int i = 0; i < argc; i++) {
         if (!valid_var_name(argv[i])) {
             streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, argv[i]);
             builtin_print_help(parser, streams, cmd, streams.err);
             return STATUS_INVALID_ARGS;
         }
     }
+
+    return STATUS_CMD_OK;
+}
+
+/// The read builtin. Reads from stdin and stores the values in environment variables.
+int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
+    int argc = builtin_count_args(argv);
+    wcstring buff;
+    int exit_res = STATUS_CMD_OK;
+    read_cmd_opts_t opts;
+
+    int optind;
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+    argc -= optind;
+    argv += optind;
+
+    if (opts.print_help) {
+        builtin_print_help(parser, streams, cmd, streams.out);
+        return STATUS_CMD_OK;
+    }
+
+    retval = validate_read_args(cmd, opts, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
 
     // TODO: Determine if the original set of conditions for interactive reads should be reinstated:
     // if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
@@ -395,17 +419,20 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         exit_res = read_one_char_at_a_time(streams.stdin_fd, buff, opts.nchars, opts.split_null);
     }
 
-    if (optind == argc || exit_res != STATUS_CMD_OK) {
-        // Define the var without any data. We do this because when this happens we want the user to
-        // be able to use the var but have it expand to nothing.
-        //
-        // TODO: For fish 3.0 we should mandate at least one var name.
-        if (argv[optind]) env_set(argv[optind], NULL, opts.place);
+    if (exit_res != STATUS_CMD_OK) {
+        // Define the var(s) without any data. We do this because when this happens we want the user
+        // to be able to use the var but have it expand to nothing.
+        for (int i = 0; i < argc; i++) env_set(argv[i], NULL, opts.place);
         return exit_res;
     }
 
-    env_var_t ifs = env_get_string(L"IFS");
-    if (ifs.missing_or_empty()) {
+    if (!opts.have_delimiter) {
+        env_var_t ifs = env_get_string(L"IFS");
+        if (!ifs.missing_or_empty()) {
+            opts.delimiter = ifs;
+        }
+    }
+    if (opts.delimiter.empty()) {
         // Every character is a separate token.
         size_t bufflen = buff.size();
         if (opts.array) {
@@ -417,42 +444,60 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     *out = *it;
                     out += 2;
                 }
-                env_set(argv[optind], chars.c_str(), opts.place);
+                env_set(argv[0], chars.c_str(), opts.place);
             } else {
-                env_set(argv[optind], NULL, opts.place);
+                env_set(argv[0], NULL, opts.place);
             }
-        } else {  // not array
+        } else {  // not array mode
+            int i = 0;
             size_t j = 0;
-            for (; optind + 1 < argc; ++optind) {
+            for (; i + 1 < argc; ++i) {
                 if (j < bufflen) {
                     wchar_t buffer[2] = {buff[j++], 0};
-                    env_set(argv[optind], buffer, opts.place);
+                    env_set(argv[i], buffer, opts.place);
                 } else {
-                    env_set(argv[optind], L"", opts.place);
+                    env_set(argv[i], L"", opts.place);
                 }
             }
-            if (optind < argc) env_set(argv[optind], &buff[j], opts.place);
+            if (i < argc) env_set(argv[i], &buff[j], opts.place);
         }
     } else if (opts.array) {
-        wcstring tokens;
-        tokens.reserve(buff.size());
-        bool empty = true;
+        if (!opts.have_delimiter) {
+            // We're using IFS, so well split on every character in that,
+            // not on the entire thing at once.
+            wcstring tokens;
+            tokens.reserve(buff.size());
 
-        for (wcstring_range loc = wcstring_tok(buff, ifs); loc.first != wcstring::npos;
-             loc = wcstring_tok(buff, ifs, loc)) {
-            if (!empty) tokens.push_back(ARRAY_SEP);
-            tokens.append(buff, loc.first, loc.second);
-            empty = false;
+            for (wcstring_range loc = wcstring_tok(buff, opts.delimiter);
+                 loc.first != wcstring::npos; loc = wcstring_tok(buff, opts.delimiter, loc)) {
+                if (!tokens.empty()) tokens.push_back(ARRAY_SEP);
+                tokens.append(buff, loc.first, loc.second);
+            }
+            env_set(argv[0], tokens.empty() ? NULL : tokens.c_str(), opts.place);
+        } else {
+            wcstring_list_t splits;
+            split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
+                        &splits, LONG_MAX);
+            auto val = list_to_array_val(splits);
+            env_set(argv[0], *val == ENV_NULL ? NULL : val->c_str(), opts.place);
         }
-        env_set(argv[optind], empty ? NULL : tokens.c_str(), opts.place);
     } else {  // not array
-        wcstring_range loc = wcstring_range(0, 0);
-
-        while (optind < argc) {
-            loc = wcstring_tok(buff, (optind + 1 < argc) ? ifs : wcstring(), loc);
-            env_set(argv[optind], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first],
-                    opts.place);
-            ++optind;
+        if (!opts.have_delimiter) {
+            wcstring_range loc = wcstring_range(0, 0);
+            for (int i = 0; i < argc; i++) {
+                loc = wcstring_tok(buff, (i + 1 < argc) ? opts.delimiter : wcstring(), loc);
+                env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first],
+                        opts.place);
+            }
+        } else {
+            wcstring_list_t splits;
+            // We're making at most argc - 1 splits so the last variable
+            // is set to the remaining string.
+            split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
+                        &splits, argc - 1);
+            for (size_t i = 0; i < (size_t)argc && i < splits.size(); i++) {
+                env_set(argv[i], splits[i].c_str(), opts.place);
+            }
         }
     }
 

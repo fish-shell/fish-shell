@@ -1,3 +1,12 @@
+
+####################
+# Test the -V flag
+
+####################
+# Testing -V
+
+####################
+# Testing -V with changed variables
 fish: function: Illegal function name '-a'
 function -a arg1 arg2 name2 ; end
 ^
@@ -7,3 +16,9 @@ function --argument-names arg1 arg2 name4 ; end
 fish: function: Unexpected positional argument 'abc'
 function name5 abc --argument-names def ; end
 ^
+
+####################
+# Verify that functions can be copied. Tests against regression of issue #3601
+
+####################
+# Checking that the copied functions are identical other than the name

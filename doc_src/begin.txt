@@ -13,7 +13,7 @@ The block is unconditionally executed. `begin; ...; end` is equivalent to `if tr
 
 `begin` is used to group a number of commands into a block. This allows the introduction of a new variable scope, redirection of the input or output of a set of commands as a group, or to specify precedence when using the conditional commands like `and`.
 
-`begin` does not change the current exit status.
+`begin` does not change the current exit status itself. After the block has completed, `$status` will be set to the status returned by the most recent command.
 
 
 \subsection begin-example Example

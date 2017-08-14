@@ -217,20 +217,6 @@ function __fish_on_interactive --on-event fish_prompt
     functions -e __fish_on_interactive
 end
 
-# "." command for compatibility with old fish versions.
-function . --description 'Evaluate contents of file (deprecated, see "source")' --no-scope-shadowing
-    if begin
-            test (count $argv) -eq 0
-            # Uses tty directly, as isatty depends on "."
-            and tty 0>&0 >/dev/null
-        end
-        echo "source: '.' command is deprecated, and doesn't work with STDIN anymore. Did you mean 'source' or './'?" >&2
-        return 1
-    else
-        source $argv
-    end
-end
-
 # Set the locale if it isn't explicitly set. Allowing the lack of locale env vars to imply the
 # C/POSIX locale causes too many problems. Do this before reading the snippets because they might be
 # in UTF-8 (with non-ASCII characters).

@@ -1,10 +1,19 @@
+
+####################
+# Comments in odd places don't cause problems
 1a
 1b
 2a
 2b
+
+####################
+# Bracket expansion
 x-1
 x-1 x-2
 foo-1 foo-23 foo-24
+
+####################
+# Escaped newlines
 foo bar
 foobar
 foobar
@@ -13,21 +22,36 @@ bar
 a
 b
 c
+
+####################
+# Simple function tests
 Test 2 pass
 Test 3a pass
 Test 3b pass
 Test 4 pass
+
+####################
+# Ensure eval doesn't unnecessarily mess with the exit status
 1
 0
 Test 5 pass
-Test redirections
+
+####################
+# Verify that we can turn stderr into stdout and then pipe it
 errput
 output
 errput
 output
+
+####################
+# Test that trailing ^ doesn't trigger redirection, see #1873
 caret_no_redirect 12345^
+
+####################
+# Verify that we can pipe something other than stdout
 is_stdout
 
+####################
 # echo tests
 abc\ndef
 abc
@@ -45,6 +69,9 @@ abc
 Catch your breath
 abc!def
 abc!1def
+
+####################
+# Verify that pipes don't conflict with fd redirections
 pipe 3
 pipe 4
 pipe 5
@@ -55,8 +82,20 @@ pipe 9
 pipe 10
 pipe 11
 pipe 12
+
+####################
+# Make sure while loops don't run forever with no-exec (#1543)
 Checking for infinite loops in no-execute
+
+####################
+# Comments allowed in between lines (#1987)
 before comment after comment
+
+####################
+# Backslashes are part of comments and do not join lines (#1255)
+
+####################
+# Verify $argv set correctly in sourced scripts (#139)
 source argv {}
 source argv {}
 source argv {abc}

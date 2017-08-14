@@ -131,11 +131,12 @@ def built_command(options, description):
     fish_options = []
     for optionstr in man_optionlist:
         option = re.sub(r"(\[.*\])", "", optionstr)
-        option = option.strip(" \t\n[]()")
+        option = option.strip(" \t\r\n[](){}.,:!")
 
 
         # Skip some problematic cases
         if option in ['-', '--']: continue
+        if any(c in "{}()" for c in option): continue
 
         if option.startswith('--'):
             # New style long option (--recursive)

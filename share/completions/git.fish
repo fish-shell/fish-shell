@@ -63,7 +63,7 @@ function __fish_git_modified_files
     set -l root (command git rev-parse --show-toplevel ^/dev/null)
     # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
     # This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
-    string replace -- "$PWD/" "" "$root/"(command git diff --name-only ^/dev/null) | string replace "$root/" ":/"
+    string replace -- "$PWD/" "" "$root/"(command git diff --name-only $argv ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_staged_files
@@ -783,6 +783,8 @@ complete -c git -n '__fish_git_needs_command' -a reset -d 'Reset current HEAD to
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
 complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_staged_files)' -d 'File'
+# reset changes the index, so we need to compare that to the commit.
+complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_modified_files --cached)' -d 'File'
 complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_reflog)' -d 'Reflog'
 # TODO options
 

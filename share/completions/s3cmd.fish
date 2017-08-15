@@ -30,7 +30,7 @@ complete -c s3cmd -f -n "__s3cmd_is_remote_path"
 # Supress file completions for initial command
 complete -c s3cmd -n "__initial_command" -f
 
-# Avaialable commands
+# Available commands
 complete -c s3cmd -n "__initial_command" -a 'mb' --description 'Make bucket'
 complete -c s3cmd -n "__initial_command" -a 'rb' --description 'Remove bucket'
 complete -c s3cmd -n "__initial_command" -a 'ls' --description 'List objects or buckets'

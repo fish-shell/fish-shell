@@ -6,6 +6,10 @@ See the bottom of this document for help on installing the linting and style ref
 
 Fish source should limit the C++ features it uses to those available in C++11. It should not use exceptions.
 
+## Versioning
+
+The fish version is constructed by the *build_tools/git_version_gen.sh* script. For developers the version is the branch name plus the output of `git describe --always --dirty --tags`. Normally the main part of the version will be the closest annotate tag. Which itself is usually the most recent release number (e.g., `2.6.0`). It can be useful to create a lightweight tag to make it clear that a fish binary is based on a particular development branch. For example, `git tag 3.0alpha` to make it clear that fish was built from the 3.x major release development branch regardless of the branch name.
+
 ## Include What You Use
 
 You should not depend on symbols being visible to a `*.cpp` module from `#include` statements inside another header file. In other words if your module does `#include "common.h"` and that header does `#include "signal.h"` your module should not assume the sub-include is present. It should instead directly `#include "signal.h"` if it needs any symbol from that header. That makes the actual dependencies much clearer. It also makes it easy to modify the headers included by a specific header file without having to worry that will break any module (or header) that includes a particular header.
@@ -131,6 +135,8 @@ If you have a good reason for doing so you can tell `clang-format` to not reform
 code to ignore
 // clang-format on
 ```
+
+However, as I write this there are no places in the code where we use this and I can't think of any legitimate reasons for exempting blocks of code from clang-format.
 
 ## Fish Script Style Guide
 

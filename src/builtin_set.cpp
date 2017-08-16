@@ -539,7 +539,7 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
 
         const env_var_t var = env_get(var_name, scope | ENV_USER);
         wcstring_list_t result;
-        if (!var.empty()) var.to_list(result);
+        var.to_list(result);
 
         streams.out.append_format(_(L"$%ls: set in %ls scope, %ls, with %d elements\n"), var_name,
                                   scope_name, exportv, result.size());

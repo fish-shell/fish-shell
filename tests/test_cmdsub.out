@@ -17,7 +17,8 @@ $b: not set in universal scope
 ####################
 # Command sub over the limit should fail
 $c: not set in local scope
-$c: set in global scope, unexported, with 0 elements
+$c: set in global scope, unexported, with 1 elements
+$c[1]: length=0 value=||
 $c: not set in universal scope
 
 

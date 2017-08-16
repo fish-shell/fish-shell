@@ -4,6 +4,11 @@
 
 ####################
 # Verify behavior of `set --show`
+$semiempty: not set in local scope
+$semiempty: set in global scope, unexported, with 1 elements
+$semiempty[1]: length=0 value=||
+$semiempty: not set in universal scope
+
 $var1: not set in local scope
 $var1: not set in global scope
 $var1: set in universal scope, unexported, with 1 elements

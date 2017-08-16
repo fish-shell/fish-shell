@@ -4,6 +4,9 @@ logmsg Verify behavior of `set --show` given an invalid var name
 set --show 'argle bargle'
 
 logmsg Verify behavior of `set --show`
+set semiempty ''
+set --show semiempty
+
 set -U var1 hello
 set --show var1
 

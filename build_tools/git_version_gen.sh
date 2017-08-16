@@ -12,7 +12,7 @@ DEF_VER=unknown
 if test -f version
 then
 	VN=$(cat version) || VN="$DEF_VER"
-elif ! VN=$(git rev-parse --abbrev-ref HEAD)/$(git describe --always --dirty --tags 2>/dev/null); then
+elif ! VN=$(git describe --always --dirty 2>/dev/null); then
 	VN="$DEF_VER"
 fi
 

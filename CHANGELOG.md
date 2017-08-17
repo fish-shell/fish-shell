@@ -33,6 +33,8 @@
  - `jest` (#4142).
  - `subl` (Sublime Text 3 editor, #4277)
  - `snap` (#4215)
+- Improved completions for:
+ - `composer` (#4295)
 
 ---
 

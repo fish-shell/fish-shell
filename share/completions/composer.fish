@@ -20,7 +20,7 @@ function __fish_composer_using_command
   return 1
 end
 
-function __fish_composer_packages
+function __fish_composer_required_packages
     test -f composer.json; or return
     echo "
 import json
@@ -32,6 +32,22 @@ print \"\n\".join(packages)
       " | python
 end
 
+function __fish_composer_installed_packages
+    test -f composer.lock; or return
+    echo "
+import json
+json_data = open('composer.lock')
+data = json.load(json_data)
+json_data.close()
+installed_packages = []
+for package in data['packages']:
+    installed_packages.append(package['name'])
+for package in data['packages-dev']:
+    installed_packages.append(package['name'])
+print \"\n\".join(installed_packages)
+" | python
+end
+
 #add cmds list
 set --local composer_cmds 'about' 'archive' 'browse' 'clear-cache' 'clearcache' 'config' 'create-project' 'depends' 'diagnose' 'dump-autoload' 'dumpautoload' 'global' 'help' 'home' 'init' 'install' 'licenses' 'list' 'remove' 'require' 'run-script' 'search' 'self-update' 'selfupdate' 'show' 'status' 'update' 'validate'
 
@@ -39,10 +55,15 @@ set --local composer_cmds 'about' 'archive' 'browse' 'clear-cache' 'clearcache' 
 complete -f -c composer -n '__fish_composer_using_command help' -a "$composer_cmds"
 
 #update
-complete -f -c composer -n '__fish_composer_using_command update' -a "(__fish_composer_packages)"
+complete -f -c composer -n '__fish_composer_using_command update' -a "(__fish_composer_required_packages)"
 
 #remove
-complete -f -c composer -n '__fish_composer_using_command remove' -a "(__fish_composer_packages)"
+complete -f -c composer -n '__fish_composer_using_command remove' -a "(__fish_composer_required_packages)"
+
+#diagnostics on installed commands
+complete -f -c composer -n '__fish_composer_using_command why' -a "(__fish_composer_installed_packages)"
+complete -f -c composer -n '__fish_composer_using_command why-not' -a "(__fish_composer_installed_packages)"
+complete -f -c composer -n '__fish_composer_using_command depends' -a "(__fish_composer_installed_packages)"
 
 #popisky
 complete -f -c composer -n '__fish_composer_needs_command' -a 'about' -d 'Short information about Composer'

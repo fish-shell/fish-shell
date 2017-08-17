@@ -41,6 +41,9 @@ complete -f -c composer -n '__fish_composer_using_command help' -a "$composer_cm
 #update
 complete -f -c composer -n '__fish_composer_using_command update' -a "(__fish_composer_packages)"
 
+#remove
+complete -f -c composer -n '__fish_composer_using_command remove' -a "(__fish_composer_packages)"
+
 #popisky
 complete -f -c composer -n '__fish_composer_needs_command' -a 'about' -d 'Short information about Composer'
 complete -f -c composer -n '__fish_composer_needs_command' -a 'archive' -d 'Create an archive of this composer package'

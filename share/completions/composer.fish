@@ -94,6 +94,8 @@ complete -f -c composer -n '__fish_composer_needs_command' -a 'show' -d 'Show in
 complete -f -c composer -n '__fish_composer_needs_command' -a 'status' -d 'Show a list of locally modified packages'
 complete -f -c composer -n '__fish_composer_needs_command' -a 'update' -d 'Updates your dependencies to the latest version according to composer.json, and updates the composer.lock file.'
 complete -f -c composer -n '__fish_composer_needs_command' -a 'validate' -d 'Validates a composer.json'
+complete -f -c composer -n '__fish_composer_needs_command' -a 'why' -d 'Shows which packages cause the given package to be installed'
+complete -f -c composer -n '__fish_composer_needs_command' -a 'why-not' -d 'Shows which packages prevent the given package from being installed'
 
 complete -f -c composer -n '__fish_composer_needs_command' -s 'h' -l 'help' -d 'Displays composer\'s help.'
 complete -f -c composer -n '__fish_composer_needs_command' -s 'q' -l 'quiet' -d 'Do not output any message.'

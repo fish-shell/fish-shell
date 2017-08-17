@@ -1,10 +1,20 @@
 function __fish_print_xdg_applications_directories --description 'Print directories where desktop files are stored'
-    set -l search_path ~/.local/share/applications /usr/share/applications
-    if test -d /usr/local/share/applications
-        set search_path $search_path /usr/local/share/applications
+    set -l data_home $XDG_DATA_HOME
+    if test -z "$data_home"
+        set data_home $HOME/.local/share/
     end
 
-    for p in $search_path
-        echo $p
+    set -l data_dirs $XDG_DATA_DIRS
+    if test -z "$data_dirs"
+        set data_dirs /usr/local/share/:/usr/share/
+    end
+
+    set data_dirs $data_home:$data_dirs
+
+    for path in (string split : $data_dirs)
+        set path $path"applications"
+        if test -d $path
+            echo $path
+        end
     end
 end

@@ -35,6 +35,7 @@
  - `snap` (#4215)
 - Improved completions for:
  - `composer` (#4295)
+ - `xdg-mime` (#4333)
 
 ---
 

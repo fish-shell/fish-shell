@@ -21,6 +21,7 @@ function __fish_composer_using_command
 end
 
 function __fish_composer_packages
+    test -f composer.json; or return
     echo "
 import json
 json_data = open('composer.json')

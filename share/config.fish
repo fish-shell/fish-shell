@@ -228,23 +228,36 @@ end
 # This used to be in etc/config.fish - keep it here to keep the semantics
 #
 if status --is-login
-    set -g __fish_tmp_path
     # OS X-ism: Load the path files out of /etc/paths and /etc/paths.d/*
-    function __fish_load_path_helper_paths
-        while read -l new_path_comp
+    set -g __fish_tmp_path
+    function __fish_append_to_tmp_path -a new_path_comp
+        if not contains $new_path_comp $__fish_tmp_path
             set __fish_tmp_path $__fish_tmp_path $new_path_comp
         end
     end
 
-    test -r /etc/paths
-    and __fish_load_path_helper_paths </etc/paths
-    for pathfile in /etc/paths.d/*
-        __fish_load_path_helper_paths <$pathfile
+    function __fish_append_stdin_to_tmp_path
+        while read -l new_path_comp
+            __fish_append_to_tmp_path $new_path_comp
+        end
     end
-    test -n "$__fish_tmp_path"
-    and set -xg PATH $__fish_tmp_path
+
+    # Read from /etc/paths, then /etc/paths.d/*, then $PATH, and
+    # remove subsequent duplicates to match the behavior of
+    # path_helper.
+    test -r /etc/paths
+    and __fish_append_stdin_to_tmp_path </etc/paths
+    for pathfile in /etc/paths.d/*
+        __fish_append_stdin_to_tmp_path <$pathfile
+    end
+
+    for new_path_comp in $PATH
+        __fish_append_to_tmp_path $new_path_comp
+    end
+
+    set -xg PATH $__fish_tmp_path
     set -e __fish_tmp_path
-    functions -e __fish_load_path_helper_paths
+    functions -e __fish_append_to_tmp_path __fish_append_stdin_to_tmp_path
 
     #
     # Put linux consoles in unicode mode.

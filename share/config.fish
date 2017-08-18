@@ -126,33 +126,6 @@ if test -d /usr/xpg4/bin
     end
 end
 
-# OS X-ism: Load the manpath files out of /etc/manpaths and /etc/manpaths.d/*
-if set -q MANPATH
-    set -g __fish_tmp_manpath $MANPATH
-    function __fish_load_manpath_helper_manpaths
-        # We want to rearrange the manpath to reflect this order. Delete that manpath component if it exists and then prepend it.
-        # Since we are prepending but want to preserve the order of the input file, we reverse the array, append, and then reverse it again
-        set __fish_tmp_manpath $__fish_tmp_manpath[-1..1]
-        while read -l new_manpath_comp
-            if test -d $new_manpath_comp
-                set -l where (contains -i -- $new_manpath_comp $__fish_tmp_manpath)
-                and set -e __fish_tmp_manpath[$where]
-                set __fish_tmp_manpath $new_manpath_comp $__fish_tmp_manpath
-            end
-        end
-        set __fish_tmp_manpath $__fish_tmp_manpath[-1..1]
-    end
-    test -r /etc/manpaths
-    and __fish_load_manpath_helper_manpaths </etc/manpaths
-    for manpathfile in /etc/manpaths.d/*
-        __fish_load_manpath_helper_manpaths <$manpathfile
-    end
-    set -xg MANPATH $__fish_tmp_manpath
-    set -e __fish_tmp_manpath
-    functions -e __fish_load_manpath_helper_manpaths
-end
-
-
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
 function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
     set -l local_path $PATH
@@ -232,36 +205,20 @@ end
 # This used to be in etc/config.fish - keep it here to keep the semantics
 #
 if status --is-login
-    # OS X-ism: Load the path files out of /etc/paths and /etc/paths.d/*
-    set -g __fish_tmp_path
-    function __fish_append_to_tmp_path -a new_path_comp
-        if not contains -- $new_path_comp $__fish_tmp_path
-            set __fish_tmp_path $__fish_tmp_path $new_path_comp
+    # OS X-ism: Call path_helper and set its output to $PATH and $MANPATH.
+    if test -x /usr/libexec/path_helper
+        set -l lines (/usr/libexec/path_helper -c)
+        if test (count $lines) -ge 1
+            and set -l match (string match -r '^setenv PATH "(.*)";$' $lines[1])
+            and count $match >= 2
+            set -xg PATH (string split ':' $match[2])
+        end
+        if test (count $lines) -ge 2
+            and set -l match (string match -r '^setenv MANPATH "(.*)";$' $lines[2])
+            and count $match >= 2
+            set -xg MANPATH (string split ':' $match[2])
         end
     end
-
-    function __fish_append_stdin_to_tmp_path
-        while read -l new_path_comp
-            __fish_append_to_tmp_path $new_path_comp
-        end
-    end
-
-    # Read from /etc/paths, then /etc/paths.d/*, then $PATH, and
-    # remove subsequent duplicates to match the behavior of
-    # path_helper.
-    test -r /etc/paths
-    and __fish_append_stdin_to_tmp_path </etc/paths
-    for pathfile in /etc/paths.d/*
-        __fish_append_stdin_to_tmp_path <$pathfile
-    end
-
-    for new_path_comp in $PATH
-        __fish_append_to_tmp_path $new_path_comp
-    end
-
-    set -xg PATH $__fish_tmp_path
-    set -e __fish_tmp_path
-    functions -e __fish_append_to_tmp_path __fish_append_stdin_to_tmp_path
 
     #
     # Put linux consoles in unicode mode.

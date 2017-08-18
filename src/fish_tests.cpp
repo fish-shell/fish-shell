@@ -2092,9 +2092,8 @@ static void test_complete(void) {
     const wcstring_list_t names(name_strs, name_strs + count);
     std::vector<completion_t> completions;
     complete_set_variable_names(&names);
-    const env_vars_snapshot_t &vars = env_vars_snapshot_t::current();
 
-    complete(L"$", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"$", &completions, COMPLETION_REQUEST_DEFAULT);
     completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 6);
     do_test(completions.at(0).completion == L"Bar1");
@@ -2105,7 +2104,7 @@ static void test_complete(void) {
     do_test(completions.at(5).completion == L"Foo3");
 
     completions.clear();
-    complete(L"$F", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"$F", &completions, COMPLETION_REQUEST_DEFAULT);
     completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 3);
     do_test(completions.at(0).completion == L"oo1");
@@ -2113,13 +2112,12 @@ static void test_complete(void) {
     do_test(completions.at(2).completion == L"oo3");
 
     completions.clear();
-    complete(L"$1", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"$1", &completions, COMPLETION_REQUEST_DEFAULT);
     completions_sort_and_prioritize(&completions);
     do_test(completions.empty());
 
     completions.clear();
-    complete(L"$1", &completions, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_FUZZY_MATCH,
-             vars);
+    complete(L"$1", &completions, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_FUZZY_MATCH);
     completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 2);
     do_test(completions.at(0).completion == L"$Bar1");
@@ -2131,25 +2129,24 @@ static void test_complete(void) {
     if (system("chmod 700 'test/complete_test/testfile'")) err(L"chmod failed");
 
     completions.clear();
-    complete(L"echo (test/complete_test/testfil", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo (test/complete_test/testfil", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
     completions.clear();
-    complete(L"echo (ls test/complete_test/testfil", &completions, COMPLETION_REQUEST_DEFAULT,
-             vars);
+    complete(L"echo (ls test/complete_test/testfil", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
     completions.clear();
     complete(L"echo (command ls test/complete_test/testfil", &completions,
-             COMPLETION_REQUEST_DEFAULT, vars);
+             COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
     // Completing after spaces - see #2447
     completions.clear();
-    complete(L"echo (ls test/complete_test/has\\ ", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo (ls test/complete_test/has\\ ", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"space");
 
@@ -2161,91 +2158,91 @@ static void test_complete(void) {
 
     // Complete a function name.
     completions.clear();
-    complete(L"echo (scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo (scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"t");
 
     // But not with the command prefix.
     completions.clear();
-    complete(L"echo (command scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo (command scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 0);
 
     // Not with the builtin prefix.
     completions.clear();
-    complete(L"echo (builtin scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo (builtin scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 0);
 
     // Not after a redirection.
     completions.clear();
-    complete(L"echo hi > scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo hi > scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 0);
 
     // Trailing spaces (#1261).
     complete_add(L"foobarbaz", false, wcstring(), option_type_args_only, NO_FILES, NULL, L"qux",
                  NULL, COMPLETE_AUTO_SPACE);
     completions.clear();
-    complete(L"foobarbaz ", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"foobarbaz ", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"qux");
 
     // Don't complete variable names in single quotes (#1023).
     completions.clear();
-    complete(L"echo '$Foo", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo '$Foo", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
     completions.clear();
-    complete(L"echo \\$Foo", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo \\$Foo", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
 
     // File completions.
     completions.clear();
-    complete(L"cat test/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"cat test/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"echo sup > test/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo sup > test/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"echo sup > test/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"echo sup > test/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
 
     if (!pushd("test/complete_test")) return;
-    complete(L"cat te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"cat te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"something --abc=te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"something --abc=te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"something -abc=te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"something -abc=te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"something abc=te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"something abc=te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"something abc=stfile", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"something abc=stfile", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 0);
     completions.clear();
-    complete(L"something abc=stfile", &completions, COMPLETION_REQUEST_FUZZY_MATCH, vars);
+    complete(L"something abc=stfile", &completions, COMPLETION_REQUEST_FUZZY_MATCH);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"abc=testfile");
 
     // Zero escapes can cause problems. See issue #1631.
     completions.clear();
-    complete(L"cat foo\\0", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"cat foo\\0", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
     completions.clear();
-    complete(L"cat foo\\0bar", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"cat foo\\0bar", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
     completions.clear();
-    complete(L"cat \\0", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"cat \\0", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
     completions.clear();
-    complete(L"cat te\\0", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    complete(L"cat te\\0", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
 
     popd();
@@ -2317,10 +2314,9 @@ static void test_completion_insertions() {
 }
 
 static void perform_one_autosuggestion_cd_test(const wcstring &command,
-                                               const env_vars_snapshot_t &vars,
                                                const wcstring &expected, long line) {
     std::vector<completion_t> comps;
-    complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION, vars);
+    complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION);
 
     bool expects_error = (expected == L"<error>");
 
@@ -2387,69 +2383,60 @@ static void test_autosuggest_suggest_special() {
     const wcstring wd = L"test/autosuggest_test";
     const env_vars_snapshot_t &vars = env_vars_snapshot_t::current();
 
-    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/1", vars, L"foo bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/1", vars, L"foo bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/1", vars, L"foo bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/2", vars, L"foo  bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/2", vars, L"foo  bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/2", vars, L"foo  bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/3", vars, L"foo\\bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/3", vars, L"foo\\bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/3", vars, L"foo\\bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/4", vars, L"foo'bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/4", vars, L"foo'bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/4", vars, L"foo'bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/5", vars, L"foo\"bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/5", vars, L"foo\"bar/",
-                                       __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/5", vars, L"foo\"bar/",
-                                       __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/0", L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/0", L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/0", L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/1", L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/1", L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/1", L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/2", L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/2", L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/2", L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/3", L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/3", L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/3", L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/4", L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/4", L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/4", L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/5", L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/5", L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/5", L"foo\"bar/", __LINE__);
 
     env_set_one(L"AUTOSUGGEST_TEST_LOC", ENV_LOCAL, wd);
-    perform_one_autosuggestion_cd_test(L"cd $AUTOSUGGEST_TEST_LOC/0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd ~/test_autosuggest_suggest_specia", vars, L"l/",
+    perform_one_autosuggestion_cd_test(L"cd $AUTOSUGGEST_TEST_LOC/0", L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd ~/test_autosuggest_suggest_specia", L"l/", __LINE__);
+
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/start/", L"unique2/unique3/",
                                        __LINE__);
 
-    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/start/", vars,
-                                       L"unique2/unique3/", __LINE__);
-
     if (!pushd(wcs2string(wd).c_str())) return;
-    perform_one_autosuggestion_cd_test(L"cd 0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '0", vars, L"foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 1", vars, L"foo bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"1", vars, L"foo bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '1", vars, L"foo bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 2", vars, L"foo  bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"2", vars, L"foo  bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '2", vars, L"foo  bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 3", vars, L"foo\\bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"3", vars, L"foo\\bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '3", vars, L"foo\\bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 4", vars, L"foo'bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"4", vars, L"foo'bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '4", vars, L"foo'bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 5", vars, L"foo\"bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"5", vars, L"foo\"bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '5", vars, L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 0", L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"0", L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '0", L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 1", L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"1", L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '1", L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 2", L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"2", L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '2", L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 3", L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"3", L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '3", L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 4", L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"4", L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '4", L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 5", L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"5", L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '5", L"foo\"bar/", __LINE__);
 
     // A single quote should defeat tilde expansion.
-    perform_one_autosuggestion_cd_test(L"cd '~/test_autosuggest_suggest_specia'", vars, L"<error>",
+    perform_one_autosuggestion_cd_test(L"cd '~/test_autosuggest_suggest_specia'", L"<error>",
                                        __LINE__);
 
     // Don't crash on ~ (issue #2696). Note this is cwd dependent.
     if (system("mkdir -p '~hahaha/path1/path2/'")) err(L"mkdir failed");
-    perform_one_autosuggestion_cd_test(L"cd ~haha", vars, L"ha/path1/path2/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd ~hahaha/", vars, L"path1/path2/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd ~haha", L"ha/path1/path2/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd ~hahaha/", L"path1/path2/", __LINE__);
 
     popd();
     system("rmdir ~/test_autosuggest_suggest_special/");
@@ -2457,7 +2444,7 @@ static void test_autosuggest_suggest_special() {
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {
     completion_list_t comps;
-    complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION, env_vars_snapshot_t::current());
+    complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION);
     do_test(comps.empty());
     if (!comps.empty()) {
         const wcstring &suggestion = comps.front().completion;

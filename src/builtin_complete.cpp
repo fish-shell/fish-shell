@@ -318,8 +318,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             recursion_level++;
 
             std::vector<completion_t> comp;
-            complete(do_complete_param, &comp, COMPLETION_REQUEST_DEFAULT,
-                     env_vars_snapshot_t::current());
+            complete(do_complete_param, &comp, COMPLETION_REQUEST_DEFAULT);
 
             for (size_t i = 0; i < comp.size(); i++) {
                 const completion_t &next = comp.at(i);

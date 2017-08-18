@@ -28,7 +28,6 @@
 #include "builtin.h"
 #include "common.h"
 #include "complete.h"
-#include "env.h"
 #include "exec.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -290,7 +289,6 @@ class completer_t {
     const completion_request_flags_t flags;
     const wcstring initial_cmd;
     std::vector<completion_t> completions;
-    const env_vars_snapshot_t &vars;  // transient, stack-allocated
 
     /// Table of completions conditions that have already been tested and the corresponding test
     /// results.
@@ -316,8 +314,7 @@ class completer_t {
     }
 
    public:
-    completer_t(const wcstring &c, completion_request_flags_t f, const env_vars_snapshot_t &evs)
-        : flags(f), initial_cmd(c), vars(evs) {}
+    completer_t(const wcstring &c, completion_request_flags_t f) : flags(f), initial_cmd(c) {}
 
     bool empty() const { return completions.empty(); }
     const std::vector<completion_t> &get_completions(void) { return completions; }
@@ -1238,7 +1235,7 @@ bool completer_t::try_complete_user(const wcstring &str) {
 }
 
 void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_comps,
-              completion_request_flags_t flags, const env_vars_snapshot_t &vars) {
+              completion_request_flags_t flags) {
     // Determine the innermost subcommand.
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
     parse_util_cmdsubst_extent(cmd_with_subcmds.c_str(), cmd_with_subcmds.size(), &cmdsubst_begin,
@@ -1247,7 +1244,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
     const wcstring cmd = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
 
     // Make our completer.
-    completer_t completer(cmd, flags, vars);
+    completer_t completer(cmd, flags);
 
     wcstring current_command;
     const size_t pos = cmd.size();

@@ -1188,7 +1188,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         // Try normal completions.
         std::vector<completion_t> completions;
-        complete(search_string, &completions, COMPLETION_REQUEST_AUTOSUGGESTION, vars);
+        complete(search_string, &completions, COMPLETION_REQUEST_AUTOSUGGESTION);
         completions_sort_and_prioritize(&completions);
         if (!completions.empty()) {
             const completion_t &comp = completions.at(0);
@@ -2590,8 +2590,7 @@ const wchar_t *reader_readline(int nchars) {
                     complete_flags_t complete_flags = COMPLETION_REQUEST_DEFAULT |
                                                       COMPLETION_REQUEST_DESCRIPTIONS |
                                                       COMPLETION_REQUEST_FUZZY_MATCH;
-                    data->complete_func(buffcpy, &comp, complete_flags,
-                                        env_vars_snapshot_t::current());
+                    data->complete_func(buffcpy, &comp, complete_flags);
 
                     // Munge our completions.
                     completions_sort_and_prioritize(&comp);

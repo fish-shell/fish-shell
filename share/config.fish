@@ -241,7 +241,8 @@ if status --is-login
     for pathfile in /etc/paths.d/*
         __fish_load_path_helper_paths <$pathfile
     end
-    set -xg PATH $__fish_tmp_path
+    test -n "$__fish_tmp_path"
+    and set -xg PATH $__fish_tmp_path
     set -e __fish_tmp_path
     functions -e __fish_load_path_helper_paths
 

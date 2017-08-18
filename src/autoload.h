@@ -47,7 +47,7 @@ class env_vars_snapshot_t;
 class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
    private:
     /// Lock for thread safety.
-    pthread_mutex_t lock;
+    std::mutex lock;
     /// The environment variable name.
     const wcstring env_var_name;
     /// The path from which we most recently autoloaded.
@@ -75,8 +75,6 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
 
     // Create an autoload_t for the given environment variable name.
     autoload_t(const wcstring &env_var_name_var, command_removed_function_t callback);
-
-    ~autoload_t();
 
     /// Autoload the specified file, if it exists in the specified path. Do not load it multiple
     /// times unless its timestamp changes or parse_util_unload is called.

@@ -168,7 +168,11 @@ class env_node_t {
     const env_var_t find_entry(const wcstring &key);
 };
 
-static pthread_mutex_t env_lock = PTHREAD_MUTEX_INITIALIZER;
+class variable_entry_t {
+    wcstring value; /**< Value of the variable */
+};
+
+static std::mutex env_lock;
 
 static bool local_scope_exports(const env_node_t *n);
 

@@ -39,7 +39,7 @@ class env_universal_t {
     // Path that we save to. If empty, use the default.
     const wcstring explicit_vars_path;
 
-    mutable pthread_mutex_t lock;
+    mutable std::mutex lock;
     bool tried_renaming;
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
@@ -70,7 +70,6 @@ class env_universal_t {
 
    public:
     explicit env_universal_t(const wcstring &path);
-    ~env_universal_t();
 
     // Get the value of the variable with the specified name.
     env_var_t get(const wcstring &name) const;

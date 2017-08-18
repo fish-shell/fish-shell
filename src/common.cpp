@@ -66,7 +66,7 @@ static pid_t initial_fg_process_group = -1;
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
 /// common_get_width()/common_get_height().
-static pthread_mutex_t termsize_lock = PTHREAD_MUTEX_INITIALIZER;
+static std::mutex termsize_lock;
 static struct winsize termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
 static volatile bool termsize_valid = false;
 
@@ -1975,102 +1975,15 @@ void assert_is_background_thread(const char *who) {
 }
 
 void assert_is_locked(void *vmutex, const char *who, const char *caller) {
-    pthread_mutex_t *mutex = static_cast<pthread_mutex_t *>(vmutex);
-    if (0 == pthread_mutex_trylock(mutex)) {
+    std::mutex *mutex = static_cast<std::mutex *>(vmutex);
+
+    // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
+    // actually locked; fortunately we are checking the opposite so we're safe.
+    if (mutex->try_lock()) {
         debug(0, "%s is not locked when it should be in '%s'", who, caller);
         debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
-        pthread_mutex_unlock(mutex);
-    }
-}
-
-void scoped_lock::lock(void) {
-    assert(!locked);  //!OCLINT(multiple unary operator)
-    ASSERT_IS_NOT_FORKED_CHILD();
-    DIE_ON_FAILURE(pthread_mutex_lock(lock_obj));
-    locked = true;
-}
-
-void scoped_lock::unlock(void) {
-    assert(locked);
-    ASSERT_IS_NOT_FORKED_CHILD();
-    DIE_ON_FAILURE(pthread_mutex_unlock(lock_obj));
-    locked = false;
-}
-
-scoped_lock::scoped_lock(pthread_mutex_t &mutex) : lock_obj(&mutex), locked(false) { this->lock(); }
-
-scoped_lock::scoped_lock(mutex_lock_t &lock) : lock_obj(&lock.mutex), locked(false) {
-    this->lock();
-}
-
-scoped_lock::~scoped_lock() {
-    if (locked) this->unlock();
-}
-
-void scoped_rwlock::lock(void) {
-    assert(!(locked || locked_shared));  //!OCLINT(multiple unary operator)
-    ASSERT_IS_NOT_FORKED_CHILD();
-    DIE_ON_FAILURE(pthread_rwlock_rdlock(rwlock_obj));
-    locked = true;
-}
-
-void scoped_rwlock::unlock(void) {
-    assert(locked);
-    ASSERT_IS_NOT_FORKED_CHILD();
-    DIE_ON_FAILURE(pthread_rwlock_unlock(rwlock_obj));
-    locked = false;
-}
-
-void scoped_rwlock::lock_shared(void) {
-    assert(!(locked || locked_shared));  //!OCLINT(multiple unary operator)
-    ASSERT_IS_NOT_FORKED_CHILD();
-    DIE_ON_FAILURE(pthread_rwlock_wrlock(rwlock_obj));
-    locked_shared = true;
-}
-
-void scoped_rwlock::unlock_shared(void) {
-    assert(locked_shared);
-    ASSERT_IS_NOT_FORKED_CHILD();
-    DIE_ON_FAILURE(pthread_rwlock_unlock(rwlock_obj));
-    locked_shared = false;
-}
-
-#if 0
-// This is not currently used.
-void scoped_rwlock::upgrade(void) {
-    assert(locked_shared);
-    ASSERT_IS_NOT_FORKED_CHILD();
-    DIE_ON_FAILURE(pthread_rwlock_unlock(rwlock_obj));
-    locked = false;
-    DIE_ON_FAILURE(pthread_rwlock_wrlock(rwlock_obj));
-    locked_shared = true;
-}
-#endif
-
-scoped_rwlock::scoped_rwlock(pthread_rwlock_t &rwlock, bool shared)
-    : rwlock_obj(&rwlock), locked(false), locked_shared(false) {
-    if (shared) {
-        this->lock_shared();
-    } else {
-        this->lock();
-    }
-}
-
-scoped_rwlock::scoped_rwlock(rwlock_t &rwlock, bool shared)
-    : rwlock_obj(&rwlock.rwlock), locked(false), locked_shared(false) {
-    if (shared) {
-        this->lock_shared();
-    } else {
-        this->lock();
-    }
-}
-
-scoped_rwlock::~scoped_rwlock() {
-    if (locked) {
-        this->unlock();
-    } else if (locked_shared) {
-        this->unlock_shared();
+        mutex->unlock();
     }
 }
 

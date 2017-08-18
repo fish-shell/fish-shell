@@ -115,7 +115,7 @@ class history_t {
     void add(const history_item_t &item, bool pending = false);
 
     // Lock for thread safety.
-    pthread_mutex_t lock;
+    std::mutex lock;
 
     // Internal function.
     void clear_file_state();
@@ -209,7 +209,6 @@ class history_t {
 
    public:
     explicit history_t(const wcstring &);  // constructor
-    ~history_t();                          // destructor
 
     // Returns history with the given name, creating it if necessary.
     static history_t &history_with_name(const wcstring &name);

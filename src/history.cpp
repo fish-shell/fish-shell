@@ -708,7 +708,7 @@ history_t &history_collection_t::get_creating(const wcstring &name) {
     // Return a history for the given name, creating it if necessary
     // Note that histories are currently never deleted, so we can return a reference to them without
     // using something like shared_ptr
-    auto hs = histories.acquire();
+    auto &&hs = histories.acquire();
     std::unique_ptr<history_t> &hist = hs.value[name];
     if (!hist) {
         hist = make_unique<history_t>(name);
@@ -732,11 +732,7 @@ history_t::history_t(const wcstring &pname)
       boundary_timestamp(time(NULL)),
       countdown_to_vacuum(-1),
       loaded_old(false),
-      chaos_mode(false) {
-    pthread_mutex_init(&lock, NULL);
-}
-
-history_t::~history_t() { pthread_mutex_destroy(&lock); }
+      chaos_mode(false) {}
 
 void history_t::add(const history_item_t &item, bool pending) {
     scoped_lock locker(lock);
@@ -1780,7 +1776,7 @@ void history_init() {}
 
 void history_collection_t::save() {
     // Save all histories
-    auto h = histories.acquire();
+    auto &&h = histories.acquire();
     for (auto &p : h.value) {
         p.second->save();
     }
@@ -1806,9 +1802,8 @@ wcstring history_session_id() {
         } else if (valid_var_name(session_id)) {
             result = session_id;
         } else {
-            debug(0,
-                  _(L"History session ID '%ls' is not a valid variable name. "
-                    L"Falling back to `%ls`."),
+            debug(0, _(L"History session ID '%ls' is not a valid variable name. "
+                       L"Falling back to `%ls`."),
                   session_id.c_str(), result.c_str());
         }
     }

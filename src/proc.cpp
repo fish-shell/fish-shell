@@ -161,7 +161,7 @@ int proc_get_last_status() { return last_status; }
 static owning_lock<std::vector<bool>> locked_consumed_job_ids;
 
 job_id_t acquire_job_id(void) {
-    auto locker = locked_consumed_job_ids.acquire();
+    auto &&locker = locked_consumed_job_ids.acquire();
     std::vector<bool> &consumed_job_ids = locker.value;
 
     // Find the index of the first 0 slot.
@@ -181,7 +181,7 @@ job_id_t acquire_job_id(void) {
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
-    auto locker = locked_consumed_job_ids.acquire();
+    auto &&locker = locked_consumed_job_ids.acquire();
     std::vector<bool> &consumed_job_ids = locker.value;
     size_t slot = (size_t)(jid - 1), count = consumed_job_ids.size();
 

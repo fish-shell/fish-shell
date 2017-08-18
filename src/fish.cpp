@@ -378,7 +378,6 @@ int main(int argc, char **argv) {
     proc_init();
     event_init();
     builtin_init();
-    function_init();
     misc_init();
     reader_init();
     history_init();

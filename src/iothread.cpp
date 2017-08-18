@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <condition_variable>
 #include <queue>
 
 #include "common.h"
@@ -70,11 +71,9 @@ static owning_lock<thread_data_t> s_spawn_requests;
 static owning_lock<std::queue<spawn_request_t>> s_result_queue;
 
 // "Do on main thread" support.
-static pthread_mutex_t s_main_thread_performer_lock =
-    PTHREAD_MUTEX_INITIALIZER;                       // protects the main thread requests
-static pthread_cond_t s_main_thread_performer_cond;  // protects the main thread requests
-static pthread_mutex_t s_main_thread_request_q_lock =
-    PTHREAD_MUTEX_INITIALIZER;  // protects the queue
+static std::mutex s_main_thread_performer_lock;               // protects the main thread requests
+static std::condition_variable s_main_thread_performer_cond;  // protects the main thread requests
+static std::mutex s_main_thread_request_q_lock;               // protects the queue
 static std::queue<main_thread_request_t *> s_main_thread_request_queue;
 
 // Notifying pipes.
@@ -84,9 +83,6 @@ static void iothread_init(void) {
     static bool inited = false;
     if (!inited) {
         inited = true;
-
-        // Initialize some locks.
-        DIE_ON_FAILURE(pthread_cond_init(&s_main_thread_performer_cond, NULL));
 
         // Initialize the completion pipes.
         int pipes[2] = {0, 0};
@@ -100,7 +96,7 @@ static void iothread_init(void) {
 }
 
 static bool dequeue_spawn_request(spawn_request_t *result) {
-    auto locker = s_spawn_requests.acquire();
+    auto &&locker = s_spawn_requests.acquire();
     thread_data_t &td = locker.value;
     if (!td.request_queue.empty()) {
         *result = std::move(td.request_queue.front());
@@ -183,7 +179,7 @@ int iothread_perform_impl(void_function_t &&func, void_function_t &&completion) 
     bool spawn_new_thread = false;
     {
         // Lock around a local region.
-        auto locker = s_spawn_requests.acquire();
+        auto &&locker = s_spawn_requests.acquire();
         thread_data_t &td = locker.value;
         td.request_queue.push(std::move(req));
         if (td.thread_count < IO_MAX_THREADS) {
@@ -295,7 +291,7 @@ static void iothread_service_main_thread_requests(void) {
         // Because the waiting thread performs step 1 under the lock, if we take the lock, we avoid
         // posting before the waiting thread is waiting.
         scoped_lock broadcast_lock(s_main_thread_performer_lock);
-        DIE_ON_FAILURE(pthread_cond_broadcast(&s_main_thread_performer_cond));
+        s_main_thread_performer_cond.notify_all();
     }
 }
 
@@ -337,12 +333,11 @@ void iothread_perform_on_main(void_function_t &&func) {
     assert_with_errno(write_loop(s_write_pipe, &wakeup_byte, sizeof wakeup_byte) != -1);
 
     // Wait on the condition, until we're done.
-    scoped_lock perform_lock(s_main_thread_performer_lock);
+    std::unique_lock<std::mutex> perform_lock(s_main_thread_performer_lock);
     while (!req.done) {
         // It would be nice to support checking for cancellation here, but the clients need a
         // deterministic way to clean up to avoid leaks
-        DIE_ON_FAILURE(
-            pthread_cond_wait(&s_main_thread_performer_cond, &s_main_thread_performer_lock));
+        s_main_thread_performer_cond.wait(perform_lock);
     }
 
     // Ok, the request must now be done.

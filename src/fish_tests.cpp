@@ -4335,7 +4335,6 @@ int main(int argc, char **argv) {
     setup_fork_guards();
     proc_init();
     event_init();
-    function_init();
     builtin_init();
     env_init();
     misc_init();

@@ -17,6 +17,7 @@
 #endif
 
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <type_traits>
@@ -199,12 +200,12 @@ extern bool has_working_tty_timestamps;
 // from within a `switch` block. As of the time I'm writing this oclint doesn't recognize the
 // `__attribute__((noreturn))` on the exit_without_destructors() function.
 // TODO: we use C++11 [[noreturn]] now, does that change things?
-#define FATAL_EXIT()                       \
-    {                                      \
-        char exit_read_buff;               \
-        show_stackframe(L'E');             \
+#define FATAL_EXIT()                                \
+    {                                               \
+        char exit_read_buff;                        \
+        show_stackframe(L'E');                      \
         ignore_result(read(0, &exit_read_buff, 1)); \
-        exit_without_destructors(1);       \
+        exit_without_destructors(1);                \
     }
 
 /// Exit the program at once after emitting an error message and stack trace if possible.
@@ -497,70 +498,8 @@ class null_terminated_array_t {
 // null_terminated_array_t<char_t>.
 void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr,
                                   null_terminated_array_t<char> *output);
-
-class mutex_lock_t {
-   public:
-    pthread_mutex_t mutex;
-    mutex_lock_t() { DIE_ON_FAILURE(pthread_mutex_init(&mutex, NULL)); }
-
-    ~mutex_lock_t() { DIE_ON_FAILURE(pthread_mutex_destroy(&mutex)); }
-};
-
-// Basic scoped lock class.
-class scoped_lock {
-    pthread_mutex_t *lock_obj;
-    bool locked;
-
-    // No copying.
-    scoped_lock &operator=(const scoped_lock &) = delete;
-    scoped_lock(const scoped_lock &) = delete;
-
-   public:
-    scoped_lock(scoped_lock &&rhs) : lock_obj(rhs.lock_obj), locked(rhs.locked) {
-        // we acquire any locked state
-        // ensure the rhs doesn't try to unlock
-        rhs.locked = false;
-    }
-
-    void lock(void);
-    void unlock(void);
-    explicit scoped_lock(pthread_mutex_t &mutex);
-    explicit scoped_lock(mutex_lock_t &lock);
-    ~scoped_lock();
-};
-
-class rwlock_t {
-   public:
-    pthread_rwlock_t rwlock;
-    rwlock_t() { DIE_ON_FAILURE(pthread_rwlock_init(&rwlock, NULL)); }
-
-    ~rwlock_t() { DIE_ON_FAILURE(pthread_rwlock_destroy(&rwlock)); }
-
-    rwlock_t &operator=(const rwlock_t &) = delete;
-    rwlock_t(const rwlock_t &) = delete;
-};
-
-// Scoped lock class for rwlocks.
-class scoped_rwlock {
-    pthread_rwlock_t *rwlock_obj;
-    bool locked;
-    bool locked_shared;
-
-    // No copying.
-    scoped_rwlock &operator=(const scoped_lock &) = delete;
-    explicit scoped_rwlock(const scoped_lock &) = delete;
-
-   public:
-    void lock(void);
-    void unlock(void);
-    void lock_shared(void);
-    void unlock_shared(void);
-    // Upgrade shared lock to exclusive. Equivalent to `lock.unlock_shared(); lock.lock();`.
-    void upgrade(void);
-    explicit scoped_rwlock(pthread_rwlock_t &rwlock, bool shared = false);
-    explicit scoped_rwlock(rwlock_t &rwlock, bool shared = false);
-    ~scoped_rwlock();
-};
+typedef std::lock_guard<std::mutex> scoped_lock;
+typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 
 // An object wrapping a scoped lock and a value
 // This is returned from owning_lock.acquire()
@@ -575,7 +514,7 @@ class scoped_rwlock {
 template <typename DATA>
 class acquired_lock {
     scoped_lock lock;
-    acquired_lock(mutex_lock_t &lk, DATA *v) : lock(lk), value(*v) {}
+    acquired_lock(std::mutex &lk, DATA *v) : lock(lk), value(*v) {}
 
     template <typename T>
     friend class owning_lock;
@@ -600,7 +539,7 @@ class owning_lock {
     owning_lock(owning_lock &&) = default;
     owning_lock &operator=(owning_lock &&) = default;
 
-    mutex_lock_t lock;
+    std::mutex lock;
     DATA data;
 
    public:
@@ -883,10 +822,13 @@ enum {
    and __extension__ to work around the problem, if the workaround is
    known to be needed.  */
 #if 3 < __GNUC__ + (4 <= __GNUC_MINOR__)
-# define ignore_result(x) \
-    (__extension__ ({ __typeof__ (x) __x = (x); (void) __x; }))
+#define ignore_result(x)         \
+    (__extension__({             \
+        __typeof__(x) __x = (x); \
+        (void)__x;               \
+    }))
 #else
-# define ignore_result(x) ((void) (x))
+#define ignore_result(x) ((void)(x))
 #endif
 
 #endif

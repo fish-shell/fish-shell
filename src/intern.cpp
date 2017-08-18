@@ -21,7 +21,7 @@ static const wchar_t *intern_with_dup(const wchar_t *in, bool dup) {
     if (!in) return NULL;
 
     debug(5, L"intern %ls", in);
-    auto lock_string_table = string_table.acquire();
+    auto &&lock_string_table = string_table.acquire();
     std::vector<const wchar_t *> &string_table = lock_string_table.value;
 
     const wchar_t *result;

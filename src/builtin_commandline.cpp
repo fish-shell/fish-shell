@@ -55,7 +55,7 @@ static owning_lock<wcstring_list_t> &get_transient_stack() {
 }
 
 static bool get_top_transient(wcstring *out_result) {
-    auto locked = get_transient_stack().acquire();
+    auto &&locked = get_transient_stack().acquire();
     wcstring_list_t &stack = locked.value;
     if (stack.empty()) {
         return false;
@@ -67,7 +67,7 @@ static bool get_top_transient(wcstring *out_result) {
 builtin_commandline_scoped_transient_t::builtin_commandline_scoped_transient_t(
     const wcstring &cmd) {
     ASSERT_IS_MAIN_THREAD();
-    auto locked = get_transient_stack().acquire();
+    auto &&locked = get_transient_stack().acquire();
     wcstring_list_t &stack = locked.value;
     stack.push_back(cmd);
     this->token = stack.size();
@@ -75,7 +75,7 @@ builtin_commandline_scoped_transient_t::builtin_commandline_scoped_transient_t(
 
 builtin_commandline_scoped_transient_t::~builtin_commandline_scoped_transient_t() {
     ASSERT_IS_MAIN_THREAD();
-    auto locked = get_transient_stack().acquire();
+    auto &&locked = get_transient_stack().acquire();
     wcstring_list_t &stack = locked.value;
     assert(this->token == stack.size());
     stack.pop_back();

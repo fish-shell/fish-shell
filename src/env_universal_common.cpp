@@ -263,11 +263,7 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
 }
 
 env_universal_t::env_universal_t(const wcstring &path)
-    : explicit_vars_path(path), tried_renaming(false), last_read_file(kInvalidFileID) {
-    DIE_ON_FAILURE(pthread_mutex_init(&lock, NULL));
-}
-
-env_universal_t::~env_universal_t() { pthread_mutex_destroy(&lock); }
+    : explicit_vars_path(path), tried_renaming(false), last_read_file(kInvalidFileID) {}
 
 env_var_t env_universal_t::get(const wcstring &name) const {
     var_table_t::const_iterator where = vars.find(name);

@@ -231,7 +231,7 @@ if status --is-login
     # OS X-ism: Load the path files out of /etc/paths and /etc/paths.d/*
     set -g __fish_tmp_path
     function __fish_append_to_tmp_path -a new_path_comp
-        if not contains $new_path_comp $__fish_tmp_path
+        if not contains -- $new_path_comp $__fish_tmp_path
             set __fish_tmp_path $__fish_tmp_path $new_path_comp
         end
     end

@@ -4,7 +4,7 @@
 
 #include <wchar.h>
 
-#include <map>
+#include <unordered_map>
 
 #include "common.h"
 
@@ -22,8 +22,6 @@
 template <class DERIVED, class CONTENTS>
 class lru_cache_t {
     struct lru_node_t;
-    typedef typename std::map<wcstring, lru_node_t>::iterator node_iter_t;
-
     struct lru_link_t {
         // Our doubly linked list
         // The base class is used for the mouth only
@@ -47,6 +45,8 @@ class lru_cache_t {
         explicit lru_node_t(const CONTENTS &v) : value(std::move(v)) {}
     };
 
+    typedef typename std::unordered_map<wcstring, lru_node_t>::iterator node_iter_t;
+
     // Max node count. This may be (transiently) exceeded by add_node_without_eviction, which is
     // used from background threads.
     const size_t max_node_count;
@@ -54,7 +54,7 @@ class lru_cache_t {
     // All of our nodes
     // Note that our linked list contains pointers to these nodes in the map
     // We are dependent on the iterator-noninvalidation guarantees of std::map
-    std::map<wcstring, lru_node_t> node_map;
+    std::unordered_map<wcstring, lru_node_t> node_map;
 
     // Head of the linked list
     // The list is circular!

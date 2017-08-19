@@ -832,3 +832,19 @@ enum {
 #endif
 
 #endif
+
+// Custom hash function used by unordered_map/unordered_set when key is const
+#ifndef CONST_WCSTRING_HASH
+#define CONST_WCSTRING_HASH 1
+namespace std {
+  template <>
+  struct hash<const wcstring>
+  {
+    std::size_t operator()(const wcstring& w) const
+    {
+        std::hash<wcstring> hasher;
+        return hasher((wcstring) w);
+    }
+  };
+}
+#endif

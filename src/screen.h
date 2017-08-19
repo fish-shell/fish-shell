@@ -16,9 +16,9 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <map>
 #include <memory>
 #include <set>
+#include <unordered_map>
 #include <vector>
 
 #include "common.h"
@@ -214,7 +214,7 @@ class cached_esc_sequences_t {
     // sequence lengths we've actually cached to avoid checking for matches of lengths we know are
     // not in our cache.
     std::vector<size_t> lengths;
-    std::map<size_t, size_t> lengths_match_count;
+    std::unordered_map<size_t, size_t> lengths_match_count;
     size_t cache_hits;
 
    public:

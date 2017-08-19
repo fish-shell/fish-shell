@@ -12,11 +12,11 @@
 #include <functional>
 #include <iostream>
 #include <iterator>
-#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -65,8 +65,8 @@ class argparse_cmd_opts_t {
     wcstring name = L"argparse";
     wcstring_list_t raw_exclusive_flags;
     wcstring_list_t argv;
-    std::map<wchar_t, option_spec_t *> options;
-    std::map<wcstring, wchar_t> long_to_short_flag;
+    std::unordered_map<wchar_t, option_spec_t *> options;
+    std::unordered_map<wcstring, wchar_t> long_to_short_flag;
     std::vector<std::vector<wchar_t>> exclusive_flag_sets;
 
     ~argparse_cmd_opts_t() {

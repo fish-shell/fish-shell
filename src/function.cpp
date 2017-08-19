@@ -14,6 +14,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 #include "autoload.h"
@@ -28,7 +29,7 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Table containing all functions.
-typedef std::map<wcstring, function_info_t> function_map_t;
+typedef std::unordered_map<wcstring, function_info_t> function_map_t;
 static function_map_t loaded_functions;
 
 /// Functions that shouldn't be autoloaded (anymore).

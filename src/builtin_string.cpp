@@ -17,9 +17,9 @@
 #include <algorithm>
 #include <cwctype>
 #include <iterator>
-#include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -387,7 +387,7 @@ static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
                                               {L"style", required_argument, NULL, 1},
                                               {NULL, 0, NULL, 0}};
 
-static std::map<char, decltype(*handle_flag_N)> flag_to_function = {
+static std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
     {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
     {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},

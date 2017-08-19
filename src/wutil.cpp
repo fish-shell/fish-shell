@@ -17,8 +17,8 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#include <map>
 #include <string>
+#include <unordered_map>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -38,7 +38,7 @@ const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, 
 #endif
 
 /// Map used as cache by wgettext.
-static owning_lock<std::map<wcstring, wcstring>> wgettext_map;
+static owning_lock<std::unordered_map<wcstring, wcstring>> wgettext_map;
 
 bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, bool *out_is_dir) {
     struct dirent d;

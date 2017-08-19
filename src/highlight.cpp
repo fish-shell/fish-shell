@@ -9,11 +9,11 @@
 #include <wchar.h>
 
 #include <algorithm>
-#include <map>
 #include <memory>
 #include <set>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 
 #include "builtin.h"
@@ -67,7 +67,7 @@ static const wchar_t *const highlight_var[] = {L"fish_color_normal",
 /// Returns:
 ///     false: the filesystem is not case insensitive
 ///     true: the file system is case insensitive
-typedef std::map<wcstring, bool> case_sensitivity_cache_t;
+typedef std::unordered_map<wcstring, bool> case_sensitivity_cache_t;
 bool fs_is_case_insensitive(const wcstring &path, int fd,
                             case_sensitivity_cache_t &case_sensitivity_cache) {
     bool result = false;

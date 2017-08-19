@@ -16,11 +16,11 @@
 #include <functional>
 #include <iterator>
 #include <list>
-#include <map>
 #include <memory>
 #include <set>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 
@@ -292,7 +292,7 @@ class completer_t {
 
     /// Table of completions conditions that have already been tested and the corresponding test
     /// results.
-    typedef std::map<wcstring, bool> condition_cache_t;
+    typedef std::unordered_map<wcstring, bool> condition_cache_t;
     condition_cache_t condition_cache;
 
     enum complete_type_t { COMPLETE_DEFAULT, COMPLETE_AUTOSUGGEST };
@@ -596,7 +596,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     wcstring lookup_cmd(L"__fish_describe_command ");
     lookup_cmd.append(escape_string(cmd_start, 1));
 
-    std::map<wcstring, wcstring> lookup;
+    std::unordered_map<wcstring, wcstring> lookup;
 
     // First locate a list of possible descriptions using a single call to apropos or a direct
     // search if we know the location of the whatis database. This can take some time on slower
@@ -634,7 +634,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
             const wcstring &el = completion.completion;
             if (el.empty()) continue;
 
-            std::map<wcstring, wcstring>::iterator new_desc_iter = lookup.find(el);
+            auto new_desc_iter = lookup.find(el);
             if (new_desc_iter != lookup.end()) completion.description = new_desc_iter->second;
         }
     }
@@ -1553,7 +1553,7 @@ wcstring complete_print() {
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 static std::mutex wrapper_lock;
-typedef std::map<wcstring, wcstring_list_t> wrapper_map_t;
+typedef std::unordered_map<wcstring, wcstring_list_t> wrapper_map_t;
 static wrapper_map_t &wrap_map() {
     ASSERT_IS_LOCKED(wrapper_lock);
     // A pointer is a little more efficient than an object as a static because we can elide the

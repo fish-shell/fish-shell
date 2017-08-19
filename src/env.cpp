@@ -30,9 +30,9 @@
 #endif
 
 #include <algorithm>
-#include <map>
 #include <set>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -85,7 +85,7 @@ bool term_has_xn = false;
 /// found in `TERMINFO_DIRS` we don't to call `handle_curses()` before we've imported the latter.
 static bool env_initialized = false;
 
-typedef std::map<const wcstring, void (*)(const wcstring &, const wcstring &)> var_dispatch_table_t;
+typedef std::unordered_map<const wcstring, void (*)(const wcstring &, const wcstring &)> var_dispatch_table_t;
 var_dispatch_table_t var_dispatch_table;
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
@@ -1596,7 +1596,7 @@ env_var_t env_vars_snapshot_t::get(const wcstring &key) const {
     if (this->is_current()) {
         return env_get(key);
     }
-    std::map<wcstring, env_var_t>::const_iterator iter = vars.find(key);
+    auto iter = vars.find(key);
     return iter == vars.end() ? missing_var : env_var_t(iter->second);
 }
 

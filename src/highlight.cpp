@@ -10,10 +10,10 @@
 
 #include <algorithm>
 #include <memory>
-#include <set>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "builtin.h"
@@ -146,7 +146,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
 
     // Don't test the same path multiple times, which can happen if the path is absolute and the
     // CDPATH contains multiple entries.
-    std::set<wcstring> checked_paths;
+    std::unordered_set<wcstring> checked_paths;
 
     // Keep a cache of which paths / filesystems are case sensitive.
     case_sensitivity_cache_t case_sensitivity_cache;

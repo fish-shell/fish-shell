@@ -375,9 +375,7 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
 
 void env_universal_t::acquire_variables(var_table_t &vars_to_acquire) {
     // Copy modified values from existing vars to vars_to_acquire.
-    for (std::set<wcstring>::iterator iter = this->modified.begin(); iter != this->modified.end();
-         ++iter) {
-        const wcstring &key = *iter;
+    for (const auto &key : this->modified) {
         var_table_t::iterator src_iter = this->vars.find(key);
         if (src_iter == this->vars.end()) {
             /* The value has been deleted. */

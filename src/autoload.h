@@ -6,6 +6,7 @@
 #include <time.h>
 
 #include <set>
+#include <unordered_set>
 
 #include "common.h"
 #include "env.h"
@@ -54,7 +55,7 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
     wcstring_list_t last_path_tokenized;
     /// A table containing all the files that are currently being loaded.
     /// This is here to help prevent recursion.
-    std::set<wcstring> is_loading_set;
+    std::unordered_set<wcstring> is_loading_set;
     // Function invoked when a command is removed
     typedef void (*command_removed_function_t)(const wcstring &);
     const command_removed_function_t command_removed;

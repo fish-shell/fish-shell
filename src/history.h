@@ -12,7 +12,7 @@
 
 #include <deque>
 #include <memory>
-#include <set>
+#include <unordered_set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -139,7 +139,7 @@ class history_t {
     uint32_t disable_automatic_save_counter;
 
     // Deleted item contents.
-    std::set<wcstring> deleted_items;
+    std::unordered_set<wcstring> deleted_items;
 
     // The mmaped region for the history file.
     const char *mmap_start;

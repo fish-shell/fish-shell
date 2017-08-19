@@ -158,17 +158,22 @@ class completion_entry_t {
 };
 
 /// Set of all completion entries.
-struct completion_entry_set_comparer {
-    /** Comparison for std::set */
-    bool operator()(const completion_entry_t &p1, const completion_entry_t &p2) const {
-        // Paths always come last for no particular reason.
-        if (p1.cmd_is_path != p2.cmd_is_path) {
-            return p1.cmd_is_path < p2.cmd_is_path;
+namespace std {
+    template<>
+    struct hash<completion_entry_t> {
+        size_t operator()(const completion_entry_t &c) const {
+            std::hash<wcstring> hasher;
+            return hasher((wcstring) c.cmd);
         }
-        return p1.cmd < p2.cmd;
-    }
-};
-typedef std::set<completion_entry_t, completion_entry_set_comparer> completion_entry_set_t;
+    };
+    template <>
+    struct equal_to<completion_entry_t> {
+        bool operator()(const completion_entry_t &c1, const completion_entry_t &c2) const {
+            return c1.cmd == c2.cmd;
+        }
+    };
+}
+typedef std::unordered_set<completion_entry_t> completion_entry_set_t;
 static completion_entry_set_t completion_set;
 
 /// Comparison function to sort completions by their order field.
@@ -417,8 +422,7 @@ bool completer_t::condition_test(const wcstring &condition) {
 static completion_entry_t &complete_get_exact_entry(const wcstring &cmd, bool cmd_is_path) {
     ASSERT_IS_LOCKED(completion_lock);
 
-    std::pair<completion_entry_set_t::iterator, bool> ins =
-        completion_set.insert(completion_entry_t(cmd, cmd_is_path));
+    auto ins = completion_set.emplace(completion_entry_t(cmd, cmd_is_path));
 
     // NOTE SET_ELEMENTS_ARE_IMMUTABLE: Exposing mutable access here is only okay as long as callers
     // do not change any field that matters to ordering - affecting order without telling std::set
@@ -1610,7 +1614,7 @@ wcstring_list_t complete_get_wrap_chain(const wcstring &command) {
     const wrapper_map_t &wraps = wrap_map();
 
     wcstring_list_t result;
-    std::set<wcstring> visited;            // set of visited commands
+    std::unordered_set<wcstring> visited;            // set of visited commands
     wcstring_list_t to_visit(1, command);  // stack of remaining-to-visit commands
 
     wcstring target;

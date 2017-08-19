@@ -11,8 +11,8 @@
 #include <wchar.h>
 
 #include <memory>
-#include <set>
 #include <string>
+#include <unordered_set>
 #include <utility>
 
 #include "common.h"
@@ -439,9 +439,9 @@ class wildcard_expander_t {
     // The working directory to resolve paths against
     const wcstring working_directory;
     // The set of items we have resolved, used to efficiently avoid duplication.
-    std::set<wcstring> completion_set;
+    std::unordered_set<wcstring> completion_set;
     // The set of file IDs we have visited, used to avoid symlink loops.
-    std::set<file_id_t> visited_files;
+    std::unordered_set<file_id_t> visited_files;
     // Flags controlling expansion.
     const expand_flags_t flags;
     // Resolved items get inserted into here. This is transient of course.

@@ -33,6 +33,7 @@
 #include <set>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -54,6 +55,7 @@
 #include "sanity.h"
 #include "screen.h"
 #include "wutil.h"  // IWYU pragma: keep
+#include "xxhash64.h"
 
 #define DEFAULT_TERM1 "ansi"
 #define DEFAULT_TERM2 "dumb"
@@ -325,7 +327,21 @@ static env_universal_t *uvars() { return s_universal_variables; }
 struct const_string_set_comparer {
     bool operator()(const wchar_t *a, const wchar_t *b) { return wcscmp(a, b) < 0; }
 };
-typedef std::set<const wchar_t *, const_string_set_comparer> const_string_set_t;
+namespace std {
+    template<>
+    struct hash<const wchar_t *> {
+        size_t operator()(const wchar_t *p) const {
+            return XXHash64::hash(p, wcslen(p), 0);
+        }
+    };
+    template <>
+    struct equal_to<const wchar_t *> {
+        bool operator()(const wchar_t *a, const wchar_t *b) const {
+            return wcscmp(a, b) == 0;
+        }
+    };
+}
+typedef std::unordered_set<const wchar_t *> const_string_set_t;
 
 /// Table of variables that may not be set using the set command.
 static const_string_set_t env_read_only;

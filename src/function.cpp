@@ -12,7 +12,7 @@
 
 #include <map>
 #include <memory>
-#include <set>
+#include <unordered_set>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -33,7 +33,7 @@ typedef std::unordered_map<wcstring, function_info_t> function_map_t;
 static function_map_t loaded_functions;
 
 /// Functions that shouldn't be autoloaded (anymore).
-static std::set<wcstring> function_tombstones;
+static std::unordered_set<wcstring> function_tombstones;
 
 /// Lock for functions.
 static std::recursive_mutex functions_lock;
@@ -76,7 +76,7 @@ static int load(const wcstring &name) {
 }
 
 /// Insert a list of all dynamically loaded functions into the specified list.
-static void autoload_names(std::set<wcstring> &names, int get_hidden) {
+static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) {
     size_t i;
 
     const env_var_t path_var = env_get(L"fish_function_path");
@@ -282,13 +282,12 @@ bool function_copy(const wcstring &name, const wcstring &new_name) {
 }
 
 wcstring_list_t function_get_names(int get_hidden) {
-    std::set<wcstring> names;
+    std::unordered_set<wcstring> names;
     scoped_rlock locker(functions_lock);
     autoload_names(names, get_hidden);
 
-    function_map_t::const_iterator iter;
-    for (iter = loaded_functions.begin(); iter != loaded_functions.end(); ++iter) {
-        const wcstring &name = iter->first;
+    for (const auto &func : loaded_functions) {
+        const wcstring &name = func.first;
 
         // Maybe skip hidden.
         if (!get_hidden && (name.empty() || name.at(0) == L'_')) {

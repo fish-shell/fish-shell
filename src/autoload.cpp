@@ -84,9 +84,8 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
     // Mark that we're loading this. Hang onto the iterator for fast erasing later. Note that
     // std::set has guarantees about not invalidating iterators, so this is safe to do across the
     // callouts below.
-    typedef std::set<wcstring>::iterator set_iterator_t;
-    std::pair<set_iterator_t, bool> insert_result = is_loading_set.insert(cmd);
-    set_iterator_t where = insert_result.first;
+    auto insert_result = is_loading_set.insert(cmd);
+    auto where = insert_result.first;
     bool inserted = insert_result.second;
 
     // Warn and fail on infinite recursion. It's OK to do this because this function is only called

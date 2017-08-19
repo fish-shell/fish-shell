@@ -26,6 +26,7 @@
 #include <map>
 #include <numeric>
 #include <type_traits>
+#include <unordered_set>
 
 #include "common.h"
 #include "env.h"
@@ -846,7 +847,7 @@ void history_t::get_string_representation(wcstring *result, const wcstring &sepa
 
     bool first = true;
 
-    std::set<wcstring> seen;
+    std::unordered_set<wcstring> seen;
 
     // If we have a pending item, we skip the first encountered (i.e. last) new item.
     bool next_is_pending = this->has_pending_item;
@@ -1161,7 +1162,7 @@ void history_t::clear_file_state() {
 void history_t::compact_new_items() {
     // Keep only the most recent items with the given contents. This algorithm could be made more
     // efficient, but likely would consume more memory too.
-    std::set<wcstring> seen;
+    std::unordered_set<wcstring> seen;
     size_t idx = new_items.size();
     while (idx--) {
         const history_item_t &item = new_items[idx];

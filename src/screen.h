@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
-#include <set>
+#include <unordered_set>
 #include <unordered_map>
 #include <vector>
 
@@ -203,7 +203,7 @@ size_t escape_code_length(const wchar_t *code);
 class cached_esc_sequences_t {
    private:
     // Cached escape sequences we've already detected in the prompt and similar strings.
-    std::set<wcstring> cache;
+    std::unordered_set<wcstring> cache;
     // The escape sequence lengths we've cached. My original implementation used min and max
     // length variables. The cache was then iterated over using a loop like this:
     // `for (size_t l = min; l <= max; l++)`.

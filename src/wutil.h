@@ -143,6 +143,19 @@ struct file_id_t {
     int compare_file_id(const file_id_t &rhs) const;
 };
 
+#ifndef HASH_FILE_ID
+#define HASH_FILE_ID 1
+#include "xxhash64.h"
+namespace std {
+    template<>
+    struct hash<file_id_t> {
+        size_t operator()(const file_id_t &f) const {
+            return XXHash64::hash(&f, sizeof(f), 0);
+        }
+    };
+}
+#endif
+
 file_id_t file_id_for_fd(int fd);
 file_id_t file_id_for_path(const wcstring &path);
 

@@ -397,7 +397,7 @@ test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
 doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in |
 	@echo "  CAT AWK  $(em)$@$(sgr0)"
 	$v rm -f command_list.tmp command_list_toc.tmp $@
-	$v for i in $(sort $(HELP_SRC)); do \
+	$v for i in `printf "%s\n" $(HELP_SRC) | LC_ALL=C.UTF-8 sort`; do \
 		echo "<hr>" >>command_list.tmp; \
 		cat $$i >>command_list.tmp; \
 		echo >>command_list.tmp; \

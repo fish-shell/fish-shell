@@ -34,7 +34,7 @@ class env_universal_t {
 
     // Keys that have been modified, and need to be written. A value here that is not present in
     // vars indicates a deleted value.
-    std::unordered_set<wcstring, wcstring_hash> modified;
+    std::unordered_set<wcstring> modified;
 
     // Path that we save to. If empty, use the default.
     const wcstring explicit_vars_path;

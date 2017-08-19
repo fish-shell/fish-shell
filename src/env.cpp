@@ -323,35 +323,20 @@ static env_universal_t *uvars() { return s_universal_variables; }
 // Helper class for storing constant strings, without needing to wrap them in a wcstring.
 
 // Comparer for const string set.
-struct const_string_set_comparer {
-    bool operator()(const wchar_t *a, const wchar_t *b) { return wcscmp(a, b) < 0; }
-};
-namespace std {
-    template<>
-    struct hash<const wchar_t *> {
-        size_t operator()(const wchar_t *p) const { return xxhash(p, wcslen(p)); }
-    };
-    template <>
-    struct equal_to<const wchar_t *> {
-        bool operator()(const wchar_t *a, const wchar_t *b) const {
-            return wcscmp(a, b) == 0;
-        }
-    };
-}
-typedef std::unordered_set<const wchar_t *> const_string_set_t;
+typedef std::unordered_set<wcstring> const_string_set_t;
 
 /// Table of variables that may not be set using the set command.
 static const_string_set_t env_read_only;
 
 static bool is_read_only(const wcstring &key) {
-    return env_read_only.find(key.c_str()) != env_read_only.end();
+    return env_read_only.find(key) != env_read_only.end();
 }
 
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
 static const_string_set_t env_electric;
 
 static bool is_electric(const wcstring &key) {
-    return env_electric.find(key.c_str()) != env_electric.end();
+    return env_electric.find(key) != env_electric.end();
 }
 
 const env_var_t env_node_t::find_entry(const wcstring &key) {
@@ -877,18 +862,20 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     setup_var_dispatch_table();
 
     // These variables can not be altered directly by the user.
-    const wchar_t *const ro_keys[] = {
-        L"status", L"history", L"_", L"PWD", L"FISH_VERSION",
+    for (auto &k : {
+             wcstring(L"status"),
+             wcstring(L"history"),
+             wcstring(L"_"),
+             wcstring(L"PWD"),
+             wcstring(L"FISH_VERSION") }) {
+        env_read_only.emplace(std::move(k));
         // L"SHLVL" is readonly but will be inserted below after we increment it.
     };
-    for (size_t i = 0; i < sizeof ro_keys / sizeof *ro_keys; i++) {
-        env_read_only.insert(ro_keys[i]);
-    }
 
     // Names of all dynamically calculated variables.
-    env_electric.insert(L"history");
-    env_electric.insert(L"status");
-    env_electric.insert(L"umask");
+    env_electric.emplace(L"history");
+    env_electric.emplace(L"status");
+    env_electric.emplace(L"umask");
 
     // Now the environment variable handling is set up, the next step is to insert valid data.
 
@@ -960,7 +947,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         }
     }
     env_set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
-    env_read_only.insert(L"SHLVL");
+    env_read_only.emplace(L"SHLVL");
 
     // Set up the HOME variable.
     // Unlike $USER, it doesn't seem that `su`s pass this along

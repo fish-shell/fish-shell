@@ -439,7 +439,7 @@ class wildcard_expander_t {
     // The working directory to resolve paths against
     const wcstring working_directory;
     // The set of items we have resolved, used to efficiently avoid duplication.
-    std::unordered_set<wcstring, wcstring_hash> completion_set;
+    std::unordered_set<wcstring> completion_set;
     // The set of file IDs we have visited, used to avoid symlink loops.
     std::unordered_set<file_id_t> visited_files;
     // Flags controlling expansion.

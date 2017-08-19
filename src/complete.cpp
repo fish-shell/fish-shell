@@ -162,7 +162,7 @@ namespace std {
     template<>
     struct hash<completion_entry_t> {
         size_t operator()(const completion_entry_t &c) const {
-            wcstring_hash hasher;
+            std::hash<wcstring> hasher;
             return hasher((wcstring) c.cmd);
         }
     };
@@ -297,7 +297,7 @@ class completer_t {
 
     /// Table of completions conditions that have already been tested and the corresponding test
     /// results.
-    typedef std::unordered_map<wcstring, bool, wcstring_hash> condition_cache_t;
+    typedef std::unordered_map<wcstring, bool> condition_cache_t;
     condition_cache_t condition_cache;
 
     enum complete_type_t { COMPLETE_DEFAULT, COMPLETE_AUTOSUGGEST };
@@ -600,7 +600,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     wcstring lookup_cmd(L"__fish_describe_command ");
     lookup_cmd.append(escape_string(cmd_start, 1));
 
-    std::unordered_map<wcstring, wcstring, wcstring_hash> lookup;
+    std::unordered_map<wcstring, wcstring> lookup;
 
     // First locate a list of possible descriptions using a single call to apropos or a direct
     // search if we know the location of the whatis database. This can take some time on slower
@@ -1557,7 +1557,7 @@ wcstring complete_print() {
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 static std::mutex wrapper_lock;
-typedef std::unordered_map<wcstring, wcstring_list_t, wcstring_hash> wrapper_map_t;
+typedef std::unordered_map<wcstring, wcstring_list_t> wrapper_map_t;
 static wrapper_map_t &wrap_map() {
     ASSERT_IS_LOCKED(wrapper_lock);
     // A pointer is a little more efficient than an object as a static because we can elide the
@@ -1614,7 +1614,7 @@ wcstring_list_t complete_get_wrap_chain(const wcstring &command) {
     const wrapper_map_t &wraps = wrap_map();
 
     wcstring_list_t result;
-    std::unordered_set<wcstring, wcstring_hash> visited;  // set of visited commands
+    std::unordered_set<wcstring> visited;  // set of visited commands
     wcstring_list_t to_visit(1, command);  // stack of remaining-to-visit commands
 
     wcstring target;

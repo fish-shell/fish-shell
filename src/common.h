@@ -831,27 +831,18 @@ enum {
 #define ignore_result(x) ((void)(x))
 #endif
 
-#endif
-
 // Custom hash function used by unordered_map/unordered_set when key is const
 #ifndef CONST_WCSTRING_HASH
 #define CONST_WCSTRING_HASH 1
-#include "xxhash32.h"
-#include "xxhash64.h"
-inline size_t xxhash(const void *t, size_t size) {
-#if __SIZEOF_POINTER__ == __SIZEOF_INT__
-    return XXHash32::hash(t, size, 0);
-#else
-    return XXHash64::hash(t, size, 0);
-}
-struct wcstring_hash {
-    size_t operator()(const wcstring &w) const { return xxhash(w.c_str(), w.size()); }
-};
 namespace std {
 template <>
 struct hash<const wcstring> {
-    std::size_t operator()(const wcstring &w) const { return xxhash(w.c_str(), w.size()); }
+    std::size_t operator()(const wcstring &w) const {
+        std::hash<wcstring> hasher;
+        return hasher((wcstring)w);
+    }
 };
 }
 #endif
+
 #endif

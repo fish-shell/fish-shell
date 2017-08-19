@@ -148,7 +148,12 @@ struct file_id_t {
 namespace std {
     template<>
     struct hash<file_id_t> {
-        size_t operator()(const file_id_t &f) const { return xxhash(&f, sizeof(f)); }
+        size_t operator()(const file_id_t &f) const {
+            std::hash<decltype(f.device)> hasher1;
+            std::hash<decltype(f.inode)> hasher2;
+
+            return hasher1(f.device) ^ hasher2(f.inode);
+        }
     };
 }
 #endif

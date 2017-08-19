@@ -139,7 +139,7 @@ class history_t {
     uint32_t disable_automatic_save_counter;
 
     // Deleted item contents.
-    std::unordered_set<wcstring, wcstring_hash> deleted_items;
+    std::unordered_set<wcstring> deleted_items;
 
     // The mmaped region for the history file.
     const char *mmap_start;

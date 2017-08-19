@@ -55,7 +55,6 @@
 #include "sanity.h"
 #include "screen.h"
 #include "wutil.h"  // IWYU pragma: keep
-#include "xxhash64.h"
 
 #define DEFAULT_TERM1 "ansi"
 #define DEFAULT_TERM2 "dumb"
@@ -330,9 +329,7 @@ struct const_string_set_comparer {
 namespace std {
     template<>
     struct hash<const wchar_t *> {
-        size_t operator()(const wchar_t *p) const {
-            return XXHash64::hash(p, wcslen(p), 0);
-        }
+        size_t operator()(const wchar_t *p) const { return xxhash(p, wcslen(p)); }
     };
     template <>
     struct equal_to<const wchar_t *> {

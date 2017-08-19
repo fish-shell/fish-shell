@@ -267,7 +267,7 @@ static void mangle_1_completion_description(wcstring *str) {
 static void join_completions(comp_info_list_t *comps) {
     // A map from description to index in the completion list of the element with that description.
     // The indexes are stored +1.
-    std::unordered_map<wcstring, size_t> desc_table;
+    std::unordered_map<wcstring, size_t, wcstring_hash> desc_table;
 
     // Note that we mutate the completion list as we go, so the size changes.
     for (size_t i = 0; i < comps->size(); i++) {

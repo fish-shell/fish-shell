@@ -66,7 +66,7 @@ class argparse_cmd_opts_t {
     wcstring_list_t raw_exclusive_flags;
     wcstring_list_t argv;
     std::unordered_map<wchar_t, option_spec_t *> options;
-    std::unordered_map<wcstring, wchar_t> long_to_short_flag;
+    std::unordered_map<wcstring, wchar_t, wcstring_hash> long_to_short_flag;
     std::vector<std::vector<wchar_t>> exclusive_flag_sets;
 
     ~argparse_cmd_opts_t() {

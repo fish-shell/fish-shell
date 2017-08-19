@@ -67,7 +67,7 @@ static const wchar_t *const highlight_var[] = {L"fish_color_normal",
 /// Returns:
 ///     false: the filesystem is not case insensitive
 ///     true: the file system is case insensitive
-typedef std::unordered_map<wcstring, bool> case_sensitivity_cache_t;
+typedef std::unordered_map<wcstring, bool, wcstring_hash> case_sensitivity_cache_t;
 bool fs_is_case_insensitive(const wcstring &path, int fd,
                             case_sensitivity_cache_t &case_sensitivity_cache) {
     bool result = false;
@@ -146,7 +146,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
 
     // Don't test the same path multiple times, which can happen if the path is absolute and the
     // CDPATH contains multiple entries.
-    std::unordered_set<wcstring> checked_paths;
+    std::unordered_set<wcstring, wcstring_hash> checked_paths;
 
     // Keep a cache of which paths / filesystems are case sensitive.
     case_sensitivity_cache_t case_sensitivity_cache;

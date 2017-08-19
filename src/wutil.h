@@ -145,13 +145,10 @@ struct file_id_t {
 
 #ifndef HASH_FILE_ID
 #define HASH_FILE_ID 1
-#include "xxhash64.h"
 namespace std {
     template<>
     struct hash<file_id_t> {
-        size_t operator()(const file_id_t &f) const {
-            return XXHash64::hash(&f, sizeof(f), 0);
-        }
+        size_t operator()(const file_id_t &f) const { return xxhash(&f, sizeof(f)); }
     };
 }
 #endif

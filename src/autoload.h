@@ -28,7 +28,7 @@ file_access_attempt_t access_file(const wcstring &path, int mode);
 
 struct autoload_function_t {
     explicit autoload_function_t(bool placeholder)
-        : access(), is_loaded(false), is_placeholder(placeholder), is_internalized(false) {}
+        : access(), is_loaded(false), is_placeholder(placeholder) {}
 
     /// The last access attempt recorded
     file_access_attempt_t access;
@@ -37,8 +37,6 @@ struct autoload_function_t {
     /// Whether we are a placeholder that stands in for "no such function". If this is true, then
     /// is_loaded must be false.
     bool is_placeholder;
-    /// Whether this function came from a builtin "internalized" script.
-    bool is_internalized;
 };
 
 class env_vars_snapshot_t;

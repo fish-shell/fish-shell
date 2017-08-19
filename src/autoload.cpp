@@ -123,10 +123,8 @@ bool autoload_t::has_tried_loading(const wcstring &cmd) {
 }
 
 /// @return Whether this function is stale.
-/// Internalized functions can never be stale.
 static bool is_stale(const autoload_function_t *func) {
-    return !func->is_internalized &&
-           time(NULL) - func->access.last_checked > kAutoloadStalenessInterval;
+    return time(NULL) - func->access.last_checked > kAutoloadStalenessInterval;
 }
 
 autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcstring &cmd,
@@ -182,7 +180,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
 
         // If we can use this function, return whether we were able to access it.
         if (use_cached(func, really_load, allow_stale_functions)) {
-            return func->is_internalized || func->access.accessible;
+            return func->access.accessible;
         }
     }
 

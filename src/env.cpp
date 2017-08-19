@@ -1029,17 +1029,18 @@ static env_node_t *env_get_node(const wcstring &key) {
     return env;
 }
 
-/// Sets the variable with the specified name to a single value.
-int env_set_one(const wcstring &key, env_mode_flags_t mode, const wcstring &val) {
-    wcstring_list_t vals({
-        val,
-    });
-    return env_set(key, mode, vals);
-}
+static int set_umask(const wcstring *single_val, wcstring_list_t *list_val) {
+    long mask = -1;
+    if (single_val && !single_val->empty()) {
+        mask = fish_wcstol(single_val->c_str(), NULL, 8);
+    } else if (list_val && list_val->size() == 1 && !(*list_val)[0].empty()) {
+        mask = fish_wcstol((*list_val)[0].c_str(), NULL, 8);
+    }
 
-/// Sets the variable with the specified name to no (i.e., zero) values.
-int env_set_empty(const wcstring &key, env_mode_flags_t mode) {
-    return env_set(key, mode, wcstring_list_t());
+    if (errno || mask > 0777 || mask < 0) return ENV_INVALID;
+    // Do not actually create a umask variable. On env_get() it will be calculated.
+    umask(mask);
+    return ENV_OK;
 }
 
 /// Set the value of the environment variable whose name matches key to val.
@@ -1048,7 +1049,6 @@ int env_set_empty(const wcstring &key, env_mode_flags_t mode) {
 /// caller afterwards
 ///
 /// \param key The key
-/// \param val The value
 /// \param var_mode The type of the variable. Can be any combination of ENV_GLOBAL, ENV_LOCAL,
 /// ENV_EXPORT and ENV_USER. If mode is ENV_DEFAULT, the current variable space is searched and the
 /// current mode is used. If no current variable with the same name is found, ENV_LOCAL is assumed.
@@ -1061,18 +1061,18 @@ int env_set_empty(const wcstring &key, env_mode_flags_t mode) {
 /// * ENV_SCOPE, the variable cannot be set in the given scope. This applies to readonly/electric
 /// variables set from the local or universal scopes, or set as exported.
 /// * ENV_INVALID, the variable value was invalid. This applies only to special variables.
-int env_set(const wcstring &key, env_mode_flags_t var_mode, const wcstring_list_t &vals) {
+static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, bool swap_vals,
+                            const wcstring *single_val, wcstring_list_t *list_val) {
     ASSERT_IS_MAIN_THREAD();
     bool has_changed_old = vars_stack().has_changed_exported;
     int done = 0;
 
-    if (!vals.empty() && (key == L"PWD" || key == L"HOME")) {
+    if (single_val && !single_val->empty() && (key == L"PWD" || key == L"HOME")) {
         // Canonicalize our path; if it changes, recurse and try again.
-        assert(vals.size() == 1);
-        wcstring val_canonical = vals[0];
+        wcstring val_canonical = *single_val;
         path_make_canonical(val_canonical);
-        if (vals[0] != val_canonical) {
-            return env_set_one(key, var_mode, val_canonical);
+        if (*single_val != val_canonical) {
+            return env_set_internal(key, var_mode, swap_vals, &val_canonical, nullptr);
         }
     }
 
@@ -1087,18 +1087,8 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wcstring_list_
         return ENV_PERM;
     }
 
-    if (key == L"umask") {
-        // Set the new umask.
-        if (!vals.empty() && vals[0].size()) {
-            long mask = fish_wcstol(vals[0].c_str(), NULL, 8);
-            if (!errno && mask <= 0777 && mask >= 0) {
-                umask(mask);
-                // Do not actually create a umask variable, on env_get, it will be calculated
-                // dynamically.
-                return ENV_OK;
-            }
-        }
-        return ENV_INVALID;
+    if (key == L"umask") {  // set new umask
+        return set_umask(single_val, list_val);
     }
 
     if (var_mode & ENV_UNIVERSAL) {
@@ -1115,7 +1105,13 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wcstring_list_
             new_export = old_export;
         }
         if (uvars()) {
-            uvars()->set(key, vals, new_export);
+            if (list_val) {
+                uvars()->set(key, *list_val, new_export);
+            } else {
+                wcstring_list_t vals;
+                if (single_val) vals.push_back(*single_val);
+                uvars()->set(key, vals, new_export);
+            }
             env_universal_barrier();
             if (old_export || new_export) {
                 vars_stack().mark_changed_exported();
@@ -1164,7 +1160,13 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wcstring_list_
                     exportv = uvars()->get_export(key);
                 }
 
-                uvars()->set(key, vals, exportv);
+                if (list_val) {
+                    uvars()->set(key, *list_val, exportv);
+                } else {
+                    wcstring_list_t vals;
+                    if (single_val) vals.push_back(*single_val);
+                    uvars()->set(key, vals, exportv);
+                }
                 env_universal_barrier();
 
                 done = 1;
@@ -1184,7 +1186,15 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wcstring_list_
                 has_changed_new = true;
             }
 
-            var.set_vals(vals);
+            if (single_val) {
+                var.set_val(*single_val);
+            } else if (list_val) {
+                if (swap_vals) {
+                    var.swap_vals(*list_val);
+                } else {
+                    var.set_vals(*list_val);
+                }
+            }
             if (var_mode & ENV_EXPORT) {
                 // The new variable is exported.
                 var.exportv = true;
@@ -1213,6 +1223,22 @@ int env_set(const wcstring &key, env_mode_flags_t var_mode, const wcstring_list_
 
     react_to_variable_change(L"SET", key);
     return ENV_OK;
+}
+
+/// Sets the variable with the specified name to the given values. The `vals` will be set to an
+/// empty list on return since its content will be swapped into the `env_var_t` that is created.
+int env_set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t &vals, bool swap_vals) {
+    return env_set_internal(key, mode, swap_vals, nullptr, &vals);
+}
+
+/// Sets the variable with the specified name to a single value.
+int env_set_one(const wcstring &key, env_mode_flags_t mode, const wcstring &val) {
+    return env_set_internal(key, mode, false, &val, nullptr);
+}
+
+/// Sets the variable with the specified name without any (i.e., zero) values.
+int env_set_empty(const wcstring &key, env_mode_flags_t mode) {
+    return env_set_internal(key, mode, false, nullptr, nullptr);
 }
 
 /// Attempt to remove/free the specified key/value pair from the specified map.

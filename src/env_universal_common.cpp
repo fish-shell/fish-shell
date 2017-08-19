@@ -280,7 +280,7 @@ bool env_universal_t::get_export(const wcstring &name) const {
     return result;
 }
 
-void env_universal_t::set_internal(const wcstring &key, const wcstring_list_t &vals, bool exportv,
+void env_universal_t::set_internal(const wcstring &key, wcstring_list_t &vals, bool exportv,
                                    bool overwrite) {
     ASSERT_IS_LOCKED(lock);
     if (!overwrite && this->modified.find(key) != this->modified.end()) {
@@ -290,7 +290,7 @@ void env_universal_t::set_internal(const wcstring &key, const wcstring_list_t &v
 
     env_var_t &entry = vars[key];
     if (entry.exportv != exportv || entry.as_list() != vals) {
-        entry.set_vals(vals);
+        entry.swap_vals(vals);
         entry.exportv = exportv;
 
         // If we are overwriting, then this is now modified.
@@ -300,7 +300,7 @@ void env_universal_t::set_internal(const wcstring &key, const wcstring_list_t &v
     }
 }
 
-void env_universal_t::set(const wcstring &key, const wcstring_list_t &vals, bool exportv) {
+void env_universal_t::set(const wcstring &key, wcstring_list_t &vals, bool exportv) {
     scoped_lock locker(lock);
     this->set_internal(key, vals, exportv, true /* overwrite */);
 }
@@ -839,7 +839,7 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t
                 env_var_t &entry = (*vars)[key];
                 entry.exportv = exportv;
                 wcstring_list_t values = decode_serialized(val);
-                entry.set_vals(values);
+                entry.swap_vals(values);
             }
         } else {
             debug(1, PARSE_ERR, msg);

@@ -645,7 +645,8 @@ static void set_argparse_result_vars(argparse_cmd_opts_t &opts) {
         if (!opt_spec->num_seen) continue;
 
         if (opt_spec->short_flag_valid) {
-            env_set(var_name_prefix + opt_spec->short_flag, ENV_LOCAL, opt_spec->vals);
+            env_set(var_name_prefix + opt_spec->short_flag, ENV_LOCAL, opt_spec->vals,
+                    opt_spec->long_flag.empty());
         }
         if (!opt_spec->long_flag.empty()) {
             // We do a simple replacement of all non alphanum chars rather than calling

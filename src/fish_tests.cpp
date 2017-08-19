@@ -2543,11 +2543,10 @@ static int test_universal_helper(int x) {
     for (int j = 0; j < UVARS_PER_THREAD; j++) {
         const wcstring key = format_string(L"key_%d_%d", x, j);
         const wcstring val = format_string(L"val_%d_%d", x, j);
-        uvars.set(key,
-                  wcstring_list_t({
+        wcstring_list_t vals({
                       val,
-                  }),
-                  false);
+                  });
+        uvars.set(key, vals, false);
         bool synced = uvars.sync(callbacks);
         if (!synced) {
             err(L"Failed to sync universal variables after modification");
@@ -2611,77 +2610,47 @@ static void test_universal_callbacks() {
     if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
     env_universal_t uvars1(UVARS_TEST_PATH);
     env_universal_t uvars2(UVARS_TEST_PATH);
+    wcstring_list_t vals;
 
     // Put some variables into both.
-    uvars1.set(L"alpha",
-               wcstring_list_t({
-                   L"1",
-               }),
-               false);
-    uvars1.set(L"beta",
-               wcstring_list_t({
-                   L"1",
-               }),
-               false);
-    uvars1.set(L"delta",
-               wcstring_list_t({
-                   L"1",
-               }),
-               false);
-    uvars1.set(L"epsilon",
-               wcstring_list_t({
-                   L"1",
-               }),
-               false);
-    uvars1.set(L"lambda",
-               wcstring_list_t({
-                   L"1",
-               }),
-               false);
-    uvars1.set(L"kappa",
-               wcstring_list_t({
-                   L"1",
-               }),
-               false);
-    uvars1.set(L"omicron",
-               wcstring_list_t({
-                   L"1",
-               }),
-               false);
+    vals.push_back(L"a1");
+    uvars1.set(L"alpha", vals, false);
+    assert(vals.size() == 0);
+    vals.push_back(L"b1");
+    uvars1.set(L"beta", vals, false);
+    vals.push_back(L"d1");
+    uvars1.set(L"delta", vals, false);
+    vals.push_back(L"e1");
+    uvars1.set(L"epsilon", vals, false);
+    vals.push_back(L"l1");
+    uvars1.set(L"lambda", vals, false);
+    vals.push_back(L"k1");
+    uvars1.set(L"kappa", vals, false);
+    vals.push_back(L"o1");
+    uvars1.set(L"omicron", vals, false);
 
     uvars1.sync(callbacks);
     uvars2.sync(callbacks);
 
     // Change uvars1.
-    uvars1.set(L"alpha",
-               wcstring_list_t({
-                   L"2",
-               }),
-               false);  // changes value
-    uvars1.set(L"beta",
-               wcstring_list_t({
-                   L"1",
-               }),
-               true);         // changes export
-    uvars1.remove(L"delta");  // erases value
-    uvars1.set(L"epsilon",
-               wcstring_list_t({
-                   L"1",
-               }),
-               false);  // changes nothing
+    vals.push_back(L"a2");
+    uvars1.set(L"alpha", vals, false);    // changes value
+    vals.clear();  // clear the old value
+    vals.push_back(L"b2");
+    uvars1.set(L"beta", vals, true);      // changes export
+
+    uvars1.remove(L"delta");              // erases value
+
+    vals.clear();  // clear the old value
+    vals.push_back(L"e1");
+    uvars1.set(L"epsilon", vals, false);  // changes nothing
     uvars1.sync(callbacks);
 
     // Change uvars2. It should treat its value as correct and ignore changes from uvars1.
-    uvars2.set(L"lambda",
-               wcstring_list_t({
-                   L"1",
-               }),
-               false);  // same value
-    uvars2.set(L"kappa",
-               wcstring_list_t({
-                   L"2",
-               }),
-               false);  // different value
+    vals.push_back(L"l2");
+    uvars2.set(L"lambda", vals, false);  // same value
+    vals.push_back(L"k2");
+    uvars2.set(L"kappa", vals, false);   // different value
 
     // Now see what uvars2 sees.
     callbacks.clear();
@@ -2694,10 +2663,10 @@ static void test_universal_callbacks() {
     do_test(callbacks.size() == 3);
     do_test(callbacks.at(0).type == SET);
     do_test(callbacks.at(0).key == L"alpha");
-    do_test(callbacks.at(0).val == L"2");
+    do_test(callbacks.at(0).val == L"a2");
     do_test(callbacks.at(1).type == SET_EXPORT);
     do_test(callbacks.at(1).key == L"beta");
-    do_test(callbacks.at(1).val == L"1");
+    do_test(callbacks.at(1).val == L"b2");
     do_test(callbacks.at(2).type == ERASE);
     do_test(callbacks.at(2).key == L"delta");
     do_test(callbacks.at(2).val == L"");

@@ -44,8 +44,7 @@ class env_universal_t {
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
 
-    void set_internal(const wcstring &key, const wcstring_list_t &val, bool exportv,
-                      bool overwrite);
+    void set_internal(const wcstring &key, wcstring_list_t &val, bool exportv, bool overwrite);
     bool remove_internal(const wcstring &name);
 
     // Functions concerned with saving.
@@ -78,7 +77,7 @@ class env_universal_t {
     bool get_export(const wcstring &name) const;
 
     // Sets a variable.
-    void set(const wcstring &key, const wcstring_list_t &val, bool exportv);
+    void set(const wcstring &key, wcstring_list_t &val, bool exportv);
 
     // Removes a variable. Returns true if it was found, false if not.
     bool remove(const wcstring &name);

@@ -284,8 +284,8 @@ static int my_env_path_setup(const wchar_t *cmd, const wchar_t *key,  //!OCLINT(
 
 /// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
-static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope,
-                      const wcstring_list_t &list, io_streams_t &streams) {
+static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstring_list_t &list,
+                      io_streams_t &streams) {
     int retval;
 
     if (is_path_variable(key)) {

@@ -116,12 +116,13 @@ class env_var_t {
 
     const wcstring get_name() const { return name; }
 
+    void set_vals(wcstring_list_t &l) { vals = l; }
+    void swap_vals(wcstring_list_t &l) { vals.swap(l); }
     void set_val(const wcstring &s) {
         vals = {
             s,
         };
     }
-    void set_vals(const wcstring_list_t &l) { vals = l; }
 
     env_var_t &operator=(const env_var_t &var) {
         this->vals = var.vals;
@@ -156,8 +157,10 @@ wcstring_list_t decode_serialized(const wcstring &s);
 /// Gets the variable with the specified name, or env_var_t::missing_var if it does not exist.
 env_var_t env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
 
-/// Sets the variable with the specified name to the given values.
-int env_set(const wcstring &key, env_mode_flags_t mode, const wcstring_list_t &vals);
+/// Sets the variable with the specified name to the given values. The `vals` will be set to an
+/// empty list on return since its content will be swapped into the `env_var_t` that is created.
+int env_set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t &vals,
+            bool swap_vals = true);
 
 /// Sets the variable with the specified name to a single value.
 int env_set_one(const wcstring &key, env_mode_flags_t mode, const wcstring &val);

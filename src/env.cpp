@@ -85,6 +85,9 @@ bool term_has_xn = false;
 /// found in `TERMINFO_DIRS` we don't to call `handle_curses()` before we've imported the latter.
 static bool env_initialized = false;
 
+typedef std::map<const wcstring, void (*)(const wcstring &, const wcstring &)> var_dispatch_table_t;
+var_dispatch_table_t var_dispatch_table;
+
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
 static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", L"LC_ADDRESS",
@@ -348,9 +351,6 @@ static mode_t get_umask() {
     return res;
 }
 
-/// Check if the specified variable is a timezone variable.
-static bool var_is_timezone(const wcstring &key) { return key == L"TZ"; }
-
 /// Properly sets all timezone information.
 static void handle_timezone(const wchar_t *env_var_name) {
     // const env_var_t var = env_get(env_var_name, ENV_EXPORT);
@@ -399,16 +399,6 @@ static void fix_colon_delimited_var(const wcstring &var_name) {
     }
 }
 
-/// Check if the specified variable is a locale variable.
-static bool var_is_locale(const wcstring &key) {
-    for (auto var_name : locale_variables) {
-        if (key == var_name) {
-            return true;
-        }
-    }
-    return false;
-}
-
 /// Initialize the locale subsystem.
 static void init_locale() {
     // We have to make a copy because the subsequent setlocale() call to change the locale will
@@ -443,16 +433,6 @@ static void init_locale() {
     }
 #endif
     free(old_msg_locale);
-}
-
-/// Check if the specified variable is a locale variable.
-static bool var_is_curses(const wcstring &key) {
-    for (auto var_name : curses_variables) {
-        if (key == var_name) {
-            return true;
-        }
-    }
-    return false;
 }
 
 /// True if we think we can set the terminal title else false.
@@ -629,33 +609,18 @@ static bool variable_is_colon_delimited_var(const wcstring &str) {
 static void react_to_variable_change(const wchar_t *op, const wcstring &key) {
     // Don't do any of this until `env_init()` has run. We only want to do this in response to
     // variables set by the user; e.g., in a script like *config.fish* or interactively or as part
-    // of loading the universal variables for the first time.
+    // of loading the universal variables for the first time. Variables we import from the
+    // environment or that are otherwise set by fish before this gets called have to explicitly
+    // call the appropriate functions to put the value of the var into effect.
     if (!env_initialized) return;
 
-    if (var_is_locale(key)) {
-        init_locale();
-    } else if (variable_is_colon_delimited_var(key)) {
-        fix_colon_delimited_var(key);
-    } else if (var_is_curses(key)) {
-        init_curses();
-        init_input();
-    } else if (var_is_timezone(key)) {
-        handle_timezone(key.c_str());
-    } else if (key == L"fish_term256" || key == L"fish_term24bit") {
-        update_fish_color_support();
-        reader_react_to_color_change();
+    auto dispatch = var_dispatch_table.find(key);
+    if (dispatch != var_dispatch_table.end()) {
+        (*dispatch->second)(op, key);
+    } else if (string_prefixes_string(L"_fish_abbr_", key)) {
+        update_abbr_cache(op, key);
     } else if (string_prefixes_string(L"fish_color_", key)) {
         reader_react_to_color_change();
-    } else if (key == L"fish_escape_delay_ms") {
-        update_wait_on_escape_ms();
-    } else if (key == L"LINES" || key == L"COLUMNS") {
-        invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
-    } else if (key == L"FISH_READ_BYTE_LIMIT") {
-        env_set_read_limit();
-    } else if (key == L"FISH_HISTORY") {
-        reader_change_history(history_session_id().c_str());
-    } else if (wcsncmp(key.c_str(), L"_fish_abbr_", wcslen(L"_fish_abbr_")) == 0) {
-        update_abbr_cache(op, key);
     }
 }
 
@@ -813,7 +778,87 @@ void env_universal_barrier() {
     env_universal_callbacks(callbacks);
 }
 
+static void handle_fish_term_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    UNUSED(var_name);
+    update_fish_color_support();
+    reader_react_to_color_change();
+}
+
+static void handle_escape_delay_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    UNUSED(var_name);
+    update_wait_on_escape_ms();
+}
+
+static void handle_term_size_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    UNUSED(var_name);
+    invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
+}
+
+static void handle_read_limit_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    UNUSED(var_name);
+    env_set_read_limit();
+}
+
+static void handle_fish_history_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    UNUSED(var_name);
+    reader_change_history(history_session_id().c_str());
+}
+
+static void handle_tz_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    handle_timezone(var_name.c_str());
+}
+
+static void handle_magic_colon_var_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    fix_colon_delimited_var(var_name);
+}
+
+static void handle_locale_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    UNUSED(var_name);
+    init_locale();
+}
+
+static void handle_curses_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    UNUSED(var_name);
+    init_curses();
+}
+
+/// Populate the dispatch table used by `react_to_variable_change()` to efficiently call the
+/// appropriate function to handle a change to a variable.
+static void setup_var_dispatch_table() {
+    for (auto var_name : locale_variables) {
+        var_dispatch_table.emplace(var_name, handle_locale_change);
+    }
+
+    for (auto var_name : curses_variables) {
+        var_dispatch_table.emplace(var_name, handle_curses_change);
+    }
+
+    for (auto var_name : colon_delimited_variable) {
+        var_dispatch_table.emplace(var_name, handle_magic_colon_var_change);
+    }
+
+    var_dispatch_table.emplace(L"fish_term256", handle_fish_term_change);
+    var_dispatch_table.emplace(L"fish_term24bit", handle_fish_term_change);
+    var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
+    var_dispatch_table.emplace(L"LINES", handle_term_size_change);
+    var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
+    var_dispatch_table.emplace(L"FISH_READ_BYTE_LIMIT", handle_read_limit_change);
+    var_dispatch_table.emplace(L"FISH_HISTORY", handle_fish_history_change);
+    var_dispatch_table.emplace(L"TZ", handle_tz_change);
+}
+
 void env_init(const struct config_paths_t *paths /* or NULL */) {
+    setup_var_dispatch_table();
+
     // These variables can not be altered directly by the user.
     const wchar_t *const ro_keys[] = {
         L"status", L"history", L"_", L"PWD", L"FISH_VERSION",

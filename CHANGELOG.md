@@ -16,6 +16,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `complete` now has a `-k` and `--keep-order` option to keep the order of the OPTION_ARGUMENTS (#361).
 - Local exported (`set -lx`) vars are now visible to functions (#1091).
 - `abbr` has been reimplemented to be faster. This means the old `fish_user_abbreviations` variable is ignored (#4048).
+- Setting variables is much faster meaning fish is much faster (#4200, #4341).
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

@@ -646,12 +646,11 @@ static int set_var_array(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_t
     UNUSED(streams);
 
     if (opts.prepend || opts.append) {
-        int scope = compute_scope(opts);
         if (opts.prepend) {
             for (int i = 0; i < argc; i++) new_values.push_back(argv[i]);
         }
 
-        env_var_t var_str = env_get(varname, scope);
+        env_var_t var_str = env_get(varname, ENV_DEFAULT);
         wcstring_list_t var_array;
         if (!var_str.missing()) var_str.to_list(var_array);
         new_values.insert(new_values.end(), var_array.begin(), var_array.end());

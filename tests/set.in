@@ -47,3 +47,10 @@ logmsg Appending and prepending at same time works
 set -g var5 abc def
 set -a -p var5 0 x 0
 set --show var5
+
+logmsg Setting local scope when no local scope of the var uses the closest scope
+set -g var6 ghi jkl
+begin
+    set -l -a var6 mno
+    set --show var6
+end

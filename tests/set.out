@@ -88,3 +88,15 @@ $var5[7]: length=1 value=|x|
 $var5[8]: length=1 value=|0|
 $var5: not set in universal scope
 
+
+####################
+# Setting local scope when no local scope of the var uses the closest scope
+$var6: set in local scope, unexported, with 3 elements
+$var6[1]: length=3 value=|ghi|
+$var6[2]: length=3 value=|jkl|
+$var6[3]: length=3 value=|mno|
+$var6: set in global scope, unexported, with 2 elements
+$var6[1]: length=3 value=|ghi|
+$var6[2]: length=3 value=|jkl|
+$var6: not set in universal scope
+

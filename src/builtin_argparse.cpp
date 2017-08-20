@@ -118,6 +118,13 @@ static int check_for_mutually_exclusive_flags(argparse_cmd_opts_t &opts, io_stre
                             if (xopt_spec->short_flag_valid) flag2 += L"/";
                             flag2 += xopt_spec->long_flag;
                         }
+                        // We want the flag order to be deterministic. Primarily to make unit
+                        // testing easier.
+                        if (flag1 > flag2) {
+                            wcstring tmp(flag1);
+                            flag2 = flag1;
+                            flag1 = tmp;
+                        }
                         streams.err.append_format(
                             _(L"%ls: Mutually exclusive flags '%ls' and `%ls` seen\n"),
                             opts.name.c_str(), flag1.c_str(), flag2.c_str());

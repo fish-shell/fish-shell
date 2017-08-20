@@ -122,8 +122,8 @@ static int check_for_mutually_exclusive_flags(argparse_cmd_opts_t &opts, io_stre
                         // testing easier.
                         if (flag1 > flag2) {
                             wcstring tmp(flag1);
-                            flag2 = flag1;
-                            flag1 = tmp;
+                            flag1 = flag2;
+                            flag2 = tmp;
                         }
                         streams.err.append_format(
                             _(L"%ls: Mutually exclusive flags '%ls' and `%ls` seen\n"),

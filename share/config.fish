@@ -206,7 +206,7 @@ end
 #
 if status --is-login
     # OS X-ism: Call path_helper and set its output to $PATH and $MANPATH.
-    if test -x /usr/libexec/path_helper
+    if command -sq /usr/libexec/path_helper
         set -l lines (/usr/libexec/path_helper -c)
         if test (count $lines) -ge 1
             and set -l match (string match -r '^setenv PATH "(.*)";$' $lines[1])

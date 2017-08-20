@@ -473,11 +473,15 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         }
 
         const wcstring &val = argument_sequence.at(i);
-        // This is wrong. It should or in ENV_USER and test if ENV_PERM is returned.
-        // TODO: Fix this so it correctly handles read-only vars.
-        env_set_one(for_var_name, ENV_LOCAL, val);
-        fb->loop_status = LOOP_NORMAL;
+        int retval = env_set_one(for_var_name, ENV_LOCAL | ENV_USER, val);
+        if (retval != ENV_OK) {
+            report_error(var_name_node, L"You cannot use read-only variable '%ls' in a for loop",
+                         for_var_name.c_str());
+            ret = parse_execution_errored;
+            break;
+        }
 
+        fb->loop_status = LOOP_NORMAL;
         this->run_job_list(block_contents, fb);
 
         if (this->cancellation_reason(fb) == execution_cancellation_loop_control) {
@@ -493,7 +497,6 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
     }
 
     parser->pop_block(fb);
-
     return ret;
 }
 

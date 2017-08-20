@@ -88,6 +88,9 @@ pipe 12
 Checking for infinite loops in no-execute
 
 ####################
+# For loops with read-only vars is an error (#4342)
+
+####################
 # Comments allowed in between lines (#1987)
 before comment after comment
 

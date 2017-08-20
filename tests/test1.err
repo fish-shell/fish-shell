@@ -33,6 +33,12 @@
 # Make sure while loops don't run forever with no-exec (#1543)
 
 ####################
+# For loops with read-only vars is an error (#4342)
+fish: You cannot use read-only variable 'status' in a for loop
+for status in a b c
+    ^
+
+####################
 # Comments allowed in between lines (#1987)
 
 ####################

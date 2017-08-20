@@ -17,6 +17,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Local exported (`set -lx`) vars are now visible to functions (#1091).
 - `abbr` has been reimplemented to be faster. This means the old `fish_user_abbreviations` variable is ignored (#4048).
 - Setting variables is much faster meaning fish is much faster (#4200, #4341).
+- Using a read-only variable in a for loop is now an error. Note that this never worked. It simply failed to set the for loop var and thus silently produced incorrect results (#4342).
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

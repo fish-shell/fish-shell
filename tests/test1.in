@@ -146,10 +146,14 @@ echo "/bin/echo pipe 10 <&10 10<&-" | source 10<&0
 echo "/bin/echo pipe 11 <&11 11<&-" | source 11<&0
 echo "/bin/echo pipe 12 <&12 12<&-" | source 12<&0
 
-
 logmsg "Make sure while loops don't run forever with no-exec (#1543)"
 echo "Checking for infinite loops in no-execute"
 echo "while true; end" | ../test/root/bin/fish --no-execute
+
+logmsg "For loops with read-only vars is an error (#4342)"
+for status in a b c
+  echo $status
+end
 
 logmsg 'Comments allowed in between lines (#1987)'
 echo before comment \

@@ -462,6 +462,16 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         return ret;
     }
 
+    env_var_t var = env_get(for_var_name, ENV_DEFAULT);
+    if (var.missing() || var.read_only()) {
+        int retval = env_set_empty(for_var_name, ENV_LOCAL | ENV_USER);
+        if (retval != ENV_OK) {
+            report_error(var_name_node, L"You cannot use read-only variable '%ls' in a for loop",
+                         for_var_name.c_str());
+            return parse_execution_errored;
+        }
+    }
+
     for_block_t *fb = parser->push_block<for_block_t>();
 
     // Now drive the for loop.
@@ -473,13 +483,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         }
 
         const wcstring &val = argument_sequence.at(i);
-        int retval = env_set_one(for_var_name, ENV_LOCAL | ENV_USER, val);
-        if (retval != ENV_OK) {
-            report_error(var_name_node, L"You cannot use read-only variable '%ls' in a for loop",
-                         for_var_name.c_str());
-            ret = parse_execution_errored;
-            break;
-        }
+        int retval = env_set_one(for_var_name, ENV_DEFAULT | ENV_USER, val);
 
         fb->loop_status = LOOP_NORMAL;
         this->run_job_list(block_contents, fb);

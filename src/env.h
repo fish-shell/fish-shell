@@ -102,6 +102,7 @@ class env_var_t {
     bool empty(void) const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
     bool missing(void) const { return is_missing; }
     bool missing_or_empty(void) const { return missing() || empty(); }
+    bool read_only(void) const;
 
     bool matches_string(const wcstring &str) {
         if (is_missing) return false;

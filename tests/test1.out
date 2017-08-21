@@ -91,6 +91,30 @@ Checking for infinite loops in no-execute
 # For loops with read-only vars is an error (#4342)
 
 ####################
+# For loop control vars available outside the for block
+$loop_var: set in local scope, unexported, with 1 elements
+$loop_var[1]: length=1 value=|c|
+$loop_var: not set in global scope
+$loop_var: not set in universal scope
+
+$loop_var: not set in local scope
+$loop_var: set in global scope, unexported, with 1 elements
+$loop_var[1]: length=1 value=|b|
+$loop_var: not set in universal scope
+
+$loop_var: set in local scope, unexported, with 1 elements
+$loop_var[1]: length=2 value=|cc|
+$loop_var: set in global scope, unexported, with 1 elements
+$loop_var[1]: length=1 value=|b|
+$loop_var: not set in universal scope
+
+$loop_var: not set in local scope
+$loop_var: set in global scope, unexported, with 1 elements
+$loop_var[1]: length=1 value=|b|
+$loop_var: not set in universal scope
+
+
+####################
 # Comments allowed in between lines (#1987)
 before comment after comment
 

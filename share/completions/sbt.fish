@@ -11,6 +11,7 @@
 complete -c sbt -f -a '(string split "\n" "
     about            Display basic information about sbt and the build
     clean            Delete files produced by the build
+    client           Connect to a server with an interactive sbt prompt 
     compile          Compile sources
     console          Scala REPL: project classes
     consoleQuick     Scala REPL: only project dependencies

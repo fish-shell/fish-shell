@@ -19,7 +19,8 @@ function __fish_apt_use_package --description 'Test if apt command should have p
 end
 
 function __fish_apt_subcommand
-    set subcommand $argv[1]; set -e argv[1]
+    set subcommand $argv[1]
+    set -e argv[1]
     complete -f -c apt -n '__fish_apt_no_subcommand' -a $subcommand $argv
 end
 
@@ -33,7 +34,8 @@ function __fish_apt_using_subcommand --description 'Test if given subcommand is 
 end
 
 function __fish_apt_option
-    set subcommand $argv[1]; set -e argv[1]
+    set subcommand $argv[1]
+    set -e argv[1]
     complete -f -c apt -n "__fish_apt_using_subcommand $subcommand" $argv
 end
 

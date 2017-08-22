@@ -67,6 +67,15 @@ extra_functionsdir = @extra_functionsdir@
 extra_confdir = @extra_confdir@
 
 #
+# muparser
+#
+MUPARSER_DIR = muparser
+MUPARSER_LIBDIR = $(MUPARSER_DIR)/lib
+MUPARSER_LIB = $(MUPARSER_LIBDIR)/libmuparser.a
+MUPARSER_H = $(MUPARSER_DIR)/include/muParser.h
+EXTRA_MUPARSER = @EXTRA_MUPARSER@
+
+#
 # pcre2
 #
 PCRE2_WIDTH = @WCHAR_T_BITS@
@@ -80,7 +89,7 @@ EXTRA_PCRE2 = @EXTRA_PCRE2@
 # Various flags
 #
 CXXFLAGS = @CXXFLAGS@ $(EXTRA_CXXFLAGS)
-CPPFLAGS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\" -DDOCDIR=L\"$(docdir)\" -iquote. -iquote./src/
+CPPFLAGS = -D_UNICODE=1 -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\" -DDOCDIR=L\"$(docdir)\" -iquote. -iquote./src/
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 LDFLAGS_FISH = ${LDFLAGS} @LDFLAGS_FISH@
@@ -104,7 +113,7 @@ FISH_OBJS := obj/autoload.o obj/builtin.o obj/builtin_bg.o obj/builtin_bind.o ob
 	obj/builtin_disown.o obj/builtin_echo.o obj/builtin_emit.o \
 	obj/builtin_exit.o obj/builtin_fg.o obj/builtin_function.o \
 	obj/builtin_functions.o obj/builtin_argparse.o obj/builtin_history.o \
-	obj/builtin_jobs.o obj/builtin_printf.o obj/builtin_pwd.o \
+	obj/builtin_jobs.o obj/builtin_math.o obj/builtin_printf.o obj/builtin_pwd.o \
 	obj/builtin_random.o obj/builtin_read.o obj/builtin_realpath.o \
 	obj/builtin_return.o obj/builtin_set.o obj/builtin_set_color.o \
 	obj/builtin_source.o obj/builtin_status.o obj/builtin_string.o \
@@ -559,6 +568,10 @@ ifdef EXTRA_PCRE2
 src/builtin_string.cpp: $(PCRE2_H)
 endif
 
+#ifdef EXTRA_MUPARSER
+#src/env.cpp: $(MUPARSER_H)
+#endif
+
 #
 # Generate the internal help functions by making doxygen create
 # man-pages. The convertion path looks like this:
@@ -817,7 +830,7 @@ obj: | show-MKDIR_P
 #
 # Build the fish program.
 #
-fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2)
+fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2) ${EXTRA_MUPARSER}
 	@echo "  CXX LD   $(em)$@$(sgr0)"
 	$v $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
@@ -829,24 +842,32 @@ $(PCRE2_H):
 	@echo "  autoconf $(em)$@$(sgr0)"
 	$v (cd $(PCRE2_DIR) && ./config.status)
 
+$(MUPARSER_LIB): $(MUPARSER_H)
+	@echo "  MAKE     $(em)$@$(sgr0)"
+	$v $(MAKE) V=$(V) -C $(MUPARSER_DIR) CPPFLAGS=-D_UNICODE=1 lib/libmuparser.a
+
+$(MUPARSER_H):
+	@echo "  autoconf $(em)$@$(sgr0)"
+	$v (cd $(MUPARSER_DIR) && ./config.status)
+
 #
 # Build the fish_tests program.
 #
-fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2)
+fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2) ${EXTRA_MUPARSER}
 	@echo "  CXX LD   $(em)$@$(sgr0)"
 	$v $(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_indent program.
 #
-fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
+fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2) ${EXTRA_MUPARSER}
 	@echo "  CXX LD   $(em)$@$(sgr0)"
 	$v $(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_key_reader program to show input from the terminal.
 #
-fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
+fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2) ${EXTRA_MUPARSER}
 	@echo "  CXX LD   $(em)$@$(sgr0)"
 	$v $(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
@@ -899,6 +920,8 @@ style-all:
 distclean: clean
 	-$v test ! -f $(PCRE2_DIR)/Makefile || \
 	$(MAKE) V=$(V) -C $(PCRE2_DIR) distclean
+	-$v test ! -f $(MUPARSER_DIR)/Makefile || \
+	$(MAKE) V=$(V) -C $(MUPARSER_DIR) distclean
 	$v rm -rf config.status config.log config.h Makefile autom4te.cache aclocal.m4
 .PHONY: distclean
 
@@ -917,10 +940,15 @@ clean:
 ifeq ($(V), 0 )
 	-@test ! -f $(PCRE2_DIR)/Makefile || \
 	$(MAKE) -C $(PCRE2_DIR) clean
+	-@test ! -f $(MUPARSER_DIR)/Makefile || \
+	$(MAKE) -C $(MUPARSER_DIR) clean
 else
 	-@test ! -f $(PCRE2_DIR)/Makefile || \
 	$(MAKE) -s -C $(PCRE2_DIR) clean > /dev/null || \
 	$(MAKE) -s -C $(PCRE2_DIR) clean
+	-@test ! -f $(MUPARSER_DIR)/Makefile || \
+	$(MAKE) -s -C $(MUPARSER_DIR) clean > /dev/null || \
+	$(MAKE) -s -C $(MUPARSER_DIR) clean
 endif
 	$v rm -f obj/*.o *.o doc.h doc.tmp
 	$v rm -f doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
@@ -960,7 +988,7 @@ obj/builtin.o: src/builtin_complete.h src/builtin_contains.h
 obj/builtin.o: src/builtin_disown.h src/builtin_echo.h src/builtin_emit.h
 obj/builtin.o: src/builtin_exit.h src/builtin_fg.h src/builtin_functions.h
 obj/builtin.o: src/builtin_argparse.h src/builtin_history.h src/builtin_jobs.h
-obj/builtin.o: src/builtin_printf.h src/builtin_pwd.h src/builtin_random.h
+obj/builtin.o: src/builtin_math.h src/builtin_printf.h src/builtin_pwd.h src/builtin_random.h
 obj/builtin.o: src/builtin_read.h src/builtin_realpath.h src/builtin_return.h
 obj/builtin.o: src/builtin_set.h src/builtin_set_color.h src/builtin_source.h
 obj/builtin.o: src/builtin_status.h src/builtin_string.h src/builtin_test.h
@@ -1054,6 +1082,8 @@ obj/builtin_jobs.o: config.h src/builtin.h src/common.h src/fallback.h
 obj/builtin_jobs.o: src/signal.h src/io.h src/proc.h src/parse_tree.h
 obj/builtin_jobs.o: src/parse_constants.h src/tokenizer.h src/wgetopt.h
 obj/builtin_jobs.o: src/wutil.h
+obj/builtin_math.o: config.h src/builtin.h src/common.h
+obj/builtin_math.o: src/builtin_math.h src/io.h src/wutil.h
 obj/builtin_printf.o: config.h src/builtin.h src/common.h src/fallback.h
 obj/builtin_printf.o: src/signal.h src/io.h src/wutil.h
 obj/builtin_pwd.o: config.h src/builtin.h src/common.h src/fallback.h

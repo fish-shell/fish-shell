@@ -27,6 +27,7 @@ At runtime, fish requires:
 * a curses implementation such as ncurses (which should provide the `tput` command).
 * gettext, if you need the localizations.
 * PCRE2, due to the regular expression support contained in the `string` builtin. A copy is included with the source code, and will be used automatically if it does not already exist on your system.
+* MuParser for the `math` builtin. A copy is included with the source code.
 * a number of common UNIX utilities:
     * an awk implementation, such as gawk, mawk, etc
     * coreutils --- at least basename, cat, cut, date, dircolors, dirname, ls, mkdir, mkfifo, mktemp, rm, seq, sort, stat, stty, tail, tr, tty, uname, uniq, wc, whoami

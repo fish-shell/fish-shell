@@ -1,0 +1,160 @@
+<?xml version="1.0" ?>
+
+<!-- RCS-ID: $Id: muparser.bkl 635 2012-12-22 10:58:11Z ibg $ -->
+
+<makefile>
+
+    <requires version="0.2.5"/>
+    <using module="pkgconfig"/>
+
+    <include file="presets/debugopt.bkl"/>
+    <include file="presets/sharedopt.bkl"/>
+    <include file="presets/setbuilddir.bkl"/>
+
+    <!-- put all object files under the OBJ folder -->
+    <if cond="FORMAT!='autoconf'">
+        <set var="BUILDDIR">obj$(DIRSEP)$(BUILDDIR)</set>
+    </if>
+
+    <set var="DEBUG_BUILD_POSTFIX">
+        <if cond="DEBUG=='0'"></if>
+        <if cond="DEBUG=='1'">d</if>
+    </set>
+
+
+    <!-- Sources for this library -->
+    <!-- ======================== -->
+
+    <if cond="FORMAT=='autoconf'">
+        <!-- Note that since autoconf 2.60 the top_builddir variable does
+             not ends with '/' anymore... -->
+        <set var="LIBOUTPATH">$(top_builddir)/lib</set>
+        <set var="SAMPLEOUTPATH">$(top_builddir)/samples</set>
+    </if>
+    <if cond="'msv' in FORMAT">
+        <!-- match all MSVC visual studio formats -->
+        <set-srcdir>../..</set-srcdir>
+    </if>
+    <if cond="FORMAT in [ 'borland', 'mingw', 'watcom', 'msvc' ]">
+        <set-srcdir>..</set-srcdir>
+    </if>
+    <if cond="FORMAT!='autoconf'">
+        <set var="LIBOUTPATH">$(SRCDIR)/lib</set>
+        <set var="SAMPLEOUTPATH">$(SRCDIR)/samples</set>
+    </if>
+
+
+
+    <!-- Settings for this library -->
+    <!-- ========================= -->
+
+    <template id="muparser_base" template="debugopt">
+        <!-- tell Bakefile to define the MUPARSER_DLL symbol when building in shared mode -->
+        <define>$(substituteFromDict(SHARED, {'1':'MUPARSER_DLL', '0':''}))</define>
+        <define>$(substituteFromDict(SHARED, {'1':'MUPARSERLIB_EXPORTS', '0':''}))</define>
+        <if cond="FORMAT!='autoconf'">
+            <define>_WIN32</define>
+        </if>
+
+        <sources>$(fileList('src/*.cpp'))</sources>
+        <headers>$(fileList('include/*.h'))</headers>
+        <dirname>$(LIBOUTPATH)</dirname>
+        <include>$(SRCDIR)/include</include>
+
+        <install-to>$(LIBDIR)</install-to>
+        <install-headers-to>$(PREFIX)</install-headers-to>
+    </template>
+
+    <lib id="muParser_lib" template="muparser_base" cond="SHARED=='0'">
+        <libname>muparser$(DEBUG_BUILD_POSTFIX)</libname>
+    </lib>
+    <dll id="muParser_dll" template="muparser_base" cond="SHARED=='1'">
+        <dllname>muparser$(DEBUG_BUILD_POSTFIX)</dllname>
+        <libname>muparser$(DEBUG_BUILD_POSTFIX)</libname>
+
+        <version>2.2</version>
+        <so_version>2.2.4</so_version>
+        <mac_version>1</mac_version>        <!-- must be > 0 -->
+    </dll>
+
+    <!-- this makes the MSVC6 project files much nicer... -->
+    <set var="MSVC6PRJ_MERGED_TARGETS">muParser=muParser_lib+muParser_dll</set>
+
+    <!-- Installs the PKG-CONFIG file -->
+    <pkgconfig id="pkgconfig" cond="FORMAT=='autoconf'">
+        <src>build/autoconf/muparser.pc</src>
+    </pkgconfig>
+
+
+
+
+    <!-- Samples for the library -->
+    <!-- ======================= -->
+
+    <if cond="FORMAT_SUPPORTS_CONDITIONS=='1'">
+        <option name="SAMPLES">
+            <values>0,1</values>
+            <default-value>1</default-value>
+            <description>Set to 1 to compile samples</description>
+        </option>
+    </if>
+    <if cond="FORMAT_SUPPORTS_CONDITIONS=='0'">
+        <!-- Avoid to create IDE project files with multiple configurations
+             which differ only for the SAMPLES=0/1 option! -->
+        <set var="SAMPLES">1</set>
+    </if>
+
+    <template id="muparser_sample" template="debugopt">
+        <library>muParser_lib</library>
+        <include>$(SRCDIR)/include</include>
+        <lib-path>$(SRCDIR)/lib</lib-path>
+    </template>
+
+    <if cond="FORMAT!='autoconf'">
+        <exe id="example1" template="muparser_sample" cond="SAMPLES=='1' and SHARED=='0'">
+            <sources>$(fileList('samples/example1/*.cpp'))</sources>
+            <dirname>$(SAMPLEOUTPATH)/example1</dirname>
+            <define>$(substituteFromDict(SHARED, {'1':'USINGDLL', '0':''}))</define>
+        </exe>
+    </if>
+    <if cond="FORMAT=='autoconf'">
+        <!-- On Unix this sample is always available -->
+        <exe id="example1" template="muparser_sample" cond="SAMPLES=='1'">
+            <sources>$(fileList('samples/example1/*.cpp'))</sources>
+            <dirname>$(SAMPLEOUTPATH)/example1</dirname>
+        </exe>
+    </if>
+
+    <if cond="FORMAT!='autoconf'">
+        <!-- This samples is win32-specific (it uses the DLL interface) -->
+        <exe id="example2" template="muparser_sample" cond="SAMPLES=='1' and SHARED=='1'">
+            <sources>$(fileList('samples/example2/*.c'))</sources>
+            <dirname>$(SAMPLEOUTPATH)/example2</dirname>
+            <define>$(substituteFromDict(SHARED, {'1':'USINGDLL', '0':''}))</define>
+        </exe>
+    </if>
+
+
+
+    <!-- Some helpers for command-line makefiles -->
+    <!-- ======================================= -->
+
+    <phony id="lib">
+        <depends>muParser_lib</depends>
+        <depends>muParser_dll</depends>
+    </phony>
+
+    <phony id="samples">
+        <depends>example1</depends>
+        <!-- <depends cond="FORMAT in [ 'msvc', 'msvc6prj' ]">example2</depends> -->
+        <depends cond="FORMAT!='autoconf'">example2</depends>
+    </phony>
+
+    <if cond="FORMAT_SUPPORTS_ACTIONS=='1'">
+        <action id="documentation">
+            <command>( cd $(SRCDIR)$(DIRSEP)docs &amp;&amp; doxygen )</command>
+        </action>
+    </if>
+
+</makefile>
+

@@ -25,6 +25,7 @@ AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
 AC_SUBST(WCHAR_T_BITS)
 AC_SUBST(EXTRA_PCRE2)
+AC_SUBST(EXTRA_MUPARSER)
 
 #
 # If needed, run autoconf to regenerate the configure file
@@ -211,17 +212,17 @@ AS_IF([test "$use_doxygen" != "no"],
 AC_SYS_LARGEFILE
 
 
-# fish does not use exceptions
-# Disabling exceptions saves about 20% (!) of the compiled code size
-CXXFLAGS="$CXXFLAGS -fno-exceptions"
-
+# Fish does not use exceptions itself. However the MuParser library does so we
+# need to enable support for them and pay the cost of larger code. Note:
+# Enabling exceptions increases the compiled code size but to avoid that we
+# would have to maintain our own patches to the MuParser code.
+#CXXFLAGS="$CXXFLAGS -fno-exceptions"
 
 #
 # Set some warning flags
 # Don't warn about missing field initializers, it has too many
 # false positives for code like `struct termios tmodes = {};`
 #
-
 CXXFLAGS="$CXXFLAGS -Wextra -Wno-missing-field-initializers"
 
 #
@@ -579,6 +580,8 @@ else
   AC_MSG_RESULT(no)
 fi
 
+# ========
+# PCRE2 library configuration.
 pcre2_min_version=10.21
 EXTRA_PCRE2=
 AC_ARG_WITH(
@@ -672,6 +675,26 @@ if test "x$included_pcre2" = "xyes"; then
   CXXFLAGS="$CXXFLAGS $PCRE2_CXXFLAGS"
   LIBS="$LIBS $PCRE2_LIBS"
 fi
+
+
+
+# ========
+# MuParser math expression library configuration.
+EXTRA_MUPARSER=
+
+# Build configure/Makefile for muparser
+AC_MSG_NOTICE([using included MuParser library])
+# unfortunately these get added to the global configuration
+ac_configure_args="$ac_configure_args --enable-shared=no --enable-samples=no --enable-debug=no"
+AC_CONFIG_SUBDIRS([muparser])
+
+MUPARSER_CXXFLAGS='-I$(MUPARSER_DIR)/include'
+MUPARSER_LIBS='-L$(MUPARSER_LIBDIR) -lmuparser'
+
+# Make the binary depend on the MuParser libraries so they get built
+EXTRA_MUPARSER='$(MUPARSER_LIB)'
+CXXFLAGS="$CXXFLAGS $MUPARSER_CXXFLAGS"
+LIBS="$LIBS $MUPARSER_LIBS"
 
 # Allow configurable extra directories.
 AC_SUBST(extra_completionsdir)

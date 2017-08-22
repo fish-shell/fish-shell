@@ -26,7 +26,7 @@ end
 
 function __fish_apt_using_subcommand --description 'Test if given subcommand is used'
     for i in (commandline -opc)
-        if contains -- $i $argv[1]
+        if contains -- $i $argv
             return 0
         end
     end

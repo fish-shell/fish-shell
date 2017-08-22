@@ -19,8 +19,24 @@ function __fish_apt_use_package --description 'Test if apt command should have p
 end
 
 function __fish_apt_subcommand
-    set subcommand $argv[1]; set -e argv[1]
+    set subcommand $argv[1]
+    set -e argv[1]
     complete -f -c apt -n '__fish_apt_no_subcommand' -a $subcommand $argv
+end
+
+function __fish_apt_using_subcommand --description 'Test if given subcommand is used'
+    for i in (commandline -opc)
+        if contains -- $i $argv
+            return 0
+        end
+    end
+    return 1
+end
+
+function __fish_apt_option
+    set subcommand $argv[1]
+    set -e argv[1]
+    complete -f -c apt -n "__fish_apt_using_subcommand $subcommand" $argv
 end
 
 complete -c apt -n '__fish_apt_use_package' -a '(__fish_print_packages)' --description 'Package'
@@ -36,9 +52,9 @@ complete -f -c apt -s t                 --description 'Target release'
 
 # List
 __fish_apt_subcommand list                  --description 'List packages'
-__fish_apt_subcommand list -l installed     --description 'Installed packages'
-__fish_apt_subcommand list -l upgradable    --description 'Upgradable packages'
-__fish_apt_subcommand list -l all-versions  --description 'Show all versions of any package'
+__fish_apt_option     list -l installed     --description 'Installed packages'
+__fish_apt_option     list -l upgradable    --description 'Upgradable packages'
+__fish_apt_option     list -l all-versions  --description 'Show all versions of any package'
 
 # Search
 __fish_apt_subcommand search -r        --description 'Search for packages'

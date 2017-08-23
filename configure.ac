@@ -215,7 +215,7 @@ AC_SYS_LARGEFILE
 # Fish does not use exceptions itself. However the MuParser library does so we
 # need to enable support for them and pay the cost of larger code. Note:
 # Disabling exceptions saves about 20% (!) of the compiled code size
-CXXFLAGS="$CXXFLAGS -fcxx-exceptions"
+#CXXFLAGS="$CXXFLAGS -fcxx-exceptions"
 
 
 #

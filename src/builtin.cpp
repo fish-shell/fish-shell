@@ -46,6 +46,7 @@
 #include "builtin_functions.h"
 #include "builtin_history.h"
 #include "builtin_jobs.h"
+#include "builtin_math.h"
 #include "builtin_printf.h"
 #include "builtin_pwd.h"
 #include "builtin_random.h"
@@ -440,6 +441,7 @@ static const builtin_data_t builtin_datas[] = {
     {L"history", &builtin_history, N_(L"History of commands executed by user")},
     {L"if", &builtin_generic, N_(L"Evaluate block if condition is true")},
     {L"jobs", &builtin_jobs, N_(L"Print currently running jobs")},
+    {L"math", &builtin_math, N_(L"Evaluate math expressions")},
     {L"not", &builtin_generic, N_(L"Negate exit status of job")},
     {L"or", &builtin_generic, N_(L"Execute command if previous command failed")},
     {L"printf", &builtin_printf, N_(L"Prints formatted text")},

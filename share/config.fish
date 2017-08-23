@@ -200,6 +200,7 @@ end
 # Some things should only be done for login terminals
 # This used to be in etc/config.fish - keep it here to keep the semantics
 #
+
 if status --is-login
     # OS X-ism: Call path_helper and set its output to $PATH and $MANPATH.
     if command -sq /usr/libexec/path_helper

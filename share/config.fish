@@ -204,15 +204,31 @@ if status --is-login
     # OS X-ism: Call path_helper and set its output to $PATH and $MANPATH.
     if command -sq /usr/libexec/path_helper
         set -l lines (/usr/libexec/path_helper -c)
-        if test (count $lines) -ge 1
-            and set -l match (string match -r '^setenv PATH "(.*)";$' $lines[1])
-            and count $match >= 2
-            set -xg PATH (string split ':' $match[2])
-        end
-        if test (count $lines) -ge 2
-            and set -l match (string match -r '^setenv MANPATH "(.*)";$' $lines[2])
-            and count $match >= 2
-            set -xg MANPATH (string split ':' $match[2])
+        for line in $lines
+            # Match lines of the form:
+            #
+            #   setenv KEY value
+            #
+            # ignoring whitespace before and after value, and an
+            # optional trailing semicolon.
+            if set -l match (string match -r '^\s*setenv\s+([A-Z]+)\s+(.*?)\s*;?\s*$' -- $line)
+                set -l key $match[2]
+                # Only set PATH and MANPATH, the two environment
+                # variables that path_helper is documented to emit.
+                if contains -- $key PATH MANPATH
+                    set -l value $match[3]
+                    # Strip any surrounding quotes from $value. Note
+                    # that we don't actually want to worry about
+                    # unescaping escaped quotes in $value, as
+                    # path_helper (buggily) doesn't bother escaping
+                    # quotes.
+                    if string match -qr '^([\'"]).*\1$' -- $value
+                        set value (string match -r '^.(.*).$' $value)[2]
+                    end
+
+                    set -xg $key (string split ':' $value)
+                end
+            end
         end
     end
 

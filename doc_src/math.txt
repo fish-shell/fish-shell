@@ -7,23 +7,23 @@ math [-sN | --scale=N] [--] EXPRESSION
 
 \subsection math-description Description
 
-`math` is used to perform mathematical calculations. It is a very thin wrapper for the bc program, which makes it possible to specify an expression from the command line without using non-standard extensions or a pipeline.
+`math` is used to perform mathematical calculations. It is based on the MuParser library which is documented <a href="http://beltoforion.de/article.php?a=muparser&hl=en&p=features&s=idPageTop#idPageTop">here</a>. You can use bare variable names (i.e., without the dollar-sign).  The stock MuParser does not support the modulo, `%` operator but fish implements it using integer semantics.
 
-For a description of the syntax supported by math, see the manual for the bc program. Keep in mind that parameter expansion takes place on any expressions before they are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis have to be escaped.
+Keep in mind that parameter expansion takes place on any expressions before they are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis and the asterisk glob character have to be escaped.
 
 The following options are available:
 
-- `-sN` or `--scale=N` sets the scale of the result. `N` must be an integer and defaults to zero. This simply sets bc's `scale` variable to the provided value.
+- `-sN` or `--scale=N` sets the scale of the result. `N` must be an integer and defaults to zero (rounded to the nearest integer).
 
 \subsection return-values Return Values
 
-If invalid options or no expression is provided the return `status` is two. If the expression is invalid the  return `status` is three. If bc returns a result of `0` (literally, not `0.0` or similar variants) the return `status` is one otherwise it's zero.
+If the expression is successfully evaluated the return `status` is zero (success) else one.
 
 \subsection math-example Examples
 
 `math 1+1` outputs 2.
 
-`math $status-128` outputs the numerical exit status of the last command minus 128.
+`math status - 128` outputs the numerical exit status of the last command minus 128.
 
 `math 10 / 6` outputs `1`.
 
@@ -33,6 +33,10 @@ If invalid options or no expression is provided the return `status` is two. If t
 
 \subsection math-cautions Cautions
 
-You should always place a `--` flag separator before the expression. 99.99% of the time you'll get the desired result without the separator. Something like `math -10.0 / 2` will fail because the negative floating point value gets treated as an invalid flag. But `math -10 / 2` will work because negative integers are special-cased.
+You don't need to use `--` before the expression even if it begins with a minus sign which might otherwise be interpreted as an invalid option.
 
-Note that the modulo operator (`x % y`) is not well defined for floating point arithmetic. The `bc` command produces a nonsensical result rather than emit an error and fail in that case. It doesn't matter if the arguments are integers; e.g., `10 % 4`. You'll still get an incorrect result. Do not use the `-sN` flag with N greater than zero if you want sensible answers when using the modulo operator.
+Note that the modulo operator (`x % y`) is not well defined for floating point arithmetic. Fish rounds down all floating point values to nearest int before performing the modulo operation. So `10.5 % 6.1` is `4`.
+
+\subsection math-notes Compatibility notes
+
+Fish 1.x and 2.x releases relied on the `bc` command for handling math expressions via the `math` command. Starting with fish 3.0.0 fish uses the MuParser library.

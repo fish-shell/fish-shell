@@ -1,3 +1,4 @@
+logmsg Validate basic expressions
 math 3 / 2
 math 10/6
 math -s0 10 / 6
@@ -12,3 +13,12 @@ math '-2 * -2'
 math 5 \* -2
 math -- -4 / 2
 math -- '-4 * 2'
+
+logmsg Validate how bare variables in an epxression are handled
+math x + 1
+set x 1
+math x + 1
+set x 3
+set y 1.5
+math '-x * y'
+math -s1 '-x * y'

@@ -108,22 +108,72 @@ static const wchar_t *math_get_arg_argv(int *argidx, wchar_t **argv) {
 /// Get the arguments from argv or stdin based on the execution context. This mimics how builtin
 /// `string` does it.
 static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storage,
-                                     const io_streams_t &streams) {
+                                   const io_streams_t &streams) {
     if (math_args_from_stdin(streams)) {
         return math_get_arg_stdin(storage, streams);
     }
     return math_get_arg_argv(argidx, argv);
 }
 
+// The MuParser mechanism for dynamic lookup of variables requires that we return a unique address
+// for each variable. The following limit is arbitrary but anyone writing a math expression in fish
+// that references more than one hundred unique variables is abusing fish.
+#define MAX_RESULTS 100
+static double double_results[MAX_RESULTS];
+static int next_result = 0;
+
+/// Return a fish var converted to a double. This allows the user to use a bar var name in the
+/// expression. That is `math a + 1` rather than `math $a + 1`.
+static double *retrieve_var(const wchar_t *var_name, void *user_data) {
+    UNUSED(user_data);
+    static double zero_result = 0.0;
+
+    env_var_t var = env_get(var_name, ENV_DEFAULT);
+    if (var.missing()) {
+        // We could report an error but we normally don't treat missing vars as a fatal error.
+        // throw mu::ParserError(L"Var '%ls' does not exist.");
+        return &zero_result;
+    }
+    if (var.empty()) {
+        return &zero_result;
+    }
+
+    const wchar_t *first_val = var.as_const_list()[0].c_str();
+    wchar_t *endptr;
+    errno = 0;
+    double result = wcstod(first_val, &endptr);
+    if (*endptr != L'\0' || errno) {
+        wchar_t errmsg[500];
+        swprintf(errmsg, sizeof(errmsg) / sizeof(wchar_t),
+                 _(L"Var '%ls' not a valid floating point number: '%ls'."), var_name, first_val);
+        throw mu::ParserError(errmsg);
+    }
+
+    // We need to return a unique address for the var. If we used a `static double` var and returned
+    // it's address then multiple vars in the expression would all refer to the same value.
+    if (next_result == MAX_RESULTS - 1) {
+        wchar_t errmsg[500];
+        swprintf(errmsg, sizeof(errmsg) / sizeof(wchar_t),
+                 _(L"More than %d var names in math expression."), MAX_RESULTS);
+        throw mu::ParserError(errmsg);
+    }
+    double_results[next_result++] = result;
+    return double_results + next_result - 1;
+}
+
 /// Implement integer modulo math operator.
 static double moduloOperator(double v, double w) { return (int)v % std::max(1, (int)w); };
 
+/// Evaluate math expressions.
 static int evaluate_expression(wchar_t *cmd, parser_t &parser, io_streams_t &streams,
                                math_cmd_opts_t &opts, wcstring &expression) {
     UNUSED(parser);
+    next_result = 0;
 
     try {
         mu::Parser p;
+        // Setup callback so variables can be retrieved dynamically.
+        p.SetVarFactory(retrieve_var, nullptr);
         // MuParser doesn't implement the modulo operator so we add it ourselves since there are
         // likely users of our old math wrapper around bc that expect it to be available.
         p.DefineOprtChars(L"%");
@@ -139,7 +189,6 @@ static int evaluate_expression(wchar_t *cmd, parser_t &parser, io_streams_t &str
                 streams.out.append_format(L"%.*lf\n", opts.scale, v[i]);
             }
         }
-
         return STATUS_CMD_OK;
     } catch (mu::Parser::exception_type &e) {
         streams.err.append_format(_(L"%ls: Invalid expression: %ls\n"), cmd, e.GetMsg().c_str());

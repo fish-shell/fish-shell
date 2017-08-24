@@ -133,7 +133,11 @@ static int evaluate_expression(wchar_t *cmd, parser_t &parser, io_streams_t &str
         int nNum;
         mu::value_type *v = p.Eval(nNum);
         for (int i = 0; i < nNum; ++i) {
-            streams.out.append_format(L"%.*lf\n", opts.scale, v[i]);
+            if (opts.scale == 0) {
+                streams.out.append_format(L"%ld\n", static_cast<long>(v[i]));
+            } else {
+                streams.out.append_format(L"%.*lf\n", opts.scale, v[i]);
+            }
         }
 
         return STATUS_CMD_OK;

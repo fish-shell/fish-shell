@@ -34,7 +34,7 @@ function __fish_print_help --description "Print help message for the specified f
         end 3<&1
     end
     if test -n "$cols"
-        set cols (math $cols - 4) # leave a bit of space on the right
+        set cols (math cols - 4) # leave a bit of space on the right
         set rLL -rLL=$cols[1]n
     end
     set -lx GROFF_TMAC_PATH $__fish_datadir/groff

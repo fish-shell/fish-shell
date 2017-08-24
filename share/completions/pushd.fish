@@ -12,7 +12,7 @@ function __fish_complete_pushd_minus
         # print each member of the stack, replace $HOME with ~
 		# Negative arguments are expected to start at "-0"
         for i in (seq (count $dirstack) -1 1)
-            printf "%s\t%s\n" -(math $i - 1) "Rotate to "(string replace -r "^$HOME" "~" -- $dirstack[(math -$i)])
+            printf "%s\t%s\n" -(math i - 1) "Rotate to "(string replace -r "^$HOME" "~" -- $dirstack[(math -i)])
         end
     end
 end

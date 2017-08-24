@@ -98,10 +98,10 @@ function __fish_umask_parse
             set val 4
         end
         if string match -q '*w*' $perms
-            set val (math $val + 2)
+            set val (math val + 2)
         end
         if string match -q '*x*' $perms
-            set val (math $val + 1)
+            set val (math val + 1)
         end
 
         for j in $scopes_to_modify

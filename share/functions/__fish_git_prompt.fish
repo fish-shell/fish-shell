@@ -478,15 +478,19 @@ function __fish_git_prompt_informative_status
     set -l changedFiles (command git diff --name-status | string match -r \\w)
     set -l stagedFiles (command git diff --staged --name-status | string match -r \\w)
 
-    set -l dirtystate (math (count $changedFiles) - (count (string match -r "U" -- $changedFiles)) ^/dev/null)
+    set -l x (count $changedFiles)
+    set -l y (count (string match -r "U" -- $changedFiles))
+    set -l dirtystate (math x - y)
+    set -l x(count $stagedFiles)
     set -l invalidstate (count (string match -r "U" -- $stagedFiles))
-    set -l stagedstate (math (count $stagedFiles) - $invalidstate ^/dev/null)
+    set -l stagedstate (math x - invalidstate)
     set -l untrackedfiles (command git ls-files --others --exclude-standard | wc -l | string trim)
 
     set -l info
 
-    # If `math` fails for some reason, assume the state is clean - it's the simpler path
-    set -l state (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles ^/dev/null)
+    # If `math` fails for some reason, assume the state is clean - it's the simpler path.
+    # TBD: Can this be simplified? It should be impossible for the math command to fail here.
+    set -l state (math dirtystate + invalidstate + stagedstate + untrackedfiles)
     if test -z "$state"
         or test "$state" = 0
         set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done

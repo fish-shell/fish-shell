@@ -686,7 +686,7 @@ EXTRA_MUPARSER=
 AC_MSG_NOTICE([using included MuParser library])
 # unfortunately these get added to the global configuration
 ac_configure_args="$ac_configure_args --enable-shared=no --enable-samples=no --enable-debug=no"
-AC_CONFIG_SUBDIRS([muparser])
+AC_CONFIG_SUBDIRS([muparser-2.2.5])
 
 MUPARSER_CXXFLAGS='-I$(MUPARSER_DIR)/include'
 MUPARSER_LIBS='-L$(MUPARSER_LIBDIR) -lmuparser'

@@ -69,7 +69,7 @@ extra_confdir = @extra_confdir@
 #
 # muparser
 #
-MUPARSER_DIR = muparser
+MUPARSER_DIR = muparser-2.2.5
 MUPARSER_LIBDIR = $(MUPARSER_DIR)/lib
 MUPARSER_LIB = $(MUPARSER_LIBDIR)/libmuparser.a
 MUPARSER_H = $(MUPARSER_DIR)/include/muParser.h

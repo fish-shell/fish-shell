@@ -6,6 +6,9 @@ See the bottom of this document for help on installing the linting and style ref
 
 Fish source should limit the C++ features it uses to those available in C++11. It should not use exceptions.
 
+Before introducing a new dependency, please make it optional with graceful failure if possible. Add
+any new dependencies to the README.md under the *Running* and/or *Building* sections.
+
 ## Versioning
 
 The fish version is constructed by the *build_tools/git_version_gen.sh* script. For developers the version is the branch name plus the output of `git describe --always --dirty`. Normally the main part of the version will be the closest annotated tag. Which itself is usually the most recent release number (e.g., `2.6.0`).

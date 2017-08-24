@@ -3,12 +3,8 @@
 
 #include <errno.h>
 #include <stddef.h>
-#include <stdint.h>
-#include <wchar.h>
 
 #include <algorithm>
-#include <iostream>
-#include <random>
 #include <string>
 
 #include "builtin.h"
@@ -134,7 +130,12 @@ static int evaluate_expression(wchar_t *cmd, parser_t &parser, io_streams_t &str
         p.DefineOprt(L"%", moduloOperator, mu::prINFIX);
 
         p.SetExpr(expression);
-        streams.out.append_format(L"%.*lf\n", opts.scale, p.Eval());
+        int nNum;
+        mu::value_type *v = p.Eval(nNum);
+        for (int i = 0; i < nNum; ++i) {
+            streams.out.append_format(L"%.*lf\n", opts.scale, v[i]);
+        }
+
         return STATUS_CMD_OK;
     } catch (mu::Parser::exception_type &e) {
         streams.err.append_format(_(L"%ls: Invalid expression: %ls\n"), cmd, e.GetMsg().c_str());

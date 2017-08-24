@@ -11,6 +11,8 @@ math [-sN | --scale=N] [--] EXPRESSION
 
 Keep in mind that parameter expansion takes place on any expressions before they are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis and the asterisk glob character have to be escaped.
 
+The `math` command can evaluate multiple expressions separated by commas. The result of each expression is written on a separate line. This means you can evaluate multiple expressions and capture the results in a single invocation just like you can with commands like `string`. See the examples below.
+
 The following options are available:
 
 - `-sN` or `--scale=N` sets the scale of the result. `N` must be an integer and defaults to zero (rounded to the nearest integer).
@@ -30,6 +32,8 @@ If the expression is successfully evaluated the return `status` is zero (success
 `math -s0 10.0 / 6.0` outputs `1`.
 
 `math -s3 10 / 6` outputs `1.666`.
+
+Capture the result of three expressions: `set results (math '1+1, 5*3, 10^2')` sets `$results` to 2, 15, and 100.
 
 \subsection math-cautions Cautions
 

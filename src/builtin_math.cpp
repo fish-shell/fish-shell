@@ -12,6 +12,7 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "lru.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -30,6 +31,23 @@ static const wchar_t *short_options = L"+:hs:";
 static const struct woption long_options[] = {{L"scale", required_argument, NULL, 's'},
                                               {L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
+
+class expression_lru_item_t {
+  public:
+    wcstring expression;
+    mu::Parser parser;
+};
+
+class expression_cache_t : public lru_cache_t<expression_cache_t, mu::Parser> {
+#if 0
+    typedef lru_cache_t<wcstring, mu::Parser> super;
+  public:
+    using super::super;
+#endif
+};
+
+//expression_cache_t expression_cache(128);
+expression_cache_t expression_cache;
 
 static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
@@ -168,20 +186,29 @@ static double moduloOperator(double v, double w) { return (int)v % std::max(1, (
 static int evaluate_expression(wchar_t *cmd, parser_t &parser, io_streams_t &streams,
                                math_cmd_opts_t &opts, wcstring &expression) {
     UNUSED(parser);
-    next_result = 0;
 
-    try {
-        mu::Parser p;
+    mu::Parser *p = expression_cache.get(expression);
+    if (!p) {
+        mu::Parser parser;
         // Setup callback so variables can be retrieved dynamically.
-        p.SetVarFactory(retrieve_var, nullptr);
+        parser.SetVarFactory(retrieve_var, nullptr);
         // MuParser doesn't implement the modulo operator so we add it ourselves since there are
         // likely users of our old math wrapper around bc that expect it to be available.
-        p.DefineOprtChars(L"%");
-        p.DefineOprt(L"%", moduloOperator, mu::prINFIX);
+        parser.DefineOprtChars(L"%");
+        parser.DefineOprt(L"%", moduloOperator, mu::prINFIX);
 
-        p.SetExpr(expression);
+        parser.SetExpr(expression);
+        expression_cache.insert(expression, parser);
+        p = expression_cache.get(expression);
+        debug(3, L"math expression_cache.size() = %d", expression_cache.size());
+    }
+
+    try {
+        p->ClearVar();  // force muparser to ask for new values of any bare vars
+        next_result = 0;
+
         int nNum;
-        mu::value_type *v = p.Eval(nNum);
+        mu::value_type *v = p->Eval(nNum);
         for (int i = 0; i < nNum; ++i) {
             if (opts.scale == 0) {
                 streams.out.append_format(L"%ld\n", static_cast<long>(v[i]));

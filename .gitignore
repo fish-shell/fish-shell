@@ -92,8 +92,8 @@ messages.pot
 
 # xcode
 ## Build generated
-build/
-DerivedData/
+/build/
+/DerivedData/
 xcuserdata/
 *.moved-aside
 *.xccheckout

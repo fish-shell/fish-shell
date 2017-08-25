@@ -1364,8 +1364,8 @@ env_var_t env_get(const wcstring &key, env_mode_flags_t mode) {
             if (!history) {
                 history = &history_t::history_with_name(history_session_id());
             }
-            wcstring result;
-            if (history) history->get_string_representation(&result, ARRAY_SEP_STR);
+            wcstring_list_t result;
+            if (history) history->get_history(result);
             return env_var_t(L"history", result);
         } else if (key == L"status") {
             return env_var_t(L"status", to_string(proc_get_last_status()));

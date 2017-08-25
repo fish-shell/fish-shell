@@ -30,7 +30,7 @@ expect_prompt
 send "echo start1; builtin history; echo end1\r"
 expect_prompt -re {start1\r\nend1\r\n} {
     puts "empty history detected as expected"
-} unmatched {
+} timeout {
     puts stderr "empty history not detected as expected"
 }
 
@@ -39,7 +39,7 @@ expect_prompt -re {start1\r\nend1\r\n} {
 send "echo start2; builtin history; echo end2\r"
 expect_prompt -re {start2\r\necho start1; builtin history; echo end1\r\nend2\r\n} {
     puts "first history command detected as expected"
-} unmatched {
+} timeout {
     puts stderr "first history command not detected as expected"
 }
 
@@ -53,7 +53,7 @@ expect_prompt -re {start2\r\necho start1; builtin history; echo end1\r\nend2\r\n
 send "history search echo start\r"
 expect_prompt -re {\r\necho start1.*\r\necho start2} {
     puts "history function explicit search succeeded"
-} unmatched {
+} timeout {
     puts stderr "history function explicit search failed"
 }
 
@@ -62,7 +62,7 @@ expect_prompt -re {\r\necho start1.*\r\necho start2} {
 send "history -p 'echo start'\r"
 expect_prompt -re {\r\necho start2.*\r\necho start1} {
     puts "history function implicit search succeeded"
-} unmatched {
+} timeout {
     puts stderr "history function implicit search failed"
 }
 
@@ -71,7 +71,7 @@ expect_prompt -re {\r\necho start2.*\r\necho start1} {
 send "history search --show-time='# %F %T%n' --prefix 'echo start'\r"
 expect_prompt -re {\r\n# \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\r\necho start2; .*\r\n# \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\r\necho start1; } {
     puts "history function implicit search with timestamps succeeded"
-} unmatched {
+} timeout {
     puts stderr "history function implicit search with timestamps failed"
 }
 
@@ -90,14 +90,14 @@ expect_prompt
 send "history search --exact 'echo goodbye'\r"
 expect_prompt -re {\r\necho goodbye\r\n} {
     puts "history function explicit exact search 'echo goodbye' succeeded"
-} unmatched {
+} timeout {
     puts stderr "history function explicit exact search 'echo goodbye' failed"
 }
 
 send "history search --exact 'echo hello'\r"
 expect_prompt -re {\r\necho hello\r\n} {
     puts "history function explicit exact search 'echo hello' succeeded"
-} unmatched {
+} timeout {
     puts stderr "history function explicit exact search 'echo hello' failed"
 }
 
@@ -106,7 +106,7 @@ expect_prompt -re {\r\necho hello\r\n} {
 send "history search --exact 'echo hell'\r"
 expect_prompt -re {history search --exact 'echo hell'\r\n} {
     puts "history function explicit exact search 'echo hell' succeeded"
-} unmatched {
+} timeout {
     puts stderr "history function explicit exact search 'echo hell' failed"
 }
 
@@ -117,7 +117,7 @@ expect -re {history delete -e -C 'echo hello'\r\n}
 send "echo count hello (history search -e -C 'echo hello' | wc -l | string trim)\r"
 expect -re {\r\ncount hello 0\r\n} {
     puts "history function explicit exact delete 'echo hello' succeeded"
-} unmatched {
+} timeout {
     puts stderr "history function explicit exact delete 'echo hello' failed"
 }
 
@@ -139,13 +139,21 @@ expect -re {Deleting history entry 1: "echo hello AGAIN"\r\n}
 send "echo count AGAIN (history search -e -C 'echo hello AGAIN' | wc -l | string trim)\r"
 expect -re {\r\ncount AGAIN 0\r\n} {
     puts "history function explicit prefix delete 'echo hello AGAIN' succeeded"
-} unmatched {
+} timeout {
     puts stderr "history function explicit prefix delete 'echo hello AGAIN' failed"
 }
 
 send "echo count again (history search -e -C 'echo hello again' | wc -l | string trim)\r"
 expect -re {\r\ncount again 1\r\n} {
     puts "history function explicit exact search 'echo hello again' succeeded"
-} unmatched {
+} timeout {
     puts stderr "history function explicit exact search 'echo hello again' failed"
+}
+
+# Verify that the $history var has the expected content.
+send "echo history2=\$history\[2\]\r"
+expect -re {\r\nhistory2=echo count AGAIN .*\r\n} {
+    puts "history\[2\] had the correct data"
+} timeout {
+    puts stderr "history\[2\] had the wrong data"
 }

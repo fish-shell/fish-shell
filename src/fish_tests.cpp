@@ -3079,12 +3079,12 @@ void history_tests_t::test_history_merge(void) {
     }
 
     // Everyone should also have items in the same order (#2312)
-    wcstring string_rep;
-    hists[0]->get_string_representation(&string_rep, L"\n");
+    wcstring_list_t hist_vals1;
+    hists[0]->get_history(hist_vals1);
     for (size_t i = 0; i < count; i++) {
-        wcstring string_rep2;
-        hists[i]->get_string_representation(&string_rep2, L"\n");
-        do_test(string_rep == string_rep2);
+        wcstring_list_t hist_vals2;
+        hists[i]->get_history(hist_vals2);
+        do_test(hist_vals1 == hist_vals2);
     }
 
     // Add some more per-history items.

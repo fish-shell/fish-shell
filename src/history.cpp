@@ -842,15 +842,12 @@ void history_t::set_valid_file_paths(const wcstring_list_t &valid_file_paths,
     }
 }
 
-void history_t::get_string_representation(wcstring *result, const wcstring &separator) {
+void history_t::get_history(wcstring_list_t &result) {
     scoped_lock locker(lock);
-
-    bool first = true;
-
-    std::unordered_set<wcstring> seen;
 
     // If we have a pending item, we skip the first encountered (i.e. last) new item.
     bool next_is_pending = this->has_pending_item;
+    std::unordered_set<wcstring> seen;
 
     // Append new items. Note that in principle we could use const_reverse_iterator, but we do not
     // because reverse_iterator is not convertible to const_reverse_iterator. See
@@ -863,12 +860,7 @@ void history_t::get_string_representation(wcstring *result, const wcstring &sepa
             continue;
         }
 
-        // Skip duplicates.
-        if (!seen.insert(iter->str()).second) continue;
-
-        if (!first) result->append(separator);
-        result->append(iter->str());
-        first = false;
+        if (seen.insert(iter->str()).second) result.push_back(iter->str());
     }
 
     // Append old items.
@@ -879,12 +871,7 @@ void history_t::get_string_representation(wcstring *result, const wcstring &sepa
         const history_item_t item =
             decode_item(mmap_start + offset, mmap_length - offset, mmap_type);
 
-        // Skip duplicates.
-        if (!seen.insert(item.str()).second) continue;
-
-        if (!first) result->append(separator);
-        result->append(item.str());
-        first = false;
+        if (seen.insert(item.str()).second) result.push_back(item.str());
     }
 }
 

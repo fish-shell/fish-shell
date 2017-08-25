@@ -15,6 +15,10 @@ BuildRequires:          ncurses-devel gettext gcc-c++ autoconf
 BuildRequires: gcc48 gcc48-c++
 %endif
 
+%if 0%{?is_opensuse} || 0%{?fedora}
+BuildRequires: pcre2-devel
+%endif
+
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:		bc

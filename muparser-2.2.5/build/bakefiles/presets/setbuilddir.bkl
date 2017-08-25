@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<!-- $Id: setbuilddir.bkl 40 2006-12-02 15:22:02Z frm $ -->
+
+<!--
+
+Adds the logic for setting BUILDDIR in a smart way, checking which other presets have been
+included. Include this preset after including all other presets.
+
+Usage:
+
+  <include file="presets/sharedopt.bkl"/>
+  <include file="presets/unicodeopt.bkl"/>
+  <include file="presets/debugopt.bkl"/>
+  <include file="presets/setbuilddir.bkl"/>
+
+  <lib id="mylib_static" template="debugopt,unicodeopt" cond="SHARED=='0'">
+    <sources>mylib.cpp</sources>
+  </lib>
+
+  <dll id="mylib_shared" template="debugopt,unicodeopt" cond="SHARED=='1'">
+    <sources>mylib.cpp</sources>
+  </dll>
+
+  <set var="MSVC6PRJ_MERGED_TARGETS">mylib=mylib_static+mylib_shared</set>
+-->
+
+<makefile>
+
+    <!--
+        Setting the BUILDDIR variable using the
+                   SHAREDBUILDPOSTFIX/DEBUGBUILDPOSTFIX/UNICODEBUILDPOSTFIX
+        variables we will keep separed the intermediate files (objects, compiled resources, exes, libs)
+        generated using SHARED/DEBUG/UNICODE=0 from those generated using SHARED/DEBUG/UNICODE=1.
+
+        Using the same BUILDDIR for these different configurations would force the
+        user to call a "make clean" (or equivalent) before rebuilding since it's not wise
+        mixing a shared build with a static one or a debug build with a release one
+        or a unicode build with an ansi one.
+
+        Last, using the COMPILER when setting BUILDDIR keeps separed the object files generated using
+        different compilers (in case makefiles for different compilers are generated in the same directory).
+
+        NOTE: the autoconf format requires BUILDDIR='.' since using different build directories
+               is already handled by the configure script.
+               E.g.
+                  for debug builds:     mkdir dbg && cd dbg && ../configure - -enable-debug
+                  for release builds:   mkdir rel && cd rel && ../configure - -disable-debug
+                  ...
+               See autoconf documentation for more info.
+    -->
+
+    <!-- some helpers -->
+    <set var="SHRDSTR"><if cond="isdefined('SHAREDBUILDPOSTFIX')">_$(SHAREDBUILDPOSTFIX)</if></set>
+    <set var="DBGSTR"><if cond="isdefined('DEBUGBUILDPOSTFIX')">_$(DEBUGBUILDPOSTFIX)</if></set>
+    <set var="UNICSTR"><if cond="isdefined('UNICODEBUILDPOSTFIX')">_$(UNICODEBUILDPOSTFIX)</if></set>
+
+    <if cond="FORMAT!='autoconf'">
+        <set var="BUILDDIR">
+            $(COMPILER)$(SHRDSTR)$(DBGSTR)$(UNICSTR)
+        </set>
+    </if>
+
+</makefile>

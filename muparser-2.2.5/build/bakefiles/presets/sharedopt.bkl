@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+<!-- $Id: sharedopt.bkl 40 2006-12-02 15:22:02Z frm $ -->
+
+<!--
+
+Adds the logic for handling a SHARED=0/1 option, which switches between static and
+shared (DLL) builds.
+
+Usage: use template "sharedopt" for your targets:
+
+  <include file="presets/sharedopt.bkl"/>
+
+  <lib id="mylib_static" cond="SHARED=='0'">
+    <sources>mylib.cpp</sources>
+  </lib>
+
+  <dll id="mylib_shared" cond="SHARED=='1'">
+    <sources>mylib.cpp</sources>
+  </dll>
+
+  <set var="MSVC6PRJ_MERGED_TARGETS">mylib=mylib_static+mylib_shared</set>
+-->
+
+<makefile>
+
+    <set var="SHARED_DEFAULT" overwrite="0">0</set>
+    <option name="SHARED">
+        <values>0,1</values>
+        <default-value>$(SHARED_DEFAULT)</default-value>
+        <values-description>Static,DLL</values-description>
+        <description>Set to 1 to build shared (DLL) version</description>
+    </option>
+
+
+    <!-- The SHAREDBUILDPOSTFIX variable is useful to set the BUILDDIR variable
+         as done in presets/setbuilddir.bkl -->
+    <set var="SHAREDBUILDPOSTFIX">
+        <if cond="SHARED=='0'">static</if>
+        <if cond="SHARED=='1'">shared</if>
+    </set>
+
+</makefile>

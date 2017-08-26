@@ -216,6 +216,21 @@ if status --is-login
             #
             # ignoring whitespace before and after value, and an
             # optional trailing semicolon.
+            #
+            # Some examples of lines that successfully match to "FOO" and "bar baz":
+            #
+            #   "setenv FOO bar baz"
+            #   "setenv FOO bar baz;"
+            #   "setenv FOO bar baz; "
+            #   "  setenv   FOO   bar baz;"
+            #
+            # and some examples that fail to match:
+            #
+            #   "SetEnv FOO bar"
+            #   "setenv foo bar"
+            #   "setenv FOO1 bar"
+            #   "setenv FOO_BAR bar"
+            #   "setenv FOO-BAR bar"
             if set -l match (string match -r '^\s*setenv\s+([A-Z]+)\s+(.*?)\s*;?\s*$' -- $line)
                 set -l key $match[2]
                 # Only set PATH and MANPATH, the two environment

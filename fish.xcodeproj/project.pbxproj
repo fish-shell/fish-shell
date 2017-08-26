@@ -199,6 +199,8 @@
 		D01243691CD4015C00C64313 /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855E13B3ACEE0099B651 /* util.cpp */; };
 		D012436A1CD4018100C64313 /* fallback.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853E13B3ACEE0099B651 /* fallback.cpp */; };
 		D012436B1CD4019700C64313 /* fallback.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853E13B3ACEE0099B651 /* fallback.cpp */; };
+		D013CE371F52964A00AB1419 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D06821651F51490E00040321 /* libmuparser.a */; };
+		D013CE381F52964D00AB1419 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D06821651F51490E00040321 /* libmuparser.a */; };
 		D01A2D24169B736200767098 /* man1 in Copy Files */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D01A2D25169B737700767098 /* man1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D030FBEF1A4A382000F7ADA0 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854A13B3ACEE0099B651 /* input.cpp */; };
@@ -364,6 +366,16 @@
 		D05F59CB1F041AE4003EE978 /* builtin_bg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D05F596D1F041AE4003EE978 /* builtin_bg.cpp */; };
 		D05F59CC1F041AE4003EE978 /* builtin_bg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D05F596D1F041AE4003EE978 /* builtin_bg.cpp */; };
 		D05F59CD1F041AE4003EE978 /* builtin_bg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D05F596D1F041AE4003EE978 /* builtin_bg.cpp */; };
+		D06821601F5148AE00040321 /* builtin_math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0B51D811F5018B30051C61A /* builtin_math.cpp */; };
+		D068222A1F5149B500040321 /* muParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822211F51498700040321 /* muParser.cpp */; };
+		D068222B1F5149B500040321 /* muParserBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822221F51498700040321 /* muParserBase.cpp */; };
+		D068222C1F5149B500040321 /* muParserBytecode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822231F51498700040321 /* muParserBytecode.cpp */; };
+		D068222D1F5149B500040321 /* muParserCallback.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822241F51498700040321 /* muParserCallback.cpp */; };
+		D068222E1F5149B500040321 /* muParserDLL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822251F51498700040321 /* muParserDLL.cpp */; };
+		D068222F1F5149B500040321 /* muParserError.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822261F51498700040321 /* muParserError.cpp */; };
+		D06822301F5149B500040321 /* muParserInt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822271F51498700040321 /* muParserInt.cpp */; };
+		D06822311F5149B500040321 /* muParserTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822281F51498700040321 /* muParserTest.cpp */; };
+		D06822321F5149B500040321 /* muParserTokenReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822291F51498700040321 /* muParserTokenReader.cpp */; };
 		D07B247315BCC15700D4ADB4 /* add-shell in Resources */ = {isa = PBXBuildFile; fileRef = D07B247215BCC15700D4ADB4 /* add-shell */; };
 		D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = D07B247515BCC4BE00D4ADB4 /* install.sh */; };
 		D07D266A15E33B86009E43F6 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0C4FD9415A7D7EE00212EF1 /* config.fish */; };
@@ -374,6 +386,8 @@
 		D0879AC816BF9AAB00E98E56 /* fish_term_icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = D0879AC616BF9A1A00E98E56 /* fish_term_icon.icns */; };
 		D0A564FE168D23D800AF6161 /* man in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0A564F1168D0BAB00AF6161 /* man */; };
 		D0A56501168D258300AF6161 /* man in Copy Files */ = {isa = PBXBuildFile; fileRef = D0A564F1168D0BAB00AF6161 /* man */; };
+		D0B51D831F5018E80051C61A /* builtin_math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0B51D811F5018B30051C61A /* builtin_math.cpp */; };
+		D0B51D841F5018F30051C61A /* builtin_math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0B51D811F5018B30051C61A /* builtin_math.cpp */; };
 		D0C52F371765284C00BFAB82 /* parse_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C52F351765284C00BFAB82 /* parse_tree.cpp */; };
 		D0C9733818DE5449002D7C81 /* utf8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C9733718DE5449002D7C81 /* utf8.cpp */; };
 		D0CBD587159EF0E10024809C /* launch_fish.scpt in Resources */ = {isa = PBXBuildFile; fileRef = D0CBD586159EF0E10024809C /* launch_fish.scpt */; };
@@ -652,8 +666,6 @@
 		9C7A557C1DCD717C0049C25D /* fish_key_reader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fish_key_reader.cpp; sourceTree = "<group>"; };
 		CB0F034A1F156FE3001827D3 /* builtin_argparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_argparse.cpp; sourceTree = "<group>"; };
 		CB0F034B1F156FE3001827D3 /* builtin_argparse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin_argparse.h; sourceTree = "<group>"; };
-		CBB7725B1F14964100780A21 /* fish-shell */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "fish-shell"; sourceTree = "<group>"; };
-		CBB7725C1F1496AF00780A21 /* fish-shell */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "fish-shell"; sourceTree = "<group>"; };
 		D00769421990137800CA4627 /* fish_tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fish_tests; sourceTree = BUILT_PRODUCTS_DIR; };
 		D00F63F019137E9D00FCCDEC /* fish_version.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fish_version.cpp; sourceTree = "<group>"; };
 		D01A2D23169B730A00767098 /* man1 */ = {isa = PBXFileReference; lastKnownFileType = text; name = man1; path = pages_for_manpath/man1; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -754,6 +766,30 @@
 		D05F596B1F041AE4003EE978 /* builtin_bind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_bind.cpp; sourceTree = "<group>"; };
 		D05F596C1F041AE4003EE978 /* builtin_bg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin_bg.h; sourceTree = "<group>"; };
 		D05F596D1F041AE4003EE978 /* builtin_bg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_bg.cpp; sourceTree = "<group>"; };
+		D06821651F51490E00040321 /* libmuparser.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmuparser.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		D06821FB1F51498700040321 /* muParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParser.h; sourceTree = "<group>"; };
+		D06821FC1F51498700040321 /* muParserBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserBase.h; sourceTree = "<group>"; };
+		D06821FD1F51498700040321 /* muParserBytecode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserBytecode.h; sourceTree = "<group>"; };
+		D06821FE1F51498700040321 /* muParserCallback.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserCallback.h; sourceTree = "<group>"; };
+		D06821FF1F51498700040321 /* muParserDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserDef.h; sourceTree = "<group>"; };
+		D06822001F51498700040321 /* muParserDLL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserDLL.h; sourceTree = "<group>"; };
+		D06822011F51498700040321 /* muParserError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserError.h; sourceTree = "<group>"; };
+		D06822021F51498700040321 /* muParserFixes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserFixes.h; sourceTree = "<group>"; };
+		D06822031F51498700040321 /* muParserInt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserInt.h; sourceTree = "<group>"; };
+		D06822041F51498700040321 /* muParserStack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserStack.h; sourceTree = "<group>"; };
+		D06822051F51498700040321 /* muParserTemplateMagic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserTemplateMagic.h; sourceTree = "<group>"; };
+		D06822061F51498700040321 /* muParserTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserTest.h; sourceTree = "<group>"; };
+		D06822071F51498700040321 /* muParserToken.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserToken.h; sourceTree = "<group>"; };
+		D06822081F51498700040321 /* muParserTokenReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserTokenReader.h; sourceTree = "<group>"; };
+		D06822211F51498700040321 /* muParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParser.cpp; sourceTree = "<group>"; };
+		D06822221F51498700040321 /* muParserBase.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserBase.cpp; sourceTree = "<group>"; };
+		D06822231F51498700040321 /* muParserBytecode.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserBytecode.cpp; sourceTree = "<group>"; };
+		D06822241F51498700040321 /* muParserCallback.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserCallback.cpp; sourceTree = "<group>"; };
+		D06822251F51498700040321 /* muParserDLL.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserDLL.cpp; sourceTree = "<group>"; };
+		D06822261F51498700040321 /* muParserError.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserError.cpp; sourceTree = "<group>"; };
+		D06822271F51498700040321 /* muParserInt.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserInt.cpp; sourceTree = "<group>"; };
+		D06822281F51498700040321 /* muParserTest.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserTest.cpp; sourceTree = "<group>"; };
+		D06822291F51498700040321 /* muParserTokenReader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserTokenReader.cpp; sourceTree = "<group>"; };
 		D07B247215BCC15700D4ADB4 /* add-shell */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "add-shell"; path = "build_tools/osx_package_scripts/add-shell"; sourceTree = "<group>"; };
 		D07B247515BCC4BE00D4ADB4 /* install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = install.sh; path = osx/install.sh; sourceTree = "<group>"; };
 		D0879AC616BF9A1A00E98E56 /* fish_term_icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = fish_term_icon.icns; path = osx/fish_term_icon.icns; sourceTree = "<group>"; };
@@ -831,6 +867,8 @@
 		D0A564D2168CF34A00AF6161 /* doc_src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc_src; sourceTree = "<group>"; };
 		D0A564F1168D0BAB00AF6161 /* man */ = {isa = PBXFileReference; lastKnownFileType = text; path = man; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0A564F2168D1F2000AF6161 /* build_documentation.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = build_documentation.sh; path = build_tools/build_documentation.sh; sourceTree = "<group>"; };
+		D0B51D811F5018B30051C61A /* builtin_math.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_math.cpp; sourceTree = "<group>"; };
+		D0B51D821F5018BE0051C61A /* builtin_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = builtin_math.h; sourceTree = "<group>"; };
 		D0B6B0FE14E88BA400AD6C10 /* color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = color.cpp; sourceTree = "<group>"; };
 		D0B6B0FF14E88BA400AD6C10 /* color.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = color.h; sourceTree = "<group>"; };
 		D0C4FD9415A7D7EE00212EF1 /* config.fish */ = {isa = PBXFileReference; lastKnownFileType = text; name = config.fish; path = etc/config.fish; sourceTree = "<group>"; };
@@ -882,12 +920,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D06821621F51490E00040321 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D0D02ACD1598642A008E62BD /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				D0D02ADC159864D5008E62BD /* libncurses.dylib in Frameworks */,
 				D04F7FF21BA4E68A00B0F227 /* libpcre2.a in Frameworks */,
+				D013CE381F52964D00AB1419 /* libmuparser.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -897,6 +943,7 @@
 			files = (
 				D0D02A8D15983CFA008E62BD /* libncurses.dylib in Frameworks */,
 				D04F7FF11BA4E68200B0F227 /* libpcre2.a in Frameworks */,
+				D013CE371F52964A00AB1419 /* libmuparser.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -959,6 +1006,52 @@
 			path = "pcre2-10.22/src";
 			sourceTree = SOURCE_ROOT;
 		};
+		D06821C71F51498700040321 /* muparser-2.2.5 */ = {
+			isa = PBXGroup;
+			children = (
+				D06821FA1F51498700040321 /* include */,
+				D06822201F51498700040321 /* src */,
+			);
+			path = "muparser-2.2.5";
+			sourceTree = SOURCE_ROOT;
+		};
+		D06821FA1F51498700040321 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				D06821FB1F51498700040321 /* muParser.h */,
+				D06821FC1F51498700040321 /* muParserBase.h */,
+				D06821FD1F51498700040321 /* muParserBytecode.h */,
+				D06821FE1F51498700040321 /* muParserCallback.h */,
+				D06821FF1F51498700040321 /* muParserDef.h */,
+				D06822001F51498700040321 /* muParserDLL.h */,
+				D06822011F51498700040321 /* muParserError.h */,
+				D06822021F51498700040321 /* muParserFixes.h */,
+				D06822031F51498700040321 /* muParserInt.h */,
+				D06822041F51498700040321 /* muParserStack.h */,
+				D06822051F51498700040321 /* muParserTemplateMagic.h */,
+				D06822061F51498700040321 /* muParserTest.h */,
+				D06822071F51498700040321 /* muParserToken.h */,
+				D06822081F51498700040321 /* muParserTokenReader.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		D06822201F51498700040321 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				D06822211F51498700040321 /* muParser.cpp */,
+				D06822221F51498700040321 /* muParserBase.cpp */,
+				D06822231F51498700040321 /* muParserBytecode.cpp */,
+				D06822241F51498700040321 /* muParserCallback.cpp */,
+				D06822251F51498700040321 /* muParserDLL.cpp */,
+				D06822261F51498700040321 /* muParserError.cpp */,
+				D06822271F51498700040321 /* muParserInt.cpp */,
+				D06822281F51498700040321 /* muParserTest.cpp */,
+				D06822291F51498700040321 /* muParserTokenReader.cpp */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
 		D08A328E17B4455100F3A533 /* fish_tests */ = {
 			isa = PBXGroup;
 			children = (
@@ -969,8 +1062,6 @@
 		D0A084F013B3AC130099B651 = {
 			isa = PBXGroup;
 			children = (
-				CBB7725C1F1496AF00780A21 /* fish-shell */,
-				CBB7725B1F14964100780A21 /* fish-shell */,
 				D0D02A91159845EF008E62BD /* Sources */,
 				D0D02AFC159871BF008E62BD /* Launcher */,
 				D0D02A8E15983D5F008E62BD /* Libraries */,
@@ -1063,6 +1154,8 @@
 				D05F596B1F041AE4003EE978 /* builtin_bind.cpp */,
 				D05F596C1F041AE4003EE978 /* builtin_bg.h */,
 				D05F596D1F041AE4003EE978 /* builtin_bg.cpp */,
+				D0B51D821F5018BE0051C61A /* builtin_math.h */,
+				D0B51D811F5018B30051C61A /* builtin_math.cpp */,
 				D0B6B0FF14E88BA400AD6C10 /* color.h */,
 				D0B6B0FE14E88BA400AD6C10 /* color.cpp */,
 				D0A0850413B3ACEE0099B651 /* common.h */,
@@ -1151,6 +1244,7 @@
 				D0A0856013B3ACEE0099B651 /* wildcard.cpp */,
 				D0A0852913B3ACEE0099B651 /* wutil.h */,
 				D0A0856113B3ACEE0099B651 /* wutil.cpp */,
+				D06821C71F51498700040321 /* muparser-2.2.5 */,
 				D04F7F8B1BA4DC7600B0F227 /* pcre */,
 			);
 			name = Sources;
@@ -1195,6 +1289,7 @@
 				D00769421990137800CA4627 /* fish_tests */,
 				D04F7FD01BA4E29300B0F227 /* libpcre2.a */,
 				9C7A55721DCD71330049C25D /* fish_key_reader */,
+				D06821651F51490E00040321 /* libmuparser.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1203,6 +1298,13 @@
 
 /* Begin PBXHeadersBuildPhase section */
 		D04F7FCE1BA4E29300B0F227 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D06821631F51490E00040321 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1264,6 +1366,23 @@
 			name = pcre2;
 			productName = libpcre2.a;
 			productReference = D04F7FD01BA4E29300B0F227 /* libpcre2.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		D06821641F51490E00040321 /* muparser */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D06821661F51490E00040321 /* Build configuration list for PBXNativeTarget "muparser" */;
+			buildPhases = (
+				D06821611F51490E00040321 /* Sources */,
+				D06821621F51490E00040321 /* Frameworks */,
+				D06821631F51490E00040321 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = muparser;
+			productName = muparser;
+			productReference = D06821651F51490E00040321 /* libmuparser.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		D0D02A9915985A75008E62BD /* fish.app */ = {
@@ -1333,6 +1452,9 @@
 					D04F7FCF1BA4E29300B0F227 = {
 						CreatedOnToolsVersion = 6.4;
 					};
+					D06821641F51490E00040321 = {
+						CreatedOnToolsVersion = 9.0;
+					};
 				};
 			};
 			buildConfigurationList = D0A084F513B3AC130099B651 /* Build configuration list for PBXProject "fish" */;
@@ -1357,6 +1479,7 @@
 				D04F7FCF1BA4E29300B0F227 /* pcre2 */,
 				D008D0C41BC58F8800841177 /* generate-version-header */,
 				9C7A55301DCD71330049C25D /* fish_key_reader */,
+				D06821641F51490E00040321 /* muparser */,
 			);
 		};
 /* End PBXProject section */
@@ -1569,6 +1692,7 @@
 				D001B6021F041CBD000838CC /* builtin_read.cpp in Sources */,
 				D001B6041F041CBD000838CC /* builtin_random.cpp in Sources */,
 				D001B6061F041CBD000838CC /* builtin_pwd.cpp in Sources */,
+				D0B51D831F5018E80051C61A /* builtin_math.cpp in Sources */,
 				D001B6081F041CBD000838CC /* builtin_printf.cpp in Sources */,
 				D001B60A1F041CBD000838CC /* builtin_jobs.cpp in Sources */,
 				D001B60C1F041CBD000838CC /* builtin_history.cpp in Sources */,
@@ -1749,6 +1873,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D06821611F51490E00040321 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D068222A1F5149B500040321 /* muParser.cpp in Sources */,
+				D068222B1F5149B500040321 /* muParserBase.cpp in Sources */,
+				D068222C1F5149B500040321 /* muParserBytecode.cpp in Sources */,
+				D068222D1F5149B500040321 /* muParserCallback.cpp in Sources */,
+				D068222E1F5149B500040321 /* muParserDLL.cpp in Sources */,
+				D068222F1F5149B500040321 /* muParserError.cpp in Sources */,
+				D06822301F5149B500040321 /* muParserInt.cpp in Sources */,
+				D06822311F5149B500040321 /* muParserTest.cpp in Sources */,
+				D06822321F5149B500040321 /* muParserTokenReader.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D0D02ACC1598642A008E62BD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1764,6 +1904,7 @@
 				D030FBF01A4A382B00F7ADA0 /* event.cpp in Sources */,
 				D05F59B11F041AE4003EE978 /* builtin_disown.cpp in Sources */,
 				D030FBFA1A4A38F300F7ADA0 /* exec.cpp in Sources */,
+				D06821601F5148AE00040321 /* builtin_math.cpp in Sources */,
 				D05F597E1F041AE4003EE978 /* builtin_source.cpp in Sources */,
 				D05F597B1F041AE4003EE978 /* builtin_status.cpp in Sources */,
 				D05F59811F041AE4003EE978 /* builtin_set.cpp in Sources */,
@@ -1851,6 +1992,7 @@
 				D05F59711F041AE4003EE978 /* builtin_ulimit.cpp in Sources */,
 				D05F59C51F041AE4003EE978 /* builtin_block.cpp in Sources */,
 				D05F59CB1F041AE4003EE978 /* builtin_bg.cpp in Sources */,
+				D0B51D841F5018F30051C61A /* builtin_math.cpp in Sources */,
 				D0D02A81159839D5008E62BD /* input_common.cpp in Sources */,
 				D05F59B01F041AE4003EE978 /* builtin_disown.cpp in Sources */,
 				D0D02A82159839D5008E62BD /* io.cpp in Sources */,
@@ -2119,6 +2261,74 @@
 			};
 			name = Release;
 		};
+		D06821671F51490E00040321 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_CFLAGS = "-Wno-switch-enum";
+			};
+			name = Debug;
+		};
+		D06821681F51490E00040321 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_CFLAGS = "-Wno-switch-enum";
+			};
+			name = Release;
+		};
 		D07D267015E33B86009E43F6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2159,8 +2369,8 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2170,6 +2380,7 @@
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
 					"BINDIR=L\\\"/usr/local/bin\\\"",
 					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
+					"_UNICODE=1",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -2183,7 +2394,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx $(SRCROOT)/osx/shared_headers $(SHARED_DERIVED_FILE_DIR)";
+				USER_HEADER_SEARCH_PATHS = "$(SHARED_DERIVED_FILE_DIR) $(SRCROOT)/osx $(SRCROOT)/osx/shared_headers $(SRCROOT)/muparser-2.2.5/include";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wunused-macros",
@@ -2211,8 +2422,8 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"LOCALEDIR=\\\"/usr/local/share/locale\\\"",
@@ -2221,6 +2432,7 @@
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
 					"BINDIR=L\\\"/usr/local/bin\\\"",
 					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
+					"_UNICODE=1",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
@@ -2232,7 +2444,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx $(SRCROOT)/osx/shared_headers $(SHARED_DERIVED_FILE_DIR)";
+				USER_HEADER_SEARCH_PATHS = "$(SHARED_DERIVED_FILE_DIR) $(SRCROOT)/osx $(SRCROOT)/osx/shared_headers $(SRCROOT)/muparser-2.2.5/include";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wunused-macros",
@@ -2402,6 +2614,15 @@
 			buildConfigurations = (
 				D04F7FD21BA4E29300B0F227 /* Debug */,
 				D04F7FD31BA4E29300B0F227 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D06821661F51490E00040321 /* Build configuration list for PBXNativeTarget "muparser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D06821671F51490E00040321 /* Debug */,
+				D06821681F51490E00040321 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

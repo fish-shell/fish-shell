@@ -88,6 +88,8 @@ messages.pot
 /tests/*.tmp.*
 /share/pkgconfig
 /muparser-*/bk-deps
+/muparser-*/shared-ld-sh
+/muparser-*/build/autoconf/muparser.pc
 /pcre2-*/configure.lineno
 
 # xcode

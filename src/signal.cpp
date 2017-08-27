@@ -270,6 +270,8 @@ void signal_reset_handlers() {
 
 static void set_interactive_handlers() {
     struct sigaction act, oact;
+    act.sa_flags = 0;
+    oact.sa_flags = 0;
     sigemptyset(&act.sa_mask);
 
     // Interactive mode. Ignore interactive signals.  We are a shell, we know what is best for
@@ -315,6 +317,7 @@ static void set_interactive_handlers() {
 
 static void set_non_interactive_handlers() {
     struct sigaction act;
+    act.sa_flags = 0;
     sigemptyset(&act.sa_mask);
 
     // Non-interactive. Ignore interrupt, check exit status of processes to determine result
@@ -327,6 +330,7 @@ static void set_non_interactive_handlers() {
 /// Sets up appropriate signal handlers.
 void signal_set_handlers() {
     struct sigaction act;
+    act.sa_flags = 0;
     sigemptyset(&act.sa_mask);
 
     // Ignore SIGPIPE. We'll detect failed writes and deal with them appropriately. We don't want
@@ -358,6 +362,7 @@ void signal_handle(int sig, int do_handle) {
         (sig == SIGTTOU) || (sig == SIGCHLD))
         return;
 
+    act.sa_flags = 0;
     sigemptyset(&act.sa_mask);
     if (do_handle) {
         act.sa_flags = SA_SIGINFO;

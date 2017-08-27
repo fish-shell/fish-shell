@@ -457,7 +457,8 @@ static bool does_term_support_setting_title() {
     const env_var_t term_var = env_get(L"TERM");
     if (term_var.missing_or_empty()) return false;
 
-    const wchar_t *term = term_var.as_string().c_str();
+    const wcstring term_str = term_var.as_string();
+    const wchar_t *term = term_str.c_str();
     bool recognized = contains(title_terms, term_var.as_string());
     if (!recognized) recognized = !wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
     if (!recognized) recognized = !wcsncmp(term, L"screen-", wcslen(L"screen-"));

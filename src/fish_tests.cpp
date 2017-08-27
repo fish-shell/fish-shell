@@ -52,6 +52,7 @@
 #include "io.h"
 #include "iothread.h"
 #include "lru.h"
+#include "maybe.h"
 #include "pager.h"
 #include "parse_constants.h"
 #include "parse_tree.h"
@@ -4247,6 +4248,37 @@ static void test_illegal_command_exit_code(void) {
     popd();
 }
 
+void test_maybe() {
+    say(L"Testing maybe_t");
+    do_test(! bool(maybe_t<int>()));
+    maybe_t<int> m(3);
+    do_test(m.has_value());
+    do_test(m.value() == 3);
+    m.reset();
+    do_test(!m.has_value());
+    m = 123;
+    do_test(m.has_value());
+    do_test(m.has_value() && m.value() == 123);
+    m = maybe_t<int>();
+    do_test(!m.has_value());
+    m = maybe_t<int>(64);
+    do_test(m.has_value() && m.value() == 64);
+    m = 123;
+    do_test(m == maybe_t<int>(123));
+    do_test(m != maybe_t<int>());
+    do_test(maybe_t<int>() == none());
+    do_test(!maybe_t<int>(none()).has_value());
+    m = none();
+    do_test(! bool(m));
+
+    maybe_t<std::string> m2("abc");
+    do_test(!m2.missing_or_empty());
+    m2 = "";
+    do_test(m2.missing_or_empty());
+    m2 = none();
+    do_test(m2.missing_or_empty());
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
@@ -4342,6 +4374,7 @@ int main(int argc, char **argv) {
     if (should_test_function("history_formats")) history_tests_t::test_history_formats();
     if (should_test_function("string")) test_string();
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
+    if (should_test_function("maybe")) test_maybe();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

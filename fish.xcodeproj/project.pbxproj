@@ -676,6 +676,7 @@
 		D03238891849D1980032CF2C /* pager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pager.cpp; sourceTree = "<group>"; };
 		D032388A1849D1980032CF2C /* pager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pager.h; sourceTree = "<group>"; };
 		D03EE83814DF88B200FC7150 /* lru.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lru.h; sourceTree = "<group>"; };
+		D043012D1F5350E400942A50 /* maybe.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = maybe.h; sourceTree = "<group>"; };
 		D04F7F8D1BA4DCD900B0F227 /* pcre2_compile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pcre2_compile.c; sourceTree = "<group>"; };
 		D04F7F901BA4DCE900B0F227 /* pcre2_config.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pcre2_config.c; sourceTree = "<group>"; };
 		D04F7F931BA4DCFA00B0F227 /* pcre2_context.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pcre2_context.c; sourceTree = "<group>"; };
@@ -1206,6 +1207,7 @@
 				D03EE83814DF88B200FC7150 /* lru.h */,
 				D0A0851A13B3ACEE0099B651 /* output.h */,
 				D0A0855113B3ACEE0099B651 /* output.cpp */,
+				D043012D1F5350E400942A50 /* maybe.h */,
 				D032388A1849D1980032CF2C /* pager.h */,
 				D03238891849D1980032CF2C /* pager.cpp */,
 				D0A0851B13B3ACEE0099B651 /* parse_util.h */,

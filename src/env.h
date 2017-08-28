@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "common.h"
+#include "maybe.h"
 
 extern size_t read_byte_limit;
 extern bool curses_initialized;
@@ -71,40 +72,31 @@ class env_var_t {
    private:
     wcstring name;         // name of the var
     wcstring_list_t vals;  // list of values assigned to the var
-    bool is_missing;       // true if the var is not set in the requested scope
 
    public:
     bool exportv;  // whether the variable should be exported
 
-    void set_missing(void) { is_missing = true; }
-
     // Constructors.
-    env_var_t(const env_var_t &v)
-        : name(v.name), vals(v.vals), is_missing(v.is_missing), exportv(v.exportv) {}
+    env_var_t(const env_var_t &v) : name(v.name), vals(v.vals), exportv(v.exportv) {}
     env_var_t(const wcstring &our_name, const wcstring_list_t &l)
-        : name(our_name), vals(l), is_missing(false), exportv(false) {}
+        : name(our_name), vals(l), exportv(false) {}
     env_var_t(const wcstring &our_name, const wcstring &s)
         : name(our_name),
           vals({
               s,
           }),
-          is_missing(false),
           exportv(false) {}
     env_var_t(const wcstring &our_name, const wchar_t *s)
         : name(our_name),
           vals({
               wcstring(s),
           }),
-          is_missing(false),
           exportv(false) {}
-    env_var_t() : name(), vals(), is_missing(false), exportv(false) {}
+    env_var_t() : name(), vals(), exportv(false) {}
 
     bool empty(void) const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
-    bool missing(void) const { return is_missing; }
-    bool missing_or_empty(void) const { return missing() || empty(); }
 
     bool matches_string(const wcstring &str) {
-        if (is_missing) return false;
         if (vals.size() > 1) return false;
         return vals[0] == str;
     }
@@ -120,35 +112,28 @@ class env_var_t {
     env_var_t &operator=(const env_var_t &var) {
         this->vals = var.vals;
         this->exportv = var.exportv;
-        this->is_missing = var.is_missing;
         return *this;
     }
 
-    /// Compare a simple string to the var. Returns true iff the var is not missing, has a single
+    /// Compare a simple string to the var. Returns true iff the var has a single
     /// value and that value matches the string being compared to.
     bool operator==(const wcstring &str) const {
-        if (is_missing) return false;
         if (vals.size() > 1) return false;
         return vals[0] == str;
     }
 
-    bool operator==(const env_var_t &var) const {
-        return this->is_missing == var.is_missing && vals == var.vals;
-    }
+    bool operator==(const env_var_t &var) const { return vals == var.vals; }
 
-    bool operator==(const wcstring_list_t &values) const { return !is_missing && vals == values; }
+    bool operator==(const wcstring_list_t &values) const { return vals == values; }
 
     bool operator!=(const env_var_t &var) const { return vals != var.vals; }
 };
 
-env_var_t create_missing_var();
-extern env_var_t missing_var;
-
 /// This is used to convert a serialized env_var_t back into a list.
 wcstring_list_t decode_serialized(const wcstring &s);
 
-/// Gets the variable with the specified name, or env_var_t::missing_var if it does not exist.
-env_var_t env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
+/// Gets the variable with the specified name, or none() if it does not exist.
+maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
 
 /// Sets the variable with the specified name to the given values.
 int env_set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
@@ -207,7 +192,7 @@ class env_vars_snapshot_t {
     env_vars_snapshot_t(const wchar_t *const *keys);
     env_vars_snapshot_t();
 
-    env_var_t get(const wcstring &key) const;
+    maybe_t<env_var_t> get(const wcstring &key) const;
 
     // Returns the fake snapshot representing the live variables array.
     static const env_vars_snapshot_t &current();

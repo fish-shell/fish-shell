@@ -428,8 +428,8 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (!opts.have_delimiter) {
-        env_var_t ifs = env_get(L"IFS");
-        if (!ifs.missing_or_empty()) opts.delimiter = ifs.as_string();
+        auto ifs = env_get(L"IFS");
+        if (!ifs.missing_or_empty()) opts.delimiter = ifs->as_string();
     }
 
     if (opts.delimiter.empty()) {

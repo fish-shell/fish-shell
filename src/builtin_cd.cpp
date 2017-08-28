@@ -39,19 +39,15 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (argv[optind]) {
         dir_in = env_var_t(L"", argv[optind]);  // unamed var
     } else {
-        dir_in = env_get(L"HOME");
-        if (dir_in.missing_or_empty()) {
+        auto maybe_dir_in = env_get(L"HOME");
+        if (maybe_dir_in.missing_or_empty()) {
             streams.err.append_format(_(L"%ls: Could not find home directory\n"), cmd);
             return STATUS_CMD_ERROR;
         }
+        dir_in = std::move(*maybe_dir_in);
     }
 
-    bool got_cd_path = false;
-    if (!dir_in.missing()) {
-        got_cd_path = path_get_cdpath(dir_in, &dir);
-    }
-
-    if (!got_cd_path) {
+    if (!path_get_cdpath(dir_in, &dir)) {
         if (errno == ENOTDIR) {
             streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd,
                                       dir_in.as_string().c_str());

@@ -221,12 +221,12 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
         directories.push_back(working_directory);
     } else {
         // Get the CDPATH.
-        env_var_t cdpath = env_get(L"CDPATH");
-        if (cdpath.missing_or_empty()) cdpath = env_var_t(cdpath.get_name(), L".");
+        auto cdpath = env_get(L"CDPATH");
+        if (cdpath.missing_or_empty()) cdpath = env_var_t(L"CDPATH", L".");
 
         // Tokenize it into directories.
         std::vector<wcstring> pathsv;
-        cdpath.to_list(pathsv);
+        cdpath->to_list(pathsv);
         for (auto next_path : pathsv) {
             if (next_path.empty()) next_path = L".";
             // Ensure that we use the working directory for relative cdpaths like ".".
@@ -268,27 +268,28 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) 
         return rgb_color_t::normal();
     }
 
-    env_var_t var = env_get(highlight_var[idx]);
+    auto var = env_get(highlight_var[idx]);
 
     // debug( 1, L"%d -> %d -> %ls", highlight, idx, val );
 
-    if (var.missing()) var = env_get(highlight_var[0]);
+    if (!var) var = env_get(highlight_var[0]);
 
-    if (!var.missing()) result = parse_color(var, treat_as_background);
+    if (var) result = parse_color(*var, treat_as_background);
 
     // Handle modifiers.
     if (highlight & highlight_modifier_valid_path) {
-        env_var_t var2 = env_get(L"fish_color_valid_path");
-
-        rgb_color_t result2 = parse_color(var2, is_background);
-        if (result.is_normal())
-            result = result2;
-        else {
-            if (result2.is_bold()) result.set_bold(true);
-            if (result2.is_underline()) result.set_underline(true);
-            if (result2.is_italics()) result.set_italics(true);
-            if (result2.is_dim()) result.set_dim(true);
-            if (result2.is_reverse()) result.set_reverse(true);
+        auto var2 = env_get(L"fish_color_valid_path");
+        if (var2) {
+            rgb_color_t result2 = parse_color(*var2, is_background);
+            if (result.is_normal())
+                result = result2;
+            else {
+                if (result2.is_bold()) result.set_bold(true);
+                if (result2.is_underline()) result.set_underline(true);
+                if (result2.is_italics()) result.set_italics(true);
+                if (result2.is_dim()) result.set_dim(true);
+                if (result2.is_reverse()) result.set_reverse(true);
+            }
         }
     }
 

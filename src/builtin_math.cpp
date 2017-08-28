@@ -146,17 +146,17 @@ static double *retrieve_var(const wchar_t *var_name, void *user_data) {
     UNUSED(user_data);
     static double zero_result = 0.0;
 
-    env_var_t var = env_get(var_name, ENV_DEFAULT);
-    if (var.missing()) {
+    auto var = env_get(var_name, ENV_DEFAULT);
+    if (!var) {
         // We could report an error but we normally don't treat missing vars as a fatal error.
         // throw mu::ParserError(L"Var '%ls' does not exist.");
         return &zero_result;
     }
-    if (var.empty()) {
+    if (var->empty()) {
         return &zero_result;
     }
 
-    const wchar_t *first_val = var.as_list()[0].c_str();
+    const wchar_t *first_val = var->as_list()[0].c_str();
     wchar_t *endptr;
     errno = 0;
     double result = wcstod(first_val, &endptr);

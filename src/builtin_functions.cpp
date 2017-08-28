@@ -192,9 +192,7 @@ static wcstring functions_def(const wcstring &name) {
                                                        end = inherit_vars.end();
          it != end; ++it) {
         wcstring_list_t lst;
-        if (!it->second.missing()) {
-            it->second.to_list(lst);
-        }
+        it->second.to_list(lst);
 
         // This forced tab is crummy, but we don't know what indentation style the function uses.
         append_format(out, L"\n\tset -l %ls", it->first.c_str());

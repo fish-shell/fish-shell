@@ -65,15 +65,15 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
     CHECK_BLOCK(0);
     ASSERT_IS_MAIN_THREAD();
 
-    env_var_t path_var = env_get(env_var_name);
+    auto path_var = env_get(env_var_name);
 
     // Do we know where to look?
-    if (path_var.empty()) return 0;
+    if (path_var.missing_or_empty()) return 0;
 
     // Check if the lookup path has changed. If so, drop all loaded files. path_var may only be
     // inspected on the main thread.
-    if (path_var != this->last_path) {
-        this->last_path = path_var;
+    if (*path_var != this->last_path) {
+        this->last_path = *path_var;
         this->last_path_tokenized.clear();
         this->last_path.to_list(this->last_path_tokenized);
 
@@ -106,11 +106,11 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
 }
 
 bool autoload_t::can_load(const wcstring &cmd, const env_vars_snapshot_t &vars) {
-    const env_var_t path_var = vars.get(env_var_name);
+    auto path_var = vars.get(env_var_name);
     if (path_var.missing_or_empty()) return false;
 
     std::vector<wcstring> path_list;
-    path_var.to_list(path_list);
+    path_var->to_list(path_list);
     return this->locate_file_and_maybe_load_it(cmd, false, false, path_list);
 }
 

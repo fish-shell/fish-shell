@@ -1780,9 +1780,9 @@ void history_sanity_check() {
 wcstring history_session_id() {
     wcstring result = DFLT_FISH_HISTORY_SESSION_ID;
 
-    const env_var_t var = env_get(L"FISH_HISTORY");
-    if (!var.missing()) {
-        wcstring session_id = var.as_string();
+    const auto var = env_get(L"FISH_HISTORY");
+    if (var) {
+        wcstring session_id = var->as_string();
         if (session_id.empty()) {
             result = L"";
         } else if (session_id == L"default") {

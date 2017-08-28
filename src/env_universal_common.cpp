@@ -265,10 +265,10 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
 env_universal_t::env_universal_t(const wcstring &path)
     : explicit_vars_path(path), tried_renaming(false), last_read_file(kInvalidFileID) {}
 
-env_var_t env_universal_t::get(const wcstring &name) const {
+maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     var_table_t::const_iterator where = vars.find(name);
     if (where != vars.end()) return where->second;
-    return missing_var;
+    return none();
 }
 
 bool env_universal_t::get_export(const wcstring &name) const {

@@ -1108,10 +1108,10 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
         wcstring desc;
         if (this->wants_descriptions()) {
             // Can't use this->vars here, it could be any variable.
-            env_var_t var = env_get(env_name);
-            if (var.missing()) continue;
+            auto var = env_get(env_name);
+            if (!var) continue;
 
-            wcstring value = expand_escape_variable(var);
+            wcstring value = expand_escape_variable(*var);
             if (this->type() != COMPLETE_AUTOSUGGEST) {
                 desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());
             }

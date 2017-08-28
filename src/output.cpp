@@ -554,10 +554,11 @@ void writembs_check(char *mbs, const char *mbs_name, const char *file, long line
     if (mbs != NULL) {
         tputs(mbs, 1, &writeb);
     } else {
-        env_var_t term = env_get(L"TERM");
+        auto term = env_get(L"TERM");
         const wchar_t *fmt =
             _(L"Tried to use terminfo string %s on line %ld of %s, which is "
               L"undefined in terminal of type \"%ls\". Please report this error to %s");
-        debug(0, fmt, mbs_name, line, file, term.as_string().c_str(), PACKAGE_BUGREPORT);
+        debug(0, fmt, mbs_name, line, file, term ? term->as_string().c_str() : L"",
+              PACKAGE_BUGREPORT);
     }
 }

@@ -71,7 +71,7 @@ class env_universal_t {
     explicit env_universal_t(const wcstring &path);
 
     // Get the value of the variable with the specified name.
-    env_var_t get(const wcstring &name) const;
+    maybe_t<env_var_t> get(const wcstring &name) const;
 
     // Returns whether the variable with the given name is exported, or false if it does not exist.
     bool get_export(const wcstring &name) const;

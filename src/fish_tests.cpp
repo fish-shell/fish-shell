@@ -2579,19 +2579,19 @@ static void test_universal() {
     for (int i = 0; i < threads; i++) {
         for (int j = 0; j < UVARS_PER_THREAD; j++) {
             const wcstring key = format_string(L"key_%d_%d", i, j);
-            env_var_t expected_val;
+            maybe_t<env_var_t> expected_val;
             if (j == 0) {
-                expected_val = missing_var;
+                expected_val = none();
             } else {
                 expected_val = env_var_t(L"", format_string(L"val_%d_%d", i, j));
             }
-            const env_var_t var = uvars.get(key);
-            if (j == 0) assert(expected_val.missing());
+            const maybe_t<env_var_t> var = uvars.get(key);
+            if (j == 0) assert(!expected_val);
             if (var != expected_val) {
                 const wchar_t *missing_desc = L"<missing>";
                 err(L"Wrong value for key %ls: expected %ls, got %ls\n", key.c_str(),
-                    (expected_val.missing() ? missing_desc : expected_val.as_string().c_str()),
-                    (var.missing() ? missing_desc : var.as_string().c_str()));
+                    (expected_val ? expected_val->as_string().c_str() : missing_desc),
+                    (var ? var->as_string().c_str() : missing_desc));
             }
         }
     }
@@ -4179,7 +4179,8 @@ long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
 
     env_set_one(L"TZ", ENV_EXPORT, timezone);
 
-    const env_var_t var = env_get(L"TZ", ENV_DEFAULT);
+    const auto var = env_get(L"TZ", ENV_DEFAULT);
+    (void)var;
 
     localtime_r(&tstamp, &ltime);
     n = strftime(ltime_str, 3, "%H", &ltime);

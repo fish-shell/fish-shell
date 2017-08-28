@@ -376,10 +376,10 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
     // really make sense, so I'm not trying to fix it here.
     if (!setup_child_process(0, all_ios)) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
-        const env_var_t shlvl_var = env_get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
+        auto shlvl_var = env_get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
-        if (!shlvl_var.missing()) {
-            long shlvl = fish_wcstol(shlvl_var.as_string().c_str());
+        if (shlvl_var) {
+            long shlvl = fish_wcstol(shlvl_var->as_string().c_str());
             if (!errno && shlvl > 0) {
                 shlvl_str = to_string<long>(shlvl - 1);
             }
@@ -1202,7 +1202,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     const int prev_status = proc_get_last_status();
     bool split_output = false;
 
-    const env_var_t ifs = env_get(L"IFS");
+    const auto ifs = env_get(L"IFS");
     if (!ifs.missing_or_empty()) {
         split_output = true;
     }

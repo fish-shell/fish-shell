@@ -769,19 +769,19 @@ static int expand_variables(const wcstring &instr, std::vector<completion_t> *ou
         }
 
         var_tmp.append(instr, start_pos, var_len);
-        env_var_t var;
+        maybe_t<env_var_t> var;
         if (var_len == 1 && var_tmp[0] == VARIABLE_EXPAND_EMPTY) {
-            var = missing_var;
+            var = none();
         } else {
             var = env_get(var_tmp);
         }
 
-        if (!var.missing()) {
+        if (var) {
             int all_vars = 1;
             wcstring_list_t var_item_list;
 
             if (is_ok) {
-                var.to_list(var_item_list);
+                var->to_list(var_item_list);
 
                 const size_t slice_start = stop_pos;
                 if (slice_start < insize && instr.at(slice_start) == L'[') {
@@ -1161,8 +1161,7 @@ static void expand_home_directory(wcstring &input) {
         size_t tail_idx;
         wcstring username = get_home_directory_name(input, &tail_idx);
 
-        bool tilde_error = false;
-        env_var_t home;
+        maybe_t<env_var_t> home;
         if (username.empty()) {
             // Current users home directory.
             home = env_get(L"HOME");
@@ -1178,16 +1177,13 @@ static void expand_home_directory(wcstring &input) {
             struct passwd *result;
             char buf[8192];
             int retval = getpwnam_r(name_cstr.c_str(), &userinfo, buf, sizeof(buf), &result);
-            if (retval || !result) {
-                tilde_error = true;
-            } else {
+            if (!retval && result) {
                 home = env_var_t(L"HOME", str2wcstring(userinfo.pw_dir));
             }
         }
 
-        wchar_t *realhome = wrealpath(home.as_string(), NULL);
-
-        if (!tilde_error && realhome) {
+        const wchar_t *realhome = home ? wrealpath(home->as_string(), NULL) : nullptr;
+        if (realhome) {
             input.replace(input.begin(), input.begin() + tail_idx, realhome);
         } else {
             input[0] = L'~';
@@ -1417,12 +1413,13 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
             } else {
                 // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
                 // implies just the current directory, while an empty PATH is left empty.
-                env_var_t paths = env_get(for_cd ? L"CDPATH" : L"PATH");
+                const wchar_t *name = for_cd ? L"CDPATH" : L"PATH";
+                auto paths = env_get(name);
                 if (paths.missing_or_empty()) {
-                    paths = env_var_t(paths.get_name(), for_cd ? L"." : L"");
+                    paths = env_var_t(name, for_cd ? L"." : L"");
                 }
 
-                for (auto next_path : paths.as_list()) {
+                for (auto next_path : paths->as_list()) {
                     effective_working_dirs.push_back(
                         path_apply_working_directory(next_path, working_dir));
                 }
@@ -1575,9 +1572,9 @@ void update_abbr_cache(const wchar_t *op, const wcstring &varname) {
     }
     abbreviations.erase(abbr);
     if (wcscmp(op, L"ERASE") != 0) {
-        const env_var_t expansion = env_get(varname);
+        const auto expansion = env_get(varname);
         if (!expansion.missing_or_empty()) {
-            abbreviations.emplace(std::make_pair(abbr, expansion.as_string()));
+            abbreviations.emplace(std::make_pair(abbr, expansion->as_string()));
         }
     }
 }

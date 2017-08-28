@@ -32,7 +32,7 @@
 const wcstring_list_t dflt_pathsv({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
 static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
-                               const env_var_t &bin_path_var) {
+                               const maybe_t<env_var_t> &bin_path_var) {
     debug(3, L"path_get_path( '%ls' )", cmd.c_str());
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
@@ -55,8 +55,8 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
     }
 
     const wcstring_list_t *pathsv;
-    if (!bin_path_var.missing()) {
-        pathsv = &bin_path_var.as_list();
+    if (bin_path_var) {
+        pathsv = &bin_path_var->as_list();
     } else {
         pathsv = &dflt_pathsv;
     }
@@ -122,9 +122,9 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
         return paths;
     }
 
-    env_var_t path_var = env_get(L"PATH");
+    auto path_var = env_get(L"PATH");
     std::vector<wcstring> pathsv;
-    path_var.to_list(pathsv);
+    if (path_var) path_var->to_list(pathsv);
     for (auto path : pathsv) {
         if (path.empty()) continue;
         append_path_component(path, cmd);
@@ -144,7 +144,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
 bool path_get_cdpath(const env_var_t &dir_var, wcstring *out, const wchar_t *wd,
                      const env_vars_snapshot_t &env_vars) {
     int err = ENOENT;
-    if (dir_var.missing_or_empty()) return false;
+    if (dir_var.empty()) return false;
     wcstring dir = dir_var.as_string();
 
     if (wd) {
@@ -165,11 +165,11 @@ bool path_get_cdpath(const env_var_t &dir_var, wcstring *out, const wchar_t *wd,
         paths.push_back(path);
     } else {
         // Respect CDPATH.
-        env_var_t cdpaths = env_vars.get(L"CDPATH");
-        if (cdpaths.missing_or_empty()) cdpaths = env_var_t(cdpaths.get_name(), L".");
+        auto cdpaths = env_vars.get(L"CDPATH");
+        if (cdpaths.missing_or_empty()) cdpaths = env_var_t(L"CDPATH", L".");
 
         std::vector<wcstring> cdpathsv;
-        cdpaths.to_list(cdpathsv);
+        cdpaths->to_list(cdpathsv);
         for (auto next_path : cdpathsv) {
             if (next_path.empty()) next_path = L".";
             if (next_path == L"." && wd != NULL) {
@@ -260,8 +260,8 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
                                      bool using_xdg, const wcstring &xdg_var, const wcstring &path,
                                      int saved_errno) {
     wcstring warning_var_name = L"_FISH_WARNED_" + which_dir;
-    env_var_t var = env_get(warning_var_name, ENV_GLOBAL | ENV_EXPORT);
-    if (var.missing()) return;
+    auto var = env_get(warning_var_name, ENV_GLOBAL | ENV_EXPORT);
+    if (!var) return;
     env_set_one(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
 
     debug(0, custom_error_msg.c_str());
@@ -288,19 +288,19 @@ static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring 
     // The vars we fetch must be exported. Allowing them to be universal doesn't make sense and
     // allowing that creates a lock inversion that deadlocks the shell since we're called before
     // uvars are available.
-    const env_var_t xdg_dir = env_get(xdg_var, ENV_GLOBAL | ENV_EXPORT);
+    const auto xdg_dir = env_get(xdg_var, ENV_GLOBAL | ENV_EXPORT);
     if (!xdg_dir.missing_or_empty()) {
         using_xdg = true;
-        path = xdg_dir.as_string() + L"/fish";
+        path = xdg_dir->as_string() + L"/fish";
         if (create_directory(path) != -1) {
             path_done = true;
         } else {
             saved_errno = errno;
         }
     } else {
-        const env_var_t home = env_get(L"HOME", ENV_GLOBAL | ENV_EXPORT);
+        const auto home = env_get(L"HOME", ENV_GLOBAL | ENV_EXPORT);
         if (!home.missing_or_empty()) {
-            path = home.as_string() +
+            path = home->as_string() +
                    (which_dir == L"config" ? L"/.config/fish" : L"/.local/share/fish");
             if (create_directory(path) != -1) {
                 path_done = true;

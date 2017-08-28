@@ -2543,10 +2543,7 @@ static int test_universal_helper(int x) {
     for (int j = 0; j < UVARS_PER_THREAD; j++) {
         const wcstring key = format_string(L"key_%d_%d", x, j);
         const wcstring val = format_string(L"val_%d_%d", x, j);
-        wcstring_list_t vals({
-                      val,
-                  });
-        uvars.set(key, vals, false);
+        uvars.set(key, {val}, false);
         bool synced = uvars.sync(callbacks);
         if (!synced) {
             err(L"Failed to sync universal variables after modification");
@@ -2566,7 +2563,7 @@ static void test_universal() {
     say(L"Testing universal variables");
     if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
 
-    const int threads = 16;
+    const int threads = 1;
     for (int i = 0; i < threads; i++) {
         iothread_perform([=]() { test_universal_helper(i); });
     }
@@ -2605,52 +2602,33 @@ static bool callback_data_less_than(const callback_data_t &a, const callback_dat
 
 static void test_universal_callbacks() {
     say(L"Testing universal callbacks");
-    callback_data_list_t callbacks;
-
     if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
+    callback_data_list_t callbacks;
     env_universal_t uvars1(UVARS_TEST_PATH);
     env_universal_t uvars2(UVARS_TEST_PATH);
-    wcstring_list_t vals;
 
     // Put some variables into both.
-    vals.push_back(L"a1");
-    uvars1.set(L"alpha", vals, false);
-    assert(vals.size() == 0);
-    vals.push_back(L"b1");
-    uvars1.set(L"beta", vals, false);
-    vals.push_back(L"d1");
-    uvars1.set(L"delta", vals, false);
-    vals.push_back(L"e1");
-    uvars1.set(L"epsilon", vals, false);
-    vals.push_back(L"l1");
-    uvars1.set(L"lambda", vals, false);
-    vals.push_back(L"k1");
-    uvars1.set(L"kappa", vals, false);
-    vals.push_back(L"o1");
-    uvars1.set(L"omicron", vals, false);
+    uvars1.set(L"alpha", {L"1"}, false);
+    uvars1.set(L"beta", {L"1"}, false);
+    uvars1.set(L"delta", {L"1"}, false);
+    uvars1.set(L"epsilon", {L"1"}, false);
+    uvars1.set(L"lambda", {L"1"}, false);
+    uvars1.set(L"kappa", {L"1"}, false);
+    uvars1.set(L"omicron", {L"1"}, false);
 
     uvars1.sync(callbacks);
     uvars2.sync(callbacks);
 
     // Change uvars1.
-    vals.push_back(L"a2");
-    uvars1.set(L"alpha", vals, false);    // changes value
-    vals.clear();  // clear the old value
-    vals.push_back(L"b2");
-    uvars1.set(L"beta", vals, true);      // changes export
-
+    uvars1.set(L"alpha", {L"2"}, false);  // changes value
+    uvars1.set(L"beta", {L"1"}, true);    // changes export
     uvars1.remove(L"delta");              // erases value
-
-    vals.clear();  // clear the old value
-    vals.push_back(L"e1");
-    uvars1.set(L"epsilon", vals, false);  // changes nothing
+    uvars1.set(L"epsilon", {L"1"}, false);  // changes nothing
     uvars1.sync(callbacks);
 
     // Change uvars2. It should treat its value as correct and ignore changes from uvars1.
-    vals.push_back(L"l2");
-    uvars2.set(L"lambda", vals, false);  // same value
-    vals.push_back(L"k2");
-    uvars2.set(L"kappa", vals, false);   // different value
+    uvars2.set(L"lambda", {L"1"}, false);  // same value
+    uvars2.set(L"kappa", {L"2"}, false);   // different value
 
     // Now see what uvars2 sees.
     callbacks.clear();
@@ -2659,14 +2637,14 @@ static void test_universal_callbacks() {
     // Sort them to get them in a predictable order.
     std::sort(callbacks.begin(), callbacks.end(), callback_data_less_than);
 
-    // Should see exactly two changes.
+    // Should see exactly three changes.
     do_test(callbacks.size() == 3);
     do_test(callbacks.at(0).type == SET);
     do_test(callbacks.at(0).key == L"alpha");
-    do_test(callbacks.at(0).val == L"a2");
+    do_test(callbacks.at(0).val == L"2");
     do_test(callbacks.at(1).type == SET_EXPORT);
     do_test(callbacks.at(1).key == L"beta");
-    do_test(callbacks.at(1).val == L"b2");
+    do_test(callbacks.at(1).val == L"1");
     do_test(callbacks.at(2).type == ERASE);
     do_test(callbacks.at(2).key == L"delta");
     do_test(callbacks.at(2).val == L"");

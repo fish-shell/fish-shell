@@ -56,7 +56,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
 
     const wcstring_list_t *pathsv;
     if (!bin_path_var.missing()) {
-        pathsv = &bin_path_var.as_const_list();
+        pathsv = &bin_path_var.as_list();
     } else {
         pathsv = &dflt_pathsv;
     }

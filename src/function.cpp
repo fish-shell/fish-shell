@@ -345,7 +345,7 @@ void function_prepare_environment(const wcstring &name, const wchar_t *const *ar
         // It should be impossible for the var to be missing since we're inheriting it from an outer
         // scope. So we now die horribly if it is missing.
         assert(!it->second.missing());
-        wcstring_list_t vals = it->second.as_const_list();  // we need a copy
+        wcstring_list_t vals = it->second.as_list();        // we need a copy
         env_set(it->first, ENV_LOCAL | ENV_USER, vals);     // because this mutates the list
     }
 }

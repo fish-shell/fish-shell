@@ -280,7 +280,7 @@ bool env_universal_t::get_export(const wcstring &name) const {
     return result;
 }
 
-void env_universal_t::set_internal(const wcstring &key, wcstring_list_t &vals, bool exportv,
+void env_universal_t::set_internal(const wcstring &key, wcstring_list_t vals, bool exportv,
                                    bool overwrite) {
     ASSERT_IS_LOCKED(lock);
     if (!overwrite && this->modified.find(key) != this->modified.end()) {
@@ -290,7 +290,7 @@ void env_universal_t::set_internal(const wcstring &key, wcstring_list_t &vals, b
 
     env_var_t &entry = vars[key];
     if (entry.exportv != exportv || entry.as_list() != vals) {
-        entry.swap_vals(vals);
+        entry.set_vals(std::move(vals));
         entry.exportv = exportv;
 
         // If we are overwriting, then this is now modified.
@@ -300,9 +300,9 @@ void env_universal_t::set_internal(const wcstring &key, wcstring_list_t &vals, b
     }
 }
 
-void env_universal_t::set(const wcstring &key, wcstring_list_t &vals, bool exportv) {
+void env_universal_t::set(const wcstring &key, wcstring_list_t vals, bool exportv) {
     scoped_lock locker(lock);
-    this->set_internal(key, vals, exportv, true /* overwrite */);
+    this->set_internal(key, std::move(vals), exportv, true /* overwrite */);
 }
 
 bool env_universal_t::remove_internal(const wcstring &key) {
@@ -661,7 +661,7 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     // instances of fish will not be able to obtain it. This seems to be a greater risk than that of
     // data loss on lockless NFS. Users who put their home directory on lockless NFS are playing
     // with fire anyways.
-    const wcstring &vars_path =
+    const wcstring vars_path =
         explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
 
     if (vars_path.empty()) {
@@ -838,8 +838,7 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t
             if (unescape_string(tmp + 1, &val, 0)) {
                 env_var_t &entry = (*vars)[key];
                 entry.exportv = exportv;
-                wcstring_list_t values = decode_serialized(val);
-                entry.swap_vals(values);
+                entry.set_vals(decode_serialized(val));
             }
         } else {
             debug(1, PARSE_ERR, msg);

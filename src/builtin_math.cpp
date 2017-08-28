@@ -156,7 +156,7 @@ static double *retrieve_var(const wchar_t *var_name, void *user_data) {
         return &zero_result;
     }
 
-    const wchar_t *first_val = var.as_const_list()[0].c_str();
+    const wchar_t *first_val = var.as_list()[0].c_str();
     wchar_t *endptr;
     errno = 0;
     double result = wcstod(first_val, &endptr);

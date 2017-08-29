@@ -28,7 +28,9 @@ complete -c sbt -f -a '(string split "\n" "
     shell            Launch an interactive sbt prompt
     tasks            List the tasks defined for the current project
     test             Execute all tests
-" | string trim | string replace -r "\s+" "\t")'
+" | string trim | string replace -r "\s+" "\t")' \
+    -n 'not contains -- "new" (commandline -cpo);
+    and not contains -- "client" (commandline -cpo)'
 
 # These cannot be combined with any other commands and require an argument
 complete -c sbt -f -n '[ (count (commandline -cpo)) = 1 ]' -a 'new'    -d 'Create a new sbt project from the given template'

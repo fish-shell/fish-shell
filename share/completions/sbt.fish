@@ -8,17 +8,15 @@
 # 4. Tasks is somewhat dynamic and depends on the project definition, so only most common are offered
 # 5. Same about settings (none are offered)
 
+# These commands can be combined in any order
 complete -c sbt -f -a '(string split "\n" "
     about            Display basic information about sbt and the build
     clean            Delete files produced by the build
-    client           Connect to a server with an interactive sbt prompt 
     compile          Compile sources
     console          Scala REPL: project classes
     consoleQuick     Scala REPL: only project dependencies
     doc              Generate API documentation
     help             Display help message
-    last             Display output from a previous command
-    new              Create a new sbt project
     package          Produce the main artifact
     plugins          List currently available plugins
     projects         List the names of available projects
@@ -31,6 +29,10 @@ complete -c sbt -f -a '(string split "\n" "
     tasks            List the tasks defined for the current project
     test             Execute all tests
 " | string trim | string replace -r "\s+" "\t")'
+
+# These cannot be combined with any other commands and require an argument
+complete -c sbt -f -n '[ (count (commandline -cpo)) = 1 ]' -a 'new'    -d 'Create a new sbt project from the given template'
+complete -c sbt -f -n '[ (count (commandline -cpo)) = 1 ]' -a 'client' -d 'Connect to a server with an interactive sbt prompt'
 
 
 ###########

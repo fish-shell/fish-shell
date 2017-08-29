@@ -480,10 +480,10 @@ function __fish_git_prompt_informative_status
 
     set -l x (count $changedFiles)
     set -l y (count (string match -r "U" -- $changedFiles))
-    set -l dirtystate (math x - y)
-    set -l x(count $stagedFiles)
+    set -l dirtystate (math $x - $y)
+    set -l x (count $stagedFiles)
     set -l invalidstate (count (string match -r "U" -- $stagedFiles))
-    set -l stagedstate (math x - invalidstate)
+    set -l stagedstate (math $x - $invalidstate)
     set -l untrackedfiles (command git ls-files --others --exclude-standard | wc -l | string trim)
 
     set -l info

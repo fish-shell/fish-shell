@@ -158,10 +158,19 @@ expect -re {\r\ncount again 1\r\n} {
     puts stderr "history function explicit exact search 'echo hello again' failed"
 }
 
-# Verify that the $history var has the expected content.
-send "echo history2=\$history\[2\]\r"
+# Verify that the `history item` command has the expected output.
+send "echo history2=(history item 2)\r"
 expect -re {\r\nhistory2=echo count AGAIN .*\r\n} {
-    puts "history\[2\] had the correct data"
+    puts "history item 2 had the correct data"
 } timeout {
-    puts stderr "history\[2\] had the wrong data"
+    puts stderr "history item 2 had the wrong data"
+}
+
+# Running `history item` with an index beyond the end of the history should
+# output nothing.
+send "echo history99 (history item 99)\r"
+expect -re {\r\nhistory99\r\n} {
+    puts "history item 99 had the correct data"
+} timeout {
+    puts stderr "history item 99 had the wrong data"
 }

@@ -4,6 +4,7 @@
 \fish{synopsis}
 history search [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] [ --max=n ] [ --null ] [ -R | --reverse ] [ "search string"... ]
 history delete [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] "search string"...
+history item "idx"
 history merge
 history save
 history clear
@@ -25,6 +26,10 @@ The following operations (sub-commands) are available:
 - `save` immediately writes all changes to the history file. The shell automatically saves the history file; this option is provided for internal use and should not normally need to be used by the user.
 
 - `clear` clears the history file. A prompt is displayed before the history is erased asking you to confirm you really want to clear all history unless `builtin history` is used.
+
+- `count` returns the number of entries in the command history not including the currently running interactive command.
+
+- `item` returns the history item at the specified index. The index must be greater than zero. If the index is greater than the number of entries in the command history then nothing is output. If the index matches a history entry then three lines are written: the command line, the seconds since the UNIX epoch when the command was run, the paths associated with the command. Note that the paths are encoded in an unusual fashion. You have to run the line through `string unescape --style=script` once to convert it to individual paths. You then need to pass each path through the same unescape command to obtain the original, literal, path. For example, to retrieve the most recently run command (not the current command being run) you would do `set hist_entry (history item 1)`. Note that you should not assume the number of lines (values) output will remain three. In the future additional data may be stored in the history and output by this subcommand. However, the currently documented lines will remain in their current order.
 
 The following options are available:
 

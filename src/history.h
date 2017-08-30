@@ -244,6 +244,9 @@ class history_t {
     // Saves history.
     void save();
 
+    // Dumps a history item to stdout.
+    void dump_item(size_t idx, io_streams_t &iostreams);
+
     // Searches history.
     bool search(history_search_type_t search_type, wcstring_list_t search_args,
                 const wchar_t *show_time_format, size_t max_items, bool case_sensitive,

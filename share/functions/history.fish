@@ -68,7 +68,7 @@ function history --description "display or manipulate interactive command histor
     # command. This allows the flags to appear before or after the subcommand.
     if not set -q hist_cmd[1]
         and set -q argv[1]
-        if contains $argv[1] search delete merge save clear
+        if contains $argv[1] search delete merge save clear item count
             set hist_cmd $argv[1]
             set -e argv[1]
         end
@@ -178,6 +178,15 @@ function history --description "display or manipulate interactive command histor
             else
                 printf (_ "You did not say 'yes' so I will not clear your command history\n")
             end
+
+        case count # retrieve an item from the history by index
+            __fish_unexpected_hist_args $argv
+            and return 1
+
+            builtin history count
+
+        case item # retrieve an item from the history by index
+            builtin history item $argv
 
         case '*'
             printf "%ls: unexpected subcommand '%ls'\n" $cmd $hist_cmd

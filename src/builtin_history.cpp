@@ -19,12 +19,21 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-enum hist_cmd_t { HIST_SEARCH = 1, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAVE, HIST_UNDEF };
+enum hist_cmd_t {
+    HIST_SEARCH = 1,
+    HIST_DELETE,
+    HIST_CLEAR,
+    HIST_COUNT,
+    HIST_ITEM,
+    HIST_MERGE,
+    HIST_SAVE,
+    HIST_UNDEF
+};
 
 // Must be sorted by string, not enum or random.
-const enum_map<hist_cmd_t> hist_enum_map[] = {{HIST_CLEAR, L"clear"},   {HIST_DELETE, L"delete"},
-                                              {HIST_MERGE, L"merge"},   {HIST_SAVE, L"save"},
-                                              {HIST_SEARCH, L"search"}, {HIST_UNDEF, NULL}};
+const enum_map<hist_cmd_t> hist_enum_map[] = {
+    {HIST_CLEAR, L"clear"}, {HIST_COUNT, L"count"}, {HIST_DELETE, L"delete"}, {HIST_ITEM, L"item"},
+    {HIST_MERGE, L"merge"}, {HIST_SAVE, L"save"},   {HIST_SEARCH, L"search"}, {HIST_UNDEF, NULL}};
 #define hist_enum_map_len (sizeof hist_enum_map / sizeof *hist_enum_map)
 
 struct history_cmd_opts_t {
@@ -291,6 +300,27 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         case HIST_SAVE: {
             CHECK_FOR_UNEXPECTED_HIST_ARGS(opts.hist_cmd)
             history->save();
+            break;
+        }
+        case HIST_COUNT: {
+            CHECK_FOR_UNEXPECTED_HIST_ARGS(opts.hist_cmd)
+            // Subtract one because we want to exclude the current command from our output.
+            streams.out.append_format(L"%lu\n", history->size() - 1);
+            break;
+        }
+        case HIST_ITEM: {
+            size_t idx = 0;
+            if (args.size() == 1) {
+                long i = fish_wcstol(args[0].c_str());
+                if (!errno && i > 0) idx = static_cast<size_t>(i);
+            }
+            if (idx == 0) {
+                streams.err.append_format(
+                    _(L"%ls: item subcommand requires a single integer >= 1\n"), cmd);
+                status = STATUS_INVALID_ARGS;
+                break;
+            }
+            history->dump_item(idx, streams);
             break;
         }
         case HIST_UNDEF: {

@@ -857,7 +857,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // These variables can not be altered directly by the user.
     for (auto &k : {
              wcstring(L"status"),
-             wcstring(L"history"),
              wcstring(L"_"),
              wcstring(L"PWD"),
              wcstring(L"FISH_VERSION") }) {
@@ -866,7 +865,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     };
 
     // Names of all dynamically calculated variables.
-    env_electric.emplace(L"history");
     env_electric.emplace(L"status");
     env_electric.emplace(L"umask");
 
@@ -1336,7 +1334,7 @@ maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode) {
             return env_var_t(L"umask", format_string(L"0%0.3o", get_umask()));
         }
         // We should never get here unless the electric var list is out of sync with the above code.
-        DIE("unerecognized electric var name");
+        DIE("unrecognized electric var name");
     }
 
     if (search_local || search_global) {

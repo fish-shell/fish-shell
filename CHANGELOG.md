@@ -9,6 +9,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `read` now requires at least one var name (#4220).
 - `set x[1] x[2] a b` is no longer valid syntax (#4236).
 - For loop control variables are no longer local to the for block (#1935).
+- The `history` variable has been replaced by the `history item` command (#4366).
 
 ## Notable fixes and improvements
 - `read` has a new `--delimiter` option as a better alternative to the `IFS` variable (#4256).

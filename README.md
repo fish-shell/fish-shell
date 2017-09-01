@@ -74,7 +74,6 @@ Running fish requires:
   `uniq`, `wc`, and `whoami`
 * a number of common UNIX utilities:
     * `awk`
-    * `bc`, the "basic calculator" program
     * `find`
     * `grep`
     * `hostname`

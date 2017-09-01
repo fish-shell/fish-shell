@@ -1,3 +1,0 @@
-## Math expression evaluation
-
-Fish 1.x and 2.x releases relied on the `bc` command for handling math expressions via the `math` command. Starting with fish 3.0.0 fish uses the MuParser library. It's documentation is [here](http://beltoforion.de/article.php?a=muparser) and the source was downloaded from [here](https://github.com/beltoforion/muparser/releases). It is also hosted on [Github](https://github.com/beltoforion/muparser/). I did not download it from Github because that source contained just a couple of cleanup changes which don't affect its behavior. See issue #3157 where making `math` a builtin was discussed.

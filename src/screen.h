@@ -202,75 +202,38 @@ size_t escape_code_length(const wchar_t *code);
 // Maintain a mapping of escape sequences to their length for fast lookup.
 class cached_esc_sequences_t {
    private:
-    // Cached escape sequences we've already detected in the prompt and similar strings.
-    std::unordered_set<wcstring> cache;
-    // The escape sequence lengths we've cached. My original implementation used min and max
-    // length variables. The cache was then iterated over using a loop like this:
-    // `for (size_t l = min; l <= max; l++)`.
-    //
-    // However that is inefficient when there are big gaps in the lengths. This has been observed
-    // with the BobTheFish theme which has a bunch of 5 and 6 char sequences and 16 to 19 char
-    // sequences and almost nothing in between. So instead we keep track of only those escape
-    // sequence lengths we've actually cached to avoid checking for matches of lengths we know are
-    // not in our cache.
-    std::vector<size_t> lengths;
-    std::unordered_map<size_t, size_t> lengths_match_count;
-    size_t cache_hits;
+    // Cached escape sequences we've already detected in the prompt and similar strings, ordered
+    // lexicographically.
+    std::vector<wcstring> cache_;
 
    public:
-    explicit cached_esc_sequences_t() : cache(), lengths(), lengths_match_count(), cache_hits(0) {}
+    /// \return the size of the cache.
+    size_t size() const { return cache_.size(); }
 
-    void add_entry(const wchar_t *entry, size_t len) {
-        auto str = wcstring(entry, len);
-
-#if 0
-        // This is a can't happen scenario. I only wrote this to validate during testing that it
-        // wouldn't be triggered. I'm leaving it in but commented out in case someone feels the need
-        // to re-enable the check.
-        auto match = cache.find(str);
-        if (match != cache.end()) {
-            debug(0, "unexpected add_entry() call of a value already in the cache: '%ls'",
-                  escape(str.c_str(), ESCAPE_ALL).c_str());
-            return;
-        }
-#endif
-
-        cache.emplace(str);
-        if (std::find(lengths.begin(), lengths.end(), len) == lengths.end()) {
-            lengths.push_back(len);
-            lengths_match_count[len] = 0;
+    /// Insert the entry \p str in its sorted position, if it is not already present in the cache.
+    void add_entry(wcstring str) {
+        auto where = std::upper_bound(cache_.begin(), cache_.end(), str);
+        if (where == cache_.begin() || where[-1] != str) {
+            cache_.emplace(where, std::move(str));
         }
     }
 
-    size_t find_entry(const wchar_t *entry) {
-        size_t entry_len = wcslen(entry);
-        for (auto len : lengths) {
-            if (len > entry_len) continue;
-            auto match = cache.find(wcstring(entry, len));
-            if (match != cache.end()) {  // we found a matching cached sequence
-                // Periodically sort  the sequence lengths so we check for matches going from the
-                // most frequently matching lengths to least frequent.
-                lengths_match_count[len]++;
-                if (++cache_hits % 1000 == 0) {
-                    // std::sort(lengths.begin(), lengths.end(), custom_cmp(lengths_match_count));
-                    std::sort(lengths.begin(), lengths.end(), [&](size_t l1, size_t l2) {
-                        return lengths_match_count[l1] > lengths_match_count[l2];
-                    });
-                }
-
-                return len;  // return the length of the matching cached sequence
-            }
+    /// \return the length of a string that matches a prefix of \p entry.
+    size_t find_entry(const wchar_t *entry) const {
+        // Do a binary search and see if the escape code right before our entry is a prefix of our
+        // entry. Note this assumes that escape codes are prefix-free: no escape code is a prefix of
+        // another one. This seems like a safe assumption.
+        auto where = std::upper_bound(cache_.begin(), cache_.end(), entry);
+        // 'where' is now the first element that is greater than entry. Thus where-1 is the last
+        // element that is less than or equal to entry.
+        if (where != cache_.begin()) {
+            const wcstring &candidate = where[-1];
+            if (string_prefixes_string(candidate.c_str(), entry)) return candidate.size();
         }
-
-        return 0;  // no cached sequence matches the entry
+        return 0;
     }
 
-    void clear() {
-        cache.clear();
-        lengths.clear();
-        lengths_match_count.clear();
-        cache_hits = 0;
-    }
+    void clear() { cache_.clear(); }
 };
 
 // Singleton that is exposed so that the cache can be invalidated when terminal related variables

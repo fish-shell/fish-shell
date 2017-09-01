@@ -4280,6 +4280,30 @@ void test_maybe() {
     do_test(m2.missing_or_empty());
 }
 
+void test_cached_esc_sequences() {
+    cached_esc_sequences_t seqs;
+    do_test(seqs.find_entry(L"abc") == 0);
+    seqs.add_entry(L"abc");
+    seqs.add_entry(L"abc");
+    do_test(seqs.size() == 1);
+    do_test(seqs.find_entry(L"abc") == 3);
+    do_test(seqs.find_entry(L"abcd") == 3);
+    do_test(seqs.find_entry(L"abcde") == 3);
+    do_test(seqs.find_entry(L"xabcde") == 0);
+    seqs.add_entry(L"ac");
+    do_test(seqs.find_entry(L"abcd") == 3);
+    do_test(seqs.find_entry(L"acbd") == 2);
+    seqs.add_entry(L"wxyz");
+    do_test(seqs.find_entry(L"abc") == 3);
+    do_test(seqs.find_entry(L"abcd") == 3);
+    do_test(seqs.find_entry(L"wxyz123") == 4);
+    do_test(seqs.find_entry(L"qwxyz123") == 0);
+    do_test(seqs.size() == 3);
+    seqs.clear();
+    do_test(seqs.size() == 0);
+    do_test(seqs.find_entry(L"abcd") == 0);
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
@@ -4376,6 +4400,7 @@ int main(int argc, char **argv) {
     if (should_test_function("string")) test_string();
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
     if (should_test_function("maybe")) test_maybe();
+    if (should_test_function("cached_esc_sequences")) test_cached_esc_sequences();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

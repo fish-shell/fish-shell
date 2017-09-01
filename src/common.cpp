@@ -1633,6 +1633,16 @@ bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &val
     return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;
 }
 
+bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value) {
+    for (size_t idx = 0; proposed_prefix[idx] != L'\0'; idx++) {
+        // Note if the prefix is longer than value, then we will compare a nonzero prefix character
+        // against a zero value character, and so we'll return false;
+        if (proposed_prefix[idx] != value[idx]) return false;
+    }
+    // We must have that proposed_prefix[idx] == L'\0', so we have a prefix match.
+    return true;
+}
+
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
                                              const wcstring &value) {
     size_t prefix_size = proposed_prefix.size();

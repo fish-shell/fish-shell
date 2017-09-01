@@ -67,8 +67,7 @@ ENDFUNCTION(FISH_LINK_DEPS)
 
 # Define fish.
 ADD_EXECUTABLE(fish src/fish.cpp ${FISH_SRCS})
-TARGET_LINK_LIBRARIES(fish ${CURSES_LIBRARIES})
+FISH_LINK_DEPS(fish)
 
-# Link PCRE and muparser.
-SET(PCRE2_WIDTH ${WCHAR_T_BITS})
-TARGET_LINK_LIBRARIES(fish pcre2-${PCRE2_WIDTH} muparser)
+# Set up tests.
+INCLUDE(CMakeFiles/Tests.cmake)

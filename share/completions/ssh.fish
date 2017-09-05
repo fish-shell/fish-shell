@@ -7,11 +7,10 @@ __fish_complete_ssh ssh
 # ssh specific completions
 #
 complete -x -c ssh -d Hostname -a "
-(__fish_print_hostnames)
-
-(
-	# Prepend any username specified in the completion to the hostname
-	echo (commandline -ct)|sed -ne 's/\(.*@\).*/\1/p'
+# First print an empty line to get just the hostname
+(echo;
+# Then prepend any username specified in the completion to the hostname
+commandline -ct | string replace -rf '(.*@).*' '$1'
 )(__fish_print_hostnames)
 "
 

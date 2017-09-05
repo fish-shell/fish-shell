@@ -95,6 +95,7 @@ class env_var_t {
     env_var_t() : name(), vals(), exportv(false) {}
 
     bool empty(void) const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
+    bool read_only(void) const;
 
     bool matches_string(const wcstring &str) {
         if (vals.size() > 1) return false;
@@ -110,6 +111,7 @@ class env_var_t {
     void set_vals(wcstring_list_t v) { vals = std::move(v); }
 
     env_var_t &operator=(const env_var_t &var) {
+        this->name = var.name;
         this->vals = var.vals;
         this->exportv = var.exportv;
         return *this;

@@ -95,9 +95,16 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         end
     end
     for file in $known_hosts
-        # Ignore hosts that are hashed, commented or have custom ports (like [localhost]:2200)
-        test -r $file
-        and string replace -ra '(\S+) .*' '$1' <$file | string match -r '^[^#|[=]+$' | string split ","
+        if test -r $file
+            # Ignore hosts that are hashed, commented or @-marked and strip the key.
+            string replace -r '[#@| ].*' '' <$file \
+            # Split on ",".
+            # Ignore negated/wildcarded hosts.
+            | string split "," | string match -rv '[!\*\?]' \
+            # Extract hosts with custom port.
+            | string replace -r '\[([^]]+)\]:.*' '$1'
+            # string replace -ra '(\S+) .*' '$1' <$file | string match -r '^[^#|[=]+$' | string split ","
+        end
     end
     return 0
 end

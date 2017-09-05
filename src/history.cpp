@@ -1527,8 +1527,10 @@ void history_t::save(void) {
     this->save_internal(false);
 }
 
-// Formats a single history record, including a trailing newline.  Returns true
-// if bytes were written to the output stream and false otherwise.
+// Formats a single history record, including a trailing newline.
+//
+// Returns nothing. The only possible failure involves formatting the timestamp. If that happens we
+// simply omit the timestamp from the output.
 static void format_history_record(const history_item_t &item, const wchar_t *show_time_format,
                                   bool null_terminate, wcstring &result) {
     if (show_time_format) {
@@ -1550,7 +1552,6 @@ static void format_history_record(const history_item_t &item, const wchar_t *sho
     } else {
         result.push_back(L'\n');
     }
-    return;
 }
 
 /// This handles the slightly unusual case of someone searching history for

@@ -238,8 +238,11 @@ class history_t {
 
     // Searches history.
     bool search(history_search_type_t search_type, wcstring_list_t search_args,
-                const wchar_t *show_time_format, long max_items, bool case_sensitive,
-                bool null_terminate, io_streams_t &streams);
+                const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
+                bool null_terminate, bool reverse, io_streams_t &streams);
+    bool search_with_args(history_search_type_t search_type, wcstring_list_t search_args,
+                          const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
+                          bool null_terminate, bool reverse, io_streams_t &streams);
 
     // Enable / disable automatic saving. Main thread only!
     void disable_automatic_saving();
@@ -267,6 +270,9 @@ class history_t {
     // Return the specified history at the specified index. 0 is the index of the current
     // commandline. (So the most recent item is at index 1.)
     history_item_t item_at_index(size_t idx);
+
+    // Return the number of history entries.
+    size_t size();
 };
 
 class history_search_t {

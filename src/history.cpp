@@ -875,6 +875,15 @@ void history_t::get_history(wcstring_list_t &result) {
     }
 }
 
+size_t history_t::size() {
+    scoped_lock locker(lock);
+    size_t new_item_count = new_items.size();
+    if (this->has_pending_item && new_item_count > 0) new_item_count -= 1;
+    load_old_if_needed();
+    size_t old_item_count = old_item_offsets.size();
+    return new_item_count + old_item_count;
+}
+
 history_item_t history_t::item_at_index(size_t idx) {
     scoped_lock locker(lock);
 
@@ -1520,42 +1529,39 @@ void history_t::save(void) {
 
 // Formats a single history record, including a trailing newline.  Returns true
 // if bytes were written to the output stream and false otherwise.
-static bool format_history_record(const history_item_t &item, const wchar_t *show_time_format,
-                                  bool null_terminate, io_streams_t &streams) {
+static void format_history_record(const history_item_t &item, const wchar_t *show_time_format,
+                                  bool null_terminate, wcstring &result) {
     if (show_time_format) {
         const time_t seconds = item.timestamp();
         struct tm timestamp;
-        if (!localtime_r(&seconds, &timestamp)) return false;
-        const int max_tstamp_length = 100;
-        wchar_t timestamp_string[max_tstamp_length + 1];
-        if (std::wcsftime(timestamp_string, max_tstamp_length, show_time_format, &timestamp) == 0) {
-            return false;
-        }
-        streams.out.append(timestamp_string);
-    }
-    streams.out.append(item.str());
-    if (null_terminate) {
-        streams.out.append(L'\0');
-    } else {
-        streams.out.append(L'\n');
-    }
-    return true;
-}
-
-bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args,
-                       const wchar_t *show_time_format, long max_items, bool case_sensitive,
-                       bool null_terminate, io_streams_t &streams) {
-    // scoped_lock locker(lock);
-    if (search_args.empty()) {
-        // Start at one because zero is the current command.
-        for (int i = 1; !this->item_at_index(i).empty() && max_items; ++i, --max_items) {
-            if (!format_history_record(this->item_at_index(i), show_time_format, null_terminate,
-                                       streams)) {
-                return false;
+        if (localtime_r(&seconds, &timestamp)) {
+            const int max_tstamp_length = 100;
+            wchar_t timestamp_string[max_tstamp_length + 1];
+            if (std::wcsftime(timestamp_string, max_tstamp_length, show_time_format, &timestamp) !=
+                0) {
+                result.append(timestamp_string);
             }
         }
-        return true;
     }
+
+    result.append(item.str());
+    if (null_terminate) {
+        result.push_back(L'\0');
+    } else {
+        result.push_back(L'\n');
+    }
+    return;
+}
+
+/// This handles the slightly unusual case of someone searching history for
+/// specific terms/patterns.
+bool history_t::search_with_args(history_search_type_t search_type, wcstring_list_t search_args,
+                                 const wchar_t *show_time_format, size_t max_items,
+                                 bool case_sensitive, bool null_terminate, bool reverse,
+                                 io_streams_t &streams) {
+    wcstring_list_t results;
+    size_t hist_size = this->size();
+    if (max_items > hist_size) max_items = hist_size;
 
     for (wcstring_list_t::const_iterator iter = search_args.begin(); iter != search_args.end();
          ++iter) {
@@ -1567,11 +1573,55 @@ bool history_t::search(history_search_type_t search_type, wcstring_list_t search
         history_search_t searcher =
             history_search_t(*this, search_string, search_type, case_sensitive);
         while (searcher.go_backwards()) {
-            if (!format_history_record(searcher.current_item(), show_time_format, null_terminate,
-                                       streams)) {
-                return false;
+            wcstring result;
+            auto cur_item = searcher.current_item();
+            format_history_record(cur_item, show_time_format, null_terminate, result);
+            if (reverse) {
+                results.push_back(result);
+            } else {
+                streams.out.append(result);
             }
-            if (--max_items == 0) return true;
+            if (--max_items == 0) break;
+        }
+    }
+
+    if (reverse) {
+        for (auto it = results.rbegin(); it != results.rend(); it++) {
+            streams.out.append(*it);
+        }
+    }
+
+    return true;
+}
+
+bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args,
+                       const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
+                       bool null_terminate, bool reverse, io_streams_t &streams) {
+    if (!search_args.empty()) {
+        // User wants the results filtered. This is not the common case so we do it separate
+        // from the code below for unfiltered output which is much cheaper.
+        return search_with_args(search_type, search_args, show_time_format, max_items,
+                                case_sensitive, null_terminate, reverse, streams);
+    }
+
+    // scoped_lock locker(lock);
+    size_t hist_size = this->size();
+    if (max_items > hist_size) max_items = hist_size;
+
+    if (reverse) {
+        for (size_t i = max_items; i != 0; --i) {
+            auto cur_item = this->item_at_index(i);
+            wcstring result;
+            format_history_record(cur_item, show_time_format, null_terminate, result);
+            streams.out.append(result);
+        }
+    } else {
+        // Start at one because zero is the current command.
+        for (size_t i = 1; i < max_items + 1; ++i) {
+            auto cur_item = this->item_at_index(i);
+            wcstring result;
+            format_history_record(cur_item, show_time_format, null_terminate, result);
+            streams.out.append(result);
         }
     }
 

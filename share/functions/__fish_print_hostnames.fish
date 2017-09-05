@@ -32,7 +32,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
             if contains -- '-F' $token
                 set ssh_config_path_is_next 0
             else if test $ssh_config_path_is_next -eq 0
-                set ssh_config (eval "echo $token")
+                set ssh_config (echo "echo $token" | source)
                 set ssh_config_path_is_next 1
             end
         end
@@ -66,7 +66,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
             set -l new_paths
             for path in $paths
                 set -l expanded_path
-                eval "set expanded_path (printf \"%s\n\" $path)"
+                echo "set expanded_path (printf \"%s\n\" $path)" | source
                 for path in $expanded_path
                     # Resolve "relative" paths in accordance to ssh path resolution
                     if string match -qv '/*' $path

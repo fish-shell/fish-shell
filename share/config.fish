@@ -122,59 +122,7 @@ if test -d /usr/xpg4/bin
     end
 end
 
-# OS X-ism: Load the path files out of /etc/paths and /etc/paths.d/*
-set -g __fish_tmp_path $PATH
-function __fish_load_path_helper_paths
-    # We want to rearrange the path to reflect this order. Delete that path component if it exists and then prepend it.
-    # Since we are prepending but want to preserve the order of the input file, we reverse the array, append, and then reverse it again
-    set __fish_tmp_path $__fish_tmp_path[-1..1]
-    while read -l new_path_comp
-        if test -d $new_path_comp
-            set -l where (contains -i -- $new_path_comp $__fish_tmp_path)
-            and set -e __fish_tmp_path[$where]
-            set __fish_tmp_path $new_path_comp $__fish_tmp_path
-        end
-    end
-    set __fish_tmp_path $__fish_tmp_path[-1..1]
-end
-test -r /etc/paths
-and __fish_load_path_helper_paths </etc/paths
-for pathfile in /etc/paths.d/*
-    __fish_load_path_helper_paths <$pathfile
-end
-set -xg PATH $__fish_tmp_path
-set -e __fish_tmp_path
-functions -e __fish_load_path_helper_paths
-
-# OS X-ism: Load the manpath files out of /etc/manpaths and /etc/manpaths.d/*
-if set -q MANPATH
-    set -g __fish_tmp_manpath $MANPATH
-    function __fish_load_manpath_helper_manpaths
-        # We want to rearrange the manpath to reflect this order. Delete that manpath component if it exists and then prepend it.
-        # Since we are prepending but want to preserve the order of the input file, we reverse the array, append, and then reverse it again
-        set __fish_tmp_manpath $__fish_tmp_manpath[-1..1]
-        while read -l new_manpath_comp
-            if test -d $new_manpath_comp
-                set -l where (contains -i -- $new_manpath_comp $__fish_tmp_manpath)
-                and set -e __fish_tmp_manpath[$where]
-                set __fish_tmp_manpath $new_manpath_comp $__fish_tmp_manpath
-            end
-        end
-        set __fish_tmp_manpath $__fish_tmp_manpath[-1..1]
-    end
-    test -r /etc/manpaths
-    and __fish_load_manpath_helper_manpaths </etc/manpaths
-    for manpathfile in /etc/manpaths.d/*
-        __fish_load_manpath_helper_manpaths <$manpathfile
-    end
-    set -xg MANPATH $__fish_tmp_manpath
-    set -e __fish_tmp_manpath
-    functions -e __fish_load_manpath_helper_manpaths
-end
-
-
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
-# Invoke it immediately to apply the current value of fish_user_path
 function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
     set -l local_path $PATH
 
@@ -197,8 +145,6 @@ function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" -
 
     set -xg PATH $local_path
 end
-
-__fish_reconstruct_path
 
 #
 # Launch debugger on SIGTRAP
@@ -256,6 +202,52 @@ end
 #
 
 if status --is-login
+    # OS X-ism: Call path_helper and set its output to $PATH and $MANPATH.
+    if command -sq /usr/libexec/path_helper
+        set -l lines (/usr/libexec/path_helper -c)
+        for line in $lines
+            # Match lines of the form:
+            #
+            #   setenv KEY value
+            #
+            # ignoring whitespace before and after value, and an
+            # optional trailing semicolon.
+            #
+            # Some examples of lines that successfully match to "FOO" and "bar baz":
+            #
+            #   "setenv FOO bar baz"
+            #   "setenv FOO bar baz;"
+            #   "setenv FOO bar baz; "
+            #   "  setenv   FOO   bar baz;"
+            #
+            # and some examples that fail to match:
+            #
+            #   "SetEnv FOO bar"
+            #   "setenv foo bar"
+            #   "setenv FOO1 bar"
+            #   "setenv FOO_BAR bar"
+            #   "setenv FOO-BAR bar"
+            if set -l match (string match -r '^\s*setenv\s+([A-Z]+)\s+(.*?)\s*;?\s*$' -- $line)
+                set -l key $match[2]
+                # Only set PATH and MANPATH, the two environment
+                # variables that path_helper is documented to emit.
+                if contains -- $key PATH MANPATH
+                    set -l value $match[3]
+                    # Strip any surrounding quotes from $value. Note
+                    # that we don't actually want to worry about
+                    # unescaping escaped quotes in $value, as
+                    # path_helper (buggily) doesn't bother escaping
+                    # quotes.
+                    if string match -qr '^([\'"]).*\1$' -- $value
+                        set value (string match -r '^.(.*).$' $value)[2]
+                    end
+
+                    set -xg $key (string split ':' $value)
+                end
+            end
+        end
+    end
+
     #
     # Put linux consoles in unicode mode.
     #
@@ -267,3 +259,7 @@ if status --is-login
         end
     end
 end
+
+# Invoke this here to apply the current value of fish_user_path after
+# PATH is possibly set above.
+__fish_reconstruct_path

@@ -369,6 +369,8 @@ complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
+complete -f -c git -n '__fish_git_using_command checkout' -l theirs -d 'Keep staged changes'
+complete -f -c git -n '__fish_git_using_command checkout' -l ours -d 'Keep unmerged changes'
 # TODO options
 
 ### apply

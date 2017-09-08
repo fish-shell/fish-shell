@@ -69,5 +69,15 @@ ENDFUNCTION(FISH_LINK_DEPS)
 ADD_EXECUTABLE(fish src/fish.cpp ${FISH_SRCS})
 FISH_LINK_DEPS(fish)
 
+# Define fish_indent.
+ADD_EXECUTABLE(fish_indent
+               src/fish_indent.cpp src/print_help.cpp ${FISH_SRCS})
+FISH_LINK_DEPS(fish_indent)
+
+# Define fish_key_reader.
+ADD_EXECUTABLE(fish_key_reader
+               src/fish_key_reader.cpp src/print_help.cpp ${FISH_SRCS})
+FISH_LINK_DEPS(fish_key_reader)
+
 # Set up tests.
 INCLUDE(CMakeFiles/Tests.cmake)

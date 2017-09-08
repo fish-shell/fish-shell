@@ -1331,7 +1331,6 @@ maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode) {
             if (history) history->get_history(result);
             return env_var_t(L"history", result);
         } else if (key == L"status") {
-            env_var_t v(L"status", to_string(proc_get_last_status()));
             return env_var_t(L"status", to_string(proc_get_last_status()));
         } else if (key == L"umask") {
             return env_var_t(L"umask", format_string(L"0%0.3o", get_umask()));

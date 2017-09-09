@@ -33,6 +33,7 @@
 #include "expand.h"
 #include "function.h"
 #include "io.h"
+#include "maybe.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
 #include "parse_tree.h"
@@ -441,6 +442,15 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(
     return ret;
 }
 
+/// Return true if the current execution context is within a function block, else false.
+bool parse_execution_context_t::is_function_context() const {
+    const block_t *current = parser->block_at_index(0);
+    const block_t *parent = parser->block_at_index(1);
+    bool is_within_function_call =
+        (current && parent && current->type() == TOP && parent->type() == FUNCTION_CALL);
+    return is_within_function_call;
+}
+
 parse_execution_result_t parse_execution_context_t::run_for_statement(
     const parse_node_t &header, const parse_node_t &block_contents) {
     assert(header.type == symbol_for_header);
@@ -462,6 +472,17 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         return ret;
     }
 
+    auto var = env_get(for_var_name, ENV_LOCAL);
+    if (!var && !is_function_context()) var = env_get(for_var_name, ENV_DEFAULT);
+    if (!var || var->read_only()) {
+        int retval = env_set_empty(for_var_name, ENV_LOCAL | ENV_USER);
+        if (retval != ENV_OK) {
+            report_error(var_name_node, L"You cannot use read-only variable '%ls' in a for loop",
+                         for_var_name.c_str());
+            return parse_execution_errored;
+        }
+    }
+
     for_block_t *fb = parser->push_block<for_block_t>();
 
     // Now drive the for loop.
@@ -473,13 +494,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         }
 
         const wcstring &val = argument_sequence.at(i);
-        int retval = env_set_one(for_var_name, ENV_LOCAL | ENV_USER, val);
-        if (retval != ENV_OK) {
-            report_error(var_name_node, L"You cannot use read-only variable '%ls' in a for loop",
-                         for_var_name.c_str());
-            ret = parse_execution_errored;
-            break;
-        }
+        int retval = env_set_one(for_var_name, ENV_DEFAULT | ENV_USER, val);
 
         fb->loop_status = LOOP_NORMAL;
         this->run_job_list(block_contents, fb);

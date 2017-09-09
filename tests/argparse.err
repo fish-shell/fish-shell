@@ -32,9 +32,9 @@ argparse: Implicit int short flag '#' does not allow modifiers like '='
 ####################
 # Invalid arg in the face of a "#-val" spec
 argparse: Unknown option '-x'
-Standard input (line 38): 
-argparse '#-val' -- abc -x def
-^
+Standard input (line 41): 
+    argparse '#-val' -- abc -x def
+    ^
 
 ####################
 # Defining a short flag more than once

@@ -401,8 +401,6 @@ void exec_job(parser_t &parser, job_t *j) {
     // Set to true if something goes wrong while exec:ing the job, in which case the cleanup code
     // will kick in.
     bool exec_error = false;
-    bool needs_keepalive = false;
-    process_t keepalive;
 
     CHECK(j, );
     CHECK_BLOCK();
@@ -412,7 +410,17 @@ void exec_job(parser_t &parser, job_t *j) {
         return;
     }
 
+    bool top_level_job;
+    static job_t *parent_job_group = nullptr;
     debug(4, L"Exec job '%ls' with id %d", j->command_wcstr(), j->job_id);
+    if (parent_job_group != nullptr) {
+        top_level_job = false;
+        debug(4, L" Parent job '%ls' with id %d", parent_job_group->command_wcstr(), parent_job_group->job_id);
+    }
+    else {
+        parent_job_group = j;
+        top_level_job = true;
+    }
 
     // Verify that all IO_BUFFERs are output. We used to support a (single, hacked-in) magical input
     // IO_BUFFER used by fish_pager, but now the claim is that there are no more clients and it is
@@ -454,30 +462,38 @@ void exec_job(parser_t &parser, job_t *j) {
     // sure that the process group doesn't die accidentally, and is often needed when a
     // builtin/block/function is inside a pipeline, since that usually means we have to wait for one
     // program to exit before continuing in the pipeline, causing the group leader to exit.
-    if (j->get_flag(JOB_CONTROL) && !exec_error) {
-        for (const process_ptr_t &p : j->processes) {
-            if (p->type != EXTERNAL && (!p->is_last_in_job || !p->is_first_in_job)) {
-                needs_keepalive = true;
-                break;
+    bool needs_keepalive = false;
+    process_t keepalive;
+
+    if (top_level_job) {
+        if (j->get_flag(JOB_CONTROL) && !exec_error) {
+            for (const process_ptr_t &p : j->processes) {
+                if (p->type != EXTERNAL && (!p->is_last_in_job || !p->is_first_in_job)) {
+                    needs_keepalive = true;
+                    break;
+                }
+            }
+        }
+
+        if (needs_keepalive) {
+            // Call fork. No need to wait for threads since our use is confined and simple.
+            keepalive.pid = execute_fork(false);
+            if (keepalive.pid == 0) {
+                // Child
+                keepalive.pid = getpid();
+                child_set_group(j, &keepalive);
+                pause();
+                exit_without_destructors(0);
+            } else {
+                // Parent
+                debug(2, L"Fork #%d, pid %d: keepalive fork for '%ls'", g_fork_count, keepalive.pid,
+                      j->command_wcstr());
+                set_child_group(j, keepalive.pid);
             }
         }
     }
-
-    if (needs_keepalive) {
-        // Call fork. No need to wait for threads since our use is confined and simple.
-        keepalive.pid = execute_fork(false);
-        if (keepalive.pid == 0) {
-            // Child
-            keepalive.pid = getpid();
-            child_set_group(j, &keepalive);
-            pause();
-            exit_without_destructors(0);
-        } else {
-            // Parent
-            debug(2, L"Fork #%d, pid %d: keepalive fork for '%ls'", g_fork_count, keepalive.pid,
-                  j->command_wcstr());
-            set_child_group(j, keepalive.pid);
-        }
+    else {
+        j->pgid = parent_job_group->pgid;
     }
 
     // This loop loops over every process_t in the job, starting it as appropriate. This turns out
@@ -1192,6 +1208,10 @@ void exec_job(parser_t &parser, job_t *j) {
         // Mark the errored job as not in the foreground. I can't fully justify whether this is the
         // right place, but it prevents sanity_lose from complaining.
         j->set_flag(JOB_FOREGROUND, false);
+    }
+
+    if (top_level_job) {
+        parent_job_group = nullptr;
     }
 }
 

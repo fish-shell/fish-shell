@@ -383,6 +383,10 @@
 		D07D266D15E33B86009E43F6 /* functions in Copy Files */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
 		D07D266E15E33B86009E43F6 /* tools in Copy Files */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
 		D07D267215E34171009E43F6 /* config.fish in Copy Files */ = {isa = PBXBuildFile; fileRef = D0CBD580159EE48F0024809C /* config.fish */; };
+		D08500A01F63A62C00C0E329 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D06821651F51490E00040321 /* libmuparser.a */; };
+		D08500A11F63A63100C0E329 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D06821651F51490E00040321 /* libmuparser.a */; };
+		D08500A41F63A65800C0E329 /* builtin_argparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB0F034A1F156FE3001827D3 /* builtin_argparse.cpp */; };
+		D08500A51F63A6EB00C0E329 /* builtin_math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0B51D811F5018B30051C61A /* builtin_math.cpp */; };
 		D0879AC816BF9AAB00E98E56 /* fish_term_icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = D0879AC616BF9A1A00E98E56 /* fish_term_icon.icns */; };
 		D0A564FE168D23D800AF6161 /* man in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0A564F1168D0BAB00AF6161 /* man */; };
 		D0A56501168D258300AF6161 /* man in Copy Files */ = {isa = PBXBuildFile; fileRef = D0A564F1168D0BAB00AF6161 /* man */; };
@@ -534,6 +538,27 @@
 			proxyType = 1;
 			remoteGlobalIDString = D0D02ACF1598642A008E62BD;
 			remoteInfo = fish_indent;
+		};
+		D085009C1F63A61B00C0E329 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D06821641F51490E00040321;
+			remoteInfo = muparser;
+		};
+		D085009E1F63A61F00C0E329 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D06821641F51490E00040321;
+			remoteInfo = muparser;
+		};
+		D08500A21F63A63600C0E329 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D06821641F51490E00040321;
+			remoteInfo = muparser;
 		};
 		D0A564EE168D09C000AF6161 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -902,6 +927,7 @@
 			files = (
 				9C7A556C1DCD71330049C25D /* libncurses.dylib in Frameworks */,
 				9C7A556D1DCD71330049C25D /* libpcre2.a in Frameworks */,
+				D08500A01F63A62C00C0E329 /* libmuparser.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -911,6 +937,7 @@
 			files = (
 				D007693D1990137800CA4627 /* libncurses.dylib in Frameworks */,
 				D04F7FFA1BA4E9A400B0F227 /* libpcre2.a in Frameworks */,
+				D08500A11F63A63100C0E329 /* libmuparser.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1328,6 +1355,7 @@
 			dependencies = (
 				9C7A55311DCD71330049C25D /* PBXTargetDependency */,
 				9C7A55331DCD71330049C25D /* PBXTargetDependency */,
+				D085009F1F63A61F00C0E329 /* PBXTargetDependency */,
 			);
 			name = fish_key_reader;
 			productName = fish_Xcode;
@@ -1346,6 +1374,7 @@
 			dependencies = (
 				D008D0CF1BC58FE500841177 /* PBXTargetDependency */,
 				D04F7FED1BA4E3DF00B0F227 /* PBXTargetDependency */,
+				D08500A31F63A63600C0E329 /* PBXTargetDependency */,
 			);
 			name = fish_tests;
 			productName = fish_Xcode;
@@ -1434,6 +1463,7 @@
 			dependencies = (
 				D008D0CB1BC58FDD00841177 /* PBXTargetDependency */,
 				D04F7FEB1BA4E3DB00B0F227 /* PBXTargetDependency */,
+				D085009D1F63A61B00C0E329 /* PBXTargetDependency */,
 			);
 			name = fish_shell;
 			productName = fish_Xcode;
@@ -1682,6 +1712,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D001B5EE1F041CBD000838CC /* builtin.cpp in Sources */,
+				D08500A41F63A65800C0E329 /* builtin_argparse.cpp in Sources */,
 				D001B5F01F041CBD000838CC /* builtin_ulimit.cpp in Sources */,
 				D001B5F21F041CBD000838CC /* builtin_test.cpp in Sources */,
 				D001B5F41F041CBD000838CC /* builtin_string.cpp in Sources */,
@@ -1772,6 +1803,7 @@
 				D05F59CA1F041AE4003EE978 /* builtin_bind.cpp in Sources */,
 				D05F59AF1F041AE4003EE978 /* builtin_echo.cpp in Sources */,
 				D05F59A61F041AE4003EE978 /* builtin_fg.cpp in Sources */,
+				D08500A51F63A6EB00C0E329 /* builtin_math.cpp in Sources */,
 				D00769121990137800CA4627 /* autoload.cpp in Sources */,
 				D05F59BE1F041AE4003EE978 /* builtin_command.cpp in Sources */,
 				D05F59AC1F041AE4003EE978 /* builtin_emit.cpp in Sources */,
@@ -2125,6 +2157,21 @@
 			isa = PBXTargetDependency;
 			target = D0D02ACF1598642A008E62BD /* fish_indent */;
 			targetProxy = D07D265E15E33B86009E43F6 /* PBXContainerItemProxy */;
+		};
+		D085009D1F63A61B00C0E329 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D06821641F51490E00040321 /* muparser */;
+			targetProxy = D085009C1F63A61B00C0E329 /* PBXContainerItemProxy */;
+		};
+		D085009F1F63A61F00C0E329 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D06821641F51490E00040321 /* muparser */;
+			targetProxy = D085009E1F63A61F00C0E329 /* PBXContainerItemProxy */;
+		};
+		D08500A31F63A63600C0E329 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D06821641F51490E00040321 /* muparser */;
+			targetProxy = D08500A21F63A63600C0E329 /* PBXContainerItemProxy */;
 		};
 		D0A564EF168D09C000AF6161 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

@@ -50,14 +50,13 @@ function __fish_complete_npm --description "Complete the commandline using npm's
         set -lx COMP_LINE (commandline -o)
         # COMP_CWORD is the index of the current word in COMP_LINE
         # bash starts arrays with 0, so subtract 1
-        set -l x (count $COMP_LINE)
-        set -lx COMP_CWORD (math x - 1)
+        set -lx COMP_CWORD (math (count $COMP_LINE) - 1)
         # COMP_POINT is the index of point/cursor when the commandline is viewed as a string
         set -lx COMP_POINT (commandline -C)
         # If the cursor is after the last word, the empty token will disappear in the expansion
         # Readd it
         if test (commandline -ct) = ""
-            set COMP_CWORD (math COMP_CWORD + 1)
+            set COMP_CWORD (math $COMP_CWORD + 1)
             set COMP_LINE $COMP_LINE ""
         end
         command npm completion -- $COMP_LINE ^/dev/null

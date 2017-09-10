@@ -53,8 +53,7 @@ function pushd --description 'Push directory to stack'
                 return 1
             end
 
-            set -l x (count $stack)
-            set rot_l (math x - 1 - rot_r)
+            set rot_l (math (count $stack) - 1 - $rot_r)
         end
 
         # check the rotation in range
@@ -64,7 +63,7 @@ function pushd --description 'Push directory to stack'
         else
             # rotate stack unless rot_l is 0
             if test $rot_l -gt 0
-                set stack $stack[(math rot_l + 1)..(count $stack)] $stack[1..$rot_l]
+                set stack $stack[(math $rot_l + 1)..(count $stack)] $stack[1..$rot_l]
             end
 
             # now reconstruct dirstack and change directory

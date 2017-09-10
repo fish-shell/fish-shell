@@ -488,9 +488,8 @@ function __fish_git_prompt_informative_status
 
     set -l info
 
-    # If `math` fails for some reason, assume the state is clean - it's the simpler path.
-    # TBD: Can this be simplified? It should be impossible for the math command to fail here.
-    set -l state (math dirtystate + invalidstate + stagedstate + untrackedfiles)
+    # If `math` fails for some reason, assume the state is clean - it's the simpler path
+    set -l state (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles ^/dev/null)
     if test -z "$state"
         or test "$state" = 0
         set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done

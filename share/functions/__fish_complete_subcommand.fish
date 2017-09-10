@@ -15,7 +15,7 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
     for i in $cmd
 
         if test $skip_next -gt 0
-            set skip_next (math skip_next - 1)
+            set skip_next (math $skip_next - 1)
             continue
         end
 
@@ -24,7 +24,7 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
         else
 
             if contains -- $i $argv
-                set skip_next (math skip_next + 1)
+                set skip_next (math $skip_next + 1)
                 continue
             end
 

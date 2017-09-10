@@ -37,8 +37,7 @@ if status --is-interactive
     else
         # Enable truecolor/24-bit support for select terminals
         # Ignore Screen and emacs' ansi-term as they swallow the sequences, rendering the text white.
-        if
-            and not set -q STY
+        if not set -q STY
             and not string match -q -- 'eterm*' $TERM
             and begin
                 set -q KONSOLE_PROFILE_NAME # KDE's konsole

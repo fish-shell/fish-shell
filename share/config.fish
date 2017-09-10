@@ -36,8 +36,8 @@ if status --is-interactive
         # Remove this code when we've made it safer to upgrade fish.
     else
         # Enable truecolor/24-bit support for select terminals
-        # Ignore Screen and emacs' ansi-term as they swallow the sequences, rendering the text white.
-        if
+        # Ignore Neovim (in 0.1.4 at least), Screen and emacs' ansi-term as they swallow the sequences, rendering the text white.
+        if not set -q NVIM_LISTEN_ADDRESS
             and not set -q STY
             and not string match -q -- 'eterm*' $TERM
             and begin

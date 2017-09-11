@@ -19,11 +19,11 @@ function __fish_git_recent_commits
 end
 
 function __fish_git_local_branches
-    __fish_git_branches | string match -r -v "/"
+    command git branch | string trim -c ' *'
 end
 
 function __fish_git_remote_branches
-    __fish_git_branches | string match -r ".+/.+"
+    command git branch --remote | string trim -c ' *'
 end
 
 function __fish_git_branches

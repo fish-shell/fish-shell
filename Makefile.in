@@ -441,36 +441,6 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
 	$v cat $@.in | $(AWK) '{if ($$0 ~ /@toc@/){ system("cat toc.txt");} else{ print $$0;}}' >$@
 
 #
-# To enable the lexicon filter, we first need to be aware of what fish
-# considers to be a command, function, or external binary. We use
-# command_list_toc.txt for the base commands. Scan the share/functions
-# directory for other functions, some of which are mentioned in the docs, and
-# use /share/completions to find a good selection of binaries. Additionally,
-# colour defaults from __fish_config_interactive to set the docs colours when
-# used in a 'cli' style context.
-#
-lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED show-FGREP
-	$v rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
-# Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
-	@echo "  SEDFGREP $(em)$@$(sgr0)"
-	$v $(SED) <command_list_toc.txt >>lexicon.tmp -n \
-		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
-		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt
-	$v printf "%s\n" $(COMPLETIONS_DIR_FILES) | $(SED) -n \
-		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | $(FGREP) -vx -f lexicon_catalog.txt | $(SED) >>lexicon.tmp -n \
-		-e 'w lexicon_catalog.tmp' \
-		-e "s|'\(.*\)'|cmnd \1|p"; cat lexicon_catalog.tmp >> lexicon_catalog.txt;
-	$v printf "%s\n" $(FUNCTIONS_DIR_FILES) | $(SED) -n \
-		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | $(FGREP) -vx -f lexicon_catalog.txt | $(SED) >>lexicon.tmp -n \
-		-e 'w lexicon_catalog.tmp' \
-		-e "s|'\(.*\)'|func \1|p";
-	$v $(SED) <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n  \
-		-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p'; \
-	$(SED) <lexicon_filter.in >>lexicon.tmp -n \
-		-e '/^#.!#/s/^#.!# \(.... [a-z][a-z_]*\)/\1/p';
-	$v mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
-
-#
 # Compile Doxygen Input Filter from the lexicon. This is an executable sed
 # script as Doxygen opens it via popen()(3) Input (doc.h) is piped through and
 # matching words inside /fish../endfish blocks are marked up, contextually,
@@ -480,19 +450,11 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 # HTML, a style context can be applied through the /fish{style} block and
 # providing suitable CSS in user_doc.css.in
 #
-lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
-	$v rm -f $@.tmp $@
-	@echo "  SED      $(em)$@.tmp$(sgr0)"
-# Set the shebang as sed can reside in multiple places.
-	$v $(SED) <$@.in >$@.tmp -e 's|@sed@|'$(SED)'|'
-# Scan through the lexicon, transforming each line to something useful to Doxygen.
-	$v if echo x | $(SED) "/[[:<:]]x/d" 2>/dev/null; then \
-		WORDBL='[[:<:]]'; WORDBR='[[:>:]]'; \
-	else \
-		WORDBL='\\<'; WORDBR='\\>'; \
-	fi; $(SED) <lexicon.txt >>$@.tmp -n -e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" -e '$$G;s/.*\n/b tidy/p';
-	$v mv $@.tmp $@; test -x $@ || chmod a+x $@;
-
+lexicon_filter: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) \
+                lexicon_filter.in build_tools/build_lexicon_filter.sh \
+                share/functions/__fish_config_interactive.fish
+	$v build_tools/build_lexicon_filter.sh share/functions/ share/completions/ < lexicon_filter.in > $@
+	$v chmod a+x lexicon_filter
 
 #
 # doc.h is a compilation of the various snipptes of text used both for

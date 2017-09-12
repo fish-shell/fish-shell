@@ -59,6 +59,9 @@ INCLUDE(CMakeFiles/PCRE2.cmake)
 # Set up muparser.
 INCLUDE(CMakeFiles/MuParser.cmake)
 
+# Set up the docs.
+INCLUDE(CMakeFiles/Docs.cmake)
+
 # Define a function to link dependencies.
 FUNCTION(FISH_LINK_DEPS target)
   TARGET_LINK_LIBRARIES(${target} ${CURSES_LIBRARIES} Threads::Threads)

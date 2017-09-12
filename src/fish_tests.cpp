@@ -2916,7 +2916,7 @@ void history_tests_t::test_history_races(void) {
 
     // Test concurrent history writing.
     // How many concurrent writers we have
-    constexpr size_t RACE_COUNT = 10;
+    constexpr size_t RACE_COUNT = 4;
 
     // How many items each writer makes
     constexpr size_t ITEM_COUNT = 256;

@@ -723,26 +723,19 @@ uninstall: uninstall-translations | show-prefix show-bindir show-sysconfdir show
 	@echo
 	@echo "$(bo)$(yellow)Uninstalling fish$(sgr0) from configured \$$prefix: $(bo)$(prefix)$(sgr0)"
 	@echo
-	@echo "Deleting programs: [ $(bo)$(PROGRAMS)$(sgr0) ] in $(em)$(bindir)$(sgr0)"
-	-$v for i in $(PROGRAMS); do \
-		rm -f $(DESTDIR)$(bindir)/$$i; \
-	done;
-	@echo "Deleting configuration: $(bo)$(DESTDIR)$(sysconfdir)/fish/*$(sgr0)"
-	-$v rm -rf $(DESTDIR)$(sysconfdir)/fish
-	@echo
 	@echo "In 5 seconds, $(red)all data$(sgr0) (includes functions, completions, tools) in"
-	@echo $$"\t$(bo)$(DESTDIR)$(datadir)/fish$(sgr0) will be deleted!"
+	@echo $$'\t$(bo)$(DESTDIR)$(datadir)/fish$(sgr0) will be deleted!'
 	@echo
-	@echo $$"If you put things there, $(red)stop now!$(sgr0) $(bo)\\c"
-	@echo $$"$(bo)5$(sgr0) \\c"
+	@echo "If you put things there, $(red)stop now!$(sgr0)"
+	@echo "$(bo)5$(sgr0)"
 	@sleep 1
-	@echo $$"$(bo)4$(sgr0) \\c"
+	@echo "$(bo)4$(sgr0)"
 	@sleep 1
-	@echo $$"$(bo)3$(sgr0) \\c"
+	@echo "$(bo)3$(sgr0)"
 	@sleep 1
-	@echo $$"$(bo)2$(sgr0) \\c"
+	@echo "$(bo)2$(sgr0)"
 	@sleep 1
-	@echo $$"$(bo)1$(sgr0) \\c"
+	@echo "$(bo)1$(sgr0)"
 	@sleep 1
 	@echo ...
 	@sleep 2
@@ -750,25 +743,26 @@ uninstall: uninstall-translations | show-prefix show-bindir show-sysconfdir show
 	-$v if test -d $(DESTDIR)$(datadir)/fish; then \
 		rm -rf $(DESTDIR)$(datadir)/fish; \
 	fi
-	@echo
+	@echo "Deleting programs: [ $(bo)$(PROGRAMS)$(sgr0) ] in $(em)$(bindir)$(sgr0)"
+	-$v for i in $(PROGRAMS); do \
+		rm -f $(DESTDIR)$(bindir)/$$i; \
+	done;
+	@echo "Deleting configuration: $(bo)$(DESTDIR)$(sysconfdir)/fish/*$(sgr0)"
+	-$v rm -rf $(DESTDIR)$(sysconfdir)/fish
 	@echo "Deleting documentation: $(bo)$(DESTDIR)$(docdir)/*$(sgr0)"
 	-$v if test -d $(DESTDIR)$(docdir); then \
 		rm -rf $(DESTDIR)$(docdir);\
 	fi
-	@echo
 	@echo "Deleting pkgconfig file: $(bo)$(DESTDIR)$(datadir)/pkgconfig/fish.pc$(sgr0)"
 	-$v if test -f $(DESTDIR)$(datadir)/pkgconfig/fish.pc; then \
 		rm -f $(DESTDIR)$(datadir)/pkgconfig/fish.pc;\
 	fi
+	@echo "Deleting [ $(bo)"$(notdir $(MANUALS))"$(sgr0) ] in $(em)$(mandir)/man1$(sgr0)"
+	-$v for i in $(notdir $(MANUALS)); do \
+		rm -f "$(DESTDIR)$(mandir)/man1/$$i" ;\
+	done
 	@echo
-	@echo $$"Deleting \\c"
-	@echo "[ $(bo)"$(basename $(MANUALS))$(sgr0) $$"] in \\c"
-	@echo "$(em)$(mandir)/man1$(sgr0)"
-	-$v for i in $(MANUALS); do \
-		rm -rf "$(DESTDIR)$(mandir)/man1/"$$$(basename $i)$$$(wildcard .*);
-	done;
-	@echo
-	@echo "$(green)Fish (likely) unintalled$(sgr0)"
+	@echo "$(green)Fish (likely) uninstalled$(sgr0)"
 	@echo
 	@echo "$(bo)./configure --prefix=$(sgr0) to uninstall fish from a different prefix"
 .PHONY: uninstall

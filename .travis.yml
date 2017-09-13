@@ -55,7 +55,11 @@ matrix:
 script:
   - autoreconf
   - ./configure --prefix=$HOME/prefix || cat config.log
-  - make -j2 && make test DESTDIR=$HOME/prefix/ SHOW_INTERACTIVE_LOG=1
+  - make -j2 &&
+    make test DESTDIR=$HOME/prefix/ SHOW_INTERACTIVE_LOG=1 &&
+    make uninstall &&
+    echo "Checking for leftover files after make uninstall" &&
+    find $HOME/prefix/ -type f -print -exec false '{}' +
 
 notifications:
   # Some items are encrypted so that notifications from other repositories

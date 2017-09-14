@@ -18,6 +18,14 @@ function __fish_git_recent_commits
     | string replace -r '(.{73}).+' '$1…'
 end
 
+function __fish_git_local_branches
+    command git branch | string trim -c ' *'
+end
+
+function __fish_git_remote_branches
+    command git branch --remote | string trim -c ' *'
+end
+
 function __fish_git_branches
     # In some cases, git can end up on no branch - e.g. with a detached head
     # This will result in output like `* (no branch)` or a localized `* (HEAD detached at SHA)`
@@ -362,7 +370,8 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_add_files)'
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command' -a checkout -d 'Checkout and switch to a branch'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_branches)' --description 'Branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_local_branches)' --description 'Local Branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_remote_branches)' --description 'Remote Branch'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' --description 'Head'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' --description 'Tag'

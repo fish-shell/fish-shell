@@ -1,7 +1,6 @@
 #
 # Wrap the builtin history command to provide additional functionality.
 #
-
 function __fish_unexpected_hist_args --no-scope-shadowing
     if test -n "$search_mode"
         or set -q show_time[1]
@@ -20,13 +19,13 @@ function history --description "display or manipulate interactive command histor
 
     set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,C' --exclusive 't,T'
     set -a options 'h/help' 'c/contains' 'e/exact' 'p/prefix'
-    set -a options 'C/case-sensitive' 'z/null' 't/show-time=?' 'n#max'
+    set -a options 'C/case-sensitive' 'R/reverse' 'z/null' 't/show-time=?' 'n#max'
     # This long option is deprecated and here solely for legacy compatibility. People should use
     # -t or --show-time now.
     set -a options 'T-with-time=?'
     # The following options are deprecated and will be removed in the next major release.
     # Note that they do not have usable short flags.
-    set -a options 'S-search' 'D-delete' 'M-merge' 'V-save' 'R-clear'
+    set -a options 'S-search' 'D-delete' 'M-merge' 'V-save' 'X-clear'
     argparse -n $cmd $options -- $argv
     or return
 
@@ -38,7 +37,9 @@ function history --description "display or manipulate interactive command histor
     set -l hist_cmd
     set -l show_time
 
-    set -l max_count $_flag_max
+    set -l max_count
+    set -q _flag_max
+    set max_count -n$_flag_max
 
     set -q _flag_with_time
     and set -l _flag_show_time $_flag_with_time
@@ -90,9 +91,9 @@ function history --description "display or manipulate interactive command histor
                 set -l pager less
                 set -q PAGER
                 and set pager $PAGER
-                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_null -- $argv | eval $pager
+                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | eval $pager
             else
-                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_null -- $argv
+                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
             end
 
         case delete # interactively delete history

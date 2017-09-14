@@ -1,16 +1,15 @@
 function pushd --description 'Push directory to stack'
-    set -l options 'h/help'
-    argparse -n pushd --max-args=1 $options -- $argv
-    or return
-
-    if set -q _flag_help
-        __fish_print_help pushd
-        return 0
-    end
-
     set -l rot_r
     set -l rot_l
-    if set -q argv[1]
+
+    if count $argv >/dev/null
+        # check for --help
+        switch $argv[1]
+            case -h --h --he --hel --help
+                __fish_print_help pushd
+                return 0
+        end
+
         # emulate bash by checking if argument of form +n or -n
         if string match -qr '^-[0-9]+$' -- $argv[1]
             set rot_r (string sub -s 2 -- $argv[1])

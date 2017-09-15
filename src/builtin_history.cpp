@@ -48,7 +48,6 @@ static const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'
                                               {L"contains", no_argument, NULL, 'c'},
                                               {L"help", no_argument, NULL, 'h'},
                                               {L"show-time", optional_argument, NULL, 't'},
-                                              {L"with-time", optional_argument, NULL, 't'},
                                               {L"exact", no_argument, NULL, 'e'},
                                               {L"max", required_argument, NULL, 'n'},
                                               {L"null", no_argument, NULL, 'z'},

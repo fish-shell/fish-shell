@@ -695,7 +695,7 @@ After a variable has been set, you can use the value of a variable in the shell 
 
 Example:
 
-To use the value of the variable `smurf`, write `$` (dollar symbol) followed by the name of the variable, like `echo Smurfs are usually $smurf_color`, which would print the result 'Smurfs are usually blue'.
+To use the value of the variable `smurf_color`, write `$` (dollar symbol) followed by the name of the variable, like `echo Smurfs are usually $smurf_color`, which would print the result 'Smurfs are usually blue'.
 
 
 \subsection variables-scope Variable scope

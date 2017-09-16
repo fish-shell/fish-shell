@@ -635,7 +635,7 @@ install: all install-force | check-legacy-binaries
 	@echo
 	@if type chsh >/dev/null 2>&1; then \
 		echo To use fish as your login shell:; \
-		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo  \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'; \
+		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo \ \ \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'; \
 		echo "  * run $(yellow)chsh -s $(DESTDIR)$(bindir)/fish$(sgr0)"; \
 		echo; \
 	fi;

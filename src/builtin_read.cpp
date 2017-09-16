@@ -2,6 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
+#include <iostream>
 #include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -374,6 +375,10 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     // Verify all variable names.
     for (int i = 0; i < argc; i++) {
         if (!valid_var_name(argv[i])) {
+            if (wcscmp(L"-", argv[i]) == 0) {
+                //writing to stdout instead
+                continue;
+            }
             streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, argv[i]);
             builtin_print_help(parser, streams, cmd, streams.err);
             return STATUS_INVALID_ARGS;
@@ -381,6 +386,26 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     }
 
     return STATUS_CMD_OK;
+}
+
+void print_or_set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
+    if (key == L"-") {
+        for (const auto &val : vals) {
+            std::wcout << val << std::endl;
+        }
+    }
+    else {
+        env_set(key, mode, vals);
+    }
+}
+
+void print_or_set_one(const wcstring &key, env_mode_flags_t mode, wcstring val) {
+    if (key == L"-") {
+        std::wcout << val << std::endl;
+    }
+    else {
+        env_set_one(key, mode, val);
+    }
 }
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
@@ -455,7 +480,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         if (opts.array) {
             // Array mode: assign each char as a separate element of the sole var.
-            env_set(argv[0], opts.place, chars);
+            print_or_set(argv[0], opts.place, chars);
         } else {
             // Not array mode: assign each char to a separate var with the remainder being assigned
             // to the last var.
@@ -463,16 +488,16 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             size_t j = 0;
             for (; i + 1 < argc; ++i) {
                 if (j < chars.size()) {
-                    env_set_one(argv[i], opts.place, chars[j]);
+                    print_or_set_one(argv[i], opts.place, chars[j]);
                     j++;
                 } else {
-                    env_set_one(argv[i], opts.place, L"");
+                    print_or_set_one(argv[i], opts.place, L"");
                 }
             }
 
             if (i < argc) {
                 wcstring val = chars.size() == static_cast<size_t>(argc) ? chars[i] : L"";
-                env_set_one(argv[i], opts.place, val);
+                print_or_set_one(argv[i], opts.place, val);
             } else {
                 env_set_empty(argv[i], opts.place);
             }
@@ -490,13 +515,13 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                  loc.first != wcstring::npos; loc = wcstring_tok(buff, opts.delimiter, loc)) {
                 tokens.emplace_back(wcstring(buff, loc.first, loc.second));
             }
-            env_set(argv[0], opts.place, tokens);
+            print_or_set(argv[0], opts.place, tokens);
         } else {
             // We're using a delimiter provided by the user so use the `string split` behavior.
             wcstring_list_t splits;
             split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                         &splits, LONG_MAX);
-            env_set(argv[0], opts.place, splits);
+            print_or_set(argv[0], opts.place, splits);
         }
     } else {
         // Not array mode. Split the input into tokens and assign each to the vars in sequence.
@@ -510,7 +535,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 if (loc.first != wcstring::npos) {
                     substr = wcstring(buff, loc.first, loc.second);
                 }
-                env_set_one(argv[i], opts.place, substr);
+                print_or_set_one(argv[i], opts.place, substr);
             }
         } else {
             // We're using a delimiter provided by the user so use the `string split` behavior.
@@ -520,7 +545,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                         &splits, argc - 1);
             for (size_t i = 0; i < (size_t)argc && i < splits.size(); i++) {
-                env_set_one(argv[i], opts.place, splits[i]);
+                print_or_set_one(argv[i], opts.place, splits[i]);
             }
         }
     }

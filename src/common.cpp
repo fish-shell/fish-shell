@@ -163,7 +163,7 @@ show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
 #else   // HAVE_BACKTRACE_SYMBOLS
 
 void __attribute__((noinline))
-show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
+show_stackframe(const wchar_t msg_level, int, int) {
     debug_shared(msg_level, L"Sorry, but your system does not support backtraces");
 }
 #endif  // HAVE_BACKTRACE_SYMBOLS

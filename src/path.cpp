@@ -86,6 +86,13 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                 case ENOTDIR: {
                     break;
                 }
+                //WSL has a bug where access(2) can return EINVAL
+                //See https://github.com/Microsoft/BashOnWindows/issues/2522
+                //The only other way EINVAL can happen is if the wrong
+                //mode was specified, but we have X_OK hard-coded above.
+                case EINVAL: {
+                    break;
+                }
                 default: {
                     debug(1, MISSING_COMMAND_ERR_MSG, next_path.c_str());
                     wperror(L"access");

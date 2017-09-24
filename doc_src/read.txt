@@ -54,7 +54,7 @@ In order to protect the shell from consuming too many system resources, `read` w
 
 \subsection read-history Using another read history file
 
-The `read` command supported the `-m` and `--mode-name` flags in fish versions prior to 2.7.0 to specify an alternative read history file. Those flags are now deprecated and ignored. Instead, set the `FISH_HISTORY` variable to specify a history session ID. That will affect both the `read` history file and the fish command history file. You can set it to an empty string to specify that no history should be read or written. This is useful for presentations where you do not want possibly private or sensitive history to be exposed to the audience but do want history relevant to the presentation to be available.
+The `read` command supported the `-m` and `--mode-name` flags in fish versions prior to 2.7.0 to specify an alternative read history file. Those flags are now deprecated and ignored. Instead, set the `fish_history` variable to specify a history session ID. That will affect both the `read` history file and the fish command history file. You can set it to an empty string to specify that no history should be read or written. This is useful for presentations where you do not want possibly private or sensitive history to be exposed to the audience but do want history relevant to the presentation to be available.
 
 \subsection read-example Example
 

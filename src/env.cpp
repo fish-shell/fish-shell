@@ -612,7 +612,7 @@ static void react_to_variable_change(const wcstring &key) {
         invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
     } else if (key == L"FISH_READ_BYTE_LIMIT") {
         env_set_read_limit();
-    } else if (key == L"FISH_HISTORY") {
+    } else if (key == L"fish_history") {
         reader_change_history(history_session_id().c_str());
     }
 }

@@ -1,9 +1,17 @@
-warn:
-	@echo "Error: BSD Make not supported"
-	@echo "Please use GNU Make (gmake) to build fish. Refer to README.md for detailed build instructions."
+JARG =
+GMAKE = "gmake"
+.if "$(.MAKE.JOBS)" != ""
+JARG = -j$(.MAKE.JOBS)
+.endif
 
-all: warn
-install: warn
-test: warn
+#by default bmake will cd into ./obj first
+.OBJDIR: ./
 
-.PHONY: warn all install test
+.DONE .DEFAULT: .SILENT
+	$(GMAKE) $(.TARGETS:S,.DONE,,) $(JARG)
+
+.ERROR: .SILENT
+	if ! which $(GMAKE) > /dev/null; then \
+		echo "GNU Make is required!"; \
+	fi
+

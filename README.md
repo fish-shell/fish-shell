@@ -135,10 +135,12 @@ Compiling from git (that is, not a released tarball) also requires:
 
 ### Autotools Build
 
-    autoreconf --no-recursive #[if building from Git]
-    ./configure
-    make #[gmake on BSD]
-    sudo make install #[sudo gmake install on BSD]
+```bash
+autoreconf --no-recursive #if building from Git
+./configure
+make #gmake on BSD
+sudo make install #sudo gmake install on BSD
+```
 
 ### Xcode Development Build
 

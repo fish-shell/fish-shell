@@ -635,13 +635,13 @@ install: all install-force | check-legacy-binaries
 	@echo
 	@if type chsh >/dev/null 2>&1; then \
 		echo To use fish as your login shell:; \
-		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo \ \ \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'; \
-		echo "  * run $(yellow)chsh -s $(DESTDIR)$(bindir)/fish$(sgr0)"; \
+		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo \ \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'; \
+		echo " * run '$(yellow)chsh -s $(DESTDIR)$(bindir)/fish$(sgr0)'"; \
 		echo; \
 	fi;
 	@if type chcon >/dev/null 2>&1; then \
 		echo If you have SELinux enabled, you may need to manually update the security policy:; \
-		echo \* use the command \'chcon -t shell_exec_t $(DESTDIR)$(bindir)/fish\'.; \
+		echo \ \* use the command \'chcon -t shell_exec_t $(DESTDIR)$(bindir)/fish\'; \
 		echo; \
 	fi;
 	@echo "To set your colors, run $(green)$(bo)fish_config$(sgr0)"

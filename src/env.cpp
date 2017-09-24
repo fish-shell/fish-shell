@@ -104,7 +104,7 @@ static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_
 /// List of "path" like variable names that need special handling. This includes automatic
 /// splitting and joining on import/export. As well as replacing empty elements, which implicitly
 /// refer to the CWD, with an explicit '.' in the case of PATH and CDPATH.
-static const wcstring_list_t colon_delimited_variable({L"PATH", L"MANPATH", L"CDPATH"});
+static const wcstring_list_t colon_delimited_variable({L"PATH", L"MANPATH", L"CDPATH", L"GOPATH"});
 
 // Some forward declarations to make it easy to logically group the code.
 static void init_locale();

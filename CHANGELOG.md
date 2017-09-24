@@ -34,8 +34,8 @@ This section is for changes merged to the `major` branch that are not also merge
 - Invalid array indexes are now silently ignored (#826, #4127).
 - `string escape` has a new `--style=xxx` flag where `xxx` can be `script`, `var`, or `url` (#4150).
 - `string unescape` has been implemented to reverse the effects of `string escape` (#3543).
-- The history file can now be specified by setting the `FISH_HISTORY` variable (#102).
-- Read history is now controlled by the `FISH_HISTORY` variable rather than the `--mode-name` flag (#1504).
+- The history file can now be specified by setting the `fish_history` variable (#102).
+- Read history is now controlled by the `fish_history` variable rather than the `--mode-name` flag (#1504).
 - Implement a `cdh` (change directory using recent history) command to provide a more friendly alternative to prevd/nextd and pushd/popd (#2847).
 - `command` now supports a `-a` flag to report all directories with the command. This means that `which -a $cmd` is no longer necessary (#2778).
 - `--init-command`/`-C` added to the command line switches, to allow execution of commands before starting the interactive shell (#4164).

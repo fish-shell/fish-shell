@@ -115,7 +115,7 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
             }
             case L'm': {
                 streams.err.append_format(_(L"%ls: flags '--mode-name' / '-m' are now ignored. "
-                                            L"Set FISH_HISTORY instead.\n"),
+                                            L"Set fish_history instead.\n"),
                                           cmd);
                 break;
             }

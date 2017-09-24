@@ -847,7 +847,7 @@ static void setup_var_dispatch_table() {
     var_dispatch_table.emplace(L"LINES", handle_term_size_change);
     var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
     var_dispatch_table.emplace(L"FISH_READ_BYTE_LIMIT", handle_read_limit_change);
-    var_dispatch_table.emplace(L"FISH_HISTORY", handle_fish_history_change);
+    var_dispatch_table.emplace(L"fish_history", handle_fish_history_change);
     var_dispatch_table.emplace(L"TZ", handle_tz_change);
 }
 

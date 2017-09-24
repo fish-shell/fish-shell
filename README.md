@@ -132,13 +132,13 @@ Compiling from git (that is, not a released tarball) also requires:
     * automake 1.13 or later
 * Doxygen (1.8.7 or later) - optional, for documentation
 
-### Autotools Build
+### Building from source
 
 ```bash
 autoreconf --no-recursive #if building from Git
 ./configure
-make #gmake on BSD
-sudo make install #sudo gmake install on BSD
+make
+sudo make install
 ```
 
 ### Xcode Development Build

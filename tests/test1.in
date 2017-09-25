@@ -155,6 +155,35 @@ for status in a b c
   echo $status
 end
 
+logmsg For loop control vars available outside the for block
+begin
+  set -l loop_var initial-value
+  for loop_var in a b c
+    # do nothing
+  end
+  set --show loop_var
+end
+
+set -g loop_var global_val
+function loop_test
+  for loop_var in a b c
+    if test $loop_var = b
+      break
+    end
+  end
+  set --show loop_var
+end
+loop_test
+set --show loop_var
+
+begin
+  set -l loop_var
+  for loop_var in aa bb cc
+  end
+  set --show loop_var
+end
+set --show loop_var
+
 logmsg 'Comments allowed in between lines (#1987)'
 echo before comment \
   # comment

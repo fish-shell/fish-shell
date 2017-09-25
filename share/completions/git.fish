@@ -18,6 +18,14 @@ function __fish_git_recent_commits
     | string replace -r '(.{73}).+' '$1…'
 end
 
+function __fish_git_local_branches
+    command git branch | string trim -c ' *'
+end
+
+function __fish_git_remote_branches
+    command git branch --remote | string trim -c ' *'
+end
+
 function __fish_git_branches
     # In some cases, git can end up on no branch - e.g. with a detached head
     # This will result in output like `* (no branch)` or a localized `* (HEAD detached at SHA)`
@@ -63,7 +71,7 @@ function __fish_git_modified_files
     set -l root (command git rev-parse --show-toplevel ^/dev/null)
     # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
     # This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
-    string replace -- "$PWD/" "" "$root/"(command git diff --name-only ^/dev/null) | string replace "$root/" ":/"
+    string replace -- "$PWD/" "" "$root/"(command git diff --name-only $argv ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_staged_files
@@ -362,13 +370,16 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_add_files)'
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command' -a checkout -d 'Checkout and switch to a branch'
-complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_branches)' --description 'Branch'
-complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' --description 'Head'
-complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
-complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' --description 'Tag'
-complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_local_branches)' --description 'Local Branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_remote_branches)' --description 'Remote Branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' --description 'Head'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' --description 'Tag'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
+complete -f -c git -n '__fish_git_using_command checkout' -l theirs -d 'Keep staged changes'
+complete -f -c git -n '__fish_git_using_command checkout' -l ours -d 'Keep unmerged changes'
 # TODO options
 
 ### apply
@@ -783,6 +794,8 @@ complete -c git -n '__fish_git_needs_command' -a reset -d 'Reset current HEAD to
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
 complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_staged_files)' -d 'File'
+# reset changes the index, so we need to compare that to the commit.
+complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_modified_files --cached)' -d 'File'
 complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_reflog)' -d 'Reflog'
 # TODO options
 

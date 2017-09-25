@@ -286,6 +286,7 @@ std::string wcs2string(const wcstring &input);
 /// Test if a string prefixes another. Returns true if a is a prefix of b.
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value);
+bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value);
 
 /// Test if a string is a suffix of another.
 bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value);

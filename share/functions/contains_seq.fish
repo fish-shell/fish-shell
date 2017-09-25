@@ -23,7 +23,7 @@ function contains_seq --description 'Return true if array contains a sequence'
         end
         if test "$s" = "$pattern[$i]"
             set -e nomatch[1]
-            set i (math i + 1)
+            set i (math $i + 1)
             if not set -q pattern[$i]
                 if set -q printnext[1]
                     set printnext[2] 1

@@ -40,9 +40,7 @@ function __fish_print_packages
         set cache_file $XDG_CACHE_HOME/.pac-cache.$USER
         if test -f $cache_file
             cat $cache_file
-            set -l x (date +%s)
-            set -l y (stat -c '%Y' $cache_file)
-            set age (math x - y)
+            set age (math (date +%s) - (stat -c '%Y' $cache_file))
             set max_age 250
             if test $age -lt $max_age
                 return
@@ -67,9 +65,7 @@ function __fish_print_packages
         set -l cache_file $XDG_CACHE_HOME/.zypper-cache.$USER
         if test -f $cache_file
             cat $cache_file
-            set -l x (date +%s)
-            set -l y (stat -c '%Y' $cache_file)
-            set -l age (math x - y)
+            set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
             set -l max_age 300
             if test $age -lt $max_age
                 return
@@ -89,9 +85,7 @@ function __fish_print_packages
         set cache_file $XDG_CACHE_HOME/.yum-cache.$USER
         if test -f $cache_file
             cat $cache_file
-            set -l x (date +%s)
-            set -l y (stat -c '%Y' $cache_file)
-            set age (math x - y)
+            set age (math (date +%s) - (stat -c '%Y' $cache_file))
             set max_age 21600
             if test $age -lt $max_age
                 return
@@ -113,9 +107,7 @@ function __fish_print_packages
         set cache_file $XDG_CACHE_HOME/.rpm-cache.$USER
         if test -f $cache_file
             cat $cache_file
-            set -l x (date +%s)
-            set -l y (stat -c '%Y' $cache_file)
-            set age (math x - y)
+            set age (math (date +%s) - (stat -c '%Y' $cache_file))
             set max_age 250
             if test $age -lt $max_age
                 return

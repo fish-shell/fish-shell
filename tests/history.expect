@@ -50,8 +50,8 @@ expect_prompt -re {start2\r\necho start1; builtin history; echo end1\r\nend2\r\n
 # ==========
 # Verify explicit searching for the first two commands in the previous tests
 # returns the expected results.
-send "history search echo start\r"
-expect_prompt -re {\r\necho start1.*\r\necho start2} {
+send "history search --reverse 'echo start'\r"
+expect_prompt -re {\r\necho start1;.*\r\necho start2;} {
     puts "history function explicit search succeeded"
 } timeout {
     puts stderr "history function explicit search failed"

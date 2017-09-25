@@ -1,16 +1,15 @@
 function pushd --description 'Push directory to stack'
-    set -l options 'h/help'
-    argparse -n pushd --max-args=1 $options -- $argv
-    or return
-
-    if set -q _flag_help
-        __fish_print_help pushd
-        return 0
-    end
-
     set -l rot_r
     set -l rot_l
-    if set -q argv[1]
+
+    if count $argv >/dev/null
+        # check for --help
+        switch $argv[1]
+            case -h --h --he --hel --help
+                __fish_print_help pushd
+                return 0
+        end
+
         # emulate bash by checking if argument of form +n or -n
         if string match -qr '^-[0-9]+$' -- $argv[1]
             set rot_r (string sub -s 2 -- $argv[1])
@@ -53,8 +52,7 @@ function pushd --description 'Push directory to stack'
                 return 1
             end
 
-            set -l x (count $stack)
-            set rot_l (math x - 1 - rot_r)
+            set rot_l (math (count $stack) - 1 - $rot_r)
         end
 
         # check the rotation in range
@@ -64,7 +62,7 @@ function pushd --description 'Push directory to stack'
         else
             # rotate stack unless rot_l is 0
             if test $rot_l -gt 0
-                set stack $stack[(math rot_l + 1)..(count $stack)] $stack[1..$rot_l]
+                set stack $stack[(math $rot_l + 1)..(count $stack)] $stack[1..$rot_l]
             end
 
             # now reconstruct dirstack and change directory

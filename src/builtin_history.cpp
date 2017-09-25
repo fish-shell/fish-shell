@@ -2,8 +2,8 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
-#include <limits.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <wchar.h>
 
 #include <string>
@@ -31,23 +31,23 @@ struct history_cmd_opts_t {
     bool print_help = false;
     hist_cmd_t hist_cmd = HIST_UNDEF;
     history_search_type_t search_type = (history_search_type_t)-1;
-    long max_items = LONG_MAX;
+    size_t max_items = SIZE_MAX;
     bool history_search_type_defined = false;
     const wchar_t *show_time_format = NULL;
     bool case_sensitive = false;
     bool null_terminate = false;
+    bool reverse = false;
 };
 
 /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
 /// the non-flag subcommand form. While many of these flags are deprecated they must be
 /// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
 /// config.fish and other scripts.
-static const wchar_t *short_options = L":Cmn:epcht::z";
+static const wchar_t *short_options = L":CRcehmn:pt::z";
 static const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'},
                                               {L"contains", no_argument, NULL, 'c'},
                                               {L"help", no_argument, NULL, 'h'},
                                               {L"show-time", optional_argument, NULL, 't'},
-                                              {L"with-time", optional_argument, NULL, 't'},
                                               {L"exact", no_argument, NULL, 'e'},
                                               {L"max", required_argument, NULL, 'n'},
                                               {L"null", no_argument, NULL, 'z'},
@@ -57,6 +57,7 @@ static const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'
                                               {L"save", no_argument, NULL, 3},
                                               {L"clear", no_argument, NULL, 4},
                                               {L"merge", no_argument, NULL, 5},
+                                              {L"reverse", no_argument, NULL, 'R'},
                                               {NULL, 0, NULL, 0}};
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.
@@ -133,6 +134,10 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
                 opts.case_sensitive = true;
                 break;
             }
+            case 'R': {
+                opts.reverse = true;
+                break;
+            }
             case 'p': {
                 opts.search_type = HISTORY_SEARCH_TYPE_PREFIX;
                 opts.history_search_type_defined = true;
@@ -153,12 +158,13 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
                 break;
             }
             case 'n': {
-                opts.max_items = fish_wcstol(w.woptarg);
+                long x = fish_wcstol(w.woptarg);
                 if (errno) {
                     streams.err.append_format(_(L"%ls: max value '%ls' is not a valid number\n"),
                                               cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
+                opts.max_items = static_cast<size_t>(x);
                 break;
             }
             case 'z': {
@@ -242,7 +248,7 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     switch (opts.hist_cmd) {
         case HIST_SEARCH: {
             if (!history->search(opts.search_type, args, opts.show_time_format, opts.max_items,
-                                 opts.case_sensitive, opts.null_terminate, streams)) {
+                                 opts.case_sensitive, opts.null_terminate, opts.reverse, streams)) {
                 status = STATUS_CMD_ERROR;
             }
             break;

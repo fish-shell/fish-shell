@@ -1626,29 +1626,7 @@ static void reader_interactive_init() {
         signal_set_handlers();
     }
 
-    // Put ourselves in our own process group.
-    shell_pgid = getpid();
-    if (getpgrp() != shell_pgid && setpgid(shell_pgid, shell_pgid) < 0) {
-        debug(0, _(L"Couldn't put the shell in its own process group"));
-        wperror(L"setpgid");
-        exit_without_destructors(1);
-    }
-
-    // Grab control of the terminal.
-    if (tcsetpgrp(STDIN_FILENO, shell_pgid) == -1) {
-        if (errno == ENOTTY) redirect_tty_output();
-        debug(0, _(L"Couldn't grab control of terminal"));
-        wperror(L"tcsetpgrp");
-        exit_without_destructors(1);
-    }
-
     invalidate_termsize();
-
-    // Set the new modes.
-    if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {
-        if (errno == EIO) redirect_tty_output();
-        wperror(L"tcsetattr");
-    }
 
     env_set_one(L"_", ENV_GLOBAL, L"fish");
 }

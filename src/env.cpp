@@ -322,6 +322,8 @@ static bool is_read_only(const wcstring &key) {
     return env_read_only.find(key) != env_read_only.end();
 }
 
+bool env_var_t::read_only() const { return is_read_only(name); }
+
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
 static const_string_set_t env_electric;
 
@@ -845,7 +847,7 @@ static void setup_var_dispatch_table() {
     var_dispatch_table.emplace(L"LINES", handle_term_size_change);
     var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
     var_dispatch_table.emplace(L"FISH_READ_BYTE_LIMIT", handle_read_limit_change);
-    var_dispatch_table.emplace(L"FISH_HISTORY", handle_fish_history_change);
+    var_dispatch_table.emplace(L"fish_history", handle_fish_history_change);
     var_dispatch_table.emplace(L"TZ", handle_tz_change);
 }
 

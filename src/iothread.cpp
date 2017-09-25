@@ -7,6 +7,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <atomic>
 
 #include <condition_variable>
 #include <queue>
@@ -50,7 +51,7 @@ struct spawn_request_t {
 };
 
 struct main_thread_request_t {
-    volatile bool done = false;
+    std::atomic<bool> done{false};
     void_function_t func;
 
     main_thread_request_t(void_function_t &&f) : func(f) {}

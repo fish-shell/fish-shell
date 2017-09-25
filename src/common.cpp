@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <pthread.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -162,7 +163,7 @@ show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
 #else   // HAVE_BACKTRACE_SYMBOLS
 
 void __attribute__((noinline))
-show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
+show_stackframe(const wchar_t msg_level, int, int) {
     debug_shared(msg_level, L"Sorry, but your system does not support backtraces");
 }
 #endif  // HAVE_BACKTRACE_SYMBOLS
@@ -486,14 +487,14 @@ wchar_t *quote_end(const wchar_t *pos) {
 }
 
 void fish_setlocale() {
-    // Use the Unicode "ellipsis" symbol if it can be encoded using the current locale.
-    ellipsis_char = can_be_encoded(L'\x2026') ? L'\x2026' : L'$';
-
-    // Use the Unicode "return" symbol if it can be encoded using the current locale.
-    omitted_newline_char = can_be_encoded(L'\x23CE') ? L'\x23CE' : L'~';
-
-    // solid circle unicode character if it is able, fallback to the hash character
-    obfuscation_read_char = can_be_encoded(L'\u25cf') ? L'\u25cf' : L'#';
+    // Use various Unicode symbols if they can be encoded using the current locale, else a simple
+    // ASCII char alternative. All of the can_be_encoded() invocations should return the same
+    // true/false value since the code points are in the BMP but we're going to be paranoid. This
+    // is also technically wrong if we're not in a Unicode locale but we expect (or hope)
+    // can_be_encoded() will return false in that case.
+    ellipsis_char = can_be_encoded(L'\u2026') ? L'\u2026' : L'$';          // "horizontal ellipsis"
+    omitted_newline_char = can_be_encoded(L'\u23CE') ? L'\u23CE' : L'~';   // "return"
+    obfuscation_read_char = can_be_encoded(L'\u25CF') ? L'\u25CF' : L'#';  // "black circle"
 }
 
 long read_blocked(int fd, void *buf, size_t count) {
@@ -1631,6 +1632,16 @@ bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &valu
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value) {
     size_t prefix_size = proposed_prefix.size();
     return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;
+}
+
+bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value) {
+    for (size_t idx = 0; proposed_prefix[idx] != L'\0'; idx++) {
+        // Note if the prefix is longer than value, then we will compare a nonzero prefix character
+        // against a zero value character, and so we'll return false;
+        if (proposed_prefix[idx] != value[idx]) return false;
+    }
+    // We must have that proposed_prefix[idx] == L'\0', so we have a prefix match.
+    return true;
 }
 
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,

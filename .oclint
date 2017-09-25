@@ -87,3 +87,9 @@ disable-rules:
     # in fish source.
     #
     - BitwiseOperatorInConditional
+    #
+    # I don't think I've ever seen a case where assigning a value to a
+    # parameter inside the function body was unclear, let along dangerous or
+    # an error. This rule is therefore just noise. Disable this rule.
+    #
+    - ParameterReassignment

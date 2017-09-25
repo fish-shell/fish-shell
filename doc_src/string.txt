@@ -59,15 +59,15 @@ The third is `--style=url` which ensures the string can be used as a URL by hex 
 
 \subsection string-match "match" subcommand
 
-`string match` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported.The default behavior is equivalent to `grep -o`.
+`string match` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported.
 
-If you specify the `-e` or `--entire` then each matching string is printed including any prefix or suffix not matched by the pattern (equivalent to `grep` without the `-o` flag). You can, obviously, achieve the same result by prepending and appending `*` or `.*` depending on whether or not you have specified the `--regex` flag. The `--entire` flag is simply a way to avoid having to complicate the pattern in that fashion and make the intent of the `string match` clearer.
+If you specify the `-e` or `--entire` then each matching string is printed including any prefix or suffix not matched by the pattern (equivalent to `grep` without the `-o` flag). You can, obviously, achieve the same result by prepending and appending `*` or `.*` depending on whether or not you have specified the `--regex` flag. The `--entire` flag is simply a way to avoid having to complicate the pattern in that fashion and make the intent of the `string match` clearer. Without `--entire` and `--regex`, a PATTERN will need to match the entire STRING before it will be reported.
 
 Matching can be made case-insensitive with `--ignore-case` or `-i`.
 
 If `--index` or `-n` is given, each match is reported as a 1-based start position and a length. By default, PATTERN is interpreted as a glob pattern matched against each entire STRING argument. A glob pattern is only considered a valid match if it matches the entire STRING.
 
-If `--regex` or `-r` is given, PATTERN is interpreted as a Perl-compatible regular expression, which does not have to match the entire STRING. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group.
+If `--regex` or `-r` is given, PATTERN is interpreted as a Perl-compatible regular expression, which does not have to match the entire STRING. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group. With this, only the matching part of the STRING will be reported, unless `--entire` is given.
 
 If `--invert` or `-v` is used the selected lines will be only those which do not match the given glob pattern or regular expression.
 
@@ -186,7 +186,23 @@ In general, special characters are special by default, so `a+` matches one or mo
 <outp>Axxb</outp>
 
 >_ echo 'ok?' | string match '*\\?'
->_ <outp>ok?</outp>
+<outp>ok?</outp>
+
+# Note that only the second STRING will match here.
+>_ string match 'foo' 'foo1' 'foo' 'foo2'
+<outp>foo</outp>
+
+>_ string match -e 'foo' 'foo1' 'foo' 'foo2'
+<outp>foo1
+foo
+foo2
+</outp>
+
+>_ string match 'foo?' 'foo1' 'foo' 'foo2'
+<outp>foo1
+foo
+foo2
+</outp>
 \endfish
 
 \subsection string-example-match-regex Match Regex Examples

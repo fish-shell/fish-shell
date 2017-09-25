@@ -132,7 +132,7 @@ function __fish_svn_prompt --description "Prompt function for svn"
 
             # the default separator is empty
             set -l prompt_separator ""
-            for index in (seq (math col - last_column))
+            for index in (seq (math "$col - $last_column"))
                 # the prompt separator variable has to be updated with the number of separators needed to represent empty status columns (eg: if a file has the status "A  +" then it should display as "A|||+" in the prompt)
                 set prompt_separator $prompt_separator$__fish_svn_prompt_char_separator
             end

@@ -67,8 +67,13 @@
     { include: ["<sys/_timespec.h>", "private", "<time.h>", "public"] },
     { include: ["<sys/spawn.h>", "private", "<spawn.h>", "public"] },
     { include: ["<sys/dirent.h>", "private", "<dirent.h>", "public"] },
+    { include: ["<__mutex_base>", "private", "<mutex>", "public"] },
+    { include: ["<__hash_table>", "private", "<unordered_map>", "public"] },
+    { include: ["<__hash_table>", "private", "<unordered_set>", "public"] },
 #   { include: ["<>", "private", "<>", "public"] },
 
+    { symbol: ["size_t", "private", "<cstddef>", "public"] },
+    { symbol: ["mutex", "private", "<mutex>", "public"] },
     { symbol: ["sig_atomic_t", "private", "<csignal>", "public"] },
     { symbol: ["va_end", "private", "<stdarg.h>", "public"] },
     { symbol: ["va_list", "private", "<stdarg.h>", "public"] },

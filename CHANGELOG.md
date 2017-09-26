@@ -30,35 +30,35 @@
 - Fix regression involving universal variables with side-effects at startup such as `set -U fish_escape_delay_ms 10` (#4196).
 - Option completion for `apt list` now works properly (#4350).
 - Added completions for:
- - `as` (#4130)
- - `cdh` (#2847)
- - `dhcpd`
- - `ezjail-admin` (#4324)
- - `fab` (fabric, #4153)
- - `grub-file` (#4119)
- - `grub-install` (#4119)
- - `jest` (#4142)
- - `kde-complete`
- - `magneto` (#4043, #4108)
- - `mdadm` (#4198)
- - `s3cmd` (#4332)
- - `sbt` (#4347)
- - `snap` (#4215)
- - `subl` (Sublime Text 3 editor, #4277)
+  - `as` (#4130)
+  - `cdh` (#2847)
+  - `dhcpd`
+  - `ezjail-admin` (#4324)
+  - `fab` (fabric, #4153)
+  - `grub-file` (#4119)
+  - `grub-install` (#4119)
+  - `jest` (#4142)
+  - `kde-complete`
+  - `magneto` (#4043, #4108)
+  - `mdadm` (#4198)
+  - `s3cmd` (#4332)
+  - `sbt` (#4347)
+  - `snap` (#4215)
+  - `subl` (Sublime Text 3 editor, #4277)
 
 - Improved completions for:
- - `apt`
- - `cd` (#4061)
- - `composer` (#4295)
- - `git` (#4117, #4368, #4147)
- - `gphoto2`
- - `killall` (#4052)
- - `ln`
- - `npm` (#4241)
- - `ssh` (#4377)
- - `tail`
- - `xdg-mime` (#4333)
- - `zypper` (#4325)
+  - `apt`
+  - `cd` (#4061)
+  - `composer` (#4295)
+  - `git` (#4117, #4368, #4147)
+  - `gphoto2`
+  - `killall` (#4052)
+  - `ln`
+  - `npm` (#4241)
+  - `ssh` (#4377)
+  - `tail`
+  - `xdg-mime` (#4333)
+  - `zypper` (#4325)
 
 
 ---

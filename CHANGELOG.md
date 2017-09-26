@@ -38,7 +38,7 @@
   - `grub-file` (#4119)
   - `grub-install` (#4119)
   - `jest` (#4142)
-  - `kde-complete`
+  - `kdeconnect-cli`
   - `magneto` (#4043, #4108)
   - `mdadm` (#4198)
   - `s3cmd` (#4332)

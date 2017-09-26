@@ -137,7 +137,7 @@ bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
 }
 
 const wcstring wgetcwd() {
-    char cwd[NAME_MAX];
+    char cwd[PATH_MAX];
     char *res = getcwd(cwd, sizeof(cwd));
     if (res) {
         return str2wcstring(res);

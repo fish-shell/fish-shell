@@ -55,8 +55,9 @@ function help --description 'Show help for the fish shell'
             # If the OS appears to be Windows (graphical), try to use cygstart
             if type -q cygstart
                 set fish_browser cygstart
-                # If xdg-open is available, just use that
-            else if type -q xdg-open
+            # If xdg-open is available, just use that
+            # but only if an X session is running
+            else if type -q xdg-open; and set -q -x DISPLAY
                 set fish_browser xdg-open
             end
 

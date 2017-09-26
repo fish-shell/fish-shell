@@ -137,18 +137,14 @@ bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
 }
 
 const wcstring wgetcwd() {
-    wcstring retval;
-
-    char *res = getcwd(NULL, 0);
+    char cwd[NAME_MAX];
+    char *res = getcwd(cwd, sizeof(cwd));
     if (res) {
-        retval = str2wcstring(res);
-        free(res);
-    } else {
-        debug(0, _(L"getcwd() failed with errno %d/%s"), errno, strerror(errno));
-        retval = wcstring();
+        return str2wcstring(res);
     }
 
-    return retval;
+    debug(0, _(L"getcwd() failed with errno %d/%s"), errno, strerror(errno));
+    return wcstring();
 }
 
 int wchdir(const wcstring &dir) {

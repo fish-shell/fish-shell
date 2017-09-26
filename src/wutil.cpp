@@ -92,7 +92,7 @@ bool wreaddir(DIR *dir, wcstring &out_name) {
     // long when it should be at least NAME_MAX + 1.
     union {
         struct dirent d;
-        char c[offsetof(struct dirent, d_name) + NAME_MAX + 1]; /* NAME_MAX is POSIX. */
+        char c[offsetof(struct dirent, d_name) + NAME_MAX + 1];
     } d_u;
     struct dirent *result = NULL;
 

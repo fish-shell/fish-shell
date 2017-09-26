@@ -148,6 +148,12 @@ function help --description 'Show help for the fish shell'
         end
         eval "$fish_browser $page_url &"
     else
+        # Work around lynx bug where <div class="contents"> always has the same formatting as links (unreadable)
+        # by using a custom style sheet. See https://github.com/fish-shell/fish-shell/issues/4170
+        set -l local_file 0
+        if eval $fish_browser --version 2>/dev/null | string match -qr Lynx
+            set fish_browser $fish_browser -lss={$__fish_help_dir}/fish.lss
+        end
         eval $fish_browser $page_url
     end
 end

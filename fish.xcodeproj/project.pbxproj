@@ -117,6 +117,7 @@
 		9C7A557D1DCD71890049C25D /* fish_key_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C7A557C1DCD717C0049C25D /* fish_key_reader.cpp */; };
 		9C7A557E1DCD71CD0049C25D /* print_help.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855613B3ACEE0099B651 /* print_help.cpp */; };
 		9C7A55811DCD739C0049C25D /* fish_key_reader in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9C7A55721DCD71330049C25D /* fish_key_reader */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		9CC8D8C51F7AF0D40095062A /* lynx.lss in Copy Files */ = {isa = PBXBuildFile; fileRef = 9CC8D8C41F7AF0610095062A /* lynx.lss */; };
 		CB0F034C1F156FE3001827D3 /* builtin_argparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB0F034A1F156FE3001827D3 /* builtin_argparse.cpp */; };
 		CB0F034D1F156FE3001827D3 /* builtin_argparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB0F034A1F156FE3001827D3 /* builtin_argparse.cpp */; };
 		CB0F034E1F156FE3001827D3 /* builtin_argparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB0F034A1F156FE3001827D3 /* builtin_argparse.cpp */; };
@@ -602,6 +603,7 @@
 			dstPath = "${INSTALL_PATH}/share/fish";
 			dstSubfolderSpec = 0;
 			files = (
+				9CC8D8C51F7AF0D40095062A /* lynx.lss in Copy Files */,
 				D07D267215E34171009E43F6 /* config.fish in Copy Files */,
 				D07D266C15E33B86009E43F6 /* completions in Copy Files */,
 				D07D266D15E33B86009E43F6 /* functions in Copy Files */,
@@ -650,6 +652,7 @@
 		63A2C0E81CC5F9FB00973404 /* pcre2_find_bracket.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pcre2_find_bracket.c; sourceTree = "<group>"; };
 		9C7A55721DCD71330049C25D /* fish_key_reader */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fish_key_reader; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C7A557C1DCD717C0049C25D /* fish_key_reader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fish_key_reader.cpp; sourceTree = "<group>"; };
+		9CC8D8C41F7AF0610095062A /* lynx.lss */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = lynx.lss; path = share/lynx.lss; sourceTree = "<group>"; };
 		CB0F034A1F156FE3001827D3 /* builtin_argparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_argparse.cpp; sourceTree = "<group>"; };
 		CB0F034B1F156FE3001827D3 /* builtin_argparse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin_argparse.h; sourceTree = "<group>"; };
 		CBB7725B1F14964100780A21 /* fish-shell */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "fish-shell"; sourceTree = "<group>"; };
@@ -1160,6 +1163,7 @@
 		D0D02AAB15985C14008E62BD /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				9CC8D8C41F7AF0610095062A /* lynx.lss */,
 				D0879AC616BF9A1A00E98E56 /* fish_term_icon.icns */,
 				D07B247215BCC15700D4ADB4 /* add-shell */,
 				D0CBD586159EF0E10024809C /* launch_fish.scpt */,

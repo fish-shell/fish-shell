@@ -23,6 +23,10 @@ This section is for changes merged to the `major` branch that are not also merge
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).
+- Added completions for
+  - `j` (autojump #4344)
+- Improved completions for
+  - `git` (#4395, #4396)
 
 
 # fish 2.7b1

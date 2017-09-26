@@ -846,7 +846,7 @@ msgstr "Utilisation par défaut de 80x24 comme dimensions du terminal."
 #: src/common.cpp:1580
 #, fuzzy
 msgid "This is a bug. Break on bugreport to debug."
-msgstr "Ceci est un bug. Utilisez bugreport pour débugger."
+msgstr "Ceci est un bogue. Utilisez bugreport pour déboguer."
 
 #: src/common.cpp:1581
 #, fuzzy, c-format
@@ -1980,7 +1980,7 @@ msgstr "$? n’est pas supporté. Dans fish, veuillez utiliser 'count $argv'."
 
 #: src/parse_constants.h:281
 msgid "$@ is not supported. In fish, please use $argv."
-msgstr "$? n’est pas supporté. Dans fish, veuillez utiliser $argv."
+msgstr "$@ n’est pas supporté. Dans fish, veuillez utiliser $argv."
 
 #: src/parse_constants.h:284
 #, c-format
@@ -1989,7 +1989,7 @@ msgstr "$(...) n’est pas supporté. Dans fish, veuillez utiliser '(%ls)'."
 
 #: src/parse_constants.h:287
 msgid "$* is not supported. In fish, please use $argv."
-msgstr "$? n’est pas supporté. Dans fish, veuillez utiliser $argv."
+msgstr "$* n’est pas supporté. Dans fish, veuillez utiliser $argv."
 
 #: src/parse_constants.h:290
 msgid "Expected a variable name after this $."
@@ -2746,8 +2746,7 @@ msgstr "Mettre à jour PATH lorsque fish_user_paths est modifiée"
 
 #: /tmp/fish/implicit/share/config.fish:2
 msgid "Signal handler for the TRAP signal. Launches a debug prompt."
-msgstr ""
-"Gestionnaire de signal pour le signal TRAP. Lance une invite de débogage."
+msgstr "Gestionnaire de signal pour le signal TRAP. Lance une invite de débogage."
 
 #: /tmp/fish/implicit/share/config.fish:3
 msgid "Evaluate contents of file (deprecated, see \"source\")"
@@ -3368,7 +3367,7 @@ msgstr "Afficher les informations de version et quitter"
 #: /tmp/fish/implicit/share/completions/adb.fish:1
 #, fuzzy
 msgid "Test if adb has yet to be given the subcommand"
-msgstr "Tester si adb doit toujours se faire donner la sous-commande"
+msgstr "Tester si adb doit encore se faire donner la sous-commande"
 
 #: /tmp/fish/implicit/share/completions/adb.fish:2
 msgid "Run adb devices and parse output"
@@ -3704,7 +3703,7 @@ msgid ""
 "Use shell as the user's login shell, rather than the default specified by "
 "the configuration file"
 msgstr ""
-"Utiliser cette invite comme invite par défaut de l’utilisateur, au lieu de "
+"Utiliser cette invite comme shell de connexion de l’utilisateur, au lieu de "
 "celui donné par le fichier de configuration"
 
 #: /tmp/fish/implicit/share/completions/adduser.fish:11
@@ -5405,7 +5404,7 @@ msgstr "Pas de changements"
 
 #: /tmp/fish/implicit/share/completions/apt-config.fish:2
 msgid "Access config file from shell"
-msgstr "Accéder au fichier de configuration à partir de l’invite de commandes"
+msgstr "Accéder au fichier de configuration à partir du shell"
 
 #: /tmp/fish/implicit/share/completions/apt-config.fish:3
 msgid "Dump contents of config file"
@@ -5732,11 +5731,11 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/aptitude.fish:4
 msgid "Display a brief help message. Identical to the help action"
-msgstr "Afficher un bref message d’aide, Identique à l’action help"
+msgstr "Afficher un bref message d’aide, identique à l’action help"
 
 #: /tmp/fish/implicit/share/completions/aptitude.fish:5
 msgid "Remove any cached packages which can no longer be downloaded"
-msgstr "Nettoyer du cache les paquets ne pouvant plus être téléchargés"
+msgstr "Supprimer du cache les paquets ne pouvant plus être téléchargés"
 
 #: /tmp/fish/implicit/share/completions/aptitude.fish:6
 msgid "Remove all downloaded .deb files from the package cache directory"
@@ -5744,8 +5743,7 @@ msgstr "Supprimer tous les fichiers .deb du cache"
 
 #: /tmp/fish/implicit/share/completions/aptitude.fish:7
 msgid "Forget all internal information about what packages are 'new'"
-msgstr ""
-"Oublier les informations à propos des paquets considérés comme 'nouveaux'"
+msgstr "Oublier les informations à propos des paquets considérés comme 'nouveaux'"
 
 #: /tmp/fish/implicit/share/completions/aptitude.fish:8
 msgid "Cancel all scheduled actions on all packages"
@@ -5761,8 +5759,7 @@ msgstr "Mettre à jour les paquets installés vers leur version la plus récente
 
 #: /tmp/fish/implicit/share/completions/aptitude.fish:11
 msgid "Download and displays the Debian changelog for the packages"
-msgstr ""
-"Télécharger et afficher le journal des modifications pour le paquet Debian"
+msgstr "Télécharger et afficher le journal des modifications Debian pour le paquet"
 
 #: /tmp/fish/implicit/share/completions/aptitude.fish:12
 msgid "Upgrade, removing or installing packages as necessary"
@@ -5845,7 +5842,7 @@ msgstr "Ne pas traiter les recommandations comme des dépendances"
 
 #: /tmp/fish/implicit/share/completions/aptitude.fish:33
 msgid "Treat recommendations as dependencies"
-msgstr "Ne pas traiter les recommandations comme des dépendances"
+msgstr "Traiter les recommandations comme des dépendances"
 
 #: /tmp/fish/implicit/share/completions/aptitude.fish:34
 msgid "Don't perform the actions. Just show them"
@@ -5898,9 +5895,7 @@ msgstr "Préciser l’ordre de la sortie de la commande search"
 
 #: /tmp/fish/implicit/share/completions/aptitude.fish:46
 msgid "Set a configuration file option directly"
-msgstr ""
-"Spécifier une option de configuration directement au lieu de l’inclure dans "
-"un fichier"
+msgstr "Spécifier une option de configuration directement"
 
 #: /tmp/fish/implicit/share/completions/aptitude.fish:47
 msgid "Specify the display width for the output from the search command"
@@ -6018,7 +6013,7 @@ msgstr "Choisir l’interface de façade"
 #: /tmp/fish/implicit/share/completions/apt-listchanges.fish:5
 #: /tmp/fish/implicit/share/completions/darcs.fish:749
 msgid "Specify email address"
-msgstr "Spécifier l’adresse de courriel"
+msgstr "Spécifier l’adresse email"
 
 #: /tmp/fish/implicit/share/completions/apt-listchanges.fish:6
 msgid "Ask confirmation"
@@ -6500,7 +6495,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/arc.fish:5
 #, fuzzy
 msgid "Specify which libraies to load"
-msgstr "Spécifier l'adresse de courriel"
+msgstr "Spécifier l'adresse email"
 
 #: /tmp/fish/implicit/share/completions/arc.fish:6
 #, fuzzy
@@ -7400,7 +7395,7 @@ msgstr "Utiliser la file spécifiée"
 
 #: /tmp/fish/implicit/share/completions/at.fish:3
 msgid "Send mail to user"
-msgstr "Envoyer un courriel à l’utilisateur"
+msgstr "Envoyer un email à l’utilisateur"
 
 #: /tmp/fish/implicit/share/completions/at.fish:4
 msgid "Read job from file"
@@ -10545,7 +10540,7 @@ msgstr "Nom d’utilisateur"
 
 #: /tmp/fish/implicit/share/completions/chsh.fish:1
 msgid "Specify your login shell"
-msgstr "Spécifier votre invite de commande par défaut"
+msgstr "Spécifier votre shell de connexion"
 
 #: /tmp/fish/implicit/share/completions/chsh.fish:2
 msgid "Display help and exit\t"
@@ -11044,7 +11039,7 @@ msgstr "Hériter des complétions de la commande spécifiée"
 
 #: /tmp/fish/implicit/share/completions/composer.fish:1
 msgid "Short information about Composer"
-msgstr ""
+msgstr "Informations concises à propos de Composer"
 
 #: /tmp/fish/implicit/share/completions/composer.fish:2
 #, fuzzy
@@ -14141,7 +14136,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/darcs.fish:753
 #, fuzzy
 msgid "Specify mail subject"
-msgstr "Spécifier l'adresse de courriel"
+msgstr "Spécifier l'adresse email"
 
 #: /tmp/fish/implicit/share/completions/darcs.fish:754
 #, fuzzy
@@ -14161,7 +14156,7 @@ msgstr "Redirige vers un descripteur de fichier"
 #: /tmp/fish/implicit/share/completions/darcs.fish:827
 #, fuzzy
 msgid "Specify sendmail command"
-msgstr "Spécifier l'adresse de courriel"
+msgstr "Spécifier l'adresse email"
 
 #: /tmp/fish/implicit/share/completions/darcs.fish:778
 msgid "Give patch name and comment in file"
@@ -14566,7 +14561,7 @@ msgstr "Spécifier le fichier de config d'APT"
 #: /tmp/fish/implicit/share/completions/dig.fish:6
 #, fuzzy
 msgid "Specify query class"
-msgstr "Spécifier l'adresse de courriel"
+msgstr "Spécifier l'adresse email"
 
 #: /tmp/fish/implicit/share/completions/dig.fish:7
 #, fuzzy
@@ -14585,7 +14580,7 @@ msgstr "Spécifier le port pour l'interface web"
 #: /tmp/fish/implicit/share/completions/dig.fish:10
 #, fuzzy
 msgid "Specify query name"
-msgstr "Spécifier l'adresse de courriel"
+msgstr "Spécifier l'adresse email"
 
 #: /tmp/fish/implicit/share/completions/dig.fish:11
 #, fuzzy
@@ -15188,7 +15183,7 @@ msgstr "Répondre 1 si dropbox est en fonctionnement"
 
 #: /tmp/fish/implicit/share/completions/dropbox.fish:4
 msgid "Ubuntu: automatically start dropbox at login"
-msgstr "Ubuntu : lancer automatiquement dropbox à la connexion"
+msgstr "Ubuntu: lancer automatiquement dropbox à la connexion"
 
 #: /tmp/fish/implicit/share/completions/dropbox.fish:5
 msgid "Start dropboxd"
@@ -15240,11 +15235,11 @@ msgstr "Afficher la liste des dossiers exclus de la synchronisation"
 
 #: /tmp/fish/implicit/share/completions/dropbox.fish:16
 msgid "Adds one or more directories to the exclusion list"
-msgstr "Ajouter un ou plusieurs fichiers à la liste des exclus"
+msgstr "Ajouter un ou plusieurs dossiers à la liste des exclus"
 
 #: /tmp/fish/implicit/share/completions/dropbox.fish:17
 msgid "Removes one or more directories from the exclusion list"
-msgstr "Retirer un ou plusieurs fichiers de la liste des exclus"
+msgstr "Retirer un ou plusieurs dossiers de la liste des exclus"
 
 #: /tmp/fish/implicit/share/completions/du.fish:1
 msgid "Write size for all files"
@@ -17169,7 +17164,7 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:58
 msgid "Print full file names into specified file"
-msgstr "Afficher les chemins absolus des fichiers séparés par \\0"
+msgstr "Enregistrer, dans le fichier spécifié, les chemins absolus des fichiers"
 
 #: /tmp/fish/implicit/share/completions/find.fish:59
 msgid "Print null separated full file names into specified file"
@@ -17256,7 +17251,7 @@ msgstr "Écriture des informations de profilage dans le fichier spécifié"
 
 #: /tmp/fish/implicit/share/completions/fish.fish:8
 msgid "Run with the specified verbosity level"
-msgstr "Exécuter avec la jactance spécifiée"
+msgstr "Exécuter avec la verbosité spécifiée"
 
 #: /tmp/fish/implicit/share/completions/fish_indent.fish:3
 msgid "Do not indent output, only reformat into one job per line"
@@ -18997,6 +18992,7 @@ msgid "Kill only processes which have write access"
 msgstr "Ne tuer que les processus dotés de droits d’écriture"
 
 #: /tmp/fish/implicit/share/completions/fuser.fish:8
+#, fuzzy
 msgid "Slect a different namespace"
 msgstr "Choisir un espace de nommage différent"
 
@@ -25323,7 +25319,7 @@ msgstr "Vérifier si l’un des fichiers donnés serait ignoré"
 
 #: /tmp/fish/implicit/share/completions/git.fish:81
 msgid "Checkout and switch to a branch"
-msgstr "Extraire une branche et bascule dessus"
+msgstr "Extraire une branche et basculer dessus"
 
 #: /tmp/fish/implicit/share/completions/git.fish:83
 #: /tmp/fish/implicit/share/completions/git.fish:238
@@ -25707,7 +25703,7 @@ msgstr "Marquer les validations équivalentes avec = et non équivalentes avec +
 
 #: /tmp/fish/implicit/share/completions/git.fish:178
 msgid "Omit equivalent commits"
-msgstr "Ignorer les validations équivalents"
+msgstr "Ignorer les validations équivalentes"
 
 #: /tmp/fish/implicit/share/completions/git.fish:179
 msgid "Join two or more development histories together"
@@ -25769,7 +25765,7 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:194
 msgid "Don't squash changes"
-msgstr "Ne pas compresser les changements"
+msgstr "Ne pas compresser les modifications"
 
 #: /tmp/fish/implicit/share/completions/git.fish:197
 #: /tmp/fish/implicit/share/completions/git.fish:214
@@ -26251,7 +26247,7 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:340
 msgid "Rebase current branch onto the superproject's commit"
-msgstr "Rebaser la branceh actuelle sur la validation du superprojet"
+msgstr "Rebaser la branche actuelle sur la validation du superprojet"
 
 #: /tmp/fish/implicit/share/completions/git.fish:341
 msgid "Don't fetch new objects from the remote"
@@ -26264,7 +26260,7 @@ msgid ""
 "remote-tracking branch"
 msgstr ""
 "Au lieu d’utiliser la somme SHA-1 du superprojet, utiliser l’état de la "
-"branche de la branche de suivi du sous-module"
+"branche de suivi du sous-module"
 
 #: /tmp/fish/implicit/share/completions/git.fish:343
 msgid ""
@@ -27759,7 +27755,7 @@ msgid ""
 "Don't look at the key ID as stored in the message but try all secret keys in "
 "turn to find the right decryption key"
 msgstr ""
-"Ne pas rechercher l’identifiant de clé tel qu’indiqué dans le message ; "
+"Ne pas rechercher l’identifiant de clé tel qu’indiqué dans le message; "
 "essayer à la place toutes les clés privées pour trouver la bonne"
 
 #: /tmp/fish/implicit/share/completions/gpg.fish:188
@@ -27788,7 +27784,8 @@ msgstr "Supprimer toutes les entrées de la liste --group"
 #: /tmp/fish/implicit/share/completions/gpg.fish:192
 msgid ""
 "Don't change the permissions of a secret keyring back to user read/write only"
-msgstr "Ne pas modifier à 400 les permissions d’un trousseau privé"
+msgstr "Ne pas modifier les permissions d’un trousseau privé vers un accès "
+"en lecture et écriture au seul utilisateur"
 
 #: /tmp/fish/implicit/share/completions/gpg.fish:193
 msgid "Set the list of personal cipher preferences to the specified string"
@@ -27907,7 +27904,7 @@ msgstr "Spécifier un répertoire"
 #: /tmp/fish/implicit/share/completions/gphoto2.fish:22
 #, fuzzy
 msgid "Specify serial transfer speed"
-msgstr "Spécifier l'adresse de courriel"
+msgstr "Spécifier l'adresse email"
 
 #: /tmp/fish/implicit/share/completions/gphoto2.fish:23
 #, fuzzy
@@ -28232,7 +28229,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/gprof.fish:29
 #, fuzzy
 msgid "Specify debugging options"
-msgstr "Spécifier les options"
+msgstr "Spécifier les options de débogage"
 
 #: /tmp/fish/implicit/share/completions/gprof.fish:32
 msgid "Profile data format"
@@ -28437,7 +28434,7 @@ msgstr "Action à effectuer sur les fichiers de périphérique"
 
 #: /tmp/fish/implicit/share/completions/grep.fish:11
 msgid "Action for directories"
-msgstr "Action à effectuer sur les répertoires"
+msgstr "Action à effectuer sur les dossiers"
 
 #: /tmp/fish/implicit/share/completions/grep.fish:12
 msgid "Pattern is extended regexp"
@@ -28467,7 +28464,7 @@ msgstr "Lire les motifs depuis un fichier"
 
 #: /tmp/fish/implicit/share/completions/grep.fish:18
 msgid "Pattern is basic regex"
-msgstr "Le motif est une expression régulière POSIX simple"
+msgstr "Le motif est une expression régulière basique"
 
 #: /tmp/fish/implicit/share/completions/grep.fish:19
 msgid "Print filename"
@@ -28552,7 +28549,7 @@ msgstr "Traiter les fichiers comme des fichiers binaires"
 
 #: /tmp/fish/implicit/share/completions/grep.fish:42
 msgid "Report Unix-style byte offsets"
-msgstr "Afficher  la  position relative en octets dans le style UNIX"
+msgstr "Afficher la position relative en octets dans le style UNIX"
 
 #: /tmp/fish/implicit/share/completions/grep.fish:44
 msgid "Invert the sense of matching"
@@ -28576,7 +28573,7 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grep.fish:48
 msgid "Treat input as a set of zero-terminated lines"
-msgstr "Traiter l’entrée en utilisant NUL comme séparateur de lignes"
+msgstr "Traiter l’entrée en utilisant un caractère null comme séparateur de lignes"
 
 #: /tmp/fish/implicit/share/completions/grep.fish:49
 msgid "Output a zero byte after filename"
@@ -29244,7 +29241,7 @@ msgstr "Aide sur le contrôle des tâches"
 
 #: /tmp/fish/implicit/share/completions/help.fish:7
 msgid "Summary on how fish differs from other shells"
-msgstr "Résumé des différences entre fish et les autres shels"
+msgstr "Résumé des différences entre fish et les autres shells"
 
 #: /tmp/fish/implicit/share/completions/help.fish:8
 msgid "Help on how to set the prompt"
@@ -29290,7 +29287,7 @@ msgstr "Aide sur l’expansion des métacaractères *.*"
 
 #: /tmp/fish/implicit/share/completions/help.fish:20
 msgid "Help on command substitution (SUBCOMMAND)"
-msgstr "Aide sur la substitution de commandes"
+msgstr "Aide sur la substitution de commandes (SUBCOMMAND)"
 
 #: /tmp/fish/implicit/share/completions/help.fish:21
 msgid "Help on process expansion %JOB"
@@ -31376,11 +31373,11 @@ msgstr "Afficher le nombre de paquets multidiffusés en entrée"
 
 #: /tmp/fish/implicit/share/completions/ifdata.fish:28
 msgid "Print # of incoming bytes per second"
-msgstr "Afficher le débit en entrée en o.s⁻¹"
+msgstr "Afficher le débit en entrée en octets par seconde"
 
 #: /tmp/fish/implicit/share/completions/ifdata.fish:29
 msgid "Print # of outgoing bytes per second"
-msgstr "Afficher le débit en sortie en o.s⁻¹"
+msgstr "Afficher le débit en sortie en octets par seconde"
 
 #: /tmp/fish/implicit/share/completions/import.fish:2
 #, fuzzy
@@ -33207,7 +33204,7 @@ msgstr "Afficher le temps"
 #: /tmp/fish/implicit/share/completions/lpstat.fish:3
 #, fuzzy
 msgid "Specifies which jobs to show"
-msgstr "Spécifier l'adresse de courriel"
+msgstr "Spécifier l'adresse email"
 
 #: /tmp/fish/implicit/share/completions/lpstat.fish:4
 msgid "Shows the accepting state of selected printer queues"
@@ -36853,7 +36850,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/mutt.fish:18
 #, fuzzy
 msgid "Specify which mailbox to load"
-msgstr "Spécifier l'adresse de courriel"
+msgstr "Spécifier l'adresse email"
 
 #: /tmp/fish/implicit/share/completions/mutt.fish:19
 msgid "Specify an initialization file to read instead of ~/.muttrc"
@@ -49644,7 +49641,7 @@ msgstr "Ne pas lancer de mise à jour"
 #: /tmp/fish/implicit/share/completions/string.fish:2
 #, fuzzy
 msgid "Specify maximum number of splits"
-msgstr "Spécifier l'adresse de courriel"
+msgstr "Spécifier l'adresse email"
 
 #: /tmp/fish/implicit/share/completions/string.fish:3
 msgid "Split right-to-left"
@@ -54042,7 +54039,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/VBoxSDL.fish:22
 #, fuzzy
 msgid "Specify settings password"
-msgstr "Spécifier l'adresse de courriel"
+msgstr "Spécifier l'adresse email"
 
 #: /tmp/fish/implicit/share/completions/VBoxHeadless.fish:5
 #: /tmp/fish/implicit/share/completions/VBoxSDL.fish:23
@@ -59867,7 +59864,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/functions/__fish_print_abook_emails.fish:1
 #, fuzzy
 msgid "Print email addresses (abook)"
-msgstr "Spécifier l'adresse de courriel"
+msgstr "Spécifier l'adresse email"
 
 #: /tmp/fish/implicit/share/functions/__fish_print_addresses.fish:1
 msgid "Print a list of known network addresses"

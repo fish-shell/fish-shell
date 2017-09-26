@@ -30,14 +30,36 @@
 - Fix regression involving universal variables with side-effects at startup such as `set -U fish_escape_delay_ms 10` (#4196).
 - Option completion for `apt list` now works properly (#4350).
 - Added completions for:
- - `as` (#4130).
- - `jest` (#4142).
+ - `as` (#4130)
+ - `cdh` (#2847)
+ - `dhcpd`
+ - `ezjail-admin` (#4324)
+ - `fab` (fabric, #4153)
+ - `grub-file` (#4119)
+ - `grub-install` (#4119)
+ - `jest` (#4142)
+ - `kde-complete`
+ - `magneto` (#4043, #4108)
+ - `mdadm` (#4198)
+ - `s3cmd` (#4332)
  - `sbt` (#4347)
- - `subl` (Sublime Text 3 editor, #4277)
  - `snap` (#4215)
+ - `subl` (Sublime Text 3 editor, #4277)
+
 - Improved completions for:
+ - `apt`
+ - `cd` (#4061)
  - `composer` (#4295)
+ - `git` (#4117, #4368, #4147)
+ - `gphoto2`
+ - `killall` (#4052)
+ - `ln`
+ - `npm` (#4241)
+ - `ssh` (#4377)
+ - `tail`
  - `xdg-mime` (#4333)
+ - `zypper` (#4325)
+
 
 ---
 
@@ -80,7 +102,7 @@ If you are upgrading from version 2.5.0 or before, please also review the releas
 - `status` supports a new `current-function` subcommand to print the current function name (#1743).
 - `string` supports a new `repeat` subcommand (#3864). `string match` supports a new `--entire` option to emit the entire line matched by a pattern (#3957). `string replace` supports a new `--filter` option to only emit lines which underwent a replacement (#3348).
 - `test` supports the `-k` option to test for sticky bits (#733).
-- `umask` understands symbolic modes (#738). 
+- `umask` understands symbolic modes (#738).
 - Empty components in the `CDPATH`, `MANPATH` and `PATH` variables are now converted to "." (#2106, #3914).
 - New versions of ncurses (6.0 and up) wipe terminal scrollback buffers with certain commands; the `C-l` binding tries to avoid this (#2855).
 - Some systems' `su` implementations do not set the `USER` environment variable; it is now reset for root users (#3916).

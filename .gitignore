@@ -97,3 +97,5 @@ xcuserdata/
 *.xccheckout
 *.xcscmblueprin
 
+# This is left over when building fish 3
+muparser-*/

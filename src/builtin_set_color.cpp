@@ -61,31 +61,10 @@ static const struct woption long_options[] = {{L"background", required_argument,
                                               {L"print-colors", no_argument, NULL, 'c'},
                                               {NULL, 0, NULL, 0}};
 
-#if __APPLE__
-char sitm_esc[] = "\e[3m";
-char ritm_esc[] = "\e[23m";
-char dim_esc[] = "\e[2m";
-#endif
-
 /// set_color builtin.
 int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // By the time this is called we should have initialized the curses subsystem.
     assert(curses_initialized);
-
-    // Hack in missing italics and dim capabilities omitted from MacOS xterm-256color terminfo
-    // Helps Terminal.app/iTerm
-    #if __APPLE__
-    const auto term_prog = env_get(L"TERM_PROGRAM");
-    if (!term_prog.missing_or_empty() && (term_prog->as_string() == L"Apple_Terminal"
-        || term_prog->as_string() == L"iTerm.app")) {
-        const auto term = env_get(L"TERM");
-        if (!term.missing_or_empty() && (term->as_string() == L"xterm-256color")) {
-            enter_italics_mode = sitm_esc;
-            exit_italics_mode = ritm_esc;
-            enter_dim_mode = dim_esc;
-        }
-    }
-    #endif
 
     // Variables used for parsing the argument list.
     wchar_t *cmd = argv[0];

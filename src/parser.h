@@ -3,7 +3,12 @@
 #define FISH_PARSER_H
 
 #include <stddef.h>
+#include <unistd.h>
+
+#include <csignal>
 #include <list>
+#include <memory>
+#include <type_traits>
 #include <vector>
 
 #include "common.h"
@@ -212,7 +217,7 @@ class parser_t {
     /// Returns the name of the currently evaluated function if we are currently evaluating a
     /// function, null otherwise. This is tested by moving down the block-scope-stack, checking
     /// every block if it is of type FUNCTION_CALL.
-    const wchar_t *is_function() const;
+    const wchar_t *is_function(size_t idx = 0) const;
 
     /// Helper for stack_trace().
     void stack_trace_internal(size_t block_idx, wcstring *out) const;
@@ -259,7 +264,7 @@ class parser_t {
     static void expand_argument_list(const wcstring &arg_src, expand_flags_t flags,
                                      std::vector<completion_t> *output);
 
-    /// Returns a string describing the current parser pisition in the format 'FILENAME (line
+    /// Returns a string describing the current parser position in the format 'FILENAME (line
     /// LINE_NUMBER): LINE'. Example:
     ///
     /// init.fish (line 127): ls|grep pancake
@@ -302,6 +307,9 @@ class parser_t {
     /// Return a description of the given blocktype.
     const wchar_t *get_block_desc(int block) const;
 
+    /// Return the function name for the specified stack frame. Default is one (current frame).
+    const wchar_t *get_function_name(int level = 1);
+
     /// Removes a job.
     bool job_remove(job_t *job);
 
@@ -312,14 +320,14 @@ class parser_t {
     job_t *job_get(job_id_t job_id);
 
     /// Returns the job with the given pid.
-    job_t *job_get_from_pid(int pid);
+    job_t *job_get_from_pid(pid_t pid);
 
     /// Returns a new profile item if profiling is active. The caller should fill it in. The
     /// parser_t will clean it up.
     profile_item_t *create_profile_item();
 
     void get_backtrace(const wcstring &src, const parse_error_list_t &errors,
-                       wcstring *output) const;
+                       wcstring &output) const;
 
     /// Detect errors in the specified string when parsed as an argument list. Returns true if an
     /// error occurred.

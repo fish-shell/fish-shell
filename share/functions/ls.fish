@@ -6,13 +6,13 @@ if command ls --version >/dev/null ^/dev/null
     function ls --description "List contents of directory"
         set -l param --color=auto
         if isatty 1
-            set param $param --indicator-style=classify
+            set -a param --indicator-style=classify
         end
         command ls $param $argv
     end
 
     if not set -q LS_COLORS
-        if command -s dircolors >/dev/null
+        if command -sq dircolors
             set -l colorfile
             for file in ~/.dir_colors ~/.dircolors /etc/DIR_COLORS
                 if test -f $file
@@ -33,5 +33,10 @@ else if command ls -G / >/dev/null ^/dev/null
     # It looks like BSD, OS X and a few more which support colors through the -G switch instead.
     function ls --description "List contents of directory"
         command ls -G $argv
+    end
+else if command ls --color / >/dev/null 2>/dev/null
+    # Solaris 11's ls command takes a --color flag
+    function ls --description "List contents of directory"
+        command ls --color $argv
     end
 end

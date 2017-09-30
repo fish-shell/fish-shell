@@ -7,6 +7,7 @@
 // compiling several modules that include this header because they use symbols which are defined as
 // macros in <term.h>.
 // IWYU pragma: no_include <term.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <unistd.h>
 // The following include must be kept despite what IWYU says. That's because of the interaction
@@ -88,16 +89,32 @@ wchar_t *wcsndup(const wchar_t *in, size_t c);
 #endif
 #else  //__APPLE__
 
-/// These functions are missing from Solaris 10
+/// These functions are missing from Solaris 10, and only accessible from
+/// Solaris 11 in the std:: namespace.
 #ifndef HAVE_WCSDUP
+#ifdef HAVE_STD__WCSDUP
+using std::wcsdup;
+#else
 wchar_t *wcsdup(const wchar_t *in);
-#endif
+#endif  // HAVE_STD__WCSDUP
+#endif  // HAVE_WCSDUP
+
 #ifndef HAVE_WCSCASECMP
+#ifdef HAVE_STD__WCSCASECMP
+using std::wcscasecmp;
+#else
 int wcscasecmp(const wchar_t *a, const wchar_t *b);
-#endif
+#endif  // HAVE_STD__WCSCASECMP
+#endif  // HAVE_WCSCASECMP
+
 #ifndef HAVE_WCSNCASECMP
+#ifdef HAVE_STD__WCSNCASECMP
+using std::wcsncasecmp;
+#else
 int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
-#endif
+#endif  // HAVE_STD__WCSNCASECMP
+#endif  // HAVE_WCSNCASECMP
+
 #ifndef HAVE_DIRFD
 #ifndef __XOPEN_OR_POSIX
 #define dirfd(d) (d->dd_fd)
@@ -121,6 +138,8 @@ wchar_t *wcsndup(const wchar_t *in, size_t c);
 size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz);
 #endif
 
+#if 0
+// These are not currently used.
 #ifndef HAVE_LRAND48_R
 /// Data structure for the lrand48_r fallback implementation.
 struct drand48_data {
@@ -132,6 +151,7 @@ int lrand48_r(struct drand48_data *buffer, long int *result);
 
 /// Fallback implementation of srand48_r, the seed function for lrand48_r.
 int srand48_r(long int seedval, struct drand48_data *buffer);
+#endif
 #endif
 
 #ifndef HAVE_FUTIMES
@@ -156,19 +176,15 @@ int killpg(int pgr, int sig);
 #endif
 
 #ifndef HAVE_FLOCK
-/// Fallback implementation of flock in terms of fcntl
+/// Fallback implementation of flock in terms of fcntl.
 /// Danger! The semantics of flock and fcntl locking are very different.
 /// Use with caution.
-// Ignore the cppcheck warning as this is the implementation that it is
-// warning about!
-// cppcheck-suppress flockSemanticsWarning
 int flock(int fd, int op);
 
 #define LOCK_SH 1  // Shared lock.
 #define LOCK_EX 2  // Exclusive lock.
 #define LOCK_UN 8  // Unlock.
 #define LOCK_NB 4  // Don't block when locking.
-
 #endif
 
 #endif

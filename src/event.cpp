@@ -1,12 +1,15 @@
 // Functions for handling event triggers.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <signal.h>
+#include <stddef.h>
 #include <unistd.h>
+
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <string>
+#include <type_traits>
 
 #include "common.h"
 #include "event.h"
@@ -125,6 +128,7 @@ wcstring event_get_desc(const event_t &e) {
             if (e.param1.pid > 0) {
                 result = format_string(_(L"exit handler for process %d"), e.param1.pid);
             } else {
+                // In events, PGIDs are stored as negative PIDs
                 job_t *j = job_get_from_pid(-e.param1.pid);
                 if (j)
                     result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id,
@@ -206,6 +210,7 @@ static wcstring event_desc_compact(const event_t &event) {
             } else if (event.param1.pid > 0) {
                 res = format_string(L"EVENT_EXIT(pid %d)", event.param1.pid);
             } else {
+                // In events, PGIDs are stored as negative PIDs
                 job_t *j = job_get_from_pid(-event.param1.pid);
                 if (j)
                     res = format_string(L"EVENT_EXIT(jobid %d: \"%ls\")", j->job_id,
@@ -242,7 +247,7 @@ static wcstring event_desc_compact(const event_t &event) {
 void event_add_handler(const event_t &event) {
     if (debug_level >= 3) {
         wcstring desc = event_desc_compact(event);
-        debug(3, "register: %ls\n", desc.c_str());
+        debug(3, "register: %ls", desc.c_str());
     }
 
     shared_ptr<event_t> e = std::make_shared<event_t>(event);
@@ -257,7 +262,7 @@ void event_add_handler(const event_t &event) {
 void event_remove(const event_t &criterion) {
     if (debug_level >= 3) {
         wcstring desc = event_desc_compact(criterion);
-        debug(3, "unregister: %ls\n", desc.c_str());
+        debug(3, "unregister: %ls", desc.c_str());
     }
 
     event_list_t::iterator iter = s_event_handlers.begin();
@@ -439,6 +444,7 @@ void event_fire(const event_t *event) {
             }
         }
         is_event--;
+        assert(is_event >= 0);
     }
 }
 

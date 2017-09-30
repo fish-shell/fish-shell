@@ -1,4 +1,3 @@
-
 function __fish_bind_test1
     set -l args
     set -l use_keys no
@@ -10,7 +9,7 @@ function __fish_bind_test1
             case "-*"
 
             case "*"
-                set args $args $i
+                set -a args $i
         end
     end
 

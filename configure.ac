@@ -25,6 +25,7 @@ AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
 AC_SUBST(WCHAR_T_BITS)
 AC_SUBST(EXTRA_PCRE2)
+AC_SUBST(EXTRA_MUPARSER)
 
 #
 # If needed, run autoconf to regenerate the configure file
@@ -37,7 +38,7 @@ AC_SUBST(EXTRA_PCRE2)
 AC_MSG_CHECKING([if autoreconf needs to be run])
 if test configure -ot configure.ac; then
   AC_MSG_RESULT([yes])
-  if which autoreconf >/dev/null; then
+  if command -v autoreconf >/dev/null; then
     # No need to provide any error messages if autoreconf fails, the
     # shell and autconf should take care of that themselves
     AC_MSG_NOTICE([running autoreconf --no-recursive])
@@ -68,7 +69,7 @@ fi
 AC_MSG_CHECKING([if autoheader needs to be run])
 if test ! -f ./config.h.in -o config.h.in -ot configure.ac; then
   AC_MSG_RESULT([yes])
-  if which autoheader >/dev/null; then
+  if command -v autoheader >/dev/null; then
     AC_MSG_NOTICE([running autoheader])
     autoheader || exit 1
   else
@@ -211,17 +212,17 @@ AS_IF([test "$use_doxygen" != "no"],
 AC_SYS_LARGEFILE
 
 
-# fish does not use exceptions
-# Disabling exceptions saves about 20% (!) of the compiled code size
-CXXFLAGS="$CXXFLAGS -fno-exceptions"
-
+# Fish does not use exceptions itself. However the MuParser library does so we
+# need to enable support for them and pay the cost of larger code. Note:
+# Enabling exceptions increases the compiled code size but to avoid that we
+# would have to maintain our own patches to the MuParser code.
+#CXXFLAGS="$CXXFLAGS -fno-exceptions"
 
 #
 # Set some warning flags
 # Don't warn about missing field initializers, it has too many
 # false positives for code like `struct termios tmodes = {};`
 #
-
 CXXFLAGS="$CXXFLAGS -Wextra -Wno-missing-field-initializers"
 
 #
@@ -327,6 +328,25 @@ AC_CHECK_FUNCS( dirfd )
 
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )
 
+#
+# Although setupterm is linkable thanks to SEARCH_LIBS above, some
+# builds of ncurses include the actual headers in a different package
+#
+AC_CHECK_DECL( [setupterm], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])], [
+#if HAVE_NCURSES_H
+#include <ncurses.h>
+#elif HAVE_NCURSES_CURSES_H
+#include <ncurses/curses.h>
+#else
+#include <curses.h>
+#endif
+#if HAVE_TERM_H
+#include <term.h>
+#elif HAVE_NCURSES_TERM_H
+#include <ncurses/term.h>
+#endif
+] )
+
 dnl AC_CHECK_FUNCS uses C linkage, but sometimes (Solaris!) the behaviour is
 dnl different with C++.
 AC_MSG_CHECKING([for wcsdup])
@@ -397,6 +417,17 @@ fi
 # Here follows a list of small programs used to test for various
 # features that Autoconf doesn't tell us about
 #
+
+dnl AC_CHECK_FUNCS uses C linkage, but sometimes (Solaris!) the behaviour is
+dnl different with C++.
+AC_MSG_CHECKING([if ctermid_r() available])
+AC_TRY_LINK( [ #include <stdio.h> ],
+             [ char buf[L_ctermid]; char *foo = ctermid_r(buf); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_CTERMID_R, 1, Define to 1 if you have the `ctermid_r' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
 
 #
 # Check if struct winsize and TIOCGWINSZ exist
@@ -549,34 +580,8 @@ else
   AC_MSG_RESULT(no)
 fi
 
-# Check that threads actually work on Solaris
-AC_MSG_CHECKING([for threadsafe errno])
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
-    #include <errno.h>
-    #include <pthread.h>
-    #include <signal.h>
-
-    void *thread1_func(void *p_arg)
-    {
-            errno = 1;
-            return 0;
-    }
-    ],[
-    errno = 0;
-    pthread_t t1;
-    pthread_create(&t1, NULL, thread1_func, NULL);
-    pthread_join(t1, NULL);
-    return errno;
-  ])],
-  [AC_MSG_RESULT(yes)],
-  [
-    AC_MSG_RESULT(no)
-    AC_MSG_FAILURE([errno is not threadsafe - check your compiler settings])
-  ],
-  [AC_MSG_RESULT(crosscompiling, skipped)]
-)
-
+# ========
+# PCRE2 library configuration.
 pcre2_min_version=10.21
 EXTRA_PCRE2=
 AC_ARG_WITH(
@@ -670,6 +675,26 @@ if test "x$included_pcre2" = "xyes"; then
   CXXFLAGS="$CXXFLAGS $PCRE2_CXXFLAGS"
   LIBS="$LIBS $PCRE2_LIBS"
 fi
+
+
+
+# ========
+# MuParser math expression library configuration.
+EXTRA_MUPARSER=
+
+# Build configure/Makefile for muparser
+AC_MSG_NOTICE([using included MuParser library])
+# unfortunately these get added to the global configuration
+ac_configure_args="$ac_configure_args --enable-shared=no --enable-samples=no --enable-debug=no"
+AC_CONFIG_SUBDIRS([muparser-2.2.5])
+
+MUPARSER_CXXFLAGS='-I$(MUPARSER_DIR)/include'
+MUPARSER_LIBS='-L$(MUPARSER_LIBDIR) -lmuparser'
+
+# Make the binary depend on the MuParser libraries so they get built
+EXTRA_MUPARSER='$(MUPARSER_LIB)'
+CXXFLAGS="$CXXFLAGS $MUPARSER_CXXFLAGS"
+LIBS="$LIBS $MUPARSER_LIBS"
 
 # Allow configurable extra directories.
 AC_SUBST(extra_completionsdir)

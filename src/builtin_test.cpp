@@ -3,27 +3,24 @@
 // Implemented from scratch (yes, really) by way of IEEE 1003.1 as reference.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
+
 #include <memory>
 #include <string>
+#include <type_traits>
 
 #include "builtin.h"
 #include "common.h"
 #include "io.h"
-#include "proc.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 using std::unique_ptr;
 using std::move;
-
-enum { BUILTIN_TEST_SUCCESS = STATUS_BUILTIN_OK, BUILTIN_TEST_FAIL = STATUS_BUILTIN_ERROR };
 
 int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 
@@ -42,6 +39,7 @@ enum token_t {
     test_filetype_G,  // "-G", for check effective group id
     test_filetype_g,  // "-g", for set-group-id
     test_filetype_h,  // "-h", for symbolic links
+    test_filetype_k,  // "-k", for sticky bit
     test_filetype_L,  // "-L", same as -h
     test_filetype_O,  // "-O", for check effective user id
     test_filetype_p,  // "-p", for FIFO
@@ -96,6 +94,7 @@ static const struct token_info_t {
                    {test_filetype_G, L"-G", UNARY_PRIMARY},
                    {test_filetype_g, L"-g", UNARY_PRIMARY},
                    {test_filetype_h, L"-h", UNARY_PRIMARY},
+                   {test_filetype_k, L"-k", UNARY_PRIMARY},
                    {test_filetype_L, L"-L", UNARY_PRIMARY},
                    {test_filetype_O, L"-O", UNARY_PRIMARY},
                    {test_filetype_p, L"-p", UNARY_PRIMARY},
@@ -192,7 +191,7 @@ class expression {
 
     virtual ~expression() {}
 
-    /// Evaluate returns true if the expression is true (i.e. BUILTIN_TEST_SUCCESS).
+    /// Evaluate returns true if the expression is true (i.e. STATUS_CMD_OK).
     virtual bool evaluate(wcstring_list_t &errors) = 0;
 };
 
@@ -233,8 +232,8 @@ class combining_expression : public expression {
     const std::vector<token_t> combiners;
 
     combining_expression(token_t tok, range_t where, std::vector<unique_ptr<expression>> exprs,
-                         std::vector<token_t> combs)
-        : expression(tok, where), subjects(move(exprs)), combiners(move(combs)) {
+                         const std::vector<token_t> &combs)
+        : expression(tok, where), subjects(std::move(exprs)), combiners(std::move(combs)) {
         // We should have one more subject than combiner.
         assert(subjects.size() == combiners.size() + 1);
     }
@@ -592,7 +591,7 @@ bool combining_expression::evaluate(wcstring_list_t &errors) {
     }
 
     errors.push_back(format_string(L"Unknown token type in %s", __func__));
-    return BUILTIN_TEST_FAIL;
+    return STATUS_INVALID_ARGS;
 }
 
 bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
@@ -684,6 +683,13 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
         case test_filetype_L: {  // "-L", same as -h
             return !lwstat(arg, &buf) && S_ISLNK(buf.st_mode);
         }
+        case test_filetype_k: {  // "-k", for sticky bit
+#ifdef S_ISVTX
+            return !lwstat(arg, &buf) && buf.st_mode & S_ISVTX;
+#else
+            return false;
+#endif
+        }
         case test_filetype_O: {  // "-O", for check effective user id
             return !wstat(arg, &buf) && geteuid() == buf.st_uid;
         }
@@ -723,7 +729,7 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
         }
     }
 }
-};
+};  // namespace test_expressions
 
 /// Evaluate a conditional expression given the arguments. If fromtest is set, the caller is the
 /// test or [ builtin; with the pointer giving the name of the command. for POSIX conformance this
@@ -735,7 +741,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     using namespace test_expressions;
 
     // The first argument should be the name of the command ('test').
-    if (!argv[0]) return BUILTIN_TEST_FAIL;
+    if (!argv[0]) return STATUS_INVALID_ARGS;
 
     // Whether we are invoked with bracket '[' or not.
     wchar_t *program_name = argv[0];
@@ -752,7 +758,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             argc--;
         } else {
             streams.err.append(L"[: the last argument must be ']'\n");
-            return BUILTIN_TEST_FAIL;
+            return STATUS_INVALID_ARGS;
         }
     }
 
@@ -760,10 +766,10 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wcstring_list_t args(argv + 1, argv + 1 + argc);
 
     if (argc == 0) {
-        return BUILTIN_TEST_FAIL;  // Per 1003.1, exit false.
+        return STATUS_CMD_ERROR;  // Per 1003.1, exit false.
     } else if (argc == 1) {
         // Per 1003.1, exit true if the arg is non-empty.
-        return args.at(0).empty() ? BUILTIN_TEST_FAIL : BUILTIN_TEST_SUCCESS;
+        return args.at(0).empty() ? STATUS_CMD_ERROR : STATUS_CMD_OK;
     }
 
     // Try parsing
@@ -778,7 +784,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         streams.err.append_format(L"and returned parse error: %ls\n", err.c_str());
 #endif
         streams.err.append(err);
-        return BUILTIN_TEST_FAIL;
+        return STATUS_CMD_ERROR;
     }
 
     wcstring_list_t eval_errors;
@@ -789,5 +795,5 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(L"\t%ls\n", eval_errors.at(i).c_str());
         }
     }
-    return result ? BUILTIN_TEST_SUCCESS : BUILTIN_TEST_FAIL;
+    return result ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }

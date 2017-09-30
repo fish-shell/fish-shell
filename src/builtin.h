@@ -3,6 +3,7 @@
 #define FISH_BUILTIN_H
 
 #include <stddef.h>
+
 #include <vector>
 
 #include "common.h"
@@ -28,9 +29,6 @@ struct builtin_data_t {
 /// The default prompt for the read command.
 #define DEFAULT_READ_PROMPT L"set_color green; echo -n read; set_color normal; echo -n \"> \""
 
-/// The mode name to pass to history and input.
-#define READ_MODE_NAME L"fish_read"
-
 enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 
 /// Error message on missing argument.
@@ -53,22 +51,26 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 #define BUILTIN_ERR_UNKNOWN _(L"%ls: Unknown option '%ls'\n")
 
 /// Error message for unexpected args.
-#define BUILTIN_ERR_ARG_COUNT1 _(L"%ls: expected %d args, got %d\n")
-#define BUILTIN_ERR_ARG_COUNT2 _(L"%ls: %ls expected %d args, got %d\n")
+#define BUILTIN_ERR_ARG_COUNT1 _(L"%ls: Expected %d args, got %d\n")
+#define BUILTIN_ERR_ARG_COUNT2 _(L"%ls %ls: Expected %d args, got %d\n")
+#define BUILTIN_ERR_MIN_ARG_COUNT1 _(L"%ls: Expected at least %d args, got only %d\n")
+#define BUILTIN_ERR_MAX_ARG_COUNT1 _(L"%ls: Expected at most %d args, got %d\n")
 
-/// Error message for invalid character in variable name.
-#define BUILTIN_ERR_VARCHAR                                                                 \
-    _(L"%ls: Invalid character '%lc' in variable name. Only alphanumerical characters and " \
-      L"underscores are valid in a variable name.\n")
+/// Error message for invalid variable name.
+#define BUILTIN_ERR_VARNAME _(L"%ls: Variable name '%ls' is not valid. See `help identifiers`.\n")
 
-/// Error message for invalid (empty) variable name.
-#define BUILTIN_ERR_VARNAME_ZERO _(L"%ls: Variable name can not be the empty string\n")
+/// Error message for invalid bind mode name.
+#define BUILTIN_ERR_BIND_MODE _(L"%ls: mode name '%ls' is not valid. See `help identifiers`.\n")
 
 /// Error message when too many arguments are supplied to a builtin.
 #define BUILTIN_ERR_TOO_MANY_ARGUMENTS _(L"%ls: Too many arguments\n")
 
 /// Error message when number expected
 #define BUILTIN_ERR_NOT_NUMBER _(L"%ls: Argument '%ls' is not a number\n")
+
+/// Command that requires a subcommand was invoked without a recognized subcommand.
+#define BUILTIN_ERR_MISSING_SUBCMD _(L"%ls: Expected a subcommand to follow the command\n")
+#define BUILTIN_ERR_INVALID_SUBCMD _(L"%ls: Subcommand '%ls' is not valid\n")
 
 /// The send stuff to foreground message.
 #define FG_MSG _(L"Send job %d, '%ls' to foreground\n")
@@ -103,13 +105,9 @@ class builtin_commandline_scoped_transient_t {
 
 wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
 
-int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
-                     const wcstring &contents, int definition_line_offset, wcstring *out_err);
-
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                         output_stream_t &b);
 int builtin_count_args(const wchar_t *const *argv);
-bool builtin_is_valid_varname(const wchar_t *varname, wcstring &errstr, const wchar_t *cmd);
 
 void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                             const wchar_t *opt);
@@ -118,4 +116,10 @@ void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wch
                               const wchar_t *opt);
 
 void builtin_wperror(const wchar_t *s, io_streams_t &streams);
+
+struct help_only_cmd_opts_t {
+    bool print_help = false;
+};
+int parse_help_only_cmd_opts(help_only_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
+                             parser_t &parser, io_streams_t &streams);
 #endif

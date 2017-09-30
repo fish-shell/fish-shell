@@ -23,7 +23,7 @@ set -g fish_prompt_git_status_order added modified renamed copied deleted untrac
 function __terlar_git_prompt --description 'Write out the git prompt'
     # If git isn't installed, there's nothing we can do
     # Return 1 so the calling prompt can deal with it
-    if not command -s git >/dev/null
+    if not command -sq git
         return 1
     end
     set -l branch (git rev-parse --abbrev-ref HEAD ^/dev/null)
@@ -52,19 +52,19 @@ function __terlar_git_prompt --description 'Write out the git prompt'
 
         switch $i
             case 'A '
-                set gs $gs added
+                set -a gs added
             case 'M ' ' M'
-                set gs $gs modified
+                set -a gs modified
             case 'R '
-                set gs $gs renamed
+                set -a gs renamed
             case 'C '
-                set gs $gs copied
+                set -a gs copied
             case 'D ' ' D'
-                set gs $gs deleted
+                set -a gs deleted
             case '\?\?'
-                set gs $gs untracked
+                set -a gs untracked
             case 'U*' '*U' 'DD' 'AA'
-                set gs $gs unmerged
+                set -a gs unmerged
         end
     end
 

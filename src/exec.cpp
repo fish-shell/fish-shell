@@ -4,24 +4,27 @@
 // performed have been massive.
 #include "config.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <algorithm>
-#include <vector>
-#ifdef HAVE_SPAWN_H
-#include <spawn.h>
-#endif
-#include <map>
-#include <memory>
-#include <string>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
+#include <signal.h>
+#ifdef HAVE_SPAWN_H
+#include <spawn.h>
+#endif
+#include <stdio.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <functional>
+#include <map>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 #include "builtin.h"
 #include "common.h"
@@ -165,7 +168,6 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
     char *const *argv = const_cast<char *const *>(cargv);
 
     execve(actual_cmd, argv, envv);
-
     err = errno;
 
     // Something went wrong with execve, check for a ":", and run /bin/sh if encountered. This is a
@@ -209,7 +211,7 @@ static void launch_process_nofork(process_t *p) {
     convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
 
     const char *const *envv = env_export_arr();
-    char *actual_cmd = wcs2str(p->actual_cmd.c_str());
+    char *actual_cmd = wcs2str(p->actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
     restore_term_mode();
@@ -322,15 +324,11 @@ static void internal_exec_helper(parser_t &parser, const wcstring &def, node_off
         return;
     }
 
-    signal_unblock();
-
     if (node_offset == NODE_OFFSET_INVALID) {
         parser.eval(def, morphed_chain, block_type);
     } else {
         parser.eval_block_node(node_offset, morphed_chain, block_type);
     }
-
-    signal_block();
 
     morphed_chain.clear();
     io_cleanup_fds(opened_fds);
@@ -365,6 +363,38 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
     return result;
 }
 
+void internal_exec(job_t *j, const io_chain_t &&all_ios) {
+    // Do a regular launch -  but without forking first...
+    signal_block();
+
+    // setup_child_process makes sure signals are properly set up. It will also call
+    // signal_unblock.
+
+    // PCA This is for handling exec. Passing all_ios here matches what fish 2.0.0 and 1.x did.
+    // It's known to be wrong - for example, it means that redirections bound for subsequent
+    // commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't
+    // really make sense, so I'm not trying to fix it here.
+    if (!setup_child_process(0, all_ios)) {
+        // Decrement SHLVL as we're removing ourselves from the shell "stack".
+        auto shlvl_var = env_get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
+        wcstring shlvl_str = L"0";
+        if (shlvl_var) {
+            long shlvl = fish_wcstol(shlvl_var->as_string().c_str());
+            if (!errno && shlvl > 0) {
+                shlvl_str = to_string<long>(shlvl - 1);
+            }
+        }
+        env_set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, shlvl_str);
+
+        // launch_process _never_ returns.
+        launch_process_nofork(j->processes.front().get());
+    } else {
+        j->set_flag(JOB_CONSTRUCTED, true);
+        j->processes.front()->completed = 1;
+        return;
+    }
+}
+
 void exec_job(parser_t &parser, job_t *j) {
     pid_t pid = 0;
 
@@ -387,46 +417,20 @@ void exec_job(parser_t &parser, job_t *j) {
     // Verify that all IO_BUFFERs are output. We used to support a (single, hacked-in) magical input
     // IO_BUFFER used by fish_pager, but now the claim is that there are no more clients and it is
     // removed. This assertion double-checks that.
+    size_t stdout_read_limit = 0;
     const io_chain_t all_ios = j->all_io_redirections();
     for (size_t idx = 0; idx < all_ios.size(); idx++) {
         const shared_ptr<io_data_t> &io = all_ios.at(idx);
 
         if ((io->io_mode == IO_BUFFER)) {
             io_buffer_t *io_buffer = static_cast<io_buffer_t *>(io.get());
-            assert(!io_buffer->is_input);  //!OCLINT(multiple unary operator)
+            assert(!io_buffer->is_input);
+            stdout_read_limit = io_buffer->get_buffer_limit();
         }
     }
 
     if (j->processes.front()->type == INTERNAL_EXEC) {
-        // Do a regular launch -  but without forking first...
-        signal_block();
-
-        // setup_child_process makes sure signals are properly set up. It will also call
-        // signal_unblock.
-
-        // PCA This is for handling exec. Passing all_ios here matches what fish 2.0.0 and 1.x did.
-        // It's known to be wrong - for example, it means that redirections bound for subsequent
-        // commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't
-        // really make sense, so I'm not trying to fix it here.
-        if (!setup_child_process(j, 0, all_ios)) {
-            // Decrement SHLVL as we're removing ourselves from the shell "stack".
-            const env_var_t shlvl_str = env_get_string(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
-            wcstring nshlvl_str = L"0";
-            if (!shlvl_str.missing()) {
-                long shlvl_i = fish_wcstol(shlvl_str.c_str());
-                if (!errno && shlvl_i > 0) {
-                    nshlvl_str = to_string<long>(shlvl_i - 1);
-                }
-            }
-            env_set(L"SHLVL", nshlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT);
-
-            // launch_process _never_ returns.
-            launch_process_nofork(j->processes.front().get());
-        } else {
-            j->set_flag(JOB_CONSTRUCTED, true);
-            j->processes.front()->completed = 1;
-            return;
-        }
+        internal_exec(j, std::move(all_ios));
         DIE("this should be unreachable");
     }
 
@@ -446,19 +450,15 @@ void exec_job(parser_t &parser, job_t *j) {
         }
     }
 
-    signal_block();
-
     // See if we need to create a group keepalive process. This is a process that we create to make
     // sure that the process group doesn't die accidentally, and is often needed when a
     // builtin/block/function is inside a pipeline, since that usually means we have to wait for one
     // program to exit before continuing in the pipeline, causing the group leader to exit.
     if (j->get_flag(JOB_CONTROL) && !exec_error) {
         for (const process_ptr_t &p : j->processes) {
-            if (p->type != EXTERNAL) {
-                if (!p->is_last_in_job || !p->is_first_in_job) {
-                    needs_keepalive = true;
-                    break;
-                }
+            if (p->type != EXTERNAL && (!p->is_last_in_job || !p->is_first_in_job)) {
+                needs_keepalive = true;
+                break;
             }
         }
     }
@@ -469,14 +469,14 @@ void exec_job(parser_t &parser, job_t *j) {
         if (keepalive.pid == 0) {
             // Child
             keepalive.pid = getpid();
-            set_child_group(j, &keepalive, 1);
+            child_set_group(j, &keepalive);
             pause();
             exit_without_destructors(0);
         } else {
             // Parent
             debug(2, L"Fork #%d, pid %d: keepalive fork for '%ls'", g_fork_count, keepalive.pid,
                   j->command_wcstr());
-            set_child_group(j, &keepalive, 0);
+            set_child_group(j, keepalive.pid);
         }
     }
 
@@ -493,6 +493,10 @@ void exec_job(parser_t &parser, job_t *j) {
     //
     // We are careful to set these to -1 when closed, so if we exit the loop abruptly, we can still
     // close them.
+    bool pgrp_set = false;
+    // This is static since processes can block on input/output across jobs the main exec_job loop
+    // is only ever run in a single thread, so this is OK.
+    static pid_t blocked_pid = -1;
     int pipe_current_read = -1, pipe_current_write = -1, pipe_next_read = -1;
     for (std::unique_ptr<process_t> &unique_p : j->processes) {
         if (exec_error) {
@@ -510,6 +514,10 @@ void exec_job(parser_t &parser, job_t *j) {
 
         // See if we need a pipe.
         const bool pipes_to_next_command = !p->is_last_in_job;
+        // Set to true if we end up forking for this process.
+        bool child_forked = false;
+        bool child_spawned = false;
+        bool block_child = true;
 
         // The pipes the current process write to and read from. Unfortunately these can't be just
         // allocated on the stack, since j->io wants shared_ptr.
@@ -615,22 +623,92 @@ void exec_job(parser_t &parser, job_t *j) {
         // a pipeline.
         shared_ptr<io_buffer_t> block_output_io_buffer;
 
+        // Used to SIGCONT the previously SIGSTOP'd process so the main loop or next command in job
+        // can read from its output.
+        auto unblock_previous = [&j]() {
+            // We've already called waitpid after forking the child, so we've guaranteed that
+            // they're already SIGSTOP'd. Otherwise we'd be risking a deadlock because we can call
+            // SIGCONT before they've actually stopped, and they'll remain suspended indefinitely.
+            if (blocked_pid != -1) {
+                debug(2, L"Unblocking process %d.\n", blocked_pid);
+                kill(blocked_pid, SIGCONT);
+                blocked_pid = -1;
+            }
+        };
+
         // This is the io_streams we pass to internal builtins.
-        std::unique_ptr<io_streams_t> builtin_io_streams;
+        std::unique_ptr<io_streams_t> builtin_io_streams(new io_streams_t(stdout_read_limit));
+
+        auto do_fork = [&j, &p, &pid, &exec_error, &process_net_io_chain, &block_child,
+                        &child_forked](bool drain_threads, const char *fork_type,
+                                       std::function<void()> child_action) -> bool {
+            pid = execute_fork(drain_threads);
+            if (pid == 0) {
+                // This is the child process. Setup redirections, print correct output to
+                // stdout and stderr, and then exit.
+                p->pid = getpid();
+                blocked_pid = -1;
+                child_set_group(j, p);
+                // Make child processes pause after executing setup_child_process() to give
+                // down-chain commands in the job a chance to join their process group and read
+                // their pipes. The process will be resumed when the next command in the chain is
+                // started.
+                if (block_child) {
+                    kill(p->pid, SIGSTOP);
+                }
+                // The parent will wake us up when we're ready to execute.
+                setup_child_process(p, process_net_io_chain);
+                child_action();
+                DIE("Child process returned control to do_fork lambda!");
+            } else {
+                if (pid < 0) {
+                    debug(1, L"Failed to fork %s!\n", fork_type);
+                    job_mark_process_as_failed(j, p);
+                    exec_error = true;
+                    return false;
+                }
+                // This is the parent process. Store away information on the child, and
+                // possibly give it control over the terminal.
+                debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type,
+                      p->argv0());
+                child_forked = true;
+                if (block_child) {
+                    debug(2, L"Blocking process %d waiting for next command in chain.\n", pid);
+                }
+                p->pid = pid;
+            }
+
+            return true;
+        };
+
+        // Helper routine executed by INTERNAL_FUNCTION and INTERNAL_BLOCK_NODE to make sure an
+        // output buffer exists in case there is another command in the job chain that will be
+        // reading from this command's output.
+        auto verify_buffer_output = [&]() {
+            if (!p->is_last_in_job) {
+                // Be careful to handle failure, e.g. too many open fds.
+                block_output_io_buffer = io_buffer_t::create(STDOUT_FILENO, all_ios);
+                if (block_output_io_buffer.get() == NULL) {
+                    exec_error = true;
+                    job_mark_process_as_failed(j, p);
+                } else {
+                    // This looks sketchy, because we're adding this io buffer locally - they
+                    // aren't in the process or job redirection list. Therefore select_try won't
+                    // be able to read them. However we call block_output_io_buffer->read()
+                    // below, which reads until EOF. So there's no need to select on this.
+                    process_net_io_chain.push_back(block_output_io_buffer);
+                }
+            }
+        };
 
         switch (p->type) {
             case INTERNAL_FUNCTION: {
-                // Calls to function_get_definition might need to source a file as a part of
-                // autoloading, hence there must be no blocks.
-                signal_unblock();
                 const wcstring func_name = p->argv0();
                 wcstring def;
                 bool function_exists = function_get_definition(func_name, &def);
                 bool shadow_scope = function_get_shadow_scope(func_name);
                 const std::map<wcstring, env_var_t> inherit_vars =
                     function_get_inherit_vars(func_name);
-
-                signal_block();
 
                 if (!function_exists) {
                     debug(0, _(L"Unknown function '%ls'"), p->argv0());
@@ -639,29 +717,10 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 function_block_t *fb =
                     parser.push_block<function_block_t>(p, func_name, shadow_scope);
-
-                // Setting variables might trigger an event handler, hence we need to unblock
-                // signals.
-                signal_unblock();
                 function_prepare_environment(func_name, p->get_argv() + 1, inherit_vars);
-                signal_block();
-
                 parser.forbid_function(func_name);
 
-                if (!p->is_last_in_job) {
-                    // Be careful to handle failure, e.g. too many open fds.
-                    block_output_io_buffer = io_buffer_t::create(STDOUT_FILENO, all_ios);
-                    if (block_output_io_buffer.get() == NULL) {
-                        exec_error = true;
-                        job_mark_process_as_failed(j, p);
-                    } else {
-                        // This looks sketchy, because we're adding this io buffer locally - they
-                        // aren't in the process or job redirection list. Therefore select_try won't
-                        // be able to read them. However we call block_output_io_buffer->read()
-                        // below, which reads until EOF. So there's no need to select on this.
-                        process_net_io_chain.push_back(block_output_io_buffer);
-                    }
-                }
+                verify_buffer_output();
 
                 if (!exec_error) {
                     internal_exec_helper(parser, def, NODE_OFFSET_INVALID, TOP,
@@ -675,18 +734,7 @@ void exec_job(parser_t &parser, job_t *j) {
             }
 
             case INTERNAL_BLOCK_NODE: {
-                if (!p->is_last_in_job) {
-                    block_output_io_buffer = io_buffer_t::create(STDOUT_FILENO, all_ios);
-                    if (block_output_io_buffer.get() == NULL) {
-                        // We failed (e.g. no more fds could be created).
-                        exec_error = true;
-                        job_mark_process_as_failed(j, p);
-                    } else {
-                        // See the comment above about it's OK to add an IO redirection to this
-                        // local buffer, even though it won't be handled in select_try.
-                        process_net_io_chain.push_back(block_output_io_buffer);
-                    }
-                }
+                verify_buffer_output();
 
                 if (!exec_error) {
                     internal_exec_helper(parser, wcstring(), p->internal_block_node, TOP,
@@ -776,7 +824,6 @@ void exec_job(parser_t &parser, job_t *j) {
                         stdin_is_directly_redirected = stdin_io && stdin_io->io_mode != IO_CLOSE;
                     }
 
-                    builtin_io_streams.reset(new io_streams_t());
                     builtin_io_streams->stdin_fd = local_builtin_stdin;
                     builtin_io_streams->out_is_redirected =
                         has_fd(process_net_io_chain, STDOUT_FILENO);
@@ -796,11 +843,10 @@ void exec_job(parser_t &parser, job_t *j) {
                     const int fg = j->get_flag(JOB_FOREGROUND);
                     j->set_flag(JOB_FOREGROUND, false);
 
-                    signal_unblock();
-
+                    // Main loop may need to perform a blocking read from previous command's output.
+                    // Make sure read source is not blocked.
+                    unblock_previous();
                     p->status = builtin_run(parser, p->get_argv(), *builtin_io_streams);
-
-                    signal_block();
 
                     // Restore the fg flag, which is temporarily set to false during builtin
                     // execution so as not to confuse some job-handling builtins.
@@ -857,22 +903,11 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 if (block_output_io_buffer->out_buffer_size() > 0) {
                     // We don't have to drain threads here because our child process is simple.
-                    pid = execute_fork(false);
-                    if (pid == 0) {
-                        // This is the child process. Write out the contents of the pipeline.
-                        p->pid = getpid();
-                        setup_child_process(j, p, process_net_io_chain);
-
-                        exec_write_and_exit(block_output_io_buffer->fd, buffer, count, status);
-                    } else {
-                        // This is the parent process. Store away information on the child, and
-                        // possibly give it control over the terminal.
-                        debug(2, L"Fork #%d, pid %d: internal block or function for '%ls'",
-                              g_fork_count, pid, p->argv0());
-                        p->pid = pid;
-                        set_child_group(j, p, 0);
+                    if (!do_fork(false, "internal block or function", [&] {
+                            exec_write_and_exit(block_output_io_buffer->fd, buffer, count, status);
+                        })) {
+                        break;
                     }
-
                 } else {
                     if (p->is_last_in_job) {
                         proc_set_last_status(j->get_flag(JOB_NEGATE) ? (!status) : status);
@@ -905,11 +940,15 @@ void exec_job(parser_t &parser, job_t *j) {
                 bool must_fork = redirection_is_to_real_file(stdout_io.get()) ||
                                  redirection_is_to_real_file(stderr_io.get());
                 if (!must_fork && p->is_last_in_job) {
+                    // We are handling reads directly in the main loop. Make sure source is
+                    // unblocked. Note that we may still end up forking.
+                    unblock_previous();
                     const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
                     const bool no_stdout_output = stdout_buffer.empty();
                     const bool no_stderr_output = stderr_buffer.empty();
+                    const bool stdout_discarded = builtin_io_streams->out.output_discarded();
 
-                    if (no_stdout_output && no_stderr_output) {
+                    if (!stdout_discarded && no_stdout_output && no_stderr_output) {
                         // The builtin produced no output and is not inside of a pipeline. No
                         // need to fork or even output anything.
                         debug(3, L"Skipping fork: no output for internal builtin '%ls'",
@@ -923,13 +962,15 @@ void exec_job(parser_t &parser, job_t *j) {
                               p->argv0());
 
                         io_buffer_t *io_buffer = static_cast<io_buffer_t *>(stdout_io.get());
-                        const std::string res = wcs2string(builtin_io_streams->out.buffer());
-
-                        io_buffer->out_buffer_append(res.data(), res.size());
+                        if (stdout_discarded) {
+                            io_buffer->set_discard();
+                        } else {
+                            const std::string res = wcs2string(builtin_io_streams->out.buffer());
+                            io_buffer->out_buffer_append(res.data(), res.size());
+                        }
                         fork_was_skipped = true;
                     } else if (stdout_io.get() == NULL && stderr_io.get() == NULL) {
-                        // We are writing to normal stdout and stderr. Just do it - no need to
-                        // fork.
+                        // We are writing to normal stdout and stderr. Just do it - no need to fork.
                         debug(3, L"Skipping fork: ordinary output for internal builtin '%ls'",
                               p->argv0());
                         const std::string outbuff = wcs2string(stdout_buffer);
@@ -941,6 +982,7 @@ void exec_job(parser_t &parser, job_t *j) {
                             debug(0, "!builtin_io_done and errno != EPIPE");
                             show_stackframe(L'E');
                         }
+                        if (stdout_discarded) p->status = STATUS_READ_TOO_MUCH;
                         fork_was_skipped = true;
                     }
                 }
@@ -971,22 +1013,11 @@ void exec_job(parser_t &parser, job_t *j) {
 
                     fflush(stdout);
                     fflush(stderr);
-                    pid = execute_fork(false);
-                    if (pid == 0) {
-                        // This is the child process. Setup redirections, print correct output to
-                        // stdout and stderr, and then exit.
-                        p->pid = getpid();
-                        setup_child_process(j, p, process_net_io_chain);
-                        do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
-                        exit_without_destructors(p->status);
-                    } else {
-                        // This is the parent process. Store away information on the child, and
-                        // possibly give it control over the terminal.
-                        debug(2, L"Fork #%d, pid %d: internal builtin for '%ls'", g_fork_count, pid,
-                              p->argv0());
-                        p->pid = pid;
-
-                        set_child_group(j, p, 0);
+                    if (!do_fork(false, "internal builtin", [&] {
+                            do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
+                            exit_without_destructors(p->status);
+                        })) {
+                        break;
                     }
                 }
 
@@ -1010,8 +1041,6 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 std::string actual_cmd_str = wcs2string(p->actual_cmd);
                 const char *actual_cmd = actual_cmd_str.c_str();
-
-                const wchar_t *reader_current_filename(void);
                 const wchar_t *file = reader_current_filename();
 
 #if FISH_USE_POSIX_SPAWN
@@ -1053,32 +1082,21 @@ void exec_job(parser_t &parser, job_t *j) {
                     if (pid == 0) {
                         job_mark_process_as_failed(j, p);
                         exec_error = true;
+                    } else {
+                        child_spawned = true;
                     }
                 } else
 #endif
                 {
-                    pid = execute_fork(false);
-                    if (pid == 0) {
-                        // This is the child process.
-                        p->pid = getpid();
-                        setup_child_process(j, p, process_net_io_chain);
-                        safe_launch_process(p, actual_cmd, argv, envv);
-                        // safe_launch_process _never_ returns...
-                        DIE("safe_launch_process should not have returned");
-                    } else {
-                        debug(2, L"Fork #%d, pid %d: external command '%s' from '%ls'\n",
-                              g_fork_count, pid, p->argv0(), file ? file : L"<no file>");
-                        if (pid < 0) {
-                            job_mark_process_as_failed(j, p);
-                            exec_error = true;
-                        }
+                    if (!do_fork(false, "external command",
+                                 [&] { safe_launch_process(p, actual_cmd, argv, envv); })) {
+                        break;
                     }
                 }
 
                 // This is the parent process. Store away information on the child, and possibly
                 // fice it control over the terminal.
                 p->pid = pid;
-                set_child_group(j, p, 0);
                 break;
             }
 
@@ -1087,6 +1105,51 @@ void exec_job(parser_t &parser, job_t *j) {
                 DIE("INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
                 break;
             }
+        }
+
+        bool child_blocked = block_child && child_forked;
+        if (child_blocked) {
+            // We have to wait to ensure the child has set their progress group and is in SIGSTOP
+            // state otherwise, we can later call SIGCONT before they call SIGSTOP and they'll be
+            // blocked indefinitely. The child is SIGSTOP'd and is guaranteed to have called
+            // child_set_group() at this point. but we only need to call set_child_group for the
+            // first process in the group. If needs_keepalive is set, this has already been called
+            // for the keepalive process.
+            int result;
+            int pid_status;
+            while ((result = waitpid(p->pid, &pid_status, WUNTRACED)) == -1 && errno == EINTR) {
+                // This could be a superfluous interrupt or Ctrl+C at the terminal In all cases, it
+                // is OK to retry since the forking code above is specifically designed to never,
+                // ever hang/block in a child process before the SIGSTOP call is reached.
+                ;  // do nothing
+            }
+            if (result == -1) {
+                exec_error = true;
+                debug(1, L"waitpid(%d) call in unblock_pid failed:!\n", p->pid);
+                wperror(L"waitpid");
+                break;
+            }
+            // We are not unblocking the child via SIGCONT just yet to give the next process a
+            // chance to open the pipes and join the process group. We only unblock the last process
+            // in the job chain because no one awaits it.
+        }
+        // Regardless of whether the child blocked or not: only once per job, and only once we've
+        // actually executed an external command.
+        if ((child_spawned || child_forked) && !pgrp_set) {
+            // This should be called after waitpid if child_forked and pipes_to_next_command it can
+            // be called at any time if child_spawned.
+            set_child_group(j, p->pid);
+            // we can't rely on p->is_first_in_job because a builtin may have been the first.
+            pgrp_set = true;
+        }
+        // If the command we ran _before_ this one was SIGSTOP'd to let this one catch up, unblock
+        // it now. this must be after the wait_pid on the process we just started, if any.
+        unblock_previous();
+
+        if (child_blocked) {
+            // Store the newly-blocked command's PID so that it can be SIGCONT'd once the next
+            // process in the chain is started. That may be in this job or in another job.
+            blocked_pid = p->pid;
         }
 
         // Close the pipe the current process uses to read from the previous process_t.
@@ -1100,6 +1163,11 @@ void exec_job(parser_t &parser, job_t *j) {
             exec_close(pipe_current_write);
             pipe_current_write = -1;
         }
+
+        // Unblock the last process because there's no need for it to stay SIGSTOP'd for anything.
+        if (p->is_last_in_job) {
+            unblock_previous();
+        }
     }
 
     // Clean up any file descriptors we left open.
@@ -1112,9 +1180,7 @@ void exec_job(parser_t &parser, job_t *j) {
         kill(keepalive.pid, SIGKILL);
     }
 
-    signal_unblock();
     debug(3, L"Job is constructed");
-
     j->set_flag(JOB_CONSTRUCTED, true);
     if (!j->get_flag(JOB_FOREGROUND)) {
         proc_last_bg_pid = j->pgid;
@@ -1129,24 +1195,25 @@ void exec_job(parser_t &parser, job_t *j) {
     }
 }
 
-static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst,
-                                  bool apply_exit_status) {
+static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, bool apply_exit_status,
+                                  bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
-    int prev_subshell = is_subshell;
+    bool prev_subshell = is_subshell;
     const int prev_status = proc_get_last_status();
     bool split_output = false;
 
-    const env_var_t ifs = env_get_string(L"IFS");
+    const auto ifs = env_get(L"IFS");
     if (!ifs.missing_or_empty()) {
         split_output = true;
     }
 
-    is_subshell = 1;
+    is_subshell = true;
     int subcommand_status = -1;  // assume the worst
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.
-    const shared_ptr<io_buffer_t> io_buffer(io_buffer_t::create(STDOUT_FILENO, io_chain_t()));
+    const shared_ptr<io_buffer_t> io_buffer(
+        io_buffer_t::create(STDOUT_FILENO, io_chain_t(), is_subcmd ? read_byte_limit : 0));
     if (io_buffer.get() != NULL) {
         parser_t &parser = parser_t::principal_parser();
         if (parser.eval(cmd, io_chain_t(io_buffer), SUBST) == 0) {
@@ -1155,6 +1222,8 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst,
 
         io_buffer->read();
     }
+
+    if (io_buffer->output_discarded()) subcommand_status = STATUS_READ_TOO_MUCH;
 
     // If the caller asked us to preserve the exit status, restore the old status. Otherwise set the
     // status of the subcommand.
@@ -1196,12 +1265,13 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst,
     return subcommand_status;
 }
 
-int exec_subshell(const wcstring &cmd, std::vector<wcstring> &outputs, bool apply_exit_status) {
+int exec_subshell(const wcstring &cmd, std::vector<wcstring> &outputs, bool apply_exit_status,
+                  bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, &outputs, apply_exit_status);
+    return exec_subshell_internal(cmd, &outputs, apply_exit_status, is_subcmd);
 }
 
-int exec_subshell(const wcstring &cmd, bool apply_exit_status) {
+int exec_subshell(const wcstring &cmd, bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, NULL, apply_exit_status);
+    return exec_subshell_internal(cmd, NULL, apply_exit_status, is_subcmd);
 }

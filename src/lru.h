@@ -2,9 +2,9 @@
 #ifndef FISH_LRU_H
 #define FISH_LRU_H
 
-#include <assert.h>
 #include <wchar.h>
-#include <map>
+
+#include <unordered_map>
 
 #include "common.h"
 
@@ -22,8 +22,6 @@
 template <class DERIVED, class CONTENTS>
 class lru_cache_t {
     struct lru_node_t;
-    typedef typename std::map<wcstring, lru_node_t>::iterator node_iter_t;
-
     struct lru_link_t {
         // Our doubly linked list
         // The base class is used for the mouth only
@@ -38,14 +36,16 @@ class lru_cache_t {
         lru_node_t &operator=(const lru_node_t &) = delete;
         lru_node_t(lru_node_t &&) = default;
 
-        // Our location in the map!
-        node_iter_t iter;
+        // Our key in the map. This is owned by the map itself.
+        const wcstring *key = NULL;
 
         // The value from the client
         CONTENTS value;
 
-        explicit lru_node_t(CONTENTS v) : value(std::move(v)) {}
+        explicit lru_node_t(const CONTENTS &v) : value(std::move(v)) {}
     };
+
+    typedef typename std::unordered_map<wcstring, lru_node_t>::iterator node_iter_t;
 
     // Max node count. This may be (transiently) exceeded by add_node_without_eviction, which is
     // used from background threads.
@@ -54,7 +54,7 @@ class lru_cache_t {
     // All of our nodes
     // Note that our linked list contains pointers to these nodes in the map
     // We are dependent on the iterator-noninvalidation guarantees of std::map
-    std::map<wcstring, lru_node_t> node_map;
+    std::unordered_map<wcstring, lru_node_t> node_map;
 
     // Head of the linked list
     // The list is circular!
@@ -78,22 +78,23 @@ class lru_cache_t {
 
     // Remove the node
     void evict_node(lru_node_t *node) {
-        assert(node != &mouth);
-
         // We should never evict the mouth.
-        assert(node != NULL && node->iter != this->node_map.end());
+        assert(node != &mouth && node != NULL && node->key != NULL);
+
+        auto iter = this->node_map.find(*node->key);
+        assert(iter != this->node_map.end());
 
         // Remove it from the linked list.
         node->prev->next = node->next;
         node->next->prev = node->prev;
 
         // Pull out our key and value
-        wcstring key = std::move(node->iter->first);
+        // Note we copy the key in case the map needs it to erase the node
+        wcstring key = *node->key;
         CONTENTS value(std::move(node->value));
 
         // Remove us from the map. This deallocates node!
-        node_map.erase(node->iter);
-        node = NULL;
+        node_map.erase(iter);
 
         // Tell ourselves what we did
         DERIVED *dthis = static_cast<DERIVED *>(this);
@@ -109,8 +110,8 @@ class lru_cache_t {
     // CRTP callback for when a node is evicted.
     // Clients can implement this
     void entry_was_evicted(wcstring key, CONTENTS value) {
-        USE(key);
-        USE(value);
+        UNUSED(key);
+        UNUSED(value);
     }
 
     // Implementation of merge step for mergesort
@@ -118,19 +119,18 @@ class lru_cache_t {
     // and a binary func F implementing less-than, return
     // the list in sorted order
     template <typename F>
-    static lru_link_t *merge(lru_link_t *left, size_t left_len,
-                             lru_link_t *right, size_t right_len,
+    static lru_link_t *merge(lru_link_t *left, size_t left_len, lru_link_t *right, size_t right_len,
                              const F &func) {
         assert(left_len > 0 && right_len > 0);
 
-        auto popleft = [&](){
+        auto popleft = [&]() {
             lru_link_t *ret = left;
             left = left->next;
             left_len--;
             return ret;
         };
 
-        auto popright = [&](){
+        auto popright = [&]() {
             lru_link_t *ret = right;
             right = right->next;
             right_len--;
@@ -140,8 +140,8 @@ class lru_cache_t {
         lru_link_t *head;
         lru_link_t **cursor = &head;
         while (left_len && right_len) {
-            bool goleft = ! func(static_cast<lru_node_t *>(left)->value,
-                                 static_cast<lru_node_t *>(right)->value);
+            bool goleft = !func(static_cast<lru_node_t *>(left)->value,
+                                static_cast<lru_node_t *>(right)->value);
             *cursor = goleft ? popleft() : popright();
             cursor = &(*cursor)->next;
         }
@@ -154,7 +154,7 @@ class lru_cache_t {
 
     // mergesort the given list of the given length
     // This only sets the next pointers, not the prev ones
-    template<typename F>
+    template <typename F>
     static lru_link_t *mergesort(lru_link_t *node, size_t length, const F &func) {
         if (length <= 1) {
             return node;
@@ -165,7 +165,7 @@ class lru_cache_t {
         lru_link_t *left = node;
 
         lru_link_t *right = node;
-        for (size_t i=0; i < left_len; i++) {
+        for (size_t i = 0; i < left_len; i++) {
             right = right->next;
         }
 
@@ -178,9 +178,7 @@ class lru_cache_t {
     }
 
    public:
-
-    // Constructor
-    // Note our linked list is always circular!
+    // Constructor. Note our linked list is always circular.
     explicit lru_cache_t(size_t max_size = 1024) : max_node_count(max_size) {
         mouth.next = mouth.prev = &mouth;
     }
@@ -232,7 +230,7 @@ class lru_cache_t {
         // Tell the node where it is in the map
         node_iter_t iter = iter_inserted.first;
         lru_node_t *node = &iter->second;
-        node->iter = iter;
+        node->key = &iter->first;
 
         node->next = mouth.next;
         node->next->prev = node;
@@ -242,13 +240,11 @@ class lru_cache_t {
     }
 
     // Number of entries
-    size_t size() const {
-        return this->node_map.size();
-    }
+    size_t size() const { return this->node_map.size(); }
 
-    // Sorting support
-    // Given a binary function F implementing less-than on the contents, place the nodes in sorted order
-    template<typename F>
+    // Given a binary function F implementing less-than on the contents, place the nodes in sorted
+    // order.
+    template <typename F>
     void stable_sort(const F &func) {
         // Perform the sort. This sets forward pointers only
         size_t length = this->size();
@@ -261,7 +257,7 @@ class lru_cache_t {
         // Go through and set back back pointers
         lru_link_t *cursor = sorted;
         lru_link_t *prev = &mouth;
-        for (size_t i=0; i < length; i++) {
+        for (size_t i = 0; i < length; i++) {
             cursor->prev = prev;
             prev = cursor;
             cursor = cursor->next;
@@ -291,8 +287,7 @@ class lru_cache_t {
         bool operator!=(const iterator &other) { return !(*this == other); }
         value_type operator*() const {
             const lru_node_t *dnode = static_cast<const lru_node_t *>(node);
-            const wcstring &key = dnode->iter->first;
-            return {key, dnode->value};
+            return {*dnode->key, dnode->value};
         }
     };
 
@@ -309,28 +304,29 @@ class lru_cache_t {
         size_t count = 0;
         while (cursor != &mouth) {
             if (cursor->prev != prev) {
-                assert(0 && "Node busted previous link");
+                DIE("node busted previous link");
             }
             prev = cursor;
             cursor = cursor->next;
             if (count++ > max) {
-                assert(0 && "LRU cache unable to re-reach the mouth - not circularly linked?");
+                DIE("LRU cache unable to re-reach the mouth - not circularly linked?");
             }
         }
         if (mouth.prev != prev) {
-            assert(0 && "mouth.prev does not connect to last node");
+            DIE("mouth.prev does not connect to last node");
         }
         if (count != expected_count) {
-            assert(0 && "Linked list count mismatch from map count");
+            DIE("linked list count mismatch from map count");
         }
 
         // Count iterators
         size_t iter_dist = 0;
         for (const auto &p : *this) {
+            UNUSED(p);
             iter_dist++;
         }
         if (iter_dist != count) {
-            assert(0 && "Linked list iterator mismatch from map count");
+            DIE("linked list iterator mismatch from map count");
         }
     }
 };

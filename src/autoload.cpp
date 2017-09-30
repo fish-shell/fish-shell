@@ -7,11 +7,11 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-#include <wchar.h>
-#include <algorithm>
+
 #include <memory>
 #include <set>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -48,13 +48,7 @@ file_access_attempt_t access_file(const wcstring &path, int mode) {
 
 autoload_t::autoload_t(const wcstring &env_var_name_var,
                        command_removed_function_t cmd_removed_callback)
-    : lock(),
-      env_var_name(env_var_name_var),
-      command_removed(cmd_removed_callback) {
-    pthread_mutex_init(&lock, NULL);
-}
-
-autoload_t::~autoload_t() { pthread_mutex_destroy(&lock); }
+    : lock(), env_var_name(env_var_name_var), command_removed(cmd_removed_callback) {}
 
 void autoload_t::entry_was_evicted(wcstring key, autoload_function_t node) {
     // This should only ever happen on the main thread.
@@ -71,17 +65,17 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
     CHECK_BLOCK(0);
     ASSERT_IS_MAIN_THREAD();
 
-    env_var_t path_var = env_get_string(env_var_name);
+    auto path_var = env_get(env_var_name);
 
     // Do we know where to look?
-    if (path_var.empty()) return 0;
+    if (path_var.missing_or_empty()) return 0;
 
     // Check if the lookup path has changed. If so, drop all loaded files. path_var may only be
     // inspected on the main thread.
-    if (path_var != this->last_path) {
-        this->last_path = path_var;
+    if (*path_var != this->last_path) {
+        this->last_path = *path_var;
         this->last_path_tokenized.clear();
-        tokenize_variable_array(this->last_path, this->last_path_tokenized);
+        this->last_path.to_list(this->last_path_tokenized);
 
         scoped_lock locker(lock);
         this->evict_all_nodes();
@@ -90,18 +84,18 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
     // Mark that we're loading this. Hang onto the iterator for fast erasing later. Note that
     // std::set has guarantees about not invalidating iterators, so this is safe to do across the
     // callouts below.
-    typedef std::set<wcstring>::iterator set_iterator_t;
-    std::pair<set_iterator_t, bool> insert_result = is_loading_set.insert(cmd);
-    set_iterator_t where = insert_result.first;
+    auto insert_result = is_loading_set.insert(cmd);
+    auto where = insert_result.first;
     bool inserted = insert_result.second;
 
     // Warn and fail on infinite recursion. It's OK to do this because this function is only called
     // on the main thread.
     if (!inserted) {
         // We failed to insert.
-        debug(0, _(L"Could not autoload item '%ls', it is already being autoloaded. "
-                   L"This is a circular dependency in the autoloading scripts, please remove it."),
-              cmd.c_str());
+        const wchar_t *fmt =
+            _(L"Could not autoload item '%ls', it is already being autoloaded. "
+              L"This is a circular dependency in the autoloading scripts, please remove it.");
+        debug(0, fmt, cmd.c_str());
         return 1;
     }
     // Try loading it.
@@ -112,11 +106,11 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
 }
 
 bool autoload_t::can_load(const wcstring &cmd, const env_vars_snapshot_t &vars) {
-    const env_var_t path_var = vars.get(env_var_name);
+    auto path_var = vars.get(env_var_name);
     if (path_var.missing_or_empty()) return false;
 
     std::vector<wcstring> path_list;
-    tokenize_variable_array(path_var, path_list);
+    path_var->to_list(path_list);
     return this->locate_file_and_maybe_load_it(cmd, false, false, path_list);
 }
 
@@ -128,10 +122,8 @@ bool autoload_t::has_tried_loading(const wcstring &cmd) {
 }
 
 /// @return Whether this function is stale.
-/// Internalized functions can never be stale.
 static bool is_stale(const autoload_function_t *func) {
-    return !func->is_internalized &&
-           time(NULL) - func->access.last_checked > kAutoloadStalenessInterval;
+    return time(NULL) - func->access.last_checked > kAutoloadStalenessInterval;
 }
 
 autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcstring &cmd,
@@ -187,7 +179,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
 
         // If we can use this function, return whether we were able to access it.
         if (use_cached(func, really_load, allow_stale_functions)) {
-            return func->is_internalized || func->access.accessible;
+            return func->access.accessible;
         }
     }
 
@@ -255,7 +247,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
             if (really_load) {
                 this->insert(cmd, autoload_function_t(true));
             } else {
-                this->insert(cmd, autoload_function_t(true));
+                this->insert_no_eviction(cmd, autoload_function_t(true));
             }
             func = this->get(cmd);
             assert(func);

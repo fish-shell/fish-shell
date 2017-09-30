@@ -24,7 +24,8 @@ end
 set TERM xterm
 set -e ITERM_PROFILE
 
-source test_util.fish (status -f) $argv; or exit
+source test_util.fish (status -f) $argv
+or exit
 
 say -o cyan "Testing high level script functionality"
 

@@ -6,11 +6,13 @@
 #define FISH_OUTPUT_H
 
 #include <stddef.h>
+
 #include <vector>
 
 #include "color.h"
-#include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+
+class env_var_t;
 
 /// Constants for various colors as used by the set_color function.
 enum {
@@ -35,7 +37,7 @@ int writech(wint_t ch);
 
 void writestr(const wchar_t *str);
 
-rgb_color_t parse_color(const wcstring &val, bool is_background);
+rgb_color_t parse_color(const env_var_t &val, bool is_background);
 
 int writeb(tputs_arg_t b);
 

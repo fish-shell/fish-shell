@@ -7,6 +7,7 @@ bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE]
 bind [(-M | --mode) MODE] [(-k | --key)] SEQUENCE
 bind (-K | --key-names) [(-a | --all)]
 bind (-f | --function-names)
+bind (-L | --list-modes)
 bind (-e | --erase) [(-M | --mode) MODE]
      (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])
 \endfish
@@ -27,7 +28,7 @@ When `COMMAND` is a shellscript command, it is a good practice to put the actual
 
 If such a script produces output, the script needs to finish by calling `commandline -f repaint` in order to tell fish that a repaint is in order.
 
-When multiple `COMMAND`s are provided, they are all run in the specified order when the key is pressed.
+When multiple `COMMAND`s are provided, they are all run in the specified order when the key is pressed. Note that special input functions cannot be combined with ordinary shell script commands. The commands must be entirely a sequence of special input functions (from `bind -f`) or all shell script commands (i.e., valid fish script).
 
 If no `SEQUENCE` is provided, all bindings (or just the bindings in the specified `MODE`) are printed. If `SEQUENCE` is provided without `COMMAND`, just the binding matching that sequence is printed.
 
@@ -42,6 +43,8 @@ The following parameters are available:
 - `-K` or `--key-names` Display a list of available key names. Specifying `-a` or `--all` includes keys that don't have a known mapping
 
 - `-f` or `--function-names` Display a list of available input functions
+
+- `-L` or `--list-modes` Display a list of defined bind modes
 
 - `-M MODE` or `--mode MODE` Specify a bind mode that the bind is used in. Defaults to "default"
 

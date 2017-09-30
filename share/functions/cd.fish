@@ -31,9 +31,11 @@ function cd --description "Change directory"
     set -l cd_status $status
 
     if test $cd_status -eq 0 -a "$PWD" != "$previous"
+        set -q dirprev
+        or set -l dirprev
         set -q dirprev[$MAX_DIR_HIST]
         and set -e dirprev[1]
-        set -g dirprev $dirprev $previous
+        set -g -a dirprev $previous
         set -e dirnext
         set -g __fish_cd_direction prev
     end

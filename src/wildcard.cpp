@@ -2,16 +2,17 @@
 // provides recursive wildcards using **.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <dirent.h>
 #include <errno.h>
+#include <stddef.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
+
 #include <memory>
-#include <set>
 #include <string>
+#include <unordered_set>
 #include <utility>
 
 #include "common.h"
@@ -100,7 +101,7 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
 
     // Hackish fix for issue #270. Prevent wildcards from matching . or .., but we must still allow
     // literal matches.
-    if (leading_dots_fail_to_match && is_first && contains(str, L".", L"..")) {
+    if (leading_dots_fail_to_match && is_first && (!wcscmp(str, L".") || !wcscmp(str, L".."))) {
         // The string is '.' or '..'. Return true if the wildcard exactly matches.
         return wcscmp(str, wc) ? fuzzy_match_none : fuzzy_match_exact;
     }
@@ -292,7 +293,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
             return false;
         }
         default: {
-            DIE("Unreachable code reached");
+            DIE("unreachable code reached");
             break;
         }
     }
@@ -438,9 +439,9 @@ class wildcard_expander_t {
     // The working directory to resolve paths against
     const wcstring working_directory;
     // The set of items we have resolved, used to efficiently avoid duplication.
-    std::set<wcstring> completion_set;
+    std::unordered_set<wcstring> completion_set;
     // The set of file IDs we have visited, used to avoid symlink loops.
-    std::set<file_id_t> visited_files;
+    std::unordered_set<file_id_t> visited_files;
     // Flags controlling expansion.
     const expand_flags_t flags;
     // Resolved items get inserted into here. This is transient of course.
@@ -630,13 +631,13 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir, const 
     }
 
     if (!(flags & EXPAND_FOR_COMPLETIONS)) {
-        // Trailing slash and not accepting incomplete, e.g. `echo /tmp/`. Insert this file if it
+        // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file if it
         // exists.
         if (waccess(base_dir, F_OK) == 0) {
             this->add_expansion_result(base_dir);
         }
     } else {
-        // Trailing slashes and accepting incomplete, e.g. `echo /tmp/<tab>`. Everything is added.
+        // Trailing slashes and accepting incomplete, e.g. `echo /xyz/<tab>`. Everything is added.
         DIR *dir = open_dir(base_dir);
         if (dir) {
             wcstring next;
@@ -699,7 +700,7 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
 
     while (!interrupted() && wreaddir_for_dirs(base_dir_fp, &name_str)) {
         // Don't bother with . and ..
-        if (contains(name_str, L".", L"..")) {
+        if (name_str == L"." || name_str == L"..") {
             continue;
         }
 

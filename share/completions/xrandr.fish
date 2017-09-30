@@ -9,19 +9,23 @@ complete -c xrandr -l screen -d 'Select which screen to manipulate' -x
 complete -c xrandr -l q1    -d 'Use RandR version 1.1 protocol'
 complete -c xrandr -l q12   -d 'Use RandR version 1.2 protocol'
 
-set -l ver (xrandr -v | grep RandR | sed 's/^.\+\s\([0-9\.]\+\)$/\1/')
-if not expr match $ver '^[0-9.]*$' >/dev/null
-    set ver 10
+set -l ver (xrandr -v | string replace -rf '.*RandR version ([0-9.]+)$' '$1' | string split ".")
+if not set -q ver[1]
+    set ver 10 10
 end
 
-# Version 1.1 options
+if not set -q ver[2]
+    set ver[2] 0
+end
+
 complete -c xrandr -s s -l size -d 'Set the screen size (index or width x height)' -x
 complete -c xrandr -s r -l rate -l refresh -d 'Set the refresh rate closest to the specified value' -x
 complete -c xrandr -s o -l orientation -d 'Specify the orientation of the screen' -xa 'normal inverted left right'
 complete -c xrandr -s x                -d 'Reflect across the X axis'
 complete -c xrandr -s y                -d 'Reflect across the Y axis'
 
-if expr $ver '>' 1.1
+# Version > 1.1
+if test $ver[1] -gt 1; or test "$ver[2]" -gt 1
     complete -c xrandr -l prop -l properties -d 'Display the contents of properties for each output'
     complete -c xrandr -l fb -d 'Set screen size' -x
     complete -c xrandr -l fbmm -d 'Set reported physical screen size' -x
@@ -50,8 +54,8 @@ if expr $ver '>' 1.1
     complete -c xrandr -l brightness -d 'Set brightness. Multiplies gamma galues by brightness value'
 end
 
-if expr $ver '>' 1.2
-    complete -c xrandr -l noprimary -d 'Don\'t define a primary output.'
+if test $ver[1] -gt 1; or test "$ver[2]" -gt 2
+    complete -c xrandr -l noprimary -d "Don't define a primary output"
     complete -c xrandr -l current -d 'Print current screen configuration'
     complete -c xrandr -l panning  -d 'Set panning: widthxheight[+x+y[/track_widthxtrack_height+track_x+track_y[/border_left/border_top/border_right/border_bottom]]]' -x
     complete -c xrandr -l transform -d 'Set transformation matrix: a,b,c,d,e,f,g,h,i for [ [a,b,c], [d,e,f], [g,h,i] ]' -x

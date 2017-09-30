@@ -14,7 +14,6 @@
 #include "config.h"
 
 // IWYU pragma: no_include <type_traits>
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -37,6 +36,9 @@
 #include <wctype.h>
 
 #include <algorithm>
+#include <atomic>
+#include <csignal>
+#include <functional>
 #include <memory>
 #include <stack>
 
@@ -90,6 +92,9 @@
 /// The name of the function that prints the fish right prompt (RPROMPT).
 #define RIGHT_PROMPT_FUNCTION_NAME L"fish_right_prompt"
 
+/// The name of the function to use in place of the left prompt if we're in the debugger context.
+#define DEBUG_PROMPT_FUNCTION_NAME L"fish_breakpoint_prompt"
+
 /// The name of the function for getting the input mode indicator.
 #define MODE_PROMPT_FUNCTION_NAME L"fish_mode_prompt"
 
@@ -125,15 +130,17 @@
 #define SEARCH_FORWARD 1
 
 /// Any time the contents of a buffer changes, we update the generation count. This allows for our
-/// background highlighting thread to notice it and skip doing work that it would otherwise have to
-/// do. This variable should really be of some kind of interlocked or atomic type that guarantees
-/// we're not reading stale cache values. With C++11 we should use atomics, but until then volatile
-/// should work as well, at least on x86.
-static volatile unsigned int s_generation_count;
+/// background threads to notice it and skip doing work that they would otherwise have to do.
+static std::atomic<unsigned int> s_generation_count;
 
 /// This pthreads generation count is set when an autosuggestion background thread starts up, so it
 /// can easily check if the work it is doing is no longer useful.
 static pthread_key_t generation_count_key;
+
+/// Helper to get the generation count
+static unsigned int read_generation_count() {
+    return s_generation_count.load(std::memory_order_relaxed);
+}
 
 static void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
 
@@ -164,6 +171,8 @@ class reader_data_t {
     bool suppress_autosuggestion;
     /// Whether abbreviations are expanded.
     bool expand_abbreviations;
+    /// Silent mode used for password input on the read command
+    bool silent;
     /// The representation of the current screen contents.
     screen_t screen;
     /// The history.
@@ -252,13 +261,14 @@ class reader_data_t {
 
     /// Constructor
     reader_data_t()
-        : allow_autosuggestion(0),
-          suppress_autosuggestion(0),
-          expand_abbreviations(0),
+        : allow_autosuggestion(false),
+          suppress_autosuggestion(false),
+          expand_abbreviations(false),
+          silent(false),
           history(0),
           token_history_pos(0),
           search_pos(0),
-          sel_active(0),
+          sel_active(false),
           sel_begin_pos(0),
           sel_start_pos(0),
           sel_stop_pos(0),
@@ -266,13 +276,13 @@ class reader_data_t {
           complete_func(0),
           highlight_function(0),
           test_func(0),
-          end_loop(0),
-          prev_end_loop(0),
+          end_loop(false),
+          prev_end_loop(false),
           next(0),
           search_mode(0),
-          repaint_needed(0),
-          screen_reset_needed(0),
-          exit_on_interrupt(0) {}
+          repaint_needed(false),
+          screen_reset_needed(false),
+          exit_on_interrupt(false) {}
 };
 
 /// Sets the command line contents, without clearing the pager.
@@ -408,8 +418,13 @@ static void reader_repaint() {
     // Update the indentation.
     data->indents = parse_util_compute_indents(cmd_line->text);
 
-    // Combine the command and autosuggestion into one string.
-    wcstring full_line = combine_command_and_autosuggestion(cmd_line->text, data->autosuggestion);
+    wcstring full_line;
+    if (data->silent) {
+        full_line = wcstring(cmd_line->text.length(), obfuscation_read_char);
+    } else {
+        // Combine the command and autosuggestion into one string.
+        full_line = combine_command_and_autosuggestion(cmd_line->text, data->autosuggestion);
+    }
 
     size_t len = full_line.size();
     if (len < 1) len = 1;
@@ -657,7 +672,8 @@ int reader_reading_interrupted() {
 
 bool reader_thread_job_is_stale() {
     ASSERT_IS_BACKGROUND_THREAD();
-    return (void *)(uintptr_t)s_generation_count != pthread_getspecific(generation_count_key);
+    void *current_count = (void *)(uintptr_t)read_generation_count();
+    return current_count != pthread_getspecific(generation_count_key);
 }
 
 void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
@@ -680,18 +696,15 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
         for (size_t i = 0; i < lst.size(); i++) {
             fputws(lst.at(i).c_str(), stdout);
         }
-        fputwc(L'\a', stdout);
+        ignore_result(write(STDOUT_FILENO, "\a", 1));
     }
 
     proc_pop_interactive();
     set_color(rgb_color_t::reset(), rgb_color_t::reset());
     if (reset_cursor_position && !lst.empty()) {
         // Put the cursor back at the beginning of the line (issue #2453).
-        fputwc(L'\r', stdout);
+        ignore_result(write(STDOUT_FILENO, "\r", 1));
     }
-
-    // TODO: This should be removed when issue #3748 is fixed.
-    fflush(stdout);
 }
 
 /// Reexecute the prompt command. The output is inserted into data->prompt_buff.
@@ -748,12 +761,12 @@ static void exec_prompt() {
 }
 
 void reader_init() {
-    VOMIT_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
+    DIE_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
 
     // Ensure this var is present even before an interactive command is run so that if it is used
     // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
-    // prompt is issued.
-    env_set(ENV_CMD_DURATION, L"0", ENV_UNEXPORT);
+    // prompt is written.
+    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, L"0");
 
     // Save the initial terminal mode.
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
@@ -790,17 +803,21 @@ void reader_init() {
     if (is_interactive_session) {
         tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes);
     }
+
+    // We do this not because we actually need the window size but for its side-effect of correctly
+    // setting the COLUMNS and LINES env vars.
+    get_current_winsize();
 }
 
 void reader_destroy() { pthread_key_delete(generation_count_key); }
 
+/// Restore the term mode if we own the terminal. It's important we do this before
+/// restore_foreground_process_group, otherwise we won't think we own the terminal.
 void restore_term_mode() {
-    // Restore the term mode if we own the terminal. It's important we do this before
-    // restore_foreground_process_group, otherwise we won't think we own the terminal.
-    if (getpid() == tcgetpgrp(STDIN_FILENO)) {
-        if (tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup) == -1 && errno == EIO) {
-            redirect_tty_output();
-        }
+    if (getpid() != tcgetpgrp(STDIN_FILENO)) return;
+
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup) == -1 && errno == EIO) {
+        redirect_tty_output();
     }
 }
 
@@ -1029,8 +1046,8 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
         if (do_escape) {
             // Respect COMPLETE_DONT_ESCAPE_TILDES.
             bool no_tilde = static_cast<bool>(flags & COMPLETE_DONT_ESCAPE_TILDES);
-            wcstring escaped =
-                escape(val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
+            wcstring escaped = escape_string(
+                val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
             sb.append(escaped);
             move_cursor = escaped.size();
         } else {
@@ -1120,7 +1137,7 @@ struct autosuggestion_result_t {
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer(
     const wcstring &search_string, size_t cursor_pos, history_t *history) {
-    const unsigned int generation_count = s_generation_count;
+    const unsigned int generation_count = read_generation_count();
     const wcstring working_directory(env_get_pwd_slash());
     env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
     // TODO: suspicious use of 'history' here
@@ -1131,11 +1148,11 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         const autosuggestion_result_t nothing = {};
         // If the main thread has moved on, skip all the work.
-        if (generation_count != s_generation_count) {
+        if (generation_count != read_generation_count()) {
             return nothing;
         }
 
-        VOMIT_ON_FAILURE(
+        DIE_ON_FAILURE(
             pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
 
         // Let's make sure we aren't using the empty string.
@@ -1171,7 +1188,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         // Try normal completions.
         std::vector<completion_t> completions;
-        complete(search_string, &completions, COMPLETION_REQUEST_AUTOSUGGESTION, vars);
+        complete(search_string, &completions, COMPLETION_REQUEST_AUTOSUGGESTION);
         completions_sort_and_prioritize(&completions);
         if (!completions.empty()) {
             const completion_t &comp = completions.at(0);
@@ -1274,7 +1291,7 @@ static void reader_flash() {
     }
 
     reader_repaint();
-    fputwc(L'\a', stdout);
+    ignore_result(write(STDOUT_FILENO, "\a", 1));
 
     pollint.tv_sec = 0;
     pollint.tv_nsec = 100 * 1000000;
@@ -1507,10 +1524,15 @@ static bool check_for_orphaned_process(unsigned long loop_count, pid_t shell_pgi
         we_think_we_are_orphaned = true;
     }
 
+    // Try reading from the tty; if we get EIO we are orphaned. This is sort of bad because it
+    // may block.
     if (!we_think_we_are_orphaned && loop_count % 128 == 0) {
-        // Try reading from the tty; if we get EIO we are orphaned. This is sort of bad because it
-        // may block.
+#ifdef HAVE_CTERMID_R
+        char buf[L_ctermid];
+        char *tty = ctermid_r(buf);
+#else
         char *tty = ctermid(NULL);
+#endif
         if (!tty) {
             wperror(L"ctermid");
             exit_without_destructors(1);
@@ -1544,7 +1566,7 @@ static void reader_interactive_init() {
     // See if we are running interactively.
     pid_t shell_pgid;
 
-    input_init();
+    if (!input_initialized) init_input();
     kill_init();
     shell_pgid = getpgrp();
 
@@ -1553,20 +1575,12 @@ static void reader_interactive_init() {
     // Check if we are in control of the terminal, so that we don't do semi-expensive things like
     // reset signal handlers unless we really have to, which we often don't.
     if (tcgetpgrp(STDIN_FILENO) != shell_pgid) {
-        int block_count = 0;
-        int i;
-
         // Bummer, we are not in control of the terminal. Stop until parent has given us control of
-        // it. Stopping in fish is a bit of a challange, what with all the signal fidgeting, we need
-        // to reset a bunch of signal state, making this coda a but unobvious.
+        // it.
         //
         // In theory, reseting signal handlers could cause us to miss signal deliveries. In
-        // practice, this code should only be run suring startup, when we're not waiting for any
+        // practice, this code should only be run during startup, when we're not waiting for any
         // signals.
-        while (signal_is_blocked()) {
-            signal_unblock();
-            block_count++;
-        }
         signal_reset_handlers();
 
         // Ok, signal handlers are taken out of the picture. Stop ourself in a loop until we are in
@@ -1593,9 +1607,10 @@ static void reader_interactive_init() {
             } else {
                 if (check_for_orphaned_process(loop_count, shell_pgid)) {
                     // We're orphaned, so we just die. Another sad statistic.
-                    debug(1, _(L"I appear to be an orphaned process, so I am quitting politely. My "
-                               L"pid is %d."),
-                          (int)getpid());
+                    const wchar_t *fmt =
+                        _(L"I appear to be an orphaned process, so I am quitting politely. "
+                          L"My pid is %d.");
+                    debug(1, fmt, (int)getpid());
                     exit_without_destructors(1);
                 }
 
@@ -1609,37 +1624,11 @@ static void reader_interactive_init() {
         }
 
         signal_set_handlers();
-
-        for (i = 0; i < block_count; i++) {
-            signal_block();
-        }
-    }
-
-    // Put ourselves in our own process group.
-    shell_pgid = getpid();
-    if (getpgrp() != shell_pgid && setpgid(shell_pgid, shell_pgid) < 0) {
-        debug(0, _(L"Couldn't put the shell in its own process group"));
-        wperror(L"setpgid");
-        exit_without_destructors(1);
-    }
-
-    // Grab control of the terminal.
-    if (tcsetpgrp(STDIN_FILENO, shell_pgid) == -1) {
-        if (errno == ENOTTY) redirect_tty_output();
-        debug(0, _(L"Couldn't grab control of terminal"));
-        wperror(L"tcsetpgrp");
-        exit_without_destructors(1);
     }
 
     invalidate_termsize();
 
-    // Set the new modes.
-    if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {
-        if (errno == EIO) redirect_tty_output();
-        wperror(L"tcsetattr");
-    }
-
-    env_set(L"_", L"fish", ENV_GLOBAL);
+    env_set_one(L"_", ENV_GLOBAL, L"fish");
 }
 
 /// Destroy data for interactive use.
@@ -1765,22 +1754,14 @@ static void handle_token_history(int forward, int reset) {
             tokenizer_t tok(data->token_history_buff.c_str(), TOK_ACCEPT_UNFINISHED);
             tok_t token;
             while (tok.next(&token)) {
-                if (token.type == TOK_STRING) {
-                    if (token.text.find(data->search_buff) != wcstring::npos) {
-                        // debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
-                        if (token.offset >= current_pos) {
-                            break;
-                        }
-                        // debug( 3, L"ok pos" );
+                if (token.type != TOK_STRING) continue;
+                if (token.text.find(data->search_buff) == wcstring::npos) continue;
+                if (token.offset >= current_pos) continue;
 
-                        if (find(data->search_prev.begin(), data->search_prev.end(), token.text) ==
-                            data->search_prev.end()) {
-                            data->token_history_pos = token.offset;
-                            str = token.text;
-                        }
-                    }
-                } else {
-                    break;
+                auto found = find(data->search_prev.begin(), data->search_prev.end(), token.text);
+                if (found == data->search_prev.end()) {
+                    data->token_history_pos = token.offset;
+                    str = token.text;
                 }
             }
         }
@@ -1914,7 +1895,7 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before) {
     }
 
     swprintf(buf, 16, L"%d", (secs * 1000) + (usecs / 1000));
-    env_set(ENV_CMD_DURATION, buf, ENV_UNEXPORT);
+    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, buf);
 }
 
 void reader_run_command(parser_t &parser, const wcstring &cmd) {
@@ -1922,7 +1903,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     wcstring ft = tok_first(cmd);
 
-    if (!ft.empty()) env_set(L"_", ft.c_str(), ENV_GLOBAL);
+    if (!ft.empty()) env_set_one(L"_", ENV_GLOBAL, ft);
 
     reader_write_title(cmd);
 
@@ -1938,7 +1919,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     term_steal();
 
-    env_set(L"_", program_name, ENV_GLOBAL);
+    env_set_one(L"_", ENV_GLOBAL, program_name);
 
 #ifdef HAVE__PROC_SELF_STAT
     proc_update_jiffies();
@@ -1958,7 +1939,7 @@ parser_test_error_bits_t reader_shell_test(const wchar_t *b) {
 
     if (res & PARSER_TEST_ERROR) {
         wcstring error_desc;
-        parser_t::principal_parser().get_backtrace(bstr, errors, &error_desc);
+        parser_t::principal_parser().get_backtrace(bstr, errors, error_desc);
 
         // Ensure we end with a newline. Also add an initial newline, because it's likely the user
         // just hit enter and so there's junk on the current line.
@@ -1978,6 +1959,11 @@ parser_test_error_bits_t reader_shell_test(const wchar_t *b) {
 static parser_test_error_bits_t default_test(const wchar_t *b) {
     UNUSED(b);
     return 0;
+}
+
+void reader_change_history(const wchar_t *name) {
+    data->history->save();
+    data->history = &history_t::history_with_name(name);
 }
 
 void reader_push(const wchar_t *name) {
@@ -2042,6 +2028,8 @@ void reader_set_test_function(parser_test_error_bits_t (*f)(const wchar_t *)) {
 
 void reader_set_exit_on_interrupt(bool i) { data->exit_on_interrupt = i; }
 
+void reader_set_silent_status(bool flag) { data->silent = flag; }
+
 void reader_import_history_if_necessary(void) {
     // Import history from older location (config path) if our current history is empty.
     if (data->history && data->history->is_empty()) {
@@ -2053,8 +2041,8 @@ void reader_import_history_if_necessary(void) {
         // Try opening a bash file. We make an effort to respect $HISTFILE; this isn't very complete
         // (AFAIK it doesn't have to be exported), and to really get this right we ought to ask bash
         // itself. But this is better than nothing.
-        const env_var_t var = env_get_string(L"HISTFILE");
-        wcstring path = (var.missing() ? L"~/.bash_history" : var);
+        const auto var = env_get(L"HISTFILE");
+        wcstring path = (var ? var->as_string() : L"~/.bash_history");
         expand_tilde(path);
         FILE *f = wfopen(path, "r");
         if (f) {
@@ -2105,17 +2093,17 @@ static std::function<highlight_result_t(void)> get_highlight_performer(const wcs
                                                                        long match_highlight_pos,
                                                                        bool no_io) {
     env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
-    unsigned int generation_count = s_generation_count;
+    unsigned int generation_count = read_generation_count();
     highlight_function_t highlight_func = no_io ? highlight_shell_no_io : data->highlight_function;
     return [=]() -> highlight_result_t {
-        if (generation_count != s_generation_count) {
+        if (generation_count != read_generation_count()) {
             // The gen count has changed, so don't do anything.
             return {};
         }
         if (text.empty()) {
             return {};
         }
-        VOMIT_ON_FAILURE(
+        DIE_ON_FAILURE(
             pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
         std::vector<highlight_spec_t> colors(text.size(), 0);
         highlight_func(text, colors, match_highlight_pos, NULL /* error */, vars);
@@ -2168,6 +2156,21 @@ bool shell_is_exiting() {
     return end_loop;
 }
 
+static void bg_job_warning() {
+    fputws(_(L"There are still jobs active:\n"), stdout);
+    fputws(_(L"\n   PID  Command\n"), stdout);
+
+    job_iterator_t jobs;
+    while (job_t *j = jobs.next()) {
+        if (!job_is_completed(j)) {
+            fwprintf(stdout, L"%6d  %ls\n", j->pgid, j->command_wcstr());
+        }
+    }
+    fputws(L"\n", stdout);
+    fputws(_(L"Use `disown PID` to let them live independently from fish.\n"), stdout);
+    fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
+}
+
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
 static void handle_end_loop() {
@@ -2192,8 +2195,7 @@ static void handle_end_loop() {
         }
 
         if (!data->prev_end_loop && bg_jobs) {
-            fputws(_(L"There are still jobs active (use the jobs command to see them).\n"), stdout);
-            fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
+            bg_job_warning();
             reader_exit(0, 0);
             data->prev_end_loop = 1;
             return;
@@ -2223,7 +2225,7 @@ static bool selection_is_at_top() {
 
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i(void) {
-    reader_push(L"fish");
+    reader_push(history_session_id().c_str());
     reader_set_complete_function(&complete);
     reader_set_highlight_function(&highlight_shell);
     reader_set_test_function(&reader_shell_test);
@@ -2237,15 +2239,20 @@ static int read_i(void) {
 
     while ((!data->end_loop) && (!sanity_check())) {
         event_fire_generic(L"fish_prompt");
-        if (function_exists(LEFT_PROMPT_FUNCTION_NAME))
-            reader_set_left_prompt(LEFT_PROMPT_FUNCTION_NAME);
-        else
-            reader_set_left_prompt(DEFAULT_PROMPT);
 
-        if (function_exists(RIGHT_PROMPT_FUNCTION_NAME))
+        if (is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME)) {
+            reader_set_left_prompt(DEBUG_PROMPT_FUNCTION_NAME);
+        } else if (function_exists(LEFT_PROMPT_FUNCTION_NAME)) {
+            reader_set_left_prompt(LEFT_PROMPT_FUNCTION_NAME);
+        } else {
+            reader_set_left_prompt(DEFAULT_PROMPT);
+        }
+
+        if (function_exists(RIGHT_PROMPT_FUNCTION_NAME)) {
             reader_set_right_prompt(RIGHT_PROMPT_FUNCTION_NAME);
-        else
+        } else {
             reader_set_right_prompt(L"");
+        }
 
         // Put buff in temporary string and clear buff, so that we can handle a call to
         // reader_set_buffer during evaluation.
@@ -2273,6 +2280,7 @@ static int read_i(void) {
             }
         }
     }
+
     reader_pop();
     return 0;
 }
@@ -2560,8 +2568,7 @@ const wchar_t *reader_readline(int nchars) {
                     complete_flags_t complete_flags = COMPLETION_REQUEST_DEFAULT |
                                                       COMPLETION_REQUEST_DESCRIPTIONS |
                                                       COMPLETION_REQUEST_FUZZY_MATCH;
-                    data->complete_func(buffcpy, &comp, complete_flags,
-                                        env_vars_snapshot_t::current());
+                    data->complete_func(buffcpy, &comp, complete_flags);
 
                     // Munge our completions.
                     completions_sort_and_prioritize(&comp);
@@ -2697,9 +2704,6 @@ const wchar_t *reader_readline(int nchars) {
                 if (el->position < el->size()) {
                     update_buff_pos(el, el->position + 1);
                     remove_backward();
-                    if (el->position > 0 && el->position == el->size()) {
-                        update_buff_pos(el, el->position - 1);
-                    }
                 }
                 break;
             }
@@ -3209,7 +3213,7 @@ const wchar_t *reader_readline(int nchars) {
         reader_repaint_if_needed();
     }
 
-    fputwc(L'\n', stdout);
+    ignore_result(write(STDOUT_FILENO, "\n", 1));
 
     // Ensure we have no pager contents when we exit.
     if (!data->pager.empty()) {
@@ -3308,7 +3312,7 @@ static int read_ni(int fd, const io_chain_t &io) {
             parser.eval(str, io, TOP, std::move(tree));
         } else {
             wcstring sb;
-            parser.get_backtrace(str, errors, &sb);
+            parser.get_backtrace(str, errors, sb);
             fwprintf(stderr, L"%ls", sb.c_str());
             res = 1;
         }

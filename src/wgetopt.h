@@ -5,7 +5,7 @@
 // all internal commands use wide characters and hence this library is useful.
 //
 // If you want to use this version of getopt in your program,
-//       1. Download the fish sourcecode, available at http://fishshell.com
+//       1. Download the fish sourcecode, available at https://fishshell.com
 //       2. Extract the sourcode
 //       3. Copy wgetopt.cpp and wgetopt.h into your program directory,
 //       4. #include wgetopt.h in your program
@@ -45,16 +45,29 @@ Cambridge, MA 02139, USA.  */
 
 class wgetopter_t {
    private:
+    bool initialized;
+    bool missing_arg_return_colon = false;
+
     void exchange(wchar_t **argv);
-    const wchar_t *_wgetopt_initialize(const wchar_t *optstring);
+    void _wgetopt_initialize(const wchar_t *optstring);
     int _wgetopt_internal(int argc, wchar_t **argv, const wchar_t *optstring,
                           const struct woption *longopts, int *longind, int long_only);
+    int _advance_to_next_argv(int argc, wchar_t **argv, const struct woption *longopts);
+    int _handle_short_opt(int argc, wchar_t **argv);
+    bool _handle_long_opt(int argc, wchar_t **argv, const struct woption *longopts, int *longind,
+                          int long_only, int *retval);
+    const struct woption *_find_matching_long_opt(const struct woption *longopts, wchar_t *nameend,
+                                                  int *exact, int *ambig, int *indfound);
+    void _update_long_opt(int argc, wchar_t **argv, const struct woption *pfound, wchar_t *nameend,
+                          int *longind, int option_index, int *retval);
 
    public:
     // For communication from `getopt' to the caller. When `getopt' finds an option that takes an
     // argument, the argument value is returned here. Also, when `ordering' is RETURN_IN_ORDER, each
     // non-option ARGV-element is returned here.
     wchar_t *woptarg;
+
+    const wchar_t *shortopts;
 
     // Index in ARGV of the next element to be scanned. This is used for communication to and from
     // the caller and for communication between successive calls to `getopt'.
@@ -115,19 +128,25 @@ class wgetopter_t {
     int last_nonopt;
 
     wgetopter_t()
-        : woptarg(NULL),
+        : initialized(false),
+          missing_arg_return_colon(false),
+          woptarg(NULL),
+          shortopts(NULL),
           woptind(0),
-          nextchar(0),
+          nextchar(NULL),
           wopterr(0),
           woptopt('?'),
           ordering(),
           first_nonopt(0),
           last_nonopt(0) {}
-
     int wgetopt_long(int argc, wchar_t **argv, const wchar_t *options,
                      const struct woption *long_options, int *opt_index);
+#if 0
+    // This function should never be used by fish. We keep the signature just in case we find a
+    // need to use it in the future.
     int wgetopt_long_only(int argc, wchar_t **argv, const wchar_t *options,
-                          const struct woption *long_options, int *opt_index);
+                         const struct woption *long_options, int *opt_index);
+#endif
 };
 
 /// Describe the long-named options requested by the application. The LONG_OPTIONS argument to

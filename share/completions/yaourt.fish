@@ -114,8 +114,8 @@ complete -c $progname -n $query -s e -l explicit -d 'List only explicitly instal
 complete -c $progname -n $query -s k -l check -d 'Check if all files owned by PACKAGE are present' -f
 complete -c $progname -n $query -s l -l list -d 'List all files owned by PACKAGE' -f
 complete -c $progname -n $query -s m -l foreign -d 'List all packages not in the database' -f
-complete -c $progname -n $query -s o -l owns -r -d 'Search for the package that owns FILE' -xa '' -f
-complete -c $progname -n $query -s p -l file -d 'Apply the query to a package file, not package' -xa '' -f
+complete -c $progname -n $query -s o -l owns -r -d 'Search for the package that owns FILE'
+complete -c $progname -n $query -s p -l file -d 'Apply the query to a package file, not package'
 complete -c $progname -n $query -s t -l unrequired -d 'List only unrequired packages' -f
 complete -c $progname -n $query -s u -l upgrades -d 'List only out-of-date packages' -f
 complete -c $progname -n "$query" -d 'Installed package' -xa $listinstalled -f

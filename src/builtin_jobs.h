@@ -3,6 +3,7 @@
 #define FISH_BUILTIN_JOBS_H
 
 #include <wchar.h>
+
 #include <cstring>
 
 class parser_t;

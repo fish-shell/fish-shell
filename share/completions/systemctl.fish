@@ -1,38 +1,27 @@
+set -l systemd_version (systemctl --version | string match "systemd*" | string replace -r "\D*(\d+)"  '$1')
 set -l commands list-units list-sockets start stop reload restart try-restart reload-or-restart reload-or-try-restart \
-	isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help \
-	reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump \
-	list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment \
-	default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root
+isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help \
+reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump \
+list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment \
+default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root
+if test $systemd_version -gt 208
+    set commands $commands cat
+    if test $systemd_version -gt 217
+        set commands $commands edit
+    end
+end
 set -l types services sockets mounts service_paths targets automounts timers
 
 function __fish_systemd_properties
-	if type -q /usr/lib/systemd/systemd
-		set IFS "="
-		/usr/lib/systemd/systemd --dump-configuration-items | while read key value
-			if not test -z $value
-				echo $key
-			end
-		end
-	else if type -q /lib/systemd/systemd # Debian has not merged /lib and /usr/lib
-		set IFS "="
-		/lib/systemd/systemd --dump-configuration-items | while read key value
-			if not test -z $value
-				echo $key
-			end
-		end
-	end
-end
-
-function __fish_systemctl_failed
-    if __fish_contains_opt user
-        # Without arguments, no "--type=" will be passed
-        systemctl --user list-units --state=failed --no-legend --type=$argv ^/dev/null | cut -f 1 -d ' '
-    else
-        systemctl list-units --state=failed --no-legend --type=$argv ^/dev/null | cut -f 1 -d ' '
+    # We need to call the main systemd binary (the thing that is run as PID1).
+    # Unfortunately, it's usually not in $PATH.
+    if test -f /usr/lib/systemd/systemd
+        /usr/lib/systemd/systemd --dump-configuration-items | string replace -rf '(.+)=(.+)$' '$1\t$2'
+    else if test -f /lib/systemd/systemd # Debian has not merged /lib and /usr/lib
+        /lib/systemd/systemd --dump-configuration-items | string replace -rf '(.+)=(.+)$' '$1\t$2'
     end
 end
 
-complete -f -e -c systemctl
 # All systemctl commands
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
 
@@ -45,38 +34,14 @@ complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a enabl
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a disable -d 'Disable one or more units'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a isolate -d 'Start a unit and dependencies and disable all others'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-default -d 'Set the default target to boot into'
-for command in start stop restart try-restart reload-or-restart reload-or-try-restart is-active is-failed is-enabled reenable mask loaded link list-dependencies show status
-	for t in $types
-		complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
-	end
-end
 
-# Handle reset-failed specially because it doesn't apply to unit-files (only units that have been tried can have failed) and a second "--state=" argument doesn't override the earlier one.
-complete -f -c systemctl -n "__fish_seen_subcommand_from reset-failed" -a "(__fish_systemctl_failed)"
+# Command completion done via argparse.
+complete -c systemctl -a '(_fish_systemctl)' -f
 
-# Enable/Disable: Only show units with matching state
-for t in services sockets timers service_paths
-		complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a "(eval __fish_systemctl_$t --state=disabled)"
-		complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a "(eval __fish_systemctl_$t --state=enabled)"
-end
-
-# These are useless for the other commands
-# .device in particular creates too much noise
-for t in devices slices scopes swaps
-	for command in status show list-dependencies
-		complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
-	end
-end
-
-complete -f -c systemctl -n "__fish_seen_subcommand_from isolate" -a '(__fish_systemctl_targets)' -d 'Target'
-complete -f -c systemctl -n "__fish_seen_subcommand_from isolate" -a '(__fish_systemctl_snapshots)' -d 'Snapshot'
-
-complete -f -c systemctl -n "__fish_seen_subcommand_from set-default" -a '(__fish_systemctl_targets)' -d 'Target'
-complete -f -c systemctl -n "__fish_seen_subcommand_from set-default" -a '(__fish_systemctl_services)' -d 'Service'
-
-complete -f -c systemctl -s t -l type -d 'List of unit types' -xa 'service mount socket target slice scope swap snapshot automount timer path'
-complete -f -c systemctl -l state -d 'List of unit states' -xa 'LOAD, SUB, ACTIVE,'
-complete -f -c systemctl -s p -l property -d 'Properties displayed in the "show" command' -a '(__fish_systemd_properties)'
+# These "--x=help" outputs always have lines like "Available unit types:". We use the fact that they end in a ":" to filter them out.
+complete -f -c systemctl -s t -l type -d 'List of unit types' -xa '(systemctl --type=help --no-legend --no-pager | string match -v "*:")'
+complete -f -c systemctl -l state -d 'List of unit states' -xa '(systemctl --state=help --no-legend --no-pager | string match -v "*:")'
+complete -f -c systemctl -s p -l property -a '(__fish_systemd_properties)'
 complete -f -c systemctl -s a -l all -d 'Show all units or properties'
 complete -f -c systemctl -s r -l recursive -d 'Show also units of local containers'
 complete -f -c systemctl -l reverse -d 'Show reverse dependencies between units'
@@ -112,6 +77,8 @@ complete -f -c systemctl -l version -d 'Print a short version and exit'
 complete -f -c systemctl -l no-pager -d 'Do not pipe output into a pager'
 
 # New options since systemd 220
-complete -f -c systemctl -l firmware-setup -n "__fish_seen_subcommand_from reboot" -d "Reboot to EFI setup"
-complete -f -c systemctl -l now -n "__fish_seen_subcommand_from enable" -d "Also start unit"
-complete -f -c systemctl -l now -n "__fish_seen_subcommand_from disable mask" -d "Also stop unit"
+if test $systemd_version -gt 219
+    complete -f -c systemctl -l firmware-setup -n "__fish_seen_subcommand_from reboot" -d "Reboot to EFI setup"
+    complete -f -c systemctl -l now -n "__fish_seen_subcommand_from enable" -d "Also start unit"
+    complete -f -c systemctl -l now -n "__fish_seen_subcommand_from disable mask" -d "Also stop unit"
+end

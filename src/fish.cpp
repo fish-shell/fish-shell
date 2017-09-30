@@ -1,3 +1,4 @@
+//
 // The main loop of the fish program.
 /*
 Copyright (C) 2005-2008 Axel Liljencrantz
@@ -22,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <getopt.h>
 #include <limits.h>
 #include <locale.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <sys/stat.h>
 #include <unistd.h>
 #include <wchar.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -42,18 +45,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "fish_version.h"
 #include "function.h"
 #include "history.h"
-#include "input.h"
 #include "io.h"
 #include "parser.h"
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
+#include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // PATH_MAX may not exist.
 #ifndef PATH_MAX
 #define PATH_MAX 4096
 #endif
+
+// container to hold the options specified within the command line
+class fish_cmd_opts_t {
+   public:
+    // Commands to be executed in place of interactive shell.
+    std::vector<std::string> batch_cmds;
+    // Commands to execute after the shell's config has been read.
+    std::vector<std::string> postconfig_cmds;
+};
 
 /// If we are doing profiling, the filename to output to.
 static const char *s_profiling_output_filename = NULL;
@@ -212,30 +224,42 @@ static int read_init(const struct config_paths_t &paths) {
     return 1;
 }
 
+int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
+    int res = 1;
+    parser_t &parser = parser_t::principal_parser();
+
+    for (size_t i = 0; i < cmds->size(); i++) {
+        const wcstring cmd_wcs = str2wcstring(cmds->at(i));
+        res = parser.eval(cmd_wcs, io, TOP);
+    }
+
+    return res;
+}
+
 /// Parse the argument list, return the index of the first non-flag arguments.
-static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds) {
-    const char *short_opts = "+hilnvc:p:d:D:";
-    const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
-                                       {"debug-level", required_argument, NULL, 'd'},
-                                       {"debug-stack-frames", required_argument, NULL, 'D'},
-                                       {"interactive", no_argument, NULL, 'i'},
-                                       {"login", no_argument, NULL, 'l'},
-                                       {"no-execute", no_argument, NULL, 'n'},
-                                       {"profile", required_argument, NULL, 'p'},
-                                       {"help", no_argument, NULL, 'h'},
-                                       {"version", no_argument, NULL, 'v'},
-                                       {NULL, 0, NULL, 0}};
+static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
+    static const char *short_opts = "+hilnvc:C:p:d:D:";
+    static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
+                                              {"init-command", required_argument, NULL, 'C'},
+                                              {"debug-level", required_argument, NULL, 'd'},
+                                              {"debug-stack-frames", required_argument, NULL, 'D'},
+                                              {"interactive", no_argument, NULL, 'i'},
+                                              {"login", no_argument, NULL, 'l'},
+                                              {"no-execute", no_argument, NULL, 'n'},
+                                              {"profile", required_argument, NULL, 'p'},
+                                              {"help", no_argument, NULL, 'h'},
+                                              {"version", no_argument, NULL, 'v'},
+                                              {NULL, 0, NULL, 0}};
 
     int opt;
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                fwprintf(stderr, _(L"getopt_long() unexpectedly returned zero\n"));
-                exit(127);
+            case 'c': {
+                opts->batch_cmds.push_back(optarg);
                 break;
             }
-            case 'c': {
-                cmds->push_back(optarg);
+            case 'C': {
+                opts->postconfig_cmds.push_back(optarg);
                 break;
             }
             case 'd': {
@@ -254,15 +278,15 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
                 break;
             }
             case 'h': {
-                cmds->push_back("__fish_print_help fish");
+                opts->batch_cmds.push_back("__fish_print_help fish");
                 break;
             }
             case 'i': {
-                is_interactive_session = 1;
+                is_interactive_session = true;
                 break;
             }
             case 'l': {
-                is_login = 1;
+                is_login = true;
                 break;
             }
             case 'n': {
@@ -308,37 +332,11 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
     // We are an interactive session if we have not been given an explicit
     // command or file to execute and stdin is a tty. Note that the -i or
     // --interactive options also force interactive mode.
-    if (cmds->size() == 0 && optind == argc && isatty(STDIN_FILENO)) {
+    if (opts->batch_cmds.size() == 0 && optind == argc && isatty(STDIN_FILENO)) {
         is_interactive_session = 1;
     }
 
     return optind;
-}
-
-/// Various things we need to initialize at run-time that don't really fit any of the other init
-/// routines.
-static void misc_init() {
-#ifdef OS_IS_CYGWIN
-    // MS Windows tty devices do not currently have either a read or write timestamp. Those
-    // respective fields of `struct stat` are always the current time. Which means we can't
-    // use them. So we assume no external program has written to the terminal behind our
-    // back. This makes multiline promptusable. See issue #2859 and
-    // https://github.com/Microsoft/BashOnWindows/issues/545
-    has_working_tty_timestamps = false;
-#else
-    // This covers preview builds of Windows Subsystem for Linux (WSL).
-    FILE *procsyskosrel;
-    if ((procsyskosrel = wfopen(L"/proc/sys/kernel/osrelease", "r"))) {
-        wcstring osrelease;
-        fgetws2(&osrelease, procsyskosrel);
-        if (osrelease.find(L"3.4.0-Microsoft") != wcstring::npos) {
-            has_working_tty_timestamps = false;
-        }
-    }
-    if (procsyskosrel) {
-        fclose(procsyskosrel);
-    }
-#endif  // OS_IS_MS_WINDOWS
 }
 
 int main(int argc, char **argv) {
@@ -348,7 +346,7 @@ int main(int argc, char **argv) {
     program_name = L"fish";
     set_main_thread();
     setup_fork_guards();
-
+    signal_unblock_all();
     setlocale(LC_ALL, "");
     fish_setlocale();
 
@@ -360,8 +358,8 @@ int main(int argc, char **argv) {
         argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
         argc = 1;                    //!OCLINT(parameter reassignment)
     }
-    std::vector<std::string> cmds;
-    my_optind = fish_parse_opt(argc, argv, &cmds);
+    fish_cmd_opts_t opts;
+    my_optind = fish_parse_opt(argc, argv, &opts);
 
     // No-exec is prohibited when in interactive mode.
     if (is_interactive_session && no_exec) {
@@ -376,43 +374,37 @@ int main(int argc, char **argv) {
     }
 
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
-
+    env_init(&paths);
     proc_init();
     event_init();
     builtin_init();
-    function_init();
-    env_init(&paths);
+    misc_init();
     reader_init();
     history_init();
-    // For set_color to support term256 in config.fish (issue #1022).
-    update_fish_color_support();
-    misc_init();
 
     parser_t &parser = parser_t::principal_parser();
 
     const io_chain_t empty_ios;
     if (read_init(paths)) {
-        // TODO: Remove this once we're confident that not blocking/unblocking every signal around
-        // some critical sections is no longer necessary.
-        env_var_t fish_no_signal_block = env_get_string(L"FISH_NO_SIGNAL_BLOCK");
-        if (!fish_no_signal_block.missing()) ignore_signal_block = true;
-
         // Stomp the exit status of any initialization commands (issue #635).
-        proc_set_last_status(STATUS_BUILTIN_OK);
+        proc_set_last_status(STATUS_CMD_OK);
 
-        // Run the commands specified as arguments, if any.
-        if (!cmds.empty()) {
-            // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
+        // Run post-config commands specified as arguments, if any.
+        if (!opts.postconfig_cmds.empty()) {
+            res = run_command_list(&opts.postconfig_cmds, empty_ios);
+        }
+
+        if (!opts.batch_cmds.empty()) {
+            // Run the commands specified as arguments, if any.
             if (is_login) {
-                fish_xdm_login_hack_hack_hack_hack(&cmds, argc - my_optind, argv + my_optind);
+                // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
+                fish_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind,
+                                                   argv + my_optind);
             }
-            for (size_t i = 0; i < cmds.size(); i++) {
-                const wcstring cmd_wcs = str2wcstring(cmds.at(i));
-                res = parser.eval(cmd_wcs, empty_ios, TOP);
-            }
+            res = run_command_list(&opts.batch_cmds, empty_ios);
             reader_exit(0, 0);
         } else if (my_optind == argc) {
-            // Interactive mode
+            // Implicitly interactive mode.
             res = reader_read(STDIN_FILENO, empty_ios);
         } else {
             char *file = *(argv + (my_optind++));
@@ -423,17 +415,11 @@ int main(int argc, char **argv) {
                 // OK to not do this atomically since we cannot have gone multithreaded yet.
                 set_cloexec(fd);
 
-                if (*(argv + my_optind)) {
-                    wcstring sb;
-                    char **ptr;
-                    int i;
-                    for (i = 1, ptr = argv + my_optind; *ptr; i++, ptr++) {
-                        if (i != 1) sb.append(ARRAY_SEP_STR);
-                        sb.append(str2wcstring(*ptr));
-                    }
-
-                    env_set(L"argv", sb.c_str(), 0);
+                wcstring_list_t list;
+                for (char **ptr = argv + my_optind; *ptr; ptr++) {
+                    list.push_back(str2wcstring(*ptr));
                 }
+                env_set(L"argv", ENV_DEFAULT, list);
 
                 const wcstring rel_filename = str2wcstring(file);
 
@@ -442,16 +428,16 @@ int main(int argc, char **argv) {
                 res = reader_read(fd, empty_ios);
 
                 if (res) {
-                    debug(1, _(L"Error while reading file %ls\n"), reader_current_filename()
-                                                                       ? reader_current_filename()
-                                                                       : _(L"Standard input"));
+                    debug(1, _(L"Error while reading file %ls\n"),
+                          reader_current_filename() ? reader_current_filename()
+                                                    : _(L"Standard input"));
                 }
                 reader_pop_current_filename();
             }
         }
     }
 
-    int exit_status = res ? STATUS_UNKNOWN_COMMAND : proc_get_last_status();
+    int exit_status = res ? STATUS_CMD_UNKNOWN : proc_get_last_status();
 
     proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), exit_status);
 

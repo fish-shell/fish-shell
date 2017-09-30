@@ -11,7 +11,17 @@ bg [PID...]
 
 The PID of the desired process is usually found by using <a href="index.html#expand-process">process expansion</a>.
 
+When at least one of the arguments isn't a valid job specifier (i.e. PID),
+`bg` will print an error without backgrounding anything.
+
+When all arguments are valid job specifiers, bg will background all matching jobs that exist.
 
 \subsection bg-example Example
 
 `bg %1` will put the job with job ID 1 in the background.
+
+`bg 123 456 789` will background 123, 456 and 789.
+
+If only 123 and 789 exist, it will still background them and print an error about 456.
+
+`bg 123 banana` or `bg banana 123` will complain that "banana" is not a valid job specifier.

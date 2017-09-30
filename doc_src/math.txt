@@ -2,28 +2,46 @@
 
 \subsection math-synopsis Synopsis
 \fish{synopsis}
-math [-sN] EXPRESSION
+math [-sN | --scale=N] [--] EXPRESSION
 \endfish
 
 \subsection math-description Description
 
-`math` is used to perform mathematical calculations. It is a very thin wrapper for the bc program, which makes it possible to specify an expression from the command line without using non-standard extensions or a pipeline.
+`math` is used to perform mathematical calculations. It supports all the usual operations such as addition, subtraction, etc. As well as functions like `abs()`, `sqrt()` and `log2()`. It also has several basic statistical functions like `min()`, `max`, and `avg()`. Internally all calculations are performed using floating point representation. Integer values are first converted to floating point before being used. The default output format is integer which causes floating point results to be rounded down to the nearest integer. The `--scale` option can be used to get floating point output.
 
-For a description of the syntax supported by math, see the manual for the bc program. Keep in mind that parameter expansion takes place on any expressions before they are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis have to be escaped.
+The `math` command is based on the MuParser library which is documented <a href="http://beltoforion.de/article.php?a=muparser&hl=en&p=features&s=idPageTop#idPageTop">here</a>. The stock MuParser does not support the modulo, `%`, operator but fish implements it using integer semantics.
+
+You can, and should, use bare variable names (i.e., without the dollar-sign). If you use the dollar-sign form the fish parser will expand the variable and you will greatly reduce the effectiveness of the expression cache. In other words do this:
+
+\fish
+math x + 1
+\endfish
+
+rather than this:
+
+\fish
+math $x + 1
+\endfish
+
+Note that if the variable has more than one element (e.g., `set x 1 2 3`) only the first element is used in the expression when you use the bare var name. But if you instead write `math $x + 1` all three elements will be inserted yielding an invalid expression.
+
+Keep in mind that parameter expansion takes before expressions are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis and the asterisk glob character have to be escaped or quoted.
+
+The `math` command can evaluate multiple expressions separated by commas. The result of each expression is written on a separate line. This means you can evaluate multiple expressions and capture the results in a single invocation just like you can with commands like `string`. See the examples below.
 
 The following options are available:
 
-- `-sN` Sets the scale of the result. `N` must be an integer and defaults to zero. This simply sets bc's `scale` variable to the provided value. Note that you cannot put a space between `-s` and `N`.
+- `-sN` or `--scale=N` sets the scale of the result. `N` must be an integer and defaults to zero. A scale of zero causes results to be rounded down to the nearest integer. So `3/2` returns `1` rather than `2` which `1.5` would normally round to. This is for compatibility with `bc` which was the basis for this command prior to fish 3.0.0. Scale values greater than zero causes the result to be rounded using the usual rules to the specified number of decimal places.
 
 \subsection return-values Return Values
 
-If invalid options or no expression is provided the return `status` is two. If the expression is invalid the  return `status` is three. If bc returns a result of `0` (literally, not `0.0` or similar variants) the return `status` is one otherwise it's zero.
+If the expression is successfully evaluated the return `status` is zero (success) else one.
 
 \subsection math-example Examples
 
 `math 1+1` outputs 2.
 
-`math $status-128` outputs the numerical exit status of the last command minus 128.
+`math status - 128` outputs the numerical exit status of the last command minus 128.
 
 `math 10 / 6` outputs `1`.
 
@@ -31,6 +49,24 @@ If invalid options or no expression is provided the return `status` is two. If t
 
 `math -s3 10 / 6` outputs `1.666`.
 
-\subsection math-cautions Cautions
+Capture the result of three expressions:
 
-Note that the modulo operator (`x % y`) is not well defined for floating point arithmetic. The `bc` command produces a nonsensical result rather than emit an error and fail in that case. It doesn't matter if the arguments are integers; e.g., `10 % 4`. You'll still get an incorrect result. Do not use the `-sN` flag with N greater than zero if you want sensible answers when using the modulo operator.
+\fish
+$ set x 5
+$ set results (math 'x+x, x*3, x^2')
+$ set --show results
+$results: not set in local scope
+$results: set in global scope, unexported, with 3 elements
+$results[1]: length=2 value=|10|
+$results[2]: length=2 value=|15|
+$results[3]: length=2 value=|25|
+$results: not set in universal scope
+\endfish
+
+\subsection math-notes Compatibility notes
+
+Fish 1.x and 2.x releases relied on the `bc` command for handling `math` expressions. Starting with fish 3.0.0 fish uses the MuParser library and evaluates the expression without the involvement of any external commands.
+
+You don't need to use `--` before the expression even if it begins with a minus sign which might otherwise be interpreted as an invalid option. If you do insert `--` before the expression it will cause option scanning to stop just like for every other command and it won't be part of the expression.
+
+Note that the modulo operator (`x % y`) is not well defined for floating point arithmetic. Fish rounds down all floating point values to the nearest integer before performing the modulo operation. So `10.5 % 6.1` is `4`. Regardless of what `--scale` value is in effect.

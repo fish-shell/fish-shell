@@ -1,0 +1,84 @@
+# Test the umask command. In particular the symbolic modes since they've been
+# broken for four years (see issue #738) at the time I added these tests.
+
+# Establish a base line umask.
+umask 027
+umask
+echo umask var = $umask
+umask -S
+
+# Verify that an invalid umask is rejected
+umask 1234
+umask 228
+umask 0282
+
+# Verify that symbolic modifications and output is correct.
+#
+# When I wrote these tests I based all of the results on the behavior of bash
+# when executing identical commands. So if bash has a bug with the umask
+# command it's possible fish will as well. However, I did verify the result of
+# each interaction and did not find any bugs in how bash or fish handled these
+# scenarios.
+#
+echo
+echo running umask a-r
+umask 0777
+umask a-r
+umask
+umask -S
+
+echo
+echo running umask u+x
+umask 0777
+umask u+x
+umask
+umask -S
+
+echo
+echo running umask g+rwx,o+x
+umask 777
+umask g+rwx,o+x
+umask
+umask -S
+
+echo
+echo running umask u-w,o-x
+umask 0
+umask u-w,o-x
+umask
+umask -S
+
+echo
+echo running umask a-r
+umask 0
+umask a-r
+umask
+umask -S
+
+echo
+echo running umask ug-rx
+umask 0
+umask ug-rx
+umask
+umask -S
+
+echo
+echo running umask u+r,g+w,o=rw
+umask 777
+umask u+r,g+w,o=rw
+umask
+umask -S
+
+echo
+echo running umask =r,g+w,o+x,o-r
+umask 777
+umask =r,g+w,o+x,o-r
+umask
+umask -S
+
+echo
+echo running umask rx
+umask 0
+umask rx
+umask
+umask -S

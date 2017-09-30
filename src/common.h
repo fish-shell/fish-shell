@@ -1,20 +1,27 @@
 // Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
 #ifndef FISH_COMMON_H
 #define FISH_COMMON_H
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
+#include <limits.h>
 #include <pthread.h>
 #include <stdarg.h>  // IWYU pragma: keep
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <termios.h>
 #include <wchar.h>
+#ifdef HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>  // IWYU pragma: keep
+#endif
+
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "fallback.h"  // IWYU pragma: keep
@@ -84,6 +91,19 @@ typedef std::vector<wcstring> wcstring_list_t;
 #define INPUT_COMMON_BASE (wchar_t)0xF700
 #define INPUT_COMMON_END (INPUT_COMMON_BASE + 64)
 
+// NAME_MAX is not defined on Solaris
+#if !defined(NAME_MAX)
+#include <sys/param.h>
+#if defined(MAXNAMELEN)
+// MAXNAMELEN is defined on Linux, BSD, and Solaris among others
+#define NAME_MAX MAXNAMELEN
+#else
+static_assert(false, "Neither NAME_MAX nor MAXNAMELEN is defined!");
+#endif
+#endif
+
+enum escape_string_style_t { STRING_STYLE_SCRIPT, STRING_STYLE_URL, STRING_STYLE_VAR };
+
 // Flags for unescape_string functions.
 enum {
     UNESCAPE_DEFAULT = 0,         // default behavior
@@ -92,15 +112,14 @@ enum {
 };
 typedef unsigned int unescape_flags_t;
 
-// Flags for the escape() and escape_string() functions.
+// Flags for the escape_string() and escape_string() functions. These are only applicable when the
+// escape style is "script" (i.e., STRING_STYLE_SCRIPT).
 enum {
     /// Escape all characters, including magic characters like the semicolon.
     ESCAPE_ALL = 1 << 0,
-
     /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty
     /// string.
     ESCAPE_NO_QUOTED = 1 << 1,
-
     /// Do not escape tildes.
     ESCAPE_NO_TILDE = 1 << 2
 };
@@ -124,25 +143,6 @@ enum selection_direction_t {
     direction_deselect
 };
 
-inline bool selection_direction_is_cardinal(selection_direction_t dir) {
-    switch (dir) {
-        case direction_north:
-        case direction_east:
-        case direction_south:
-        case direction_west:
-        case direction_page_north:
-        case direction_page_south: {
-            return true;
-        }
-        case direction_next:
-        case direction_prev:
-        case direction_deselect: {
-            return false;
-        }
-        default: { abort(); }
-    }
-}
-
 /// Issue a debug message with printf-style string formating and automatic line breaking. The string
 /// will begin with the string \c program_name, followed by a colon and a whitespace.
 ///
@@ -163,28 +163,6 @@ void __attribute__((noinline)) debug(int level, const char *msg, ...)
     __attribute__((format(printf, 2, 3)));
 void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...);
 
-/// Helper macro for errors.
-#define VOMIT_ON_FAILURE(a)         \
-    do {                            \
-        if (0 != (a)) {             \
-            VOMIT_ABORT(errno, #a); \
-        }                           \
-    } while (0)
-#define VOMIT_ON_FAILURE_NO_ERRNO(a) \
-    do {                             \
-        int err = (a);               \
-        if (0 != err) {              \
-            VOMIT_ABORT(err, #a);    \
-        }                            \
-    } while (0)
-#define VOMIT_ABORT(err, str)                                                               \
-    do {                                                                                    \
-        int code = (err);                                                                   \
-        debug(0, "%s failed on line %d in file %s: %d (%s)", str, __LINE__, __FILE__, code, \
-              strerror(code));                                                              \
-        abort();                                                                            \
-    } while (0)
-
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 [[noreturn]] void exit_without_destructors(int code);
 
@@ -198,6 +176,9 @@ extern wchar_t ellipsis_char;
 /// Character representing an omitted newline at the end of text.
 extern wchar_t omitted_newline_char;
 
+/// Character used for the silent mode of the read command
+extern wchar_t obfuscation_read_char;
+
 /// The verbosity level of fish. If a call to debug has a severity level higher than \c debug_level,
 /// it will not be printed.
 extern int debug_level;
@@ -210,10 +191,6 @@ extern bool g_profiling_active;
 
 /// Name of the current program. Should be set at startup. Used by the debug function.
 extern const wchar_t *program_name;
-
-// Variants of read() and write() that ignores return values, defeating a warning.
-void read_ignore(int fd, void *buff, size_t count);
-void write_ignore(int fd, const void *buff, size_t count);
 
 /// Set to false at run-time if it's been determined we can't trust the last modified timestamp on
 /// the tty.
@@ -235,28 +212,35 @@ extern bool has_working_tty_timestamps;
 // from within a `switch` block. As of the time I'm writing this oclint doesn't recognize the
 // `__attribute__((noreturn))` on the exit_without_destructors() function.
 // TODO: we use C++11 [[noreturn]] now, does that change things?
-#define FATAL_EXIT()                        \
-    {                                       \
-        char exit_read_buff;                \
-        show_stackframe(L'E');              \
-        read_ignore(0, &exit_read_buff, 1); \
-        exit_without_destructors(1);        \
+#define FATAL_EXIT()                                \
+    {                                               \
+        char exit_read_buff;                        \
+        show_stackframe(L'E');                      \
+        ignore_result(read(0, &exit_read_buff, 1)); \
+        exit_without_destructors(1);                \
     }
 
-/// Exit program at once after emitting an error message.
-#define DIE(msg)                                                                                  \
-    {                                                                                             \
-        debug(0, "%s on line %ld of file %s, shutting down fish", msg, (long)__LINE__, __FILE__); \
-        FATAL_EXIT();                                                                             \
-    }
+/// Exit the program at once after emitting an error message and stack trace if possible.
+/// We use our own private implementation of `assert()` for two reasons. First, some implementations
+/// are subtly broken. For example, using `printf()` which can cause problems when mixed with wide
+/// stdio functions and should be writing the message to stderr rather than stdout. Second, if
+/// possible it is useful to provide additional context such as a stack backtrace.
+#undef assert
+#define assert(e) (e) ? ((void)0) : __fish_assert(#e, __FILE__, __LINE__, 0)
+#define assert_with_errno(e) (e) ? ((void)0) : __fish_assert(#e, __FILE__, __LINE__, errno)
+#define DIE(msg) __fish_assert(msg, __FILE__, __LINE__, 0)
+#define DIE_WITH_ERRNO(msg) __fish_assert(msg, __FILE__, __LINE__, errno)
+/// This macro is meant to be used with functions that return zero on success otherwise return an
+/// errno value. Most notably the pthread family of functions which we never expect to fail.
+#define DIE_ON_FAILURE(e)                                  \
+    do {                                                   \
+        int status = e;                                    \
+        if (status != 0) {                                 \
+            __fish_assert(#e, __FILE__, __LINE__, status); \
+        }                                                  \
+    } while (0)
 
-/// Exit program at once, leaving an error message about running out of memory.
-#define DIE_MEM()                                                                             \
-    {                                                                                         \
-        fwprintf(stderr, L"fish: Out of memory on line %ld of file %s, shutting down fish\n", \
-                 (long)__LINE__, __FILE__);                                                   \
-        FATAL_EXIT();                                                                         \
-    }
+[[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error);
 
 /// Check if signals are blocked. If so, print an error message and return from the function
 /// performing this check.
@@ -280,8 +264,8 @@ extern bool has_working_tty_timestamps;
 /// See https://developer.gnome.org/glib/stable/glib-I18N.html#N-:CAPS
 #define N_(wstr) wstr
 
-/// Check if the specified string element is a part of the specified string list.
-#define contains(str, ...) contains_internal(str, 0, __VA_ARGS__, NULL)
+/// Test if a list of stirngs contains a particular string.
+bool contains(const wcstring_list_t &list, const wcstring &str);
 
 /// Print a stack trace to stderr.
 void show_stackframe(const wchar_t msg_level, int frame_count = 100, int skip_levels = 0);
@@ -314,6 +298,7 @@ std::string wcs2string(const wcstring &input);
 /// Test if a string prefixes another. Returns true if a is a prefix of b.
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value);
+bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value);
 
 /// Test if a string is a suffix of another.
 bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value);
@@ -391,9 +376,6 @@ struct string_fuzzy_match_t {
 string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
                                                const wcstring &match_against,
                                                fuzzy_match_type_t limit_type = fuzzy_match_none);
-
-/// Test if a list contains a string using a linear search.
-bool list_contains_string(const wcstring_list_t &list, const wcstring &str);
 
 // Check if we are running in the test mode, where we should suppress error output
 #define TESTS_PROGRAM_NAME L"(ignore)"
@@ -529,70 +511,8 @@ class null_terminated_array_t {
 // null_terminated_array_t<char_t>.
 void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr,
                                   null_terminated_array_t<char> *output);
-
-class mutex_lock_t {
-   public:
-    pthread_mutex_t mutex;
-    mutex_lock_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_init(&mutex, NULL)); }
-
-    ~mutex_lock_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_destroy(&mutex)); }
-};
-
-// Basic scoped lock class.
-class scoped_lock {
-    pthread_mutex_t *lock_obj;
-    bool locked;
-
-    // No copying.
-    scoped_lock &operator=(const scoped_lock &) = delete;
-    scoped_lock(const scoped_lock &)  = delete;
-
-   public:
-    scoped_lock(scoped_lock &&rhs) : lock_obj(rhs.lock_obj), locked(rhs.locked) {
-        // we acquire any locked state
-        // ensure the rhs doesn't try to unlock
-        rhs.locked = false;
-    }
-
-    void lock(void);
-    void unlock(void);
-    explicit scoped_lock(pthread_mutex_t &mutex);
-    explicit scoped_lock(mutex_lock_t &lock);
-    ~scoped_lock();
-};
-
-class rwlock_t {
-   public:
-    pthread_rwlock_t rwlock;
-    rwlock_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_init(&rwlock, NULL)); }
-
-    ~rwlock_t() { VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_destroy(&rwlock)); }
-
-    rwlock_t &operator=(const rwlock_t &) = delete;
-    rwlock_t(const rwlock_t &)  = delete;
-};
-
-// Scoped lock class for rwlocks.
-class scoped_rwlock {
-    pthread_rwlock_t *rwlock_obj;
-    bool locked;
-    bool locked_shared;
-
-    // No copying.
-    scoped_rwlock &operator=(const scoped_lock &) = delete;
-    explicit scoped_rwlock(const scoped_lock &) = delete;
-
-   public:
-    void lock(void);
-    void unlock(void);
-    void lock_shared(void);
-    void unlock_shared(void);
-    // Upgrade shared lock to exclusive. Equivalent to `lock.unlock_shared(); lock.lock();`.
-    void upgrade(void);
-    explicit scoped_rwlock(pthread_rwlock_t &rwlock, bool shared = false);
-    explicit scoped_rwlock(rwlock_t &rwlock, bool shared = false);
-    ~scoped_rwlock();
-};
+typedef std::lock_guard<std::mutex> scoped_lock;
+typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 
 // An object wrapping a scoped lock and a value
 // This is returned from owning_lock.acquire()
@@ -604,16 +524,15 @@ class scoped_rwlock {
 // Or for simple cases:
 //   name.acquire().value = "derp"
 //
-template<typename DATA>
+template <typename DATA>
 class acquired_lock {
     scoped_lock lock;
-    acquired_lock(mutex_lock_t &lk, DATA *v) : lock(lk), value(*v)
-    {}
+    acquired_lock(std::mutex &lk, DATA *v) : lock(lk), value(*v) {}
 
-    template<typename T>
+    template <typename T>
     friend class owning_lock;
 
-    public:
+   public:
     // No copying, move only
     acquired_lock &operator=(const acquired_lock &) = delete;
     acquired_lock(const acquired_lock &) = delete;
@@ -625,7 +544,7 @@ class acquired_lock {
 
 // A lock that owns a piece of data
 // Access to the data is only provided by taking the lock
-template<typename DATA>
+template <typename DATA>
 class owning_lock {
     // No copying
     owning_lock &operator=(const scoped_lock &) = delete;
@@ -633,16 +552,14 @@ class owning_lock {
     owning_lock(owning_lock &&) = default;
     owning_lock &operator=(owning_lock &&) = default;
 
-    mutex_lock_t lock;
+    std::mutex lock;
     DATA data;
 
-public:
-    owning_lock(DATA d) : data(std::move(d)) {}
+   public:
+    owning_lock(DATA &&d) : data(std::move(d)) {}
     owning_lock() : data() {}
 
-    acquired_lock<DATA> acquire() {
-        return {lock, &data};
-    }
+    acquired_lock<DATA> acquire() { return {lock, &data}; }
 };
 
 /// A scoped manager to save the current value of some variable, and optionally set it to a new
@@ -671,21 +588,6 @@ class scoped_push {
             restored = true;
         }
     }
-};
-
-/// Wrapper around wcstok.
-class wcstokenizer {
-    wchar_t *buffer, *str, *state;
-    const wcstring sep;
-
-    // No copying.
-    wcstokenizer &operator=(const wcstokenizer &);
-    wcstokenizer(const wcstokenizer &);
-
-   public:
-    wcstokenizer(const wcstring &s, const wcstring &separator);
-    bool next(wcstring &result);
-    ~wcstokenizer();
 };
 
 /// Appends a path component, with a / if necessary.
@@ -722,15 +624,6 @@ void error_reset();
 /// initialization.
 void fish_setlocale();
 
-/// Checks if \c needle is included in the list of strings specified. A warning is printed if needle
-/// is zero.
-///
-/// \param needle the string to search for in the list.
-///
-/// \return zero if needle is not found, of if needle is null, non-zero otherwise.
-__sentinel bool contains_internal(const wchar_t *needle, int vararg_handle, ...);
-__sentinel bool contains_internal(const wcstring &needle, int vararg_handle, ...);
-
 /// Call read while blocking the SIGCHLD signal. Should only be called if you _know_ there is data
 /// available for reading, or the program will hang until there is data.
 long read_blocked(int fd, void *buf, size_t count);
@@ -748,8 +641,10 @@ ssize_t read_loop(int fd, void *buff, size_t count);
 /// \param in The string to be escaped
 /// \param flags Flags to control the escaping
 /// \return The escaped string
-wcstring escape(const wchar_t *in, escape_flags_t flags);
-wcstring escape_string(const wcstring &in, escape_flags_t flags);
+wcstring escape_string(const wchar_t *in, escape_flags_t flags,
+                       escape_string_style_t style = STRING_STYLE_SCRIPT);
+wcstring escape_string(const wcstring &in, escape_flags_t flags,
+                       escape_string_style_t style = STRING_STYLE_SCRIPT);
 
 /// Expand backslashed escapes and substitute them with their unescaped counterparts. Also
 /// optionally change the wildcards, the tilde character and a few more into constants which are
@@ -764,10 +659,13 @@ size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_i
 /// indicates the string was unmodified.
 bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special);
 
-/// Unescapes a string, returning the unescaped value by reference. On failure, the output is set to
-/// an empty string.
-bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special);
-bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special);
+/// Reverse the effects of calling `escape_string`. Returns the unescaped value by reference. On
+/// failure, the output is set to an empty string.
+bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special,
+                     escape_string_style_t style = STRING_STYLE_SCRIPT);
+
+bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special,
+                     escape_string_style_t style = STRING_STYLE_SCRIPT);
 
 /// Returns the width of the terminal window, so that not all functions that use these values
 /// continually have to keep track of it separately.
@@ -787,12 +685,6 @@ void common_handle_winch(int signal);
 
 /// Write the given paragraph of output, redoing linebreaks to fit the current screen.
 wcstring reformat_for_screen(const wcstring &msg);
-
-/// Tokenize the specified string into the specified wcstring_list_t.
-///
-/// \param val the input string. The contents of this string is not changed.
-/// \param out the list in which to place the elements.
-void tokenize_variable_array(const wcstring &val, wcstring_list_t &out);
 
 /// Make sure the specified direcotry exists. If needed, try to create it and any currently not
 /// existing parent directories.
@@ -827,9 +719,6 @@ bool is_forked_child(void);
 void assert_is_not_forked_child(const char *who);
 #define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
 #define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
-
-/// Macro to help suppress potentially unused variable warnings.
-#define USE(var) (void)(var)
 
 extern "C" {
 __attribute__((noinline)) void debug_thread_error(void);
@@ -894,18 +783,6 @@ static const wchar_t *enum_to_str(T enum_val, const enum_map<T> map[]) {
     return NULL;
 };
 
-#if !defined(HAVE_WCSDUP) && defined(HAVE_STD__WCSDUP)
-using std::wcsdup;
-#endif
-
-#if !defined(HAVE_WCSCASECMP) && defined(HAVE_STD__WCSCASECMP)
-using std::wcscasecmp;
-#endif
-
-#if !defined(HAVE_WCSNCASECMP) && defined(HAVE_STD__WCSNCASECMP)
-using std::wcsncasecmp;
-#endif
-
 void redirect_tty_output();
 
 // Minimum allowed terminal size and default size if the detected size is not reasonable.
@@ -917,4 +794,68 @@ void redirect_tty_output();
 #define DFLT_TERM_ROW_STR L"24"
 void invalidate_termsize(bool invalidate_vars = false);
 struct winsize get_current_winsize();
+
+bool valid_var_name_char(wchar_t chr);
+bool valid_var_name(const wchar_t *str);
+bool valid_var_name(const wcstring &str);
+bool valid_func_name(const wcstring &str);
+
+// Return values (`$status` values for fish scripts) for various situations.
+enum {
+    /// The status code used for normal exit in a command.
+    STATUS_CMD_OK = 0,
+    /// The status code used for failure exit in a command (but not if the args were invalid).
+    STATUS_CMD_ERROR = 1,
+    /// The status code used when a command was not found.
+    STATUS_CMD_UNKNOWN = 127,
+
+    /// TODO: Figure out why we have two distinct failure codes for when an external command cannot
+    /// be run.
+    ///
+    /// The status code used when an external command can not be run.
+    STATUS_NOT_EXECUTABLE = 126,
+    /// The status code used when an external command can not be run.
+    STATUS_EXEC_FAIL = 125,
+
+    /// The status code used when a wildcard had no matches.
+    STATUS_UNMATCHED_WILDCARD = 124,
+    /// The status code used when illegal command name is encountered.
+    STATUS_ILLEGAL_CMD = 123,
+    /// The status code used when `read` is asked to consume too much data.
+    STATUS_READ_TOO_MUCH = 122,
+    /// The status code used for invalid arguments given to a command. This is distinct from valid
+    /// arguments that might result in a command failure. An invalid args condition is something
+    /// like an unrecognized flag, missing or too many arguments, an invalid integer, etc. But
+    STATUS_INVALID_ARGS = 121,
+};
+
+/* Normally casting an expression to void discards its value, but GCC
+   versions 3.4 and newer have __attribute__ ((__warn_unused_result__))
+   which may cause unwanted diagnostics in that case.  Use __typeof__
+   and __extension__ to work around the problem, if the workaround is
+   known to be needed.  */
+#if 3 < __GNUC__ + (4 <= __GNUC_MINOR__)
+#define ignore_result(x)         \
+    (__extension__({             \
+        __typeof__(x) __x = (x); \
+        (void)__x;               \
+    }))
+#else
+#define ignore_result(x) ((void)(x))
+#endif
+
+// Custom hash function used by unordered_map/unordered_set when key is const
+#ifndef CONST_WCSTRING_HASH
+#define CONST_WCSTRING_HASH 1
+namespace std {
+template <>
+struct hash<const wcstring> {
+    std::size_t operator()(const wcstring &w) const {
+        std::hash<wcstring> hasher;
+        return hasher((wcstring)w);
+    }
+};
+}
+#endif
+
 #endif

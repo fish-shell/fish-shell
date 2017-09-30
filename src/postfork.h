@@ -5,6 +5,7 @@
 
 #include "config.h"
 
+#include <stddef.h>
 #include <unistd.h>
 #if HAVE_SPAWN_H
 #include <spawn.h>
@@ -17,7 +18,8 @@ class io_chain_t;
 class job_t;
 class process_t;
 
-bool set_child_group(job_t *j, process_t *p, int print_errors);
+bool set_child_group(job_t *j, pid_t child_pid);  // called by parent
+bool child_set_group(job_t *j, process_t *p);     // called by child
 
 /// Initialize a new child process. This should be called right away after forking in the child
 /// process. If job control is enabled for this job, the process is put in the process group of the
@@ -25,13 +27,12 @@ bool set_child_group(job_t *j, process_t *p, int print_errors);
 /// inside the exec function, which blocks all signals), and all IO redirections and other file
 /// descriptor actions are performed.
 ///
-/// \param j the job to set up the IO for
 /// \param p the child process to set up
 /// \param io_chain the IO chain to use
 ///
 /// \return 0 on sucess, -1 on failiure. When this function returns, signals are always unblocked.
 /// On failiure, signal handlers, io redirections and process group of the process is undefined.
-int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain);
+int setup_child_process(process_t *p, const io_chain_t &io_chain);
 
 /// Call fork(), optionally waiting until we are no longer multithreaded. If the forked child
 /// doesn't do anything that could allocate memory, take a lock, etc. (like call exec), then it's

@@ -1,3 +1,3 @@
-No matches for wildcard '*ee*'.  (Tip: empty matches are allowed in 'set', 'count', 'for'.)
-fish: 	case *ee*
-      	     ^
+fish: No matches for wildcard '*ee*'. See `help expand`.
+	case *ee*
+	     ^

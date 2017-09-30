@@ -6,7 +6,7 @@
 # external command by that name. That's because if we don't the parser will select our builtin.
 # However, we only want our builtin if there is no external realpath command.
 
-if command -s realpath >/dev/null
+if command -sq realpath
     function realpath -w realpath -d "print the resolved path [command realpath]"
         command realpath $argv
     end
@@ -14,7 +14,7 @@ if command -s realpath >/dev/null
 end
 
 # If there is a HomeBrew installed version of GNU realpath named grealpath use that.
-if command -s grealpath >/dev/null
+if command -sq grealpath
     function realpath -w grealpath -d "print the resolved path [command grealpath]"
         command grealpath $argv
     end
@@ -22,32 +22,27 @@ if command -s grealpath >/dev/null
 end
 
 function realpath -d "return an absolute path without symlinks"
-    if test -z "$argv"
-        printf "usage: %s%s%s %sfile%s …\n" (set_color -o) $_ (set_color normal) (set_color -u) (set_color normal)
-        echo "       resolves files as absolute paths without symlinks"
+    set -l options 'h/help' 'q/quiet' 'V-version' 's/strip' 'N-no-symlinks' 'z/zero'
+    set -a options 'e/canonicalize-existing' 'm/canonicalize-missing' 'L/logical' 'P/physical'
+    set -a options 'R-relative-to=' 'B-relative-base='
+    argparse -n realpath --min-args=1 $options -- $argv
+    or return
+
+    if set -q _flag_help
+        __fish_print_help realpath
+        return 0
+    end
+
+    # We don't implement any of the other flags so if any are set it's an error.
+    if string match -q '_flag_*' -- (set -l)
+        set flags (set -l | string replace --filter _flag_ '')
+        printf (_ "%s: These flags are not allowed by fish realpath: '%s'") realpath "$flags" >&2
+        echo >&2
+        __fish_print_help realpath
         return 1
     end
 
-    # Loop over arguments - allow our realpath to work on more than one path per invocation
-    # like gnu/bsd realpath.
-    for arg in $argv
-        switch $arg
-            # These - no can do our realpath
-            case -s --strip --no-symlinks -z --zero --relative-base\* --relative-to\*
-                __fish_print_help realpath
-                return 2
-
-            case -h --help --version
-                __fish_print_help realpath
-                return 0
-
-                # Handle commands called with these arguments by dropping the arguments to protect
-                # realpath from them. There are no sure things here.
-            case -e --canonicalize-existing --physical -P -q --quiet -m --canonicalize-missing
-                continue
-
-            case "*"
-                builtin realpath $arg
-        end
+    for path in $argv
+        builtin realpath $path
     end
 end

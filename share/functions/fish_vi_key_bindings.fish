@@ -64,11 +64,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Add way to kill current command line while in insert mode.
     bind -M insert \cc __fish_cancel_commandline
     # Add a way to switch from insert to normal (command) mode.
-    bind -M insert -m default \e backward-char force-repaint
+    # Note if we are paging, we want to stay in insert mode
+    # See #2871
+    bind -M insert \e "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char force-repaint; end"
 
     # Default (command) mode
     bind :q exit
-    bind \cd exit
     bind -m insert \cc __fish_cancel_commandline
     bind -M default h backward-char
     bind -M default l forward-char
@@ -117,10 +118,13 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -M insert -k end end-of-line 2>/dev/null
     bind -M default -k end end-of-line 2>/dev/null
 
-    bind -M default x delete-char
+    # Vi moves the cursor back if, after deleting, it is at EOL.
+    # To emulate that, move forward, then backward, which will be a NOP
+    # if there is something to move forward to.
+    bind -M default x delete-char forward-char backward-char
     bind -M default X backward-delete-char
-    bind -M insert -k dc delete-char
-    bind -M default -k dc delete-char
+    bind -M insert -k dc delete-char forward-char backward-char
+    bind -M default -k dc delete-char forward-char backward-char
 
     # Backspace deletes a char in insert mode, but not in normal/default mode.
     bind -M insert -k backspace backward-delete-char
@@ -206,11 +210,11 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind '"*P' backward-char "commandline -i ( xsel -p; echo )[1]"
 
     #
-    # Lowercase r, enters replace-one mode
+    # Lowercase r, enters replace_one mode
     #
-    bind -m replace-one r force-repaint
-    bind -M replace-one -m default '' delete-char self-insert backward-char force-repaint
-    bind -M replace-one -m default \e cancel force-repaint
+    bind -m replace_one r force-repaint
+    bind -M replace_one -m default '' delete-char self-insert backward-char force-repaint
+    bind -M replace_one -m default \e cancel force-repaint
 
     #
     # visual mode

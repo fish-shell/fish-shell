@@ -237,7 +237,7 @@ end
 function __fish_hg_help_topics
     set -l commands (__fish_hg debugcomplete)
     printf "%s\tcommand\n" $commands
-    for line in (__fish_hg help | grep "^ [a-zA-Z]")
+    for line in (__fish_hg help | string match -re '^ [a-zA-Z]')
         set -l parts (string trim $line | string split " " -m 1)
         set -l topic $parts[1]
         if not contains $topic $commands
@@ -318,7 +318,7 @@ function __fish_hg_sources
 end
 
 function __fish_hg_mq_enabled
-    if set -l line (__fish_hg config | grep extensions.hgext.mq)
+    if set -l line (__fish_hg config extensions.hgext.mq)
         set -l parts (string split "=" -m 1 $line)
         not string match -r -q -- "^!" $parts[2]
         return

@@ -10,14 +10,16 @@
 
 function __fish_set_locale
     set -l LOCALE_VARS
-    set LOCALE_VARS $LOCALE_VARS LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE
-    set LOCALE_VARS $LOCALE_VARS LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS
-    set LOCALE_VARS $LOCALE_VARS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION
+    set -a LOCALE_VARS LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE
+    set -a LOCALE_VARS LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS
+    set -a LOCALE_VARS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION
 
     # We check LC_ALL to figure out if we have a locale but we don't set it later. That is because
     # locale.conf doesn't allow it so we should not set it.
-    if string length -q -- $$LOCALE_VARS $LC_ALL
-        return 0
+    for locale_var in $LOCALE_VARS LC_ALL
+        if set -q $locale_var
+            return 0
+        end
     end
 
     # Unset all variables - they are empty anyway and this makes merging easier.
@@ -72,7 +74,10 @@ function __fish_set_locale
     end
 
     # If we really cannot get anything, at least set character encoding to UTF-8.
-    if not string length -q -- $$LOCALE_VARS $LC_ALL
-        set -gx LC_CTYPE en_US.UTF-8
+    for locale_var in $LOCALE_VARS LC_ALL
+        if set -q $locale_var
+            return 0
+        end
     end
+    set -gx LC_CTYPE en_US.UTF-8
 end

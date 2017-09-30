@@ -3,16 +3,14 @@ function __fish_cancel_commandline
     set -l cmd (commandline)
     if test -n "$cmd"
         commandline -C 1000000
-        # TODO: Switch from using tput and standout mode to `set_color` when themes have been
-        # augmented to include support for background colors or has support for standout/reverse
-        # mode.
-        #
-        # Set reverse fg/bg color mode, output ^C, restore normal mode, clear to EOL (to erase any
-        # autosuggestion).
-        if command -sq tput
-            echo -ns (set_color -r) "^C" (set_color normal) (tput el; or tput ce)
+        if set -q fish_color_cancel
+            echo -ns (set_color $fish_color_cancel) "^C" (set_color normal)
         else
-            echo -n "^C"
+            echo -ns "^C"
+        end
+        if command -sq tput
+            # Clear to EOL (to erase any autosuggestion).
+            echo -n (tput el; or tput ce)
         end
         for i in (seq (commandline -L))
             echo ""

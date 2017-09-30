@@ -75,7 +75,6 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     bind $argv \e\< beginning-of-buffer
     bind $argv \e\> end-of-buffer
 
-    bind \ed forward-kill-word
     bind \ed kill-word
 
     # Ignore some known-bad control sequences

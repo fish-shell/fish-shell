@@ -91,7 +91,7 @@ end
 
 function __fish_svn_prompt --description "Prompt function for svn"
     # if svn isn't installed then don't do anything
-    if not command -s svn >/dev/null
+    if not command -sq svn
         return 1
     end
 

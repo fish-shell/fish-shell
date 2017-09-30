@@ -1,7 +1,7 @@
 // Color class implementation.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <wchar.h>  // IWYU pragma: keep
@@ -153,28 +153,17 @@ struct named_color_t {
 };
 
 static const named_color_t named_colors[] = {
-    {L"black", 0, {0, 0, 0}, false},
-    {L"red", 1, {0x80, 0, 0}, false},
-    {L"green", 2, {0, 0x80, 0}, false},
-    {L"brown", 3, {0x72, 0x50, 0}, true},
-    {L"yellow", 3, {0x80, 0x80, 0}, false},
-    {L"blue", 4, {0, 0, 0x80}, false},
-    {L"magenta", 5, {0x80, 0, 0x80}, false},
-    {L"purple", 5, {0x80, 0, 0x80}, true},
-    {L"cyan", 6, {0, 0x80, 0x80}, false},
-    {L"white", 7, {0xC0, 0xC0, 0xC0}, false},
-    {L"grey", 7, {0xe5, 0xe5, 0xe5}, true},
-    {L"brblack", 8, {0x80, 0x80, 0x80}, false},
-    {L"brgrey", 8, {0055, 0x55, 0x55}, true},
-    {L"brred", 9, {0xFF, 0x00, 0x00}, false},
-    {L"brgreen", 10, {0x00, 0xFF, 0x00}, false},
-    {L"brbrown", 11, {0xFF, 0xFF, 0x00}, true},
-    {L"bryellow", 11, {0xFF, 0xFF, 0x00}, false},
-    {L"brblue", 12, {0x00, 0, 0xFF}, false},
-    {L"brmagenta", 13, {0xFF, 0, 0xFF}, false},
-    {L"brpurple", 13, {0xFF, 0, 0xFF}, true},
-    {L"brcyan", 14, {0x00, 0xFF, 0xFF}, false},
-    {L"brwhite", 15, {0xFF, 0xFF, 0xFF}, false},
+    {L"black", 0, {0x00, 0x00, 0x00}, false},      {L"red", 1, {0x80, 0x00, 0x00}, false},
+    {L"green", 2, {0x00, 0x80, 0x00}, false},      {L"brown", 3, {0x72, 0x50, 0x00}, true},
+    {L"yellow", 3, {0x80, 0x80, 0x00}, false},     {L"blue", 4, {0x00, 0x00, 0x80}, false},
+    {L"magenta", 5, {0x80, 0x00, 0x80}, false},    {L"purple", 5, {0x80, 0x00, 0x80}, true},
+    {L"cyan", 6, {0x00, 0x80, 0x80}, false},       {L"white", 7, {0xC0, 0xC0, 0xC0}, false},
+    {L"grey", 7, {0xE5, 0xE5, 0xE5}, true},        {L"brblack", 8, {0x80, 0x80, 0x80}, false},
+    {L"brgrey", 8, {0x55, 0x55, 0x55}, true},      {L"brred", 9, {0xFF, 0x00, 0x00}, false},
+    {L"brgreen", 10, {0x00, 0xFF, 0x00}, false},   {L"brbrown", 11, {0xFF, 0xFF, 0x00}, true},
+    {L"bryellow", 11, {0xFF, 0xFF, 0x00}, false},  {L"brblue", 12, {0x00, 0x00, 0xFF}, false},
+    {L"brmagenta", 13, {0xFF, 0x00, 0xFF}, false}, {L"brpurple", 13, {0xFF, 0x00, 0xFF}, true},
+    {L"brcyan", 14, {0x00, 0xFF, 0xFF}, false},    {L"brwhite", 15, {0xFF, 0xFF, 0xFF}, false},
 };
 
 wcstring_list_t rgb_color_t::named_color_names(void) {
@@ -297,7 +286,7 @@ color24_t rgb_color_t::to_color24() const {
 }
 
 unsigned char rgb_color_t::to_name_index() const {
-    // XXX this should look for the nearest color
+    // TODO: This should look for the nearest color.
     assert(type == type_named || type == type_rgb);
     if (type == type_named) return data.name_idx;
     if (type == type_rgb) return term16_color_for_rgb(data.color.rgb);
@@ -340,9 +329,7 @@ wcstring rgb_color_t::description() const {
         case type_normal: {
             return L"normal";
         }
-        default: {
-            abort();
-            return L"";
-        }
+        default: { break; }
     }
+    DIE("unknown color type");
 }

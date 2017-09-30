@@ -7,7 +7,6 @@
 
 // IWYU likes to recommend adding term.h when we want ncurses.h.
 // IWYU pragma: no_include term.h
-#include <assert.h>  // IWYU pragma: keep
 #include <dirent.h>  // IWYU pragma: keep
 #include <errno.h>   // IWYU pragma: keep
 #include <fcntl.h>   // IWYU pragma: keep
@@ -108,6 +107,7 @@ int fish_mkstemp_cloexec(char *name_template) {
 /// Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g.
 /// building on Linux) these should end up just being stripped, as they are static functions that
 /// are not referenced in this file.
+// cppcheck-suppress unusedFunction
 __attribute__((unused)) static wchar_t *wcsdup_fallback(const wchar_t *in) {
     size_t len = wcslen(in);
     wchar_t *out = (wchar_t *)malloc(sizeof(wchar_t) * (len + 1));
@@ -172,19 +172,27 @@ int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
 #endif  // __DARWIN_C_LEVEL >= 200809L
 #else   // __APPLE__
 
-/// These functions are missing from Solaris 10
 #ifndef HAVE_WCSDUP
+#ifndef HAVE_STD__WCSDUP
 wchar_t *wcsdup(const wchar_t *in) { return wcsdup_fallback(in); }
 #endif
+#endif
+
 #ifndef HAVE_WCSCASECMP
+#ifndef HAVE_STD__WCSCASECMP
 int wcscasecmp(const wchar_t *a, const wchar_t *b) { return wcscasecmp_fallback(a, b); }
 #endif
+#endif
+
 #ifndef HAVE_WCSNCASECMP
+#ifndef HAVE_STD__WCSNCASECMP
 int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
     return wcsncasecmp_fallback(a, b, n);
 }
 #endif
 #endif
+
+#endif  // __APPLE__
 
 #ifndef HAVE_WCSNDUP
 wchar_t *wcsndup(const wchar_t *in, size_t c) {
@@ -216,9 +224,9 @@ wchar_t *wcsndup(const wchar_t *in, size_t c) {
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
-    register wchar_t *d = dst;
-    register const wchar_t *s = src;
-    register size_t n = siz;
+    wchar_t *d = dst;
+    const wchar_t *s = src;
+    size_t n = siz;
 
     // Copy as many bytes as will fit.
     if (n != 0 && --n != 0) {
@@ -237,6 +245,8 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
 }
 #endif
 
+#if 0
+// These are not currently used.
 #ifndef HAVE_LRAND48_R
 int lrand48_r(struct drand48_data *buffer, long int *result) {
     *result = rand_r(&buffer->seed);
@@ -247,6 +257,7 @@ int srand48_r(long int seedval, struct drand48_data *buffer) {
     buffer->seed = (unsigned int)seedval;
     return 0;
 }
+#endif
 #endif
 
 #ifndef HAVE_FUTIMES

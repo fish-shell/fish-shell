@@ -9,7 +9,6 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
-#include "proc.h"
 #include "util.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -144,9 +143,9 @@ static int set_limit(int resource, int hard, int soft, rlim_t value, io_streams_
         } else {
             builtin_wperror(L"ulimit", streams);
         }
-        return STATUS_BUILTIN_ERROR;
+        return STATUS_CMD_ERROR;
     }
-    return STATUS_BUILTIN_OK;
+    return STATUS_CMD_OK;
 }
 
 /// The ulimit builtin, used for setting resource limits.
@@ -158,22 +157,23 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     bool soft = false;
     int what = RLIMIT_FSIZE;
 
-    const wchar_t *short_options = L":HSacdflmnstuvh";
-    const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
-                                           {L"hard", no_argument, NULL, 'H'},
-                                           {L"soft", no_argument, NULL, 'S'},
-                                           {L"core-size", no_argument, NULL, 'c'},
-                                           {L"data-size", no_argument, NULL, 'd'},
-                                           {L"file-size", no_argument, NULL, 'f'},
-                                           {L"lock-size", no_argument, NULL, 'l'},
-                                           {L"resident-set-size", no_argument, NULL, 'm'},
-                                           {L"file-descriptor-count", no_argument, NULL, 'n'},
-                                           {L"stack-size", no_argument, NULL, 's'},
-                                           {L"cpu-time", no_argument, NULL, 't'},
-                                           {L"process-count", no_argument, NULL, 'u'},
-                                           {L"virtual-memory-size", no_argument, NULL, 'v'},
-                                           {L"help", no_argument, NULL, 'h'},
-                                           {NULL, 0, NULL, 0}};
+    static const wchar_t *short_options = L":HSacdflmnstuvh";
+    static const struct woption long_options[] = {
+        {L"all", no_argument, NULL, 'a'},
+        {L"hard", no_argument, NULL, 'H'},
+        {L"soft", no_argument, NULL, 'S'},
+        {L"core-size", no_argument, NULL, 'c'},
+        {L"data-size", no_argument, NULL, 'd'},
+        {L"file-size", no_argument, NULL, 'f'},
+        {L"lock-size", no_argument, NULL, 'l'},
+        {L"resident-set-size", no_argument, NULL, 'm'},
+        {L"file-descriptor-count", no_argument, NULL, 'n'},
+        {L"stack-size", no_argument, NULL, 's'},
+        {L"cpu-time", no_argument, NULL, 't'},
+        {L"process-count", no_argument, NULL, 'u'},
+        {L"virtual-memory-size", no_argument, NULL, 'v'},
+        {L"help", no_argument, NULL, 'h'},
+        {NULL, 0, NULL, 0}};
 
     int opt;
     wgetopter_t w;
@@ -241,15 +241,15 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 #endif
             case 'h': {
                 builtin_print_help(parser, streams, cmd, streams.out);
-                return 0;
+                return STATUS_CMD_OK;
             }
             case ':': {
-                streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
-                return STATUS_BUILTIN_ERROR;
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-                return STATUS_BUILTIN_ERROR;
+                return STATUS_INVALID_ARGS;
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
@@ -260,18 +260,18 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (report_all) {
         print_all(hard, streams);
-        return STATUS_BUILTIN_OK;
+        return STATUS_CMD_OK;
     }
 
     int arg_count = argc - w.woptind;
     if (arg_count == 0) {
         // Show current limit value.
         print(what, hard, streams);
-        return STATUS_BUILTIN_OK;
+        return STATUS_CMD_OK;
     } else if (arg_count != 1) {
         streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
         builtin_print_help(parser, streams, cmd, streams.err);
-        return STATUS_BUILTIN_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     // Change current limit value.
@@ -284,7 +284,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (*argv[w.woptind] == L'\0') {
         streams.err.append_format(_(L"%ls: New limit cannot be an empty string\n"), cmd);
         builtin_print_help(parser, streams, cmd, streams.err);
-        return STATUS_BUILTIN_ERROR;
+        return STATUS_INVALID_ARGS;
     } else if (wcscasecmp(argv[w.woptind], L"unlimited") == 0) {
         new_limit = RLIM_INFINITY;
     } else if (wcscasecmp(argv[w.woptind], L"hard") == 0) {
@@ -296,7 +296,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (errno) {
             streams.err.append_format(_(L"%ls: Invalid limit '%ls'\n"), cmd, argv[w.woptind]);
             builtin_print_help(parser, streams, cmd, streams.err);
-            return STATUS_BUILTIN_ERROR;
+            return STATUS_INVALID_ARGS;
         }
         new_limit *= get_multiplier(what);
     }

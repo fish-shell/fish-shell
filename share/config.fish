@@ -5,6 +5,8 @@
 # Set default field separators
 #
 set -g IFS \n\ \t
+set -qg __fish_added_user_paths
+or set -g __fish_added_user_paths
 
 #
 # Create the default command_not_found handler
@@ -34,9 +36,8 @@ if status --is-interactive
         # Remove this code when we've made it safer to upgrade fish.
     else
         # Enable truecolor/24-bit support for select terminals
-        # Ignore Neovim (in 0.1.4 at least), Screen and emacs' ansi-term as they swallow the sequences, rendering the text white.
-        if not set -q NVIM_LISTEN_ADDRESS
-            and not set -q STY
+        # Ignore Screen and emacs' ansi-term as they swallow the sequences, rendering the text white.
+        if not set -q STY
             and not string match -q -- 'eterm*' $TERM
             and begin
                 set -q KONSOLE_PROFILE_NAME # KDE's konsole
@@ -175,23 +176,27 @@ end
 # Invoke it immediately to apply the current value of fish_user_path
 function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
     set -l local_path $PATH
-    set -l x
+
     for x in $__fish_added_user_paths
         set -l idx (contains --index -- $x $local_path)
         and set -e local_path[$idx]
     end
 
-    set -e __fish_added_user_paths
-    for x in $fish_user_paths[-1..1]
-        if set -l idx (contains --index -- $x $local_path)
-            set -e local_path[$idx]
-        else
-            set -g __fish_added_user_paths $__fish_added_user_paths $x
+    set -g __fish_added_user_paths
+    if set -q fish_user_paths
+        for x in $fish_user_paths[-1..1]
+            if set -l idx (contains --index -- $x $local_path)
+                set -e local_path[$idx]
+            else
+                set -g __fish_added_user_paths $__fish_added_user_paths $x
+            end
+            set local_path $x $local_path
         end
-        set local_path $x $local_path
     end
+
     set -xg PATH $local_path
 end
+
 __fish_reconstruct_path
 
 #
@@ -211,47 +216,36 @@ function __fish_on_interactive --on-event fish_prompt
     functions -e __fish_on_interactive
 end
 
-# "." command for compatibility with old fish versions.
-function . --description 'Evaluate contents of file (deprecated, see "source")' --no-scope-shadowing
-    if begin
-            test (count $argv) -eq 0
-            # Uses tty directly, as isatty depends on "."
-            and tty 0>&0 >/dev/null
-        end
-        echo "source: '.' command is deprecated, and doesn't work with STDIN anymore. Did you mean 'source' or './'?" >&2
-        return 1
-    else
-        source $argv
-    end
-end
-
 # Set the locale if it isn't explicitly set. Allowing the lack of locale env vars to imply the
 # C/POSIX locale causes too many problems. Do this before reading the snippets because they might be
 # in UTF-8 (with non-ASCII characters).
 __fish_set_locale
 
-# As last part of initialization, source the conf directories
-# Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename"
+# As last part of initialization, source the conf directories.
+# Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename".
 set -l sourcelist
 for file in $configdir/fish/conf.d/*.fish $__fish_sysconfdir/conf.d/*.fish $__extra_confdir/*.fish
     set -l basename (string replace -r '^.*/' '' -- $file)
     contains -- $basename $sourcelist
     and continue
     set sourcelist $sourcelist $basename
-    # Also skip non-files or unreadable files
-    # This allows one to use e.g. symlinks to /dev/null to "mask" something (like in systemd)
+    # Also skip non-files or unreadable files.
+    # This allows one to use e.g. symlinks to /dev/null to "mask" something (like in systemd).
     [ -f $file -a -r $file ]
     and source $file
 end
 
-# Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax
-# This needs to be in share/config.fish because __fish_config_interactive is called after 2sourcing config.fish, which might contain abbr calls
+# Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax.
+# This needs to be in share/config.fish because __fish_config_interactive is called after sourcing
+# config.fish, which might contain abbr calls.
 if not set -q __fish_init_2_3_0
-    set -l fab
-    for abb in $fish_user_abbreviations
-        set fab $fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abb)
+    if set -q fish_user_abbreviations
+        set -l fab
+        for abbr in $fish_user_abbreviations
+            set fab $fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abbr)
+        end
+        set fish_user_abbreviations $fab
     end
-    set fish_user_abbreviations $fab
     set -U __fish_init_2_3_0
 end
 
@@ -261,14 +255,12 @@ end
 #
 
 if status --is-login
-
     #
     # Put linux consoles in unicode mode.
     #
-
     if test "$TERM" = linux
         if string match -qir '\.UTF' -- $LANG
-            if command -s unicode_start >/dev/null
+            if command -sq unicode_start
                 unicode_start
             end
         end

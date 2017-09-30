@@ -74,7 +74,6 @@ complete $heroku_looking -xa maintenance -d 'manage maintenance mode for an app'
 complete $heroku_looking -xa members -d 'manage membership in organization accounts'
 complete $heroku_looking -xa orgs -d 'manage organization accounts'
 complete $heroku_looking -xa pg -d 'manage heroku-postgresql databases'
-complete $heroku_looking -xa pgbackups -d 'manage backups of heroku postgresql databases'
 complete $heroku_looking -xa plugins -d 'manage plugins to the heroku gem'
 complete $heroku_looking -xa regions -d 'list available regions'
 complete $heroku_looking -xa stack -d 'manage the stack for an app'
@@ -167,6 +166,19 @@ complete -c heroku -n '__fish_heroku_using_command logs' -s n -l num -l NUM -d "
 complete -c heroku -n '__fish_heroku_using_command logs' -s p -l ps -l PS -d "only display logs from the given process"
 complete -c heroku -n '__fish_heroku_using_command logs' -s s -l source -l SOURCE -d "only display logs from the given source"
 complete -c heroku -n '__fish_heroku_using_command logs' -s t -l tail -d "continually stream logs"
+
+# PG subcommands
+complete $heroku_looking -xa pg:backups -d "manage backups of heroku postgresql databases"
+complete $heroku_looking -xa pg:backups:cancel -d "cancel an in-progress backup or restore (default newest)"
+complete $heroku_looking -xa pg:backups:capture -d "capture a new backup"
+complete $heroku_looking -xa pg:backups:delete -d "delete a backup"
+complete $heroku_looking -xa pg:backups:download -d "downloads database backup"
+complete $heroku_looking -xa pg:backups:info -d "get information about a specific backup"
+complete $heroku_looking -xa pg:backups:restore -d "restore a backup (default latest) to a database"
+complete $heroku_looking -xa pg:backups:schedule -d "schedule daily backups for given database"
+complete $heroku_looking -xa pg:backups:schedules -d "list backup schedule"
+complete $heroku_looking -xa pg:backups:unschedule -d "stop daily backups"
+complete $heroku_looking -xa pg:backups:url -d "get secret but publicly accessible URL of a backup"
 
 # PS subcommands
 complete $heroku_looking -xa ps:resize -d "resize dynos to the given size (DYNO1=1X|2X|PX)"

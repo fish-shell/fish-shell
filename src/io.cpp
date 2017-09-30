@@ -1,7 +1,6 @@
 // Utilities for io redirection.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -54,9 +53,9 @@ void io_buffer_t::read() {
                 // never block. But a broken pipe seems to cause some flags to reset, causing the
                 // EOF flag to not be set. Therefore, EAGAIN is ignored and we exit anyway.
                 if (errno != EAGAIN) {
-                    debug(1, _(L"An error occured while reading output from code block on file "
-                               L"descriptor %d"),
-                          pipe_fd[0]);
+                    const wchar_t *fmt =
+                        _(L"An error occured while reading output from code block on fd %d");
+                    debug(1, fmt, pipe_fd[0]);
                     wperror(L"io_buffer_t::read");
                 }
 
@@ -76,10 +75,11 @@ bool io_buffer_t::avoid_conflicts_with_io_chain(const io_chain_t &ios) {
     return result;
 }
 
-shared_ptr<io_buffer_t> io_buffer_t::create(int fd, const io_chain_t &conflicts) {
+shared_ptr<io_buffer_t> io_buffer_t::create(int fd, const io_chain_t &conflicts,
+                                            size_t buffer_limit) {
     bool success = true;
     assert(fd >= 0);
-    shared_ptr<io_buffer_t> buffer_redirect(new io_buffer_t(fd));
+    shared_ptr<io_buffer_t> buffer_redirect(new io_buffer_t(fd, buffer_limit));
 
     if (exec_pipe(buffer_redirect->pipe_fd) == -1) {
         debug(1, PIPE_ERROR);

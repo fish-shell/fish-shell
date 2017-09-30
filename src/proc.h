@@ -5,38 +5,19 @@
 #define FISH_PROC_H
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <signal.h>
 #include <stddef.h>
 #include <sys/time.h>  // IWYU pragma: keep
 #include <termios.h>
 #include <unistd.h>
+
 #include <list>
+#include <memory>
+#include <vector>
 
 #include "common.h"
 #include "io.h"
 #include "parse_tree.h"
-
-/// The status code use when a command was not found.
-#define STATUS_UNKNOWN_COMMAND 127
-
-/// The status code use when an unknown error occured during execution of a command.
-#define STATUS_NOT_EXECUTABLE 126
-
-/// The status code use when an unknown error occured during execution of a command.
-#define STATUS_EXEC_FAIL 125
-
-/// The status code use when a wildcard had no matches.
-#define STATUS_UNMATCHED_WILDCARD 124
-
-/// The status code use when illegal command name is encountered.
-#define STATUS_ILLEGAL_CMD 123
-
-/// The status code used for normal exit in a  builtin.
-#define STATUS_BUILTIN_OK 0
-
-/// The status code used for erroneous argument combinations in a builtin.
-#define STATUS_BUILTIN_ERROR 1
 
 /// Types of processes.
 enum process_type_t {
@@ -212,6 +193,7 @@ class job_t {
     process_list_t processes;
 
     /// Process group ID for the process group that this job is running in.
+    /// Set to a nonexistent, non-return-value of getpgid() integer by the constructor
     pid_t pgid;
     /// The saved terminal modes of this job. This needs to be saved so that we can restore the
     /// terminal to the same state after temporarily taking control over the terminal when a job
@@ -235,22 +217,26 @@ class job_t {
     io_chain_t all_io_redirections() const;
 };
 
-/// Whether we are running a subshell command.
-extern int is_subshell;
-
-/// Whether we are running a block of commands.
-extern int is_block;
-
 /// Whether we are reading from the keyboard right now.
 bool shell_is_interactive(void);
 
+/// Whether we are running a subshell command.
+extern bool is_subshell;
+
+/// Whether we are running a block of commands.
+extern bool is_block;
+
+/// Whether we are running due to a `breakpoint` command.
+extern bool is_breakpoint;
+
 /// Whether this shell is attached to the keyboard at all.
-extern int is_interactive_session;
+extern bool is_interactive_session;
 
 /// Whether we are a login shell.
-extern int is_login;
+extern bool is_login;
 
-/// Whether we are running an event handler.
+/// Whether we are running an event handler. This is not a bool because we keep count of the event
+/// nesting level.
 extern int is_event;
 
 // List of jobs. We sometimes mutate this while iterating - hence it must be a list, not a vector
@@ -379,3 +365,5 @@ void proc_pop_interactive();
 int proc_format_status(int status);
 
 #endif
+
+bool terminal_give_to_job(job_t *j, int cont);

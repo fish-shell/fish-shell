@@ -1,9 +1,9 @@
 // The fish parser. Contains functions for parsing and evaluating code.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <stdio.h>
 #include <wchar.h>
+
 #include <algorithm>
 #include <memory>
 
@@ -89,7 +89,7 @@ static const struct block_lookup_entry block_lookup[] = {
     {TOP, 0, TOP_BLOCK},
     {SUBST, 0, SUBST_BLOCK},
     {BEGIN, L"begin", BEGIN_BLOCK},
-    {SOURCE, L".", SOURCE_BLOCK},
+    {SOURCE, L"source", SOURCE_BLOCK},
     {EVENT, 0, EVENT_BLOCK},
     {BREAKPOINT, L"breakpoint", BREAKPOINT_BLOCK},
     {(block_type_t)0, 0, 0}};
@@ -148,9 +148,13 @@ void parser_t::push_block_int(block_t *new_current) {
     // Push it onto our stack. This acquires ownership because of unique_ptr.
     this->block_stack.emplace_back(new_current);
 
-    // Types TOP and SUBST are not considered blocks for the purposes of `status -b`.
+    // Types TOP and SUBST are not considered blocks for the purposes of `status is-block`.
     if (type != TOP && type != SUBST) {
-        is_block = 1;
+        is_block = true;
+    }
+
+    if (type == BREAKPOINT) {
+        is_breakpoint = true;
     }
 
     if (new_current->type() != TOP) {
@@ -174,16 +178,27 @@ void parser_t::pop_block(const block_t *expected) {
 
     if (old->wants_pop_env) env_pop();
 
-    // Figure out if `status -b` should consider us to be in a block now.
-    int new_is_block = 0;
+    // Figure out if `status is-block` should consider us to be in a block now.
+    bool new_is_block = false;
     for (const auto &b : block_stack) {
         const enum block_type_t type = b->type();
         if (type != TOP && type != SUBST) {
-            new_is_block = 1;
+            new_is_block = true;
             break;
         }
     }
     is_block = new_is_block;
+
+    // Are we still in a breakpoint?
+    bool new_is_breakpoint = false;
+    for (const auto &b : block_stack) {
+        const enum block_type_t type = b->type();
+        if (type == BREAKPOINT) {
+            new_is_breakpoint = true;
+            break;
+        }
+    }
+    is_breakpoint = new_is_breakpoint;
 }
 
 const wchar_t *parser_t::get_block_desc(int block) const {
@@ -419,14 +434,15 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
 }
 
 /// Returns the name of the currently evaluated function if we are currently evaluating a function,
-/// null otherwise. This is tested by moving down the block-scope-stack, checking every block if it
-/// is of type FUNCTION_CALL.
-const wchar_t *parser_t::is_function() const {
+/// NULL otherwise. This is tested by moving down the block-scope-stack, checking every block if it
+/// is of type FUNCTION_CALL. If the caller doesn't specify a starting position in the stack we
+/// begin with the current block.
+const wchar_t *parser_t::is_function(size_t idx) const {
     // PCA: Have to make this a string somehow.
     ASSERT_IS_MAIN_THREAD();
 
     const wchar_t *result = NULL;
-    for (size_t block_idx = 0; block_idx < this->block_count(); block_idx++) {
+    for (size_t block_idx = idx; block_idx < this->block_count(); block_idx++) {
         const block_t *b = this->block_at_index(block_idx);
         if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
@@ -438,6 +454,38 @@ const wchar_t *parser_t::is_function() const {
         }
     }
     return result;
+}
+
+/// Return the function name for the specified stack frame. Default is zero (current frame).
+/// The special value zero means the function frame immediately above the closest breakpoint frame.
+const wchar_t *parser_t::get_function_name(int level) {
+    if (level == 0) {
+        // Return the function name for the level preceding the most recent breakpoint. If there
+        // isn't one return the function name for the current level.
+        int idx = 0;
+        for (const auto &b : block_stack) {
+            const enum block_type_t type = b->type();
+            if (type == BREAKPOINT) {
+                return this->is_function(idx);
+            }
+            idx++;
+        }
+        return NULL;  // couldn't find a breakpoint frame
+    } else if (level == 1) {
+        // Return the function name for the current level.
+        return this->is_function();
+    }
+
+    // Return the function name for the specific function stack frame.
+    int idx = 0;
+    for (const auto &b : block_stack) {
+        const enum block_type_t type = b->type();
+        if (type == FUNCTION_CALL || type == FUNCTION_CALL_NO_SHADOW) {
+            if (--level == 0) return this->is_function(idx);
+        }
+        idx++;
+    }
+    return NULL;  // couldn't find that function level
 }
 
 int parser_t::get_lineno() const {
@@ -499,9 +547,9 @@ wcstring parser_t::current_line() {
             append_format(prefix, _(L"%ls (line %d): "), user_presentable_path(file).c_str(),
                           lineno);
         } else if (is_within_fish_initialization) {
-            append_format(prefix, L"%ls: ", _(L"Startup"), lineno);
+            append_format(prefix, L"%ls (line %d): ", _(L"Startup"), lineno);
         } else {
-            append_format(prefix, L"%ls: ", _(L"Standard input"), lineno);
+            append_format(prefix, L"%ls (line %d): ", _(L"Standard input"), lineno);
         }
     }
 
@@ -562,11 +610,24 @@ job_t *parser_t::job_get(job_id_t id) {
     return NULL;
 }
 
-job_t *parser_t::job_get_from_pid(int pid) {
+job_t *parser_t::job_get_from_pid(pid_t pid) {
     job_iterator_t jobs;
     job_t *job;
+
+    pid_t pgid = getpgid(pid);
+
+    if (pgid == -1) {
+        return 0;
+    }
+
     while ((job = jobs.next())) {
-        if (job->pgid == pid) return job;
+        if (job->pgid == pgid) {
+            for (const process_ptr_t &p : job->processes) {
+                if (p->pid == pid) {
+                    return job;
+                }
+            }
+        }
     }
     return 0;
 }
@@ -587,7 +648,7 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
     if (!parse_tree_from_string(cmd, parse_flag_none, &tree, &error_list)) {
         // Get a backtrace. This includes the message.
         wcstring backtrace_and_desc;
-        this->get_backtrace(cmd, error_list, &backtrace_and_desc);
+        this->get_backtrace(cmd, error_list, backtrace_and_desc);
 
         // Print it.
         fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
@@ -663,7 +724,6 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
     this->pop_block(scope_block);
 
     job_reap(0);  // reap again
-
     return result;
 }
 
@@ -710,8 +770,7 @@ bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcst
 }
 
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
-                             wcstring *output) const {
-    assert(output != NULL);
+                             wcstring &output) const {
     if (!errors.empty()) {
         const parse_error_t &err = errors.at(0);
 
@@ -747,10 +806,10 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         const wcstring description =
             err.describe_with_prefix(src, prefix, is_interactive, skip_caret);
         if (!description.empty()) {
-            output->append(description);
-            output->push_back(L'\n');
+            output.append(description);
+            output.push_back(L'\n');
         }
-        output->append(this->stack_trace());
+        output.append(this->stack_trace());
     }
 }
 

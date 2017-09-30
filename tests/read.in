@@ -1,19 +1,29 @@
 # vim: set filetype=fish:
 #
-# Test read builtin and IFS
+# Test read builtin and IFS.
 #
 
-count (echo one\ntwo)
-set -l IFS \t
-count (echo one\ntwo)
-set -l IFS
-count (echo one\ntwo)
-echo [(echo -n one\ntwo)]
-count (echo one\ntwo\n)
-echo [(echo -n one\ntwo\n)]
-count (echo one\ntwo\n\n)
-echo [(echo -n one\ntwo\n\n)]
-set -le IFS
+logmsg Read with no vars is an error
+read
+
+logmsg Read with -a and anything other than exactly on var name is an error
+read -a
+read -a v1 v2
+read -a v1
+
+logmsg Verify correct behavior of subcommands and splitting of input.
+begin
+    count (echo one\ntwo)
+    set -l IFS \t
+    count (echo one\ntwo)
+    set -l IFS
+    count (echo one\ntwo)
+    echo [(echo -n one\ntwo)]
+    count (echo one\ntwo\n)
+    echo [(echo -n one\ntwo\n)]
+    count (echo one\ntwo\n\n)
+    echo [(echo -n one\ntwo\n\n)]
+end
 
 function print_vars --no-scope-shadowing
 	set -l space
@@ -25,7 +35,7 @@ function print_vars --no-scope-shadowing
 	echo
 end
 
-echo
+logmsg Test splitting input
 echo 'hello there' | read -l one two
 print_vars one two
 echo 'hello there' | read -l one
@@ -41,7 +51,7 @@ print_vars one two three
 echo -n 'a' | read -l one
 echo "$status $one"
 
-echo
+logmsg Test splitting input with IFS empty
 set -l IFS
 echo 'hello' | read -l one
 print_vars one
@@ -81,10 +91,7 @@ echo '' | read -la ary
 print_vars ary
 set -le IFS
 
-# read -n tests
-
-echo
-echo '# read -n tests'
+logmsg read -n tests
 echo 'testing' | read -n 3 foo
 echo $foo
 echo 'test' | read -n 10 foo
@@ -97,10 +104,7 @@ echo $bar
 echo 'test' | read -n 1 foo
 echo $foo
 
-# read -0 tests
-
-echo
-echo '# read -z tests'
+logmsg read -z tests
 echo -n 'testing' | read -lz foo
 echo $foo
 echo -n 'test ing' | read -lz foo
@@ -117,8 +121,7 @@ echo -ne 'foo\nbar\0baz\nquux' | while read -lza foo
     print_vars foo
 end
 
-echo
-echo '# chunked read tests'
+logmsg Chunked read tests
 set -l path /tmp/fish_chunked_read_test.txt
 set -l longstr (seq 1024 | string join ',')
 echo -n $longstr > $path
@@ -128,4 +131,119 @@ and echo "Chunked reads test pass"
 or echo "Chunked reads test failure: long strings don't match!"
 rm $path
 
-true
+# ==========
+# The following tests verify that `read` correctly handles the limit on the
+# number of bytes consumed.
+#
+set FISH_READ_BYTE_LIMIT 8192
+set line abcdefghijklmnopqrstuvwxyz
+
+# Ensure the `read` command terminates if asked to read too much data. The var
+# should be empty. We throw away any data we read if it exceeds the limit on
+# what we consider reasonable.
+yes $line | dd bs=1024 count=(math "1 + $FISH_READ_BYTE_LIMIT / 1024") ^/dev/null | read --null x
+if test $status -ne 122
+    echo reading too much data did not terminate with failure status
+end
+# The read var should be defined but not have any elements when the read
+# aborts due to too much data.
+set -q x
+or echo reading too much data did not define the var
+set -q x[1]
+and echo reading too much data resulted in a var with unexpected data
+
+# Ensure the `read` command terminates if asked to read too much data even if
+# given an explicit limit. The var should be empty. We throw away any data we
+# read if it exceeds the limit on what we consider reasonable.
+yes $line | read --null --nchars=(math "$FISH_READ_BYTE_LIMIT + 1") x
+if test $status -ne 122
+    echo reading too much data did not terminate with failure status
+end
+set -q x
+or echo reading too much data with --nchars did not define the var
+set -q x[1]
+and echo reading too much data with --nchars resulted in a var with unexpected data
+
+# Now do the opposite of the previous test and confirm we can read reasonable
+# amounts of data.
+echo $line | read x
+if test $status -ne 0
+    echo the read of a reasonable amount of data failed unexpectedly
+end
+set exp_length (string length $x)
+set act_length (string length $line)
+if test $exp_length -ne $act_length
+    echo reading a reasonable amount of data failed the length test
+    echo expected length $exp_length, actual length $act_length
+end
+
+# Confirm we can read exactly up to the limit.
+yes $line | read --null --nchars $FISH_READ_BYTE_LIMIT x
+if test $status -ne 0
+    echo the read of the max amount of data with --nchars failed unexpectedly
+end
+if test (string length "$x") -ne $FISH_READ_BYTE_LIMIT
+    echo reading the max amount of data with --nchars failed the length test
+end
+
+# Same as previous test but limit the amount of data fed to `read` rather than
+# using the `--nchars` flag.
+yes $line | dd bs=1024 count=(math "$FISH_READ_BYTE_LIMIT / 1024") ^/dev/null | read --null x
+if test $status -ne 0
+    echo the read of the max amount of data failed unexpectedly
+end
+if test (string length "$x") -ne $FISH_READ_BYTE_LIMIT
+    echo reading the max amount of data with --nchars failed the length test
+end
+
+logmsg Confirm reading non-interactively works -- \#4206 regression
+echo abc\ndef | ../test/root/bin/fish -i -c 'read a; read b; set --show a; set --show b'
+
+logmsg Test --delimiter '(and $IFS, for now)'
+echo a=b | read -l foo bar
+echo $foo
+echo $bar
+
+logmsg Delimiter =
+echo a=b | read -l -d = foo bar
+echo $foo
+echo $bar
+
+logmsg Delimiter empty
+echo a=b | read -l -d '' foo bar baz
+echo $foo
+echo $bar
+echo $baz
+
+logmsg IFS empty string
+set -l IFS ''
+echo a=b | read -l foo bar baz
+echo $foo
+echo $bar
+echo $baz
+
+logmsg IFS unset
+set -e IFS
+echo a=b | read -l foo bar baz
+echo $foo
+echo $bar
+echo $baz
+
+logmsg Delimiter =
+echo a=b | read -l -d = foo bar baz
+echo $foo
+echo $bar
+echo $baz
+echo
+
+echo 'Multi-char delimiters with -d'
+echo a...b...c | read -l -d "..." a b c
+echo $a
+echo $b
+echo $c
+echo 'Multi-char delimiters with IFS'
+begin
+    set IFS "..."
+    echo a...b...c | read -l a b c
+    echo $a; echo $b; echo $c
+end

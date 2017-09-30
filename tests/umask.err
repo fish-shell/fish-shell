@@ -1,0 +1,3 @@
+umask: Invalid mask '1234'
+umask: Invalid mask '228'
+umask: Invalid mask '0282'

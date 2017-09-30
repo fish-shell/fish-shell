@@ -1,7 +1,7 @@
-# If seq is not installed, then define a function that invokes __fish_fallback_seq
+    # If seq is not installed, then define a function that invokes __fish_fallback_seq
 # We can't call type here because that also calls seq
 
-if not command -s seq >/dev/null
+if not command -sq seq
     # No seq command
     function seq --description "Print sequences of numbers"
         __fish_fallback_seq $argv
@@ -33,7 +33,7 @@ if not command -s seq >/dev/null
         end
 
         for i in $from $step $to
-            if not echo $i | grep -E '^-?[0-9]*([0-9]*|\.[0-9]+)$' >/dev/null
+            if not string match -rq '^-?[0-9]*([0-9]*|\.[0-9]+)$' $i
                 printf (_ "%s: '%s' is not a number\n") seq $i
                 return 1
             end

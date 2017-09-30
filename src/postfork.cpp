@@ -59,69 +59,98 @@ static void debug_safe_int(int level, const char *format, int val) {
     debug_safe(level, format, buff);
 }
 
-/// This function should be called by both the parent process and the child right after fork() has
-/// been called. If job control is enabled, the child is put in the jobs group, and if the child is
-/// also in the foreground, it is also given control of the terminal. When called in the parent
-/// process, this function may fail, since the child might have already finished and called exit.
-/// The parent process may safely ignore the exit status of this call.
+/// Called only by the child to set its own process group (possibly creating a new group in the
+/// process if it is the first in a JOB_CONTROL job. The parent will wait for this to finish.
+/// A process that isn't already in control of the terminal can't give itself control of the
+/// terminal without hanging, but it's not right for the child to try and give itself control
+/// from the very beginning because the parent may not have gotten around to doing so yet. Let
+/// the parent figure it out; if the child doesn't have terminal control and it later tries to
+/// read from the terminal, the kernel will send it SIGTTIN and it'll hang anyway.
+/// The key here is that the parent should transfer control of the terminal (if appropriate)
+/// prior to sending the child SIGCONT to wake it up to exec.
 ///
 /// Returns true on sucess, false on failiure.
-bool set_child_group(job_t *j, process_t *p, int print_errors) {
+bool child_set_group(job_t *j, process_t *p) {
     bool retval = true;
 
     if (j->get_flag(JOB_CONTROL)) {
-        if (!j->pgid) {
+        // New jobs have the pgid set to -2
+        if (j->pgid == -2) {
             j->pgid = p->pid;
         }
+        // Retry on EPERM because there's no way that a child cannot join an existing progress group
+        // because we are SIGSTOPing the previous job in the chain. Sometimes we have to try a few
+        // times to get the kernel to see the new group. (Linux 4.4.0)
+        int failure = setpgid(p->pid, j->pgid);
+        while (failure == -1 && (errno == EPERM || errno == EINTR)) {
+            debug_safe(4, "Retrying setpgid in child process");
+            failure = setpgid(p->pid, j->pgid);
+        }
+        // TODO: Figure out why we're testing whether the pgid is correct after attempting to
+        // set it failed. This was added in commit 4e912ef8 from 2012-02-27.
+        failure = failure && getpgid(p->pid) != j->pgid;
+        if (failure) {  //!OCLINT(collapsible if statements)
+            char pid_buff[128];
+            char job_id_buff[128];
+            char getpgid_buff[128];
+            char job_pgid_buff[128];
+            char argv0[64];
+            char command[64];
 
-        if (setpgid(p->pid, j->pgid)) {  //!OCLINT(collapsible if statements)
-            // TODO: Figure out why we're testing whether the pgid is correct after attempting to
-            // set it failed. This was added in commit 4e912ef8 from 2012-02-27.
-            if (getpgid(p->pid) != j->pgid && print_errors) {
-                char pid_buff[128];
-                char job_id_buff[128];
-                char getpgid_buff[128];
-                char job_pgid_buff[128];
-                char argv0[64];
-                char command[64];
+            format_long_safe(pid_buff, p->pid);
+            format_long_safe(job_id_buff, j->job_id);
+            format_long_safe(getpgid_buff, getpgid(p->pid));
+            format_long_safe(job_pgid_buff, j->pgid);
+            narrow_string_safe(argv0, p->argv0());
+            narrow_string_safe(command, j->command_wcstr());
 
-                format_long_safe(pid_buff, p->pid);
-                format_long_safe(job_id_buff, j->job_id);
-                format_long_safe(getpgid_buff, getpgid(p->pid));
-                format_long_safe(job_pgid_buff, j->pgid);
-                narrow_string_safe(argv0, p->argv0());
-                narrow_string_safe(command, j->command_wcstr());
+            debug_safe(
+                1, "Could not send own process %s, '%s' in job %s, '%s' from group %s to group %s",
+                pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
 
-                debug_safe(
-                    1, "Could not send process %s, '%s' in job %s, '%s' from group %s to group %s",
-                    pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
-
-                safe_perror("setpgid");
-                retval = false;
-            }
+            safe_perror("setpgid");
+            retval = false;
         }
     } else {
-        j->pgid = getpid();
+        // This is probably stays unused in the child.
+        j->pgid = getpgrp();
+    }
+
+    return retval;
+}
+
+/// Called only by the parent only after a child forks and successfully calls child_set_group,
+/// guaranteeing the job control process group has been created and that the child belongs to the
+/// correct process group. Here we can update our job_t structure to reflect the correct process
+/// group in the case of JOB_CONTROL, and we can give the new process group control of the terminal
+/// if it's to run in the foreground. Note that we can guarantee the child won't try to read from
+/// the terminal before we've had a chance to run this code, because we haven't woken them up with a
+/// SIGCONT yet. This musn't be called as a part of setup_child_process because that can hang
+/// indefinitely until data is available to read/write in the case of IO_FILE, which means we'll
+/// never reach our SIGSTOP and everything hangs.
+bool set_child_group(job_t *j, pid_t child_pid) {
+    bool retval = true;
+
+    if (j->get_flag(JOB_CONTROL)) {
+        // New jobs have the pgid set to -2
+        if (j->pgid == -2) {
+            j->pgid = child_pid;
+        }
+    } else {
+        j->pgid = getpgrp();
     }
 
     if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {  //!OCLINT(early exit)
-        int result = -1;
-        errno = EINTR;
-        while (result == -1 && errno == EINTR) {
-            result = tcsetpgrp(STDIN_FILENO, j->pgid);
-        }
-        if (result == -1) {
-            if (errno == ENOTTY) redirect_tty_output();
-            if (print_errors) {
-                char job_id_buff[64];
-                char command_buff[64];
-                format_long_safe(job_id_buff, j->job_id);
-                narrow_string_safe(command_buff, j->command_wcstr());
-                debug_safe(1, "Could not send job %s ('%s') to foreground", job_id_buff,
-                           command_buff);
-                safe_perror("tcsetpgrp");
-                retval = false;
-            }
+        if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
+            // We've already assigned the process group control of the terminal when the first
+            // process in the job was started. There's no need to do so again, and on some platforms
+            // this can cause an EPERM error. In addition, if we've given control of the terminal to
+            // a process group, attempting to call tcsetpgrp from the background will cause SIGTTOU
+            // to be sent to everything in our process group (unless we handle it).
+            debug(4, L"Process group %d already has control of terminal\n", j->pgid);
+        } else {
+            // No need to duplicate the code here, a function already exists that does just this.
+            retval = terminal_give_to_job(j, false /*new job, so not continuing*/);
         }
     }
 
@@ -229,16 +258,14 @@ static int handle_child_io(const io_chain_t &io_chain) {
     return 0;
 }
 
-int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain) {
+int setup_child_process(process_t *p, const io_chain_t &io_chain) {
     bool ok = true;
 
-    if (p) {
-        ok = set_child_group(j, p, 1);
-    }
-
     if (ok) {
+        // In the case of IO_FILE, this can hang until data is available to read/write!
         ok = (0 == handle_child_io(io_chain));
         if (p != 0 && !ok) {
+            debug_safe(4, "handle_child_io failed in setup_child_process");
             exit_without_destructors(1);
         }
     }
@@ -247,8 +274,6 @@ int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain) {
         // Set the handling for job control signals back to the default.
         signal_reset_handlers();
     }
-
-    signal_unblock();  // remove all signal blocks
 
     return ok ? 0 : -1;
 }
@@ -265,6 +290,7 @@ pid_t execute_fork(bool wait_for_threads_to_die) {
         // Make sure we have no outstanding threads before we fork. This is a pretty sketchy thing
         // to do here, both because exec.cpp shouldn't have to know about iothreads, and because the
         // completion handlers may do unexpected things.
+        debug_safe(4, "waiting for threads to drain.");
         iothread_drain_all();
     }
 
@@ -315,15 +341,17 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
         return false;
     }
 
-    bool should_set_parent_group_id = false;
-    int desired_parent_group_id = 0;
+    bool should_set_process_group_id = false;
+    int desired_process_group_id = 0;
     if (j->get_flag(JOB_CONTROL)) {
-        should_set_parent_group_id = true;
+        should_set_process_group_id = true;
 
-        // PCA: I'm quite fuzzy on process groups, but I believe that the default value of 0 means
-        // that the process becomes its own group leader, which is what set_child_group did in this
-        // case. So we want this to be 0 if j->pgid is 0.
-        desired_parent_group_id = j->pgid;
+        // set_child_group puts each job into its own process group
+        // do the same here if there is no PGID yet (i.e. PGID == -2)
+        desired_process_group_id = j->pgid;
+        if (desired_process_group_id == -2) {
+            desired_process_group_id = 0;
+        }
     }
 
     // Set the handling for job control signals back to the default.
@@ -336,13 +364,13 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
     short flags = 0;
     if (reset_signal_handlers) flags |= POSIX_SPAWN_SETSIGDEF;
     if (reset_sigmask) flags |= POSIX_SPAWN_SETSIGMASK;
-    if (should_set_parent_group_id) flags |= POSIX_SPAWN_SETPGROUP;
+    if (should_set_process_group_id) flags |= POSIX_SPAWN_SETPGROUP;
 
     int err = 0;
     if (!err) err = posix_spawnattr_setflags(attr, flags);
 
-    if (!err && should_set_parent_group_id)
-        err = posix_spawnattr_setpgroup(attr, desired_parent_group_id);
+    if (!err && should_set_process_group_id)
+        err = posix_spawnattr_setpgroup(attr, desired_process_group_id);
 
     // Everybody gets default handlers.
     if (!err && reset_signal_handlers) {

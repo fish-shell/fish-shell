@@ -1,0 +1,4 @@
+# In the tests directory we want to allow including files matching *.out but
+# exclude temporary test result files.
+!*.out
+*.tmp.*

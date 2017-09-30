@@ -1,7 +1,7 @@
 #
 # Alias for gettext or a fallback if gettext isn't installed.
 #
-if command -s gettext >/dev/null
+if command -sq gettext
     function _ --description "Alias for the gettext command"
         command gettext fish $argv
     end

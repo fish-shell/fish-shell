@@ -3,11 +3,13 @@
 #define FISH_AUTOLOAD_H
 
 #include <pthread.h>
-#include <stddef.h>
 #include <time.h>
+
 #include <set>
+#include <unordered_set>
 
 #include "common.h"
+#include "env.h"
 #include "lru.h"
 
 /// Record of an attempt to access a file.
@@ -27,7 +29,7 @@ file_access_attempt_t access_file(const wcstring &path, int mode);
 
 struct autoload_function_t {
     explicit autoload_function_t(bool placeholder)
-        : access(), is_loaded(false), is_placeholder(placeholder), is_internalized(false) {}
+        : access(), is_loaded(false), is_placeholder(placeholder) {}
 
     /// The last access attempt recorded
     file_access_attempt_t access;
@@ -36,8 +38,6 @@ struct autoload_function_t {
     /// Whether we are a placeholder that stands in for "no such function". If this is true, then
     /// is_loaded must be false.
     bool is_placeholder;
-    /// Whether this function came from a builtin "internalized" script.
-    bool is_internalized;
 };
 
 class env_vars_snapshot_t;
@@ -46,16 +46,16 @@ class env_vars_snapshot_t;
 class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
    private:
     /// Lock for thread safety.
-    pthread_mutex_t lock;
+    std::mutex lock;
     /// The environment variable name.
     const wcstring env_var_name;
     /// The path from which we most recently autoloaded.
-    wcstring last_path;
+    env_var_t last_path;
     /// the most reecently autoloaded path, tokenized (split on separators).
     wcstring_list_t last_path_tokenized;
     /// A table containing all the files that are currently being loaded.
     /// This is here to help prevent recursion.
-    std::set<wcstring> is_loading_set;
+    std::unordered_set<wcstring> is_loading_set;
     // Function invoked when a command is removed
     typedef void (*command_removed_function_t)(const wcstring &);
     const command_removed_function_t command_removed;
@@ -73,10 +73,7 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
     void entry_was_evicted(wcstring key, autoload_function_t node);
 
     // Create an autoload_t for the given environment variable name.
-    autoload_t(const wcstring &env_var_name_var,
-               command_removed_function_t callback);
-
-    ~autoload_t();
+    autoload_t(const wcstring &env_var_name_var, command_removed_function_t callback);
 
     /// Autoload the specified file, if it exists in the specified path. Do not load it multiple
     /// times unless its timestamp changes or parse_util_unload is called.

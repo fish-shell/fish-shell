@@ -4,13 +4,15 @@
 
 // IWYU pragma: no_include <cstddef>
 #include <pthread.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 #include <wctype.h>
+
 #include <deque>
 #include <memory>
-#include <set>
+#include <unordered_set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -87,7 +89,7 @@ class history_item_t {
     time_t timestamp() const { return creation_timestamp; }
 
     const path_list_t &get_required_paths() const { return required_paths; }
-    void set_required_paths(path_list_t paths) { required_paths = paths; }
+    void set_required_paths(const path_list_t &paths) { required_paths = paths; }
 
     bool operator==(const history_item_t &other) const {
         return contents == other.contents && creation_timestamp == other.creation_timestamp &&
@@ -113,7 +115,7 @@ class history_t {
     void add(const history_item_t &item, bool pending = false);
 
     // Lock for thread safety.
-    pthread_mutex_t lock;
+    std::mutex lock;
 
     // Internal function.
     void clear_file_state();
@@ -137,7 +139,7 @@ class history_t {
     uint32_t disable_automatic_save_counter;
 
     // Deleted item contents.
-    std::set<wcstring> deleted_items;
+    std::unordered_set<wcstring> deleted_items;
 
     // The mmaped region for the history file.
     const char *mmap_start;
@@ -178,6 +180,10 @@ class history_t {
     // Deletes duplicates in new_items.
     void compact_new_items();
 
+    // Attempts to rewrite the existing file to a target temporary file
+    // Returns false on error, true on success
+    bool rewrite_to_temporary_file(int existing_fd, int dst_fd) const;
+
     // Saves history by rewriting the file.
     bool save_internal_via_rewrite();
 
@@ -193,14 +199,16 @@ class history_t {
     // Do a private, read-only map of the entirety of a history file with the given name. Returns
     // true if successful. Returns the mapped memory region by reference.
     bool map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
-                  file_id_t *file_id);
+                  file_id_t *file_id) const;
+
+    // Like map_file but takes a file descriptor
+    bool map_fd(int fd, const char **out_map_start, size_t *out_map_len) const;
 
     // Whether we're in maximum chaos mode, useful for testing.
     bool chaos_mode;
 
    public:
     explicit history_t(const wcstring &);  // constructor
-    ~history_t();                          // destructor
 
     // Returns history with the given name, creating it if necessary.
     static history_t &history_with_name(const wcstring &name);
@@ -230,8 +238,11 @@ class history_t {
 
     // Searches history.
     bool search(history_search_type_t search_type, wcstring_list_t search_args,
-                const wchar_t *show_time_format, long max_items, bool case_sensitive,
-                bool null_terminate, io_streams_t &streams);
+                const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
+                bool null_terminate, bool reverse, io_streams_t &streams);
+    bool search_with_args(history_search_type_t search_type, wcstring_list_t search_args,
+                          const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
+                          bool null_terminate, bool reverse, io_streams_t &streams);
 
     // Enable / disable automatic saving. Main thread only!
     void disable_automatic_saving();
@@ -249,9 +260,9 @@ class history_t {
     // Incorporates the history of other shells into this history.
     void incorporate_external_changes();
 
-    // Gets all the history into a string with ARRAY_SEP_STR. This is intended for the $history
-    // environment variable. This may be long!
-    void get_string_representation(wcstring *result, const wcstring &separator);
+    // Gets all the history into a list. This is intended for the $history environment variable.
+    // This may be long!
+    void get_history(wcstring_list_t &result);
 
     // Sets the valid file paths for the history item with the given identifier.
     void set_valid_file_paths(const wcstring_list_t &valid_file_paths, history_identifier_t ident);
@@ -259,6 +270,9 @@ class history_t {
     // Return the specified history at the specified index. 0 is the index of the current
     // commandline. (So the most recent item is at index 1.)
     history_item_t item_at_index(size_t idx);
+
+    // Return the number of history entries.
+    size_t size();
 };
 
 class history_search_t {
@@ -331,22 +345,25 @@ class history_search_t {
         : history(), term(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), case_sensitive(true) {}
 };
 
-// Init history library. The history file won't actually be loaded until the first time a history
-// search is performed.
+/// Init history library. The history file won't actually be loaded until the first time a history
+/// search is performed.
 void history_init();
 
-// Saves the new history to disk.
+/// Saves the new history to disk.
 void history_destroy();
 
-// Perform sanity checks.
+/// Perform sanity checks.
 void history_sanity_check();
 
-// Given a list of paths and a working directory, return the paths that are valid
-// This does disk I/O and may only be called in a background thread
+/// Return the prefix for the files to be used for command and read history.
+wcstring history_session_id();
+
+/// Given a list of paths and a working directory, return the paths that are valid
+/// This does disk I/O and may only be called in a background thread
 path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory);
 
-// Given a list of paths and a working directory,
-// return true if all paths in the list are valid
-// Returns true for if paths is empty
+/// Given a list of paths and a working directory,
+/// return true if all paths in the list are valid
+/// Returns true for if paths is empty
 bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory);
 #endif

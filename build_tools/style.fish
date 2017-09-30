@@ -79,7 +79,6 @@ if set -q c_files[1]
             cp $file $file.new # preserves mode bits
             clang-format $file >$file.new
             if cmp --quiet $file $file.new
-                echo $file was correctly formatted
                 rm $file.new
             else
                 echo $file was NOT correctly formatted
@@ -107,7 +106,6 @@ if set -q f_files[1]
         cp $file $file.new # preserves mode bits
         fish_indent <$file >$file.new
         if cmp --quiet $file $file.new
-            echo $file was correctly formatted
             rm $file.new
         else
             echo $file was NOT correctly formatted

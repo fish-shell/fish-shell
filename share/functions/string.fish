@@ -14,7 +14,7 @@ if not contains string (builtin -n)
                 set -g __is_launched_without_string 1
             end
         end
-        set PATH $__fish_bin_dir $PATH
+        set -p PATH $__fish_bin_dir
         set string_cmd string \'$argv\'
 
         if fish -c 'contains string (builtin -n)'

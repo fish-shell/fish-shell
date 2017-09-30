@@ -18,6 +18,7 @@
 #endif
 #include <limits.h>
 #include <wchar.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -95,6 +96,7 @@ static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
 }
 
 static bool write_foreground_color(unsigned char idx) {
+    if (!cur_term) return false;
     if (set_a_foreground && set_a_foreground[0]) {
         return write_color_escape(set_a_foreground, idx, true);
     } else if (set_foreground && set_foreground[0]) {
@@ -104,6 +106,7 @@ static bool write_foreground_color(unsigned char idx) {
 }
 
 static bool write_background_color(unsigned char idx) {
+    if (!cur_term) return false;
     if (set_a_background && set_a_background[0]) {
         return write_color_escape(set_a_background, idx, false);
     } else if (set_background && set_background[0]) {
@@ -114,6 +117,7 @@ static bool write_background_color(unsigned char idx) {
 
 // Exported for builtin_set_color's usage only.
 bool write_color(rgb_color_t color, bool is_fg) {
+    if (!cur_term) return false;
     bool supports_term24bit =
         static_cast<bool>(output_get_color_support() & color_support_term24bit);
     if (!supports_term24bit || !color.is_rgb()) {
@@ -164,9 +168,10 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 #if 0
     wcstring tmp = c.description();
     wcstring tmp2 = c2.description();
-    debug(3, "set_color %ls : %ls\n", tmp.c_str(), tmp2.c_str());
+    debug(3, "set_color %ls : %ls", tmp.c_str(), tmp2.c_str());
 #endif
     ASSERT_IS_MAIN_THREAD();
+    if (!cur_term) return;
 
     const rgb_color_t normal = rgb_color_t::normal();
     static rgb_color_t last_color = rgb_color_t::normal();
@@ -481,8 +486,8 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
 }
 
 /// Return the internal color code representing the specified color.
-/// XXX This code should be refactored to enable sharing with builtin_set_color.
-rgb_color_t parse_color(const wcstring &val, bool is_background) {
+/// TODO: This code should be refactored to enable sharing with builtin_set_color.
+rgb_color_t parse_color(const env_var_t &var, bool is_background) {
     int is_bold = 0;
     int is_underline = 0;
     int is_italics = 0;
@@ -492,7 +497,7 @@ rgb_color_t parse_color(const wcstring &val, bool is_background) {
     std::vector<rgb_color_t> candidates;
 
     wcstring_list_t el;
-    tokenize_variable_array(val, el);
+    var.to_list(el);
 
     for (size_t j = 0; j < el.size(); j++) {
         const wcstring &next = el.at(j);
@@ -549,9 +554,11 @@ void writembs_check(char *mbs, const char *mbs_name, const char *file, long line
     if (mbs != NULL) {
         tputs(mbs, 1, &writeb);
     } else {
-        env_var_t term = env_get_string(L"TERM");
-        debug(0, _(L"Tried to use terminfo string %s on line %ld of %s, which is undefined in "
-                   L"terminal of type \"%ls\". Please report this error to %s"),
-              mbs_name, line, file, term.c_str(), PACKAGE_BUGREPORT);
+        auto term = env_get(L"TERM");
+        const wchar_t *fmt =
+            _(L"Tried to use terminfo string %s on line %ld of %s, which is "
+              L"undefined in terminal of type \"%ls\". Please report this error to %s");
+        debug(0, fmt, mbs_name, line, file, term ? term->as_string().c_str() : L"",
+              PACKAGE_BUGREPORT);
     }
 }

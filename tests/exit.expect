@@ -9,8 +9,13 @@ expect_prompt
 send "sleep 111 &\r"
 expect_prompt
 send "exit\r"
-expect "There are still jobs active"
-expect "A second attempt to exit will terminate them."
+expect -re "There are still jobs active:\r
+\r
+   PID  Command\r
+ *\\d+  sleep 111 &\r
+\r
+Use `disown PID` to let them live independently from fish.\r
+A second attempt to exit will terminate them.\r"
 expect_prompt
 
 # Running anything other than `exit` should result in the same warning with
@@ -18,8 +23,14 @@ expect_prompt
 send "sleep 113 &\r"
 expect_prompt
 send "exit\r"
-expect "There are still jobs active"
-expect "A second attempt to exit will terminate them."
+expect -re "There are still jobs active:\r
+\r
+   PID  Command\r
+  *\\d+  sleep 113 &\r
+  *\\d+  sleep 111 &\r
+\r
+Use `disown PID` to let them live independently from fish.\r
+A second attempt to exit will terminate them.\r"
 expect_prompt
 
 # Verify that asking to exit a second time does so.

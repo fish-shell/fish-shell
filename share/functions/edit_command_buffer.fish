@@ -17,9 +17,13 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     # Edit the command line with the users preferred editor or vim or emacs.
     commandline -b >$f
     if set -q VISUAL
+        __fish_disable_bracketed_paste
         eval $VISUAL $f
+        __fish_enable_bracketed_paste
     else if set -q EDITOR
+        __fish_disable_bracketed_paste
         eval $EDITOR $f
+        __fish_enable_bracketed_paste
     else
         echo
         echo (_ 'External editor requested but $VISUAL or $EDITOR not set.')

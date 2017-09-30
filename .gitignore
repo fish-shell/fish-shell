@@ -47,7 +47,6 @@ config.h
 config.cache
 config.h.in
 config.status
-configure
 messages.pot
 .directory
 .fuse_hidden*
@@ -68,6 +67,7 @@ messages.pot
 /command_list_toc.txt
 /compile_commands.json
 /confdefs.h
+/configure
 /doc.h
 /fish
 /fish.pc
@@ -87,11 +87,15 @@ messages.pot
 /share/__fish_build_paths.fish
 /tests/*.tmp.*
 /share/pkgconfig
+/muparser-*/bk-deps
+/muparser-*/shared-ld-sh
+/muparser-*/build/autoconf/muparser.pc
+/pcre2-*/configure.lineno
 
 # xcode
 ## Build generated
-build/
-DerivedData/
+/build/
+/DerivedData/
 xcuserdata/
 *.moved-aside
 *.xccheckout

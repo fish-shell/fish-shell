@@ -5,17 +5,22 @@
 #ifdef _WIN32
 #define PCRE2_STATIC
 #endif
-#include <assert.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <wchar.h>
 #include <wctype.h>
+
 #include <algorithm>
+#include <cwctype>
 #include <iterator>
+#include <memory>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "builtin.h"
@@ -24,6 +29,7 @@
 #include "io.h"
 #include "parse_util.h"
 #include "pcre2.h"
+#include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -31,8 +37,6 @@
 class parser_t;
 
 #define STRING_ERR_MISSING _(L"%ls: Expected argument\n")
-
-enum { BUILTIN_STRING_OK = 0, BUILTIN_STRING_NONE = 1, BUILTIN_STRING_ERROR = 2 };
 
 static void string_error(io_streams_t &streams, const wchar_t *fmt, ...) {
     streams.err.append(L"string ");
@@ -60,12 +64,12 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
         long rc = read_blocked(streams.stdin_fd, &ch, 1);
 
         if (rc < 0) {  // failure
-            return 0;
+            return NULL;
         }
 
         if (rc == 0) {  // EOF
             if (arg.empty()) {
-                return 0;
+                return NULL;
             }
             break;
         }
@@ -82,7 +86,7 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
 }
 
 static const wchar_t *string_get_arg_argv(int *argidx, wchar_t **argv) {
-    return argv && argv[*argidx] ? argv[(*argidx)++] : 0;
+    return argv && argv[*argidx] ? argv[(*argidx)++] : NULL;
 }
 
 static const wchar_t *string_get_arg(int *argidx, wchar_t **argv, wcstring *storage,
@@ -93,105 +97,519 @@ static const wchar_t *string_get_arg(int *argidx, wchar_t **argv, wcstring *stor
     return string_get_arg_argv(argidx, argv);
 }
 
-static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L"n";
-    const struct woption long_options[] = {{L"no-quoted", no_argument, 0, 'n'}, {0, 0, 0, 0}};
+// This is used by the string subcommands to communicate with the option parser which flags are
+// valid and get the result of parsing the command for flags.
+typedef struct {  //!OCLINT(too many fields)
+    bool all_valid = false;
+    bool chars_valid = false;
+    bool count_valid = false;
+    bool entire_valid = false;
+    bool filter_valid = false;
+    bool ignore_case_valid = false;
+    bool index_valid = false;
+    bool invert_valid = false;
+    bool left_valid = false;
+    bool length_valid = false;
+    bool max_valid = false;
+    bool no_newline_valid = false;
+    bool no_quoted_valid = false;
+    bool quiet_valid = false;
+    bool regex_valid = false;
+    bool right_valid = false;
+    bool start_valid = false;
+    bool style_valid = false;
 
-    escape_flags_t flags = ESCAPE_ALL;
+    bool all = false;
+    bool entire = false;
+    bool filter = false;
+    bool ignore_case = false;
+    bool index = false;
+    bool invert_match = false;
+    bool left = false;
+    bool no_newline = false;
+    bool no_quoted = false;
+    bool quiet = false;
+    bool regex = false;
+    bool right = false;
+
+    long count = 0;
+    long length = 0;
+    long max = 0;
+    long start = 0;
+
+    const wchar_t *chars_to_trim = L" \f\n\r\t";
+    const wchar_t *arg1 = NULL;
+    const wchar_t *arg2 = NULL;
+
+    escape_string_style_t escape_style = STRING_STYLE_SCRIPT;
+} options_t;
+
+/// This handles the `--style=xxx` flag.
+static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    const wchar_t *cmd = argv[0];
+
+    if (opts->style_valid) {
+        if (wcscmp(w.woptarg, L"script") == 0) {
+            opts->escape_style = STRING_STYLE_SCRIPT;
+        } else if (wcscmp(w.woptarg, L"url") == 0) {
+            opts->escape_style = STRING_STYLE_URL;
+        } else if (wcscmp(w.woptarg, L"var") == 0) {
+            opts->escape_style = STRING_STYLE_VAR;
+        } else {
+            string_error(streams, _(L"%ls: Invalid escape style '%ls'\n"), cmd, w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        return STATUS_CMD_OK;
+    }
+
+    string_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_N(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->no_newline_valid) {
+        opts->no_newline = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_a(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->all_valid) {
+        opts->all = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_c(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->chars_valid) {
+        opts->chars_to_trim = w.woptarg;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_e(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->entire_valid) {
+        opts->entire = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_f(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->filter_valid) {
+        opts->filter = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_i(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->ignore_case_valid) {
+        opts->ignore_case = true;
+        return STATUS_CMD_OK;
+    } else if (opts->index_valid) {
+        opts->index = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_l(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->length_valid) {
+        opts->length = fish_wcstol(w.woptarg);
+        if (opts->length < 0 || opts->length == LONG_MIN || errno == ERANGE) {
+            string_error(streams, _(L"%ls: Invalid length value '%ls'\n"), argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        } else if (errno) {
+            string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        return STATUS_CMD_OK;
+    } else if (opts->left_valid) {
+        opts->left = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_m(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->max_valid) {
+        opts->max = fish_wcstol(w.woptarg);
+        if (opts->max < 0 || errno == ERANGE) {
+            string_error(streams, _(L"%ls: Invalid max value '%ls'\n"), argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        } else if (errno) {
+            string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_n(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->count_valid) {
+        opts->count = fish_wcstol(w.woptarg);
+        if (opts->count < 0 || errno == ERANGE) {
+            string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        } else if (errno) {
+            string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        return STATUS_CMD_OK;
+    } else if (opts->index_valid) {
+        opts->index = true;
+        return STATUS_CMD_OK;
+    } else if (opts->no_quoted_valid) {
+        opts->no_quoted = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_q(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->quiet_valid) {
+        opts->quiet = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_r(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->regex_valid) {
+        opts->regex = true;
+        return STATUS_CMD_OK;
+    } else if (opts->right_valid) {
+        opts->right = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_s(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->start_valid) {
+        opts->start = fish_wcstol(w.woptarg);
+        if (opts->start == 0 || opts->start == LONG_MIN || errno == ERANGE) {
+            string_error(streams, _(L"%ls: Invalid start value '%ls'\n"), argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        } else if (errno) {
+            string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_v(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                         options_t *opts) {
+    if (opts->invert_valid) {
+        opts->invert_match = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+/// This constructs the wgetopt() short options string based on which arguments are valid for the
+/// subcommand. We have to do this because many short flags have multiple meanings and may or may
+/// not require an argument depending on the meaning.
+static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath complexity)
+    wcstring short_opts(L":");
+    if (opts->all_valid) short_opts.append(L"a");
+    if (opts->chars_valid) short_opts.append(L"c:");
+    if (opts->count_valid) short_opts.append(L"n:");
+    if (opts->entire_valid) short_opts.append(L"e");
+    if (opts->filter_valid) short_opts.append(L"f");
+    if (opts->ignore_case_valid) short_opts.append(L"i");
+    if (opts->index_valid) short_opts.append(L"n");
+    if (opts->invert_valid) short_opts.append(L"v");
+    if (opts->left_valid) short_opts.append(L"l");
+    if (opts->length_valid) short_opts.append(L"l:");
+    if (opts->max_valid) short_opts.append(L"m:");
+    if (opts->no_newline_valid) short_opts.append(L"N");
+    if (opts->no_quoted_valid) short_opts.append(L"n");
+    if (opts->quiet_valid) short_opts.append(L"q");
+    if (opts->regex_valid) short_opts.append(L"r");
+    if (opts->right_valid) short_opts.append(L"r");
+    if (opts->start_valid) short_opts.append(L"s:");
+    return short_opts;
+}
+
+// Note that several long flags share the same short flag. That is okay. The caller is expected
+// to indicate that a max of one of the long flags sharing a short flag is valid.
+static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
+                                              {L"chars", required_argument, NULL, 'c'},
+                                              {L"count", required_argument, NULL, 'n'},
+                                              {L"entire", no_argument, NULL, 'e'},
+                                              {L"filter", no_argument, NULL, 'f'},
+                                              {L"ignore-case", no_argument, NULL, 'i'},
+                                              {L"index", no_argument, NULL, 'n'},
+                                              {L"invert", no_argument, NULL, 'v'},
+                                              {L"left", no_argument, NULL, 'l'},
+                                              {L"length", required_argument, NULL, 'l'},
+                                              {L"max", required_argument, NULL, 'm'},
+                                              {L"no-newline", no_argument, NULL, 'N'},
+                                              {L"no-quoted", no_argument, NULL, 'n'},
+                                              {L"quiet", no_argument, NULL, 'q'},
+                                              {L"regex", no_argument, NULL, 'r'},
+                                              {L"right", no_argument, NULL, 'r'},
+                                              {L"start", required_argument, NULL, 's'},
+                                              {L"style", required_argument, NULL, 1},
+                                              {NULL, 0, NULL, 0}};
+
+static std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
+    {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
+    {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
+    {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
+    {'v', handle_flag_v}, {1, handle_flag_1}};
+
+/// Parse the arguments for flags recognized by a specific string subcommand.
+static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wchar_t **argv,
+                      parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
+    wcstring short_opts = construct_short_opts(opts);
+    const wchar_t *short_options = short_opts.c_str();
+    int opt;
     wgetopter_t w;
-    for (;;) {
-        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (opt == -1) {
-            break;
-        }
-
-        switch (opt) {
-            case 0: {
-                break;
-            }
-            case 'n': {
-                flags |= ESCAPE_NO_QUOTED;
-                break;
-            }
-            case '?': {
-                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
-            }
-            default: {
-                DIE("unexpected opt");
-                break;
-            }
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        auto fn = flag_to_function.find(opt);
+        if (fn != flag_to_function.end()) {
+            int retval = fn->second(argv, parser, streams, w, opts);
+            if (retval != STATUS_CMD_OK) return retval;
+        } else if (opt == ':') {
+            string_error(streams, STRING_ERR_MISSING, cmd);
+            return STATUS_INVALID_ARGS;
+        } else if (opt == '?') {
+            string_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+            return STATUS_INVALID_ARGS;
+        } else {
+            DIE("unexpected retval from wgetopt_long");
         }
     }
 
-    int i = w.woptind;
-    if (string_args_from_stdin(streams) && argc > i) {
-        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
+    *optind = w.woptind;
+
+    // If the caller requires one or two mandatory args deal with that here.
+    if (n_req_args) {
+        opts->arg1 = string_get_arg_argv(optind, argv);
+        if (!opts->arg1) {
+            string_error(streams, STRING_ERR_MISSING, cmd);
+            return STATUS_INVALID_ARGS;
+        }
+    }
+    if (n_req_args > 1) {
+        opts->arg2 = string_get_arg_argv(optind, argv);
+        if (!opts->arg2) {
+            string_error(streams, STRING_ERR_MISSING, cmd);
+            return STATUS_INVALID_ARGS;
+        }
     }
 
-    int nesc = 0;
+    // At this point we should not have optional args and be reading args from stdin.
+    if (string_args_from_stdin(streams) && argc > *optind) {
+        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    return STATUS_CMD_OK;
+}
+
+/// Escape a string so that it can be used in a fish script without further word splitting.
+static int string_escape_script(options_t &opts, int optind, wchar_t **argv,
+                                io_streams_t &streams) {
     wcstring storage;
-    const wchar_t *arg;
-    while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
-        streams.out.append(escape(arg, flags));
+    int nesc = 0;
+    escape_flags_t flags = ESCAPE_ALL;
+    if (opts.no_quoted) flags |= ESCAPE_NO_QUOTED;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        streams.out.append(escape_string(arg, flags, STRING_STYLE_SCRIPT));
         streams.out.append(L'\n');
         nesc++;
     }
 
-    return nesc > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Escape a string so that it can be used as a URL.
+static int string_escape_url(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    escape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        streams.out.append(escape_string(arg, flags, STRING_STYLE_URL));
+        streams.out.append(L'\n');
+        nesc++;
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Escape a string so that it can be used as a fish var name.
+static int string_escape_var(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    escape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        streams.out.append(escape_string(arg, flags, STRING_STYLE_VAR));
+        streams.out.append(L'\n');
+        nesc++;
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Unescape a string encoded so it can be used in fish script.
+static int string_unescape_script(options_t &opts, int optind, wchar_t **argv,
+                                  io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    unescape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        wcstring result;
+        if (unescape_string(arg, &result, flags, STRING_STYLE_SCRIPT)) {
+            streams.out.append(result);
+            streams.out.append(L'\n');
+            nesc++;
+        }
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Unescape an encoded URL.
+static int string_unescape_url(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    unescape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        wcstring result;
+        if (unescape_string(arg, &result, flags, STRING_STYLE_URL)) {
+            streams.out.append(result);
+            streams.out.append(L'\n');
+            nesc++;
+        }
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Unescape an encoded var name.
+static int string_unescape_var(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
+    UNUSED(opts);
+    wcstring storage;
+    int nesc = 0;
+    unescape_flags_t flags = 0;
+
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        wcstring result;
+        if (unescape_string(arg, &result, flags, STRING_STYLE_VAR)) {
+            streams.out.append(result);
+            streams.out.append(L'\n');
+            nesc++;
+        }
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    options_t opts;
+    opts.no_quoted_valid = true;
+    opts.style_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    switch (opts.escape_style) {
+        case STRING_STYLE_SCRIPT: {
+            return string_escape_script(opts, optind, argv, streams);
+        }
+        case STRING_STYLE_URL: {
+            return string_escape_url(opts, optind, argv, streams);
+        }
+        case STRING_STYLE_VAR: {
+            return string_escape_var(opts, optind, argv, streams);
+        }
+    }
+
+    DIE("should never reach this statement");
+}
+
+static int string_unescape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    options_t opts;
+    opts.no_quoted_valid = true;
+    opts.style_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    switch (opts.escape_style) {
+        case STRING_STYLE_SCRIPT: {
+            return string_unescape_script(opts, optind, argv, streams);
+        }
+        case STRING_STYLE_URL: {
+            return string_unescape_url(opts, optind, argv, streams);
+        }
+        case STRING_STYLE_VAR: {
+            return string_unescape_var(opts, optind, argv, streams);
+        }
+    }
+
+    DIE("should never reach this statement");
 }
 
 static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L"q";
-    const struct woption long_options[] = {{L"quiet", no_argument, 0, 'q'}, {0, 0, 0, 0}};
+    options_t opts;
+    opts.quiet_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
 
-    bool quiet = false;
-    wgetopter_t w;
-    for (;;) {
-        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (opt == -1) {
-            break;
-        }
-
-        switch (opt) {
-            case 0: {
-                break;
-            }
-            case 'q': {
-                quiet = true;
-                break;
-            }
-            case '?': {
-                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
-            }
-            default: {
-                DIE("unexpected opt");
-                break;
-            }
-        }
-    }
-
-    int i = w.woptind;
-    const wchar_t *sep;
-    if ((sep = string_get_arg_argv(&i, argv)) == 0) {
-        string_error(streams, STRING_ERR_MISSING, argv[0]);
-        return BUILTIN_STRING_ERROR;
-    }
-
-    if (string_args_from_stdin(streams) && argc > i) {
-        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
-    }
-
+    const wchar_t *sep = opts.arg1;
     int nargs = 0;
     const wchar_t *arg;
     wcstring storage;
-    while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
-        if (!quiet) {
+    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != 0) {
+        if (!opts.quiet) {
             if (nargs > 0) {
                 streams.out.append(sep);
             }
@@ -199,86 +617,45 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
         }
         nargs++;
     }
-    if (nargs > 0 && !quiet) {
+    if (nargs > 0 && !opts.quiet) {
         streams.out.push_back(L'\n');
     }
 
-    return nargs > 1 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nargs > 1 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 static int string_length(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L"q";
-    const struct woption long_options[] = {{L"quiet", no_argument, 0, 'q'}, {0, 0, 0, 0}};
-
-    bool quiet = false;
-    wgetopter_t w;
-    for (;;) {
-        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (opt == -1) {
-            break;
-        }
-        switch (opt) {
-            case 0: {
-                break;
-            }
-            case 'q': {
-                quiet = true;
-                break;
-            }
-            case '?': {
-                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
-            }
-            default: {
-                DIE("unexpected opt");
-                break;
-            }
-        }
-    }
-
-    int i = w.woptind;
-    if (string_args_from_stdin(streams) && argc > i) {
-        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
-    }
+    options_t opts;
+    opts.quiet_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
 
     const wchar_t *arg;
     int nnonempty = 0;
     wcstring storage;
-    while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
+    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != 0) {
         size_t n = wcslen(arg);
         if (n > 0) {
             nnonempty++;
         }
-        if (!quiet) {
+        if (!opts.quiet) {
             streams.out.append(to_string(n));
             streams.out.append(L'\n');
         }
     }
 
-    return nnonempty > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nnonempty > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
-
-struct match_options_t {
-    bool all;
-    bool ignore_case;
-    bool index;
-    bool invert_match;
-    bool quiet;
-
-    match_options_t()
-        : all(false), ignore_case(false), index(false), invert_match(false), quiet(false) {}
-};
 
 class string_matcher_t {
    protected:
-    match_options_t opts;
+    options_t opts;
     io_streams_t &streams;
     int total_matched;
 
    public:
-    string_matcher_t(const match_options_t &opts_, io_streams_t &streams_)
+    string_matcher_t(const options_t &opts_, io_streams_t &streams_)
         : opts(opts_), streams(streams_), total_matched(0) {}
 
     virtual ~string_matcher_t() {}
@@ -291,21 +668,25 @@ class wildcard_matcher_t : public string_matcher_t {
     wcstring wcpattern;
 
    public:
-    wildcard_matcher_t(const wchar_t * /*argv0*/, const wchar_t *pattern,
-                       const match_options_t &opts, io_streams_t &streams)
+    wildcard_matcher_t(const wchar_t * /*argv0*/, const wchar_t *pattern, const options_t &opts,
+                       io_streams_t &streams)
         : string_matcher_t(opts, streams), wcpattern(parse_util_unescape_wildcards(pattern)) {
         if (opts.ignore_case) {
             for (size_t i = 0; i < wcpattern.length(); i++) {
                 wcpattern[i] = towlower(wcpattern[i]);
             }
         }
+        if (opts.entire && !wcpattern.empty()) {
+            if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
+            if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
+        }
     }
 
     virtual ~wildcard_matcher_t() {}
 
     bool report_matches(const wchar_t *arg) {
-        // Note: --all is a no-op for glob matching since the pattern is always matched against the
-        // entire argument.
+        // Note: --all is a no-op for glob matching since the pattern is always matched
+        // against the entire argument.
         bool match;
 
         if (opts.ignore_case) {
@@ -367,9 +748,7 @@ struct compiled_regex_t {
         }
 
         match = pcre2_match_data_create_from_pattern(code, 0);
-        if (match == 0) {
-            DIE_MEM();
-        }
+        assert(match);
     }
 
     ~compiled_regex_t() {
@@ -407,14 +786,17 @@ class pcre2_matcher_t : public string_matcher_t {
             // The output vector wasn't big enough. Should not happen.
             string_error(streams, _(L"%ls: Regular expression internal error\n"), argv0);
             return -1;
+        } else if (opts.invert_match) {
+            return 0;
         }
 
-        else if (opts.invert_match)
-            return 0;
+        if (opts.entire) {
+            streams.out.append(arg);
+            streams.out.push_back(L'\n');
+        }
 
         PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
-
-        for (int j = 0; j < pcre2_rc; j++) {
+        for (int j = (opts.entire ? 1 : 0); j < pcre2_rc; j++) {
             PCRE2_SIZE begin = ovector[2 * j];
             PCRE2_SIZE end = ovector[2 * j + 1];
 
@@ -422,8 +804,8 @@ class pcre2_matcher_t : public string_matcher_t {
                 if (opts.index) {
                     streams.out.append_format(L"%lu %lu", (unsigned long)(begin + 1),
                                               (unsigned long)(end - begin));
-                } else if (end > begin)  // may have end < begin if \K is used
-                {
+                } else if (end > begin) {
+                    // May have end < begin if \K is used.
                     streams.out.append(wcstring(&arg[begin], end - begin));
                 }
                 streams.out.push_back(L'\n');
@@ -434,7 +816,7 @@ class pcre2_matcher_t : public string_matcher_t {
     }
 
    public:
-    pcre2_matcher_t(const wchar_t *argv0_, const wchar_t *pattern, const match_options_t &opts,
+    pcre2_matcher_t(const wchar_t *argv0_, const wchar_t *pattern, const options_t &opts,
                     io_streams_t &streams)
         : string_matcher_t(opts, streams),
           argv0(argv0_),
@@ -501,116 +883,59 @@ class pcre2_matcher_t : public string_matcher_t {
 };
 
 static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L"ainvqr";
-    const struct woption long_options[] = {{L"all", no_argument, 0, 'a'},
-                                           {L"ignore-case", no_argument, 0, 'i'},
-                                           {L"index", no_argument, 0, 'n'},
-                                           {L"invert", no_argument, 0, 'v'},
-                                           {L"quiet", no_argument, 0, 'q'},
-                                           {L"regex", no_argument, 0, 'r'},
-                                           {0, 0, 0, 0}};
+    wchar_t *cmd = argv[0];
 
-    match_options_t opts;
-    bool regex = false;
-    wgetopter_t w;
-    for (;;) {
-        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
+    options_t opts;
+    opts.all_valid = true;
+    opts.entire_valid = true;
+    opts.ignore_case_valid = true;
+    opts.invert_valid = true;
+    opts.quiet_valid = true;
+    opts.regex_valid = true;
+    opts.index_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+    const wchar_t *pattern = opts.arg1;
 
-        if (opt == -1) {
-            break;
-        }
-        switch (opt) {
-            case 0: {
-                break;
-            }
-            case 'a': {
-                opts.all = true;
-                break;
-            }
-            case 'i': {
-                opts.ignore_case = true;
-                break;
-            }
-            case 'n': {
-                opts.index = true;
-                break;
-            }
-            case 'v': {
-                opts.invert_match = true;
-                break;
-            }
-            case 'q': {
-                opts.quiet = true;
-                break;
-            }
-            case 'r': {
-                regex = true;
-                break;
-            }
-            case '?': {
-                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
-            }
-            default: {
-                DIE("unexpected opt");
-                break;
-            }
-        }
-    }
-
-    int i = w.woptind;
-    const wchar_t *pattern;
-    if ((pattern = string_get_arg_argv(&i, argv)) == 0) {
-        string_error(streams, STRING_ERR_MISSING, argv[0]);
-        return BUILTIN_STRING_ERROR;
-    }
-
-    if (string_args_from_stdin(streams) && argc > i) {
-        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
+    if (opts.entire && opts.index) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--entire and --index are mutually exclusive"));
+        return STATUS_INVALID_ARGS;
     }
 
     std::unique_ptr<string_matcher_t> matcher;
-    if (regex) {
-        matcher = make_unique<pcre2_matcher_t>(argv[0], pattern, opts, streams);
+    if (opts.regex) {
+        matcher = make_unique<pcre2_matcher_t>(cmd, pattern, opts, streams);
     } else {
-        matcher = make_unique<wildcard_matcher_t>(argv[0], pattern, opts, streams);
+        matcher = make_unique<wildcard_matcher_t>(cmd, pattern, opts, streams);
     }
 
     const wchar_t *arg;
     wcstring storage;
-    while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
+    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != 0) {
         if (!matcher->report_matches(arg)) {
-            return BUILTIN_STRING_ERROR;
+            return STATUS_INVALID_ARGS;
         }
     }
 
-    int rc = matcher->match_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
-    return rc;
+    return matcher->match_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
-
-struct replace_options_t {
-    bool all;
-    bool ignore_case;
-    bool quiet;
-
-    replace_options_t() : all(false), ignore_case(false), quiet(false) {}
-};
 
 class string_replacer_t {
    protected:
     const wchar_t *argv0;
-    replace_options_t opts;
+    options_t opts;
     int total_replaced;
     io_streams_t &streams;
 
    public:
-    string_replacer_t(const wchar_t *argv0_, const replace_options_t &opts_, io_streams_t &streams_)
+    string_replacer_t(const wchar_t *argv0_, const options_t &opts_, io_streams_t &streams_)
         : argv0(argv0_), opts(opts_), total_replaced(0), streams(streams_) {}
 
     virtual ~string_replacer_t() {}
-    virtual bool replace_matches(const wchar_t *arg) = 0;
     int replace_count() { return total_replaced; }
+    virtual bool replace_matches(const wchar_t *arg) = 0;
 };
 
 class literal_replacer_t : public string_replacer_t {
@@ -620,65 +945,38 @@ class literal_replacer_t : public string_replacer_t {
 
    public:
     literal_replacer_t(const wchar_t *argv0, const wchar_t *pattern_, const wchar_t *replacement_,
-                       const replace_options_t &opts, io_streams_t &streams)
+                       const options_t &opts, io_streams_t &streams)
         : string_replacer_t(argv0, opts, streams),
           pattern(pattern_),
           replacement(replacement_),
           patlen(wcslen(pattern)) {}
 
     virtual ~literal_replacer_t() {}
-
-    bool replace_matches(const wchar_t *arg) {
-        wcstring result;
-        if (patlen == 0) {
-            result = arg;
-        } else {
-            int replaced = 0;
-            const wchar_t *cur = arg;
-            while (*cur != L'\0') {
-                if ((opts.all || replaced == 0) &&
-                    (opts.ignore_case ? wcsncasecmp(cur, pattern, patlen)
-                                      : wcsncmp(cur, pattern, patlen)) == 0) {
-                    result += replacement;
-                    cur += patlen;
-                    replaced++;
-                    total_replaced++;
-                } else {
-                    result += *cur;
-                    cur++;
-                }
-            }
-        }
-        if (!opts.quiet) {
-            streams.out.append(result);
-            streams.out.append(L'\n');
-        }
-        return true;
-    }
+    bool replace_matches(const wchar_t *arg);
 };
+
+static wcstring interpret_escapes(const wchar_t *orig) {
+    wcstring result;
+
+    while (*orig != L'\0') {
+        if (*orig == L'\\') {
+            orig += read_unquoted_escape(orig, &result, true, false);
+        } else {
+            result += *orig;
+            orig++;
+        }
+    }
+
+    return result;
+}
 
 class regex_replacer_t : public string_replacer_t {
     compiled_regex_t regex;
     wcstring replacement;
 
-    static wcstring interpret_escapes(const wchar_t *orig) {
-        wcstring result;
-
-        while (*orig != L'\0') {
-            if (*orig == L'\\') {
-                orig += read_unquoted_escape(orig, &result, true, false);
-            } else {
-                result += *orig;
-                orig++;
-            }
-        }
-
-        return result;
-    }
-
    public:
     regex_replacer_t(const wchar_t *argv0, const wchar_t *pattern, const wchar_t *replacement_,
-                     const replace_options_t &opts, io_streams_t &streams)
+                     const options_t &opts, io_streams_t &streams)
         : string_replacer_t(argv0, opts, streams),
           regex(argv0, pattern, opts.ignore_case, streams),
           replacement(interpret_escapes(replacement_)) {}
@@ -688,11 +986,41 @@ class regex_replacer_t : public string_replacer_t {
 
 /// A return value of true means all is well (even if no replacements were performed), false
 /// indicates an unrecoverable error.
-bool regex_replacer_t::replace_matches(const wchar_t *arg) {
-    if (regex.code == 0) {
-        // pcre2_compile() failed
-        return false;
+bool literal_replacer_t::replace_matches(const wchar_t *arg) {
+    wcstring result;
+    bool replacement_occurred = false;
+
+    if (patlen == 0) {
+        replacement_occurred = true;
+        result = arg;
+    } else {
+        auto &cmp_func = opts.ignore_case ? wcsncasecmp : wcsncmp;
+        const wchar_t *cur = arg;
+        while (*cur != L'\0') {
+            if ((opts.all || !replacement_occurred) && cmp_func(cur, pattern, patlen) == 0) {
+                result += replacement;
+                cur += patlen;
+                replacement_occurred = true;
+                total_replaced++;
+            } else {
+                result += *cur;
+                cur++;
+            }
+        }
     }
+
+    if (!opts.quiet && (!opts.filter || replacement_occurred)) {
+        streams.out.append(result);
+        streams.out.append(L'\n');
+    }
+
+    return true;
+}
+
+/// A return value of true means all is well (even if no replacements were performed), false
+/// indicates an unrecoverable error.
+bool regex_replacer_t::replace_matches(const wchar_t *arg) {
+    if (!regex.code) return false;  // pcre2_compile() failed
 
     uint32_t options = PCRE2_SUBSTITUTE_OVERFLOW_LENGTH | PCRE2_SUBSTITUTE_EXTENDED |
                        (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
@@ -703,9 +1031,8 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
 
     bool done = false;
     while (!done) {
-        if (output == NULL) {
-            DIE_MEM();
-        }
+        assert(output);
+
         PCRE2_SIZE outlen = bufsize;
         pcre2_rc = pcre2_substitute(regex.code, PCRE2_SPTR(arg), arglen,
                                     0,  // start offset
@@ -729,7 +1056,8 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
                      pcre2_strerror(pcre2_rc).c_str());
         rc = false;
     } else {
-        if (!opts.quiet) {
+        bool replacement_occurred = pcre2_rc > 0;
+        if (!opts.quiet && (!opts.filter || replacement_occurred)) {
             streams.out.append(output);
             streams.out.append(L'\n');
         }
@@ -741,207 +1069,72 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
 }
 
 static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L"aiqr";
-    const struct woption long_options[] = {{L"all", no_argument, 0, 'a'},
-                                           {L"ignore-case", no_argument, 0, 'i'},
-                                           {L"quiet", no_argument, 0, 'q'},
-                                           {L"regex", no_argument, 0, 'r'},
-                                           {0, 0, 0, 0}};
+    options_t opts;
+    opts.all_valid = true;
+    opts.filter_valid = true;
+    opts.ignore_case_valid = true;
+    opts.quiet_valid = true;
+    opts.regex_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 2, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
 
-    replace_options_t opts;
-    bool regex = false;
-    wgetopter_t w;
-    for (;;) {
-        int opt = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (opt == -1) {
-            break;
-        }
-        switch (opt) {
-            case 0: {
-                break;
-            }
-            case 'a': {
-                opts.all = true;
-                break;
-            }
-            case 'i': {
-                opts.ignore_case = true;
-                break;
-            }
-            case 'q': {
-                opts.quiet = true;
-                break;
-            }
-            case 'r': {
-                regex = true;
-                break;
-            }
-            case '?': {
-                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
-            }
-            default: {
-                DIE("unexpected opt");
-                break;
-            }
-        }
-    }
-
-    int i = w.woptind;
-    const wchar_t *pattern, *replacement;
-    if ((pattern = string_get_arg_argv(&i, argv)) == 0) {
-        string_error(streams, STRING_ERR_MISSING, argv[0]);
-        return BUILTIN_STRING_ERROR;
-    }
-    if ((replacement = string_get_arg_argv(&i, argv)) == 0) {
-        string_error(streams, STRING_ERR_MISSING, argv[0]);
-        return BUILTIN_STRING_ERROR;
-    }
-
-    if (string_args_from_stdin(streams) && argc > i) {
-        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
-    }
+    const wchar_t *pattern = opts.arg1;
+    const wchar_t *replacement = opts.arg2;
 
     std::unique_ptr<string_replacer_t> replacer;
-    if (regex) {
+    if (opts.regex) {
         replacer = make_unique<regex_replacer_t>(argv[0], pattern, replacement, opts, streams);
     } else {
         replacer = make_unique<literal_replacer_t>(argv[0], pattern, replacement, opts, streams);
     }
 
-    const wchar_t *arg;
     wcstring storage;
-    while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
-        if (!replacer->replace_matches(arg)) {
-            return BUILTIN_STRING_ERROR;
-        }
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        if (!replacer->replace_matches(arg)) return STATUS_INVALID_ARGS;
     }
 
-    int rc = replacer->replace_count() > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
-    return rc;
-}
-
-/// Given iterators into a string (forward or reverse), splits the haystack iterators
-/// about the needle sequence, up to max times. Inserts splits into the output array.
-/// If the iterators are forward, this does the normal thing.
-/// If the iterators are backward, this returns reversed strings, in reversed order!
-/// If the needle is empty, split on individual elements (characters).
-template <typename ITER>
-void split_about(ITER haystack_start, ITER haystack_end, ITER needle_start, ITER needle_end,
-                 wcstring_list_t *output, long max) {
-    long remaining = max;
-    ITER haystack_cursor = haystack_start;
-    while (remaining > 0 && haystack_cursor != haystack_end) {
-        ITER split_point;
-        if (needle_start == needle_end) {  // empty needle, we split on individual elements
-            split_point = haystack_cursor + 1;
-        } else {
-            split_point = std::search(haystack_cursor, haystack_end, needle_start, needle_end);
-        }
-        if (split_point == haystack_end) {  // not found
-            break;
-        }
-        output->push_back(wcstring(haystack_cursor, split_point));
-        remaining--;
-        // Need to skip over the needle for the next search note that the needle may be empty.
-        haystack_cursor = split_point + std::distance(needle_start, needle_end);
-    }
-    // Trailing component, possibly empty.
-    output->push_back(wcstring(haystack_cursor, haystack_end));
+    return replacer->replace_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L":m:qr";
-    const struct woption long_options[] = {{L"max", required_argument, 0, 'm'},
-                                           {L"quiet", no_argument, 0, 'q'},
-                                           {L"right", no_argument, 0, 'r'},
-                                           {0, 0, 0, 0}};
+    options_t opts;
+    opts.quiet_valid = true;
+    opts.right_valid = true;
+    opts.max_valid = true;
+    opts.max = LONG_MAX;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
 
-    long max = LONG_MAX;
-    bool quiet = false;
-    bool right = false;
-    wgetopter_t w;
-    for (;;) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (c == -1) {
-            break;
-        }
-        switch (c) {
-            case 0: {
-                break;
-            }
-            case 'm': {
-                max = fish_wcstol(w.woptarg);
-                if (errno) {
-                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
-                }
-                break;
-            }
-            case 'q': {
-                quiet = true;
-                break;
-            }
-            case 'r': {
-                right = true;
-                break;
-            }
-            case ':': {
-                string_error(streams, STRING_ERR_MISSING, argv[0]);
-                return BUILTIN_STRING_ERROR;
-            }
-            case '?': {
-                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
-            }
-            default: {
-                DIE("unexpected opt");
-                break;
-            }
-        }
-    }
-
-    int i = w.woptind;
-    const wchar_t *sep;
-    if ((sep = string_get_arg_argv(&i, argv)) == NULL) {
-        string_error(streams, STRING_ERR_MISSING, argv[0]);
-        return BUILTIN_STRING_ERROR;
-    }
+    const wchar_t *sep = opts.arg1;
     const wchar_t *sep_end = sep + wcslen(sep);
-
-    if (string_args_from_stdin(streams) && argc > i) {
-        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
-    }
 
     wcstring_list_t splits;
     size_t arg_count = 0;
     wcstring storage;
     const wchar_t *arg;
-    while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
+    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != 0) {
         const wchar_t *arg_end = arg + wcslen(arg);
-        if (right) {
+        if (opts.right) {
             typedef std::reverse_iterator<const wchar_t *> reverser;
             split_about(reverser(arg_end), reverser(arg), reverser(sep_end), reverser(sep), &splits,
-                        max);
+                        opts.max);
         } else {
-            split_about(arg, arg_end, sep, sep_end, &splits, max);
+            split_about(arg, arg_end, sep, sep_end, &splits, opts.max);
         }
         arg_count++;
     }
 
     // If we are from the right, split_about gave us reversed strings, in reversed order!
-    if (right) {
+    if (opts.right) {
         for (size_t j = 0; j < splits.size(); j++) {
             std::reverse(splits[j].begin(), splits[j].end());
         }
         std::reverse(splits.begin(), splits.end());
     }
 
-    if (!quiet) {
+    if (!opts.quiet) {
         for (wcstring_list_t::const_iterator si = splits.begin(); si != splits.end(); ++si) {
             streams.out.append(*si);
             streams.out.append(L'\n');
@@ -949,177 +1142,119 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     }
 
     // We split something if we have more split values than args.
-    return splits.size() > arg_count ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return splits.size() > arg_count ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+// Helper function to abstract the repeat logic from string_repeat
+// returns the to_repeat string, repeated count times.
+static wcstring wcsrepeat(const wcstring &to_repeat, size_t count) {
+    wcstring repeated;
+    repeated.reserve(to_repeat.length() * count);
+
+    for (size_t j = 0; j < count; j++) {
+        repeated += to_repeat;
+    }
+
+    return repeated;
+}
+
+// Helper function to abstract the repeat until logic from string_repeat
+// returns the to_repeat string, repeated until max char has been reached.
+static wcstring wcsrepeat_until(const wcstring &to_repeat, size_t max) {
+    size_t count = max / to_repeat.length();
+    size_t mod = max % to_repeat.length();
+
+    return wcsrepeat(to_repeat, count) + to_repeat.substr(0, mod);
+}
+
+static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    options_t opts;
+    opts.count_valid = true;
+    opts.max_valid = true;
+    opts.quiet_valid = true;
+    opts.no_newline_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    const wchar_t *to_repeat;
+    wcstring storage;
+    bool is_empty = true;
+
+    if ((to_repeat = string_get_arg(&optind, argv, &storage, streams)) != NULL && *to_repeat) {
+        const wcstring word(to_repeat);
+        const bool limit_repeat =
+            (opts.max > 0 && word.length() * opts.count > (size_t)opts.max) || !opts.count;
+        const wcstring repeated =
+            limit_repeat ? wcsrepeat_until(word, opts.max) : wcsrepeat(word, opts.count);
+        is_empty = repeated.empty();
+
+        if (!opts.quiet && !is_empty) {
+            streams.out.append(repeated);
+            if (!opts.no_newline) streams.out.append(L"\n");
+        }
+    }
+
+    return !is_empty ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L":l:qs:";
-    const struct woption long_options[] = {{L"length", required_argument, 0, 'l'},
-                                           {L"quiet", no_argument, 0, 'q'},
-                                           {L"start", required_argument, 0, 's'},
-                                           {0, 0, 0, 0}};
-
-    long start = 0;
-    long length = -1;
-    bool quiet = false;
-    wgetopter_t w;
-
-    for (;;) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (c == -1) {
-            break;
-        }
-        switch (c) {
-            case 0: {
-                break;
-            }
-            case 'l': {
-                length = fish_wcstol(w.woptarg);
-                if (length < 0 || errno == ERANGE) {
-                    string_error(streams, _(L"%ls: Invalid length value '%ls'\n"), argv[0],
-                                 w.woptarg);
-                    return BUILTIN_STRING_ERROR;
-                } else if (errno) {
-                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
-                }
-                break;
-            }
-            case 'q': {
-                quiet = true;
-                break;
-            }
-            case 's': {
-                start = fish_wcstol(w.woptarg);
-                if (start == 0 || start == LONG_MIN || errno == ERANGE) {
-                    string_error(streams, _(L"%ls: Invalid start value '%ls'\n"), argv[0],
-                                 w.woptarg);
-                    return BUILTIN_STRING_ERROR;
-                } else if (errno) {
-                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
-                    return BUILTIN_STRING_ERROR;
-                }
-                break;
-            }
-            case ':': {
-                string_error(streams, STRING_ERR_MISSING, argv[0]);
-                return BUILTIN_STRING_ERROR;
-            }
-            case '?': {
-                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
-            }
-            default: {
-                DIE("unexpected opt");
-                break;
-            }
-        }
-    }
-
-    int i = w.woptind;
-    if (string_args_from_stdin(streams) && argc > i) {
-        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
-    }
+    options_t opts;
+    opts.length_valid = true;
+    opts.quiet_valid = true;
+    opts.start_valid = true;
+    opts.length = -1;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
 
     int nsub = 0;
     const wchar_t *arg;
     wcstring storage;
-    while ((arg = string_get_arg(&i, argv, &storage, streams)) != NULL) {
+    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != NULL) {
         typedef wcstring::size_type size_type;
         size_type pos = 0;
         size_type count = wcstring::npos;
         wcstring s(arg);
-        if (start > 0) {
-            pos = static_cast<size_type>(start - 1);
-        } else if (start < 0) {
-            assert(start != LONG_MIN);  // checked above
-            size_type n = static_cast<size_type>(-start);
+        if (opts.start > 0) {
+            pos = static_cast<size_type>(opts.start - 1);
+        } else if (opts.start < 0) {
+            assert(opts.start != LONG_MIN);  // checked above
+            size_type n = static_cast<size_type>(-opts.start);
             pos = n > s.length() ? 0 : s.length() - n;
         }
         if (pos > s.length()) {
             pos = s.length();
         }
 
-        if (length >= 0) {
-            count = static_cast<size_type>(length);
+        if (opts.length >= 0) {
+            count = static_cast<size_type>(opts.length);
         }
 
         // Note that std::string permits count to extend past end of string.
-        if (!quiet) {
+        if (!opts.quiet) {
             streams.out.append(s.substr(pos, count));
             streams.out.append(L'\n');
         }
         nsub++;
     }
 
-    return nsub > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return nsub > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    const wchar_t *short_options = L":c:lqr";
-    const struct woption long_options[] = {{L"chars", required_argument, 0, 'c'},
-                                           {L"left", no_argument, 0, 'l'},
-                                           {L"quiet", no_argument, 0, 'q'},
-                                           {L"right", no_argument, 0, 'r'},
-                                           {0, 0, 0, 0}};
-
-    bool do_left = 0, do_right = 0;
-    bool quiet = false;
-    wcstring chars_to_trim = L" \f\n\r\t";
-    wgetopter_t w;
-    for (;;) {
-        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
-
-        if (c == -1) {
-            break;
-        }
-        switch (c) {
-            case 0: {
-                break;
-            }
-            case 'c': {
-                chars_to_trim = w.woptarg;
-                break;
-            }
-            case 'l': {
-                do_left = true;
-                break;
-            }
-            case 'q': {
-                quiet = true;
-                break;
-            }
-            case 'r': {
-                do_right = true;
-                break;
-            }
-            case ':': {
-                string_error(streams, STRING_ERR_MISSING, argv[0]);
-                return BUILTIN_STRING_ERROR;
-            }
-            case '?': {
-                string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return BUILTIN_STRING_ERROR;
-            }
-            default: {
-                DIE("unexpected opt");
-                break;
-            }
-        }
-    }
-
-    int i = w.woptind;
-    if (string_args_from_stdin(streams) && argc > i) {
-        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        return BUILTIN_STRING_ERROR;
-    }
+    options_t opts;
+    opts.chars_valid = true;
+    opts.left_valid = true;
+    opts.right_valid = true;
+    opts.quiet_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
 
     // If neither left or right is specified, we do both.
-    if (!do_left && !do_right) {
-        do_left = true;
-        do_right = true;
+    if (!opts.left && !opts.right) {
+        opts.left = opts.right = true;
     }
 
     const wchar_t *arg;
@@ -1127,28 +1262,74 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
 
     wcstring argstr;
     wcstring storage;
-    while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0) {
+    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != 0) {
         argstr = arg;
         // Begin and end are respectively the first character to keep on the left, and first
         // character to trim on the right. The length is thus end - start.
         size_t begin = 0, end = argstr.size();
-        if (do_right) {
-            size_t last_to_keep = argstr.find_last_not_of(chars_to_trim);
+        if (opts.right) {
+            size_t last_to_keep = argstr.find_last_not_of(opts.chars_to_trim);
             end = (last_to_keep == wcstring::npos) ? 0 : last_to_keep + 1;
         }
-        if (do_left) {
-            size_t first_to_keep = argstr.find_first_not_of(chars_to_trim);
+        if (opts.left) {
+            size_t first_to_keep = argstr.find_first_not_of(opts.chars_to_trim);
             begin = (first_to_keep == wcstring::npos ? end : first_to_keep);
         }
         assert(begin <= end && end <= argstr.size());
         ntrim += argstr.size() - (end - begin);
-        if (!quiet) {
+        if (!opts.quiet) {
             streams.out.append(wcstring(argstr, begin, end - begin));
             streams.out.append(L'\n');
         }
     }
 
-    return ntrim > 0 ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    return ntrim > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Implementation of `string lower`.
+static int string_lower(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    options_t opts;
+    opts.quiet_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    int n_transformed = 0;
+    wcstring storage;
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        wcstring transformed(arg);
+        std::transform(transformed.begin(), transformed.end(), transformed.begin(), std::towlower);
+        if (wcscmp(transformed.c_str(), arg)) n_transformed++;
+        if (!opts.quiet) {
+            streams.out.append(transformed);
+            streams.out.append(L'\n');
+        }
+    }
+
+    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+/// Implementation of `string upper`.
+static int string_upper(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    options_t opts;
+    opts.quiet_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    int n_transformed = 0;
+    wcstring storage;
+    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+        wcstring transformed(arg);
+        std::transform(transformed.begin(), transformed.end(), transformed.begin(), std::towupper);
+        if (wcscmp(transformed.c_str(), arg)) n_transformed++;
+        if (!opts.quiet) {
+            streams.out.append(transformed);
+            streams.out.append(L'\n');
+        }
+    }
+
+    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 static const struct string_subcommand {
@@ -1157,33 +1338,43 @@ static const struct string_subcommand {
                    wchar_t **argv);                       //!OCLINT(unused param)
 }
 
-string_subcommands[] = {
-    {L"escape", &string_escape}, {L"join", &string_join},       {L"length", &string_length},
-    {L"match", &string_match},   {L"replace", &string_replace}, {L"split", &string_split},
-    {L"sub", &string_sub},       {L"trim", &string_trim},       {0, 0}};
+string_subcommands[] = {{L"escape", &string_escape},
+                        {L"join", &string_join},
+                        {L"length", &string_length},
+                        {L"match", &string_match},
+                        {L"replace", &string_replace},
+                        {L"split", &string_split},
+                        {L"sub", &string_sub},
+                        {L"trim", &string_trim},
+                        {L"lower", &string_lower},
+                        {L"upper", &string_upper},
+                        {L"repeat", &string_repeat},
+                        {L"unescape", &string_unescape},
+                        {NULL, NULL}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     if (argc <= 1) {
-        streams.err.append_format(_(L"string: Expected subcommand\n"));
+        streams.err.append_format(BUILTIN_ERR_MISSING_SUBCMD, cmd);
         builtin_print_help(parser, streams, L"string", streams.err);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     if (wcscmp(argv[1], L"-h") == 0 || wcscmp(argv[1], L"--help") == 0) {
         builtin_print_help(parser, streams, L"string", streams.err);
-        return BUILTIN_STRING_OK;
+        return STATUS_CMD_OK;
     }
 
     const string_subcommand *subcmd = &string_subcommands[0];
     while (subcmd->name != 0 && wcscmp(subcmd->name, argv[1]) != 0) {
         subcmd++;
     }
-    if (subcmd->handler == 0) {
-        streams.err.append_format(_(L"string: Unknown subcommand '%ls'\n"), argv[1]);
+    if (!subcmd->handler) {
+        streams.err.append_format(BUILTIN_ERR_INVALID_SUBCMD, cmd, argv[1]);
         builtin_print_help(parser, streams, L"string", streams.err);
-        return BUILTIN_STRING_ERROR;
+        return STATUS_INVALID_ARGS;
     }
 
     argc--;

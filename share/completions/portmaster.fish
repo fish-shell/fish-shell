@@ -48,8 +48,7 @@ complete -c portmaster -l version --description 'display the version number El E
 # Grab items from the ports directory, max depth 2
 complete -c portmaster -f --description 'Ports Directory' -a "
 (
-        ls -d /usr/ports/(commandline -ct)*/ \
-                | sed -E -e 's#/usr/ports/##' -e 's#/+#/#' -e 's#([^/]+/[^/]+).*#\1#'
+	string match -r '(?<=/usr/ports/)[^/]*(?:/[^/]*)?' (__fish_complete_directories /usr/ports/(commandline -ct))
 )"
 
 complete -c portmaster -f --description 'Installed Package' -a "(__fish_print_packages)"

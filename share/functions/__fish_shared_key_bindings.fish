@@ -77,7 +77,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     bind $argv \el __fish_list_current_token
     bind $argv \ew 'set tok (commandline -pt); if test $tok[1]; echo; whatis $tok[1]; commandline -f repaint; end'
-    bind $argv \cl 'clear; commandline -f repaint'
+    # ncurses > 6.0 sends a "delete scrollback" sequence along with clear.
+    # This string replace removes it.
+    bind $argv \cl 'echo -n (clear | string replace \e\[3J ""); commandline -f repaint'
     bind $argv \cc __fish_cancel_commandline
     bind $argv \cu backward-kill-line
     bind $argv \cw backward-kill-path-component
@@ -103,4 +105,68 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # The [meta-e] and [meta-v] keystrokes invoke an external editor on the command buffer.
     bind \ee edit_command_buffer
     bind \ev edit_command_buffer
+
+    # Support for "bracketed paste"
+    # The way it works is that we acknowledge our support by printing
+    # \e\[?2004h
+    # then the terminal will "bracket" every paste in
+    # \e\[200~ and \e\[201~
+    # Every character in between those two will be part of the paste and should not cause a binding to execute (like \n executing commands).
+    #
+    # We enable it after every command and disable it before (in __fish_config_interactive.fish)
+    #
+    # Support for this seems to be ubiquitous - emacs enables it unconditionally (!) since 25.1 (though it only supports it since then,
+    # it seems to be the last term to gain support).
+    # TODO: Should we disable this in older emacsen?
+    #
+    # NOTE: This is more of a "security" measure than a proper feature.
+    # The better way to paste remains the `fish_clipboard_paste` function (bound to \cv by default).
+    # We don't disable highlighting here, so it will be redone after every character (which can be slow),
+    # and it doesn't handle "paste-stop" sequences in the paste (which the terminal needs to strip, but KDE konsole doesn't).
+    #
+    # See http://thejh.net/misc/website-terminal-copy-paste. The second case will not be caught in KDE konsole.
+    # Bind the starting sequence in every bind mode, even user-defined ones.
+
+    # We usually just pass the text through as-is to facilitate pasting code,
+    # but when the current token contains an unbalanced single-quote (`'`),
+    # we escape all single-quotes and backslashes, effectively turning the paste
+    # into one literal token, to facilitate pasting non-code (e.g. markdown or git commitishes)
+
+    # Exclude paste mode or there'll be an additional binding after switching between emacs and vi
+    for mode in (bind --list-modes | string match -v paste)
+        bind -M $mode -m paste \e\[200~ '__fish_start_bracketed_paste'
+    end
+    # This sequence ends paste-mode and returns to the previous mode we have saved before.
+    bind -M paste \e\[201~ '__fish_stop_bracketed_paste'
+    # In paste-mode, everything self-inserts except for the sequence to get out of it
+    bind -M paste "" self-insert
+    # Without this, a \r will overwrite the other text, rendering it invisible - which makes the exercise kinda pointless.
+    # TODO: Test this in windows (\r\n line endings)
+    bind -M paste \r "commandline -i \n"
+    bind -M paste "'" "__fish_commandline_insert_escaped \' \$__fish_paste_quoted"
+    bind -M paste \\ "__fish_commandline_insert_escaped \\\ \$__fish_paste_quoted"
+end
+
+function __fish_commandline_insert_escaped --description 'Insert the first arg escaped if a second arg is given'
+    if set -q argv[2]
+        commandline -i \\$argv[1]
+    else
+        commandline -i $argv[1]
+    end
+end
+
+function __fish_start_bracketed_paste
+    # Save the last bind mode so we can restore it.
+    set -g __fish_last_bind_mode $fish_bind_mode
+    # If the token is currently single-quoted,
+    # we escape single-quotes (and backslashes).
+    __fish_commandline_is_singlequoted
+    and set -g __fish_paste_quoted 1
+end
+
+function __fish_stop_bracketed_paste
+    # Restore the last bind mode.
+    set fish_bind_mode $__fish_last_bind_mode
+    set -e __fish_paste_quoted
+    commandline -f force-repaint
 end

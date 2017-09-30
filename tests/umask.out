@@ -1,0 +1,39 @@
+0027
+umask var = 0027
+u=rwx,g=rx,o=
+
+running umask a-r
+0777
+u=,g=,o=
+
+running umask u+x
+0677
+u=x,g=,o=
+
+running umask g+rwx,o+x
+0706
+u=,g=rwx,o=x
+
+running umask u-w,o-x
+0201
+u=rx,g=rwx,o=rw
+
+running umask a-r
+0444
+u=wx,g=wx,o=wx
+
+running umask ug-rx
+0550
+u=w,g=w,o=rwx
+
+running umask u+r,g+w,o=rw
+0351
+u=r,g=w,o=rw
+
+running umask =r,g+w,o+x,o-r
+0316
+u=r,g=rw,o=x
+
+running umask rx
+0222
+u=rx,g=rx,o=rx

@@ -23,7 +23,7 @@ set -g fish_prompt_hg_status_order added modified copied deleted untracked unmer
 function __fish_hg_prompt --description 'Write out the hg prompt'
     # If hg isn't installed, there's nothing we can do
     # Return 1 so the calling prompt can deal with it
-    if not command -s hg >/dev/null
+    if not command -sq hg
         return 1
     end
 
@@ -70,17 +70,17 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
             # Add a character for each file status if we have one
             switch $line
                 case 'A '
-                    set hg_statuses $hg_statuses added
+                    set -a hg_statuses added
                 case 'M ' ' M'
-                    set hg_statuses $hg_statuses modified
+                    set -a hg_statuses modified
                 case 'C '
-                    set hg_statuses $hg_statuses copied
+                    set -a hg_statuses copied
                 case 'D ' ' D'
-                    set hg_statuses $hg_statuses deleted
+                    set -a hg_statuses deleted
                 case '\? '
-                    set hg_statuses $hg_statuses untracked
+                    set -a hg_statuses untracked
                 case 'U*' '*U' 'DD' 'AA'
-                    set hg_statuses $hg_statuses unmerged
+                    set -a hg_statuses unmerged
             end
         end
 

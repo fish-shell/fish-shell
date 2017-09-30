@@ -2,12 +2,20 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <arpa/inet.h>  // IWYU pragma: keep
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+// We need the sys/file.h for the flock() declaration on Linux but not OS X.
+#include <sys/file.h>  // IWYU pragma: keep
+// We need the ioctl.h header so we can check if SIOCGIFHWADDR is defined by it so we know if we're
+// on a Linux system.
 #include <limits.h>
 #include <netinet/in.h>  // IWYU pragma: keep
+#include <sys/ioctl.h>   // IWYU pragma: keep
+#if !defined(__APPLE__) && !defined(__CYGWIN__)
 #include <pwd.h>
+#endif
+#include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef __CYGWIN__
@@ -17,17 +25,15 @@
 #include <sys/select.h>  // IWYU pragma: keep
 #endif
 #include <sys/stat.h>
-#include <sys/time.h>  // IWYU pragma: keep
-// We need the sys/file.h for the flock() declaration on Linux but not OS X.
-#include <sys/file.h>  // IWYU pragma: keep
-// We need the ioctl.h header so we can check if SIOCGIFHWADDR is defined by it so we know if we're
-// on a Linux system.
-#include <sys/ioctl.h>  // IWYU pragma: keep
+#include <sys/time.h>   // IWYU pragma: keep
+#include <sys/types.h>  // IWYU pragma: keep
 #include <unistd.h>
 #include <wchar.h>
+
 #include <atomic>
 #include <map>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "common.h"
@@ -48,13 +54,6 @@
 #define _BSD_SOURCE
 #include <bsd/ifaddrs.h>
 #endif  // Haiku
-
-// NAME_MAX is not defined on Solaris and suggests the use of pathconf()
-// There is no obvious sensible pathconf() for shared memory and _XPG_NAME_MAX
-// seems a reasonable choice.
-#if !defined(NAME_MAX) && defined(_XOPEN_NAME_MAX)
-#define NAME_MAX _XOPEN_NAME_MAX
-#endif
 
 /// The set command.
 #define SET_STR L"SET"
@@ -134,11 +133,11 @@ static wcstring get_runtime_path() {
         result = str2wcstring(dir);
     } else {
         const char *uname = getenv("USER");
-        if (uname == NULL) {
-            const struct passwd *pw = getpwuid(getuid());
-            uname = pw->pw_name;
+        // $USER should already have been set (in setup_path()).
+        // If it still isn't, there's something wrong.
+        if (!uname) {
+            return result;
         }
-
         // /tmp/fish.user
         std::string tmpdir = "/tmp/fish.";
         tmpdir.append(uname);
@@ -222,7 +221,7 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
     result->push_back(' ');
 
     // Append variable name like "fish_color_cwd".
-    if (wcsvarname(key_in)) {
+    if (!valid_var_name(key_in)) {
         debug(0, L"Illegal variable name: '%ls'", key_in.c_str());
         success = false;
     }
@@ -257,19 +256,12 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
 }
 
 env_universal_t::env_universal_t(const wcstring &path)
-    : explicit_vars_path(path), tried_renaming(false), last_read_file(kInvalidFileID) {
-    VOMIT_ON_FAILURE(pthread_mutex_init(&lock, NULL));
-}
+    : explicit_vars_path(path), tried_renaming(false), last_read_file(kInvalidFileID) {}
 
-env_universal_t::~env_universal_t() { pthread_mutex_destroy(&lock); }
-
-env_var_t env_universal_t::get(const wcstring &name) const {
-    env_var_t result = env_var_t::missing_var();
+maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     var_table_t::const_iterator where = vars.find(name);
-    if (where != vars.end()) {
-        result = env_var_t(where->second.val);
-    }
-    return result;
+    if (where != vars.end()) return where->second;
+    return none();
 }
 
 bool env_universal_t::get_export(const wcstring &name) const {
@@ -281,7 +273,7 @@ bool env_universal_t::get_export(const wcstring &name) const {
     return result;
 }
 
-void env_universal_t::set_internal(const wcstring &key, const wcstring &val, bool exportv,
+void env_universal_t::set_internal(const wcstring &key, wcstring_list_t vals, bool exportv,
                                    bool overwrite) {
     ASSERT_IS_LOCKED(lock);
     if (!overwrite && this->modified.find(key) != this->modified.end()) {
@@ -289,10 +281,10 @@ void env_universal_t::set_internal(const wcstring &key, const wcstring &val, boo
         return;
     }
 
-    var_entry_t *entry = &vars[key];
-    if (entry->exportv != exportv || entry->val != val) {
-        entry->val = val;
-        entry->exportv = exportv;
+    env_var_t &entry = vars[key];
+    if (entry.exportv != exportv || entry.as_list() != vals) {
+        entry.set_vals(std::move(vals));
+        entry.exportv = exportv;
 
         // If we are overwriting, then this is now modified.
         if (overwrite) {
@@ -301,9 +293,9 @@ void env_universal_t::set_internal(const wcstring &key, const wcstring &val, boo
     }
 }
 
-void env_universal_t::set(const wcstring &key, const wcstring &val, bool exportv) {
+void env_universal_t::set(const wcstring &key, wcstring_list_t vals, bool exportv) {
     scoped_lock locker(lock);
-    this->set_internal(key, val, exportv, true /* overwrite */);
+    this->set_internal(key, std::move(vals), exportv, true /* overwrite */);
 }
 
 bool env_universal_t::remove_internal(const wcstring &key) {
@@ -326,8 +318,8 @@ wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexpor
     var_table_t::const_iterator iter;
     for (iter = vars.begin(); iter != vars.end(); ++iter) {
         const wcstring &key = iter->first;
-        const var_entry_t &e = iter->second;
-        if ((e.exportv && show_exported) || (!e.exportv && show_unexported)) {
+        const env_var_t &var = iter->second;
+        if ((var.exportv && show_exported) || (!var.exportv && show_unexported)) {
             result.push_back(key);
         }
     }
@@ -337,9 +329,7 @@ wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexpor
 // Given a variable table, generate callbacks representing the difference between our vars and the
 // new vars.
 void env_universal_t::generate_callbacks(const var_table_t &new_vars,
-                                         callback_data_list_t *callbacks) const {
-    assert(callbacks != NULL);
-
+                                         callback_data_list_t &callbacks) const {
     // Construct callbacks for erased values.
     for (var_table_t::const_iterator iter = this->vars.begin(); iter != this->vars.end(); ++iter) {
         const wcstring &key = iter->first;
@@ -351,7 +341,7 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
 
         // If the value is not present in new_vars, it has been erased.
         if (new_vars.find(key) == new_vars.end()) {
-            callbacks->push_back(callback_data_t(ERASE, key, L""));
+            callbacks.push_back(callback_data_t(ERASE, key, L""));
         }
     }
 
@@ -365,41 +355,38 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
         }
 
         // See if the value has changed.
-        const var_entry_t &new_entry = iter->second;
+        const env_var_t &new_entry = iter->second;
         var_table_t::const_iterator existing = this->vars.find(key);
         if (existing == this->vars.end() || existing->second.exportv != new_entry.exportv ||
-            existing->second.val != new_entry.val) {
+            existing->second != new_entry) {
             // Value has changed.
-            callbacks->push_back(
-                callback_data_t(new_entry.exportv ? SET_EXPORT : SET, key, new_entry.val));
+            callbacks.push_back(
+                callback_data_t(new_entry.exportv ? SET_EXPORT : SET, key, new_entry.as_string()));
         }
     }
 }
 
-void env_universal_t::acquire_variables(var_table_t *vars_to_acquire) {
+void env_universal_t::acquire_variables(var_table_t &vars_to_acquire) {
     // Copy modified values from existing vars to vars_to_acquire.
-    for (std::set<wcstring>::iterator iter = this->modified.begin(); iter != this->modified.end();
-         ++iter) {
-        const wcstring &key = *iter;
+    for (const auto &key : this->modified) {
         var_table_t::iterator src_iter = this->vars.find(key);
         if (src_iter == this->vars.end()) {
             /* The value has been deleted. */
-            vars_to_acquire->erase(key);
+            vars_to_acquire.erase(key);
         } else {
             // The value has been modified. Copy it over. Note we can destructively modify the
             // source entry in vars since we are about to get rid of this->vars entirely.
-            var_entry_t &src = src_iter->second;
-            var_entry_t &dst = (*vars_to_acquire)[key];
-            dst.val = std::move(src.val);
-            dst.exportv = src.exportv;
+            env_var_t &src = src_iter->second;
+            env_var_t &dst = vars_to_acquire[key];
+            dst = src;
         }
     }
 
     // We have constructed all the callbacks and updated vars_to_acquire. Acquire it!
-    this->vars = std::move(*vars_to_acquire);
+    this->vars = std::move(vars_to_acquire);
 }
 
-void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks) {
+void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
     ASSERT_IS_LOCKED(lock);
     assert(fd >= 0);
     // Get the dev / inode.
@@ -411,17 +398,15 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks) {
         var_table_t new_vars = this->read_message_internal(fd);
 
         // Announce changes.
-        if (callbacks != NULL) {
-            this->generate_callbacks(new_vars, callbacks);
-        }
+        this->generate_callbacks(new_vars, callbacks);
 
         // Acquire the new variables.
-        this->acquire_variables(&new_vars);
+        this->acquire_variables(new_vars);
         last_read_file = current_file;
     }
 }
 
-bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t *callbacks) {
+bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t &callbacks) {
     ASSERT_IS_LOCKED(lock);
 
     // Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids
@@ -462,8 +447,9 @@ bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
         // Append the entry. Note that append_file_entry may fail, but that only affects one
         // variable; soldier on.
         const wcstring &key = iter->first;
-        const var_entry_t &entry = iter->second;
-        append_file_entry(entry.exportv ? SET_EXPORT : SET, key, entry.val, &contents, &storage);
+        const env_var_t &var = iter->second;
+        append_file_entry(var.exportv ? SET_EXPORT : SET, key, var.as_string(), &contents,
+                          &storage);
 
         // Go to next.
         ++iter;
@@ -498,12 +484,11 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
     return ret == 0;
 }
 
-bool env_universal_t::load() {
-    scoped_lock locker(lock);
-    callback_data_list_t callbacks;
+bool env_universal_t::load(callback_data_list_t &callbacks) {
     const wcstring vars_path =
         explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
-    bool success = load_from_path(vars_path, &callbacks);
+    scoped_lock locker(lock);
+    bool success = load_from_path(vars_path, callbacks);
     if (!success && !tried_renaming && errno == ENOENT) {
         // We failed to load, because the file was not found. Older fish used the hostname only. Try
         // moving the filename based on the hostname into place; if that succeeds try again.
@@ -514,10 +499,11 @@ bool env_universal_t::load() {
             const wcstring hostname_path = wdirname(vars_path) + L'/' + hostname_id;
             if (0 == wrename(hostname_path, vars_path)) {
                 // We renamed - try again.
-                success = this->load();
+                success = this->load(callbacks);
             }
         }
     }
+
     return success;
 }
 
@@ -533,7 +519,7 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
     const wcstring tmp_name_template = directory + L"/fishd.tmp.XXXXXX";
 
     for (size_t attempt = 0; attempt < 10 && !success; attempt++) {
-        char *narrow_str = wcs2str(tmp_name_template.c_str());
+        char *narrow_str = wcs2str(tmp_name_template);
         int result_fd = fish_mkstemp_cloexec(narrow_str);
         saved_errno = errno;
         success = result_fd != -1;
@@ -636,7 +622,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
 
 // Returns true if modified variables were written, false if not. (There may still be variable
 // changes due to other processes on a false return).
-bool env_universal_t::sync(callback_data_list_t *callbacks) {
+bool env_universal_t::sync(callback_data_list_t &callbacks) {
     debug(5, L"universal log sync");
     scoped_lock locker(lock);
     // Our saving strategy:
@@ -668,7 +654,7 @@ bool env_universal_t::sync(callback_data_list_t *callbacks) {
     // instances of fish will not be able to obtain it. This seems to be a greater risk than that of
     // data loss on lockless NFS. Users who put their home directory on lockless NFS are playing
     // with fire anyways.
-    const wcstring &vars_path =
+    const wcstring vars_path =
         explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
 
     if (vars_path.empty()) {
@@ -843,9 +829,9 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t
 
             wcstring val;
             if (unescape_string(tmp + 1, &val, 0)) {
-                var_entry_t &entry = (*vars)[key];
+                env_var_t &entry = (*vars)[key];
                 entry.exportv = exportv;
-                entry.val = std::move(val);  // acquire the value
+                entry.set_vals(decode_serialized(val));
             }
         } else {
             debug(1, PARSE_ERR, msg);
@@ -1207,7 +1193,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         // would cause us to hang!
         size_t read_amt = 64 * 1024;
         void *buff = malloc(read_amt);
-        read_ignore(this->pipe_fd, buff, read_amt);
+        ignore_result(read(this->pipe_fd, buff, read_amt));
         free(buff);
     }
 
@@ -1306,7 +1292,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
             while (this->readback_amount > 0) {
                 char buff[64];
                 size_t amt_to_read = mini(this->readback_amount, sizeof buff);
-                read_ignore(this->pipe_fd, buff, amt_to_read);
+                ignore_result(read(this->pipe_fd, buff, amt_to_read));
                 this->readback_amount -= amt_to_read;
             }
             assert(this->readback_amount == 0);
@@ -1375,11 +1361,9 @@ std::unique_ptr<universal_notifier_t> universal_notifier_t::new_notifier_for_str
         case strategy_named_pipe: {
             return make_unique<universal_notifier_named_pipe_t>(test_path);
         }
-        default: {
-            debug(0, "Unsupported universal notifier strategy %d\n", strat);
-            return NULL;
-        }
     }
+    DIE("should never reach this statement");
+    return NULL;
 }
 
 // Default implementations.

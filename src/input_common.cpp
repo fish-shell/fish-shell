@@ -4,10 +4,6 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-#include <deque>
-#include <list>
-#include <queue>
-#include <utility>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -16,7 +12,11 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <wchar.h>
+
+#include <deque>
+#include <list>
 #include <memory>
+#include <type_traits>
 
 #include "common.h"
 #include "env.h"
@@ -58,10 +58,7 @@ static wint_t lookahead_front(void) { return lookahead_list.front(); }
 /// Callback function for handling interrupts on reading.
 static int (*interrupt_handler)();
 
-void input_common_init(int (*ih)()) {
-    interrupt_handler = ih;
-    update_wait_on_escape_ms();
-}
+void input_common_init(int (*ih)()) { interrupt_handler = ih; }
 
 void input_common_destroy() {}
 
@@ -161,18 +158,18 @@ static wint_t readb() {
 // Update the wait_on_escape_ms value in response to the fish_escape_delay_ms user variable being
 // set.
 void update_wait_on_escape_ms() {
-    env_var_t escape_time_ms = env_get_string(L"fish_escape_delay_ms");
+    auto escape_time_ms = env_get(L"fish_escape_delay_ms");
     if (escape_time_ms.missing_or_empty()) {
         wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
         return;
     }
 
-    long tmp = fish_wcstol(escape_time_ms.c_str());
+    long tmp = fish_wcstol(escape_time_ms->as_string().c_str());
     if (errno || tmp < 10 || tmp >= 5000) {
         fwprintf(stderr,
                  L"ignoring fish_escape_delay_ms: value '%ls' "
                  L"is not an integer or is < 10 or >= 5000 ms\n",
-                 escape_time_ms.c_str());
+                 escape_time_ms->as_string().c_str());
     } else {
         wait_on_escape_ms = (int)tmp;
     }

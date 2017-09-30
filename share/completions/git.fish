@@ -18,6 +18,14 @@ function __fish_git_recent_commits
     | string replace -r '(.{73}).+' '$1…'
 end
 
+function __fish_git_local_branches
+    command git branch | string trim -c ' *'
+end
+
+function __fish_git_remote_branches
+    command git branch --remote | string trim -c ' *'
+end
+
 function __fish_git_branches
     # In some cases, git can end up on no branch - e.g. with a detached head
     # This will result in output like `* (no branch)` or a localized `* (HEAD detached at SHA)`
@@ -63,7 +71,7 @@ function __fish_git_modified_files
     set -l root (command git rev-parse --show-toplevel ^/dev/null)
     # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
     # This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
-    string replace -- "$PWD/" "" "$root/"(command git diff --name-only ^/dev/null) | string replace "$root/" ":/"
+    string replace -- "$PWD/" "" "$root/"(command git diff --name-only $argv ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_staged_files
@@ -130,6 +138,28 @@ function __fish_git_needs_command
     return 1
 end
 
+
+# HACK: Aliases
+# Git allows aliases, so we need to see what command the current command-token corresponds to
+# (so we can complete e.g. `lg` like `log`).
+# Checking `git config` for a lot of aliases can be quite slow if it is called
+# for every possible command.
+# Ideally, we'd `complete --wraps` this, but that is not currently possible, as is
+# using `complete -C` like
+# complete -c git -n '__fish_git_using_command lg' -a '(complete -C"git log ")'
+#
+# So instead, we store the aliases in global variables, named after the alias, containing the command.
+# This is because alias:command is an n:1 mapping (an alias can only have one corresponding command,
+#                                                  but a command can be aliased multiple times)
+git config -z --get-regexp 'alias\..*' | while read -lz alias command _
+    # Git aliases can contain chars that variable names can't - escape them.
+    if test (count $command) -ne 1
+        printf (_ "Warning: alias '%s' has more than one command: '%s'") $alias "$command" >&2
+    end
+    set alias (string replace 'alias.' '' -- $alias | string escape --style=var)
+    set -g __fish_git_alias_$alias $command
+end
+
 function __fish_git_using_command
     set -l cmd (__fish_git_needs_command)
     test -z "$cmd"
@@ -137,9 +167,10 @@ function __fish_git_using_command
     contains -- $cmd $argv
     and return 0
 
-    # aliased command
-    set -l aliased (command git config --get "alias.$cmd" ^/dev/null | string split " ")
-    contains -- "$aliased[1]" $argv
+    # Check aliases.
+    set -l varname __fish_git_alias_(string escape --style=var -- $cmd)
+    set -q $varname
+    and contains -- $$varname $argv
     and return 0
     return 1
 end
@@ -339,13 +370,16 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_add_files)'
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command' -a checkout -d 'Checkout and switch to a branch'
-complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_branches)' --description 'Branch'
-complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' --description 'Head'
-complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
-complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' --description 'Tag'
-complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_local_branches)' --description 'Local Branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_remote_branches)' --description 'Remote Branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' --description 'Head'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' --description 'Tag'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
+complete -f -c git -n '__fish_git_using_command checkout' -l theirs -d 'Keep staged changes'
+complete -f -c git -n '__fish_git_using_command checkout' -l ours -d 'Keep unmerged changes'
 # TODO options
 
 ### apply
@@ -404,7 +438,7 @@ complete -c git -n '__fish_git_needs_command' -a commit -d 'Record changes to th
 complete -c git -n '__fish_git_using_command commit' -l amend -d 'Amend the log message of the last commit'
 complete -f -c git -n '__fish_git_using_command commit' -a '(__fish_git_modified_files)'
 complete -f -c git -n '__fish_git_using_command commit' -l fixup -d 'Fixup commit to be used with rebase --autosquash'
-complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup' -a '(__fish_git_recent_commits)'
+complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup' -k -a '(__fish_git_recent_commits)'
 # TODO options
 
 ### diff
@@ -723,6 +757,7 @@ complete -f -c git -n '__fish_git_using_command push' -l tags -d 'Push all refs 
 complete -f -c git -n '__fish_git_using_command push' -s n -l dry-run -d 'Do everything except actually send the updates'
 complete -f -c git -n '__fish_git_using_command push' -l porcelain -d 'Produce machine-readable output'
 complete -f -c git -n '__fish_git_using_command push' -s f -l force -d 'Force update of remote refs'
+complete -f -c git -n '__fish_git_using_command push' -s f -l force-with-lease -d 'Force update of remote refs, stopping if other\'s changes would be overwritten'
 complete -f -c git -n '__fish_git_using_command push' -s u -l set-upstream -d 'Add upstream (tracking) reference'
 complete -f -c git -n '__fish_git_using_command push' -s q -l quiet -d 'Be quiet'
 complete -f -c git -n '__fish_git_using_command push' -s v -l verbose -d 'Be verbose'
@@ -759,6 +794,8 @@ complete -c git -n '__fish_git_needs_command' -a reset -d 'Reset current HEAD to
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
 complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_staged_files)' -d 'File'
+# reset changes the index, so we need to compare that to the commit.
+complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_modified_files --cached)' -d 'File'
 complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_reflog)' -d 'Reflog'
 # TODO options
 

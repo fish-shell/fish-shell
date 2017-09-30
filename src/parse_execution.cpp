@@ -8,7 +8,6 @@
 // for the execution to finish to see them.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -21,9 +20,11 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "builtin.h"
+#include "builtin_function.h"
 #include "common.h"
 #include "complete.h"
 #include "env.h"
@@ -32,6 +33,7 @@
 #include "expand.h"
 #include "function.h"
 #include "io.h"
+#include "maybe.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
 #include "parse_tree.h"
@@ -302,7 +304,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
         } else if (else_clause->child_count == 0) {
             // 'if' condition failed, no else clause, return 0, we're done.
             job_list_to_execute = NULL;
-            proc_set_last_status(STATUS_BUILTIN_OK);
+            proc_set_last_status(STATUS_CMD_OK);
             break;
         } else {
             // We have an 'else continuation' (either else-if or else).
@@ -325,7 +327,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
         run_job_list(*job_list_to_execute, ib);
     } else {
         // No job list means no sucessful conditions, so return 0 (issue #1443).
-        proc_set_last_status(STATUS_BUILTIN_OK);
+        proc_set_last_status(STATUS_CMD_OK);
     }
 
     // It's possible there's a last-minute cancellation (issue #1297).
@@ -387,14 +389,13 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     const wcstring contents_str =
         wcstring(this->src, contents_start, contents_end - contents_start);
     int definition_line_offset = this->line_offset_of_character_at_offset(contents_start);
-    wcstring error_str;
-    io_streams_t streams;
-    int err = builtin_function(*parser, streams, argument_list, contents_str,
-                               definition_line_offset, &error_str);
+    io_streams_t streams(0);  // no limit on the amount of output from builtin_function()
+    int err =
+        builtin_function(*parser, streams, argument_list, contents_str, definition_line_offset);
     proc_set_last_status(err);
 
-    if (!error_str.empty()) {
-        this->report_error(header, L"%ls", error_str.c_str());
+    if (!streams.err.empty()) {
+        this->report_error(header, L"%ls", streams.err.buffer().c_str());
         result = parse_execution_errored;
     }
 
@@ -441,6 +442,15 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(
     return ret;
 }
 
+/// Return true if the current execution context is within a function block, else false.
+bool parse_execution_context_t::is_function_context() const {
+    const block_t *current = parser->block_at_index(0);
+    const block_t *parent = parser->block_at_index(1);
+    bool is_within_function_call =
+        (current && parent && current->type() == TOP && parent->type() == FUNCTION_CALL);
+    return is_within_function_call;
+}
+
 parse_execution_result_t parse_execution_context_t::run_for_statement(
     const parse_node_t &header, const parse_node_t &block_contents) {
     assert(header.type == symbol_for_header);
@@ -462,6 +472,17 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         return ret;
     }
 
+    auto var = env_get(for_var_name, ENV_LOCAL);
+    if (!var && !is_function_context()) var = env_get(for_var_name, ENV_DEFAULT);
+    if (!var || var->read_only()) {
+        int retval = env_set_empty(for_var_name, ENV_LOCAL | ENV_USER);
+        if (retval != ENV_OK) {
+            report_error(var_name_node, L"You cannot use read-only variable '%ls' in a for loop",
+                         for_var_name.c_str());
+            return parse_execution_errored;
+        }
+    }
+
     for_block_t *fb = parser->push_block<for_block_t>();
 
     // Now drive the for loop.
@@ -473,9 +494,9 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         }
 
         const wcstring &val = argument_sequence.at(i);
-        env_set(for_var_name, val.c_str(), ENV_LOCAL);
-        fb->loop_status = LOOP_NORMAL;
+        int retval = env_set_one(for_var_name, ENV_DEFAULT | ENV_USER, val);
 
+        fb->loop_status = LOOP_NORMAL;
         this->run_job_list(block_contents, fb);
 
         if (this->cancellation_reason(fb) == execution_cancellation_loop_control) {
@@ -491,7 +512,6 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
     }
 
     parser->pop_block(fb);
-
     return ret;
 }
 
@@ -689,7 +709,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(
 
         // Get a backtrace.
         wcstring backtrace_and_desc;
-        parser->get_backtrace(src, error_list, &backtrace_and_desc);
+        parser->get_backtrace(src, error_list, backtrace_and_desc);
 
         // Print it.
         if (!should_suppress_stderr_for_tests()) {
@@ -709,25 +729,26 @@ parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_er
 
 // Given a command string that might contain fish special tokens return a string without those
 // tokens.
-static wcstring reconstruct_orig_cmd(wcstring cmd_str) {
-    // TODO(krader1961): Figure out what VARIABLE_EXPAND means in this context. After looking at the
-    // code and doing various tests I couldn't figure out why that token would be present when this
-    // code is run. I was therefore unable to determine how to substitute its presence in the error
-    // message.
-    wcstring orig_cmd = cmd_str;
+//
+// TODO(krader1961): Figure out what VARIABLE_EXPAND means in this context. After looking at the
+// code and doing various tests I couldn't figure out why that token would be present when this
+// code is run. I was therefore unable to determine how to substitute its presence in the error
+// message.
+static wcstring reconstruct_orig_str(wcstring tokenized_str) {
+    wcstring orig_str = tokenized_str;
 
-    if (cmd_str.find(VARIABLE_EXPAND_SINGLE) != std::string::npos) {
+    if (tokenized_str.find(VARIABLE_EXPAND_SINGLE) != std::string::npos) {
         // Variable was quoted to force expansion of multiple elements into a single element.
         //
         // The following isn't entirely correct. For example, $abc"$def" will become "$abc$def".
         // However, anyone writing the former is asking for trouble so I don't feel bad about not
         // accurately reconstructing what they typed.
-        wcstring new_cmd_str = wcstring(cmd_str);
-        std::replace(new_cmd_str.begin(), new_cmd_str.end(), (wchar_t)VARIABLE_EXPAND_SINGLE, L'$');
-        orig_cmd = L"\"" + new_cmd_str + L"\"";
+        wcstring new_str = wcstring(tokenized_str);
+        std::replace(new_str.begin(), new_str.end(), (wchar_t)VARIABLE_EXPAND_SINGLE, L'$');
+        orig_str = L"\"" + new_str + L"\"";
     }
 
-    return orig_cmd;
+    return orig_str;
 }
 
 /// Handle the case of command not found.
@@ -760,18 +781,20 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
                                name_str.c_str(), val_str.c_str(), argument.c_str(),
                                ellipsis_str.c_str());
         } else {
+            wcstring assigned_val = reconstruct_orig_str(val_str);
             this->report_error(statement_node, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, name_str.c_str(),
-                               val_str.c_str());
+                               assigned_val.c_str());
         }
     } else if (wcschr(cmd, L'$') || wcschr(cmd, VARIABLE_EXPAND_SINGLE) ||
                wcschr(cmd, VARIABLE_EXPAND)) {
-        wcstring eval_cmd = reconstruct_orig_cmd(cmd_str);
-        this->report_error(statement_node, _(L"Variables may not be used as commands. In fish, "
-                                             L"please define a function or use 'eval %ls'."),
-                           eval_cmd.c_str());
+        const wchar_t *msg =
+            _(L"Variables may not be used as commands. In fish, "
+              L"please define a function or use 'eval %ls'.");
+        wcstring eval_cmd = reconstruct_orig_str(cmd_str);
+        this->report_error(statement_node, msg, eval_cmd.c_str());
     } else if (err_code != ENOENT) {
         this->report_error(statement_node, _(L"The file '%ls' is not executable by this user"),
-                           cmd ? cmd : L"UNKNOWN");
+                           cmd);
     } else {
         // Handle unrecognized commands with standard command not found handler that can make better
         // error messages.
@@ -794,7 +817,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
     }
 
     // Set the last proc status appropriately.
-    proc_set_last_status(err_code == ENOENT ? STATUS_UNKNOWN_COMMAND : STATUS_NOT_EXECUTABLE);
+    proc_set_last_status(err_code == ENOENT ? STATUS_CMD_UNKNOWN : STATUS_NOT_EXECUTABLE);
 
     return parse_execution_errored;
 }
@@ -873,10 +896,8 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
         process_type = function_exists(L"cd") ? INTERNAL_FUNCTION : INTERNAL_BUILTIN;
     } else {
-        const globspec_t glob_behavior = contains(cmd, L"set", L"count") ? nullglob : failglob;
-        // Form the list of arguments. The command is the first argument. TODO: count hack, where we
-        // treat 'count --help' as different from 'count $foo' that expands to 'count --help'. fish
-        // 1.x never successfully did this, but it tried to!
+        const globspec_t glob_behavior = (cmd == L"set" || cmd == L"count") ? nullglob : failglob;
+        // Form the list of arguments. The command is the first argument.
         parse_execution_result_t arg_result =
             this->determine_arguments(statement, &argument_list, glob_behavior);
         if (arg_result != parse_execution_success) {
@@ -996,10 +1017,10 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
                 } else {
                     int old_fd = fish_wcstoi(target.c_str());
                     if (errno || old_fd < 0) {
-                        errored =
-                            report_error(redirect_node, _(L"Requested redirection to '%ls', which "
-                                                          L"is not a valid file descriptor"),
-                                         target.c_str());
+                        const wchar_t *fmt =
+                            _(L"Requested redirection to '%ls', "
+                              L"which is not a valid file descriptor");
+                        errored = report_error(redirect_node, fmt, target.c_str());
                     } else {
                         new_io.reset(new io_fd_t(source_fd, old_fd, true));
                     }
@@ -1268,7 +1289,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
     job->set_flag(JOB_FOREGROUND, !tree.job_should_be_backgrounded(job_node));
 
-    job->set_flag(JOB_TERMINAL, job->get_flag(JOB_CONTROL) && !is_subshell && !is_event);
+    job->set_flag(JOB_TERMINAL, job->get_flag(JOB_CONTROL) && !is_event);
 
     job->set_flag(JOB_SKIP_NOTIFICATION,
                   is_subshell || is_block || is_event || !shell_is_interactive());

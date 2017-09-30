@@ -35,7 +35,10 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
             and begin set -q KONSOLE_PROFILE_NAME
                 or set -q ITERM_PROFILE
                 or set -q VTE_VERSION # which version is already checked above
-                or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280
+                or begin
+                    set -q XTERM_VERSION
+                    and test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280
+                end
             end
             # .. unless an unsupporting terminal has been started in tmux inside a supporting one
             and begin string match -q "screen*" -- $TERM

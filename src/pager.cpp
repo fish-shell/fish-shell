@@ -1,12 +1,13 @@
 #include "config.h"  // IWYU pragma: keep
 
 // IWYU pragma: no_include <cstddef>
-#include <assert.h>
 #include <stddef.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <map>
+
+#include <algorithm>
 #include <numeric>
+#include <unordered_map>
 #include <vector>
 
 #include "common.h"
@@ -38,12 +39,31 @@ typedef std::vector<comp_t> comp_info_list_t;
 /// Text we use for the search field.
 #define SEARCH_FIELD_PROMPT _(L"search: ")
 
+inline bool selection_direction_is_cardinal(selection_direction_t dir) {
+    switch (dir) {
+        case direction_north:
+        case direction_east:
+        case direction_south:
+        case direction_west:
+        case direction_page_north:
+        case direction_page_south: {
+            return true;
+        }
+        case direction_next:
+        case direction_prev:
+        case direction_deselect: {
+            return false;
+        }
+    }
+
+    DIE("should never reach this statement");
+}
+
 /// Returns numer / denom, rounding up. As a "courtesy" 0/0 is 0.
 static size_t divide_round_up(size_t numer, size_t denom) {
     if (numer == 0) return 0;
-
     assert(denom > 0);
-    bool has_rem = (numer % denom) > 0;
+    bool has_rem = (numer % denom) != 0;
     return numer / denom + (has_rem ? 1 : 0);
 }
 
@@ -247,7 +267,7 @@ static void mangle_1_completion_description(wcstring *str) {
 static void join_completions(comp_info_list_t *comps) {
     // A map from description to index in the completion list of the element with that description.
     // The indexes are stored +1.
-    std::map<wcstring, size_t> desc_table;
+    std::unordered_map<wcstring, size_t> desc_table;
 
     // Note that we mutate the completion list as we go, so the size changes.
     for (size_t i = 0; i < comps->size(); i++) {
@@ -300,18 +320,20 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
     size_t prefix_len = fish_wcswidth(prefix.c_str());
     for (size_t i = 0; i < infos->size(); i++) {
         comp_t *comp = &infos->at(i);
-
-        // Compute comp_width.
         const wcstring_list_t &comp_strings = comp->comp;
+
         for (size_t j = 0; j < comp_strings.size(); j++) {
             // If there's more than one, append the length of ', '.
             if (j >= 1) comp->comp_width += 2;
 
-            comp->comp_width += prefix_len + fish_wcswidth(comp_strings.at(j).c_str());
+            // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
+            int comp_width = fish_wcswidth(comp_strings.at(j).c_str());
+            if (comp_width >= 0) comp->comp_width += prefix_len + comp_width;
         }
 
-        // Compute desc_width.
-        comp->desc_width = fish_wcswidth(comp->desc.c_str());
+        // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
+        int desc_width = fish_wcswidth(comp->desc.c_str());
+        comp->desc_width = desc_width > 0 ? desc_width : 0;
     }
 }
 
@@ -368,9 +390,7 @@ void pager_t::set_completions(const completion_list_t &raw_completions) {
 
 void pager_t::set_prefix(const wcstring &pref) { prefix = pref; }
 
-void pager_t::set_term_size(int w, int h) {
-    assert(w > 0);
-    assert(h > 0);
+void pager_t::set_term_size(size_t w, size_t h) {
     available_term_width = w;
     available_term_height = h;
 }
@@ -426,14 +446,12 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     }
 
     bool print;
-    assert(cols >= 1);
     // Force fit if one column.
     if (cols == 1) {
         width_by_column[0] = std::min(width_by_column[0], term_width);
         print = true;
     } else {
         // Compute total preferred width, plus spacing
-        assert(cols > 0);
         size_t total_width_needed = std::accumulate(width_by_column, width_by_column + cols, 0);
         total_width_needed += (cols - 1) * PAGER_SPACER_STRING_WIDTH;
         print = (total_width_needed <= term_width);
@@ -492,24 +510,24 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         print_max(progress_text, spec, term_width, true /* has_more */, &line);
     }
 
-    if (search_field_shown) {
-        // Add the search field.
-        wcstring search_field_text = search_field_line.text;
-        // Append spaces to make it at least the required width.
-        if (search_field_text.size() < PAGER_SEARCH_FIELD_WIDTH) {
-            search_field_text.append(PAGER_SEARCH_FIELD_WIDTH - search_field_text.size(), L' ');
-        }
-        line_t *search_field = &rendering->screen_data.insert_line_at_index(0);
-
-        // We limit the width to term_width - 1.
-        size_t search_field_remaining = term_width - 1;
-        search_field_remaining -= print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal,
-                                            search_field_remaining, false, search_field);
-
-        search_field_remaining -= print_max(search_field_text, highlight_modifier_force_underline,
-                                            search_field_remaining, false, search_field);
+    if (!search_field_shown) {
+        return true;
     }
 
+    // Add the search field.
+    wcstring search_field_text = search_field_line.text;
+    // Append spaces to make it at least the required width.
+    if (search_field_text.size() < PAGER_SEARCH_FIELD_WIDTH) {
+        search_field_text.append(PAGER_SEARCH_FIELD_WIDTH - search_field_text.size(), L' ');
+    }
+    line_t *search_field = &rendering->screen_data.insert_line_at_index(0);
+
+    // We limit the width to term_width - 1.
+    size_t search_field_remaining = term_width - 1;
+    search_field_remaining -= print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal,
+                                        search_field_remaining, false, search_field);
+    search_field_remaining -= print_max(search_field_text, highlight_modifier_force_underline,
+                                        search_field_remaining, false, search_field);
     return true;
 }
 

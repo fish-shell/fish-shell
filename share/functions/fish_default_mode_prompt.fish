@@ -9,7 +9,7 @@ function fish_default_mode_prompt --description "Display the default mode for th
             case insert
                 set_color --bold --background green white
                 echo '[I]'
-            case replace-one
+            case replace_one
                 set_color --bold --background green white
                 echo '[R]'
             case visual

@@ -4,12 +4,22 @@
 # This function is called by the __fish_on_interactive function, which is defined in config.fish.
 #
 function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"
+    if not set -q __fish_init_3_x
+        # Perform transitions relevant to going from fish 2.x to 3.x.
+
+        # Migrate old universal abbreviations to the new scheme.
+        abbr_old | source
+
+        set -U __fish_init_3_x
+    end
+
     # Make sure this function is only run once.
     if set -q __fish_config_interactive_done
         return
     end
 
     set -g __fish_config_interactive_done
+    set -g __fish_active_key_bindings
 
     # Set the correct configuration directory
     set -l configdir ~/.config
@@ -23,13 +33,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
 
     if not set -q fish_greeting
-        set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell' ))
+        set -l line1 (_ 'Welcome to fish, the friendly interactive shell')
+        set -l line2 ''
         if not set -q __fish_init_2_3_0
-            set -l line2 \n(printf (_ 'Type %shelp%s for instructions on how to use fish %s') (set_color green) (set_color normal))
-        else
-            set -l line2 ''
+            set line2 \n(_ 'Type `help` for instructions on how to use fish')
         end
-        set -U fish_greeting $line1$line2
+        set -U fish_greeting "$line1$line2"
     end
 
     #
@@ -86,6 +95,9 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -q fish_color_selection
         or set -U fish_color_selection white --bold --background=brblack
 
+        set -q fish_color_cancel
+        or set -U fish_color_cancel -r
+
         # Pager colors
         set -q fish_pager_color_prefix
         or set -U fish_pager_color_prefix white --bold --underline
@@ -109,14 +121,24 @@ function __fish_config_interactive -d "Initializations that should be performed 
     #
     # Generate man page completions if not present.
     #
-    if not test -d $userdatadir/fish/generated_completions
-        # Generating completions from man pages needs python (see issue #3588).
-        # Don't do this if we're being invoked as part of running unit tests.
-        if command -qs python
-        and not set -q FISH_UNIT_TESTS_RUNNING
-            # We cannot simply do `fish_update_completions &` because it is a function. Hence the
-            # need for the convoluted `eval` to run it in a subshell.
-            eval (string escape "$__fish_bin_dir/fish") "-c 'fish_update_completions >/dev/null ^/dev/null' &"
+    # Don't do this if we're being invoked as part of running unit tests.
+    if not set -q FISH_UNIT_TESTS_RUNNING
+        if not test -d $userdatadir/fish/generated_completions
+            # Generating completions from man pages needs python (see issue #3588).
+
+            # We cannot simply do `fish_update_completions &` because it is a function.
+            # We cannot do `eval` since it is a function.
+            # We don't want to call `fish -c` since that is unnecessary and sources config.fish again.
+            # Hence we'll call python directly.
+            # c_m_p.py should work with any python version.
+            set -l update_args -B $__fish_datadir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
+            if command -qs python3
+                python3 $update_args >/dev/null ^/dev/null &
+            else if command -qs python2
+                python2 $update_args >/dev/null ^/dev/null &
+            else if command -qs python
+                python $update_args >/dev/null ^/dev/null &
+            end
         end
     end
 
@@ -173,16 +195,16 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
-        # do nothing if the key bindings didn't actually change
+        # Do nothing if the key bindings didn't actually change.
         # This could be because the variable was set to the existing value
-        # or because it was a local variable
-        # If fish_key_bindings is empty on the first run, we still need to set the defaults
+        # or because it was a local variable.
+        # If fish_key_bindings is empty on the first run, we still need to set the defaults.
         if test "$fish_key_bindings" = "$__fish_active_key_bindings" -a -n "$fish_key_bindings"
             return
         end
-        # Check if fish_key_bindings is a valid function
-        # If not, either keep the previous bindings (if any) or revert to default
-        # Also print an error so the user knows
+        # Check if fish_key_bindings is a valid function.
+        # If not, either keep the previous bindings (if any) or revert to default.
+        # Also print an error so the user knows.
         if not functions -q "$fish_key_bindings"
             echo "There is no fish_key_bindings function called: '$fish_key_bindings'" >&2
             # We need to see if this is a defined function, otherwise we'd be in an endless loop.
@@ -222,26 +244,40 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Load key bindings
     __fish_reload_key_bindings
 
+    if not set -q FISH_UNIT_TESTS_RUNNING
+        # Enable bracketed paste before every prompt (see __fish_shared_bindings for the bindings).
+        # Disable it for unit tests so we don't have to add the sequences to bind.expect
+        function __fish_enable_bracketed_paste --on-event fish_prompt
+            printf "\e[?2004h"
+        end
+
+        # Disable BP before every command because that might not support it.
+        function __fish_disable_bracketed_paste --on-event fish_preexec --on-process-exit %self
+            printf "\e[?2004l"
+        end
+
+        # Tell the terminal we support BP. Since we are in __f_c_i, the first fish_prompt
+        # has already fired.
+        __fish_enable_bracketed_paste
+    end
+
     function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"
         commandline -f repaint
     end
 
-    # Notify terminals when $PWD changes (issue #906)
-    # VTE and Terminal.app support this in practice.
-    if test "0$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
+    # Notify terminals when $PWD changes (issue #906).
+    # VTE based terminals, Terminal.app, and iTerm.app support this.
+    set -q VTE_VERSION
+    or set -l VTE_VERSION 0
+    set -q TERM_PROGRAM
+    or set -l TERM_PROGRAM
+    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal" -o "$TERM_PROGRAM" = "iTerm.app"
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
-            status --is-command-substitution
-            or test -n "$INSIDE_EMACS"
-            and return
-            printf \e\]7\;file://\%s\%s\a (hostname) (echo -n $PWD | __fish_urlencode)
-        end
-        if test "$TERM_PROGRAM" = "Apple_Terminal"
-            # Suppress duplicative title display on Terminal.app
-            if not functions -q fish_title
-                echo -n \e\]0\;\a # clear existing title
-                function fish_title -d 'no-op terminal title'
-                end
+            if status --is-command-substitution
+                or set -q INSIDE_EMACS
+                return
             end
+            printf \e\]7\;file://\%s\%s\a (hostname) (string escape --style=url $PWD)
         end
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end
@@ -262,7 +298,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # First check if we are on OpenSUSE since SUSE's handler has no options
         # but the same name and path as Ubuntu's.
         if contains -- suse $os
-            and type -q -p command-not-found
+            and type -q command-not-found
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 /usr/bin/command-not-found $argv[1]
             end
@@ -282,7 +318,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
                 /run/current-system/sw/bin/command-not-found $argv
             end
             # Ubuntu Feisty places this command in the regular path instead
-        else if type -q -p command-not-found
+        else if type -q command-not-found
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 command-not-found -- $argv[1]
             end

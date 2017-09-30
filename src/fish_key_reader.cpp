@@ -11,12 +11,14 @@
 #include <errno.h>
 #include <getopt.h>
 #include <signal.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
 #include <wchar.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -24,6 +26,7 @@
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fish_version.h"
 #include "input.h"
 #include "input_common.h"
 #include "print_help.h"
@@ -88,74 +91,63 @@ static char *sequence_name(wchar_t wc) {
     return NULL;
 }
 
-/// Return true if the character must be escaped in the sequence of chars to be bound in `bind`
-/// command.
-static bool must_escape(wchar_t wc) {
-    switch (wc) {
-        case '[':
-        case ']':
-        case '(':
-        case ')':
-        case '<':
-        case '>':
-        case '{':
-        case '}':
-        case '*':
-        case '\\':
-        case '?':
-        case '$':
-        case '#':
-        case ';':
-        case '&':
-        case '|':
-        case '\'':
-        case '"':
-            return true;
-        default:
-            return false;
+/// Return true if the character must be escaped when used in the sequence of chars to be bound in
+/// a `bind` command.
+static bool must_escape(wchar_t wc) { return wcschr(L"[]()<>{}*\\?$#;&|'\"", wc) != NULL; }
+
+static void ctrl_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, bool bind_friendly) {
+    if (ctrl_symbolic_names[wc]) {
+        if (bind_friendly) {
+            swprintf(buf, buf_len, L"%ls", ctrl_symbolic_names[wc]);
+        } else {
+            swprintf(buf, buf_len, L"\\c%c  (or %ls)", wc + 0x40, ctrl_symbolic_names[wc]);
+        }
+    } else {
+        swprintf(buf, buf_len, L"\\c%c", wc + 0x40);
     }
 }
 
-static wchar_t *char_to_symbol(wchar_t wc, bool bind_friendly) {
-#define BUF_LEN 64
-    static wchar_t buf[BUF_LEN];
-
-    if (wc < L' ') {
-        // ASCII control character.
-        if (ctrl_symbolic_names[wc]) {
-            if (bind_friendly) {
-                swprintf(buf, BUF_LEN, L"%ls", ctrl_symbolic_names[wc]);
-            } else {
-                swprintf(buf, BUF_LEN, L"\\c%c  (or %ls)", wc + 0x40, ctrl_symbolic_names[wc]);
-            }
-        } else {
-            swprintf(buf, BUF_LEN, L"\\c%c", wc + 0x40);
-        }
-    } else if (wc == L' ') {
-        // The "space" character.
-        if (bind_friendly) {
-            swprintf(buf, BUF_LEN, L"\\x%X", ' ');
-        } else {
-            swprintf(buf, BUF_LEN, L"\\x%X  (aka \"space\")", ' ');
-        }
-    } else if (wc == 0x7F) {
-        // The "del" character.
-        if (bind_friendly) {
-            swprintf(buf, BUF_LEN, L"\\x%X", 0x7F);
-        } else {
-            swprintf(buf, BUF_LEN, L"\\x%X  (aka \"del\")", 0x7F);
-        }
-    } else if (wc < 0x80) {
-        // ASCII characters that are not control characters.
-        if (bind_friendly && must_escape(wc)) {
-            swprintf(buf, BUF_LEN, L"\\%c", wc);
-        } else {
-            swprintf(buf, BUF_LEN, L"%c", wc);
-        }
-    } else if (wc <= 0xFFFF) {
-        swprintf(buf, BUF_LEN, L"\\u%04X", (int)wc);
+static void space_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, bool bind_friendly) {
+    if (bind_friendly) {
+        swprintf(buf, buf_len, L"\\x%X", wc);
     } else {
-        swprintf(buf, BUF_LEN, L"\\U%06X", (int)wc);
+        swprintf(buf, buf_len, L"\\x%X  (aka \"space\")", wc);
+    }
+}
+
+static void del_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, bool bind_friendly) {
+    if (bind_friendly) {
+        swprintf(buf, buf_len, L"\\x%X", wc);
+    } else {
+        swprintf(buf, buf_len, L"\\x%X  (aka \"del\")", wc);
+    }
+}
+
+static void ascii_printable_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, bool bind_friendly) {
+    if (bind_friendly && must_escape(wc)) {
+        swprintf(buf, buf_len, L"\\%c", wc);
+    } else {
+        swprintf(buf, buf_len, L"%c", wc);
+    }
+}
+
+/// Convert a wide-char to a symbol that can be used in our output. The use of a static buffer
+/// requires that the returned string be used before we are called again.
+static wchar_t *char_to_symbol(wchar_t wc, bool bind_friendly) {
+    static wchar_t buf[64];
+
+    if (wc < L' ') {  // ASCII control character
+        ctrl_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
+    } else if (wc == L' ') {  // the "space" character
+        space_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
+    } else if (wc == 0x7F) {  // the "del" character
+        del_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
+    } else if (wc < 0x80) {  // ASCII characters that are not control characters
+        ascii_printable_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
+    } else if (wc <= 0xFFFF) {  // BMP Unicode chararacter
+        swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\u%04X", wc);
+    } else {  // Non-BMP Unicode chararacter
+        swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\U%06X", wc);
     }
 
     return buf;
@@ -290,10 +282,9 @@ static void setup_and_process_keys(bool continuous_mode) {
     is_interactive_session = 1;  // by definition this program is interactive
     set_main_thread();
     setup_fork_guards();
+    proc_push_interactive(1);
     env_init();
     reader_init();
-    input_init();
-    proc_push_interactive(1);
     install_our_signal_handlers();
 
     if (continuous_mode) {
@@ -311,63 +302,67 @@ static void setup_and_process_keys(bool continuous_mode) {
     reader_destroy();
 }
 
-int main(int argc, char **argv) {
-    program_name = L"fish_key_reader";
-    bool continuous_mode = false;
-    const char *short_opts = "+cd:D:h";
+static bool parse_debug_level_flag() {
+    errno = 0;
+    char *end;
+    long tmp = strtol(optarg, &end, 10);
+
+    if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
+        debug_level = (int)tmp;
+    } else {
+        fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag\n"), optarg);
+        return false;
+    }
+
+    return true;
+}
+
+static bool parse_debug_frames_flag() {
+    errno = 0;
+    char *end;
+    long tmp = strtol(optarg, &end, 10);
+    if (tmp > 0 && tmp <= 128 && !*end && !errno) {
+        debug_stack_frames = (int)tmp;
+    } else {
+        fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag\n"), optarg);
+        return false;
+    }
+
+    return true;
+}
+
+static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
+    const char *short_opts = "+cd:D:hv";
     const struct option long_opts[] = {{"continuous", no_argument, NULL, 'c'},
                                        {"debug-level", required_argument, NULL, 'd'},
                                        {"debug-stack-frames", required_argument, NULL, 'D'},
                                        {"help", no_argument, NULL, 'h'},
+                                       {"version", no_argument, NULL, 'v'},
                                        {NULL, 0, NULL, 0}};
     int opt;
     bool error = false;
     while (!error && (opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                fwprintf(stderr, L"getopt_long() unexpectedly returned zero\n");
-                error = true;
-                break;
-            }
             case 'c': {
-                continuous_mode = true;
+                *continuous_mode = true;
                 break;
             }
             case 'h': {
                 print_help("fish_key_reader", 0);
-                exit(0);
+                error = true;
                 break;
             }
             case 'd': {
-                char *end;
-                long tmp;
-
-                errno = 0;
-                tmp = strtol(optarg, &end, 10);
-
-                if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
-                    debug_level = (int)tmp;
-                } else {
-                    fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
-                    error = true;
-                }
+                error = !parse_debug_level_flag();
                 break;
             }
             case 'D': {
-                char *end;
-                long tmp;
-
-                errno = 0;
-                tmp = strtol(optarg, &end, 10);
-
-                if (tmp > 0 && tmp <= 128 && !*end && !errno) {
-                    debug_stack_frames = (int)tmp;
-                } else {
-                    fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
-                    error = true;
-                    break;
-                }
+                error = !parse_debug_frames_flag();
                 break;
+            }
+            case 'v': {
+                fwprintf(stdout, L"%s\n", get_fish_version());
+                return false;
             }
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.
@@ -376,13 +371,23 @@ int main(int argc, char **argv) {
             }
         }
     }
-    if (error) return 1;
+
+    if (error) return false;
 
     argc -= optind;
     if (argc != 0) {
         fwprintf(stderr, L"Expected no arguments, got %d\n", argc);
-        return 1;
+        return false;
     }
+
+    return true;
+}
+
+int main(int argc, char **argv) {
+    program_name = L"fish_key_reader";
+    bool continuous_mode = false;
+
+    if (!parse_flags(argc, argv, &continuous_mode)) return 1;
 
     if (!isatty(STDIN_FILENO)) {
         fwprintf(stderr, L"Stdin must be attached to a tty.\n");

@@ -4,8 +4,9 @@
 
 #include <pthread.h>
 #include <stdio.h>
+
 #include <memory>
-#include <set>
+#include <unordered_set>
 #include <vector>
 
 #include "common.h"
@@ -33,17 +34,17 @@ class env_universal_t {
 
     // Keys that have been modified, and need to be written. A value here that is not present in
     // vars indicates a deleted value.
-    std::set<wcstring> modified;
+    std::unordered_set<wcstring> modified;
 
     // Path that we save to. If empty, use the default.
     const wcstring explicit_vars_path;
 
-    mutable pthread_mutex_t lock;
+    mutable std::mutex lock;
     bool tried_renaming;
-    bool load_from_path(const wcstring &path, callback_data_list_t *callbacks);
-    void load_from_fd(int fd, callback_data_list_t *callbacks);
+    bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
+    void load_from_fd(int fd, callback_data_list_t &callbacks);
 
-    void set_internal(const wcstring &key, const wcstring &val, bool exportv, bool overwrite);
+    void set_internal(const wcstring &key, wcstring_list_t val, bool exportv, bool overwrite);
     bool remove_internal(const wcstring &name);
 
     // Functions concerned with saving.
@@ -57,27 +58,26 @@ class env_universal_t {
 
     // Given a variable table, generate callbacks representing the difference between our vars and
     // the new vars.
-    void generate_callbacks(const var_table_t &new_vars, callback_data_list_t *callbacks) const;
+    void generate_callbacks(const var_table_t &new_vars, callback_data_list_t &callbacks) const;
 
-    // Given a variable table, copy unmodified values into self. May destructively modified
+    // Given a variable table, copy unmodified values into self. May destructively modify
     // vars_to_acquire.
-    void acquire_variables(var_table_t *vars_to_acquire);
+    void acquire_variables(var_table_t &vars_to_acquire);
 
     static void parse_message_internal(const wcstring &msg, var_table_t *vars, wcstring *storage);
     static var_table_t read_message_internal(int fd);
 
    public:
     explicit env_universal_t(const wcstring &path);
-    ~env_universal_t();
 
     // Get the value of the variable with the specified name.
-    env_var_t get(const wcstring &name) const;
+    maybe_t<env_var_t> get(const wcstring &name) const;
 
     // Returns whether the variable with the given name is exported, or false if it does not exist.
     bool get_export(const wcstring &name) const;
 
     // Sets a variable.
-    void set(const wcstring &key, const wcstring &val, bool exportv);
+    void set(const wcstring &key, wcstring_list_t val, bool exportv);
 
     // Removes a variable. Returns true if it was found, false if not.
     bool remove(const wcstring &name);
@@ -86,11 +86,11 @@ class env_universal_t {
     wcstring_list_t get_names(bool show_exported, bool show_unexported) const;
 
     /// Loads variables at the correct path.
-    bool load();
+    bool load(callback_data_list_t &callbacks);
 
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.
-    bool sync(callback_data_list_t *callbacks);
+    bool sync(callback_data_list_t &callbacks);
 };
 
 /// The "universal notifier" is an object responsible for broadcasting and receiving universal

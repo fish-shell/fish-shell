@@ -1,11 +1,11 @@
 // History functions, part of the user interface.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,10 +17,16 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+
 #include <algorithm>
+#include <atomic>
 #include <cwchar>
+#include <functional>
 #include <iterator>
 #include <map>
+#include <numeric>
+#include <type_traits>
+#include <unordered_set>
 
 #include "common.h"
 #include "env.h"
@@ -31,9 +37,9 @@
 #include "lru.h"
 #include "parse_constants.h"
 #include "parse_tree.h"
+#include "parse_util.h"
 #include "path.h"
 #include "reader.h"
-#include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // Our history format is intended to be valid YAML. Here it is:
@@ -46,11 +52,22 @@
 //
 //   Newlines are replaced by \n. Backslashes are replaced by \\.
 
+// This is the history session ID we use by default if the user has not set env var fish_history.
+#define DFLT_FISH_HISTORY_SESSION_ID L"fish"
+
 // When we rewrite the history, the number of items we keep.
 #define HISTORY_SAVE_MAX (1024 * 256)
 
 // Default buffer size for flushing to the history file.
-#define HISTORY_OUTPUT_BUFFER_SIZE (16 * 1024)
+#define HISTORY_OUTPUT_BUFFER_SIZE (64 * 1024)
+
+// The file access mode we use for creating history files
+static constexpr int history_file_mode = 0644;
+
+// How many times we retry to save
+// Saving may fail if the file is modified in between our opening
+// the file and taking the lock
+static constexpr int max_save_tries = 1024;
 
 namespace {
 
@@ -59,52 +76,44 @@ namespace {
 /// implement your own streambuf? Total insanity.
 static size_t safe_strlen(const char *s) { return s ? strlen(s) : 0; }
 class history_output_buffer_t {
-    // A null-terminated C string.
     std::vector<char> buffer;
-    // Offset is the offset of the null terminator.
-    size_t offset;
 
    public:
     /// Add a bit more to HISTORY_OUTPUT_BUFFER_SIZE because we flush once we've exceeded that size.
-    history_output_buffer_t() : buffer(HISTORY_OUTPUT_BUFFER_SIZE + 128, '\0'), offset(0) {}
+    explicit history_output_buffer_t(size_t reserve_amt = HISTORY_OUTPUT_BUFFER_SIZE + 128) {
+        buffer.reserve(reserve_amt);
+    }
 
     /// Append one or more strings.
     void append(const char *s1, const char *s2 = NULL, const char *s3 = NULL) {
-        const char *ptrs[4] = {s1, s2, s3, NULL};
-        const size_t lengths[4] = {safe_strlen(s1), safe_strlen(s2), safe_strlen(s3), 0};
+        constexpr size_t ptr_count = 3;
+        const char *ptrs[ptr_count] = {s1, s2, s3};
+        size_t lengths[ptr_count] = {safe_strlen(s1), safe_strlen(s2), safe_strlen(s3)};
 
         // Determine the additional size we'll need.
-        size_t additional_length = 0;
-        for (size_t i = 0; i < sizeof lengths / sizeof *lengths; i++) {
-            additional_length += lengths[i];
-        }
+        size_t additional_length = std::accumulate(std::begin(lengths), std::end(lengths), 0);
+        buffer.reserve(buffer.size() + additional_length);
 
-        // Allocate that much, plus a null terminator.
-        size_t required_size = offset + additional_length + 1;
-        if (required_size > buffer.size()) {
-            buffer.resize(required_size, '\0');
+        // Append
+        for (size_t i = 0; i < ptr_count; i++) {
+            if (lengths[i] > 0) {
+                buffer.insert(buffer.end(), ptrs[i], ptrs[i] + lengths[i]);
+            }
         }
-
-        // Copy.
-        for (size_t i = 0; ptrs[i] != NULL; i++) {
-            memmove(&buffer.at(offset), ptrs[i], lengths[i]);
-            offset += lengths[i];
-        }
-
-        // Null terminator was appended by virtue of the resize() above (or in a previous
-        // invocation).
-        assert(buffer.at(buffer.size() - 1) == '\0');
     }
 
     /// Output to a given fd, resetting our buffer. Returns true on success, false on error.
     bool flush_to_fd(int fd) {
-        bool result = write_loop(fd, &buffer.at(0), offset) >= 0;
-        offset = 0;
+        if (buffer.empty()) {
+            return true;
+        }
+        bool result = write_loop(fd, &buffer.at(0), buffer.size()) >= 0;
+        buffer.clear();
         return result;
     }
 
     /// Return how much data we've accumulated.
-    size_t output_size() const { return offset; }
+    size_t output_size() const { return buffer.size(); }
 };
 
 class time_profiler_t {
@@ -126,7 +135,7 @@ class time_profiler_t {
 /// Lock the history file.
 /// Returns true on success, false on failure.
 static bool history_file_lock(int fd, int lock_type) {
-    static bool do_locking = true;
+    static std::atomic<bool> do_locking(true);
     if (!do_locking) return false;
 
     double start_time = timef();
@@ -134,6 +143,11 @@ static bool history_file_lock(int fd, int lock_type) {
     double duration = timef() - start_time;
     if (duration > 0.25) {
         debug(1, _(L"Locking the history file took too long (%.3f seconds)."), duration);
+        // we've decided to stop doing any locking behavior
+        // but make sure we don't leave the file locked!
+        if (retval == 0 && lock_type != LOCK_UN) {
+            flock(fd, LOCK_UN);
+        }
         do_locking = false;
         return false;
     }
@@ -182,7 +196,7 @@ class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_lru_
 class history_collection_t {
     owning_lock<std::map<wcstring, std::unique_ptr<history_t>>> histories;
 
-    public:
+   public:
     history_t &get_creating(const wcstring &name);
     void save();
 };
@@ -695,9 +709,9 @@ history_t &history_collection_t::get_creating(const wcstring &name) {
     // Return a history for the given name, creating it if necessary
     // Note that histories are currently never deleted, so we can return a reference to them without
     // using something like shared_ptr
-    auto hs = histories.acquire();
+    auto &&hs = histories.acquire();
     std::unique_ptr<history_t> &hist = hs.value[name];
-    if (! hist) {
+    if (!hist) {
         hist = make_unique<history_t>(name);
     }
     return *hist;
@@ -719,11 +733,7 @@ history_t::history_t(const wcstring &pname)
       boundary_timestamp(time(NULL)),
       countdown_to_vacuum(-1),
       loaded_old(false),
-      chaos_mode(false) {
-    pthread_mutex_init(&lock, NULL);
-}
-
-history_t::~history_t() { pthread_mutex_destroy(&lock); }
+      chaos_mode(false) {}
 
 void history_t::add(const history_item_t &item, bool pending) {
     scoped_lock locker(lock);
@@ -832,19 +842,16 @@ void history_t::set_valid_file_paths(const wcstring_list_t &valid_file_paths,
     }
 }
 
-void history_t::get_string_representation(wcstring *result, const wcstring &separator) {
+void history_t::get_history(wcstring_list_t &result) {
     scoped_lock locker(lock);
-
-    bool first = true;
-
-    std::set<wcstring> seen;
 
     // If we have a pending item, we skip the first encountered (i.e. last) new item.
     bool next_is_pending = this->has_pending_item;
+    std::unordered_set<wcstring> seen;
 
     // Append new items. Note that in principle we could use const_reverse_iterator, but we do not
     // because reverse_iterator is not convertible to const_reverse_iterator. See
-    // http://github.com/fish-shell/fish-shell/issues/431.
+    // https://github.com/fish-shell/fish-shell/issues/431.
     for (history_item_list_t::reverse_iterator iter = new_items.rbegin(); iter < new_items.rend();
          ++iter) {
         // Skip a pending item if we have one.
@@ -853,12 +860,7 @@ void history_t::get_string_representation(wcstring *result, const wcstring &sepa
             continue;
         }
 
-        // Skip duplicates.
-        if (!seen.insert(iter->str()).second) continue;
-
-        if (!first) result->append(separator);
-        result->append(iter->str());
-        first = false;
+        if (seen.insert(iter->str()).second) result.push_back(iter->str());
     }
 
     // Append old items.
@@ -869,13 +871,17 @@ void history_t::get_string_representation(wcstring *result, const wcstring &sepa
         const history_item_t item =
             decode_item(mmap_start + offset, mmap_length - offset, mmap_type);
 
-        // Skip duplicates.
-        if (!seen.insert(item.str()).second) continue;
-
-        if (!first) result->append(separator);
-        result->append(item.str());
-        first = false;
+        if (seen.insert(item.str()).second) result.push_back(item.str());
     }
+}
+
+size_t history_t::size() {
+    scoped_lock locker(lock);
+    size_t new_item_count = new_items.size();
+    if (this->has_pending_item && new_item_count > 0) new_item_count -= 1;
+    load_old_if_needed();
+    size_t old_item_count = old_item_offsets.size();
+    return new_item_count + old_item_count;
 }
 
 history_item_t history_t::item_at_index(size_t idx) {
@@ -925,23 +931,10 @@ void history_t::populate_from_mmap(void) {
     }
 }
 
-/// Do a private, read-only map of the entirety of a history file with the given name. Returns true
-/// if successful. Returns the mapped memory region by reference.
-bool history_t::map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
-                         file_id_t *file_id) {
-    wcstring filename = history_filename(name, L"");
-    if (filename.empty()) {
+bool history_t::map_fd(int fd, const char **out_map_start, size_t *out_map_len) const {
+    if (fd < 0) {
         return false;
     }
-
-    int fd = wopen_cloexec(filename, O_RDONLY);
-    if (fd == -1) {
-        return false;
-    }
-
-    bool result = false;
-    // Get the file ID if requested.
-    if (file_id != NULL) *file_id = file_id_for_fd(fd);
 
     // Take a read lock to guard against someone else appending. This is released when the file
     // is closed (below). We will read the file after releasing the lock, but that's not a
@@ -953,6 +946,7 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
     // unlikely because we only treat an item as valid if it has a terminating newline.
     //
     // Simulate a failing lock in chaos_mode.
+    bool result = false;
     if (!chaos_mode) history_file_lock(fd, LOCK_SH);
     off_t len = lseek(fd, 0, SEEK_END);
     if (len != (off_t)-1) {
@@ -968,6 +962,26 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
         }
     }
     if (!chaos_mode) history_file_lock(fd, LOCK_UN);
+    return result;
+}
+
+/// Do a private, read-only map of the entirety of a history file with the given name. Returns true
+/// if successful. Returns the mapped memory region by reference.
+bool history_t::map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
+                         file_id_t *file_id) const {
+    wcstring filename = history_filename(name, L"");
+    if (filename.empty()) {
+        return false;
+    }
+
+    int fd = wopen_cloexec(filename, O_RDONLY);
+    if (fd < 0) {
+        return false;
+    }
+
+    // Get the file ID if requested.
+    if (file_id != NULL) *file_id = file_id_for_fd(fd);
+    bool result = this->map_fd(fd, out_map_start, out_map_len);
     close(fd);
     return result;
 }
@@ -975,9 +989,6 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
 bool history_t::load_old_if_needed(void) {
     if (loaded_old) return true;
     loaded_old = true;
-
-    // PCA not sure why signals were blocked here
-    // signal_block();
 
     bool ok = false;
     if (map_file(name, &mmap_start, &mmap_length, &mmap_file_id)) {
@@ -987,7 +998,6 @@ bool history_t::load_old_if_needed(void) {
         this->populate_from_mmap();
     }
 
-    // signal_unblock();
     return ok;
 }
 
@@ -1120,13 +1130,14 @@ static void unescape_yaml(std::string *str) {
     }
 }
 
-static wcstring history_filename(const wcstring &name, const wcstring &suffix) {
-    wcstring path;
-    if (!path_get_data(path)) return L"";
+static wcstring history_filename(const wcstring &session_id, const wcstring &suffix) {
+    if (session_id.empty()) return L"";
 
-    wcstring result = path;
+    wcstring result;
+    if (!path_get_data(result)) return L"";
+
     result.append(L"/");
-    result.append(name);
+    result.append(session_id);
     result.append(L"_history");
     result.append(suffix);
     return result;
@@ -1147,7 +1158,7 @@ void history_t::clear_file_state() {
 void history_t::compact_new_items() {
     // Keep only the most recent items with the given contents. This algorithm could be made more
     // efficient, but likely would consume more memory too.
-    std::set<wcstring> seen;
+    std::unordered_set<wcstring> seen;
     size_t idx = new_items.size();
     while (idx--) {
         const history_item_t &item = new_items[idx];
@@ -1165,135 +1176,193 @@ void history_t::compact_new_items() {
     }
 }
 
+// Given the fd of an existing history file, or -1 if none, write
+// a new history file to temp_fd. Returns true on success, false
+// on error
+bool history_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
+    // This must be called while locked.
+    ASSERT_IS_LOCKED(lock);
+
+    // We are reading FROM existing_fd and writing TO dst_fd
+    // dst_fd must be valid; existing_fd does not need to be
+    assert(dst_fd >= 0);
+
+    // Make an LRU cache to save only the last N elements.
+    history_lru_cache_t lru(HISTORY_SAVE_MAX);
+
+    // Map in existing items (which may have changed out from underneath us, so don't trust our
+    // old mmap'd data).
+    const char *local_mmap_start = NULL;
+    size_t local_mmap_size = 0;
+    if (existing_fd >= 0 && map_fd(existing_fd, &local_mmap_start, &local_mmap_size)) {
+        const history_file_type_t local_mmap_type =
+            infer_file_type(local_mmap_start, local_mmap_size);
+        size_t cursor = 0;
+        for (;;) {
+            size_t offset =
+                offset_of_next_item(local_mmap_start, local_mmap_size, local_mmap_type, &cursor, 0);
+            // If we get back -1, we're done.
+            if (offset == (size_t)-1) break;
+
+            // Try decoding an old item.
+            const history_item_t old_item =
+                decode_item(local_mmap_start + offset, local_mmap_size - offset, local_mmap_type);
+
+            if (old_item.empty() || deleted_items.count(old_item.str()) > 0) {
+                // debug(0, L"Item is deleted : %s\n", old_item.str().c_str());
+                continue;
+            }
+            // Add this old item.
+            lru.add_item(old_item);
+        }
+        munmap((void *)local_mmap_start, local_mmap_size);
+    }
+
+    // Insert any unwritten new items
+    for (auto iter = new_items.cbegin() + this->first_unwritten_new_item_index;
+         iter != new_items.cend(); ++iter) {
+        lru.add_item(*iter);
+    }
+
+    // Stable-sort our items by timestamp
+    // This is because we may have read "old" items with a later timestamp than our "new" items
+    // This is the essential step that roughly orders items by history
+    lru.stable_sort([](const history_lru_item_t &item1, const history_lru_item_t &item2) {
+        return item1.timestamp < item2.timestamp;
+    });
+
+    // Write them out.
+    bool ok = true;
+    history_output_buffer_t buffer(HISTORY_OUTPUT_BUFFER_SIZE);
+    for (const auto &key_item : lru) {
+        const history_lru_item_t &item = key_item.second;
+        append_yaml_to_buffer(item.text, item.timestamp, item.required_paths, &buffer);
+        if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE) {
+            ok = buffer.flush_to_fd(dst_fd);
+            if (!ok) {
+                debug(2, L"Error %d when writing to temporary history file", errno);
+                break;
+            }
+        }
+    }
+
+    if (ok) {
+        ok = buffer.flush_to_fd(dst_fd);
+        if (!ok) {
+            debug(2, L"Error %d when writing to temporary history file", errno);
+        }
+    }
+    return ok;
+}
+
+// Returns the fd of an opened temporary file, or -1 on failure
+static int create_temporary_file(const wcstring &name_template, wcstring *out_path) {
+    int out_fd = -1;
+    for (size_t attempt = 0; attempt < 10 && out_fd == -1; attempt++) {
+        char *narrow_str = wcs2str(name_template);
+        out_fd = fish_mkstemp_cloexec(narrow_str);
+        if (out_fd >= 0) {
+            *out_path = str2wcstring(narrow_str);
+        }
+        free(narrow_str);
+    }
+    return out_fd;
+}
+
 bool history_t::save_internal_via_rewrite() {
     // This must be called while locked.
     ASSERT_IS_LOCKED(lock);
     bool ok = false;
 
-    wcstring tmp_name_template = history_filename(name, L".XXXXXX");
-    if (!tmp_name_template.empty()) {
-        // Make an LRU cache to save only the last N elements.
-        history_lru_cache_t lru(HISTORY_SAVE_MAX);
-
-        // Insert old items in, from old to new. Merge them with our new items, inserting items with
-        // earlier timestamps first.
-        history_item_list_t::const_iterator new_item_iter = new_items.begin();
-
-        // Map in existing items (which may have changed out from underneath us, so don't trust our
-        // old mmap'd data).
-        const char *local_mmap_start = NULL;
-        size_t local_mmap_size = 0;
-        if (map_file(name, &local_mmap_start, &local_mmap_size, NULL)) {
-            const history_file_type_t local_mmap_type =
-                infer_file_type(local_mmap_start, local_mmap_size);
-            size_t cursor = 0;
-            for (;;) {
-                size_t offset = offset_of_next_item(local_mmap_start, local_mmap_size,
-                                                    local_mmap_type, &cursor, 0);
-                // If we get back -1, we're done.
-                if (offset == (size_t)-1) break;
-
-                // Try decoding an old item.
-                const history_item_t old_item = decode_item(
-                    local_mmap_start + offset, local_mmap_size - offset, local_mmap_type);
-                if (old_item.empty() || deleted_items.count(old_item.str()) > 0) {
-                    //                    debug(0, L"Item is deleted : %s\n",
-                    //                    old_item.str().c_str());
-                    continue;
-                }
-                // The old item may actually be more recent than our new item, if it came from
-                // another session. Insert all new items at the given index with an earlier
-                // timestamp.
-                for (; new_item_iter != new_items.end(); ++new_item_iter) {
-                    if (new_item_iter->timestamp() < old_item.timestamp()) {
-                        // This "new item" is in fact older.
-                        lru.add_item(*new_item_iter);
-                    } else {
-                        // The new item is not older.
-                        break;
-                    }
-                }
-
-                // Now add this old item.
-                lru.add_item(old_item);
-            }
-            munmap((void *)local_mmap_start, local_mmap_size);
-        }
-
-        // Insert any remaining new items.
-        for (; new_item_iter != new_items.end(); ++new_item_iter) {
-            lru.add_item(*new_item_iter);
-        }
-
-        signal_block();
-
-        // Try to create a CLO_EXEC temporary file, up to 10 times.
-        // This should almost always succeed on the first try.
-        int out_fd = -1;
-        wcstring tmp_name;
-        for (size_t attempt = 0; attempt < 10 && out_fd == -1; attempt++) {
-            char *narrow_str = wcs2str(tmp_name_template.c_str());
-            out_fd = fish_mkstemp_cloexec(narrow_str);
-            if (out_fd >= 0) {
-                tmp_name = str2wcstring(narrow_str);
-            }
-            free(narrow_str);
-        }
-
-        if (out_fd >= 0) {
-            // Write them out.
-            bool errored = false;
-            history_output_buffer_t buffer;
-            for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); ++iter) {
-                const wcstring &text = (*iter).first;
-                const history_lru_item_t &item = (*iter).second;
-                append_yaml_to_buffer(text, item.timestamp, item.required_paths, &buffer);
-                if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE &&
-                    !buffer.flush_to_fd(out_fd)) {
-                    errored = true;
-                    break;
-                }
-            }
-
-            if (!errored && buffer.flush_to_fd(out_fd)) {
-                ok = true;
-            }
-
-            if (!ok) {
-                // This message does not have high enough priority to be shown by default.
-                debug(2, L"Error when writing history file");
-            } else {
-                wcstring new_name = history_filename(name, wcstring());
-
-                // Ensure we maintain the ownership and permissions of the original (#2355). If the
-                // stat fails, we assume (hope) our default permissions are correct. This
-                // corresponds to e.g. someone running sudo -E as the very first command. If they
-                // did, it would be tricky to set the permissions correctly. (bash doesn't get this
-                // case right either).
-                struct stat sbuf;
-                if (wstat(new_name, &sbuf) >= 0) {  // success
-                    if (fchown(out_fd, sbuf.st_uid, sbuf.st_gid) == -1) {
-                        debug(2, L"Error %d when changing ownership of history file", errno);
-                    }
-                    if (fchmod(out_fd, sbuf.st_mode) == -1) {
-                        debug(2, L"Error %d when changing mode of history file", errno);
-                    }
-                }
-
-                if (wrename(tmp_name, new_name) == -1) {
-                    debug(2, L"Error %d when renaming history file", errno);
-                }
-            }
-            close(out_fd);
-        }
-
-        signal_unblock();
-
-        // Make sure we clear all nodes, since this doesn't happen automatically.
-        lru.evict_all_nodes();
+    // We want to rewrite the file, while holding the lock for as briefly as possible
+    // To do this, we speculatively write a file, and then lock and see if our original file changed
+    // Repeat until we succeed or give up
+    const wcstring target_name = history_filename(name, wcstring());
+    const wcstring tmp_name_template = history_filename(name, L".XXXXXX");
+    if (target_name.empty() || tmp_name_template.empty()) {
+        return false;
     }
 
-    if (ok) {
+    // Make our temporary file
+    // Remember that we have to close this fd!
+    wcstring tmp_name;
+    int tmp_fd = create_temporary_file(tmp_name_template, &tmp_name);
+    if (tmp_fd < 0) {
+        return false;
+    }
+
+    bool done = false;
+    for (int i = 0; i < max_save_tries && !done; i++) {
+        // Open any target file, but do not lock it right away
+        int target_fd_before = wopen_cloexec(target_name, O_RDONLY | O_CREAT, history_file_mode);
+        file_id_t orig_file_id = file_id_for_fd(target_fd_before);  // possibly invalid
+        bool wrote = this->rewrite_to_temporary_file(target_fd_before, tmp_fd);
+        if (target_fd_before >= 0) {
+            close(target_fd_before);
+        }
+        if (!wrote) {
+            // Failed to write, no good
+            break;
+        }
+
+        // The crux! We rewrote the history file; see if the history file changed while we
+        // were rewriting it. Make an effort to take the lock before checking, to avoid racing.
+        // If the open fails, then proceed; this may be because there is no current history
+        file_id_t new_file_id = kInvalidFileID;
+        int target_fd_after = wopen_cloexec(target_name, O_RDONLY);
+        if (target_fd_after >= 0) {
+            // critical to take the lock before checking file IDs,
+            // and hold it until after we are done replacing
+            // Also critical to check the file at the path, NOT based on our fd
+            // It's only OK to replace the file while holding the lock
+            history_file_lock(target_fd_after, LOCK_EX);
+            new_file_id = file_id_for_path(target_name);
+        }
+        bool can_replace_file = (new_file_id == orig_file_id || new_file_id == kInvalidFileID);
+        if (!can_replace_file) {
+            // The file has changed, so we're going to re-read it
+            // Truncate our tmp_fd so we can reuse it
+            if (ftruncate(tmp_fd, 0) == -1 || lseek(tmp_fd, 0, SEEK_SET) == -1) {
+                debug(2, L"Error %d when truncating temporary history file", errno);
+            }
+        } else {
+            // The file is unchanged, or the new file doesn't exist or we can't read it
+            // We also attempted to take the lock, so we feel confident in replacing it
+
+            // Ensure we maintain the ownership and permissions of the original (#2355). If the
+            // stat fails, we assume (hope) our default permissions are correct. This
+            // corresponds to e.g. someone running sudo -E as the very first command. If they
+            // did, it would be tricky to set the permissions correctly. (bash doesn't get this
+            // case right either).
+            struct stat sbuf;
+            if (target_fd_after >= 0 && fstat(target_fd_after, &sbuf) >= 0) {
+                if (fchown(tmp_fd, sbuf.st_uid, sbuf.st_gid) == -1) {
+                    debug(2, L"Error %d when changing ownership of history file", errno);
+                }
+                if (fchmod(tmp_fd, sbuf.st_mode) == -1) {
+                    debug(2, L"Error %d when changing mode of history file", errno);
+                }
+            }
+
+            // Slide it into place
+            if (wrename(tmp_name, target_name) == -1) {
+                debug(2, L"Error %d when renaming history file", errno);
+            }
+
+            // We did it
+            done = true;
+        }
+
+        if (target_fd_after >= 0) {
+            close(target_fd_after);
+        }
+    }
+
+    // Ensure we never leave the old file around
+    wunlink(tmp_name);
+    close(tmp_fd);
+
+    if (done) {
         // We've saved everything, so we have no more unsaved items.
         this->first_unwritten_new_item_index = new_items.size();
 
@@ -1308,6 +1377,8 @@ bool history_t::save_internal_via_rewrite() {
     return ok;
 }
 
+// Function called to save our unwritten history file by appending to the existing history file
+// Returns true on success, false on failure.
 bool history_t::save_internal_via_appending() {
     // This must be called while locked.
     ASSERT_IS_LOCKED(lock);
@@ -1322,15 +1393,22 @@ bool history_t::save_internal_via_appending() {
 
     // Get the path to the real history file.
     wcstring history_path = history_filename(name, wcstring());
+    if (history_path.empty()) {
+        return true;
+    }
 
-    signal_block();
-
-    // Open the file.
-    int out_fd = wopen_cloexec(history_path, O_WRONLY | O_APPEND);
-    if (out_fd >= 0) {
-        // Check to see if the file changed.
-        if (file_id_for_fd(out_fd) != mmap_file_id) file_changed = true;
-
+    // We are going to open the file, lock it, append to it, and then close it
+    // After locking it, we need to stat the file at the path; if there is a new file there, it
+    // means
+    // the file was replaced and we have to try again
+    // Limit our max tries so we don't do this forever
+    int history_fd = -1;
+    for (int i = 0; i < max_save_tries; i++) {
+        int fd = wopen_cloexec(history_path, O_WRONLY | O_APPEND);
+        if (fd < 0) {
+            // can't open, we're hosed
+            break;
+        }
         // Exclusive lock on the entire file. This is released when we close the file (below). This
         // may fail on (e.g.) lockless NFS. If so, proceed as if it did not fail; the risk is that
         // we may get interleaved history items, which is considered better than no history, or
@@ -1338,8 +1416,23 @@ bool history_t::save_internal_via_appending() {
         // by writing with O_APPEND.
         //
         // Simulate a failing lock in chaos_mode
-        if (!chaos_mode) history_file_lock(out_fd, LOCK_EX);
+        if (!chaos_mode) history_file_lock(fd, LOCK_EX);
+        const file_id_t file_id = file_id_for_fd(fd);
+        if (file_id_for_path(history_path) != file_id) {
+            // The file has changed, we're going to retry
+            close(fd);
+        } else {
+            // File IDs match, so the file we opened is still at that path
+            // We're going to use this fd
+            if (file_id != this->mmap_file_id) {
+                file_changed = true;
+            }
+            history_fd = fd;
+            break;
+        }
+    }
 
+    if (history_fd >= 0) {
         // We (hopefully successfully) took the exclusive lock. Append to the file.
         // Note that this is sketchy for a few reasons:
         //   - Another shell may have appended its own items with a later timestamp, so our file may
@@ -1360,13 +1453,15 @@ bool history_t::save_internal_via_appending() {
         // So far so good. Write all items at or after first_unwritten_new_item_index. Note that we
         // write even a pending item - pending items are ignored by history within the command
         // itself, but should still be written to the file.
+        // TODO: consider filling the buffer ahead of time, so we can just lock, splat, and unlock?
         bool errored = false;
-        history_output_buffer_t buffer;
+        // Use a small buffer size for appending, we usually only have 1 item
+        history_output_buffer_t buffer(64);
         while (first_unwritten_new_item_index < new_items.size()) {
             const history_item_t &item = new_items.at(first_unwritten_new_item_index);
             append_yaml_to_buffer(item.str(), item.timestamp(), item.get_required_paths(), &buffer);
             if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE) {
-                errored = !buffer.flush_to_fd(out_fd);
+                errored = !buffer.flush_to_fd(history_fd);
                 if (errored) break;
             }
 
@@ -1374,15 +1469,20 @@ bool history_t::save_internal_via_appending() {
             first_unwritten_new_item_index++;
         }
 
-        if (!errored && buffer.flush_to_fd(out_fd)) {
+        if (!errored && buffer.flush_to_fd(history_fd)) {
             ok = true;
         }
 
-        if (!chaos_mode) history_file_lock(out_fd, LOCK_UN);
-        close(out_fd);
-    }
+        // Since we just modified the file, update our mmap_file_id to match its current state
+        // Otherwise we'll think the file has been changed by someone else the next time we go to
+        // write
+        // We don't update the mapping since we only appended to the file, and everything we
+        // appended
+        // remains in our new_items
+        this->mmap_file_id = file_id_for_fd(history_fd);
 
-    signal_unblock();
+        close(history_fd);
+    }
 
     // If someone has replaced the file, forget our file state.
     if (file_changed) {
@@ -1398,6 +1498,13 @@ void history_t::save_internal(bool vacuum) {
 
     // Nothing to do if there's no new items.
     if (first_unwritten_new_item_index >= new_items.size() && deleted_items.empty()) return;
+
+    if (history_filename(name, L"").empty()) {
+        // We're in the "incognito" mode. Pretend we've saved the history.
+        this->first_unwritten_new_item_index = new_items.size();
+        this->deleted_items.clear();
+        this->clear_file_state();
+    }
 
     // Compact our new items so we don't have duplicates.
     this->compact_new_items();
@@ -1420,44 +1527,42 @@ void history_t::save(void) {
     this->save_internal(false);
 }
 
-// Formats a single history record, including a trailing newline.  Returns true
-// if bytes were written to the output stream and false otherwise.
-static bool format_history_record(const history_item_t &item, const wchar_t *show_time_format,
-                                  bool null_terminate, io_streams_t &streams) {
+// Formats a single history record, including a trailing newline.
+//
+// Returns nothing. The only possible failure involves formatting the timestamp. If that happens we
+// simply omit the timestamp from the output.
+static void format_history_record(const history_item_t &item, const wchar_t *show_time_format,
+                                  bool null_terminate, wcstring &result) {
     if (show_time_format) {
         const time_t seconds = item.timestamp();
         struct tm timestamp;
-        if (!localtime_r(&seconds, &timestamp)) return false;
-        const int max_tstamp_length = 100;
-        wchar_t timestamp_string[max_tstamp_length + 1];
-        if (std::wcsftime(timestamp_string, max_tstamp_length, show_time_format, &timestamp) == 0) {
-            return false;
-        }
-        streams.out.append(timestamp_string);
-    }
-    streams.out.append(item.str());
-    if (null_terminate) {
-        streams.out.append(L'\0');
-    } else {
-        streams.out.append(L'\n');
-    }
-    return true;
-}
-
-bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args,
-                       const wchar_t *show_time_format, long max_items, bool case_sensitive,
-                       bool null_terminate, io_streams_t &streams) {
-    // scoped_lock locker(lock);
-    if (search_args.empty()) {
-        // Start at one because zero is the current command.
-        for (int i = 1; !this->item_at_index(i).empty() && max_items; ++i, --max_items) {
-            if (!format_history_record(this->item_at_index(i), show_time_format, null_terminate,
-                                       streams)) {
-                return false;
+        if (localtime_r(&seconds, &timestamp)) {
+            const int max_tstamp_length = 100;
+            wchar_t timestamp_string[max_tstamp_length + 1];
+            if (std::wcsftime(timestamp_string, max_tstamp_length, show_time_format, &timestamp) !=
+                0) {
+                result.append(timestamp_string);
             }
         }
-        return true;
     }
+
+    result.append(item.str());
+    if (null_terminate) {
+        result.push_back(L'\0');
+    } else {
+        result.push_back(L'\n');
+    }
+}
+
+/// This handles the slightly unusual case of someone searching history for
+/// specific terms/patterns.
+bool history_t::search_with_args(history_search_type_t search_type, wcstring_list_t search_args,
+                                 const wchar_t *show_time_format, size_t max_items,
+                                 bool case_sensitive, bool null_terminate, bool reverse,
+                                 io_streams_t &streams) {
+    wcstring_list_t results;
+    size_t hist_size = this->size();
+    if (max_items > hist_size) max_items = hist_size;
 
     for (wcstring_list_t::const_iterator iter = search_args.begin(); iter != search_args.end();
          ++iter) {
@@ -1469,11 +1574,55 @@ bool history_t::search(history_search_type_t search_type, wcstring_list_t search
         history_search_t searcher =
             history_search_t(*this, search_string, search_type, case_sensitive);
         while (searcher.go_backwards()) {
-            if (!format_history_record(searcher.current_item(), show_time_format, null_terminate,
-                                       streams)) {
-                return false;
+            wcstring result;
+            auto cur_item = searcher.current_item();
+            format_history_record(cur_item, show_time_format, null_terminate, result);
+            if (reverse) {
+                results.push_back(result);
+            } else {
+                streams.out.append(result);
             }
-            if (--max_items == 0) return true;
+            if (--max_items == 0) break;
+        }
+    }
+
+    if (reverse) {
+        for (auto it = results.rbegin(); it != results.rend(); it++) {
+            streams.out.append(*it);
+        }
+    }
+
+    return true;
+}
+
+bool history_t::search(history_search_type_t search_type, wcstring_list_t search_args,
+                       const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
+                       bool null_terminate, bool reverse, io_streams_t &streams) {
+    if (!search_args.empty()) {
+        // User wants the results filtered. This is not the common case so we do it separate
+        // from the code below for unfiltered output which is much cheaper.
+        return search_with_args(search_type, search_args, show_time_format, max_items,
+                                case_sensitive, null_terminate, reverse, streams);
+    }
+
+    // scoped_lock locker(lock);
+    size_t hist_size = this->size();
+    if (max_items > hist_size) max_items = hist_size;
+
+    if (reverse) {
+        for (size_t i = max_items; i != 0; --i) {
+            auto cur_item = this->item_at_index(i);
+            wcstring result;
+            format_history_record(cur_item, show_time_format, null_terminate, result);
+            streams.out.append(result);
+        }
+    } else {
+        // Start at one because zero is the current command.
+        for (size_t i = 1; i < max_items + 1; ++i) {
+            auto cur_item = this->item_at_index(i);
+            wcstring result;
+            format_history_record(cur_item, show_time_format, null_terminate, result);
+            streams.out.append(result);
         }
     }
 
@@ -1518,6 +1667,10 @@ bool history_t::is_empty(void) {
         // If we have not loaded old items, don't actually load them (which may be expensive); just
         // stat the file and see if it exists and is nonempty.
         const wcstring where = history_filename(name, L"");
+        if (where.empty()) {
+            return true;
+        }
+
         struct stat buf = {};
         if (wstat(where, &buf) != 0) {
             // Access failed, assume missing.
@@ -1534,6 +1687,11 @@ bool history_t::is_empty(void) {
 /// clearing ourselves, and copying the contents of the old history file to the new history file.
 /// The new contents will automatically be re-mapped later.
 void history_t::populate_from_config_path() {
+    wcstring new_file = history_filename(name, wcstring());
+    if (new_file.empty()) {
+        return;
+    }
+
     wcstring old_file;
     if (path_get_config(old_file)) {
         old_file.append(L"/");
@@ -1541,13 +1699,11 @@ void history_t::populate_from_config_path() {
         old_file.append(L"_history");
         int src_fd = wopen_cloexec(old_file, O_RDONLY, 0);
         if (src_fd != -1) {
-            wcstring new_file = history_filename(name, wcstring());
-
             // Clear must come after we've retrieved the new_file name, and before we open
             // destination file descriptor, since it destroys the name and the file.
             this->clear();
 
-            int dst_fd = wopen_cloexec(new_file, O_WRONLY | O_CREAT, 0644);
+            int dst_fd = wopen_cloexec(new_file, O_WRONLY | O_CREAT, history_file_mode);
             char buf[BUFSIZ];
             ssize_t size;
             while ((size = read(src_fd, buf, BUFSIZ)) > 0) {
@@ -1565,56 +1721,69 @@ void history_t::populate_from_config_path() {
     }
 }
 
-/// Indicate whether we ought to import the bash history file into fish.
+/// Decide whether we ought to import a bash history line into fish. This is a very crude heuristic.
 static bool should_import_bash_history_line(const std::string &line) {
     if (line.empty()) return false;
 
-    // Very naive tests! Skip export; probably should skip others.
-    const char *const ignore_prefixes[] = {"export ", "#"};
+    parse_node_tree_t parse_tree;
+    wcstring wide_line = str2wcstring(line);
+    if (!parse_tree_from_string(wide_line, parse_flag_none, &parse_tree, NULL)) return false;
 
-    for (size_t i = 0; i < sizeof ignore_prefixes / sizeof *ignore_prefixes; i++) {
-        const char *prefix = ignore_prefixes[i];
-        if (!line.compare(0, strlen(prefix), prefix)) {
-            return false;
-        }
-    }
+    // In doing this test do not allow incomplete strings. Hence the "false" argument.
+    parse_error_list_t errors;
+    parse_util_detect_errors(wide_line, &errors, false);
+    if (!errors.empty()) return false;
+
+    // The following are Very naive tests!
+
+    // Skip comments.
+    if (line[0] == '#') return false;
 
     // Skip lines with backticks.
     if (line.find('`') != std::string::npos) return false;
 
+    // Skip lines with [[...]] and ((...)) since we don't handle those constructs.
+    if (line.find("[[") != std::string::npos) return false;
+    if (line.find("]]") != std::string::npos) return false;
+    if (line.find("((") != std::string::npos) return false;
+    if (line.find("))") != std::string::npos) return false;
+
+    // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
+    if (line.back() == '\\') return false;
+
     return true;
 }
 
+/// Import a bash command history file. Bash's history format is very simple: just lines with #s for
+/// comments. Ignore a few commands that are bash-specific. It makes no attempt to handle multiline
+/// commands. We can't actually parse bash syntax and the bash history file does not unambiguously
+/// encode multiline commands.
 void history_t::populate_from_bash(FILE *stream) {
-    // Bash's format is very simple: just lines with #s for comments. Ignore a few commands that are
-    // bash-specific. This list ought to be expanded.
-    std::string line;
-    for (;;) {
-        line.clear();
-        bool success = false;
-        bool has_newline = false;
+    // We do not import bash history if an alternative fish history file is being used.
+    if (history_session_id() != DFLT_FISH_HISTORY_SESSION_ID) return;
 
-        // Loop until we've read a line.
-        do {
+    // Process the entire history file until EOF is observed.
+    bool eof = false;
+    while (!eof) {
+        auto line = std::string();
+
+        // Loop until we've read a line or EOF is observed.
+        while (true) {
             char buff[128];
-            success = (bool)fgets(buff, sizeof buff, stream);
-            if (success) {
-                // Skip the newline.
-                char *a_newline = strchr(buff, '\n');
-                if (a_newline) *a_newline = '\0';
-                has_newline = (a_newline != NULL);
-
-                // Append what we've got.
-                line.append(buff);
+            if (!fgets(buff, sizeof buff, stream)) {
+                eof = true;
+                break;
             }
-        } while (success && !has_newline);
 
-        // Maybe add this line.
-        if (should_import_bash_history_line(line)) {
-            this->add(str2wcstring(line));
+            // Deal with the newline if present.
+            char *a_newline = strchr(buff, '\n');
+            if (a_newline) *a_newline = '\0';
+            line.append(buff);
+            if (a_newline) break;
         }
 
-        if (line.empty()) break;
+        // Add this line if it doesn't contain anything we know we can't handle.
+        if (should_import_bash_history_line(line)) this->add(str2wcstring(line));
     }
 }
 
@@ -1646,7 +1815,7 @@ void history_init() {}
 
 void history_collection_t::save() {
     // Save all histories
-    auto h = histories.acquire();
+    auto &&h = histories.acquire();
     for (auto &p : h.value) {
         p.second->save();
     }
@@ -1656,6 +1825,29 @@ void history_destroy() { histories.save(); }
 
 void history_sanity_check() {
     // No sanity checking implemented yet...
+}
+
+/// Return the prefix for the files to be used for command and read history.
+wcstring history_session_id() {
+    wcstring result = DFLT_FISH_HISTORY_SESSION_ID;
+
+    const auto var = env_get(L"fish_history");
+    if (var) {
+        wcstring session_id = var->as_string();
+        if (session_id.empty()) {
+            result = L"";
+        } else if (session_id == L"default") {
+            ;  // using the default value
+        } else if (valid_var_name(session_id)) {
+            result = session_id;
+        } else {
+            debug(0, _(L"History session ID '%ls' is not a valid variable name. "
+                       L"Falling back to `%ls`."),
+                  session_id.c_str(), result.c_str());
+        }
+    }
+
+    return result;
 }
 
 path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory) {
@@ -1720,7 +1912,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
             wcstring command;
             tree.command_for_plain_statement(node, str, &command);
             unescape_string_in_place(&command, UNESCAPE_DEFAULT);
-            if (contains(command, L"exit", L"reboot")) {
+            if (command == L"exit" || command == L"reboot") {
                 impending_exit = true;
             }
         }

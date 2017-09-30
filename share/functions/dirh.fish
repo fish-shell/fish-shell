@@ -1,10 +1,11 @@
 function dirh --description "Print the current directory history (the prev and next lists)"
-    if set -q argv[1]
-        switch $argv[1]
-            case -h --h --he --hel --help
-                __fish_print_help dirh
-                return 0
-        end
+    set -l options 'h/help'
+    argparse -n dirh --max-args=0 $options -- $argv
+    or return
+
+    if set -q _flag_help
+        __fish_print_help dirh
+        return 0
     end
 
     set -l dirc (count $dirprev)
@@ -25,6 +26,5 @@ function dirh --description "Print the current directory history (the prev and n
             printf '%2d) %s\n' $i $dirnext[$i]
         end
     end
-
     echo
 end

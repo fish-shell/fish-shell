@@ -8,12 +8,19 @@
 // of text around to handle text insertion.
 #ifndef FISH_SCREEN_H
 #define FISH_SCREEN_H
+#include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <stddef.h>
 #include <sys/stat.h>
+#include <wchar.h>
+
+#include <algorithm>
+#include <cstddef>
 #include <memory>
+#include <unordered_set>
+#include <unordered_map>
 #include <vector>
+
 #include "common.h"
 #include "highlight.h"
 
@@ -191,5 +198,46 @@ bool screen_force_clear_to_end();
 
 /// Returns the length of an escape code. Exposed for testing purposes only.
 size_t escape_code_length(const wchar_t *code);
+
+// Maintain a mapping of escape sequences to their length for fast lookup.
+class cached_esc_sequences_t {
+   private:
+    // Cached escape sequences we've already detected in the prompt and similar strings, ordered
+    // lexicographically.
+    std::vector<wcstring> cache_;
+
+   public:
+    /// \return the size of the cache.
+    size_t size() const { return cache_.size(); }
+
+    /// Insert the entry \p str in its sorted position, if it is not already present in the cache.
+    void add_entry(wcstring str) {
+        auto where = std::upper_bound(cache_.begin(), cache_.end(), str);
+        if (where == cache_.begin() || where[-1] != str) {
+            cache_.emplace(where, std::move(str));
+        }
+    }
+
+    /// \return the length of a string that matches a prefix of \p entry.
+    size_t find_entry(const wchar_t *entry) const {
+        // Do a binary search and see if the escape code right before our entry is a prefix of our
+        // entry. Note this assumes that escape codes are prefix-free: no escape code is a prefix of
+        // another one. This seems like a safe assumption.
+        auto where = std::upper_bound(cache_.begin(), cache_.end(), entry);
+        // 'where' is now the first element that is greater than entry. Thus where-1 is the last
+        // element that is less than or equal to entry.
+        if (where != cache_.begin()) {
+            const wcstring &candidate = where[-1];
+            if (string_prefixes_string(candidate.c_str(), entry)) return candidate.size();
+        }
+        return 0;
+    }
+
+    void clear() { cache_.clear(); }
+};
+
+// Singleton that is exposed so that the cache can be invalidated when terminal related variables
+// change by calling `cached_esc_sequences.clear()`.
+extern cached_esc_sequences_t cached_esc_sequences;
 
 #endif

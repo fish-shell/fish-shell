@@ -1,14 +1,14 @@
 // Programmatic representation of fish code.
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <wchar.h>
+
 #include <algorithm>
-#include <cwchar>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "common.h"
@@ -29,8 +29,10 @@ static bool production_is_empty(const production_element_t *production) {
 /// Returns a string description of this parse error.
 wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix,
                                              bool is_interactive, bool skip_caret) const {
-    wcstring result = text;
+    if (skip_caret && this->text.empty()) return L"";
 
+    wcstring result = prefix;
+    result.append(this->text);
     if (skip_caret || source_start >= src.size() || source_start + source_length > src.size()) {
         return result;
     }
@@ -63,25 +65,20 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     // Don't include the caret and line if we're interactive this is the first line, because
     // then it's obvious.
     bool interactive_skip_caret = is_interactive && source_start == 0;
-
     if (interactive_skip_caret) {
         return result;
     }
 
     // Append the line of text.
-    if (!result.empty()) {
-        result.push_back(L'\n');
-    }
-    result.append(prefix);
+    if (!result.empty()) result.push_back(L'\n');
     result.append(src, line_start, line_end - line_start);
 
     // Append the caret line. The input source may include tabs; for that reason we
     // construct a "caret line" that has tabs in corresponding positions.
-    const wcstring line_to_measure = prefix + wcstring(src, line_start, source_start - line_start);
     wcstring caret_space_line;
     caret_space_line.reserve(source_start - line_start);
-    for (size_t i = 0; i < line_to_measure.size(); i++) {
-        wchar_t wc = line_to_measure.at(i);
+    for (size_t i = line_start; i < source_start; i++) {
+        wchar_t wc = src.at(i);
         if (wc == L'\t') {
             caret_space_line.push_back(L'\t');
         } else if (wc == L'\n') {
@@ -258,7 +255,7 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
     return result;
 }
 
-#if 0
+#if 1
 // Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
 
 /// Helper function for parse_dump_tree().
@@ -1055,7 +1052,9 @@ static const parse_token_t kInvalidToken = {
 static const parse_token_t kTerminalToken = {
     parse_token_type_terminate, parse_keyword_none, false, false, SOURCE_OFFSET_INVALID, 0};
 
-static inline bool is_help_argument(const wcstring &txt) { return contains(txt, L"-h", L"--help"); }
+static inline bool is_help_argument(const wcstring &txt) {
+    return txt == L"-h" || txt == L"--help";
+}
 
 /// Return a new parse token, advancing the tokenizer.
 static inline parse_token_t next_parse_token(tokenizer_t *tok, tok_t *token) {

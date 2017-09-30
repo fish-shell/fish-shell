@@ -20,7 +20,7 @@ function fish_prompt --description 'Write out the prompt'
         set __fish_color_status (set_color -o red)
     end
 
-    switch $USER
+    switch "$USER"
 
         case root toor
 

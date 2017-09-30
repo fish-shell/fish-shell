@@ -7,11 +7,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <wchar.h>
+
 #include <algorithm>
-#include <map>
 #include <memory>
-#include <set>
 #include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "builtin.h"
@@ -39,16 +41,25 @@
 
 /// The environment variables used to specify the color of different tokens. This matches the order
 /// in highlight_spec_t.
-static const wchar_t *const highlight_var[] = {
-    L"fish_color_normal", L"fish_color_error", L"fish_color_command", L"fish_color_end",
-    L"fish_color_param", L"fish_color_comment", L"fish_color_match", L"fish_color_search_match",
-    L"fish_color_operator", L"fish_color_escape", L"fish_color_quote", L"fish_color_redirection",
-    L"fish_color_autosuggestion", L"fish_color_selection",
-
-    L"fish_pager_color_prefix", L"fish_pager_color_completion", L"fish_pager_color_description",
-    L"fish_pager_color_progress", L"fish_pager_color_secondary"
-
-};
+static const wchar_t *const highlight_var[] = {L"fish_color_normal",
+                                               L"fish_color_error",
+                                               L"fish_color_command",
+                                               L"fish_color_end",
+                                               L"fish_color_param",
+                                               L"fish_color_comment",
+                                               L"fish_color_match",
+                                               L"fish_color_search_match",
+                                               L"fish_color_operator",
+                                               L"fish_color_escape",
+                                               L"fish_color_quote",
+                                               L"fish_color_redirection",
+                                               L"fish_color_autosuggestion",
+                                               L"fish_color_selection",
+                                               L"fish_pager_color_prefix",
+                                               L"fish_pager_color_completion",
+                                               L"fish_pager_color_description",
+                                               L"fish_pager_color_progress",
+                                               L"fish_pager_color_secondary"};
 
 /// Determine if the filesystem containing the given fd is case insensitive for lookups regardless
 /// of whether it preserves the case when saving a pathname.
@@ -56,7 +67,7 @@ static const wchar_t *const highlight_var[] = {
 /// Returns:
 ///     false: the filesystem is not case insensitive
 ///     true: the file system is case insensitive
-typedef std::map<wcstring, bool> case_sensitivity_cache_t;
+typedef std::unordered_map<wcstring, bool> case_sensitivity_cache_t;
 bool fs_is_case_insensitive(const wcstring &path, int fd,
                             case_sensitivity_cache_t &case_sensitivity_cache) {
     bool result = false;
@@ -135,7 +146,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
 
     // Don't test the same path multiple times, which can happen if the path is absolute and the
     // CDPATH contains multiple entries.
-    std::set<wcstring> checked_paths;
+    std::unordered_set<wcstring> checked_paths;
 
     // Keep a cache of which paths / filesystems are case sensitive.
     case_sensitivity_cache_t case_sensitivity_cache;
@@ -210,13 +221,14 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
         directories.push_back(working_directory);
     } else {
         // Get the CDPATH.
-        env_var_t cdpath = env_get_string(L"CDPATH");
-        if (cdpath.missing_or_empty()) cdpath = L".";
+        auto cdpath = env_get(L"CDPATH");
+        if (cdpath.missing_or_empty()) cdpath = env_var_t(L"CDPATH", L".");
 
         // Tokenize it into directories.
-        wcstokenizer tokenizer(cdpath, ARRAY_SEP_STR);
-        wcstring next_path;
-        while (tokenizer.next(next_path)) {
+        std::vector<wcstring> pathsv;
+        cdpath->to_list(pathsv);
+        for (auto next_path : pathsv) {
+            if (next_path.empty()) next_path = L".";
             // Ensure that we use the working directory for relative cdpaths like ".".
             directories.push_back(path_apply_working_directory(next_path, working_directory));
         }
@@ -256,28 +268,28 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) 
         return rgb_color_t::normal();
     }
 
-    env_var_t val_wstr = env_get_string(highlight_var[idx]);
+    auto var = env_get(highlight_var[idx]);
 
     // debug( 1, L"%d -> %d -> %ls", highlight, idx, val );
 
-    if (val_wstr.missing()) val_wstr = env_get_string(highlight_var[0]);
+    if (!var) var = env_get(highlight_var[0]);
 
-    if (!val_wstr.missing()) result = parse_color(val_wstr, treat_as_background);
+    if (var) result = parse_color(*var, treat_as_background);
 
     // Handle modifiers.
     if (highlight & highlight_modifier_valid_path) {
-        env_var_t val2_wstr = env_get_string(L"fish_color_valid_path");
-        const wcstring val2 = val2_wstr.missing() ? L"" : val2_wstr.c_str();
-
-        rgb_color_t result2 = parse_color(val2, is_background);
-        if (result.is_normal())
-            result = result2;
-        else {
-            if (result2.is_bold()) result.set_bold(true);
-            if (result2.is_underline()) result.set_underline(true);
-            if (result2.is_italics()) result.set_italics(true);
-            if (result2.is_dim()) result.set_dim(true);
-            if (result2.is_reverse()) result.set_reverse(true);
+        auto var2 = env_get(L"fish_color_valid_path");
+        if (var2) {
+            rgb_color_t result2 = parse_color(*var2, is_background);
+            if (result.is_normal())
+                result = result2;
+            else {
+                if (result2.is_bold()) result.set_bold(true);
+                if (result2.is_underline()) result.set_underline(true);
+                if (result2.is_italics()) result.set_italics(true);
+                if (result2.is_dim()) result.set_dim(true);
+                if (result2.is_reverse()) result.set_reverse(true);
+            }
         }
     }
 
@@ -348,7 +360,8 @@ bool autosuggest_validate_from_history(const history_item_t &item,
                 string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
             if (!is_help) {
                 wcstring path;
-                bool can_cd = path_get_cdpath(dir, &path, working_directory.c_str(), vars);
+                env_var_t dir_var(L"n/a", dir);
+                bool can_cd = path_get_cdpath(dir_var, &path, working_directory.c_str(), vars);
                 if (can_cd && !paths_are_same_file(working_directory, path)) {
                     suggestionOK = true;
                 }
@@ -390,7 +403,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
     while (in[idx] == '$') {
         // Our color depends on the next char.
         wchar_t next = in[idx + 1];
-        if (next == L'$' || wcsvarchr(next)) {
+        if (next == L'$' || valid_var_name_char(next)) {
             colors[idx] = highlight_spec_operator;
         } else {
             colors[idx] = highlight_spec_error;
@@ -400,7 +413,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
     }
 
     // Handle a sequence of variable characters.
-    while (wcsvarchr(in[idx])) {
+    while (valid_var_name_char(in[idx])) {
         colors[idx++] = highlight_spec_operator;
     }
 
@@ -840,9 +853,8 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node) {
             this->parse_tree.type_for_redirection(redirection_node, this->buff, NULL, &target);
 
         // We may get a TOK_NONE redirection type, e.g. if the redirection is invalid.
-        this->color_node(*redirection_primitive, redirect_type == TOK_NONE
-                                                     ? highlight_spec_error
-                                                     : highlight_spec_redirection);
+        auto hl = redirect_type == TOK_NONE ? highlight_spec_error : highlight_spec_redirection;
+        this->color_node(*redirection_primitive, hl);
 
         // Check if the argument contains a command substitution. If so, highlight it as a param
         // even though it's a command redirection, and don't try to do any other validation.
@@ -939,8 +951,8 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node) {
             }
 
             if (redirection_target != NULL) {
-                this->color_node(*redirection_target, target_is_valid ? highlight_spec_redirection
-                                                                      : highlight_spec_error);
+                auto hl = target_is_valid ? highlight_spec_redirection : highlight_spec_error;
+                this->color_node(*redirection_target, hl);
             }
         }
     }
@@ -1003,8 +1015,9 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
     if (!is_valid && command_ok) is_valid = path_get_path(cmd, NULL, vars);
 
     // Implicit cd
-    if (!is_valid && implicit_cd_ok)
+    if (!is_valid && implicit_cd_ok) {
         is_valid = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str(), vars);
+    }
 
     // Return what we got.
     return is_valid;

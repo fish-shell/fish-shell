@@ -1,12 +1,13 @@
 // Various functions, mostly string utilities, that are used by most parts of fish.
 #include "config.h"
 
-#include <assert.h>
+#include <ctype.h>
 #include <cxxabi.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <pthread.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -28,8 +29,10 @@
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
+
 #include <algorithm>
 #include <memory>  // IWYU pragma: keep
+#include <type_traits>
 
 #include "common.h"
 #include "env.h"
@@ -49,6 +52,7 @@ static bool thread_asserts_cfg_for_testing = false;
 
 wchar_t ellipsis_char;
 wchar_t omitted_newline_char;
+wchar_t obfuscation_read_char;
 bool g_profiling_active = false;
 const wchar_t *program_name;
 int debug_level = 1;         // default maximum debug output level (errors and warnings)
@@ -63,7 +67,7 @@ static pid_t initial_fg_process_group = -1;
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
 /// common_get_width()/common_get_height().
-static pthread_mutex_t termsize_lock = PTHREAD_MUTEX_INITIALIZER;
+static std::mutex termsize_lock;
 static struct winsize termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
 static volatile bool termsize_valid = false;
 
@@ -71,6 +75,38 @@ static char *wcs2str_internal(const wchar_t *in, char *out);
 static void debug_shared(const wchar_t msg_level, const wcstring &msg);
 
 bool has_working_tty_timestamps = true;
+
+/// Convert a character to its integer equivalent if it is a valid character for the requested base.
+/// Return the integer value if it is valid else -1.
+long convert_digit(wchar_t d, int base) {
+    long res = -1;
+    if ((d <= L'9') && (d >= L'0')) {
+        res = d - L'0';
+    } else if ((d <= L'z') && (d >= L'a')) {
+        res = d + 10 - L'a';
+    } else if ((d <= L'Z') && (d >= L'A')) {
+        res = d + 10 - L'A';
+    }
+    if (res >= base) {
+        res = -1;
+    }
+
+    return res;
+}
+
+/// Test whether the char is a valid hex digit as used by the `escape_string_*()` functions.
+static bool is_hex_digit(int c) { return strchr("0123456789ABCDEF", c) != NULL; }
+
+/// This is a specialization of `convert_digit()` that only handles base 16 and only uppercase.
+long convert_hex_digit(wchar_t d) {
+    if ((d <= L'9') && (d >= L'0')) {
+        return d - L'0';
+    } else if ((d <= L'Z') && (d >= L'A')) {
+        return 10 + d - L'A';
+    }
+
+    return -1;
+}
 
 #ifdef HAVE_BACKTRACE_SYMBOLS
 // This function produces a stack backtrace with demangled function & method names. It is based on
@@ -108,7 +144,6 @@ demangled_backtrace(int max_frames, int skip_levels) {
 
 void __attribute__((noinline))
 show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
-    ASSERT_IS_NOT_FORKED_CHILD();
     if (frame_count < 1) return;
 
     // TODO: Decide if this is still needed. I'm commenting it out because it caused me some grief
@@ -128,7 +163,7 @@ show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
 #else   // HAVE_BACKTRACE_SYMBOLS
 
 void __attribute__((noinline))
-show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
+show_stackframe(const wchar_t msg_level, int, int) {
     debug_shared(msg_level, L"Sorry, but your system does not support backtraces");
 }
 #endif  // HAVE_BACKTRACE_SYMBOLS
@@ -265,14 +300,14 @@ char *wcs2str(const wchar_t *in) {
         if (result) {
             // It converted into the local buffer, so copy it.
             result = strdup(result);
-            if (!result) DIE_MEM();
+            assert(result);
         }
         return result;
     }
 
     // Here we probably allocate a buffer probably much larger than necessary.
     char *out = (char *)malloc(MAX_UTF8_BYTES * wcslen(in) + 1);
-    if (!out) DIE_MEM();
+    assert(out);
     return wcs2str_internal(in, out);
 }
 
@@ -399,9 +434,7 @@ void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig) {
                 break;
             }
             buff = (wchar_t *)realloc((buff == static_buff ? NULL : buff), size);
-            if (buff == NULL) {
-                DIE_MEM();
-            }
+            assert(buff != NULL);
         }
 
         // Try printing.
@@ -454,50 +487,14 @@ wchar_t *quote_end(const wchar_t *pos) {
 }
 
 void fish_setlocale() {
-    // Use the Unicode "ellipsis" symbol if it can be encoded using the current locale.
-    ellipsis_char = can_be_encoded(L'\x2026') ? L'\x2026' : L'$';
-
-    // Use the Unicode "return" symbol if it can be encoded using the current locale.
-    omitted_newline_char = can_be_encoded(L'\x23CE') ? L'\x23CE' : L'~';
-}
-
-bool contains_internal(const wchar_t *a, int vararg_handle, ...) {
-    const wchar_t *arg;
-    va_list va;
-    bool res = false;
-
-    CHECK(a, 0);
-
-    va_start(va, vararg_handle);
-    while ((arg = va_arg(va, const wchar_t *)) != 0) {
-        if (wcscmp(a, arg) == 0) {
-            res = true;
-            break;
-        }
-    }
-    va_end(va);
-    return res;
-}
-
-/// wcstring variant of contains_internal. The first parameter is a wcstring, the rest are const
-/// wchar_t *. vararg_handle exists only to give us a POD-value to pass to va_start.
-__sentinel bool contains_internal(const wcstring &needle, int vararg_handle, ...) {
-    const wchar_t *arg;
-    va_list va;
-    int res = 0;
-
-    const wchar_t *needle_cstr = needle.c_str();
-    va_start(va, vararg_handle);
-    while ((arg = va_arg(va, const wchar_t *)) != 0) {
-        // libc++ has an unfortunate implementation of operator== that unconditonally wcslen's the
-        // wchar_t* parameter, so prefer wcscmp directly.
-        if (!wcscmp(needle_cstr, arg)) {
-            res = 1;
-            break;
-        }
-    }
-    va_end(va);
-    return res;
+    // Use various Unicode symbols if they can be encoded using the current locale, else a simple
+    // ASCII char alternative. All of the can_be_encoded() invocations should return the same
+    // true/false value since the code points are in the BMP but we're going to be paranoid. This
+    // is also technically wrong if we're not in a Unicode locale but we expect (or hope)
+    // can_be_encoded() will return false in that case.
+    ellipsis_char = can_be_encoded(L'\u2026') ? L'\u2026' : L'$';          // "horizontal ellipsis"
+    omitted_newline_char = can_be_encoded(L'\u23CE') ? L'\u23CE' : L'~';   // "return"
+    obfuscation_read_char = can_be_encoded(L'\u25CF') ? L'\u25CF' : L'#';  // "black circle"
 }
 
 long read_blocked(int fd, void *buf, size_t count) {
@@ -545,16 +542,19 @@ ssize_t read_loop(int fd, void *buff, size_t count) {
     return result;
 }
 
+/// Hack to not print error messages in the tests. Do not call this from functions in this module
+/// like `debug()`. It is only intended to supress diagnostic noise from testing things like the
+/// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
 bool should_suppress_stderr_for_tests() {
-    // Hack to not print error messages in the tests.
     return program_name && !wcscmp(program_name, TESTS_PROGRAM_NAME);
 }
 
-static bool should_debug(int level) {
-    if (level > debug_level) return false;
-    if (should_suppress_stderr_for_tests()) return false;
-    return true;
-}
+/// Return true if we should emit a `debug()` message. This used to call
+/// `should_suppress_stderr_for_tests()`. It no longer does so because it can suppress legitimate
+/// errors we want to see if things go wrong. Too, calling that function is no longer necessary, if
+/// it ever was, to suppress unwanted diagnostic output that might confuse people running `make
+/// test`.
+static bool should_debug(int level) { return level <= debug_level; }
 
 static void debug_shared(const wchar_t level, const wcstring &msg) {
     pid_t current_pid = getpid();
@@ -599,16 +599,6 @@ void __attribute__((noinline)) debug(int level, const char *msg, ...) {
     errno = errno_old;
 }
 
-void read_ignore(int fd, void *buff, size_t count) {
-    size_t ignore __attribute__((unused));
-    ignore = read(fd, buff, count);
-}
-
-void write_ignore(int fd, const void *buff, size_t count) {
-    size_t ignore __attribute__((unused));
-    ignore = write(fd, buff, count);
-}
-
 void debug_safe(int level, const char *msg, const char *param1, const char *param2,
                 const char *param3, const char *param4, const char *param5, const char *param6,
                 const char *param7, const char *param8, const char *param9, const char *param10,
@@ -627,14 +617,14 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
         const char *end = strchr(cursor, '%');
         if (end == NULL) end = cursor + strlen(cursor);
 
-        write_ignore(STDERR_FILENO, cursor, end - cursor);
+        ignore_result(write(STDERR_FILENO, cursor, end - cursor));
 
         if (end[0] == '%' && end[1] == 's') {
             // Handle a format string.
             assert(param_idx < sizeof params / sizeof *params);
             const char *format = params[param_idx++];
             if (!format) format = "(null)";
-            write_ignore(STDERR_FILENO, format, strlen(format));
+            ignore_result(write(STDERR_FILENO, format, strlen(format)));
             cursor = end + 2;
         } else if (end[0] == '\0') {
             // Must be at the end of the string.
@@ -646,7 +636,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     }
 
     // We always append a newline.
-    write_ignore(STDERR_FILENO, "\n", 1);
+    ignore_result(write(STDERR_FILENO, "\n", 1));
 
     errno = errno_old;
 }
@@ -779,11 +769,131 @@ wcstring reformat_for_screen(const wcstring &msg) {
     return buff;
 }
 
-/// Escape a string, storing the result in out_str.
-static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstring *out_str,
-                                   escape_flags_t flags) {
-    assert(orig_in != NULL);
+/// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
+static void escape_string_url(const wchar_t *orig_in, wcstring &out) {
+    const std::string &in = wcs2string(orig_in);
+    for (auto c1 : in) {
+        // This silliness is so we get the correct result whether chars are signed or unsigned.
+        unsigned int c2 = (unsigned int)c1 & 0xFF;
+        if (!(c2 & 0x80) &&
+            (isalnum(c2) || c2 == '/' || c2 == '.' || c2 == '~' || c2 == '-' || c2 == '_')) {
+            // The above characters don't need to be encoded.
+            out.push_back((wchar_t)c2);
+        } else {
+            // All other chars need to have their UTF-8 representation encoded in hex.
+            wchar_t buf[4];
+            swprintf(buf, sizeof buf / sizeof buf[0], L"%%%02X", c2);
+            out.append(buf);
+        }
+    }
+}
 
+/// Reverse the effects of `escape_string_url()`. By definition the string has consist of just ASCII
+/// chars.
+static bool unescape_string_url(const wchar_t *in, wcstring *out) {
+    std::string result;
+    result.reserve(out->size());
+    for (wchar_t c = *in; c; c = *++in) {
+        if (c > 0x7F) return false;  // invalid character means we can't decode the string
+        if (c == '%') {
+            int c1 = in[1];
+            if (c1 == 0) return false;  // found unexpected end of string
+            if (c1 == '%') {
+                result.push_back('%');
+                in++;
+            } else {
+                int c2 = in[2];
+                if (c2 == 0) return false;  // string ended prematurely
+                long d1 = convert_digit(c1, 16);
+                if (d1 < 0) return false;
+                long d2 = convert_digit(c2, 16);
+                if (d2 < 0) return false;
+                result.push_back(16 * d1 + d2);
+                in += 2;
+            }
+        } else {
+            result.push_back(c);
+        }
+    }
+
+    *out = str2wcstring(result);
+    return true;
+}
+
+/// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
+static void escape_string_var(const wchar_t *orig_in, wcstring &out) {
+    bool prev_was_hex_encoded = false;
+    const std::string &in = wcs2string(orig_in);
+    for (auto c1 : in) {
+        // This silliness is so we get the correct result whether chars are signed or unsigned.
+        unsigned int c2 = (unsigned int)c1 & 0xFF;
+        if (!(c2 & 0x80) && isalnum(c2) && (!prev_was_hex_encoded || !is_hex_digit(c2))) {
+            // ASCII alphanumerics don't need to be encoded.
+            if (prev_was_hex_encoded) {
+                out.push_back(L'_');
+                prev_was_hex_encoded = false;
+            }
+            out.push_back((wchar_t)c2);
+        } else if (c2 == '_') {
+            // Underscores are encoded by doubling them.
+            out.append(L"__");
+            prev_was_hex_encoded = false;
+        } else {
+            // All other chars need to have their UTF-8 representation encoded in hex.
+            wchar_t buf[4];
+            swprintf(buf, sizeof buf / sizeof buf[0], L"_%02X", c2);
+            out.append(buf);
+            prev_was_hex_encoded = true;
+        }
+    }
+    if (prev_was_hex_encoded) {
+        out.push_back(L'_');
+    }
+}
+
+/// Reverse the effects of `escape_string_var()`. By definition the string has consist of just ASCII
+/// chars.
+static bool unescape_string_var(const wchar_t *in, wcstring *out) {
+    std::string result;
+    result.reserve(out->size());
+    bool prev_was_hex_encoded = false;
+    for (wchar_t c = *in; c; c = *++in) {
+        if (c > 0x7F) return false;  // invalid character means we can't decode the string
+        if (c == '_') {
+            int c1 = in[1];
+            if (c1 == 0) {
+                if (prev_was_hex_encoded) break;
+                return false;  // found unexpected escape char at end of string
+            }
+            if (c1 == '_') {
+                result.push_back('_');
+                in++;
+            } else if (is_hex_digit(c1)) {
+                int c2 = in[2];
+                if (c2 == 0) return false;  // string ended prematurely
+                long d1 = convert_hex_digit(c1);
+                if (d1 < 0) return false;
+                long d2 = convert_hex_digit(c2);
+                if (d2 < 0) return false;
+                result.push_back(16 * d1 + d2);
+                in += 2;
+                prev_was_hex_encoded = true;
+            }
+            // No "else" clause because if the first char after an underscore is not another
+            // underscore or a valid hex character then the underscore is there to improve
+            // readability after we've encoded a character not valid in a var name.
+        } else {
+            result.push_back(c);
+        }
+    }
+
+    *out = str2wcstring(result);
+    return true;
+}
+
+/// Escape a string in a fashion suitable for using in fish script. Store the result in out_str.
+static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring &out,
+                                 escape_flags_t flags) {
     const wchar_t *in = orig_in;
     bool escape_all = static_cast<bool>(flags & ESCAPE_ALL);
     bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
@@ -791,9 +901,6 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
 
     int need_escape = 0;
     int need_complex_escape = 0;
-
-    // Avoid dereferencing all over the place.
-    wcstring &out = *out_str;
 
     if (!no_quoted && in_len == 0) {
         out.assign(L"''");
@@ -851,7 +958,7 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
                 case L'\\':
                 case L'\'': {
                     need_escape = need_complex_escape = 1;
-                    if (escape_all) out += L'\\';
+                    out += L'\\';
                     out += *in;
                     break;
                 }
@@ -936,15 +1043,45 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
     }
 }
 
-wcstring escape(const wchar_t *in, escape_flags_t flags) {
+wcstring escape_string(const wchar_t *in, escape_flags_t flags, escape_string_style_t style) {
     wcstring result;
-    escape_string_internal(in, wcslen(in), &result, flags);
+
+    switch (style) {
+        case STRING_STYLE_SCRIPT: {
+            escape_string_script(in, wcslen(in), result, flags);
+            break;
+        }
+        case STRING_STYLE_URL: {
+            escape_string_url(in, result);
+            break;
+        }
+        case STRING_STYLE_VAR: {
+            escape_string_var(in, result);
+            break;
+        }
+    }
+
     return result;
 }
 
-wcstring escape_string(const wcstring &in, escape_flags_t flags) {
+wcstring escape_string(const wcstring &in, escape_flags_t flags, escape_string_style_t style) {
     wcstring result;
-    escape_string_internal(in.c_str(), in.size(), &result, flags);
+
+    switch (style) {
+        case STRING_STYLE_SCRIPT: {
+            escape_string_script(in.c_str(), in.size(), result, flags);
+            break;
+        }
+        case STRING_STYLE_URL: {
+            DIE("STRING_STYLE_URL not implemented");
+            break;
+        }
+        case STRING_STYLE_VAR: {
+            escape_string_var(in.c_str(), result);
+            break;
+        }
+    }
+
     return result;
 }
 
@@ -1344,14 +1481,44 @@ bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special) {
     return success;
 }
 
-bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special) {
-    bool success = unescape_string_internal(input, wcslen(input), output, escape_special);
+bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special,
+                     escape_string_style_t style) {
+    bool success = false;
+    switch (style) {
+        case STRING_STYLE_SCRIPT: {
+            success = unescape_string_internal(input, wcslen(input), output, escape_special);
+            break;
+        }
+        case STRING_STYLE_URL: {
+            success = unescape_string_url(input, output);
+            break;
+        }
+        case STRING_STYLE_VAR: {
+            success = unescape_string_var(input, output);
+            break;
+        }
+    }
     if (!success) output->clear();
     return success;
 }
 
-bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special) {
-    bool success = unescape_string_internal(input.c_str(), input.size(), output, escape_special);
+bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special,
+                     escape_string_style_t style) {
+    bool success = false;
+    switch (style) {
+        case STRING_STYLE_SCRIPT: {
+            success = unescape_string_internal(input.c_str(), input.size(), output, escape_special);
+            break;
+        }
+        case STRING_STYLE_URL: {
+            success = unescape_string_url(input.c_str(), output);
+            break;
+        }
+        case STRING_STYLE_VAR: {
+            success = unescape_string_var(input.c_str(), output);
+            break;
+        }
+    }
     if (!success) output->clear();
     return success;
 }
@@ -1387,13 +1554,13 @@ static void validate_new_termsize(struct winsize *new_termsize) {
         }
 #endif
         // Fallback to the environment vars.
-        env_var_t col_var = env_get_string(L"COLUMNS");
-        env_var_t row_var = env_get_string(L"LINES");
+        maybe_t<env_var_t> col_var = env_get(L"COLUMNS");
+        maybe_t<env_var_t> row_var = env_get(L"LINES");
         if (!col_var.missing_or_empty() && !row_var.missing_or_empty()) {
             // Both vars have to have valid values.
-            int col = fish_wcstoi(col_var.c_str());
+            int col = fish_wcstoi(col_var->as_string().c_str());
             bool col_ok = errno == 0 && col > 0 && col <= USHRT_MAX;
-            int row = fish_wcstoi(row_var.c_str());
+            int row = fish_wcstoi(row_var->as_string().c_str());
             bool row_ok = errno == 0 && row > 0 && row <= USHRT_MAX;
             if (col_ok && row_ok) {
                 new_termsize->ws_col = col;
@@ -1415,10 +1582,14 @@ static void validate_new_termsize(struct winsize *new_termsize) {
 /// Export the new terminal size as env vars and to the kernel if possible.
 static void export_new_termsize(struct winsize *new_termsize) {
     wchar_t buf[64];
+
+    auto cols = env_get(L"COLUMNS", ENV_EXPORT);
     swprintf(buf, 64, L"%d", (int)new_termsize->ws_col);
-    env_set(L"COLUMNS", buf, ENV_EXPORT | ENV_GLOBAL);
+    env_set_one(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
+
+    auto lines = env_get(L"LINES", ENV_EXPORT);
     swprintf(buf, 64, L"%d", (int)new_termsize->ws_row);
-    env_set(L"LINES", buf, ENV_EXPORT | ENV_GLOBAL);
+    env_set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
 
 #ifdef HAVE_WINSIZE
     ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);
@@ -1453,19 +1624,6 @@ int common_get_width() { return get_current_winsize().ws_col; }
 
 int common_get_height() { return get_current_winsize().ws_row; }
 
-void tokenize_variable_array(const wcstring &val, std::vector<wcstring> &out) {
-    size_t pos = 0, end = val.size();
-    while (pos <= end) {
-        size_t next_pos = val.find(ARRAY_SEP, pos);
-        if (next_pos == wcstring::npos) {
-            next_pos = end;
-        }
-        out.resize(out.size() + 1);
-        out.back().assign(val, pos, next_pos - pos);
-        pos = next_pos + 1;  // skip the separator, or skip past the end
-    }
-}
-
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value) {
     size_t prefix_size = wcslen(proposed_prefix);
     return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;
@@ -1474,6 +1632,16 @@ bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &valu
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value) {
     size_t prefix_size = proposed_prefix.size();
     return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;
+}
+
+bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value) {
+    for (size_t idx = 0; proposed_prefix[idx] != L'\0'; idx++) {
+        // Note if the prefix is longer than value, then we will compare a nonzero prefix character
+        // against a zero value character, and so we'll return false;
+        if (proposed_prefix[idx] != value[idx]) return false;
+    }
+    // We must have that proposed_prefix[idx] == L'\0', so we have a prefix match.
+    return true;
 }
 
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
@@ -1583,7 +1751,7 @@ int string_fuzzy_match_t::compare(const string_fuzzy_match_t &rhs) const {
     return 0;  // equal
 }
 
-bool list_contains_string(const wcstring_list_t &list, const wcstring &str) {
+bool contains(const wcstring_list_t &list, const wcstring &str) {
     return std::find(list.begin(), list.end(), str) != list.end();
 }
 
@@ -1706,7 +1874,7 @@ void format_size_safe(char buff[128], unsigned long long sz) {
 /// the gettimeofday function and will have the same precision as that function.
 double timef() {
     struct timeval tv;
-    VOMIT_ON_FAILURE(gettimeofday(&tv, 0));
+    assert_with_errno(gettimeofday(&tv, 0) != -1);
     // return (double)tv.tv_sec + 0.000001 * tv.tv_usec;
     return (double)tv.tv_sec + 1e-6 * tv.tv_usec;
 }
@@ -1780,12 +1948,11 @@ void save_term_foreground_process_group(void) {
 }
 
 void restore_term_foreground_process_group(void) {
-    if (initial_fg_process_group != -1) {
-        // This is called during shutdown and from a signal handler. We don't bother to complain on
-        // failure.
-        if (tcsetpgrp(STDIN_FILENO, initial_fg_process_group) == -1 && errno == ENOTTY) {
-            redirect_tty_output();
-        }
+    if (initial_fg_process_group == -1) return;
+    // This is called during shutdown and from a signal handler. We don't bother to complain on
+    // failure because doing so is unlikely to be noticed.
+    if (tcsetpgrp(STDIN_FILENO, initial_fg_process_group) == -1 && errno == ENOTTY) {
+        redirect_tty_output();
     }
 }
 
@@ -1819,117 +1986,17 @@ void assert_is_background_thread(const char *who) {
 }
 
 void assert_is_locked(void *vmutex, const char *who, const char *caller) {
-    pthread_mutex_t *mutex = static_cast<pthread_mutex_t *>(vmutex);
-    if (0 == pthread_mutex_trylock(mutex)) {
+    std::mutex *mutex = static_cast<std::mutex *>(vmutex);
+
+    // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
+    // actually locked; fortunately we are checking the opposite so we're safe.
+    if (mutex->try_lock()) {
         debug(0, "%s is not locked when it should be in '%s'", who, caller);
         debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
-        pthread_mutex_unlock(mutex);
+        mutex->unlock();
     }
 }
-
-void scoped_lock::lock(void) {
-    assert(!locked);  //!OCLINT(multiple unary operator)
-    ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_lock(lock_obj));
-    locked = true;
-}
-
-void scoped_lock::unlock(void) {
-    assert(locked);
-    ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_unlock(lock_obj));
-    locked = false;
-}
-
-scoped_lock::scoped_lock(pthread_mutex_t &mutex) : lock_obj(&mutex), locked(false) { this->lock(); }
-
-scoped_lock::scoped_lock(mutex_lock_t &lock) : lock_obj(&lock.mutex), locked(false) {
-    this->lock();
-}
-
-scoped_lock::~scoped_lock() {
-    if (locked) this->unlock();
-}
-
-void scoped_rwlock::lock(void) {
-    assert(!(locked || locked_shared));  //!OCLINT(multiple unary operator)
-    ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_rdlock(rwlock_obj));
-    locked = true;
-}
-
-void scoped_rwlock::unlock(void) {
-    assert(locked);
-    ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
-    locked = false;
-}
-
-void scoped_rwlock::lock_shared(void) {
-    assert(!(locked || locked_shared));  //!OCLINT(multiple unary operator)
-    ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_wrlock(rwlock_obj));
-    locked_shared = true;
-}
-
-void scoped_rwlock::unlock_shared(void) {
-    assert(locked_shared);
-    ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
-    locked_shared = false;
-}
-
-void scoped_rwlock::upgrade(void) {
-    assert(locked_shared);
-    ASSERT_IS_NOT_FORKED_CHILD();
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
-    locked = false;
-    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_wrlock(rwlock_obj));
-    locked_shared = true;
-}
-
-scoped_rwlock::scoped_rwlock(pthread_rwlock_t &rwlock, bool shared)
-    : rwlock_obj(&rwlock), locked(false), locked_shared(false) {
-    if (shared) {
-        this->lock_shared();
-    } else {
-        this->lock();
-    }
-}
-
-scoped_rwlock::scoped_rwlock(rwlock_t &rwlock, bool shared)
-    : rwlock_obj(&rwlock.rwlock), locked(false), locked_shared(false) {
-    if (shared) {
-        this->lock_shared();
-    } else {
-        this->lock();
-    }
-}
-
-scoped_rwlock::~scoped_rwlock() {
-    if (locked) {
-        this->unlock();
-    } else if (locked_shared) {
-        this->unlock_shared();
-    }
-}
-
-wcstokenizer::wcstokenizer(const wcstring &s, const wcstring &separator)
-    : buffer(), str(), state(), sep(separator) {
-    buffer = wcsdup(s.c_str());
-    str = buffer;
-    state = NULL;
-}
-
-bool wcstokenizer::next(wcstring &result) {
-    wchar_t *tmp = wcstok(str, sep.c_str(), &state);
-    str = NULL;
-    if (tmp) result = tmp;
-    return tmp != NULL;
-}
-
-wcstokenizer::~wcstokenizer() { free(buffer); }
 
 template <typename CharType_t>
 static CharType_t **make_null_terminated_array_helper(
@@ -1988,22 +2055,6 @@ char **make_null_terminated_array(const std::vector<std::string> &lst) {
     return make_null_terminated_array_helper(lst);
 }
 
-long convert_digit(wchar_t d, int base) {
-    long res = -1;
-    if ((d <= L'9') && (d >= L'0')) {
-        res = d - L'0';
-    } else if ((d <= L'z') && (d >= L'a')) {
-        res = d + 10 - L'a';
-    } else if ((d <= L'Z') && (d >= L'A')) {
-        res = d + 10 - L'A';
-    }
-    if (res >= base) {
-        res = -1;
-    }
-
-    return res;
-}
-
 /// Test if the specified character is in a range that fish uses interally to store special tokens.
 ///
 /// NOTE: This is used when tokenizing the input. It is also used when reading input, before
@@ -2027,4 +2078,40 @@ void redirect_tty_output() {
     if (tcgetattr(STDOUT_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDOUT_FILENO);
     if (tcgetattr(STDERR_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDERR_FILENO);
     close(fd);
+}
+
+/// Display a failed assertion message, dump a stack trace if possible, then die.
+[[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error) {
+    if (error) {
+        debug(0, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
+              strerror(error));
+    } else {
+        debug(0, L"%s:%zu: failed assertion: %s", file, line, msg);
+    }
+    show_stackframe(L'E', 99, 1);
+    abort();
+}
+
+/// Test if the given char is valid in a variable name.
+bool valid_var_name_char(wchar_t chr) { return fish_iswalnum(chr) || chr == L'_'; }
+
+/// Test if the given string is a valid variable name.
+bool valid_var_name(const wchar_t *str) {
+    if (str[0] == L'\0') return false;
+    while (*str) {
+        if (!valid_var_name_char(*str)) return false;
+        str++;
+    }
+    return true;
+}
+
+/// Test if the given string is a valid variable name.
+bool valid_var_name(const wcstring &str) { return valid_var_name(str.c_str()); }
+
+/// Test if the string is a valid function name.
+bool valid_func_name(const wcstring &str) {
+    if (str.size() == 0) return false;
+    if (str.at(0) == L'-') return false;
+    if (str.find_first_of(L'/') != wcstring::npos) return false;
+    return true;
 }

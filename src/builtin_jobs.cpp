@@ -2,6 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
+#include <stddef.h>
 #ifdef HAVE__PROC_SELF_STAT
 #include <sys/time.h>
 #endif
@@ -108,35 +109,22 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
 
 /// The jobs builtin. Used fopr printing running jobs. Defined in builtin_jobs.c.
 int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wgetopter_t w;
-    int argc = 0;
+    wchar_t *cmd = argv[0];
+    int argc = builtin_count_args(argv);
     int found = 0;
     int mode = JOBS_DEFAULT;
     int print_last = 0;
 
-    argc = builtin_count_args(argv);
-    w.woptind = 0;
+    static const wchar_t *short_options = L":cghlp";
+    static const struct woption long_options[] = {
+        {L"pid", no_argument, NULL, 'p'},   {L"command", no_argument, NULL, 'c'},
+        {L"group", no_argument, NULL, 'g'}, {L"last", no_argument, NULL, 'l'},
+        {L"help", no_argument, NULL, 'h'},  {NULL, 0, NULL, 0}};
 
-    while (1) {
-        static const struct woption long_options[] = {
-            {L"pid", no_argument, 0, 'p'},   {L"command", no_argument, 0, 'c'},
-            {L"group", no_argument, 0, 'g'}, {L"last", no_argument, 0, 'l'},
-            {L"help", no_argument, 0, 'h'},  {0, 0, 0, 0}};
-
-        int opt_index = 0;
-
-        int opt = w.wgetopt_long(argc, argv, L"pclgh", long_options, &opt_index);
-        if (opt == -1) break;
-
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                if (long_options[opt_index].flag != 0) break;
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0],
-                                          long_options[opt_index].name);
-
-                builtin_print_help(parser, streams, argv[0], streams.err);
-                return 1;
-            }
             case 'p': {
                 mode = JOBS_PRINT_PID;
                 break;
@@ -154,15 +142,19 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 break;
             }
             case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
-                return 0;
+                builtin_print_help(parser, streams, cmd, streams.out);
+                return STATUS_CMD_OK;
+            }
+            case ':': {
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
-                builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-                return 1;
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             default: {
-                DIE("unexpected opt");
+                DIE("unexpected retval from wgetopt_long");
                 break;
             }
         }
@@ -175,7 +167,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         while ((j = jobs.next())) {
             if ((j->flags & JOB_CONSTRUCTED) && !job_is_completed(j)) {
                 builtin_jobs_print(j, mode, !streams.out_is_redirected, streams);
-                return 0;
+                return STATUS_CMD_ERROR;
             }
         }
 
@@ -186,8 +178,8 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             for (i = w.woptind; i < argc; i++) {
                 int pid = fish_wcstoi(argv[i]);
                 if (errno || pid < 0) {
-                    streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), argv[0], argv[i]);
-                    return 1;
+                    streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), cmd, argv[i]);
+                    return STATUS_INVALID_ARGS;
                 }
 
                 const job_t *j = job_get_from_pid(pid);
@@ -196,8 +188,8 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     builtin_jobs_print(j, mode, false, streams);
                     found = 1;
                 } else {
-                    streams.err.append_format(_(L"%ls: No suitable job: %d\n"), argv[0], pid);
-                    return 1;
+                    streams.err.append_format(_(L"%ls: No suitable job: %d\n"), cmd, pid);
+                    return STATUS_CMD_ERROR;
                 }
             }
         } else {
@@ -218,8 +210,8 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (!streams.out_is_redirected) {
             streams.out.append_format(_(L"%ls: There are no jobs\n"), argv[0]);
         }
-        return 1;
+        return STATUS_CMD_ERROR;
     }
 
-    return 0;
+    return STATUS_CMD_OK;
 }

@@ -1,4 +1,4 @@
-#Test scoping rules for functions
+logmsg Test scoping rules for functions
 
 set -e smurf
 
@@ -161,10 +161,10 @@ end;
 
 set -U -e baz
 
-echo "Verify subcommand statuses"
+logmsg Verify subcommand statuses
 echo (false) $status (true) $status (false) $status
 
-echo "Verify that set passes through exit status, except when passed -n or -q or -e"
+logmsg Verify that set passes through exit status, except when passed -n or -q or -e
 false ; set foo bar ; echo 1 $status # passthrough
 true ; set foo bar ; echo 2 $status # passthrough
 false ; set -q foo ; echo 3 $status # no passthrough
@@ -178,7 +178,7 @@ false ; set foo (echo A; true) ; echo 10 $status $foo
 true ; set foo (echo B; false) ; echo 11 $status $foo
 true
 
-echo "Verify set -ql behavior" # see 2502
+logmsg "Verify set -ql behavior (#2502)"
 function setql_check
   set -l setql_foo val
   if set -ql setql_foo

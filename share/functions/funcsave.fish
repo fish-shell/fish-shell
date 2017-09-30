@@ -1,19 +1,12 @@
-
 function funcsave --description "Save the current definition of all specified functions to file"
+    set -l options 'h/help'
+    argparse -n funcsave --min-args=1 $options -- $argv
+    or return
 
-    if count $argv >/dev/null
-        switch $argv[1]
-            case -h --h --he --hel --help
-                __fish_print_help funcsave
-                return 0
-        end
-    else
-        printf (_ "%s: Expected function name\n") funcsave
+    if set -q _flag_help
         __fish_print_help funcsave
-        return 1
+        return 0
     end
-
-    set -l res 0
 
     set -l configdir ~/.config
     if set -q XDG_CONFIG_HOME
@@ -29,15 +22,16 @@ function funcsave --description "Save the current definition of all specified fu
         end
     end
 
-    for i in $argv
-        if functions -q -- $i
-            functions -- $i >$configdir/fish/functions/$i.fish
+    set -l retval 0
+    for funcname in $argv
+        if functions -q -- $funcname
+            functions -- $funcname >$configdir/fish/functions/$funcname.fish
         else
-            printf (_ "%s: Unknown function '%s'\n") funcsave $i
-            set res 1
+            printf (_ "%s: Unknown function '%s'\n") funcsave $funcname
+            set retval 1
         end
     end
 
-    return $res
+    return $retval
 end
 

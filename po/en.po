@@ -1778,8 +1778,8 @@ msgstr "Illegal file descriptor in redirection “%ls”"
 
 #: parse_constants.h:213
 #, c-format
-msgid "No matches for wildcard '%ls'."
-msgstr "No matches for wildcard “%ls”."
+msgid "No matches for wildcard '%ls'. See `help expand`."
+msgstr "No matches for wildcard “%ls”. See `help expand`."
 
 #: parse_constants.h:216
 msgid "break command while not inside of loop"
@@ -8113,10 +8113,6 @@ msgstr "Show current path"
 #: share/functions/__fish_test_arg.fish:2
 msgid "Test if the token under the cursor matches the specified wildcard"
 msgstr "Test if the token under the cursor matches the specified wildcard"
-
-#: share/functions/__fish_urlencode.fish:1
-msgid "URL-encode stdin"
-msgstr "URL-encode stdin"
 
 #: share/functions/__terlar_git_prompt.fish:23
 msgid "Write out the git prompt"

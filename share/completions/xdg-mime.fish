@@ -12,7 +12,7 @@ complete -c xdg-mime -d 'Query default application for type' -n 'contains_seq qu
 complete -c xdg-mime -d 'Query file\'s filetype' -n 'contains_seq query filetype -- (commandline -cop)' -r
 
 # complete xdg-mime default
-complete -c xdg-mime -d 'Choose application' -n '__fish_seen_subcommand_from default; and __fish_is_token_n 3' -xa '(__fish_print_xdg_mimeapps)'
+complete -c xdg-mime -d 'Choose application' -n '__fish_seen_subcommand_from default; and __fish_is_token_n 3' -xa '(__fish_print_xdg_desktop_file_ids)'
 complete -c xdg-mime -d 'Mimetype'           -n '__fish_seen_subcommand_from default; and __fish_is_token_n 4' -xa '(__fish_print_xdg_mimetypes)'
 
 # complete xdg-mime install
@@ -29,4 +29,3 @@ complete -c xdg-mime -d 'Set mode'                    -n 'contains_seq xdg-mime 
 complete -c xdg-mime -l help -d 'Display help'
 complete -c xdg-mime -l manual -d 'Diplay long help'
 complete -c xdg-mime -l version -d 'Print version'
-

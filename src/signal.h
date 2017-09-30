@@ -26,6 +26,9 @@ void signal_set_handlers();
 /// default action (SIG_DFL) will be set
 void signal_handle(int sig, int do_handle);
 
+/// Ensure we did not inherit any blocked signals. See issue #3964.
+void signal_unblock_all();
+
 /// Block all signals.
 void signal_block();
 
@@ -37,6 +40,4 @@ bool signal_is_blocked();
 
 /// Returns signals with non-default handlers.
 void get_signals_with_handlers(sigset_t *set);
-
-extern bool ignore_signal_block;
 #endif

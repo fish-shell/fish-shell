@@ -4,6 +4,8 @@
 
 
 function fish_prompt --description 'Write out the prompt'
+    set -l last_status $status
+
     if not set -q __fish_git_prompt_show_informative_status
         set -g __fish_git_prompt_show_informative_status 1
     end
@@ -59,15 +61,14 @@ function fish_prompt --description 'Write out the prompt'
         set -g __fish_git_prompt_color_cleanstate green --bold
     end
 
-    set -l last_status $status
-
     if not set -q __fish_prompt_normal
         set -g __fish_prompt_normal (set_color normal)
     end
 
     set -l color_cwd
     set -l prefix
-    switch $USER
+    set -l suffix
+    switch "$USER"
         case root toor
             if set -q fish_color_cwd_root
                 set color_cwd $fish_color_cwd_root

@@ -17,7 +17,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 #include "config.h"  // IWYU pragma: keep
 
-#include <assert.h>
 #include <errno.h>
 #include <getopt.h>
 #include <locale.h>
@@ -27,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <string.h>
 #include <wchar.h>
 #include <wctype.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -36,7 +36,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "env.h"
 #include "fish_version.h"
 #include "highlight.h"
-#include "input.h"
 #include "output.h"
 #include "parse_constants.h"
 #include "parse_tree.h"
@@ -173,23 +172,27 @@ static void prettify_node_recursive(const wcstring &source, const parse_node_tre
 
 // Entry point for prettification.
 static wcstring prettify(const wcstring &src, bool do_indent) {
-    parse_node_tree_t tree;
+    parse_node_tree_t parse_tree;
     int parse_flags = (parse_flag_continue_after_error | parse_flag_include_comments |
                        parse_flag_leave_unterminated | parse_flag_show_blank_lines);
-    if (!parse_tree_from_string(src, parse_flags, &tree, NULL)) {
-        // We return the initial string on failure.
-        return src;
+    if (!parse_tree_from_string(src, parse_flags, &parse_tree, NULL)) {
+        return src;  // we return the original string on failure
+    }
+
+    if (dump_parse_tree) {
+        const wcstring dump = parse_dump_tree(parse_tree, src);
+        fwprintf(stderr, L"%ls\n", dump.c_str());
     }
 
     // We may have a forest of disconnected trees on a parse failure. We have to handle all nodes
     // that have no parent, and all parse errors.
     bool has_new_line = true;
     wcstring result;
-    for (node_offset_t i = 0; i < tree.size(); i++) {
-        const parse_node_t &node = tree.at(i);
+    for (node_offset_t i = 0; i < parse_tree.size(); i++) {
+        const parse_node_t &node = parse_tree.at(i);
         if (node.parent == NODE_OFFSET_INVALID || node.type == parse_special_type_parse_error) {
             // A root node.
-            prettify_node_recursive(src, tree, i, 0, symbol_job_list, &has_new_line, &result,
+            prettify_node_recursive(src, parse_tree, i, 0, symbol_job_list, &has_new_line, &result,
                                     do_indent);
         }
     }
@@ -347,7 +350,6 @@ int main(int argc, char *argv[]) {
     // (e.g., "# -*- coding: <encoding-name> -*-").
     setlocale(LC_ALL, "");
     env_init();
-    input_init();
 
     // Types of output we support.
     enum {
@@ -374,11 +376,6 @@ int main(int argc, char *argv[]) {
     int opt;
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
         switch (opt) {
-            case 0: {
-                fwprintf(stderr, _(L"getopt_long() unexpectedly returned zero\n"));
-                exit(127);
-                break;
-            }
             case 'P': {
                 dump_parse_tree = true;
                 break;

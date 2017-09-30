@@ -1,6 +1,7 @@
 $foo: 'text'
 $foo: 'again'
 $foo: 'bar'
+$foo: 'read_i'
 $foo: '123'
 $foo: '456'
 $foo: 'hello'

@@ -17,7 +17,7 @@
 
 \section introduction Introduction
 
-This is the documentation for `fish`, the friendly interactive shell. `fish` is a user friendly commandline shell intended mostly for interactive use. A shell is a program used to execute other programs. For the latest information on `fish`, please visit the <a href="http://fishshell.com/">`fish` homepage</a>.
+This is the documentation for `fish`, the friendly interactive shell. `fish` is a user friendly commandline shell intended mostly for interactive use. A shell is a program used to execute other programs. For the latest information on `fish`, please visit the <a href="https://fishshell.com/">`fish` homepage</a>.
 
 
 \section syntax Syntax overview
@@ -106,6 +106,7 @@ Some characters can not be written directly on the command line. For these chara
 - '<code>\\\></code>' escapes the more than character
 - '<code>\\^</code>' escapes the circumflex character
 - '<code>\\&amp;</code>' escapes the ampersand character
+- '<code>\\|</code>' escapes the vertical bar character
 - '<code>\\;</code>' escapes the semicolon character
 - '<code>\\"</code>' escapes the quote character
 - '<code>\\'</code>' escapes the apostrophe character
@@ -470,9 +471,11 @@ end
 
 The output of a series of commands can be used as the parameters to another command. If a parameter contains a set of parenthesis, the text enclosed by the parenthesis will be interpreted as a list of commands. On expansion, this list is executed, and substituted by the output. If the output is more than one line long, each line will be expanded to a new parameter. Setting `IFS` to the empty string will disable line splitting.
 
-The exit status of the last run command substitution is available in the <a href='#variables-status'>status</a> variable.
+The exit status of the last run command substitution is available in the <a href='#variables-status'>status</a> variable if the substitution occurs in the context of a `set` command.
 
 Only part of the output can be used, see <a href='#expand-index-range'>index range expansion</a> for details.
+
+Fish has a default limit of 10 MiB on the amount of data a command substitution can output. If the limit is exceeded the entire command, not just the substitution, is failed and `$status` is set to 122. You can modify the limit by setting the `FISH_READ_BYTE_LIMIT` variable at any time including in the environment before fish starts running. If you set it to zero then no limit is imposed. This is a safety mechanism to keep the shell from consuming an too much memory if a command outputs an unreasonable amount of data. Note that this limit also affects how much data the `read` command will process.
 
 Examples:
 
@@ -580,7 +583,7 @@ Be careful when you try to use braces to separate variable names from text. The 
 
 \subsection expand-index-range Index range expansion
 
-Both command substitution and shell variable expansion support accessing only specific items by providing a set of indices in square brackets. It's often needed to access a sequence of elements. To do this, use the range operator '`..`' for this. A range '`a..b`', where range limits 'a' and 'b' are integer numbers, is expanded into a sequence of indices '`a a+1 a+2 ... b`' or '`a a-1 a-2 ... b`' depending on which of 'a' or 'b' is higher. The negative range limits are calculated from the end of the array or command substitution.
+Both command substitution and shell variable expansion support accessing only specific items by providing a set of indices in square brackets. It's often needed to access a sequence of elements. To do this, use the range operator '`..`' for this. A range '`a..b`', where range limits 'a' and 'b' are integer numbers, is expanded into a sequence of indices '`a a+1 a+2 ... b`' or '`a a-1 a-2 ... b`' depending on which of 'a' or 'b' is higher. The negative range limits are calculated from the end of the array or command substitution. Note that invalid indexes for either end are silently clamped to one or the size of the array as appropriate.
 
 Some examples:
 
@@ -667,11 +670,22 @@ Example:
 If the current directory contains the files 'foo' and 'bar', the command `echo a(ls){1,2,3} ` will output 'abar1 abar2 abar3 afoo1 afoo2 afoo3'.
 
 
+\section identifiers Shell variable and function names
+
+The names given to shell objects such as variables and function names are known as "identifiers". Each type of identifier has rules that define the valid sequence of characters which compose the identifier.
+
+A variable name cannot be empty. It can contain only letters, digits, and underscores. It may begin and end with any of those characters.
+
+A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid.
+
+A bind mode name (e.g., `bind -m abc ...`) is restricted to the rules for valid variable names.
+
+
 \section variables Shell variables
 
 Shell variables are named pieces of data, which can be created, deleted and their values changed and used by the user.  Variables may optionally be "exported", so that a copy of the variable is available to any subprocesses the shell creates. An exported variable is referred to as an "environment variable".
 
-To set a variable value, use the <a href="commands.html#set">`set` command</a>.
+To set a variable value, use the <a href="commands.html#set">`set` command</a>. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
 Example:
 
@@ -681,7 +695,7 @@ After a variable has been set, you can use the value of a variable in the shell 
 
 Example:
 
-To use the value of the variable `smurf`, write `$` (dollar symbol) followed by the name of the variable, like `echo Smurfs are usually $smurf_color`, which would print the result 'Smurfs are usually blue'.
+To use the value of the variable `smurf_color`, write `$` (dollar symbol) followed by the name of the variable, like `echo Smurfs are usually $smurf_color`, which would print the result 'Smurfs are usually blue'.
 
 
 \subsection variables-scope Variable scope
@@ -760,6 +774,9 @@ Variables can be explicitly set to be exported with the `-x` or `--export` switc
 
 -# If a variable is not explicitly set to be either exported or not exported and has never before been defined, the variable will not be exported.
 
+-# If a variable has local-scope and is exported, any function called receives a _copy_ of it, so any changes it makes to the variable disappear once the function returns.
+
+-# If a variable has global-scope, it is accessible read-write to functions whether it is exported or not.
 
 \subsection variables-arrays Arrays
 
@@ -767,7 +784,7 @@ Variables can be explicitly set to be exported with the `-x` or `--export` switc
 
 `echo $PATH[3]`
 
-Note that array indices start at 1 in `fish`, not 0, as is more common in other languages. This is because many common Unix tools like `seq` are more suited to such use.
+Note that array indices start at 1 in `fish`, not 0, as is more common in other languages. This is because many common Unix tools like `seq` are more suited to such use. An invalid index is silently ignored resulting in no value being substituted (not an empty string).
 
 If you do not use any brackets, all the elements of the array will be written as separate items. This means you can easily iterate over an array using this syntax:
 
@@ -835,6 +852,8 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `history`, an array containing the last commands that were entered.
 
+- `fish_history`: Name of the history session. It defaults to `fish` (which typically means the history will be saved in `~/.local/share/fish/fish_history`). This variable can be changed by the user. It does not have to be an environment variable. You can change it at will within an interactive fish session to change where subsequent commands are logged.
+
 - `HOME`, the user's home directory. This variable can be changed by the user.
 
 - `IFS`, the internal field separator that is used for word splitting with the <a href="commands.html#read">read builtin</a>. Setting this to the empty string will also disable line splitting in <a href="#expand-command-substitution">command substitution</a>. This variable can be changed by the user.
@@ -865,17 +884,21 @@ Fish stores the exit status of the last process in the last job to exit in the `
 
 If `fish` encounters a problem while executing a command, the status variable may also be set to a specific value:
 
-- 1 is the generally the exit status from fish builtin commands if they were supplied with invalid arguments
+- 0 is generally the exit status of fish commands if they successfully performed the requested operation.
 
-- 123 means that the command was not executed because the command name contained invalid characters
+- 1 is generally the exit status of fish commands if they failed to perform the requested operation.
 
-- 124 means that the command was not executed because none of the wildcards in the command produced any matches
+- 121 is generally the exit status of fish commands if they were supplied with invalid arguments.
 
-- 125 means that while an executable with the specified name was located, the operating system could not actually execute the command
+- 123 means that the command was not executed because the command name contained invalid characters.
 
-- 126 means that while a file with the specified name was located, it was not executable
+- 124 means that the command was not executed because none of the wildcards in the command produced any matches.
 
-- 127 means that no function, builtin or command with the given name could be located
+- 125 means that while an executable with the specified name was located, the operating system could not actually execute the command.
+
+- 126 means that while a file with the specified name was located, it was not executable.
+
+- 127 means that no function, builtin or command with the given name could be located.
 
 If a process exits through a signal, the exit status will be 128 plus the number of the signal.
 
@@ -917,6 +940,8 @@ The following variables are available to change the highlighting colors in fish:
 - `fish_color_user`, the color used to print the current username in some of fish default prompts
 
 - `fish_color_host`, the color used to print the current host system in some of fish default prompts
+
+- `fish_color_cancel`, the color for the '^C' indicator on a canceled command
 
 Additionally, the following variables are available to change the highlighting in the completion pager:
 
@@ -977,7 +1002,7 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - @key{Alt,&larr;,Left} and @key{Alt,&rarr;,Right} move the cursor one word left or right, or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Alt,&rarr;,Right} (or @key{Alt,F}) accepts the first word in the suggestion.
 
-- @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the <a href='#history'>history</a> section for more information on history searching.
+- @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} (or @key{Control,P} and @key{Control,N} for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the <a href='#history'>history</a> section for more information on history searching.
 
 - @key{Alt,&uarr;,Up} and @key{Alt,&darr;,Down} search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the <a href='#history'>history</a> section for more information on history searching.
 
@@ -1074,7 +1099,7 @@ Command mode is also known as normal mode.
 
 - @key{p} pastes text from the <a href="#killring">killring</a>.
 
-- @key{u} undoes the most recent action.
+- @key{u} search history backwards.
 
 - @key{[} and @key{]} search the command history for the previous/next token containing the token under the cursor before the search was started. See the <a href='#history'>history</a> section for more information on history searching.
 
@@ -1100,6 +1125,8 @@ Command mode is also known as normal mode.
 
 `fish` uses an Emacs style kill ring for copy and paste functionality. Use @key{Control,K} to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed) is inserted into a linked list of kills, called the kill ring. To paste the latest value from the kill ring use @key{Control,Y}. After pasting, use @key{Alt,Y} to rotate to the previous kill.
 
+Copy and paste from outside are also supported, both via the @key{Control,X} / @key{Control,V} bindings and via the terminal's paste function, for which fish enables "Bracketed Paste Mode". When pasting inside single quotes, pasted single quotes and backslashes are automatically escaped so that the result can be used as a single token simply by closing the quote after.
+
 \subsection history-search Searchable history
 
 After a command has been entered, it is inserted at the end of a history list. Any duplicate history items are automatically removed. By pressing the up and down keys, the user can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
@@ -1110,7 +1137,10 @@ History searches can be aborted by pressing the escape key.
 
 Prefixing the commandline with a space will prevent the entire line from being stored in the history.
 
-The history is stored in the file `~/.local/share/fish/fish_history` (or `$XDG_DATA_HOME/fish/fish_history` if that variable is set).
+The command history is stored in the file `~/.local/share/fish/fish_history` (or
+`$XDG_DATA_HOME/fish/fish_history` if that variable is set) by default. However, you can set the
+`fish_history` environment variable to change the name of the history session (resulting in a
+`<session>_history` file); both before starting the shell and while the shell is running.
 
 Examples:
 
@@ -1158,12 +1188,15 @@ Configuration files are evaluated in the following order:
   - `/usr/share/fish/vendor_conf.d` (set at compile time; by default, `$__fish_datadir/conf.d`)
 
   If there are multiple files with the same name in these directories, only the first will be executed.
+  They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").
 
 - User initialization, usually in `~/.config/fish/config.fish` (controlled by the `XDG_CONFIG_HOME` environment variable).
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
 
 This wide search may be confusing. If you are unsure where to put your own customisations, use `~/.config/fish/config.fish`.
+
+Note that ~/.config/fish/config.fish is sourced _after_ the snippets. This is so users can copy snippets and override some of their behavior.
 
 These files are all executed on the startup of every shell. If you want to run a command only on starting an interactive shell, use the exit status of the command `status --is-interactive` to determine if the shell is interactive. If you want to run a command only when using a login shell, use `status --is-login` instead. This will speed up the starting of non-interactive or non-login shells.
 
@@ -1265,9 +1298,11 @@ For more information on how to define new event handlers, see the documentation 
 
 \subsection debugging Debugging fish scripts
 
-Fish includes a built in debugger. The debugger allows you to stop execution of a script at an arbitrary point and launch a prompt. This prompt can then be used to check or change the value of any variables or perform any shellscript command. To resume normal execution of the script, simply exit the prompt.
+Fish includes a built in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using `printf` and `set`. As another example, you can run `status print-stack-trace` to see how this breakpoint was reached. To resume normal execution of the script, simply type `exit` or [ctrl-D].
 
-To start the debugger, simply call the builtin command `breakpoint`. The default action of the TRAP signal is to call this builtin, so a running script can be debugged by sending it the TRAP signal. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.
+To start a debug session simply run the builtin command `breakpoint` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the `kill` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.
+
+Note: At the moment the debug prompt is identical to your normal fish prompt. This can make it hard to recognize that you've entered a debug session. <a hread="https://github.com/fish-shell/fish-shell/issues/1310">Issue 1310</a> is open to improve this.
 
 
 \section issues Common issues with fish

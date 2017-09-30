@@ -2,30 +2,19 @@
 #
 # Test the `function` builtin
 
-# utility function
-function show_ary -a name --no-scope-shadowing
-    set -l count (count $$name)
-    echo "\$$name: ($count)"
-    if test $count -gt 0
-        for i in (seq $count)
-            echo "$i: '$$name[1][$i]'"
-        end
-    end
-end
-
-# Test the -V flag
+logmsg Test the -V flag
 set -g foo 'global foo'
 set -l foo 'local foo'
 set bar one 'two    2' \t '' 3
 set baz
 function frob -V foo -V bar -V baz
-    show_ary foo
-    show_ary bar
-    show_ary baz
+    set --show foo bar baz
 end
-echo "Testing -V"
+
+logmsg Testing -V
 frob
-echo "Testing -V with changed variables"
+
+logmsg Testing -V with changed variables
 set foo 'bad foo'
 set bar 'bad bar'
 set baz 'bad baz'
@@ -45,14 +34,15 @@ functions -q name2; or echo "Function name2 not found as expected"
 functions -q name3; and echo "Function name3 found"
 functions -q name4; or echo "Function name4 not found as expected"
 
-# Verify that functions can be copied. Tests against regression of issue #3601.
+logmsg Verify that functions can be copied. Tests against regression of issue \#3601
 functions -c name1 name1a
 functions --copy name3 name3a
 functions -q name1a
 or echo "Function name1a not found as expected"
 functions -q name3a
 or echo "Function name3a not found as expected"
-echo Checking that the copied functions are identical other than the name
+
+logmsg Checking that the copied functions are identical other than the name
 diff (functions name1 | psub) (functions name1a | psub)
 diff (functions name3 | psub) (functions name3a | psub)
 

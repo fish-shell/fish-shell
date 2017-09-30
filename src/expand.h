@@ -8,11 +8,14 @@
 #include "config.h"
 
 #include <stddef.h>
+
 #include <string>
 #include <vector>
 
 #include "common.h"
 #include "parse_constants.h"
+
+class env_var_t;
 
 enum {
     /// Flag specifying that cmdsubst expansion should be skipped.
@@ -24,10 +27,9 @@ enum {
     /// The expansion is being done for tab or auto completions. Returned completions may have the
     /// wildcard as a prefix instead of a match.
     EXPAND_FOR_COMPLETIONS = 1 << 3,
-    /// Only match files that are executable by the current user. Only applicable together with
-    /// ACCEPT_INCOMPLETE.
+    /// Only match files that are executable by the current user.
     EXECUTABLES_ONLY = 1 << 4,
-    /// Only match directories. Only applicable together with ACCEPT_INCOMPLETE.
+    /// Only match directories.
     DIRECTORIES_ONLY = 1 << 5,
     /// Don't generate descriptions.
     EXPAND_NO_DESCRIPTIONS = 1 << 6,
@@ -89,16 +91,6 @@ enum expand_error_t {
     EXPAND_WILDCARD_MATCH
 };
 
-/// Character for separating two array elements. We use 30, i.e. the ascii record separator since
-/// that seems logical.
-#define ARRAY_SEP ((wchar_t)(0x1e))
-
-/// String containing the character for separating two array elements.
-#define ARRAY_SEP_STR L"\x1e"
-
-/// Error issued on array out of bounds.
-#define ARRAY_BOUNDS_ERR _(L"Array index out of bounds")
-
 /// Perform various forms of expansion on in, such as tilde expansion (\~USER becomes the users home
 /// directory), variable expansion (\$VAR_NAME becomes the value of the environment variable
 /// VAR_NAME), cmdsubst expansion and wildcard expansion. The results are inserted into the list
@@ -130,10 +122,8 @@ __warn_unused expand_error_t expand_string(const wcstring &input, std::vector<co
 bool expand_one(wcstring &inout_str, expand_flags_t flags, parse_error_list_t *errors = NULL);
 
 /// Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc.
-/// Suitable for pretty-printing. The result must be free'd!
-///
-/// \param in the value to escape
-wcstring expand_escape_variable(const wcstring &in);
+/// Suitable for pretty-printing.
+wcstring expand_escape_variable(const env_var_t &var);
 
 /// Perform tilde expansion and nothing else on the specified string, which is modified in place.
 ///
@@ -145,11 +135,10 @@ wcstring replace_home_directory_with_tilde(const wcstring &str);
 
 /// Abbreviation support. Expand src as an abbreviation, returning true if one was found, false if
 /// not. If result is not-null, returns the abbreviation by reference.
-#define USER_ABBREVIATIONS_VARIABLE_NAME L"fish_user_abbreviations"
+void update_abbr_cache(const wchar_t *op, const wcstring &varname);
 bool expand_abbreviation(const wcstring &src, wcstring *output);
 
 // Terrible hacks
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
                                         const char *const *argv);
-
 #endif

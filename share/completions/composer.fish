@@ -48,6 +48,18 @@ print \"\n\".join(installed_packages)
 " | python
 end
 
+function __fish_composer_scripts
+    test -f composer.json; or return
+    echo "
+import json
+json_data = open('composer.json')
+data = json.load(json_data)
+json_data.close()
+if 'scripts' in data and data['scripts']:
+    print \"\n\".join(data['scripts'].keys())
+" | python
+end
+
 #add cmds list
 set --local composer_cmds 'about' 'archive' 'browse' 'clear-cache' 'clearcache' 'config' 'create-project' 'depends' 'diagnose' 'dump-autoload' 'dumpautoload' 'global' 'help' 'home' 'init' 'install' 'licenses' 'list' 'remove' 'require' 'run-script' 'search' 'self-update' 'selfupdate' 'show' 'status' 'update' 'validate'
 
@@ -64,6 +76,10 @@ complete -f -c composer -n '__fish_composer_using_command remove' -a "(__fish_co
 complete -f -c composer -n '__fish_composer_using_command why' -a "(__fish_composer_installed_packages)"
 complete -f -c composer -n '__fish_composer_using_command why-not' -a "(__fish_composer_installed_packages)"
 complete -f -c composer -n '__fish_composer_using_command depends' -a "(__fish_composer_installed_packages)"
+
+# Custom scripts
+complete -f -c composer -n '__fish_composer_needs_command' -a '(__fish_composer_scripts)' -d 'User script'
+complete -f -c composer -n '__fish_composer_using_command run-script' -a "(__fish_composer_scripts)"
 
 #popisky
 complete -f -c composer -n '__fish_composer_needs_command' -a 'about' -d 'Short information about Composer'

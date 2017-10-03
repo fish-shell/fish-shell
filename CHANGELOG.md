@@ -20,6 +20,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Setting variables is much faster (#4200, #4341).
 - Using a read-only variable in a for loop is now an error. Note that this never worked. It simply failed to set the for loop var and thus silently produced incorrect results (#4342).
 - `math` is now a builtin rather than a wrapper around `bc` (#3157).
+- `bind` has a new `--silent` option to ignore bind requests for named keys not available under the current `$TERMINAL` (#4188, #4431)
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

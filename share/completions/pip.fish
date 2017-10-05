@@ -1,3 +1,3 @@
-if test (command -v pip)
+if command -sq pip
     eval (pip completion --fish)
 end

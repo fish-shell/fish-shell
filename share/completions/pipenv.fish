@@ -1,3 +1,3 @@
-if test (command -v pipenv)
+if command -sq pipenv
     eval (pipenv --completion)
 end

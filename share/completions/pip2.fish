@@ -1,3 +1,3 @@
 if command -sq pip2
-    pip2 completion --fish | sed 's/-c pip$/-c pip2/' | source
+    pip3 completion --fish | string replace -r "\b-c\s+pip\b" -- "-c pip2" | source
 end

@@ -16,13 +16,13 @@ SET(HDR_FILES_SRC doc_src/index.hdr.in doc_src/tutorial.hdr doc_src/design.hdr
                   doc_src/license.hdr doc_src/commands.hdr.in doc_src/faq.hdr)
 
 # These are the generated result files.
-STRING(REPLACE ".in" "" HDR_FILES ${HDR_FILES_SRC})
+STRING(REPLACE ".in" "" HDR_FILES "${HDR_FILES_SRC}")
 
 # Build lexicon_filter.
 ADD_CUSTOM_COMMAND(OUTPUT lexicon_filter
                    COMMAND build_tools/build_lexicon_filter.sh
-                              ${CMAKE_CURRENT_SOURCE_DIR}/share/completions/
-                              ${CMAKE_CURRENT_SOURCE_DIR}/share/functions/
+                              share/completions/
+                              share/functions/
                               < lexicon_filter.in
                               > ${CMAKE_CURRENT_BINARY_DIR}/lexicon_filter
                                 && chmod a+x ${CMAKE_CURRENT_BINARY_DIR}/lexicon_filter
@@ -36,12 +36,15 @@ ADD_CUSTOM_COMMAND(OUTPUT lexicon_filter
 # commands.dr collects documentation on all commands, functions and
 # builtins
 #
-
+FILE(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc_src)
 ADD_CUSTOM_COMMAND(OUTPUT doc_src/commands.hdr
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                    COMMAND build_tools/build_commands_hdr.sh ${HELP_SRC}
-                               < doc_src/commands.hdr.in 
+                               < doc_src/commands.hdr.in
                                > ${CMAKE_CURRENT_BINARY_DIR}/doc_src/commands.hdr
-                   DEPENDS ${DOC_SRC_FILES} doc_src/commands.hdr.in build_tools/build_commands_hdr.sh)
+                   DEPENDS ${HELP_SRC}
+                           ${CMAKE_CURRENT_SOURCE_DIR}/doc_src/commands.hdr.in
+                           ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_commands_hdr.sh)
 
 # doc.h is a compilation of the various snipptes of text used both for
 # the user documentation and for internal help functions into a single
@@ -52,10 +55,20 @@ ADD_CUSTOM_COMMAND(OUTPUT doc.h
                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                    DEPENDS ${HDR_FILES})
 
+# doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
+# @echo "  AWK CAT  $(em)$@$(sgr0)"
+# $v cat $@.in | $(AWK) '{if ($$0 ~ /@toc@/){ system("cat toc.txt");} else{ print $$0;}}' >$@
+ADD_CUSTOM_COMMAND(OUTPUT doc_src/index.hdr
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                   COMMAND build_tools/build_index_hdr.sh toc.txt
+                           < doc_src/index.hdr.in
+                           > ${CMAKE_CURRENT_BINARY_DIR}/doc_src/index.hdr
+                   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/toc.txt)
+
 ADD_CUSTOM_TARGET(doc
                   COMMAND "(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=${FISH_BUILD_VERSION} |\
                            /usr/bin/env sed 's/-.*//') | doxygen - && touch user_doc)"
-                  DEPENDS ${HDR_FILES_SRC} Doxyfile.user ${DOC_SRC_FILES} doc.h $(HDR_FILES) lexicon_filter)
+                  DEPENDS Doxyfile.user ${DOC_SRC_FILES} doc.h $(HDR_FILES) lexicon_filter)
 
 # doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
 #   @echo "  doxygen  $(em)user_doc$(sgr0)"

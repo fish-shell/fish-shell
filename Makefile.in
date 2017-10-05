@@ -425,7 +425,7 @@ toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) | show-SED
 
 doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
 	@echo "  AWK CAT  $(em)$@$(sgr0)"
-	$v cat $@.in | $(AWK) '{if ($$0 ~ /@toc@/){ system("cat toc.txt");} else{ print $$0;}}' >$@
+	$v build_tools/build_index_hdr.sh toc.txt < $@.in > $@
 
 #
 # Compile Doxygen Input Filter from the lexicon. This is an executable sed

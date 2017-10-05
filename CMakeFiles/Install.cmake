@@ -175,7 +175,12 @@ INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share/man/
 # done;
 INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/)
 
-
-
 # $v $(INSTALL) -m 644 share/lynx.lss $(DESTDIR)$(datadir)/fish/
 INSTALL(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)
+
+# Group install targets into a InstallTargets folder
+SET_PROPERTY(TARGET CHECK-FISH-BUILD-VERSION-FILE build_fish_pc
+                    test_invocation test_fishscript
+                    test_prep tests_buildroot_target
+                    build_lexicon_filter
+             PROPERTY FOLDER cmake/InstallTargets)

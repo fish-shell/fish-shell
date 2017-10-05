@@ -4,6 +4,17 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 # We are C++11.
 SET(CMAKE_CXX_STANDARD 11)
 
+# Hide the CMake Rules directories in Xcode projects.
+SOURCE_GROUP("CMake Rules" REGULAR_EXPRESSION "^$")
+
+# Put source and header files at top level under targets.
+SOURCE_GROUP("Source Files" REGULAR_EXPRESSION "^$")
+SOURCE_GROUP("Header Files" REGULAR_EXPRESSION "^$")
+SOURCE_GROUP("Builtins" REGULAR_EXPRESSION "builtin_.*")
+
+# Support folders.
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+
 # All objects that the system needs to build fish, except fish.cpp
 SET(FISH_SRCS
     src/autoload.cpp src/builtin.cpp src/builtin_bg.cpp src/builtin_bind.cpp
@@ -29,6 +40,9 @@ SET(FISH_SRCS
     src/tokenizer.cpp src/utf8.cpp src/util.cpp src/wcstringutil.cpp
     src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
 )
+
+# Header files are just globbed.
+FILE(GLOB FISH_HEADERS src/*.h)
 
 # Set up the version target.
 # This creates the file FISH-BUILD-VERSION-FILE which is only modified if necessary.
@@ -74,6 +88,7 @@ ENDFUNCTION(FISH_LINK_DEPS)
 
 # Define libfish.a.
 ADD_LIBRARY(fishlib STATIC ${FISH_SRCS})
+TARGET_SOURCES(fishlib PRIVATE ${FISH_HEADERS})
 TARGET_LINK_LIBRARIES(fishlib
   ${CURSES_LIBRARIES} Threads::Threads
   ${PCRE2_LIB} muparser)

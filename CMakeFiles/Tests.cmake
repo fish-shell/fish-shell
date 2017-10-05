@@ -102,3 +102,10 @@ ADD_CUSTOM_TARGET(test_fishscript
 ADD_CUSTOM_TARGET(test_high_level
                   DEPENDS test_invocation test_fishscript)
 ADD_DEPENDENCIES(test test_high_level)
+
+# Group test targets into a TestTargets folder
+SET_PROPERTY(TARGET test test_low_level test_high_level tests_dir
+                    test_invocation test_fishscript test_prep
+                    tests_buildroot_target build_lexicon_filter
+                    symlink_functions
+             PROPERTY FOLDER cmake/TestTargets)

@@ -99,3 +99,7 @@ ADD_CUSTOM_COMMAND(OUTPUT share/man/
                    DEPENDS ${FBVF} ${HELP_SRC} ${CMAKE_CURRENT_BINARY_DIR}/lexicon_filter)
 
 ADD_CUSTOM_TARGET(BUILD_MANUALS ALL DEPENDS share/man/)
+
+# Group docs targets into a DocsTargets folder
+SET_PROPERTY(TARGET doc BUILD_MANUALS
+             PROPERTY FOLDER cmake/DocTargets)

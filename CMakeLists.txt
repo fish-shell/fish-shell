@@ -53,17 +53,16 @@ ADD_DEFINITIONS(-D_UNICODE=1
                 -DBINDIR=L"${CMAKE_INSTALL_FULL_BINDIR}"
                 -DDOCDIR=L"${CMAKE_INSTALL_FULL_DOCDIR}")
 
-# Set up dependency paths.
-INCLUDE_DIRECTORIES(muparser-2.2.5/include/ pcre2-10.22/src/)
-LINK_DIRECTORIES(muparser-2.2.5/lib/ pcre2-10.22/.libs/)
+# Set up PCRE2
+INCLUDE(CMakeFiles/PCRE2.cmake)
 
-# PCRE2 needs a define.
-SET(PCRE2_WIDTH ${WCHAR_T_BITS})
+# Set up muparser.
+INCLUDE(CMakeFiles/MuParser.cmake)
 
 # Define a function to link dependencies.
 FUNCTION(FISH_LINK_DEPS target)
   TARGET_LINK_LIBRARIES(${target} ${CURSES_LIBRARIES} Threads::Threads)
-  TARGET_LINK_LIBRARIES(${target} pcre2-${PCRE2_WIDTH} muparser)
+  TARGET_LINK_LIBRARIES(${target} ${PCRE2_LIB} muparser)
 ENDFUNCTION(FISH_LINK_DEPS)
 
 # Define fish.

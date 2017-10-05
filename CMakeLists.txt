@@ -30,11 +30,13 @@ SET(FISH_SRCS
     src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
 )
 
-# Set up FISH-BUILD-VERSION-FILE
-# Note this happens when CMake runs, not when the generated build system runs
-EXECUTE_PROCESS(COMMAND build_tools/git_version_gen.sh
-                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-                OUTPUT_QUIET)
+# Set up the version target.
+# This creates the file FISH-BUILD-VERSION-FILE which is only modified if necessary.
+ADD_CUSTOM_COMMAND(OUTPUT "FISH-BUILD-VERSION-FILE"
+                   DEPENDS CHECK-FISH-BUILD-VERSION-FILE)
+
+ADD_CUSTOM_TARGET("CHECK-FISH-BUILD-VERSION-FILE"
+                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh)
 
 # Set up config.h
 INCLUDE(CMakeFiles/ConfigureChecks.cmake)

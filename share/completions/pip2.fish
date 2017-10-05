@@ -1,3 +1,3 @@
 if command -sq pip2
-    eval (pip2 completion --fish)
+    pip2 completion --fish | source
 end

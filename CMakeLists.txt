@@ -69,22 +69,30 @@ INCLUDE(CMakeFiles/Docs.cmake)
 
 # Define a function to link dependencies.
 FUNCTION(FISH_LINK_DEPS target)
-  TARGET_LINK_LIBRARIES(${target} ${CURSES_LIBRARIES} Threads::Threads)
-  TARGET_LINK_LIBRARIES(${target} ${PCRE2_LIB} muparser)
+  TARGET_LINK_LIBRARIES(${target} fishlib)
 ENDFUNCTION(FISH_LINK_DEPS)
 
+# Define libfish.a.
+ADD_LIBRARY(fishlib STATIC ${FISH_SRCS})
+TARGET_LINK_LIBRARIES(fishlib
+  ${CURSES_LIBRARIES} Threads::Threads
+  ${PCRE2_LIB} muparser)
+
+# builtin_math.cpp needs to see muParser's built header.
+ADD_DEPENDENCIES(fishlib muparser)
+
 # Define fish.
-ADD_EXECUTABLE(fish src/fish.cpp ${FISH_SRCS})
+ADD_EXECUTABLE(fish src/fish.cpp)
 FISH_LINK_DEPS(fish)
 
 # Define fish_indent.
 ADD_EXECUTABLE(fish_indent
-               src/fish_indent.cpp src/print_help.cpp ${FISH_SRCS})
+               src/fish_indent.cpp src/print_help.cpp)
 FISH_LINK_DEPS(fish_indent)
 
 # Define fish_key_reader.
 ADD_EXECUTABLE(fish_key_reader
-               src/fish_key_reader.cpp src/print_help.cpp ${FISH_SRCS})
+               src/fish_key_reader.cpp src/print_help.cpp)
 FISH_LINK_DEPS(fish_key_reader)
 
 # Set up tests.

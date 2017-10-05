@@ -66,9 +66,10 @@ ADD_CUSTOM_COMMAND(OUTPUT doc_src/index.hdr
                    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/toc.txt)
 
 ADD_CUSTOM_TARGET(doc
-                  COMMAND "(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=${FISH_BUILD_VERSION} |\
-                           /usr/bin/env sed 's/-.*//') | doxygen - && touch user_doc)"
-                  DEPENDS Doxyfile.user ${DOC_SRC_FILES} doc.h $(HDR_FILES) lexicon_filter)
+                  COMMAND env "$$(cat" "FISH-BUILD-VERSION-FILE)"
+                          ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_user_doc.sh
+                          ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.user ./lexicon_filter
+                  DEPENDS "FISH-BUILD-VERSION-FILE" Doxyfile.user ${DOC_SRC_FILES} doc.h $(HDR_FILES) lexicon_filter)
 
 # doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
 #   @echo "  doxygen  $(em)user_doc$(sgr0)"

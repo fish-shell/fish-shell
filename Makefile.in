@@ -538,8 +538,8 @@ share/man: $(HELP_SRC) lexicon_filter | show-FISH_BUILD_VERSION show-SED
 	@echo "  doxygen  $(em)$@$(sgr0)"
 	$v touch share/man
 	-$v rm -Rf share/man/man1
-	$v echo "$(dim)" && PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION) \
-		| $(SED) "s/-.*//"` INPUT_FILTER=./lexicon_filter build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share;
+	$v echo "$(dim)" && FISH_BUILD_VERSION=${FISH_BUILD_VERSION} INPUT_FILTER=./lexicon_filter \
+	                    build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share;
 
 #
 # The build rules for installing/uninstalling fish

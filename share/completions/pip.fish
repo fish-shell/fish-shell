@@ -1,4 +1,4 @@
 if command -sq pip
-    eval (pip completion --fish)
+    pip completion --fish | source
 end
 

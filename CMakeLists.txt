@@ -89,3 +89,6 @@ FISH_LINK_DEPS(fish_key_reader)
 
 # Set up tests.
 INCLUDE(CMakeFiles/Tests.cmake)
+
+# Set up install.
+INCLUDE(CMakeFiles/Install.cmake)

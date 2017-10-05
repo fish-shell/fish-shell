@@ -406,22 +406,9 @@ test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
 doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in build_tools/build_commands_hdr.sh
 	build_tools/build_commands_hdr.sh ${HELP_SRC} < doc_src/commands.hdr.in > $@
 
-toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) | show-SED
-	@echo "  SED      $(em)$@$(sgr0)"
-	$v rm -f toc.tmp $@
-# Ugly hack to set the toc initial title for the main page
-	$v echo '- <a href="index.html" id="toc-index">fish shell documentation - $(FISH_BUILD_VERSION)</a>' > toc.tmp
-# The first sed command captures the page name, followed by the description
-# The second sed command captures the command name \1 and the description \2, but only up to a dash
-# This is to reduce the size of the TOC in the command listing on the main page
-	$v for i in $(HDR_FILES:index.hdr=index.hdr.in); do\
-		NAME=`basename $$i .hdr`; \
-		NAME=`basename $$NAME .hdr.in`; \
-		$(SED) <$$i >>toc.tmp -n \
-		-e 's,.*\\page *\([^ ]*\) *\(.*\)$$,- <a href="'$$NAME'.html" id="toc-'$$NAME'">\2</a>,p' \
-		-e 's,.*\\section *\([^ ]*\) *\([^-]*\)\(.*\)$$,  - <a href="'$$NAME'.html#\1">\2</a>,p'; \
-	done
-	$v mv toc.tmp $@
+toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) build_tools/build_toc_txt.sh | show-SED
+	FISH_BUILD_VERSION=${FISH_BUILD_VERSION} build_tools/build_toc_txt.sh \
+	    $(HDR_FILES:index.hdr=index.hdr.in) > toc.txt
 
 doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
 	@echo "  AWK CAT  $(em)$@$(sgr0)"

@@ -2,7 +2,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
-#include <iostream>
 #include <limits.h>
 #include <stddef.h>
 #include <stdio.h>

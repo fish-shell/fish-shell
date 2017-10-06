@@ -48,6 +48,7 @@ struct read_cmd_opts_t {
     bool array = false;
     bool silent = false;
     bool split_null = false;
+    bool stdout = false;
     int nchars = 0;
 };
 
@@ -73,6 +74,11 @@ static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'
 
 static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    if (argc == 1) {
+        opts.stdout = true;
+        return STATUS_CMD_OK;
+    }
+
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -375,10 +381,6 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     // Verify all variable names.
     for (int i = 0; i < argc; i++) {
         if (!valid_var_name(argv[i])) {
-            if (wcscmp(L"-", argv[i]) == 0) {
-                //writing to stdout instead
-                continue;
-            }
             streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, argv[i]);
             builtin_print_help(parser, streams, cmd, streams.err);
             return STATUS_INVALID_ARGS;
@@ -388,24 +390,9 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     return STATUS_CMD_OK;
 }
 
-void print_or_set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
-    if (key == L"-") {
-        for (const auto &val : vals) {
-            std::wcout << val << std::endl;
-        }
-    }
-    else {
-        env_set(key, mode, vals);
-    }
-}
-
-void print_or_set_one(const wcstring &key, env_mode_flags_t mode, wcstring val) {
-    if (key == L"-") {
-        std::wcout << val << std::endl;
-    }
-    else {
-        env_set_one(key, mode, val);
-    }
+void write_stdout(wcstring val) {
+    const std::string &out = wcs2string(val);
+    write_loop(STDOUT_FILENO, out.c_str(), out.size());
 }
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
@@ -452,6 +439,11 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return exit_res;
     }
 
+    if (opts.stdout) {
+        write_stdout(buff);
+        return exit_res;
+    }
+
     if (!opts.have_delimiter) {
         auto ifs = env_get(L"IFS");
         if (!ifs.missing_or_empty()) opts.delimiter = ifs->as_string();
@@ -480,7 +472,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         if (opts.array) {
             // Array mode: assign each char as a separate element of the sole var.
-            print_or_set(argv[0], opts.place, chars);
+            env_set(argv[0], opts.place, chars);
         } else {
             // Not array mode: assign each char to a separate var with the remainder being assigned
             // to the last var.
@@ -488,16 +480,16 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             size_t j = 0;
             for (; i + 1 < argc; ++i) {
                 if (j < chars.size()) {
-                    print_or_set_one(argv[i], opts.place, chars[j]);
+                    env_set_one(argv[i], opts.place, chars[j]);
                     j++;
                 } else {
-                    print_or_set_one(argv[i], opts.place, L"");
+                    env_set_one(argv[i], opts.place, L"");
                 }
             }
 
             if (i < argc) {
                 wcstring val = chars.size() == static_cast<size_t>(argc) ? chars[i] : L"";
-                print_or_set_one(argv[i], opts.place, val);
+                env_set_one(argv[i], opts.place, val);
             } else {
                 env_set_empty(argv[i], opts.place);
             }
@@ -515,13 +507,13 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                  loc.first != wcstring::npos; loc = wcstring_tok(buff, opts.delimiter, loc)) {
                 tokens.emplace_back(wcstring(buff, loc.first, loc.second));
             }
-            print_or_set(argv[0], opts.place, tokens);
+            env_set(argv[0], opts.place, tokens);
         } else {
             // We're using a delimiter provided by the user so use the `string split` behavior.
             wcstring_list_t splits;
             split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                         &splits, LONG_MAX);
-            print_or_set(argv[0], opts.place, splits);
+            env_set(argv[0], opts.place, splits);
         }
     } else {
         // Not array mode. Split the input into tokens and assign each to the vars in sequence.
@@ -535,7 +527,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 if (loc.first != wcstring::npos) {
                     substr = wcstring(buff, loc.first, loc.second);
                 }
-                print_or_set_one(argv[i], opts.place, substr);
+                env_set_one(argv[i], opts.place, substr);
             }
         } else {
             // We're using a delimiter provided by the user so use the `string split` behavior.
@@ -545,7 +537,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                         &splits, argc - 1);
             for (size_t i = 0; i < (size_t)argc && i < splits.size(); i++) {
-                print_or_set_one(argv[i], opts.place, splits[i]);
+                env_set_one(argv[i], opts.place, splits[i]);
             }
         }
     }

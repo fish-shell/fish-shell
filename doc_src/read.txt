@@ -7,10 +7,7 @@ read [OPTIONS] VARIABLES...
 
 \subsection read-description Description
 
-`read` reads from standard input and stores the result in one or more shell variables. By default,
-one line (terminated by a newline) is read into each variable. Alternatively, a null character or a
-maximum number of characters can be used to terminate the input. Unlike other shells, there is no
-default variable (such as `REPLY`) for storing the result.
+`read` reads from standard input and either writes the result back to the terminal for use in command substitution or stores the result in one or more shell variables. By default, one line (terminated by a newline) is read into each variable. Alternatively, a null character or a maximum number of characters can be used to terminate the input. Unlike other shells, there is no default variable (such as `REPLY`) for storing the result.
 
 The following options are available:
 
@@ -47,6 +44,12 @@ The following options are available:
   disables interactive mode.
 
 `read` reads a single line of input from stdin, breaks it into tokens based on the delimiter set via `-d`/`--delimiter` as a complete string (like `string split` or, if that has not been given the (deprecated) `IFS` shell variable as a set of characters, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable. As a special case, if `IFS` is set to the empty string, each character of the input is considered a separate token.
+
+If no parameters are provided, `read` enters a special case that simply provides redirection from `stdin` to `stdout`, useful for command substitution. For instance, the fish shell command below can be used to read data that should be provided via a command line argument from the console instead of hardcoding it in the command itself, allowing the command to both be reused as-is in various contexts with different input values and preventing possibly sensitive text from being included in the shell history:
+
+`mysql -uuser -p(read)`
+
+When running in stdout redirect mode, `read` does not split the input in any way and text is redirected to standard output without any further processing or manipulation.
 
 If `-a` or `--array` is provided, only one variable name is allowed and the tokens are stored as an array in this variable.
 

@@ -90,7 +90,7 @@ ENDFUNCTION(FISH_LINK_DEPS)
 ADD_LIBRARY(fishlib STATIC ${FISH_SRCS})
 TARGET_SOURCES(fishlib PRIVATE ${FISH_HEADERS})
 TARGET_LINK_LIBRARIES(fishlib
-  ${CURSES_LIBRARIES} Threads::Threads
+  ${CURSES_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS}
   ${PCRE2_LIB} muparser)
 
 # builtin_math.cpp needs to see muParser's built header.

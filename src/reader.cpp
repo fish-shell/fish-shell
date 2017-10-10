@@ -918,6 +918,7 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field) {
         case R_VI_ARG_DIGIT:
         case R_VI_DELETE_TO:
         case R_BEGINNING_OF_BUFFER:
+        case R_NEW_LINE_WITH_BACKSLASH:
         case R_END_OF_BUFFER: {
             // These commands operate on the search field if that's where the focus is.
             return !focused_on_search_field;
@@ -3169,6 +3170,11 @@ const wchar_t *reader_readline(int nchars) {
                 }
                 input_function_set_status(status);
                 reader_repaint_needed();
+                break;
+            }
+            case R_NEW_LINE_WITH_BACKSLASH: {
+                const wchar_t *str_to_insert = L" \\\n";
+                insert_string(data->active_edit_line(), str_to_insert);
                 break;
             }
             default: {

@@ -102,6 +102,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # remove the commenting chars so the command can be further edited then executed.
     bind $argv \e\# __fish_toggle_comment_commandline
 
+    # Insert a space, a backslash and a newline (" \\\n") by pressing Ctrl-o.
+    bind $argv \co new-line-with-backslash
+
     # The [meta-e] and [meta-v] keystrokes invoke an external editor on the command buffer.
     bind \ee edit_command_buffer
     bind \ev edit_command_buffer

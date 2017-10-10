@@ -111,6 +111,7 @@ static const wchar_t *const name_arr[] = {L"beginning-of-line",
                                           L"forward-jump",
                                           L"backward-jump",
                                           L"and",
+                                          L"new-line-with-backslash",
                                           L"cancel"};
 
 wcstring describe_char(wint_t c) {
@@ -175,6 +176,7 @@ static const wchar_t code_arr[] = {R_BEGINNING_OF_LINE,
                                    R_FORWARD_JUMP,
                                    R_BACKWARD_JUMP,
                                    R_AND,
+                                   R_NEW_LINE_WITH_BACKSLASH,
                                    R_CANCEL};
 
 /// Mappings for the current input mode.

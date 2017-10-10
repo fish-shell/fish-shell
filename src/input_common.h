@@ -71,6 +71,7 @@ enum {
     R_FORWARD_JUMP,
     R_BACKWARD_JUMP,
     R_AND,
+    R_NEW_LINE_WITH_BACKSLASH,
     R_CANCEL,
     R_TIMEOUT,  // we didn't get interactive input within wait_on_escape_ms
     R_MAX = R_CANCEL,

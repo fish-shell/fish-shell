@@ -53,7 +53,7 @@ matrix:
   fast_finish: true
 
 script:
-  - autoreconf
+  - autoreconf --no-recursive
   - ./configure --prefix=$HOME/prefix || cat config.log
   - make -j2 &&
     make test DESTDIR=$HOME/prefix/ SHOW_INTERACTIVE_LOG=1 &&

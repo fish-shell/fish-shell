@@ -16,6 +16,11 @@ expect_prompt
 
 # read
 
+send_line "read"
+expect_read_prompt
+send_line "text"
+expect_prompt
+
 send_line "read foo"
 expect_read_prompt
 send_line "text"

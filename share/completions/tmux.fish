@@ -34,7 +34,7 @@ complete -c tmux -n '__fish_use_subcommand' -s V    -d 'Report the tmux version'
 complete -c tmux -n '__fish_use_subcommand' -xs c   -d 'Execute command using the default shell'
 complete -c tmux -n '__fish_use_subcommand' -rs f   -d 'Alternate config file'
 complete -c tmux -n '__fish_use_subcommand' -rs L   -d 'Specify the name of the server socket to use'
-complete -c tmux -n '__fish_use_subcommand' -rs S   -d 'Full path to sever socket. If set, -L is ignored.'
+complete -c tmux -n '__fish_use_subcommand' -rs S   -d 'Full path to server socket. If set, -L is ignored.'
 ###############  End:   Front  Flags ###############
 
 ###############  Begin: Clients and Sessions ###############

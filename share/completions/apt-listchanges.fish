@@ -6,7 +6,7 @@ complete -f -c apt-listchanges -s f -l frontend -a "pager browser xterm-pager xt
 complete -r -f -c apt-listchanges -l email-address --description "Specify email address"
 complete -f -c apt-listchanges -s c -l confirm --description "Ask confirmation"
 complete -f -c apt-listchanges -s a -l all --description "Display all changelogs"
-complete -r -c apt-listchanges -l save_seen --description "Avoid changelogs from db in named file"
+complete -r -c apt-listchanges -l save-seen --description "Avoid changelogs from db in named file"
 complete -r -f -c apt-listchanges -l which -a "news changelogs both" --description "Select display"
 complete -f -c apt-listchanges -s h -l headers --description "Insert header"
 complete -f -c apt-listchanges -l debug --description "Display debug info"

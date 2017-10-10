@@ -34,4 +34,9 @@ else if command ls -G / >/dev/null ^/dev/null
     function ls --description "List contents of directory"
         command ls -G $argv
     end
+else if command ls --color / >/dev/null 2>/dev/null
+    # Solaris 11's ls command takes a --color flag
+    function ls --description "List contents of directory"
+        command ls --color $argv
+    end
 end

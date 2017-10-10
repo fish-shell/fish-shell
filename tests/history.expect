@@ -110,6 +110,14 @@ expect_prompt -re {history search --exact 'echo hell'\r\n} {
     puts stderr "history function explicit exact search 'echo hell' failed"
 }
 
+# Verify that glob searching works.
+send "history search --prefix 'echo start*echo end'\r"
+expect_prompt -re {echo start1; builtin history; echo end1\r\n} {
+    puts "history function explicit glob search 'echo start*echo end' succeeded"
+} timeout {
+    puts stderr "history function explicit glob search 'echo start*echo end' failed"
+}
+
 # ==========
 # Delete a single command we recently ran.
 send "history delete -e -C 'echo hello'\r"

@@ -1,6 +1,6 @@
 
 ####################
-# Read with no vars is an error
+# Read with no vars is not an error
 
 ####################
 # Read with -a and anything other than exactly on var name is an error

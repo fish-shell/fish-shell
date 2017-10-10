@@ -139,6 +139,22 @@ if test $status -eq 0
 end
 \endfish
 
+The previous test can likewise be inverted:
+
+\fish
+if test ! $status -eq 0
+    echo "Previous command failed"
+end
+\endfish
+
+which is logically equivalent to the following:
+
+\fish
+if test $status -ne 0
+    echo "Previous command failed"
+end
+\endfish
+
 \subsection test-standards Standards
 
 `test` implements a subset of the <a href="http://www.unix.com/man-page/POSIX/1/test/">IEEE Std 1003.1-2008 (POSIX.1) standard</a>. The following exceptions apply:

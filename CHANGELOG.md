@@ -20,9 +20,16 @@ This section is for changes merged to the `major` branch that are not also merge
 - Setting variables is much faster (#4200, #4341).
 - Using a read-only variable in a for loop is now an error. Note that this never worked. It simply failed to set the for loop var and thus silently produced incorrect results (#4342).
 - `math` is now a builtin rather than a wrapper around `bc` (#3157).
+- `history search` supports globs for wildcard searching (#3136).
+- `bind` has a new `--silent` option to ignore bind requests for named keys not available under the current `$TERMINAL` (#4188, #4431)
+- `read` writes directly to stdout if called without arguments (#4407)
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).
+- Added completions for
+  - `j` (autojump #4344)
+- Improved completions for
+  - `git` (#4395, #4396)
 
 
 # fish 2.7b1
@@ -58,10 +65,35 @@ This section is for changes merged to the `major` branch that are not also merge
 - Option completion for `apt list` now works properly (#4350).
 - Added completions for:
   - `as` (#4130)
+  - `cdh` (#2847)
+  - `dhcpd`
+  - `ezjail-admin` (#4324)
+  - `fab` (fabric, #4153)
+  - `grub-file` (#4119)
+  - `grub-install` (#4119)
   - `jest` (#4142)
+  - `kdeconnect-cli`
+  - `magneto` (#4043, #4108)
+  - `mdadm` (#4198)
+  - `s3cmd` (#4332)
   - `sbt` (#4347)
-  - `subl` (Sublime Text 3 editor, #4277)
   - `snap` (#4215)
+  - `subl` (Sublime Text 3 editor, #4277)
+
+- Improved completions for:
+  - `apt`
+  - `cd` (#4061)
+  - `composer` (#4295)
+  - `git` (#4117, #4147, #4329, #4368)
+  - `gphoto2`
+  - `killall` (#4052)
+  - `ln`
+  - `npm` (#4241)
+  - `ssh` (#4377)
+  - `tail`
+  - `xdg-mime` (#4333)
+  - `zypper` (#4325)
+
 
 ---
 
@@ -104,7 +136,7 @@ If you are upgrading from version 2.5.0 or before, please also review the releas
 - `status` supports a new `current-function` subcommand to print the current function name (#1743).
 - `string` supports a new `repeat` subcommand (#3864). `string match` supports a new `--entire` option to emit the entire line matched by a pattern (#3957). `string replace` supports a new `--filter` option to only emit lines which underwent a replacement (#3348).
 - `test` supports the `-k` option to test for sticky bits (#733).
-- `umask` understands symbolic modes (#738). 
+- `umask` understands symbolic modes (#738).
 - Empty components in the `CDPATH`, `MANPATH` and `PATH` variables are now converted to "." (#2106, #3914).
 - New versions of ncurses (6.0 and up) wipe terminal scrollback buffers with certain commands; the `C-l` binding tries to avoid this (#2855).
 - Some systems' `su` implementations do not set the `USER` environment variable; it is now reset for root users (#3916).

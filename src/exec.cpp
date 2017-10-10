@@ -1115,8 +1115,8 @@ void exec_job(parser_t &parser, job_t *j) {
             // child_set_group() at this point. but we only need to call set_child_group for the
             // first process in the group. If needs_keepalive is set, this has already been called
             // for the keepalive process.
-            pid_t pid_status{};
             int result;
+            int pid_status;
             while ((result = waitpid(p->pid, &pid_status, WUNTRACED)) == -1 && errno == EINTR) {
                 // This could be a superfluous interrupt or Ctrl+C at the terminal In all cases, it
                 // is OK to retry since the forking code above is specifically designed to never,

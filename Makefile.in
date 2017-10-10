@@ -727,6 +727,8 @@ install-force: all install-translations install-doc | show-datadir show-sysconfd
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
 		true; \
 	done;
+	@echo "Installing miscellaneous helper resources";
+	$v $(INSTALL) -m 644 share/lynx.lss $(DESTDIR)$(datadir)/fish/
 .PHONY: install-force
 
 #

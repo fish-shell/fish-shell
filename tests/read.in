@@ -3,7 +3,7 @@
 # Test read builtin and IFS.
 #
 
-logmsg Read with no vars is an error
+logmsg Read with no vars is not an error
 read
 
 logmsg Read with -a and anything other than exactly on var name is an error

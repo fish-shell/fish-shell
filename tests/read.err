@@ -1,7 +1,6 @@
 
 ####################
-# Read with no vars is an error
-read: Expected at least 1 args, got only 0
+# Read with no vars is not an error
 
 ####################
 # Read with -a and anything other than exactly on var name is an error

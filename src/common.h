@@ -4,6 +4,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
+#include <limits.h>
 #include <pthread.h>
 #include <stdarg.h>  // IWYU pragma: keep
 #include <stddef.h>
@@ -89,6 +90,17 @@ typedef std::vector<wcstring> wcstring_list_t;
 #define ENCODE_DIRECT_END (ENCODE_DIRECT_BASE + 256)
 #define INPUT_COMMON_BASE (wchar_t)0xF700
 #define INPUT_COMMON_END (INPUT_COMMON_BASE + 64)
+
+// NAME_MAX is not defined on Solaris
+#if !defined(NAME_MAX)
+#include <sys/param.h>
+#if defined(MAXNAMELEN)
+// MAXNAMELEN is defined on Linux, BSD, and Solaris among others
+#define NAME_MAX MAXNAMELEN
+#else
+static_assert(false, "Neither NAME_MAX nor MAXNAMELEN is defined!");
+#endif
+#endif
 
 enum escape_string_style_t { STRING_STYLE_SCRIPT, STRING_STYLE_URL, STRING_STYLE_VAR };
 

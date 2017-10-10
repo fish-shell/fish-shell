@@ -55,8 +55,9 @@ function help --description 'Show help for the fish shell'
             # If the OS appears to be Windows (graphical), try to use cygstart
             if type -q cygstart
                 set fish_browser cygstart
-                # If xdg-open is available, just use that
-            else if type -q xdg-open
+            # If xdg-open is available, just use that
+            # but only if an X session is running
+            else if type -q xdg-open; and set -q -x DISPLAY
                 set fish_browser xdg-open
             end
 
@@ -147,6 +148,12 @@ function help --description 'Show help for the fish shell'
         end
         eval "$fish_browser $page_url &"
     else
+        # Work around lynx bug where <div class="contents"> always has the same formatting as links (unreadable)
+        # by using a custom style sheet. See https://github.com/fish-shell/fish-shell/issues/4170
+        set -l local_file 0
+        if eval $fish_browser --version 2>/dev/null | string match -qr Lynx
+            set fish_browser $fish_browser -lss={$__fish_datadir}/lynx.lss
+        end
         eval $fish_browser $page_url
     end
 end

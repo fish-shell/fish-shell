@@ -53,7 +53,7 @@
 //
 //   Newlines are replaced by \n. Backslashes are replaced by \\.
 
-// This is the history session ID we use by default if the user has not set env var FISH_HISTORY.
+// This is the history session ID we use by default if the user has not set env var fish_history.
 #define DFLT_FISH_HISTORY_SESSION_ID L"fish"
 
 // When we rewrite the history, the number of items we keep.
@@ -1837,7 +1837,7 @@ void history_sanity_check() {
 wcstring history_session_id() {
     wcstring result = DFLT_FISH_HISTORY_SESSION_ID;
 
-    const auto var = env_get(L"FISH_HISTORY");
+    const auto var = env_get(L"fish_history");
     if (var) {
         wcstring session_id = var->as_string();
         if (session_id.empty()) {

@@ -328,7 +328,7 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
 
             // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
             int comp_width = fish_wcswidth(comp_strings.at(j).c_str());
-            if (comp_width > 0) comp->comp_width += prefix_len + comp_width;
+            if (comp_width >= 0) comp->comp_width += prefix_len + comp_width;
         }
 
         // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.

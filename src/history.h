@@ -48,7 +48,15 @@ enum history_search_type_t {
     // Search for commands containing the given string.
     HISTORY_SEARCH_TYPE_CONTAINS,
     // Search for commands starting with the given string.
-    HISTORY_SEARCH_TYPE_PREFIX
+    HISTORY_SEARCH_TYPE_PREFIX,
+    // Search for commands containing the given glob pattern.
+    HISTORY_SEARCH_TYPE_CONTAINS_GLOB,
+    // Search for commands starting with the given glob pattern.
+    HISTORY_SEARCH_TYPE_PREFIX_GLOB,
+    // Search for commands containing the given PCRE pattern.
+    HISTORY_SEARCH_TYPE_CONTAINS_PCRE,
+    // Search for commands starting with the given PCRE pattern.
+    HISTORY_SEARCH_TYPE_PREFIX_PCRE
 };
 
 typedef uint32_t history_identifier_t;

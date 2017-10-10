@@ -139,12 +139,12 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
                 break;
             }
             case 'p': {
-                opts.search_type = HISTORY_SEARCH_TYPE_PREFIX;
+                opts.search_type = HISTORY_SEARCH_TYPE_PREFIX_GLOB;
                 opts.history_search_type_defined = true;
                 break;
             }
             case 'c': {
-                opts.search_type = HISTORY_SEARCH_TYPE_CONTAINS;
+                opts.search_type = HISTORY_SEARCH_TYPE_CONTAINS_GLOB;
                 opts.history_search_type_defined = true;
                 break;
             }
@@ -240,7 +240,7 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Establish appropriate defaults.
     if (opts.hist_cmd == HIST_UNDEF) opts.hist_cmd = HIST_SEARCH;
     if (!opts.history_search_type_defined) {
-        if (opts.hist_cmd == HIST_SEARCH) opts.search_type = HISTORY_SEARCH_TYPE_CONTAINS;
+        if (opts.hist_cmd == HIST_SEARCH) opts.search_type = HISTORY_SEARCH_TYPE_CONTAINS_GLOB;
         if (opts.hist_cmd == HIST_DELETE) opts.search_type = HISTORY_SEARCH_TYPE_EXACT;
     }
 

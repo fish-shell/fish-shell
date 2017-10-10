@@ -67,7 +67,7 @@ complete -f -c climate -n '__fish_is_git_repository; and __fish_climate_has_no_a
 complete -f -c climate -n '__fish_is_git_repository; and __fish_climate_has_no_argument' -a user-stats -d 'Calculate total contribution for a user'
 
 # Performance
-complete -f -n '__fish_climate_has_no_argument' -c climate -a overview -d 'Display an performance overview'
+complete -f -n '__fish_climate_has_no_argument' -c climate -a overview -d 'Display a performance overview'
 complete -f -n '__fish_climate_has_no_argument' -c climate -a memory -d 'Find memory used'
 complete -f -n '__fish_climate_has_no_argument' -c climate -a disk -d 'Find disk used'
 complete -f -n '__fish_climate_has_no_argument' -c climate -a get-pids -d 'Get all PIDs for a process name'

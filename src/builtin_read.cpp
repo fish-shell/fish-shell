@@ -47,6 +47,7 @@ struct read_cmd_opts_t {
     bool array = false;
     bool silent = false;
     bool split_null = false;
+    bool stdout = false;
     int nchars = 0;
 };
 
@@ -72,6 +73,11 @@ static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'
 
 static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    if (argc == 1) {
+        opts.stdout = true;
+        return STATUS_CMD_OK;
+    }
+
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -383,6 +389,11 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     return STATUS_CMD_OK;
 }
 
+void write_stdout(wcstring val) {
+    const std::string &out = wcs2string(val);
+    write_loop(STDOUT_FILENO, out.c_str(), out.size());
+}
+
 /// The read builtin. Reads from stdin and stores the values in environment variables.
 int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
@@ -424,6 +435,11 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Define the var(s) without any data. We do this because when this happens we want the user
         // to be able to use the var but have it expand to nothing.
         for (int i = 0; i < argc; i++) env_set_empty(argv[i], opts.place);
+        return exit_res;
+    }
+
+    if (opts.stdout) {
+        write_stdout(buff);
         return exit_res;
     }
 

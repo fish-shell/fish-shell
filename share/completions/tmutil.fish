@@ -46,7 +46,7 @@ complete -f -c tmutil -n '__fish_use_subcommand' -a snapshot -d 'Create new loca
 complete -f -c tmutil -n '__fish_use_subcommand' -a startbackup -d 'Begin a backup if one is not already running'
 complete -f -c tmutil -n '__fish_seen_subcommand_from startbackup' -s a -l auto -d 'Automatic mode'
 complete -f -c tmutil -n '__fish_seen_subcommand_from startbackup' -s b -l block -d 'Block until finished'
-complete -f -c tmutil -n '__fish_seen_subcommand_from startbackup' -s r -l rotation -d 'Autmatic rotation'
+complete -f -c tmutil -n '__fish_seen_subcommand_from startbackup' -s r -l rotation -d 'Automatic rotation'
 complete -r -c tmutil -n '__fish_seen_subcommand_from startbackup' -s d -l destination -d 'Backup destination'
 complete -f -c tmutil -n '__fish_use_subcommand' -a stopbackup -d 'Cancel a backup currently in progress'
 complete -r -c tmutil -n '__fish_use_subcommand' -a uniquesize -d 'Analyze the specified path and determine its unique size'

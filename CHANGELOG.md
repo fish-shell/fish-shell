@@ -84,6 +84,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `apt`
   - `cd` (#4061)
   - `composer` (#4295)
+  - `flatpak` (#4456)
   - `git` (#4117, #4147, #4329, #4368)
   - `gphoto2`
   - `killall` (#4052)

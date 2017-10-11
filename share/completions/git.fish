@@ -340,14 +340,14 @@ complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcomma
 complete -f -c git -n '__fish_git_needs_command' -a show -d 'Shows the last commit of a branch'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
-complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_tags)' --description 'Tag'
+complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_tags)' -d 'Tag'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command show' -l stat -d 'Generate a diffstat, showing the number of changed lines of each file'
 # TODO options
 
 ### show-branch
 complete -f -c git -n '__fish_git_needs_command' -a show-branch -d 'Shows the commits on branches'
-complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_refs)' --description 'Rev'
+complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_refs)' -d 'Rev'
 # TODO options
 
 ### add
@@ -370,12 +370,12 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_add_files)'
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command' -a checkout -d 'Checkout and switch to a branch'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_local_branches)' --description 'Local Branch'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_remote_branches)' --description 'Remote Branch'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' --description 'Head'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' --description 'Tag'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_local_branches)' -d 'Local Branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_remote_branches)' -d 'Remote Branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' -d 'Head'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' -d 'Tag'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' -d 'File'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -l theirs -d 'Keep staged changes'

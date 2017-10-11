@@ -5,7 +5,7 @@
 # Adrien Grellier <adrien.grellier@laposte.net>
 #
 
-function __fish_vim-addons_subcommand  --description 'Test if vim-addons has yet to be given the subcommand'
+function __fish_vim-addons_subcommand  -d 'Test if vim-addons has yet to be given the subcommand'
 	for i in (commandline -opc)
 		if contains -- $i list status install remove disable amend files show
 			return 1

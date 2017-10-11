@@ -3,11 +3,11 @@
 #
 # Find mount points, borrowed from umount.fish
 #
-complete -c fusermount --description "Mount point" -x -a '(__fish_print_mounted)'
-complete -c fusermount -s h --description "Display help and exit"
-complete -c fusermount -s v --description "Display version and exit"
-complete -c fusermount -s o -x --description "Mount options"
-complete -c fusermount -s u --description "Unmount"
-complete -c fusermount -s q --description "Quiet"
-complete -c fusermount -s z --description "Lazy unmount"
+complete -c fusermount -d "Mount point" -x -a '(__fish_print_mounted)'
+complete -c fusermount -s h -d "Display help and exit"
+complete -c fusermount -s v -d "Display version and exit"
+complete -c fusermount -s o -x -d "Mount options"
+complete -c fusermount -s u -d "Unmount"
+complete -c fusermount -s q -d "Quiet"
+complete -c fusermount -s z -d "Lazy unmount"
 

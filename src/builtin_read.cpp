@@ -405,8 +405,10 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
-    argc -= optind;
-    argv += optind;
+    if (!opts.stdout) {
+        argc -= optind;
+        argv += optind;
+    }
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd, streams.out);

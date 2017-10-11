@@ -338,10 +338,10 @@ void safe_perror(const char *message) {
     errno = err;
 }
 
-wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
-    if (pathname.size() == 0) return NULL;
+maybe_t<wcstring> wrealpath(const wcstring &pathname) {
+    if (pathname.empty()) return none();
 
-    cstring real_path("");
+    cstring real_path;
     cstring narrow_path = wcs2string(pathname);
 
     // Strip trailing slashes. This is needed to be bug-for-bug compatible with GNU realpath which
@@ -370,7 +370,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
             } else {
                 // Only call realpath() on the portion up to the last component.
                 narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), tmpbuff);
-                if (!narrow_res) return NULL;
+                if (!narrow_res) return none();
                 pathsep_idx++;
             }
             real_path.append(narrow_res);
@@ -379,12 +379,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
             real_path.append(narrow_path.substr(pathsep_idx, cstring::npos));
         }
     }
-    wcstring wreal_path = str2wcstring(real_path);
-    if (resolved_path) {
-        wcslcpy(resolved_path, wreal_path.c_str(), PATH_MAX);
-        return resolved_path;
-    }
-    return wcsdup(wreal_path.c_str());
+    return str2wcstring(real_path);
 }
 
 wcstring wdirname(const wcstring &path) {

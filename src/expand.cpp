@@ -1182,13 +1182,15 @@ static void expand_home_directory(wcstring &input) {
             }
         }
 
-        const wchar_t *realhome = home ? wrealpath(home->as_string(), NULL) : nullptr;
+        maybe_t<wcstring> realhome;
+        if (home)
+            realhome = wrealpath(home->as_string());
+
         if (realhome) {
-            input.replace(input.begin(), input.begin() + tail_idx, realhome);
+            input.replace(input.begin(), input.begin() + tail_idx, *realhome);
         } else {
             input[0] = L'~';
         }
-        free((void *)realhome);
     }
 }
 

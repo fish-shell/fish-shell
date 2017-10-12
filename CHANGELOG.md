@@ -27,7 +27,12 @@ This section is for changes merged to the `major` branch that are not also merge
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).
 - Added completions for
+  - `bd` (#4471)
+  - `docker` (#4471)
+  - `docker-compose` (#4471)
   - `j` (autojump #4344)
+  - `jhipster` (#4471)
+
 - Improved completions for
   - `git` (#4395, #4396)
 
@@ -65,13 +70,17 @@ This section is for changes merged to the `major` branch that are not also merge
 - Option completion for `apt list` now works properly (#4350).
 - Added completions for:
   - `as` (#4130)
+  - `bd` (#4472)
   - `cdh` (#2847)
   - `dhcpd`
+  - `docker` (#4472)
+  - `docker-compose` (#4472)
   - `ezjail-admin` (#4324)
   - `fab` (fabric, #4153)
   - `grub-file` (#4119)
   - `grub-install` (#4119)
   - `jest` (#4142)
+  - `jhipster` (#4472)
   - `kdeconnect-cli`
   - `magneto` (#4043, #4108)
   - `mdadm` (#4198)

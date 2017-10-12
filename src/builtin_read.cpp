@@ -47,7 +47,7 @@ struct read_cmd_opts_t {
     bool array = false;
     bool silent = false;
     bool split_null = false;
-    bool stdout = false;
+    bool to_stdout = false;
     int nchars = 0;
 };
 
@@ -74,7 +74,7 @@ static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'
 static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     if (argc == 1) {
-        opts.stdout = true;
+        opts.to_stdout = true;
         return STATUS_CMD_OK;
     }
 
@@ -405,7 +405,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
-    if (!opts.stdout) {
+    if (!opts.to_stdout) {
         argc -= optind;
         argv += optind;
     }
@@ -440,7 +440,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return exit_res;
     }
 
-    if (opts.stdout) {
+    if (opts.to_stdout) {
         write_stdout(buff);
         return exit_res;
     }

@@ -754,6 +754,7 @@ complete -f -c git -n '__fish_git_using_command push' -l prune -d "Remove remote
 complete -f -c git -n '__fish_git_using_command push' -l mirror -d 'Push all refs under refs/'
 complete -f -c git -n '__fish_git_using_command push' -l delete -d 'Delete all listed refs from the remote repository'
 complete -f -c git -n '__fish_git_using_command push' -l tags -d 'Push all refs under refs/tags'
+complete -f -c git -n '__fish_git_using_command push' -l follow-tags -d 'Push all usual refs plus the ones under refs/tags'
 complete -f -c git -n '__fish_git_using_command push' -s n -l dry-run -d 'Do everything except actually send the updates'
 complete -f -c git -n '__fish_git_using_command push' -l porcelain -d 'Produce machine-readable output'
 complete -f -c git -n '__fish_git_using_command push' -s f -l force -d 'Force update of remote refs'

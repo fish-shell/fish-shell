@@ -2741,6 +2741,12 @@ const wchar_t *reader_readline(int nchars) {
                         break;
                     }
                 }
+                // Check if the end of the line is backslashed (issue #4467).
+                if (is_backslashed(el->text, el->size()) && !text_ends_in_comment(el->text)) {
+                    el->position = el->size();
+                    insert_char(el, '\n');
+                    break;
+                }
 
                 // See if this command is valid.
                 int command_test_result = data->test_func(el->text.c_str());

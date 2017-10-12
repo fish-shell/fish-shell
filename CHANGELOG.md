@@ -31,17 +31,17 @@
 - Option completion for `apt list` now works properly (#4350).
 - Added completions for:
   - `as` (#4130)
-  - `bd`
+  - `bd` (#4472)
   - `cdh` (#2847)
   - `dhcpd`
-  - `docker`
-  - `docker-compose`
+  - `docker` (#4472)
+  - `docker-compose` (#4472)
   - `ezjail-admin` (#4324)
   - `fab` (fabric, #4153)
   - `grub-file` (#4119)
   - `grub-install` (#4119)
   - `jest` (#4142)
-  - `jhipster`
+  - `jhipster` (#4472)
   - `kdeconnect-cli`
   - `magneto` (#4043, #4108)
   - `mdadm` (#4198)

@@ -2726,20 +2726,29 @@ const wchar_t *reader_readline(int nchars) {
                 // We only execute the command line.
                 editable_line_t *el = &data->command_line;
 
-                // Allow backslash-escaped newlines, but only if the following character is
-                // whitespace, or we're at the end of the text (see issue #613) and not in a comment
-                // (issue #1255).
-                if (is_backslashed(el->text, el->position)) {
-                    bool continue_on_next_line = false;
-                    if (el->position >= el->size()) {
-                        continue_on_next_line = !text_ends_in_comment(el->text);
-                    } else {
-                        continue_on_next_line = iswspace(el->text.at(el->position));
+                // Allow backslash-escaped newlines.
+                bool continue_on_next_line = false;
+                if (el->position >= el->size()) {
+                    // We're at the end of the text and not in a comment (issue #1225).
+                    continue_on_next_line = is_backslashed(el->text, el->position) &&
+                                            !text_ends_in_comment(el->text);
+                } else {
+                    // Allow mid line split if the following character is whitespace (issue #613).
+                    if (is_backslashed(el->text, el->position) &&
+                        iswspace(el->text.at(el->position))) {
+                        continue_on_next_line = true;
+                    // Check if the end of the line is backslashed (issue #4467).
+                    } else if (is_backslashed(el->text, el->size()) &&
+                               !text_ends_in_comment(el->text)) {
+                        // Move the cursor to the end of the line.
+                        el->position = el->size();
+                        continue_on_next_line = true;
                     }
-                    if (continue_on_next_line) {
-                        insert_char(el, '\n');
-                        break;
-                    }
+                }
+                // If the conditions are met, insert a new line at the position of the cursor.
+                if (continue_on_next_line) {
+                    insert_char(el, '\n');
+                    break;
                 }
 
                 // See if this command is valid.

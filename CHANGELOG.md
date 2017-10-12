@@ -31,6 +31,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `jhipster`
   - `bd`
   - `docker`
+  - `docker-compose`
 
 - Improved completions for
   - `git` (#4395, #4396)
@@ -86,6 +87,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `jhipster`
   - `bd`
   - `docker`
+  - `docker-compose`
 
 - Improved completions for:
   - `apt`

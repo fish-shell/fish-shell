@@ -28,6 +28,10 @@ This section is for changes merged to the `major` branch that are not also merge
 - Command substitution output is now limited to 10 MB by default (#3822).
 - Added completions for
   - `j` (autojump #4344)
+  - `jhipster`
+  - `bd`
+  - `docker`
+
 - Improved completions for
   - `git` (#4395, #4396)
 
@@ -79,6 +83,9 @@ This section is for changes merged to the `major` branch that are not also merge
   - `sbt` (#4347)
   - `snap` (#4215)
   - `subl` (Sublime Text 3 editor, #4277)
+  - `jhipster`
+  - `bd`
+  - `docker`
 
 - Improved completions for:
   - `apt`

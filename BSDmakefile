@@ -1,5 +1,10 @@
 JARG =
 GMAKE = "gmake"
+#When gmake is called from another make instance, -w is automatically added
+#which causes extraneous messages about directory changes to be emitted.
+#--no-print-directory silences these messages.
+GARGS = "--no-print-directory"
+
 .if "$(.MAKE.JOBS)" != ""
 JARG = -j$(.MAKE.JOBS)
 .endif
@@ -9,10 +14,10 @@ JARG = -j$(.MAKE.JOBS)
 
 .PHONY: FRC
 $(.TARGETS): FRC
-	$(GMAKE) $(.TARGETS:S,.DONE,,) $(JARG)
+	$(GMAKE) $(GARGS) $(.TARGETS:S,.DONE,,) $(JARG)
 
 .DONE .DEFAULT: .SILENT
-	$(GMAKE) $(.TARGETS:S,.DONE,,) $(JARG)
+	$(GMAKE) $(GARGS) $(.TARGETS:S,.DONE,,) $(JARG)
 
 .ERROR: .SILENT
 	if ! which $(GMAKE) > /dev/null; then \

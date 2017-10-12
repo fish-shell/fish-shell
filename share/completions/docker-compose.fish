@@ -14,7 +14,7 @@ end
 
 function __fish_docker_compose_file_path -d \
         'Get the next docker-compose.yml file in the folder parent path.'
-    set -l path (echo $PWD)
+    set -l path $PWD
     while not test -e $path/docker-compose.yml
         if test $path = '/'
             return

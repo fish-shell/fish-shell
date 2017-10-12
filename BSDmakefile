@@ -7,6 +7,10 @@ JARG = -j$(.MAKE.JOBS)
 #by default bmake will cd into ./obj first
 .OBJDIR: ./
 
+.PHONY: FRC
+$(.TARGETS): FRC
+	$(GMAKE) $(.TARGETS:S,.DONE,,) $(JARG)
+
 .DONE .DEFAULT: .SILENT
 	$(GMAKE) $(.TARGETS:S,.DONE,,) $(JARG)
 
@@ -14,4 +18,3 @@ JARG = -j$(.MAKE.JOBS)
 	if ! which $(GMAKE) > /dev/null; then \
 		echo "GNU Make is required!"; \
 	fi
-

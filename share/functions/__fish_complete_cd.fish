@@ -30,9 +30,14 @@ function __fish_complete_cd -d "Completions for the cd command"
         set -l desc (string replace -r -- "^$HOME" "~" "$cdpath")
         # This assumes the CDPATH component itself is cd-able.
         for d in $cdpath/$token*/
+            set -l withoutcdpath (string replace -- "$cdpath/" "" $d)
+            # Skip if the path exists in the current directory, since that's what `cd` will use.
+            if test -d "$withoutcdpath" -a -x "$withoutcdpath"
+                continue
+            end
             # Remove the cdpath component again.
             test -x $d
-            and printf "%s\tCDPATH %s\n" (string replace -r "^$cdpath/" "" -- $d) $desc
+            and printf "%s\tCDPATH %s\n" "$withoutcdpath" $desc
         end
     end
 end

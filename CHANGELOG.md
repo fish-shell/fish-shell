@@ -34,8 +34,6 @@
   - `bd` (#4472)
   - `cdh` (#2847)
   - `dhcpd`
-  - `docker` (#4472)
-  - `docker-compose` (#4472)
   - `ezjail-admin` (#4324)
   - `fab` (fabric, #4153)
   - `grub-file` (#4119)

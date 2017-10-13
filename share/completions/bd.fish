@@ -12,7 +12,7 @@ complete -c bd -s h -x -d "Display help and exit"
 complete -c bd -A -f
 
 function __fish_bd_complete_dirs
-    printf $PWD | string replace -ar "/" "\n"
+    string split "/" -- $PWD
 end
 
 complete -c bd -a '(__fish_bd_complete_dirs)'

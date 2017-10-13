@@ -10,4 +10,5 @@ history function explicit glob search 'echo start*echo end' succeeded
 history function explicit exact delete 'echo hello' succeeded
 history function explicit prefix delete 'echo hello AGAIN' succeeded
 history function explicit exact search 'echo hello again' succeeded
-history[2] had the correct data
+history item 2 had the correct data
+history item 99 had the correct data

@@ -483,10 +483,12 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
             return wildcard_match(content_to_match, wcpattern2);
         }
         case HISTORY_SEARCH_TYPE_CONTAINS_PCRE: {
-            abort();
+            DIE("HISTORY_SEARCH_TYPE_CONTAINS_PCRE not implemented");
+            break;
         }
         case HISTORY_SEARCH_TYPE_PREFIX_PCRE: {
-            abort();
+            DIE("HISTORY_SEARCH_TYPE_PREFIX_PCRE not implemented");
+            break;
         }
     }
     DIE("unexpected history_search_type_t value");
@@ -1633,6 +1635,29 @@ bool history_t::search(history_search_type_t search_type, wcstring_list_t search
     }
 
     return true;
+}
+
+void history_t::dump_item(size_t idx, io_streams_t &streams) {
+    size_t hist_size = this->size();
+    if (idx >= hist_size) return;  // return nothing if the idx is greater than the history size
+
+    auto item = this->item_at_index(idx);
+    streams.out.append_format(L"%ls\n", item.str().c_str());
+    streams.out.append_format(L"%lu\n", item.timestamp());
+    bool first_path = true;
+    for (auto path : item.get_required_paths()) {
+        if (!first_path) streams.out.append(L"\\n");
+        first_path = false;
+        // We have to escape the path twice because the first time someone
+        // unescapes the paths string it gets broken into individual lines
+        // with one path per line. We thus need to ensure that if the path
+        // contains a literal newline it is not broken into more than one path
+        // by the first unescape.
+        int flags = ESCAPE_ALL | ESCAPE_NO_QUOTED;
+        const wcstring path2 = escape_string(path, flags, STRING_STYLE_SCRIPT);
+        streams.out.append(escape_string(path2, flags, STRING_STYLE_SCRIPT));
+    }
+    streams.out.push_back(L'\n');
 }
 
 void history_t::disable_automatic_saving() {

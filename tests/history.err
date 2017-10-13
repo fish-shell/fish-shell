@@ -21,3 +21,4 @@ history merge: Expected 0 args, got 1
 history clear: Expected 0 args, got 2
 history: you cannot use any options with the save command
 history: you cannot use any options with the merge command
+history: item subcommand requires a single integer >= 1

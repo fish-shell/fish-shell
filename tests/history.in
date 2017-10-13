@@ -39,6 +39,9 @@ builtin history clear abc def
 builtin history --contains save
 builtin history -t merge
 
+# `history item` with an invalid index should result in an error.
+history item 0
+
 # Now do a history command that should succeed so we exit with a zero,
 # success, status.
 builtin history save

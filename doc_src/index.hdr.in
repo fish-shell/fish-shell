@@ -866,7 +866,7 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `cmd_duration`, the runtime of the last command in milliseconds.
 
-- `FISH_VERSION`, the version of the currently running fish
+- `version`, the version of the currently running fish
 
 - `SHLVL`, the level of nesting of shells
 

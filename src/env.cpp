@@ -860,7 +860,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
              wcstring(L"history"),
              wcstring(L"_"),
              wcstring(L"PWD"),
-             wcstring(L"FISH_VERSION") }) {
+             wcstring(L"version") }) {
         env_read_only.emplace(std::move(k));
         // L"SHLVL" is readonly but will be inserted below after we increment it.
     };
@@ -926,7 +926,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
-    env_set_one(L"FISH_VERSION", ENV_GLOBAL, version);
+    env_set_one(L"version", ENV_GLOBAL, version);
 
     // Set up SHLVL variable.
     const auto shlvl_var = env_get(L"SHLVL");

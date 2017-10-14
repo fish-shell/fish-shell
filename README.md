@@ -141,7 +141,7 @@ Compiling from git (that is, not a released tarball) also requires:
 mkdir build; cd build
 cmake .. #  add -DCMAKE_BUILD_TYPE=Release for release build
 make install
-````
+```
 
 #### Using autotools
 

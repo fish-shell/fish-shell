@@ -61,7 +61,7 @@ Otherwise, it is set to 0.
 In order to protect the shell from consuming too many system resources, `read` will only consume a
 maximum of 10 MiB (1048576 bytes); if the terminator is not reached before this limit then VARIABLE
 is set to empty and the exit status is set to 122. This limit can be altered with the
-`FISH_READ_BYTE_LIMIT` variable. If set to 0 (zero), the limit is removed.
+`fish_read_limit` variable. If set to 0 (zero), the limit is removed.
 
 \subsection read-history Using another read history file
 

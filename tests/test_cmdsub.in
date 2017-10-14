@@ -1,7 +1,7 @@
 # This tests various corner cases involving command substitution. Most
 # importantly the limits on the amount of data we'll substitute.
 
-set FISH_READ_BYTE_LIMIT 512
+set fish_read_limit 512
 
 function subme
     set -l x (string repeat -n $argv x)

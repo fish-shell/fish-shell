@@ -69,7 +69,7 @@
 extern char **environ;
 
 // Limit `read` to 10 MiB (bytes not wide chars) by default. This can be overridden by the
-// FISH_READ_BYTE_LIMIT variable.
+// fish_read_limit variable.
 #define READ_BYTE_LIMIT 10 * 1024 * 1024
 size_t read_byte_limit = READ_BYTE_LIMIT;
 
@@ -680,11 +680,11 @@ bool env_set_pwd() {
 /// Allow the user to override the limit on how much data the `read` command will process.
 /// This is primarily for testing but could be used by users in special situations.
 void env_set_read_limit() {
-    auto read_byte_limit_var = env_get(L"FISH_READ_BYTE_LIMIT");
+    auto read_byte_limit_var = env_get(L"fish_read_limit");
     if (!read_byte_limit_var.missing_or_empty()) {
         size_t limit = fish_wcstoull(read_byte_limit_var->as_string().c_str());
         if (errno) {
-            debug(1, "Ignoring FISH_READ_BYTE_LIMIT since it is not valid");
+            debug(1, "Ignoring fish_read_limit since it is not valid");
         } else {
             read_byte_limit = limit;
         }
@@ -846,7 +846,7 @@ static void setup_var_dispatch_table() {
     var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
     var_dispatch_table.emplace(L"LINES", handle_term_size_change);
     var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
-    var_dispatch_table.emplace(L"FISH_READ_BYTE_LIMIT", handle_read_limit_change);
+    var_dispatch_table.emplace(L"fish_read_limit", handle_read_limit_change);
     var_dispatch_table.emplace(L"fish_history", handle_fish_history_change);
     var_dispatch_table.emplace(L"TZ", handle_tz_change);
 }

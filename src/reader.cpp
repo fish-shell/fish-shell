@@ -76,7 +76,7 @@
 
 // Name of the variable that tells how long it took, in milliseconds, for the previous
 // interactive command to complete.
-#define ENV_CMD_DURATION L"CMD_DURATION"
+#define ENV_cmd_duration L"cmd_duration"
 
 /// Maximum length of prefix string when printing completion list. Longer prefixes will be
 /// ellipsized.
@@ -766,7 +766,7 @@ void reader_init() {
     // Ensure this var is present even before an interactive command is run so that if it is used
     // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
     // prompt is written.
-    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, L"0");
+    env_set_one(ENV_cmd_duration, ENV_UNEXPORT, L"0");
 
     // Save the initial terminal mode.
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
@@ -1895,7 +1895,7 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before) {
     }
 
     swprintf(buf, 16, L"%d", (secs * 1000) + (usecs / 1000));
-    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, buf);
+    env_set_one(ENV_cmd_duration, ENV_UNEXPORT, buf);
 }
 
 void reader_run_command(parser_t &parser, const wcstring &cmd) {

@@ -864,7 +864,7 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `USER`, the current username. This variable can be changed by the user.
 
-- `CMD_DURATION`, the runtime of the last command in milliseconds.
+- `cmd_duration`, the runtime of the last command in milliseconds.
 
 - `FISH_VERSION`, the version of the currently running fish
 

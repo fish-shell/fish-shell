@@ -375,8 +375,8 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
     // commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't
     // really make sense, so I'm not trying to fix it here.
     if (!setup_child_process(0, all_ios)) {
-        // Decrement shlvl as we're removing ourselves from the shell "stack".
-        auto shlvl_var = env_get(L"shlvl", ENV_GLOBAL | ENV_EXPORT);
+        // Decrement SHLVL as we're removing ourselves from the shell "stack".
+        auto shlvl_var = env_get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
         if (shlvl_var) {
             long shlvl = fish_wcstol(shlvl_var->as_string().c_str());
@@ -384,7 +384,7 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
                 shlvl_str = to_string<long>(shlvl - 1);
             }
         }
-        env_set_one(L"shlvl", ENV_GLOBAL | ENV_EXPORT, shlvl_str);
+        env_set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, shlvl_str);
 
         // launch_process _never_ returns.
         launch_process_nofork(j->processes.front().get());

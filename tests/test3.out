@@ -33,13 +33,13 @@ Testing Universal Startup
 2
 testu undef in top level shell
 testu undef in sub shell
-shlvl: 1
-shlvl: 2
-shlvl: 1
-shlvl: 1
-shlvl: 1
-shlvl: 4
-shlvl: 4
+SHLVL: 1
+SHLVL: 2
+SHLVL: 1
+SHLVL: 1
+SHLVL: 1
+SHLVL: 4
+SHLVL: 4
 Elements in DISPLAY: 1
 Elements in FOO: 4
 MANPATH=man1:man2:man3

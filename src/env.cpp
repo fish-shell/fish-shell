@@ -862,7 +862,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
              wcstring(L"PWD"),
              wcstring(L"version") }) {
         env_read_only.emplace(std::move(k));
-        // L"shlvl" is readonly but will be inserted below after we increment it.
+        // L"SHLVL" is readonly but will be inserted below after we increment it.
     };
 
     // Names of all dynamically calculated variables.
@@ -928,8 +928,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     wcstring version = str2wcstring(get_fish_version());
     env_set_one(L"version", ENV_GLOBAL, version);
 
-    // Set up shlvl variable.
-    const auto shlvl_var = env_get(L"shlvl");
+    // Set up SHLVL variable.
+    const auto shlvl_var = env_get(L"SHLVL");
     wcstring nshlvl_str = L"1";
     if (!shlvl_var.missing_or_empty()) {
         const wchar_t *end;
@@ -939,8 +939,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
             nshlvl_str = to_string<long>(shlvl_i + 1);
         }
     }
-    env_set_one(L"shlvl", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
-    env_read_only.emplace(L"shlvl");
+    env_set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
+    env_read_only.emplace(L"SHLVL");
 
     // Set up the HOME variable.
     // Unlike $USER, it doesn't seem that `su`s pass this along

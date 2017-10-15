@@ -285,16 +285,16 @@ set -q testu
 or echo testu undef in top level shell
 ../test/root/bin/fish -c 'set -q testu; or echo testu undef in sub shell'
 
-# test SHLVL
+# test shlvl
 # use a subshell to ensure a clean slate
-env SHLVL= ../test/root/bin/fish -c 'echo SHLVL: $SHLVL; ../test/root/bin/fish -c \'echo SHLVL: $SHLVL\''
-# exec should decrement SHLVL
-env SHLVL= ../test/root/bin/fish -c 'echo SHLVL: $SHLVL; exec ../test/root/bin/fish -c \'echo SHLVL: $SHLVL\''
-# garbage SHLVLs should be treated as garbage
-env SHLVL=3foo ../test/root/bin/fish -c 'echo SHLVL: $SHLVL'
+env shlvl= ../test/root/bin/fish -c 'echo shlvl: $shlvl; ../test/root/bin/fish -c \'echo shlvl: $shlvl\''
+# exec should decrement shlvl
+env shlvl= ../test/root/bin/fish -c 'echo shlvl: $shlvl; exec ../test/root/bin/fish -c \'echo shlvl: $shlvl\''
+# garbage shlvls should be treated as garbage
+env shlvl=3foo ../test/root/bin/fish -c 'echo shlvl: $shlvl'
 # whitespace is allowed though (for bash compatibility)
-env SHLVL="3  " ../test/root/bin/fish -c 'echo SHLVL: $SHLVL'
-env SHLVL="  3" ../test/root/bin/fish -c 'echo SHLVL: $SHLVL'
+env shlvl="3  " ../test/root/bin/fish -c 'echo shlvl: $shlvl'
+env shlvl="  3" ../test/root/bin/fish -c 'echo shlvl: $shlvl'
 
 # Test transformation of inherited variables
 env DISPLAY="localhost:0.0" ../test/root/bin/fish -c 'echo Elements in DISPLAY: (count $DISPLAY)'

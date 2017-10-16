@@ -1592,7 +1592,10 @@ static void export_new_termsize(struct winsize *new_termsize) {
     env_set(L"LINES", buf, ENV_GLOBAL | (lines.missing_or_empty() ? 0 : ENV_EXPORT));
 
 #ifdef HAVE_WINSIZE
-    ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);
+    // Only write the new terminal size if we are in the foreground (#4477)
+    if (tcgetpgrp(STDOUT_FILENO) == getpgrp()) {
+        ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);
+    }
 #endif
 }
 

@@ -807,7 +807,7 @@ complete -f -c git -n '__fish_git_using_command revert' -a '(__fish_git_commits)
 
 ### rm
 complete -c git -n '__fish_git_needs_command' -a rm -d 'Remove files from the working tree and from the index'
-complete -c git -n '__fish_git_using_command rm' -f
+complete -c git -n '__fish_git_using_command rm'
 complete -c git -n '__fish_git_using_command rm' -l cached -d 'Keep local copies'
 complete -c git -n '__fish_git_using_command rm' -l ignore-unmatch -d 'Exit with a zero status even if no files matched'
 complete -c git -n '__fish_git_using_command rm' -s r -d 'Allow recursive removal'

@@ -86,16 +86,18 @@ function help --description 'Show help for the fish shell'
     end
 
     switch "$fish_help_item"
+        # Issue #4480: OS X strips the #fragment when opening URLs, so we also pass it in as
+        # a query string and jump to the appropriate section with some very basic javascript
         case "."
-            set fish_help_page "commands.html\#source"
+            set fish_help_page "commands.html\?section=source\#source"
         case globbing
-            set fish_help_page "index.html\#expand"
+            set fish_help_page "index.html\?section=expand\#expand"
         case (__fish_print_commands)
-            set fish_help_page "commands.html\#$fish_help_item"
+            set fish_help_page "commands.html\?section=$fish_help_item\#$fish_help_item"
         case $help_topics
-            set fish_help_page "index.html\#$fish_help_item"
+            set fish_help_page "index.html\?section=$fish_help_item\#$fish_help_item"
         case 'tut_*'
-            set fish_help_page "tutorial.html\#$fish_help_item"
+            set fish_help_page "tutorial.html\?section=$fish_help_item\#$fish_help_item"
         case tutorial
             set fish_help_page "tutorial.html"
         case "*"
@@ -128,15 +130,6 @@ function help --description 'Show help for the fish shell'
         set -l version_string (echo $version| cut -d . -f 1,2)
         set page_url https://fishshell.com/docs/$version_string/$fish_help_page
     end
-
-    # OS X /usr/bin/open swallows fragments (anchors), so use osascript
-    # Eval is just a cheesy way of removing the hash escaping
-    if test "$fish_browser" = osascript
-        set -l opencmd 'open location "'(eval echo $page_url)'"'
-        osascript -e 'try' -e $opencmd -e 'on error' -e $opencmd -e 'end try'
-        return
-    end
-
 
     # If browser is known to be graphical, put into background
     if contains -- $fish_browser[1] $graphical_browsers

@@ -1,2 +1,12 @@
 </body>
+<script type='text/javascript'>
+// Some platforms don't handle launching a browser to navigate a page with
+// a #fragment specified, so we use this workaround combined with a query string.
+// See https://github.com/fish-shell/fish-shell/issues/4480
+var params = new URLSearchParams(window.location.search); //?section=foo
+var section = params.get("section");
+if (section != null && location.hash == "") {
+	location.hash = "#" + section;
+}
+</script>
 </html>

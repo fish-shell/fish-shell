@@ -7,7 +7,7 @@ ver="$SCRIPT_OUTPUT_FILE_0"
 
 ./build_tools/git_version_gen.sh
 
-cat FISH-BUILD-VERSION-FILE | awk '{printf("#define %s \"%s\"\n",$1,$3)}' > "$tmp"
+cat FISH-BUILD-VERSION-FILE | awk -F= '{printf("#define %s \"%s\"\n",$1,$2)}' > "$tmp"
 
 cmp --quiet "$tmp" "$ver"
 if [ $? -ne 0 ]; then

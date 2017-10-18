@@ -36,16 +36,19 @@ for line in $rust_docs
     complete -c rustc -x -s C -l codegen -a "$flag" -d "$docs[2]"
 end
 
-set -l rust_docs (rustc -Z help \
-    | string replace -r -i '(\s+)-Z(.+)--(\s+)([^\n]+)' '$2 $4' \
-    | string trim \
-    | string match -r '^.*[^:]$')
+# rustc -Z is only available with the nightly toolchain, which may not be installed
+if rustc +nightly >/dev/null 2>&1
+    set -l rust_docs (rustc +nightly -Z help \
+        | string replace -r -i '(\s+)-Z(.+)--(\s+)([^\n]+)' '$2 $4' \
+        | string trim \
+        | string match -r '^.*[^:]$')
 
-for line in $rust_docs
-    set docs (string split -m 1 ' ' $line)
-    set flag (string replace -r '^([a-z\-]+\=|[a-z\-]+)(.*)' '$1' \
-                                   $docs[1])
-    complete -c rustc -x -s Z -a "$flag" -d "$docs[2]"
+    for line in $rust_docs
+        set docs (string split -m 1 ' ' $line)
+        set flag (string replace -r '^([a-z\-]+\=|[a-z\-]+)(.*)' '$1' \
+                                       $docs[1])
+        complete -c rustc -x -s Z -a "$flag" -d "$docs[2]"
+    end
 end
 
 set -l rust_docs (rustc -W help  \

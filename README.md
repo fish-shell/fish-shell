@@ -46,7 +46,7 @@ Instructions for other distributions may be found at [fishshell.com](https://fis
 
 fish can be installed using [Cygwin](https://cygwin.com/) Setup (under the **Shells** category).
 
-fish can be installed into Windows Services for Linux using the instructions under *Packages for
+fish can be installed into Windows Subsystem for Linux using the instructions under *Packages for
 Linux* for the appropriate image (eg Ubuntu).
 
 ### Building from source

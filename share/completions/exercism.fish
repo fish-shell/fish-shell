@@ -10,7 +10,7 @@ end
 complete -c exercism -s c -l config -d "path to config file [$EXERCISM_CONFIG_FILE, $XDG_CONFIG_HOME]"
 complete -c exercism -s v -l verbose -d "turn on verbose logging"
 complete -c exercism -s h -l help -d "show help"
-complete -c exercism -s v -l version -d "turn on verbose logging"
+complete -c exercism -s v -l version -d "print the version"
 complete -f -n '__fish_exercism_no_subcommand' -c exercism -a 'configure' -d "Writes config values to a JSON file."
 complete -f -n '__fish_exercism_no_subcommand' -c exercism -a 'debug' -d "Outputs useful debug information."
 complete -f -n '__fish_exercism_no_subcommand' -c exercism -a 'download' -d "Downloads a solution given the ID of the latest iteration."

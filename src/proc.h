@@ -364,6 +364,9 @@ void proc_pop_interactive();
 /// proc_set_last_status.
 int proc_format_status(int status);
 
+/// Wait for any process finishing.
+pid_t proc_wait_any();
+
 #endif
 
 bool terminal_give_to_job(job_t *j, int cont);

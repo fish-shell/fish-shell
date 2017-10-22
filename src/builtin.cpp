@@ -60,6 +60,7 @@
 #include "builtin_string.h"
 #include "builtin_test.h"
 #include "builtin_ulimit.h"
+#include "builtin_wait.h"
 #include "common.h"
 #include "complete.h"
 #include "exec.h"
@@ -459,6 +460,7 @@ static const builtin_data_t builtin_datas[] = {
     {L"test", &builtin_test, N_(L"Test a condition")},
     {L"true", &builtin_true, N_(L"Return a successful result")},
     {L"ulimit", &builtin_ulimit, N_(L"Set or get the shells resource usage limits")},
+    {L"wait", &builtin_wait, N_(L"Wait for background processes completed")},
     {L"while", &builtin_generic, N_(L"Perform a command multiple times")}};
 
 #define BUILTIN_COUNT (sizeof builtin_datas / sizeof *builtin_datas)

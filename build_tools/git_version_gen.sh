@@ -8,7 +8,7 @@
 # See https://stackoverflow.com/a/43919044/17027 (public domain)
 a="/$0"; a="${a%/*}"; a="${a:-.}"; a="${a#/}/"; BASEDIR=$(cd "$a"; pwd)
 # Find the fish git directory as two levels up from this directory.
-GIT_DIR=$(dirname $(dirname "$a"))
+GIT_DIR=$(dirname "$a")
 
 FBVF=FISH-BUILD-VERSION-FILE
 DEF_VER=unknown

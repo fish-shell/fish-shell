@@ -31,6 +31,7 @@
 - Option completion for `apt list` now works properly (#4350).
 - Added completions for:
   - `as` (#4130)
+  - `bd` (#4472)
   - `cdh` (#2847)
   - `dhcpd`
   - `ezjail-admin` (#4324)
@@ -38,6 +39,7 @@
   - `grub-file` (#4119)
   - `grub-install` (#4119)
   - `jest` (#4142)
+  - `jhipster` (#4472)
   - `kdeconnect-cli`
   - `magneto` (#4043, #4108)
   - `mdadm` (#4198)
@@ -45,6 +47,7 @@
   - `sbt` (#4347)
   - `snap` (#4215)
   - `subl` (Sublime Text 3 editor, #4277)
+
 
 - Improved completions for:
   - `apt`

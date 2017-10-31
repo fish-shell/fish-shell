@@ -2201,8 +2201,8 @@ static void bg_job_warning() {
         }
     }
     fputws(L"\n", stdout);
-    fputws(_(L"Use `disown PID` to let them live independently from fish.\n"), stdout);
     fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
+    fputws(_(L"Use 'disown PID' to remove jobs from the list without terminating them.\n"), stdout);
 }
 
 /// This function is called when the main loop notices that end_loop has been set while in

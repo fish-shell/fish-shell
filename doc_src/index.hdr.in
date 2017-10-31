@@ -828,9 +828,17 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - A large number of variable starting with the prefixes `fish_color` and `fish_pager_color.` See <a href='#variables-color'>Variables for changing highlighting colors</a> for more information.
 
+- `fish_escape_delay_ms` overrides the default timeout of 300ms (default key bindings) or 10ms (vi key bindings) after seeing an escape character before giving up on matching a key binding. See the documentation for the <a href='bind.html#special-case-escape'>bind</a> builtin command. This delay facilitates using escape as a meta key.
+
 - `fish_greeting`, the greeting message printed on startup.
 
-- `fish_escape_delay_ms` overrides the default timeout of 300ms (default key bindings) or 10ms (vi key bindings) after seeing an escape character before giving up on matching a key binding. See the documentation for the <a href='bind.html#special-case-escape'>bind</a> builtin command. This delay facilitates using escape as a meta key.
+- `fish_history`, the current history session name. If set, all subsequent commands within an
+  interactive fish session will be logged to a separate file identified by the value of the
+  variable. If unset, or set to `default`, the default session name "fish" is used.
+
+- `fish_user_paths`, an array of directories that are prepended to `PATH`. This can be a universal variable.
+
+- `umask`, the current file creation mask. The preferred way to change the umask variable is through the <a href="commands.html#umask">umask function</a>. An attempt to set umask to an invalid value will always fail.
 
 - `BROWSER`, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 
@@ -838,11 +846,7 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `LANG`, `LC_ALL`, `LC_COLLATE`, `LC_CTYPE`, `LC_MESSAGES`, `LC_MONETARY`, `LC_NUMERIC` and `LC_TIME` set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
 
-- `fish_user_paths`, an array of directories that are prepended to `PATH`. This can be a universal variable.
-
 - `PATH`, an array of directories in which to search for commands
-
-- `umask`, the current file creation mask. The preferred way to change the umask variable is through the <a href="commands.html#umask">umask function</a>. An attempt to set umask to an invalid value will always fail.
 
 `fish` also sends additional information to the user through the values of certain environment variables. The user cannot change the values of most of these variables.
 
@@ -851,8 +855,6 @@ The user can change the settings of `fish` by changing the values of certain var
 - `argv`, an array of arguments to the shell or function. `argv` is only defined when inside a function call, or if fish was invoked with a list of arguments, like `fish myscript.fish foo bar`. This variable can be changed by the user.
 
 - `history`, an array containing the last commands that were entered.
-
-- `fish_history`: Name of the history session. It defaults to `fish` (which typically means the history will be saved in `~/.local/share/fish/fish_history`). This variable can be changed by the user. It does not have to be an environment variable. You can change it at will within an interactive fish session to change where subsequent commands are logged.
 
 - `HOME`, the user's home directory. This variable can be changed by the user.
 

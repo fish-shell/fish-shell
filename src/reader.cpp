@@ -2197,7 +2197,7 @@ static void bg_job_warning() {
     job_iterator_t jobs;
     while (job_t *j = jobs.next()) {
         if (!job_is_completed(j)) {
-            fwprintf(stdout, L"%6d  %ls\n", j->pgid, j->command_wcstr());
+            fwprintf(stdout, L"%6d  %ls\n", j->processes[0]->pid, j->command_wcstr());
         }
     }
     fputws(L"\n", stdout);

@@ -309,7 +309,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             const wchar_t *fn = parser.current_filename();
 
-            if (!fn) fn = _(L"stdin");
+            if (!fn) fn = _(L"Standard input");
             streams.out.append_format(L"%ls\n", fn);
             break;
         }
@@ -317,7 +317,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             const wchar_t *fn = parser.get_function_name(opts.level);
 
-            if (!fn) fn = _(L"N/A");
+            if (!fn) fn = _(L"Not a function");
             streams.out.append_format(L"%ls\n", fn);
             break;
         }

@@ -17,7 +17,7 @@ The fish version is constructed by the *build_tools/git_version_gen.sh* script. 
 
 You should not depend on symbols being visible to a `*.cpp` module from `#include` statements inside another header file. In other words if your module does `#include "common.h"` and that header does `#include "signal.h"` your module should not assume the sub-include is present. It should instead directly `#include "signal.h"` if it needs any symbol from that header. That makes the actual dependencies much clearer. It also makes it easy to modify the headers included by a specific header file without having to worry that will break any module (or header) that includes a particular header.
 
-To help enforce this rule the `make lint` (and `make lint-all`) command will run the [include-what-you-use](http://include-what-you-use.org/) tool. You can find the IWYU project on [github](https://github.com/include-what-you-use/include-what-you-use).
+To help enforce this rule the `make lint` (and `make lint-all`) command will run the [include-what-you-use](https://include-what-you-use.org/) tool. You can find the IWYU project on [github](https://github.com/include-what-you-use/include-what-you-use).
 
 To install the tool on OS X you'll need to add a [formula](https://github.com/jasonmp85/homebrew-iwyu) then install it:
 
@@ -175,7 +175,7 @@ You are strongly encouraged to add tests when changing the functionality of fish
 
 The tests can be run on your local computer on all operating systems.
 
-Running the tests is only supported from the autotools build and not xcodebuild. On OS X, you will need to install autoconf &mdash; we suggest using [Homebrew](http://brew.sh/) to install these tools.
+Running the tests is only supported from the autotools build and not xcodebuild. On OS X, you will need to install autoconf &mdash; we suggest using [Homebrew](https://brew.sh/) to install these tools.
 
     autoconf
     ./configure

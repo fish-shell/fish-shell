@@ -14,7 +14,7 @@
 - <a href='#faq-subcommand'>How do I run a subcommand? The backtick doesn't work!</a>
 - <a href='#faq-exit-status'>How do I get the exit status of a command?</a>
 - <a href='#faq-single-env'>How do I set an environment variable for just one command?</a>
-- <a href='#faq-exported-uvar'>Why doesn't `set -Ux` (exported universal varables) seem to work?</a>
+- <a href='#faq-exported-uvar'>Why doesn't `set -Ux` (exported universal variables) seem to work?</a>
 - <a href='#faq-customize-colors'>How do I customize my syntax highlighting colors?</a>
 - <a href='#faq-update-manpage-completions'>How do I update man page completions?</a>
 - <a href='#faq-cwd-symlink'>Why does cd, pwd and other fish commands always resolve symlinked directories to their canonical path?</a>
@@ -139,7 +139,7 @@ variables.
 This means that the global value takes precedence over the universal value.
 
 To avoid this problem, consider changing the setting which fish inherits. If this is not possible,
-add a statement to your <a href="index.html#">user initilization file</a> (usually
+add a statement to your <a href="index.html#">user initialization file</a> (usually
 `~/.config/fish/config.fish`):
 
 \fish{cli-dark}

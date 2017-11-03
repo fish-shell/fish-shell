@@ -54,7 +54,7 @@ set -l argv
 argparse 'h/help' 'n/name' $argv
 \endfish
 
-The first `--` seen is what allows the `argparse` command to reliably seperate the option specifications from the command arguments.
+The first `--` seen is what allows the `argparse` command to reliably separate the option specifications from the command arguments.
 
 \subsection argparse-option-specs Option Specifications
 

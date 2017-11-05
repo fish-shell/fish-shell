@@ -184,3 +184,9 @@ SET_PROPERTY(TARGET CHECK-FISH-BUILD-VERSION-FILE build_fish_pc
                     test_prep tests_buildroot_target
                     build_lexicon_filter
              PROPERTY FOLDER cmake/InstallTargets)
+
+# Make a target build_root that installs into the buildroot directory, for testing.
+SET(BUILDROOT_DIR ${CMAKE_CURRENT_BINARY_DIR}/buildroot)
+ADD_CUSTOM_TARGET(build_root
+                  COMMAND DESTDIR=${BUILDROOT_DIR} ${CMAKE_COMMAND}
+                          --build ${CMAKE_CURRENT_BINARY_DIR} --target install)

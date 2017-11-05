@@ -76,7 +76,7 @@ ADD_DEFINITIONS(-D_UNICODE=1
 INCLUDE(CMakeFiles/PCRE2.cmake)
 
 # Set up muparser.
-INCLUDE(CMakeFiles/MuParser.cmake)
+INCLUDE(muparser-2.2.5/CMakeLists.txt)
 
 # Set up the docs.
 INCLUDE(CMakeFiles/Docs.cmake)
@@ -92,9 +92,6 @@ TARGET_SOURCES(fishlib PRIVATE ${FISH_HEADERS})
 TARGET_LINK_LIBRARIES(fishlib
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}
   ${PCRE2_LIB} muparser)
-
-# builtin_math.cpp needs to see muParser's built header.
-ADD_DEPENDENCIES(fishlib muparser)
 
 # Define fish.
 ADD_EXECUTABLE(fish src/fish.cpp)

@@ -105,7 +105,7 @@ INSTALL(FILES share/config.fish
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir)
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir)
 FISH_CREATE_DIRS(${rel_datadir}/pkgconfig ${extra_completionsdir}
-                 ${extra_functionsdir} ${extra_confsdir})
+                 ${extra_functionsdir} ${extra_confdir})
 
 # @echo "Installing pkgconfig file"
 # $v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig

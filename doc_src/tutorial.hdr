@@ -276,7 +276,7 @@ Unlike other shells, `fish` does not have an export command. Instead, a variable
 \fish{cli-dark}
 >_ set -x MyVariable SomeValue
 >_ env | grep MyVariable
-<outp><m>MyVariablem</outp>=SomeValue</m>
+<outp><m>MyVariable</outp>=SomeValue</m>
 \endfish
 
 You can erase a variable with `-e` or `--erase`

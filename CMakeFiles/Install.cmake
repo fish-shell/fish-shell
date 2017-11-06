@@ -23,15 +23,15 @@ SET(configure_input
  DO NOT MANUALLY EDIT THIS FILE!")
 
 SET(extra_completionsdir
-    ${CMAKE_INSTALL_FULL_DATADIR}/fish/vendor_completions.d
+    ${rel_datadir}/fish/vendor_completions.d
     CACHE STRING "Path for extra completions")
 
 SET(extra_functionsdir
-    ${CMAKE_INSTALL_FULL_DATADIR}/fish/vendor_functions.d
+    ${rel_datadir}/fish/vendor_functions.d
     CACHE STRING "Path for extra completions")
 
 SET(extra_confdir
-    ${CMAKE_INSTALL_FULL_DATADIR}/fish/vendor_conf.d
+    ${rel_datadir}/fish/vendor_conf.d
     CACHE STRING "Path for extra configuration")
 
 # These are the man pages that go in system manpath.

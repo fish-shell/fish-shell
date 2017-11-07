@@ -7,12 +7,6 @@
 /* Define to 1 if you have the `ctermid_r' function. */
 #cmakedefine HAVE_CTERMID_R 1
 
-/* Define to 1 if you have the <curses.h> header file. */
-#cmakedefine HAVE_CURSES_H 1
-
-/* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'. */
-#cmakedefine HAVE_DIRENT_H 1
-
 /* Define to 1 if you have the `dirfd' function. */
 #cmakedefine HAVE_DIRFD 1
 
@@ -31,17 +25,11 @@
 /* Define to 1 if you have the `getifaddrs' function. */
 #cmakedefine HAVE_GETIFADDRS 1
 
-/* Define to 1 if you have the <getopt.h> header file. */
-#cmakedefine HAVE_GETOPT_H 1
-
 /* Define to 1 if you have the `getpwent' function. */
 #cmakedefine HAVE_GETPWENT 1
 
 /* Define to 1 if you have the `gettext' function. */
 #cmakedefine HAVE_GETTEXT 1
-
-/* Define to 1 if you have the <inttypes.h> header file. */
-#cmakedefine HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `killpg' function. */
 #cmakedefine HAVE_KILLPG 1
@@ -51,9 +39,6 @@
 
 /* Define to 1 if you have the `lrand48_r' function. */
 #cmakedefine HAVE_LRAND48_R 1
-
-/* Define to 1 if you have the <memory.h> header file. */
-#cmakedefine HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the `mkostemp' function. */
 #cmakedefine HAVE_MKOSTEMP 1
@@ -67,23 +52,11 @@
 /* Define to 1 if you have the <ncurses/term.h> header file. */
 #cmakedefine HAVE_NCURSES_TERM_H 1
 
-/* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
-#cmakedefine HAVE_NDIR_H 1
-
-/* Define to 1 if the shm_open() function exists */
-#cmakedefine HAVE_SHM_OPEN 1
-
 /* Define to 1 if you have the <siginfo.h> header file. */
 #cmakedefine HAVE_SIGINFO_H 1
 
 /* Define to 1 if you have the <spawn.h> header file. */
 #cmakedefine HAVE_SPAWN_H 1
-
-/* Define to 1 if you have the <stdint.h> header file. */
-#cmakedefine HAVE_STDINT_H 1
-
-/* Define to 1 if you have the <stdlib.h> header file. */
-#cmakedefine HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the `std::wcscasecmp' function. */
 #cmakedefine HAVE_STD__WCSCASECMP 1
@@ -93,15 +66,6 @@
 
 /* Define to 1 if you have the `std::wcsncasecmp' function. */
 #cmakedefine HAVE_STD__WCSNCASECMP 1
-
-/* Define to 1 if you have the <strings.h> header file. */
-#cmakedefine HAVE_STRINGS_H 1
-
-/* Define to 1 if you have the <string.h> header file. */
-#cmakedefine HAVE_STRING_H 1
-
-/* Define to 1 if you have the <stropts.h> header file. */
-#cmakedefine HAVE_STROPTS_H 1
 
 /* Define to 1 if `d_type' is a member of `struct dirent'. */
 #cmakedefine HAVE_STRUCT_DIRENT_D_TYPE 1
@@ -115,43 +79,23 @@
 /* Define to 1 if `st_mtim.tv_nsec' is a member of `struct stat'. */
 #cmakedefine HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC 1
 
-/* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
-   */
-#cmakedefine HAVE_SYS_DIR_H 1
-
 /* Define to 1 if the sys_errlist array is available. */
 #cmakedefine HAVE_SYS_ERRLIST 1
 
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
 #cmakedefine HAVE_SYS_IOCTL_H 1
 
-/* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
-   */
-#cmakedefine HAVE_SYS_NDIR_H 1
-
-/* Define to 1 if you have the <sys/resource.h> header file. */
-#cmakedefine HAVE_SYS_RESOURCE_H 1
-
 /* Define to 1 if you have the <sys/select.h> header file. */
 #cmakedefine HAVE_SYS_SELECT_H 1
 
-/* Define to 1 if you have the <sys/stat.h> header file. */
-#cmakedefine HAVE_SYS_STAT_H 1
-
 /* Define to 1 if you have the <sys/sysctl.h> header file. */
 #cmakedefine HAVE_SYS_SYSCTL_H 1
-
-/* Define to 1 if you have the <sys/types.h> header file. */
-#cmakedefine HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <termios.h> header file. */
 #cmakedefine HAVE_TERMIOS_H 1
 
 /* Define to 1 if you have the <term.h> header file. */
 #cmakedefine HAVE_TERM_H 1
-
-/* Define to 1 if you have the <unistd.h> header file. */
-#cmakedefine HAVE_UNISTD_H 1
 
 /* Define to 1 if you have the `wcscasecmp' function. */
 #cmakedefine HAVE_WCSCASECMP 1
@@ -192,15 +136,6 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "fish"
 
-/* Define to the full name and version of this package. */
-// #define PACKAGE_STRING "FIXME" # FISH-BUILD-VERSION-FILE
-
-/* Define to the one symbol short name of this package. */
-#cmakedefine PACKAGE_TARNAME "fish" 1
-
-/* Define to the version of this package. */
-// #define PACKAGE_VERSION "FIXME"
-
 /* Define to 1 if tparm accepts a fixed amount of paramters. */
 // #cmakedefine TPARM_SOLARIS_KLUDGE 1
 
@@ -214,12 +149,6 @@
 #ifndef _DARWIN_USE_64_BIT_INODE
 # define _DARWIN_USE_64_BIT_INODE 1
 #endif
-
-/* Number of bits in a file offset, on hosts where this is settable. */
-// TODO #cmakedefine _FILE_OFFSET_BITS 1
-
-/* Define for large files, on AIX-style hosts. */
-// TODO #cmakedefine _LARGE_FILES 1
 
 #if __GNUC__ >= 3
 #ifndef __warn_unused

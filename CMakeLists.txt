@@ -56,7 +56,7 @@ SET(FBVF "FISH-BUILD-VERSION-FILE")
 
 
 # Set up config.h
-INCLUDE(CMakeFiles/ConfigureChecks.cmake)
+INCLUDE(cmake/ConfigureChecks.cmake)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config_cmake.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
@@ -73,13 +73,13 @@ ADD_DEFINITIONS(-D_UNICODE=1
                 -DDOCDIR=L"${CMAKE_INSTALL_FULL_DOCDIR}")
 
 # Set up PCRE2
-INCLUDE(CMakeFiles/PCRE2.cmake)
+INCLUDE(cmake/PCRE2.cmake)
 
 # Set up muparser.
 INCLUDE(muparser-2.2.5/CMakeLists.txt)
 
 # Set up the docs.
-INCLUDE(CMakeFiles/Docs.cmake)
+INCLUDE(cmake/Docs.cmake)
 
 # Define a function to link dependencies.
 FUNCTION(FISH_LINK_DEPS target)
@@ -108,7 +108,7 @@ ADD_EXECUTABLE(fish_key_reader
 FISH_LINK_DEPS(fish_key_reader)
 
 # Set up tests.
-INCLUDE(CMakeFiles/Tests.cmake)
+INCLUDE(cmake/Tests.cmake)
 
 # Set up install.
-INCLUDE(CMakeFiles/Install.cmake)
+INCLUDE(cmake/Install.cmake)

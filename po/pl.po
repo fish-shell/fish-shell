@@ -237,7 +237,7 @@ msgstr ""
 #: src/builtin.cpp:371
 #, fuzzy, c-format
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr "Tylko dla zadań interaktywnych\n"
 
 #: src/builtin.cpp:409 src/builtin.cpp:459
 msgid "Test a condition"
@@ -632,7 +632,7 @@ msgstr ""
 #: src/builtin_math.cpp:194
 #, fuzzy, c-format
 msgid "%ls: Invalid expression: %ls\n"
-msgstr "%ls: Nieprawidłowy identyfikator procesu %ls"
+msgstr "%ls: Nieprawidłowy identyfikator procesu %ls\n"
 
 #: src/builtin_printf.cpp:243
 msgid "Number out of range"
@@ -1563,7 +1563,9 @@ msgstr "%ls: Brak pasujących zadań\n"
 msgid ""
 "\n"
 "   PID  Command\n"
-msgstr "Komenda\n"
+msgstr ""
+"\n"
+"   Komenda\n"
 
 #: src/reader.cpp:2170
 msgid "A second attempt to exit will terminate them.\n"
@@ -2550,7 +2552,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
 #, fuzzy
 msgid "%s %s: Expected one argument\\n"
-msgstr "%ls: Oczekiwano argumentu\n"
+msgstr "%ls: Oczekiwano argumentu\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:6
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
@@ -2775,7 +2777,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/isatty.fish:1
 #, fuzzy
 msgid "%s: Too many arguments"
-msgstr "%ls: Zbyt dużo argumentów\n"
+msgstr "%ls: Zbyt dużo argumentów"
 
 #: /tmp/fish/explicit/share/functions/nextd.fish:1
 #: /tmp/fish/explicit/share/functions/prevd.fish:1
@@ -2793,7 +2795,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/psub.fish:1
 #, fuzzy
 msgid "%s: Not inside of command substitution"
-msgstr "w zastępstwie polecenia \n"
+msgstr "w zastępstwie polecenia"
 
 #: /tmp/fish/explicit/share/functions/realpath.fish:1
 msgid "%s: These flags are not allowed by fish realpath: '%s'"
@@ -2855,7 +2857,7 @@ msgstr "%s: Nieprawidłowa ścieżka: '%s'\\n"
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:1
 #, fuzzy
 msgid "%s: Value '%s' for flag '%s' is not an integer\\n"
-msgstr "%ls: maksymalna wartość '%ls' nie jest prawidłową liczbą\n"
+msgstr "%ls: maksymalna wartość '%ls' nie jest prawidłową liczbą\\n"
 
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:2
 msgid "%s: Value '%s' for flag '%s' less than min allowed of '%s'\\n"
@@ -29208,12 +29210,12 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:18
 #, fuzzy
 msgid "Command substitution"
-msgstr "w zastępstwie polecenia \n"
+msgstr "w zastępstwie polecenia"
 
 #: /tmp/fish/implicit/share/completions/help.fish:19
 #, fuzzy
 msgid "Command substitution (SUBCOMMAND)"
-msgstr "w zastępstwie polecenia \n"
+msgstr "w zastępstwie polecenia"
 
 #: /tmp/fish/implicit/share/completions/help.fish:20
 msgid "Home directory expansion ~USER"
@@ -29334,7 +29336,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:49
 #, fuzzy
 msgid "Job control"
-msgstr "Kontrola zadania: %ls\n"
+msgstr "Kontrola zadania: %ls"
 
 #: /tmp/fish/implicit/share/completions/help.fish:50
 #, fuzzy
@@ -29427,7 +29429,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:70
 #, fuzzy
 msgid "Command Substitutions"
-msgstr "w zastępstwie polecenia \n"
+msgstr "w zastępstwie polecenia"
 
 #: /tmp/fish/implicit/share/completions/help.fish:71
 msgid "Conditionals (If, Else, Switch)"

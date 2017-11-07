@@ -117,7 +117,7 @@ msgstr "%ls: “%ls” is not a valid variable name\n"
 #: src/builtin_bg.cpp:95 src/builtin_disown.cpp:89
 #, fuzzy, c-format
 msgid "%ls: Could not find job '%d'\n"
-msgstr "%s: Could not find “%s”\\n"
+msgstr "%s: Could not find “%s”\n"
 
 #: src/builtin_bind.cpp:141
 #, c-format
@@ -197,7 +197,7 @@ msgstr "%ls: Could not set PWD variable\n"
 #: src/builtin_commandline.cpp:344
 #, fuzzy, c-format
 msgid "%ls: Unknown input function '%ls'"
-msgstr "%ls: Unknown input function “%ls”\n"
+msgstr "%ls: Unknown input function “%ls”"
 
 #: src/builtin_complete.cpp:183
 #, fuzzy, c-format
@@ -241,7 +241,7 @@ msgstr "%ls: Not inside of loop\n"
 #: src/builtin.cpp:371
 #, fuzzy, c-format
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "%ls: Command only available in interactive sessions"
+msgstr "%ls: Command only available in interactive sessions\n"
 
 #: src/builtin.cpp:409 src/builtin.cpp:459
 msgid "Test a condition"
@@ -489,27 +489,27 @@ msgstr ""
 #: src/builtin_function.cpp:68
 #, fuzzy, c-format
 msgid "%ls: Unknown signal '%ls'"
-msgstr "%ls: Unknown signal “%ls”\n"
+msgstr "%ls: Unknown signal “%ls”"
 
 #: src/builtin_function.cpp:113
 #, fuzzy, c-format
 msgid "%ls: Cannot find calling job for event handler"
-msgstr "%ls: Cannot find calling job for event handler\n"
+msgstr "%ls: Cannot find calling job for event handler"
 
 #: src/builtin_function.cpp:121
 #, fuzzy, c-format
 msgid "%ls: Invalid process id '%ls'"
-msgstr "%ls: Invalid process id %ls\n"
+msgstr "%ls: Invalid process id %ls"
 
 #: src/builtin_function.cpp:179
 #, fuzzy, c-format
 msgid "%ls: Expected function name"
-msgstr "%ls: Expected function name\n"
+msgstr "%ls: Expected function name"
 
 #: src/builtin_function.cpp:185
 #, fuzzy, c-format
 msgid "%ls: Illegal function name '%ls'"
-msgstr "%ls: Illegal function name “%ls”\n"
+msgstr "%ls: Illegal function name “%ls”"
 
 #: src/builtin_function.cpp:192
 #, fuzzy, c-format
@@ -518,7 +518,7 @@ msgid ""
 "and can not be used as a function name"
 msgstr ""
 "%ls: The name “%ls” is reserved,\n"
-"and can not be used as a function name\n"
+"and can not be used as a function name"
 
 #: src/builtin_function.cpp:239
 #, fuzzy, c-format
@@ -746,7 +746,7 @@ msgstr "%ls: Erase needs a variable name\n"
 #: src/builtin_set.cpp:67
 #, fuzzy, c-format
 msgid "%ls: Array index out of bounds\n"
-msgstr "Array index out of bounds"
+msgstr "Array index out of bounds\n"
 
 #: src/builtin_set.cpp:69
 #, c-format
@@ -1227,12 +1227,12 @@ msgstr ""
 #: src/fish_key_reader.cpp:313
 #, fuzzy, c-format
 msgid "Invalid value '%s' for debug-level flag\n"
-msgstr "Invalid value “%s” for debug level switch"
+msgstr "Invalid value “%s” for debug level switch\n"
 
 #: src/fish_key_reader.cpp:327
 #, fuzzy, c-format
 msgid "Invalid value '%s' for debug-stack-frames flag\n"
-msgstr "Invalid value “%s” for debug level switch"
+msgstr "Invalid value “%s” for debug level switch\n"
 
 #: src/history.cpp:146
 #, c-format
@@ -1243,7 +1243,7 @@ msgstr ""
 #, fuzzy, c-format
 msgid ""
 "History session ID '%ls' is not a valid variable name. Falling back to `%ls`."
-msgstr "%ls: “%ls” is not a valid variable name\n"
+msgstr "%ls: “%ls” is not a valid variable name"
 
 #: src/io.cpp:57
 #, fuzzy, c-format
@@ -1571,7 +1571,9 @@ msgstr "There are stopped jobs\n"
 msgid ""
 "\n"
 "   PID  Command\n"
-msgstr "Command\n"
+msgstr ""
+"\n"
+"   Command\n"
 
 #: src/reader.cpp:2170
 #, fuzzy
@@ -2042,7 +2044,7 @@ msgstr "“return” builtin command outside of function definition"
 #: src/parse_constants.h:262
 #, fuzzy, c-format
 msgid "$%lc is not a valid variable in fish."
-msgstr "%ls: “%ls” is not a valid variable name\n"
+msgstr "%ls: “%ls” is not a valid variable name"
 
 #: src/parse_constants.h:265
 #, c-format
@@ -2564,7 +2566,7 @@ msgstr "%s: Could not create configuration directory\\n"
 #: /tmp/fish/explicit/share/functions/abbr.fish:2
 #, fuzzy
 msgid "%s %s: Requires at least two arguments\\n"
-msgstr "%ls: Expected at least two arguments, got %d\n"
+msgstr "%ls: Expected at least two arguments, got %d\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:3
 #: /tmp/fish/explicit/share/functions/abbr.fish:5
@@ -2577,7 +2579,7 @@ msgstr "%s: abbreviation must have a value\\n"
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
 #, fuzzy
 msgid "%s %s: Expected one argument\\n"
-msgstr "%ls: Expected an argument\n"
+msgstr "%ls: Expected an argument\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:6
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
@@ -2593,7 +2595,7 @@ msgstr "%s: option requires an argument -- %s\\n"
 #: /tmp/fish/explicit/share/functions/abbr.fish:11
 #, fuzzy
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\\n"
-msgstr "%ls: Function “%ls” already exists. Cannot create copy “%ls”\n"
+msgstr "%ls: Function “%ls” already exists. Cannot create copy “%ls”\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:12
 #: /tmp/fish/explicit/share/functions/abbr.fish:13
@@ -2630,7 +2632,7 @@ msgstr "%s: abbreviation must have a value\\n"
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:7
 #, fuzzy
 msgid "%s: abbreviation '%s' already exists, cannot rename\\n"
-msgstr "%ls: Function “%ls” already exists. Cannot create copy “%ls”\n"
+msgstr "%ls: Function “%ls” already exists. Cannot create copy “%ls”\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:9
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:10
@@ -2652,7 +2654,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/cdh.fish:1
 #, fuzzy
 msgid "cdh: Expected zero or one arguments"
-msgstr "%ls: Expected zero or one argument, got %d\n"
+msgstr "%ls: Expected zero or one argument, got %d"
 
 #: /tmp/fish/explicit/share/functions/cdh.fish:2
 msgid "No previous directories to select. You have to cd at least once."
@@ -2777,7 +2779,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/history.fish:2
 #, fuzzy
 msgid "%ls: %ls expected %d args, got %d\\n"
-msgstr "%ls: Expected one argument, got %d\n"
+msgstr "%ls: Expected one argument, got %d\\n"
 
 #: /tmp/fish/explicit/share/functions/history.fish:3
 msgid "You must specify at least one search term when deleting entries\\n"
@@ -2800,7 +2802,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/isatty.fish:1
 #, fuzzy
 msgid "%s: Too many arguments"
-msgstr "%s: Too many arguments\n"
+msgstr "%s: Too many arguments"
 
 #: /tmp/fish/explicit/share/functions/nextd.fish:1
 #: /tmp/fish/explicit/share/functions/prevd.fish:1
@@ -2819,7 +2821,7 @@ msgstr "%s: Directory stack is empty...\\n"
 #: /tmp/fish/explicit/share/functions/psub.fish:1
 #, fuzzy
 msgid "%s: Not inside of command substitution"
-msgstr "in command substitution\n"
+msgstr "in command substitution"
 
 #: /tmp/fish/explicit/share/functions/realpath.fish:1
 msgid "%s: These flags are not allowed by fish realpath: '%s'"
@@ -20324,7 +20326,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/fuser.fish:4
 #, fuzzy
 msgid "List all known signal names"
-msgstr "%ls: Unknown signal “%ls”\n"
+msgstr "%ls: Unknown signal “%ls”"
 
 #: /tmp/fish/implicit/share/completions/fuser.fish:5
 msgid "All processes accessing files on that file system are listed"
@@ -30987,7 +30989,7 @@ msgstr "Help on brace expansion {a,b,c}"
 #: /tmp/fish/implicit/share/completions/help.fish:18
 #, fuzzy
 msgid "Command substitution"
-msgstr "in command substitution\n"
+msgstr "in command substitution"
 
 #: /tmp/fish/implicit/share/completions/help.fish:19
 #, fuzzy
@@ -31121,7 +31123,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:49
 #, fuzzy
 msgid "Job control"
-msgstr "Job control: %ls\n"
+msgstr "Job control: %ls"
 
 #: /tmp/fish/implicit/share/completions/help.fish:50
 msgid "Some common words"
@@ -31216,7 +31218,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:70
 #, fuzzy
 msgid "Command Substitutions"
-msgstr "in command substitution\n"
+msgstr "in command substitution"
 
 #: /tmp/fish/implicit/share/completions/help.fish:71
 msgid "Conditionals (If, Else, Switch)"
@@ -52756,7 +52758,7 @@ msgstr "Follow mount points"
 #: /tmp/fish/implicit/share/completions/screen.fish:17
 #, fuzzy
 msgid "Flow control off"
-msgstr "Job control: %ls\n"
+msgstr "Job control: %ls"
 
 #: /tmp/fish/implicit/share/completions/screen.fish:18
 msgid "Flow control automatic"
@@ -55846,7 +55848,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/tmux.fish:6
 #, fuzzy
 msgid "Behave as a login shell"
-msgstr "This is a login shell\n"
+msgstr "This is a login shell"
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:7
 #, fuzzy
@@ -57627,7 +57629,7 @@ msgstr "Select by group"
 #: /tmp/fish/implicit/share/completions/useradd.fish:5
 #, fuzzy
 msgid "The user's home directory will be created if it does not exist"
-msgstr "%ls: The directory “%ls” does not exist\n"
+msgstr "%ls: The directory “%ls” does not exist"
 
 #: /tmp/fish/implicit/share/completions/useradd.fish:6
 msgid ""
@@ -62757,7 +62759,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/zypper.fish:135
 #, fuzzy
 msgid "Set a descriptive name for the service"
-msgstr "%s: No description for type %s\n"
+msgstr "%s: No description for type %s"
 
 #: /tmp/fish/implicit/share/completions/zypper.fish:136
 #, fuzzy

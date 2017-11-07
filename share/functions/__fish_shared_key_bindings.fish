@@ -98,6 +98,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # If none is set, less will be used.
     bind $argv \ep '__fish_paginate'
 
+    # This will send the output of the current command to grep when you press Meta-g.
+    bind $argv \eg '__fish_grepify'
+
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also,
     # remove the commenting chars so the command can be further edited then executed.
     bind $argv \e\# __fish_toggle_comment_commandline

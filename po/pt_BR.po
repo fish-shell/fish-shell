@@ -245,7 +245,7 @@ msgstr "%ls: Não está dentro de laço\n"
 #: src/builtin.cpp:371
 #, fuzzy, c-format
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "Do no interactive prompting"
+msgstr "Do no interactive prompting\n"
 
 #: src/builtin.cpp:409 src/builtin.cpp:459
 msgid "Test a condition"
@@ -648,7 +648,7 @@ msgstr ""
 #: src/builtin_math.cpp:194
 #, fuzzy, c-format
 msgid "%ls: Invalid expression: %ls\n"
-msgstr "%ls: ID de processo inválido '%ls'"
+msgstr "%ls: ID de processo inválido '%ls'\n"
 
 #: src/builtin_printf.cpp:243
 #, fuzzy
@@ -754,7 +754,7 @@ msgstr ""
 #: src/builtin_set.cpp:67
 #, fuzzy, c-format
 msgid "%ls: Array index out of bounds\n"
-msgstr "Índice do array fora dos limites"
+msgstr "Índice do array fora dos limites\n"
 
 #: src/builtin_set.cpp:69
 #, c-format
@@ -1586,7 +1586,9 @@ msgstr "%ls: Não há tarefas adequadas\n"
 msgid ""
 "\n"
 "   PID  Command\n"
-msgstr "Comando\n"
+msgstr ""
+"\n"
+"   Comando\n"
 
 #: src/reader.cpp:2170
 #, fuzzy
@@ -2640,7 +2642,7 @@ msgstr "Create signature caches in the keyring"
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
 #, fuzzy
 msgid "%s %s: Expected one argument\\n"
-msgstr "%ls: Esperava um argumento\n"
+msgstr "%ls: Esperava um argumento\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:6
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
@@ -2656,7 +2658,7 @@ msgstr "%s: Opção requer argumento -- %s\\n"
 #: /tmp/fish/explicit/share/functions/abbr.fish:11
 #, fuzzy
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\\n"
-msgstr "%ls: Função “%ls” já existe. Não é possivel criar cópia “%ls”\n"
+msgstr "%ls: Função “%ls” já existe. Não é possivel criar cópia “%ls”\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:12
 #: /tmp/fish/explicit/share/functions/abbr.fish:13
@@ -2870,7 +2872,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/isatty.fish:1
 #, fuzzy
 msgid "%s: Too many arguments"
-msgstr "%s: Too many arguments\\n"
+msgstr "%s: Too many arguments"
 
 #: /tmp/fish/explicit/share/functions/nextd.fish:1
 #: /tmp/fish/explicit/share/functions/prevd.fish:1
@@ -2890,7 +2892,7 @@ msgstr "%s: Directory stack is empty..."
 #: /tmp/fish/explicit/share/functions/psub.fish:1
 #, fuzzy
 msgid "%s: Not inside of command substitution"
-msgstr "na substituição de comando\n"
+msgstr "na substituição de comando"
 
 #: /tmp/fish/explicit/share/functions/realpath.fish:1
 msgid "%s: These flags are not allowed by fish realpath: '%s'"
@@ -31501,7 +31503,7 @@ msgstr "Help on brace expansion {a,b,c}"
 #: /tmp/fish/implicit/share/completions/help.fish:18
 #, fuzzy
 msgid "Command substitution"
-msgstr "na substituição de comando\n"
+msgstr "na substituição de comando"
 
 #: /tmp/fish/implicit/share/completions/help.fish:19
 #, fuzzy
@@ -31637,7 +31639,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:49
 #, fuzzy
 msgid "Job control"
-msgstr "Controle de tarefa: %ls\n"
+msgstr "Controle de tarefa: %ls"
 
 #: /tmp/fish/implicit/share/completions/help.fish:50
 #, fuzzy
@@ -31733,7 +31735,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:70
 #, fuzzy
 msgid "Command Substitutions"
-msgstr "na substituição de comando\n"
+msgstr "na substituição de comando"
 
 #: /tmp/fish/implicit/share/completions/help.fish:71
 msgid "Conditionals (If, Else, Switch)"

@@ -719,7 +719,7 @@ msgstr ""
 #: src/builtin_math.cpp:194
 #, fuzzy, c-format
 msgid "%ls: Invalid expression: %ls\n"
-msgstr "%ls: id de processus invalide '%ls'"
+msgstr "%ls: id de processus invalide '%ls'\n"
 
 #: src/builtin_printf.cpp:243
 msgid "Number out of range"
@@ -824,7 +824,7 @@ msgstr ""
 #: src/builtin_set.cpp:67
 #, fuzzy, c-format
 msgid "%ls: Array index out of bounds\n"
-msgstr "Indice de liste hors limite"
+msgstr "Indice de liste hors limite\n"
 
 #: src/builtin_set.cpp:69
 #, c-format
@@ -1686,7 +1686,9 @@ msgstr "%ls: Aucune tâche appropriée\n"
 msgid ""
 "\n"
 "   PID  Command\n"
-msgstr "Commande\n"
+msgstr ""
+"\n"
+"   Commande\n"
 
 #: src/reader.cpp:2170
 msgid "A second attempt to exit will terminate them.\n"
@@ -2692,7 +2694,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
 #, fuzzy
 msgid "%s %s: Expected one argument\\n"
-msgstr "%ls: Un argument attendu\n"
+msgstr "%ls: Un argument attendu\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:6
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
@@ -2708,7 +2710,7 @@ msgstr "%s: l'option exige un argument -- %s\\n"
 #: /tmp/fish/explicit/share/functions/abbr.fish:11
 #, fuzzy
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\\n"
-msgstr "%ls: La fonction '%ls' n'existe pas\n"
+msgstr "%ls: La fonction '%ls' n'existe pas\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:12
 #: /tmp/fish/explicit/share/functions/abbr.fish:13
@@ -2911,7 +2913,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/isatty.fish:1
 #, fuzzy
 msgid "%s: Too many arguments"
-msgstr "%ls: Trop d'arguments\n"
+msgstr "%ls: Trop d'arguments"
 
 #: /tmp/fish/explicit/share/functions/nextd.fish:1
 #: /tmp/fish/explicit/share/functions/prevd.fish:1
@@ -2929,7 +2931,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/psub.fish:1
 #, fuzzy
 msgid "%s: Not inside of command substitution"
-msgstr "dans la substitution de commande\n"
+msgstr "dans la substitution de commande"
 
 #: /tmp/fish/explicit/share/functions/realpath.fish:1
 msgid "%s: These flags are not allowed by fish realpath: '%s'"
@@ -2988,7 +2990,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:1
 #, fuzzy
 msgid "%s: Value '%s' for flag '%s' is not an integer\\n"
-msgstr "%ls: La valeur germe '%ls' n'est pas un nombre valide\n"
+msgstr "%ls: La valeur germe '%ls' n'est pas un nombre valide\\n"
 
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:2
 msgid "%s: Value '%s' for flag '%s' less than min allowed of '%s'\\n"
@@ -29979,7 +29981,7 @@ msgstr "Aide sur l’expansion des accolades {a,b,c}"
 #: /tmp/fish/implicit/share/completions/help.fish:18
 #, fuzzy
 msgid "Command substitution"
-msgstr "dans la substitution de commande\n"
+msgstr "dans la substitution de commande"
 
 #: /tmp/fish/implicit/share/completions/help.fish:19
 #, fuzzy
@@ -30114,7 +30116,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:49
 #, fuzzy
 msgid "Job control"
-msgstr "Contrôle des tâches: %ls\n"
+msgstr "Contrôle des tâches: %ls"
 
 #: /tmp/fish/implicit/share/completions/help.fish:50
 #, fuzzy
@@ -30209,7 +30211,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:70
 #, fuzzy
 msgid "Command Substitutions"
-msgstr "dans la substitution de commande\n"
+msgstr "dans la substitution de commande"
 
 #: /tmp/fish/implicit/share/completions/help.fish:71
 msgid "Conditionals (If, Else, Switch)"

@@ -245,7 +245,7 @@ msgstr "%ls: Nicht innerhalb einer Schleife\n"
 #: src/builtin.cpp:371
 #, fuzzy, c-format
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "Ausführung im interaktiven Modus"
+msgstr "Ausführung im interaktiven Modus\n"
 
 #: src/builtin.cpp:409 src/builtin.cpp:459
 #, fuzzy
@@ -653,7 +653,7 @@ msgstr ""
 #: src/builtin_math.cpp:194
 #, fuzzy, c-format
 msgid "%ls: Invalid expression: %ls\n"
-msgstr "%ls: Ungültige Prozesskennung %ls"
+msgstr "%ls: Ungültige Prozesskennung %ls\n"
 
 #: src/builtin_printf.cpp:243
 #, fuzzy
@@ -757,7 +757,7 @@ msgstr "%ls: Erase benötigt einen Variablennamen\n"
 #: src/builtin_set.cpp:67
 #, fuzzy, c-format
 msgid "%ls: Array index out of bounds\n"
-msgstr "Arrayindex ausserhalb der Grenzen"
+msgstr "Arrayindex ausserhalb der Grenzen\n"
 
 #: src/builtin_set.cpp:69
 #, c-format
@@ -1615,7 +1615,9 @@ msgstr "%ls: Es gibt keine passenden Jobs\n"
 msgid ""
 "\n"
 "   PID  Command\n"
-msgstr "Befehl\n"
+msgstr ""
+"\n"
+"   Befehl\n"
 
 #: src/reader.cpp:2170
 msgid "A second attempt to exit will terminate them.\n"
@@ -2672,7 +2674,7 @@ msgstr "Signaturcache im Schlüsselring erstellen"
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
 #, fuzzy
 msgid "%s %s: Expected one argument\\n"
-msgstr "%ls: Argument erwartet\n"
+msgstr "%ls: Argument erwartet\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:6
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
@@ -2688,7 +2690,7 @@ msgstr "%s: Erwartete ein Argument, erhielt %s\\n"
 #: /tmp/fish/explicit/share/functions/abbr.fish:11
 #, fuzzy
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\\n"
-msgstr "%ls: Funktion '%ls' existiert schon. Kann keine Kopie '%ls' anlegen\n"
+msgstr "%ls: Funktion '%ls' existiert schon. Kann keine Kopie '%ls' anlegen\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:12
 #: /tmp/fish/explicit/share/functions/abbr.fish:13
@@ -2904,7 +2906,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/isatty.fish:1
 #, fuzzy
 msgid "%s: Too many arguments"
-msgstr "%s: Zu viele Argumente\\n"
+msgstr "%s: Zu viele Argumente"
 
 #: /tmp/fish/explicit/share/functions/nextd.fish:1
 #: /tmp/fish/explicit/share/functions/prevd.fish:1
@@ -2924,7 +2926,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/psub.fish:1
 #, fuzzy
 msgid "%s: Not inside of command substitution"
-msgstr "Befehlsersetzungsblock\n"
+msgstr "Befehlsersetzungsblock"
 
 #: /tmp/fish/explicit/share/functions/realpath.fish:1
 msgid "%s: These flags are not allowed by fish realpath: '%s'"
@@ -31199,7 +31201,7 @@ msgstr "Hilfe zur Klammer-Expansion {a,b,c}"
 #: /tmp/fish/implicit/share/completions/help.fish:18
 #, fuzzy
 msgid "Command substitution"
-msgstr "Befehlsersetzungsblock\n"
+msgstr "Befehlsersetzungsblock"
 
 #: /tmp/fish/implicit/share/completions/help.fish:19
 #, fuzzy
@@ -31335,7 +31337,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:49
 #, fuzzy
 msgid "Job control"
-msgstr "Jobsteuerung: %ls\n"
+msgstr "Jobsteuerung: %ls"
 
 #: /tmp/fish/implicit/share/completions/help.fish:50
 #, fuzzy
@@ -31404,7 +31406,7 @@ msgstr "Pfad zu Befehl ausgeben"
 #: /tmp/fish/implicit/share/completions/help.fish:63
 #, fuzzy
 msgid "Command mode"
-msgstr "Befehl\n"
+msgstr "Befehl"
 
 #: /tmp/fish/implicit/share/completions/help.fish:64
 #, fuzzy
@@ -31431,7 +31433,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:70
 #, fuzzy
 msgid "Command Substitutions"
-msgstr "Befehlsersetzungsblock\n"
+msgstr "Befehlsersetzungsblock"
 
 #: /tmp/fish/implicit/share/completions/help.fish:71
 msgid "Conditionals (If, Else, Switch)"

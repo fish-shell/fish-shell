@@ -232,7 +232,7 @@ msgstr "%ls：不在循环体内部\n"
 #: src/builtin.cpp:371
 #, fuzzy, c-format
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "只在不活跃的进程上"
+msgstr "只在不活跃的进程上\n"
 
 #: src/builtin.cpp:409 src/builtin.cpp:459
 #, fuzzy
@@ -631,7 +631,7 @@ msgstr ""
 #: src/builtin_math.cpp:194
 #, fuzzy, c-format
 msgid "%ls: Invalid expression: %ls\n"
-msgstr "%ls：进程id %ls 非法"
+msgstr "%ls：进程id %ls 非法\n"
 
 #: src/builtin_printf.cpp:243
 msgid "Number out of range"
@@ -1560,7 +1560,9 @@ msgstr "%ls：没有匹配的任务\n"
 msgid ""
 "\n"
 "   PID  Command\n"
-msgstr "命令\n"
+msgstr ""
+"\n"
+"   命令\n"
 
 #: src/reader.cpp:2170
 msgid "A second attempt to exit will terminate them.\n"
@@ -2528,7 +2530,7 @@ msgstr "%s：找不到home目录\\n"
 #: /tmp/fish/explicit/share/functions/abbr.fish:2
 #, fuzzy
 msgid "%s %s: Requires at least two arguments\\n"
-msgstr "%ls：函数 “%ls” 不存在\n"
+msgstr "%ls：函数 “%ls” 不存在\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:3
 #: /tmp/fish/explicit/share/functions/abbr.fish:5
@@ -2540,7 +2542,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
 #, fuzzy
 msgid "%s %s: Expected one argument\\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%ls：应有一个参数，提供了 %d 个\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:6
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
@@ -2550,7 +2552,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/abbr.fish:7
 #, fuzzy
 msgid "%s %s: Requires exactly two arguments\\n"
-msgstr "%ls：函数 “%ls” 不存在\n"
+msgstr "%ls：函数 “%ls” 不存在\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:11
 #, fuzzy
@@ -2763,7 +2765,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/isatty.fish:1
 #, fuzzy
 msgid "%s: Too many arguments"
-msgstr "%ls：参数过多\\n"
+msgstr "%ls：参数过多"
 
 #: /tmp/fish/explicit/share/functions/nextd.fish:1
 #: /tmp/fish/explicit/share/functions/prevd.fish:1
@@ -2781,7 +2783,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/psub.fish:1
 #, fuzzy
 msgid "%s: Not inside of command substitution"
-msgstr "%ls：不在函数体之内\n"
+msgstr "%ls：不在函数体之内"
 
 #: /tmp/fish/explicit/share/functions/realpath.fish:1
 msgid "%s: These flags are not allowed by fish realpath: '%s'"
@@ -29308,7 +29310,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:49
 #, fuzzy
 msgid "Job control"
-msgstr "任务控制：%ls\n"
+msgstr "任务控制：%ls"
 
 #: /tmp/fish/implicit/share/completions/help.fish:50
 #, fuzzy

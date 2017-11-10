@@ -112,7 +112,7 @@ msgstr "%ls: There are no suitable jobs\n"
 #: src/builtin_bg.cpp:80 src/builtin_disown.cpp:82
 #, fuzzy, c-format
 msgid "%ls: '%ls' is not a valid job specifier\n"
-msgstr "%ls: “%ls” is not a valid variable name\n"
+msgstr "%ls: '%ls' is not a valid variable name\n"
 
 #: src/builtin_bg.cpp:95 src/builtin_disown.cpp:89
 #, fuzzy, c-format
@@ -627,7 +627,7 @@ msgstr "%ls: There are no jobs\n"
 #: src/builtin_math.cpp:44
 #, fuzzy, c-format
 msgid "%ls: '%ls' is not a valid scale value\n"
-msgstr "%ls: “%ls” is not a valid variable name\n"
+msgstr "%ls: '%ls' is not a valid variable name\n"
 
 #: src/builtin_math.cpp:148
 #, c-format
@@ -1243,7 +1243,7 @@ msgstr ""
 #, fuzzy, c-format
 msgid ""
 "History session ID '%ls' is not a valid variable name. Falling back to `%ls`."
-msgstr "%ls: “%ls” is not a valid variable name"
+msgstr "%ls: '%ls' is not a valid variable name"
 
 #: src/io.cpp:57
 #, fuzzy, c-format
@@ -2044,7 +2044,7 @@ msgstr "“return” builtin command outside of function definition"
 #: src/parse_constants.h:262
 #, fuzzy, c-format
 msgid "$%lc is not a valid variable in fish."
-msgstr "%ls: “%ls” is not a valid variable name"
+msgstr "%ls: '%ls' is not a valid variable name"
 
 #: src/parse_constants.h:265
 #, c-format

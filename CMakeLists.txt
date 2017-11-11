@@ -15,6 +15,8 @@ SOURCE_GROUP("Builtins" REGULAR_EXPRESSION "builtin_.*")
 # Support folders.
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 # All objects that the system needs to build fish, except fish.cpp
 SET(FISH_SRCS
     src/autoload.cpp src/builtin.cpp src/builtin_bg.cpp src/builtin_bind.cpp

@@ -78,7 +78,9 @@ IF(STRUCT_WINSIZE GREATER -1 AND HAVE_TIOCGWINSZ EQUAL 1)
 ENDIF()
 SET(CMAKE_EXTRA_INCLUDE_FILES)
 
-SET(HAVE__PROC_SELF_STAT (EXISTS "/proc/self/stat"))
+IF(EXISTS "/proc/self/stat")
+  SET(HAVE__PROC_SELF_STAT 1)
+ENDIF()
 CHECK_TYPE_SIZE("wchar_t[8]" WCHAR_T_BITS LANGUAGE CXX)
 
 # Not checked yet: non-varargs tparm ("Solaris tparm kludge")

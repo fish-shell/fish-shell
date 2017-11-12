@@ -88,10 +88,13 @@ TMPLOC=`mktemp -d -t fish_doc_build_XXXXXX` || { echo >&2 "Could not build docum
 
 # Copy stuff to the temp directory
 for i in "$INPUTDIR"/*.txt; do
-	INPUTFILE=$TMPLOC/`basename $i .txt`.doxygen
-	echo  "/** \page" `basename $i .txt` > $INPUTFILE
-	cat $i >>$INPUTFILE
-	echo "*/" >>$INPUTFILE
+	BASENAME=`basename $i .txt`
+	TMPFILE=$TMPLOC/$BASENAME
+	INPUTFILE=$TMPLOC/$BASENAME.doxygen
+	echo  "/** \page" $BASENAME > $TMPFILE
+	cat $i >>$TMPFILE
+	echo "*/" >>$TMPFILE
+	cat $TMPFILE | sed "s/\\\section $BASENAME $BASENAME/\\\section $BASENAME-man $BASENAME/" > $INPUTFILE
 done
 
 # Make some extra stuff to pass to doxygen
@@ -127,10 +130,14 @@ if test "$RESULT" = 0 ; then
 	for i in "$INPUTDIR"/*.txt; do
 		# It would be nice to use -i here for edit in place, but that is not portable
 		CMD_NAME=`basename "$i" .txt`;
-		sed < ${CMD_NAME}.1 > ${CMD_NAME}.1.tmp \
-            -e "/.SH \"$CMD_NAME/d" \
-            -e "s/^$CMD_NAME * \\\- \([^ ]*\) /\\\fB\1\\\fP -/"
-		mv "${CMD_NAME}.1.tmp" "${CMD_NAME}.1"
+		sed < ${CMD_NAME}.1 > ${CMD_NAME}.1.tmp-delete-quote \
+			-e "s/^\\.SH \"\(.*\)\"/\\.SH \1\\n/"
+		sed < ${CMD_NAME}.1.tmp-delete-quote > ${CMD_NAME}.1.tmp-bold \
+			-e "s/^\\.SH \("$CMD_NAME"\) \\-/\\.SH \\\fB\1\\\fP \\-/"
+		sed < ${CMD_NAME}.1.tmp-bold > ${CMD_NAME}.1.tmp-shape \
+			-z "s/\\.SH NAME\\n$CMD_NAME \\\- \\n\\.SH /\\.SH NAME\\n/"
+		cp "${CMD_NAME}.1.tmp-shape" "${CMD_NAME}.1"
+		rm "${CMD_NAME}.1.tmp-delete-quote" "${CMD_NAME}.1.tmp-bold" "${CMD_NAME}.1.tmp-shape"
 	done
 
 	# Erase condemned pages

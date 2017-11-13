@@ -1,5 +1,5 @@
 # Detect curses.
-INCLUDE(FindCurses)
+FIND_PACKAGE(Curses REQUIRED)
 
 # Get threads.
 set(THREADS_PREFER_PTHREAD_FLAG ON)

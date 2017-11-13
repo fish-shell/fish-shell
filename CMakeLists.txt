@@ -114,3 +114,6 @@ INCLUDE(cmake/Tests.cmake)
 
 # Set up install.
 INCLUDE(cmake/Install.cmake)
+
+INCLUDE(FeatureSummary)
+FEATURE_SUMMARY(WHAT ALL)

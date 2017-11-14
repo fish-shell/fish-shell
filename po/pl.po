@@ -23,9 +23,9 @@ msgid ""
 msgstr ""
 
 #: src/builtin_argparse.cpp:36
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid option spec '%ls' at char '%lc'\n"
-msgstr "%ls: Nieprawidłowa opcja -- %lc\n"
+msgstr ""
 
 #: src/builtin_argparse.cpp:129
 #, c-format
@@ -111,9 +111,9 @@ msgid "%ls: '%ls' is not a valid job specifier\n"
 msgstr "%ls: '%ls' nie jest zadaniem\n"
 
 #: src/builtin_bg.cpp:95 src/builtin_disown.cpp:89
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Could not find job '%d'\n"
-msgstr "%ls: Nie można odnaleźć katalogu domowego\n"
+msgstr ""
 
 #: src/builtin_bind.cpp:141
 #, c-format
@@ -235,9 +235,9 @@ msgid "%ls: Not inside of loop\n"
 msgstr ""
 
 #: src/builtin.cpp:371
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "Tylko dla zadań interaktywnych\n"
+msgstr ""
 
 #: src/builtin.cpp:409 src/builtin.cpp:459
 msgid "Test a condition"
@@ -713,9 +713,9 @@ msgid "%ls: Expected an argument\n"
 msgstr "%ls: Oczekiwano argumentu\n"
 
 #: src/builtin_set.cpp:62
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n"
-msgstr "%ls: maksymalna wartość '%ls' nie jest prawidłową liczbą\n"
+msgstr ""
 
 #: src/builtin_set.cpp:64
 #, c-format
@@ -783,9 +783,9 @@ msgid "$%ls: set in %ls scope, %ls, with %d elements\n"
 msgstr ""
 
 #: src/builtin_set.cpp:554
-#, fuzzy, c-format
+#, c-format
 msgid "$%ls[%d]: length=%d value=|%ls|\n"
-msgstr "%ls: Nieprawidłowa wartość długości  '%ls'\n"
+msgstr ""
 
 #: src/builtin_set.cpp:578
 #, fuzzy, c-format
@@ -982,9 +982,8 @@ msgid "Could not set up terminal."
 msgstr "Nie mozna skonfigurować terminala"
 
 #: src/env.cpp:576
-#, fuzzy
 msgid "TERM environment variable not set."
-msgstr "Zmienna środowiskowa TERM ustawiona jest do '%ls'"
+msgstr ""
 
 #: src/env.cpp:578
 #, fuzzy, c-format
@@ -1002,9 +1001,9 @@ msgid ""
 msgstr ""
 
 #: src/env_universal_common.cpp:461
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to write to universal variables file '%ls': %s"
-msgstr "Nie udało się rozszerzyć nazwy zmiennej '%ls'"
+msgstr ""
 
 #: src/env_universal_common.cpp:481
 #, c-format
@@ -1012,9 +1011,9 @@ msgid "Unable to rename file from '%ls' to '%ls': %s"
 msgstr ""
 
 #: src/env_universal_common.cpp:533
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to open temporary file '%ls': %s"
-msgstr "Nie udało się rozszerzyć nazwy zmiennej '%ls'"
+msgstr ""
 
 #: src/env_universal_common.cpp:543
 #, c-format
@@ -1022,9 +1021,9 @@ msgid "Locking the universal var file took too long (%.3f seconds)."
 msgstr ""
 
 #: src/env_universal_common.cpp:595
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to open universal variable file '%ls': %s"
-msgstr "Nie udało się rozszerzyć nazwy zmiennej '%ls'"
+msgstr ""
 
 #: src/env_universal_common.cpp:970
 #, c-format
@@ -1047,14 +1046,14 @@ msgid "Unable to memory map shared memory object with path '%s': %s"
 msgstr ""
 
 #: src/env_universal_common.cpp:1396
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to make a pipe for universal variables using '%ls': %s"
-msgstr "Nie udało się rozszerzyć nazwy zmiennej '%ls'"
+msgstr ""
 
 #: src/env_universal_common.cpp:1405
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to open a pipe for universal variables using '%ls': %s"
-msgstr "Nie udało się rozszerzyć nazwy zmiennej '%ls'"
+msgstr ""
 
 #: src/event.cpp:119
 #, c-format
@@ -1237,9 +1236,9 @@ msgid ""
 msgstr ""
 
 #: src/io.cpp:57
-#, fuzzy, c-format
+#, c-format
 msgid "An error occured while reading output from code block on fd %d"
-msgstr "Wystąpił błąd podczas odczytywania wyjścia z bloku kodu"
+msgstr ""
 
 #: src/output.cpp:559
 #, c-format
@@ -1493,9 +1492,9 @@ msgid "An error occured while reading output from code block"
 msgstr "Wystąpił błąd podczas odczytywania wyjścia z bloku kodu"
 
 #: src/proc.cpp:846
-#, fuzzy, c-format
+#, c-format
 msgid "Could not send job %d ('%ls') with pgid %d to foreground"
-msgstr "Nie można przenieść zadania %d ('%ls') na pierwszy plan"
+msgstr ""
 
 #: src/proc.cpp:875
 #, c-format
@@ -1554,9 +1553,8 @@ msgid "Pop null reader block"
 msgstr ""
 
 #: src/reader.cpp:2160
-#, fuzzy
 msgid "There are still jobs active:\n"
-msgstr "%ls: Brak pasujących zadań\n"
+msgstr ""
 
 #: src/reader.cpp:2161
 #, fuzzy
@@ -1951,7 +1949,7 @@ msgstr "%ls: Argument '%ls' nie jest liczbą \n"
 #: src/builtin.h:72
 #, fuzzy, c-format
 msgid "%ls: Expected a subcommand to follow the command\n"
-msgstr "%ls: Oczekiwano argumentu dla funkcji %ls\n"
+msgstr "%ls: Oczekiwano argumentu dla funkcji\n"
 
 #: src/builtin.h:73
 #, fuzzy, c-format
@@ -2552,7 +2550,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
 #, fuzzy
 msgid "%s %s: Expected one argument\\n"
-msgstr "%ls: Oczekiwano argumentu\\n"
+msgstr "%s %s: Oczekiwano argumentu\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:6
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
@@ -2562,18 +2560,17 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/abbr.fish:7
 #, fuzzy
 msgid "%s %s: Requires exactly two arguments\\n"
-msgstr "%s: Opcja wymaga argumentu -- %s\\n"
+msgstr "%s %s: Opcja wymaga argumentu\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:11
-#, fuzzy
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\\n"
-msgstr "%s: Funkcja '%ls' już istnieje. Nie można utworzyć kopii\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:12
 #: /tmp/fish/explicit/share/functions/abbr.fish:13
 #, fuzzy
 msgid "%s %s: Unexpected argument -- '%s'\\n"
-msgstr "%s: Oczekiwano argumentu -- %s\\n"
+msgstr "%s %s: Oczekiwano argumentu -- '%s'\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:1
 #, fuzzy
@@ -2629,7 +2626,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/cdh.fish:1
 #, fuzzy
 msgid "cdh: Expected zero or one arguments"
-msgstr "%s: Oczekiwano 0 lub 1 argument, otrzymano %d\\n"
+msgstr "cdh: Oczekiwano 0 lub 1 argument"
 
 #: /tmp/fish/explicit/share/functions/cdh.fish:2
 msgid "No previous directories to select. You have to cd at least once."
@@ -2793,9 +2790,8 @@ msgid "%s: Directory stack is empty…\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/psub.fish:1
-#, fuzzy
 msgid "%s: Not inside of command substitution"
-msgstr "w zastępstwie polecenia"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/realpath.fish:1
 msgid "%s: These flags are not allowed by fish realpath: '%s'"
@@ -2855,9 +2851,8 @@ msgid "%s: Invalid mask '%s'\\n"
 msgstr "%s: Nieprawidłowa ścieżka: '%s'\\n"
 
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:1
-#, fuzzy
 msgid "%s: Value '%s' for flag '%s' is not an integer\\n"
-msgstr "%ls: maksymalna wartość '%ls' nie jest prawidłową liczbą\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:2
 msgid "%s: Value '%s' for flag '%s' less than min allowed of '%s'\\n"
@@ -8541,9 +8536,8 @@ msgstr "Nazwa procesu"
 
 #: /tmp/fish/implicit/share/completions/bind.fish:10
 #: /tmp/fish/implicit/share/completions/commandline.fish:17
-#, fuzzy
 msgid "Function name"
-msgstr "%ls: Nie podano nazwy funkcji"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/bison.fish:1
 msgid "Specify a prefix to use for all bison output file names"
@@ -10812,9 +10806,8 @@ msgid "Find disk used"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:49
-#, fuzzy
 msgid "Get all PIDs for a process name"
-msgstr "zakończ obsługę procesu %d"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:50
 msgid "Find the trash size"
@@ -19032,9 +19025,8 @@ msgid "Ask the user for confirmation before killing a process"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fuser.fish:4
-#, fuzzy
 msgid "List all known signal names"
-msgstr "%ls: Nieznany sygnał '%ls'"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fuser.fish:5
 msgid "All processes accessing files on that file system are listed"
@@ -29246,9 +29238,8 @@ msgid "Searchable history"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:29
-#, fuzzy
 msgid "Shell variable and function names"
-msgstr "%ls: Niedozwolona nazwa funkcji '%ls'"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:30
 msgid "Initialization files"
@@ -29320,9 +29311,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:46
 #: /tmp/fish/implicit/share/completions/help.fish:74
-#, fuzzy
 msgid "Functions"
-msgstr "%ls: Nie podano nazwy funkcji"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:47
 #, fuzzy
@@ -29336,7 +29326,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:49
 #, fuzzy
 msgid "Job control"
-msgstr "Kontrola zadania: %ls"
+msgstr "Kontrola zadania"
 
 #: /tmp/fish/implicit/share/completions/help.fish:50
 #, fuzzy
@@ -29378,7 +29368,7 @@ msgstr "Operuj zmiennymi środowiskowymi"
 #: /tmp/fish/implicit/share/completions/help.fish:58
 #, fuzzy
 msgid "Variable scope"
-msgstr "Zmienna: %ls"
+msgstr "Zmienna"
 
 #: /tmp/fish/implicit/share/completions/help.fish:59
 #, fuzzy
@@ -29502,7 +29492,7 @@ msgstr "Operuj zmiennymi środowiskowymi"
 #: /tmp/fish/implicit/share/completions/help.fish:89
 #, fuzzy
 msgid "Variables"
-msgstr "Zmienna: %ls"
+msgstr "Zmienna"
 
 #: /tmp/fish/implicit/share/completions/help.fish:90
 msgid "Why fish?"
@@ -35844,7 +35834,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/minikube.fish:7
 #, fuzzy
 msgid "Log level for logs"
-msgstr "Katalog domowy dla %ls"
+msgstr "Katalog domowy dla"
 
 #: /tmp/fish/implicit/share/completions/minikube.fish:8
 msgid "Comma-separated list of pattern=N settings for file-filtered logging"
@@ -36641,7 +36631,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/mocha.fish:21
 #, fuzzy
 msgid "check for global variable leaks"
-msgstr "obsługa zmiennej '%ls'"
+msgstr "obsługa zmiennej"
 
 #: /tmp/fish/implicit/share/completions/mocha.fish:22
 msgid "display the full stack trace"
@@ -44134,7 +44124,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/opam.fish:28
 #, fuzzy
 msgid "Display environment variables as an s-expression."
-msgstr "Zmienna środowiskowa TERM ustawiona jest do '%ls'"
+msgstr "Zmienna środowiskowa TERM ustawiona jest do"
 
 #: /tmp/fish/implicit/share/completions/opam.fish:29
 msgid "Use sh-compatible mode for configuring OPAM."
@@ -48329,9 +48319,8 @@ msgid "List objects or buckets"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:4
-#, fuzzy
 msgid "List all object in all buckets"
-msgstr "%ls: Nieznany sygnał '%ls'"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:5
 msgid "Put file into bucket"
@@ -49088,7 +49077,7 @@ msgstr "Zwraca sformatowany tekst"
 #: /tmp/fish/implicit/share/completions/sbt.fish:5
 #, fuzzy
 msgid "Set log level to debug"
-msgstr "Katalog domowy dla %ls"
+msgstr "Katalog domowy dla"
 
 #: /tmp/fish/implicit/share/completions/sbt.fish:6
 msgid "Disable ANSI color codes"
@@ -49946,9 +49935,8 @@ msgid "Consider only blanks and alphanumerics"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sort.fish:4
-#, fuzzy
 msgid "Compare general numeric value"
-msgstr "%ls: oczekiwano wartości liczbowej"
+msgstr "oczekiwano wartości liczbowej"
 
 #: /tmp/fish/implicit/share/completions/sort.fish:5
 msgid "Consider only printable"
@@ -51385,7 +51373,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/systemd-nspawn.fish:30
 #, fuzzy
 msgid "Pass environment variables to init in the container"
-msgstr "Zmienna środowiskowa TERM ustawiona jest do '%ls'"
+msgstr "Zmienna środowiskowa TERM ustawiona jest do"
 
 #: /tmp/fish/implicit/share/completions/systemd-nspawn.fish:31
 msgid "Share the system with the host [See Man Page]"
@@ -51881,7 +51869,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/terraform.fish:33
 #, fuzzy
 msgid "Environment management"
-msgstr "Zmienna środowiskowa TERM ustawiona jest do '%ls'"
+msgstr "Zmienna środowiskowa TERM ustawiona jest do"
 
 #: /tmp/fish/implicit/share/completions/terraform.fish:34
 msgid "List environments"

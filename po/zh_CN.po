@@ -20,7 +20,7 @@ msgstr "不能自动加载项目 “%ls”，它已经被自动加载了。"
 #: src/builtin_argparse.cpp:36
 #, fuzzy, c-format
 msgid "%ls: Invalid option spec '%ls' at char '%lc'\n"
-msgstr "%ls：进程id %ls 非法\n"
+msgstr "%ls：进程id %ls 非法 '%lc'\n"
 
 #: src/builtin_argparse.cpp:129
 #, c-format
@@ -108,7 +108,7 @@ msgstr "%ls：“%ls” 不是一个任务\n"
 #: src/builtin_bg.cpp:95 src/builtin_disown.cpp:89
 #, fuzzy, c-format
 msgid "%ls: Could not find job '%d'\n"
-msgstr "%ls：找不到home目录\n"
+msgstr "%ls：找不到home目录 '%d'\n"
 
 #: src/builtin_bind.cpp:141
 #, c-format
@@ -232,7 +232,7 @@ msgstr "%ls：不在循环体内部\n"
 #: src/builtin.cpp:371
 #, fuzzy, c-format
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "只在不活跃的进程上\n"
+msgstr "%ls: 只在不活跃的进程上\n"
 
 #: src/builtin.cpp:409 src/builtin.cpp:459
 #, fuzzy
@@ -550,7 +550,7 @@ msgstr "%ls：函数名 “%ls” 非法\n"
 #: src/builtin_functions.cpp:368
 #, fuzzy, c-format
 msgid "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"
-msgstr "%ls：函数 “%ls” 不存在\n"
+msgstr "%ls：函数 “%ls” 不存在 '%ls'\n"
 
 #: src/builtin_history.cpp:71 src/builtin_status.cpp:117
 #, c-format
@@ -694,7 +694,7 @@ msgstr ""
 #: src/builtin_realpath.cpp:44
 #, fuzzy, c-format
 msgid "%ls: Invalid path: %ls\n"
-msgstr "%ls：非法状态\n"
+msgstr "%ls：非法状态: %ls\n"
 
 #: src/builtin_return.cpp:100
 #, c-format
@@ -709,12 +709,12 @@ msgstr "%ls：未知的任务 “%ls”\n"
 #: src/builtin_set_color.cpp:167
 #, fuzzy, c-format
 msgid "%ls: Expected an argument\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%ls：应有一个参数，提供了 个\n"
 
 #: src/builtin_set.cpp:62
 #, fuzzy, c-format
 msgid "%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n"
-msgstr "%ls：种子值 “%ls” 不是一个有效的数字\n"
+msgstr "%ls：$ %ls 种子值 “%ls” 不是一个有效的数字 (%s)\n"
 
 #: src/builtin_set.cpp:64
 #, c-format
@@ -731,7 +731,6 @@ msgstr ""
 msgid "%ls: Erase needs a variable name\n"
 msgstr ""
 "%ls：Erase 需要一个变量名\n"
-"%ls\n"
 
 #: src/builtin_set.cpp:67
 #, c-format
@@ -768,7 +767,7 @@ msgstr "%ls：开始于 “%ls” 的索引非法\n"
 #: src/builtin_set.cpp:537
 #, fuzzy, c-format
 msgid "$%ls: not set in %ls scope\n"
-msgstr "%ls：不在循环体内部\n"
+msgstr "%ls：不在循环体内部 %ls\n"
 
 #: src/builtin_set.cpp:542
 msgid "exported"
@@ -786,7 +785,7 @@ msgstr ""
 #: src/builtin_set.cpp:554
 #, fuzzy, c-format
 msgid "$%ls[%d]: length=%d value=|%ls|\n"
-msgstr "%ls：变量名 “%ls” 非法\n"
+msgstr "$%ls[%d]: length=%d value=|%ls|\n"
 
 #: src/builtin_set.cpp:578
 #, fuzzy, c-format
@@ -855,7 +854,7 @@ msgstr "定义一个新函数"
 #: src/builtin_string.cpp:39
 #, fuzzy, c-format
 msgid "%ls: Expected argument\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%ls：应有一个参数，提供了个\n"
 
 #: src/builtin_string.cpp:160
 #, fuzzy, c-format
@@ -987,7 +986,7 @@ msgstr "处理环境变量"
 #: src/env.cpp:578
 #, fuzzy, c-format
 msgid "TERM environment variable set to '%ls'."
-msgstr "处理环境变量"
+msgstr "处理环境变量 '%ls'"
 
 #: src/env.cpp:579
 msgid "Check that this terminal type is supported on this system."
@@ -1061,7 +1060,7 @@ msgstr ""
 #: src/event.cpp:124
 #, fuzzy, c-format
 msgid "handler for variable '%ls'"
-msgstr "处理环境变量"
+msgstr "处理环境变量 '%ls'"
 
 #: src/event.cpp:129
 #, c-format
@@ -1182,12 +1181,12 @@ msgstr ""
 #: src/fish.cpp:431
 #, fuzzy, c-format
 msgid "Error while reading file %ls\n"
-msgstr "%ls：读取文件 “%ls” 时发生错误\n"
+msgstr "读取文件 “%ls” 时发生错误\n"
 
 #: src/fish_indent.cpp:389
 #, fuzzy, c-format
 msgid "%ls, version %s\n"
-msgstr "%ls：拒绝访问：“%ls”\n"
+msgstr "%ls：拒绝访问：“%s”\n"
 
 #: src/fish_indent.cpp:453
 #, c-format
@@ -1205,7 +1204,7 @@ msgstr ""
 #: src/fish_indent.cpp:469
 #, fuzzy
 msgid "Too many arguments\n"
-msgstr "%ls：参数过多\n"
+msgstr "参数过多\n"
 
 #: src/fish_key_reader.cpp:241
 #, c-format
@@ -1266,7 +1265,7 @@ msgstr ""
 #: src/parse_execution.cpp:556
 #, fuzzy, c-format
 msgid "switch: Expected exactly one argument, got %lu\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "应有一个参数，提供了 %lu 个\n"
 
 #: src/parse_execution.cpp:791
 #, c-format
@@ -1370,7 +1369,7 @@ msgstr ""
 #: src/parser.cpp:392
 #, fuzzy, c-format
 msgid "in function '%ls'\n"
-msgstr "%ls：未知的输入函数 “%ls”\n"
+msgstr "未知的输入函数 “%ls”\n"
 
 #: src/parser.cpp:396
 msgid "in command substitution\n"
@@ -1492,7 +1491,7 @@ msgstr ""
 #: src/proc.cpp:846
 #, fuzzy, c-format
 msgid "Could not send job %d ('%ls') with pgid %d to foreground"
-msgstr "将任务 %d，“%ls” 发送到前台"
+msgstr "将任务 %d，“%ls” 发送到前台 pgid %d"
 
 #: src/proc.cpp:875
 #, fuzzy, c-format
@@ -1553,7 +1552,7 @@ msgstr ""
 #: src/reader.cpp:2160
 #, fuzzy
 msgid "There are still jobs active:\n"
-msgstr "%ls：没有匹配的任务\n"
+msgstr "没有匹配的任务\n"
 
 #: src/reader.cpp:2161
 #, fuzzy
@@ -1795,7 +1794,7 @@ msgstr "%ls：函数 “%ls” 不存在\n"
 #: src/wgetopt.cpp:308
 #, fuzzy, c-format
 msgid "%ls: Option '%lc%ls' doesn't allow an argument\n"
-msgstr "%ls：函数 “%ls” 不存在\n"
+msgstr "%ls：函数 “%lc%ls” 不存在\n"
 
 #: src/wgetopt.cpp:320
 #, fuzzy, c-format
@@ -1815,7 +1814,7 @@ msgstr "%ls：未知的输入函数 “%ls”\n"
 #: src/wgetopt.cpp:405
 #, fuzzy, c-format
 msgid "%ls: Unrecognized option '%lc%ls'\n"
-msgstr "%ls：未知的输入函数 “%ls”\n"
+msgstr "%ls：未知的输入函数 “%lc%ls”\n"
 
 #: src/wildcard.cpp:27 /tmp/fish/implicit/share/completions/journalctl.fish:2
 msgid "Executable"
@@ -1888,6 +1887,7 @@ msgid ""
 "%ls: Invalid combination of options,\n"
 "%ls\n"
 msgstr "%ls：非法的选项组合\n"
+"%ls\n"
 
 #: src/builtin.h:45
 #, c-format
@@ -1907,22 +1907,22 @@ msgstr "%ls：未知的任务 “%ls”\n"
 #: src/builtin.h:54
 #, fuzzy, c-format
 msgid "%ls: Expected %d args, got %d\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%ls：应有一个参数%d，提供了 %d 个\n"
 
 #: src/builtin.h:55
 #, fuzzy, c-format
 msgid "%ls %ls: Expected %d args, got %d\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%ls %ls：应有一个参数%d，提供了 %d 个\n"
 
 #: src/builtin.h:56
 #, fuzzy, c-format
 msgid "%ls: Expected at least %d args, got only %d\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%ls：应有一个参数%d，提供了 %d 个\n"
 
 #: src/builtin.h:57
 #, fuzzy, c-format
 msgid "%ls: Expected at most %d args, got %d\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%ls：应有一个参数%d，提供了 %d 个\n"
 
 #: src/builtin.h:60
 #, fuzzy, c-format
@@ -1947,7 +1947,7 @@ msgstr "%ls: Argument “%ls” is not a number\n"
 #: src/builtin.h:72
 #, fuzzy, c-format
 msgid "%ls: Expected a subcommand to follow the command\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\n"
+msgstr "%ls：应有一个参数，提供了个\n"
 
 #: src/builtin.h:73
 #, fuzzy, c-format
@@ -2557,13 +2557,13 @@ msgstr "%ls：函数 “%ls” 不存在\\n"
 #: /tmp/fish/explicit/share/functions/abbr.fish:11
 #, fuzzy
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\\n"
-msgstr "%s：函数 “%s” 不存在\\n"
+msgstr "%s %s：函数 “%s” 不存在 %s\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:12
 #: /tmp/fish/explicit/share/functions/abbr.fish:13
 #, fuzzy
 msgid "%s %s: Unexpected argument -- '%s'\\n"
-msgstr "%s：应有一个参数，提供了 %s 个\\n"
+msgstr "%s %s：应有一个参数，提供了 %s 个\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:1
 #, fuzzy
@@ -2617,7 +2617,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/cdh.fish:1
 #, fuzzy
 msgid "cdh: Expected zero or one arguments"
-msgstr "%s：应有一个参数，提供了 %d 个\\n"
+msgstr "cdh: 应有一个参数，提供了 个\\n"
 
 #: /tmp/fish/explicit/share/functions/cdh.fish:2
 msgid "No previous directories to select. You have to cd at least once."
@@ -2668,7 +2668,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/fish_md5.fish:2
 #, fuzzy
 msgid "%s: Too many arguments %s\\n"
-msgstr "%s：参数过多\\n"
+msgstr "%s：参数过多%s\\n"
 
 #: /tmp/fish/explicit/share/functions/__fish_move_last.fish:1
 msgid "Hit end of history…\\n"
@@ -2743,7 +2743,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/history.fish:2
 #, fuzzy
 msgid "%ls: %ls expected %d args, got %d\\n"
-msgstr "%ls：应有一个参数，提供了 %d 个\\n"
+msgstr "%ls：%ls 应有一个参数%d，提供了 %d 个\\n"
 
 #: /tmp/fish/explicit/share/functions/history.fish:3
 msgid "You must specify at least one search term when deleting entries\\n"
@@ -2846,7 +2846,7 @@ msgstr "%s：变量名 “%s” 非法\\n"
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:1
 #, fuzzy
 msgid "%s: Value '%s' for flag '%s' is not an integer\\n"
-msgstr "%ls：“%ls” 不是一个任务\\n"
+msgstr "%s：“%s” 不是%s一个任务\\n"
 
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:2
 msgid "%s: Value '%s' for flag '%s' less than min allowed of '%s'\\n"
@@ -29223,7 +29223,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:29
 #, fuzzy
 msgid "Shell variable and function names"
-msgstr "%ls：函数名 “%ls” 非法"
+msgstr "函数名 非法"
 
 #: /tmp/fish/implicit/share/completions/help.fish:30
 msgid "Initialization files"
@@ -29310,7 +29310,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:49
 #, fuzzy
 msgid "Job control"
-msgstr "任务控制：%ls"
+msgstr "任务控制"
 
 #: /tmp/fish/implicit/share/completions/help.fish:50
 #, fuzzy
@@ -31771,7 +31771,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/iptables.fish:19
 #, fuzzy
 msgid "Destination specification"
-msgstr "%.*ls：非法的选项组合"
+msgstr "非法的选项组合"
 
 #: /tmp/fish/implicit/share/completions/iptables.fish:21
 msgid "Interface via which a packet was received"
@@ -49910,7 +49910,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/sort.fish:4
 #, fuzzy
 msgid "Compare general numeric value"
-msgstr "%s：应有一个参数"
+msgstr "应有一个参数"
 
 #: /tmp/fish/implicit/share/completions/sort.fish:5
 msgid "Consider only printable"

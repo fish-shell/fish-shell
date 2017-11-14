@@ -102,7 +102,7 @@ msgstr ""
 #: src/builtin_argparse.cpp:36
 #, fuzzy, c-format
 msgid "%ls: Invalid option spec '%ls' at char '%lc'\n"
-msgstr "%ls: Option invalide -- %lc\n"
+msgstr "%ls: Option invalide '%ls' au caractère '%lc'\n"
 
 #: src/builtin_argparse.cpp:129
 #, c-format
@@ -190,9 +190,9 @@ msgid "%ls: '%ls' is not a valid job specifier\n"
 msgstr "%ls: '%ls' est un nom de variable invalide\n"
 
 #: src/builtin_bg.cpp:95 src/builtin_disown.cpp:89
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Could not find job '%d'\n"
-msgstr "%ls: Répertoire personnel introuvable\n"
+msgstr "%ls: Impossible de trouver la tâche '%d'\n"
 
 #: src/builtin_bind.cpp:141
 #, c-format
@@ -220,9 +220,9 @@ msgid "%ls: No binding found for sequence '%ls'\n"
 msgstr "%ls: Aucune description trouvée pour la séquence '%ls'\n"
 
 #: src/builtin_bind.cpp:406
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid state\n"
-msgstr "%ls: Option invalide -- %lc\n"
+msgstr "%ls: État invalide\n"
 
 #: src/builtin_block.cpp:89
 #, c-format
@@ -295,9 +295,9 @@ msgid "%ls: -o requires a non-empty string\n"
 msgstr "%ls: Le nom de variable ne peut pas être une chaîne vide\n"
 
 #: src/builtin_contains.cpp:75
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Key not specified\n"
-msgstr "Utiliser une étiquette spécifiée\n"
+msgstr "%ls: Clé non spécifiée\n"
 
 #: src/builtin.cpp:261
 #, c-format
@@ -636,9 +636,9 @@ msgid "%ls: Illegal function name '%ls'\n"
 msgstr "%ls: Nom de fonction illégal '%ls'\n"
 
 #: src/builtin_functions.cpp:368
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"
-msgstr "%ls: La fonction '%ls' n'existe pas\n"
+msgstr "%ls: La fonction '%ls' existe déjà. Impossible de créer la copie '%ls'\n"
 
 #: src/builtin_history.cpp:71 src/builtin_status.cpp:117
 #, c-format
@@ -800,9 +800,9 @@ msgid "%ls: Expected an argument\n"
 msgstr "%ls: Un argument attendu\n"
 
 #: src/builtin_set.cpp:62
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n"
-msgstr "%ls: La valeur germe '%ls' n'est pas un nombre valide\n"
+msgstr "%ls: Attention : dans $%ls, l’entrée '%ls' n'est pas valide (%s)\n"
 
 #: src/builtin_set.cpp:64
 #, c-format
@@ -815,16 +815,14 @@ msgid "%ls: You provided %d indexes but %d values\n"
 msgstr ""
 
 #: src/builtin_set.cpp:66
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Erase needs a variable name\n"
-msgstr ""
-"%ls: 'Erase' requiert un nom de variable\n"
-"%ls\n"
+msgstr "%ls: 'Erase' requiert un nom de variable\n"
 
 #: src/builtin_set.cpp:67
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Array index out of bounds\n"
-msgstr "Indice de liste hors limite\n"
+msgstr "%ls: Indice de liste hors limite\n"
 
 #: src/builtin_set.cpp:69
 #, c-format
@@ -857,9 +855,9 @@ msgid "%ls: Invalid index starting at '%ls'\n"
 msgstr "%ls: Index invalide commençant à '%ls'\n"
 
 #: src/builtin_set.cpp:537
-#, fuzzy, c-format
+#, c-format
 msgid "$%ls: not set in %ls scope\n"
-msgstr "%ls: À l'extérieur de la boucle\n"
+msgstr "%ls: non paramétré dans la portée %ls\n"
 
 #: src/builtin_set.cpp:542
 msgid "exported"
@@ -875,14 +873,14 @@ msgid "$%ls: set in %ls scope, %ls, with %d elements\n"
 msgstr ""
 
 #: src/builtin_set.cpp:554
-#, fuzzy, c-format
+#, c-format
 msgid "$%ls[%d]: length=%d value=|%ls|\n"
-msgstr "%ls: Nom de variable invalide '%ls'\n"
+msgstr "$%ls[%d]: taille=%d valeur=|%ls|\n"
 
 #: src/builtin_set.cpp:578
-#, fuzzy, c-format
+#, c-format
 msgid "$%ls: invalid var name\n"
-msgstr "%ls: Option invalide -- %lc\n"
+msgstr "$%ls: nom de variable invalide\n"
 
 #: src/builtin_set.cpp:584
 #, c-format
@@ -973,34 +971,33 @@ msgid "%ls: Invalid start value '%ls'\n"
 msgstr "%ls: Index invalide commençant à '%ls'\n"
 
 #: src/builtin_string.cpp:743
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Regular expression compile error: %ls\n"
-msgstr "%s: Compilation impossible de l'expression régulière\n"
+msgstr "%ls: Erreur lors de la compilation de l’expression régulière: %ls\n"
 
 #: src/builtin_string.cpp:782
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Regular expression match error: %ls\n"
-msgstr "%s: Compilation impossible de l'expression régulière\n"
+msgstr "%ls: Erreur lors de la recherche de l’expression régulière: %ls\n"
 
 #: src/builtin_string.cpp:787
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Regular expression internal error\n"
-msgstr "%s: Compilation impossible de l'expression régulière\n"
+msgstr "%ls: Erreur interne à l'expression régulière\n"
 
 #: src/builtin_string.cpp:903
-#, fuzzy
 msgid "--entire and --index are mutually exclusive"
-msgstr "--enter et --index sont mutuellement exclusifs"
+msgstr "--entire et --index sont mutuellement exclusifs"
 
 #: src/builtin_string.cpp:1055
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Regular expression substitute error: %ls\n"
-msgstr "%s: Compilation impossible de l'expression régulière\n"
+msgstr "%ls: Erreur lors de la substitution de l’expression régulière: %ls\n"
 
 #: src/builtin_test.cpp:608
-#, fuzzy, c-format
+#, c-format
 msgid "invalid integer '%ls'"
-msgstr "%ls: id de processus invalide %ls"
+msgstr "entier invalide '%ls'"
 
 #: src/builtin_ulimit.cpp:285
 #, fuzzy, c-format
@@ -1105,9 +1102,9 @@ msgid "Unable to rename file from '%ls' to '%ls': %s"
 msgstr "Impossible de renommer le fichier '%ls' en '%ls': %s"
 
 #: src/env_universal_common.cpp:533
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to open temporary file '%ls': %s"
-msgstr "Nom de variable invalide '%ls'"
+msgstr "Impossible d’ouvrir le fichier temporaire '%ls' : %s"
 
 #: src/env_universal_common.cpp:543
 #, c-format
@@ -1119,7 +1116,7 @@ msgstr ""
 #: src/env_universal_common.cpp:595
 #, fuzzy, c-format
 msgid "Unable to open universal variable file '%ls': %s"
-msgstr "Nom de variable invalide '%ls'"
+msgstr "Impossible d’ouvrir le fichier universel des variables '%ls' : %s"
 
 #: src/env_universal_common.cpp:970
 #, fuzzy, c-format
@@ -1145,14 +1142,14 @@ msgstr ""
 "Impossible de mapper en mémoire partagée l’objet avec le chemin '%s': %s"
 
 #: src/env_universal_common.cpp:1396
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to make a pipe for universal variables using '%ls': %s"
-msgstr "Nom de variable invalide '%ls'"
+msgstr "Impossible de créer un tube pour les variables universelles à l’aide de '%ls' : %s"
 
 #: src/env_universal_common.cpp:1405
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to open a pipe for universal variables using '%ls': %s"
-msgstr "Nom de variable invalide '%ls'"
+msgstr "Impossible d’ouvrir un tube pour les variables universelles à l’aide de '%ls' : %s"
 
 #: src/event.cpp:119
 #, c-format
@@ -1343,7 +1340,8 @@ msgstr ""
 #, fuzzy, c-format
 msgid "An error occured while reading output from code block on fd %d"
 msgstr ""
-"Une erreur est survenue lors de la lecture de la sortie du bloc de code"
+"Une erreur est survenue lors de la lecture de la sortie du bloc de code sur "
+"le descripteur de fichier %d"
 
 #: src/output.cpp:559
 #, c-format
@@ -1616,14 +1614,16 @@ msgstr ""
 "Une erreur est survenue lors de la lecture de la sortie du bloc de code"
 
 #: src/proc.cpp:846
-#, fuzzy, c-format
+#, c-format
 msgid "Could not send job %d ('%ls') with pgid %d to foreground"
-msgstr "Mise en premier plan de la tâche %d ('%ls') impossible"
+msgstr ""
+"Mise en premier plan impossible pour la tâche %d ('%ls') à l’identifiant de "
+"groupe de processus %d"
 
 #: src/proc.cpp:875
 #, c-format
 msgid "Could not send job %d ('%ls') to foreground"
-msgstr "Mise en premier plan de la tâche %d ('%ls') impossible"
+msgstr "Mise en premier plan impossible pour la tâche %d ('%ls')"
 
 #: src/proc.cpp:899 src/proc.cpp:908 src/proc.cpp:922
 msgid "Could not return shell to foreground"
@@ -1677,9 +1677,8 @@ msgid "Pop null reader block"
 msgstr "Pop null reader block"
 
 #: src/reader.cpp:2160
-#, fuzzy
 msgid "There are still jobs active:\n"
-msgstr "%ls: Aucune tâche appropriée\n"
+msgstr "Des tâches sont toujours actives :\n"
 
 #: src/reader.cpp:2161
 #, fuzzy
@@ -2075,14 +2074,14 @@ msgid "%ls: Argument '%ls' is not a number\n"
 msgstr "%ls: L’argument '%ls' doit être un entier\n"
 
 #: src/builtin.h:72
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected a subcommand to follow the command\n"
-msgstr "%ls: Arguments attendus pour l’option %ls\n"
+msgstr "%ls: Sous-commande attendue pour poursuivre la commande\n"
 
 #: src/builtin.h:73
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Subcommand '%ls' is not valid\n"
-msgstr "%ls: '%ls' n'est pas un fichier\n"
+msgstr "%ls: la sous-commande '%ls' n’est pas valide\n"
 
 #: src/builtin.h:76
 #, c-format
@@ -2692,15 +2691,13 @@ msgid "%s %s: Abbreviation %s cannot have spaces in the word\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
-#, fuzzy
 msgid "%s %s: Expected one argument\\n"
-msgstr "%ls: Un argument attendu\\n"
+msgstr "%s %s: Un argument attendu\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:6
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
-#, fuzzy
 msgid "%s %s: No abbreviation named %s\\n"
-msgstr "Fonction inconnue '%ls'"
+msgstr "%s %s: Aucune abbréviation nommée %s\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:7
 #, fuzzy
@@ -2708,15 +2705,13 @@ msgid "%s %s: Requires exactly two arguments\\n"
 msgstr "%s: l'option exige un argument -- %s\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:11
-#, fuzzy
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\\n"
-msgstr "%ls: La fonction '%ls' n'existe pas\\n"
+msgstr "%s %s: L’abbréviation %s existe, impossible de renommer %s\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:12
 #: /tmp/fish/explicit/share/functions/abbr.fish:13
-#, fuzzy
 msgid "%s %s: Unexpected argument -- '%s'\\n"
-msgstr "%s: Argument inattendu -- %s\\n"
+msgstr "%s %s: Argument inattendu -- '%s'\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:1
 #, fuzzy
@@ -2750,9 +2745,8 @@ msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:9
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:10
-#, fuzzy
 msgid "%s: no such abbreviation '%s'\\n"
-msgstr "Fonction inconnue '%ls'"
+msgstr "%s: aucune abbréviation '%s'\\n"
 
 #: /tmp/fish/explicit/share/functions/alias.fish:1
 msgid "%s: Name cannot be empty\\n"
@@ -2767,9 +2761,8 @@ msgid "Too many args for cd command"
 msgstr "Trop d’arguments pour la commande cd"
 
 #: /tmp/fish/explicit/share/functions/cdh.fish:1
-#, fuzzy
 msgid "cdh: Expected zero or one arguments"
-msgstr "%s: Un argument attendu, %d obtenu(s)\\n"
+msgstr "cdh: zéro ou un argument attendu"
 
 #: /tmp/fish/explicit/share/functions/cdh.fish:2
 msgid "No previous directories to select. You have to cd at least once."
@@ -2913,7 +2906,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/isatty.fish:1
 #, fuzzy
 msgid "%s: Too many arguments"
-msgstr "%ls: Trop d'arguments"
+msgstr "%s: Trop d’arguments"
 
 #: /tmp/fish/explicit/share/functions/nextd.fish:1
 #: /tmp/fish/explicit/share/functions/prevd.fish:1
@@ -2931,7 +2924,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/psub.fish:1
 #, fuzzy
 msgid "%s: Not inside of command substitution"
-msgstr "dans la substitution de commande"
+msgstr "%s: pas dans la substitution de commande"
 
 #: /tmp/fish/explicit/share/functions/realpath.fish:1
 msgid "%s: These flags are not allowed by fish realpath: '%s'"
@@ -2990,7 +2983,7 @@ msgstr ""
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:1
 #, fuzzy
 msgid "%s: Value '%s' for flag '%s' is not an integer\\n"
-msgstr "%ls: La valeur germe '%ls' n'est pas un nombre valide\\n"
+msgstr "%s: La valeur '%s' pour le sémaphore '%s' n’est pas un entier\\n"
 
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:2
 msgid "%s: Value '%s' for flag '%s' less than min allowed of '%s'\\n"
@@ -30114,9 +30107,8 @@ msgid "Defining aliases"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:49
-#, fuzzy
 msgid "Job control"
-msgstr "Contrôle des tâches: %ls"
+msgstr "Contrôle des tâches"
 
 #: /tmp/fish/implicit/share/completions/help.fish:50
 #, fuzzy
@@ -30157,9 +30149,8 @@ msgid "Locale variables"
 msgstr "Variable de culture"
 
 #: /tmp/fish/implicit/share/completions/help.fish:58
-#, fuzzy
 msgid "Variable scope"
-msgstr "Variable: %ls"
+msgstr "Portée des variable"
 
 #: /tmp/fish/implicit/share/completions/help.fish:59
 #, fuzzy
@@ -30288,9 +30279,8 @@ msgid "Universal Variables"
 msgstr "Déparamétrer les variables"
 
 #: /tmp/fish/implicit/share/completions/help.fish:89
-#, fuzzy
 msgid "Variables"
-msgstr "Variable: %ls"
+msgstr "Variables"
 
 #: /tmp/fish/implicit/share/completions/help.fish:90
 msgid "Why fish?"

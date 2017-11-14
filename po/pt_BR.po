@@ -31,7 +31,7 @@ msgstr ""
 #: src/builtin_argparse.cpp:36
 #, fuzzy, c-format
 msgid "%ls: Invalid option spec '%ls' at char '%lc'\n"
-msgstr "%ls: Opção inválida -- %lc\n"
+msgstr "%ls: Opção inválida '%ls' at char '%lc'\n"
 
 #: src/builtin_argparse.cpp:129
 #, c-format
@@ -245,7 +245,7 @@ msgstr "%ls: Não está dentro de laço\n"
 #: src/builtin.cpp:371
 #, fuzzy, c-format
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "Do no interactive prompting\n"
+msgstr "%ls: Do no interactive prompting\n"
 
 #: src/builtin.cpp:409 src/builtin.cpp:459
 msgid "Test a condition"
@@ -712,7 +712,7 @@ msgstr ""
 #: src/builtin_realpath.cpp:44
 #, fuzzy, c-format
 msgid "%ls: Invalid path: %ls\n"
-msgstr "%ls: Estado inválido\n"
+msgstr "%ls: Estado inválido: %ls\n"
 
 #: src/builtin_return.cpp:100
 #, c-format
@@ -732,7 +732,7 @@ msgstr "%ls: Esperava um argumento\n"
 #: src/builtin_set.cpp:62
 #, fuzzy, c-format
 msgid "%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n"
-msgstr "%ls: Valor semeado “%ls” não é um número válido\n"
+msgstr "%ls: Valor semeado $%ls “%ls” não é um número válido (%s)\n"
 
 #: src/builtin_set.cpp:64
 #, c-format
@@ -749,12 +749,11 @@ msgstr ""
 msgid "%ls: Erase needs a variable name\n"
 msgstr ""
 "%ls: Erase needs a variable name\n"
-"%ls\n"
 
 #: src/builtin_set.cpp:67
 #, fuzzy, c-format
 msgid "%ls: Array index out of bounds\n"
-msgstr "Índice do array fora dos limites\n"
+msgstr "%ls: Índice do array fora dos limites\n"
 
 #: src/builtin_set.cpp:69
 #, c-format
@@ -786,7 +785,7 @@ msgstr "%ls: Invalid index starting at “%ls”\n"
 #: src/builtin_set.cpp:537
 #, fuzzy, c-format
 msgid "$%ls: not set in %ls scope\n"
-msgstr "%ls: Não está dentro de laço\n"
+msgstr "$%ls: Não está dentro de laço %ls\n"
 
 #: src/builtin_set.cpp:542
 msgid "exported"
@@ -804,12 +803,12 @@ msgstr ""
 #: src/builtin_set.cpp:554
 #, fuzzy, c-format
 msgid "$%ls[%d]: length=%d value=|%ls|\n"
-msgstr "%ls: Nome inválido de variável “%ls”\n"
+msgstr "$%ls[%d]: length=%d value=|%ls|\n"
 
 #: src/builtin_set.cpp:578
 #, fuzzy, c-format
 msgid "$%ls: invalid var name\n"
-msgstr "%ls: Estado inválido\n"
+msgstr "$%ls: Estado inválido\n"
 
 #: src/builtin_set.cpp:584
 #, c-format
@@ -903,17 +902,17 @@ msgstr "%ls: Invalid index starting at “%ls”\n"
 #: src/builtin_string.cpp:743
 #, fuzzy, c-format
 msgid "%ls: Regular expression compile error: %ls\n"
-msgstr "%s: Não é possível compilar a expressão regular %s com erro %s\n"
+msgstr "%ls: Não é possível compilar a expressão regular com erro %ls\n"
 
 #: src/builtin_string.cpp:782
 #, fuzzy, c-format
 msgid "%ls: Regular expression match error: %ls\n"
-msgstr "%s: Não é possível compilar a expressão regular %s com erro %s\n"
+msgstr "%ls: Não é possível compilar a expressão regular com erro %ls\n"
 
 #: src/builtin_string.cpp:787
 #, fuzzy, c-format
 msgid "%ls: Regular expression internal error\n"
-msgstr "%s: Não é possível compilar a expressão regular %s com erro %s\n"
+msgstr "%ls: Não é possível compilar a expressão regular com erro\n"
 
 #: src/builtin_string.cpp:903
 msgid "--entire and --index are mutually exclusive"
@@ -922,7 +921,7 @@ msgstr ""
 #: src/builtin_string.cpp:1055
 #, fuzzy, c-format
 msgid "%ls: Regular expression substitute error: %ls\n"
-msgstr "%s: Não é possível compilar a expressão regular %s com erro %s\n"
+msgstr "%ls: Não é possível compilar a expressão regular com erro %ls\n"
 
 #: src/builtin_test.cpp:608
 #, fuzzy, c-format
@@ -1007,12 +1006,12 @@ msgstr "Handle environment variables"
 #: src/env.cpp:578
 #, fuzzy, c-format
 msgid "TERM environment variable set to '%ls'."
-msgstr "Handle environment variables"
+msgstr "TERM environment variable set to '%ls'."
 
 #: src/env.cpp:579
 #, fuzzy
 msgid "Check that this terminal type is supported on this system."
-msgstr "Verifique se seu tipo de terminal, “%ls”, é suportado neste sistema"
+msgstr "Verifique se seu tipo de terminal é suportado neste sistema"
 
 #: src/env.cpp:673
 #, fuzzy
@@ -1023,7 +1022,7 @@ msgstr "Print the current working directory, shortend to fit the prompt"
 #: src/env_universal_common.cpp:461
 #, fuzzy, c-format
 msgid "Unable to write to universal variables file '%ls': %s"
-msgstr "Incapaz de expandir o nome da variável “%ls”"
+msgstr "Incapaz de expandir o nome da variável “%ls”: %s"
 
 #: src/env_universal_common.cpp:481
 #, c-format
@@ -1033,7 +1032,7 @@ msgstr ""
 #: src/env_universal_common.cpp:533
 #, fuzzy, c-format
 msgid "Unable to open temporary file '%ls': %s"
-msgstr "Incapaz de expandir o nome da variável “%ls”"
+msgstr "Incapaz de expandir o nome da variável “%ls”: %s"
 
 #: src/env_universal_common.cpp:543
 #, c-format
@@ -1043,7 +1042,7 @@ msgstr ""
 #: src/env_universal_common.cpp:595
 #, fuzzy, c-format
 msgid "Unable to open universal variable file '%ls': %s"
-msgstr "Incapaz de expandir o nome da variável “%ls”"
+msgstr "Incapaz de expandir o nome da variável “%ls”: %s"
 
 #: src/env_universal_common.cpp:970
 #, c-format
@@ -1068,12 +1067,12 @@ msgstr ""
 #: src/env_universal_common.cpp:1396
 #, fuzzy, c-format
 msgid "Unable to make a pipe for universal variables using '%ls': %s"
-msgstr "Incapaz de expandir o nome da variável “%ls”"
+msgstr "Incapaz de expandir o nome da variável “%ls”: %s"
 
 #: src/env_universal_common.cpp:1405
 #, fuzzy, c-format
 msgid "Unable to open a pipe for universal variables using '%ls': %s"
-msgstr "Incapaz de expandir o nome da variável “%ls”"
+msgstr "Incapaz de expandir o nome da variável “%ls”: %s"
 
 #: src/event.cpp:119
 #, fuzzy, c-format
@@ -1113,7 +1112,7 @@ msgstr "handler for generic event “%ls”"
 #: src/event.cpp:157
 #, fuzzy, c-format
 msgid "Unknown event type '0x%x'"
-msgstr "Unknown event type"
+msgstr "Unknown event type '0x%x'"
 
 #: src/event.cpp:403
 #, fuzzy
@@ -1229,7 +1228,7 @@ msgstr ""
 #: src/fish_indent.cpp:469
 #, fuzzy
 msgid "Too many arguments\n"
-msgstr "%s: Too many arguments\n"
+msgstr "Too many arguments\n"
 
 #: src/fish_key_reader.cpp:241
 #, c-format
@@ -1260,7 +1259,7 @@ msgstr ""
 #: src/io.cpp:57
 #, fuzzy, c-format
 msgid "An error occured while reading output from code block on fd %d"
-msgstr "Ocorreu um erro ao ler saída de bloco de código"
+msgstr "Ocorreu um erro ao ler saída de bloco de código %d"
 
 #: src/output.cpp:559
 #, c-format
@@ -1466,7 +1465,7 @@ msgstr "Erro ao procurar por comando “%ls”"
 #: src/path.cpp:276
 #, fuzzy, c-format
 msgid "Unable to locate the %ls directory."
-msgstr "Don't remove the test directory"
+msgstr "Unable to locate the %ls directory."
 
 #: src/path.cpp:277
 #, c-format
@@ -1518,7 +1517,7 @@ msgstr "Ocorreu um erro ao ler saída de bloco de código"
 #: src/proc.cpp:846
 #, fuzzy, c-format
 msgid "Could not send job %d ('%ls') with pgid %d to foreground"
-msgstr "Não foi possível enviar tarefa %d (“%ls”) para primeiro plano"
+msgstr "Não foi possível enviar tarefa %d (“%ls”) para primeiro plano pgid %d"
 
 #: src/proc.cpp:875
 #, c-format
@@ -1579,7 +1578,7 @@ msgstr ""
 #: src/reader.cpp:2160
 #, fuzzy
 msgid "There are still jobs active:\n"
-msgstr "%ls: Não há tarefas adequadas\n"
+msgstr "Não há tarefas adequadas\n"
 
 #: src/reader.cpp:2161
 #, fuzzy
@@ -1942,22 +1941,22 @@ msgstr "%ls: Opção desconhecida “%ls”\n"
 #: src/builtin.h:54
 #, fuzzy, c-format
 msgid "%ls: Expected %d args, got %d\n"
-msgstr "%ls: Esperava um argumento, obteve %d\n"
+msgstr "%ls: Esperava %d argumento, obteve %d\n"
 
 #: src/builtin.h:55
 #, fuzzy, c-format
 msgid "%ls %ls: Expected %d args, got %d\n"
-msgstr "%ls: Esperava um argumento, obteve %d\n"
+msgstr "%ls %ls: Esperava %d argumento, obteve %d\n"
 
 #: src/builtin.h:56
 #, fuzzy, c-format
 msgid "%ls: Expected at least %d args, got only %d\n"
-msgstr "%ls: Esperava um argumento, obteve %d\n"
+msgstr "%ls: Esperava %d argumento, obteve %d\n"
 
 #: src/builtin.h:57
 #, fuzzy, c-format
 msgid "%ls: Expected at most %d args, got %d\n"
-msgstr "%ls: Esperava um argumento, obteve %d\n"
+msgstr "%ls: Esperava %d argumento, obteve %d\n"
 
 #: src/builtin.h:60
 #, fuzzy, c-format
@@ -1982,7 +1981,7 @@ msgstr "%ls: Argumento “%ls” não é número\n"
 #: src/builtin.h:72
 #, fuzzy, c-format
 msgid "%ls: Expected a subcommand to follow the command\n"
-msgstr "%ls: Esperava um argumento, obteve %d\n"
+msgstr "%ls: Esperava um argumento, obteve\n"
 
 #: src/builtin.h:73
 #, fuzzy, c-format
@@ -2635,36 +2634,35 @@ msgstr "%s: Opção requer argumento -- %s\\n"
 #: /tmp/fish/explicit/share/functions/abbr.fish:5
 #: /tmp/fish/explicit/share/functions/abbr.fish:8
 #: /tmp/fish/explicit/share/functions/abbr.fish:9
-#, fuzzy
 msgid "%s %s: Abbreviation %s cannot have spaces in the word\\n"
-msgstr "Create signature caches in the keyring"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
 #, fuzzy
 msgid "%s %s: Expected one argument\\n"
-msgstr "%ls: Esperava um argumento\\n"
+msgstr "%s %s: Esperava um argumento\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:6
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
 #, fuzzy
 msgid "%s %s: No abbreviation named %s\\n"
-msgstr "%s: Unknown option “%s”\\n"
+msgstr "%s %s: Unknown option “%s”\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:7
 #, fuzzy
 msgid "%s %s: Requires exactly two arguments\\n"
-msgstr "%s: Opção requer argumento -- %s\\n"
+msgstr "%s %s: Opção requer argumento\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:11
 #, fuzzy
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\\n"
-msgstr "%ls: Função “%ls” já existe. Não é possivel criar cópia “%ls”\\n"
+msgstr "%s %s: Função “%s” já existe. Não é possivel criar cópia “%s”\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:12
 #: /tmp/fish/explicit/share/functions/abbr.fish:13
 #, fuzzy
 msgid "%s %s: Unexpected argument -- '%s'\\n"
-msgstr "%s: Esperava argumento -- %s\\n"
+msgstr "%s %s: Esperava argumento -- '%s'\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:1
 #, fuzzy
@@ -2687,9 +2685,8 @@ msgstr "%s: Esperava argumento -- %s\\n"
 
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:5
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:8
-#, fuzzy
 msgid "%s: abbreviation cannot have spaces in the key\\n"
-msgstr "Create signature caches in the keyring"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr_old.fish:6
 msgid "%s: abbreviation must have a value\\n"
@@ -2719,9 +2716,8 @@ msgid "Too many args for cd command"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/cdh.fish:1
-#, fuzzy
 msgid "cdh: Expected zero or one arguments"
-msgstr "%s: Expected 1, 2 or 3 arguments, got %d\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/cdh.fish:2
 msgid "No previous directories to select. You have to cd at least once."
@@ -2762,9 +2758,8 @@ msgstr "Treat absent files as empty"
 #: /tmp/fish/explicit/share/functions/__fish_complete_tar.fish:3
 #: /tmp/fish/explicit/share/functions/__fish_complete_tar.fish:4
 #: /tmp/fish/explicit/share/functions/__fish_complete_unrar.fish:1
-#, fuzzy
 msgid "%s\\tArchived file\\n"
-msgstr "Archive file"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/__fish_config_interactive.fish:1
 msgid "Welcome to fish, the friendly interactive shell"
@@ -2774,12 +2769,12 @@ msgstr "Bem-vindo ao fish, o friendly interactive shell"
 #: /tmp/fish/explicit/share/functions/fish_md5.fish:2
 #, fuzzy
 msgid "%s: Too many arguments %s\\n"
-msgstr "%s: Too many arguments\\n"
+msgstr "%s: Too many arguments %s\\n"
 
 #: /tmp/fish/explicit/share/functions/__fish_move_last.fish:1
 #, fuzzy
 msgid "Hit end of history…\\n"
-msgstr "Hit end of history...\\n"
+msgstr "Hit end of history…\\n"
 
 #: /tmp/fish/explicit/share/functions/fish_opt.fish:1
 msgid "%s: The --short flag is required and must be a single character\\n"
@@ -2892,7 +2887,7 @@ msgstr "%s: Directory stack is empty..."
 #: /tmp/fish/explicit/share/functions/psub.fish:1
 #, fuzzy
 msgid "%s: Not inside of command substitution"
-msgstr "na substituição de comando"
+msgstr "%s: na substituição de comando"
 
 #: /tmp/fish/explicit/share/functions/realpath.fish:1
 msgid "%s: These flags are not allowed by fish realpath: '%s'"
@@ -2959,7 +2954,7 @@ msgstr "%s: Invalid mask “%s”\\n"
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:1
 #, fuzzy
 msgid "%s: Value '%s' for flag '%s' is not an integer\\n"
-msgstr "%s: “%s” não é um número\\n"
+msgstr "%s: “%s” não é um número %s\\n"
 
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:2
 msgid "%s: Value '%s' for flag '%s' less than min allowed of '%s'\\n"
@@ -2979,8 +2974,8 @@ msgid ""
 "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element "
 "of %s\\n"
 msgstr ""
-"%s: %s is an array variable. Use %svared%s %s[n] to edit the n:th element of "
-"%s\\n"
+"%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element "
+"of %s\\n"
 
 #: /tmp/fish/explicit/share/functions/vared.fish:3
 #, fuzzy
@@ -7673,9 +7668,8 @@ msgid "Suppress warning about uncommitted changes"
 msgstr "Suppress the warning about “using insecure memory”"
 
 #: /tmp/fish/implicit/share/completions/arc.fish:152
-#, fuzzy
 msgid "Read revision information from file"
-msgstr "Error while reading input information from file “%ls”"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:153
 #, fuzzy
@@ -11767,9 +11761,8 @@ msgid "Find disk used"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:49
-#, fuzzy
 msgid "Get all PIDs for a process name"
-msgstr "exit handler for process %d"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:50
 msgid "Find the trash size"
@@ -18068,9 +18061,8 @@ msgid "enables a keepalive every N seconds"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fab.fish:27
-#, fuzzy
 msgid "print line-by-line instead of byte-by-byte"
-msgstr "Could not convert input. Read %d bytes."
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fab.fish:28
 msgid "make M attempts to connect before giving up"
@@ -18990,9 +18982,8 @@ msgid "Run in login mode"
 msgstr "Run in login mode"
 
 #: /tmp/fish/implicit/share/completions/fish.fish:7
-#, fuzzy
 msgid "Output profiling information to specified file"
-msgstr "Could not write profiling information to file “%s”"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fish.fish:8
 #, fuzzy
@@ -21722,10 +21713,8 @@ msgid ""
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gcc.fish:175
-#, fuzzy
 msgid "Warn if the compiler detects that code will never be executed"
 msgstr ""
-"Warning: No match for wildcard “%ls”. The command will not be executed."
 
 #: /tmp/fish/implicit/share/completions/gcc.fish:176
 msgid "Warn if a function can not be inlined and it was declared as inline"
@@ -31639,7 +31628,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/help.fish:49
 #, fuzzy
 msgid "Job control"
-msgstr "Controle de tarefa: %ls"
+msgstr "Controle de tarefa"
 
 #: /tmp/fish/implicit/share/completions/help.fish:50
 #, fuzzy
@@ -31683,7 +31672,7 @@ msgstr "Erase variable"
 #: /tmp/fish/implicit/share/completions/help.fish:58
 #, fuzzy
 msgid "Variable scope"
-msgstr "Variável: %ls"
+msgstr "Variável"
 
 #: /tmp/fish/implicit/share/completions/help.fish:59
 #, fuzzy
@@ -31815,7 +31804,7 @@ msgstr "Erase variable"
 #: /tmp/fish/implicit/share/completions/help.fish:89
 #, fuzzy
 msgid "Variables"
-msgstr "Variável: %ls"
+msgstr "Variável"
 
 #: /tmp/fish/implicit/share/completions/help.fish:90
 msgid "Why fish?"
@@ -32016,9 +32005,8 @@ msgid " lock an organization app to restrict access"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/heroku.fish:46
-#, fuzzy
 msgid " open the app in a web browser"
-msgstr "%s: Could not find a web browser.\\n"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/heroku.fish:47
 msgid " rename the app (apps:rename newname --app oldname)"
@@ -32878,7 +32866,7 @@ msgstr "Use specified string as comment string"
 #: /tmp/fish/implicit/share/completions/hg.fish:163
 #, fuzzy
 msgid "end fields with NUL"
-msgstr "tamanho de campo inválido: %ls"
+msgstr "tamanho de campo inválido"
 
 #: /tmp/fish/implicit/share/completions/hg.fish:164
 #, fuzzy
@@ -34350,7 +34338,7 @@ msgstr "Force name/rev association"
 #: /tmp/fish/implicit/share/completions/iptables.fish:19
 #, fuzzy
 msgid "Destination specification"
-msgstr "%.*ls: especificação de conversão inválida"
+msgstr "especificação de conversão inválida"
 
 #: /tmp/fish/implicit/share/completions/iptables.fish:21
 msgid "Interface via which a packet was received"
@@ -38754,7 +38742,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/minikube.fish:7
 #, fuzzy
 msgid "Log level for logs"
-msgstr "Diretório de usuário para %ls"
+msgstr "Diretório de usuário para"
 
 #: /tmp/fish/implicit/share/completions/minikube.fish:8
 #, fuzzy
@@ -39625,9 +39613,8 @@ msgid "watch files for changes"
 msgstr "Patch local changes"
 
 #: /tmp/fish/implicit/share/completions/mocha.fish:21
-#, fuzzy
 msgid "check for global variable leaks"
-msgstr "handler for variable “%ls”"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mocha.fish:22
 #, fuzzy
@@ -39697,9 +39684,8 @@ msgid "enable perf linux profiler (basic support)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mocha.fish:37
-#, fuzzy
 msgid "log statistical profiling information"
-msgstr "Could not write profiling information to file “%s”"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mocha.fish:38
 msgid "Time events including external callbacks"
@@ -48531,9 +48517,8 @@ msgid "Execute command"
 msgstr "Execute command"
 
 #: /tmp/fish/implicit/share/completions/perl.fish:19
-#, fuzzy
 msgid "Execute command, enable optional features"
-msgstr "Expected a command name, got token of type “%ls”"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/perl.fish:20
 #, fuzzy
@@ -49049,7 +49034,7 @@ msgstr "Arquivo de configuração"
 #: /tmp/fish/implicit/share/completions/pkg.fish:10
 #, fuzzy
 msgid "Set repository configuration directory"
-msgstr "%ls: Não foi possível encontrar o diretório home"
+msgstr "Não foi possível encontrar o diretório home"
 
 #: /tmp/fish/implicit/share/completions/pkg.fish:11
 msgid "Use IPv4"
@@ -50312,9 +50297,8 @@ msgid "Set total number of bytes to be transfered"
 msgstr "Set number of retries to number"
 
 #: /tmp/fish/implicit/share/completions/pv.fish:16
-#, fuzzy
 msgid "Count lines instead of bytes"
-msgstr "Could not convert input. Read %d bytes."
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pv.fish:17
 #, fuzzy
@@ -53867,9 +53851,8 @@ msgid "List aliases"
 msgstr "Imprimir todos os nomes"
 
 #: /tmp/fish/implicit/share/completions/snap.fish:11
-#, fuzzy
 msgid "Check that no assertion type is used yet"
-msgstr "Verifique se seu tipo de terminal, “%ls”, é suportado neste sistema"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/snap.fish:12
 msgid "Check if certain assertion type is used"

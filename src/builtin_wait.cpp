@@ -13,9 +13,8 @@
 static int retval;
 
 static bool all_jobs_finished() {
-    job_t *j;
     job_iterator_t jobs;
-    while ((j = jobs.next())) {
+    while (job_t *j = jobs.next()) {
         // If any job is not completed, return false.
         // If there are stopped jobs, they are ignored.
         if ((j->flags & JOB_CONSTRUCTED) && !job_is_completed(j) && !job_is_stopped(j)) {
@@ -26,7 +25,6 @@ static bool all_jobs_finished() {
 }
 
 static bool any_jobs_finished(size_t jobs_len) {
-    job_t *j;
     job_iterator_t jobs;
     bool no_jobs_running = true;
 
@@ -34,7 +32,7 @@ static bool any_jobs_finished(size_t jobs_len) {
     if (jobs_len != jobs.count()) {
         return true;
     }
-    while ((j = jobs.next())) {
+    while (job_t *j = jobs.next()) {
         // If any job is completed, return true.
         if ((j->flags & JOB_CONSTRUCTED) && (job_is_completed(j) || job_is_stopped(j))) {
             return true;
@@ -64,9 +62,8 @@ static void wait_for_backgrounds(bool any_flag) {
 }
 
 static bool all_specified_jobs_finished(const std::vector<int> &wjobs_pid) {
-    job_t *j;
     for (auto pid : wjobs_pid) {
-        if ((j = job_get_from_pid(pid))) {
+        if (job_t *j = job_get_from_pid(pid)) {
             // If any specified job is not completed, return false.
             // If there are stopped jobs, they are ignored.
             if ((j->flags & JOB_CONSTRUCTED) && !job_is_completed(j) && !job_is_stopped(j)) {

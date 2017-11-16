@@ -20,3 +20,20 @@ IF(GETTEXT_FOUND)
                              PO_FILES po/${lang}.po)
   ENDFOREACH()
 ENDIF()
+
+
+# libintl.h can be compiled into the stdlib on some GLibC systems
+IF(Intl_FOUND AND Intl_LIBRARIES)
+  SET(LIBINTL_INCLUDE "#include <libintl.h>")
+  SET(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} intl)
+ENDIF()
+CHECK_CXX_SOURCE_COMPILES("
+${LIBINTL_INCLUDE}
+#include <stdlib.h>
+int main () {
+    extern int  _nl_msg_cat_cntr;
+    int tmp = _nl_msg_cat_cntr;
+    exit(tmp);
+}
+"
+    HAVE__NL_MSG_CAT_CNTR)

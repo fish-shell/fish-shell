@@ -34,9 +34,6 @@
 /* Define to 1 if you have the `killpg' function. */
 #cmakedefine HAVE_KILLPG 1
 
-/* Define to 1 if you have the <libintl.h> header file. */
-#cmakedefine HAVE_LIBINTL_H 1
-
 /* Define to 1 if you have the `lrand48_r' function. */
 #cmakedefine HAVE_LRAND48_R 1
 

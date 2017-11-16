@@ -513,12 +513,12 @@ void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status) {
     event.arguments.resize(0);
 }
 
-int job_reap(bool allow_interactive) {
+static int process_clean_after_marking(bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
     job_t *jnext;
     int found = 0;
 
-    // job_reap may fire an event handler, we do not want to call ourselves recursively (to avoid
+    // this function may fire an event handler, we do not want to call ourselves recursively (to avoid
     // infinite recursion).
     static bool locked = false;
     if (locked) {
@@ -530,10 +530,6 @@ int job_reap(bool allow_interactive) {
     // don't try to print in that case (#3222)
     const bool interactive = allow_interactive && cur_term != NULL;
 
-    process_mark_finished_children(false);
-
-    // Preserve the exit status.
-    const int saved_status = proc_get_last_status();
 
     job_iterator_t jobs;
     const size_t job_count = jobs.count();
@@ -637,10 +633,24 @@ int job_reap(bool allow_interactive) {
 
     if (found) fflush(stdout);
 
+    locked = false;
+
+    return found;
+}
+
+int job_reap(bool allow_interactive) {
+    ASSERT_IS_MAIN_THREAD();
+    int found = 0;
+
+    process_mark_finished_children(false);
+
+    // Preserve the exit status.
+    const int saved_status = proc_get_last_status();
+
+    found = process_clean_after_marking(allow_interactive);
+
     // Restore the exit status.
     proc_set_last_status(saved_status);
-
-    locked = false;
 
     return found;
 }
@@ -1094,4 +1104,13 @@ void proc_pop_interactive() {
     is_interactive = interactive_stack.back();
     interactive_stack.pop_back();
     if (is_interactive != old) signal_set_handlers();
+}
+
+pid_t proc_wait_any() {
+    int pid_status;
+    pid_t pid = waitpid(-1, &pid_status, WUNTRACED);
+    if (pid == -1) return -1;
+    handle_child_status(pid, pid_status);
+    process_clean_after_marking(is_interactive);
+    return pid;
 }

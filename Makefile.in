@@ -117,7 +117,7 @@ FISH_OBJS := obj/autoload.o obj/builtin.o obj/builtin_bg.o obj/builtin_bind.o ob
 	obj/builtin_random.o obj/builtin_read.o obj/builtin_realpath.o \
 	obj/builtin_return.o obj/builtin_set.o obj/builtin_set_color.o \
 	obj/builtin_source.o obj/builtin_status.o obj/builtin_string.o \
-	obj/builtin_test.o obj/builtin_ulimit.o obj/color.o obj/common.o \
+	obj/builtin_test.o obj/builtin_ulimit.o obj/builtin_wait.o obj/color.o obj/common.o \
 	obj/complete.o obj/env.o obj/env_universal_common.o obj/event.o obj/exec.o \
 	obj/expand.o obj/fallback.o obj/fish_version.o obj/function.o obj/highlight.o \
 	obj/history.o obj/input.o obj/input_common.o obj/intern.o obj/io.o \

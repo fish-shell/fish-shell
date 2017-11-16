@@ -59,6 +59,7 @@ SET(FBVF "FISH-BUILD-VERSION-FILE")
 
 # Set up config.h
 INCLUDE(cmake/ConfigureChecks.cmake)
+INCLUDE(cmake/gettext.cmake)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config_cmake.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})

@@ -84,4 +84,3 @@ ENDIF()
 CHECK_TYPE_SIZE("wchar_t[8]" WCHAR_T_BITS LANGUAGE CXX)
 
 # Not checked yet: non-varargs tparm ("Solaris tparm kludge")
-# Not checked yet: gettext

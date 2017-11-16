@@ -65,7 +65,6 @@ namespace mu
     m_vErrMsg.resize(ecCOUNT);
 
     m_vErrMsg[ecUNASSIGNABLE_TOKEN]     = _T("Unexpected token \"$TOK$\" found at position $POS$.");
-    m_vErrMsg[ecINTERNAL_ERROR]         = _T("Internal error");
     m_vErrMsg[ecINVALID_NAME]           = _T("Invalid function-, variable- or constant name: \"$TOK$\".");
     m_vErrMsg[ecINVALID_BINOP_IDENT]    = _T("Invalid binary operator identifier: \"$TOK$\".");
     m_vErrMsg[ecINVALID_INFIX_IDENT]    = _T("Invalid infix operator identifier: \"$TOK$\".");

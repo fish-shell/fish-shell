@@ -460,9 +460,8 @@ namespace mu
   const SToken* ParserByteCode::GetBase() const
   {
     if (m_vRPN.size()==0)
-      throw ParserError(ecINTERNAL_ERROR);
-    else
-      return &m_vRPN[0];
+      assert(0 && "muParser internal error");
+    return &m_vRPN[0];
   }
 
   //---------------------------------------------------------------------------

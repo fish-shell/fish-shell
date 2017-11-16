@@ -52,7 +52,6 @@ if (pTag->errHandler)                                  \
         catch (...)                                               \
         {                                                        \
         ParserTag *pTag = static_cast<ParserTag*>(a_hParser);  \
-        pTag->exc = muError_t(mu::ecINTERNAL_ERROR);           \
         pTag->bError = true;                                   \
 if (pTag->errHandler)                                  \
     (pTag->errHandler)(a_hParser);                       \

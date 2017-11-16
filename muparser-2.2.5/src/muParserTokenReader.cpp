@@ -462,7 +462,7 @@ namespace mu
               break;
 
 		    default:      // The operator is listed in c_DefaultOprt, but not here. This is a bad thing...
-              Error(ecINTERNAL_ERROR);
+            assert(0 && "missing operator in muParser");
         } // switch operator id
 
         m_iPos += (int)len;
@@ -825,7 +825,7 @@ namespace mu
 
     m_iPos = iEnd;
     if (!m_pParser->m_vStringVarBuf.size())
-      Error(ecINTERNAL_ERROR);
+      assert(0 && "muParser internal error");
 
     a_Tok.SetString(m_pParser->m_vStringVarBuf[item->second], m_pParser->m_vStringVarBuf.size() );
 

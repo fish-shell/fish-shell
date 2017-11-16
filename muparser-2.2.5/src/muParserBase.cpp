@@ -650,7 +650,7 @@ namespace mu
     // user defined binary operators
     case cmOPRT_INFIX: 
     case cmOPRT_BIN: return a_Tok.GetPri();
-    default:  Error(ecINTERNAL_ERROR, 5);
+    default:  assert(0 && "Unexpected operator in muParser");
               return 999;
     }  
   }
@@ -766,7 +766,7 @@ namespace mu
       case 0: valTok.SetVal(1); a_vArg[0].GetAsString();  break;
       case 1: valTok.SetVal(1); a_vArg[1].GetAsString();  a_vArg[0].GetVal();  break;
       case 2: valTok.SetVal(1); a_vArg[2].GetAsString();  a_vArg[1].GetVal();  a_vArg[0].GetVal();  break;
-      default: Error(ecINTERNAL_ERROR);
+      default: assert(0 && "Unexpected arg count");
       }
     }
     catch(ParserError& )
@@ -814,7 +814,7 @@ namespace mu
     int iArgNumerical = iArgCount - ((funTok.GetType()==tpSTR) ? 1 : 0);
 
     if (funTok.GetCode()==cmFUNC_STR && iArgCount-iArgNumerical>1)
-      Error(ecINTERNAL_ERROR);
+      assert(0 && "muParser internal error");
 
     if (funTok.GetArgCount()>=0 && iArgCount>iArgRequired) 
       Error(ecTOO_MANY_PARAMS, m_pTokenReader->GetPos()-1, funTok.GetAsString());
@@ -979,7 +979,7 @@ namespace mu
           break;
 
       default:
-          Error(ecINTERNAL_ERROR);
+          assert(0 && "muParser internal error");
       }
     }
   }
@@ -1110,7 +1110,7 @@ namespace mu
               case 10:sidx -= 9; Stack[sidx] = (*(fun_type10)pTok->Fun.ptr)(Stack[sidx], Stack[sidx+1], Stack[sidx+2], Stack[sidx+3], Stack[sidx+4], Stack[sidx+5], Stack[sidx+6], Stack[sidx+7], Stack[sidx+8], Stack[sidx+9]); continue;
               default:
                 if (iArgCount>0) // function with variable arguments store the number as a negative value
-                  Error(ecINTERNAL_ERROR, 1);
+                  assert(0 && "muParser internal error");
 
                 sidx -= -iArgCount - 1;
                 Stack[sidx] =(*(multfun_type)pTok->Fun.ptr)(&Stack[sidx], -iArgCount);
@@ -1156,13 +1156,13 @@ namespace mu
                 case 9: sidx -= 8; Stack[sidx] = (*(bulkfun_type9 )pTok->Fun.ptr)(nOffset, nThreadID, Stack[sidx], Stack[sidx+1], Stack[sidx+2], Stack[sidx+3], Stack[sidx+4], Stack[sidx+5], Stack[sidx+6], Stack[sidx+7], Stack[sidx+8]); continue;
                 case 10:sidx -= 9; Stack[sidx] = (*(bulkfun_type10)pTok->Fun.ptr)(nOffset, nThreadID, Stack[sidx], Stack[sidx+1], Stack[sidx+2], Stack[sidx+3], Stack[sidx+4], Stack[sidx+5], Stack[sidx+6], Stack[sidx+7], Stack[sidx+8], Stack[sidx+9]); continue;
                 default:
-                  Error(ecINTERNAL_ERROR, 2);
+                  assert(0 && "muParser internal error");
                   continue;
                 }
               }
 
         default:
-              Error(ecINTERNAL_ERROR, 3);
+              assert(0 && "muParser internal error");
               return 0;
       } // switch CmdCode
     } // for all bytecode tokens
@@ -1363,7 +1363,7 @@ namespace mu
                 ApplyFunc(stOpt, stVal, 1);  // this is the postfix operator
                 break;
 
-        default:  Error(ecINTERNAL_ERROR, 3);
+        default:  assert(0 && "muParser internal error");
       } // end of switch operator-token
 
       opta = opt;
@@ -1391,7 +1391,7 @@ namespace mu
     MUP_ASSERT(stArgCount.size()==1);
     m_nFinalResultIdx = stArgCount.top();
     if (m_nFinalResultIdx==0)
-      Error(ecINTERNAL_ERROR, 9);
+      assert(0 && "muParser internal error");
 
     if (stVal.size()==0)
       Error(ecEMPTY_EXPRESSION);

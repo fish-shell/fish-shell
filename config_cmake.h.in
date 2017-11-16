@@ -139,9 +139,6 @@
 /* Define to 1 if tparm accepts a fixed amount of paramters. */
 // #cmakedefine TPARM_SOLARIS_KLUDGE 1
 
-/* Perform string translations with gettext */
-// #cmakedefine USE_GETTEXT 1
-
 /* The size of wchar_t in bits. */
 #define WCHAR_T_BITS ${WCHAR_T_BITS}
 

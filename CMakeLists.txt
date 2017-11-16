@@ -28,17 +28,17 @@ SET(FISH_SRCS
     src/builtin_random.cpp src/builtin_read.cpp src/builtin_realpath.cpp
     src/builtin_return.cpp src/builtin_set.cpp src/builtin_set_color.cpp
     src/builtin_source.cpp src/builtin_status.cpp src/builtin_string.cpp
-    src/builtin_test.cpp src/builtin_ulimit.cpp src/color.cpp src/common.cpp
-    src/complete.cpp src/env.cpp src/env_universal_common.cpp src/event.cpp
-    src/exec.cpp src/expand.cpp src/fallback.cpp src/fish_version.cpp
-    src/function.cpp src/highlight.cpp src/history.cpp src/input.cpp
-    src/input_common.cpp src/intern.cpp src/io.cpp src/iothread.cpp
-    src/kill.cpp src/output.cpp src/pager.cpp src/parse_execution.cpp
-    src/parse_productions.cpp src/parse_tree.cpp src/parse_util.cpp
-    src/parser.cpp src/parser_keywords.cpp src/path.cpp src/postfork.cpp
-    src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp src/signal.cpp
-    src/tokenizer.cpp src/utf8.cpp src/util.cpp src/wcstringutil.cpp
-    src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
+    src/builtin_test.cpp src/builtin_ulimit.cpp src/builtin_wait.cpp
+    src/color.cpp src/common.cpp src/complete.cpp src/env.cpp
+    src/env_universal_common.cpp src/event.cpp src/exec.cpp src/expand.cpp
+    src/fallback.cpp src/fish_version.cpp src/function.cpp src/highlight.cpp
+    src/history.cpp src/input.cpp src/input_common.cpp src/intern.cpp src/io.cpp
+    src/iothread.cpp src/kill.cpp src/output.cpp src/pager.cpp
+    src/parse_execution.cpp src/parse_productions.cpp src/parse_tree.cpp
+    src/parse_util.cpp src/parser.cpp src/parser_keywords.cpp src/path.cpp
+    src/postfork.cpp src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp
+    src/signal.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
+    src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
 )
 
 # Header files are just globbed.

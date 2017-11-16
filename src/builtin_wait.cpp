@@ -63,7 +63,7 @@ static void wait_for_backgrounds(bool any_flag) {
     }
 }
 
-static bool all_specified_jobs_finished(std::vector<int> wjobs_pid) {
+static bool all_specified_jobs_finished(const std::vector<int> &wjobs_pid) {
     job_t *j;
     for (auto pid : wjobs_pid) {
         if ((j = job_get_from_pid(pid))) {
@@ -77,7 +77,7 @@ static bool all_specified_jobs_finished(std::vector<int> wjobs_pid) {
     return true;
 }
 
-static bool any_specified_jobs_finished(std::vector<int> wjobs_pid) {
+static bool any_specified_jobs_finished(const std::vector<int> &wjobs_pid) {
     job_t *j;
     for (auto pid : wjobs_pid) {
         if ((j = job_get_from_pid(pid))) {
@@ -93,7 +93,7 @@ static bool any_specified_jobs_finished(std::vector<int> wjobs_pid) {
     return false;
 }
 
-static void wait_for_backgrounds_specified(std::vector<int> wjobs_pid, bool any_flag) {
+static void wait_for_backgrounds_specified(const std::vector<int> &wjobs_pid, bool any_flag) {
     while ((!any_flag && !all_specified_jobs_finished(wjobs_pid)) ||
            (any_flag && !any_specified_jobs_finished(wjobs_pid))) {
         pid_t pid = proc_wait_any();

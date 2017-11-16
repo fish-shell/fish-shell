@@ -58,7 +58,7 @@
 /// The special cased translation macro for completions. The empty string needs to be special cased,
 /// since it can occur, and should not be translated. (Gettext returns the version information as
 /// the response).
-#ifdef USE_GETTEXT
+#ifdef HAVE_GETTEXT
 static const wchar_t *C_(const wcstring &s) {
     return s.empty() ? L"" : wgettext(s.c_str()).c_str();
 }

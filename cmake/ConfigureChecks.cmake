@@ -82,4 +82,33 @@ IF(EXISTS "/proc/self/stat")
 ENDIF()
 CHECK_TYPE_SIZE("wchar_t[8]" WCHAR_T_BITS LANGUAGE CXX)
 
-# Not checked yet: non-varargs tparm ("Solaris tparm kludge")
+# Solaris, NetBSD and X/Open-conforming systems have a fixed-args tparm
+SET(TPARM_INCLUDES)
+IF(HAVE_NCURSES_H)
+  SET(TPARM_INCLUDES "${TPARM_INCLUDES}#include <ncurses.h>\n")
+ELSEIF(HAVE_NCURSES_CURSES_H)
+  SET(TPARM_INCLUDES "${TPARM_INCLUDES}#include <ncurses/curses.h>\n")
+ELSE()
+  SET(TPARM_INCLUDES "${TPARM_INCLUDES}#include <curses.h>\n")
+ENDIF()
+
+IF(HAVE_TERM_H)
+  SET(TPARM_INCLUDES "${TPARM_INCLUDES}#include <term.h>\n")
+ELSEIF(HAVE_NCURSES_TERM_H)
+  SET(TPARM_INCLUDES "${TPARM_INCLUDES}#include <ncurses/term.h>\n")
+ENDIF()
+
+SET(CMAKE_REQUIRED_LIBRARIES ${CURSES_LIBRARY})
+CHECK_CXX_SOURCE_COMPILES("
+${TPARM_INCLUDES}
+
+int main () {
+  tparm( \"\" );
+}
+"
+  TPARM_TAKES_VARARGS
+)
+SET(CMAKE_REQUIRED_LIBRARIES)
+IF(NOT TPARM_TAKES_VARARGS)
+  SET(TPARM_SOLARIS_KLUDGE 1)
+ENDIF()

@@ -38,7 +38,6 @@
 #include "muParserBytecode.h"
 #include "muParserDef.h"
 #include "muParserError.h"
-#include "muParserStack.h"
 #include "muParserTokenReader.h"
 
 namespace mu {
@@ -286,6 +285,6 @@ class ParserBase {
         m_vStackBuffer;  ///< This is merely a buffer used for the stack in the cmd parsing routine
     mutable int m_nFinalResultIdx;
 };
-} // namespace mu
+}  // namespace mu
 
 #endif

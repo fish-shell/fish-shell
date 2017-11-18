@@ -64,7 +64,6 @@ MUPARSER_LIB_HEADERS =  \
 	include/muParserError.h \
 	include/muParserFixes.h \
 	include/muParserInt.h \
-	include/muParserStack.h \
 	include/muParserTemplateMagic.h \
 	include/muParserTest.h \
 	include/muParserToken.h \
@@ -91,7 +90,6 @@ MUPARSER_DLL_HEADERS =  \
 	include/muParserError.h \
 	include/muParserFixes.h \
 	include/muParserInt.h \
-	include/muParserStack.h \
 	include/muParserTemplateMagic.h \
 	include/muParserTest.h \
 	include/muParserToken.h \

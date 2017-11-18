@@ -29,6 +29,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "muParserFixes.h"
 
@@ -120,6 +121,22 @@ inline std::istream& console_in() { return std::cin; }
 
 #endif
 
+/// Our stack type.
+template <typename T>
+class ParserStack : public std::vector<T> {
+   public:
+    // Convenience to get the top value and pop it.
+    T pop() {
+        T val = std::move(this->back());
+        this->pop_back();
+        return val;
+    }
+
+    T& top() { return this->back(); }
+
+    void push(T val) { this->push_back(std::move(val)); }
+};
+
 //------------------------------------------------------------------------------
 /** \brief Bytecode values.
 
@@ -163,7 +180,7 @@ enum ECmdCode {
     cmFUNC,          ///< Code for a generic function item
     cmFUNC_STR,      ///< Code for a function with a string parameter
     cmFUNC_BULK,     ///< Special callbacks for Bulk mode with an additional parameter for the bulk
-                     ///index
+                     /// index
     cmSTRING,        ///< Code for a string token
     cmOPRT_BIN,      ///< user defined binary operator
     cmOPRT_POSTFIX,  ///< code for postfix operators

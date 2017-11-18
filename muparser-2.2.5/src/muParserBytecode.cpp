@@ -34,7 +34,6 @@
 
 #include "muParserDef.h"
 #include "muParserError.h"
-#include "muParserStack.h"
 #include "muParserTemplateMagic.h"
 #include "muParserToken.h"
 
@@ -436,11 +435,11 @@ void ParserByteCode::Finalize() {
     for (int i = 0; i < (int)m_vRPN.size(); ++i) {
         switch (m_vRPN[i].Cmd) {
             case cmIF:
-                stIf.push(i);
+                stIf.push_back(i);
                 break;
 
             case cmELSE:
-                stElse.push(i);
+                stElse.push_back(i);
                 idx = stIf.pop();
                 m_vRPN[idx].Oprt.offset = i - idx;
                 break;

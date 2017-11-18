@@ -116,7 +116,7 @@ static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storag
 }
 
 /// Implement integer modulo math operator.
-static double moduloOperator(double v, double w) { return (int)v % std::max(1, (int)w); };
+static mu::ValueOrError moduloOperator(double v, double w) { return (int)v % std::max(1, (int)w); };
 
 /// Evaluate math expressions.
 static int evaluate_expression(wchar_t *cmd, parser_t &parser, io_streams_t &streams,

@@ -45,36 +45,36 @@ class ParserInt : public ParserBase {
    private:
     static int Round(value_type v) { return (int)(v + ((v >= 0) ? 0.5 : -0.5)); };
 
-    static value_type Abs(value_type);
-    static value_type Sign(value_type);
-    static value_type Ite(value_type, value_type, value_type);
+    static ValueOrError Abs(value_type);
+    static ValueOrError Sign(value_type);
+    static ValueOrError Ite(value_type, value_type, value_type);
     // !! The unary Minus is a MUST, otherwise you cant use negative signs !!
-    static value_type UnaryMinus(value_type);
+    static ValueOrError UnaryMinus(value_type);
     // Functions with variable number of arguments
-    static value_type Sum(const value_type* a_afArg, int a_iArgc);  // sum
-    static value_type Min(const value_type* a_afArg, int a_iArgc);  // minimum
-    static value_type Max(const value_type* a_afArg, int a_iArgc);  // maximum
+    static ValueOrError Sum(const value_type* a_afArg, int a_iArgc);  // sum
+    static ValueOrError Min(const value_type* a_afArg, int a_iArgc);  // minimum
+    static ValueOrError Max(const value_type* a_afArg, int a_iArgc);  // maximum
     // binary operator callbacks
-    static value_type Add(value_type v1, value_type v2);
-    static value_type Sub(value_type v1, value_type v2);
-    static value_type Mul(value_type v1, value_type v2);
-    static value_type Div(value_type v1, value_type v2);
-    static value_type Mod(value_type v1, value_type v2);
-    static value_type Pow(value_type v1, value_type v2);
-    static value_type Shr(value_type v1, value_type v2);
-    static value_type Shl(value_type v1, value_type v2);
-    static value_type LogAnd(value_type v1, value_type v2);
-    static value_type LogOr(value_type v1, value_type v2);
-    static value_type And(value_type v1, value_type v2);
-    static value_type Or(value_type v1, value_type v2);
-    static value_type Xor(value_type v1, value_type v2);
-    static value_type Less(value_type v1, value_type v2);
-    static value_type Greater(value_type v1, value_type v2);
-    static value_type LessEq(value_type v1, value_type v2);
-    static value_type GreaterEq(value_type v1, value_type v2);
-    static value_type Equal(value_type v1, value_type v2);
-    static value_type NotEqual(value_type v1, value_type v2);
-    static value_type Not(value_type v1);
+    static ValueOrError Add(value_type v1, value_type v2);
+    static ValueOrError Sub(value_type v1, value_type v2);
+    static ValueOrError Mul(value_type v1, value_type v2);
+    static ValueOrError Div(value_type v1, value_type v2);
+    static ValueOrError Mod(value_type v1, value_type v2);
+    static ValueOrError Pow(value_type v1, value_type v2);
+    static ValueOrError Shr(value_type v1, value_type v2);
+    static ValueOrError Shl(value_type v1, value_type v2);
+    static ValueOrError LogAnd(value_type v1, value_type v2);
+    static ValueOrError LogOr(value_type v1, value_type v2);
+    static ValueOrError And(value_type v1, value_type v2);
+    static ValueOrError Or(value_type v1, value_type v2);
+    static ValueOrError Xor(value_type v1, value_type v2);
+    static ValueOrError Less(value_type v1, value_type v2);
+    static ValueOrError Greater(value_type v1, value_type v2);
+    static ValueOrError LessEq(value_type v1, value_type v2);
+    static ValueOrError GreaterEq(value_type v1, value_type v2);
+    static ValueOrError Equal(value_type v1, value_type v2);
+    static ValueOrError NotEqual(value_type v1, value_type v2);
+    static ValueOrError Not(value_type v1);
 
     static int IsHexVal(const char_type* a_szExpr, int* a_iPos, value_type* a_iVal);
     static int IsBinVal(const char_type* a_szExpr, int* a_iPos, value_type* a_iVal);

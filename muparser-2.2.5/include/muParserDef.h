@@ -25,8 +25,10 @@
 #ifndef MUP_DEF_H
 #define MUP_DEF_H
 
+#include <cassert>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -352,60 +354,137 @@ class ParserError {
     EErrorCodes m_iErrc;       ///< Error code
 };
 
+// Compatibility with non-clang compilers.
+#ifndef __has_attribute
+#define __has_attribute(x) 0
+#endif
+
+// Define a type-level attribute declaring that this type, when used as the return value
+// of a function, should produce warnings.
+#if __has_attribute(warn_unused_result)
+#define MUPARSER_ATTR_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+#else
+#define MUPARSER_ATTR_WARN_UNUSED_RESULT
+#endif
+
+// OptionalError is used to optionally encapsulate an error.
+class OptionalError {
+    std::unique_ptr<ParserError> error_{};
+
+   public:
+    /// Create an OptionalError that represents no error.
+    OptionalError() {}
+
+    /// Create an OptionalError for the given error.
+    /* implicit */ OptionalError(ParserError err) : error_(new ParserError(std::move(err))) {}
+
+    /// \return whether an error is present.
+    bool has_error() const { return bool(error_); }
+
+    /// \return the error. asserts if this is not an error.
+    const ParserError &error() const {
+        assert(error_ && "Value did not error");
+        return *error_;
+    }
+} MUPARSER_ATTR_WARN_UNUSED_RESULT;
+
+// ValueOrError is used to propagate failures to callers.
+class ValueOrError {
+    value_type value_{0};
+    OptionalError error_{};
+
+   public:
+    /// \return true if this has a value, false if it is an error.
+    bool has_value() const { return !error_.has_error(); }
+
+    /// \return false if this has a value,true if it is an error.
+    bool has_error() const { return error_.has_error(); }
+
+    /// Construct from a value.
+    /* implicit */ ValueOrError(value_type value) : value_(value) {}
+
+    /// Construct from an error.
+    /* implicit */ ValueOrError(ParserError err) : error_(std::move(err)) {}
+
+    /// \return the error. asserts if this is not an error.
+    const ParserError &error() const { return error_.error(); }
+
+    /// \return the value. asserts if this is an error.
+    value_type value() const {
+        assert(has_value() && "Value is an error");
+        return value_;
+    }
+
+    /// \return the value or throw the error
+    value_type getOrThrow() const {
+        if (has_error()) throw error();
+        return value();
+    }
+
+    /// \return whether this has a value.
+    explicit operator bool() const { return has_value(); }
+
+    value_type operator*() const {
+        assert(has_value() && "Cannot access value with error");
+        return value_;
+    }
+
+} MUPARSER_ATTR_WARN_UNUSED_RESULT;
+
 // Parser callbacks
 
 /** \brief Callback type used for functions without arguments. */
-typedef value_type (*generic_fun_type)();
+typedef ValueOrError (*generic_fun_type)();
 
 /** \brief Callback type used for functions without arguments. */
-typedef value_type (*fun_type0)();
+typedef ValueOrError (*fun_type0)();
 
 /** \brief Callback type used for functions with a single arguments. */
-typedef value_type (*fun_type1)(value_type);
+typedef ValueOrError (*fun_type1)(value_type);
 
 /** \brief Callback type used for functions with two arguments. */
-typedef value_type (*fun_type2)(value_type, value_type);
+typedef ValueOrError (*fun_type2)(value_type, value_type);
 
 /** \brief Callback type used for functions with three arguments. */
-typedef value_type (*fun_type3)(value_type, value_type, value_type);
+typedef ValueOrError (*fun_type3)(value_type, value_type, value_type);
 
 /** \brief Callback type used for functions with four arguments. */
-typedef value_type (*fun_type4)(value_type, value_type, value_type, value_type);
+typedef ValueOrError (*fun_type4)(value_type, value_type, value_type, value_type);
 
 /** \brief Callback type used for functions with five arguments. */
-typedef value_type (*fun_type5)(value_type, value_type, value_type, value_type, value_type);
+typedef ValueOrError (*fun_type5)(value_type, value_type, value_type, value_type, value_type);
 
 /** \brief Callback type used for functions with five arguments. */
-typedef value_type (*fun_type6)(value_type, value_type, value_type, value_type, value_type,
-                                value_type);
+typedef ValueOrError (*fun_type6)(value_type, value_type, value_type, value_type, value_type,
+                                  value_type);
 
 /** \brief Callback type used for functions with five arguments. */
-typedef value_type (*fun_type7)(value_type, value_type, value_type, value_type, value_type,
-                                value_type, value_type);
+typedef ValueOrError (*fun_type7)(value_type, value_type, value_type, value_type, value_type,
+                                  value_type, value_type);
 
 /** \brief Callback type used for functions with five arguments. */
-typedef value_type (*fun_type8)(value_type, value_type, value_type, value_type, value_type,
-                                value_type, value_type, value_type);
+typedef ValueOrError (*fun_type8)(value_type, value_type, value_type, value_type, value_type,
+                                  value_type, value_type, value_type);
 
 /** \brief Callback type used for functions with five arguments. */
-typedef value_type (*fun_type9)(value_type, value_type, value_type, value_type, value_type,
-                                value_type, value_type, value_type, value_type);
+typedef ValueOrError (*fun_type9)(value_type, value_type, value_type, value_type, value_type,
+                                  value_type, value_type, value_type, value_type);
 
 /** \brief Callback type used for functions with five arguments. */
-typedef value_type (*fun_type10)(value_type, value_type, value_type, value_type, value_type,
-                                 value_type, value_type, value_type, value_type, value_type);
+typedef ValueOrError (*fun_type10)(value_type, value_type, value_type, value_type, value_type,
+                                   value_type, value_type, value_type, value_type, value_type);
 
 /** \brief Callback type used for functions with a variable argument list. */
-typedef value_type (*multfun_type)(const value_type *, int);
+typedef ValueOrError (*multfun_type)(const value_type *, int);
 
 /** \brief Callback type used for functions taking a string as an argument. */
-typedef value_type (*strfun_type1)(const char_type *);
+typedef ValueOrError (*strfun_type1)(const char_type *);
 
 /** \brief Callback type used for functions taking a string and a value as arguments. */
-typedef value_type (*strfun_type2)(const char_type *, value_type);
+typedef ValueOrError (*strfun_type2)(const char_type *, value_type);
 
 /** \brief Callback type used for functions taking a string and two values as arguments. */
-typedef value_type (*strfun_type3)(const char_type *, value_type, value_type);
+typedef ValueOrError (*strfun_type3)(const char_type *, value_type, value_type);
 
 /** \brief Callback used for functions that identify values in a string. */
 typedef int (*identfun_type)(const char_type *sExpr, int *nPos, value_type *fVal);

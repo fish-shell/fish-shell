@@ -55,28 +55,29 @@ typedef wchar_t muChar_t;  // character type
 typedef int muBool_t;      // boolean type
 typedef int muInt_t;       // integer type
 typedef double muFloat_t;  // floating point type
+using mu::ValueOrError;
 
 // function types for calculation
-typedef muFloat_t (*muFun0_t)();
-typedef muFloat_t (*muFun1_t)(muFloat_t);
-typedef muFloat_t (*muFun2_t)(muFloat_t, muFloat_t);
-typedef muFloat_t (*muFun3_t)(muFloat_t, muFloat_t, muFloat_t);
-typedef muFloat_t (*muFun4_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t);
-typedef muFloat_t (*muFun5_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t);
-typedef muFloat_t (*muFun6_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t);
-typedef muFloat_t (*muFun7_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t,
-                              muFloat_t);
-typedef muFloat_t (*muFun8_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t,
-                              muFloat_t, muFloat_t);
-typedef muFloat_t (*muFun9_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t,
-                              muFloat_t, muFloat_t, muFloat_t);
-typedef muFloat_t (*muFun10_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t,
-                               muFloat_t, muFloat_t, muFloat_t, muFloat_t);
+typedef ValueOrError (*muFun0_t)();
+typedef ValueOrError (*muFun1_t)(muFloat_t);
+typedef ValueOrError (*muFun2_t)(muFloat_t, muFloat_t);
+typedef ValueOrError (*muFun3_t)(muFloat_t, muFloat_t, muFloat_t);
+typedef ValueOrError (*muFun4_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t);
+typedef ValueOrError (*muFun5_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t);
+typedef ValueOrError (*muFun6_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t);
+typedef ValueOrError (*muFun7_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t,
+                                 muFloat_t);
+typedef ValueOrError (*muFun8_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t,
+                                 muFloat_t, muFloat_t);
+typedef ValueOrError (*muFun9_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t,
+                                 muFloat_t, muFloat_t, muFloat_t);
+typedef ValueOrError (*muFun10_t)(muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t, muFloat_t,
+                                  muFloat_t, muFloat_t, muFloat_t, muFloat_t);
 
-typedef muFloat_t (*muMultFun_t)(const muFloat_t *, muInt_t);
-typedef muFloat_t (*muStrFun1_t)(const muChar_t *);
-typedef muFloat_t (*muStrFun2_t)(const muChar_t *, muFloat_t);
-typedef muFloat_t (*muStrFun3_t)(const muChar_t *, muFloat_t, muFloat_t);
+typedef ValueOrError (*muMultFun_t)(const muFloat_t *, muInt_t);
+typedef ValueOrError (*muStrFun1_t)(const muChar_t *);
+typedef ValueOrError (*muStrFun2_t)(const muChar_t *, muFloat_t);
+typedef ValueOrError (*muStrFun3_t)(const muChar_t *, muFloat_t, muFloat_t);
 
 // Functions for parser management
 typedef void (*muErrorHandler_t)(

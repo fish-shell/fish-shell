@@ -1025,62 +1025,74 @@ value_type ParserBase::ParseCmdCode() const {
                 switch (iArgCount) {
                     case 0:
                         sidx += 1;
-                        Stack[sidx] = (*(fun_type0)pTok->Fun.ptr)();
+                        Stack[sidx] = (*(fun_type0)pTok->Fun.ptr)().getOrThrow();
                         continue;
                     case 1:
-                        Stack[sidx] = (*(fun_type1)pTok->Fun.ptr)(Stack[sidx]);
+                        Stack[sidx] = (*(fun_type1)pTok->Fun.ptr)(Stack[sidx]).getOrThrow();
                         continue;
                     case 2:
                         sidx -= 1;
-                        Stack[sidx] = (*(fun_type2)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1]);
+                        Stack[sidx] =
+                            (*(fun_type2)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1]).getOrThrow();
                         continue;
                     case 3:
                         sidx -= 2;
                         Stack[sidx] = (*(fun_type3)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
-                                                                  Stack[sidx + 2]);
+                                                                  Stack[sidx + 2])
+                                          .getOrThrow();
                         continue;
                     case 4:
                         sidx -= 3;
                         Stack[sidx] = (*(fun_type4)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
-                                                                  Stack[sidx + 2], Stack[sidx + 3]);
+                                                                  Stack[sidx + 2], Stack[sidx + 3])
+                                          .getOrThrow();
                         continue;
                     case 5:
                         sidx -= 4;
                         Stack[sidx] = (*(fun_type5)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
                                                                   Stack[sidx + 2], Stack[sidx + 3],
-                                                                  Stack[sidx + 4]);
+                                                                  Stack[sidx + 4])
+                                          .getOrThrow();
                         continue;
                     case 6:
                         sidx -= 5;
                         Stack[sidx] = (*(fun_type6)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
                                                                   Stack[sidx + 2], Stack[sidx + 3],
-                                                                  Stack[sidx + 4], Stack[sidx + 5]);
+                                                                  Stack[sidx + 4], Stack[sidx + 5])
+                                          .getOrThrow();
                         continue;
                     case 7:
                         sidx -= 6;
-                        Stack[sidx] = (*(fun_type7)pTok->Fun.ptr)(
-                            Stack[sidx], Stack[sidx + 1], Stack[sidx + 2], Stack[sidx + 3],
-                            Stack[sidx + 4], Stack[sidx + 5], Stack[sidx + 6]);
+                        Stack[sidx] = (*(fun_type7)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
+                                                                  Stack[sidx + 2], Stack[sidx + 3],
+                                                                  Stack[sidx + 4], Stack[sidx + 5],
+                                                                  Stack[sidx + 6])
+                                          .getOrThrow();
                         continue;
                     case 8:
                         sidx -= 7;
-                        Stack[sidx] = (*(fun_type8)pTok->Fun.ptr)(
-                            Stack[sidx], Stack[sidx + 1], Stack[sidx + 2], Stack[sidx + 3],
-                            Stack[sidx + 4], Stack[sidx + 5], Stack[sidx + 6], Stack[sidx + 7]);
+                        Stack[sidx] = (*(fun_type8)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
+                                                                  Stack[sidx + 2], Stack[sidx + 3],
+                                                                  Stack[sidx + 4], Stack[sidx + 5],
+                                                                  Stack[sidx + 6], Stack[sidx + 7])
+                                          .getOrThrow();
                         continue;
                     case 9:
                         sidx -= 8;
                         Stack[sidx] = (*(fun_type9)pTok->Fun.ptr)(
-                            Stack[sidx], Stack[sidx + 1], Stack[sidx + 2], Stack[sidx + 3],
-                            Stack[sidx + 4], Stack[sidx + 5], Stack[sidx + 6], Stack[sidx + 7],
-                            Stack[sidx + 8]);
+                                          Stack[sidx], Stack[sidx + 1], Stack[sidx + 2],
+                                          Stack[sidx + 3], Stack[sidx + 4], Stack[sidx + 5],
+                                          Stack[sidx + 6], Stack[sidx + 7], Stack[sidx + 8])
+                                          .getOrThrow();
                         continue;
                     case 10:
                         sidx -= 9;
-                        Stack[sidx] = (*(fun_type10)pTok->Fun.ptr)(
-                            Stack[sidx], Stack[sidx + 1], Stack[sidx + 2], Stack[sidx + 3],
-                            Stack[sidx + 4], Stack[sidx + 5], Stack[sidx + 6], Stack[sidx + 7],
-                            Stack[sidx + 8], Stack[sidx + 9]);
+                        Stack[sidx] = (*(fun_type10)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
+                                                                   Stack[sidx + 2], Stack[sidx + 3],
+                                                                   Stack[sidx + 4], Stack[sidx + 5],
+                                                                   Stack[sidx + 6], Stack[sidx + 7],
+                                                                   Stack[sidx + 8], Stack[sidx + 9])
+                                          .getOrThrow();
                         continue;
                     default:
                         if (iArgCount > 0)  // function with variable arguments store the number as
@@ -1088,7 +1100,8 @@ value_type ParserBase::ParseCmdCode() const {
                             assert(0 && "muParser internal error");
 
                         sidx -= -iArgCount - 1;
-                        Stack[sidx] = (*(multfun_type)pTok->Fun.ptr)(&Stack[sidx], -iArgCount);
+                        Stack[sidx] =
+                            (*(multfun_type)pTok->Fun.ptr)(&Stack[sidx], -iArgCount).getOrThrow();
                         continue;
                 }
             }
@@ -1105,15 +1118,19 @@ value_type ParserBase::ParseCmdCode() const {
                 {
                     case 0:
                         Stack[sidx] =
-                            (*(strfun_type1)pTok->Fun.ptr)(m_vStringBuf[iIdxStack].c_str());
+                            (*(strfun_type1)pTok->Fun.ptr)(m_vStringBuf[iIdxStack].c_str())
+                                .getOrThrow();
                         continue;
                     case 1:
                         Stack[sidx] = (*(strfun_type2)pTok->Fun.ptr)(
-                            m_vStringBuf[iIdxStack].c_str(), Stack[sidx]);
+                                          m_vStringBuf[iIdxStack].c_str(), Stack[sidx])
+                                          .getOrThrow();
                         continue;
                     case 2:
-                        Stack[sidx] = (*(strfun_type3)pTok->Fun.ptr)(
-                            m_vStringBuf[iIdxStack].c_str(), Stack[sidx], Stack[sidx + 1]);
+                        Stack[sidx] =
+                            (*(strfun_type3)pTok->Fun.ptr)(m_vStringBuf[iIdxStack].c_str(),
+                                                           Stack[sidx], Stack[sidx + 1])
+                                .getOrThrow();
                         continue;
                 }
 

@@ -48,27 +48,27 @@ namespace mu {
 
 //---------------------------------------------------------------------------
 // Trigonometric function
-value_type Parser::Sin(value_type v) { return MathImpl<value_type>::Sin(v); }
-value_type Parser::Cos(value_type v) { return MathImpl<value_type>::Cos(v); }
-value_type Parser::Tan(value_type v) { return MathImpl<value_type>::Tan(v); }
-value_type Parser::ASin(value_type v) { return MathImpl<value_type>::ASin(v); }
-value_type Parser::ACos(value_type v) { return MathImpl<value_type>::ACos(v); }
-value_type Parser::ATan(value_type v) { return MathImpl<value_type>::ATan(v); }
-value_type Parser::ATan2(value_type v1, value_type v2) {
+ValueOrError Parser::Sin(value_type v) { return MathImpl<value_type>::Sin(v); }
+ValueOrError Parser::Cos(value_type v) { return MathImpl<value_type>::Cos(v); }
+ValueOrError Parser::Tan(value_type v) { return MathImpl<value_type>::Tan(v); }
+ValueOrError Parser::ASin(value_type v) { return MathImpl<value_type>::ASin(v); }
+ValueOrError Parser::ACos(value_type v) { return MathImpl<value_type>::ACos(v); }
+ValueOrError Parser::ATan(value_type v) { return MathImpl<value_type>::ATan(v); }
+ValueOrError Parser::ATan2(value_type v1, value_type v2) {
     return MathImpl<value_type>::ATan2(v1, v2);
 }
-value_type Parser::Sinh(value_type v) { return MathImpl<value_type>::Sinh(v); }
-value_type Parser::Cosh(value_type v) { return MathImpl<value_type>::Cosh(v); }
-value_type Parser::Tanh(value_type v) { return MathImpl<value_type>::Tanh(v); }
-value_type Parser::ASinh(value_type v) { return MathImpl<value_type>::ASinh(v); }
-value_type Parser::ACosh(value_type v) { return MathImpl<value_type>::ACosh(v); }
-value_type Parser::ATanh(value_type v) { return MathImpl<value_type>::ATanh(v); }
+ValueOrError Parser::Sinh(value_type v) { return MathImpl<value_type>::Sinh(v); }
+ValueOrError Parser::Cosh(value_type v) { return MathImpl<value_type>::Cosh(v); }
+ValueOrError Parser::Tanh(value_type v) { return MathImpl<value_type>::Tanh(v); }
+ValueOrError Parser::ASinh(value_type v) { return MathImpl<value_type>::ASinh(v); }
+ValueOrError Parser::ACosh(value_type v) { return MathImpl<value_type>::ACosh(v); }
+ValueOrError Parser::ATanh(value_type v) { return MathImpl<value_type>::ATanh(v); }
 
 //---------------------------------------------------------------------------
 // Logarithm functions
 
 // Logarithm base 2
-value_type Parser::Log2(value_type v) {
+ValueOrError Parser::Log2(value_type v) {
 #ifdef MUP_MATH_EXCEPTIONS
     if (v <= 0) throw ParserError(ecDOMAIN_ERROR, _T("Log2"));
 #endif
@@ -77,7 +77,7 @@ value_type Parser::Log2(value_type v) {
 }
 
 // Logarithm base 10
-value_type Parser::Log10(value_type v) {
+ValueOrError Parser::Log10(value_type v) {
 #ifdef MUP_MATH_EXCEPTIONS
     if (v <= 0) throw ParserError(ecDOMAIN_ERROR, _T("Log10"));
 #endif
@@ -86,7 +86,7 @@ value_type Parser::Log10(value_type v) {
 }
 
 // Logarithm base e (natural logarithm)
-value_type Parser::Ln(value_type v) {
+ValueOrError Parser::Ln(value_type v) {
 #ifdef MUP_MATH_EXCEPTIONS
     if (v <= 0) throw ParserError(ecDOMAIN_ERROR, _T("Ln"));
 #endif
@@ -96,38 +96,38 @@ value_type Parser::Ln(value_type v) {
 
 //---------------------------------------------------------------------------
 //  misc
-value_type Parser::Exp(value_type v) { return MathImpl<value_type>::Exp(v); }
-value_type Parser::Abs(value_type v) { return MathImpl<value_type>::Abs(v); }
-value_type Parser::Sqrt(value_type v) {
+ValueOrError Parser::Exp(value_type v) { return MathImpl<value_type>::Exp(v); }
+ValueOrError Parser::Abs(value_type v) { return MathImpl<value_type>::Abs(v); }
+ValueOrError Parser::Sqrt(value_type v) {
 #ifdef MUP_MATH_EXCEPTIONS
     if (v < 0) throw ParserError(ecDOMAIN_ERROR, _T("sqrt"));
 #endif
 
     return MathImpl<value_type>::Sqrt(v);
 }
-value_type Parser::Rint(value_type v) { return MathImpl<value_type>::Rint(v); }
-value_type Parser::Sign(value_type v) { return MathImpl<value_type>::Sign(v); }
+ValueOrError Parser::Rint(value_type v) { return MathImpl<value_type>::Rint(v); }
+ValueOrError Parser::Sign(value_type v) { return MathImpl<value_type>::Sign(v); }
 
 //---------------------------------------------------------------------------
 /** \brief Callback for the unary minus operator.
     \param v The value to negate
     \return -v
 */
-value_type Parser::UnaryMinus(value_type v) { return -v; }
+ValueOrError Parser::UnaryMinus(value_type v) { return -v; }
 
 //---------------------------------------------------------------------------
 /** \brief Callback for the unary minus operator.
     \param v The value to negate
     \return -v
 */
-value_type Parser::UnaryPlus(value_type v) { return v; }
+ValueOrError Parser::UnaryPlus(value_type v) { return v; }
 
 //---------------------------------------------------------------------------
 /** \brief Callback for adding multiple values.
     \param [in] a_afArg Vector with the function arguments
     \param [in] a_iArgc The size of a_afArg
 */
-value_type Parser::Sum(const value_type *a_afArg, int a_iArgc) {
+ValueOrError Parser::Sum(const value_type *a_afArg, int a_iArgc) {
     if (!a_iArgc) throw exception_type(_T("too few arguments for function sum."));
 
     value_type fRes = 0;
@@ -140,7 +140,7 @@ value_type Parser::Sum(const value_type *a_afArg, int a_iArgc) {
     \param [in] a_afArg Vector with the function arguments
     \param [in] a_iArgc The size of a_afArg
 */
-value_type Parser::Avg(const value_type *a_afArg, int a_iArgc) {
+ValueOrError Parser::Avg(const value_type *a_afArg, int a_iArgc) {
     if (!a_iArgc) throw exception_type(_T("too few arguments for function sum."));
 
     value_type fRes = 0;
@@ -153,7 +153,7 @@ value_type Parser::Avg(const value_type *a_afArg, int a_iArgc) {
     \param [in] a_afArg Vector with the function arguments
     \param [in] a_iArgc The size of a_afArg
 */
-value_type Parser::Min(const value_type *a_afArg, int a_iArgc) {
+ValueOrError Parser::Min(const value_type *a_afArg, int a_iArgc) {
     if (!a_iArgc) throw exception_type(_T("too few arguments for function min."));
 
     value_type fRes = a_afArg[0];
@@ -167,7 +167,7 @@ value_type Parser::Min(const value_type *a_afArg, int a_iArgc) {
     \param [in] a_afArg Vector with the function arguments
     \param [in] a_iArgc The size of a_afArg
 */
-value_type Parser::Max(const value_type *a_afArg, int a_iArgc) {
+ValueOrError Parser::Max(const value_type *a_afArg, int a_iArgc) {
     if (!a_iArgc) throw exception_type(_T("too few arguments for function min."));
 
     value_type fRes = a_afArg[0];
@@ -330,7 +330,7 @@ void Parser::OnDetectVar(string_type * /*pExpr*/, int & /*nStart*/, int & /*nEnd
 
   http://sourceforge.net/forum/forum.php?thread_id=1994611&forum_id=462843
 */
-value_type Parser::Diff(value_type *a_Var, value_type a_fPos, value_type a_fEpsilon) const {
+ValueOrError Parser::Diff(value_type *a_Var, value_type a_fPos, value_type a_fEpsilon) const {
     value_type fRes(0), fBuf(*a_Var), f[4] = {0, 0, 0, 0}, fEpsilon(a_fEpsilon);
 
     // Backwards compatible calculation of epsilon inc case the user doesn't provide

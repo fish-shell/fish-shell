@@ -56,39 +56,40 @@ struct DumpLeaks {
 #endif
 
 // Operator callback functions
-value_type Mega(value_type a_fVal) { return a_fVal * 1e6; }
-value_type Milli(value_type a_fVal) { return a_fVal / (value_type)1e3; }
-value_type Rnd(value_type v) { return v * std::rand() / (value_type)(RAND_MAX + 1.0); }
-value_type Not(value_type v) { return v == 0; }
-value_type Add(value_type v1, value_type v2) { return v1 + v2; }
-value_type Mul(value_type v1, value_type v2) { return v1 * v2; }
+ValueOrError Mega(value_type a_fVal) { return a_fVal * 1e6; }
+ValueOrError Milli(value_type a_fVal) { return a_fVal / (value_type)1e3; }
+ValueOrError Rnd(value_type v) { return v * std::rand() / (value_type)(RAND_MAX + 1.0); }
+ValueOrError Not(value_type v) { return v == 0; }
+ValueOrError Add(value_type v1, value_type v2) { return v1 + v2; }
+ValueOrError Mul(value_type v1, value_type v2) { return v1 * v2; }
 
 //---------------------------------------------------------------------------
-value_type ThrowAnException(value_type) {
+ValueOrError ThrowAnException(value_type) {
     throw std::runtime_error("This function does throw an exception.");
 }
 
 //---------------------------------------------------------------------------
-value_type Ping() {
+//---------------------------------------------------------------------------
+ValueOrError Ping() {
     mu::console() << "ping\n";
     return 0;
 }
 
 //---------------------------------------------------------------------------
-value_type StrFun0(const char_type *szMsg) {
+ValueOrError StrFun0(const char_type *szMsg) {
     if (szMsg) mu::console() << szMsg << std::endl;
 
     return 999;
 }
 
 //---------------------------------------------------------------------------
-value_type StrFun2(const char_type *v1, value_type v2, value_type v3) {
+ValueOrError StrFun2(const char_type *v1, value_type v2, value_type v3) {
     mu::console() << v1 << std::endl;
     return v2 + v3;
 }
 
 //---------------------------------------------------------------------------
-value_type Debug(mu::value_type v1, mu::value_type v2) {
+ValueOrError Debug(mu::value_type v1, mu::value_type v2) {
     ParserBase::EnableDebugDump(v1 != 0, v2 != 0);
     mu::console() << _T("Bytecode dumping ") << ((v1 != 0) ? _T("active") : _T("inactive"))
                   << _T("\n");
@@ -153,7 +154,7 @@ void Splash() {
 }
 
 //---------------------------------------------------------------------------
-value_type SelfTest() {
+ValueOrError SelfTest() {
     mu::console() << _T( "-----------------------------------------------------------\n");
     mu::console() << _T( "Running test suite:\n\n");
 
@@ -170,7 +171,7 @@ value_type SelfTest() {
 }
 
 //---------------------------------------------------------------------------
-value_type Help() {
+ValueOrError Help() {
     mu::console() << _T( "-----------------------------------------------------------\n");
     mu::console() << _T( "Commands:\n\n");
     mu::console() << _T( "  list var     - list parser variables\n");

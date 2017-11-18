@@ -50,65 +50,65 @@ class ParserTester  // final
     static int c_iCount;
 
     // Multiarg callbacks
-    static value_type f1of1(value_type v) { return v; };
+    static ValueOrError f1of1(value_type v) { return v; };
 
-    static value_type f1of2(value_type v, value_type) { return v; };
-    static value_type f2of2(value_type, value_type v) { return v; };
+    static ValueOrError f1of2(value_type v, value_type) { return v; };
+    static ValueOrError f2of2(value_type, value_type v) { return v; };
 
-    static value_type f1of3(value_type v, value_type, value_type) { return v; };
-    static value_type f2of3(value_type, value_type v, value_type) { return v; };
-    static value_type f3of3(value_type, value_type, value_type v) { return v; };
+    static ValueOrError f1of3(value_type v, value_type, value_type) { return v; };
+    static ValueOrError f2of3(value_type, value_type v, value_type) { return v; };
+    static ValueOrError f3of3(value_type, value_type, value_type v) { return v; };
 
-    static value_type f1of4(value_type v, value_type, value_type, value_type) { return v; }
-    static value_type f2of4(value_type, value_type v, value_type, value_type) { return v; }
-    static value_type f3of4(value_type, value_type, value_type v, value_type) { return v; }
-    static value_type f4of4(value_type, value_type, value_type, value_type v) { return v; }
+    static ValueOrError f1of4(value_type v, value_type, value_type, value_type) { return v; }
+    static ValueOrError f2of4(value_type, value_type v, value_type, value_type) { return v; }
+    static ValueOrError f3of4(value_type, value_type, value_type v, value_type) { return v; }
+    static ValueOrError f4of4(value_type, value_type, value_type, value_type v) { return v; }
 
-    static value_type f1of5(value_type v, value_type, value_type, value_type, value_type) {
+    static ValueOrError f1of5(value_type v, value_type, value_type, value_type, value_type) {
         return v;
     }
-    static value_type f2of5(value_type, value_type v, value_type, value_type, value_type) {
+    static ValueOrError f2of5(value_type, value_type v, value_type, value_type, value_type) {
         return v;
     }
-    static value_type f3of5(value_type, value_type, value_type v, value_type, value_type) {
+    static ValueOrError f3of5(value_type, value_type, value_type v, value_type, value_type) {
         return v;
     }
-    static value_type f4of5(value_type, value_type, value_type, value_type v, value_type) {
+    static ValueOrError f4of5(value_type, value_type, value_type, value_type v, value_type) {
         return v;
     }
-    static value_type f5of5(value_type, value_type, value_type, value_type, value_type v) {
+    static ValueOrError f5of5(value_type, value_type, value_type, value_type, value_type v) {
         return v;
     }
 
-    static value_type Min(value_type a_fVal1, value_type a_fVal2) {
+    static ValueOrError Min(value_type a_fVal1, value_type a_fVal2) {
         return (a_fVal1 < a_fVal2) ? a_fVal1 : a_fVal2;
     }
-    static value_type Max(value_type a_fVal1, value_type a_fVal2) {
+    static ValueOrError Max(value_type a_fVal1, value_type a_fVal2) {
         return (a_fVal1 > a_fVal2) ? a_fVal1 : a_fVal2;
     }
 
-    static value_type plus2(value_type v1) { return v1 + 2; }
-    static value_type times3(value_type v1) { return v1 * 3; }
-    static value_type sqr(value_type v1) { return v1 * v1; }
-    static value_type sign(value_type v) { return -v; }
-    static value_type add(value_type v1, value_type v2) { return v1 + v2; }
-    static value_type land(value_type v1, value_type v2) { return (int)v1 & (int)v2; }
+    static ValueOrError plus2(value_type v1) { return v1 + 2; }
+    static ValueOrError times3(value_type v1) { return v1 * 3; }
+    static ValueOrError sqr(value_type v1) { return v1 * v1; }
+    static ValueOrError sign(value_type v) { return -v; }
+    static ValueOrError add(value_type v1, value_type v2) { return v1 + v2; }
+    static ValueOrError land(value_type v1, value_type v2) { return (int)v1 & (int)v2; }
 
-    static value_type FirstArg(const value_type* a_afArg, int a_iArgc) {
+    static ValueOrError FirstArg(const value_type* a_afArg, int a_iArgc) {
         if (!a_iArgc)
             throw mu::Parser::exception_type(_T("too few arguments for function FirstArg."));
 
         return a_afArg[0];
     }
 
-    static value_type LastArg(const value_type* a_afArg, int a_iArgc) {
+    static ValueOrError LastArg(const value_type* a_afArg, int a_iArgc) {
         if (!a_iArgc)
             throw mu::Parser::exception_type(_T("too few arguments for function LastArg."));
 
         return a_afArg[a_iArgc - 1];
     }
 
-    static value_type Sum(const value_type* a_afArg, int a_iArgc) {
+    static ValueOrError Sum(const value_type* a_afArg, int a_iArgc) {
         if (!a_iArgc) throw mu::Parser::exception_type(_T("too few arguments for function sum."));
 
         value_type fRes = 0;
@@ -116,46 +116,46 @@ class ParserTester  // final
         return fRes;
     }
 
-    static value_type Rnd(value_type v) {
+    static ValueOrError Rnd(value_type v) {
         return (value_type)(1 + (v * std::rand() / (RAND_MAX + 1.0)));
     }
 
-    static value_type RndWithString(const char_type*) {
+    static ValueOrError RndWithString(const char_type*) {
         return (value_type)(1 + (1000.0f * std::rand() / (RAND_MAX + 1.0)));
     }
 
-    static value_type Ping() { return 10; }
+    static ValueOrError Ping() { return 10; }
 
-    static value_type ValueOf(const char_type*) { return 123; }
+    static ValueOrError ValueOf(const char_type*) { return 123; }
 
-    static value_type StrFun1(const char_type* v1) {
+    static ValueOrError StrFun1(const char_type* v1) {
         int val(0);
         stringstream_type(v1) >> val;
         return (value_type)val;
     }
 
-    static value_type StrFun2(const char_type* v1, value_type v2) {
+    static ValueOrError StrFun2(const char_type* v1, value_type v2) {
         int val(0);
         stringstream_type(v1) >> val;
         return (value_type)(val + v2);
     }
 
-    static value_type StrFun3(const char_type* v1, value_type v2, value_type v3) {
+    static ValueOrError StrFun3(const char_type* v1, value_type v2, value_type v3) {
         int val(0);
         stringstream_type(v1) >> val;
         return val + v2 + v3;
     }
 
-    static value_type StrToFloat(const char_type* a_szMsg) {
+    static ValueOrError StrToFloat(const char_type* a_szMsg) {
         value_type val(0);
         stringstream_type(a_szMsg) >> val;
         return val;
     }
 
     // postfix operator callback
-    static value_type Mega(value_type a_fVal) { return a_fVal * (value_type)1e6; }
-    static value_type Micro(value_type a_fVal) { return a_fVal * (value_type)1e-6; }
-    static value_type Milli(value_type a_fVal) { return a_fVal / (value_type)1e3; }
+    static ValueOrError Mega(value_type a_fVal) { return a_fVal * (value_type)1e6; }
+    static ValueOrError Micro(value_type a_fVal) { return a_fVal * (value_type)1e-6; }
+    static ValueOrError Milli(value_type a_fVal) { return a_fVal / (value_type)1e3; }
 
     // Custom value recognition
     static int IsHexVal(const char_type* a_szExpr, int* a_iPos, value_type* a_fVal);

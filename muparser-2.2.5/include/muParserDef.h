@@ -51,12 +51,6 @@
 */
 #define MUP_BASETYPE double
 
-/** \brief Activate this option in order to compile with OpenMP support. 
-
-  OpenMP is used only in the bulk mode it may increase the performance a bit. 
-*/
-//#define MUP_USE_OPENMP
-
 #if defined(_UNICODE)
   /** \brief Definition of the basic parser string type. */
   #define MUP_STRING_TYPE std::wstring

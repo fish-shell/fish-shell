@@ -36,10 +36,6 @@
 #include <sstream>
 #include <locale>
 
-#ifdef MUP_USE_OPENMP
-  #include <omp.h>
-#endif
-
 using namespace std;
 
 /** \file
@@ -289,12 +285,6 @@ namespace mu
   #else
       ss << _T("; ASCII");
   #endif
-#endif
-
-#ifdef MUP_USE_OPENMP
-      ss << _T("; OPENMP");
-//#else
-//      ss << _T("; NO_OPENMP");
 #endif
 
 #if defined(MUP_MATH_EXCEPTIONS)
@@ -1726,53 +1716,9 @@ namespace mu
     CreateRPN();
 
     int i = 0;
-
-#ifdef MUP_USE_OPENMP
-//#define DEBUG_OMP_STUFF
-    #ifdef DEBUG_OMP_STUFF
-    int *pThread = new int[nBulkSize];
-    int *pIdx = new int[nBulkSize];
-    #endif
-
-    int nMaxThreads = std::min(omp_get_max_threads(), s_MaxNumOpenMPThreads);
-	int nThreadID = 0, ct = 0;
-    omp_set_num_threads(nMaxThreads);
-
-    #pragma omp parallel for schedule(static, nBulkSize/nMaxThreads) private(nThreadID)
     for (i=0; i<nBulkSize; ++i)
     {
-      nThreadID = omp_get_thread_num();
-      results[i] = ParseCmdCodeBulk(i, nThreadID);
-
-      #ifdef DEBUG_OMP_STUFF
-      #pragma omp critical
-      {
-        pThread[ct] = nThreadID;  
-        pIdx[ct] = i; 
-        ct++;
-      }
-      #endif
+        results[i] = ParseCmdCodeBulk(i, 0);
     }
-
-#ifdef DEBUG_OMP_STUFF
-    FILE *pFile = fopen("bulk_dbg.txt", "w");
-    for (i=0; i<nBulkSize; ++i)
-    {
-      fprintf(pFile, "idx: %d  thread: %d \n", pIdx[i], pThread[i]);
-    }
-    
-    delete [] pIdx;
-    delete [] pThread;
-
-    fclose(pFile);
-#endif
-
-#else
-    for (i=0; i<nBulkSize; ++i)
-    {
-      results[i] = ParseCmdCodeBulk(i, 0);
-    }
-#endif
-
   }
 } // namespace mu

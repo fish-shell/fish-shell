@@ -37,7 +37,6 @@
 //--- Parser includes --------------------------------------------------------------------------
 #include "muParserBytecode.h"
 #include "muParserDef.h"
-#include "muParserError.h"
 #include "muParserTokenReader.h"
 
 namespace mu {

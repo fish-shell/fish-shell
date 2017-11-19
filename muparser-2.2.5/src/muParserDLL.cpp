@@ -40,7 +40,6 @@
 
 #include "muParser.h"
 #include "muParserDLL.h"
-#include "muParserError.h"
 #include "muParserInt.h"
 
 #define MU_TRY try {

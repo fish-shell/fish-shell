@@ -33,7 +33,6 @@
 #include <vector>
 
 #include "muParserCallback.h"
-#include "muParserError.h"
 
 /** \file
     \brief This file contains the parser token definition.

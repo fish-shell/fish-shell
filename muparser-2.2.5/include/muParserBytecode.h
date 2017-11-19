@@ -31,7 +31,6 @@
 #include <vector>
 
 #include "muParserDef.h"
-#include "muParserError.h"
 #include "muParserToken.h"
 
 /** \file

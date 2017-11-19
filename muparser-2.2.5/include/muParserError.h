@@ -94,26 +94,8 @@ enum EErrorCodes {
     ecUNDEFINED = -1  ///< Undefined message, placeholder to detect unassigned error messages
 };
 
-//---------------------------------------------------------------------------
-/** \brief A class that handles the error messages.
-*/
-class ParserErrorMsg {
-   public:
-    typedef ParserErrorMsg self_type;
-
-    ParserErrorMsg &operator=(const ParserErrorMsg &);
-    ParserErrorMsg(const ParserErrorMsg &);
-    ParserErrorMsg();
-
-    ~ParserErrorMsg();
-
-    static const ParserErrorMsg &Instance();
-    string_type operator[](unsigned a_iIdx) const;
-
-   private:
-    std::vector<string_type> m_vErrMsg;  ///< A vector with the predefined error messages
-    static const self_type m_Instance;   ///< The instance pointer
-};
+/// \return an error message for the given code.
+string_type parser_error_for_code(EErrorCodes code);
 
 //---------------------------------------------------------------------------
 /** \brief Error class of the parser.
@@ -153,7 +135,6 @@ class ParserError {
     string_type m_strTok;      ///< Token related with the error
     int m_iPos;                ///< Formula position related to the error
     EErrorCodes m_iErrc;       ///< Error code
-    const ParserErrorMsg &m_ErrMsg;
 };
 
 }  // namespace mu

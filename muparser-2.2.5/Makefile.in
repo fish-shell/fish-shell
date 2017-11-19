@@ -43,7 +43,7 @@ LDFLAGS = @LDFLAGS@
 
 DESTDIR = 
 MUPARSER_LIB_CXXFLAGS = $(____DEBUG) $(____SHARED) $(____SHARED_0) \
-	-I$(srcdir)/include $(CPPFLAGS) $(CXXFLAGS)
+	-I$(srcdir)/include $(CPPFLAGS) $(CXXFLAGS) -std=c++11
 MUPARSER_LIB_OBJECTS =  \
 	muParser_lib_muParser.o \
 	muParser_lib_muParserBase.o \
@@ -68,7 +68,7 @@ MUPARSER_LIB_HEADERS =  \
 	include/muParserToken.h \
 	include/muParserTokenReader.h
 MUPARSER_DLL_CXXFLAGS = $(____DEBUG) $(____SHARED) $(____SHARED_0) \
-	-I$(srcdir)/include $(PIC_FLAG) $(CPPFLAGS) $(CXXFLAGS)
+	-I$(srcdir)/include $(PIC_FLAG) $(CPPFLAGS) $(CXXFLAGS)  -std=c++11
 MUPARSER_DLL_OBJECTS =  \
 	muParser_dll_muParser.o \
 	muParser_dll_muParserBase.o \
@@ -92,7 +92,7 @@ MUPARSER_DLL_HEADERS =  \
 	include/muParserTest.h \
 	include/muParserToken.h \
 	include/muParserTokenReader.h
-EXAMPLE1_CXXFLAGS = $(____DEBUG) -I$(srcdir)/include $(CPPFLAGS) $(CXXFLAGS)
+EXAMPLE1_CXXFLAGS = $(____DEBUG) -I$(srcdir)/include $(CPPFLAGS) $(CXXFLAGS) -std=c++11
 EXAMPLE1_OBJECTS =  \
 	example1_example1.o
 

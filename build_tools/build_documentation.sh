@@ -134,8 +134,8 @@ if test "$RESULT" = 0 ; then
 			-e "s/^\\.SH \"\(.*\)\"/\\.SH \1\\n/"
 		sed < ${CMD_NAME}.1.tmp-delete-quote > ${CMD_NAME}.1.tmp-bold \
 			-e "s/^\\.SH \("$CMD_NAME"\) \\-/\\.SH \\\fB\1\\\fP \\-/"
-		sed < ${CMD_NAME}.1.tmp-bold > ${CMD_NAME}.1.tmp-shape \
-			-z "s/\\.SH NAME\\n$CMD_NAME \\\- \\n\\.SH /\\.SH NAME\\n/"
+		cat ${CMD_NAME}.1.tmp-bold | perl -0pe \
+			"s/.SH NAME\n$CMD_NAME \\\- \n.SH /.SH NAME\n/m" > ${CMD_NAME}.1.tmp-shape
 		cp "${CMD_NAME}.1.tmp-shape" "${CMD_NAME}.1"
 		rm "${CMD_NAME}.1.tmp-delete-quote" "${CMD_NAME}.1.tmp-bold" "${CMD_NAME}.1.tmp-shape"
 	done

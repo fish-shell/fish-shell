@@ -1151,7 +1151,7 @@ int ParserTester::EqnTestWithVarChange(const string_type &a_str, double a_fVar1,
 int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass) {
     ParserTester::c_iCount++;
     int iRet(0);
-    value_type fVal[5] = {-999, -998, -997, -996, -995};  // initially should be different
+    value_type fVal[] = {-999, -998, -997};  // initially should be different
 
     try {
         std::auto_ptr<Parser> p1;
@@ -1239,31 +1239,10 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
         if (fVal[0] != fVal[1])
             throw Parser::exception_type(_T("Bytecode / string parsing mismatch."));
 
-        // Test copy and assignment operators
-        try {
-            // Test copy constructor
-            std::vector<mu::Parser> vParser;
-            vParser.push_back(*(p1.get()));
-            mu::Parser p2 = vParser[0];  // take parser from vector
-
-            // destroy the originals from p2
-            vParser.clear();  // delete the vector
-            p1.reset(0);
-
-            fVal[2] = *p2.Eval();
-
-            // Test assignment operator
-            mu::Parser p3;
-            p3 = p2;
-            fVal[3] = *p3.Eval();
-
-            // Test Eval function for multiple return values
-            std::vector<ValueOrError> v;
-            p2.Eval(&v);
-            fVal[4] = *v.back();
-        } catch (std::exception &e) {
-            mu::console() << _T("\n  ") << e.what() << _T("\n");
-        }
+        // Test Eval function for multiple return values.
+        std::vector<ValueOrError> v;
+        p1->Eval(&v);
+        fVal[2] = *v.back();
 
         // limited floating point accuracy requires the following test
         bool bCloseEnough(true);
@@ -1288,15 +1267,11 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
             mu::console() << _T("\n  fail: ") << a_str.c_str()
                           << _T(" (incorrect result; expected: ") << a_fRes << _T(" ;calculated: ")
                           << fVal[0] << _T(",") << fVal[1] << _T(",") << fVal[2] << _T(",")
-                          << fVal[3] << _T(",") << fVal[4] << _T(").");
+                          << _T(").");
         }
     } catch (Parser::exception_type &e) {
         if (a_fPass) {
-            if (fVal[0] != fVal[2] && fVal[0] != -999 && fVal[1] != -998)
-                mu::console() << _T("\n  fail: ") << a_str.c_str() << _T(" (copy construction)");
-            else
-                mu::console() << _T("\n  fail: ") << a_str.c_str() << _T(" (") << e.GetMsg()
-                              << _T(")");
+            mu::console() << _T("\n  fail: ") << a_str.c_str() << _T(" (") << e.GetMsg() << _T(")");
             return 1;
         }
     } catch (std::exception &e) {

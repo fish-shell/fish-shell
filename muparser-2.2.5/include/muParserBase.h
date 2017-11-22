@@ -92,8 +92,8 @@ class ParserBase {
     static void EnableDebugDump(bool bDumpCmd, bool bDumpStack);
 
     ParserBase();
-    ParserBase(const ParserBase &a_Parser);
-    ParserBase &operator=(const ParserBase &a_Parser);
+    ParserBase(const ParserBase &a_Parser) = delete;
+    ParserBase &operator=(const ParserBase &a_Parser) = delete;
 
     virtual ~ParserBase();
 
@@ -212,7 +212,6 @@ class ParserBase {
     };
 
    private:
-    void Assign(const ParserBase &a_Parser);
     void InitTokenReader();
     void ReInit() const;
 

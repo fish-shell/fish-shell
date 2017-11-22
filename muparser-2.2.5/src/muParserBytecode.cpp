@@ -44,36 +44,6 @@ ParserByteCode::ParserByteCode() : m_iStackPos(0), m_iMaxStackSize(0), m_vRPN() 
 }
 
 //---------------------------------------------------------------------------
-/** \brief Copy constructor.
-
-    Implemented in Terms of Assign(const ParserByteCode &a_ByteCode)
-*/
-ParserByteCode::ParserByteCode(const ParserByteCode &a_ByteCode) { Assign(a_ByteCode); }
-
-//---------------------------------------------------------------------------
-/** \brief Assignment operator.
-
-    Implemented in Terms of Assign(const ParserByteCode &a_ByteCode)
-*/
-ParserByteCode &ParserByteCode::operator=(const ParserByteCode &a_ByteCode) {
-    Assign(a_ByteCode);
-    return *this;
-}
-
-//---------------------------------------------------------------------------
-/** \brief Copy state of another object to this.
-
-    \throw nowthrow
-*/
-void ParserByteCode::Assign(const ParserByteCode &a_ByteCode) {
-    if (this == &a_ByteCode) return;
-
-    m_iStackPos = a_ByteCode.m_iStackPos;
-    m_vRPN = a_ByteCode.m_vRPN;
-    m_iMaxStackSize = a_ByteCode.m_iMaxStackSize;
-}
-
-//---------------------------------------------------------------------------
 /** \brief Add a Variable pointer to bytecode.
     \param a_pVar Pointer to be added.
 */
@@ -113,75 +83,6 @@ void ParserByteCode::AddVal(value_type a_fVal) {
     tok.Val.data = 0;
     tok.Val.data2 = a_fVal;
     m_vRPN.push_back(tok);
-}
-
-//---------------------------------------------------------------------------
-void ParserByteCode::ConstantFolding(ECmdCode a_Oprt) {
-    std::size_t sz = m_vRPN.size();
-    value_type &x = m_vRPN[sz - 2].Val.data2, &y = m_vRPN[sz - 1].Val.data2;
-    switch (a_Oprt) {
-        case cmLAND:
-            x = (int)x && (int)y;
-            m_vRPN.pop_back();
-            break;
-        case cmLOR:
-            x = (int)x || (int)y;
-            m_vRPN.pop_back();
-            break;
-        case cmLT:
-            x = x < y;
-            m_vRPN.pop_back();
-            break;
-        case cmGT:
-            x = x > y;
-            m_vRPN.pop_back();
-            break;
-        case cmLE:
-            x = x <= y;
-            m_vRPN.pop_back();
-            break;
-        case cmGE:
-            x = x >= y;
-            m_vRPN.pop_back();
-            break;
-        case cmNEQ:
-            x = x != y;
-            m_vRPN.pop_back();
-            break;
-        case cmEQ:
-            x = x == y;
-            m_vRPN.pop_back();
-            break;
-        case cmADD:
-            x = x + y;
-            m_vRPN.pop_back();
-            break;
-        case cmSUB:
-            x = x - y;
-            m_vRPN.pop_back();
-            break;
-        case cmMUL:
-            x = x * y;
-            m_vRPN.pop_back();
-            break;
-        case cmDIV:
-
-#if defined(MUP_MATH_EXCEPTIONS)
-            if (y == 0) throw ParserError(ecDIV_BY_ZERO, _T("0"));
-#endif
-
-            x = x / y;
-            m_vRPN.pop_back();
-            break;
-
-        case cmPOW:
-            x = MathImpl<value_type>::Pow(x, y);
-            m_vRPN.pop_back();
-            break;
-
-        default:
-            break;
-    }  // switch opcode
 }
 
 //---------------------------------------------------------------------------

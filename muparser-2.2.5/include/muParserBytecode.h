@@ -95,13 +95,10 @@ class ParserByteCode {
     /** \brief The actual rpn storage. */
     rpn_type m_vRPN;
 
-    void ConstantFolding(ECmdCode a_Oprt);
-
    public:
     ParserByteCode();
-    ParserByteCode(const ParserByteCode &a_ByteCode);
-    ParserByteCode &operator=(const ParserByteCode &a_ByteCode);
-    void Assign(const ParserByteCode &a_ByteCode);
+    ParserByteCode(const ParserByteCode &a_ByteCode) = default;
+    ParserByteCode &operator=(const ParserByteCode &a_ByteCode) = default;
 
     void AddVar(value_type *a_pVar);
     void AddVal(value_type a_fVal);

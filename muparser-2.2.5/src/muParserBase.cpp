@@ -775,6 +775,9 @@ void ParserBase::ApplyFunc(ParserStack<token_type> &a_stOpt, ParserStack<token_t
             m_vRPN.AddFun(funTok.GetFuncAddr(),
                           (funTok.GetArgCount() == -1) ? -iArgNumerical : iArgNumerical);
             break;
+        default:
+            assert(0 && "Unexpected function token");
+            break;
     }
 
     // Push dummy value representing the function result to the stack

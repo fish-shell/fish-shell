@@ -65,7 +65,7 @@ class ParserBase {
       the function pointer to the parser function depending on
       which state it is in. (i.e. bytecode parser vs. string parser)
     */
-    typedef value_type (ParserBase::*ParseFunction)() const;
+    typedef ValueOrError (ParserBase::*ParseFunction)() const;
 
     /** \brief Type used for storing an array of values. */
     typedef std::vector<value_type> valbuf_type;
@@ -236,9 +236,10 @@ class ParserBase {
 
     void CreateRPN() const;
 
-    value_type ParseString() const;
-    value_type ParseCmdCode() const;
-    value_type ParseCmdCodeBulk(int nOffset, int nThreadID) const;
+    ValueOrError ParseString() const;
+    ValueOrError ParseCmdCode() const;
+    ValueOrError ParseCmdCodeBulk(int nOffset, int nThreadID) const;
+    ValueOrError InvokeFunction(generic_fun_type func, const value_type *args, int argCount) const;
 
     void CheckName(const string_type &a_strName, const string_type &a_CharSet) const;
     void CheckOprt(const string_type &a_sName, const ParserCallback &a_Callback,

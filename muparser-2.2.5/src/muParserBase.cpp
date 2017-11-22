@@ -886,6 +886,44 @@ void ParserBase::ApplyRemainingOprt(ParserStack<token_type> &stOpt,
     }
 }
 
+/// Invoke the function \p func as the fun_typeN given argCount, passing in \p argCount arguments
+/// starting at \p args.
+ValueOrError ParserBase::InvokeFunction(generic_fun_type func, const value_type *args,
+                                        int argCount) const {
+    assert(0 <= argCount && argCount <= 10 && "Invalid arg count");
+    switch (argCount) {
+        case 0:
+            return ((fun_type0)func)();
+        case 1:
+            return ((fun_type1)func)(args[0]);
+        case 2:
+            return ((fun_type2)func)(args[0], args[1]);
+        case 3:
+            return ((fun_type3)func)(args[0], args[1], args[2]);
+        case 4:
+            return ((fun_type4)func)(args[0], args[1], args[2], args[3]);
+        case 5:
+            return ((fun_type5)func)(args[0], args[1], args[2], args[3], args[4]);
+        case 6:
+            return ((fun_type6)func)(args[0], args[1], args[2], args[3], args[4], args[5]);
+        case 7:
+            return ((fun_type7)func)(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+        case 8:
+            return ((fun_type8)func)(args[0], args[1], args[2], args[3], args[4], args[5], args[6],
+                                     args[7]);
+        case 9:
+            return ((fun_type9)func)(args[0], args[1], args[2], args[3], args[4], args[5], args[6],
+                                     args[7], args[8]);
+        case 10:
+            return ((fun_type10)func)(args[0], args[1], args[2], args[3], args[4], args[5], args[6],
+                                      args[7], args[8], args[9]);
+        default:
+            // Unreachable.
+            assert(0 && "Internal error");
+            return 0;
+    }
+}
+
 //---------------------------------------------------------------------------
 /** \brief Parse the command code.
     \sa ParseString(...)
@@ -894,7 +932,7 @@ void ParserBase::ApplyRemainingOprt(ParserStack<token_type> &stOpt,
     associated operators. The Stack is filled beginning from index one the
     value at index zero is not used at all.
 */
-value_type ParserBase::ParseCmdCode() const {
+ValueOrError ParserBase::ParseCmdCode() const {
     value_type *Stack = &m_vStackBuffer[0];
     value_type buf;
     int sidx(0);
@@ -1020,90 +1058,18 @@ value_type ParserBase::ParseCmdCode() const {
             // Next is treatment of numeric functions
             case cmFUNC: {
                 int iArgCount = pTok->Fun.argc;
-
-                // switch according to argument count
-                switch (iArgCount) {
-                    case 0:
-                        sidx += 1;
-                        Stack[sidx] = (*(fun_type0)pTok->Fun.ptr)().getOrThrow();
-                        continue;
-                    case 1:
-                        Stack[sidx] = (*(fun_type1)pTok->Fun.ptr)(Stack[sidx]).getOrThrow();
-                        continue;
-                    case 2:
-                        sidx -= 1;
-                        Stack[sidx] =
-                            (*(fun_type2)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1]).getOrThrow();
-                        continue;
-                    case 3:
-                        sidx -= 2;
-                        Stack[sidx] = (*(fun_type3)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
-                                                                  Stack[sidx + 2])
-                                          .getOrThrow();
-                        continue;
-                    case 4:
-                        sidx -= 3;
-                        Stack[sidx] = (*(fun_type4)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
-                                                                  Stack[sidx + 2], Stack[sidx + 3])
-                                          .getOrThrow();
-                        continue;
-                    case 5:
-                        sidx -= 4;
-                        Stack[sidx] = (*(fun_type5)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
-                                                                  Stack[sidx + 2], Stack[sidx + 3],
-                                                                  Stack[sidx + 4])
-                                          .getOrThrow();
-                        continue;
-                    case 6:
-                        sidx -= 5;
-                        Stack[sidx] = (*(fun_type6)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
-                                                                  Stack[sidx + 2], Stack[sidx + 3],
-                                                                  Stack[sidx + 4], Stack[sidx + 5])
-                                          .getOrThrow();
-                        continue;
-                    case 7:
-                        sidx -= 6;
-                        Stack[sidx] = (*(fun_type7)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
-                                                                  Stack[sidx + 2], Stack[sidx + 3],
-                                                                  Stack[sidx + 4], Stack[sidx + 5],
-                                                                  Stack[sidx + 6])
-                                          .getOrThrow();
-                        continue;
-                    case 8:
-                        sidx -= 7;
-                        Stack[sidx] = (*(fun_type8)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
-                                                                  Stack[sidx + 2], Stack[sidx + 3],
-                                                                  Stack[sidx + 4], Stack[sidx + 5],
-                                                                  Stack[sidx + 6], Stack[sidx + 7])
-                                          .getOrThrow();
-                        continue;
-                    case 9:
-                        sidx -= 8;
-                        Stack[sidx] = (*(fun_type9)pTok->Fun.ptr)(
-                                          Stack[sidx], Stack[sidx + 1], Stack[sidx + 2],
-                                          Stack[sidx + 3], Stack[sidx + 4], Stack[sidx + 5],
-                                          Stack[sidx + 6], Stack[sidx + 7], Stack[sidx + 8])
-                                          .getOrThrow();
-                        continue;
-                    case 10:
-                        sidx -= 9;
-                        Stack[sidx] = (*(fun_type10)pTok->Fun.ptr)(Stack[sidx], Stack[sidx + 1],
-                                                                   Stack[sidx + 2], Stack[sidx + 3],
-                                                                   Stack[sidx + 4], Stack[sidx + 5],
-                                                                   Stack[sidx + 6], Stack[sidx + 7],
-                                                                   Stack[sidx + 8], Stack[sidx + 9])
-                                          .getOrThrow();
-                        continue;
-                    default:
-                        if (iArgCount > 0)  // function with variable arguments store the number as
-                                            // a negative value
-                            assert(0 && "muParser internal error");
-
-                        sidx -= -iArgCount - 1;
-                        Stack[sidx] =
-                            (*(multfun_type)pTok->Fun.ptr)(&Stack[sidx], -iArgCount).getOrThrow();
-                        continue;
+                ValueOrError funcResult{0.0};
+                if (iArgCount >= 0) {
+                    sidx -= iArgCount - 1;
+                    funcResult = InvokeFunction(pTok->Fun.ptr, &Stack[sidx], iArgCount);
+                } else {
+                    // function with variable arguments store the number as a negative value
+                    sidx -= -iArgCount - 1;
+                    funcResult = ((multfun_type)pTok->Fun.ptr)(&Stack[sidx], -iArgCount);
                 }
+                if (!funcResult) return funcResult;
+                Stack[sidx] = *funcResult;
+                continue;
             }
 
             // Next is treatment of string functions
@@ -1113,27 +1079,23 @@ value_type ParserBase::ParseCmdCode() const {
                 // The index of the string argument in the string table
                 int iIdxStack = pTok->Fun.idx;
                 MUP_ASSERT(iIdxStack >= 0 && iIdxStack < (int)m_vStringBuf.size());
-
+                ValueOrError funcResult{0.0};
                 switch (pTok->Fun.argc)  // switch according to argument count
                 {
                     case 0:
-                        Stack[sidx] =
-                            (*(strfun_type1)pTok->Fun.ptr)(m_vStringBuf[iIdxStack].c_str())
-                                .getOrThrow();
-                        continue;
+                        funcResult = ((strfun_type1)pTok->Fun.ptr)(m_vStringBuf[iIdxStack].c_str());
+                        break;
                     case 1:
-                        Stack[sidx] = (*(strfun_type2)pTok->Fun.ptr)(
-                                          m_vStringBuf[iIdxStack].c_str(), Stack[sidx])
-                                          .getOrThrow();
-                        continue;
+                        funcResult = ((strfun_type2)pTok->Fun.ptr)(m_vStringBuf[iIdxStack].c_str(),
+                                                                   Stack[sidx]);
+                        break;
                     case 2:
-                        Stack[sidx] =
-                            (*(strfun_type3)pTok->Fun.ptr)(m_vStringBuf[iIdxStack].c_str(),
-                                                           Stack[sidx], Stack[sidx + 1])
-                                .getOrThrow();
-                        continue;
+                        funcResult = ((strfun_type3)pTok->Fun.ptr)(m_vStringBuf[iIdxStack].c_str(),
+                                                                   Stack[sidx], Stack[sidx + 1]);
+                        break;
                 }
-
+                if (!funcResult) return funcResult;
+                Stack[sidx] = *funcResult;
                 continue;
             }
 
@@ -1357,7 +1319,7 @@ void ParserBase::CreateRPN() const {
   pointer #m_pParseFormula will be changed to the second parse routine the
   uses bytecode instead of string parsing.
 */
-value_type ParserBase::ParseString() const {
+ValueOrError ParserBase::ParseString() const {
     try {
         CreateRPN();
         m_pParseFormula = &ParserBase::ParseCmdCode;
@@ -1623,6 +1585,6 @@ int ParserBase::GetNumResults() const { return m_nFinalResultIdx; }
   \return The evaluation result
   \throw ParseException if no Formula is set or in case of any other error related to the formula.
 */
-value_type ParserBase::Eval() const { return (this->*m_pParseFormula)(); }
+value_type ParserBase::Eval() const { return (this->*m_pParseFormula)().getOrThrow(); }
 
 }  // namespace mu

@@ -47,15 +47,13 @@ namespace mu {
 class ParserBase;
 
 /** \brief Token reader for the ParserBase class.
-
 */
-class ParserTokenReader {
+class ParserTokenReader final {
    private:
     typedef ParserToken<value_type, string_type> token_type;
 
    public:
     ParserTokenReader(ParserBase *a_pParent);
-    ParserTokenReader *Clone(ParserBase *a_pParent) const;
 
     void AddValIdent(identfun_type a_pCallback);
     void SetVarCreator(facfun_type a_pFactory, void *pUserData);
@@ -97,9 +95,8 @@ class ParserTokenReader {
         noANY = ~0  ///< All of he above flags set
     };
 
-    ParserTokenReader(const ParserTokenReader &a_Reader);
-    ParserTokenReader &operator=(const ParserTokenReader &a_Reader);
-    void Assign(const ParserTokenReader &a_Reader);
+    ParserTokenReader(const ParserTokenReader &a_Reader) = delete;
+    ParserTokenReader &operator=(const ParserTokenReader &a_Reader) = delete;
 
     void SetParent(ParserBase *a_pParent);
     int ExtractToken(const char_type *a_szCharSet, string_type &a_strTok, int a_iPos) const;

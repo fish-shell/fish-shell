@@ -38,58 +38,6 @@
 
 namespace mu {
 
-// Forward declaration
-class ParserBase;
-
-//---------------------------------------------------------------------------
-/** \brief Copy constructor.
-
-    \sa Assign
-*/
-ParserTokenReader::ParserTokenReader(const ParserTokenReader &a_Reader) { Assign(a_Reader); }
-
-//---------------------------------------------------------------------------
-/** \brief Assignment operator.
-
-    Self assignment will be suppressed otherwise #Assign is called.
-
-    \param a_Reader Object to copy to this token reader.
-*/
-ParserTokenReader &ParserTokenReader::operator=(const ParserTokenReader &a_Reader) {
-    if (&a_Reader != this) Assign(a_Reader);
-
-    return *this;
-}
-
-//---------------------------------------------------------------------------
-/** \brief Assign state of a token reader to this token reader.
-
-    \param a_Reader Object from which the state should be copied.
-*/
-void ParserTokenReader::Assign(const ParserTokenReader &a_Reader) {
-    m_pParser = a_Reader.m_pParser;
-    m_strFormula = a_Reader.m_strFormula;
-    m_iPos = a_Reader.m_iPos;
-    m_iSynFlags = a_Reader.m_iSynFlags;
-
-    m_UsedVar = a_Reader.m_UsedVar;
-    m_pFunDef = a_Reader.m_pFunDef;
-    m_pConstDef = a_Reader.m_pConstDef;
-    m_pVarDef = a_Reader.m_pVarDef;
-    m_pStrVarDef = a_Reader.m_pStrVarDef;
-    m_pPostOprtDef = a_Reader.m_pPostOprtDef;
-    m_pInfixOprtDef = a_Reader.m_pInfixOprtDef;
-    m_pOprtDef = a_Reader.m_pOprtDef;
-    m_bIgnoreUndefVar = a_Reader.m_bIgnoreUndefVar;
-    m_vIdentFun = a_Reader.m_vIdentFun;
-    m_pFactory = a_Reader.m_pFactory;
-    m_pFactoryData = a_Reader.m_pFactoryData;
-    m_iBrackets = a_Reader.m_iBrackets;
-    m_cArgSep = a_Reader.m_cArgSep;
-    m_fZero = a_Reader.m_fZero;
-    m_lastTok = a_Reader.m_lastTok;
-}
-
 //---------------------------------------------------------------------------
 /** \brief Constructor.
 
@@ -122,20 +70,6 @@ ParserTokenReader::ParserTokenReader(ParserBase *a_pParent)
       m_cArgSep(',') {
     assert(m_pParser);
     SetParent(m_pParser);
-}
-
-//---------------------------------------------------------------------------
-/** \brief Create instance of a ParserTokenReader identical with this
-            and return its pointer.
-
-    This is a factory method the calling function must take care of the object destruction.
-
-    \return A new ParserTokenReader object.
-*/
-ParserTokenReader *ParserTokenReader::Clone(ParserBase *a_pParent) const {
-    std::auto_ptr<ParserTokenReader> ptr(new ParserTokenReader(*this));
-    ptr->SetParent(a_pParent);
-    return ptr.release();
 }
 
 //---------------------------------------------------------------------------

@@ -47,29 +47,9 @@ namespace mu {
     \post #m_pParser==a_pParser
     \param a_pParent Parent parser object of the token reader.
 */
-ParserTokenReader::ParserTokenReader(ParserBase *a_pParent)
-    : m_pParser(a_pParent),
-      m_strFormula(),
-      m_iPos(0),
-      m_iSynFlags(0),
-      m_bIgnoreUndefVar(false),
-      m_pFunDef(NULL),
-      m_pPostOprtDef(NULL),
-      m_pInfixOprtDef(NULL),
-      m_pOprtDef(NULL),
-      m_pConstDef(NULL),
-      m_pStrVarDef(NULL),
-      m_pVarDef(NULL),
-      m_pFactory(NULL),
-      m_pFactoryData(NULL),
-      m_vIdentFun(),
-      m_UsedVar(),
-      m_fZero(0),
-      m_iBrackets(0),
-      m_lastTok(),
-      m_cArgSep(',') {
-    assert(m_pParser);
-    SetParent(m_pParser);
+ParserTokenReader::ParserTokenReader(ParserBase *a_pParent) {
+    assert(a_pParent && "Missing parent");
+    SetParent(a_pParent);
 }
 
 //---------------------------------------------------------------------------

@@ -121,25 +121,25 @@ class ParserTokenReader final {
 
     ParserBase *m_pParser;
     string_type m_strFormula;
-    int m_iPos;
-    int m_iSynFlags;
-    bool m_bIgnoreUndefVar;
+    int m_iPos = 0;
+    int m_iSynFlags = 0;
+    bool m_bIgnoreUndefVar = false;
 
-    const funmap_type *m_pFunDef;
-    const funmap_type *m_pPostOprtDef;
-    const funmap_type *m_pInfixOprtDef;
-    const funmap_type *m_pOprtDef;
-    const valmap_type *m_pConstDef;
-    const strmap_type *m_pStrVarDef;
-    varmap_type *m_pVarDef;  ///< The only non const pointer to parser internals
-    facfun_type m_pFactory;
-    void *m_pFactoryData;
+    const funmap_type *m_pFunDef = nullptr;
+    const funmap_type *m_pPostOprtDef = nullptr;
+    const funmap_type *m_pInfixOprtDef = nullptr;
+    const funmap_type *m_pOprtDef = nullptr;
+    const valmap_type *m_pConstDef = nullptr;
+    const strmap_type *m_pStrVarDef = nullptr;
+    varmap_type *m_pVarDef = nullptr;  ///< The only non const pointer to parser internals
+    facfun_type m_pFactory = nullptr;
+    void *m_pFactoryData = nullptr;
     std::list<identfun_type> m_vIdentFun;  ///< Value token identification function
     varmap_type m_UsedVar;
-    value_type m_fZero;  ///< Dummy value of zero, referenced by undefined variables
-    int m_iBrackets;
+    value_type m_fZero = 0;  ///< Dummy value of zero, referenced by undefined variables
+    int m_iBrackets = 0;
     token_type m_lastTok;
-    char_type m_cArgSep;  ///< The character used for separating function arguments
+    char_type m_cArgSep = ',';  ///< The character used for separating function arguments
 };
 }  // namespace mu
 

@@ -39,8 +39,7 @@
 namespace mu {
 //---------------------------------------------------------------------------
 /** \brief Bytecode default constructor. */
-ParserByteCode::ParserByteCode()
-    : m_iStackPos(0), m_iMaxStackSize(0), m_vRPN(), m_bEnableOptimizer(true) {
+ParserByteCode::ParserByteCode() : m_iStackPos(0), m_iMaxStackSize(0), m_vRPN() {
     m_vRPN.reserve(50);
 }
 
@@ -62,9 +61,6 @@ ParserByteCode &ParserByteCode::operator=(const ParserByteCode &a_ByteCode) {
 }
 
 //---------------------------------------------------------------------------
-void ParserByteCode::EnableOptimizer(bool bStat) { m_bEnableOptimizer = bStat; }
-
-//---------------------------------------------------------------------------
 /** \brief Copy state of another object to this.
 
     \throw nowthrow
@@ -75,7 +71,6 @@ void ParserByteCode::Assign(const ParserByteCode &a_ByteCode) {
     m_iStackPos = a_ByteCode.m_iStackPos;
     m_vRPN = a_ByteCode.m_vRPN;
     m_iMaxStackSize = a_ByteCode.m_iMaxStackSize;
-    m_bEnableOptimizer = a_ByteCode.m_bEnableOptimizer;
 }
 
 //---------------------------------------------------------------------------
@@ -203,131 +198,10 @@ void ParserByteCode::ConstantFolding(ECmdCode a_Oprt) {
     \sa  ParserToken::ECmdCode
 */
 void ParserByteCode::AddOp(ECmdCode a_Oprt) {
-    bool bOptimized = false;
-
-    if (m_bEnableOptimizer) {
-        std::size_t sz = m_vRPN.size();
-
-        // Check for foldable constants like:
-        //   cmVAL cmVAL cmADD
-        // where cmADD can stand fopr any binary operator applied to
-        // two constant values.
-        if (sz >= 2 && m_vRPN[sz - 2].Cmd == cmVAL && m_vRPN[sz - 1].Cmd == cmVAL) {
-            ConstantFolding(a_Oprt);
-            bOptimized = true;
-        } else {
-            switch (a_Oprt) {
-                case cmPOW:
-                    // Optimization for polynomials of low order
-                    if (m_vRPN[sz - 2].Cmd == cmVAR && m_vRPN[sz - 1].Cmd == cmVAL) {
-                        if (m_vRPN[sz - 1].Val.data2 == 2)
-                            m_vRPN[sz - 2].Cmd = cmVARPOW2;
-                        else if (m_vRPN[sz - 1].Val.data2 == 3)
-                            m_vRPN[sz - 2].Cmd = cmVARPOW3;
-                        else if (m_vRPN[sz - 1].Val.data2 == 4)
-                            m_vRPN[sz - 2].Cmd = cmVARPOW4;
-                        else
-                            break;
-
-                        m_vRPN.pop_back();
-                        bOptimized = true;
-                    }
-                    break;
-
-                case cmSUB:
-                case cmADD:
-                    // Simple optimization based on pattern recognition for a shitload of different
-                    // bytecode combinations of addition/subtraction
-                    if ((m_vRPN[sz - 1].Cmd == cmVAR && m_vRPN[sz - 2].Cmd == cmVAL) ||
-                        (m_vRPN[sz - 1].Cmd == cmVAL && m_vRPN[sz - 2].Cmd == cmVAR) ||
-                        (m_vRPN[sz - 1].Cmd == cmVAL && m_vRPN[sz - 2].Cmd == cmVARMUL) ||
-                        (m_vRPN[sz - 1].Cmd == cmVARMUL && m_vRPN[sz - 2].Cmd == cmVAL) ||
-                        (m_vRPN[sz - 1].Cmd == cmVAR && m_vRPN[sz - 2].Cmd == cmVAR &&
-                         m_vRPN[sz - 2].Val.ptr == m_vRPN[sz - 1].Val.ptr) ||
-                        (m_vRPN[sz - 1].Cmd == cmVAR && m_vRPN[sz - 2].Cmd == cmVARMUL &&
-                         m_vRPN[sz - 2].Val.ptr == m_vRPN[sz - 1].Val.ptr) ||
-                        (m_vRPN[sz - 1].Cmd == cmVARMUL && m_vRPN[sz - 2].Cmd == cmVAR &&
-                         m_vRPN[sz - 2].Val.ptr == m_vRPN[sz - 1].Val.ptr) ||
-                        (m_vRPN[sz - 1].Cmd == cmVARMUL && m_vRPN[sz - 2].Cmd == cmVARMUL &&
-                         m_vRPN[sz - 2].Val.ptr == m_vRPN[sz - 1].Val.ptr)) {
-                        assert((m_vRPN[sz - 2].Val.ptr == NULL && m_vRPN[sz - 1].Val.ptr != NULL) ||
-                               (m_vRPN[sz - 2].Val.ptr != NULL && m_vRPN[sz - 1].Val.ptr == NULL) ||
-                               (m_vRPN[sz - 2].Val.ptr == m_vRPN[sz - 1].Val.ptr));
-
-                        m_vRPN[sz - 2].Cmd = cmVARMUL;
-                        m_vRPN[sz - 2].Val.ptr =
-                            (value_type *)((long long)(m_vRPN[sz - 2].Val.ptr) |
-                                           (long long)(m_vRPN[sz - 1].Val.ptr));  // variable
-                        m_vRPN[sz - 2].Val.data2 +=
-                            ((a_Oprt == cmSUB) ? -1 : 1) * m_vRPN[sz - 1].Val.data2;  // offset
-                        m_vRPN[sz - 2].Val.data +=
-                            ((a_Oprt == cmSUB) ? -1 : 1) * m_vRPN[sz - 1].Val.data;  // multiplicand
-                        m_vRPN.pop_back();
-                        bOptimized = true;
-                    }
-                    break;
-
-                case cmMUL:
-                    if ((m_vRPN[sz - 1].Cmd == cmVAR && m_vRPN[sz - 2].Cmd == cmVAL) ||
-                        (m_vRPN[sz - 1].Cmd == cmVAL && m_vRPN[sz - 2].Cmd == cmVAR)) {
-                        m_vRPN[sz - 2].Cmd = cmVARMUL;
-                        m_vRPN[sz - 2].Val.ptr =
-                            (value_type *)((long long)(m_vRPN[sz - 2].Val.ptr) |
-                                           (long long)(m_vRPN[sz - 1].Val.ptr));
-                        m_vRPN[sz - 2].Val.data =
-                            m_vRPN[sz - 2].Val.data2 + m_vRPN[sz - 1].Val.data2;
-                        m_vRPN[sz - 2].Val.data2 = 0;
-                        m_vRPN.pop_back();
-                        bOptimized = true;
-                    } else if ((m_vRPN[sz - 1].Cmd == cmVAL && m_vRPN[sz - 2].Cmd == cmVARMUL) ||
-                               (m_vRPN[sz - 1].Cmd == cmVARMUL && m_vRPN[sz - 2].Cmd == cmVAL)) {
-                        // Optimization: 2*(3*b+1) or (3*b+1)*2 -> 6*b+2
-                        m_vRPN[sz - 2].Cmd = cmVARMUL;
-                        m_vRPN[sz - 2].Val.ptr =
-                            (value_type *)((long long)(m_vRPN[sz - 2].Val.ptr) |
-                                           (long long)(m_vRPN[sz - 1].Val.ptr));
-                        if (m_vRPN[sz - 1].Cmd == cmVAL) {
-                            m_vRPN[sz - 2].Val.data *= m_vRPN[sz - 1].Val.data2;
-                            m_vRPN[sz - 2].Val.data2 *= m_vRPN[sz - 1].Val.data2;
-                        } else {
-                            m_vRPN[sz - 2].Val.data =
-                                m_vRPN[sz - 1].Val.data * m_vRPN[sz - 2].Val.data2;
-                            m_vRPN[sz - 2].Val.data2 =
-                                m_vRPN[sz - 1].Val.data2 * m_vRPN[sz - 2].Val.data2;
-                        }
-                        m_vRPN.pop_back();
-                        bOptimized = true;
-                    } else if (m_vRPN[sz - 1].Cmd == cmVAR && m_vRPN[sz - 2].Cmd == cmVAR &&
-                               m_vRPN[sz - 1].Val.ptr == m_vRPN[sz - 2].Val.ptr) {
-                        // Optimization: a*a -> a^2
-                        m_vRPN[sz - 2].Cmd = cmVARPOW2;
-                        m_vRPN.pop_back();
-                        bOptimized = true;
-                    }
-                    break;
-
-                case cmDIV:
-                    if (m_vRPN[sz - 1].Cmd == cmVAL && m_vRPN[sz - 2].Cmd == cmVARMUL &&
-                        m_vRPN[sz - 1].Val.data2 != 0) {
-                        // Optimization: 4*a/2 -> 2*a
-                        m_vRPN[sz - 2].Val.data /= m_vRPN[sz - 1].Val.data2;
-                        m_vRPN[sz - 2].Val.data2 /= m_vRPN[sz - 1].Val.data2;
-                        m_vRPN.pop_back();
-                        bOptimized = true;
-                    }
-                    break;
-
-            }  // switch a_Oprt
-        }
-    }
-
-    // If optimization can't be applied just write the value
-    if (!bOptimized) {
-        --m_iStackPos;
-        SToken tok;
-        tok.Cmd = a_Oprt;
-        m_vRPN.push_back(tok);
-    }
+    --m_iStackPos;
+    SToken tok;
+    tok.Cmd = a_Oprt;
+    m_vRPN.push_back(tok);
 }
 
 //---------------------------------------------------------------------------

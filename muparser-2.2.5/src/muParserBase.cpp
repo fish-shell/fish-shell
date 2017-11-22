@@ -1441,16 +1441,6 @@ void ParserBase::ClearInfixOprt() {
     ReInit();
 }
 
-//------------------------------------------------------------------------------
-/** \brief Enable or disable the formula optimization feature.
-    \post Resets the parser to string parser mode.
-    \throw nothrow
-*/
-void ParserBase::EnableOptimizer(bool a_bIsOn) {
-    m_vRPN.EnableOptimizer(a_bIsOn);
-    ReInit();
-}
-
 //---------------------------------------------------------------------------
 /** \brief Enable the dumping of bytecode and stack content on the console.
     \param bDumpCmd Flag to enable dumping of the current bytecode to the console.

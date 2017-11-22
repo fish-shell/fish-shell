@@ -95,8 +95,6 @@ class ParserByteCode {
     /** \brief The actual rpn storage. */
     rpn_type m_vRPN;
 
-    bool m_bEnableOptimizer;
-
     void ConstantFolding(ECmdCode a_Oprt);
 
    public:
@@ -112,8 +110,6 @@ class ParserByteCode {
     void AddAssignOp(value_type *a_pVar);
     void AddFun(generic_fun_type a_pFun, int a_iArgc);
     void AddStrFun(generic_fun_type a_pFun, int a_iArgc, int a_iIdx);
-
-    void EnableOptimizer(bool bStat);
 
     void Finalize();
     void clear();

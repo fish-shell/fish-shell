@@ -1253,10 +1253,8 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
             fVal[2] = p2.Eval();
 
             // Test assignment operator
-            // additionally  disable Optimizer this time
             mu::Parser p3;
             p3 = p2;
-            p3.EnableOptimizer(false);
             fVal[3] = p3.Eval();
 
             // Test Eval function for multiple return values

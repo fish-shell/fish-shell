@@ -176,8 +176,6 @@ value_type Help() {
     mu::console() << _T( "  list var     - list parser variables\n");
     mu::console() << _T( "  list exprvar - list expression variables\n");
     mu::console() << _T( "  list const   - list all numeric parser constants\n");
-    mu::console() << _T( "  opt on       - enable optimizer (default)\n");
-    mu::console() << _T( "  opt off      - disable optimizer\n");
     mu::console() << _T( "  locale de    - switch to german locale\n");
     mu::console() << _T( "  locale en    - switch to english locale\n");
     mu::console() << _T( "  locale reset - reset locale\n");
@@ -310,14 +308,6 @@ int CheckKeywords(const mu::char_type *a_szLine, mu::Parser &a_Parser) {
     } else if (sLine == _T("list var")) {
         ListVar(a_Parser);
         return 1;
-    } else if (sLine == _T("opt on")) {
-        a_Parser.EnableOptimizer(true);
-        mu::console() << _T("Optimizer enabled\n");
-        return 1;
-    } else if (sLine == _T("opt off")) {
-        a_Parser.EnableOptimizer(false);
-        mu::console() << _T("Optimizer disabled\n");
-        return 1;
     } else if (sLine == _T("list const")) {
         ListConst(a_Parser);
         return 1;
@@ -382,7 +372,7 @@ void Calc() {
     parser.DefineFun(_T("strfun0"), StrFun0);
     parser.DefineFun(_T("strfun2"), StrFun2);
     parser.DefineFun(_T("ping"), Ping);
-    parser.DefineFun(_T("rnd"), Rnd);  // Add an unoptimizeable function
+    parser.DefineFun(_T("rnd"), Rnd);
     parser.DefineFun(_T("throw"), ThrowAnException);
 
     parser.DefineOprt(_T("add"), Add, 0);

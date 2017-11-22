@@ -109,7 +109,6 @@ class ParserBase {
     void SetThousandsSep(char_type cThousandsSep = 0);
     void ResetLocale();
 
-    void EnableOptimizer(bool a_bIsOn = true);
     void EnableBuiltInOprt(bool a_bIsOn = true);
 
     bool HasBuiltInOprt() const;

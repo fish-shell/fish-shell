@@ -282,18 +282,9 @@ class ParserToken {
                function and operator tokens.
 
         \return The pointer stored in #m_pTok.
-        \throw exception_type if token type is non of:
-               <ul>
-                 <li>cmFUNC</li>
-                 <li>cmSTRFUNC</li>
-                 <li>cmPOSTOP</li>
-                 <li>cmINFIXOP</li>
-                 <li>cmOPRT_BIN</li>
-               </ul>
-        \sa ECmdCode
     */
     generic_fun_type GetFuncAddr() const {
-        return (m_pCallback.get()) ? (generic_fun_type)m_pCallback->GetAddr() : 0;
+        return m_pCallback ? (generic_fun_type)m_pCallback->GetAddr() : nullptr;
     }
 
     //------------------------------------------------------------------------------

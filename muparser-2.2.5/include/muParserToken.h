@@ -116,7 +116,7 @@ class ParserToken {
         m_iType = a_Tok.m_iType;
         m_fVal = a_Tok.m_fVal;
         // create new callback object if a_Tok has one
-        m_pCallback.reset(a_Tok.m_pCallback.get() ? a_Tok.m_pCallback->Clone() : 0);
+        m_pCallback.reset(a_Tok.m_pCallback ? new ParserCallback(*a_Tok.m_pCallback) : nullptr);
     }
 
     //------------------------------------------------------------------------------

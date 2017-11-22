@@ -46,7 +46,7 @@ namespace mu {
 
     \author (C) 2004-2011 Ingo Berg
 */
-class ParserCallback {
+class ParserCallback final {
    public:
     ParserCallback(fun_type0 a_pFun, bool a_bAllowOpti);
     ParserCallback(fun_type1 a_pFun, bool a_bAllowOpti, int a_iPrec = -1,
@@ -69,8 +69,6 @@ class ParserCallback {
     ParserCallback(strfun_type3 a_pFun, bool a_bAllowOpti);
     ParserCallback();
     ParserCallback(const ParserCallback& a_Fun);
-
-    ParserCallback* Clone() const;
 
     bool IsOptimizable() const;
     void* GetAddr() const;

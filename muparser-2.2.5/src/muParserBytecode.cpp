@@ -76,7 +76,6 @@ void ParserByteCode::Assign(const ParserByteCode &a_ByteCode) {
 //---------------------------------------------------------------------------
 /** \brief Add a Variable pointer to bytecode.
     \param a_pVar Pointer to be added.
-    \throw nothrow
 */
 void ParserByteCode::AddVar(value_type *a_pVar) {
     ++m_iStackPos;
@@ -102,7 +101,6 @@ void ParserByteCode::AddVar(value_type *a_pVar) {
     </ul>
 
     \param a_pVal Value to be added.
-    \throw nothrow
 */
 void ParserByteCode::AddVal(value_type a_fVal) {
     ++m_iStackPos;
@@ -255,7 +253,6 @@ void ParserByteCode::AddFun(generic_fun_type a_pFun, int a_iArgc) {
 
 //---------------------------------------------------------------------------
 /** \brief Add String function entry to the parser bytecode.
-    \throw nothrow
 
     A string function entry consists of the stack position of the return value,
     followed by a cmSTRFUNC code, the function pointer and an index into the
@@ -276,8 +273,6 @@ void ParserByteCode::AddStrFun(generic_fun_type a_pFun, int a_iArgc, int a_iIdx)
 
 //---------------------------------------------------------------------------
 /** \brief Add end marker to bytecode.
-
-    \throw nothrow
 */
 void ParserByteCode::Finalize() {
     SToken tok;
@@ -326,8 +321,6 @@ std::size_t ParserByteCode::GetSize() const { return m_vRPN.size(); }
 
 //---------------------------------------------------------------------------
 /** \brief Delete the bytecode.
-
-    \throw nothrow
 
     The name of this function is a violation of my own coding guidelines
     but this way it's more in line with the STL functions thus more

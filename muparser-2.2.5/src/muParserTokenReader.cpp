@@ -45,7 +45,6 @@ class ParserBase;
 /** \brief Copy constructor.
 
     \sa Assign
-    \throw nothrow
 */
 ParserTokenReader::ParserTokenReader(const ParserTokenReader &a_Reader) { Assign(a_Reader); }
 
@@ -55,7 +54,6 @@ ParserTokenReader::ParserTokenReader(const ParserTokenReader &a_Reader) { Assign
     Self assignment will be suppressed otherwise #Assign is called.
 
     \param a_Reader Object to copy to this token reader.
-    \throw nothrow
 */
 ParserTokenReader &ParserTokenReader::operator=(const ParserTokenReader &a_Reader) {
     if (&a_Reader != this) Assign(a_Reader);
@@ -67,7 +65,6 @@ ParserTokenReader &ParserTokenReader::operator=(const ParserTokenReader &a_Reade
 /** \brief Assign state of a token reader to this token reader.
 
     \param a_Reader Object from which the state should be copied.
-    \throw nothrow
 */
 void ParserTokenReader::Assign(const ParserTokenReader &a_Reader) {
     m_pParser = a_Reader.m_pParser;
@@ -134,7 +131,6 @@ ParserTokenReader::ParserTokenReader(ParserBase *a_pParent)
     This is a factory method the calling function must take care of the object destruction.
 
     \return A new ParserTokenReader object.
-    \throw nothrow
 */
 ParserTokenReader *ParserTokenReader::Clone(ParserBase *a_pParent) const {
     std::auto_ptr<ParserTokenReader> ptr(new ParserTokenReader(*this));
@@ -169,7 +165,6 @@ void ParserTokenReader::SetVarCreator(facfun_type a_pFactory, void *pUserData) {
 /** \brief Return the current position of the token reader in the formula string.
 
     \return #m_iPos
-    \throw nothrow
 */
 int ParserTokenReader::GetPos() const { return m_iPos; }
 
@@ -177,7 +172,6 @@ int ParserTokenReader::GetPos() const { return m_iPos; }
 /** \brief Return a reference to the formula.
 
     \return #m_strFormula
-    \throw nothrow
 */
 const string_type &ParserTokenReader::GetExpr() const { return m_strFormula; }
 
@@ -214,7 +208,6 @@ void ParserTokenReader::IgnoreUndefVar(bool bIgnore) { m_bIgnoreUndefVar = bIgno
     The syntax flags will be reset to a value appropriate for the
     start of a formula.
     \post #m_iPos==0, #m_iSynFlags = noOPT | noBC | noPOSTOP | noSTR
-    \throw nothrow
     \sa ESynCodes
 */
 void ParserTokenReader::ReInit() {
@@ -288,7 +281,6 @@ void ParserTokenReader::SetParent(ParserBase *a_pParent) {
   \param a_strTok [out]  The string that consists entirely of characters listed in a_szCharSet.
   \param a_iPos [in] Position in the string from where to start reading.
   \return The Position of the first character not listed in a_szCharSet.
-  \throw nothrow
 */
 int ParserTokenReader::ExtractToken(const char_type *a_szCharSet, string_type &a_sTok,
                                     int a_iPos) const {
@@ -454,7 +446,6 @@ bool ParserTokenReader::IsArgSep(token_type &a_Tok) {
 
     \return true if an end of formula is found false otherwise.
     \param a_Tok [out] If an eof is found the corresponding token will be stored there.
-    \throw nothrow
     \sa IsOprt, IsFunTok, IsStrFunTok, IsValTok, IsVarTok, IsString, IsInfixOpTok, IsPostOpTok
 */
 bool ParserTokenReader::IsEOF(token_type &a_Tok) {
@@ -746,7 +737,6 @@ bool ParserTokenReader::IsStrVarTok(token_type &a_Tok) {
     \param a_Tok [out] If a variable tom_pParser->m_vStringBufken has been found it will be placed
    here.
           \return true if a variable token has been found.
-    \throw nothrow
 */
 bool ParserTokenReader::IsUndefVarTok(token_type &a_Tok) {
     string_type strTok;
@@ -791,7 +781,6 @@ bool ParserTokenReader::IsUndefVarTok(token_type &a_Tok) {
     \param a_Tok [out] If a variable token has been found it will be placed here.
         \return true if a string token has been found.
     \sa IsOprt, IsFunTok, IsStrFunTok, IsValTok, IsVarTok, IsEOF, IsInfixOpTok, IsPostOpTok
-    \throw nothrow
 */
 bool ParserTokenReader::IsString(token_type &a_Tok) {
     if (m_strFormula[m_iPos] != '"') return false;

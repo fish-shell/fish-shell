@@ -122,7 +122,6 @@ ParserBase::~ParserBase() {}
   Implemented by calling Assign(a_Parser). Self assignment is suppressed.
   \param a_Parser Object to copy to this.
   \return *this
-  \throw nothrow
 */
 ParserBase &ParserBase::operator=(const ParserBase &a_Parser) {
     Assign(a_Parser);
@@ -211,7 +210,6 @@ void ParserBase::ResetLocale() {
   constant and variable definitions.
 
   \post m_pTokenReader.get()!=0
-  \throw nothrow
 */
 void ParserBase::InitTokenReader() { m_pTokenReader.reset(new token_reader_type(this)); }
 
@@ -219,7 +217,6 @@ void ParserBase::InitTokenReader() { m_pTokenReader.reset(new token_reader_type(
 /** \brief Reset parser to string parsing mode and clear internal buffers.
 
     Clear bytecode, reset the token reader.
-    \throw nothrow
 */
 void ParserBase::ReInit() const {
     m_pParseFormula = &ParserBase::ParseString;
@@ -646,7 +643,6 @@ const valmap_type &ParserBase::GetConst() const { return m_ConstDef; }
 /** \brief Return prototypes of all parser functions.
     \return #m_FunDef
     \sa FunProt
-    \throw nothrow
 
     The return type is a map of the public type #funmap_type containing the prototype
     definitions for all numerical parser functions. String functions are not part of
@@ -1347,7 +1343,6 @@ void ParserBase::Error(EErrorCodes a_iErrc, int a_iPos, const string_type &a_sTo
 
 //------------------------------------------------------------------------------
 /** \brief Clear all user defined variables.
-    \throw nothrow
 
     Resets the parser to string parsing mode by calling #ReInit.
 */
@@ -1358,7 +1353,6 @@ void ParserBase::ClearVar() {
 
 //------------------------------------------------------------------------------
 /** \brief Remove a variable from internal storage.
-    \throw nothrow
 
     Removes a variable if it exists. If the Variable does not exist nothing will be done.
 */
@@ -1373,7 +1367,6 @@ void ParserBase::RemoveVar(const string_type &a_strVarName) {
 //------------------------------------------------------------------------------
 /** \brief Clear all functions.
     \post Resets the parser to string parsing mode.
-    \throw nothrow
 */
 void ParserBase::ClearFun() {
     m_FunDef.clear();
@@ -1385,7 +1378,6 @@ void ParserBase::ClearFun() {
 
     Both numeric and string constants will be removed from the internal storage.
     \post Resets the parser to string parsing mode.
-    \throw nothrow
 */
 void ParserBase::ClearConst() {
     m_ConstDef.clear();
@@ -1396,7 +1388,6 @@ void ParserBase::ClearConst() {
 //------------------------------------------------------------------------------
 /** \brief Clear all user defined postfix operators.
     \post Resets the parser to string parsing mode.
-    \throw nothrow
 */
 void ParserBase::ClearPostfixOprt() {
     m_PostOprtDef.clear();
@@ -1406,7 +1397,6 @@ void ParserBase::ClearPostfixOprt() {
 //------------------------------------------------------------------------------
 /** \brief Clear all user defined binary operators.
     \post Resets the parser to string parsing mode.
-    \throw nothrow
 */
 void ParserBase::ClearOprt() {
     m_OprtDef.clear();
@@ -1416,7 +1406,6 @@ void ParserBase::ClearOprt() {
 //------------------------------------------------------------------------------
 /** \brief Clear the user defined Prefix operators.
     \post Resets the parser to string parser mode.
-    \throw nothrow
 */
 void ParserBase::ClearInfixOprt() {
     m_InfixOprtDef.clear();
@@ -1437,7 +1426,6 @@ void ParserBase::EnableDebugDump(bool bDumpCmd, bool bDumpStack) {
 
 //------------------------------------------------------------------------------
 /** \brief Enable or disable the built in binary operators.
-    \throw nothrow
     \sa m_bBuiltInOp, ReInit()
 
   If you disable the built in binary operators there will be no binary operators
@@ -1453,7 +1441,6 @@ void ParserBase::EnableBuiltInOprt(bool a_bIsOn) {
 //------------------------------------------------------------------------------
 /** \brief Query status of built in variables.
     \return #m_bBuiltInOp; true if built in operators are enabled.
-    \throw nothrow
 */
 bool ParserBase::HasBuiltInOprt() const { return m_bBuiltInOp; }
 

@@ -532,7 +532,6 @@ API_EXPORT(int) mupGetVarNum(muParserHandle_t a_hParser) {
     \param a_iVar [in] The index of the variable to return.
     \param a_szName [out] Pointer to the variable name.
     \param a_pVar [out] Pointer to the variable.
-    \throw nothrow
 
     Prior to calling this function call mupGetExprVarNum in order to get the
     number of variables in the expression. If the parameter a_iVar is greater
@@ -612,7 +611,6 @@ API_EXPORT(int) mupGetExprVarNum(muParserHandle_t a_hParser) {
     \param a_iVar [in] The index of the variable to return.
     \param a_szName [out] Pointer to the variable name.
     \param a_pVar [out] Pointer to the variable.
-    \throw nothrow
     */
 API_EXPORT(void)
 mupGetExprVar(muParserHandle_t a_hParser, unsigned a_iVar, const muChar_t** a_szName,

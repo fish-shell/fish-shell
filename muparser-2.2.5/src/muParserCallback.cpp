@@ -52,7 +52,6 @@ ParserCallback::ParserCallback(fun_type1 a_pFun, bool a_bAllowOpti, int a_iPrec,
 
 //---------------------------------------------------------------------------
 /** \brief Constructor for constructing function callbacks taking two arguments.
-    \throw nothrow
 */
 ParserCallback::ParserCallback(fun_type2 a_pFun, bool a_bAllowOpti)
     : m_pFun((void*)a_pFun),
@@ -69,7 +68,6 @@ ParserCallback::ParserCallback(fun_type2 a_pFun, bool a_bAllowOpti)
     \param a_bAllowOpti A flag indicating this function can be optimized
     \param a_iPrec The operator precedence
     \param a_eOprtAsct The operators associativity
-    \throw nothrow
 */
 ParserCallback::ParserCallback(fun_type2 a_pFun, bool a_bAllowOpti, int a_iPrec,
                                EOprtAssociativity a_eOprtAsct)
@@ -203,7 +201,6 @@ ParserCallback::ParserCallback(strfun_type3 a_pFun, bool a_bAllowOpti)
 
 //---------------------------------------------------------------------------
 /** \brief Default constructor.
-    \throw nothrow
 */
 ParserCallback::ParserCallback()
     : m_pFun(0),
@@ -216,7 +213,6 @@ ParserCallback::ParserCallback()
 
 //---------------------------------------------------------------------------
 /** \brief Copy constructor.
-    \throw nothrow
 */
 ParserCallback::ParserCallback(const ParserCallback& ref) {
     m_pFun = ref.m_pFun;
@@ -236,7 +232,6 @@ ParserCallback* ParserCallback::Clone() const { return new ParserCallback(*this)
 /** \brief Return tru if the function is conservative.
 
     Conservative functions return always the same result for the same argument.
-    \throw nothrow
 */
 bool ParserCallback::IsOptimizable() const { return m_bAllowOpti; }
 
@@ -245,8 +240,6 @@ bool ParserCallback::IsOptimizable() const { return m_bAllowOpti; }
 
     The type of the address is void. It needs to be recasted according to the
     argument number to the right type.
-
-    \throw nothrow
     \return #pFun
 */
 void* ParserCallback::GetAddr() const { return m_pFun; }
@@ -259,16 +252,14 @@ ECmdCode ParserCallback::GetCode() const { return m_iCode; }
 ETypeCode ParserCallback::GetType() const { return m_iType; }
 
 //---------------------------------------------------------------------------
-/** \brief Return the operator precedence.
-    \throw nothrown
+/** \brief Return the operator precedence.n
 
    Only valid if the callback token is an operator token (binary or infix).
 */
 int ParserCallback::GetPri() const { return m_iPri; }
 
 //---------------------------------------------------------------------------
-/** \brief Return the operators associativity.
-    \throw nothrown
+/** \brief Return the operators associativity.n
 
    Only valid if the callback token is a binary operator token.
 */

@@ -72,7 +72,6 @@ class ParserToken {
     /** \brief Constructor (default).
 
         Sets token to an neutral state of type cmUNKNOWN.
-        \throw nothrow
         \sa ECmdCode
     */
     ParserToken()
@@ -89,7 +88,6 @@ class ParserToken {
     /** \brief Create token from another one.
 
         Implemented by calling Assign(...)
-        \throw nothrow
         \post m_iType==cmUNKNOWN
         \sa #Assign
     */
@@ -100,7 +98,6 @@ class ParserToken {
 
         Copy token state from another token and return this.
         Implemented by calling Assign(...).
-        \throw nothrow
     */
     ParserToken &operator=(const ParserToken &a_Tok) {
         Assign(a_Tok);
@@ -109,8 +106,6 @@ class ParserToken {
 
     //------------------------------------------------------------------------------
     /** \brief Copy token information from argument.
-
-        \throw nothrow
     */
     void Assign(const ParserToken &a_Tok) {
         m_iCode = a_Tok.m_iCode;
@@ -170,7 +165,6 @@ class ParserToken {
     /** \brief Make this token a value token.
 
         Member variables not necessary for value tokens will be invalidated.
-        \throw nothrow
     */
     ParserToken &SetVal(TBase a_fVal, const TString &a_strTok = TString()) {
         m_iCode = cmVAL;
@@ -189,7 +183,6 @@ class ParserToken {
     /** \brief make this token a variable token.
 
         Member variables not necessary for variable tokens will be invalidated.
-        \throw nothrow
     */
     ParserToken &SetVar(TBase *a_pVar, const TString &a_strTok) {
         m_iCode = cmVAR;
@@ -205,7 +198,6 @@ class ParserToken {
     /** \brief Make this token a variable token.
 
         Member variables not necessary for variable tokens will be invalidated.
-        \throw nothrow
     */
     ParserToken &SetString(const TString &a_strTok, std::size_t a_iSize) {
         m_iCode = cmSTRING;
@@ -249,7 +241,6 @@ class ParserToken {
     /** \brief Return the token type.
 
         \return #m_iType
-        \throw nothrow
     */
     ECmdCode GetCode() const {
         if (m_pCallback.get()) {
@@ -353,7 +344,6 @@ class ParserToken {
         If #m_iType is cmSTRING the token identifier is the value of the string argument
         for a string function.
         \return #m_strTok
-        \throw nothrow
         \sa m_strTok
     */
     const TString &GetAsString() const { return m_strTok; }

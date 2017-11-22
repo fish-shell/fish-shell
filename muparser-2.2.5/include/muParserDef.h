@@ -179,8 +179,6 @@ enum ECmdCode {
     // operators and functions
     cmFUNC,          ///< Code for a generic function item
     cmFUNC_STR,      ///< Code for a function with a string parameter
-    cmFUNC_BULK,     ///< Special callbacks for Bulk mode with an additional parameter for the bulk
-                     /// index
     cmSTRING,        ///< Code for a string token
     cmOPRT_BIN,      ///< user defined binary operator
     cmOPRT_POSTFIX,  ///< code for postfix operators
@@ -396,46 +394,6 @@ typedef value_type (*fun_type9)(value_type, value_type, value_type, value_type, 
 /** \brief Callback type used for functions with five arguments. */
 typedef value_type (*fun_type10)(value_type, value_type, value_type, value_type, value_type,
                                  value_type, value_type, value_type, value_type, value_type);
-
-/** \brief Callback type used for functions without arguments. */
-typedef value_type (*bulkfun_type0)(int, int);
-
-/** \brief Callback type used for functions with a single arguments. */
-typedef value_type (*bulkfun_type1)(int, int, value_type);
-
-/** \brief Callback type used for functions with two arguments. */
-typedef value_type (*bulkfun_type2)(int, int, value_type, value_type);
-
-/** \brief Callback type used for functions with three arguments. */
-typedef value_type (*bulkfun_type3)(int, int, value_type, value_type, value_type);
-
-/** \brief Callback type used for functions with four arguments. */
-typedef value_type (*bulkfun_type4)(int, int, value_type, value_type, value_type, value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef value_type (*bulkfun_type5)(int, int, value_type, value_type, value_type, value_type,
-                                    value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef value_type (*bulkfun_type6)(int, int, value_type, value_type, value_type, value_type,
-                                    value_type, value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef value_type (*bulkfun_type7)(int, int, value_type, value_type, value_type, value_type,
-                                    value_type, value_type, value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef value_type (*bulkfun_type8)(int, int, value_type, value_type, value_type, value_type,
-                                    value_type, value_type, value_type, value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef value_type (*bulkfun_type9)(int, int, value_type, value_type, value_type, value_type,
-                                    value_type, value_type, value_type, value_type, value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef value_type (*bulkfun_type10)(int, int, value_type, value_type, value_type, value_type,
-                                     value_type, value_type, value_type, value_type, value_type,
-                                     value_type);
 
 /** \brief Callback type used for functions with a variable argument list. */
 typedef value_type (*multfun_type)(const value_type *, int);

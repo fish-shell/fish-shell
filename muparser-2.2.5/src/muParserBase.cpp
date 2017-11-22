@@ -765,10 +765,6 @@ void ParserBase::ApplyFunc(ParserStack<token_type> &a_stOpt, ParserStack<token_t
             ApplyStrFunc(funTok, stArg);
             break;
 
-        case cmFUNC_BULK:
-            m_vRPN.AddBulkFun(funTok.GetFuncAddr(), (int)stArg.size());
-            break;
-
         case cmOPRT_BIN:
         case cmOPRT_POSTFIX:
         case cmOPRT_INFIX:
@@ -895,22 +891,8 @@ void ParserBase::ApplyRemainingOprt(ParserStack<token_type> &stOpt,
     associated operators. The Stack is filled beginning from index one the
     value at index zero is not used at all.
 */
-value_type ParserBase::ParseCmdCode() const { return ParseCmdCodeBulk(0, 0); }
-
-//---------------------------------------------------------------------------
-/** \brief Evaluate the RPN.
-    \param nOffset The offset added to variable addresses (for bulk mode)
-    \param nThreadID OpenMP Thread id of the calling thread
-*/
-value_type ParserBase::ParseCmdCodeBulk(int nOffset, int nThreadID) const {
-    assert(nThreadID <= s_MaxNumOpenMPThreads);
-
-    // Note: The check for nOffset==0 and nThreadID here is not necessary but
-    //       brings a minor performance gain when not in bulk mode.
-    value_type *Stack =
-        ((nOffset == 0) && (nThreadID == 0))
-            ? &m_vStackBuffer[0]
-            : &m_vStackBuffer[nThreadID * (m_vStackBuffer.size() / s_MaxNumOpenMPThreads)];
+value_type ParserBase::ParseCmdCode() const {
+    value_type *Stack = &m_vStackBuffer[0];
     value_type buf;
     int sidx(0);
     for (const SToken *pTok = m_vRPN.GetBase(); pTok->Cmd != cmEND; ++pTok) {
@@ -980,7 +962,7 @@ value_type ParserBase::ParseCmdCodeBulk(int nOffset, int nThreadID) const {
                 // for details see:
                 //    https://groups.google.com/forum/embed/?place=forum/muparser-dev&showsearch=true&showpopout=true&showtabs=false&parenturl=http://muparser.beltoforion.de/mup_forum.html&afterlogin&pli=1#!topic/muparser-dev/szgatgoHTws
                 --sidx;
-                Stack[sidx] = *(pTok->Oprt.ptr + nOffset) = Stack[sidx + 1];
+                Stack[sidx] = *(pTok->Oprt.ptr) = Stack[sidx + 1];
                 continue;
             // original code:
             //--sidx; Stack[sidx] = *pTok->Oprt.ptr = Stack[sidx+1]; continue;
@@ -1007,29 +989,29 @@ value_type ParserBase::ParseCmdCodeBulk(int nOffset, int nThreadID) const {
 
             // value and variable tokens
             case cmVAR:
-                Stack[++sidx] = *(pTok->Val.ptr + nOffset);
+                Stack[++sidx] = *(pTok->Val.ptr);
                 continue;
             case cmVAL:
                 Stack[++sidx] = pTok->Val.data2;
                 continue;
 
             case cmVARPOW2:
-                buf = *(pTok->Val.ptr + nOffset);
+                buf = *(pTok->Val.ptr);
                 Stack[++sidx] = buf * buf;
                 continue;
 
             case cmVARPOW3:
-                buf = *(pTok->Val.ptr + nOffset);
+                buf = *(pTok->Val.ptr);
                 Stack[++sidx] = buf * buf * buf;
                 continue;
 
             case cmVARPOW4:
-                buf = *(pTok->Val.ptr + nOffset);
+                buf = *(pTok->Val.ptr);
                 Stack[++sidx] = buf * buf * buf * buf;
                 continue;
 
             case cmVARMUL:
-                Stack[++sidx] = *(pTok->Val.ptr + nOffset) * pTok->Val.data + pTok->Val.data2;
+                Stack[++sidx] = *(pTok->Val.ptr) * pTok->Val.data + pTok->Val.data2;
                 continue;
 
             // Next is treatment of numeric functions
@@ -1135,80 +1117,6 @@ value_type ParserBase::ParseCmdCodeBulk(int nOffset, int nThreadID) const {
                 continue;
             }
 
-            case cmFUNC_BULK: {
-                int iArgCount = pTok->Fun.argc;
-
-                // switch according to argument count
-                switch (iArgCount) {
-                    case 0:
-                        sidx += 1;
-                        Stack[sidx] = (*(bulkfun_type0)pTok->Fun.ptr)(nOffset, nThreadID);
-                        continue;
-                    case 1:
-                        Stack[sidx] =
-                            (*(bulkfun_type1)pTok->Fun.ptr)(nOffset, nThreadID, Stack[sidx]);
-                        continue;
-                    case 2:
-                        sidx -= 1;
-                        Stack[sidx] = (*(bulkfun_type2)pTok->Fun.ptr)(nOffset, nThreadID,
-                                                                      Stack[sidx], Stack[sidx + 1]);
-                        continue;
-                    case 3:
-                        sidx -= 2;
-                        Stack[sidx] = (*(bulkfun_type3)pTok->Fun.ptr)(
-                            nOffset, nThreadID, Stack[sidx], Stack[sidx + 1], Stack[sidx + 2]);
-                        continue;
-                    case 4:
-                        sidx -= 3;
-                        Stack[sidx] = (*(bulkfun_type4)pTok->Fun.ptr)(
-                            nOffset, nThreadID, Stack[sidx], Stack[sidx + 1], Stack[sidx + 2],
-                            Stack[sidx + 3]);
-                        continue;
-                    case 5:
-                        sidx -= 4;
-                        Stack[sidx] = (*(bulkfun_type5)pTok->Fun.ptr)(
-                            nOffset, nThreadID, Stack[sidx], Stack[sidx + 1], Stack[sidx + 2],
-                            Stack[sidx + 3], Stack[sidx + 4]);
-                        continue;
-                    case 6:
-                        sidx -= 5;
-                        Stack[sidx] = (*(bulkfun_type6)pTok->Fun.ptr)(
-                            nOffset, nThreadID, Stack[sidx], Stack[sidx + 1], Stack[sidx + 2],
-                            Stack[sidx + 3], Stack[sidx + 4], Stack[sidx + 5]);
-                        continue;
-                    case 7:
-                        sidx -= 6;
-                        Stack[sidx] = (*(bulkfun_type7)pTok->Fun.ptr)(
-                            nOffset, nThreadID, Stack[sidx], Stack[sidx + 1], Stack[sidx + 2],
-                            Stack[sidx + 3], Stack[sidx + 4], Stack[sidx + 5], Stack[sidx + 6]);
-                        continue;
-                    case 8:
-                        sidx -= 7;
-                        Stack[sidx] = (*(bulkfun_type8)pTok->Fun.ptr)(
-                            nOffset, nThreadID, Stack[sidx], Stack[sidx + 1], Stack[sidx + 2],
-                            Stack[sidx + 3], Stack[sidx + 4], Stack[sidx + 5], Stack[sidx + 6],
-                            Stack[sidx + 7]);
-                        continue;
-                    case 9:
-                        sidx -= 8;
-                        Stack[sidx] = (*(bulkfun_type9)pTok->Fun.ptr)(
-                            nOffset, nThreadID, Stack[sidx], Stack[sidx + 1], Stack[sidx + 2],
-                            Stack[sidx + 3], Stack[sidx + 4], Stack[sidx + 5], Stack[sidx + 6],
-                            Stack[sidx + 7], Stack[sidx + 8]);
-                        continue;
-                    case 10:
-                        sidx -= 9;
-                        Stack[sidx] = (*(bulkfun_type10)pTok->Fun.ptr)(
-                            nOffset, nThreadID, Stack[sidx], Stack[sidx + 1], Stack[sidx + 2],
-                            Stack[sidx + 3], Stack[sidx + 4], Stack[sidx + 5], Stack[sidx + 6],
-                            Stack[sidx + 7], Stack[sidx + 8], Stack[sidx + 9]);
-                        continue;
-                    default:
-                        assert(0 && "muParser internal error");
-                        continue;
-                }
-            }
-
             default:
                 assert(0 && "muParser internal error");
                 return 0;
@@ -1300,8 +1208,7 @@ void ParserBase::CreateRPN() const {
 
                     if (iArgCount > 1 &&
                         (stOpt.size() == 0 ||
-                         (stOpt.top().GetCode() != cmFUNC && stOpt.top().GetCode() != cmFUNC_BULK &&
-                          stOpt.top().GetCode() != cmFUNC_STR)))
+                         (stOpt.top().GetCode() != cmFUNC && stOpt.top().GetCode() != cmFUNC_STR)))
                         Error(ecUNEXPECTED_ARG, m_pTokenReader->GetPos());
 
                     // The opening bracket was popped from the stack now check if there
@@ -1379,7 +1286,6 @@ void ParserBase::CreateRPN() const {
 
             case cmOPRT_INFIX:
             case cmFUNC:
-            case cmFUNC_BULK:
             case cmFUNC_STR:
                 stOpt.push(opt);
                 break;
@@ -1624,9 +1530,6 @@ void ParserBase::StackDump(const ParserStack<token_type> &a_stVal,
                 case cmFUNC:
                     mu::console() << _T("FUNC \"") << stOprt.top().GetAsString() << _T("\"\n");
                     break;
-                case cmFUNC_BULK:
-                    mu::console() << _T("FUNC_BULK \"") << stOprt.top().GetAsString() << _T("\"\n");
-                    break;
                 case cmOPRT_INFIX:
                     mu::console() << _T("OPRT_INFIX \"") << stOprt.top().GetAsString()
                                   << _T("\"\n");
@@ -1712,23 +1615,4 @@ int ParserBase::GetNumResults() const { return m_nFinalResultIdx; }
 */
 value_type ParserBase::Eval() const { return (this->*m_pParseFormula)(); }
 
-//---------------------------------------------------------------------------
-void ParserBase::Eval(value_type *results, int nBulkSize) {
-    /* <ibg 2014-09-24/> Commented because it is making a unit test impossible
-
-        // Parallelization does not make sense for fewer than 10000 computations
-        // due to thread creation overhead. If the bulk size is below 2000
-        // computation is refused.
-        if (nBulkSize<2000)
-        {
-          throw ParserError(ecUNREASONABLE_NUMBER_OF_COMPUTATIONS);
-        }
-    */
-    CreateRPN();
-
-    int i = 0;
-    for (i = 0; i < nBulkSize; ++i) {
-        results[i] = ParseCmdCodeBulk(i, 0);
-    }
-}
 }  // namespace mu

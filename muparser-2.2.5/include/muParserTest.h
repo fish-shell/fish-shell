@@ -172,7 +172,6 @@ class ParserTester  // final
     int TestException();
     int TestStrArg();
     int TestIfThenElse();
-    int TestBulkMode();
 
     void Abort() const;
 
@@ -194,9 +193,6 @@ class ParserTester  // final
 
     // Test Int Parser
     int EqnTestInt(const string_type& a_str, double a_fRes, bool a_fPass);
-
-    // Test Bulkmode
-    int EqnTestBulk(const string_type& a_str, double a_fRes[4], bool a_fPass);
 };
 }  // namespace Test
 }  // namespace mu

@@ -380,24 +380,7 @@ void ParserByteCode::AddFun(generic_fun_type a_pFun, int a_iArgc) {
 }
 
 //---------------------------------------------------------------------------
-/** \brief Add a bulk function to bytecode.
-
-    \param a_iArgc Number of arguments, negative numbers indicate multiarg functions.
-    \param a_pFun Pointer to function callback.
-*/
-void ParserByteCode::AddBulkFun(generic_fun_type a_pFun, int a_iArgc) {
-    m_iStackPos = m_iStackPos - a_iArgc + 1;
-    m_iMaxStackSize = std::max(m_iMaxStackSize, (size_t)m_iStackPos);
-
-    SToken tok;
-    tok.Cmd = cmFUNC_BULK;
-    tok.Fun.argc = a_iArgc;
-    tok.Fun.ptr = a_pFun;
-    m_vRPN.push_back(tok);
-}
-
-//---------------------------------------------------------------------------
-/** \brief Add Strung function entry to the parser bytecode.
+/** \brief Add String function entry to the parser bytecode.
     \throw nothrow
 
     A string function entry consists of the stack position of the return value,

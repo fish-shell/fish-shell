@@ -57,7 +57,6 @@ ParserTester::ParserTester() : m_vTestFun() {
     AddTest(&ParserTester::TestBinOprt);
     AddTest(&ParserTester::TestException);
     AddTest(&ParserTester::TestStrArg);
-    AddTest(&ParserTester::TestBulkMode);
 
     ParserTester::c_iCount = 0;
 }
@@ -133,39 +132,6 @@ int ParserTester::TestStrArg() {
     iStat += EqnTest(_T("strfun3(\"99\",1,2)"), 102, true);
     // string constants
     iStat += EqnTest(_T("atof(str1)+atof(str2)"), 3.33, true);
-
-    if (iStat == 0)
-        mu::console() << _T("passed") << endl;
-    else
-        mu::console() << _T("\n  failed with ") << iStat << _T(" errors") << endl;
-
-    return iStat;
-}
-
-//---------------------------------------------------------------------------------------------
-int ParserTester::TestBulkMode() {
-    int iStat = 0;
-    mu::console() << _T("testing bulkmode...");
-
-#define EQN_TEST_BULK(EXPR, R1, R2, R3, R4, PASS)    \
-    {                                                \
-        double res[] = {R1, R2, R3, R4};             \
-        iStat += EqnTestBulk(_T(EXPR), res, (PASS)); \
-    }
-
-    // Bulk Variables for the test:
-    // a: 1,2,3,4
-    // b: 2,2,2,2
-    // c: 3,3,3,3
-    // d: 5,4,3,2
-    EQN_TEST_BULK("a", 1, 1, 1, 1, false)
-    EQN_TEST_BULK("a", 1, 2, 3, 4, true)
-    EQN_TEST_BULK("b=a", 1, 2, 3, 4, true)
-    EQN_TEST_BULK("b=a, b*10", 10, 20, 30, 40, true)
-    EQN_TEST_BULK("b=a, b*10, a", 1, 2, 3, 4, true)
-    EQN_TEST_BULK("a+b", 3, 4, 5, 6, true)
-    EQN_TEST_BULK("c*(a+b)", 9, 12, 15, 18, true)
-#undef EQN_TEST_BULK
 
     if (iStat == 0)
         mu::console() << _T("passed") << endl;
@@ -1374,56 +1340,6 @@ int ParserTester::EqnTestInt(const string_type &a_str, double a_fRes, bool a_fPa
             mu::console() << _T("\n  fail: ") << a_str.c_str()
                           << _T(" (incorrect result; expected: ") << a_fRes << _T(" ;calculated: ")
                           << fVal[0] << _T(").");
-        }
-    } catch (Parser::exception_type &e) {
-        if (a_fPass) {
-            mu::console() << _T("\n  fail: ") << e.GetExpr() << _T(" : ") << e.GetMsg();
-            iRet = 1;
-        }
-    } catch (...) {
-        mu::console() << _T("\n  fail: ") << a_str.c_str() << _T(" (unexpected exception)");
-        iRet = 1;  // exceptions other than ParserException are not allowed
-    }
-
-    return iRet;
-}
-
-//---------------------------------------------------------------------------
-/** \brief Test an expression in Bulk Mode. */
-int ParserTester::EqnTestBulk(const string_type &a_str, double a_fRes[4], bool a_fPass) {
-    ParserTester::c_iCount++;
-
-    // Define Bulk Variables
-    int nBulkSize = 4;
-    value_type vVariableA[] = {1, 2, 3, 4};  // variable values
-    value_type vVariableB[] = {2, 2, 2, 2};  // variable values
-    value_type vVariableC[] = {3, 3, 3, 3};  // variable values
-    value_type vResults[] = {0, 0, 0, 0};    // variable values
-    int iRet(0);
-
-    try {
-        Parser p;
-        p.DefineConst(_T("const1"), 1);
-        p.DefineConst(_T("const2"), 2);
-        p.DefineVar(_T("a"), vVariableA);
-        p.DefineVar(_T("b"), vVariableB);
-        p.DefineVar(_T("c"), vVariableC);
-
-        p.SetExpr(a_str);
-        p.Eval(vResults, nBulkSize);
-
-        bool bCloseEnough(true);
-        for (int i = 0; i < nBulkSize; ++i) {
-            bCloseEnough &= (fabs(a_fRes[i] - vResults[i]) <= fabs(a_fRes[i] * 0.00001));
-        }
-
-        iRet = ((bCloseEnough && a_fPass) || (!bCloseEnough && !a_fPass)) ? 0 : 1;
-        if (iRet == 1) {
-            mu::console() << _T("\n  fail: ") << a_str.c_str()
-                          << _T(" (incorrect result; expected: {") << a_fRes[0] << _T(",")
-                          << a_fRes[1] << _T(",") << a_fRes[2] << _T(",") << a_fRes[3] << _T("}")
-                          << _T(" ;calculated: ") << vResults[0] << _T(",") << vResults[1]
-                          << _T(",") << vResults[2] << _T(",") << vResults[3] << _T("}");
         }
     } catch (Parser::exception_type &e) {
         if (a_fPass) {

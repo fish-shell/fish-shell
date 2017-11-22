@@ -99,7 +99,6 @@ class ParserBase {
 
     value_type Eval() const;
     value_type *Eval(int &nStackSize) const;
-    void Eval(value_type *results, int nBulkSize);
 
     int GetNumResults() const;
 

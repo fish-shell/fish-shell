@@ -214,14 +214,6 @@ API_EXPORT(muFloat_t*) mupEvalMulti(muParserHandle_t a_hParser, int* nNum) {
 }
 
 //---------------------------------------------------------------------------
-API_EXPORT(void) mupEvalBulk(muParserHandle_t a_hParser, muFloat_t* a_res, int nSize) {
-    MU_TRY
-    muParser_t* p(AsParser(a_hParser));
-    p->Eval(a_res, nSize);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
 API_EXPORT(void) mupSetExpr(muParserHandle_t a_hParser, const muChar_t* a_szExpr) {
     MU_TRY
     muParser_t* const p(AsParser(a_hParser));
@@ -385,105 +377,6 @@ mupDefineFun10(muParserHandle_t a_hParser, const muChar_t* a_szName, muFun10_t a
     MU_TRY
     muParser_t* const p(AsParser(a_hParser));
     p->DefineFun(a_szName, a_pFun, a_bAllowOpt != 0);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(void)
-mupDefineBulkFun0(muParserHandle_t a_hParser, const muChar_t* a_szName, muBulkFun0_t a_pFun) {
-    MU_TRY
-    muParser_t* const p(AsParser(a_hParser));
-    p->DefineFun(a_szName, a_pFun, false);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(void)
-mupDefineBulkFun1(muParserHandle_t a_hParser, const muChar_t* a_szName, muBulkFun1_t a_pFun) {
-    MU_TRY
-    muParser_t* const p(AsParser(a_hParser));
-    p->DefineFun(a_szName, a_pFun, false);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(void)
-mupDefineBulkFun2(muParserHandle_t a_hParser, const muChar_t* a_szName, muBulkFun2_t a_pFun) {
-    MU_TRY
-    muParser_t* const p(AsParser(a_hParser));
-    p->DefineFun(a_szName, a_pFun, false);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(void)
-mupDefineBulkFun3(muParserHandle_t a_hParser, const muChar_t* a_szName, muBulkFun3_t a_pFun) {
-    MU_TRY
-    muParser_t* const p(AsParser(a_hParser));
-    p->DefineFun(a_szName, a_pFun, false);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(void)
-mupDefineBulkFun4(muParserHandle_t a_hParser, const muChar_t* a_szName, muBulkFun4_t a_pFun) {
-    MU_TRY
-    muParser_t* const p(AsParser(a_hParser));
-    p->DefineFun(a_szName, a_pFun, false);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(void)
-mupDefineBulkFun5(muParserHandle_t a_hParser, const muChar_t* a_szName, muBulkFun5_t a_pFun) {
-    MU_TRY
-    muParser_t* const p(AsParser(a_hParser));
-    p->DefineFun(a_szName, a_pFun, false);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(void)
-mupDefineBulkFun6(muParserHandle_t a_hParser, const muChar_t* a_szName, muBulkFun6_t a_pFun) {
-    MU_TRY
-    muParser_t* const p(AsParser(a_hParser));
-    p->DefineFun(a_szName, a_pFun, false);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(void)
-mupDefineBulkFun7(muParserHandle_t a_hParser, const muChar_t* a_szName, muBulkFun7_t a_pFun) {
-    MU_TRY
-    muParser_t* const p(AsParser(a_hParser));
-    p->DefineFun(a_szName, a_pFun, false);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(void)
-mupDefineBulkFun8(muParserHandle_t a_hParser, const muChar_t* a_szName, muBulkFun8_t a_pFun) {
-    MU_TRY
-    muParser_t* const p(AsParser(a_hParser));
-    p->DefineFun(a_szName, a_pFun, false);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(void)
-mupDefineBulkFun9(muParserHandle_t a_hParser, const muChar_t* a_szName, muBulkFun9_t a_pFun) {
-    MU_TRY
-    muParser_t* const p(AsParser(a_hParser));
-    p->DefineFun(a_szName, a_pFun, false);
-    MU_CATCH
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(void)
-mupDefineBulkFun10(muParserHandle_t a_hParser, const muChar_t* a_szName, muBulkFun10_t a_pFun) {
-    MU_TRY
-    muParser_t* const p(AsParser(a_hParser));
-    p->DefineFun(a_szName, a_pFun, false);
     MU_CATCH
 }
 

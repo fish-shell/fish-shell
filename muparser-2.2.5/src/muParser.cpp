@@ -331,9 +331,10 @@ void Parser::OnDetectVar(string_type * /*pExpr*/, int & /*nStart*/, int & /*nEnd
   http://sourceforge.net/forum/forum.php?thread_id=1994611&forum_id=462843
 */
 ValueOrError Parser::Diff(value_type *a_Var, value_type a_fPos, value_type a_fEpsilon) const {
-    value_type fRes(0), fBuf(*a_Var), f[4] = {0, 0, 0, 0}, fEpsilon(a_fEpsilon);
+    value_type fRes(0), fBuf(*a_Var), fEpsilon(a_fEpsilon);
+    ValueOrError f[4] = {0, 0, 0, 0};
 
-    // Backwards compatible calculation of epsilon inc case the user doesn't provide
+    // Backwards compatible calculation of epsilon in case the user doesn't provide
     // his own epsilon
     if (fEpsilon == 0) fEpsilon = (a_fPos == 0) ? (value_type)1e-10 : (value_type)1e-7 * a_fPos;
 
@@ -347,7 +348,10 @@ ValueOrError Parser::Diff(value_type *a_Var, value_type a_fPos, value_type a_fEp
     f[3] = Eval();
     *a_Var = fBuf;  // restore variable
 
-    fRes = (-f[0] + 8 * f[1] - 8 * f[2] + f[3]) / (12 * fEpsilon);
+    for (ValueOrError &v : f) {
+        if (!v) return std::move(v);
+    }
+    fRes = (-*f[0] + 8 * *f[1] - 8 * *f[2] + *f[3]) / (12 * fEpsilon);
     return fRes;
 }
 }  // namespace mu

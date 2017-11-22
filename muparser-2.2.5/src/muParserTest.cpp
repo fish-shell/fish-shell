@@ -94,14 +94,14 @@ int ParserTester::TestInterface() {
         p.DefineVar(_T("b"), &afVal[1]);
         p.DefineVar(_T("c"), &afVal[2]);
         p.SetExpr(_T("a+b+c"));
-        p.Eval();
+        (void)p.Eval();
     } catch (...) {
         iStat += 1;  // this is not supposed to happen
     }
 
     try {
         p.RemoveVar(_T("c"));
-        p.Eval();
+        (void)p.Eval();
         iStat += 1;  // not supposed to reach this, nonexisting variable "c" deleted...
     } catch (...) {
         // failure is expected...
@@ -1075,7 +1075,7 @@ int ParserTester::ThrowTest(const string_type &a_str, int a_iErrc, bool a_bFail)
         p.DefineFun(_T("strfun2"), StrFun2);
         p.DefineFun(_T("strfun3"), StrFun3);
         p.SetExpr(a_str);
-        p.Eval();
+        (void)p.Eval();
     } catch (ParserError &e) {
         // output the formula in case of an failed test
         if (a_bFail == false || (a_bFail == true && a_iErrc != e.GetCode())) {
@@ -1119,10 +1119,10 @@ int ParserTester::EqnTestWithVarChange(const string_type &a_str, double a_fVar1,
         p.SetExpr(a_str);
 
         var = a_fVar1;
-        fVal[0] = p.Eval();
+        fVal[0] = *p.Eval();
 
         var = a_fVar2;
-        fVal[1] = p.Eval();
+        fVal[1] = *p.Eval();
 
         if (fabs(a_fRes1 - fVal[0]) > 0.0000000001)
             throw std::runtime_error("incorrect result (first pass)");
@@ -1234,8 +1234,8 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
 
         // Test bytecode integrity
         // String parsing and bytecode parsing must yield the same result
-        fVal[0] = p1->Eval();  // result from stringparsing
-        fVal[1] = p1->Eval();  // result from bytecode
+        fVal[0] = *p1->Eval();  // result from stringparsing
+        fVal[1] = *p1->Eval();  // result from bytecode
         if (fVal[0] != fVal[1])
             throw Parser::exception_type(_T("Bytecode / string parsing mismatch."));
 
@@ -1250,18 +1250,17 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
             vParser.clear();  // delete the vector
             p1.reset(0);
 
-            fVal[2] = p2.Eval();
+            fVal[2] = *p2.Eval();
 
             // Test assignment operator
             mu::Parser p3;
             p3 = p2;
-            fVal[3] = p3.Eval();
+            fVal[3] = *p3.Eval();
 
             // Test Eval function for multiple return values
-            // use p2 since it has the optimizer enabled!
-            int nNum;
-            value_type *v = p2.Eval(nNum);
-            fVal[4] = v[nNum - 1];
+            std::vector<ValueOrError> v;
+            p2.Eval(&v);
+            fVal[4] = *v.back();
         } catch (std::exception &e) {
             mu::console() << _T("\n  ") << e.what() << _T("\n");
         }
@@ -1328,8 +1327,8 @@ int ParserTester::EqnTestInt(const string_type &a_str, double a_fRes, bool a_fPa
         p.DefineVar(_T("c"), &vVarVal[2]);
 
         p.SetExpr(a_str);
-        fVal[0] = p.Eval();  // result from stringparsing
-        fVal[1] = p.Eval();  // result from bytecode
+        fVal[0] = *p.Eval();  // result from stringparsing
+        fVal[1] = *p.Eval();  // result from bytecode
 
         if (fVal[0] != fVal[1]) throw Parser::exception_type(_T("Bytecode corrupt."));
 

@@ -112,7 +112,6 @@ API_EXPORT(void)
 mupSetVarFactory(muParserHandle_t a_hParser, muFacFun_t a_pFactory, void *pUserData);
 API_EXPORT(const muChar_t *) mupGetVersion(muParserHandle_t a_hParser);
 API_EXPORT(muFloat_t) mupEval(muParserHandle_t a_hParser);
-API_EXPORT(muFloat_t *) mupEvalMulti(muParserHandle_t a_hParser, int *nNum);
 
 // Defining callbacks / variables / constants
 API_EXPORT(void)

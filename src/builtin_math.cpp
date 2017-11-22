@@ -131,13 +131,13 @@ static int evaluate_expression(wchar_t *cmd, parser_t &parser, io_streams_t &str
         p.DefineOprt(L"%", moduloOperator, mu::prINFIX);
 
         p.SetExpr(expression);
-        int nNum;
-        mu::value_type *v = p.Eval(nNum);
-        for (int i = 0; i < nNum; ++i) {
+        std::vector<mu::ValueOrError> vs;
+        p.Eval(&vs);
+        for (const mu::ValueOrError &v : vs) {
             if (opts.scale == 0) {
-                streams.out.append_format(L"%ld\n", static_cast<long>(v[i]));
+                streams.out.append_format(L"%ld\n", static_cast<long>(*v));
             } else {
-                streams.out.append_format(L"%.*lf\n", opts.scale, v[i]);
+                streams.out.append_format(L"%.*lf\n", opts.scale, *v);
             }
         }
         return STATUS_CMD_OK;

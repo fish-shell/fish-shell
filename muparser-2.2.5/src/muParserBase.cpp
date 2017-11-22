@@ -1552,12 +1552,12 @@ void ParserBase::StackDump(const ParserStack<token_type> &a_stVal,
     This member function can be used to retrieve all results of an expression
     made up of multiple comma separated subexpressions (i.e. "x+y,sin(x),cos(y)")
 */
-value_type *ParserBase::Eval(int &nStackSize) const {
+void ParserBase::Eval(std::vector<ValueOrError> *outResult) const {
     (this->*m_pParseFormula)();
-    nStackSize = m_nFinalResultIdx;
+    int stackSize = m_nFinalResultIdx;
 
     // (for historic reasons the stack starts at position 1)
-    return &m_vStackBuffer[1];
+    outResult->assign(&m_vStackBuffer[1], &m_vStackBuffer[1 + stackSize]);
 }
 
 //---------------------------------------------------------------------------
@@ -1585,6 +1585,6 @@ int ParserBase::GetNumResults() const { return m_nFinalResultIdx; }
   \return The evaluation result
   \throw ParseException if no Formula is set or in case of any other error related to the formula.
 */
-value_type ParserBase::Eval() const { return (this->*m_pParseFormula)().getOrThrow(); }
+ValueOrError ParserBase::Eval() const { return (this->*m_pParseFormula)(); }
 
 }  // namespace mu

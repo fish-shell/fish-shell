@@ -195,19 +195,7 @@ API_EXPORT(const muChar_t*) mupGetVersion(muParserHandle_t a_hParser) {
 API_EXPORT(muFloat_t) mupEval(muParserHandle_t a_hParser) {
     MU_TRY
     muParser_t* const p(AsParser(a_hParser));
-    return p->Eval();
-    MU_CATCH
-
-    return 0;
-}
-
-//---------------------------------------------------------------------------
-API_EXPORT(muFloat_t*) mupEvalMulti(muParserHandle_t a_hParser, int* nNum) {
-    MU_TRY
-    assert(nNum != NULL);
-
-    muParser_t* const p(AsParser(a_hParser));
-    return p->Eval(*nNum);
+    return *p->Eval();
     MU_CATCH
 
     return 0;

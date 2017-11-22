@@ -416,7 +416,7 @@ void Calc() {
             // 1.) If you know there is only a single return value or in case you only need the last
             //     result of an expression consisting of comma separated subexpressions you can
             //     simply use:
-            mu::console() << _T("ans=") << parser.Eval() << _T("\n");
+            mu::console() << _T("ans=") << *parser.Eval() << _T("\n");
 
             // 2.) As an alternative you can also retrieve multiple return values using this API:
             int nNum = parser.GetNumResults();
@@ -425,10 +425,11 @@ void Calc() {
 
                 // this is the hard way if you need to retrieve multiple subexpression
                 // results
-                value_type *v = parser.Eval(nNum);
+                std::vector<ValueOrError> vs;
+                parser.Eval(&vs);
                 mu::console() << std::setprecision(12);
-                for (int i = 0; i < nNum; ++i) {
-                    mu::console() << v[i] << _T("\n");
+                for (const ValueOrError &v : vs) {
+                    mu::console() << *v << _T("\n");
                 }
             }
         } catch (mu::Parser::exception_type &e) {
@@ -446,8 +447,8 @@ void Calc() {
 //---------------------------------------------------------------------------
 int main(int, char **) {
     Splash();
-    SelfTest();
-    Help();
+    (void)SelfTest();
+    (void)Help();
 
     //  CheckLocale();
     //  CheckDiff();

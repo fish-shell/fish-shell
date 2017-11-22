@@ -97,8 +97,8 @@ class ParserBase {
 
     virtual ~ParserBase();
 
-    value_type Eval() const;
-    value_type *Eval(int &nStackSize) const;
+    ValueOrError Eval() const;
+    void Eval(std::vector<ValueOrError> *results) const;
 
     int GetNumResults() const;
 

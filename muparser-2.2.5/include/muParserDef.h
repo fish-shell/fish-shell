@@ -71,32 +71,6 @@
 #define MUP_STRING_TYPE std::string
 #endif
 
-#if defined(_DEBUG)
-/** \brief Debug macro to force an abortion of the programm with a certain message.
-*/
-#define MUP_FAIL(MSG)     \
-    {                     \
-        bool MSG = false; \
-        assert(MSG);      \
-    }
-
-/** \brief An assertion that does not kill the program.
-
-    This macro is neutralised in UNICODE builds. It's
-    too difficult to translate.
-*/
-#define MUP_ASSERT(COND)                                                                 \
-    if (!(COND)) {                                                                       \
-        stringstream_type ss;                                                            \
-        ss << _T("Assertion \"") _T(#COND) _T("\" failed: ") << __FILE__ << _T(" line ") \
-           << __LINE__ << _T(".");                                                       \
-        throw ParserError(ss.str());                                                     \
-    }
-#else
-#define MUP_FAIL(MSG)
-#define MUP_ASSERT(COND)
-#endif
-
 namespace mu {
 #if defined(_UNICODE)
 

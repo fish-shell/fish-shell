@@ -788,13 +788,13 @@ void ParserBase::ApplyIfElse(ParserStack<token_type> &a_stOpt,
     // Check if there is an if Else clause to be calculated
     while (a_stOpt.size() && a_stOpt.top().GetCode() == cmELSE) {
         token_type opElse = a_stOpt.pop();
-        MUP_ASSERT(a_stOpt.size() > 0);
+        assert(a_stOpt.size() > 0 && "Invalid if/else clause");
 
         // Take the value associated with the else branch from the value stack
         token_type vVal2 = a_stVal.pop();
 
-        MUP_ASSERT(a_stOpt.size() > 0);
-        MUP_ASSERT(a_stVal.size() >= 2);
+        assert(a_stOpt.size() > 0 && "Invalid if/else clause");
+        assert(a_stVal.size() >= 2 && "Invalid if/else clause");
 
         // it then else is a ternary operator Pop all three values from the value s
         // tack and just return the right value
@@ -804,8 +804,8 @@ void ParserBase::ApplyIfElse(ParserStack<token_type> &a_stOpt,
         a_stVal.push((vExpr.GetVal() != 0) ? vVal1 : vVal2);
 
         token_type opIf = a_stOpt.pop();
-        MUP_ASSERT(opElse.GetCode() == cmELSE);
-        MUP_ASSERT(opIf.GetCode() == cmIF);
+        assert(opElse.GetCode() == cmELSE && "Invalid if/else clause");
+        assert(opIf.GetCode() == cmIF && "Invalid if/else clause");
 
         m_vRPN.AddIfElse(cmENDIF);
     }  // while pending if-else-clause found
@@ -821,7 +821,7 @@ void ParserBase::ApplyBinOprt(ParserStack<token_type> &a_stOpt,
     if (a_stOpt.top().GetCode() == cmOPRT_BIN) {
         ApplyFunc(a_stOpt, a_stVal, 2);
     } else {
-        MUP_ASSERT(a_stVal.size() >= 2);
+        assert(a_stVal.size() >= 2 && "Too few arguments for binary operator");
         token_type valTok1 = a_stVal.pop(), valTok2 = a_stVal.pop(), optTok = a_stOpt.pop(), resTok;
 
         if (valTok1.GetType() != valTok2.GetType() ||
@@ -1074,7 +1074,8 @@ ValueOrError ParserBase::ParseCmdCode() const {
 
                 // The index of the string argument in the string table
                 int iIdxStack = pTok->Fun.idx;
-                MUP_ASSERT(iIdxStack >= 0 && iIdxStack < (int)m_vStringBuf.size());
+                assert(iIdxStack >= 0 && iIdxStack < (int)m_vStringBuf.size() &&
+                       "Invalid string index");
                 ValueOrError funcResult{0.0};
                 switch (pTok->Fun.argc)  // switch according to argument count
                 {
@@ -1295,7 +1296,7 @@ void ParserBase::CreateRPN() const {
     if (m_nIfElseCounter > 0) Error(ecMISSING_ELSE_CLAUSE);
 
     // get the last value (= final result) from the stack
-    MUP_ASSERT(stArgCount.size() == 1);
+    assert(stArgCount.size() == 1 && "Expected arg count of 1");
     m_nFinalResultIdx = stArgCount.top();
     if (m_nFinalResultIdx == 0) assert(0 && "muParser internal error");
 

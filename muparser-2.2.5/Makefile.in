@@ -200,7 +200,7 @@ COND_USE_SOTWOSYMLINKS_1___muParser_dll___so_symlinks_uninst_cmd = rm -f \
 @COND_SHARED_1@____SHARED = -DMUPARSER_DLL
 @COND_SHARED_0@____SHARED_0 = 
 @COND_SHARED_1@____SHARED_0 = -DMUPARSERLIB_EXPORTS
-@COND_DEBUG_0@____DEBUG = -DNDEBUG
+@COND_DEBUG_0@____DEBUG = 
 @COND_DEBUG_1@____DEBUG = 
 
 ### Targets: ###

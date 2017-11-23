@@ -1,3 +1,11 @@
+# fish 2.7.0 (released November 23, 2017)
+
+There are no major changes between 2.7b1 and 2.7.0. If you are upgrading from version 2.6.0 or before, please also review the release notes for 2.7b1 (included below).
+
+Xcode builds and macOS packages could not be produced with 2.7b1, but this is fixed in 2.7.0.
+
+--
+
 # fish 2.7b1 (released October 31, 2017)
 
 ## Notable improvements

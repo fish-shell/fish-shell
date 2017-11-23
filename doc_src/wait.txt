@@ -1,0 +1,16 @@
+\section wait wait - wait for commands to complete
+
+\subsection wait-synopsis Synopsis
+\fish{synopsis}
+wait [-n | --any] PID...
+\endfish
+
+\subsection wait-description Description
+
+`wait` waits for child processes to complete. If a pid is specified, the command waits for that pid. If no pid is specified, the command waits for all background processes.
+
+If the `-n` / `--any` flag is provided, the command returns as soon as the first subprocess completes. If it is not provided, it returns after all subprocesses complete.
+
+\subsection wait-example Example
+
+`sleep 10 & ; wait %1` spawns sleep in the background, and then waits until it finishes.

@@ -30,13 +30,7 @@ end
 # Hostname
 #
 complete -c scp -d Hostname -n "commandline --cut-at-cursor --current-token | string match -v '*:*'" -a "
-(__fish_print_hostnames):
-
-(
-	#Prepend any username specified in the completion to the hostname
-	commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
-)(__fish_print_hostnames):
-"
+(__fish_complete_user_at_hosts):"
 
 #
 # Local path

@@ -204,6 +204,10 @@
 		D013CE381F52964D00AB1419 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D06821651F51490E00040321 /* libmuparser.a */; };
 		D01A2D24169B736200767098 /* man1 in Copy Files */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D01A2D25169B737700767098 /* man1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
+		D02960E61FBD726200CA3985 /* builtin_wait.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D02960E51FBD726100CA3985 /* builtin_wait.cpp */; };
+		D02960E71FBD726200CA3985 /* builtin_wait.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D02960E51FBD726100CA3985 /* builtin_wait.cpp */; };
+		D02960E81FBD726200CA3985 /* builtin_wait.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D02960E51FBD726100CA3985 /* builtin_wait.cpp */; };
+		D02960E91FBD726200CA3985 /* builtin_wait.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D02960E51FBD726100CA3985 /* builtin_wait.cpp */; };
 		D030FBEF1A4A382000F7ADA0 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854A13B3ACEE0099B651 /* input.cpp */; };
 		D030FBF01A4A382B00F7ADA0 /* event.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853B13B3ACEE0099B651 /* event.cpp */; };
 		D030FBF11A4A384000F7ADA0 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855113B3ACEE0099B651 /* output.cpp */; };
@@ -700,6 +704,7 @@
 		D025C02715D1FEA100B9DB63 /* completions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = completions; path = share/completions; sourceTree = "<group>"; };
 		D025C02815D1FEA100B9DB63 /* functions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = functions; path = share/functions; sourceTree = "<group>"; };
 		D025C02915D1FEA100B9DB63 /* tools */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tools; path = share/tools; sourceTree = "<group>"; };
+		D02960E51FBD726100CA3985 /* builtin_wait.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_wait.cpp; sourceTree = "<group>"; };
 		D031890915E36D9800D9CC39 /* base */ = {isa = PBXFileReference; lastKnownFileType = text; path = base; sourceTree = BUILT_PRODUCTS_DIR; };
 		D03238891849D1980032CF2C /* pager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pager.cpp; sourceTree = "<group>"; };
 		D032388A1849D1980032CF2C /* pager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pager.h; sourceTree = "<group>"; };
@@ -1123,6 +1128,7 @@
 				D0C6FCC914CFA4B0004CE8AD /* autoload.cpp */,
 				D05F592E1F041AE4003EE978 /* builtin.h */,
 				D05F592F1F041AE4003EE978 /* builtin.cpp */,
+				D02960E51FBD726100CA3985 /* builtin_wait.cpp */,
 				D05F59301F041AE4003EE978 /* builtin_ulimit.h */,
 				D05F59311F041AE4003EE978 /* builtin_ulimit.cpp */,
 				D05F59321F041AE4003EE978 /* builtin_test.h */,
@@ -1768,6 +1774,7 @@
 				9C7A554E1DCD71330049C25D /* function.cpp in Sources */,
 				9C7A554F1DCD71330049C25D /* complete.cpp in Sources */,
 				9C7A55501DCD71330049C25D /* env.cpp in Sources */,
+				D02960E91FBD726200CA3985 /* builtin_wait.cpp in Sources */,
 				9C7A55511DCD71330049C25D /* exec.cpp in Sources */,
 				9C7A55521DCD71330049C25D /* wcstringutil.cpp in Sources */,
 				9C7A55531DCD71330049C25D /* expand.cpp in Sources */,
@@ -1800,6 +1807,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D02960E81FBD726200CA3985 /* builtin_wait.cpp in Sources */,
 				9C7A552F1DCD65820049C25D /* util.cpp in Sources */,
 				D05F59971F041AE4003EE978 /* builtin_printf.cpp in Sources */,
 				D05F59A31F041AE4003EE978 /* builtin_function.cpp in Sources */,
@@ -1984,6 +1992,7 @@
 				D030FC081A4A38F300F7ADA0 /* pager.cpp in Sources */,
 				D030FC091A4A38F300F7ADA0 /* parse_util.cpp in Sources */,
 				D0D02AD9159864A6008E62BD /* parser_keywords.cpp in Sources */,
+				D02960E71FBD726200CA3985 /* builtin_wait.cpp in Sources */,
 				D05F59A51F041AE4003EE978 /* builtin_fg.cpp in Sources */,
 				D05F596F1F041AE4003EE978 /* builtin.cpp in Sources */,
 				D05F598D1F041AE4003EE978 /* builtin_read.cpp in Sources */,
@@ -2016,6 +2025,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D02960E61FBD726200CA3985 /* builtin_wait.cpp in Sources */,
 				D0D02A7C159839D5008E62BD /* autoload.cpp in Sources */,
 				D05F59951F041AE4003EE978 /* builtin_printf.cpp in Sources */,
 				D05F59A11F041AE4003EE978 /* builtin_function.cpp in Sources */,

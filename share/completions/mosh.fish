@@ -1,13 +1,5 @@
 
-complete -x -c mosh -d Hostname -a "
-
-(__fish_print_hostnames)
-
-(
-        #Prepend any username specified in the completion to the hostname
-        echo (commandline -ct)|sed -ne 's/\(.*@\).*/\1/p'
-)(__fish_print_hostnames)
-"
+complete -x -c mosh -d Hostname -a "(__fish_complete_user_at_hosts)"
 
 complete -x -c mosh -d User -a "
 (__fish_print_users)@

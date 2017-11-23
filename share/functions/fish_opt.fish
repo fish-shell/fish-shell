@@ -17,7 +17,7 @@ function fish_opt -d 'Produce an option specification suitable for use with `arg
     or return
 
     if set -q _flag_help
-        __fish_print_help nextd
+        __fish_print_help fish_opt
         return 0
     end
 

@@ -11,6 +11,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - For loop control variables are no longer local to the for block (#1935).
 
 ## Notable fixes and improvements
+- `wait` builtin is added for waiting on processes (#4498).
 - `read` has a new `--delimiter` option as a better alternative to the `IFS` variable (#4256).
 - `set` has a new `--append` and `--prepend` option (#1326).
 - `set` has a new `--show` option to show lots of information about variables (#4265).

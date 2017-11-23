@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-07 15:04+0100\n"
+"POT-Creation-Date: 2017-12-13 10:22+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1814,9 +1814,11 @@ msgstr ""
 #: src/wildcard.cpp:31 /tmp/fish/implicit/share/completions/fossil.fish:6
 #: /tmp/fish/implicit/share/completions/fossil.fish:90
 #: /tmp/fish/implicit/share/completions/git.fish:87
-#: /tmp/fish/implicit/share/completions/git.fish:206
-#: /tmp/fish/implicit/share/completions/git.fish:266
-#: /tmp/fish/implicit/share/completions/git.fish:267
+#: /tmp/fish/implicit/share/completions/git.fish:133
+#: /tmp/fish/implicit/share/completions/git.fish:137
+#: /tmp/fish/implicit/share/completions/git.fish:208
+#: /tmp/fish/implicit/share/completions/git.fish:268
+#: /tmp/fish/implicit/share/completions/git.fish:269
 msgid "File"
 msgstr ""
 
@@ -2502,6 +2504,553 @@ msgstr ""
 msgid "Remove all temporarily added virtual overlays from the eix database"
 msgstr ""
 
+#: /tmp/fish/explicit/share/completions/zfs.fish:1
+msgid "ZFS filesystem"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:2
+msgid "ZFS filesystem snapshot"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:3
+msgid "ZFS block storage device"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:4
+msgid "ZFS snapshot bookmark"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:5
+msgid "Any ZFS dataset"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:6
+msgid "Dataset-specific value"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:7
+msgid "Default ZFS value"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:8
+msgid "Value inherited from parent dataset"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:9
+msgid "Value received by 'zfs receive'"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:10
+msgid "Value valid for the current mount"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:11
+msgid "Read-only value"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:12
+msgid "Dataset full name"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:13
+#: /tmp/fish/explicit/share/completions/zpool.fish:2
+#: /tmp/fish/implicit/share/completions/minikube.fish:25
+#: /tmp/fish/implicit/share/completions/minikube.fish:26
+#: /tmp/fish/implicit/share/completions/minikube.fish:27
+#: /tmp/fish/implicit/share/completions/minikube.fish:28
+msgid "Property"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:14
+#: /tmp/fish/explicit/share/completions/zpool.fish:3
+msgid "Property value"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:15
+#: /tmp/fish/explicit/share/completions/zpool.fish:4
+msgid "Property value origin"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:16
+msgid "Identity type"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:17
+msgid "Identity name"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:18
+msgid "Space usage"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:19
+msgid "Space quota"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:20
+msgid "POSIX user"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:21
+msgid "Samba user"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:22
+#: /tmp/fish/explicit/share/completions/zfs.fish:25
+msgid "Both types"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:23
+msgid "POSIX group"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:24
+msgid "Samba group"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:26
+msgid "Also needs the permission to be allowed"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:27
+msgid ""
+"Also needs the 'create' and 'mount' permissions in the origin filesystem"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:28
+#: /tmp/fish/explicit/share/completions/zfs.fish:29
+#: /tmp/fish/explicit/share/completions/zfs.fish:33
+#: /tmp/fish/explicit/share/completions/zfs.fish:35
+msgid "Also needs the 'mount' permission"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:30
+msgid ""
+"Also needs the 'promote' and 'mount' permissions in the origin filesystem"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:31
+msgid "Also needs the 'create' and 'mount' permissions"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:32
+msgid "Also needs the 'create' and 'mount' permissions in the new parent"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:34
+msgid "For SMB and NFS shares"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:36
+msgid "Allows changing any user property"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:37
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:26
+msgid "Volume block size"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:38
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:1
+msgid "Inheritance of ACL entries"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:39
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:1
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:2
+msgid "Update access time on read"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:40
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:3
+msgid "Is the dataset mountable"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:41
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:4
+msgid "Data checksum"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:42
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:5
+msgid "Compression algorithm"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:43
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:6
+msgid "Number of copies of data"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:44
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:7
+msgid "Deduplication"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:45
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:2
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:8
+msgid "Are contained device nodes openable"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:46
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:3
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:9
+msgid "Can contained executables be executed"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:47
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:10
+msgid "Max number of filesystems and volumes"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:48
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:11
+msgid "Mountpoint"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:49
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:12
+msgid "Which data to cache in ARC"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:50
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:13
+msgid "Max size of dataset and children"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:51
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:14
+msgid "Max number of snapshots"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:52
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:4
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:15
+msgid "Read-only"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:53
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:16
+msgid "Suggest block size"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:54
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:17
+msgid "How redundant are the metadata"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:55
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:18
+msgid "Max space used by dataset itself"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:56
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:19
+msgid "Min space guaranteed to dataset itself"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:57
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:20
+msgid "Min space guaranteed to dataset"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:58
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:21
+msgid "Which data to cache in L2ARC"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:59
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:5
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:22
+msgid "Respect set-UID bit"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:60
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:23
+msgid "Share in NFS"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:61
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:24
+msgid "Hint for handling of synchronous requests"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:62
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:25
+msgid "Hide .zfs directory"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:63
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:26
+msgid "Handle of synchronous requests"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:64
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:27
+msgid "Volume logical size"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:65
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:38
+msgid "Managed from a non-global zone"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:66
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:31
+msgid "Can the dataset be mounted in a zone with Trusted Extensions enabled"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:67
+#: /tmp/fish/explicit/share/completions/zfs.fish:74
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:6
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:8
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:32
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:40
+msgid "Mount with Non Blocking mandatory locks"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:68
+#: /tmp/fish/explicit/share/completions/zfs.fish:77
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:33
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:43
+msgid "Share in Samba"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:69
+#: /tmp/fish/explicit/share/completions/zfs.fish:76
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:34
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:42
+msgid "Share as an iSCSI target"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:70
+#: /tmp/fish/explicit/share/completions/zfs.fish:79
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:35
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:45
+msgid "On-disk version of filesystem"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:71
+#: /tmp/fish/explicit/share/completions/zfs.fish:80
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:36
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:46
+msgid "Scan regular files for viruses on opening and closing"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:72
+#: /tmp/fish/explicit/share/completions/zfs.fish:81
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:7
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:10
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:37
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:47
+msgid "Extended attributes"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:73
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:39
+msgid "Use no ACL or POSIX ACL"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:75
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:9
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:41
+msgid "Sometimes update access time on read"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:78
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:44
+msgid "Hide volume snapshots"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:82
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:30
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:48
+msgid "How is ACL modified by chmod"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:83
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:49
+msgid "How to expose volumes to OS"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:84
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_write_once_properties.fish:1
+msgid "Unicode normalization"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:85
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_write_once_properties.fish:2
+msgid "Reject non-UTF-8-compliant filenames"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:86
+#: /tmp/fish/explicit/share/completions/zfs.fish:87
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_write_once_properties.fish:8
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_write_once_properties.fish:9
+msgid "Case sensitivity"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:88
+msgid "Space properties"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zfs.fish:89
+#: /tmp/fish/explicit/share/completions/zfs.fish:90
+msgid "Dataset name"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:1
+msgid "Pool full name"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:5
+msgid "Mirror of at least two devices"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:6
+#: /tmp/fish/explicit/share/completions/zpool.fish:7
+msgid "ZFS RAID-5 variant, single parity"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:8
+msgid "ZFS RAID-5 variant, double parity"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:9
+msgid "ZFS RAID-5 variant, triple parity"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:10
+msgid "Pseudo vdev for pool hot spares"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:11
+msgid "SLOG device"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:12
+msgid "L2ARC device"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:13
+msgid "Physically allocated space"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:14
+#: /tmp/fish/explicit/share/completions/zpool.fish:15
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:1
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:2
+msgid "Available space"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:16
+msgid "System boot partition size"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:17
+msgid "Usage percentage of pool"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:18
+msgid "Deduplication ratio"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:19
+msgid "Amount of uninitialized space within the pool"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:20
+msgid "Fragmentation percentage of pool"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:21
+msgid "Free pool space"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:22
+msgid "Remaining pool space to be freed"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:23
+msgid "Pool GUID"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:24
+msgid "Current pool health"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:25
+msgid "Total pool space"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:26
+msgid "Used pool space"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:27
+msgid "Pool sector size exponent"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:28
+#: /tmp/fish/explicit/share/completions/zpool.fish:29
+msgid "Alternate root directory"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:30
+#: /tmp/fish/explicit/share/completions/zpool.fish:31
+msgid "Import pool in read-only mode"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:32
+#: /tmp/fish/explicit/share/completions/zpool.fish:33
+msgid "Automatic pool expansion on LUN growing"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:34
+#: /tmp/fish/explicit/share/completions/zpool.fish:35
+msgid "Automatic use of replacement device"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:36
+msgid "Default bootable dataset"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:37
+msgid "Pool configuration cache"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:38
+msgid "Comment about the pool"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:39
+msgid "Threshold for writting a ditto copy of deduplicated blocks"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:40
+msgid "Allow rights delegation on the pool"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:41
+msgid "Behavior in case of catastrophic pool failure"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:42
+msgid "Display snapshots even if 'zfs list' does not use '-t'"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:43
+msgid "On-disk version of pool"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:44
+msgid "%sEnable the %s feature\\n"
+msgstr ""
+
+#: /tmp/fish/explicit/share/completions/zpool.fish:45
+msgid "All properties"
+msgstr ""
+
 #: /tmp/fish/explicit/share/functions/abbr.fish:1
 msgid "%s: Could not figure out what to do!\\n"
 msgstr ""
@@ -2631,6 +3180,135 @@ msgstr ""
 msgid "%s\\tArchived file\\n"
 msgstr ""
 
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:3
+msgid "Achieved compression ratio"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:4
+msgid "Dataset creation time"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:5
+msgid "Snapshot clones"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:6
+msgid "Marked for deferred destruction"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:7
+msgid "Total lower-level filesystems and volumes"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:8
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:9
+msgid "Logical total space"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:10
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:11
+msgid "Logical used space"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:12
+msgid "Is currently mounted?"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:13
+msgid "Source snapshot"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:14
+msgid "Token for interrupted reception resumption"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:15
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:16
+msgid "Total space"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:17
+msgid "Achieved compression ratio of referenced space"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:18
+msgid "Total lower-level snapshots"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:19
+#: /tmp/fish/implicit/share/completions/zfs.fish:71
+#: /tmp/fish/implicit/share/completions/zfs.fish:81
+msgid "Dataset type"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:20
+msgid "Space used by dataset and children"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:21
+msgid "Space used by children datasets"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:22
+msgid "Space used by dataset itself"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:23
+msgid "Space used by refreservation"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:24
+msgid "Space used by dataset snapshots"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:25
+msgid "Holds count"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:27
+msgid "Referenced data written since previous snapshot"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:28
+msgid "%sDataset space use by user %s\\n"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:29
+msgid "%sDataset space use by group %s\\n"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:30
+msgid "%sReferenced data written since snapshot %s\\n"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:28
+msgid "%sMax usage by user %s\\n"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:29
+msgid "%sMax usage by group %s\\n"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_write_once_properties.fish:3
+msgid "Allow overlay mount"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_write_once_properties.fish:4
+msgid "SELinux context for the child filesystem"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_write_once_properties.fish:5
+msgid "SELinux context for the filesystem being mounted"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_write_once_properties.fish:6
+msgid "SELinux context for unlabeled files"
+msgstr ""
+
+#: /tmp/fish/explicit/share/functions/__fish_complete_zfs_write_once_properties.fish:7
+msgid "SELinux context for the root inode of the filesystem"
+msgstr ""
+
 #: /tmp/fish/explicit/share/functions/__fish_config_interactive.fish:1
 msgid "Welcome to fish, the friendly interactive shell"
 msgstr ""
@@ -2655,6 +3333,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/aptitude.fish:3
 #: /tmp/fish/implicit/share/completions/apt-mark.fish:3
 #: /tmp/fish/implicit/share/completions/dpkg-reconfigure.fish:1
+#: /tmp/fish/implicit/share/completions/pkg_delete.fish:1
+#: /tmp/fish/implicit/share/completions/pkg_info.fish:1
 #: /tmp/fish/implicit/share/completions/prt-get.fish:1
 #: /tmp/fish/implicit/share/completions/prt-get.fish:63
 #: /tmp/fish/implicit/share/completions/wajig.fish:3
@@ -5060,7 +5740,10 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/valgrind.fish:6
 #: /tmp/fish/implicit/share/completions/vi.fish:8
 #: /tmp/fish/implicit/share/completions/wget.fish:9
+#: /tmp/fish/implicit/share/completions/zfs.fish:42
+#: /tmp/fish/implicit/share/completions/zfs.fish:87
 #: /tmp/fish/implicit/share/completions/zip.fish:13
+#: /tmp/fish/implicit/share/completions/zpool.fish:140
 #: /tmp/fish/implicit/share/functions/__fish_complete_ssh.fish:11
 msgid "Verbose mode"
 msgstr ""
@@ -9705,7 +10388,7 @@ msgid "Show usage message and options"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/bzr.fish:72
-#: /tmp/fish/implicit/share/completions/git.fish:380
+#: /tmp/fish/implicit/share/completions/git.fish:382
 msgid "Show help message"
 msgstr ""
 
@@ -14374,7 +15057,7 @@ msgid "Ignore all white space"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/diff.fish:7
-#: /tmp/fish/implicit/share/completions/git.fish:325
+#: /tmp/fish/implicit/share/completions/git.fish:327
 msgid "Ignore changes whose lines are all blank"
 msgstr ""
 
@@ -14383,7 +15066,7 @@ msgid "Ignore changes whose lines match the REGEX"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/diff.fish:9
-#: /tmp/fish/implicit/share/completions/git.fish:321
+#: /tmp/fish/implicit/share/completions/git.fish:323
 msgid "Treat all files as text"
 msgstr ""
 
@@ -16224,6 +16907,81 @@ msgstr ""
 msgid "X display to use"
 msgstr ""
 
+#: /tmp/fish/implicit/share/completions/exercism.fish:1
+msgid "Test if exercism has yet to be given the subcommand"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:3
+msgid "turn on verbose logging"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:4
+#: /tmp/fish/implicit/share/completions/exercism.fish:19
+#: /tmp/fish/implicit/share/completions/ninja.fish:8
+#: /tmp/fish/implicit/share/completions/quilt.fish:1
+msgid "show help"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:5
+msgid "print the version"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:6
+msgid "Writes config values to a JSON file."
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:7
+msgid "Outputs useful debug information."
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:8
+msgid "Downloads a solution given the ID of the latest iteration."
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:9
+msgid "Fetches the next unsubmitted problem in each track."
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:10
+msgid "Lists the available problems for a language track, given its ID."
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:11
+msgid ""
+"Opens exercism.io to your most recent iteration of a problem given the track "
+"ID and problem slug."
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:12
+msgid ""
+"Downloads the most recent iteration for each of your solutions on exercism."
+"io."
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:13
+msgid "Skips a problem given a track ID and problem slug."
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:14
+msgid "Fetches information about your progress with a given language track."
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:15
+msgid "Submits a new iteration to a problem on exercism.io."
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:16
+msgid "Lists the available language tracks."
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:17
+msgid "REMOVED"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/exercism.fish:18
+msgid "Upgrades the CLI to the latest released version."
+msgstr ""
+
 #: /tmp/fish/implicit/share/completions/exit.fish:2
 msgid "Quit with normal exit status"
 msgstr ""
@@ -16971,6 +17729,8 @@ msgid ""
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:8
+#: /tmp/fish/implicit/share/completions/zfs.fish:66
+#: /tmp/fish/implicit/share/completions/zfs.fish:76
 msgid "Maximum recursion depth"
 msgstr ""
 
@@ -18218,9 +18978,9 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/fossil.fish:280
 #: /tmp/fish/implicit/share/completions/git.fish:64
 #: /tmp/fish/implicit/share/completions/git.fish:86
-#: /tmp/fish/implicit/share/completions/git.fish:244
-#: /tmp/fish/implicit/share/completions/git.fish:293
-#: /tmp/fish/implicit/share/completions/git.fish:294
+#: /tmp/fish/implicit/share/completions/git.fish:246
+#: /tmp/fish/implicit/share/completions/git.fish:295
+#: /tmp/fish/implicit/share/completions/git.fish:296
 msgid "Tag"
 msgstr ""
 
@@ -18621,7 +19381,7 @@ msgid "Limit number of tags"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:281
-#: /tmp/fish/implicit/share/completions/git.fish:291
+#: /tmp/fish/implicit/share/completions/git.fish:293
 msgid "List tags"
 msgstr ""
 
@@ -18714,6 +19474,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/gsettings.fish:15
 #: /tmp/fish/implicit/share/completions/ncdu.fish:1
 #: /tmp/fish/implicit/share/completions/obnam.fish:12
+#: /tmp/fish/implicit/share/completions/pkg_add.fish:4
 #: /tmp/fish/implicit/share/completions/pkgadd.fish:5
 #: /tmp/fish/implicit/share/completions/pkginfo.fish:7
 #: /tmp/fish/implicit/share/completions/pkgmk.fish:17
@@ -24822,24 +25583,24 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/git.fish:96
 #: /tmp/fish/implicit/share/completions/git.fish:108
 #: /tmp/fish/implicit/share/completions/git.fish:130
-#: /tmp/fish/implicit/share/completions/git.fish:134
-#: /tmp/fish/implicit/share/completions/git.fish:140
-#: /tmp/fish/implicit/share/completions/git.fish:183
-#: /tmp/fish/implicit/share/completions/git.fish:219
-#: /tmp/fish/implicit/share/completions/git.fish:222
-#: /tmp/fish/implicit/share/completions/git.fish:242
-#: /tmp/fish/implicit/share/completions/git.fish:265
-#: /tmp/fish/implicit/share/completions/git.fish:285
-#: /tmp/fish/implicit/share/completions/git.fish:307
+#: /tmp/fish/implicit/share/completions/git.fish:135
+#: /tmp/fish/implicit/share/completions/git.fish:142
+#: /tmp/fish/implicit/share/completions/git.fish:185
+#: /tmp/fish/implicit/share/completions/git.fish:221
+#: /tmp/fish/implicit/share/completions/git.fish:224
+#: /tmp/fish/implicit/share/completions/git.fish:244
+#: /tmp/fish/implicit/share/completions/git.fish:267
+#: /tmp/fish/implicit/share/completions/git.fish:287
+#: /tmp/fish/implicit/share/completions/git.fish:309
 msgid "Branch"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:23
-#: /tmp/fish/implicit/share/completions/git.fish:198
-#: /tmp/fish/implicit/share/completions/git.fish:210
-#: /tmp/fish/implicit/share/completions/git.fish:237
-#: /tmp/fish/implicit/share/completions/git.fish:250
-#: /tmp/fish/implicit/share/completions/git.fish:274
+#: /tmp/fish/implicit/share/completions/git.fish:200
+#: /tmp/fish/implicit/share/completions/git.fish:212
+#: /tmp/fish/implicit/share/completions/git.fish:239
+#: /tmp/fish/implicit/share/completions/git.fish:252
+#: /tmp/fish/implicit/share/completions/git.fish:276
 #: /tmp/fish/implicit/share/completions/mdadm.fish:12
 #: /tmp/fish/implicit/share/completions/update-eix-remote.fish:1
 msgid "Be quiet"
@@ -24848,10 +25609,10 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/git.fish:24
 #: /tmp/fish/implicit/share/completions/git.fish:41
 #: /tmp/fish/implicit/share/completions/git.fish:70
-#: /tmp/fish/implicit/share/completions/git.fish:199
-#: /tmp/fish/implicit/share/completions/git.fish:211
-#: /tmp/fish/implicit/share/completions/git.fish:238
-#: /tmp/fish/implicit/share/completions/git.fish:251
+#: /tmp/fish/implicit/share/completions/git.fish:201
+#: /tmp/fish/implicit/share/completions/git.fish:213
+#: /tmp/fish/implicit/share/completions/git.fish:240
+#: /tmp/fish/implicit/share/completions/git.fish:253
 #: /tmp/fish/implicit/share/completions/prt-get.fish:53
 #: /tmp/fish/implicit/share/completions/prt-get.fish:111
 #: /tmp/fish/implicit/share/completions/xz.fish:32
@@ -24859,12 +25620,12 @@ msgid "Be verbose"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:25
-#: /tmp/fish/implicit/share/completions/git.fish:213
+#: /tmp/fish/implicit/share/completions/git.fish:215
 msgid "Append ref names and object names"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:26
-#: /tmp/fish/implicit/share/completions/git.fish:214
+#: /tmp/fish/implicit/share/completions/git.fish:216
 msgid "Force update of local branches"
 msgstr ""
 
@@ -25012,7 +25773,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/git.fish:63
 #: /tmp/fish/implicit/share/completions/git.fish:85
 #: /tmp/fish/implicit/share/completions/git.fish:109
-#: /tmp/fish/implicit/share/completions/git.fish:184
+#: /tmp/fish/implicit/share/completions/git.fish:186
 msgid "Remote branch"
 msgstr ""
 
@@ -25041,7 +25802,7 @@ msgid "Allow adding otherwise ignored files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:72
-#: /tmp/fish/implicit/share/completions/git.fish:257
+#: /tmp/fish/implicit/share/completions/git.fish:259
 msgid "Interactive mode"
 msgstr ""
 
@@ -25092,7 +25853,7 @@ msgid "Remote Branch"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:84
-#: /tmp/fish/implicit/share/completions/git.fish:243
+#: /tmp/fish/implicit/share/completions/git.fish:245
 msgid "Head"
 msgstr ""
 
@@ -25257,893 +26018,896 @@ msgstr ""
 msgid "Compare two paths on the filesystem"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:133
+#: /tmp/fish/implicit/share/completions/git.fish:134
 msgid "Open diffs in a visual tool"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:135
+#: /tmp/fish/implicit/share/completions/git.fish:136
 msgid "Visually show diff of changes in the index"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:136
+#: /tmp/fish/implicit/share/completions/git.fish:138
 msgid "Print lines matching a pattern"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:137
+#: /tmp/fish/implicit/share/completions/git.fish:139
 msgid "Create an empty git repository or reinitialize an existing one"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:138
+#: /tmp/fish/implicit/share/completions/git.fish:140
 msgid "Show commit shortlog"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:139
+#: /tmp/fish/implicit/share/completions/git.fish:141
 msgid "Show commit logs"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:141
+#: /tmp/fish/implicit/share/completions/git.fish:143
 msgid "Continue listing file history beyond renames"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:142
+#: /tmp/fish/implicit/share/completions/git.fish:144
 msgid "Don't print ref names"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:143
+#: /tmp/fish/implicit/share/completions/git.fish:145
 msgid "Print out ref names"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:144
+#: /tmp/fish/implicit/share/completions/git.fish:146
 msgid "Print ref name by which each commit was reached"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:145
+#: /tmp/fish/implicit/share/completions/git.fish:147
 msgid "Limit the number of commits before starting to show the commit output"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:146
-msgid "Skip given number of commits"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/git.fish:147
 #: /tmp/fish/implicit/share/completions/git.fish:148
-msgid "Show commits more recent than specified date"
+msgid "Skip given number of commits"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:149
 #: /tmp/fish/implicit/share/completions/git.fish:150
-msgid "Show commits older than specified date"
+msgid "Show commits more recent than specified date"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:151
-msgid "Limit commits from given author"
-msgstr ""
-
 #: /tmp/fish/implicit/share/completions/git.fish:152
-msgid "Limit commits from given committer"
+msgid "Show commits older than specified date"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:153
-msgid "Limit commits to ones with reflog entries matching given pattern"
+msgid "Limit commits from given author"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:154
-msgid "Limit commits with message that match given pattern"
+msgid "Limit commits from given committer"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:155
-msgid "Limit commits to ones that match all given --grep"
+msgid "Limit commits to ones with reflog entries matching given pattern"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:156
-msgid "Limit commits to ones with message that don't match --grep"
+msgid "Limit commits with message that match given pattern"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:157
-msgid "Case insensitive match"
+msgid "Limit commits to ones that match all given --grep"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:158
-msgid "Patterns are basic regular expressions (default)"
+msgid "Limit commits to ones with message that don't match --grep"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:159
-msgid "Patterns are extended regular expressions"
+msgid "Case insensitive match"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:160
-msgid "Patterns are fixed strings"
+msgid "Patterns are basic regular expressions (default)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:161
-msgid "Patterns are Perl-compatible regular expressions"
+msgid "Patterns are extended regular expressions"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:162
-msgid "Stop when given path disappears from tree"
+msgid "Patterns are fixed strings"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:163
-msgid "Print only merge commits"
+msgid "Patterns are Perl-compatible regular expressions"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:164
-msgid "Don't print commits with more than one parent"
+msgid "Stop when given path disappears from tree"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:165
-msgid "Show only commit with at least the given number of parents"
+msgid "Print only merge commits"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:166
-msgid "Show only commit with at most the given number of parents"
+msgid "Don't print commits with more than one parent"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:167
-msgid "Show only commit without a mimimum number of parents"
+msgid "Show only commit with at least the given number of parents"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:168
-msgid "Show only commit without a maximum number of parents"
+msgid "Show only commit with at most the given number of parents"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:169
-msgid "Follow only the first parent commit upon seeing a merge commit"
+msgid "Show only commit without a mimimum number of parents"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:170
-msgid "Reverse meaning of ^ prefix"
+msgid "Show only commit without a maximum number of parents"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:171
+msgid "Follow only the first parent commit upon seeing a merge commit"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/git.fish:172
+msgid "Reverse meaning of ^ prefix"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/git.fish:173
 msgid ""
 "Pretend as if all refs in refs/ are listed on the command line as <commit>"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:172
+#: /tmp/fish/implicit/share/completions/git.fish:174
 msgid ""
 "Pretend as if all refs are in refs/heads are listed on the command line as "
 "<commit>"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:173
+#: /tmp/fish/implicit/share/completions/git.fish:175
 msgid ""
 "Pretend as if all refs are in ref/tags are listed on the command line as "
 "<commit>"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:174
+#: /tmp/fish/implicit/share/completions/git.fish:176
 msgid ""
 "Pretend as if all refs in refs/remotes  are listed on the command line as "
 "<commit>"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:175
+#: /tmp/fish/implicit/share/completions/git.fish:177
 msgid ""
 "Pretend as if all refs matching shell glob are listed on the command line as "
 "<commit>"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:176
+#: /tmp/fish/implicit/share/completions/git.fish:178
 msgid "Do not include refs matching given glob pattern"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:177
+#: /tmp/fish/implicit/share/completions/git.fish:179
 msgid ""
 "Pretend as if all objcets mentioned by reflogs are listed on the command "
 "line as <commit>"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:178
+#: /tmp/fish/implicit/share/completions/git.fish:180
 msgid "Ignore invalid object names"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:179
+#: /tmp/fish/implicit/share/completions/git.fish:181
 msgid "Read commits from stdin"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:180
+#: /tmp/fish/implicit/share/completions/git.fish:182
 msgid "Mark equivalent commits with = and inequivalent with +"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:181
+#: /tmp/fish/implicit/share/completions/git.fish:183
 msgid "Omit equivalent commits"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:182
+#: /tmp/fish/implicit/share/completions/git.fish:184
 msgid "Join two or more development histories together"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:185
+#: /tmp/fish/implicit/share/completions/git.fish:187
 msgid "Autocommit the merge"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:186
+#: /tmp/fish/implicit/share/completions/git.fish:188
 msgid "Don't autocommit the merge"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:187
+#: /tmp/fish/implicit/share/completions/git.fish:189
 msgid "Edit auto-generated merge message"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:188
+#: /tmp/fish/implicit/share/completions/git.fish:190
 msgid "Don't edit auto-generated merge message"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:189
+#: /tmp/fish/implicit/share/completions/git.fish:191
 msgid "Don't generate a merge commit if merge is fast-forward"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:190
+#: /tmp/fish/implicit/share/completions/git.fish:192
 msgid "Generate a merge commit even if merge is fast-forward"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:191
+#: /tmp/fish/implicit/share/completions/git.fish:193
 msgid "Refuse to merge unless fast-forward possible"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:192
+#: /tmp/fish/implicit/share/completions/git.fish:194
 msgid "Populate the log message with one-line descriptions"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:193
+#: /tmp/fish/implicit/share/completions/git.fish:195
 msgid "Don't populate the log message with one-line descriptions"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:194
+#: /tmp/fish/implicit/share/completions/git.fish:196
 msgid "Show diffstat of the merge"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:195
+#: /tmp/fish/implicit/share/completions/git.fish:197
 msgid "Don't show diffstat of the merge"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:196
+#: /tmp/fish/implicit/share/completions/git.fish:198
 msgid "Squash changes from other branch as a single commit"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:197
+#: /tmp/fish/implicit/share/completions/git.fish:199
 msgid "Don't squash changes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:200
-#: /tmp/fish/implicit/share/completions/git.fish:217
-#: /tmp/fish/implicit/share/completions/git.fish:239
+#: /tmp/fish/implicit/share/completions/git.fish:202
+#: /tmp/fish/implicit/share/completions/git.fish:219
+#: /tmp/fish/implicit/share/completions/git.fish:241
 msgid "Force progress status"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:201
+#: /tmp/fish/implicit/share/completions/git.fish:203
 msgid "Force no progress status"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:202
+#: /tmp/fish/implicit/share/completions/git.fish:204
 msgid "Set the commit message"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:203
+#: /tmp/fish/implicit/share/completions/git.fish:205
 msgid "Abort the current conflict resolution process"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:204
+#: /tmp/fish/implicit/share/completions/git.fish:206
 msgid "Run merge conflict resolution tools to resolve merge conflicts"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:205
+#: /tmp/fish/implicit/share/completions/git.fish:207
 msgid "Use specific merge resolution program"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:207
+#: /tmp/fish/implicit/share/completions/git.fish:209
 msgid "Move or rename a file, a directory, or a symlink"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:208
+#: /tmp/fish/implicit/share/completions/git.fish:210
 msgid "Prune all unreachable objects from the object database"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:209
+#: /tmp/fish/implicit/share/completions/git.fish:211
 msgid "Fetch from and merge with another repository or a local branch"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:212
+#: /tmp/fish/implicit/share/completions/git.fish:214
 msgid "Fetch all remotes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:215
+#: /tmp/fish/implicit/share/completions/git.fish:217
 msgid "Keep downloaded pack"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:216
+#: /tmp/fish/implicit/share/completions/git.fish:218
 msgid "Disable automatic tag following"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:218
-#: /tmp/fish/implicit/share/completions/git.fish:221
-#: /tmp/fish/implicit/share/completions/git.fish:241
+#: /tmp/fish/implicit/share/completions/git.fish:220
+#: /tmp/fish/implicit/share/completions/git.fish:223
+#: /tmp/fish/implicit/share/completions/git.fish:243
 msgid "Remote alias"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:220
+#: /tmp/fish/implicit/share/completions/git.fish:222
 msgid "Update remote refs along with associated objects"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:223
+#: /tmp/fish/implicit/share/completions/git.fish:225
 msgid "Force-push branch"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:224
+#: /tmp/fish/implicit/share/completions/git.fish:226
 msgid "Force-push local branch to remote branch"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:225
+#: /tmp/fish/implicit/share/completions/git.fish:227
 msgid "Push local branch to remote branch"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:226
+#: /tmp/fish/implicit/share/completions/git.fish:228
 msgid "Push all refs under refs/heads/"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:227
+#: /tmp/fish/implicit/share/completions/git.fish:229
 msgid "Remove remote branches that don't have a local counterpart"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:228
+#: /tmp/fish/implicit/share/completions/git.fish:230
 msgid "Push all refs under refs/"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:229
+#: /tmp/fish/implicit/share/completions/git.fish:231
 msgid "Delete all listed refs from the remote repository"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:230
+#: /tmp/fish/implicit/share/completions/git.fish:232
 msgid "Push all refs under refs/tags"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:231
+#: /tmp/fish/implicit/share/completions/git.fish:233
 msgid "Push all usual refs plus the ones under refs/tags"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:232
+#: /tmp/fish/implicit/share/completions/git.fish:234
 msgid "Do everything except actually send the updates"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:233
+#: /tmp/fish/implicit/share/completions/git.fish:235
 msgid "Produce machine-readable output"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:234
+#: /tmp/fish/implicit/share/completions/git.fish:236
 msgid "Force update of remote refs"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:235
+#: /tmp/fish/implicit/share/completions/git.fish:237
 msgid ""
 "Force update of remote refs, stopping if other's changes would be overwritten"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:236
+#: /tmp/fish/implicit/share/completions/git.fish:238
 msgid "Add upstream (tracking) reference"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:240
+#: /tmp/fish/implicit/share/completions/git.fish:242
 msgid "Forward-port local commits to the updated upstream head"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:245
+#: /tmp/fish/implicit/share/completions/git.fish:247
 msgid "Restart the rebasing process"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:246
+#: /tmp/fish/implicit/share/completions/git.fish:248
 msgid "Abort the rebase operation"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:247
+#: /tmp/fish/implicit/share/completions/git.fish:249
 msgid "Keep the commits that don't cahnge anything"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:248
+#: /tmp/fish/implicit/share/completions/git.fish:250
 msgid "Restart the rebasing process by skipping the current patch"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:249
+#: /tmp/fish/implicit/share/completions/git.fish:251
 msgid "Use merging strategies to rebase"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:252
+#: /tmp/fish/implicit/share/completions/git.fish:254
 msgid "Show diffstat of the rebase"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:253
+#: /tmp/fish/implicit/share/completions/git.fish:255
 msgid "Don't show diffstat of the rebase"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:254
+#: /tmp/fish/implicit/share/completions/git.fish:256
 msgid "Allow the pre-rebase hook to run"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:255
+#: /tmp/fish/implicit/share/completions/git.fish:257
 msgid "Don't allow the pre-rebase hook to run"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:256
+#: /tmp/fish/implicit/share/completions/git.fish:258
 msgid "Force the rebase"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:258
+#: /tmp/fish/implicit/share/completions/git.fish:260
 msgid "Try to recreate merges"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:259
+#: /tmp/fish/implicit/share/completions/git.fish:261
 msgid "Rebase all reachable commits"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:260
+#: /tmp/fish/implicit/share/completions/git.fish:262
 msgid "Automatic squashing"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:261
+#: /tmp/fish/implicit/share/completions/git.fish:263
 msgid "No automatic squashing"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:262
+#: /tmp/fish/implicit/share/completions/git.fish:264
 msgid "No fast-forward"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:263
+#: /tmp/fish/implicit/share/completions/git.fish:265
 msgid "Reset current HEAD to the specified state"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:264
+#: /tmp/fish/implicit/share/completions/git.fish:266
 msgid "Reset files in working directory"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:268
+#: /tmp/fish/implicit/share/completions/git.fish:270
 msgid "Reflog"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:269
+#: /tmp/fish/implicit/share/completions/git.fish:271
 msgid "Revert an existing commit"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:270
+#: /tmp/fish/implicit/share/completions/git.fish:272
 msgid "Remove files from the working tree and from the index"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:271
+#: /tmp/fish/implicit/share/completions/git.fish:273
 msgid "Keep local copies"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:272
+#: /tmp/fish/implicit/share/completions/git.fish:274
 msgid "Exit with a zero status even if no files matched"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:273
+#: /tmp/fish/implicit/share/completions/git.fish:275
 msgid "Allow recursive removal"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:275
+#: /tmp/fish/implicit/share/completions/git.fish:277
 msgid "Override the up-to-date check"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:276
+#: /tmp/fish/implicit/share/completions/git.fish:278
 #: /tmp/fish/implicit/share/completions/prt-get.fish:45
 #: /tmp/fish/implicit/share/completions/prt-get.fish:103
+#: /tmp/fish/implicit/share/completions/zfs.fish:40
+#: /tmp/fish/implicit/share/completions/zfs.fish:124
+#: /tmp/fish/implicit/share/completions/zfs.fish:132
 msgid "Dry run"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:277
+#: /tmp/fish/implicit/share/completions/git.fish:279
 msgid "Show the working tree status"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:278
+#: /tmp/fish/implicit/share/completions/git.fish:280
 msgid "Give the output in the short-format"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:279
+#: /tmp/fish/implicit/share/completions/git.fish:281
 msgid "Show the branch and tracking info even in short-format"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:280
+#: /tmp/fish/implicit/share/completions/git.fish:282
 msgid "Give the output in a stable, easy-to-parse format"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:281
+#: /tmp/fish/implicit/share/completions/git.fish:283
 msgid "Terminate entries with null character"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:282
+#: /tmp/fish/implicit/share/completions/git.fish:284
 msgid "The untracked files handling mode"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:283
+#: /tmp/fish/implicit/share/completions/git.fish:285
 msgid "Ignore changes to submodules"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:284
+#: /tmp/fish/implicit/share/completions/git.fish:286
 msgid "Create, list, delete or verify a tag object signed with GPG"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:286
+#: /tmp/fish/implicit/share/completions/git.fish:288
 msgid "Make an unsigned, annotated tag object"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:287
+#: /tmp/fish/implicit/share/completions/git.fish:289
 msgid "Make a GPG-signed tag"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:288
+#: /tmp/fish/implicit/share/completions/git.fish:290
 msgid "Remove a tag"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:289
+#: /tmp/fish/implicit/share/completions/git.fish:291
 msgid "Verify signature of a tag"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:290
+#: /tmp/fish/implicit/share/completions/git.fish:292
 msgid "Force overwriting exising tag"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:292
+#: /tmp/fish/implicit/share/completions/git.fish:294
 msgid "List tags that contain a commit"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:295
+#: /tmp/fish/implicit/share/completions/git.fish:297
 msgid "Stash away changes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:296
+#: /tmp/fish/implicit/share/completions/git.fish:298
 msgid "List stashes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:297
+#: /tmp/fish/implicit/share/completions/git.fish:299
 msgid "Show the changes recorded in the stash"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:298
+#: /tmp/fish/implicit/share/completions/git.fish:300
 msgid "Apply and remove a single stashed state"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:299
+#: /tmp/fish/implicit/share/completions/git.fish:301
 msgid "Apply a single stashed state"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:300
+#: /tmp/fish/implicit/share/completions/git.fish:302
 msgid "Remove all stashed states"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:301
+#: /tmp/fish/implicit/share/completions/git.fish:303
 msgid "Remove a single stashed state from the stash list"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:302
+#: /tmp/fish/implicit/share/completions/git.fish:304
 msgid "Create a stash"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:303
+#: /tmp/fish/implicit/share/completions/git.fish:305
 msgid "Save a new stash"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:304
+#: /tmp/fish/implicit/share/completions/git.fish:306
 msgid "Create a new branch from a stash"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:305
+#: /tmp/fish/implicit/share/completions/git.fish:307
 msgid "Set and read git configuration variables"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:306
+#: /tmp/fish/implicit/share/completions/git.fish:308
 msgid "Generate patch series to send upstream"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:308
+#: /tmp/fish/implicit/share/completions/git.fish:310
 msgid "Generate plain patches without diffstat"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:309
+#: /tmp/fish/implicit/share/completions/git.fish:311
 msgid "Suppress diff output"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:310
+#: /tmp/fish/implicit/share/completions/git.fish:312
 msgid "Spend more time to create smaller diffs"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:311
+#: /tmp/fish/implicit/share/completions/git.fish:313
 msgid "Generate diff with the 'patience' algorithm"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:312
+#: /tmp/fish/implicit/share/completions/git.fish:314
 msgid "Generate diff with the 'histogram' algorithm"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:313
+#: /tmp/fish/implicit/share/completions/git.fish:315
 msgid "Print all commits to stdout in mbox format"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:314
+#: /tmp/fish/implicit/share/completions/git.fish:316
 msgid "Show number of added/deleted lines in decimal notation"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:315
+#: /tmp/fish/implicit/share/completions/git.fish:317
 msgid "Output only last line of the stat"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:316
+#: /tmp/fish/implicit/share/completions/git.fish:318
 msgid "Output a condensed summary of extended header information"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:317
+#: /tmp/fish/implicit/share/completions/git.fish:319
 msgid "Disable rename detection"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:318
+#: /tmp/fish/implicit/share/completions/git.fish:320
 msgid "Show full blob object names"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:319
+#: /tmp/fish/implicit/share/completions/git.fish:321
 msgid "Output a binary diff for use with git apply"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:320
+#: /tmp/fish/implicit/share/completions/git.fish:322
 msgid "Also inspect unmodified files as source for a copy"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:322
+#: /tmp/fish/implicit/share/completions/git.fish:324
 msgid "Ignore changes in whitespace at EOL"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:323
+#: /tmp/fish/implicit/share/completions/git.fish:325
 msgid "Ignore changes in amount of whitespace"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:324
+#: /tmp/fish/implicit/share/completions/git.fish:326
 msgid "Ignore whitespace when comparing lines"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:326
+#: /tmp/fish/implicit/share/completions/git.fish:328
 msgid "Show whole surrounding functions of changes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:327
+#: /tmp/fish/implicit/share/completions/git.fish:329
 msgid "Allow an external diff helper to be executed"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:328
+#: /tmp/fish/implicit/share/completions/git.fish:330
 msgid "Disallow external diff helpers"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:329
+#: /tmp/fish/implicit/share/completions/git.fish:331
 msgid "Disallow external text conversion filters for binary files (Default)"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:330
+#: /tmp/fish/implicit/share/completions/git.fish:332
 msgid ""
 "Allow external text conversion filters for binary files (Resulting diff is "
 "unappliable)"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:331
+#: /tmp/fish/implicit/share/completions/git.fish:333
 msgid "Do not show source or destination prefix"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:332
+#: /tmp/fish/implicit/share/completions/git.fish:334
 msgid "Name output in [Patch n/m] format, even with a single patch"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:333
+#: /tmp/fish/implicit/share/completions/git.fish:335
 msgid "Name output in [Patch] format, even with multiple patches"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:334
+#: /tmp/fish/implicit/share/completions/git.fish:336
 msgid "Initialize, update or inspect submodules"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:335
+#: /tmp/fish/implicit/share/completions/git.fish:337
 msgid "Add a submodule"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:336
+#: /tmp/fish/implicit/share/completions/git.fish:338
 msgid "Show submodule status"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:337
-#: /tmp/fish/implicit/share/completions/git.fish:343
+#: /tmp/fish/implicit/share/completions/git.fish:339
+#: /tmp/fish/implicit/share/completions/git.fish:345
 msgid "Initialize all submodules"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:338
+#: /tmp/fish/implicit/share/completions/git.fish:340
 msgid "Update all submodules"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:339
+#: /tmp/fish/implicit/share/completions/git.fish:341
 msgid "Show commit summary"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:340
+#: /tmp/fish/implicit/share/completions/git.fish:342
 msgid "Run command on each submodule"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:341
+#: /tmp/fish/implicit/share/completions/git.fish:343
 msgid "Sync submodules' URL with .gitmodules"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:342
+#: /tmp/fish/implicit/share/completions/git.fish:344
 msgid "Only print error messages"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:344
+#: /tmp/fish/implicit/share/completions/git.fish:346
 msgid "Checkout the superproject's commit on a detached HEAD in the submodule"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:345
+#: /tmp/fish/implicit/share/completions/git.fish:347
 msgid ""
 "Merge the superproject's commit into the current branch of the submodule"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:346
+#: /tmp/fish/implicit/share/completions/git.fish:348
 msgid "Rebase current branch onto the superproject's commit"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:347
+#: /tmp/fish/implicit/share/completions/git.fish:349
 msgid "Don't fetch new objects from the remote"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:348
+#: /tmp/fish/implicit/share/completions/git.fish:350
 msgid ""
 "Instead of using superproject's SHA-1, use the state of the submodule's "
 "remote-tracking branch"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:349
+#: /tmp/fish/implicit/share/completions/git.fish:351
 msgid ""
 "Throw away local changes when switching to a different commit and always run "
 "checkout"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:350
+#: /tmp/fish/implicit/share/completions/git.fish:352
 msgid "Also add ignored submodule path"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:351
+#: /tmp/fish/implicit/share/completions/git.fish:353
 msgid "Remove even with local changes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:352
+#: /tmp/fish/implicit/share/completions/git.fish:354
 msgid "Use the commit stored in the index"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:353
+#: /tmp/fish/implicit/share/completions/git.fish:355
 msgid "Compare the commit in the index with submodule HEAD"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:354
+#: /tmp/fish/implicit/share/completions/git.fish:356
 msgid "Traverse submodules recursively"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:355
+#: /tmp/fish/implicit/share/completions/git.fish:357
 msgid "Show logs with difference each commit introduces"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:356
+#: /tmp/fish/implicit/share/completions/git.fish:358
 msgid "Remove untracked files from the working tree"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:357
+#: /tmp/fish/implicit/share/completions/git.fish:359
 msgid "Force run"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:358
+#: /tmp/fish/implicit/share/completions/git.fish:360
 msgid "Show what would be done and clean files interactively"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:359
+#: /tmp/fish/implicit/share/completions/git.fish:361
 msgid "Don't actually remove anything, just show what would be done"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:360
+#: /tmp/fish/implicit/share/completions/git.fish:362
 msgid "Be quiet, only report errors"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:361
+#: /tmp/fish/implicit/share/completions/git.fish:363
 msgid "Remove untracked directories in addition to untracked files"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:362
+#: /tmp/fish/implicit/share/completions/git.fish:364
 msgid "Remove ignored files, as well"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:363
+#: /tmp/fish/implicit/share/completions/git.fish:365
 msgid "Remove only ignored files"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:364
+#: /tmp/fish/implicit/share/completions/git.fish:366
 msgid "Show what revision and author last modified each line of a file"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:365
+#: /tmp/fish/implicit/share/completions/git.fish:367
 msgid "Show blank SHA-1 for boundary commits"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:366
+#: /tmp/fish/implicit/share/completions/git.fish:368
 msgid "Do not treat root commits as boundaries"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:367
+#: /tmp/fish/implicit/share/completions/git.fish:369
 msgid "Include additional statistics"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:368
+#: /tmp/fish/implicit/share/completions/git.fish:370
 msgid "Annotate only the given line range"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:369
+#: /tmp/fish/implicit/share/completions/git.fish:371
 msgid "Show long rev"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:370
+#: /tmp/fish/implicit/share/completions/git.fish:372
 msgid "Show raw timestamp"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:371
+#: /tmp/fish/implicit/share/completions/git.fish:373
 msgid "Use revisions from named file instead of calling rev-list"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:372
+#: /tmp/fish/implicit/share/completions/git.fish:374
 msgid "Walk history forward instead of backward"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:373
+#: /tmp/fish/implicit/share/completions/git.fish:375
 msgid "Show in a format designed for machine consumption"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:374
+#: /tmp/fish/implicit/share/completions/git.fish:376
 msgid "Show the porcelain format"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:375
+#: /tmp/fish/implicit/share/completions/git.fish:377
 msgid "Show the result incrementally"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:376
+#: /tmp/fish/implicit/share/completions/git.fish:378
 msgid "Instead of working tree, use the contents of the named file"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:377
+#: /tmp/fish/implicit/share/completions/git.fish:379
 msgid "Specifies the format used to output dates"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:378
+#: /tmp/fish/implicit/share/completions/git.fish:380
 msgid "Detect moved or copied lines within a file"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:379
+#: /tmp/fish/implicit/share/completions/git.fish:381
 msgid ""
 "Detect lines moved or copied from other files that were modified in the same "
 "commit"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:381
+#: /tmp/fish/implicit/share/completions/git.fish:383
 msgid "Use the same output mode as git-annotate"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:382
+#: /tmp/fish/implicit/share/completions/git.fish:384
 msgid "Show the filename in the original commit"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:383
+#: /tmp/fish/implicit/share/completions/git.fish:385
 msgid "Show the line number in the original commit"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:384
+#: /tmp/fish/implicit/share/completions/git.fish:386
 msgid "Suppress the author name and timestamp from the output"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:385
+#: /tmp/fish/implicit/share/completions/git.fish:387
 msgid "Show the author email instead of author name"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:386
+#: /tmp/fish/implicit/share/completions/git.fish:388
 msgid "Ignore whitespace changes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:387
+#: /tmp/fish/implicit/share/completions/git.fish:389
 msgid "Custom command"
 msgstr ""
 
@@ -26638,6 +27402,7 @@ msgid "List all keys with their fingerprints"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gpg.fish:22
+#: /tmp/fish/implicit/share/completions/signify.fish:2
 msgid "Generate a new key pair"
 msgstr ""
 
@@ -35561,13 +36326,6 @@ msgstr ""
 msgid "Display values currently set in the minikube config file"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/minikube.fish:25
-#: /tmp/fish/implicit/share/completions/minikube.fish:26
-#: /tmp/fish/implicit/share/completions/minikube.fish:27
-#: /tmp/fish/implicit/share/completions/minikube.fish:28
-msgid "Property"
-msgstr ""
-
 #: /tmp/fish/implicit/share/completions/minikube.fish:29
 msgid "Go template format string for the config view output"
 msgstr ""
@@ -41532,11 +42290,6 @@ msgstr ""
 msgid "keep going until N jobs fail [default=1]"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/ninja.fish:8
-#: /tmp/fish/implicit/share/completions/quilt.fish:1
-msgid "show help"
-msgstr ""
-
 #: /tmp/fish/implicit/share/completions/ninja.fish:9
 msgid "enable debugging, specify debug mode"
 msgstr ""
@@ -44813,6 +45566,18 @@ msgstr ""
 msgid "Extract script"
 msgstr ""
 
+#: /tmp/fish/implicit/share/completions/pfctl.fish:1
+msgid "Show a filter parameter by modifier"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/pfctl.fish:2
+msgid "Flush filter params specified by mod"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/pfctl.fish:3
+msgid "Table command"
+msgstr ""
+
 #: /tmp/fish/implicit/share/completions/pgrep.fish:1
 msgid "Output delimiter"
 msgstr ""
@@ -45021,6 +45786,27 @@ msgstr ""
 msgid "omit the user's full name, remote host and idle time in short format"
 msgstr ""
 
+#: /tmp/fish/implicit/share/completions/pkg_add.fish:1
+msgid "failsafe to overwrite"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/pkg_add.fish:2
+#: /tmp/fish/implicit/share/completions/pkg_delete.fish:3
+msgid "Turn on stats"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/pkg_add.fish:3
+msgid "Automated package installation"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/pkg_add.fish:5
+msgid "Update packages"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/pkg_add.fish:6
+msgid "Fuzzy match"
+msgstr ""
+
 #: /tmp/fish/implicit/share/completions/pkgadd.fish:1
 msgid "Upgrade"
 msgstr ""
@@ -45123,6 +45909,10 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkg-config.fish:25
 msgid "List all modules the given packages requires for static linking"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/pkg_delete.fish:2
+msgid "Delete unsed deps"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkgfile.fish:3
@@ -49458,6 +50248,18 @@ msgstr ""
 msgid "Specifies layout variant used to choose component names"
 msgstr ""
 
+#: /tmp/fish/implicit/share/completions/signify.fish:1
+msgid "Verify a signed checksum list"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/signify.fish:3
+msgid "Sign specified message"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/signify.fish:4
+msgid "Verify a signed message and sig"
+msgstr ""
+
 #: /tmp/fish/implicit/share/completions/snap.fish:1
 msgid "Test if snap has yet to be given the subcommand"
 msgstr ""
@@ -53258,10 +54060,12 @@ msgid "Monitor changes to objects"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/udisksctl.fish:7
+#: /tmp/fish/implicit/share/completions/zfs.fish:17
 msgid "Mount a filesystem"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/udisksctl.fish:8
+#: /tmp/fish/implicit/share/completions/zfs.fish:18
 msgid "Unmount a filesystem"
 msgstr ""
 
@@ -57793,6 +58597,604 @@ msgstr ""
 msgid "Delete all cache contents"
 msgstr ""
 
+#: /tmp/fish/implicit/share/completions/zfs.fish:1
+msgid ""
+"Internal completion function for appending string to the ZFS commandline"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:2
+#: /tmp/fish/implicit/share/completions/zpool.fish:2
+msgid "Display a help message"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:3
+msgid "Create a volume or filesystem"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:4
+msgid "Destroy a dataset"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:5
+msgid "Create a snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:6
+msgid "Roll back a filesystem to a previous snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:7
+msgid "Create a clone of a snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:8
+msgid ""
+"Promotes a clone file system to no longer be dependent on its \"origin\" "
+"snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:9
+msgid "Rename a dataset"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:10
+msgid "List dataset properties"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:11
+msgid "Set a dataset property"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:12
+msgid "Get one or several dataset properties"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:13
+msgid "Set a dataset property to be inherited"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:14
+msgid "List upgradeable datasets, or upgrade one"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:15
+msgid "Get dataset space consumed by each user"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:16
+msgid "Get dataset space consumed by each user group"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:19
+msgid "Share a given filesystem, or all of them"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:20
+msgid "Stop sharing a given filesystem, or all of them"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:21
+msgid "Create a bookmark for a snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:22
+msgid "Output a stream representation of a dataset"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:23
+msgid ""
+"Write on disk a dataset from the stream representation given on standard "
+"input"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:24
+msgid ""
+"Delegate, or display delegations of, rights on a dataset to (groups of) users"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:25
+msgid "Revoke delegations of rights on a dataset from (groups of) users"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:26
+msgid "Put a named hold on a snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:27
+msgid "List holds on a snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:28
+msgid "Remove a named hold from a snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:29
+msgid ""
+"List changed files between a snapshot, and a filesystem or a previous "
+"snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:30
+msgid "Execute a ZFS Channel Program"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:31
+#: /tmp/fish/implicit/share/completions/zfs.fish:53
+#: /tmp/fish/implicit/share/completions/zfs.fish:58
+msgid "Create all needed non-existing parent datasets"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:32
+#: /tmp/fish/implicit/share/completions/zfs.fish:33
+msgid "Dataset property"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:34
+msgid "Volume size"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:35
+msgid "Create a sparse volume"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:36
+msgid "Blocksize"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:37
+msgid "Recursively destroy children"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:38
+msgid "Recursively destroy all dependents"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:39
+msgid "Force unmounting"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:41
+msgid "Print machine-parsable verbose information"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:43
+msgid "Defer snapshot deletion"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:44
+msgid "Dataset to destroy"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:45
+msgid "Recursively snapshot children"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:46
+#: /tmp/fish/implicit/share/completions/zfs.fish:47
+msgid "Snapshot property"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:48
+msgid "Dataset to snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:49
+msgid "Destroy later snapshot and bookmarks"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:50
+msgid "Recursively destroy later snapshot, bookmarks and clones"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:51
+msgid "Force unmounting of clones"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:52
+msgid "Snapshot to roll back to"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:54
+#: /tmp/fish/implicit/share/completions/zfs.fish:55
+msgid "Clone property"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:56
+msgid "Snapshot to clone"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:57
+msgid "Clone to promote"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:59
+msgid "Recursively rename children snapshots"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:60
+#: /tmp/fish/implicit/share/completions/zfs.fish:62
+#: /tmp/fish/implicit/share/completions/zfs.fish:108
+msgid "Force unmounting if needed"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:61
+msgid "Do not remount filesystems during rename"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:63
+msgid "Dataset to rename"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:64
+#: /tmp/fish/implicit/share/completions/zfs.fish:77
+#: /tmp/fish/implicit/share/completions/zfs.fish:94
+#: /tmp/fish/implicit/share/completions/zfs.fish:172
+#: /tmp/fish/implicit/share/completions/zpool.fish:59
+#: /tmp/fish/implicit/share/completions/zpool.fish:67
+#: /tmp/fish/implicit/share/completions/zpool.fish:99
+msgid "Print output in a machine-parsable format"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:65
+#: /tmp/fish/implicit/share/completions/zfs.fish:75
+#: /tmp/fish/implicit/share/completions/zfs.fish:84
+#: /tmp/fish/implicit/share/completions/zfs.fish:89
+msgid "Operate recursively on datasets"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:67
+#: /tmp/fish/implicit/share/completions/zpool.fish:105
+msgid "Property to list"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:68
+#: /tmp/fish/implicit/share/completions/zfs.fish:80
+#: /tmp/fish/implicit/share/completions/zfs.fish:95
+#: /tmp/fish/implicit/share/completions/zpool.fish:66
+msgid "Print parsable (exact) values for numbers"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:69
+#: /tmp/fish/implicit/share/completions/zfs.fish:97
+msgid "Property to use for sorting output by ascending order"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:70
+#: /tmp/fish/implicit/share/completions/zfs.fish:98
+msgid "Property to use for sorting output by descending order"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:72
+msgid "Dataset which properties is to be listed"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:73
+#: /tmp/fish/implicit/share/completions/zpool.fish:125
+msgid "Property to set"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:74
+msgid "Dataset which property is to be setted"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:78
+#: /tmp/fish/implicit/share/completions/zpool.fish:68
+msgid "Fields to display"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:79
+msgid "Property source to display"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:82
+msgid "Property to get"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:83
+msgid "Dataset which properties is to be got"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:85
+msgid "Revert to the received value if available"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:86
+msgid "Dataset which properties is to be inherited"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:88
+msgid "Upgrade all eligible filesystems"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:90
+msgid "Upgrade to the specified version"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:91
+msgid "Filesystem to upgrade"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:92
+msgid "Print UID instead of user name"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:93
+msgid "Print GID instead of group name"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:96
+msgid "Field to display"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:99
+#: /tmp/fish/implicit/share/completions/zfs.fish:100
+msgid "Identity types to display"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:101
+msgid "Translate S(amba)ID to POSIX ID"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:102
+msgid "Dataset which space usage is to be got"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:103
+msgid "Temporary mount point property"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:104
+msgid "Report progress"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:105
+msgid "Mount all available ZFS filesystems"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:106
+msgid "Overlay mount"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:107
+msgid "Filesystem to mount"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:109
+msgid "Unmount all available ZFS filesystems"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:110
+msgid "Filesystem to unmount"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:111
+msgid "Share all eligible ZFS filesystems"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:112
+msgid "Filesystem to share"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:113
+msgid "Unshare all shared ZFS filesystems"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:114
+msgid "Filesystem to unshare"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:115
+msgid "Snapshot to bookmark"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:116
+msgid "Generate incremental stream from snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:117
+msgid ""
+"Generate incremental stream from snapshot, even with intermediary snapshots"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:118
+#: /tmp/fish/implicit/share/completions/zfs.fish:127
+msgid "Include children in replication stream"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:119
+#: /tmp/fish/implicit/share/completions/zfs.fish:128
+msgid "Generate a deduplicated stream"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:120
+#: /tmp/fish/implicit/share/completions/zfs.fish:129
+msgid "Allow the presence of larger blocks than 128 kiB"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:121
+#: /tmp/fish/implicit/share/completions/zfs.fish:130
+msgid "Generate a more compact stream by using WRITE_EMBEDDED records"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:122
+#: /tmp/fish/implicit/share/completions/zfs.fish:131
+msgid "Print verbose information about the stream in a machine-parsable format"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:123
+msgid "Generate compressed stream"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:125
+#: /tmp/fish/implicit/share/completions/zfs.fish:133
+msgid "Include dataset properties"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:126
+#: /tmp/fish/implicit/share/completions/zfs.fish:134
+msgid "Print verbose information about the stream"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:135
+msgid "Dataset to send"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:136
+msgid ""
+"Print verbose information about the stream and the time spent processing it"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:137
+msgid "Dry run: do not actually receive the stream"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:138
+msgid "Force rollback to the most recent snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:139
+msgid "Unmount the target filesystem"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:140
+msgid "Discard the first element of the path of the sent snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:141
+msgid "Discard all but the last element of the path of the sent snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:142
+msgid "Force the stream to be received as a clone of the given snapshot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:143
+msgid "On transfer interruption, store a receive_resume_token for resumption"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:144
+msgid "Dataset to receive"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:145
+msgid "Delegate permissions only on the specified dataset"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:146
+msgid "Delegate permissions only on the descendents dataset"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:147
+msgid "User to delegate permissions to"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:148
+msgid "Group to delegate permissions to"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:149
+#: /tmp/fish/implicit/share/completions/zfs.fish:150
+msgid "Delegate permission to everyone"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:151
+msgid "Delegate permissions only to the creator of later descendent datasets"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:152
+msgid "Create a permission set or add permissions to an existing one"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:153
+msgid "Dataset on which delegation is to be applied"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:154
+msgid "Remove permissions only on the specified dataset"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:155
+msgid "Remove permissions only on the descendents dataset"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:156
+msgid "User to remove permissions from"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:157
+msgid "Group to remove permissions from"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:158
+#: /tmp/fish/implicit/share/completions/zfs.fish:162
+#: /tmp/fish/implicit/share/completions/zfs.fish:163
+msgid "Remove permission from everyone"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:159
+msgid "Remove permissions only on later created descendent datasets"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:160
+msgid "Remove a permission set or remove permissions from an existing one"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:161
+msgid "Remove permissions recursively"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:164
+msgid "Dataset on which delegation is to be removed"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:165
+msgid "Apply hold recursively"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:166
+msgid "Snapshot on which hold is to be applied"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:167
+msgid "List holds recursively"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:168
+msgid "Snapshot which holds are to be listed"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:169
+msgid "Release hold recursively"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:170
+msgid "Snapshot from which hold is to be removed"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:171
+msgid "Display file type (à la ls -F)"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:173
+msgid "Display inode change time"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:174
+msgid "Source snapshot for the diff"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:175
+msgid "Execution timeout"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:176
+msgid "Execution memory limit"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zfs.fish:177
+msgid "Pool which program will be executed on"
+msgstr ""
+
 #: /tmp/fish/implicit/share/completions/zip.fish:1
 msgid "Freshen: only changed files"
 msgstr ""
@@ -57895,6 +59297,469 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zip.fish:29
 msgid "Don't compress files with these suffixes"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:1
+msgid ""
+"Internal completion function for appending string to the zpool commandline"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:3
+msgid "Add new virtual devices to pool"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:4
+msgid "Attach virtual device to a pool device"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:5
+msgid "Clear devices errors in pool"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:6
+msgid "Create a new storage pool"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:7
+msgid "Destroy a storage pool"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:8
+msgid "Detach virtual device from a mirroring pool"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:9
+msgid "Display pool event log"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:10
+msgid "Export a pool"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:11
+msgid "Get one or several pool properties"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:12
+msgid "Display pool command history"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:13
+msgid "List importable pools, or import some"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:14
+msgid "Display pool I/O stats"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:15
+msgid "Remove ZFS label information from the specified device"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:16
+msgid "List pools with health status and space usage"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:17
+msgid "Take the specified devices offline"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:18
+msgid "Bring the specified devices back online"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:19
+msgid "Reset pool GUID"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:20
+msgid "Remove virtual devices from pool"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:21
+msgid "Reopen pool devices"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:22
+msgid "Replace a pool virtual device"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:23
+msgid "Start or stop scrubbing"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:24
+msgid "Set a pool property"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:25
+msgid "Create a pool by splitting an existing mirror one"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:26
+msgid "Display detailed pool health status"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:27
+msgid "List upgradeable pools, or upgrade one"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:28
+#: /tmp/fish/implicit/share/completions/zpool.fish:36
+#: /tmp/fish/implicit/share/completions/zpool.fish:45
+#: /tmp/fish/implicit/share/completions/zpool.fish:117
+msgid "Force use of virtual device"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:29
+#: /tmp/fish/implicit/share/completions/zpool.fish:130
+msgid "Dry run: only display resulting configuration"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:30
+#: /tmp/fish/implicit/share/completions/zpool.fish:91
+#: /tmp/fish/implicit/share/completions/zpool.fish:100
+#: /tmp/fish/implicit/share/completions/zpool.fish:127
+#: /tmp/fish/implicit/share/completions/zpool.fish:135
+msgid "Display virtual device GUID instead of device name"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:31
+#: /tmp/fish/implicit/share/completions/zpool.fish:92
+#: /tmp/fish/implicit/share/completions/zpool.fish:101
+#: /tmp/fish/implicit/share/completions/zpool.fish:128
+#: /tmp/fish/implicit/share/completions/zpool.fish:136
+msgid "Resolve device path symbolic links"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:32
+#: /tmp/fish/implicit/share/completions/zpool.fish:93
+#: /tmp/fish/implicit/share/completions/zpool.fish:102
+#: /tmp/fish/implicit/share/completions/zpool.fish:129
+#: /tmp/fish/implicit/share/completions/zpool.fish:137
+msgid "Display device full path"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:33
+#: /tmp/fish/implicit/share/completions/zpool.fish:37
+#: /tmp/fish/implicit/share/completions/zpool.fish:48
+#: /tmp/fish/implicit/share/completions/zpool.fish:118
+#: /tmp/fish/implicit/share/completions/zpool.fish:132
+msgid "Pool property"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:34
+msgid "Pool to add virtual devices to"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:35
+#: /tmp/fish/implicit/share/completions/zpool.fish:53
+msgid "Virtual device to add"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:38
+msgid "Pool to attach virtual device to"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:39
+#: /tmp/fish/implicit/share/completions/zpool.fish:43
+msgid "Virtual device to operate on"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:40
+msgid "Initiate recovery mode"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:41
+#: /tmp/fish/implicit/share/completions/zpool.fish:85
+msgid ""
+"Dry run: only determine if the recovery is possible, without attempting it"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:42
+msgid "Pool to clear errors on"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:44
+msgid ""
+"Create whole disk pool with EFI System partition to support booting system "
+"with UEFI firmware"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:46
+msgid "Dry run, only display resulting configuration"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:47
+msgid "Do not enable any feature on the new pool"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:49
+msgid "Root filesystem property"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:50
+#: /tmp/fish/implicit/share/completions/zpool.fish:83
+msgid "Equivalent to \"-o cachefile=none,altroot=ROOT\""
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:51
+msgid "Root filesystem mountpoint"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:52
+msgid "Set a different in-core pool name"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:54
+#: /tmp/fish/implicit/share/completions/zpool.fish:64
+msgid "Force unmounting of all contained datasets"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:55
+msgid "Pool to destroy"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:56
+msgid "Pool to detach device from"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:57
+msgid "Physical device to detach"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:58
+msgid "Print verbose event information"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:60
+msgid "Output appended data as the log grows"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:61
+msgid "Clear all previous events"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:62
+msgid "Pool to read events from"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:63
+msgid "Export all pools"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:65
+msgid "Pool to export"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:69
+msgid "Properties to get"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:70
+msgid "Pool to get properties of"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:71
+msgid "Also display internal events"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:72
+msgid "Display log records using long format"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:73
+msgid "Pool to get command history of"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:74
+msgid "Read configuration from specified cache file"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:75
+msgid "Search for devices or files in specified directory"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:76
+msgid "List or import destroyed pools only (requires -f for importation)"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:77
+#: /tmp/fish/implicit/share/completions/zpool.fish:133
+msgid "Mount properties for contained datasets"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:78
+msgid "Properties of the imported pool"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:79
+msgid "Force import"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:80
+msgid "Recovery mode"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:81
+msgid "Search for and import all pools found"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:82
+msgid "Ignore missing log device (risk of loss of last changes)"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:84
+msgid "Do not mount contained filesystems"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:86
+msgid "Roll back to a previous TXG (hazardous)"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:87
+msgid "TXG to roll back to (implies -FX)"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:88
+msgid "Specify, as the last argument, a temporary pool name"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:89
+msgid "Pool to import"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:90
+#: /tmp/fish/implicit/share/completions/zpool.fish:103
+#: /tmp/fish/implicit/share/completions/zpool.fish:142
+msgid "Display a timestamp using specified format"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:94
+msgid "Omit statistics since boot"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:95
+#: /tmp/fish/implicit/share/completions/zpool.fish:104
+msgid "Print verbose statistics"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:96
+msgid "Pool to retrieve I/O stats from"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:97
+msgid "Treat exported or foreign devices as inactive"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:98
+msgid "Device to clear ZFS label information from"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:106
+msgid "Pool to list properties of"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:107
+msgid "Temporarily offline"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:108
+msgid "Pool to offline device from"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:109
+msgid "Physical device to offline"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:110
+msgid "Expand the device to use all available space"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:111
+msgid "Pool to bring device back online on"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:112
+msgid "Physical device to bring back online"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:113
+msgid "Pool which GUID is to be changed"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:114
+msgid "Pool to remove device from"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:115
+msgid "Physical device to remove"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:116
+msgid "Pool which devices are to be reopened"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:119
+msgid "Pool to replace device"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:120
+msgid "Pool device to be replaced"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:121
+msgid "Device to use for replacement"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:122
+msgid "Stop scrubbing"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:123
+msgid "Pause scrubbing"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:124
+msgid "Pool to start/stop scrubbing"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:126
+msgid "Pool which property is to be set"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:131
+msgid "Set altroot for newpool and automatically import it"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:134
+msgid "Pool to split"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:138
+#: /tmp/fish/implicit/share/completions/zpool.fish:139
+msgid "Display deduplication histogram"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:141
+msgid "Only display status for unhealthy or unavailable pools"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:143
+#: /tmp/fish/implicit/share/completions/zpool.fish:147
+msgid "Pool which status is to be displayed"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:144
+msgid "Upgrade all eligible pools, enabling all supported features"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:145
+msgid "Display upgradeable ZFS versions"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/zpool.fish:146
+msgid "Upgrade to the specified legacy version"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zypper.fish:2
@@ -59363,6 +61228,28 @@ msgstr ""
 msgid "Complete wvdial peers"
 msgstr ""
 
+#: /tmp/fish/implicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:1
+msgid "Completes with ZFS mountpoint properties"
+msgstr ""
+
+#: /tmp/fish/implicit/share/functions/__fish_complete_zfs_pools.fish:1
+msgid "Completes with available ZFS pools"
+msgstr ""
+
+#: /tmp/fish/implicit/share/functions/__fish_complete_zfs_ro_properties.fish:1
+msgid "Completes with ZFS read-only properties"
+msgstr ""
+
+#: /tmp/fish/implicit/share/functions/__fish_complete_zfs_rw_properties.fish:1
+msgid "Completes with ZFS read-write properties"
+msgstr ""
+
+#: /tmp/fish/implicit/share/functions/__fish_complete_zfs_write_once_properties.fish:1
+msgid ""
+"Completes with ZFS properties which can only be written at filesystem "
+"creation, and only be read thereafter"
+msgstr ""
+
 #: /tmp/fish/implicit/share/functions/fish_config.fish:1
 msgid "Launch fish's web based configuration"
 msgstr ""
@@ -59520,6 +61407,12 @@ msgstr ""
 msgid "Test if current token is on Nth place"
 msgstr ""
 
+#: /tmp/fish/implicit/share/functions/__fish_is_zfs_feature_enabled.fish:1
+msgid ""
+"Returns 0 if the given ZFS feature is available or enabled for the given "
+"full-path target (zpool or dataset), or any target if none given"
+msgstr ""
+
 #: /tmp/fish/implicit/share/functions/__fish_list_current_token.fish:1
 msgid ""
 "List contents of token under the cursor if it is a directory, otherwise list "
@@ -59596,6 +61489,10 @@ msgid ""
 "current directory"
 msgstr ""
 
+#: /tmp/fish/implicit/share/functions/__fish_print_groups.fish:1
+msgid "Print a list of local groups"
+msgstr ""
+
 #: /tmp/fish/implicit/share/functions/__fish_print_help.fish:1
 msgid "Print help message for the specified fish function or builtin"
 msgstr ""
@@ -59662,6 +61559,22 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_print_xwindows.fish:1
 msgid "Print X windows"
+msgstr ""
+
+#: /tmp/fish/implicit/share/functions/__fish_print_zfs_bookmarks.fish:1
+msgid "Lists ZFS bookmarks, if the feature is enabled"
+msgstr ""
+
+#: /tmp/fish/implicit/share/functions/__fish_print_zfs_filesystems.fish:1
+msgid "Lists ZFS filesystems"
+msgstr ""
+
+#: /tmp/fish/implicit/share/functions/__fish_print_zfs_snapshots.fish:1
+msgid "Lists ZFS snapshots"
+msgstr ""
+
+#: /tmp/fish/implicit/share/functions/__fish_print_zfs_volumes.fish:1
+msgid "Lists ZFS volumes"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/fish_prompt.fish:1

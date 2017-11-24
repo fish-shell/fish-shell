@@ -218,8 +218,8 @@ class ParserBase {
     void AddCallback(const string_type &a_strName, const ParserCallback &a_Callback,
                      funmap_type &a_Storage, const char_type *a_szCharSet);
 
-    void ApplyRemainingOprt(ParserStack<token_type> &a_stOpt,
-                            ParserStack<token_type> &a_stVal) const;
+    OptionalError ApplyRemainingOprt(ParserStack<token_type> &a_stOpt,
+                                     ParserStack<token_type> &a_stVal) const;
     OptionalError ApplyBinOprt(ParserStack<token_type> &a_stOpt,
                                ParserStack<token_type> &a_stVal) const;
 

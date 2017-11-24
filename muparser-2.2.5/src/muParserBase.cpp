@@ -540,7 +540,8 @@ const varmap_type &ParserBase::GetUsedVar() const {
         m_pTokenReader->IgnoreUndefVar(true);
         // Try to create bytecode, but don't use it for any further calculations since it may
         // contain references to nonexisting variables.
-        OptionalError err = CreateRPN();
+        OptionalError oerr = CreateRPN();
+        if (oerr.has_error()) throw oerr.error();
         m_pParseFormula = &ParserBase::ParseString;
         m_pTokenReader->IgnoreUndefVar(false);
     } catch (exception_type & /*e*/) {
@@ -772,9 +773,10 @@ OptionalError ParserBase::ApplyBinOprt(ParserStack<token_type> &a_stOpt,
     \param a_stOpt The operator stack
     \param a_stVal The value stack
 */
-void ParserBase::ApplyRemainingOprt(ParserStack<token_type> &stOpt,
-                                    ParserStack<token_type> &stVal) const {
+OptionalError ParserBase::ApplyRemainingOprt(ParserStack<token_type> &stOpt,
+                                             ParserStack<token_type> &stVal) const {
     while (stOpt.size() && stOpt.top().GetCode() != cmBO && stOpt.top().GetCode() != cmIF) {
+        OptionalError oerr;
         token_type tok = stOpt.top();
         switch (tok.GetCode()) {
             case cmOPRT_INFIX:
@@ -794,19 +796,21 @@ void ParserBase::ApplyRemainingOprt(ParserStack<token_type> &stOpt,
             case cmLOR:
             case cmASSIGN:
                 if (stOpt.top().GetCode() == cmOPRT_INFIX)
-                    ApplyFunc(stOpt, stVal, 1);
+                    oerr = ApplyFunc(stOpt, stVal, 1);
                 else
-                    ApplyBinOprt(stOpt, stVal);
+                    oerr = ApplyBinOprt(stOpt, stVal);
                 break;
 
             case cmELSE:
-                ApplyIfElse(stOpt, stVal);
+                oerr = ApplyIfElse(stOpt, stVal);
                 break;
 
             default:
                 assert(0 && "muParser internal error");
         }
+        if (oerr.has_error()) return oerr.error();
     }
+    return {};
 }
 
 /// Invoke the function \p func as the fun_typeN given argCount, passing in \p argCount arguments
@@ -1049,6 +1053,7 @@ OptionalError ParserBase::CreateRPN() const {
 
     for (;;) {
         opt = m_pTokenReader->ReadNextToken();
+        OptionalError oerr;
 
         switch (opt.GetCode()) {
             //
@@ -1068,7 +1073,7 @@ OptionalError ParserBase::CreateRPN() const {
             case cmVAL: {
                 stVal.push(opt);
                 ValueOrError optVal = opt.GetVal();
-                if (optVal.has_error()) throw optVal.error();
+                if (optVal.has_error()) return optVal.error();
                 m_vRPN.AddVal(optVal.value());
                 break;
             }
@@ -1077,7 +1082,8 @@ OptionalError ParserBase::CreateRPN() const {
                 m_nIfElseCounter--;
                 if (m_nIfElseCounter < 0) Error(ecMISPLACED_COLON, m_pTokenReader->GetPos());
 
-                ApplyRemainingOprt(stOpt, stVal);
+                oerr = ApplyRemainingOprt(stOpt, stVal);
+                if (oerr.has_error()) return oerr.error();
                 m_vRPN.AddIfElse(cmELSE);
                 stOpt.push(opt);
                 break;
@@ -1089,7 +1095,8 @@ OptionalError ParserBase::CreateRPN() const {
             // fallthrough intentional (no break!)
 
             case cmEND:
-                ApplyRemainingOprt(stOpt, stVal);
+                oerr = ApplyRemainingOprt(stOpt, stVal);
+                if (oerr.has_error()) return oerr.error();
                 break;
 
             case cmBC: {
@@ -1099,7 +1106,8 @@ OptionalError ParserBase::CreateRPN() const {
                 // was an opening bracket we know better...
                 if (opta.GetCode() == cmBO) --stArgCount.top();
 
-                ApplyRemainingOprt(stOpt, stVal);
+                oerr = ApplyRemainingOprt(stOpt, stVal);
+                if (oerr.has_error()) return oerr.error();
 
                 // Check if the bracket content has been evaluated completely
                 if (stOpt.size() && stOpt.top().GetCode() == cmBO) {

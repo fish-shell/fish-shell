@@ -538,9 +538,9 @@ EOprtAssociativity ParserBase::GetOprtAssociativity(const token_type &a_Tok) con
 const varmap_type &ParserBase::GetUsedVar() const {
     try {
         m_pTokenReader->IgnoreUndefVar(true);
-        CreateRPN();  // try to create bytecode, but don't use it for any further calculations since
-                      // it
-                      // may contain references to nonexisting variables.
+        // Try to create bytecode, but don't use it for any further calculations since it may
+        // contain references to nonexisting variables.
+        OptionalError err = CreateRPN();
         m_pParseFormula = &ParserBase::ParseString;
         m_pTokenReader->IgnoreUndefVar(false);
     } catch (exception_type & /*e*/) {
@@ -583,45 +583,42 @@ const string_type &ParserBase::GetExpr() const { return m_pTokenReader->GetExpr(
     \param a_FunTok Function token.
     \throw exception_type If the function token is not a string function
 */
-ParserBase::token_type ParserBase::ApplyStrFunc(const token_type &a_FunTok,
-                                                const std::vector<token_type> &a_vArg) const {
+OptionalError ParserBase::ApplyStrFunc(const token_type &a_FunTok,
+                                       const std::vector<token_type> &a_vArg) const {
     if (a_vArg.back().GetCode() != cmSTRING)
         Error(ecSTRING_EXPECTED, m_pTokenReader->GetPos(), a_FunTok.GetAsString());
 
     token_type valTok;
     generic_fun_type pFunc = a_FunTok.GetFuncAddr();
     assert(pFunc);
-
-    try {
-        // Check function arguments; write dummy value into valtok to represent the result
-        switch (a_FunTok.GetArgCount()) {
-            case 0:
-                valTok.SetVal(1);
-                a_vArg[0].GetAsString();
-                break;
-            case 1:
-                valTok.SetVal(1);
-                a_vArg[1].GetAsString();
-                a_vArg[0].GetVal();
-                break;
-            case 2:
-                valTok.SetVal(1);
-                a_vArg[2].GetAsString();
-                a_vArg[1].GetVal();
-                a_vArg[0].GetVal();
-                break;
-            default:
-                assert(0 && "Unexpected arg count");
-        }
-    } catch (ParserError &) {
+    bool errored = false;
+    // Check function arguments; write dummy value into valtok to represent the result
+    switch (a_FunTok.GetArgCount()) {
+        case 0:
+            valTok.SetVal(1);
+            a_vArg[0].GetAsString();
+            break;
+        case 1:
+            valTok.SetVal(1);
+            a_vArg[1].GetAsString();
+            errored |= a_vArg[0].GetVal().has_error();
+            break;
+        case 2:
+            valTok.SetVal(1);
+            a_vArg[2].GetAsString();
+            errored |= a_vArg[1].GetVal().has_error();
+            errored |= a_vArg[0].GetVal().has_error();
+            break;
+        default:
+            assert(0 && "Unexpected arg count");
+    }
+    if (errored) {
         Error(ecVAL_EXPECTED, m_pTokenReader->GetPos(), a_FunTok.GetAsString());
     }
 
     // string functions won't be optimized
     m_vRPN.AddStrFun(pFunc, a_FunTok.GetArgCount(), a_vArg.back().GetIdx());
-
-    // Push dummy value representing the function result to the stack
-    return valTok;
+    return {};
 }
 
 //---------------------------------------------------------------------------
@@ -629,14 +626,14 @@ ParserBase::token_type ParserBase::ApplyStrFunc(const token_type &a_FunTok,
     \param iArgCount Number of Arguments actually gathered used only for multiarg functions.
     \post The result is pushed to the value stack
     \post The function token is removed from the stack
-    \throw exception_type if Argument count does not match function requirements.
+    \return ParserError if Argument count does not match function requirements.
 */
-void ParserBase::ApplyFunc(ParserStack<token_type> &a_stOpt, ParserStack<token_type> &a_stVal,
-                           int a_iArgCount) const {
+OptionalError ParserBase::ApplyFunc(ParserStack<token_type> &a_stOpt,
+                                    ParserStack<token_type> &a_stVal, int a_iArgCount) const {
     assert(m_pTokenReader.get());
 
     // Operator stack empty or does not contain tokens with callback functions
-    if (a_stOpt.empty() || a_stOpt.top().GetFuncAddr() == 0) return;
+    if (a_stOpt.empty() || a_stOpt.top().GetFuncAddr() == 0) return {};
 
     token_type funTok = a_stOpt.pop();
     assert(funTok.GetFuncAddr());
@@ -675,14 +672,16 @@ void ParserBase::ApplyFunc(ParserStack<token_type> &a_stOpt, ParserStack<token_t
     }
 
     switch (funTok.GetCode()) {
-        case cmFUNC_STR:
+        case cmFUNC_STR: {
             stArg.push_back(a_stVal.pop());
 
             if (stArg.back().GetType() == tpSTR && funTok.GetType() != tpSTR)
                 Error(ecVAL_EXPECTED, m_pTokenReader->GetPos(), funTok.GetAsString());
 
-            ApplyStrFunc(funTok, stArg);
+            OptionalError err = ApplyStrFunc(funTok, stArg);
+            if (err.has_error()) return err;
             break;
+        }
 
         case cmOPRT_BIN:
         case cmOPRT_POSTFIX:
@@ -703,11 +702,12 @@ void ParserBase::ApplyFunc(ParserStack<token_type> &a_stOpt, ParserStack<token_t
     token_type token;
     token.SetVal(1);
     a_stVal.push(token);
+    return {};
 }
 
 //---------------------------------------------------------------------------
-void ParserBase::ApplyIfElse(ParserStack<token_type> &a_stOpt,
-                             ParserStack<token_type> &a_stVal) const {
+OptionalError ParserBase::ApplyIfElse(ParserStack<token_type> &a_stOpt,
+                                      ParserStack<token_type> &a_stVal) const {
     // Check if there is an if Else clause to be calculated
     while (a_stOpt.size() && a_stOpt.top().GetCode() == cmELSE) {
         token_type opElse = a_stOpt.pop();
@@ -724,7 +724,9 @@ void ParserBase::ApplyIfElse(ParserStack<token_type> &a_stOpt,
         token_type vVal1 = a_stVal.pop();
         token_type vExpr = a_stVal.pop();
 
-        a_stVal.push((vExpr.GetVal() != 0) ? vVal1 : vVal2);
+        ValueOrError vExprValue = vExpr.GetVal();
+        if (vExprValue.has_error()) return vExprValue.error();
+        a_stVal.push((vExprValue.value() != 0) ? vVal1 : vVal2);
 
         token_type opIf = a_stOpt.pop();
         assert(opElse.GetCode() == cmELSE && "Invalid if/else clause");
@@ -732,17 +734,18 @@ void ParserBase::ApplyIfElse(ParserStack<token_type> &a_stOpt,
 
         m_vRPN.AddIfElse(cmENDIF);
     }  // while pending if-else-clause found
+    return {};
 }
 
 //---------------------------------------------------------------------------
 /** \brief Performs the necessary steps to write code for
            the execution of binary operators into the bytecode.
 */
-void ParserBase::ApplyBinOprt(ParserStack<token_type> &a_stOpt,
-                              ParserStack<token_type> &a_stVal) const {
+OptionalError ParserBase::ApplyBinOprt(ParserStack<token_type> &a_stOpt,
+                                       ParserStack<token_type> &a_stVal) const {
     // is it a user defined binary operator?
     if (a_stOpt.top().GetCode() == cmOPRT_BIN) {
-        ApplyFunc(a_stOpt, a_stVal, 2);
+        return ApplyFunc(a_stOpt, a_stVal, 2);
     } else {
         assert(a_stVal.size() >= 2 && "Too few arguments for binary operator");
         token_type valTok1 = a_stVal.pop(), valTok2 = a_stVal.pop(), optTok = a_stOpt.pop(), resTok;
@@ -761,6 +764,7 @@ void ParserBase::ApplyBinOprt(ParserStack<token_type> &a_stOpt,
         resTok.SetVal(1);
         a_stVal.push(resTok);
     }
+    return {};
 }
 
 //---------------------------------------------------------------------------
@@ -1029,8 +1033,8 @@ ValueOrError ParserBase::ParseCmdCode() const {
 }
 
 //---------------------------------------------------------------------------
-void ParserBase::CreateRPN() const {
-    if (!m_pTokenReader->GetExpr().length()) Error(ecUNEXPECTED_EOF, 0);
+OptionalError ParserBase::CreateRPN() const {
+    if (!m_pTokenReader->GetExpr().length()) return ParserError(ecUNEXPECTED_EOF, 0);
 
     ParserStack<token_type> stOpt, stVal;
     ParserStack<int> stArgCount;
@@ -1061,10 +1065,13 @@ void ParserBase::CreateRPN() const {
                 m_vRPN.AddVar(static_cast<value_type *>(opt.GetVar()));
                 break;
 
-            case cmVAL:
+            case cmVAL: {
                 stVal.push(opt);
-                m_vRPN.AddVal(opt.GetVal());
+                ValueOrError optVal = opt.GetVal();
+                if (optVal.has_error()) throw optVal.error();
+                m_vRPN.AddVal(optVal.value());
                 break;
+            }
 
             case cmELSE:
                 m_nIfElseCounter--;
@@ -1117,7 +1124,8 @@ void ParserBase::CreateRPN() const {
                     // was a function before this bracket
                     if (stOpt.size() && stOpt.top().GetCode() != cmOPRT_INFIX &&
                         stOpt.top().GetCode() != cmOPRT_BIN && stOpt.top().GetFuncAddr() != 0) {
-                        ApplyFunc(stOpt, stVal, iArgCount);
+                        OptionalError err = ApplyFunc(stOpt, stVal, iArgCount);
+                        if (err.has_error()) return err.error();
                     }
                 }
             }  // if bracket content is evaluated
@@ -1166,10 +1174,14 @@ void ParserBase::CreateRPN() const {
                         break;
                     }
 
+                    OptionalError oerr;
                     if (stOpt.top().GetCode() == cmOPRT_INFIX)
-                        ApplyFunc(stOpt, stVal, 1);
+                        oerr = ApplyFunc(stOpt, stVal, 1);
                     else
-                        ApplyBinOprt(stOpt, stVal);
+                        oerr = ApplyBinOprt(stOpt, stVal);
+                    if (oerr.has_error()) {
+                        return oerr.error();
+                    }
                 }  // while ( ... )
 
                 if (opt.GetCode() == cmIF) m_vRPN.AddIfElse(opt.GetCode());
@@ -1192,10 +1204,12 @@ void ParserBase::CreateRPN() const {
                 stOpt.push(opt);
                 break;
 
-            case cmOPRT_POSTFIX:
+            case cmOPRT_POSTFIX: {
                 stOpt.push(opt);
-                ApplyFunc(stOpt, stVal, 1);  // this is the postfix operator
+                OptionalError oerr = ApplyFunc(stOpt, stVal, 1);  // this is the postfix operator
+                if (oerr.has_error()) return oerr.error();
                 break;
+            }
 
             default:
                 assert(0 && "muParser internal error");
@@ -1228,6 +1242,7 @@ void ParserBase::CreateRPN() const {
     if (stVal.top().GetType() != tpDBL) Error(ecSTR_RESULT);
 
     m_vStackBuffer.resize(m_vRPN.GetMaxStackSize() * s_MaxNumOpenMPThreads);
+    return {};
 }
 
 //---------------------------------------------------------------------------
@@ -1241,7 +1256,8 @@ void ParserBase::CreateRPN() const {
 */
 ValueOrError ParserBase::ParseString() const {
     try {
-        CreateRPN();
+        OptionalError oerr = CreateRPN();
+        if (oerr.has_error()) return oerr.error();
         m_pParseFormula = &ParserBase::ParseCmdCode;
         return (this->*m_pParseFormula)();
     } catch (ParserError &exc) {
@@ -1394,7 +1410,7 @@ void ParserBase::StackDump(const ParserStack<token_type> &a_stVal,
         if (val.GetType() == tpSTR)
             mu::console() << _T(" \"") << val.GetAsString() << _T("\" ");
         else
-            mu::console() << _T(" ") << val.GetVal() << _T(" ");
+            mu::console() << _T(" ") << val.GetVal().value() << _T(" ");
     }
     mu::console() << "\nOperator stack:\n";
 

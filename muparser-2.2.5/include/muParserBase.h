@@ -220,20 +220,22 @@ class ParserBase {
 
     void ApplyRemainingOprt(ParserStack<token_type> &a_stOpt,
                             ParserStack<token_type> &a_stVal) const;
-    void ApplyBinOprt(ParserStack<token_type> &a_stOpt, ParserStack<token_type> &a_stVal) const;
+    OptionalError ApplyBinOprt(ParserStack<token_type> &a_stOpt,
+                               ParserStack<token_type> &a_stVal) const;
 
-    void ApplyIfElse(ParserStack<token_type> &a_stOpt, ParserStack<token_type> &a_stVal) const;
+    OptionalError ApplyIfElse(ParserStack<token_type> &a_stOpt,
+                              ParserStack<token_type> &a_stVal) const;
 
-    void ApplyFunc(ParserStack<token_type> &a_stOpt, ParserStack<token_type> &a_stVal,
-                   int iArgCount) const;
+    OptionalError ApplyFunc(ParserStack<token_type> &a_stOpt, ParserStack<token_type> &a_stVal,
+                            int iArgCount) const;
 
-    token_type ApplyStrFunc(const token_type &a_FunTok,
-                            const std::vector<token_type> &a_vArg) const;
+    OptionalError ApplyStrFunc(const token_type &a_FunTok,
+                               const std::vector<token_type> &a_vArg) const;
 
     int GetOprtPrecedence(const token_type &a_Tok) const;
     EOprtAssociativity GetOprtAssociativity(const token_type &a_Tok) const;
 
-    void CreateRPN() const;
+    OptionalError CreateRPN() const;
 
     ValueOrError ParseString() const;
     ValueOrError ParseCmdCode() const;

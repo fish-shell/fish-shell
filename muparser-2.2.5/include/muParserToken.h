@@ -291,9 +291,8 @@ class ParserToken {
     /** \biref Get value of the token.
 
         Only applicable to variable and value tokens.
-        \throw exception_type if token is no value/variable token.
     */
-    TBase GetVal() const {
+    ValueOrError GetVal() const {
         switch (m_iCode) {
             case cmVAL:
                 return m_fVal;

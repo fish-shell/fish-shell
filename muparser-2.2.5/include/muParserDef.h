@@ -288,6 +288,19 @@ enum EErrorCodes {
 /// \return an error message for the given code.
 string_type parser_error_for_code(EErrorCodes code);
 
+// Compatibility with non-clang compilers.
+#ifndef __has_attribute
+#define __has_attribute(x) 0
+#endif
+
+// Define a type-level attribute declaring that this type, when used as the return value
+// of a function, should produce warnings.
+#if __has_attribute(warn_unused_result)
+#define MUPARSER_ATTR_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+#else
+#define MUPARSER_ATTR_WARN_UNUSED_RESULT
+#endif
+
 //---------------------------------------------------------------------------
 /** \brief Error class of the parser.
  \author Ingo Berg
@@ -326,20 +339,7 @@ class ParserError {
     string_type m_strTok;      ///< Token related with the error
     int m_iPos;                ///< Formula position related to the error
     EErrorCodes m_iErrc;       ///< Error code
-};
-
-// Compatibility with non-clang compilers.
-#ifndef __has_attribute
-#define __has_attribute(x) 0
-#endif
-
-// Define a type-level attribute declaring that this type, when used as the return value
-// of a function, should produce warnings.
-#if __has_attribute(warn_unused_result)
-#define MUPARSER_ATTR_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
-#else
-#define MUPARSER_ATTR_WARN_UNUSED_RESULT
-#endif
+} MUPARSER_ATTR_WARN_UNUSED_RESULT;
 
 // OptionalError is used to optionally encapsulate an error.
 class OptionalError {

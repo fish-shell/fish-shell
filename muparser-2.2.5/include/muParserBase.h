@@ -102,7 +102,7 @@ class ParserBase {
 
     int GetNumResults() const;
 
-    void SetExpr(const string_type &a_sExpr);
+    OptionalError SetExpr(const string_type &a_sExpr);
     void SetVarFactory(facfun_type a_pFactory, void *pUserData = NULL);
 
     void SetDecSep(char_type cDecSep);
@@ -123,14 +123,17 @@ class ParserBase {
     */
     template <typename T>
     void DefineFun(const string_type &a_strName, T a_pFun, bool a_bAllowOpt = true) {
-        AddCallback(a_strName, ParserCallback(a_pFun, a_bAllowOpt), m_FunDef, ValidNameChars());
+        auto oerr =
+            AddCallback(a_strName, ParserCallback(a_pFun, a_bAllowOpt), m_FunDef, ValidNameChars());
+        if (oerr.has_error()) throw oerr.error();
     }
 
-    void DefineOprt(const string_type &a_strName, fun_type2 a_pFun, unsigned a_iPri = 0,
-                    EOprtAssociativity a_eAssociativity = oaLEFT, bool a_bAllowOpt = false);
-    void DefineConst(const string_type &a_sName, value_type a_fVal);
-    void DefineStrConst(const string_type &a_sName, const string_type &a_strVal);
-    void DefineVar(const string_type &a_sName, value_type *a_fVar);
+    OptionalError DefineOprt(const string_type &a_strName, fun_type2 a_pFun, unsigned a_iPri = 0,
+                             EOprtAssociativity a_eAssociativity = oaLEFT,
+                             bool a_bAllowOpt = false);
+    OptionalError DefineConst(const string_type &a_sName, value_type a_fVal);
+    OptionalError DefineStrConst(const string_type &a_sName, const string_type &a_strVal);
+    OptionalError DefineVar(const string_type &a_sName, value_type *a_fVar);
     void DefinePostfixOprt(const string_type &a_strFun, fun_type1 a_pOprt, bool a_bAllowOpt = true);
     void DefineInfixOprt(const string_type &a_strName, fun_type1 a_pOprt, int a_iPrec = prINFIX,
                          bool a_bAllowOpt = true);
@@ -161,8 +164,8 @@ class ParserBase {
     void SetArgSep(char_type cArgSep);
     char_type GetArgSep() const;
 
-    void Error(EErrorCodes a_iErrc, int a_iPos = (int)mu::string_type::npos,
-               const string_type &a_strTok = string_type()) const;
+    ParserError Error(EErrorCodes a_iErrc, int a_iPos = (int)mu::string_type::npos,
+                      const string_type &a_strTok = string_type()) const;
 
    protected:
     void Init();
@@ -213,8 +216,8 @@ class ParserBase {
     void InitTokenReader();
     void ReInit() const;
 
-    void AddCallback(const string_type &a_strName, const ParserCallback &a_Callback,
-                     funmap_type &a_Storage, const char_type *a_szCharSet);
+    OptionalError AddCallback(const string_type &a_strName, const ParserCallback &a_Callback,
+                              funmap_type &a_Storage, const char_type *a_szCharSet);
 
     OptionalError ApplyRemainingOprt(ParserStack<token_type> &a_stOpt,
                                      ParserStack<token_type> &a_stVal) const;
@@ -240,9 +243,9 @@ class ParserBase {
     ValueOrError ParseCmdCodeBulk(int nOffset, int nThreadID) const;
     ValueOrError InvokeFunction(generic_fun_type func, const value_type *args, int argCount) const;
 
-    void CheckName(const string_type &a_strName, const string_type &a_CharSet) const;
-    void CheckOprt(const string_type &a_sName, const ParserCallback &a_Callback,
-                   const string_type &a_szCharSet) const;
+    OptionalError CheckName(const string_type &a_strName, const string_type &a_CharSet) const;
+    OptionalError CheckOprt(const string_type &a_sName, const ParserCallback &a_Callback,
+                            const string_type &a_szCharSet) const;
 
     void StackDump(const ParserStack<token_type> &a_stVal,
                    const ParserStack<token_type> &a_stOprt) const;

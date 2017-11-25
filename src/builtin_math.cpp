@@ -130,9 +130,13 @@ static int evaluate_expression(wchar_t *cmd, parser_t &parser, io_streams_t &str
         p.DefineOprtChars(L"%");
         p.DefineOprt(L"%", moduloOperator, mu::prINFIX);
 
-        p.SetExpr(expression);
+        mu::OptionalError oerr = p.SetExpr(expression);
+        if (oerr.has_error()) throw oerr.error();
         std::vector<mu::ValueOrError> vs;
         p.Eval(&vs);
+        for (const mu::ValueOrError &v : vs) {
+            if (v.has_error()) throw v.error();
+        }
         for (const mu::ValueOrError &v : vs) {
             if (opts.scale == 0) {
                 streams.out.append_format(L"%ld\n", static_cast<long>(*v));

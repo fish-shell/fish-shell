@@ -71,7 +71,7 @@ ValueOrError ParserInt::UnaryMinus(value_type v) { return -Round(v); }
 
 //---------------------------------------------------------------------------
 ValueOrError ParserInt::Sum(const value_type *a_afArg, int a_iArgc) {
-    if (!a_iArgc) throw ParserError(_T("too few arguments for function sum."));
+    if (!a_iArgc) return ParserError(_T("too few arguments for function sum."));
 
     value_type fRes = 0;
     for (int i = 0; i < a_iArgc; ++i) fRes += a_afArg[i];
@@ -81,7 +81,7 @@ ValueOrError ParserInt::Sum(const value_type *a_afArg, int a_iArgc) {
 
 //---------------------------------------------------------------------------
 ValueOrError ParserInt::Min(const value_type *a_afArg, int a_iArgc) {
-    if (!a_iArgc) throw ParserError(_T("too few arguments for function min."));
+    if (!a_iArgc) return ParserError(_T("too few arguments for function min."));
 
     value_type fRes = a_afArg[0];
     for (int i = 0; i < a_iArgc; ++i) fRes = std::min(fRes, a_afArg[i]);
@@ -91,7 +91,7 @@ ValueOrError ParserInt::Min(const value_type *a_afArg, int a_iArgc) {
 
 //---------------------------------------------------------------------------
 ValueOrError ParserInt::Max(const value_type *a_afArg, int a_iArgc) {
-    if (!a_iArgc) throw ParserError(_T("too few arguments for function min."));
+    if (!a_iArgc) return ParserError(_T("too few arguments for function min."));
 
     value_type fRes = a_afArg[0];
     for (int i = 0; i < a_iArgc; ++i) fRes = std::max(fRes, a_afArg[i]);
@@ -219,28 +219,28 @@ void ParserInt::InitOprt() {
     DefineInfixOprt(_T("-"), UnaryMinus);
     DefineInfixOprt(_T("!"), Not);
 
-    DefineOprt(_T("&"), LogAnd, prLOGIC);
-    DefineOprt(_T("|"), LogOr, prLOGIC);
-    DefineOprt(_T("&&"), And, prLOGIC);
-    DefineOprt(_T("||"), Or, prLOGIC);
+    (void)DefineOprt(_T("&"), LogAnd, prLOGIC);
+    (void)DefineOprt(_T("|"), LogOr, prLOGIC);
+    (void)DefineOprt(_T("&&"), And, prLOGIC);
+    (void)DefineOprt(_T("||"), Or, prLOGIC);
 
-    DefineOprt(_T("<"), Less, prCMP);
-    DefineOprt(_T(">"), Greater, prCMP);
-    DefineOprt(_T("<="), LessEq, prCMP);
-    DefineOprt(_T(">="), GreaterEq, prCMP);
-    DefineOprt(_T("=="), Equal, prCMP);
-    DefineOprt(_T("!="), NotEqual, prCMP);
+    (void)DefineOprt(_T("<"), Less, prCMP);
+    (void)DefineOprt(_T(">"), Greater, prCMP);
+    (void)DefineOprt(_T("<="), LessEq, prCMP);
+    (void)DefineOprt(_T(">="), GreaterEq, prCMP);
+    (void)DefineOprt(_T("=="), Equal, prCMP);
+    (void)DefineOprt(_T("!="), NotEqual, prCMP);
 
-    DefineOprt(_T("+"), Add, prADD_SUB);
-    DefineOprt(_T("-"), Sub, prADD_SUB);
+    (void)DefineOprt(_T("+"), Add, prADD_SUB);
+    (void)DefineOprt(_T("-"), Sub, prADD_SUB);
 
-    DefineOprt(_T("*"), Mul, prMUL_DIV);
-    DefineOprt(_T("/"), Div, prMUL_DIV);
-    DefineOprt(_T("%"), Mod, prMUL_DIV);
+    (void)DefineOprt(_T("*"), Mul, prMUL_DIV);
+    (void)DefineOprt(_T("/"), Div, prMUL_DIV);
+    (void)DefineOprt(_T("%"), Mod, prMUL_DIV);
 
-    DefineOprt(_T("^"), Pow, prPOW, oaRIGHT);
-    DefineOprt(_T(">>"), Shr, prMUL_DIV + 1);
-    DefineOprt(_T("<<"), Shl, prMUL_DIV + 1);
+    (void)DefineOprt(_T("^"), Pow, prPOW, oaRIGHT);
+    (void)DefineOprt(_T(">>"), Shr, prMUL_DIV + 1);
+    (void)DefineOprt(_T("<<"), Shl, prMUL_DIV + 1);
 }
 
 }  // namespace mu

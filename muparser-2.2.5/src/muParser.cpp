@@ -70,7 +70,7 @@ ValueOrError Parser::ATanh(value_type v) { return MathImpl<value_type>::ATanh(v)
 // Logarithm base 2
 ValueOrError Parser::Log2(value_type v) {
 #ifdef MUP_MATH_EXCEPTIONS
-    if (v <= 0) throw ParserError(ecDOMAIN_ERROR, _T("Log2"));
+    if (v <= 0) return ParserError(ecDOMAIN_ERROR, _T("Log2"));
 #endif
 
     return MathImpl<value_type>::Log2(v);
@@ -79,7 +79,7 @@ ValueOrError Parser::Log2(value_type v) {
 // Logarithm base 10
 ValueOrError Parser::Log10(value_type v) {
 #ifdef MUP_MATH_EXCEPTIONS
-    if (v <= 0) throw ParserError(ecDOMAIN_ERROR, _T("Log10"));
+    if (v <= 0) return ParserError(ecDOMAIN_ERROR, _T("Log10"));
 #endif
 
     return MathImpl<value_type>::Log10(v);
@@ -88,7 +88,7 @@ ValueOrError Parser::Log10(value_type v) {
 // Logarithm base e (natural logarithm)
 ValueOrError Parser::Ln(value_type v) {
 #ifdef MUP_MATH_EXCEPTIONS
-    if (v <= 0) throw ParserError(ecDOMAIN_ERROR, _T("Ln"));
+    if (v <= 0) return ParserError(ecDOMAIN_ERROR, _T("Ln"));
 #endif
 
     return MathImpl<value_type>::Log(v);
@@ -100,7 +100,7 @@ ValueOrError Parser::Exp(value_type v) { return MathImpl<value_type>::Exp(v); }
 ValueOrError Parser::Abs(value_type v) { return MathImpl<value_type>::Abs(v); }
 ValueOrError Parser::Sqrt(value_type v) {
 #ifdef MUP_MATH_EXCEPTIONS
-    if (v < 0) throw ParserError(ecDOMAIN_ERROR, _T("sqrt"));
+    if (v < 0) return ParserError(ecDOMAIN_ERROR, _T("sqrt"));
 #endif
 
     return MathImpl<value_type>::Sqrt(v);
@@ -128,7 +128,7 @@ ValueOrError Parser::UnaryPlus(value_type v) { return v; }
     \param [in] a_iArgc The size of a_afArg
 */
 ValueOrError Parser::Sum(const value_type *a_afArg, int a_iArgc) {
-    if (!a_iArgc) throw exception_type(_T("too few arguments for function sum."));
+    if (!a_iArgc) return ParserError(_T("too few arguments for function sum."));
 
     value_type fRes = 0;
     for (int i = 0; i < a_iArgc; ++i) fRes += a_afArg[i];
@@ -141,7 +141,7 @@ ValueOrError Parser::Sum(const value_type *a_afArg, int a_iArgc) {
     \param [in] a_iArgc The size of a_afArg
 */
 ValueOrError Parser::Avg(const value_type *a_afArg, int a_iArgc) {
-    if (!a_iArgc) throw exception_type(_T("too few arguments for function sum."));
+    if (!a_iArgc) return ParserError(_T("too few arguments for function sum."));
 
     value_type fRes = 0;
     for (int i = 0; i < a_iArgc; ++i) fRes += a_afArg[i];
@@ -154,7 +154,7 @@ ValueOrError Parser::Avg(const value_type *a_afArg, int a_iArgc) {
     \param [in] a_iArgc The size of a_afArg
 */
 ValueOrError Parser::Min(const value_type *a_afArg, int a_iArgc) {
-    if (!a_iArgc) throw exception_type(_T("too few arguments for function min."));
+    if (!a_iArgc) return ParserError(_T("too few arguments for function min."));
 
     value_type fRes = a_afArg[0];
     for (int i = 0; i < a_iArgc; ++i) fRes = std::min(fRes, a_afArg[i]);
@@ -168,7 +168,7 @@ ValueOrError Parser::Min(const value_type *a_afArg, int a_iArgc) {
     \param [in] a_iArgc The size of a_afArg
 */
 ValueOrError Parser::Max(const value_type *a_afArg, int a_iArgc) {
-    if (!a_iArgc) throw exception_type(_T("too few arguments for function max."));
+    if (!a_iArgc) return ParserError(_T("too few arguments for function max."));
 
     value_type fRes = a_afArg[0];
     for (int i = 0; i < a_iArgc; ++i) fRes = std::max(fRes, a_afArg[i]);
@@ -279,8 +279,13 @@ void Parser::InitFun() {
   number ("_e").
 */
 void Parser::InitConst() {
-    DefineConst(_T("_pi"), (value_type)PARSER_CONST_PI);
-    DefineConst(_T("_e"), (value_type)PARSER_CONST_E);
+    OptionalError oerr;
+    oerr = DefineConst(_T("_pi"), (value_type)PARSER_CONST_PI);
+    assert(!oerr.has_error() && "Error defining _pi constant");
+    (void)oerr;
+    oerr = DefineConst(_T("_e"), (value_type)PARSER_CONST_E);
+    assert(!oerr.has_error() && "Error defining _e constant");
+    (void)oerr;
 }
 
 //---------------------------------------------------------------------------

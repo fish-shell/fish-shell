@@ -219,30 +219,33 @@ void ParserBase::SetVarFactory(facfun_type a_pFactory, void *pUserData) {
 
 //---------------------------------------------------------------------------
 /** \brief Add a function or operator callback to the parser. */
-void ParserBase::AddCallback(const string_type &a_strName, const ParserCallback &a_Callback,
-                             funmap_type &a_Storage, const char_type *a_szCharSet) {
-    if (a_Callback.GetAddr() == 0) Error(ecINVALID_FUN_PTR);
+OptionalError ParserBase::AddCallback(const string_type &a_strName,
+                                      const ParserCallback &a_Callback, funmap_type &a_Storage,
+                                      const char_type *a_szCharSet) {
+    assert(a_Callback.GetAddr() && "Null callback");
 
     const funmap_type *pFunMap = &a_Storage;
 
     // Check for conflicting operator or function names
     if (pFunMap != &m_FunDef && m_FunDef.find(a_strName) != m_FunDef.end())
-        Error(ecNAME_CONFLICT, -1, a_strName);
+        return Error(ecNAME_CONFLICT, -1, a_strName);
 
     if (pFunMap != &m_PostOprtDef && m_PostOprtDef.find(a_strName) != m_PostOprtDef.end())
-        Error(ecNAME_CONFLICT, -1, a_strName);
+        return Error(ecNAME_CONFLICT, -1, a_strName);
 
     if (pFunMap != &m_InfixOprtDef && pFunMap != &m_OprtDef &&
         m_InfixOprtDef.find(a_strName) != m_InfixOprtDef.end())
-        Error(ecNAME_CONFLICT, -1, a_strName);
+        return Error(ecNAME_CONFLICT, -1, a_strName);
 
     if (pFunMap != &m_InfixOprtDef && pFunMap != &m_OprtDef &&
         m_OprtDef.find(a_strName) != m_OprtDef.end())
-        Error(ecNAME_CONFLICT, -1, a_strName);
+        return Error(ecNAME_CONFLICT, -1, a_strName);
 
-    CheckOprt(a_strName, a_Callback, a_szCharSet);
+    OptionalError oerr = CheckOprt(a_strName, a_Callback, a_szCharSet);
+    if (oerr.has_error()) return oerr;
     a_Storage[a_strName] = a_Callback;
     ReInit();
+    return {};
 }
 
 //---------------------------------------------------------------------------
@@ -250,19 +253,20 @@ void ParserBase::AddCallback(const string_type &a_strName, const ParserCallback 
 
     \throw ParserException if the name contains invalid characters.
 */
-void ParserBase::CheckOprt(const string_type &a_sName, const ParserCallback &a_Callback,
-                           const string_type &a_szCharSet) const {
+OptionalError ParserBase::CheckOprt(const string_type &a_sName, const ParserCallback &a_Callback,
+                                    const string_type &a_szCharSet) const {
     if (!a_sName.length() || (a_sName.find_first_not_of(a_szCharSet) != string_type::npos) ||
         (a_sName[0] >= '0' && a_sName[0] <= '9')) {
         switch (a_Callback.GetCode()) {
             case cmOPRT_POSTFIX:
-                Error(ecINVALID_POSTFIX_IDENT, -1, a_sName);
+                return Error(ecINVALID_POSTFIX_IDENT, -1, a_sName);
             case cmOPRT_INFIX:
-                Error(ecINVALID_INFIX_IDENT, -1, a_sName);
+                return Error(ecINVALID_INFIX_IDENT, -1, a_sName);
             default:
-                Error(ecINVALID_NAME, -1, a_sName);
+                return Error(ecINVALID_NAME, -1, a_sName);
         }
     }
+    return {};
 }
 
 //---------------------------------------------------------------------------
@@ -270,11 +274,13 @@ void ParserBase::CheckOprt(const string_type &a_sName, const ParserCallback &a_C
 
     \throw ParserException if the name contains invalid characters.
 */
-void ParserBase::CheckName(const string_type &a_sName, const string_type &a_szCharSet) const {
+OptionalError ParserBase::CheckName(const string_type &a_sName,
+                                    const string_type &a_szCharSet) const {
     if (!a_sName.length() || (a_sName.find_first_not_of(a_szCharSet) != string_type::npos) ||
         (a_sName[0] >= '0' && a_sName[0] <= '9')) {
-        Error(ecINVALID_NAME);
+        return Error(ecINVALID_NAME);
     }
+    return {};
 }
 
 //---------------------------------------------------------------------------
@@ -285,11 +291,11 @@ void ParserBase::CheckName(const string_type &a_sName, const string_type &a_szCh
     Triggers first time calculation thus the creation of the bytecode and
     scanning of used variables.
 */
-void ParserBase::SetExpr(const string_type &a_sExpr) {
+OptionalError ParserBase::SetExpr(const string_type &a_sExpr) {
     // Check locale compatibility
     std::locale loc;
     if (m_pTokenReader->GetArgSep() == std::use_facet<numpunct<char_type> >(loc).decimal_point())
-        Error(ecLOCALE);
+        return Error(ecLOCALE);
 
     // <ibg> 20060222: Bugfix for Borland-Kylix:
     // adding a space to the expression will keep Borlands KYLIX from going wild
@@ -299,6 +305,7 @@ void ParserBase::SetExpr(const string_type &a_sExpr) {
     string_type sBuf(a_sExpr + _T(" "));
     m_pTokenReader->SetFormula(sBuf);
     ReInit();
+    return {};
 }
 
 //---------------------------------------------------------------------------
@@ -359,8 +366,9 @@ const char_type *ParserBase::ValidInfixOprtChars() const {
     \post Will reset the Parser to string parsing mode.
 */
 void ParserBase::DefinePostfixOprt(const string_type &a_sName, fun_type1 a_pFun, bool a_bAllowOpt) {
-    AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, prPOSTFIX, cmOPRT_POSTFIX),
-                m_PostOprtDef, ValidOprtChars());
+    auto oerr = AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, prPOSTFIX, cmOPRT_POSTFIX),
+                            m_PostOprtDef, ValidOprtChars());
+    if (oerr.has_error()) throw oerr.error();
 }
 
 //---------------------------------------------------------------------------
@@ -386,8 +394,9 @@ void ParserBase::Init() {
 */
 void ParserBase::DefineInfixOprt(const string_type &a_sName, fun_type1 a_pFun, int a_iPrec,
                                  bool a_bAllowOpt) {
-    AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, a_iPrec, cmOPRT_INFIX), m_InfixOprtDef,
-                ValidInfixOprtChars());
+    auto oerr = AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, a_iPrec, cmOPRT_INFIX),
+                            m_InfixOprtDef, ValidInfixOprtChars());
+    if (oerr.has_error()) throw oerr.error();
 }
 
 //---------------------------------------------------------------------------
@@ -400,14 +409,14 @@ void ParserBase::DefineInfixOprt(const string_type &a_sName, fun_type1 a_pFun, i
 
     Adds a new Binary operator the the parser instance.
 */
-void ParserBase::DefineOprt(const string_type &a_sName, fun_type2 a_pFun, unsigned a_iPrec,
-                            EOprtAssociativity a_eAssociativity, bool a_bAllowOpt) {
+OptionalError ParserBase::DefineOprt(const string_type &a_sName, fun_type2 a_pFun, unsigned a_iPrec,
+                                     EOprtAssociativity a_eAssociativity, bool a_bAllowOpt) {
     // Check for conflicts with built in operator names
     for (int i = 0; m_bBuiltInOp && i < cmENDIF; ++i)
-        if (a_sName == string_type(c_DefaultOprt[i])) Error(ecBUILTIN_OVERLOAD, -1, a_sName);
+        if (a_sName == string_type(c_DefaultOprt[i])) return Error(ecBUILTIN_OVERLOAD, -1, a_sName);
 
-    AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, a_iPrec, a_eAssociativity), m_OprtDef,
-                ValidOprtChars());
+    return AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, a_iPrec, a_eAssociativity),
+                       m_OprtDef, ValidOprtChars());
 }
 
 //---------------------------------------------------------------------------
@@ -415,16 +424,19 @@ void ParserBase::DefineOprt(const string_type &a_sName, fun_type2 a_pFun, unsign
     \param [in] a_strName The name of the constant.
     \param [in] a_strVal the value of the constant.
 */
-void ParserBase::DefineStrConst(const string_type &a_strName, const string_type &a_strVal) {
+OptionalError ParserBase::DefineStrConst(const string_type &a_strName,
+                                         const string_type &a_strVal) {
     // Test if a constant with that names already exists
-    if (m_StrVarDef.find(a_strName) != m_StrVarDef.end()) Error(ecNAME_CONFLICT);
+    if (m_StrVarDef.find(a_strName) != m_StrVarDef.end()) return Error(ecNAME_CONFLICT);
 
-    CheckName(a_strName, ValidNameChars());
+    OptionalError oerr = CheckName(a_strName, ValidNameChars());
+    if (oerr.has_error()) return oerr;
 
     m_vStringVarBuf.push_back(a_strVal);  // Store variable string in internal buffer
     m_StrVarDef[a_strName] = m_vStringVarBuf.size() - 1;  // bind buffer index to variable name
 
     ReInit();
+    return {};
 }
 
 //---------------------------------------------------------------------------
@@ -434,15 +446,18 @@ void ParserBase::DefineStrConst(const string_type &a_strName, const string_type 
     \post Will reset the Parser to string parsing mode.
     \throw ParserException in case the name contains invalid signs or a_pVar is NULL.
 */
-void ParserBase::DefineVar(const string_type &a_sName, value_type *a_pVar) {
-    if (a_pVar == 0) Error(ecINVALID_VAR_PTR);
+OptionalError ParserBase::DefineVar(const string_type &a_sName, value_type *a_pVar) {
+    assert(a_pVar != nullptr && "Null variable pointer");
 
     // Test if a constant with that names already exists
-    if (m_ConstDef.find(a_sName) != m_ConstDef.end()) Error(ecNAME_CONFLICT);
+    if (m_ConstDef.find(a_sName) != m_ConstDef.end()) return Error(ecNAME_CONFLICT);
 
-    CheckName(a_sName, ValidNameChars());
+    OptionalError oerr = CheckName(a_sName, ValidNameChars());
+    if (oerr.has_error()) return oerr;
+
     m_VarDef[a_sName] = a_pVar;
     ReInit();
+    return {};
 }
 
 //---------------------------------------------------------------------------
@@ -452,10 +467,12 @@ void ParserBase::DefineVar(const string_type &a_sName, value_type *a_pVar) {
     \post Will reset the Parser to string parsing mode.
     \throw ParserException in case the name contains invalid signs.
 */
-void ParserBase::DefineConst(const string_type &a_sName, value_type a_fVal) {
-    CheckName(a_sName, ValidNameChars());
+OptionalError ParserBase::DefineConst(const string_type &a_sName, value_type a_fVal) {
+    OptionalError oerr = CheckName(a_sName, ValidNameChars());
+    if (oerr.has_error()) return oerr;
     m_ConstDef[a_sName] = a_fVal;
     ReInit();
+    return {};
 }
 
 //---------------------------------------------------------------------------
@@ -557,7 +574,7 @@ const string_type &ParserBase::GetExpr() const { return m_pTokenReader->GetExpr(
 OptionalError ParserBase::ApplyStrFunc(const token_type &a_FunTok,
                                        const std::vector<token_type> &a_vArg) const {
     if (a_vArg.back().GetCode() != cmSTRING)
-        Error(ecSTRING_EXPECTED, m_pTokenReader->GetPos(), a_FunTok.GetAsString());
+        return Error(ecSTRING_EXPECTED, m_pTokenReader->GetPos(), a_FunTok.GetAsString());
 
     token_type valTok;
     generic_fun_type pFunc = a_FunTok.GetFuncAddr();
@@ -584,7 +601,7 @@ OptionalError ParserBase::ApplyStrFunc(const token_type &a_FunTok,
             assert(0 && "Unexpected arg count");
     }
     if (errored) {
-        Error(ecVAL_EXPECTED, m_pTokenReader->GetPos(), a_FunTok.GetAsString());
+        return Error(ecVAL_EXPECTED, m_pTokenReader->GetPos(), a_FunTok.GetAsString());
     }
 
     // string functions won't be optimized
@@ -625,13 +642,13 @@ OptionalError ParserBase::ApplyFunc(ParserStack<token_type> &a_stOpt,
         assert(0 && "muParser internal error");
 
     if (funTok.GetArgCount() >= 0 && iArgCount > iArgRequired)
-        Error(ecTOO_MANY_PARAMS, m_pTokenReader->GetPos() - 1, funTok.GetAsString());
+        return Error(ecTOO_MANY_PARAMS, m_pTokenReader->GetPos() - 1, funTok.GetAsString());
 
     if (funTok.GetCode() != cmOPRT_BIN && iArgCount < iArgRequired)
-        Error(ecTOO_FEW_PARAMS, m_pTokenReader->GetPos() - 1, funTok.GetAsString());
+        return Error(ecTOO_FEW_PARAMS, m_pTokenReader->GetPos() - 1, funTok.GetAsString());
 
     if (funTok.GetCode() == cmFUNC_STR && iArgCount > iArgRequired)
-        Error(ecTOO_MANY_PARAMS, m_pTokenReader->GetPos() - 1, funTok.GetAsString());
+        return Error(ecTOO_MANY_PARAMS, m_pTokenReader->GetPos() - 1, funTok.GetAsString());
 
     // Collect the numeric function arguments from the value stack and store them
     // in a vector
@@ -639,7 +656,7 @@ OptionalError ParserBase::ApplyFunc(ParserStack<token_type> &a_stOpt,
     for (int i = 0; i < iArgNumerical; ++i) {
         stArg.push_back(a_stVal.pop());
         if (stArg.back().GetType() == tpSTR && funTok.GetType() != tpSTR)
-            Error(ecVAL_EXPECTED, m_pTokenReader->GetPos(), funTok.GetAsString());
+            return Error(ecVAL_EXPECTED, m_pTokenReader->GetPos(), funTok.GetAsString());
     }
 
     switch (funTok.GetCode()) {
@@ -647,7 +664,7 @@ OptionalError ParserBase::ApplyFunc(ParserStack<token_type> &a_stOpt,
             stArg.push_back(a_stVal.pop());
 
             if (stArg.back().GetType() == tpSTR && funTok.GetType() != tpSTR)
-                Error(ecVAL_EXPECTED, m_pTokenReader->GetPos(), funTok.GetAsString());
+                return Error(ecVAL_EXPECTED, m_pTokenReader->GetPos(), funTok.GetAsString());
 
             OptionalError err = ApplyStrFunc(funTok, stArg);
             if (err.has_error()) return err;
@@ -659,7 +676,7 @@ OptionalError ParserBase::ApplyFunc(ParserStack<token_type> &a_stOpt,
         case cmOPRT_INFIX:
         case cmFUNC:
             if (funTok.GetArgCount() == -1 && iArgCount == 0)
-                Error(ecTOO_FEW_PARAMS, m_pTokenReader->GetPos(), funTok.GetAsString());
+                return Error(ecTOO_FEW_PARAMS, m_pTokenReader->GetPos(), funTok.GetAsString());
 
             m_vRPN.AddFun(funTok.GetFuncAddr(),
                           (funTok.GetArgCount() == -1) ? -iArgNumerical : iArgNumerical);
@@ -723,10 +740,10 @@ OptionalError ParserBase::ApplyBinOprt(ParserStack<token_type> &a_stOpt,
 
         if (valTok1.GetType() != valTok2.GetType() ||
             (valTok1.GetType() == tpSTR && valTok2.GetType() == tpSTR))
-            Error(ecOPRT_TYPE_CONFLICT, m_pTokenReader->GetPos(), optTok.GetAsString());
+            return Error(ecOPRT_TYPE_CONFLICT, m_pTokenReader->GetPos(), optTok.GetAsString());
 
         if (optTok.GetCode() == cmASSIGN) {
-            if (valTok2.GetCode() != cmVAR) Error(ecUNEXPECTED_OPERATOR, -1, _T("="));
+            if (valTok2.GetCode() != cmVAR) return Error(ecUNEXPECTED_OPERATOR, -1, _T("="));
 
             m_vRPN.AddAssignOp(valTok2.GetVar());
         } else
@@ -1023,8 +1040,8 @@ OptionalError ParserBase::CreateRPN() const {
 
     for (;;) {
         opt = m_pTokenReader->ReadNextToken();
-        OptionalError oerr;
 
+        OptionalError oerr;
         switch (opt.GetCode()) {
             //
             // Next three are different kind of value entries
@@ -1050,7 +1067,7 @@ OptionalError ParserBase::CreateRPN() const {
 
             case cmELSE:
                 m_nIfElseCounter--;
-                if (m_nIfElseCounter < 0) Error(ecMISPLACED_COLON, m_pTokenReader->GetPos());
+                if (m_nIfElseCounter < 0) return Error(ecMISPLACED_COLON, m_pTokenReader->GetPos());
 
                 oerr = ApplyRemainingOprt(stOpt, stVal);
                 if (oerr.has_error()) return oerr.error();
@@ -1059,7 +1076,8 @@ OptionalError ParserBase::CreateRPN() const {
                 break;
 
             case cmARG_SEP:
-                if (stArgCount.empty()) Error(ecUNEXPECTED_ARG_SEP, m_pTokenReader->GetPos());
+                if (stArgCount.empty())
+                    return Error(ecUNEXPECTED_ARG_SEP, m_pTokenReader->GetPos());
 
                 ++stArgCount.top();
             // fallthrough intentional (no break!)
@@ -1096,7 +1114,7 @@ OptionalError ParserBase::CreateRPN() const {
                     if (iArgCount > 1 &&
                         (stOpt.size() == 0 ||
                          (stOpt.top().GetCode() != cmFUNC && stOpt.top().GetCode() != cmFUNC_STR)))
-                        Error(ecUNEXPECTED_ARG, m_pTokenReader->GetPos());
+                        return Error(ecUNEXPECTED_ARG, m_pTokenReader->GetPos());
 
                     // The opening bracket was popped from the stack now check if there
                     // was a function before this bracket
@@ -1208,16 +1226,16 @@ OptionalError ParserBase::CreateRPN() const {
 
     if (ParserBase::g_DbgDumpCmdCode) m_vRPN.AsciiDump();
 
-    if (m_nIfElseCounter > 0) Error(ecMISSING_ELSE_CLAUSE);
+    if (m_nIfElseCounter > 0) return Error(ecMISSING_ELSE_CLAUSE);
 
     // get the last value (= final result) from the stack
     assert(stArgCount.size() == 1 && "Expected arg count of 1");
     m_nFinalResultIdx = stArgCount.top();
     if (m_nFinalResultIdx == 0) assert(0 && "muParser internal error");
 
-    if (stVal.size() == 0) Error(ecEMPTY_EXPRESSION);
+    if (stVal.size() == 0) return Error(ecEMPTY_EXPRESSION);
 
-    if (stVal.top().GetType() != tpDBL) Error(ecSTR_RESULT);
+    if (stVal.top().GetType() != tpDBL) return Error(ecSTR_RESULT);
 
     m_vStackBuffer.resize(m_vRPN.GetMaxStackSize() * s_MaxNumOpenMPThreads);
     return {};
@@ -1253,10 +1271,9 @@ ValueOrError ParserBase::ParseString() const {
   \param a_iErrc [in] The error code of type #EErrorCodes.
   \param a_iPos [in] The position where the error was detected.
   \param a_strTok [in] The token string representation associated with the error.
-  \throw ParserException always throws thats the only purpose of this function.
 */
-void ParserBase::Error(EErrorCodes a_iErrc, int a_iPos, const string_type &a_sTok) const {
-    throw exception_type(a_iErrc, a_sTok, m_pTokenReader->GetExpr(), a_iPos);
+ParserError ParserBase::Error(EErrorCodes a_iErrc, int a_iPos, const string_type &a_sTok) const {
+    return ParserError(a_iErrc, a_sTok, m_pTokenReader->GetExpr(), a_iPos);
 }
 
 //------------------------------------------------------------------------------
@@ -1458,7 +1475,8 @@ void ParserBase::StackDump(const ParserStack<token_type> &a_stVal,
     made up of multiple comma separated subexpressions (i.e. "x+y,sin(x),cos(y)")
 */
 void ParserBase::Eval(std::vector<ValueOrError> *outResult) const {
-    (this->*m_pParseFormula)();
+    ValueOrError v = (this->*m_pParseFormula)();
+    if (v.has_error()) throw v.error();
     int stackSize = m_nFinalResultIdx;
 
     // (for historic reasons the stack starts at position 1)

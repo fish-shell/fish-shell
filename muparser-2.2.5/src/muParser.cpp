@@ -168,7 +168,7 @@ ValueOrError Parser::Min(const value_type *a_afArg, int a_iArgc) {
     \param [in] a_iArgc The size of a_afArg
 */
 ValueOrError Parser::Max(const value_type *a_afArg, int a_iArgc) {
-    if (!a_iArgc) throw exception_type(_T("too few arguments for function min."));
+    if (!a_iArgc) throw exception_type(_T("too few arguments for function max."));
 
     value_type fRes = a_afArg[0];
     for (int i = 0; i < a_iArgc; ++i) fRes = std::max(fRes, a_afArg[i]);

@@ -162,7 +162,8 @@ int ParserInt::IsBinVal(const char_type *a_szExpr, int *a_iPos, value_type *a_fV
 
     if (i == 0) return 0;
 
-    if (i == iBits) throw exception_type(_T("Binary to integer conversion error (overflow)."));
+    // return false on overflow
+    if (i == iBits) return 0;
 
     *a_fVal = (unsigned)(iVal >> (iBits - i));
     *a_iPos += i + 1;

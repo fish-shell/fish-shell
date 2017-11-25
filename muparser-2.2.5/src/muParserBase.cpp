@@ -1040,8 +1040,9 @@ OptionalError ParserBase::CreateRPN() const {
 
     for (;;) {
         opt = m_pTokenReader->ReadNextToken();
+        OptionalError oerr = m_pTokenReader->acquireFirstError();
+        if (oerr.has_error()) return oerr;
 
-        OptionalError oerr;
         switch (opt.GetCode()) {
             //
             // Next three are different kind of value entries

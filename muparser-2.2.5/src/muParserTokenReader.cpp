@@ -162,14 +162,14 @@ ParserTokenReader::token_type ParserTokenReader::ReadNextToken() {
 
     // Check for unknown token
     //
-    // !!! From this point on there is no exit without an exception possible...
+    // !!! From this point on there is no exit without an error possible...
     //
     string_type strTok;
     int iEnd = ExtractToken(m_pParser->ValidNameChars(), strTok, m_iPos);
     if (iEnd != m_iPos) Error(ecUNASSIGNABLE_TOKEN, m_iPos, strTok);
 
     Error(ecUNASSIGNABLE_TOKEN, m_iPos, m_strFormula.substr(m_iPos));
-    return token_type();  // never reached
+    return token_type();
 }
 
 //---------------------------------------------------------------------------
@@ -723,17 +723,18 @@ bool ParserTokenReader::IsString(token_type &a_Tok) {
 }
 
 //---------------------------------------------------------------------------
-/** \brief Create an error containing the parse error position.
-
-  This function will create an Parser Exception object containing the error text and its position.
+/** \brief Create an error containing the parse error position. Store it in parseError_, if not
+  already set.
 
   \param a_iErrc [in] The error code of type #EErrorCodes.
   \param a_iPos [in] The position where the error was detected.
   \param a_strTok [in] The token string representation associated with the error.
-  \throw ParserException always throws thats the only purpose of this function.
 */
-void ParserTokenReader::Error(EErrorCodes a_iErrc, int a_iPos, const string_type &a_sTok) const {
-    m_pParser->Error(a_iErrc, a_iPos, a_sTok);
+bool ParserTokenReader::Error(EErrorCodes a_iErrc, int a_iPos, const string_type &a_sTok) {
+    if (!firstError_.has_error()) {
+        firstError_ = m_pParser->Error(a_iErrc, a_iPos, a_sTok);
+    }
+    return false;
 }
 
 //---------------------------------------------------------------------------

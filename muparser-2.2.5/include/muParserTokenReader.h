@@ -68,6 +68,13 @@ class ParserTokenReader final {
     void ReInit();
     token_type ReadNextToken();
 
+    /// \return the first error (if any), clearing it.
+    OptionalError acquireFirstError() {
+        OptionalError ret = std::move(firstError_);
+        firstError_ = OptionalError{};
+        return ret;
+    }
+
    private:
     /** \brief Syntax codes.
 
@@ -113,8 +120,7 @@ class ParserTokenReader final {
     bool IsStrVarTok(token_type &a_Tok);
     bool IsUndefVarTok(token_type &a_Tok);
     bool IsString(token_type &a_Tok);
-    void Error(EErrorCodes a_iErrc, int a_iPos = -1,
-               const string_type &a_sTok = string_type()) const;
+    bool Error(EErrorCodes a_iErrc, int a_iPos = -1, const string_type &a_sTok = string_type());
 
     token_type &SaveBeforeReturn(const token_type &tok);
 
@@ -124,6 +130,7 @@ class ParserTokenReader final {
     int m_iSynFlags = 0;
     bool m_bIgnoreUndefVar = false;
 
+    OptionalError firstError_;  /// The first error reported during parsing.
     const funmap_type *m_pFunDef = nullptr;
     const funmap_type *m_pPostOprtDef = nullptr;
     const funmap_type *m_pInfixOprtDef = nullptr;

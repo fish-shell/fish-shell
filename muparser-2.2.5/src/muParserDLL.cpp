@@ -42,6 +42,10 @@
 #include "muParserDLL.h"
 #include "muParserInt.h"
 
+static void throwIfError(mu::OptionalError oerr) {
+    if (oerr.has_error()) throw oerr.error();
+}
+
 #define MU_TRY try {
 #define MU_CATCH                                              \
     }                                                         \
@@ -205,7 +209,7 @@ API_EXPORT(muFloat_t) mupEval(muParserHandle_t a_hParser) {
 API_EXPORT(void) mupSetExpr(muParserHandle_t a_hParser, const muChar_t* a_szExpr) {
     MU_TRY
     muParser_t* const p(AsParser(a_hParser));
-    p->SetExpr(a_szExpr);
+    throwIfError(p->SetExpr(a_szExpr));
     MU_CATCH
 }
 
@@ -411,7 +415,8 @@ mupDefineOprt(muParserHandle_t a_hParser, const muChar_t* a_szName, muFun2_t a_p
               muInt_t a_nPrec, muInt_t a_nOprtAsct, muBool_t a_bAllowOpt) {
     MU_TRY
     muParser_t* const p(AsParser(a_hParser));
-    p->DefineOprt(a_szName, a_pFun, a_nPrec, (mu::EOprtAssociativity)a_nOprtAsct, a_bAllowOpt != 0);
+    throwIfError(p->DefineOprt(a_szName, a_pFun, a_nPrec, (mu::EOprtAssociativity)a_nOprtAsct,
+                               a_bAllowOpt != 0));
     MU_CATCH
 }
 
@@ -420,7 +425,7 @@ API_EXPORT(void)
 mupDefineVar(muParserHandle_t a_hParser, const muChar_t* a_szName, muFloat_t* a_pVar) {
     MU_TRY
     muParser_t* const p(AsParser(a_hParser));
-    p->DefineVar(a_szName, a_pVar);
+    throwIfError(p->DefineVar(a_szName, a_pVar));
     MU_CATCH
 }
 
@@ -429,7 +434,7 @@ API_EXPORT(void)
 mupDefineBulkVar(muParserHandle_t a_hParser, const muChar_t* a_szName, muFloat_t* a_pVar) {
     MU_TRY
     muParser_t* const p(AsParser(a_hParser));
-    p->DefineVar(a_szName, a_pVar);
+    throwIfError(p->DefineVar(a_szName, a_pVar));
     MU_CATCH
 }
 
@@ -438,7 +443,7 @@ API_EXPORT(void)
 mupDefineConst(muParserHandle_t a_hParser, const muChar_t* a_szName, muFloat_t a_fVal) {
     MU_TRY
     muParser_t* const p(AsParser(a_hParser));
-    p->DefineConst(a_szName, a_fVal);
+    throwIfError(p->DefineConst(a_szName, a_fVal));
     MU_CATCH
 }
 
@@ -447,7 +452,7 @@ API_EXPORT(void)
 mupDefineStrConst(muParserHandle_t a_hParser, const muChar_t* a_szName, const muChar_t* a_szVal) {
     MU_TRY
     muParser_t* const p(AsParser(a_hParser));
-    p->DefineStrConst(a_szName, a_szVal);
+    throwIfError(p->DefineStrConst(a_szName, a_szVal));
     MU_CATCH
 }
 

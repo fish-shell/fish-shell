@@ -41,6 +41,12 @@ using namespace std;
 
 namespace mu {
 namespace Test {
+
+static value_type getOrThrow(mu::ValueOrError voerr) {
+    if (voerr.has_error()) throw voerr.error();
+    return *voerr;
+}
+
 int ParserTester::c_iCount = 0;
 
 //---------------------------------------------------------------------------------------------
@@ -93,14 +99,14 @@ int ParserTester::TestInterface() {
         p.DefineVar(_T("b"), &afVal[1]);
         p.DefineVar(_T("c"), &afVal[2]);
         p.SetExpr(_T("a+b+c"));
-        (void)p.Eval();
+        getOrThrow(p.Eval());
     } catch (...) {
         iStat += 1;  // this is not supposed to happen
     }
 
     try {
         p.RemoveVar(_T("c"));
-        (void)p.Eval();
+        getOrThrow(p.Eval());
         iStat += 1;  // not supposed to reach this, nonexisting variable "c" deleted...
     } catch (...) {
         // failure is expected...
@@ -323,12 +329,10 @@ int ParserTester::TestNames() {
     PARSER_THROWCHECK(Var, true, _T("a_min"), &a)
     PARSER_THROWCHECK(Var, true, _T("a_min0"), &a)
     PARSER_THROWCHECK(Var, true, _T("a_min9"), &a)
-    PARSER_THROWCHECK(Var, false, _T("a_min9"), 0)
     // Postfix operators
     // fail
     PARSER_THROWCHECK(PostfixOprt, false, _T("(k"), f1of1)
     PARSER_THROWCHECK(PostfixOprt, false, _T("9+"), f1of1)
-    PARSER_THROWCHECK(PostfixOprt, false, _T("+"), 0)
     // pass
     PARSER_THROWCHECK(PostfixOprt, true, _T("-a"), f1of1)
     PARSER_THROWCHECK(PostfixOprt, true, _T("?a"), f1of1)
@@ -977,7 +981,7 @@ int ParserTester::ThrowTest(const string_type &a_str, int a_iErrc, bool a_bFail)
         p.DefineFun(_T("strfun2"), StrFun2);
         p.DefineFun(_T("strfun3"), StrFun3);
         p.SetExpr(a_str);
-        (void)p.Eval();
+        getOrThrow(p.Eval());
     } catch (ParserError &e) {
         // output the formula in case of an failed test
         if (a_bFail == false || (a_bFail == true && a_iErrc != e.GetCode())) {
@@ -1021,10 +1025,10 @@ int ParserTester::EqnTestWithVarChange(const string_type &a_str, double a_fVar1,
         p.SetExpr(a_str);
 
         var = a_fVar1;
-        fVal[0] = *p.Eval();
+        fVal[0] = getOrThrow(p.Eval());
 
         var = a_fVar2;
-        fVal[1] = *p.Eval();
+        fVal[1] = getOrThrow(p.Eval());
 
         if (fabs(a_fRes1 - fVal[0]) > 0.0000000001)
             throw std::runtime_error("incorrect result (first pass)");
@@ -1136,8 +1140,8 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
 
         // Test bytecode integrity
         // String parsing and bytecode parsing must yield the same result
-        fVal[0] = *p1->Eval();  // result from stringparsing
-        fVal[1] = *p1->Eval();  // result from bytecode
+        fVal[0] = getOrThrow(p1->Eval());  // result from stringparsing
+        fVal[1] = getOrThrow(p1->Eval());  // result from bytecode
         if (fVal[0] != fVal[1])
             throw Parser::exception_type(_T("Bytecode / string parsing mismatch."));
 
@@ -1204,8 +1208,8 @@ int ParserTester::EqnTestInt(const string_type &a_str, double a_fRes, bool a_fPa
         p.DefineVar(_T("c"), &vVarVal[2]);
 
         p.SetExpr(a_str);
-        fVal[0] = *p.Eval();  // result from stringparsing
-        fVal[1] = *p.Eval();  // result from bytecode
+        fVal[0] = getOrThrow(p.Eval());  // result from stringparsing
+        fVal[1] = getOrThrow(p.Eval());  // result from bytecode
 
         if (fVal[0] != fVal[1]) throw Parser::exception_type(_T("Bytecode corrupt."));
 

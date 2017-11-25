@@ -1079,7 +1079,6 @@ OptionalError ParserBase::CreateRPN() const {
             case cmARG_SEP:
                 if (stArgCount.empty())
                     return Error(ecUNEXPECTED_ARG_SEP, m_pTokenReader->GetPos());
-
                 ++stArgCount.top();
             // fallthrough intentional (no break!)
 

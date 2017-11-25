@@ -166,10 +166,13 @@ ParserTokenReader::token_type ParserTokenReader::ReadNextToken() {
     //
     string_type strTok;
     int iEnd = ExtractToken(m_pParser->ValidNameChars(), strTok, m_iPos);
-    if (iEnd != m_iPos) Error(ecUNASSIGNABLE_TOKEN, m_iPos, strTok);
+    if (iEnd != m_iPos) {
+        Error(ecUNASSIGNABLE_TOKEN, m_iPos, strTok);
+        return {};
+    }
 
     Error(ecUNASSIGNABLE_TOKEN, m_iPos, m_strFormula.substr(m_iPos));
-    return token_type();
+    return {};
 }
 
 //---------------------------------------------------------------------------
@@ -267,7 +270,7 @@ bool ParserTokenReader::IsBuiltIn(token_type &a_Tok) {
 
                     // The assignment operator need special treatment
                     if (i == cmASSIGN && m_iSynFlags & noASSIGN)
-                        Error(ecUNEXPECTED_OPERATOR, m_iPos, pOprtDef[i]);
+                        return Error(ecUNEXPECTED_OPERATOR, m_iPos, pOprtDef[i]);
 
                     if (!m_pParser->HasBuiltInOprt()) continue;
                     if (m_iSynFlags & noOPT) {
@@ -276,7 +279,7 @@ bool ParserTokenReader::IsBuiltIn(token_type &a_Tok) {
                         // their identifiers
                         if (IsInfixOpTok(a_Tok)) return true;
 
-                        Error(ecUNEXPECTED_OPERATOR, m_iPos, pOprtDef[i]);
+                        return Error(ecUNEXPECTED_OPERATOR, m_iPos, pOprtDef[i]);
                     }
 
                     m_iSynFlags =
@@ -284,7 +287,7 @@ bool ParserTokenReader::IsBuiltIn(token_type &a_Tok) {
                     break;
 
                 case cmBO:
-                    if (m_iSynFlags & noBO) Error(ecUNEXPECTED_PARENS, m_iPos, pOprtDef[i]);
+                    if (m_iSynFlags & noBO) return Error(ecUNEXPECTED_PARENS, m_iPos, pOprtDef[i]);
 
                     if (m_lastTok.GetCode() == cmFUNC)
                         m_iSynFlags =
@@ -297,21 +300,23 @@ bool ParserTokenReader::IsBuiltIn(token_type &a_Tok) {
                     break;
 
                 case cmBC:
-                    if (m_iSynFlags & noBC) Error(ecUNEXPECTED_PARENS, m_iPos, pOprtDef[i]);
+                    if (m_iSynFlags & noBC) return Error(ecUNEXPECTED_PARENS, m_iPos, pOprtDef[i]);
 
                     m_iSynFlags = noBO | noVAR | noVAL | noFUN | noINFIXOP | noSTR | noASSIGN;
 
-                    if (--m_iBrackets < 0) Error(ecUNEXPECTED_PARENS, m_iPos, pOprtDef[i]);
+                    if (--m_iBrackets < 0) return Error(ecUNEXPECTED_PARENS, m_iPos, pOprtDef[i]);
                     break;
 
                 case cmELSE:
-                    if (m_iSynFlags & noELSE) Error(ecUNEXPECTED_CONDITIONAL, m_iPos, pOprtDef[i]);
+                    if (m_iSynFlags & noELSE)
+                        return Error(ecUNEXPECTED_CONDITIONAL, m_iPos, pOprtDef[i]);
 
                     m_iSynFlags = noBC | noPOSTOP | noEND | noOPT | noIF | noELSE;
                     break;
 
                 case cmIF:
-                    if (m_iSynFlags & noIF) Error(ecUNEXPECTED_CONDITIONAL, m_iPos, pOprtDef[i]);
+                    if (m_iSynFlags & noIF)
+                        return Error(ecUNEXPECTED_CONDITIONAL, m_iPos, pOprtDef[i]);
 
                     m_iSynFlags = noBC | noPOSTOP | noEND | noOPT | noIF | noELSE;
                     break;
@@ -340,7 +345,7 @@ bool ParserTokenReader::IsArgSep(token_type &a_Tok) {
         szSep[0] = m_cArgSep;
         szSep[1] = 0;
 
-        if (m_iSynFlags & noARG_SEP) Error(ecUNEXPECTED_ARG_SEP, m_iPos, szSep);
+        if (m_iSynFlags & noARG_SEP) return Error(ecUNEXPECTED_ARG_SEP, m_iPos, szSep);
 
         m_iSynFlags = noBC | noOPT | noEND | noARG_SEP | noPOSTOP | noASSIGN;
         m_iPos++;
@@ -363,9 +368,9 @@ bool ParserTokenReader::IsEOF(token_type &a_Tok) {
 
     // check for EOF
     if (!szFormula[m_iPos] /*|| szFormula[m_iPos] == '\n'*/) {
-        if (m_iSynFlags & noEND) Error(ecUNEXPECTED_EOF, m_iPos);
+        if (m_iSynFlags & noEND) return Error(ecUNEXPECTED_EOF, m_iPos);
 
-        if (m_iBrackets > 0) Error(ecMISSING_PARENS, m_iPos, _T(")"));
+        if (m_iBrackets > 0) return Error(ecMISSING_PARENS, m_iPos, _T(")"));
 
         m_iSynFlags = 0;
         a_Tok.Set(cmEND);
@@ -392,7 +397,8 @@ bool ParserTokenReader::IsInfixOpTok(token_type &a_Tok) {
         a_Tok.Set(it->second, it->first);
         m_iPos += (int)it->first.length();
 
-        if (m_iSynFlags & noINFIXOP) Error(ecUNEXPECTED_OPERATOR, m_iPos, a_Tok.GetAsString());
+        if (m_iSynFlags & noINFIXOP)
+            return Error(ecUNEXPECTED_OPERATOR, m_iPos, a_Tok.GetAsString());
 
         m_iSynFlags = noPOSTOP | noINFIXOP | noOPT | noBC | noSTR | noASSIGN;
         return true;
@@ -405,7 +411,7 @@ bool ParserTokenReader::IsInfixOpTok(token_type &a_Tok) {
         m_iPos = (int)iEnd;
 
         if (m_iSynFlags & noINFIXOP)
-          Error(ecUNEXPECTED_OPERATOR, m_iPos, a_Tok.GetAsString());
+          return Error(ecUNEXPECTED_OPERATOR, m_iPos, a_Tok.GetAsString());
 
         m_iSynFlags = noPOSTOP | noINFIXOP | noOPT | noBC | noSTR | noASSIGN;
         return true;
@@ -435,7 +441,8 @@ bool ParserTokenReader::IsFunTok(token_type &a_Tok) {
 
     m_iPos = (int)iEnd;
     if (m_iSynFlags & noFUN)
-        Error(ecUNEXPECTED_FUN, m_iPos - (int)a_Tok.GetAsString().length(), a_Tok.GetAsString());
+        return Error(ecUNEXPECTED_FUN, m_iPos - (int)a_Tok.GetAsString().length(),
+                     a_Tok.GetAsString());
 
     m_iSynFlags = noANY ^ noBO;
     return true;
@@ -483,7 +490,7 @@ bool ParserTokenReader::IsOprt(token_type &a_Tok) {
                 else {
                     // nope, no infix operator
                     return false;
-                    // Error(ecUNEXPECTED_OPERATOR, m_iPos, a_Tok.GetAsString());
+                    // return Error(ecUNEXPECTED_OPERATOR, m_iPos, a_Tok.GetAsString());
                 }
             }
 
@@ -562,7 +569,8 @@ bool ParserTokenReader::IsValTok(token_type &a_Tok) {
             m_iPos = iEnd;
             a_Tok.SetVal(item->second, strTok);
 
-            if (m_iSynFlags & noVAL) Error(ecUNEXPECTED_VAL, m_iPos - (int)strTok.length(), strTok);
+            if (m_iSynFlags & noVAL)
+                return Error(ecUNEXPECTED_VAL, m_iPos - (int)strTok.length(), strTok);
 
             m_iSynFlags = noVAL | noVAR | noFUN | noBO | noINFIXOP | noSTR | noASSIGN;
             return true;
@@ -578,7 +586,8 @@ bool ParserTokenReader::IsValTok(token_type &a_Tok) {
             // 2013-11-27 Issue 2:  https://code.google.com/p/muparser/issues/detail?id=2
             strTok.assign(m_strFormula.c_str(), iStart, m_iPos - iStart);
 
-            if (m_iSynFlags & noVAL) Error(ecUNEXPECTED_VAL, m_iPos - (int)strTok.length(), strTok);
+            if (m_iSynFlags & noVAL)
+                return Error(ecUNEXPECTED_VAL, m_iPos - (int)strTok.length(), strTok);
 
             a_Tok.SetVal(fVal, strTok);
             m_iSynFlags = noVAL | noVAR | noFUN | noBO | noINFIXOP | noSTR | noASSIGN;
@@ -604,7 +613,7 @@ bool ParserTokenReader::IsVarTok(token_type &a_Tok) {
     varmap_type::const_iterator item = m_pVarDef->find(strTok);
     if (item == m_pVarDef->end()) return false;
 
-    if (m_iSynFlags & noVAR) Error(ecUNEXPECTED_VAR, m_iPos, strTok);
+    if (m_iSynFlags & noVAR) return Error(ecUNEXPECTED_VAR, m_iPos, strTok);
 
     m_pParser->OnDetectVar(&m_strFormula, m_iPos, iEnd);
 
@@ -630,7 +639,7 @@ bool ParserTokenReader::IsStrVarTok(token_type &a_Tok) {
     strmap_type::const_iterator item = m_pStrVarDef->find(strTok);
     if (item == m_pStrVarDef->end()) return false;
 
-    if (m_iSynFlags & noSTR) Error(ecUNEXPECTED_VAR, m_iPos, strTok);
+    if (m_iSynFlags & noSTR) return Error(ecUNEXPECTED_VAR, m_iPos, strTok);
 
     m_iPos = iEnd;
     if (!m_pParser->m_vStringVarBuf.size()) assert(0 && "muParser internal error");
@@ -658,7 +667,7 @@ bool ParserTokenReader::IsUndefVarTok(token_type &a_Tok) {
         //                 token identifier.
         // related bug report:
         // http://sourceforge.net/tracker/index.php?func=detail&aid=1578779&group_id=137191&atid=737979
-        Error(ecUNEXPECTED_VAR, m_iPos - (int)a_Tok.GetAsString().length(), strTok);
+        return Error(ecUNEXPECTED_VAR, m_iPos - (int)a_Tok.GetAsString().length(), strTok);
     }
 
     // If a factory is available implicitely create new variables
@@ -706,11 +715,11 @@ bool ParserTokenReader::IsString(token_type &a_Tok) {
         iSkip++;
     }
 
-    if (iEnd == string_type::npos) Error(ecUNTERMINATED_STRING, m_iPos, _T("\""));
+    if (iEnd == string_type::npos) return Error(ecUNTERMINATED_STRING, m_iPos, _T("\""));
 
     string_type strTok(strBuf.begin(), strBuf.begin() + iEnd);
 
-    if (m_iSynFlags & noSTR) Error(ecUNEXPECTED_STR, m_iPos, strTok);
+    if (m_iSynFlags & noSTR) return Error(ecUNEXPECTED_STR, m_iPos, strTok);
 
     m_pParser->m_vStringBuf.push_back(strTok);  // Store string in internal buffer
     a_Tok.SetString(strTok, m_pParser->m_vStringBuf.size());

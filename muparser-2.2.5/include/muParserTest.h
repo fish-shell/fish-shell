@@ -167,7 +167,6 @@ class ParserTester  // final
     int TestExpression();
     int TestInfixOprt();
     int TestBinOprt();
-    int TestVarConst();
     int TestInterface();
     int TestException();
     int TestStrArg();

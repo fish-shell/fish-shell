@@ -244,61 +244,6 @@ void CheckDiff()
 */
 
 //---------------------------------------------------------------------------
-void ListVar(const mu::ParserBase &parser) {
-    // Query the used variables (must be done after calc)
-    mu::varmap_type variables = parser.GetVar();
-    if (!variables.size()) return;
-
-    cout << "\nParser variables:\n";
-    cout << "-----------------\n";
-    cout << "Number: " << (int)variables.size() << "\n";
-    varmap_type::const_iterator item = variables.begin();
-    for (; item != variables.end(); ++item)
-        mu::console() << _T("Name: ") << item->first << _T("   Address: [0x") << item->second
-                      << _T("]\n");
-}
-
-//---------------------------------------------------------------------------
-void ListConst(const mu::ParserBase &parser) {
-    mu::console() << _T("\nParser constants:\n");
-    mu::console() << _T("-----------------\n");
-
-    mu::valmap_type cmap = parser.GetConst();
-    if (!cmap.size()) {
-        mu::console() << _T("Expression does not contain constants\n");
-    } else {
-        valmap_type::const_iterator item = cmap.begin();
-        for (; item != cmap.end(); ++item)
-            mu::console() << _T("  ") << item->first << _T(" =  ") << item->second << _T("\n");
-    }
-}
-
-//---------------------------------------------------------------------------
-void ListExprVar(const mu::ParserBase &parser) {
-    string_type sExpr = parser.GetExpr();
-    if (sExpr.length() == 0) {
-        cout << _T("Expression string is empty\n");
-        return;
-    }
-
-    // Query the used variables (must be done after calc)
-    mu::console() << _T("\nExpression variables:\n");
-    mu::console() << _T("---------------------\n");
-    mu::console() << _T("Expression: ") << parser.GetExpr() << _T("\n");
-
-    varmap_type variables = parser.GetUsedVar();
-    if (!variables.size()) {
-        mu::console() << _T("Expression does not contain variables\n");
-    } else {
-        mu::console() << _T("Number: ") << (int)variables.size() << _T("\n");
-        mu::varmap_type::const_iterator item = variables.begin();
-        for (; item != variables.end(); ++item)
-            mu::console() << _T("Name: ") << item->first << _T("   Address: [0x") << item->second
-                          << _T("]\n");
-    }
-}
-
-//---------------------------------------------------------------------------
 /** \brief Check for external keywords.
 */
 int CheckKeywords(const mu::char_type *a_szLine, mu::Parser &a_Parser) {
@@ -306,15 +251,6 @@ int CheckKeywords(const mu::char_type *a_szLine, mu::Parser &a_Parser) {
 
     if (sLine == _T("quit")) {
         return -1;
-    } else if (sLine == _T("list var")) {
-        ListVar(a_Parser);
-        return 1;
-    } else if (sLine == _T("list const")) {
-        ListConst(a_Parser);
-        return 1;
-    } else if (sLine == _T("list exprvar")) {
-        ListExprVar(a_Parser);
-        return 1;
     } else if (sLine == _T("locale de")) {
         mu::console() << _T("Setting german locale: ArgSep=';' DecSep=',' ThousandsSep='.'\n");
         a_Parser.SetArgSep(';');

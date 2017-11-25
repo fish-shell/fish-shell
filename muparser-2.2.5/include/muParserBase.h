@@ -144,9 +144,7 @@ class ParserBase {
     void ClearOprt();
 
     void RemoveVar(const string_type &a_strVarName);
-    const varmap_type &GetUsedVar() const;
     const varmap_type &GetVar() const;
-    const valmap_type &GetConst() const;
     const string_type &GetExpr() const;
     const funmap_type &GetFunDef() const;
     string_type GetVersion(EParserVersionInfo eInfo = pviFULL) const;

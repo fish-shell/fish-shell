@@ -62,7 +62,6 @@ class ParserTokenReader final {
 
     int GetPos() const;
     const string_type &GetExpr() const;
-    varmap_type &GetUsedVar();
     char_type GetArgSep() const;
 
     void IgnoreUndefVar(bool bIgnore);

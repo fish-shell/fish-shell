@@ -90,10 +90,6 @@ int ParserTokenReader::GetPos() const { return m_iPos; }
 const string_type &ParserTokenReader::GetExpr() const { return m_strFormula; }
 
 //---------------------------------------------------------------------------
-/** \brief Return a map containing the used variables only. */
-varmap_type &ParserTokenReader::GetUsedVar() { return m_UsedVar; }
-
-//---------------------------------------------------------------------------
 /** \brief Initialize the token Reader.
 
     Sets the formula position index to zero and set Syntax flags to default for initial formula

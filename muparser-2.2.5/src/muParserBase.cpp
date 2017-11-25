@@ -534,36 +534,6 @@ EOprtAssociativity ParserBase::GetOprtAssociativity(const token_type &a_Tok) con
 }
 
 //---------------------------------------------------------------------------
-/** \brief Return a map containing the used variables only. */
-const varmap_type &ParserBase::GetUsedVar() const {
-    try {
-        m_pTokenReader->IgnoreUndefVar(true);
-        // Try to create bytecode, but don't use it for any further calculations since it may
-        // contain references to nonexisting variables.
-        OptionalError oerr = CreateRPN();
-        if (oerr.has_error()) throw oerr.error();
-        m_pParseFormula = &ParserBase::ParseString;
-        m_pTokenReader->IgnoreUndefVar(false);
-    } catch (exception_type & /*e*/) {
-        // Make sure to stay in string parse mode, dont call ReInit()
-        // because it deletes the array with the used variables
-        m_pParseFormula = &ParserBase::ParseString;
-        m_pTokenReader->IgnoreUndefVar(false);
-        throw;
-    }
-
-    return m_pTokenReader->GetUsedVar();
-}
-
-//---------------------------------------------------------------------------
-/** \brief Return a map containing the used variables only. */
-const varmap_type &ParserBase::GetVar() const { return m_VarDef; }
-
-//---------------------------------------------------------------------------
-/** \brief Return a map containing all parser constants. */
-const valmap_type &ParserBase::GetConst() const { return m_ConstDef; }
-
-//---------------------------------------------------------------------------
 /** \brief Return prototypes of all parser functions.
     \return #m_FunDef
     \sa FunProt
@@ -1510,8 +1480,7 @@ int ParserBase::GetNumResults() const { return m_nFinalResultIdx; }
   A note on const correctness:
   I consider it important that Calc is a const function.
   Due to caching operations Calc changes only the state of internal variables with one exception
-  m_UsedVar this is reset during string parsing and accessible from the outside. Instead of making
-  Calc non const GetUsedVar is non const because it explicitly calls Eval() forcing this update.
+  m_UsedVar this is reset during string parsing and accessible from the outside.
 
   \pre A formula must be set.
   \pre Variables must have been set (if needed)

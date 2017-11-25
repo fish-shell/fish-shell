@@ -49,7 +49,6 @@ ParserTester::ParserTester() : m_vTestFun() {
     AddTest(&ParserTester::TestSyntax);
     AddTest(&ParserTester::TestPostFix);
     AddTest(&ParserTester::TestInfixOprt);
-    AddTest(&ParserTester::TestVarConst);
     AddTest(&ParserTester::TestMultiArg);
     AddTest(&ParserTester::TestExpression);
     AddTest(&ParserTester::TestIfThenElse);
@@ -418,103 +417,6 @@ int ParserTester::TestSyntax() {
     iStat += EqnTest(_T("pi)"), 0, false);        // unexpected closing bracket
     iStat += EqnTest(_T("sin(())"), 0, false);    // unexpected closing bracket
     iStat += EqnTest(_T("sin()"), 0, false);      // unexpected closing bracket
-
-    if (iStat == 0)
-        mu::console() << _T("passed") << endl;
-    else
-        mu::console() << _T("\n  failed with ") << iStat << _T(" errors") << endl;
-
-    return iStat;
-}
-
-//---------------------------------------------------------------------------
-int ParserTester::TestVarConst() {
-    int iStat = 0;
-    mu::console() << _T("testing variable/constant detection...");
-
-    // Test if the result changes when a variable changes
-    iStat += EqnTestWithVarChange(_T("a"), 1, 1, 2, 2);
-    iStat += EqnTestWithVarChange(_T("2*a"), 2, 4, 3, 6);
-
-    // distinguish constants with same basename
-    iStat += EqnTest(_T("const"), 1, true);
-    iStat += EqnTest(_T("const1"), 2, true);
-    iStat += EqnTest(_T("const2"), 3, true);
-    iStat += EqnTest(_T("2*const"), 2, true);
-    iStat += EqnTest(_T("2*const1"), 4, true);
-    iStat += EqnTest(_T("2*const2"), 6, true);
-    iStat += EqnTest(_T("2*const+1"), 3, true);
-    iStat += EqnTest(_T("2*const1+1"), 5, true);
-    iStat += EqnTest(_T("2*const2+1"), 7, true);
-    iStat += EqnTest(_T("const"), 0, false);
-    iStat += EqnTest(_T("const1"), 0, false);
-    iStat += EqnTest(_T("const2"), 0, false);
-
-    // distinguish variables with same basename
-    iStat += EqnTest(_T("a"), 1, true);
-    iStat += EqnTest(_T("aa"), 2, true);
-    iStat += EqnTest(_T("2*a"), 2, true);
-    iStat += EqnTest(_T("2*aa"), 4, true);
-    iStat += EqnTest(_T("2*a-1"), 1, true);
-    iStat += EqnTest(_T("2*aa-1"), 3, true);
-
-    // custom value recognition
-    iStat += EqnTest(_T("0xff"), 255, true);
-    iStat += EqnTest(_T("0x97 + 0xff"), 406, true);
-
-    // Finally test querying of used variables
-    try {
-        int idx;
-        mu::Parser p;
-        mu::value_type vVarVal[] = {1, 2, 3, 4, 5};
-        p.DefineVar(_T("a"), &vVarVal[0]);
-        p.DefineVar(_T("b"), &vVarVal[1]);
-        p.DefineVar(_T("c"), &vVarVal[2]);
-        p.DefineVar(_T("d"), &vVarVal[3]);
-        p.DefineVar(_T("e"), &vVarVal[4]);
-
-        // Test lookup of defined variables
-        // 4 used variables
-        p.SetExpr(_T("a+b+c+d"));
-        mu::varmap_type UsedVar = p.GetUsedVar();
-        int iCount = (int)UsedVar.size();
-        if (iCount != 4) throw false;
-
-        // the next check will fail if the parser
-        // erroneously creates new variables internally
-        if (p.GetVar().size() != 5) throw false;
-
-        mu::varmap_type::const_iterator item = UsedVar.begin();
-        for (idx = 0; item != UsedVar.end(); ++item) {
-            if (&vVarVal[idx++] != item->second) throw false;
-        }
-
-        // Test lookup of undefined variables
-        p.SetExpr(_T("undef1+undef2+undef3"));
-        UsedVar = p.GetUsedVar();
-        iCount = (int)UsedVar.size();
-        if (iCount != 3) throw false;
-
-        // the next check will fail if the parser
-        // erroneously creates new variables internally
-        if (p.GetVar().size() != 5) throw false;
-
-        for (item = UsedVar.begin(); item != UsedVar.end(); ++item) {
-            if (item->second != 0) throw false;  // all pointers to undefined variables must be null
-        }
-
-        // 1 used variables
-        p.SetExpr(_T("a+b"));
-        UsedVar = p.GetUsedVar();
-        iCount = (int)UsedVar.size();
-        if (iCount != 2) throw false;
-        item = UsedVar.begin();
-        for (idx = 0; item != UsedVar.end(); ++item)
-            if (&vVarVal[idx++] != item->second) throw false;
-
-    } catch (...) {
-        iStat += 1;
-    }
 
     if (iStat == 0)
         mu::console() << _T("passed") << endl;

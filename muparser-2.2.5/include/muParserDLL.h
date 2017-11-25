@@ -195,17 +195,9 @@ API_EXPORT(void) mupClearFun(muParserHandle_t a_hParser);
 
 // Querying variables / expression variables / constants
 API_EXPORT(int) mupGetExprVarNum(muParserHandle_t a_hParser);
-API_EXPORT(int) mupGetVarNum(muParserHandle_t a_hParser);
-API_EXPORT(int) mupGetConstNum(muParserHandle_t a_hParser);
 API_EXPORT(void)
 mupGetExprVar(muParserHandle_t a_hParser, unsigned a_iVar, const muChar_t **a_pszName,
               muFloat_t **a_pVar);
-API_EXPORT(void)
-mupGetVar(muParserHandle_t a_hParser, unsigned a_iVar, const muChar_t **a_pszName,
-          muFloat_t **a_pVar);
-API_EXPORT(void)
-mupGetConst(muParserHandle_t a_hParser, unsigned a_iVar, const muChar_t **a_pszName,
-            muFloat_t *a_pVar);
 API_EXPORT(void) mupSetArgSep(muParserHandle_t a_hParser, const muChar_t cArgSep);
 API_EXPORT(void) mupSetDecSep(muParserHandle_t a_hParser, const muChar_t cArgSep);
 API_EXPORT(void) mupSetThousandsSep(muParserHandle_t a_hParser, const muChar_t cArgSep);

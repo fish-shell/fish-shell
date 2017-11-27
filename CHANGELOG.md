@@ -30,6 +30,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Added completions for
   - `j` (autojump #4344)
   - `bd` (#4472)
+  - `jhipster` (#4472)
 - Improved completions for
   - `git` (#4395, #4396)
 

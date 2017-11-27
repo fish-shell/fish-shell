@@ -29,6 +29,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Command substitution output is now limited to 10 MB by default (#3822).
 - Added completions for
   - `j` (autojump #4344)
+  - `bd` (#4472)
 - Improved completions for
   - `git` (#4395, #4396)
 
@@ -88,7 +89,25 @@ Xcode builds and macOS packages could not be produced with 2.7b1, but this is fi
 - Lots of improvements to completions.
 - Updated Chinese and French translations.
 
+<<<<<<< Local Changes
+
+- Improved completions for:
+  - `apt`
+  - `cd` (#4061)
+  - `composer` (#4295)
+  - `flatpak` (#4456)
+  - `git` (#4117, #4147, #4329, #4368)
+  - `gphoto2`
+  - `killall` (#4052)
+  - `ln`
+  - `npm` (#4241)
+  - `ssh` (#4377)
+  - `tail`
+  - `xdg-mime` (#4333)
+  - `zypper` (#4325)
+=======
 ---
+>>>>>>> External Changes
 
 # fish 2.6.0 (released June 3, 2017)
 

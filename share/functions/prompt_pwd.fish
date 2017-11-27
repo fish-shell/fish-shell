@@ -20,6 +20,6 @@ function prompt_pwd --description "Print the current working directory, shortene
         echo $tmp
     else
         # Shorten to at most $fish_prompt_pwd_dir_length characters per directory
-        string replace -ar '(\.?[^/]{'"$fish_prompt_pwd_dir_length"'})[^/]*/' '$1/' $tmp
+        string replace -ar '(\.?[^/]{'"$fish_prompt_pwd_dir_length"'})[^/]+/' '$1…/' $tmp
     end
 end

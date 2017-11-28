@@ -30,6 +30,7 @@ ADD_CUSTOM_COMMAND(OUTPUT lexicon_filter
                    COMMAND build_tools/build_lexicon_filter.sh
                               ${CMAKE_CURRENT_SOURCE_DIR}/share/functions/
                               ${CMAKE_CURRENT_SOURCE_DIR}/share/completions/
+                              ${SED}
                               < ${CMAKE_CURRENT_SOURCE_DIR}/lexicon_filter.in
                               > ${CMAKE_CURRENT_BINARY_DIR}/lexicon_filter
                                 && chmod a+x ${CMAKE_CURRENT_BINARY_DIR}/lexicon_filter

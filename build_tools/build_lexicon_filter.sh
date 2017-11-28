@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Builds the lexicon filter
-# Usage: build_lexicon_filter.sh FUNCTIONS_DIR COMPLETIONS_DIR < lexicon_filter.in > lexicon_filter
+# Usage: build_lexicon_filter.sh FUNCTIONS_DIR COMPLETIONS_DIR [SED_BINARY] < lexicon_filter.in > lexicon_filter
 
 set -e
 
@@ -14,10 +14,11 @@ set -e
 # used in a 'cli' style context.
 rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt lexicon.txt
 
-SED=$(which sed)
 
 FUNCTIONS_DIR_FILES=${1}/*.fish
 COMPLETIONS_DIR_FILES=${2}/*.fish
+
+SED=${3:-$(which sed)}
 
 # Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
 $SED <command_list_toc.txt >>lexicon.tmp -n \

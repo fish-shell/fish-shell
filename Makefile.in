@@ -426,7 +426,7 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
 lexicon_filter: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) \
                 lexicon_filter.in build_tools/build_lexicon_filter.sh \
                 share/functions/__fish_config_interactive.fish
-	$v build_tools/build_lexicon_filter.sh share/functions/ share/completions/ < lexicon_filter.in > $@
+	$v build_tools/build_lexicon_filter.sh share/functions/ share/completions/ $(SED) < lexicon_filter.in > $@
 	$v chmod a+x lexicon_filter
 
 #

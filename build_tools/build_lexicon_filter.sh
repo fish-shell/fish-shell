@@ -35,7 +35,7 @@ $SED <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n  \
 	-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p'; \
 $SED <lexicon_filter.in >>lexicon.tmp -n \
 	-e '/^#.!#/s/^#.!# \(.... [a-z][a-z_]*\)/\1/p';
-$v mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
+mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
 
 # Copy the filter to stdout. We're going to append sed commands to it after.
 $SED -e 's|@sed@|'$SED'|'

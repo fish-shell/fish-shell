@@ -355,8 +355,8 @@ You can iterate over a list (or a slice) with a for loop:
 Lists adjacent to other lists or strings are expanded as <a href="index.html#cartesian-product">cartesian products</a> unless quoted (see <a href="index.html#expand-variable">Variable expansion</a>):
 
 \fish{cli-dark}
->_ set -l a 1 2 3
->_ set -l 1 a b c
+>_ set a 1 2 3
+>_ set 1 a b c
 >_ echo $a$1
 <outp>1a 2a 3a 1b 2b 3b 1c 2c 3c</outp>
 >_ echo $a" banana"

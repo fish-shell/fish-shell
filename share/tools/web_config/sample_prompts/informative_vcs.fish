@@ -1,7 +1,48 @@
 # name: Informative Vcs
 # author: Mariusz Smykula <mariuszs at gmail.com>
+# human readable exit codes: Johan Walles <johan.walles at gmail.com>
+function _print_exitcode --description 'Print a human-readable exit code'
+    set -l exitcode $argv[1]
+    if math $exitcode == 127 > /dev/null
+        echo -n "Command not found"
+        return
+    end
 
+    if math $exitcode \< 129 > /dev/null
+        echo -n "$exitcode"
+        return
+    end
 
+    set -l signal_number (math $exitcode - 128)
+
+    # From "man signal" on macOS
+    set -l signal_names[1] "SIGHUP"
+    set -l signal_names[2] "SIGINT"
+    set -l signal_names[9] "SIGKILL"
+    set -l signal_names[13] "SIGPIPE"
+    set -l signal_names[14] "SIGALRM"
+    set -l signal_names[15] "SIGTERM"
+    set -l signal_names[24] "SIGXCPU"
+    set -l signal_names[25] "SIGXFSZ"
+    set -l signal_names[26] "SIGVTALRM"
+    set -l signal_names[27] "SIGPROF"
+    set -l signal_names[30] "SIGUSR1"
+    set -l signal_names[31] "SIGUSR2"
+
+    # Interpretations
+    set -l signal_names[2] "CTRL-C"
+    set -l signal_names[9] "kill -9"
+    set -l signal_names[15] "kill"
+
+    set -l signal_name $signal_names[$signal_number]
+    if [ "$signal_name" != "" ]
+        echo -n "$signal_name"
+        return
+    end
+
+    # We don't know, just print the exit code
+    echo -n "$exitcode"
+end
 
 function fish_prompt --description 'Write out the prompt'
     set -l last_status $status
@@ -90,9 +131,11 @@ function fish_prompt --description 'Write out the prompt'
 
     if not test $last_status -eq 0
         set_color $fish_color_error
+        echo -n "["
+        _print_exitcode $last_status
+        echo -n "] "
+        set_color normal
     end
 
     echo -n "$suffix "
-
-    set_color normal
 end

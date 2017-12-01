@@ -3,8 +3,12 @@
 # human readable exit codes: Johan Walles <johan.walles at gmail.com>
 function _print_exitcode --description 'Print a human-readable exit code'
     set -l exitcode $argv[1]
+    if math $exitcode == 126 > /dev/null
+        echo -n "Not executable"
+        return
+    end
     if math $exitcode == 127 > /dev/null
-        echo -n "Command not found"
+        echo -n "Not found"
         return
     end
 

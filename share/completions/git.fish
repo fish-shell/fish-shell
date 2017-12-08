@@ -19,11 +19,11 @@ function __fish_git_recent_commits
 end
 
 function __fish_git_local_branches
-    command git branch | string trim -c ' *'
+    command git branch --no-color | string trim -c ' *'
 end
 
 function __fish_git_remote_branches
-    command git branch --remote | string trim -c ' *'
+    command git branch --no-color --remote | string trim -c ' *'
 end
 
 function __fish_git_branches

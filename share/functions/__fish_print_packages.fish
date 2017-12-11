@@ -35,6 +35,18 @@ function __fish_print_packages
         return
     end
 
+    # pkg_info on OpenBSD provides versioning info which we want for
+    # installed packages but, calling it directly can cause delays in
+    # returning information if another pkg_* tool have a lock.
+    # Listing /var/db/pkg is a clean alternative.
+    if begin
+            type -q -f pkg_add
+            and test (uname) = "OpenBSD"
+        end
+        set -l files /var/db/pkg/*; string replace '/var/db/pkg/' '' -- $files
+        return
+    end
+
     # Caches for 5 minutes
     if type -q -f pacman
         set cache_file $XDG_CACHE_HOME/.pac-cache.$USER

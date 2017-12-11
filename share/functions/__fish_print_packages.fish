@@ -27,11 +27,17 @@ function __fish_print_packages
 
     # Pkg is fast on FreeBSD and provides versioning info which we want for
     # installed packages
-    if begin
-            type -q -f pkg
-            and test (uname) = "FreeBSD"
-        end
+    if type -q -f pkg
         pkg query "%n-%v"
+        return
+    end
+
+    # pkg_info on OpenBSD provides versioning info which we want for
+    # installed packages but, calling it directly can cause delays in
+    # returning information if another pkg_* tool have a lock.
+    # Listing /var/db/pkg is a clean alternative.
+    if type -q -f pkg_add
+        set -l files /var/db/pkg/*; string replace '/var/db/pkg/' '' -- $files
         return
     end
 

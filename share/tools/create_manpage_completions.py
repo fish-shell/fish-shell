@@ -876,7 +876,7 @@ def get_paths_from_man_locations():
         parent_paths = manpath.decode().strip().split(':')
     if (not parent_paths) or (proc and proc.returncode > 0):
         # HACK: Use some fallbacks in case we can't get anything else.
-        # `mandoc` does not provide `manpath` or `man --path` and $MANPATH might not be set, so just use the default for mandoc (minus /usr/X11R6/man, because that's not relevant).
+        # `mandoc` does not provide `manpath` or `man --path` and $MANPATH might not be set.
         # The alternative is reading its config file (/etc/man.conf)
         if os.path.isfile('/etc/man.conf'):
             data = open('/etc/man.conf', 'r')

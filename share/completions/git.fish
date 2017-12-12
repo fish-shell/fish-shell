@@ -446,12 +446,14 @@ complete -c git -n '__fish_git_needs_command' -a diff -d 'Show changes between c
 complete -c git -n '__fish_git_using_command diff' -a '(__fish_git_ranges)' -d 'Branch'
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
+complete -f -c git -n '__fish_git_using_command diff' -a '(__fish_git_modified_files)' -d 'File'
 # TODO options
 
 ### difftool
 complete -c git -n '__fish_git_needs_command' -a difftool -d 'Open diffs in a visual tool'
 complete -c git -n '__fish_git_using_command difftool' -a '(__fish_git_ranges)' -d 'Branch'
 complete -c git -n '__fish_git_using_command difftool' -l cached -d 'Visually show diff of changes in the index'
+complete -f -c git -n '__fish_git_using_command difftool' -a '(__fish_git_modified_files)' -d 'File'
 # TODO options
 
 

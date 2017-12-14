@@ -89,12 +89,10 @@ TMPLOC=`mktemp -d -t fish_doc_build_XXXXXX` || { echo >&2 "Could not build docum
 # Copy stuff to the temp directory
 for i in "$INPUTDIR"/*.txt; do
 	BASENAME=`basename $i .txt`
-	TMPFILE=$TMPLOC/$BASENAME
 	INPUTFILE=$TMPLOC/$BASENAME.doxygen
-	echo  "/** \page" $BASENAME > $TMPFILE
-	cat $i >>$TMPFILE
-	echo "*/" >>$TMPFILE
-	cat $TMPFILE | sed "s/\\\section $BASENAME $BASENAME/\\\section $BASENAME-man $BASENAME/" > $INPUTFILE
+	echo "/** \\page" $BASENAME > $INPUTFILE
+	cat $i | sed "s/\\\section $BASENAME $BASENAME/\\\section $BASENAME-man $BASENAME/" >> $INPUTFILE
+	echo "*/" >> $INPUTFILE
 done
 
 # Make some extra stuff to pass to doxygen
@@ -128,16 +126,19 @@ if test "$RESULT" = 0 ; then
 
 	# Postprocess the files
 	for i in "$INPUTDIR"/*.txt; do
+		# This command turns the following weirdness from Doxygen:
+		# abbr \-
+		# .SH "abbr - manage fish abbreviations"
+		# into
+		# \fBabbr\fP - manage fish abbreviations
 		# It would be nice to use -i here for edit in place, but that is not portable
 		CMD_NAME=`basename "$i" .txt`;
-		sed < ${CMD_NAME}.1 > ${CMD_NAME}.1.tmp-delete-quote \
-			-e "s/^\\.SH \"\(.*\)\"/\\.SH \1\\n/"
-		sed < ${CMD_NAME}.1.tmp-delete-quote > ${CMD_NAME}.1.tmp-bold \
-			-e "s/^\\.SH \("$CMD_NAME"\) \\-/\\.SH \\\fB\1\\\fP \\-/"
-		cat ${CMD_NAME}.1.tmp-bold | perl -0pe \
-			"s/.SH NAME\n$CMD_NAME \\\- \n.SH /.SH NAME\n/m" > ${CMD_NAME}.1.tmp-shape
-		cp "${CMD_NAME}.1.tmp-shape" "${CMD_NAME}.1"
-		rm "${CMD_NAME}.1.tmp-delete-quote" "${CMD_NAME}.1.tmp-bold" "${CMD_NAME}.1.tmp-shape"
+		sed -E < ${CMD_NAME}.1 > ${CMD_NAME}.1.tmp \
+			-e "/^.SH NAME/{
+                                        N; N
+                                        s/abbr \\\\- \n.SH \"abbr (- .*)\"/\\\fBabbr\\\fP \1/g
+                                       }"
+		mv "${CMD_NAME}.1.tmp" "${CMD_NAME}.1"
 	done
 
 	# Erase condemned pages

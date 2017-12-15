@@ -70,22 +70,14 @@ end
 # and: https://github.com/fish-shell/fish-shell/pull/2366
 complete -f -c npm -n 'not __fish_npm_needs_option; and not __fish_npm_using_command run; and not __fish_npm_using_command run-script' -a "(__fish_complete_npm)"
 
-# list available npm scripts and their parial content
-function __fish_parse_npm_run_completions
-    while read -l name
-        set -l trim 20
-        read -l value
-        set value (string sub -l $trim -- $value)
-        printf "%s\t%s\n" $name $value
-    end
-end
-
 function __fish_npm_run
     # Like above, only try to call npm if there's a command by that name to facilitate aliases that call nvm.
     if command -sq jq; and test -e package.json
-        jq -r '.scripts | to_entries[] | .key,.value' <package.json | __fish_parse_npm_run_completions
+        jq -r '.scripts | to_entries | map("\(.key)\t\(.value | tostring | .[0:20])") | .[]' package.json
+    else if command -sq npm; and command -sq jq
+        command npm run --json | jq -r 'to_entries | map("\(.key)\t\(.value | tostring | .[0:20])") | .[]'
     else if command -sq npm
-        command npm run | string match -r -v '^[^ ]|^$' | string trim | __fish_parse_npm_run_completions
+        command npm run | string match -r -v '^[^ ]|^$' | string trim | awk 'NR % 2 == 1 { name=$0 ; next } { print name "\t" substr($0, 0, 20) }'
     end
 end
 

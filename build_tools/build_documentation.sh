@@ -135,9 +135,9 @@ if test "$RESULT" = 0 ; then
 		CMD_NAME=`basename "$i" .txt`;
 		sed -E < ${CMD_NAME}.1 > ${CMD_NAME}.1.tmp \
 			-e "/^.SH NAME/{
-                                        N; N
-                                        s/abbr \\\\- \n.SH \"abbr (- .*)\"/\\\fBabbr\\\fP \1/g
-                                       }"
+											N; N
+											s/${CMD_NAME} \\\\- \n.SH \"${CMD_NAME} (- .*)\"/\\\fB${CMD_NAME}\\\fP \1/g
+											}"
 		mv "${CMD_NAME}.1.tmp" "${CMD_NAME}.1"
 	done
 

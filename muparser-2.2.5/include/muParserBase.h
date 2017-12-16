@@ -134,9 +134,10 @@ class ParserBase {
     OptionalError DefineConst(const string_type &a_sName, value_type a_fVal);
     OptionalError DefineStrConst(const string_type &a_sName, const string_type &a_strVal);
     OptionalError DefineVar(const string_type &a_sName, value_type *a_fVar);
-    void DefinePostfixOprt(const string_type &a_strFun, fun_type1 a_pOprt, bool a_bAllowOpt = true);
-    void DefineInfixOprt(const string_type &a_strName, fun_type1 a_pOprt, int a_iPrec = prINFIX,
-                         bool a_bAllowOpt = true);
+    OptionalError DefinePostfixOprt(const string_type &a_strFun, fun_type1 a_pOprt,
+                                    bool a_bAllowOpt = true);
+    OptionalError DefineInfixOprt(const string_type &a_strName, fun_type1 a_pOprt,
+                                  int a_iPrec = prINFIX, bool a_bAllowOpt = true);
 
     // Clear user defined variables, constants or functions
     void ClearVar();

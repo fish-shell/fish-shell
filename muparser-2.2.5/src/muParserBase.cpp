@@ -365,10 +365,10 @@ const char_type *ParserBase::ValidInfixOprtChars() const {
 /** \brief Add a user defined operator.
     \post Will reset the Parser to string parsing mode.
 */
-void ParserBase::DefinePostfixOprt(const string_type &a_sName, fun_type1 a_pFun, bool a_bAllowOpt) {
-    auto oerr = AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, prPOSTFIX, cmOPRT_POSTFIX),
-                            m_PostOprtDef, ValidOprtChars());
-    if (oerr.has_error()) throw oerr.error();
+OptionalError ParserBase::DefinePostfixOprt(const string_type &a_sName, fun_type1 a_pFun,
+                                            bool a_bAllowOpt) {
+    return AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, prPOSTFIX, cmOPRT_POSTFIX),
+                       m_PostOprtDef, ValidOprtChars());
 }
 
 //---------------------------------------------------------------------------
@@ -392,11 +392,10 @@ void ParserBase::Init() {
     \param [in] a_bAllowOpt  True if operator is volatile (default=false)
     \sa EPrec
 */
-void ParserBase::DefineInfixOprt(const string_type &a_sName, fun_type1 a_pFun, int a_iPrec,
-                                 bool a_bAllowOpt) {
-    auto oerr = AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, a_iPrec, cmOPRT_INFIX),
-                            m_InfixOprtDef, ValidInfixOprtChars());
-    if (oerr.has_error()) throw oerr.error();
+OptionalError ParserBase::DefineInfixOprt(const string_type &a_sName, fun_type1 a_pFun, int a_iPrec,
+                                          bool a_bAllowOpt) {
+    return AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, a_iPrec, cmOPRT_INFIX),
+                       m_InfixOprtDef, ValidInfixOprtChars());
 }
 
 //---------------------------------------------------------------------------

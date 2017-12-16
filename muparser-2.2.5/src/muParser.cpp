@@ -272,6 +272,14 @@ void Parser::InitFun() {
     }
 }
 
+/// assert that the given optional error \p oerr is not an error.
+/// This is used only during initialization, when it ought to be impossible
+/// to generate an error.
+static void assertNoError(OptionalError oerr) {
+    assert(!oerr.has_error() && "Unexpected error during initialization");
+    (void)oerr;
+}
+
 //---------------------------------------------------------------------------
 /** \brief Initialize constants.
 
@@ -279,13 +287,8 @@ void Parser::InitFun() {
   number ("_e").
 */
 void Parser::InitConst() {
-    OptionalError oerr;
-    oerr = DefineConst(_T("_pi"), (value_type)PARSER_CONST_PI);
-    assert(!oerr.has_error() && "Error defining _pi constant");
-    (void)oerr;
-    oerr = DefineConst(_T("_e"), (value_type)PARSER_CONST_E);
-    assert(!oerr.has_error() && "Error defining _e constant");
-    (void)oerr;
+    assertNoError(DefineConst(_T("_pi"), (value_type)PARSER_CONST_PI));
+    assertNoError(DefineConst(_T("_e"), (value_type)PARSER_CONST_E));
 }
 
 //---------------------------------------------------------------------------
@@ -294,8 +297,8 @@ void Parser::InitConst() {
   By default only the unary minus operator is added.
 */
 void Parser::InitOprt() {
-    DefineInfixOprt(_T("-"), UnaryMinus);
-    DefineInfixOprt(_T("+"), UnaryPlus);
+    assertNoError(DefineInfixOprt(_T("-"), UnaryMinus));
+    assertNoError(DefineInfixOprt(_T("+"), UnaryPlus));
 }
 
 //---------------------------------------------------------------------------

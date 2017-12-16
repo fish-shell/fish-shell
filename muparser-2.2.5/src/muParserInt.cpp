@@ -207,6 +207,14 @@ void ParserInt::InitFun() {
     DefineFun(_T("max"), Max);
 }
 
+/// assert that the given optional error \p oerr is not an error.
+/// This is used only during initialization, when it ought to be impossible
+/// to generate an error.
+static void assertNoError(OptionalError oerr) {
+    assert(!oerr.has_error() && "Unexpected error during initialization");
+    (void)oerr;
+}
+
 //---------------------------------------------------------------------------
 /** \brief Initialize operators. */
 void ParserInt::InitOprt() {
@@ -216,31 +224,31 @@ void ParserInt::InitOprt() {
 
     // Disable all built in operators, they wont work with integer numbers
     // since they are designed for floating point numbers
-    DefineInfixOprt(_T("-"), UnaryMinus);
-    DefineInfixOprt(_T("!"), Not);
+    assertNoError(DefineInfixOprt(_T("-"), UnaryMinus));
+    assertNoError(DefineInfixOprt(_T("!"), Not));
 
-    (void)DefineOprt(_T("&"), LogAnd, prLOGIC);
-    (void)DefineOprt(_T("|"), LogOr, prLOGIC);
-    (void)DefineOprt(_T("&&"), And, prLOGIC);
-    (void)DefineOprt(_T("||"), Or, prLOGIC);
+    assertNoError(DefineOprt(_T("&"), LogAnd, prLOGIC));
+    assertNoError(DefineOprt(_T("|"), LogOr, prLOGIC));
+    assertNoError(DefineOprt(_T("&&"), And, prLOGIC));
+    assertNoError(DefineOprt(_T("||"), Or, prLOGIC));
 
-    (void)DefineOprt(_T("<"), Less, prCMP);
-    (void)DefineOprt(_T(">"), Greater, prCMP);
-    (void)DefineOprt(_T("<="), LessEq, prCMP);
-    (void)DefineOprt(_T(">="), GreaterEq, prCMP);
-    (void)DefineOprt(_T("=="), Equal, prCMP);
-    (void)DefineOprt(_T("!="), NotEqual, prCMP);
+    assertNoError(DefineOprt(_T("<"), Less, prCMP));
+    assertNoError(DefineOprt(_T(">"), Greater, prCMP));
+    assertNoError(DefineOprt(_T("<="), LessEq, prCMP));
+    assertNoError(DefineOprt(_T(">="), GreaterEq, prCMP));
+    assertNoError(DefineOprt(_T("=="), Equal, prCMP));
+    assertNoError(DefineOprt(_T("!="), NotEqual, prCMP));
 
-    (void)DefineOprt(_T("+"), Add, prADD_SUB);
-    (void)DefineOprt(_T("-"), Sub, prADD_SUB);
+    assertNoError(DefineOprt(_T("+"), Add, prADD_SUB));
+    assertNoError(DefineOprt(_T("-"), Sub, prADD_SUB));
 
-    (void)DefineOprt(_T("*"), Mul, prMUL_DIV);
-    (void)DefineOprt(_T("/"), Div, prMUL_DIV);
-    (void)DefineOprt(_T("%"), Mod, prMUL_DIV);
+    assertNoError(DefineOprt(_T("*"), Mul, prMUL_DIV));
+    assertNoError(DefineOprt(_T("/"), Div, prMUL_DIV));
+    assertNoError(DefineOprt(_T("%"), Mod, prMUL_DIV));
 
-    (void)DefineOprt(_T("^"), Pow, prPOW, oaRIGHT);
-    (void)DefineOprt(_T(">>"), Shr, prMUL_DIV + 1);
-    (void)DefineOprt(_T("<<"), Shl, prMUL_DIV + 1);
+    assertNoError(DefineOprt(_T("^"), Pow, prPOW, oaRIGHT));
+    assertNoError(DefineOprt(_T(">>"), Shr, prMUL_DIV + 1));
+    assertNoError(DefineOprt(_T("<<"), Shl, prMUL_DIV + 1));
 }
 
 }  // namespace mu

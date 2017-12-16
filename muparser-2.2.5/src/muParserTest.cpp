@@ -47,6 +47,12 @@ static value_type getOrThrow(mu::ValueOrError voerr) {
     return *voerr;
 }
 
+static void throwIfError(mu::OptionalError oerr) {
+    if (oerr.has_error()) {
+        throw oerr.error();
+    }
+}
+
 int ParserTester::c_iCount = 0;
 
 //---------------------------------------------------------------------------------------------
@@ -95,10 +101,10 @@ int ParserTester::TestInterface() {
     Parser p;
 
     try {
-        p.DefineVar(_T("a"), &afVal[0]);
-        p.DefineVar(_T("b"), &afVal[1]);
-        p.DefineVar(_T("c"), &afVal[2]);
-        p.SetExpr(_T("a+b+c"));
+        throwIfError(p.DefineVar(_T("a"), &afVal[0]));
+        throwIfError(p.DefineVar(_T("b"), &afVal[1]));
+        throwIfError(p.DefineVar(_T("c"), &afVal[2]));
+        throwIfError(p.SetExpr(_T("a+b+c")));
         getOrThrow(p.Eval());
     } catch (...) {
         iStat += 1;  // this is not supposed to happen
@@ -283,21 +289,17 @@ int ParserTester::TestBinOprt() {
 //---------------------------------------------------------------------------------------------
 /** \brief Check muParser name restriction enforcement. */
 int ParserTester::TestNames() {
-    int iStat = 0, iErr = 0;
+    int failures = 0;
 
     mu::console() << "testing name restriction enforcement...";
 
     Parser p;
+    OptionalError oerr;
 
-#define PARSER_THROWCHECK(DOMAIN, FAIL, EXPR, ARG) \
-    iErr = 0;                                      \
-    ParserTester::c_iCount++;                      \
-    try {                                          \
-        p.Define##DOMAIN(EXPR, ARG);               \
-    } catch (Parser::exception_type &) {           \
-        iErr = (FAIL == false) ? 0 : 1;            \
-    }                                              \
-    iStat += iErr;
+#define PARSER_THROWCHECK(DOMAIN, SHOULDPASS, EXPR, ARG) \
+    ParserTester::c_iCount++;                            \
+    oerr = p.Define##DOMAIN(EXPR, ARG);                  \
+    failures += (oerr.has_error() == SHOULDPASS);
 
     // constant names
     PARSER_THROWCHECK(Const, false, _T("0a"), 1)
@@ -374,12 +376,12 @@ int ParserTester::TestNames() {
     PARSER_THROWCHECK(Oprt, true, _T("||"), f1of2)
 #undef PARSER_THROWCHECK
 
-    if (iStat == 0)
+    if (failures == 0)
         mu::console() << _T("passed") << endl;
     else
-        mu::console() << _T("\n  failed with ") << iStat << _T(" errors") << endl;
+        mu::console() << _T("\n  failed with ") << failures << _T(" errors") << endl;
 
-    return iStat;
+    return failures;
 }
 
 //---------------------------------------------------------------------------
@@ -970,17 +972,17 @@ int ParserTester::ThrowTest(const string_type &a_str, int a_iErrc, bool a_bFail)
         value_type fVal[] = {1, 1, 1};
         Parser p;
 
-        p.DefineVar(_T("a"), &fVal[0]);
-        p.DefineVar(_T("b"), &fVal[1]);
-        p.DefineVar(_T("c"), &fVal[2]);
-        p.DefinePostfixOprt(_T("{m}"), Milli);
-        p.DefinePostfixOprt(_T("m"), Milli);
+        throwIfError(p.DefineVar(_T("a"), &fVal[0]));
+        throwIfError(p.DefineVar(_T("b"), &fVal[1]));
+        throwIfError(p.DefineVar(_T("c"), &fVal[2]));
+        throwIfError(p.DefinePostfixOprt(_T("{m}"), Milli));
+        throwIfError(p.DefinePostfixOprt(_T("m"), Milli));
         p.DefineFun(_T("ping"), Ping);
         p.DefineFun(_T("valueof"), ValueOf);
         p.DefineFun(_T("strfun1"), StrFun1);
         p.DefineFun(_T("strfun2"), StrFun2);
         p.DefineFun(_T("strfun3"), StrFun3);
-        p.SetExpr(a_str);
+        throwIfError(p.SetExpr(a_str));
         getOrThrow(p.Eval());
     } catch (ParserError &e) {
         // output the formula in case of an failed test
@@ -1021,8 +1023,8 @@ int ParserTester::EqnTestWithVarChange(const string_type &a_str, double a_fVar1,
         value_type var = 0;
 
         // variable
-        p.DefineVar(_T("a"), &var);
-        p.SetExpr(a_str);
+        throwIfError(p.DefineVar(_T("a"), &var));
+        throwIfError(p.SetExpr(a_str));
 
         var = a_fVar1;
         fVal[0] = getOrThrow(p.Eval());
@@ -1069,21 +1071,21 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
 
         p1.reset(new mu::Parser());
         // Add constants
-        p1->DefineConst(_T("pi"), (value_type)PARSER_CONST_PI);
-        p1->DefineConst(_T("e"), (value_type)PARSER_CONST_E);
-        p1->DefineConst(_T("const"), 1);
-        p1->DefineConst(_T("const1"), 2);
-        p1->DefineConst(_T("const2"), 3);
+        throwIfError(p1->DefineConst(_T("pi"), (value_type)PARSER_CONST_PI));
+        throwIfError(p1->DefineConst(_T("e"), (value_type)PARSER_CONST_E));
+        throwIfError(p1->DefineConst(_T("const"), 1));
+        throwIfError(p1->DefineConst(_T("const1"), 2));
+        throwIfError(p1->DefineConst(_T("const2"), 3));
         // string constants
-        p1->DefineStrConst(_T("str1"), _T("1.11"));
-        p1->DefineStrConst(_T("str2"), _T("2.22"));
+        throwIfError(p1->DefineStrConst(_T("str1"), _T("1.11")));
+        throwIfError(p1->DefineStrConst(_T("str2"), _T("2.22")));
         // variables
         value_type vVarVal[] = {1, 2, 3, -2};
-        p1->DefineVar(_T("a"), &vVarVal[0]);
-        p1->DefineVar(_T("aa"), &vVarVal[1]);
-        p1->DefineVar(_T("b"), &vVarVal[1]);
-        p1->DefineVar(_T("c"), &vVarVal[2]);
-        p1->DefineVar(_T("d"), &vVarVal[3]);
+        throwIfError(p1->DefineVar(_T("a"), &vVarVal[0]));
+        throwIfError(p1->DefineVar(_T("aa"), &vVarVal[1]));
+        throwIfError(p1->DefineVar(_T("b"), &vVarVal[1]));
+        throwIfError(p1->DefineVar(_T("c"), &vVarVal[2]));
+        throwIfError(p1->DefineVar(_T("d"), &vVarVal[3]));
 
         // custom value ident functions
         p1->AddValIdent(&ParserTester::IsHexVal);
@@ -1107,9 +1109,9 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
         p1->DefineFun(_T("f5of5"), f5of5);
 
         // binary operators
-        p1->DefineOprt(_T("add"), add, 0);
-        p1->DefineOprt(_T("++"), add, 0);
-        p1->DefineOprt(_T("&"), land, prLAND);
+        throwIfError(p1->DefineOprt(_T("add"), add, 0));
+        throwIfError(p1->DefineOprt(_T("++"), add, 0));
+        throwIfError(p1->DefineOprt(_T("&"), land, prLAND));
 
         // sample functions
         p1->DefineFun(_T("min"), Min);
@@ -1127,16 +1129,16 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
         // infix / postfix operator
         // Note: Identifiers used here do not have any meaning
         //       they are mere placeholders to test certain features.
-        p1->DefineInfixOprt(_T("$"), sign, prPOW + 1);  // sign with high priority
-        p1->DefineInfixOprt(_T("~"), plus2);            // high priority
-        p1->DefineInfixOprt(_T("~~"), plus2);
-        p1->DefinePostfixOprt(_T("{m}"), Milli);
-        p1->DefinePostfixOprt(_T("{M}"), Mega);
-        p1->DefinePostfixOprt(_T("m"), Milli);
-        p1->DefinePostfixOprt(_T("meg"), Mega);
-        p1->DefinePostfixOprt(_T("#"), times3);
-        p1->DefinePostfixOprt(_T("'"), sqr);
-        p1->SetExpr(a_str);
+        throwIfError(p1->DefineInfixOprt(_T("$"), sign, prPOW + 1));  // sign with high priority
+        throwIfError(p1->DefineInfixOprt(_T("~"), plus2));            // high priority
+        throwIfError(p1->DefineInfixOprt(_T("~~"), plus2));
+        throwIfError(p1->DefinePostfixOprt(_T("{m}"), Milli));
+        throwIfError(p1->DefinePostfixOprt(_T("{M}"), Mega));
+        throwIfError(p1->DefinePostfixOprt(_T("m"), Milli));
+        throwIfError(p1->DefinePostfixOprt(_T("meg"), Mega));
+        throwIfError(p1->DefinePostfixOprt(_T("#"), times3));
+        throwIfError(p1->DefinePostfixOprt(_T("'"), sqr));
+        throwIfError(p1->SetExpr(a_str));
 
         // Test bytecode integrity
         // String parsing and bytecode parsing must yield the same result
@@ -1201,13 +1203,13 @@ int ParserTester::EqnTestInt(const string_type &a_str, double a_fRes, bool a_fPa
     try {
         value_type fVal[2] = {-99, -999};  // results: initially should be different
         ParserInt p;
-        p.DefineConst(_T("const1"), 1);
-        p.DefineConst(_T("const2"), 2);
-        p.DefineVar(_T("a"), &vVarVal[0]);
-        p.DefineVar(_T("b"), &vVarVal[1]);
-        p.DefineVar(_T("c"), &vVarVal[2]);
+        throwIfError(p.DefineConst(_T("const1"), 1));
+        throwIfError(p.DefineConst(_T("const2"), 2));
+        throwIfError(p.DefineVar(_T("a"), &vVarVal[0]));
+        throwIfError(p.DefineVar(_T("b"), &vVarVal[1]));
+        throwIfError(p.DefineVar(_T("c"), &vVarVal[2]));
 
-        p.SetExpr(a_str);
+        throwIfError((p.SetExpr(a_str)));
         fVal[0] = getOrThrow(p.Eval());  // result from stringparsing
         fVal[1] = getOrThrow(p.Eval());  // result from bytecode
 

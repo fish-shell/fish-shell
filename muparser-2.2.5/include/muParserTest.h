@@ -95,21 +95,18 @@ class ParserTester  // final
     static ValueOrError land(value_type v1, value_type v2) { return (int)v1 & (int)v2; }
 
     static ValueOrError FirstArg(const value_type* a_afArg, int a_iArgc) {
-        if (!a_iArgc)
-            throw mu::Parser::exception_type(_T("too few arguments for function FirstArg."));
-
+        if (!a_iArgc) return ParserError(_T("too few arguments for function FirstArg."));
         return a_afArg[0];
     }
 
     static ValueOrError LastArg(const value_type* a_afArg, int a_iArgc) {
-        if (!a_iArgc)
-            throw mu::Parser::exception_type(_T("too few arguments for function LastArg."));
+        if (!a_iArgc) return ParserError(_T("too few arguments for function LastArg."));
 
         return a_afArg[a_iArgc - 1];
     }
 
     static ValueOrError Sum(const value_type* a_afArg, int a_iArgc) {
-        if (!a_iArgc) throw mu::Parser::exception_type(_T("too few arguments for function sum."));
+        if (!a_iArgc) return ParserError(_T("too few arguments for function sum."));
 
         value_type fRes = 0;
         for (int i = 0; i < a_iArgc; ++i) fRes += a_afArg[i];

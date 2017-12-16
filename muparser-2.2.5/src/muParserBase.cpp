@@ -1250,15 +1250,10 @@ OptionalError ParserBase::CreateRPN() const {
   uses bytecode instead of string parsing.
 */
 ValueOrError ParserBase::ParseString() const {
-    try {
-        OptionalError oerr = CreateRPN();
-        if (oerr.has_error()) return oerr.error();
-        m_pParseFormula = &ParserBase::ParseCmdCode;
-        return (this->*m_pParseFormula)();
-    } catch (ParserError &exc) {
-        exc.SetFormula(m_pTokenReader->GetExpr());
-        throw;
-    }
+    OptionalError oerr = CreateRPN();
+    if (oerr.has_error()) return oerr.error();
+    m_pParseFormula = &ParserBase::ParseCmdCode;
+    return (this->*m_pParseFormula)();
 }
 
 //---------------------------------------------------------------------------

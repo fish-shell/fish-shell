@@ -288,7 +288,7 @@ class ParserToken {
     }
 
     //------------------------------------------------------------------------------
-    /** \biref Get value of the token.
+    /** \brifef Get value of the token.
 
         Only applicable to variable and value tokens.
     */
@@ -299,7 +299,7 @@ class ParserToken {
             case cmVAR:
                 return *((TBase *)m_pTok);
             default:
-                throw ParserError(ecVAL_EXPECTED);
+                return ParserError(ecVAL_EXPECTED);
         }
     }
 

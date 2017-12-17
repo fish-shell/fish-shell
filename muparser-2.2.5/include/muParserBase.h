@@ -122,10 +122,9 @@ class ParserBase {
         \param a_bAllowOpt A flag indicating this function may be optimized
     */
     template <typename T>
-    void DefineFun(const string_type &a_strName, T a_pFun, bool a_bAllowOpt = true) {
-        auto oerr =
-            AddCallback(a_strName, ParserCallback(a_pFun, a_bAllowOpt), m_FunDef, ValidNameChars());
-        if (oerr.has_error()) throw oerr.error();
+    OptionalError DefineFun(const string_type &a_strName, T a_pFun, bool a_bAllowOpt = true) {
+        return AddCallback(a_strName, ParserCallback(a_pFun, a_bAllowOpt), m_FunDef,
+                           ValidNameChars());
     }
 
     OptionalError DefineOprt(const string_type &a_strName, fun_type2 a_pFun, unsigned a_iPri = 0,

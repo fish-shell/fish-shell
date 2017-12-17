@@ -196,23 +196,23 @@ void ParserInt::InitCharSets() {
     DefineInfixOprtChars(_T("/+-*^?<>=!%&|~'_"));
 }
 
-//---------------------------------------------------------------------------
-/** \brief Initialize the default functions. */
-void ParserInt::InitFun() {
-    DefineFun(_T("sign"), Sign);
-    DefineFun(_T("abs"), Abs);
-    DefineFun(_T("if"), Ite);
-    DefineFun(_T("sum"), Sum);
-    DefineFun(_T("min"), Min);
-    DefineFun(_T("max"), Max);
-}
-
 /// assert that the given optional error \p oerr is not an error.
 /// This is used only during initialization, when it ought to be impossible
 /// to generate an error.
 static void assertNoError(OptionalError oerr) {
     assert(!oerr.has_error() && "Unexpected error during initialization");
     (void)oerr;
+}
+
+//---------------------------------------------------------------------------
+/** \brief Initialize the default functions. */
+void ParserInt::InitFun() {
+    assertNoError(DefineFun(_T("sign"), Sign));
+    assertNoError(DefineFun(_T("abs"), Abs));
+    assertNoError(DefineFun(_T("if"), Ite));
+    assertNoError(DefineFun(_T("sum"), Sum));
+    assertNoError(DefineFun(_T("min"), Min));
+    assertNoError(DefineFun(_T("max"), Max));
 }
 
 //---------------------------------------------------------------------------

@@ -226,6 +226,14 @@ void Parser::InitCharSets() {
     DefineInfixOprtChars(_T("/+-*^?<>=#!$%&|~'_"));
 }
 
+/// assert that the given optional error \p oerr is not an error.
+/// This is used only during initialization, when it ought to be impossible
+/// to generate an error.
+static void assertNoError(OptionalError oerr) {
+    assert(!oerr.has_error() && "Unexpected error during initialization");
+    (void)oerr;
+}
+
 //---------------------------------------------------------------------------
 /** \brief Initialize the default functions. */
 void Parser::InitFun() {
@@ -237,47 +245,39 @@ void Parser::InitFun() {
         // ...
     } else {
         // trigonometric functions
-        DefineFun(_T("sin"), Sin);
-        DefineFun(_T("cos"), Cos);
-        DefineFun(_T("tan"), Tan);
+        assertNoError(DefineFun(_T("sin"), Sin));
+        assertNoError(DefineFun(_T("cos"), Cos));
+        assertNoError(DefineFun(_T("tan"), Tan));
         // arcus functions
-        DefineFun(_T("asin"), ASin);
-        DefineFun(_T("acos"), ACos);
-        DefineFun(_T("atan"), ATan);
-        DefineFun(_T("atan2"), ATan2);
+        assertNoError(DefineFun(_T("asin"), ASin));
+        assertNoError(DefineFun(_T("acos"), ACos));
+        assertNoError(DefineFun(_T("atan"), ATan));
+        assertNoError(DefineFun(_T("atan2"), ATan2));
         // hyperbolic functions
-        DefineFun(_T("sinh"), Sinh);
-        DefineFun(_T("cosh"), Cosh);
-        DefineFun(_T("tanh"), Tanh);
+        assertNoError(DefineFun(_T("sinh"), Sinh));
+        assertNoError(DefineFun(_T("cosh"), Cosh));
+        assertNoError(DefineFun(_T("tanh"), Tanh));
         // arcus hyperbolic functions
-        DefineFun(_T("asinh"), ASinh);
-        DefineFun(_T("acosh"), ACosh);
-        DefineFun(_T("atanh"), ATanh);
+        assertNoError(DefineFun(_T("asinh"), ASinh));
+        assertNoError(DefineFun(_T("acosh"), ACosh));
+        assertNoError(DefineFun(_T("atanh"), ATanh));
         // Logarithm functions
-        DefineFun(_T("log2"), Log2);
-        DefineFun(_T("log10"), Log10);
-        DefineFun(_T("log"), Ln);
-        DefineFun(_T("ln"), Ln);
+        assertNoError(DefineFun(_T("log2"), Log2));
+        assertNoError(DefineFun(_T("log10"), Log10));
+        assertNoError(DefineFun(_T("log"), Ln));
+        assertNoError(DefineFun(_T("ln"), Ln));
         // misc
-        DefineFun(_T("exp"), Exp);
-        DefineFun(_T("sqrt"), Sqrt);
-        DefineFun(_T("sign"), Sign);
-        DefineFun(_T("rint"), Rint);
-        DefineFun(_T("abs"), Abs);
+        assertNoError(DefineFun(_T("exp"), Exp));
+        assertNoError(DefineFun(_T("sqrt"), Sqrt));
+        assertNoError(DefineFun(_T("sign"), Sign));
+        assertNoError(DefineFun(_T("rint"), Rint));
+        assertNoError(DefineFun(_T("abs"), Abs));
         // Functions with variable number of arguments
-        DefineFun(_T("sum"), Sum);
-        DefineFun(_T("avg"), Avg);
-        DefineFun(_T("min"), Min);
-        DefineFun(_T("max"), Max);
+        assertNoError(DefineFun(_T("sum"), Sum));
+        assertNoError(DefineFun(_T("avg"), Avg));
+        assertNoError(DefineFun(_T("min"), Min));
+        assertNoError(DefineFun(_T("max"), Max));
     }
-}
-
-/// assert that the given optional error \p oerr is not an error.
-/// This is used only during initialization, when it ought to be impossible
-/// to generate an error.
-static void assertNoError(OptionalError oerr) {
-    assert(!oerr.has_error() && "Unexpected error during initialization");
-    (void)oerr;
 }
 
 //---------------------------------------------------------------------------

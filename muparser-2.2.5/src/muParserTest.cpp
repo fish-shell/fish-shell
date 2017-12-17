@@ -977,11 +977,11 @@ int ParserTester::ThrowTest(const string_type &a_str, int a_iErrc, bool a_bFail)
         throwIfError(p.DefineVar(_T("c"), &fVal[2]));
         throwIfError(p.DefinePostfixOprt(_T("{m}"), Milli));
         throwIfError(p.DefinePostfixOprt(_T("m"), Milli));
-        p.DefineFun(_T("ping"), Ping);
-        p.DefineFun(_T("valueof"), ValueOf);
-        p.DefineFun(_T("strfun1"), StrFun1);
-        p.DefineFun(_T("strfun2"), StrFun2);
-        p.DefineFun(_T("strfun3"), StrFun3);
+        throwIfError(p.DefineFun(_T("ping"), Ping));
+        throwIfError(p.DefineFun(_T("valueof"), ValueOf));
+        throwIfError(p.DefineFun(_T("strfun1"), StrFun1));
+        throwIfError(p.DefineFun(_T("strfun2"), StrFun2));
+        throwIfError(p.DefineFun(_T("strfun3"), StrFun3));
         throwIfError(p.SetExpr(a_str));
         getOrThrow(p.Eval());
     } catch (ParserError &e) {
@@ -1091,22 +1091,22 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
         p1->AddValIdent(&ParserTester::IsHexVal);
 
         // functions
-        p1->DefineFun(_T("ping"), Ping);
-        p1->DefineFun(_T("f1of1"), f1of1);  // one parameter
-        p1->DefineFun(_T("f1of2"), f1of2);  // two parameter
-        p1->DefineFun(_T("f2of2"), f2of2);
-        p1->DefineFun(_T("f1of3"), f1of3);  // three parameter
-        p1->DefineFun(_T("f2of3"), f2of3);
-        p1->DefineFun(_T("f3of3"), f3of3);
-        p1->DefineFun(_T("f1of4"), f1of4);  // four parameter
-        p1->DefineFun(_T("f2of4"), f2of4);
-        p1->DefineFun(_T("f3of4"), f3of4);
-        p1->DefineFun(_T("f4of4"), f4of4);
-        p1->DefineFun(_T("f1of5"), f1of5);  // five parameter
-        p1->DefineFun(_T("f2of5"), f2of5);
-        p1->DefineFun(_T("f3of5"), f3of5);
-        p1->DefineFun(_T("f4of5"), f4of5);
-        p1->DefineFun(_T("f5of5"), f5of5);
+        throwIfError(p1->DefineFun(_T("ping"), Ping));
+        throwIfError(p1->DefineFun(_T("f1of1"), f1of1));  // one parameter
+        throwIfError(p1->DefineFun(_T("f1of2"), f1of2));  // two parameter
+        throwIfError(p1->DefineFun(_T("f2of2"), f2of2));
+        throwIfError(p1->DefineFun(_T("f1of3"), f1of3));  // three parameter
+        throwIfError(p1->DefineFun(_T("f2of3"), f2of3));
+        throwIfError(p1->DefineFun(_T("f3of3"), f3of3));
+        throwIfError(p1->DefineFun(_T("f1of4"), f1of4));  // four parameter
+        throwIfError(p1->DefineFun(_T("f2of4"), f2of4));
+        throwIfError(p1->DefineFun(_T("f3of4"), f3of4));
+        throwIfError(p1->DefineFun(_T("f4of4"), f4of4));
+        throwIfError(p1->DefineFun(_T("f1of5"), f1of5));  // five parameter
+        throwIfError(p1->DefineFun(_T("f2of5"), f2of5));
+        throwIfError(p1->DefineFun(_T("f3of5"), f3of5));
+        throwIfError(p1->DefineFun(_T("f4of5"), f4of5));
+        throwIfError(p1->DefineFun(_T("f5of5"), f5of5));
 
         // binary operators
         throwIfError(p1->DefineOprt(_T("add"), add, 0));
@@ -1114,17 +1114,17 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
         throwIfError(p1->DefineOprt(_T("&"), land, prLAND));
 
         // sample functions
-        p1->DefineFun(_T("min"), Min);
-        p1->DefineFun(_T("max"), Max);
-        p1->DefineFun(_T("sum"), Sum);
-        p1->DefineFun(_T("valueof"), ValueOf);
-        p1->DefineFun(_T("atof"), StrToFloat);
-        p1->DefineFun(_T("strfun1"), StrFun1);
-        p1->DefineFun(_T("strfun2"), StrFun2);
-        p1->DefineFun(_T("strfun3"), StrFun3);
-        p1->DefineFun(_T("lastArg"), LastArg);
-        p1->DefineFun(_T("firstArg"), FirstArg);
-        p1->DefineFun(_T("order"), FirstArg);
+        throwIfError(p1->DefineFun(_T("min"), Min));
+        throwIfError(p1->DefineFun(_T("max"), Max));
+        throwIfError(p1->DefineFun(_T("sum"), Sum));
+        throwIfError(p1->DefineFun(_T("valueof"), ValueOf));
+        throwIfError(p1->DefineFun(_T("atof"), StrToFloat));
+        throwIfError(p1->DefineFun(_T("strfun1"), StrFun1));
+        throwIfError(p1->DefineFun(_T("strfun2"), StrFun2));
+        throwIfError(p1->DefineFun(_T("strfun3"), StrFun3));
+        throwIfError(p1->DefineFun(_T("lastArg"), LastArg));
+        throwIfError(p1->DefineFun(_T("firstArg"), FirstArg));
+        throwIfError(p1->DefineFun(_T("order"), FirstArg));
 
         // infix / postfix operator
         // Note: Identifiers used here do not have any meaning

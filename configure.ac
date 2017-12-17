@@ -212,11 +212,8 @@ AS_IF([test "$use_doxygen" != "no"],
 AC_SYS_LARGEFILE
 
 
-# Fish does not use exceptions itself. However the MuParser library does so we
-# need to enable support for them and pay the cost of larger code. Note:
-# Enabling exceptions increases the compiled code size but to avoid that we
-# would have to maintain our own patches to the MuParser code.
-#CXXFLAGS="$CXXFLAGS -fno-exceptions"
+# Fish does not use exceptions.
+CXXFLAGS="$CXXFLAGS -fno-exceptions"
 
 #
 # Set some warning flags

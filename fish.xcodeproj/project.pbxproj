@@ -379,7 +379,6 @@
 		D068222E1F5149B500040321 /* muParserDLL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822251F51498700040321 /* muParserDLL.cpp */; };
 		D068222F1F5149B500040321 /* muParserError.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822261F51498700040321 /* muParserError.cpp */; };
 		D06822301F5149B500040321 /* muParserInt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822271F51498700040321 /* muParserInt.cpp */; };
-		D06822311F5149B500040321 /* muParserTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822281F51498700040321 /* muParserTest.cpp */; };
 		D06822321F5149B500040321 /* muParserTokenReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822291F51498700040321 /* muParserTokenReader.cpp */; };
 		D07B247315BCC15700D4ADB4 /* add-shell in Resources */ = {isa = PBXBuildFile; fileRef = D07B247215BCC15700D4ADB4 /* add-shell */; };
 		D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = D07B247515BCC4BE00D4ADB4 /* install.sh */; };
@@ -822,7 +821,6 @@
 		D06822251F51498700040321 /* muParserDLL.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserDLL.cpp; sourceTree = "<group>"; };
 		D06822261F51498700040321 /* muParserError.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserError.cpp; sourceTree = "<group>"; };
 		D06822271F51498700040321 /* muParserInt.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserInt.cpp; sourceTree = "<group>"; };
-		D06822281F51498700040321 /* muParserTest.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserTest.cpp; sourceTree = "<group>"; };
 		D06822291F51498700040321 /* muParserTokenReader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserTokenReader.cpp; sourceTree = "<group>"; };
 		D07B247215BCC15700D4ADB4 /* add-shell */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "add-shell"; path = "build_tools/osx_package_scripts/add-shell"; sourceTree = "<group>"; };
 		D07B247515BCC4BE00D4ADB4 /* install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = install.sh; path = osx/install.sh; sourceTree = "<group>"; };
@@ -1082,7 +1080,6 @@
 				D06822251F51498700040321 /* muParserDLL.cpp */,
 				D06822261F51498700040321 /* muParserError.cpp */,
 				D06822271F51498700040321 /* muParserInt.cpp */,
-				D06822281F51498700040321 /* muParserTest.cpp */,
 				D06822291F51498700040321 /* muParserTokenReader.cpp */,
 			);
 			path = src;
@@ -1930,7 +1927,6 @@
 				D068222E1F5149B500040321 /* muParserDLL.cpp in Sources */,
 				D068222F1F5149B500040321 /* muParserError.cpp in Sources */,
 				D06822301F5149B500040321 /* muParserInt.cpp in Sources */,
-				D06822311F5149B500040321 /* muParserTest.cpp in Sources */,
 				D06822321F5149B500040321 /* muParserTokenReader.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2432,6 +2428,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2485,6 +2482,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;

@@ -14,11 +14,11 @@ math 5 \* -2
 math -- -4 / 2
 math -- '-4 * 2'
 
-logmsg Validate how bare variables in an epxression are handled
-math x + 1
+logmsg Validate how variables in an expression are handled
+math $x + 1
 set x 1
-math x + 1
+math $x + 1
 set x 3
 set y 1.5
-math '-x * y'
-math -s1 '-x * y'
+math "-$x * $y"
+math -s1 "-$x * $y"

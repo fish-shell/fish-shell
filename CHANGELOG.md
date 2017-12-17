@@ -9,7 +9,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `read` now requires at least one var name (#4220).
 - `set x[1] x[2] a b` is no longer valid syntax (#4236).
 - For loop control variables are no longer local to the for block (#1935).
-- Bracketed paste disabled for iTerm (#4575).
+- A message related to bracketed paste has been worked around by disabling $PWD reporting for iTerm (#4575).
 
 ## Notable fixes and improvements
 - `wait` builtin is added for waiting on processes (#4498).

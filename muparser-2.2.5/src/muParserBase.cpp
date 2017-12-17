@@ -1470,7 +1470,10 @@ void ParserBase::StackDump(const ParserStack<token_type> &a_stVal,
 */
 void ParserBase::Eval(std::vector<ValueOrError> *outResult) const {
     ValueOrError v = (this->*m_pParseFormula)();
-    if (v.has_error()) throw v.error();
+    if (v.has_error()) {
+        outResult->push_back(std::move(v));
+        return;
+    }
     int stackSize = m_nFinalResultIdx;
 
     // (for historic reasons the stack starts at position 1)

@@ -270,9 +270,6 @@ class ParserBase {
     string_type m_sOprtChars;       ///< Charset for postfix/ binary operator tokens
     string_type m_sInfixOprtChars;  ///< Charset for infix operator tokens
 
-    mutable int
-        m_nIfElseCounter;  ///< Internal counter for keeping track of nested if-then-else clauses
-
     // items merely used for caching state information
     mutable valbuf_type
         m_vStackBuffer;  ///< This is merely a buffer used for the stack in the cmd parsing routine

@@ -79,7 +79,6 @@ ParserBase::ParserBase()
       m_sNameChars(),
       m_sOprtChars(),
       m_sInfixOprtChars(),
-      m_nIfElseCounter(0),
       m_vStackBuffer(),
       m_nFinalResultIdx(0) {
     InitTokenReader();
@@ -144,7 +143,6 @@ void ParserBase::ReInit() const {
     m_vStringBuf.clear();
     m_vRPN.clear();
     m_pTokenReader->ReInit();
-    m_nIfElseCounter = 0;
 }
 
 //---------------------------------------------------------------------------
@@ -1003,6 +1001,7 @@ ValueOrError ParserBase::ExecuteRPN() const {
 //---------------------------------------------------------------------------
 OptionalError ParserBase::CreateRPN() const {
     if (!m_pTokenReader->GetExpr().length()) return ParserError(ecUNEXPECTED_EOF, 0);
+    int ifElseCounter = 0;
 
     ParserStack<token_type> stOpt, stVal;
     ParserStack<int> stArgCount;
@@ -1044,8 +1043,8 @@ OptionalError ParserBase::CreateRPN() const {
             }
 
             case cmELSE:
-                m_nIfElseCounter--;
-                if (m_nIfElseCounter < 0) return Error(ecMISPLACED_COLON, m_pTokenReader->GetPos());
+                ifElseCounter--;
+                if (ifElseCounter < 0) return Error(ecMISPLACED_COLON, m_pTokenReader->GetPos());
 
                 oerr = ApplyRemainingOprt(stOpt, stVal);
                 if (oerr.has_error()) return oerr.error();
@@ -1111,7 +1110,7 @@ OptionalError ParserBase::CreateRPN() const {
             // case cmOR:
             // case cmXOR:
             case cmIF:
-                m_nIfElseCounter++;
+                ifElseCounter++;
             // fallthrough intentional (no break!)
 
             case cmLAND:
@@ -1203,7 +1202,7 @@ OptionalError ParserBase::CreateRPN() const {
 
     if (ParserBase::g_DbgDumpCmdCode) m_vRPN.AsciiDump();
 
-    if (m_nIfElseCounter > 0) return Error(ecMISSING_ELSE_CLAUSE);
+    if (ifElseCounter > 0) return Error(ecMISSING_ELSE_CLAUSE);
 
     // get the last value (= final result) from the stack
     assert(stArgCount.size() == 1 && "Expected arg count of 1");

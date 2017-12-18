@@ -190,8 +190,7 @@ COND_USE_SOTWOSYMLINKS_1___muParser_dll___so_symlinks_uninst_cmd = rm -f \
 @COND_USE_SOVERSOLARIS_1@	$(LIBPREFIX)muparser$(DEBUG_BUILD_POSTFIX).$(DLLIMP_SUFFIX)
 @COND_PLATFORM_MACOSX_1@__muParser_dll___macver = \
 @COND_PLATFORM_MACOSX_1@	-compatibility_version 1 -current_version 1
-@COND_SAMPLES_1@__example1___depname = \
-@COND_SAMPLES_1@	$(top_builddir)/samples/example1/example1$(EXEEXT)
+__example1___depname = $(top_builddir)/samples/example1/example1$(EXEEXT)
 @COND_PLATFORM_MAC_0@__example1___mac_setfilecmd = @true
 @COND_PLATFORM_MAC_1@__example1___mac_setfilecmd = \
 @COND_PLATFORM_MAC_1@	$(SETFILE) -t APPL \

@@ -868,25 +868,6 @@ ValueOrError ParserBase::ExecuteRPN() const {
                 Stack[++sidx] = pTok->Val.data2;
                 continue;
 
-            case cmVARPOW2:
-                buf = *(pTok->Val.ptr);
-                Stack[++sidx] = buf * buf;
-                continue;
-
-            case cmVARPOW3:
-                buf = *(pTok->Val.ptr);
-                Stack[++sidx] = buf * buf * buf;
-                continue;
-
-            case cmVARPOW4:
-                buf = *(pTok->Val.ptr);
-                Stack[++sidx] = buf * buf * buf * buf;
-                continue;
-
-            case cmVARMUL:
-                Stack[++sidx] = *(pTok->Val.ptr) * pTok->Val.data + pTok->Val.data2;
-                continue;
-
             // Next is treatment of numeric functions
             case cmFUNC: {
                 int iArgCount = pTok->Fun.argc;

@@ -145,13 +145,6 @@ enum ECmdCode {
     cmVAR = 20,      ///< variable item
     cmVAL = 21,      ///< value item
 
-    // For optimization purposes
-    cmVARPOW2,
-    cmVARPOW3,
-    cmVARPOW4,
-    cmVARMUL,
-    cmPOW2,
-
     // operators and functions
     cmFUNC,          ///< Code for a generic function item
     cmFUNC_STR,      ///< Code for a function with a string parameter

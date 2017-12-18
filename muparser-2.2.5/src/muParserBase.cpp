@@ -24,7 +24,6 @@
 */
 
 #include "muParserBase.h"
-#include "muParserTemplateMagic.h"
 
 //--- Standard includes ------------------------------------------------------------------------
 #include <algorithm>

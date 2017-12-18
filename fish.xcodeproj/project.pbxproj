@@ -806,7 +806,6 @@
 		D06821FF1F51498700040321 /* muParserDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserDef.h; sourceTree = "<group>"; };
 		D06822021F51498700040321 /* muParserFixes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserFixes.h; sourceTree = "<group>"; };
 		D06822031F51498700040321 /* muParserInt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserInt.h; sourceTree = "<group>"; };
-		D06822051F51498700040321 /* muParserTemplateMagic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserTemplateMagic.h; sourceTree = "<group>"; };
 		D06822061F51498700040321 /* muParserTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserTest.h; sourceTree = "<group>"; };
 		D06822071F51498700040321 /* muParserToken.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserToken.h; sourceTree = "<group>"; };
 		D06822081F51498700040321 /* muParserTokenReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserTokenReader.h; sourceTree = "<group>"; };
@@ -1054,7 +1053,6 @@
 				D06821FF1F51498700040321 /* muParserDef.h */,
 				D06822021F51498700040321 /* muParserFixes.h */,
 				D06822031F51498700040321 /* muParserInt.h */,
-				D06822051F51498700040321 /* muParserTemplateMagic.h */,
 				D06822061F51498700040321 /* muParserTest.h */,
 				D06822071F51498700040321 /* muParserToken.h */,
 				D06822081F51498700040321 /* muParserTokenReader.h */,

@@ -33,7 +33,6 @@
 #include <vector>
 
 #include "muParserDef.h"
-#include "muParserTemplateMagic.h"
 #include "muParserToken.h"
 
 namespace mu {

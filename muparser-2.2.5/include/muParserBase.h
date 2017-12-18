@@ -67,14 +67,8 @@ class ParserBase {
     */
     typedef ValueOrError (ParserBase::*ParseFunction)() const;
 
-    /** \brief Type used for storing an array of values. */
-    typedef std::vector<value_type> valbuf_type;
-
     /** \brief Type for a vector of strings. */
     typedef std::vector<string_type> stringbuf_type;
-
-    /** \brief Typedef for the token reader. */
-    typedef ParserTokenReader token_reader_type;
 
     /** \brief Type used for parser tokens. */
     typedef ParserToken<value_type, string_type> token_type;
@@ -199,7 +193,6 @@ class ParserBase {
     };
 
    private:
-    void InitTokenReader();
     void ReInit() const;
 
     OptionalError AddCallback(const string_type &a_strName, const ParserCallback &a_Callback,
@@ -247,8 +240,7 @@ class ParserBase {
         m_vStringBuf;  ///< String buffer, used for storing string function arguments
     stringbuf_type m_vStringVarBuf;
 
-    std::auto_ptr<token_reader_type>
-        m_pTokenReader;  ///< Managed pointer to the token reader object.
+    std::unique_ptr<ParserTokenReader> m_pTokenReader;
 
     funmap_type m_FunDef;        ///< Map of function names and pointers.
     funmap_type m_PostOprtDef;   ///< Postfix operator callbacks
@@ -258,16 +250,17 @@ class ParserBase {
     strmap_type m_StrVarDef;     ///< user defined string constants
     varmap_type m_VarDef;        ///< user defind variables.
 
-    bool m_bBuiltInOp;  ///< Flag that can be used for switching built in operators on and off
+    bool m_bBuiltInOp =
+        true;  ///< Flag that can be used for switching built in operators on and off
 
     string_type m_sNameChars;       ///< Charset for names
     string_type m_sOprtChars;       ///< Charset for postfix/ binary operator tokens
     string_type m_sInfixOprtChars;  ///< Charset for infix operator tokens
 
     // items merely used for caching state information
-    mutable valbuf_type
-        m_vStackBuffer;  ///< This is merely a buffer used for the stack in the cmd parsing routine
-    mutable int m_nFinalResultIdx;
+    /// This is merely a buffer used for the stack in the cmd parsing routine
+    mutable std::vector<value_type> m_vStackBuffer;
+    mutable int m_nFinalResultIdx = 0;
 };
 }  // namespace mu
 

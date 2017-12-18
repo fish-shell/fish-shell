@@ -83,9 +83,6 @@ class ParserByteCode {
     /** \brief Token type for internal use only. */
     typedef ParserToken<value_type, string_type> token_type;
 
-    /** \brief Token vector for storing the RPN. */
-    typedef std::vector<SToken> rpn_type;
-
     /** \brief Position in the Calculation array. */
     unsigned m_iStackPos;
 
@@ -93,7 +90,7 @@ class ParserByteCode {
     std::size_t m_iMaxStackSize;
 
     /** \brief The actual rpn storage. */
-    rpn_type m_vRPN;
+    std::vector<SToken> m_vRPN;
 
    public:
     ParserByteCode();

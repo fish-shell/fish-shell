@@ -64,25 +64,7 @@ const char_type *ParserBase::c_DefaultOprt[] = {
     \param a_szFormula the formula to interpret.
     \throw ParserException if a_szFormula is null.
 */
-ParserBase::ParserBase()
-    : m_vRPN(),
-      m_vStringBuf(),
-      m_pTokenReader(),
-      m_FunDef(),
-      m_PostOprtDef(),
-      m_InfixOprtDef(),
-      m_OprtDef(),
-      m_ConstDef(),
-      m_StrVarDef(),
-      m_VarDef(),
-      m_bBuiltInOp(true),
-      m_sNameChars(),
-      m_sOprtChars(),
-      m_sInfixOprtChars(),
-      m_vStackBuffer(),
-      m_nFinalResultIdx(0) {
-    InitTokenReader();
-}
+ParserBase::ParserBase() : m_pTokenReader(new ParserTokenReader(this)) {}
 
 //---------------------------------------------------------------------------
 ParserBase::~ParserBase() = default;
@@ -123,16 +105,6 @@ void ParserBase::ResetLocale() {
     s_locale = std::locale(std::locale("C"), new change_dec_sep<char_type>('.'));
     SetArgSep(',');
 }
-
-//---------------------------------------------------------------------------
-/** \brief Initialize the token reader.
-
-  Create new token reader object and submit pointers to function, operator,
-  constant and variable definitions.
-
-  \post m_pTokenReader.get()!=0
-*/
-void ParserBase::InitTokenReader() { m_pTokenReader.reset(new token_reader_type(this)); }
 
 //---------------------------------------------------------------------------
 /** \brief Reset parser to string parsing mode and clear internal buffers.
@@ -539,7 +511,6 @@ OptionalError ParserBase::ApplyStrFunc(const token_type &a_FunTok,
         return Error(ecVAL_EXPECTED, m_pTokenReader->GetPos(), a_FunTok.GetAsString());
     }
 
-    // string functions won't be optimized
     m_vRPN.AddStrFun(pFunc, a_FunTok.GetArgCount(), a_vArg.back().GetIdx());
     return {};
 }
@@ -766,7 +737,6 @@ ValueOrError ParserBase::InvokeFunction(generic_fun_type func, const value_type 
 ValueOrError ParserBase::ExecuteRPN() const {
     assert(! m_vRPN.empty() && "Missing RPN");
     value_type *Stack = &m_vStackBuffer[0];
-    value_type buf;
     int sidx(0);
     for (const SToken *pTok = m_vRPN.GetBase(); pTok->Cmd != cmEND; ++pTok) {
         switch (pTok->Cmd) {

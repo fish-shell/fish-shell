@@ -179,27 +179,30 @@ void ParserByteCode::Finalize() {
     SToken tok;
     tok.Cmd = cmEND;
     m_vRPN.push_back(tok);
-    rpn_type(m_vRPN).swap(m_vRPN);  // shrink bytecode vector to fit
+    m_vRPN.shrink_to_fit();
 
     // Determine the if-then-else jump offsets
     ParserStack<int> stIf, stElse;
-    int idx;
     for (int i = 0; i < (int)m_vRPN.size(); ++i) {
         switch (m_vRPN[i].Cmd) {
             case cmIF:
                 stIf.push_back(i);
                 break;
 
-            case cmELSE:
+            case cmELSE: {
+                int idx = stIf.back();
+                stIf.pop_back();
+                m_vRPN[idx].Oprt.offset = i - idx;
                 stElse.push_back(i);
-                idx = stIf.pop();
-                m_vRPN[idx].Oprt.offset = i - idx;
                 break;
+            }
 
-            case cmENDIF:
-                idx = stElse.pop();
+            case cmENDIF: {
+                int idx = stElse.back();
+                stElse.pop_back();
                 m_vRPN[idx].Oprt.offset = i - idx;
                 break;
+            }
 
             default:
                 break;

@@ -788,7 +788,7 @@ ValueOrError ParserBase::ExecuteRPN() const {
 
             case cmPOW:
                 --sidx;
-                Stack[sidx] = MathImpl<value_type>::Pow(Stack[sidx], Stack[1 + sidx]);
+                Stack[sidx] = std::pow(Stack[sidx], Stack[1 + sidx]);
                 continue;
 
             case cmLAND:

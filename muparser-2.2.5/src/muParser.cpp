@@ -49,21 +49,19 @@ namespace mu {
 
 //---------------------------------------------------------------------------
 // Trigonometric function
-ValueOrError Parser::Sin(value_type v) { return MathImpl<value_type>::Sin(v); }
-ValueOrError Parser::Cos(value_type v) { return MathImpl<value_type>::Cos(v); }
-ValueOrError Parser::Tan(value_type v) { return MathImpl<value_type>::Tan(v); }
-ValueOrError Parser::ASin(value_type v) { return MathImpl<value_type>::ASin(v); }
-ValueOrError Parser::ACos(value_type v) { return MathImpl<value_type>::ACos(v); }
-ValueOrError Parser::ATan(value_type v) { return MathImpl<value_type>::ATan(v); }
-ValueOrError Parser::ATan2(value_type v1, value_type v2) {
-    return MathImpl<value_type>::ATan2(v1, v2);
-}
-ValueOrError Parser::Sinh(value_type v) { return MathImpl<value_type>::Sinh(v); }
-ValueOrError Parser::Cosh(value_type v) { return MathImpl<value_type>::Cosh(v); }
-ValueOrError Parser::Tanh(value_type v) { return MathImpl<value_type>::Tanh(v); }
-ValueOrError Parser::ASinh(value_type v) { return MathImpl<value_type>::ASinh(v); }
-ValueOrError Parser::ACosh(value_type v) { return MathImpl<value_type>::ACosh(v); }
-ValueOrError Parser::ATanh(value_type v) { return MathImpl<value_type>::ATanh(v); }
+ValueOrError Parser::Sin(value_type v) { return std::sin(v); }
+ValueOrError Parser::Cos(value_type v) { return std::cos(v); }
+ValueOrError Parser::Tan(value_type v) { return std::tan(v); }
+ValueOrError Parser::ASin(value_type v) { return std::asin(v); }
+ValueOrError Parser::ACos(value_type v) { return std::acos(v); }
+ValueOrError Parser::ATan(value_type v) { return std::atan(v); }
+ValueOrError Parser::ATan2(value_type v1, value_type v2) { return std::atan2(v1, v2); }
+ValueOrError Parser::Sinh(value_type v) { return std::sinh(v); }
+ValueOrError Parser::Cosh(value_type v) { return std::cosh(v); }
+ValueOrError Parser::Tanh(value_type v) { return std::tanh(v); }
+ValueOrError Parser::ASinh(value_type v) { return std::asinh(v); }
+ValueOrError Parser::ACosh(value_type v) { return std::acosh(v); }
+ValueOrError Parser::ATanh(value_type v) { return std::atanh(v); }
 
 //---------------------------------------------------------------------------
 // Logarithm functions
@@ -74,7 +72,7 @@ ValueOrError Parser::Log2(value_type v) {
     if (v <= 0) return ParserError(ecDOMAIN_ERROR, _T("Log2"));
 #endif
 
-    return MathImpl<value_type>::Log2(v);
+    return std::log2(v);
 }
 
 // Logarithm base 10
@@ -83,7 +81,7 @@ ValueOrError Parser::Log10(value_type v) {
     if (v <= 0) return ParserError(ecDOMAIN_ERROR, _T("Log10"));
 #endif
 
-    return MathImpl<value_type>::Log10(v);
+    return std::log10(v);
 }
 
 // Logarithm base e (natural logarithm)
@@ -92,22 +90,25 @@ ValueOrError Parser::Ln(value_type v) {
     if (v <= 0) return ParserError(ecDOMAIN_ERROR, _T("Ln"));
 #endif
 
-    return MathImpl<value_type>::Log(v);
+    return std::log(v);
 }
 
 //---------------------------------------------------------------------------
 //  misc
-ValueOrError Parser::Exp(value_type v) { return MathImpl<value_type>::Exp(v); }
-ValueOrError Parser::Abs(value_type v) { return MathImpl<value_type>::Abs(v); }
+ValueOrError Parser::Exp(value_type v) { return std::exp(v); }
+ValueOrError Parser::Abs(value_type v) { return std::abs(v); }
 ValueOrError Parser::Sqrt(value_type v) {
 #ifdef MUP_MATH_EXCEPTIONS
     if (v < 0) return ParserError(ecDOMAIN_ERROR, _T("sqrt"));
 #endif
 
-    return MathImpl<value_type>::Sqrt(v);
+    return std::sqrt(v);
 }
-ValueOrError Parser::Rint(value_type v) { return MathImpl<value_type>::Rint(v); }
-ValueOrError Parser::Sign(value_type v) { return MathImpl<value_type>::Sign(v); }
+ValueOrError Parser::Rint(value_type v) { return std::floor(v + 0.5); }
+ValueOrError Parser::Sign(value_type v) {
+    // return 1, 0, -1 according to whether v is positive, zero, negative.
+    return (v > 0) - (v < 0);
+}
 
 //---------------------------------------------------------------------------
 /** \brief Callback for the unary minus operator.

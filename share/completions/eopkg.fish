@@ -34,11 +34,11 @@ end
 
 # Print additional completion
 function __fish_eopkg_print_components -d "Print list of components"
-    eopkg list-components -N | cut -d ' ' -f 1
+    eopkg list-components -N | string replace -r ' .*' ''
 end
 
 function __fish_eopkg_print_repos -d "Print list of repositories"
-    eopkg list-repo -N | grep active | cut -d ' ' -f 1
+    eopkg list-repo -N | string match -e active | string replace -r ' .*' ''
 end
 
 # Setup additional completion

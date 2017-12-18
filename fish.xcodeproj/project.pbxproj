@@ -804,11 +804,8 @@
 		D06821FD1F51498700040321 /* muParserBytecode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserBytecode.h; sourceTree = "<group>"; };
 		D06821FE1F51498700040321 /* muParserCallback.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserCallback.h; sourceTree = "<group>"; };
 		D06821FF1F51498700040321 /* muParserDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserDef.h; sourceTree = "<group>"; };
-		D06822001F51498700040321 /* muParserDLL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserDLL.h; sourceTree = "<group>"; };
-		D06822011F51498700040321 /* muParserError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserError.h; sourceTree = "<group>"; };
 		D06822021F51498700040321 /* muParserFixes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserFixes.h; sourceTree = "<group>"; };
 		D06822031F51498700040321 /* muParserInt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserInt.h; sourceTree = "<group>"; };
-		D06822041F51498700040321 /* muParserStack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserStack.h; sourceTree = "<group>"; };
 		D06822051F51498700040321 /* muParserTemplateMagic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserTemplateMagic.h; sourceTree = "<group>"; };
 		D06822061F51498700040321 /* muParserTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserTest.h; sourceTree = "<group>"; };
 		D06822071F51498700040321 /* muParserToken.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserToken.h; sourceTree = "<group>"; };
@@ -1055,11 +1052,8 @@
 				D06821FD1F51498700040321 /* muParserBytecode.h */,
 				D06821FE1F51498700040321 /* muParserCallback.h */,
 				D06821FF1F51498700040321 /* muParserDef.h */,
-				D06822001F51498700040321 /* muParserDLL.h */,
-				D06822011F51498700040321 /* muParserError.h */,
 				D06822021F51498700040321 /* muParserFixes.h */,
 				D06822031F51498700040321 /* muParserInt.h */,
-				D06822041F51498700040321 /* muParserStack.h */,
 				D06822051F51498700040321 /* muParserTemplateMagic.h */,
 				D06822061F51498700040321 /* muParserTest.h */,
 				D06822071F51498700040321 /* muParserToken.h */,

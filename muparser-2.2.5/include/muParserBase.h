@@ -130,19 +130,13 @@ class ParserBase {
     OptionalError DefineInfixOprt(const string_type &a_strName, fun_type1 a_pOprt,
                                   int a_iPrec = prINFIX);
 
-    // Clear user defined variables, constants or functions
-    void ClearVar();
-    void ClearFun();
+    // Clear user defined constants or operators.
     void ClearConst();
-    void ClearInfixOprt();
     void ClearPostfixOprt();
-    void ClearOprt();
 
     void RemoveVar(const string_type &a_strVarName);
     const varmap_type &GetVar() const;
     const string_type &GetExpr() const;
-    const funmap_type &GetFunDef() const;
-    string_type GetVersion(EParserVersionInfo eInfo = pviFULL) const;
 
     const char_type **GetOprtDef() const;
     void DefineNameChars(const char_type *a_szCharset);

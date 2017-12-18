@@ -173,9 +173,6 @@ enum ETypeCode {
 };
 
 //------------------------------------------------------------------------------
-enum EParserVersionInfo { pviBRIEF, pviFULL };
-
-//------------------------------------------------------------------------------
 /** \brief Parser operator precedence values. */
 enum EOprtAssociativity { oaLEFT = 0, oaRIGHT = 1, oaNONE = 2 };
 

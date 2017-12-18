@@ -149,51 +149,6 @@ void ParserBase::ReInit() const {
 void ParserBase::OnDetectVar(string_type * /*pExpr*/, int & /*nStart*/, int & /*nEnd*/) {}
 
 //---------------------------------------------------------------------------
-/** \brief Returns the version of muparser.
-    \param eInfo A flag indicating whether the full version info should be
-                 returned or not.
-
-  Format is as follows: "MAJOR.MINOR (COMPILER_FLAGS)" The COMPILER_FLAGS
-  are returned only if eInfo==pviFULL.
-*/
-string_type ParserBase::GetVersion(EParserVersionInfo eInfo) const {
-    stringstream_type ss;
-
-    ss << MUP_VERSION;
-
-    if (eInfo == pviFULL) {
-        ss << _T(" (") << MUP_VERSION_DATE;
-        ss << std::dec << _T("; ") << sizeof(void *) * 8 << _T("BIT");
-
-#ifdef _DEBUG
-        ss << _T("; DEBUG");
-#else
-        ss << _T("; RELEASE");
-#endif
-
-#ifdef _UNICODE
-        ss << _T("; UNICODE");
-#else
-#ifdef _MBCS
-        ss << _T("; MBCS");
-#else
-        ss << _T("; ASCII");
-#endif
-#endif
-
-#if defined(MUP_MATH_EXCEPTIONS)
-        ss << _T("; MATHEXC");
-//#else
-//      ss << _T("; NO_MATHEXC");
-#endif
-
-        ss << _T(")");
-    }
-
-    return ss.str();
-}
-
-//---------------------------------------------------------------------------
 /** \brief Add a value parsing function.
 
     When parsing an expression muParser tries to detect values in the expression
@@ -541,18 +496,6 @@ EOprtAssociativity ParserBase::GetOprtAssociativity(const token_type &a_Tok) con
             return oaNONE;
     }
 }
-
-//---------------------------------------------------------------------------
-/** \brief Return prototypes of all parser functions.
-    \return #m_FunDef
-    \sa FunProt
-
-    The return type is a map of the public type #funmap_type containing the prototype
-    definitions for all numerical parser functions. String functions are not part of
-    this map. The Prototype definition is encapsulated in objects of the class FunProt
-    one per parser function each associated with function names via a map construct.
-*/
-const funmap_type &ParserBase::GetFunDef() const { return m_FunDef; }
 
 //---------------------------------------------------------------------------
 /** \brief Retrieve the formula. */
@@ -1241,16 +1184,6 @@ ParserError ParserBase::Error(EErrorCodes a_iErrc, int a_iPos, const string_type
 }
 
 //------------------------------------------------------------------------------
-/** \brief Clear all user defined variables.
-
-    Resets the parser to string parsing mode by calling #ReInit.
-*/
-void ParserBase::ClearVar() {
-    m_VarDef.clear();
-    ReInit();
-}
-
-//------------------------------------------------------------------------------
 /** \brief Remove a variable from internal storage.
 
     Removes a variable if it exists. If the Variable does not exist nothing will be done.
@@ -1261,15 +1194,6 @@ void ParserBase::RemoveVar(const string_type &a_strVarName) {
         m_VarDef.erase(item);
         ReInit();
     }
-}
-
-//------------------------------------------------------------------------------
-/** \brief Clear all functions.
-    \post Resets the parser to string parsing mode.
-*/
-void ParserBase::ClearFun() {
-    m_FunDef.clear();
-    ReInit();
 }
 
 //------------------------------------------------------------------------------
@@ -1290,24 +1214,6 @@ void ParserBase::ClearConst() {
 */
 void ParserBase::ClearPostfixOprt() {
     m_PostOprtDef.clear();
-    ReInit();
-}
-
-//------------------------------------------------------------------------------
-/** \brief Clear all user defined binary operators.
-    \post Resets the parser to string parsing mode.
-*/
-void ParserBase::ClearOprt() {
-    m_OprtDef.clear();
-    ReInit();
-}
-
-//------------------------------------------------------------------------------
-/** \brief Clear the user defined Prefix operators.
-    \post Resets the parser to string parser mode.
-*/
-void ParserBase::ClearInfixOprt() {
-    m_InfixOprtDef.clear();
     ReInit();
 }
 

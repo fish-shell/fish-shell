@@ -149,7 +149,6 @@ void Splash() {
         << _T("  |  Y Y  \\|  |  /|    |     / __ \\_|  | \\/\\___ \\ \\  ___/ |  | \\/ \n");
     mu::console() << _T("  |__|_|  /|____/ |____|    (____  /|__|  /____  > \\___  >|__|    \n");
     mu::console() << _T("        \\/                       \\/            \\/      \\/         \n");
-    mu::console() << _T("  Version ") << Parser().GetVersion(pviFULL) << _T("\n");
     mu::console() << _T("  (C) 2015 Ingo Berg\n");
 }
 

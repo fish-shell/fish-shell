@@ -47,37 +47,37 @@ complete -f -c eopkg -n '__fish_seen_subcommand_from upgrade up remove rm instal
 complete -f -c eopkg -n '__fish_seen_subcommand_from remove-repo rr enable-repo er disable-repo dr' -a "(__fish_eopkg_print_repos)" -d "Repository"
 
 # Setup eopkg subcommand with shortcut
-__fish_eopkg_subcommand_with_shortcut upgrade up -d "Upgrades eopkg packages"
-__fish_eopkg_option_with_shortcut upgrade up -l security-only -d "Security related package upgrades only"
-__fish_eopkg_option_with_shortcut upgrade up -s n -l dry-run -d "Do not perform any action, just show what would be done"
+__fish_eopkg_subcommand_with_shortcut upgrade up -d "Upgrades packages"
+__fish_eopkg_option_with_shortcut upgrade up -l security-only -d "Security related upgrades only"
+__fish_eopkg_option_with_shortcut upgrade up -s n -l dry-run -d "Show what would be done"
 __fish_eopkg_option_with_shortcut upgrade up -s c -l component -f -d "Upgrade component's and recursive components' packages"
 
-__fish_eopkg_subcommand_with_shortcut install it -d "Install eopkg packages"
+__fish_eopkg_subcommand_with_shortcut install it -d "Install packages"
 __fish_eopkg_option_with_shortcut install it -l reinstall -d "Reinstall already installed packages"
-__fish_eopkg_option_with_shortcut install it -s n -l dry-run -d "Do not perform any action, just show what would be done"
+__fish_eopkg_option_with_shortcut install it -s n -l dry-run -d "Show what would be done"
 __fish_eopkg_option_with_shortcut install it -s c -l component -f -d "Install component's and recursive components' packages"
 
-__fish_eopkg_subcommand_with_shortcut remove rm -d "Remove eopkg packages"
+__fish_eopkg_subcommand_with_shortcut remove rm -d "Remove packages"
 __fish_eopkg_option_with_shortcut remove rm -l purge -d "Removes everything including changed config files of the package"
-__fish_eopkg_option_with_shortcut remove rm -s n -l dry-run -d "Do not perform any action, just show what would be done"
+__fish_eopkg_option_with_shortcut remove rm -s n -l dry-run -d "Show what would be done"
 __fish_eopkg_option_with_shortcut remove rm -s c -l component -f -d "Remove component's and recursive components' packages"
 
 __fish_eopkg_subcommand_with_shortcut remove-orphans rmo -d "Remove orphaned packages"
-__fish_eopkg_option_with_shortcut remove-orphans rmo -l purge -d "Removes everything including changed config files of the package"
-__fish_eopkg_option_with_shortcut remove-orphans rmo -s n -l dry-run -d "Do not perform any action, just show what would be done"
+__fish_eopkg_option_with_shortcut remove-orphans rmo -l purge -d "Remove everything including changed config files of the package"
+__fish_eopkg_option_with_shortcut remove-orphans rmo -s n -l dry-run -d "Show what would be done"
 
 __fish_eopkg_subcommand_with_shortcut autoremove rmf -d "Remove packages and dependencies"
-__fish_eopkg_option_with_shortcut autoremove rmf -l purge -d "Removes everything including changed config files of the package"
-__fish_eopkg_option_with_shortcut autoremove rmf -s n -l dry-run -d "Do not perform any action, just show what would be done"
+__fish_eopkg_option_with_shortcut autoremove rmf -l purge -d "Remove everything including changed config files of the package"
+__fish_eopkg_option_with_shortcut autoremove rmf -s n -l dry-run -d "Show what would be done"
 
-__fish_eopkg_subcommand_with_shortcut history hs -d "History of eopkg operations"
+__fish_eopkg_subcommand_with_shortcut history hs -d "History of operations"
 __fish_eopkg_option_with_shortcut history hs -s l -l last -x -d "Output only the last n operations"
-__fish_eopkg_option_with_shortcut history hs -s t -l takeback -x -d "Takeback to the state after the given operation finished"
+__fish_eopkg_option_with_shortcut history hs -s t -l takeback -x -d "Takeback to the state after the given operation"
 
 __fish_eopkg_subcommand_with_shortcut add-repo ar -r -d "Add a repository"
 __fish_eopkg_subcommand_with_shortcut remove-repo rr -x -d "Remove repositories"
 __fish_eopkg_subcommand_with_shortcut enable-repo er -x -d "Enable repositories"
-__fish_eopkg_subcommand_with_shortcut disable-repo dr -x -d "Enable repositories"
+__fish_eopkg_subcommand_with_shortcut disable-repo dr -x -d "Disable repositories"
 
 __fish_eopkg_subcommand_with_shortcut list-available la -d "List available packages in the repositories"
 __fish_eopkg_subcommand_with_shortcut list-components lc -d "List available components"

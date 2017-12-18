@@ -389,12 +389,6 @@ class ValueOrError {
         return value_;
     }
 
-    /// \return the value or throw the error
-    value_type getOrThrow() const {
-        if (has_error()) throw error();
-        return value();
-    }
-
     /// \return whether this has a value.
     explicit operator bool() const { return has_value(); }
 

@@ -4,64 +4,23 @@
 
 # Frequently used eopkg commands
 
-# Eopkg additional completion test
-function __fish_eopkg_package_ok -d 'Test if eopkg should have packages as completion candidate'
-    for i in (commandline -poc)
-        if contains -- $i upgrade up remove rm install it info check
-            return 0
-        end
-    end
-    return 1
-end
-
-function __fish_eopkg_component_ok -d 'Test if eopkg should have components as posible completion'
-    for i in (commandline -poc)
-        if contains -- $i -c --component
-            return 0
-        end
-    end
-    return 1
-end
-
-function __fish_eopkg_repo_ok -d 'Test if eopkg should have repositories as posible completion'
-    for i in (commandline -poc)
-        if contains -- $i remove-repo rr enable-repo er disable-repo dr
-            return 0
-        end
-    end
-    return 1
-end
-
 # Eopkg subcommand
-function __fish_eopkg_subcommand
-    set subcommand $argv[1]
+function __fish_eopkg_subcommand -a subcommand
     set -e argv[1]
     complete -f -c eopkg -n '__fish_use_subcommand' -a $subcommand $argv
 end
 
-function __fish_eopkg_subcommand_with_shortcut
-    set subcommand $argv[1]
-    set -e argv[1]
-    set shortcut $argv[1]
-    set -e argv[1]
+function __fish_eopkg_subcommand_with_shortcut -a subcommand shortcut
+    set -e argv[1..2]
     complete -f -c eopkg -n '__fish_use_subcommand' -a $subcommand $argv
     complete -f -c eopkg -n '__fish_use_subcommand' -a $shortcut $argv
-end
-
-function __fish_eopkg_using_subcommand -d 'Test if given subcommand is used'
-    for i in (commandline -poc)
-        if contains -- $i $argv
-            return 0
-        end
-    end
-    return 1
 end
 
 # Eopkg subcommand's option
 function __fish_eopkg_option
     set subcommand $argv[1]
     set -e argv[1]
-    complete -f -c eopkg -n "__fish_eopkg_using_subcommand $subcommand" $argv
+    complete -f -c eopkg -n "__fish_seen_subcommand_from $subcommand" $argv
 end
 
 function __fish_eopkg_option_with_shortcut
@@ -69,8 +28,8 @@ function __fish_eopkg_option_with_shortcut
     set -e argv[1]
     set shortcut $argv[1]
     set -e argv[1]
-    complete -f -c eopkg -n "__fish_eopkg_using_subcommand $subcommand" $argv
-    complete -f -c eopkg -n "__fish_eopkg_using_subcommand $shortcut" $argv
+    complete -f -c eopkg -n "__fish_seen_subcommand_from $subcommand" $argv
+    complete -f -c eopkg -n "__fish_seen_subcommand_from $shortcut" $argv
 end
 
 # Print additional completion
@@ -83,9 +42,9 @@ function __fish_eopkg_print_repos -d "Print list of repositories"
 end
 
 # Setup additional completion
-complete -f -c eopkg -n '__fish_eopkg_package_ok; and not __fish_eopkg_component_ok' -a "(__fish_print_packages)" -d "package"
-complete -f -c eopkg -n '__fish_eopkg_component_ok' -a "(__fish_eopkg_print_components)" -d "component"
-complete -f -c eopkg -n '__fish_eopkg_repo_ok' -a "(__fish_eopkg_print_repos)" -d "repository"
+complete -f -c eopkg -n '__fish_seen_subcommand_from upgrade up remove rm install it info check' -s c -l component -a "(__fish_eopkg_print_components)" -d "Component"
+complete -f -c eopkg -n '__fish_seen_subcommand_from upgrade up remove rm install it info check' -a "(__fish_print_packages)" -d "Package"
+complete -f -c eopkg -n '__fish_seen_subcommand_from remove-repo rr enable-repo er disable-repo dr' -a "(__fish_eopkg_print_repos)" -d "Repository"
 
 # Setup eopkg subcommand with shortcut
 __fish_eopkg_subcommand_with_shortcut upgrade up -d "Upgrades eopkg packages"

@@ -114,29 +114,24 @@ class ParserBase {
     bool HasBuiltInOprt() const;
     void AddValIdent(identfun_type a_pCallback);
 
-    /** \fn void mu::ParserBase::DefineFun(const string_type &a_strName, fun_type0 a_pFun, bool
-       a_bAllowOpt = true)
+    /** \fn void mu::ParserBase::DefineFun(const string_type &a_strName, fun_type0 a_pFun)
         \brief Define a parser function without arguments.
         \param a_strName Name of the function
         \param a_pFun Pointer to the callback function
-        \param a_bAllowOpt A flag indicating this function may be optimized
     */
     template <typename T>
-    OptionalError DefineFun(const string_type &a_strName, T a_pFun, bool a_bAllowOpt = true) {
-        return AddCallback(a_strName, ParserCallback(a_pFun, a_bAllowOpt), m_FunDef,
-                           ValidNameChars());
+    OptionalError DefineFun(const string_type &a_strName, T a_pFun) {
+        return AddCallback(a_strName, ParserCallback(a_pFun), m_FunDef, ValidNameChars());
     }
 
     OptionalError DefineOprt(const string_type &a_strName, fun_type2 a_pFun, unsigned a_iPri = 0,
-                             EOprtAssociativity a_eAssociativity = oaLEFT,
-                             bool a_bAllowOpt = false);
+                             EOprtAssociativity a_eAssociativity = oaLEFT);
     OptionalError DefineConst(const string_type &a_sName, value_type a_fVal);
     OptionalError DefineStrConst(const string_type &a_sName, const string_type &a_strVal);
     OptionalError DefineVar(const string_type &a_sName, value_type *a_fVar);
-    OptionalError DefinePostfixOprt(const string_type &a_strFun, fun_type1 a_pOprt,
-                                    bool a_bAllowOpt = true);
+    OptionalError DefinePostfixOprt(const string_type &a_strFun, fun_type1 a_pOprt);
     OptionalError DefineInfixOprt(const string_type &a_strName, fun_type1 a_pOprt,
-                                  int a_iPrec = prINFIX, bool a_bAllowOpt = true);
+                                  int a_iPrec = prINFIX);
 
     // Clear user defined variables, constants or functions
     void ClearVar();

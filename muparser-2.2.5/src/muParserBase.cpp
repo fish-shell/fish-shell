@@ -365,10 +365,9 @@ const char_type *ParserBase::ValidInfixOprtChars() const {
 /** \brief Add a user defined operator.
     \post Will reset the Parser to string parsing mode.
 */
-OptionalError ParserBase::DefinePostfixOprt(const string_type &a_sName, fun_type1 a_pFun,
-                                            bool a_bAllowOpt) {
-    return AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, prPOSTFIX, cmOPRT_POSTFIX),
-                       m_PostOprtDef, ValidOprtChars());
+OptionalError ParserBase::DefinePostfixOprt(const string_type &a_sName, fun_type1 a_pFun) {
+    return AddCallback(a_sName, ParserCallback(a_pFun, prPOSTFIX, cmOPRT_POSTFIX), m_PostOprtDef,
+                       ValidOprtChars());
 }
 
 //---------------------------------------------------------------------------
@@ -389,13 +388,12 @@ void ParserBase::Init() {
     \param [in] a_sName  operator Identifier
     \param [in] a_pFun  Operator callback function
     \param [in] a_iPrec  Operator Precedence (default=prSIGN)
-    \param [in] a_bAllowOpt  True if operator is volatile (default=false)
     \sa EPrec
 */
-OptionalError ParserBase::DefineInfixOprt(const string_type &a_sName, fun_type1 a_pFun, int a_iPrec,
-                                          bool a_bAllowOpt) {
-    return AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, a_iPrec, cmOPRT_INFIX),
-                       m_InfixOprtDef, ValidInfixOprtChars());
+OptionalError ParserBase::DefineInfixOprt(const string_type &a_sName, fun_type1 a_pFun,
+                                          int a_iPrec) {
+    return AddCallback(a_sName, ParserCallback(a_pFun, a_iPrec, cmOPRT_INFIX), m_InfixOprtDef,
+                       ValidInfixOprtChars());
 }
 
 //---------------------------------------------------------------------------
@@ -404,18 +402,17 @@ OptionalError ParserBase::DefineInfixOprt(const string_type &a_sName, fun_type1 
     \param [in] a_pFun Pointer to the callback function.
     \param [in] a_iPrec Precedence of the operator.
     \param [in] a_eAssociativity The associativity of the operator.
-    \param [in] a_bAllowOpt If this is true the operator may be optimized away.
 
     Adds a new Binary operator the the parser instance.
 */
 OptionalError ParserBase::DefineOprt(const string_type &a_sName, fun_type2 a_pFun, unsigned a_iPrec,
-                                     EOprtAssociativity a_eAssociativity, bool a_bAllowOpt) {
+                                     EOprtAssociativity a_eAssociativity) {
     // Check for conflicts with built in operator names
     for (int i = 0; m_bBuiltInOp && i < cmENDIF; ++i)
         if (a_sName == string_type(c_DefaultOprt[i])) return Error(ecBUILTIN_OVERLOAD, -1, a_sName);
 
-    return AddCallback(a_sName, ParserCallback(a_pFun, a_bAllowOpt, a_iPrec, a_eAssociativity),
-                       m_OprtDef, ValidOprtChars());
+    return AddCallback(a_sName, ParserCallback(a_pFun, a_iPrec, a_eAssociativity), m_OprtDef,
+                       ValidOprtChars());
 }
 
 //---------------------------------------------------------------------------

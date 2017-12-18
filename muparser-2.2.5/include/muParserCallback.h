@@ -48,25 +48,23 @@ namespace mu {
 */
 class ParserCallback final {
    public:
-    ParserCallback(fun_type0 a_pFun, bool a_bAllowOpti);
-    ParserCallback(fun_type1 a_pFun, bool a_bAllowOpti, int a_iPrec = -1,
-                   ECmdCode a_iCode = cmFUNC);
-    ParserCallback(fun_type2 a_pFun, bool a_bAllowOpti, int a_iPrec,
-                   EOprtAssociativity a_eAssociativity);
-    ParserCallback(fun_type2 a_pFun, bool a_bAllowOpti);
-    ParserCallback(fun_type3 a_pFun, bool a_bAllowOpti);
-    ParserCallback(fun_type4 a_pFun, bool a_bAllowOpti);
-    ParserCallback(fun_type5 a_pFun, bool a_bAllowOpti);
-    ParserCallback(fun_type6 a_pFun, bool a_bAllowOpti);
-    ParserCallback(fun_type7 a_pFun, bool a_bAllowOpti);
-    ParserCallback(fun_type8 a_pFun, bool a_bAllowOpti);
-    ParserCallback(fun_type9 a_pFun, bool a_bAllowOpti);
-    ParserCallback(fun_type10 a_pFun, bool a_bAllowOpti);
+    explicit ParserCallback(fun_type0 a_pFun);
+    ParserCallback(fun_type1 a_pFun, int a_iPrec = -1, ECmdCode a_iCode = cmFUNC);
+    ParserCallback(fun_type2 a_pFun, int a_iPrec, EOprtAssociativity a_eAssociativity);
+    explicit ParserCallback(fun_type2 a_pFun);
+    explicit ParserCallback(fun_type3 a_pFun);
+    explicit ParserCallback(fun_type4 a_pFun);
+    explicit ParserCallback(fun_type5 a_pFun);
+    explicit ParserCallback(fun_type6 a_pFun);
+    explicit ParserCallback(fun_type7 a_pFun);
+    explicit ParserCallback(fun_type8 a_pFun);
+    explicit ParserCallback(fun_type9 a_pFun);
+    explicit ParserCallback(fun_type10 a_pFun);
 
-    ParserCallback(multfun_type a_pFun, bool a_bAllowOpti);
-    ParserCallback(strfun_type1 a_pFun, bool a_bAllowOpti);
-    ParserCallback(strfun_type2 a_pFun, bool a_bAllowOpti);
-    ParserCallback(strfun_type3 a_pFun, bool a_bAllowOpti);
+    explicit ParserCallback(multfun_type a_pFun);
+    explicit ParserCallback(strfun_type1 a_pFun);
+    explicit ParserCallback(strfun_type2 a_pFun);
+    explicit ParserCallback(strfun_type3 a_pFun);
     ParserCallback();
     ParserCallback(const ParserCallback& a_Fun);
 

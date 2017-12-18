@@ -116,16 +116,14 @@ string_type parser_error_for_code(EErrorCodes code) {
 //---------------------------------------------------------------------------
 
 /** \brief Default constructor. */
-ParserError::ParserError()
-    : m_strMsg(), m_strFormula(), m_strTok(), m_iPos(-1), m_iErrc(ecUNDEFINED) {}
+ParserError::ParserError() {}
 
 //------------------------------------------------------------------------------
 /** \brief This Constructor is used for internal exceptions only.
 
   It does not contain any information but the error code.
 */
-ParserError::ParserError(EErrorCodes a_iErrc)
-    : m_strMsg(), m_strFormula(), m_strTok(), m_iPos(-1), m_iErrc(a_iErrc) {
+ParserError::ParserError(EErrorCodes a_iErrc) : m_iErrc(a_iErrc) {
     m_strMsg = parser_error_for_code(m_iErrc);
     stringstream_type stream;
     stream << (int)m_iPos;
@@ -184,28 +182,6 @@ ParserError::ParserError(const char_type *szMsg, int iPos, const string_type &sT
     stream << (int)m_iPos;
     ReplaceSubString(m_strMsg, _T("$POS$"), stream.str());
     ReplaceSubString(m_strMsg, _T("$TOK$"), m_strTok);
-}
-
-//------------------------------------------------------------------------------
-/** \brief Copy constructor. */
-ParserError::ParserError(const ParserError &a_Obj)
-    : m_strMsg(a_Obj.m_strMsg),
-      m_strFormula(a_Obj.m_strFormula),
-      m_strTok(a_Obj.m_strTok),
-      m_iPos(a_Obj.m_iPos),
-      m_iErrc(a_Obj.m_iErrc) {}
-
-//------------------------------------------------------------------------------
-/** \brief Assignment operator. */
-ParserError &ParserError::operator=(const ParserError &a_Obj) {
-    if (this == &a_Obj) return *this;
-
-    m_strMsg = a_Obj.m_strMsg;
-    m_strFormula = a_Obj.m_strFormula;
-    m_strTok = a_Obj.m_strTok;
-    m_iPos = a_Obj.m_iPos;
-    m_iErrc = a_Obj.m_iErrc;
-    return *this;
 }
 
 //------------------------------------------------------------------------------

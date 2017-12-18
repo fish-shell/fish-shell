@@ -376,7 +376,6 @@
 		D068222B1F5149B500040321 /* muParserBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822221F51498700040321 /* muParserBase.cpp */; };
 		D068222C1F5149B500040321 /* muParserBytecode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822231F51498700040321 /* muParserBytecode.cpp */; };
 		D068222D1F5149B500040321 /* muParserCallback.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822241F51498700040321 /* muParserCallback.cpp */; };
-		D068222E1F5149B500040321 /* muParserDLL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822251F51498700040321 /* muParserDLL.cpp */; };
 		D068222F1F5149B500040321 /* muParserError.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822261F51498700040321 /* muParserError.cpp */; };
 		D06822301F5149B500040321 /* muParserInt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822271F51498700040321 /* muParserInt.cpp */; };
 		D06822321F5149B500040321 /* muParserTokenReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822291F51498700040321 /* muParserTokenReader.cpp */; };
@@ -818,7 +817,6 @@
 		D06822221F51498700040321 /* muParserBase.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserBase.cpp; sourceTree = "<group>"; };
 		D06822231F51498700040321 /* muParserBytecode.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserBytecode.cpp; sourceTree = "<group>"; };
 		D06822241F51498700040321 /* muParserCallback.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserCallback.cpp; sourceTree = "<group>"; };
-		D06822251F51498700040321 /* muParserDLL.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserDLL.cpp; sourceTree = "<group>"; };
 		D06822261F51498700040321 /* muParserError.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserError.cpp; sourceTree = "<group>"; };
 		D06822271F51498700040321 /* muParserInt.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserInt.cpp; sourceTree = "<group>"; };
 		D06822291F51498700040321 /* muParserTokenReader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserTokenReader.cpp; sourceTree = "<group>"; };
@@ -1077,7 +1075,6 @@
 				D06822221F51498700040321 /* muParserBase.cpp */,
 				D06822231F51498700040321 /* muParserBytecode.cpp */,
 				D06822241F51498700040321 /* muParserCallback.cpp */,
-				D06822251F51498700040321 /* muParserDLL.cpp */,
 				D06822261F51498700040321 /* muParserError.cpp */,
 				D06822271F51498700040321 /* muParserInt.cpp */,
 				D06822291F51498700040321 /* muParserTokenReader.cpp */,
@@ -1924,7 +1921,6 @@
 				D068222B1F5149B500040321 /* muParserBase.cpp in Sources */,
 				D068222C1F5149B500040321 /* muParserBytecode.cpp in Sources */,
 				D068222D1F5149B500040321 /* muParserCallback.cpp in Sources */,
-				D068222E1F5149B500040321 /* muParserDLL.cpp in Sources */,
 				D068222F1F5149B500040321 /* muParserError.cpp in Sources */,
 				D06822301F5149B500040321 /* muParserInt.cpp in Sources */,
 				D06822321F5149B500040321 /* muParserTokenReader.cpp in Sources */,

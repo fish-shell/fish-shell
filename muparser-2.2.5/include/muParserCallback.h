@@ -53,13 +53,6 @@ class ParserCallback final {
     ParserCallback(fun_type2 a_pFun, int a_iPrec, EOprtAssociativity a_eAssociativity);
     explicit ParserCallback(fun_type2 a_pFun);
     explicit ParserCallback(fun_type3 a_pFun);
-    explicit ParserCallback(fun_type4 a_pFun);
-    explicit ParserCallback(fun_type5 a_pFun);
-    explicit ParserCallback(fun_type6 a_pFun);
-    explicit ParserCallback(fun_type7 a_pFun);
-    explicit ParserCallback(fun_type8 a_pFun);
-    explicit ParserCallback(fun_type9 a_pFun);
-    explicit ParserCallback(fun_type10 a_pFun);
 
     explicit ParserCallback(multfun_type a_pFun);
     explicit ParserCallback(strfun_type1 a_pFun);

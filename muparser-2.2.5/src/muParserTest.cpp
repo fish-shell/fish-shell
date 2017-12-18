@@ -455,15 +455,6 @@ int ParserTester::TestMultiArg() {
     iStat += EqnTest(_T("f1of3(1, 2, 3)"), 1, true);
     iStat += EqnTest(_T("f2of3(1, 2, 3)"), 2, true);
     iStat += EqnTest(_T("f3of3(1, 2, 3)"), 3, true);
-    iStat += EqnTest(_T("f1of4(1, 2, 3, 4)"), 1, true);
-    iStat += EqnTest(_T("f2of4(1, 2, 3, 4)"), 2, true);
-    iStat += EqnTest(_T("f3of4(1, 2, 3, 4)"), 3, true);
-    iStat += EqnTest(_T("f4of4(1, 2, 3, 4)"), 4, true);
-    iStat += EqnTest(_T("f1of5(1, 2, 3, 4, 5)"), 1, true);
-    iStat += EqnTest(_T("f2of5(1, 2, 3, 4, 5)"), 2, true);
-    iStat += EqnTest(_T("f3of5(1, 2, 3, 4, 5)"), 3, true);
-    iStat += EqnTest(_T("f4of5(1, 2, 3, 4, 5)"), 4, true);
-    iStat += EqnTest(_T("f5of5(1, 2, 3, 4, 5)"), 5, true);
     // Too few arguments / Too many arguments
     iStat += EqnTest(_T("1+ping()"), 11, true);
     iStat += EqnTest(_T("ping()+1"), 11, true);
@@ -477,8 +468,6 @@ int ParserTester::TestMultiArg() {
     iStat += EqnTest(_T("f1of2(1)"), 0, false);
     iStat += EqnTest(_T("f1of3(1, 2, 3, 4)"), 0, false);
     iStat += EqnTest(_T("f1of3(1)"), 0, false);
-    iStat += EqnTest(_T("f1of4(1, 2, 3, 4, 5)"), 0, false);
-    iStat += EqnTest(_T("f1of4(1)"), 0, false);
     iStat += EqnTest(_T("(1,2,3)"), 0, false);
     iStat += EqnTest(_T("1,2,3"), 0, false);
     iStat += EqnTest(_T("(1*a,2,3)"), 0, false);
@@ -613,7 +602,6 @@ int ParserTester::TestPostFix() {
     iStat += EqnTest(_T("f1of1(1000){m}"), 1, true);
     iStat += EqnTest(_T("-f1of1(1000){m}"), -1, true);
     iStat += EqnTest(_T("-f1of1(-1000){m}"), 1, true);
-    iStat += EqnTest(_T("f4of4(0,0,0,1000){m}"), 1, true);
     iStat += EqnTest(_T("2+(a*1000){m}"), 3, true);
 
     // can postfix operators "m" und "meg" be told apart properly?
@@ -1098,15 +1086,6 @@ int ParserTester::EqnTest(const string_type &a_str, double a_fRes, bool a_fPass)
         throwIfError(p1->DefineFun(_T("f1of3"), f1of3));  // three parameter
         throwIfError(p1->DefineFun(_T("f2of3"), f2of3));
         throwIfError(p1->DefineFun(_T("f3of3"), f3of3));
-        throwIfError(p1->DefineFun(_T("f1of4"), f1of4));  // four parameter
-        throwIfError(p1->DefineFun(_T("f2of4"), f2of4));
-        throwIfError(p1->DefineFun(_T("f3of4"), f3of4));
-        throwIfError(p1->DefineFun(_T("f4of4"), f4of4));
-        throwIfError(p1->DefineFun(_T("f1of5"), f1of5));  // five parameter
-        throwIfError(p1->DefineFun(_T("f2of5"), f2of5));
-        throwIfError(p1->DefineFun(_T("f3of5"), f3of5));
-        throwIfError(p1->DefineFun(_T("f4of5"), f4of5));
-        throwIfError(p1->DefineFun(_T("f5of5"), f5of5));
 
         // binary operators
         throwIfError(p1->DefineOprt(_T("add"), add, 0));

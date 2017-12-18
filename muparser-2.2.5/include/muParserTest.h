@@ -59,27 +59,6 @@ class ParserTester  // final
     static ValueOrError f2of3(value_type, value_type v, value_type) { return v; };
     static ValueOrError f3of3(value_type, value_type, value_type v) { return v; };
 
-    static ValueOrError f1of4(value_type v, value_type, value_type, value_type) { return v; }
-    static ValueOrError f2of4(value_type, value_type v, value_type, value_type) { return v; }
-    static ValueOrError f3of4(value_type, value_type, value_type v, value_type) { return v; }
-    static ValueOrError f4of4(value_type, value_type, value_type, value_type v) { return v; }
-
-    static ValueOrError f1of5(value_type v, value_type, value_type, value_type, value_type) {
-        return v;
-    }
-    static ValueOrError f2of5(value_type, value_type v, value_type, value_type, value_type) {
-        return v;
-    }
-    static ValueOrError f3of5(value_type, value_type, value_type v, value_type, value_type) {
-        return v;
-    }
-    static ValueOrError f4of5(value_type, value_type, value_type, value_type v, value_type) {
-        return v;
-    }
-    static ValueOrError f5of5(value_type, value_type, value_type, value_type, value_type v) {
-        return v;
-    }
-
     static ValueOrError Min(value_type a_fVal1, value_type a_fVal2) {
         return (a_fVal1 < a_fVal2) ? a_fVal1 : a_fVal2;
     }

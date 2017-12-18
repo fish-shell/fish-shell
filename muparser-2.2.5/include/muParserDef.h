@@ -416,32 +416,6 @@ typedef ValueOrError (*fun_type2)(value_type, value_type);
 /** \brief Callback type used for functions with three arguments. */
 typedef ValueOrError (*fun_type3)(value_type, value_type, value_type);
 
-/** \brief Callback type used for functions with four arguments. */
-typedef ValueOrError (*fun_type4)(value_type, value_type, value_type, value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef ValueOrError (*fun_type5)(value_type, value_type, value_type, value_type, value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef ValueOrError (*fun_type6)(value_type, value_type, value_type, value_type, value_type,
-                                  value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef ValueOrError (*fun_type7)(value_type, value_type, value_type, value_type, value_type,
-                                  value_type, value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef ValueOrError (*fun_type8)(value_type, value_type, value_type, value_type, value_type,
-                                  value_type, value_type, value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef ValueOrError (*fun_type9)(value_type, value_type, value_type, value_type, value_type,
-                                  value_type, value_type, value_type, value_type);
-
-/** \brief Callback type used for functions with five arguments. */
-typedef ValueOrError (*fun_type10)(value_type, value_type, value_type, value_type, value_type,
-                                   value_type, value_type, value_type, value_type, value_type);
-
 /** \brief Callback type used for functions with a variable argument list. */
 typedef ValueOrError (*multfun_type)(const value_type *, int);
 

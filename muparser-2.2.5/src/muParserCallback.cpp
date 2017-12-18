@@ -84,69 +84,6 @@ ParserCallback::ParserCallback(fun_type3 a_pFun)
       m_iType(tpDBL) {}
 
 //---------------------------------------------------------------------------
-ParserCallback::ParserCallback(fun_type4 a_pFun)
-    : m_pFun((void*)a_pFun),
-      m_iArgc(4),
-      m_iPri(-1),
-      m_eOprtAsct(oaNONE),
-      m_iCode(cmFUNC),
-      m_iType(tpDBL) {}
-
-//---------------------------------------------------------------------------
-ParserCallback::ParserCallback(fun_type5 a_pFun)
-    : m_pFun((void*)a_pFun),
-      m_iArgc(5),
-      m_iPri(-1),
-      m_eOprtAsct(oaNONE),
-      m_iCode(cmFUNC),
-      m_iType(tpDBL) {}
-
-//---------------------------------------------------------------------------
-ParserCallback::ParserCallback(fun_type6 a_pFun)
-    : m_pFun((void*)a_pFun),
-      m_iArgc(6),
-      m_iPri(-1),
-      m_eOprtAsct(oaNONE),
-      m_iCode(cmFUNC),
-      m_iType(tpDBL) {}
-
-//---------------------------------------------------------------------------
-ParserCallback::ParserCallback(fun_type7 a_pFun)
-    : m_pFun((void*)a_pFun),
-      m_iArgc(7),
-      m_iPri(-1),
-      m_eOprtAsct(oaNONE),
-      m_iCode(cmFUNC),
-      m_iType(tpDBL) {}
-
-//---------------------------------------------------------------------------
-ParserCallback::ParserCallback(fun_type8 a_pFun)
-    : m_pFun((void*)a_pFun),
-      m_iArgc(8),
-      m_iPri(-1),
-      m_eOprtAsct(oaNONE),
-      m_iCode(cmFUNC),
-      m_iType(tpDBL) {}
-
-//---------------------------------------------------------------------------
-ParserCallback::ParserCallback(fun_type9 a_pFun)
-    : m_pFun((void*)a_pFun),
-      m_iArgc(9),
-      m_iPri(-1),
-      m_eOprtAsct(oaNONE),
-      m_iCode(cmFUNC),
-      m_iType(tpDBL) {}
-
-//---------------------------------------------------------------------------
-ParserCallback::ParserCallback(fun_type10 a_pFun)
-    : m_pFun((void*)a_pFun),
-      m_iArgc(10),
-      m_iPri(-1),
-      m_eOprtAsct(oaNONE),
-      m_iCode(cmFUNC),
-      m_iType(tpDBL) {}
-
-//---------------------------------------------------------------------------
 ParserCallback::ParserCallback(multfun_type a_pFun)
     : m_pFun((void*)a_pFun),
       m_iArgc(-1),

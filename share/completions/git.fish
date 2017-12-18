@@ -74,11 +74,6 @@ function __fish_git_modified_files
     string replace -- "$PWD/" "" "$root/"(command git diff --name-only $argv ^/dev/null) | string replace "$root/" ":/"
 end
 
-function __fish_git_staged_files
-    set -l root (command git rev-parse --show-toplevel ^/dev/null)
-    string replace -- "$PWD/" "" "$root/"(command git diff --staged --name-only ^/dev/null) | string replace "$root/" ":/"
-end
-
 function __fish_git_add_files
     set -l root (command git rev-parse --show-toplevel ^/dev/null)
     string replace -- "$PWD/" "" "$root/"(command git -C $root ls-files -mo --exclude-standard ^/dev/null) | string replace "$root/" ":/"
@@ -796,9 +791,8 @@ complete -f -c git -n '__fish_git_using_command rebase' -l no-ff -d 'No fast-for
 complete -c git -n '__fish_git_needs_command' -a reset -d 'Reset current HEAD to the specified state'
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
 complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)' -d 'Branch'
-complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_staged_files)' -d 'File'
 # reset changes the index, so we need to compare that to the commit.
-complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_modified_files --cached)' -d 'File'
+complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_modified_files --staged)' -d 'File'
 complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_reflog)' -d 'Reflog'
 # TODO options
 

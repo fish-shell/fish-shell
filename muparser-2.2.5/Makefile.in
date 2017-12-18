@@ -59,7 +59,6 @@ MUPARSER_LIB_HEADERS =  \
 	include/muParserBytecode.h \
 	include/muParserCallback.h \
 	include/muParserDef.h \
-	include/muParserFixes.h \
 	include/muParserInt.h \
 	include/muParserTest.h \
 	include/muParserToken.h \

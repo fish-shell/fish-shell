@@ -33,8 +33,6 @@
 #include <string>
 #include <vector>
 
-#include "muParserFixes.h"
-
 /** \file
     \brief This file contains standard definitions used by the parser.
 */

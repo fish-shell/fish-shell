@@ -37,6 +37,7 @@
 class parser_t;
 
 #define STRING_ERR_MISSING _(L"%ls: Expected argument\n")
+#define STRING_CHUNK_SIZE 128
 
 static void string_error(io_streams_t &streams, const wchar_t *fmt, ...) {
     streams.err.append(L"string ");
@@ -58,31 +59,33 @@ static bool string_args_from_stdin(const io_streams_t &streams) {
 }
 
 static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t &streams) {
-    std::string arg;
-    for (;;) {
-        char ch = '\0';
-        long rc = read_blocked(streams.stdin_fd, &ch, 1);
+    // We might read more than a line - store the rest in a static buffer.
+    static std::string buffer;
 
-        if (rc < 0) {  // failure
+    // Read in chunks from fd until buffer has a line.
+    std::string::iterator pos;
+    while ((pos = std::find (buffer.begin(), buffer.end(), '\n')) == buffer.end ()) {
+        char buf[STRING_CHUNK_SIZE];
+        int n = read_blocked(streams.stdin_fd, buf, STRING_CHUNK_SIZE);
+        if (n == 0) {
+            // If we still have buffer contents, flush them.
+            if (buffer.empty()) return NULL;
+            *storage = str2wcstring(buffer);
+            buffer = "";
+            return storage->c_str();
+        }
+        if (n == -1) {    // handle errors
+            *storage = str2wcstring(buffer);
+            buffer = "";
             return NULL;
         }
-
-        if (rc == 0) {  // EOF
-            if (arg.empty()) {
-                return NULL;
-            }
-            break;
-        }
-
-        if (ch == '\n') {
-            break;
-        }
-
-        arg += ch;
+        buffer.append(buf, n);
     }
 
-    *storage = str2wcstring(arg);
-    return storage->c_str();
+  // Split the buffer around '\n' found and return first part.
+  *storage = str2wcstring(buffer.c_str(), std::distance(buffer.begin(), pos));
+  buffer = std::string(pos + 1, buffer.end());
+  return storage->c_str();
 }
 
 static const wchar_t *string_get_arg_argv(int *argidx, wchar_t **argv) {

@@ -117,9 +117,6 @@ void ParserBase::ReInit() const {
 }
 
 //---------------------------------------------------------------------------
-void ParserBase::OnDetectVar(string_type * /*pExpr*/, int & /*nStart*/, int & /*nEnd*/) {}
-
-//---------------------------------------------------------------------------
 /** \brief Add a value parsing function.
 
     When parsing an expression muParser tries to detect values in the expression

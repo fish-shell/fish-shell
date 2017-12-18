@@ -54,9 +54,6 @@ namespace mu {
     virtual void InitFun();
     virtual void InitConst();
     virtual void InitOprt();
-    virtual void OnDetectVar(string_type *pExpr, int &nStart, int &nEnd);
-
-    ValueOrError Diff(value_type *a_Var, value_type a_fPos, value_type a_fEpsilon = 0) const;
 
    protected:
     // Trigonometric functions

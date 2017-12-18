@@ -155,8 +155,6 @@ class ParserBase {
     virtual void InitConst() = 0;
     virtual void InitOprt() = 0;
 
-    virtual void OnDetectVar(string_type *pExpr, int &nStart, int &nEnd);
-
     static const char_type *c_DefaultOprt[];
     static std::locale s_locale;  ///< The locale used by the parser
     static bool g_DbgDumpCmdCode;

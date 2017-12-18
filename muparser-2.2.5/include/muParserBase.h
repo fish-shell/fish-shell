@@ -230,9 +230,12 @@ class ParserBase {
 
     OptionalError CreateRPN() const;
 
-    ValueOrError ParseString() const;
-    ValueOrError ParseCmdCode() const;
+    ValueOrError ExecuteRPN() const;
     ValueOrError InvokeFunction(generic_fun_type func, const value_type *args, int argCount) const;
+
+    /// Build the RPN if necessary, and then execute it.
+    /// \return the result, or an error.
+    ValueOrError BuildAndExecuteRPN() const;
 
     OptionalError CheckName(const string_type &a_strName, const string_type &a_CharSet) const;
     OptionalError CheckOprt(const string_type &a_sName, const ParserCallback &a_Callback,
@@ -245,7 +248,6 @@ class ParserBase {
 
       Eval() calls the function whose address is stored there.
     */
-    mutable ParseFunction m_pParseFormula;
     mutable ParserByteCode m_vRPN;  ///< The Bytecode class.
     mutable stringbuf_type
         m_vStringBuf;  ///< String buffer, used for storing string function arguments

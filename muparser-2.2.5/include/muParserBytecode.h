@@ -112,6 +112,7 @@ class ParserByteCode {
     void clear();
     std::size_t GetMaxStackSize() const;
     std::size_t GetSize() const;
+    bool empty() const { return GetSize() == 0; }
 
     const SToken *GetBase() const;
     void AsciiDump();

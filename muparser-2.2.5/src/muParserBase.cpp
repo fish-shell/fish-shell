@@ -65,8 +65,7 @@ const char_type *ParserBase::c_DefaultOprt[] = {
     \throw ParserException if a_szFormula is null.
 */
 ParserBase::ParserBase()
-    : m_pParseFormula(&ParserBase::ParseString),
-      m_vRPN(),
+    : m_vRPN(),
       m_vStringBuf(),
       m_pTokenReader(),
       m_FunDef(),
@@ -142,7 +141,6 @@ void ParserBase::InitTokenReader() { m_pTokenReader.reset(new token_reader_type(
     Clear bytecode, reset the token reader.
 */
 void ParserBase::ReInit() const {
-    m_pParseFormula = &ParserBase::ParseString;
     m_vStringBuf.clear();
     m_vRPN.clear();
     m_pTokenReader->ReInit();
@@ -818,14 +816,14 @@ ValueOrError ParserBase::InvokeFunction(generic_fun_type func, const value_type 
 }
 
 //---------------------------------------------------------------------------
-/** \brief Parse the command code.
-    \sa ParseString(...)
+/** \brief Execute the RPN.
 
     Command code contains precalculated stack positions of the values and the
     associated operators. The Stack is filled beginning from index one the
     value at index zero is not used at all.
 */
-ValueOrError ParserBase::ParseCmdCode() const {
+ValueOrError ParserBase::ExecuteRPN() const {
+    assert(! m_vRPN.empty() && "Missing RPN");
     value_type *Stack = &m_vStackBuffer[0];
     value_type buf;
     int sidx(0);
@@ -1220,20 +1218,13 @@ OptionalError ParserBase::CreateRPN() const {
     return {};
 }
 
-//---------------------------------------------------------------------------
-/** \brief One of the two main parse functions.
-    \sa ParseCmdCode(...)
-
-  Parse expression from input string. Perform syntax checking and create
-  bytecode. After parsing the string and creating the bytecode the function
-  pointer #m_pParseFormula will be changed to the second parse routine the
-  uses bytecode instead of string parsing.
-*/
-ValueOrError ParserBase::ParseString() const {
+ValueOrError ParserBase::BuildAndExecuteRPN() const {
+  if (m_vRPN.empty()) {
     OptionalError oerr = CreateRPN();
     if (oerr.has_error()) return oerr.error();
-    m_pParseFormula = &ParserBase::ParseCmdCode;
-    return (this->*m_pParseFormula)();
+    assert(! m_vRPN.empty() && "RPN should no longer be empty");
+  }
+  return ExecuteRPN();
 }
 
 //---------------------------------------------------------------------------
@@ -1449,7 +1440,7 @@ void ParserBase::StackDump(const ParserStack<token_type> &a_stVal,
     made up of multiple comma separated subexpressions (i.e. "x+y,sin(x),cos(y)")
 */
 void ParserBase::Eval(std::vector<ValueOrError> *outResult) const {
-    ValueOrError v = (this->*m_pParseFormula)();
+    ValueOrError v = BuildAndExecuteRPN();
     if (v.has_error()) {
         outResult->push_back(std::move(v));
         return;
@@ -1484,6 +1475,6 @@ int ParserBase::GetNumResults() const { return m_nFinalResultIdx; }
   \return The evaluation result
   \throw ParseException if no Formula is set or in case of any other error related to the formula.
 */
-ValueOrError ParserBase::Eval() const { return (this->*m_pParseFormula)(); }
+ValueOrError ParserBase::Eval() const { return BuildAndExecuteRPN(); }
 
 }  // namespace mu

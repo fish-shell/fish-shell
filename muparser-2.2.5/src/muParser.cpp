@@ -29,6 +29,7 @@
 //--- Standard includes ------------------------------------------------------------------------
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <numeric>
 
 /** \brief Pi (what else?). */
@@ -237,7 +238,7 @@ static void assertNoError(OptionalError oerr) {
 //---------------------------------------------------------------------------
 /** \brief Initialize the default functions. */
 void Parser::InitFun() {
-    if (mu::TypeInfo<mu::value_type>::IsInteger()) {
+    if (std::numeric_limits<mu::value_type>::is_integer) {
         // When setting MUP_BASETYPE to an integer type
         // Place functions for dealing with integer values here
         // ...

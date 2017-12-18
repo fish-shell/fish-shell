@@ -158,7 +158,7 @@ ValueOrError SelfTest() {
     mu::console() << _T( "Running test suite:\n\n");
 
     // Skip the self test if the value type is set to an integer type.
-    if (mu::TypeInfo<mu::value_type>::IsInteger()) {
+    if (std::numeric_limits<mu::value_type>::is_integer) {
         mu::console()
             << _T( "  Test skipped: integer data type are not compatible with the unit test!\n\n");
     } else {

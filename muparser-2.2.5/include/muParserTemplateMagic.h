@@ -4,59 +4,6 @@
 #include <cmath>
 
 namespace mu {
-//-----------------------------------------------------------------------------------------------
-//
-// Compile time type detection
-//
-//-----------------------------------------------------------------------------------------------
-
-/** \brief A class singling out integer types at compile time using
-           template meta programming.
-*/
-template <typename T>
-struct TypeInfo {
-    static bool IsInteger() { return false; }
-};
-
-template <>
-struct TypeInfo<char> {
-    static bool IsInteger() { return true; }
-};
-
-template <>
-struct TypeInfo<short> {
-    static bool IsInteger() { return true; }
-};
-
-template <>
-struct TypeInfo<int> {
-    static bool IsInteger() { return true; }
-};
-
-template <>
-struct TypeInfo<long> {
-    static bool IsInteger() { return true; }
-};
-
-template <>
-struct TypeInfo<unsigned char> {
-    static bool IsInteger() { return true; }
-};
-
-template <>
-struct TypeInfo<unsigned short> {
-    static bool IsInteger() { return true; }
-};
-
-template <>
-struct TypeInfo<unsigned int> {
-    static bool IsInteger() { return true; }
-};
-
-template <>
-struct TypeInfo<unsigned long> {
-    static bool IsInteger() { return true; }
-};
 
 //-----------------------------------------------------------------------------------------------
 //

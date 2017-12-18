@@ -92,8 +92,8 @@ class ParserByteCode {
 
    public:
     ParserByteCode();
-    ParserByteCode(const ParserByteCode &a_ByteCode) = default;
-    ParserByteCode &operator=(const ParserByteCode &a_ByteCode) = default;
+    ParserByteCode(const ParserByteCode &a_ByteCode) = delete;
+    ParserByteCode &operator=(const ParserByteCode &a_ByteCode) = delete;
 
     void AddVar(value_type *a_pVar);
     void AddVal(value_type a_fVal);

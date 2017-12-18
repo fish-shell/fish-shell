@@ -1202,7 +1202,7 @@ int ParserTester::EqnTestInt(const string_type &a_str, double a_fRes, bool a_fPa
         }
     } catch (Parser::exception_type &e) {
         if (a_fPass) {
-            mu::console() << _T("\n  fail: ") << e.GetExpr() << _T(" : ") << e.GetMsg();
+            mu::console() << _T("\n  fail: ") << e.GetMsg();
             iRet = 1;
         }
     } catch (...) {

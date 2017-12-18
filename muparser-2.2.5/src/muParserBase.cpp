@@ -1130,7 +1130,7 @@ ValueOrError ParserBase::BuildAndExecuteRPN() const {
   \param a_strTok [in] The token string representation associated with the error.
 */
 ParserError ParserBase::Error(EErrorCodes a_iErrc, int a_iPos, const string_type &a_sTok) const {
-    return ParserError(a_iErrc, a_sTok, m_pTokenReader->GetExpr(), a_iPos);
+    return ParserError(a_iErrc, a_sTok, a_iPos);
 }
 
 //------------------------------------------------------------------------------

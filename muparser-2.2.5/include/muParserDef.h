@@ -308,8 +308,7 @@ class ParserError {
     ParserError();
     explicit ParserError(EErrorCodes a_iErrc);
     explicit ParserError(const string_type &sMsg);
-    ParserError(EErrorCodes a_iErrc, const string_type &sTok,
-                const string_type &sFormula = string_type(), int a_iPos = -1);
+    ParserError(EErrorCodes a_iErrc, const string_type &sTok, int a_iPos = -1);
     ParserError(EErrorCodes a_iErrc, int a_iPos, const string_type &sTok);
     ParserError(const char_type *a_szMsg, int a_iPos = -1, const string_type &sTok = string_type());
     ParserError(ParserError &&) = default;
@@ -327,7 +326,6 @@ class ParserError {
 
    private:
     string_type m_strMsg;      ///< The message string
-    string_type m_strFormula;  ///< Formula string
     string_type m_strTok;      ///< Token related with the error
     int m_iPos = -1;           ///< Formula position related to the error
     EErrorCodes m_iErrc = ecUNDEFINED;  ///< Error code

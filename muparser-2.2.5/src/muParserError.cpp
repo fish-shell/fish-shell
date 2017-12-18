@@ -142,12 +142,10 @@ ParserError::ParserError(const string_type &sMsg) {
 /** \brief Construct an error object.
     \param [in] a_iErrc the error code.
     \param [in] sTok The token string related to this error.
-    \param [in] sExpr The expression related to the error.
     \param [in] a_iPos the position in the expression where the error occurred.
 */
-ParserError::ParserError(EErrorCodes iErrc, const string_type &sTok, const string_type &sExpr,
-                         int iPos)
-    : m_strMsg(), m_strFormula(sExpr), m_strTok(sTok), m_iPos(iPos), m_iErrc(iErrc) {
+ParserError::ParserError(EErrorCodes iErrc, const string_type &sTok, int iPos)
+    : m_strTok(sTok), m_iPos(iPos), m_iErrc(iErrc) {
     m_strMsg = parser_error_for_code(m_iErrc);
     stringstream_type stream;
     stream << (int)m_iPos;
@@ -162,7 +160,7 @@ ParserError::ParserError(EErrorCodes iErrc, const string_type &sTok, const strin
     \param [in] sTok The token string related to this error.
 */
 ParserError::ParserError(EErrorCodes iErrc, int iPos, const string_type &sTok)
-    : m_strMsg(), m_strFormula(), m_strTok(sTok), m_iPos(iPos), m_iErrc(iErrc) {
+    : m_strMsg(), m_strTok(sTok), m_iPos(iPos), m_iErrc(iErrc) {
     m_strMsg = parser_error_for_code(m_iErrc);
     stringstream_type stream;
     stream << (int)m_iPos;
@@ -177,7 +175,7 @@ ParserError::ParserError(EErrorCodes iErrc, int iPos, const string_type &sTok)
     \param [in] sTok The token string related to this error.
 */
 ParserError::ParserError(const char_type *szMsg, int iPos, const string_type &sTok)
-    : m_strMsg(szMsg), m_strFormula(), m_strTok(sTok), m_iPos(iPos), m_iErrc(ecGENERIC) {
+    : m_strMsg(szMsg), m_strTok(sTok), m_iPos(iPos), m_iErrc(ecGENERIC) {
     stringstream_type stream;
     stream << (int)m_iPos;
     ReplaceSubString(m_strMsg, _T("$POS$"), stream.str());
@@ -214,19 +212,10 @@ void ParserError::ReplaceSubString(string_type &strSource, const string_type &st
 /** \brief Reset the erro object. */
 void ParserError::Reset() {
     m_strMsg = _T("");
-    m_strFormula = _T("");
     m_strTok = _T("");
     m_iPos = -1;
     m_iErrc = ecUNDEFINED;
 }
-
-//------------------------------------------------------------------------------
-/** \brief Set the expression related to this error. */
-void ParserError::SetFormula(const string_type &a_strFormula) { m_strFormula = a_strFormula; }
-
-//------------------------------------------------------------------------------
-/** \brief gets the expression related tp this error.*/
-const string_type &ParserError::GetExpr() const { return m_strFormula; }
 
 //------------------------------------------------------------------------------
 /** \brief Returns the message string for this error. */

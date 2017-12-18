@@ -188,61 +188,6 @@ ValueOrError Help() {
 }
 
 //---------------------------------------------------------------------------
-/*
-void CheckLocale()
-{
-  // Local names:
-  // "C" - the classic C locale
-  // "de_DE" - not for Windows?
-  // "en_US" - not for Windows?
-  // "German_germany" - For MSVC8
-  try
-  {
-    std::locale loc("German_germany");
-    console() << _T("Locale settings:\n");
-    console() << _T("  Decimal point:  '") << std::use_facet<numpunct<char_type>
->(loc).decimal_point() << _T("'\n");
-    console() << _T("  Thousands sep:  '") << std::use_facet<numpunct<char_type>
->(loc).thousands_sep() << _T("'\n");
-    console() << _T("  Grouping:       '") << std::use_facet<numpunct<char_type> >(loc).grouping()
-<< _T("'\n");
-    console() << _T("  True is named:  '") << std::use_facet<numpunct<char_type> >(loc).truename()
-<< _T("'\n");
-    console() << _T("  False is named: '") << std::use_facet<numpunct<char_type> >(loc).falsename()
-<< _T("'\n");
-    console() << _T("-----------------------------------------------------------\n");
-  }
-  catch(...)
-  {
-    console() << _T("Locale settings:\n");
-    console() << _T("  invalid locale name\n");
-    console() << _T("-----------------------------------------------------------\n");
-  }
-}
-
-//---------------------------------------------------------------------------
-void CheckDiff()
-{
-  mu::Parser  parser;
-  value_type x = 1,
-             v1,
-             v2,
-             v3,
-             eps(pow(std::numeric_limits<value_type>::epsilon(), 0.2));
-  parser.DefineVar(_T("x"), &x);
-  parser.SetExpr(_T("_e^-x*sin(x)"));
-
-  v1 = parser.Diff(&x, 1),
-  v2 = parser.Diff(&x, 1, eps);
-  v3 = cos((value_type)1.0)/exp((value_type)1) - sin((value_type)1.0)/exp((value_type)1);
-//-0.110793765307;
-  mu::console() << parser.GetExpr() << _T("\n");
-  mu::console() << _T("v1 = ") << v1 << _T("; v1-v3 = ") << v1-v3 << _T("\n");
-  mu::console() << _T("v2 = ") << v2 << _T("; v2-v3 = ") << v2-v3 << _T("\n");
-}
-*/
-
-//---------------------------------------------------------------------------
 /** \brief Check for external keywords.
 */
 int CheckKeywords(const mu::char_type *a_szLine, mu::Parser &a_Parser) {
@@ -371,7 +316,6 @@ void Calc() {
             mu::console() << _T("\nError:\n");
             mu::console() << _T("------\n");
             mu::console() << _T("Message:     ") << e.GetMsg() << _T("\n");
-            mu::console() << _T("Expression:  \"") << e.GetExpr() << _T("\"\n");
             mu::console() << _T("Token:       \"") << e.GetToken() << _T("\"\n");
             mu::console() << _T("Position:    ") << (int)e.GetPos() << _T("\n");
             mu::console() << _T("Errc:        ") << std::dec << e.GetCode() << _T("\n");

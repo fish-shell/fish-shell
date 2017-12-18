@@ -128,20 +128,12 @@ ParserCallback::ParserCallback()
       m_iPri(-1),
       m_eOprtAsct(oaNONE),
       m_iCode(cmUNKNOWN),
-      m_iType(tpVOID),
-      m_bAllowOpti(0) {}
+      m_iType(tpVOID) {}
 
 //---------------------------------------------------------------------------
 /** \brief Copy constructor.
 */
 ParserCallback::ParserCallback(const ParserCallback& ref) = default;
-
-//---------------------------------------------------------------------------
-/** \brief Return tru if the function is conservative.
-
-    Conservative functions return always the same result for the same argument.
-*/
-bool ParserCallback::IsOptimizable() const { return m_bAllowOpti; }
 
 //---------------------------------------------------------------------------
 /** \brief Get the callback address for the parser function.

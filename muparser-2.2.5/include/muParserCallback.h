@@ -61,7 +61,6 @@ class ParserCallback final {
     ParserCallback();
     ParserCallback(const ParserCallback& a_Fun);
 
-    bool IsOptimizable() const;
     void* GetAddr() const;
     ECmdCode GetCode() const;
     ETypeCode GetType() const;
@@ -82,7 +81,6 @@ class ParserCallback final {
     EOprtAssociativity m_eOprtAsct;  ///< Operator associativity; Valid only for binary operators
     ECmdCode m_iCode;
     ETypeCode m_iType;
-    bool m_bAllowOpti;  ///< Flag indication optimizeability
 };
 
 //------------------------------------------------------------------------------

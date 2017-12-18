@@ -1216,7 +1216,7 @@ OptionalError ParserBase::CreateRPN() const {
 
     if (stVal.top().GetType() != tpDBL) return Error(ecSTR_RESULT);
 
-    m_vStackBuffer.resize(m_vRPN.GetMaxStackSize() * s_MaxNumOpenMPThreads);
+    m_vStackBuffer.resize(m_vRPN.GetMaxStackSize());
     return {};
 }
 

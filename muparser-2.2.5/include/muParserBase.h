@@ -79,9 +79,6 @@ class ParserBase {
     /** \brief Type used for parser tokens. */
     typedef ParserToken<value_type, string_type> token_type;
 
-    /** \brief Maximum number of threads spawned by OpenMP when using the bulk mode. */
-    static const int s_MaxNumOpenMPThreads = 16;
-
    public:
     /** \brief Type of the error class.
 
@@ -235,7 +232,6 @@ class ParserBase {
 
     ValueOrError ParseString() const;
     ValueOrError ParseCmdCode() const;
-    ValueOrError ParseCmdCodeBulk(int nOffset, int nThreadID) const;
     ValueOrError InvokeFunction(generic_fun_type func, const value_type *args, int argCount) const;
 
     OptionalError CheckName(const string_type &a_strName, const string_type &a_CharSet) const;

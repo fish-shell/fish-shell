@@ -51,12 +51,10 @@ void ParserByteCode::AddVar(value_type *a_pVar) {
     ++m_iStackPos;
     m_iMaxStackSize = std::max(m_iMaxStackSize, (size_t)m_iStackPos);
 
-    // optimization does not apply
     SToken tok;
     tok.Cmd = cmVAR;
     tok.Val.ptr = a_pVar;
-    tok.Val.data = 1;
-    tok.Val.data2 = 0;
+    tok.Val.data = 0;
     m_vRPN.push_back(tok);
 }
 
@@ -80,8 +78,7 @@ void ParserByteCode::AddVal(value_type a_fVal) {
     SToken tok;
     tok.Cmd = cmVAL;
     tok.Val.ptr = NULL;
-    tok.Val.data = 0;
-    tok.Val.data2 = a_fVal;
+    tok.Val.data = a_fVal;
     m_vRPN.push_back(tok);
 }
 
@@ -250,7 +247,7 @@ void ParserByteCode::AsciiDump() {
         switch (m_vRPN[i].Cmd) {
             case cmVAL:
                 mu::console() << _T("VAL \t");
-                mu::console() << _T("[") << m_vRPN[i].Val.data2 << _T("]\n");
+                mu::console() << _T("[") << m_vRPN[i].Val.data << _T("]\n");
                 break;
 
             case cmVAR:

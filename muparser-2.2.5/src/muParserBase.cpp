@@ -835,7 +835,7 @@ ValueOrError ParserBase::ExecuteRPN() const {
                 Stack[++sidx] = *(pTok->Val.ptr);
                 continue;
             case cmVAL:
-                Stack[++sidx] = pTok->Val.data2;
+                Stack[++sidx] = pTok->Val.data;
                 continue;
 
             // Next is treatment of numeric functions

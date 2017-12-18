@@ -40,14 +40,12 @@
 namespace mu {
 struct SToken {
     ECmdCode Cmd;
-    int StackPos;
 
     union {
         struct  // SValData
         {
             value_type *ptr;
             value_type data;
-            value_type data2;
         } Val;
 
         struct  // SFunData

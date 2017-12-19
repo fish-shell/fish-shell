@@ -63,8 +63,8 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
     static std::string buffer;
 
     // Read in chunks from fd until buffer has a line.
-    std::string::iterator pos;
-    while ((pos = std::find (buffer.begin(), buffer.end(), '\n')) == buffer.end ()) {
+    size_t pos;
+    while ((pos = buffer.find('\n')) == std::string::npos) {
         char buf[STRING_CHUNK_SIZE];
         int n = read_blocked(streams.stdin_fd, buf, STRING_CHUNK_SIZE);
         if (n == 0) {
@@ -82,10 +82,10 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
         buffer.append(buf, n);
     }
 
-  // Split the buffer around '\n' found and return first part.
-  *storage = str2wcstring(buffer.c_str(), std::distance(buffer.begin(), pos));
-  buffer = std::string(pos + 1, buffer.end());
-  return storage->c_str();
+    // Split the buffer around '\n' found and return first part.
+    *storage = str2wcstring(buffer.c_str(), pos);
+    buffer.erase(0, pos + 1);
+    return storage->c_str();
 }
 
 static const wchar_t *string_get_arg_argv(int *argidx, wchar_t **argv) {

@@ -71,12 +71,12 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
             // If we still have buffer contents, flush them.
             if (buffer.empty()) return NULL;
             *storage = str2wcstring(buffer);
-            buffer = "";
+            buffer.clear();
             return storage->c_str();
         }
         if (n == -1) {    // handle errors
             *storage = str2wcstring(buffer);
-            buffer = "";
+            buffer.clear();
             return NULL;
         }
         buffer.append(buf, n);

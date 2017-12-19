@@ -4,6 +4,9 @@ PROJECT(fish-shell CXX)
 # We are C++11.
 SET(CMAKE_CXX_STANDARD 11)
 
+# Disable exception handling.
+ADD_COMPILE_OPTIONS(-fno-exceptions)
+
 # Hide the CMake Rules directories in Xcode projects.
 SOURCE_GROUP("CMake Rules" REGULAR_EXPRESSION "^$")
 

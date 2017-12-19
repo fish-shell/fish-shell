@@ -376,10 +376,8 @@
 		D068222B1F5149B500040321 /* muParserBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822221F51498700040321 /* muParserBase.cpp */; };
 		D068222C1F5149B500040321 /* muParserBytecode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822231F51498700040321 /* muParserBytecode.cpp */; };
 		D068222D1F5149B500040321 /* muParserCallback.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822241F51498700040321 /* muParserCallback.cpp */; };
-		D068222E1F5149B500040321 /* muParserDLL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822251F51498700040321 /* muParserDLL.cpp */; };
 		D068222F1F5149B500040321 /* muParserError.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822261F51498700040321 /* muParserError.cpp */; };
 		D06822301F5149B500040321 /* muParserInt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822271F51498700040321 /* muParserInt.cpp */; };
-		D06822311F5149B500040321 /* muParserTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822281F51498700040321 /* muParserTest.cpp */; };
 		D06822321F5149B500040321 /* muParserTokenReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D06822291F51498700040321 /* muParserTokenReader.cpp */; };
 		D07B247315BCC15700D4ADB4 /* add-shell in Resources */ = {isa = PBXBuildFile; fileRef = D07B247215BCC15700D4ADB4 /* add-shell */; };
 		D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = D07B247515BCC4BE00D4ADB4 /* install.sh */; };
@@ -806,12 +804,7 @@
 		D06821FD1F51498700040321 /* muParserBytecode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserBytecode.h; sourceTree = "<group>"; };
 		D06821FE1F51498700040321 /* muParserCallback.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserCallback.h; sourceTree = "<group>"; };
 		D06821FF1F51498700040321 /* muParserDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserDef.h; sourceTree = "<group>"; };
-		D06822001F51498700040321 /* muParserDLL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserDLL.h; sourceTree = "<group>"; };
-		D06822011F51498700040321 /* muParserError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserError.h; sourceTree = "<group>"; };
-		D06822021F51498700040321 /* muParserFixes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserFixes.h; sourceTree = "<group>"; };
 		D06822031F51498700040321 /* muParserInt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserInt.h; sourceTree = "<group>"; };
-		D06822041F51498700040321 /* muParserStack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserStack.h; sourceTree = "<group>"; };
-		D06822051F51498700040321 /* muParserTemplateMagic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserTemplateMagic.h; sourceTree = "<group>"; };
 		D06822061F51498700040321 /* muParserTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserTest.h; sourceTree = "<group>"; };
 		D06822071F51498700040321 /* muParserToken.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserToken.h; sourceTree = "<group>"; };
 		D06822081F51498700040321 /* muParserTokenReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = muParserTokenReader.h; sourceTree = "<group>"; };
@@ -819,10 +812,8 @@
 		D06822221F51498700040321 /* muParserBase.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserBase.cpp; sourceTree = "<group>"; };
 		D06822231F51498700040321 /* muParserBytecode.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserBytecode.cpp; sourceTree = "<group>"; };
 		D06822241F51498700040321 /* muParserCallback.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserCallback.cpp; sourceTree = "<group>"; };
-		D06822251F51498700040321 /* muParserDLL.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserDLL.cpp; sourceTree = "<group>"; };
 		D06822261F51498700040321 /* muParserError.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserError.cpp; sourceTree = "<group>"; };
 		D06822271F51498700040321 /* muParserInt.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserInt.cpp; sourceTree = "<group>"; };
-		D06822281F51498700040321 /* muParserTest.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserTest.cpp; sourceTree = "<group>"; };
 		D06822291F51498700040321 /* muParserTokenReader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = muParserTokenReader.cpp; sourceTree = "<group>"; };
 		D07B247215BCC15700D4ADB4 /* add-shell */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "add-shell"; path = "build_tools/osx_package_scripts/add-shell"; sourceTree = "<group>"; };
 		D07B247515BCC4BE00D4ADB4 /* install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = install.sh; path = osx/install.sh; sourceTree = "<group>"; };
@@ -1059,12 +1050,7 @@
 				D06821FD1F51498700040321 /* muParserBytecode.h */,
 				D06821FE1F51498700040321 /* muParserCallback.h */,
 				D06821FF1F51498700040321 /* muParserDef.h */,
-				D06822001F51498700040321 /* muParserDLL.h */,
-				D06822011F51498700040321 /* muParserError.h */,
-				D06822021F51498700040321 /* muParserFixes.h */,
 				D06822031F51498700040321 /* muParserInt.h */,
-				D06822041F51498700040321 /* muParserStack.h */,
-				D06822051F51498700040321 /* muParserTemplateMagic.h */,
 				D06822061F51498700040321 /* muParserTest.h */,
 				D06822071F51498700040321 /* muParserToken.h */,
 				D06822081F51498700040321 /* muParserTokenReader.h */,
@@ -1079,10 +1065,8 @@
 				D06822221F51498700040321 /* muParserBase.cpp */,
 				D06822231F51498700040321 /* muParserBytecode.cpp */,
 				D06822241F51498700040321 /* muParserCallback.cpp */,
-				D06822251F51498700040321 /* muParserDLL.cpp */,
 				D06822261F51498700040321 /* muParserError.cpp */,
 				D06822271F51498700040321 /* muParserInt.cpp */,
-				D06822281F51498700040321 /* muParserTest.cpp */,
 				D06822291F51498700040321 /* muParserTokenReader.cpp */,
 			);
 			path = src;
@@ -1927,10 +1911,8 @@
 				D068222B1F5149B500040321 /* muParserBase.cpp in Sources */,
 				D068222C1F5149B500040321 /* muParserBytecode.cpp in Sources */,
 				D068222D1F5149B500040321 /* muParserCallback.cpp in Sources */,
-				D068222E1F5149B500040321 /* muParserDLL.cpp in Sources */,
 				D068222F1F5149B500040321 /* muParserError.cpp in Sources */,
 				D06822301F5149B500040321 /* muParserInt.cpp in Sources */,
-				D06822311F5149B500040321 /* muParserTest.cpp in Sources */,
 				D06822321F5149B500040321 /* muParserTokenReader.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2432,6 +2414,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2485,6 +2468,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;

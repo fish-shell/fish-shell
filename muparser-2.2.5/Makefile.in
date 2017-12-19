@@ -43,13 +43,12 @@ LDFLAGS = @LDFLAGS@
 
 DESTDIR = 
 MUPARSER_LIB_CXXFLAGS = $(____DEBUG) $(____SHARED) $(____SHARED_0) \
-	-I$(srcdir)/include $(CPPFLAGS) $(CXXFLAGS)
+	-I$(srcdir)/include $(CPPFLAGS) $(CXXFLAGS) -std=c++11
 MUPARSER_LIB_OBJECTS =  \
 	muParser_lib_muParser.o \
 	muParser_lib_muParserBase.o \
 	muParser_lib_muParserBytecode.o \
 	muParser_lib_muParserCallback.o \
-	muParser_lib_muParserDLL.o \
 	muParser_lib_muParserError.o \
 	muParser_lib_muParserInt.o \
 	muParser_lib_muParserTest.o \
@@ -59,44 +58,12 @@ MUPARSER_LIB_HEADERS =  \
 	include/muParserBase.h \
 	include/muParserBytecode.h \
 	include/muParserCallback.h \
-	include/muParserDLL.h \
 	include/muParserDef.h \
-	include/muParserError.h \
-	include/muParserFixes.h \
 	include/muParserInt.h \
-	include/muParserStack.h \
-	include/muParserTemplateMagic.h \
 	include/muParserTest.h \
 	include/muParserToken.h \
 	include/muParserTokenReader.h
-MUPARSER_DLL_CXXFLAGS = $(____DEBUG) $(____SHARED) $(____SHARED_0) \
-	-I$(srcdir)/include $(PIC_FLAG) $(CPPFLAGS) $(CXXFLAGS)
-MUPARSER_DLL_OBJECTS =  \
-	muParser_dll_muParser.o \
-	muParser_dll_muParserBase.o \
-	muParser_dll_muParserBytecode.o \
-	muParser_dll_muParserCallback.o \
-	muParser_dll_muParserDLL.o \
-	muParser_dll_muParserError.o \
-	muParser_dll_muParserInt.o \
-	muParser_dll_muParserTest.o \
-	muParser_dll_muParserTokenReader.o
-MUPARSER_DLL_HEADERS =  \
-	include/muParser.h \
-	include/muParserBase.h \
-	include/muParserBytecode.h \
-	include/muParserCallback.h \
-	include/muParserDLL.h \
-	include/muParserDef.h \
-	include/muParserError.h \
-	include/muParserFixes.h \
-	include/muParserInt.h \
-	include/muParserStack.h \
-	include/muParserTemplateMagic.h \
-	include/muParserTest.h \
-	include/muParserToken.h \
-	include/muParserTokenReader.h
-EXAMPLE1_CXXFLAGS = $(____DEBUG) -I$(srcdir)/include $(CPPFLAGS) $(CXXFLAGS)
+EXAMPLE1_CXXFLAGS = $(____DEBUG) -I$(srcdir)/include $(CPPFLAGS) $(CXXFLAGS) -std=c++11
 EXAMPLE1_OBJECTS =  \
 	example1_example1.o
 
@@ -106,17 +73,13 @@ EXAMPLE1_OBJECTS =  \
 @COND_DEPS_TRACKING_1@CXXC = $(BK_DEPS) $(CXX)
 @COND_DEBUG_0@DEBUG_BUILD_POSTFIX = 
 @COND_DEBUG_1@DEBUG_BUILD_POSTFIX = d
-@COND_SHARED_0@__muParser_lib___depname = \
-@COND_SHARED_0@	$(top_builddir)/lib/$(LIBPREFIX)muparser$(DEBUG_BUILD_POSTFIX)$(LIBEXT)
+__muParser_lib___depname = $(top_builddir)/lib/$(LIBPREFIX)muparser$(DEBUG_BUILD_POSTFIX)$(LIBEXT)
 @COND_SHARED_0@__install_muParser_lib___depname = install_muParser_lib
 @COND_SHARED_0@__uninstall_muParser_lib___depname = uninstall_muParser_lib
 @COND_SHARED_0@__install_muParser_lib_headers___depname = \
 @COND_SHARED_0@	install_muParser_lib_headers
 @COND_SHARED_0@__uninstall_muParser_lib_headers___depname = \
 @COND_SHARED_0@	uninstall_muParser_lib_headers
-COND_SHARED_1___muParser_dll___depname = \
-	$(top_builddir)/lib/$(DLLPREFIX)muparser$(DEBUG_BUILD_POSTFIX)$(__muParser_dll___targetsuf3)
-@COND_SHARED_1@__muParser_dll___depname = $(COND_SHARED_1___muParser_dll___depname)
 @COND_SHARED_1@__install_muParser_dll___depname = install_muParser_dll
 @COND_SHARED_1@__uninstall_muParser_dll___depname = uninstall_muParser_dll
 COND_PLATFORM_MACOSX_1___muParser_dll___macinstnamecmd = -install_name \
@@ -194,8 +157,7 @@ COND_USE_SOTWOSYMLINKS_1___muParser_dll___so_symlinks_uninst_cmd = rm -f \
 @COND_USE_SOVERSOLARIS_1@	$(LIBPREFIX)muparser$(DEBUG_BUILD_POSTFIX).$(DLLIMP_SUFFIX)
 @COND_PLATFORM_MACOSX_1@__muParser_dll___macver = \
 @COND_PLATFORM_MACOSX_1@	-compatibility_version 1 -current_version 1
-@COND_SAMPLES_1@__example1___depname = \
-@COND_SAMPLES_1@	$(top_builddir)/samples/example1/example1$(EXEEXT)
+__example1___depname = $(top_builddir)/samples/example1/example1$(EXEEXT)
 @COND_PLATFORM_MAC_0@__example1___mac_setfilecmd = @true
 @COND_PLATFORM_MAC_1@__example1___mac_setfilecmd = \
 @COND_PLATFORM_MAC_1@	$(SETFILE) -t APPL \
@@ -204,12 +166,12 @@ COND_USE_SOTWOSYMLINKS_1___muParser_dll___so_symlinks_uninst_cmd = rm -f \
 @COND_SHARED_1@____SHARED = -DMUPARSER_DLL
 @COND_SHARED_0@____SHARED_0 = 
 @COND_SHARED_1@____SHARED_0 = -DMUPARSERLIB_EXPORTS
-@COND_DEBUG_0@____DEBUG = -DNDEBUG
+@COND_DEBUG_0@____DEBUG = 
 @COND_DEBUG_1@____DEBUG = 
 
 ### Targets: ###
 
-all: $(__muParser_lib___depname) $(__muParser_dll___depname) $(__example1___depname)
+all: $(__muParser_lib___depname) $(__example1___depname)
 
 install: $(__install_muParser_lib___depname) $(__install_muParser_lib_headers___depname) $(__install_muParser_dll___depname) $(__install_muParser_dll_headers___depname)
 	$(INSTALL_DIR) $(DESTDIR)$(libdir)/pkgconfig
@@ -259,12 +221,9 @@ distclean: clean
 @COND_SHARED_0@	rm -f $(DESTDIR)$(prefix)/$$f; \
 @COND_SHARED_0@	done
 
-@COND_SHARED_1@$(top_builddir)/lib/$(DLLPREFIX)muparser$(DEBUG_BUILD_POSTFIX)$(__muParser_dll___targetsuf3): $(MUPARSER_DLL_OBJECTS)
-@COND_SHARED_1@	$(SHARED_LD_CXX) $@ $(MUPARSER_DLL_OBJECTS)   $(__muParser_dll___macinstnamecmd) $(__muParser_dll___importlib) $(__muParser_dll___soname_flags) $(__muParser_dll___macver) $(LDFLAGS)  $(LIBS)
 @COND_SHARED_1@	
 @COND_SHARED_1@	$(__muParser_dll___so_symlinks_cmd)
 
-@COND_SHARED_1@install_muParser_dll: $(__muParser_dll___depname)
 @COND_SHARED_1@	$(INSTALL_DIR) $(DESTDIR)$(libdir)
 @COND_SHARED_1@	$(INSTALL_DATA) $(top_builddir)/lib/$(LIBPREFIX)muparser$(DEBUG_BUILD_POSTFIX).$(DLLIMP_SUFFIX) $(DESTDIR)$(libdir)
 @COND_SHARED_1@	$(INSTALL_PROGRAM) $(top_builddir)/lib/$(DLLPREFIX)muparser$(DEBUG_BUILD_POSTFIX)$(__muParser_dll___targetsuf3) $(DESTDIR)$(libdir)
@@ -275,26 +234,12 @@ distclean: clean
 @COND_SHARED_1@	rm -f $(DESTDIR)$(libdir)/$(DLLPREFIX)muparser$(DEBUG_BUILD_POSTFIX)$(__muParser_dll___targetsuf3)
 @COND_SHARED_1@	(cd $(DESTDIR)$(libdir) ; $(__muParser_dll___so_symlinks_uninst_cmd))
 
-@COND_SHARED_1@install_muParser_dll_headers: 
-@COND_SHARED_1@	$(INSTALL_DIR) $(DESTDIR)$(prefix)
-@COND_SHARED_1@	for f in $(MUPARSER_DLL_HEADERS); do \
-@COND_SHARED_1@	if test ! -d $(DESTDIR)$(prefix)/`dirname $$f` ; then \
-@COND_SHARED_1@	$(INSTALL_DIR) $(DESTDIR)$(prefix)/`dirname $$f`; \
-@COND_SHARED_1@	fi; \
-@COND_SHARED_1@	$(INSTALL_DATA) $(srcdir)/$$f $(DESTDIR)$(prefix)/$$f; \
-@COND_SHARED_1@	done
-
-@COND_SHARED_1@uninstall_muParser_dll_headers: 
-@COND_SHARED_1@	for f in $(MUPARSER_DLL_HEADERS); do \
-@COND_SHARED_1@	rm -f $(DESTDIR)$(prefix)/$$f; \
-@COND_SHARED_1@	done
-
 @COND_SAMPLES_1@$(top_builddir)/samples/example1/example1$(EXEEXT): $(EXAMPLE1_OBJECTS) $(__muParser_lib___depname)
 @COND_SAMPLES_1@	$(CXX) -o $@ $(EXAMPLE1_OBJECTS) -L$(top_builddir)/lib   -L$(srcdir)/lib $(LDFLAGS)  -lmuparser$(DEBUG_BUILD_POSTFIX) $(LIBS)
 @COND_SAMPLES_1@	
 @COND_SAMPLES_1@	$(__example1___mac_setfilecmd)
 
-lib: $(__muParser_lib___depname) $(__muParser_dll___depname)
+lib: $(__muParser_lib___depname)
 
 samples: $(__example1___depname)
 
@@ -327,33 +272,6 @@ muParser_lib_muParserTest.o: $(srcdir)/src/muParserTest.cpp
 
 muParser_lib_muParserTokenReader.o: $(srcdir)/src/muParserTokenReader.cpp
 	$(CXXC) -c -o $@ $(MUPARSER_LIB_CXXFLAGS) $(srcdir)/src/muParserTokenReader.cpp
-
-muParser_dll_muParser.o: $(srcdir)/src/muParser.cpp
-	$(CXXC) -c -o $@ $(MUPARSER_DLL_CXXFLAGS) $(srcdir)/src/muParser.cpp
-
-muParser_dll_muParserBase.o: $(srcdir)/src/muParserBase.cpp
-	$(CXXC) -c -o $@ $(MUPARSER_DLL_CXXFLAGS) $(srcdir)/src/muParserBase.cpp
-
-muParser_dll_muParserBytecode.o: $(srcdir)/src/muParserBytecode.cpp
-	$(CXXC) -c -o $@ $(MUPARSER_DLL_CXXFLAGS) $(srcdir)/src/muParserBytecode.cpp
-
-muParser_dll_muParserCallback.o: $(srcdir)/src/muParserCallback.cpp
-	$(CXXC) -c -o $@ $(MUPARSER_DLL_CXXFLAGS) $(srcdir)/src/muParserCallback.cpp
-
-muParser_dll_muParserDLL.o: $(srcdir)/src/muParserDLL.cpp
-	$(CXXC) -c -o $@ $(MUPARSER_DLL_CXXFLAGS) $(srcdir)/src/muParserDLL.cpp
-
-muParser_dll_muParserError.o: $(srcdir)/src/muParserError.cpp
-	$(CXXC) -c -o $@ $(MUPARSER_DLL_CXXFLAGS) $(srcdir)/src/muParserError.cpp
-
-muParser_dll_muParserInt.o: $(srcdir)/src/muParserInt.cpp
-	$(CXXC) -c -o $@ $(MUPARSER_DLL_CXXFLAGS) $(srcdir)/src/muParserInt.cpp
-
-muParser_dll_muParserTest.o: $(srcdir)/src/muParserTest.cpp
-	$(CXXC) -c -o $@ $(MUPARSER_DLL_CXXFLAGS) $(srcdir)/src/muParserTest.cpp
-
-muParser_dll_muParserTokenReader.o: $(srcdir)/src/muParserTokenReader.cpp
-	$(CXXC) -c -o $@ $(MUPARSER_DLL_CXXFLAGS) $(srcdir)/src/muParserTokenReader.cpp
 
 example1_example1.o: $(srcdir)/samples/example1/example1.cpp
 	$(CXXC) -c -o $@ $(EXAMPLE1_CXXFLAGS) $(srcdir)/samples/example1/example1.cpp

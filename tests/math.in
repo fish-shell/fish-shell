@@ -22,3 +22,9 @@ set x 3
 set y 1.5
 math "-$x * $y"
 math -s1 "-$x * $y"
+
+logmsg Validate math error reporting
+not math 'min()'
+not math 'min("abc")'
+not math 'max()'
+not math 'sum()'

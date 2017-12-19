@@ -3569,11 +3569,12 @@ $as_echo "no" >&6; }
     fi
 
     # Check whether --enable-shared was given.
-if test "${enable_shared+set}" = set; then :
-  enableval=$enable_shared;
-else
-  enableval="$default"
-fi
+    # fish: disabled
+# if test "${enable_shared+set}" = set; then :
+#   enableval=$enable_shared;
+# else
+#   enableval="$default"
+# fi
 
 
 

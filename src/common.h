@@ -285,6 +285,7 @@ int fgetws2(wcstring *s, FILE *f);
 wcstring str2wcstring(const char *in);
 wcstring str2wcstring(const char *in, size_t len);
 wcstring str2wcstring(const std::string &in);
+wcstring str2wcstring(const std::string &in, size_t len);
 
 /// Returns a newly allocated multibyte character string equivalent of the specified wide character
 /// string.

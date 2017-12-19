@@ -74,6 +74,16 @@ __fish_eopkg_subcommand_with_shortcut history hs -d "History of operations"
 __fish_eopkg_option_with_shortcut history hs -s l -l last -x -d "Output only the last n operations"
 __fish_eopkg_option_with_shortcut history hs -s t -l takeback -x -d "Takeback to the state after the given operation"
 
+__fish_eopkg_subcommand_with_shortcut search sr -d "Search packages"
+__fish_eopkg_option_with_shortcut search sr -s r -l repository -x -d "Name of the source or package repository"
+__fish_eopkg_option_with_shortcut search sr -l name -d "Search in package name"
+__fish_eopkg_option_with_shortcut search sr -l summary -d "Search in package name"
+__fish_eopkg_option_with_shortcut search sr -l description -d "Search in package name"
+
+__fish_eopkg_subcommand_with_shortcut search-file sf -d "Search for a file in installed packages"
+__fish_eopkg_option_with_shortcut search-file sf -s l -l long -d "Show in long format"
+__fish_eopkg_option_with_shortcut search-file sf -s q -l quiet -d "Show only package name"
+
 __fish_eopkg_subcommand_with_shortcut add-repo ar -r -d "Add a repository"
 __fish_eopkg_subcommand_with_shortcut remove-repo rr -x -d "Remove repositories"
 __fish_eopkg_subcommand_with_shortcut enable-repo er -x -d "Enable repositories"

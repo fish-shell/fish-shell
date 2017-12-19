@@ -290,6 +290,11 @@ wcstring str2wcstring(const std::string &in) {
     return str2wcs_internal(in.data(), in.size());
 }
 
+wcstring str2wcstring(const std::string &in, size_t len) {
+    // Handles embedded nulls!
+    return str2wcs_internal(in.data(), len);
+}
+
 char *wcs2str(const wchar_t *in) {
     if (!in) return NULL;
     size_t desired_size = MAX_UTF8_BYTES * wcslen(in) + 1;

@@ -38,6 +38,11 @@ class parser_t;
 
 #define STRING_ERR_MISSING _(L"%ls: Expected argument\n")
 
+// How many bytes we read() at once.
+// Bash uses 128 here, so we do too (see READ_CHUNK_SIZE).
+// This should be about the size of a line.
+#define STRING_CHUNK_SIZE 128
+
 static void string_error(io_streams_t &streams, const wchar_t *fmt, ...) {
     streams.err.append(L"string ");
     va_list va;
@@ -58,30 +63,32 @@ static bool string_args_from_stdin(const io_streams_t &streams) {
 }
 
 static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t &streams) {
-    std::string arg;
-    for (;;) {
-        char ch = '\0';
-        long rc = read_blocked(streams.stdin_fd, &ch, 1);
+    // We might read more than a line - store the rest in a static buffer.
+    static std::string buffer;
 
-        if (rc < 0) {  // failure
+    // Read in chunks from fd until buffer has a line.
+    size_t pos;
+    while ((pos = buffer.find('\n')) == std::string::npos) {
+        char buf[STRING_CHUNK_SIZE];
+        int n = read_blocked(streams.stdin_fd, buf, STRING_CHUNK_SIZE);
+        if (n == 0) {
+            // If we still have buffer contents, flush them.
+            if (buffer.empty()) return NULL;
+            *storage = str2wcstring(buffer);
+            buffer.clear();
+            return storage->c_str();
+        }
+        if (n == -1) {    // handle errors
+            *storage = str2wcstring(buffer);
+            buffer.clear();
             return NULL;
         }
-
-        if (rc == 0) {  // EOF
-            if (arg.empty()) {
-                return NULL;
-            }
-            break;
-        }
-
-        if (ch == '\n') {
-            break;
-        }
-
-        arg += ch;
+        buffer.append(buf, n);
     }
 
-    *storage = str2wcstring(arg);
+    // Split the buffer around '\n' found and return first part.
+    *storage = str2wcstring(buffer, pos);
+    buffer.erase(0, pos + 1);
     return storage->c_str();
 }
 

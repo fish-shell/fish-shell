@@ -91,7 +91,7 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
     }
 
     // Split the buffer on the '\n' and return the first part.
-    *storage = str2wcstring(buffer.c_str(), pos);
+    *storage = str2wcstring(buffer, pos);
     buffer.erase(0, pos + 1);
     return storage->c_str();
 }

@@ -37,6 +37,10 @@
 class parser_t;
 
 #define STRING_ERR_MISSING _(L"%ls: Expected argument\n")
+
+// How many bytes we read() at once.
+// Bash uses 128 here, so we do too (see READ_CHUNK_SIZE).
+// This should be about the size of a line.
 #define STRING_CHUNK_SIZE 128
 
 static void string_error(io_streams_t &streams, const wchar_t *fmt, ...) {

@@ -26,6 +26,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `bind` has a new `--silent` option to ignore bind requests for named keys not available under the current `$TERMINAL` (#4188, #4431)
 - `read` writes directly to stdout if called without arguments (#4407)
 - Globs are faster (#4579)
+- `string` reads from stdin faster (#4610)
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

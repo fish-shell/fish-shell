@@ -1,21 +1,18 @@
 function __fish_complete_zfs_mountpoint_properties -d "Completes with ZFS mountpoint properties"
 	set -l OS ""
-	if passwd --help >/dev/null ^&1
-		set OS "Linux"
-	else # Not Linux, so use the ugly uname
-		set -l os_type (uname)
-		switch $os_type
-			case Darwin
-				set OS "macOS"
-			case FreeBSD
-				set OS "FreeBSD"
-			case SunOS
-				set OS "SunOS"
-			# Others?
-			case "*"
-				set OS "unknown"
-		end
-	end
+    switch (uname)
+        case Linux
+            set OS "Linux"
+        case Darwin
+            set OS "macOS"
+        case FreeBSD
+            set OS "FreeBSD"
+        case SunOS
+            set OS "SunOS"
+        # Others?
+        case "*"
+            set OS "unknown"
+    end
 	echo -e "atime\t"(_ "Update access time on read")" (on, off)"
 	echo -e "devices\t"(_ "Are contained device nodes openable")" (on, off)"
 	echo -e "exec\t"(_ "Can contained executables be executed")" (on, off)"

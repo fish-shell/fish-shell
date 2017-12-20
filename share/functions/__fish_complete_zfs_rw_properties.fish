@@ -1,26 +1,23 @@
 function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write properties"
 	set -l OS ""
-	if passwd --help >/dev/null ^&1
-		set OS "Linux"
-	else # Not Linux, so use the ugly uname
-		set -l os_type (uname)
-		switch $os_type
-			case Darwin
-				set OS "macOS"
-			case FreeBSD
-				set OS "FreeBSD"
-			case SunOS
-				set OS "SunOS"
-			# Others?
-			case "*"
-				set OS "unknown"
-		end
+    switch (uname)
+        case Linux
+            set OS "Linux"
+        case Darwin
+            set OS "macOS"
+        case FreeBSD
+            set OS "FreeBSD"
+        case SunOS
+            set OS "SunOS"
+        # Others?
+        case "*"
+            set OS "unknown"
 	end
 	echo -e "aclinherit\t"(_ "Inheritance of ACL entries")" (discard, noallow, restricted, passthrough, passthrough-x)"
 	echo -e "atime\t"(_ "Update access time on read")" (on, off)"
 	echo -e "canmount\t"(_ "Is the dataset mountable")" (on, off, noauto)"
 	set -l additional_algs ''
-    if test $OS = 'FreeBSD'; or test $OS = 'SunOS'
+    if contains -- $OS FreeBSD SunOS
 		set additional_algs "$additional_algs, noparity"
     end
 	if __fish_is_zfs_feature_enabled "feature@sha512"
@@ -96,5 +93,5 @@ function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write pro
 		echo -e "volmode\t"(_ "How to expose volumes to OS")" (default, geom, dev, none)"
 	end		
 	# User properties; the /dev/null redirection masks the possible "no datasets available"
-	zfs list -o all ^/dev/null | head -n 1 | string replace -a -r "\s+" "\n" | grep ":" | tr '[:upper:]' '[:lower:]'
+	zfs list -o all ^/dev/null | head -n 1 | string replace -a -r "\s+" "\n" | string match -e ":" | string lower
 end

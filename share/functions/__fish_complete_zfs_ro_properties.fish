@@ -40,7 +40,7 @@ function __fish_complete_zfs_ro_properties -d "Completes with ZFS read-only prop
     end
 	# Autogenerate written@$SNAPSHOT list
     for snapshot in (__fish_print_zfs_snapshots)
-        set tabAndBefore (echo -e "written@$snapshot\t")
+        set -l tabAndBefore (echo -e "written@$snapshot\t")
         printf (_ "%sReferenced data written since snapshot %s\n") $tabAndBefore $snapshot
     end
 end

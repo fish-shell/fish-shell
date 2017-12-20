@@ -5,21 +5,18 @@
 # - this has been written mainly from manpages, which are known to be out-of-sync with the real feature set; some discrepancies have been addressed, but it is highly likely that others still lie
 
 set OS ""
-if passwd --help >/dev/null ^&1
-    set OS "Linux"
-else # Not Linux, so use the ugly uname
-    set -l os_type (uname)
-    switch $os_type
-        case Darwin
-            set OS "macOS"
-        case FreeBSD
-            set OS "FreeBSD"
-        case SunOS
-            set OS "SunOS"
-        # Others?
-        case "*"
-            set OS "unknown"
-    end
+switch (uname)
+    case Linux
+        set OS "Linux"
+    case Darwin
+        set OS "macOS"
+    case FreeBSD
+        set OS "FreeBSD"
+    case SunOS
+        set OS "SunOS"
+    # Others?
+    case "*"
+        set OS "unknown"
 end
 
 # Does the current invocation need a command?
@@ -134,7 +131,7 @@ end
 
 function __fish_zpool_list_ro_properties
     echo -e "alloc\t"(_ "Physically allocated space")
-    if test $OS = 'SunOS'; or test $OS = 'Linux'
+    if contains -- $OS SunOS Linux
         echo -e "available\t"(_ "Available space")
         echo -e "avail\t"(_ "Available space")
     end
@@ -291,7 +288,7 @@ complete -c zpool -x -n '__fish_zpool_using_command export' -d 'Pool to export' 
 # get completions
 complete -c zpool -f -n '__fish_zpool_using_command get' -s p -d 'Print parsable (exact) values for numbers'
 complete -c zpool -f -n '__fish_zpool_using_command get' -s H -d 'Print output in a machine-parsable format'
-if test $OS = 'FreeBSD'; or test $OS = 'SunOS'
+if contains -- $OS FreeBSD SunOS
     complete -c zpool -x -n '__fish_zpool_using_command get' -s o -d 'Fields to display' -a '(__fish_zpool_append (__fish_zpool_list_get_fields))'
 end
 complete -c zpool -x -n '__fish_zpool_using_command get' -d 'Properties to get' -a '(__fish_zpool_append (__fish_zpool_list_importtime_properties; __fish_zpool_list_rw_properties; __fish_zpool_list_writeonce_properties; __fish_zpool_list_ro_properties; __fish_zpool_list_device_properties; echo -e "all\t"(_ "All properties")))'

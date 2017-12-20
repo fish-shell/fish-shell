@@ -11,25 +11,22 @@
 # - for commands accepting several arguments of different types, propose arguments in the right order: for get, once the ZFS parameters have been given, only propose datasets
 
 set OS ""
-if passwd --help >/dev/null ^&1
-    set OS "Linux"
-else # Not Linux, so use the ugly uname
-    set -l os_type (uname)
-    switch $os_type
-        case Darwin
-            set OS "macOS"
-        case FreeBSD
-            set OS "FreeBSD"
-        case SunOS
-            set OS "SunOS"
-        # Others?
-        case "*"
-            set OS "unknown"
-    end
+switch (uname)
+    case Linux
+        set OS "Linux"
+    case Darwin
+        set OS "macOS"
+    case FreeBSD
+        set OS "FreeBSD"
+    case SunOS
+        set OS "SunOS"
+    # Others?
+    case "*"
+        set OS "unknown"
 end
 
 function __fish_zfs_append -d "Internal completion function for appending string to the ZFS commandline"
-    set str (commandline -tc| sed -ne "s/\(.*,\)[^,]*/\1/p"|sed -e "s/--.*=//")
+    set str (commandline -tc | string replace -rf '(.*,)[^,]*' '$1' | string replace -r -- '--.*=' '')
     printf "%s\n" "$str"$argv
 end
 
@@ -128,7 +125,7 @@ function __fish_zfs_list_permissions
     echo -e "canmount\t"(_ "Is the dataset mountable")" (on, off, noauto)"
     set -l additional_cksum_algs ''
     set -l additional_dedup_algs ''
-    if test $OS = 'FreeBSD'; or test $OS = 'SunOS'
+    if contains -- $OS FreeBSD SunOS
         set additional_cksum_algs ", noparity"
     end
     if __fish_is_zfs_feature_enabled "feature@sha512"
@@ -361,7 +358,7 @@ complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_c
 complete -c zfs -x -n '__fish_zfs_using_command mount' -s o -d 'Temporary mount point property' -a '(__fish_zfs_append (__fish_complete_zfs_mountpoint_properties))'
 complete -c zfs -f -n '__fish_zfs_using_command mount' -s v -d 'Report progress'
 complete -c zfs -f -n '__fish_zfs_using_command mount' -s a -d 'Mount all available ZFS filesystems'
-if test $OS = 'Linux'; or test $OS = 'SunOS'
+if contains -- $OS Linux SunOS
     complete -c zfs -f -n '__fish_zfs_using_command mount' -s O -d 'Overlay mount'
 end
 complete -c zfs -x -n '__fish_zfs_using_command mount; and __fish_not_contain_opt -s a' -d 'Filesystem to mount' -a '(__fish_print_zfs_filesystems)'
@@ -429,7 +426,7 @@ complete -c zfs -f -n '__fish_zfs_using_command allow; and __fish_not_contain_op
 complete -c zfs -f -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s l' -s d -d 'Delegate permissions only on the descendents dataset'
 complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s e' -s u -d 'User to delegate permissions to' -a '(__fish_zfs_append (__fish_complete_users))'
 complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s e' -s g -d 'Group to delegate permissions to' -a '(__fish_zfs_append (__fish_complete_groups))'
-if test $OS = "SunOS"; or test $OS = "FreeBSD"
+if contains -- $OS SunOS FreeBSD
     complete -c zfs -f -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s u -s g -s e' -a 'everyone' -d 'Delegate permission to everyone'
 end
 complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s u -s g everyone' -s e -d 'Delegate permission to everyone'

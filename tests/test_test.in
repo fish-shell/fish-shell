@@ -1,0 +1,23 @@
+# Tests for the `test` builtin. TEST!
+function is_two
+    # TEST?
+    if test 2 -eq "$argv"
+        echo argv is two
+    else
+        echo argv is not two
+    end
+end
+
+is_two 5 # This is indeed not two
+is_two 2 # This fine specimen, on the other hand, is.
+is_two " 2 " # This is also two.
+
+# Consider the banana. It is not two.
+is_two banana
+is_two banana banana # While they are two bananas, they are not two itself.
+is_two # When no one is there to be two, is it still two?
+is_two "no one" # No one is not two.
+is_two everyone # is also not two.
+
+is_two 0b10
+is_two (printf '%d\n' 0x2) # Twobular!

@@ -495,6 +495,8 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
 
         const wcstring &val = argument_sequence.at(i);
         int retval = env_set_one(for_var_name, ENV_DEFAULT | ENV_USER, val);
+        assert(retval == ENV_OK && "for loop variable should have been successfully set");
+        (void)retval;
 
         fb->loop_status = LOOP_NORMAL;
         this->run_job_list(block_contents, fb);

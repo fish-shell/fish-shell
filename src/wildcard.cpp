@@ -91,7 +91,8 @@ bool wildcard_has(const wcstring &str, bool internal) {
 ///
 /// \param str String to be matched.
 /// \param wc The wildcard.
-/// \param is_first Whether files beginning with dots should not be matched against wildcards.
+/// \param leading_dots_fail_to_match Whether files beginning with dots should not be matched
+/// against wildcards.
 static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const wchar_t *wc,
                                                        bool leading_dots_fail_to_match) {
     // Hackish fix for issue #270. Prevent wildcards from matching . or .., but we must still allow

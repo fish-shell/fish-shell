@@ -30,6 +30,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `string` reads from stdin faster (#4610)
 - `cd` tab completions no longer descend into the deepest unambiguous path (#4649)
 - Setting `$PATH` no longer warns on non-existent directories, allowing for a single $PATH to be shared across machines (e.g. via dotfiles).
+- `funced` now has a `-s` and `--save` option to automatically save the edited function after successfully editing (#4668).
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

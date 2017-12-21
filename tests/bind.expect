@@ -51,7 +51,7 @@ expect_prompt -re {\r\ndefault\r\npaste} {
 
 # Test vi key bindings.
 # This should leave vi mode in the insert state.
-send "fish_vi_key_bindings\r"
+send "set -g fish_key_bindings fish_vi_key_bindings\r"
 expect_prompt
 
 # These vi tests assume the fish_vi_key_bindings default escape timeout of

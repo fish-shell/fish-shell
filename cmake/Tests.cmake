@@ -31,7 +31,8 @@ CMAKE_POLICY(POP)
 ADD_CUSTOM_TARGET(test_low_level
   COMMAND env XDG_DATA_HOME=test/data XDG_CONFIG_HOME=test/home ./fish_tests
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS fish_tests)
+  DEPENDS fish_tests
+  USES_TERMINAL)
 ADD_DEPENDENCIES(test test_low_level)
 
 # Make the directory in which to run tests.
@@ -69,7 +70,8 @@ ADD_CUSTOM_TARGET(test_prep
                   COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/temp
                   COMMAND ${CMAKE_COMMAND} -E make_directory
                           ${TEST_DIR}/data ${TEST_DIR}/home ${TEST_DIR}/temp
-                  DEPENDS tests_buildroot_target)
+                  DEPENDS tests_buildroot_target
+                  USES_TERMINAL)
 
 
 # test_high_level_test_deps = test_fishscript test_interactive test_invocation
@@ -84,7 +86,8 @@ ADD_CUSTOM_TARGET(test_prep
 ADD_CUSTOM_TARGET(test_invocation
                   COMMAND ./invocation.sh
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests/
-                  DEPENDS test_prep test_low_level)
+                  DEPENDS test_prep test_low_level
+                  USES_TERMINAL)
 
 #
 # test_fishscript: $(call filter_up_to,test_fishscript,$(active_test_goals))
@@ -93,7 +96,8 @@ ADD_CUSTOM_TARGET(test_invocation
 
 ADD_CUSTOM_TARGET(test_fishscript
                   COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish test.fish
-                  DEPENDS test_prep test_invocation)
+                  DEPENDS test_prep test_invocation
+                  USES_TERMINAL)
 #
 # test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
 #   cd tests; ../test/root/bin/fish interactive.fish

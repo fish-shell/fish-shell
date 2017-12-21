@@ -37,7 +37,8 @@ function __fish_print_packages
     # returning information if another pkg_* tool have a lock.
     # Listing /var/db/pkg is a clean alternative.
     if type -q -f pkg_add
-        set -l files /var/db/pkg/*; string replace '/var/db/pkg/' '' -- $files
+        set -l files /var/db/pkg/*
+        string replace '/var/db/pkg/' '' -- $files
         return
     end
 
@@ -125,6 +126,27 @@ function __fish_print_packages
         return
     end
 
+    # Eopkg is slow in showing list of available packages
+
+    if type -q -f eopkg
+
+        # If the cache is less than max_age, we do not recalculate it
+
+        set cache_file $XDG_CACHE_HOME/.eopkg-cache.$USER
+        if test -f $cache_file
+            cat $cache_file
+            set age (math (date +%s) - (stat -c '%Y' $cache_file))
+            set max_age 500
+            if test $age -lt $max_age
+                return
+            end
+        end
+
+        # Remove package version information from output and pipe into cache file
+        eopkg list-available -N | cut -d ' ' -f 1 >$cache_file &
+        return
+    end
+
     # This completes the package name from the portage tree.
     # True for installing new packages. Function for printing
     # installed on the system packages is in completions/emerge.fish
@@ -142,4 +164,3 @@ function __fish_print_packages
     end
 
 end
-

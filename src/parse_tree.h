@@ -245,7 +245,7 @@ struct parsed_source_t {
     parsed_source_t &operator=(parsed_source_t &&) = default;
 };
 /// Return a shared pointer to parsed_source_t, or null on failure.
-using parsed_source_ref_t = std::shared_ptr<parsed_source_t>;
+using parsed_source_ref_t = std::shared_ptr<const parsed_source_t>;
 parsed_source_ref_t parse_source(wcstring src, parse_tree_flags_t flags, parse_error_list_t *errors,
                                  parse_token_type_t goal = symbol_job_list);
 

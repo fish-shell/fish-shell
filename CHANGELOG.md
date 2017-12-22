@@ -1,3 +1,11 @@
+# fish 2.7.1 (released December 23, 2017)
+
+This release of fish fixes an issue where iTerm 2 on macOS would display a warning about paste bracketing being left on when starting a new fish session (#4521).
+
+If you are upgrading from version 2.6.0 or before, please also review the release notes for 2.7.0 and 2.7b1 (included below).
+
+--
+
 # fish 2.7.0 (released November 23, 2017)
 
 There are no major changes between 2.7b1 and 2.7.0. If you are upgrading from version 2.6.0 or before, please also review the release notes for 2.7b1 (included below).

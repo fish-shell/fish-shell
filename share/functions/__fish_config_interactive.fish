@@ -262,7 +262,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     or set -l VTE_VERSION 0
     set -q TERM_PROGRAM
     or set -l TERM_PROGRAM
-    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal" -o "$TERM_PROGRAM" = "iTerm.app"
+    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             if status --is-command-substitution
                 or set -q INSIDE_EMACS

@@ -554,12 +554,6 @@ bool should_suppress_stderr_for_tests() {
     return program_name && !wcscmp(program_name, TESTS_PROGRAM_NAME);
 }
 
-/// Return true if we should emit a `debug()` message. This used to call
-/// `should_suppress_stderr_for_tests()`. It no longer does so because it can suppress legitimate
-/// errors we want to see if things go wrong. Too, calling that function is no longer necessary, if
-/// it ever was, to suppress unwanted diagnostic output that might confuse people running `make
-/// test`.
-static bool should_debug(int level) { return level <= debug_level; }
 
 static void debug_shared(const wchar_t level, const wcstring &msg) {
     pid_t current_pid = getpid();
@@ -573,8 +567,7 @@ static void debug_shared(const wchar_t level, const wcstring &msg) {
 }
 
 static wchar_t level_char[] = {L'E', L'W', L'2', L'3', L'4', L'5'};
-void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...) {
-    if (!should_debug(level)) return;
+void __attribute__((noinline)) debug_impl(int level, const wchar_t *msg, ...) {
     int errno_old = errno;
     va_list va;
     va_start(va, msg);
@@ -588,7 +581,7 @@ void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...) {
     errno = errno_old;
 }
 
-void __attribute__((noinline)) debug(int level, const char *msg, ...) {
+void __attribute__((noinline)) debug_impl(int level, const char *msg, ...) {
     if (!should_debug(level)) return;
     int errno_old = errno;
     char local_msg[512];

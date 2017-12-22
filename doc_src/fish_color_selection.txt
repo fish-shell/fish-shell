@@ -1,0 +1,14 @@
+\section fish_color_selection - set color for selected text in vi mode
+
+\subsection fish_color_selection-synopsis Synopsis
+\fish{synopsis}
+fish_color_selection [OPTIONS] VALUE
+\endfish
+
+\subsection fish_color_selection-description Description
+
+`fish_color_selection` is used to set which color to display for highlighting the selected text in vi mode. `VALUE` corresponds to a reserved color name such as *red* or a RGB color value given as 3 or 6 hexadecimal digits.
+
+Valid colors include:
+
+see set_color section

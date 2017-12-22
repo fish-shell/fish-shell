@@ -282,8 +282,8 @@ string_type parser_error_for_code(EErrorCodes code);
 #endif
 
 // Define a type-level attribute declaring that this type, when used as the return value
-// of a function, should produce warnings.
-#if __has_attribute(warn_unused_result)
+// of a function, should produce warnings. Only clang supports this on types.
+#if __clang__ && __has_attribute(warn_unused_result)
 #define MUPARSER_ATTR_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 #else
 #define MUPARSER_ATTR_WARN_UNUSED_RESULT

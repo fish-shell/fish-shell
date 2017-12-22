@@ -1199,6 +1199,13 @@ const parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, nod
     return result;
 }
 
+parsed_source_ref_t parse_source(wcstring src, parse_tree_flags_t flags, parse_error_list_t *errors,
+                                 parse_token_type_t goal) {
+    parse_node_tree_t tree;
+    if (!parse_tree_from_string(src, flags, &tree, errors, goal)) return {};
+    return std::make_shared<parsed_source_t>(std::move(src), std::move(tree));
+}
+
 const parse_node_t &parse_node_tree_t::find_child(const parse_node_t &parent,
                                                   parse_token_type_t type) const {
     for (node_offset_t i = 0; i < parent.child_count; i++) {

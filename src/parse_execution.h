@@ -28,17 +28,16 @@ enum parse_execution_result_t {
 
 class parse_execution_context_t {
    private:
-    const parse_node_tree_t tree;
-    const wcstring src;
+    parsed_source_ref_t pstree;
     io_chain_t block_io;
     parser_t *const parser;
     // parse_error_list_t errors;
     int eval_level;
     // The currently executing node index, used to indicate the line number.
-    node_offset_t executing_node_idx;
+    node_offset_t executing_node_idx = NODE_OFFSET_INVALID;
     // Cached line number information.
-    size_t cached_lineno_offset;
-    int cached_lineno_count;
+    size_t cached_lineno_offset = 0;
+    int cached_lineno_count = 0;
     // No copying allowed.
     parse_execution_context_t(const parse_execution_context_t &);
     parse_execution_context_t &operator=(const parse_execution_context_t &);
@@ -128,8 +127,7 @@ class parse_execution_context_t {
     int line_offset_of_character_at_offset(size_t char_idx);
 
    public:
-    parse_execution_context_t(parse_node_tree_t t, const wcstring &s, parser_t *p,
-                              int initial_eval_level);
+    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p, int initial_eval_level);
 
     /// Returns the current eval level.
     int current_eval_level() const { return eval_level; }
@@ -142,7 +140,10 @@ class parse_execution_context_t {
     int get_current_source_offset() const;
 
     /// Returns the source string.
-    const wcstring &get_source() const { return src; }
+    const wcstring &get_source() const { return pstree->src; }
+
+    /// Return the parse tree.
+    const parse_node_tree_t &tree() const { return pstree->tree; }
 
     /// Start executing at the given node offset. Returns 0 if there was no error, 1 if there was an
     /// error.

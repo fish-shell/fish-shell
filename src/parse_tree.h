@@ -232,6 +232,23 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags,
                             parse_node_tree_t *output, parse_error_list_t *errors,
                             parse_token_type_t goal = symbol_job_list);
 
+/// A type wrapping up a parse tree and the original source behind it.
+struct parsed_source_t {
+    wcstring src;
+    parse_node_tree_t tree;
+
+    parsed_source_t(wcstring s, parse_node_tree_t t) : src(std::move(s)), tree(std::move(t)) {}
+
+    parsed_source_t(const parsed_source_t &) = delete;
+    void operator=(const parsed_source_t &) = delete;
+    parsed_source_t(parsed_source_t &&) = default;
+    parsed_source_t &operator=(parsed_source_t &&) = default;
+};
+/// Return a shared pointer to parsed_source_t, or null on failure.
+using parsed_source_ref_t = std::shared_ptr<parsed_source_t>;
+parsed_source_ref_t parse_source(wcstring src, parse_tree_flags_t flags, parse_error_list_t *errors,
+                                 parse_token_type_t goal = symbol_job_list);
+
 // Fish grammar:
 //
 // # A job_list is a list of jobs, separated by semicolons or newlines

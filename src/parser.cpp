@@ -641,11 +641,11 @@ profile_item_t *parser_t::create_profile_item() {
     return result;
 }
 
-int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type) {
+int parser_t::eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
-    parse_node_tree_t tree;
     parse_error_list_t error_list;
-    if (!parse_tree_from_string(cmd, parse_flag_none, &tree, &error_list)) {
+    parsed_source_ref_t ps = parse_source(cmd, parse_flag_none, &error_list);
+    if (!ps) {
         // Get a backtrace. This includes the message.
         wcstring backtrace_and_desc;
         this->get_backtrace(cmd, error_list, backtrace_and_desc);
@@ -654,15 +654,14 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
         fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
         return 1;
     }
-    return this->eval(cmd, io, block_type, std::move(tree));
+    return this->eval(ps, io, block_type);
 }
 
-int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type,
-                   parse_node_tree_t tree) {
+int parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type) {
     CHECK_BLOCK(1);
     assert(block_type == TOP || block_type == SUBST);
 
-    if (tree.empty()) {
+    if (ps->tree.empty()) {
         return 0;
     }
 
@@ -674,8 +673,7 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
         (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
 
     // Append to the execution context stack.
-    execution_contexts.push_back(
-        make_unique<parse_execution_context_t>(std::move(tree), cmd, this, exec_eval_level));
+    execution_contexts.push_back(make_unique<parse_execution_context_t>(ps, this, exec_eval_level));
     const parse_execution_context_t *ctx = execution_contexts.back().get();
 
     // Execute the first node.

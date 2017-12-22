@@ -77,36 +77,30 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
-parse_execution_context_t::parse_execution_context_t(parse_node_tree_t t, const wcstring &s,
-                                                     parser_t *p, int initial_eval_level)
-    : tree(std::move(t)),
-      src(s),
-      parser(p),
-      eval_level(initial_eval_level),
-      executing_node_idx(NODE_OFFSET_INVALID),
-      cached_lineno_offset(0),
-      cached_lineno_count(0) {}
+parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
+                                                     int initial_eval_level)
+    : pstree(std::move(pstree)), parser(p), eval_level(initial_eval_level) {}
 
 // Utilities
 
 wcstring parse_execution_context_t::get_source(const parse_node_t &node) const {
-    return node.get_source(this->src);
+    return node.get_source(pstree->src);
 }
 
 const parse_node_t *parse_execution_context_t::get_child(const parse_node_t &parent,
                                                          node_offset_t which,
                                                          parse_token_type_t expected_type) const {
-    return this->tree.get_child(parent, which, expected_type);
+    return this->tree().get_child(parent, which, expected_type);
 }
 
 node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) const {
     // Get the offset of a node via pointer arithmetic, very hackish.
     const parse_node_t *addr = &node;
-    const parse_node_t *base = &this->tree.at(0);
+    const parse_node_t *base = &this->tree().at(0);
     assert(addr >= base);
     node_offset_t offset = static_cast<node_offset_t>(addr - base);
-    assert(offset < this->tree.size());
-    assert(&tree.at(offset) == &node);
+    assert(offset < this->tree().size());
+    assert(&tree().at(offset) == &node);
     return offset;
 }
 
@@ -130,7 +124,7 @@ const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_j
     const wcstring &forbidden_function_name = parser->forbidden_function.back();
 
     // Get the first job in the job list.
-    const parse_node_t *first_job = tree.next_node_in_node_list(job_list, symbol_job, NULL);
+    const parse_node_t *first_job = tree().next_node_in_node_list(job_list, symbol_job, NULL);
     if (first_job == NULL) {
         return NULL;
     }
@@ -140,7 +134,7 @@ const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_j
 
     // Get the list of statements.
     const parse_node_tree_t::parse_node_list_t statements =
-        tree.specific_statements_for_job(*first_job);
+        tree().specific_statements_for_job(*first_job);
 
     // Find all the decorated statements. We are interested in statements with no decoration (i.e.
     // not command, not builtin) whose command expands to the forbidden function.
@@ -151,8 +145,8 @@ const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_j
             continue;
         }
 
-        const parse_node_t &plain_statement = tree.find_child(statement, symbol_plain_statement);
-        if (tree.decoration_for_plain_statement(plain_statement) !=
+        const parse_node_t &plain_statement = tree().find_child(statement, symbol_plain_statement);
+        if (tree().decoration_for_plain_statement(plain_statement) !=
             parse_statement_decoration_none) {
             // This statement has a decoration like 'builtin' or 'command', and therefore is not
             // infinite recursion. In particular this is what enables 'wrapper functions'.
@@ -161,7 +155,7 @@ const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_j
 
         // Ok, this is an undecorated plain statement. Get and expand its command.
         wcstring cmd;
-        tree.command_for_plain_statement(plain_statement, src, &cmd);
+        tree().command_for_plain_statement(plain_statement, pstree->src, &cmd);
 
         if (expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL) &&
             cmd == forbidden_function_name) {
@@ -187,7 +181,7 @@ enum process_type_t parse_execution_context_t::process_type_for_command(
     // Determine the process type, which depends on the statement decoration (command, builtin,
     // etc).
     enum parse_statement_decoration_t decoration =
-        tree.decoration_for_plain_statement(plain_statement);
+        tree().decoration_for_plain_statement(plain_statement);
 
     if (decoration == parse_statement_decoration_exec) {
         // Always exec.
@@ -251,7 +245,7 @@ bool parse_execution_context_t::job_is_simple_block(const parse_node_t &job_node
     // Check for arguments and redirections. All of the above types have an arguments / redirections
     // list. It must be empty.
     const parse_node_t &args_and_redirections =
-        tree.find_child(specific_statement, symbol_arguments_or_redirections_list);
+        tree().find_child(specific_statement, symbol_arguments_or_redirections_list);
     if (args_and_redirections.child_count > 0) {
         // Non-empty, we have an argument or redirection.
         return false;
@@ -378,16 +372,16 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     assert(contents_end >= contents_start);
 
     // Swallow whitespace at both ends.
-    while (contents_start < contents_end && iswspace(this->src.at(contents_start))) {
+    while (contents_start < contents_end && iswspace(pstree->src.at(contents_start))) {
         contents_start++;
     }
-    while (contents_start < contents_end && iswspace(this->src.at(contents_end - 1))) {
+    while (contents_start < contents_end && iswspace(pstree->src.at(contents_end - 1))) {
         contents_end--;
     }
 
     assert(contents_end >= contents_start);
     const wcstring contents_str =
-        wcstring(this->src, contents_start, contents_end - contents_start);
+        wcstring(pstree->src, contents_start, contents_end - contents_start);
     int definition_line_offset = this->line_offset_of_character_at_offset(contents_start);
     io_streams_t streams(0);  // no limit on the amount of output from builtin_function()
     int err =
@@ -580,7 +574,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
 
         // Get the next item and the remainder of the list.
         const parse_node_t *case_item =
-            tree.next_node_in_node_list(*case_item_list, symbol_case_item, &case_item_list);
+            tree().next_node_in_node_list(*case_item_list, symbol_case_item, &case_item_list);
         if (case_item == NULL) {
             // No more items.
             break;
@@ -711,7 +705,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(
 
         // Get a backtrace.
         wcstring backtrace_and_desc;
-        parser->get_backtrace(src, error_list, backtrace_and_desc);
+        parser->get_backtrace(pstree->src, error_list, backtrace_and_desc);
 
         // Print it.
         if (!should_suppress_stderr_for_tests()) {
@@ -770,7 +764,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
         const wcstring val_str = wcstring(equals_ptr + 1);          // variable value, past the =
 
         const parse_node_tree_t::parse_node_list_t args =
-            tree.find_nodes(statement_node, symbol_argument, 1);
+            tree().find_nodes(statement_node, symbol_argument, 1);
 
         if (!args.empty()) {
             const wcstring argument = get_source(*args.at(0));
@@ -836,7 +830,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
 
     // Get the command. We expect to always get it here.
     wcstring cmd;
-    bool got_cmd = tree.command_for_plain_statement(statement, src, &cmd);
+    bool got_cmd = tree().command_for_plain_statement(statement, pstree->src, &cmd);
     assert(got_cmd);
 
     // Expand it as a command. Return an error on failure.
@@ -868,7 +862,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
 
         // If the specified command does not exist, and is undecorated, try using an implicit cd.
         if (!has_command &&
-            tree.decoration_for_plain_statement(statement) == parse_statement_decoration_none) {
+            tree().decoration_for_plain_statement(statement) == parse_statement_decoration_none) {
             // Implicit cd requires an empty argument and redirection list.
             const parse_node_t *args =
                 get_child(statement, 1, symbol_arguments_or_redirections_list);
@@ -931,7 +925,7 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(
     // Get all argument nodes underneath the statement. We guess we'll have that many arguments (but
     // may have more or fewer, if there are wildcards involved).
     const parse_node_tree_t::parse_node_list_t argument_nodes =
-        tree.find_nodes(parent, symbol_argument);
+        tree().find_nodes(parent, symbol_argument);
     out_arguments->reserve(out_arguments->size() + argument_nodes.size());
     std::vector<completion_t> arg_expanded;
     for (size_t i = 0; i < argument_nodes.size(); i++) {
@@ -939,7 +933,7 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(
 
         // Expect all arguments to have source.
         assert(arg_node.has_source());
-        const wcstring arg_str = arg_node.get_source(src);
+        const wcstring arg_str = arg_node.get_source(pstree->src);
 
         // Expand this string.
         parse_error_list_t errors;
@@ -988,18 +982,18 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
     // We are called with a statement of varying types. We require that the statement have an
     // arguments_or_redirections_list child.
     const parse_node_t &args_and_redirections_list =
-        tree.find_child(statement_node, symbol_arguments_or_redirections_list);
+        tree().find_child(statement_node, symbol_arguments_or_redirections_list);
 
     // Get all redirection nodes underneath the statement.
     const parse_node_tree_t::parse_node_list_t redirect_nodes =
-        tree.find_nodes(args_and_redirections_list, symbol_redirection);
+        tree().find_nodes(args_and_redirections_list, symbol_redirection);
     for (size_t i = 0; i < redirect_nodes.size(); i++) {
         const parse_node_t &redirect_node = *redirect_nodes.at(i);
 
         int source_fd = -1;  // source fd
         wcstring target;     // file path or target fd
         enum token_type redirect_type =
-            tree.type_for_redirection(redirect_node, src, &source_fd, &target);
+            tree().type_for_redirection(redirect_node, pstree->src, &source_fd, &target);
 
         // PCA: I can't justify this EXPAND_SKIP_VARIABLES flag. It was like this when I got here.
         bool target_expanded = expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0, NULL);
@@ -1084,7 +1078,7 @@ parse_execution_result_t parse_execution_context_t::populate_boolean_process(
     if (skip_job) {
         return parse_execution_skipped;
     }
-    const parse_node_t &subject = *tree.get_child(bool_statement, 1, symbol_statement);
+    const parse_node_t &subject = *tree().get_child(bool_statement, 1, symbol_statement);
     return this->populate_job_process(job, proc, subject);
 }
 
@@ -1133,7 +1127,7 @@ parse_execution_result_t parse_execution_context_t::populate_job_process(
         case symbol_decorated_statement: {
             // Get the plain statement. It will pull out the decoration itself.
             const parse_node_t &plain_statement =
-                tree.find_child(specific_statement, symbol_plain_statement);
+                tree().find_child(specific_statement, symbol_plain_statement);
             result = this->populate_plain_process(job, proc, plain_statement);
             break;
         }
@@ -1275,8 +1269,8 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
             profile_item->level = eval_level;
             profile_item->parse = 0;
             profile_item->exec = (int)(exec_time - start_time);
-            profile_item->cmd = profiling_cmd_name_for_redirectable_block(specific_statement,
-                                                                          this->tree, this->src);
+            profile_item->cmd = profiling_cmd_name_for_redirectable_block(
+                specific_statement, this->tree(), this->pstree->src);
             profile_item->skipped = false;
         }
 
@@ -1289,7 +1283,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
                   (job_control_mode == JOB_CONTROL_ALL) ||
                       ((job_control_mode == JOB_CONTROL_INTERACTIVE) && shell_is_interactive()));
 
-    job->set_flag(JOB_FOREGROUND, !tree.job_should_be_backgrounded(job_node));
+    job->set_flag(JOB_FOREGROUND, !tree().job_should_be_backgrounded(job_node));
 
     job->set_flag(JOB_TERMINAL, job->get_flag(JOB_CONTROL) && !is_event);
 
@@ -1362,7 +1356,7 @@ parse_execution_result_t parse_execution_context_t::run_job_list(const parse_nod
         assert(job_list->type == symbol_job_list || job_list_node.type == symbol_andor_job_list);
 
         // Try pulling out a job.
-        const parse_node_t *job = tree.next_node_in_node_list(*job_list, symbol_job, &job_list);
+        const parse_node_t *job = tree().next_node_in_node_list(*job_list, symbol_job, &job_list);
 
         if (job != NULL) {
             result = this->run_1_job(*job, associated_block);
@@ -1376,13 +1370,13 @@ parse_execution_result_t parse_execution_context_t::run_job_list(const parse_nod
 parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
     node_offset_t offset, const block_t *associated_block, const io_chain_t &io) {
     // Don't ever expect to have an empty tree if this is called.
-    assert(!tree.empty());  //!OCLINT(multiple unary operator)
-    assert(offset < tree.size());
+    assert(!tree().empty());  //!OCLINT(multiple unary operator)
+    assert(offset < tree().size());
 
     // Apply this block IO for the duration of this function.
     scoped_push<io_chain_t> block_io_push(&block_io, io);
 
-    const parse_node_t &node = tree.at(offset);
+    const parse_node_t &node = tree().at(offset);
 
     // Currently, we only expect to execute the top level job list, or a block node. Assert that.
     assert(node.type == symbol_job_list || specific_statement_type_is_redirectable_block(node));
@@ -1439,18 +1433,18 @@ int parse_execution_context_t::line_offset_of_node_at_offset(node_offset_t reque
     }
 
     // If for some reason we're executing a node without source, return -1.
-    const parse_node_t &node = tree.at(requested_index);
+    const parse_node_t &node = tree().at(requested_index);
     if (!node.has_source()) {
         return -1;
     }
 
-    size_t char_offset = tree.at(requested_index).source_start;
+    size_t char_offset = tree().at(requested_index).source_start;
     return this->line_offset_of_character_at_offset(char_offset);
 }
 
 int parse_execution_context_t::line_offset_of_character_at_offset(size_t offset) {
     // Count the number of newlines, leveraging our cache.
-    assert(offset <= src.size());
+    assert(offset <= pstree->src.size());
 
     // Easy hack to handle 0.
     if (offset == 0) {
@@ -1459,7 +1453,7 @@ int parse_execution_context_t::line_offset_of_character_at_offset(size_t offset)
 
     // We want to return (one plus) the number of newlines at offsets less than the given offset.
     // cached_lineno_count is the number of newlines at indexes less than cached_lineno_offset.
-    const wchar_t *str = src.c_str();
+    const wchar_t *str = pstree->src.c_str();
     if (offset > cached_lineno_offset) {
         size_t i;
         for (i = cached_lineno_offset; str[i] != L'\0' && i < offset; i++) {
@@ -1495,7 +1489,7 @@ int parse_execution_context_t::get_current_line_number() {
 int parse_execution_context_t::get_current_source_offset() const {
     int result = -1;
     if (executing_node_idx != NODE_OFFSET_INVALID) {
-        const parse_node_t &node = tree.at(executing_node_idx);
+        const parse_node_t &node = tree().at(executing_node_idx);
         if (node.has_source()) {
             result = static_cast<int>(node.source_start);
         }

@@ -3316,9 +3316,10 @@ static int read_ni(int fd, const io_chain_t &io) {
         }
 
         parse_error_list_t errors;
-        parse_node_tree_t tree;
-        if (!parse_util_detect_errors(str, &errors, false /* do not accept incomplete */, &tree)) {
-            parser.eval(str, io, TOP, std::move(tree));
+        parsed_source_ref_t pstree;
+        if (!parse_util_detect_errors(str, &errors, false /* do not accept incomplete */,
+                                      &pstree)) {
+            parser.eval(pstree, io, TOP);
         } else {
             wcstring sb;
             parser.get_backtrace(str, errors, sb);

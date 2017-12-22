@@ -1043,7 +1043,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors,
                                                   bool allow_incomplete,
-                                                  parse_node_tree_t *out_tree) {
+                                                  parsed_source_ref_t *out_pstree) {
     parse_node_tree_t node_tree;
     parse_error_list_t parse_errors;
 
@@ -1291,8 +1291,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         *out_errors = std::move(parse_errors);
     }
 
-    if (out_tree != NULL) {
-        *out_tree = std::move(node_tree);
+    if (out_pstree != NULL) {
+        *out_pstree = std::make_shared<parsed_source_t>(buff_src, std::move(node_tree));
     }
 
     return res;

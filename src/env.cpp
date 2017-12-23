@@ -217,7 +217,7 @@ void var_stack_t::push(bool new_scope) {
     // Only if we introduce a new shadowing scope; i.e. not if it's just `begin; end` or
     // "--no-scope-shadowing".
     if (new_scope && top_node != this->global_env) {
-        for (auto &var : top_node->env) {
+        for (const auto &var : top_node->env) {
             if (var.second.exportv) node->env.insert(var);
         }
     }
@@ -547,14 +547,14 @@ static void init_path_vars() {
 
 /// Initialize the curses subsystem.
 static void init_curses() {
-    for (auto var_name : curses_variables) {
+    for (const auto &var_name : curses_variables) {
+        std::string name = wcs2string(var_name);
         const auto var = env_get(var_name, ENV_EXPORT);
-        const std::string &name = wcs2string(var_name);
         if (var.missing_or_empty()) {
             debug(2, L"curses var %s missing or empty", name.c_str());
             unsetenv(name.c_str());
         } else {
-            const std::string &value = wcs2string(var->as_string());
+            std::string value = wcs2string(var->as_string());
             debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
             setenv(name.c_str(), value.c_str(), 1);
         }

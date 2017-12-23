@@ -86,8 +86,9 @@ bool term_has_xn = false;
 /// found in `TERMINFO_DIRS` we don't to call `handle_curses()` before we've imported the latter.
 static bool env_initialized = false;
 
-typedef std::unordered_map<const wcstring, void (*)(const wcstring &, const wcstring &)> var_dispatch_table_t;
-var_dispatch_table_t var_dispatch_table;
+typedef std::unordered_map<wcstring, void (*)(const wcstring &, const wcstring &)>
+    var_dispatch_table_t;
+static var_dispatch_table_t var_dispatch_table;
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
@@ -371,25 +372,17 @@ static void fix_colon_delimited_var(const wcstring &var_name) {
     const auto paths = env_get(var_name);
     if (paths.missing_or_empty()) return;
 
-    bool modified = false;
-    wcstring_list_t pathsv;
-    wcstring_list_t new_pathsv;
-    paths->to_list(pathsv);
-    for (auto next_path : pathsv) {
-        if (next_path.empty()) {
-            next_path = L".";
-            modified = true;
+    // See if there's any empties.
+    const wcstring empty = wcstring();
+    const wcstring_list_t &strs = paths->as_list();
+    if (std::find(strs.begin(), strs.end(), empty) != strs.end()) {
+        // Copy the list and replace empties with L"."
+        wcstring_list_t newstrs = strs;
+        std::replace(newstrs.begin(), newstrs.end(), empty, wcstring(L"."));
+        int retval = env_set(var_name, ENV_DEFAULT | ENV_USER, std::move(newstrs));
+        if (retval != ENV_OK) {
+            debug(0, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
         }
-        new_pathsv.push_back(next_path);
-    }
-
-    if (!modified) {
-        return;
-    }
-
-    int retval = env_set(var_name, ENV_DEFAULT | ENV_USER, new_pathsv);
-    if (retval != ENV_OK) {
-        debug(0, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
     }
 }
 
@@ -399,7 +392,7 @@ static void init_locale() {
     // invalidate the pointer from the this setlocale() call.
     char *old_msg_locale = strdup(setlocale(LC_MESSAGES, NULL));
 
-    for (auto var_name : locale_variables) {
+    for (const auto &var_name : locale_variables) {
         const auto var = env_get(var_name, ENV_EXPORT);
         const std::string &name = wcs2string(var_name);
         if (var.missing_or_empty()) {
@@ -547,7 +540,7 @@ static bool initialize_curses_using_fallback(const char *term) {
 /// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path
 /// elements are converted to explicit "." to make the vars easier to use in fish scripts.
 static void init_path_vars() {
-    for (auto var_name : colon_delimited_variable) {
+    for (const auto &var_name : colon_delimited_variable) {
         fix_colon_delimited_var(var_name);
     }
 }
@@ -829,15 +822,15 @@ static void handle_curses_change(const wcstring &op, const wcstring &var_name) {
 /// Populate the dispatch table used by `react_to_variable_change()` to efficiently call the
 /// appropriate function to handle a change to a variable.
 static void setup_var_dispatch_table() {
-    for (auto var_name : locale_variables) {
+    for (const auto &var_name : locale_variables) {
         var_dispatch_table.emplace(var_name, handle_locale_change);
     }
 
-    for (auto var_name : curses_variables) {
+    for (const auto &var_name : curses_variables) {
         var_dispatch_table.emplace(var_name, handle_curses_change);
     }
 
-    for (auto var_name : colon_delimited_variable) {
+    for (const auto &var_name : colon_delimited_variable) {
         var_dispatch_table.emplace(var_name, handle_magic_colon_var_change);
     }
 
@@ -855,20 +848,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     setup_var_dispatch_table();
 
     // These variables can not be altered directly by the user.
-    for (auto &k : {
-             wcstring(L"status"),
-             wcstring(L"history"),
-             wcstring(L"_"),
-             wcstring(L"PWD"),
-             wcstring(L"version") }) {
-        env_read_only.emplace(std::move(k));
-        // L"SHLVL" is readonly but will be inserted below after we increment it.
-    };
+    env_read_only.insert({L"status", L"history", L"_", L"PWD", L"version"});
 
     // Names of all dynamically calculated variables.
-    env_electric.emplace(L"history");
-    env_electric.emplace(L"status");
-    env_electric.emplace(L"umask");
+    env_electric.insert({L"history", L"status", L"umask"});
 
     // Now the environment variable handling is set up, the next step is to insert valid data.
 
@@ -1350,7 +1333,7 @@ maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode) {
 
             var_table_t::const_iterator result = env->env.find(key);
             if (result != env->env.end()) {
-                const env_var_t var = result->second;
+                const env_var_t &var = result->second;
                 if (var.exportv ? search_exported : search_unexported) {
                     return var;
                 }

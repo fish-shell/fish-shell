@@ -157,6 +157,8 @@ class env_node_t {
     std::unique_ptr<env_node_t> next;
 
     maybe_t<env_var_t> find_entry(const wcstring &key);
+
+    bool contains_any_of(const wcstring_list_t &vars) const;
 };
 
 class variable_entry_t {
@@ -196,8 +198,6 @@ struct var_stack_t {
     // Pops the top node if it's not global
     void pop();
 
-    bool var_changed(const wcstring_list_t &vars);
-
     // Returns the next scope to search for a given node, respecting the new_scope lag
     // Returns NULL if we're done
     env_node_t *next_scope_to_search(env_node_t *node);
@@ -228,10 +228,10 @@ void var_stack_t::push(bool new_scope) {
     }
 }
 
-/// Return true if one of the vars in the passed list was changed in the current var scope.
-bool var_stack_t::var_changed(const wcstring_list_t &vars) {
-    for (auto v : vars) {
-        if (top->env.find(v) != top->env.end()) return true;
+/// Return true if if the node contains any of the entries in the vars list.
+bool env_node_t::contains_any_of(const wcstring_list_t &vars) const {
+    for (const auto &v : vars) {
+        if (env.count(v)) return true;
     }
     return false;
 }
@@ -244,8 +244,8 @@ void var_stack_t::pop() {
         return;
     }
 
-    bool locale_changed = this->var_changed(locale_variables);
-    bool curses_changed = this->var_changed(curses_variables);
+    bool locale_changed = top->contains_any_of(locale_variables);
+    bool curses_changed = top->contains_any_of(curses_variables);
 
     if (top->new_scope) {  //!OCLINT(collapsible if statements)
         if (top->exportv || local_scope_exports(top->next.get())) {

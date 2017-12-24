@@ -93,33 +93,16 @@ class env_var_t {
     bool empty() const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
     bool read_only() const;
 
-    bool matches_string(const wcstring &str) {
-        if (vals.size() > 1) return false;
-        return vals[0] == str;
-    }
-
     wcstring as_string() const;
     void to_list(wcstring_list_t &out) const;
     const wcstring_list_t &as_list() const;
-
-    const wcstring get_name() const { return name; }
 
     void set_vals(wcstring_list_t v) { vals = std::move(v); }
 
     env_var_t &operator=(const env_var_t &var) = default;
     env_var_t &operator=(env_var_t &&) = default;
 
-    /// Compare a simple string to the var. Returns true iff the var has a single
-    /// value and that value matches the string being compared to.
-    bool operator==(const wcstring &str) const {
-        if (vals.size() > 1) return false;
-        return vals[0] == str;
-    }
-
     bool operator==(const env_var_t &var) const { return vals == var.vals; }
-
-    bool operator==(const wcstring_list_t &values) const { return vals == values; }
-
     bool operator!=(const env_var_t &var) const { return vals != var.vals; }
 };
 

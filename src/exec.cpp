@@ -53,6 +53,8 @@
 /// Base open mode to pass to calls to open.
 #define OPEN_MASK 0666
 
+static bool s_block_children = false;
+
 /// Called in a forked child.
 static void exec_write_and_exit(int fd, const char *buff, size_t count, int status) {
     if (write_loop(fd, buff, count) == -1) {
@@ -750,7 +752,7 @@ void exec_job(parser_t &parser, job_t *j) {
             // SIGCONT before they've actually stopped, and they'll remain suspended indefinitely.
             if (blocked_pid != -1) {
                 debug(2, L"Unblocking process %d.\n", blocked_pid);
-                kill(blocked_pid, SIGCONT);
+                if (s_block_children) kill(blocked_pid, SIGCONT);
                 blocked_pid = -1;
             }
         };
@@ -772,7 +774,7 @@ void exec_job(parser_t &parser, job_t *j) {
                 // down-chain commands in the job a chance to join their process group and read
                 // their pipes. The process will be resumed when the next command in the chain is
                 // started.
-                if (block_child) {
+                if (block_child && s_block_children) {
                     kill(p->pid, SIGSTOP);
                 }
                 // The parent will wake us up when we're ready to execute.
@@ -1118,7 +1120,7 @@ void exec_job(parser_t &parser, job_t *j) {
         }
 
         bool child_blocked = block_child && child_forked;
-        if (child_blocked) {
+        if (child_blocked && s_block_children) {
             // We have to wait to ensure the child has set their progress group and is in SIGSTOP
             // state otherwise, we can later call SIGCONT before they call SIGSTOP and they'll be
             // blocked indefinitely. The child is SIGSTOP'd and is guaranteed to have called

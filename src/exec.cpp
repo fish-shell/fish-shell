@@ -1242,9 +1242,11 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     const char *end = begin + io_buffer->out_buffer_size();
     if (split_output) {
         const char *cursor = begin;
+        // Use NUL if one is found, newline otherwise.
+        const char sep = memchr(cursor, '\0', end - cursor) ? '\0' : '\n';
         while (cursor < end) {
             // Look for the next separator.
-            const char *stop = (const char *)memchr(cursor, '\n', end - cursor);
+            const char *stop = (const char *)memchr(cursor, sep, end - cursor);
             const bool hit_separator = (stop != NULL);
             if (!hit_separator) {
                 // If it's not found, just use the end.

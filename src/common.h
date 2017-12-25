@@ -728,6 +728,9 @@ void assert_is_not_forked_child(const char *who);
 #define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
 #define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
 
+/// Return whether we are running in Windows Subsystem for Linux.
+bool is_windows_subsystem_for_linux();
+
 extern "C" {
 __attribute__((noinline)) void debug_thread_error(void);
 }

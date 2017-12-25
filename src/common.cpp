@@ -1997,6 +1997,25 @@ void assert_is_locked(void *vmutex, const char *who, const char *caller) {
     }
 }
 
+/// Detect if we are Windows Subsystem for Linux by inspecting /proc/sys/kernel/osrelease
+/// and checking if "Microsoft" is in the first line.
+/// See https://github.com/Microsoft/WSL/issues/423
+bool is_windows_subsystem_for_linux() {
+    ASSERT_IS_NOT_FORKED_CHILD();
+    static bool s_is_wsl = false;
+    static std::once_flag oflag;
+    std::call_once(oflag, []() {
+        // 'e' sets CLOEXEC if possible.
+        FILE *fp = fopen("/proc/sys/kernel/osrelease", "re");
+        if (fp) {
+            char buff[256];
+            if (fgets(buff, sizeof buff, fp)) s_is_wsl = (strstr(buff, "Microsoft") != NULL);
+            fclose(fp);
+        }
+    });
+    return s_is_wsl;
+}
+
 template <typename CharType_t>
 static CharType_t **make_null_terminated_array_helper(
     const std::vector<std::basic_string<CharType_t> > &argv) {

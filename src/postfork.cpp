@@ -72,24 +72,12 @@ static void debug_safe_int(int level, const char *format, int val) {
 /// Returns true on sucess, false on failiure.
 bool child_set_group(job_t *j, process_t *p) {
     bool retval = true;
-
     if (j->get_flag(JOB_CONTROL)) {
         // New jobs have the pgid set to -2
         if (j->pgid == -2) {
             j->pgid = p->pid;
         }
-        // Retry on EPERM because there's no way that a child cannot join an existing progress group
-        // because we are SIGSTOPing the previous job in the chain. Sometimes we have to try a few
-        // times to get the kernel to see the new group. (Linux 4.4.0)
-        int failure = setpgid(p->pid, j->pgid);
-        while (failure == -1 && (errno == EPERM || errno == EINTR)) {
-            debug_safe(4, "Retrying setpgid in child process");
-            failure = setpgid(p->pid, j->pgid);
-        }
-        // TODO: Figure out why we're testing whether the pgid is correct after attempting to
-        // set it failed. This was added in commit 4e912ef8 from 2012-02-27.
-        failure = failure && getpgid(p->pid) != j->pgid;
-        if (failure) {  //!OCLINT(collapsible if statements)
+        if (setpgid(p->pid, j->pgid) < 0) {
             char pid_buff[128];
             char job_id_buff[128];
             char getpgid_buff[128];
@@ -135,6 +123,13 @@ bool set_child_group(job_t *j, pid_t child_pid) {
         // New jobs have the pgid set to -2
         if (j->pgid == -2) {
             j->pgid = child_pid;
+        }
+        // The parent sets the child's group. This incurs the well-known unavoidable race with the
+        // child exiting, so ignore ESRCH and EPERM (in case the pid was recycled).
+        if (setpgid(child_pid, j->pgid) < 0) {
+            if (errno != ESRCH && errno != EPERM) {
+                safe_perror("setpgid");
+            }
         }
     } else {
         j->pgid = getpgrp();

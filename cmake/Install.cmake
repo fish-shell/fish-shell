@@ -164,8 +164,9 @@ INSTALL(DIRECTORY share/tools/web_config
 
 #$v test -z "$(wildcard share/man/man1/*.1)" || $(INSTALL) -m 644 $(filter-out $(addprefix share/man/man1/, $(CONDEMNED_PAGES)), $(wildcard share/man/man1/*.1)) #$(DESTDIR)$(datadir)/fish/man/man1/
 #TODO: CONDEMNED_PAGES
+# Building the man pages is optional: if doxygen isn't installed, they're not built
 INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share/man/
-        DESTINATION ${rel_datadir}/fish/man/)
+        DESTINATION ${rel_datadir}/fish/man/ OPTIONAL)
 
 # @echo "Installing more man pages";
 # $v $(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;
@@ -173,7 +174,8 @@ INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share/man/
 #   $(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
 #   true; \
 # done;
-INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/)
+# Building the man pages is optional: if doxygen isn't installed, they're not built
+INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
 
 # $v $(INSTALL) -m 644 share/lynx.lss $(DESTDIR)$(datadir)/fish/
 INSTALL(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)

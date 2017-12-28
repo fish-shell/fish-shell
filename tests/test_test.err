@@ -1,0 +1,41 @@
+test returned eval errors:
+	invalid integer 'banana'
+	in function 'is_two'
+	called on standard input
+	with parameter list 'banana'
+
+
+test returned eval errors:
+	invalid integer 'banana banana'
+	in function 'is_two'
+	called on standard input
+	with parameter list 'banana banana'
+
+
+test returned eval errors:
+	invalid integer ''
+	in function 'is_two'
+	called on standard input
+
+
+test returned eval errors:
+	invalid integer 'no one'
+	in function 'is_two'
+	called on standard input
+	with parameter list 'no one'
+
+
+test returned eval errors:
+	invalid integer 'everyone'
+	in function 'is_two'
+	called on standard input
+	with parameter list 'everyone'
+
+
+test returned eval errors:
+	invalid integer '0b10'
+	in function 'is_two'
+	called on standard input
+	with parameter list '0b10'
+
+

@@ -17,6 +17,7 @@
 #include "builtin.h"
 #include "common.h"
 #include "io.h"
+#include "parser.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 using std::unique_ptr;
@@ -794,6 +795,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         for (size_t i = 0; i < eval_errors.size(); i++) {
             streams.err.append_format(L"\t%ls\n", eval_errors.at(i).c_str());
         }
+        streams.err.append_format(L"\t%ls\n", parser.stack_trace().c_str());
     }
     return result ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }

@@ -585,7 +585,7 @@ To remove /usr/local/bin from `$PATH`, you can write:
 
 \fish{cli-dark}
 >_ set PATH (string match -v /usr/local/bin $PATH)
-\end{fish}
+\endfish
 
 You can do so directly in `config.fish`, like you might do in other shells with `.profile`. See [this example](#path_example).
 

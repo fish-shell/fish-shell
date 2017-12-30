@@ -62,7 +62,6 @@ execute_process(
     OUTPUT_VARIABLE FISH_BUILD_VERSION)
 
 message(STATUS "FISH_BUILD_VERSION: ${FISH_BUILD_VERSION}")
-ADD_DEFINITIONS(-DFISH_BUILD_VERSION="${FISH_BUILD_VERSION}")
 
 # Set up fish-build-version.h
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/fish_build_version.h.in"

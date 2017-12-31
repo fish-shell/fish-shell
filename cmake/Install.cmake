@@ -114,8 +114,6 @@ FISH_CREATE_DIRS(${rel_datadir}/pkgconfig ${extra_completionsdir}
 set(fish_build_version ${FISH_BUILD_VERSION})
 CONFIGURE_FILE(fish.pc.in fish.pc)
 
-ADD_CUSTOM_TARGET(build_fish_pc ALL DEPENDS fish.pc)
-
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/fish.pc
         DESTINATION ${rel_datadir}/pkgconfig)
 
@@ -180,7 +178,7 @@ INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
 INSTALL(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)
 
 # Group install targets into a InstallTargets folder
-SET_PROPERTY(TARGET build_fish_pc
+SET_PROPERTY(TARGET 
                     test_invocation test_fishscript
                     test_prep tests_buildroot_target
                     build_lexicon_filter

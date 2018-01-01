@@ -1962,8 +1962,11 @@ static parser_test_error_bits_t default_test(const wchar_t *b) {
 }
 
 void reader_change_history(const wchar_t *name) {
-    data->history->save();
-    data->history = &history_t::history_with_name(name);
+    // We don't need to _change_ if we're not initialized yet.
+    if (data && data->history) {
+        data->history->save();
+        data->history = &history_t::history_with_name(name);
+    }
 }
 
 void reader_push(const wchar_t *name) {

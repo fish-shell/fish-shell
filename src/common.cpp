@@ -943,7 +943,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
         return;
     }
 
-    while (*in != 0) {
+    for (size_t i = 0; i < in_len; i++) {
         if ((*in >= ENCODE_DIRECT_BASE) && (*in < ENCODE_DIRECT_BASE + 256)) {
             int val = *in - ENCODE_DIRECT_BASE;
             int tmp;

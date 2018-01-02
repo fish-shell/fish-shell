@@ -123,6 +123,18 @@ class arg_iterator_t {
         }
         return string_get_arg_argv(&argidx_, argv_);
     }
+
+    const wcstring *nextstr() {
+        if (string_args_from_stdin(streams_)) {
+            return get_arg_stdin() ? &storage_ : NULL;
+        }
+        if (auto arg = string_get_arg_argv(&argidx_, argv_)) {
+            storage_ = wcstring(arg);
+            return &storage_;
+        } else {
+            return NULL;
+        }
+    }
 };
 }
 
@@ -488,8 +500,9 @@ static int string_escape_script(options_t &opts, int optind, wchar_t **argv,
     if (opts.no_quoted) flags |= ESCAPE_NO_QUOTED;
 
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        streams.out.append(escape_string(arg, flags, STRING_STYLE_SCRIPT));
+    while (auto arg = aiter.nextstr()) {
+        // Use the wcstring here because of embedded NULs.
+        streams.out.append(escape_string(*arg, flags, STRING_STYLE_SCRIPT));
         streams.out.append(L'\n');
         nesc++;
     }

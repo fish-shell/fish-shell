@@ -980,6 +980,15 @@ static expand_error_t expand_brackets(const wcstring &instr, expand_flags_t flag
         }
     }
 
+    // Expand a literal "{}" to itself because it is useless otherwise,
+    // and this eases e.g. `find -exec {}`. See #1109.
+    if (bracket_begin + 1 == bracket_end) {
+        wcstring newstr = instr;
+        newstr.at(bracket_begin - in) = L'{';
+        newstr.at(bracket_end - in) = L'}';
+        return expand_brackets(newstr, flags, out, errors);
+    }
+
     if (syntax_error) {
         append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, _(L"Mismatched brackets"));
         return EXPAND_ERROR;

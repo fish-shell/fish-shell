@@ -1354,9 +1354,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     break;
                 }
                 case L',': {
-                    // If the last character was a separator, then treat this as a literal comma.
-                    if (unescape_special && bracket_count > 0 &&
-                        string_last_char(result) != BRACKET_SEP) {
+                    if (unescape_special && bracket_count > 0) {
                         to_append_or_none = BRACKET_SEP;
                     }
                     break;

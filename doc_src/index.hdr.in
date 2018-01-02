@@ -506,6 +506,14 @@ mv *.{c,h} src/
 # Moves all files with the suffix '.c' or '.h' to the subdirectory src.
 \endfish
 
+A literal "{}" will not be used as a brace expansion:
+
+\fish
+echo foo-{}
+# Outputs foo-{}
+
+echo foo-{$undefinedvar}
+# Output is an empty line - see <a href="#cartesian-product">the cartesian product section</a>
 
 \subsection expand-variable Variable expansion
 

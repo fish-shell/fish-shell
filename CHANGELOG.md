@@ -10,6 +10,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `set x[1] x[2] a b` is no longer valid syntax (#4236).
 - For loop control variables are no longer local to the for block (#1935).
 - A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier. (#1109, #4632)
+- Successive commas in brace expansions are handled in less surprising manner (`{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again). (#3002, #4632).
 
 ## Notable fixes and improvements
 - `wait` builtin is added for waiting on processes (#4498).

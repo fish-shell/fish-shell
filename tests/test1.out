@@ -16,6 +16,7 @@ foo-{} foo-{}
 foo-
 
 foo- foo- foo- foo-
+foo- foo-, foo-
 
 ####################
 # Escaped newlines

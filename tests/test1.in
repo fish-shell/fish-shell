@@ -22,6 +22,7 @@ echo foo-{""} # still expands to foo-
 echo foo-{$undefinedvar} # still expands to nothing
 
 echo foo-{,,,} # four empty items in the braces.
+echo foo-{,\,,} # an empty item, a "," and an empty item.
 
 logmsg Escaped newlines
 echo foo\ bar

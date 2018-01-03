@@ -656,12 +656,12 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
     const wchar_t *sep = opts.arg1;
     int nargs = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
+    while (auto arg = aiter.nextstr()) {
         if (!opts.quiet) {
             if (nargs > 0) {
                 streams.out.append(sep);
             }
-            streams.out.append(arg);
+            streams.out.append(*arg);
         }
         nargs++;
     }

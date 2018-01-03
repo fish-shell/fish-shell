@@ -681,8 +681,8 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
 
     int nnonempty = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        size_t n = wcslen(arg);
+    while (auto arg = aiter.nextstr()) {
+        size_t n = arg->length();
         if (n > 0) {
             nnonempty++;
         }

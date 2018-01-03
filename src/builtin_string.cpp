@@ -517,8 +517,8 @@ static int string_escape_url(options_t &opts, int optind, wchar_t **argv, io_str
     escape_flags_t flags = 0;
 
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        streams.out.append(escape_string(arg, flags, STRING_STYLE_URL));
+    while (auto arg = aiter.nextstr()) {
+        streams.out.append(escape_string(*arg, flags, STRING_STYLE_URL));
         streams.out.append(L'\n');
         nesc++;
     }
@@ -533,8 +533,8 @@ static int string_escape_var(options_t &opts, int optind, wchar_t **argv, io_str
     escape_flags_t flags = 0;
 
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        streams.out.append(escape_string(arg, flags, STRING_STYLE_VAR));
+    while (auto arg = aiter.nextstr()) {
+        streams.out.append(escape_string(*arg, flags, STRING_STYLE_VAR));
         streams.out.append(L'\n');
         nesc++;
     }

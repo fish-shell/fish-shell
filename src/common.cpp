@@ -804,9 +804,8 @@ wcstring reformat_for_screen(const wcstring &msg) {
 }
 
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
-static void escape_string_url(const wchar_t *orig_in, wcstring &out) {
-    const std::string &in = wcs2string(orig_in);
-    for (auto c1 : in) {
+static void escape_string_url(wcstring in, wcstring &out) {
+    for (auto& c1 : in) {
         // This silliness is so we get the correct result whether chars are signed or unsigned.
         unsigned int c2 = (unsigned int)c1 & 0xFF;
         if (!(c2 & 0x80) &&
@@ -855,9 +854,8 @@ static bool unescape_string_url(const wchar_t *in, wcstring *out) {
 }
 
 /// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
-static void escape_string_var(const wchar_t *orig_in, wcstring &out) {
+static void escape_string_var(const wcstring in, wcstring &out) {
     bool prev_was_hex_encoded = false;
-    const std::string &in = wcs2string(orig_in);
     for (auto c1 : in) {
         // This silliness is so we get the correct result whether chars are signed or unsigned.
         unsigned int c2 = (unsigned int)c1 & 0xFF;
@@ -1109,11 +1107,11 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags, escape_string_s
             break;
         }
         case STRING_STYLE_URL: {
-            escape_string_url(in.c_str(), result);
+            escape_string_url(in, result);
             break;
         }
         case STRING_STYLE_VAR: {
-            escape_string_var(in.c_str(), result);
+            escape_string_var(in, result);
             break;
         }
     }

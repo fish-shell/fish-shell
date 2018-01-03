@@ -300,12 +300,34 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
     return STATUS_CMD_ERROR;
 }
 
+// How many bytes we read() at once.
+// Since this is just for counting, it can be massive.
+#define COUNT_CHUNK_SIZE 512 * 256
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.
 static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
-    int argc = builtin_count_args(argv);
-    streams.out.append_format(L"%d\n", argc - 1);
-    return argc - 1 == 0 ? STATUS_CMD_ERROR : STATUS_CMD_OK;
+    int argc = 0;
+
+    // Count the newlines coming in via stdin like `wc -l`.
+    if (streams.stdin_is_directly_redirected) {
+        char buf[COUNT_CHUNK_SIZE];
+        while (true) {
+            long n = read_blocked(streams.stdin_fd, buf, COUNT_CHUNK_SIZE);
+            // Ignore all errors for now.
+            if (n <= 0) break;
+            for (int i = 0; i < n; i++) {
+                if (buf[i] == L'\n') {
+                    argc++;
+                }
+            }
+        }
+    }
+
+    // Always add the size of argv.
+    // That means if you call `something | count a b c`, you'll get the count of something _plus 3_.
+    argc += builtin_count_args(argv) - 1;
+    streams.out.append_format(L"%d\n", argc);
+    return argc == 0 ? STATUS_CMD_ERROR : STATUS_CMD_OK;
 }
 
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop

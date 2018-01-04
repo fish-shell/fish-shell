@@ -55,19 +55,6 @@ SET(FISH_SRCS
 # Header files are just globbed.
 FILE(GLOB FISH_HEADERS src/*.h)
 
-# git_version_gen.sh creates FISH-BUILD-VERSION-FILE if it does not exist, and updates it
-# only if it is out-of-date.
-execute_process(
-    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/build_tools/cmake_git_version_gen.sh"
-    OUTPUT_VARIABLE FISH_BUILD_VERSION)
-
-message(STATUS "FISH_BUILD_VERSION: ${FISH_BUILD_VERSION}")
-
-# Set up fish-build-version.h
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/fish_build_version.h.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/include/fish_build_version.h")
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
-
 # Set up config.h
 INCLUDE(cmake/ConfigureChecks.cmake)
 INCLUDE(cmake/gettext.cmake)
@@ -106,6 +93,23 @@ TARGET_SOURCES(fishlib PRIVATE ${FISH_HEADERS})
 TARGET_LINK_LIBRARIES(fishlib
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}
   ${PCRE2_LIB} muparser)
+
+ADD_CUSTOM_TARGET(fish_version ALL)
+
+ADD_CUSTOM_COMMAND(TARGET fish_version
+                   COMMAND ${CMAKE_COMMAND}
+                   -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+                   -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+                   -P ${CMAKE_SOURCE_DIR}/cmake/GenerateGitVersion.cmake
+                   VERBATIM)
+
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_BINARY_DIR}/include/fish_build_version.h
+                            PROPERTIES GENERATED TRUE
+                            HEADER_FILE_ONLY TRUE)
+
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/include)
+
+ADD_DEPENDENCIES(fishlib fish_version)
 
 # Define fish.
 ADD_EXECUTABLE(fish src/fish.cpp)

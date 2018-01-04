@@ -514,6 +514,17 @@ echo foo-{}
 
 echo foo-{$undefinedvar}
 # Output is an empty line - see <a href="#cartesian-product">the cartesian product section</a>
+\endfish
+
+If there is nothing between a brace and a comma or two commas, it's interpreted as an empty element.
+
+So:
+\fish
+echo {,,/usr}/bin
+# Output /bin /bin /usr/bin
+\endfish
+
+To use a "," as an element, <a href="#quotes">quote</a> or <a href="#escapes">escape</a> it.
 
 \subsection expand-variable Variable expansion
 

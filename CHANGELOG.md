@@ -33,6 +33,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `j` (autojump #4344)
   - `bd` (#4472)
   - `jhipster` (#4472)
+  - `ngrok` (#4642)
 - Improved completions for
   - `git` (#4395, #4396, #4592)
 

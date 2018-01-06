@@ -74,6 +74,10 @@ function __fish_brew_installed_formulas
     brew list
 end
 
+function __fish_brew_leaves
+    brew leaves
+end
+
 function __fish_brew_outdated_formulas
     brew outdated
 end
@@ -96,7 +100,6 @@ complete -f -c brew -n '__fish_brew_needs_command' -a audit -d 'Check formula'
 complete -f -c brew -n '__fish_brew_using_command audit' -a '(__fish_brew_formulae)'
 
 # bottle
-
 complete -f -c brew -n '__fish_brew_needs_command' -a bottle -d 'Create a binary package'
 complete -f -c brew -n '__fish_brew_using_command bottle' -l 'homebrew-developer' -d 'Output developer debug information'
 complete -f -c brew -n '__fish_brew_using_command bottle' -l 'no-revision' -d 'Do not bump the bottle revision number'
@@ -186,6 +189,10 @@ complete -f -c brew -n '__fish_brew_using_command install' -l env -a "std super"
 complete -f -c brew -n '__fish_brew_using_command install' -l build-bottle -d 'Optimize for a generic CPU architecture'
 complete -f -c brew -n '__fish_brew_using_command install' -l bottle-arch -a 'core core2 penryn g3 g4 g4e g5' -d 'Optimize for the specified CPU architecture'
 complete -c brew -n '__fish_brew_using_command install' -a '(__fish_brew_formulae)'
+
+# leaves
+complete -f -c brew -n '__fish_brew_needs_command' -a 'leaves' -d 'List installed top level formulae'
+complete -f -c brew -n '__fish_brew_using_command leaves' -a '(__fish_brew_leaves)'
 
 # link
 complete -f -c brew -n '__fish_brew_needs_command' -a 'link ln' -d 'Symlink installed formula'

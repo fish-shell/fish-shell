@@ -703,6 +703,7 @@
 		D025C02815D1FEA100B9DB63 /* functions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = functions; path = share/functions; sourceTree = "<group>"; };
 		D025C02915D1FEA100B9DB63 /* tools */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tools; path = share/tools; sourceTree = "<group>"; };
 		D02960E51FBD726100CA3985 /* builtin_wait.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_wait.cpp; sourceTree = "<group>"; };
+		D0301C1D2002B90500B1F463 /* parse_grammar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = parse_grammar.h; sourceTree = "<group>"; };
 		D031890915E36D9800D9CC39 /* base */ = {isa = PBXFileReference; lastKnownFileType = text; path = base; sourceTree = BUILT_PRODUCTS_DIR; };
 		D03238891849D1980032CF2C /* pager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pager.cpp; sourceTree = "<group>"; };
 		D032388A1849D1980032CF2C /* pager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pager.h; sourceTree = "<group>"; };
@@ -1232,6 +1233,7 @@
 				D03238891849D1980032CF2C /* pager.cpp */,
 				D0A0851B13B3ACEE0099B651 /* parse_util.h */,
 				D0A0855213B3ACEE0099B651 /* parse_util.cpp */,
+				D0301C1D2002B90500B1F463 /* parse_grammar.h */,
 				D0A0851C13B3ACEE0099B651 /* parser_keywords.h */,
 				D0A0855313B3ACEE0099B651 /* parser_keywords.cpp */,
 				D0A0851D13B3ACEE0099B651 /* parser.h */,

@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "parse_constants.h"
+#include "parse_grammar.h"
 #include "parse_productions.h"
 #include "parse_tree.h"
 

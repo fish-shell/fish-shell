@@ -82,6 +82,9 @@ template <class T0, class... Ts>
 struct seq {
     static constexpr production_t<1 + sizeof...(Ts)> production = {
         {element<T0>(), element<Ts>()..., token_type_invalid}};
+
+    using type_tuple = std::tuple<T0, Ts...>;
+
     static const production_element_t *resolve(const parse_token_t &, const parse_token_t &,
                                                parse_node_tag_t *) {
         return production_for<seq>();
@@ -103,7 +106,7 @@ struct alternative {
 };
 
 // Following are the grammar productions.
-#define BODY(T)
+#define BODY(T) static constexpr parse_token_type_t symbol = symbol_##T;
 #define DEF(T) struct T : public
 
 #define DEF_ALT(T) struct T : public alternative

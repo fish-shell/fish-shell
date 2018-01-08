@@ -11,6 +11,7 @@
 
 #include "common.h"
 #include "parse_constants.h"
+#include "parse_grammar.h"
 #include "tokenizer.h"
 
 class parse_node_tree_t;
@@ -225,6 +226,44 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
 
     /// Given a job, return whether it should be backgrounded, because it has a & specifier.
     bool job_should_be_backgrounded(const parse_node_t &job) const;
+};
+
+/// A helper for type-safe manipulation of parse nodes.
+/// This is a lightweight value-type class.
+template <typename Type>
+class tnode_t {
+    /// The tree containing our node.
+    const parse_node_tree_t *tree = nullptr;
+
+    /// The node in the tree
+    const parse_node_t *nodeptr = nullptr;
+
+    // Helper to get a child type at a given index.
+    template <class Element, uint32_t Index>
+    using child_at = typename std::tuple_element<Index, typename Element::type_tuple>::type;
+
+   public:
+    tnode_t() = default;
+
+    tnode_t(const parse_node_tree_t *t, const parse_node_t *n) : tree(t), nodeptr(n) {
+        assert(t && "tree cannot be null in this constructor");
+        assert((!n || n->type == Type::symbol) && "node has wrong type");
+    }
+
+    /// Return the underlying (type-erased) node.
+    const parse_node_t *node() const { return nodeptr; }
+
+    /// Check whether we're populated.
+    explicit operator bool() const { return nodeptr != nullptr; }
+
+    /// Type-safe access to a child at the given index.
+    template <node_offset_t Index>
+    tnode_t<child_at<Type, Index>> child() const {
+        using child_type = child_at<Type, Index>;
+        const parse_node_t *child = nullptr;
+        if (nodeptr) child = tree->get_child(*nodeptr, Index, child_type::symbol);
+        return tnode_t<child_type>{tree, child};
+    }
 };
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.

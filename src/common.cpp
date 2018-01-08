@@ -857,23 +857,21 @@ static bool unescape_string_url(const wchar_t *in, wcstring *out) {
 static void escape_string_var(const wcstring &in, wcstring &out) {
     bool prev_was_hex_encoded = false;
     for (auto c1 : in) {
-        // This silliness is so we get the correct result whether chars are signed or unsigned.
-        unsigned int c2 = (unsigned int)c1 & 0xFF;
-        if (!(c2 & 0x80) && isalnum(c2) && (!prev_was_hex_encoded || !is_hex_digit(c2))) {
+        if (c1 >= 0 && c1 <= 127 && isalnum(c1) && (!prev_was_hex_encoded || !is_hex_digit(c1))) {
             // ASCII alphanumerics don't need to be encoded.
             if (prev_was_hex_encoded) {
                 out.push_back(L'_');
                 prev_was_hex_encoded = false;
             }
-            out.push_back((wchar_t)c2);
-        } else if (c2 == '_') {
+            out.push_back(c1);
+        } else if (c1 == L'_') {
             // Underscores are encoded by doubling them.
             out.append(L"__");
             prev_was_hex_encoded = false;
         } else {
             // All other chars need to have their UTF-8 representation encoded in hex.
             wchar_t buf[4];
-            swprintf(buf, sizeof buf / sizeof buf[0], L"_%02X", c2);
+            swprintf(buf, sizeof buf / sizeof buf[0], L"_%02X", c1);
             out.append(buf);
             prev_was_hex_encoded = true;
         }

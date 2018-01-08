@@ -46,9 +46,12 @@ enum {
     /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
     /// working directories.
     EXPAND_SPECIAL_FOR_CD = 1 << 11,
+    /// Do expansions specifically for cd autosuggestion. This is to differentiate between cd
+    /// completions and cd autosuggestions.
+    EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST = 1 << 12,
     /// Do expansions specifically to support external command completions. This means using PATH as
     /// a list of potential working directories.
-    EXPAND_SPECIAL_FOR_COMMAND = 1 << 12
+    EXPAND_SPECIAL_FOR_COMMAND = 1 << 13
 };
 typedef int expand_flags_t;
 

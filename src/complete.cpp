@@ -1031,6 +1031,9 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
     if (!do_file) flags |= EXPAND_SKIP_WILDCARDS;
 
     if (handle_as_special_cd && do_file) {
+        if (this->type() == COMPLETE_AUTOSUGGEST) {
+            flags |= EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST;
+        }
         flags |= DIRECTORIES_ONLY | EXPAND_SPECIAL_FOR_CD | EXPAND_NO_DESCRIPTIONS;
     }
 

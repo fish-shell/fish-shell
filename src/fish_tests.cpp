@@ -2350,6 +2350,42 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command,
     }
 }
 
+static void perform_one_completion_cd_test(const wcstring &command,
+                                               const wcstring &expected, long line) {
+    std::vector<completion_t> comps;
+    complete(command, &comps, COMPLETION_REQUEST_DEFAULT);
+
+    bool expects_error = (expected == L"<error>");
+
+    if (comps.empty() && !expects_error) {
+        fwprintf(stderr, L"line %ld: autosuggest_suggest_special() failed for command %ls\n", line,
+                 command.c_str());
+        do_test_from(!comps.empty(), line);
+        return;
+    } else if (!comps.empty() && expects_error) {
+        fwprintf(stderr,
+                 L"line %ld: autosuggest_suggest_special() was expected to fail but did not, "
+                 L"for command %ls\n",
+                 line, command.c_str());
+        do_test_from(comps.empty(), line);
+    }
+
+    if (!comps.empty()) {
+        completions_sort_and_prioritize(&comps);
+        const completion_t &suggestion = comps.at(0);
+
+        if (suggestion.completion != expected) {
+            fwprintf(
+                stderr,
+                L"line %ld: complete() for cd tab completion returned the wrong expected string for command %ls\n",
+                line, command.c_str());
+            fwprintf(stderr, L"  actual: %ls\n", suggestion.completion.c_str());
+            fwprintf(stderr, L"expected: %ls\n", expected.c_str());
+            do_test_from(suggestion.completion == expected, line);
+        }
+    }
+}
+
 // Testing test_autosuggest_suggest_special, in particular for properly handling quotes and
 // backslashes.
 static void test_autosuggest_suggest_special() {
@@ -2438,6 +2474,8 @@ static void test_autosuggest_suggest_special() {
     if (system("mkdir -p '~hahaha/path1/path2/'")) err(L"mkdir failed");
     perform_one_autosuggestion_cd_test(L"cd ~haha", L"ha/path1/path2/", __LINE__);
     perform_one_autosuggestion_cd_test(L"cd ~hahaha/", L"path1/path2/", __LINE__);
+    perform_one_completion_cd_test(L"cd ~haha", L"ha/", __LINE__);
+    perform_one_completion_cd_test(L"cd ~hahaha/", L"path1/", __LINE__);
 
     popd();
     system("rmdir ~/test_autosuggest_suggest_special/");

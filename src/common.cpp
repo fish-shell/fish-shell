@@ -804,7 +804,7 @@ wcstring reformat_for_screen(const wcstring &msg) {
 }
 
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
-static void escape_string_url(wcstring in, wcstring &out) {
+static void escape_string_url(const wcstring &in, wcstring &out) {
     for (auto& c1 : in) {
         // This silliness is so we get the correct result whether chars are signed or unsigned.
         unsigned int c2 = (unsigned int)c1 & 0xFF;
@@ -854,7 +854,7 @@ static bool unescape_string_url(const wchar_t *in, wcstring *out) {
 }
 
 /// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
-static void escape_string_var(const wcstring in, wcstring &out) {
+static void escape_string_var(const wcstring &in, wcstring &out) {
     bool prev_was_hex_encoded = false;
     for (auto c1 : in) {
         // This silliness is so we get the correct result whether chars are signed or unsigned.

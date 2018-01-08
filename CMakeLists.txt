@@ -55,18 +55,16 @@ SET(FISH_SRCS
 # Header files are just globbed.
 FILE(GLOB FISH_HEADERS src/*.h)
 
-# git_version_gen.sh creates FISH-BUILD-VERSION-FILE if it does not exist, and updates it
-# only if it is out-of-date.
-execute_process(
-    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/build_tools/cmake_git_version_gen.sh"
-    OUTPUT_VARIABLE FISH_BUILD_VERSION)
+# Set up the version target.
+# This creates the file FISH-BUILD-VERSION-FILE which is only modified if necessary.
+ADD_CUSTOM_COMMAND(OUTPUT "FISH-BUILD-VERSION-FILE"
+                   DEPENDS CHECK-FISH-BUILD-VERSION-FILE)
 
-message(STATUS "FISH_BUILD_VERSION: ${FISH_BUILD_VERSION}")
+ADD_CUSTOM_TARGET("CHECK-FISH-BUILD-VERSION-FILE"
+                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh)
 
-# Set up fish-build-version.h
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/fish_build_version.h.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/include/fish_build_version.h")
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
+SET(FBVF "FISH-BUILD-VERSION-FILE")
+
 
 # Set up config.h
 INCLUDE(cmake/ConfigureChecks.cmake)
@@ -77,8 +75,8 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 # Set up standard directories.
 INCLUDE(GNUInstallDirs)
-ADD_DEFINITIONS(-DCMAKE
-                -D_UNICODE=1
+ADD_DEFINITIONS(-D_UNICODE=1
+                -DFISH_BUILD_VERSION="${FISH_BUILD_VERSION}"
                 -DLOCALEDIR="${CMAKE_INSTALL_FULL_LOCALEDIR}"
                 -DPREFIX=L"${CMAKE_INSTALL_PREFIX}"
                 -DDATADIR=L"${CMAKE_INSTALL_FULL_DATADIR}"

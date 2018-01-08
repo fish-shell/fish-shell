@@ -55,17 +55,6 @@ SET(FISH_SRCS
 # Header files are just globbed.
 FILE(GLOB FISH_HEADERS src/*.h)
 
-# Set up the version target.
-# This creates the file FISH-BUILD-VERSION-FILE which is only modified if necessary.
-ADD_CUSTOM_COMMAND(OUTPUT "FISH-BUILD-VERSION-FILE"
-                   DEPENDS CHECK-FISH-BUILD-VERSION-FILE)
-
-ADD_CUSTOM_TARGET("CHECK-FISH-BUILD-VERSION-FILE"
-                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh)
-
-SET(FBVF "FISH-BUILD-VERSION-FILE")
-
-
 # Set up config.h
 INCLUDE(cmake/ConfigureChecks.cmake)
 INCLUDE(cmake/gettext.cmake)
@@ -76,13 +65,22 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 # Set up standard directories.
 INCLUDE(GNUInstallDirs)
 ADD_DEFINITIONS(-D_UNICODE=1
-                -DFISH_BUILD_VERSION="${FISH_BUILD_VERSION}"
                 -DLOCALEDIR="${CMAKE_INSTALL_FULL_LOCALEDIR}"
                 -DPREFIX=L"${CMAKE_INSTALL_PREFIX}"
                 -DDATADIR=L"${CMAKE_INSTALL_FULL_DATADIR}"
                 -DSYSCONFDIR=L"${CMAKE_INSTALL_FULL_SYSCONFDIR}"
                 -DBINDIR=L"${CMAKE_INSTALL_FULL_BINDIR}"
                 -DDOCDIR=L"${CMAKE_INSTALL_FULL_DOCDIR}")
+
+# Set up the machinery around FISH-BUILD-VERSION-FILE
+# This defines the FBVF variable.
+INCLUDE(Version)
+
+# Teach fish_version.o to rebuild when FBVF changes.
+# The standard C++ include detection machinery misses this.
+SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp
+                            PROPERTIES OBJECT_DEPENDS
+                            ${CMAKE_CURRENT_BINARY_DIR}/${FBVF})
 
 # Set up PCRE2
 INCLUDE(cmake/PCRE2.cmake)

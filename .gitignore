@@ -78,6 +78,7 @@ messages.pot
 /lexicon_filter
 /toc.txt
 /version
+fish-build-version-witness.txt
 
 # File names that can appear below the project root that represent artifacts
 # from building and testing.
@@ -101,4 +102,5 @@ xcuserdata/
 *.moved-aside
 *.xccheckout
 *.xcscmblueprin
+.vscode
 

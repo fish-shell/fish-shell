@@ -109,10 +109,11 @@ FISH_CREATE_DIRS(${rel_datadir}/pkgconfig ${extra_completionsdir}
 
 # @echo "Installing pkgconfig file"
 # $v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
-
-# main CMakeFiles.txt sets ${FISH_BUILD_VERSION}, not ${fish_build_version}
-set(fish_build_version ${FISH_BUILD_VERSION})
-CONFIGURE_FILE(fish.pc.in fish.pc)
+CONFIGURE_FILE(fish.pc.in fish.pc.noversion)
+ADD_CUSTOM_COMMAND(OUTPUT fish.pc
+  COMMAND awk -v `cat ${FBVF}` '/^Version:/ {$$0=$$0 FISH_BUILD_VERSION} 1' fish.pc.noversion  > fish.pc
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  DEPENDS ${FBVF} ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
 
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/fish.pc
         DESTINATION ${rel_datadir}/pkgconfig)
@@ -178,7 +179,7 @@ INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
 INSTALL(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)
 
 # Group install targets into a InstallTargets folder
-SET_PROPERTY(TARGET 
+SET_PROPERTY(TARGET CHECK-FISH-BUILD-VERSION-FILE
                     test_invocation test_fishscript
                     test_prep tests_buildroot_target
                     build_lexicon_filter

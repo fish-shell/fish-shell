@@ -1,4 +1,0 @@
-#pragma once
-
-//to be filled in by cmake
-#define FISH_BUILD_VERSION "@FISH_BUILD_VERSION@"

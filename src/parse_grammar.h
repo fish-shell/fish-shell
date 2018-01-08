@@ -18,6 +18,8 @@ using production_element_t = uint8_t;
 // Define primitive types.
 template <enum parse_token_type_t Token>
 struct primitive {
+    using type_tuple = std::tuple<>;
+    static constexpr parse_token_type_t token = Token;
     static constexpr production_element_t element() { return Token; }
 };
 
@@ -30,6 +32,7 @@ using tok_redirection = primitive<parse_token_type_redirection>;
 // Define keyword types.
 template <parse_keyword_t Keyword>
 struct keyword {
+    using type_tuple = std::tuple<>;
     static constexpr production_element_t element() {
         // Convert a parse_keyword_t enum to a production_element_t enum.
         return Keyword + LAST_TOKEN_OR_SYMBOL + 1;
@@ -106,7 +109,8 @@ struct alternative {
 };
 
 // Following are the grammar productions.
-#define BODY(T) static constexpr parse_token_type_t symbol = symbol_##T;
+#define BODY(T) static constexpr parse_token_type_t token = symbol_##T;
+
 #define DEF(T) struct T : public
 
 #define DEF_ALT(T) struct T : public alternative

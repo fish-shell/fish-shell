@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "common.h"
+#include "maybe.h"
 #include "parse_constants.h"
 #include "parse_grammar.h"
 #include "tokenizer.h"
@@ -228,6 +229,11 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     bool job_should_be_backgrounded(const parse_node_t &job) const;
 };
 
+struct source_range_t {
+    uint32_t start;
+    uint32_t length;
+};
+
 /// A helper for type-safe manipulation of parse nodes.
 /// This is a lightweight value-type class.
 template <typename Type>
@@ -247,7 +253,7 @@ class tnode_t {
 
     tnode_t(const parse_node_tree_t *t, const parse_node_t *n) : tree(t), nodeptr(n) {
         assert(t && "tree cannot be null in this constructor");
-        assert((!n || n->type == Type::symbol) && "node has wrong type");
+        assert((!n || n->type == Type::token) && "node has wrong type");
     }
 
     /// Return the underlying (type-erased) node.
@@ -256,12 +262,24 @@ class tnode_t {
     /// Check whether we're populated.
     explicit operator bool() const { return nodeptr != nullptr; }
 
+    bool has_source() const { return nodeptr && nodeptr->has_source(); }
+
+    maybe_t<source_range_t> source_range() const {
+        if (!has_source()) return none();
+        return source_range_t{nodeptr->source_start, nodeptr->source_length};
+    }
+
+    wcstring get_source(const wcstring &str) const {
+        assert(has_source() && "Source missing");
+        return nodeptr->get_source(str);
+    }
+
     /// Type-safe access to a child at the given index.
     template <node_offset_t Index>
     tnode_t<child_at<Type, Index>> child() const {
         using child_type = child_at<Type, Index>;
         const parse_node_t *child = nullptr;
-        if (nodeptr) child = tree->get_child(*nodeptr, Index, child_type::symbol);
+        if (nodeptr) child = tree->get_child(*nodeptr, Index, child_type::token);
         return tnode_t<child_type>{tree, child};
     }
 };

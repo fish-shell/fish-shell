@@ -580,7 +580,8 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
                            &parse_tree, NULL);
 
     // Look for plain statements where the cursor is at the end of the command.
-    const parse_node_t *matching_cmd_node = NULL;
+    using namespace grammar;
+    tnode_t<tok_string> matching_cmd_node;
     const size_t len = parse_tree.size();
     for (size_t i = 0; i < len; i++) {
         const parse_node_t &node = parse_tree.at(i);
@@ -593,12 +594,15 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
             continue;
 
         // Get the command node. Skip it if we can't or it has no source.
-        const parse_node_t *cmd_node = parse_tree.get_child(node, 0, parse_token_type_string);
-        if (cmd_node == NULL || !cmd_node->has_source()) continue;
+        tnode_t<plain_statement> statement(&parse_tree, &node);
+        tnode_t<tok_string> cmd_node = statement.child<0>();
+
+        auto msource = cmd_node.source_range();
+        if (!msource) continue;
 
         // Now see if its source range contains our cursor, including at the end.
-        if (subcmd_cursor_pos >= cmd_node->source_start &&
-            subcmd_cursor_pos <= cmd_node->source_start + cmd_node->source_length) {
+        if (subcmd_cursor_pos >= msource->start &&
+            subcmd_cursor_pos <= msource->start + msource->length) {
             // Success!
             matching_cmd_node = cmd_node;
             break;
@@ -607,17 +611,16 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
 
     // Now if we found a command node, expand it.
     bool result = false;
-    if (matching_cmd_node != NULL) {
-        assert(matching_cmd_node->type == parse_token_type_string);
-        const wcstring token = matching_cmd_node->get_source(subcmd);
+    if (matching_cmd_node) {
+        const wcstring token = matching_cmd_node.get_source(subcmd);
         wcstring abbreviation;
         if (expand_abbreviation(token, &abbreviation)) {
             // There was an abbreviation! Replace the token in the full command. Maintain the
             // relative position of the cursor.
             if (output != NULL) {
                 output->assign(cmdline);
-                output->replace(subcmd_offset + matching_cmd_node->source_start,
-                                matching_cmd_node->source_length, abbreviation);
+                source_range_t r = *matching_cmd_node.source_range();
+                output->replace(subcmd_offset + r.start, r.length, abbreviation);
             }
             result = true;
         }

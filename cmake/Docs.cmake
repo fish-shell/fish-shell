@@ -70,7 +70,7 @@ ADD_CUSTOM_COMMAND(OUTPUT doc.h
 # Note we would like to add doc_src/index.hdr.in as a dependency but CMake replaces this with
 # doc_src/index.hdr; CMake bug?
 ADD_CUSTOM_COMMAND(OUTPUT toc.txt
-                   COMMAND env `cat ${FBVF}` ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_toc_txt.sh
+                   COMMAND env `cat ${FBVF} | tr -d '\"'` ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_toc_txt.sh
                            doc_src/index.hdr.in ${HDR_FILES_NO_INDEX}
                            > ${CMAKE_CURRENT_BINARY_DIR}/toc.txt
                    DEPENDS ${FBVF} ${HDR_FILES_NO_INDEX})
@@ -95,7 +95,7 @@ ADD_CUSTOM_TARGET(doc
                   DEPENDS ${FBVF} Doxyfile.user ${DOC_SRC_FILES} doc.h ${HDR_FILES} lexicon_filter)
 
 ADD_CUSTOM_COMMAND(OUTPUT share/man/
-                   COMMAND env `cat ${FBVF}`
+                   COMMAND env `cat ${FBVF} | tr -d '\"' `
                            INPUT_FILTER=lexicon_filter ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_documentation.sh ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.help doc_src ./share
                    DEPENDS ${FBVF} ${HELP_SRC} ${CMAKE_CURRENT_BINARY_DIR}/lexicon_filter)
 

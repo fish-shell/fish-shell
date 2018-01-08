@@ -1,14 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 # Originally from the git sources (GIT-VERSION-GEN)
 # Presumably (C) Junio C Hamano <junkio@cox.net>
 # Reused under GPL v2.0
 # Modified for fish by David Adam <zanchey@ucc.gu.uwa.edu.au>
 
-# Obtain directory containing this script in POSIX-compatible manner
-# See https://stackoverflow.com/a/43919044/17027 (public domain)
-a="/$0"; a="${a%/*}"; a="${a:-.}"; a="${a#/}/"; BASEDIR=$(cd "$a"; pwd)
-# Find the fish git directory as two levels up from this directory.
-GIT_DIR=$(dirname "$a")
+# Find the fish git directory as two levels up from script directory.
+GIT_DIR="$( cd "$( dirname $( dirname "${BASH_SOURCE[0]}" ) )" && pwd )"
 
 FBVF=FISH-BUILD-VERSION-FILE
 DEF_VER=unknown
@@ -24,11 +21,21 @@ fi
 
 if test -r $FBVF
 then
-	VC=$(sed -e 's/^FISH_BUILD_VERSION=//' <$FBVF)
+	VC=$(grep -v '^#' $FBVF | tr -d '"' | sed -e 's/^FISH_BUILD_VERSION=//')
 else
 	VC=unset
 fi
+
+# Output the FBVF
+# Note that we are super-double sneaky: we produce a file that is valid bash
+# and valid C++, so it may be included from either. Also it may have leading
+# hashes filtered out with grep to get a version of the form (for example):
+#   FISH_BUILD_VERSION=2.7.1-620-g94c9f5c2
 test "$VN" = "$VC" || {
 	echo >&2 "FISH_BUILD_VERSION=$VN"
-	echo "FISH_BUILD_VERSION=$VN" >$FBVF
+	echo "FISH_BUILD_VERSION=\"$VN\"" >$FBVF
 }
+
+# Output the fish-build-version-witness.txt
+# See https://cmake.org/cmake/help/v3.4/policy/CMP0058.html
+date +%s > fish-build-version-witness.txt

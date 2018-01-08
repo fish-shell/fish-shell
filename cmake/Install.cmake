@@ -115,6 +115,8 @@ ADD_CUSTOM_COMMAND(OUTPUT fish.pc
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS ${FBVF} ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
 
+ADD_CUSTOM_TARGET(build_fish_pc ALL DEPENDS fish.pc)
+
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/fish.pc
         DESTINATION ${rel_datadir}/pkgconfig)
 
@@ -179,7 +181,7 @@ INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
 INSTALL(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)
 
 # Group install targets into a InstallTargets folder
-SET_PROPERTY(TARGET CHECK-FISH-BUILD-VERSION-FILE
+SET_PROPERTY(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
                     test_invocation test_fishscript
                     test_prep tests_buildroot_target
                     build_lexicon_filter

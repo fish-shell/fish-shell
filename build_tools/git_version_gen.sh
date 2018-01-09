@@ -26,11 +26,8 @@ else
 	VC=unset
 fi
 
-# Output the FBVF
-# Note that we are super-double sneaky: we produce a file that is valid bash
-# and valid C++, so it may be included from either. Also it may have leading
-# hashes filtered out with grep to get a version of the form (for example):
-#   FISH_BUILD_VERSION=2.7.1-620-g94c9f5c2
+# Output the FBVF.
+# It looks like FISH_BUILD_VERSION="2.7.1-621-ga2f065e6"
 test "$VN" = "$VC" || {
 	echo >&2 "FISH_BUILD_VERSION=$VN"
 	echo "FISH_BUILD_VERSION=\"$VN\"" >$FBVF

@@ -584,11 +584,12 @@ class wildcard_expander_t {
                 c->prepend_token_prefix(prefix);
             }
 
-            // Hack. Implement EXPAND_SPECIAL_FOR_CD by descending the deepest unique hierarchy we
+            // Implement EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST by descending the deepest unique
+            // hierarchy we
             // can, and then appending any components to each new result.
             // Only descend deepest unique for cd autosuggest and not for cd tab completion
             // (issue #4402).
-            if (flags & EXPAND_SPECIAL_FOR_CD && flags & EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST) {
+            if (flags & EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST) {
                 wcstring unique_hierarchy = this->descend_unique_hierarchy(abs_path);
                 if (!unique_hierarchy.empty()) {
                     for (size_t i = before; i < after; i++) {

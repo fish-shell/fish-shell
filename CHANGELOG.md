@@ -28,6 +28,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `read` writes directly to stdout if called without arguments (#4407)
 - Globs are faster (#4579)
 - `string` reads from stdin faster (#4610)
+- `cd` tab completions no longer descend into the deepest unambiguous path (#4649)
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

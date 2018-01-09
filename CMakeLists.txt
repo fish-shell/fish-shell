@@ -103,6 +103,23 @@ TARGET_LINK_LIBRARIES(fishlib
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}
   ${PCRE2_LIB} muparser)
 
+ADD_CUSTOM_TARGET(fish_version ALL)
+
+ADD_CUSTOM_COMMAND(TARGET fish_version
+                   COMMAND ${CMAKE_COMMAND}
+                   -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+                   -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+                   -P ${CMAKE_SOURCE_DIR}/cmake/GenerateGitVersion.cmake
+                   VERBATIM)
+
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_BINARY_DIR}/include/fish_build_version.h
+                            PROPERTIES GENERATED TRUE
+                            HEADER_FILE_ONLY TRUE)
+
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/include)
+
+ADD_DEPENDENCIES(fishlib fish_version)
+
 # Define fish.
 ADD_EXECUTABLE(fish src/fish.cpp)
 FISH_LINK_DEPS(fish)

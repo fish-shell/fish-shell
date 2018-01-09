@@ -43,7 +43,6 @@ matrix:
             - gettext
             - libncurses5-dev
     - os: osx
-      osx_image: xcode8
       before_install:
         - brew update
         - brew install pcre2 # use system PCRE2

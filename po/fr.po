@@ -31055,7 +31055,7 @@ msgstr "Fichier de configuration"
 #: /tmp/fish/implicit/share/completions/help.fish:31
 #, fuzzy
 msgid "Introduction"
-msgstr "Instruction illégale"
+msgstr "Introduction"
 
 #: /tmp/fish/implicit/share/completions/help.fish:32
 msgid "Common issues with fish"

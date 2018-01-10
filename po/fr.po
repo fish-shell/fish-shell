@@ -249,7 +249,7 @@ msgstr "%ls: '%ls' n'est pas un dossier\n"
 #: src/builtin_cd.cpp:55
 #, fuzzy, c-format
 msgid "%ls: The directory '%ls' does not exist\n"
-msgstr "%ls: La fonction '%ls' n'existe pas\n"
+msgstr "%ls: Le dossier '%ls' n'existe pas\n"
 
 #: src/builtin_cd.cpp:58
 #, fuzzy, c-format

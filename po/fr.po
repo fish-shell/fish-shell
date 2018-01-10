@@ -264,7 +264,7 @@ msgstr "%ls: Option '%ls' inconnue\n"
 #: src/builtin_cd.cpp:76
 #, fuzzy, c-format
 msgid "%ls: Permission denied: '%ls'\n"
-msgstr "%ls: Nom de fonction illégal '%ls'\n"
+msgstr "%ls: Permission non accordée: '%ls'\n"
 
 #: src/builtin_cd.cpp:90
 #, c-format

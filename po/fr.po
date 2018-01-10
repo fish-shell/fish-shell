@@ -204,7 +204,7 @@ msgstr "%ls: Aucune clef avec le nom '%ls' n'a été trouvée\n"
 #: src/builtin_bind.cpp:143
 #, fuzzy, c-format
 msgid "%ls: Key with name '%ls' does not have any mapping\n"
-msgstr "%ls: La fonction '%ls' n'existe pas\n"
+msgstr "%ls: La clef avec le nom '%ls' n'a aucune correspondance\n"
 
 #: src/builtin_bind.cpp:146
 #, fuzzy, c-format

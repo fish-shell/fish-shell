@@ -10062,9 +10062,8 @@ msgid "Optimize for the specified CPU architecture"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/brew.fish:58
-#, fuzzy
 msgid "List installed top level formulae"
-msgstr "Limiter aux installés"
+msgstr "Limiter aux formules de premier niveau installées"
 
 #: /tmp/fish/implicit/share/completions/brew.fish:59
 msgid "Symlink installed formula"
@@ -10094,9 +10093,8 @@ msgid "Link .app bundles into ~/Applications instead"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/brew.fish:68
-#, fuzzy
 msgid "List all installed formula"
-msgstr "Limiter aux installés"
+msgstr "Limiter aux formules installées"
 
 #: /tmp/fish/implicit/share/completions/brew.fish:69
 #: /tmp/fish/implicit/share/completions/brew.fish:72
@@ -10111,7 +10109,7 @@ msgstr "Afficher le numéro de version"
 #: /tmp/fish/implicit/share/completions/brew.fish:71
 #: /tmp/fish/implicit/share/completions/brew.fish:74
 msgid "Show the versions of pinned formulae"
-msgstr ""
+msgstr "Montrer les versions des formules épinglées"
 
 #: /tmp/fish/implicit/share/completions/brew.fish:75
 msgid "Show log for formula"
@@ -27426,9 +27424,8 @@ msgid "Force-push branch"
 msgstr "Pousser autoritairement la branche"
 
 #: /tmp/fish/implicit/share/completions/git.fish:226
-#, fuzzy
 msgid "Delete remote branch"
-msgstr "Supprimer la branche"
+msgstr "Supprimer la branche distante"
 
 #: /tmp/fish/implicit/share/completions/git.fish:227
 msgid "Force-push local branch to remote branch"
@@ -33180,14 +33177,12 @@ msgid "Debug output"
 msgstr "Option de débogage"
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:3
-#, fuzzy
 msgid "Enable logging"
-msgstr "Activer le débogage"
+msgstr "Activer la journalisation"
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:4
-#, fuzzy
 msgid "Log file"
-msgstr "Ficher de configuration"
+msgstr "Fichier de journalisation"
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:6
 #: /tmp/fish/implicit/share/completions/iptables.fish:25
@@ -39399,7 +39394,7 @@ msgstr "Afficher l’utilisation et quitter"
 
 #: /tmp/fish/implicit/share/completions/mocp.fish:3
 msgid "Turn on logging to a file"
-msgstr ""
+msgstr "Activer la journalisation vers un fichier"
 
 #: /tmp/fish/implicit/share/completions/mocp.fish:4
 msgid "Run only the server"
@@ -44576,9 +44571,8 @@ msgid "log record format: 'term', 'logfmt', 'json'"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ngrok.fish:14
-#, fuzzy
 msgid "logging level"
-msgstr "Niveau de compression"
+msgstr "niveau de journalisation"
 
 #: /tmp/fish/implicit/share/completions/ngrok.fish:15
 msgid "ngrok server region [us , eu, au, ap] (default: us)"
@@ -51605,9 +51599,8 @@ msgid "Prefix for access logs"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:92
-#, fuzzy
 msgid "Disable access logging"
-msgstr "Désactiver le téléchargement de paquets"
+msgstr "Désactiver la journalisation des accès"
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:93
 msgid "Default MIME-type for objects"
@@ -60465,7 +60458,7 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:20
 msgid "Turn off logging"
-msgstr ""
+msgstr "Désactiver la journalisation"
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:21
 msgid "Turn off support for encodings according the locale setting"
@@ -60877,7 +60870,7 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:124
 msgid "Turn on logging"
-msgstr ""
+msgstr "Activer la journalisation"
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:125
 msgid "Turn on asynchronous scrolling"

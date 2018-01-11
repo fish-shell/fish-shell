@@ -1294,10 +1294,10 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
         while (position_in_statement > 0 && cmd.at(position_in_statement - 1) == L' ') {
             position_in_statement--;
         }
-        const parse_node_t *plain_statement = tree.find_node_matching_source_location(
-            symbol_plain_statement, position_in_statement, NULL);
-
-        if (plain_statement == NULL) {
+        auto plain_statement = tnode_t<grammar::plain_statement>{
+            &tree, tree.find_node_matching_source_location(symbol_plain_statement,
+                                                           position_in_statement, NULL)};
+        if (!plain_statement) {
             // Not part of a plain statement. This could be e.g. a for loop header, case expression,
             // etc. Do generic file completions (issue #1309). If we had to backtrack, it means
             // there was whitespace; don't do an autosuggestion in that case. Also don't do it if we
@@ -1327,15 +1327,14 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
             }
             completer.complete_param_expand(current_token, do_file);
         } else {
-            assert(plain_statement->has_source() &&
-                   plain_statement->type == symbol_plain_statement);
+            assert(plain_statement && plain_statement.has_source());
 
             // Get the command node.
-            const parse_node_t *cmd_node =
-                tree.get_child(*plain_statement, 0, parse_token_type_string);
+            tnode_t<grammar::tok_string> cmd_node = plain_statement.child<0>();
+            assert(cmd_node && cmd_node.has_source() && "Expected command node to be valid");
 
             // Get the actual command string.
-            if (cmd_node) current_command = cmd_node->get_source(cmd);
+            current_command = cmd_node.get_source(cmd);
 
             // Check the decoration.
             switch (tree.decoration_for_plain_statement(*plain_statement)) {
@@ -1363,7 +1362,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                 }
             }
 
-            if (cmd_node && cmd_node->location_in_or_at_end_of_source_range(pos)) {
+            if (cmd_node.location_in_or_at_end_of_source_range(pos)) {
                 // Complete command filename.
                 completer.complete_cmd(current_token, use_function, use_builtin, use_command,
                                        use_implicit_cd);
@@ -1394,7 +1393,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                     // of the argument, then the current argument is the matching one, and the
                     // previous argument is the one before it.
                     bool cursor_in_whitespace =
-                        !plain_statement->location_in_or_at_end_of_source_range(pos);
+                        !plain_statement.location_in_or_at_end_of_source_range(pos);
                     if (cursor_in_whitespace) {
                         current_argument = L"";
                         previous_argument = matching_arg;
@@ -1452,8 +1451,9 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                                 assert(wrap_chain.at(i) == current_command_unescape);
                             } else if (!(flags & COMPLETION_REQUEST_AUTOSUGGESTION)) {
                                 wcstring faux_cmdline = cmd;
-                                faux_cmdline.replace(cmd_node->source_start,
-                                                     cmd_node->source_length, wrap_chain.at(i));
+                                faux_cmdline.replace(cmd_node.source_range()->start,
+                                                     cmd_node.source_range()->length,
+                                                     wrap_chain.at(i));
                                 transient_cmd = make_unique<builtin_commandline_scoped_transient_t>(
                                     faux_cmdline);
                             }

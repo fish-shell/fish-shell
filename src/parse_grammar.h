@@ -116,6 +116,7 @@ struct alternative {
 #define DEF_ALT(T) struct T : public alternative
 #define ALT_BODY(T)                                                                          \
     BODY(T)                                                                                  \
+    using type_tuple = std::tuple<>;                                                         \
     static const production_element_t *resolve(const parse_token_t &, const parse_token_t &, \
                                                parse_node_tag_t *);
 

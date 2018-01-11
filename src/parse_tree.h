@@ -256,6 +256,14 @@ class tnode_t {
         assert((!n || n->type == Type::token) && "node has wrong type");
     }
 
+    /// Temporary conversion to parse_node_t to assist in migration.
+    /* implicit */ operator const parse_node_t &() const {
+        assert(nodeptr && "Empty tnode_t");
+        return *nodeptr;
+    }
+
+    /* implicit */ operator const parse_node_t *() const { return nodeptr; }
+
     /// Return the underlying (type-erased) node.
     const parse_node_t *node() const { return nodeptr; }
 
@@ -274,6 +282,10 @@ class tnode_t {
         return nodeptr->get_source(str);
     }
 
+    bool location_in_or_at_end_of_source_range(size_t loc) const {
+        return nodeptr && nodeptr->location_in_or_at_end_of_source_range(loc);
+    }
+
     /// Type-safe access to a child at the given index.
     template <node_offset_t Index>
     tnode_t<child_at<Type, Index>> child() const {
@@ -281,6 +293,15 @@ class tnode_t {
         const parse_node_t *child = nullptr;
         if (nodeptr) child = tree->get_child(*nodeptr, Index, child_type::token);
         return tnode_t<child_type>{tree, child};
+    }
+
+    /// Type-safe access to a node's parent.
+    /// If the parent exists and has type ParentType, return it.
+    /// Otherwise return a missing tnode.
+    template <class ParentType>
+    tnode_t<ParentType> try_get_parent() const {
+        if (!nodeptr) return {};
+        return {tree, tree->get_parent(*nodeptr, ParentType::token)};
     }
 };
 

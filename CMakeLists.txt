@@ -4,12 +4,6 @@ PROJECT(fish-shell CXX)
 # We are C++11.
 SET(CMAKE_CXX_STANDARD 11)
 
-# Work around cmake/ninja bug that fails on install with ninja
-# See https://cmake.org/Bug/print_bug_page.php?bug_id=13934
-if (NINJA)
-    SET(CMAKE_BUILD_WITH_INSTALL_RPATH 1)
-endif(NINJA)
-
 # Disable exception handling.
 ADD_COMPILE_OPTIONS(-fno-exceptions)
 

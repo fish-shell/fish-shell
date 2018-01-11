@@ -1256,20 +1256,19 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
 
     int nsub = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
+    while (auto s = aiter.nextstr()) {
         typedef wcstring::size_type size_type;
         size_type pos = 0;
         size_type count = wcstring::npos;
-        wcstring s(arg);
         if (opts.start > 0) {
             pos = static_cast<size_type>(opts.start - 1);
         } else if (opts.start < 0) {
             assert(opts.start != LONG_MIN);  // checked above
             size_type n = static_cast<size_type>(-opts.start);
-            pos = n > s.length() ? 0 : s.length() - n;
+            pos = n > s->length() ? 0 : s->length() - n;
         }
-        if (pos > s.length()) {
-            pos = s.length();
+        if (pos > s->length()) {
+            pos = s->length();
         }
 
         if (opts.length >= 0) {
@@ -1278,7 +1277,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
 
         // Note that std::string permits count to extend past end of string.
         if (!opts.quiet) {
-            streams.out.append(s.substr(pos, count));
+            streams.out.append(s->substr(pos, count));
             streams.out.append(L'\n');
         }
         nsub++;

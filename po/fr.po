@@ -205,12 +205,12 @@ msgstr "%ls: Impossible de trouver la tâche '%d'\n"
 #: src/builtin_bind.cpp:141
 #, c-format
 msgid "%ls: No key with name '%ls' found\n"
-msgstr "%ls: Aucune clef avec le nom '%ls' n'a été trouvée\n"
+msgstr "%ls: Aucune clé avec le nom '%ls' n'a été trouvée\n"
 
 #: src/builtin_bind.cpp:143
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Key with name '%ls' does not have any mapping\n"
-msgstr "%ls: La clef avec le nom '%ls' n'a aucune correspondance\n"
+msgstr "%ls: La clé avec le nom '%ls' n'a aucune correspondance\n"
 
 #: src/builtin_bind.cpp:146
 #, fuzzy, c-format
@@ -253,7 +253,7 @@ msgid "%ls: '%ls' is not a directory\n"
 msgstr "%ls: '%ls' n'est pas un dossier\n"
 
 #: src/builtin_cd.cpp:55
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: The directory '%ls' does not exist\n"
 msgstr "%ls: Le dossier '%ls' n'existe pas\n"
 
@@ -268,7 +268,7 @@ msgid "%ls: Unknown error trying to locate directory '%ls'\n"
 msgstr "%ls: Option '%ls' inconnue\n"
 
 #: src/builtin_cd.cpp:76
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Permission denied: '%ls'\n"
 msgstr "%ls: Permission non accordée: '%ls'\n"
 
@@ -598,7 +598,7 @@ msgid "%ls: Expected function name"
 msgstr "%ls: Exactement un nom de fonction est attendu"
 
 #: src/builtin_function.cpp:185
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Illegal function name '%ls'"
 msgstr "%ls: Nom de fonction illégal '%ls'"
 
@@ -1227,7 +1227,7 @@ msgstr "Type de redirection d'entrée inconnu: %d"
 #: src/exec.cpp:827
 #, c-format
 msgid "Unknown function '%ls'"
-msgstr "Fonction inconnue '%ls'"
+msgstr "Fonction '%ls' inconnue"
 
 #: src/expand.cpp:55
 msgid "Child process"

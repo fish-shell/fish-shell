@@ -17,7 +17,6 @@ FILE(GLOB TESTS_FILES tests/*)
 ADD_CUSTOM_TARGET(tests_dir DEPENDS tests)
 
 ADD_CUSTOM_COMMAND(TARGET tests_dir
-                   PRE_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy_directory
                    ${CMAKE_SOURCE_DIR}/tests/ ${CMAKE_BINARY_DIR}/tests/
                    COMMENT "Copying test files to binary dir"

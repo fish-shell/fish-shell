@@ -1303,25 +1303,23 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
 
     size_t ntrim = 0;
 
-    wcstring argstr;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        argstr = arg;
+    while (auto arg = aiter.nextstr()) {
         // Begin and end are respectively the first character to keep on the left, and first
         // character to trim on the right. The length is thus end - start.
-        size_t begin = 0, end = argstr.size();
+        size_t begin = 0, end = arg->size();
         if (opts.right) {
-            size_t last_to_keep = argstr.find_last_not_of(opts.chars_to_trim);
+            size_t last_to_keep = arg->find_last_not_of(opts.chars_to_trim);
             end = (last_to_keep == wcstring::npos) ? 0 : last_to_keep + 1;
         }
         if (opts.left) {
-            size_t first_to_keep = argstr.find_first_not_of(opts.chars_to_trim);
+            size_t first_to_keep = arg->find_first_not_of(opts.chars_to_trim);
             begin = (first_to_keep == wcstring::npos ? end : first_to_keep);
         }
-        assert(begin <= end && end <= argstr.size());
-        ntrim += argstr.size() - (end - begin);
+        assert(begin <= end && end <= arg->size());
+        ntrim += arg->size() - (end - begin);
         if (!opts.quiet) {
-            streams.out.append(wcstring(argstr, begin, end - begin));
+            streams.out.append(wcstring(*arg, begin, end - begin));
             streams.out.append(L'\n');
         }
     }

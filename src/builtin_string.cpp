@@ -492,114 +492,6 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wc
     return STATUS_CMD_OK;
 }
 
-/// Escape a string so that it can be used in a fish script without further word splitting.
-static int string_escape_script(options_t &opts, int optind, wchar_t **argv,
-                                io_streams_t &streams) {
-    int nesc = 0;
-    escape_flags_t flags = ESCAPE_ALL;
-    if (opts.no_quoted) flags |= ESCAPE_NO_QUOTED;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
-        // Use the wcstring here because of embedded NULs.
-        streams.out.append(escape_string(*arg, flags, STRING_STYLE_SCRIPT));
-        streams.out.append(L'\n');
-        nesc++;
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-/// Escape a string so that it can be used as a URL.
-static int string_escape_url(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
-    UNUSED(opts);
-    int nesc = 0;
-    escape_flags_t flags = 0;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
-        streams.out.append(escape_string(*arg, flags, STRING_STYLE_URL));
-        streams.out.append(L'\n');
-        nesc++;
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-/// Escape a string so that it can be used as a fish var name.
-static int string_escape_var(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
-    UNUSED(opts);
-    int nesc = 0;
-    escape_flags_t flags = 0;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
-        streams.out.append(escape_string(*arg, flags, STRING_STYLE_VAR));
-        streams.out.append(L'\n');
-        nesc++;
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-/// Unescape a string encoded so it can be used in fish script.
-static int string_unescape_script(options_t &opts, int optind, wchar_t **argv,
-                                  io_streams_t &streams) {
-    UNUSED(opts);
-    int nesc = 0;
-    unescape_flags_t flags = 0;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        wcstring result;
-        if (unescape_string(arg, &result, flags, STRING_STYLE_SCRIPT)) {
-            streams.out.append(result);
-            streams.out.append(L'\n');
-            nesc++;
-        }
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-/// Unescape an encoded URL.
-static int string_unescape_url(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
-    UNUSED(opts);
-    int nesc = 0;
-    unescape_flags_t flags = 0;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        wcstring result;
-        if (unescape_string(arg, &result, flags, STRING_STYLE_URL)) {
-            streams.out.append(result);
-            streams.out.append(L'\n');
-            nesc++;
-        }
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-/// Unescape an encoded var name.
-static int string_unescape_var(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
-    UNUSED(opts);
-    int nesc = 0;
-    unescape_flags_t flags = 0;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        wcstring result;
-        if (unescape_string(arg, &result, flags, STRING_STYLE_VAR)) {
-            streams.out.append(result);
-            streams.out.append(L'\n');
-            nesc++;
-        }
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
 static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     options_t opts;
     opts.no_quoted_valid = true;
@@ -608,18 +500,23 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    switch (opts.escape_style) {
-        case STRING_STYLE_SCRIPT: {
-            return string_escape_script(opts, optind, argv, streams);
-        }
-        case STRING_STYLE_URL: {
-            return string_escape_url(opts, optind, argv, streams);
-        }
-        case STRING_STYLE_VAR: {
-            return string_escape_var(opts, optind, argv, streams);
-        }
+    // Currently, only the script style supports options.
+    // Ignore them for other styles for now.
+    escape_flags_t flags = 0;
+    if (opts.escape_style == STRING_STYLE_SCRIPT) {
+        flags = ESCAPE_ALL;
+        if (opts.no_quoted) flags |= ESCAPE_NO_QUOTED;
     }
 
+    int nesc = 0;
+    arg_iterator_t aiter(argv, optind, streams);
+    while (auto arg = aiter.nextstr()) {
+        streams.out.append(escape_string(*arg, flags, opts.escape_style));
+        streams.out.append(L'\n');
+        nesc++;
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
     DIE("should never reach this statement");
 }
 
@@ -629,20 +526,22 @@ static int string_unescape(parser_t &parser, io_streams_t &streams, int argc, wc
     opts.style_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    int nesc = 0;
+    unescape_flags_t flags = 0;
+
     if (retval != STATUS_CMD_OK) return retval;
 
-    switch (opts.escape_style) {
-        case STRING_STYLE_SCRIPT: {
-            return string_unescape_script(opts, optind, argv, streams);
-        }
-        case STRING_STYLE_URL: {
-            return string_unescape_url(opts, optind, argv, streams);
-        }
-        case STRING_STYLE_VAR: {
-            return string_unescape_var(opts, optind, argv, streams);
+    arg_iterator_t aiter(argv, optind, streams);
+    while (auto arg = aiter.nextstr()) {
+        wcstring result;
+        if (unescape_string(*arg, &result, flags, opts.escape_style)) {
+            streams.out.append(result);
+            streams.out.append(L'\n');
+            nesc++;
         }
     }
 
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
     DIE("should never reach this statement");
 }
 

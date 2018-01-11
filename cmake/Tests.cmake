@@ -14,9 +14,15 @@ SET(TEST_ROOT_DIR ${TEST_DIR}/root)
 
 # Copy tests files.
 FILE(GLOB TESTS_FILES tests/*)
-FILE(COPY ${TESTS_FILES} DESTINATION tests/)
-
 ADD_CUSTOM_TARGET(tests_dir DEPENDS tests)
+
+ADD_CUSTOM_COMMAND(TARGET tests_dir
+                   PRE_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory
+                   ${CMAKE_SOURCE_DIR}/tests/ ${CMAKE_BINARY_DIR}/tests/
+                   COMMENT "Copying test files to binary dir"
+                   VERBATIM)
+
 ADD_DEPENDENCIES(fish_tests tests_dir)
 
 # Create the 'test' target.
@@ -33,7 +39,7 @@ ADD_CUSTOM_TARGET(test_low_level
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS fish_tests
   USES_TERMINAL)
-ADD_DEPENDENCIES(test test_low_level)
+ADD_DEPENDENCIES(test test_low_level tests_dir)
 
 # Make the directory in which to run tests.
 # Also symlink fish to where the tests expect it to be.

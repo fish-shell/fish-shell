@@ -1327,8 +1327,8 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
     return ntrim > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
-/// Implementation of `string lower`.
-static int string_lower(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+// A helper function for lower and upper.
+static int string_transform(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv, decltype(std::towlower) func) {
     options_t opts;
     opts.quiet_valid = true;
     int optind;
@@ -1337,10 +1337,10 @@ static int string_lower(parser_t &parser, io_streams_t &streams, int argc, wchar
 
     int n_transformed = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        wcstring transformed(arg);
-        std::transform(transformed.begin(), transformed.end(), transformed.begin(), std::towlower);
-        if (wcscmp(transformed.c_str(), arg)) n_transformed++;
+    while (auto arg = aiter.nextstr()) {
+        wcstring transformed(*arg);
+        std::transform(transformed.begin(), transformed.end(), transformed.begin(), func);
+        if (transformed != *arg) n_transformed++;
         if (!opts.quiet) {
             streams.out.append(transformed);
             streams.out.append(L'\n');
@@ -1350,27 +1350,14 @@ static int string_lower(parser_t &parser, io_streams_t &streams, int argc, wchar
     return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
+/// Implementation of `string lower`.
+static int string_lower(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    return string_transform(parser, streams, argc, argv, std::towlower);
+}
+
 /// Implementation of `string upper`.
 static int string_upper(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    options_t opts;
-    opts.quiet_valid = true;
-    int optind;
-    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
-
-    int n_transformed = 0;
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        wcstring transformed(arg);
-        std::transform(transformed.begin(), transformed.end(), transformed.begin(), std::towupper);
-        if (wcscmp(transformed.c_str(), arg)) n_transformed++;
-        if (!opts.quiet) {
-            streams.out.append(transformed);
-            streams.out.append(L'\n');
-        }
-    }
-
-    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+    return string_transform(parser, streams, argc, argv, std::towupper);
 }
 
 static const struct string_subcommand {

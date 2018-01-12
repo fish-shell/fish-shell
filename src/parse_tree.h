@@ -303,6 +303,18 @@ class tnode_t {
         return tnode_t<child_type>{tree, child};
     }
 
+    /// If the child at the given index has the given type, return it; otherwise return an empty
+    /// child.
+    /// This is used for e.g. alternations.
+    /// TODO: check that the type is possible (i.e. sum type).
+    template <class ChildType, node_offset_t Index>
+    tnode_t<ChildType> try_get_child() const {
+        const parse_node_t *child = nullptr;
+        if (nodeptr) child = tree->get_child(*nodeptr, Index);
+        if (child && child->type == ChildType::token) return {tree, child};
+        return {};
+    }
+
     /// Type-safe access to a node's parent.
     /// If the parent exists and has type ParentType, return it.
     /// Otherwise return a missing tnode.
@@ -310,6 +322,17 @@ class tnode_t {
     tnode_t<ParentType> try_get_parent() const {
         if (!nodeptr) return {};
         return {tree, tree->get_parent(*nodeptr, ParentType::token)};
+    }
+
+    /// Given that we are a list type, \return the next node of some Item in some node list,
+    /// adjusting 'this' to be the remainder of the list.
+    /// Returns an empty item on failure.
+    template <class ItemType>
+    tnode_t<ItemType> next_in_list() {
+        if (!nodeptr) return {};
+        const parse_node_t *next =
+            tree->next_node_in_node_list(*nodeptr, ItemType::token, &nodeptr);
+        return {tree, next};
     }
 
     static std::vector<tnode_t> find_nodes(const parse_node_tree_t *tree,

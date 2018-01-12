@@ -1040,6 +1040,56 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
     return err;
 }
 
+/// Given that the job given by node should be backgrounded, return true if we detect any errors.
+static bool detect_errors_in_backgrounded_job(const parse_node_tree_t &node_tree,
+                                              tnode_t<grammar::job> node,
+                                              parse_error_list_t *parse_errors) {
+    bool errored = false;
+    // Disallow background in the following cases:
+    // foo & ; and bar
+    // foo & ; or bar
+    // if foo & ; end
+    // while foo & ; end
+    const parse_node_t *job_parent = node_tree.get_parent(node);
+    assert(job_parent != NULL);
+    switch (job_parent->type) {
+        case symbol_if_clause:
+        case symbol_while_header: {
+            assert(node_tree.get_child(*job_parent, 1) == node);
+            errored = append_syntax_error(parse_errors, node.source_range()->start,
+                                          BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+            break;
+        }
+        case symbol_job_list: {
+            // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
+            // Build the job list and then advance it by one.
+            tnode_t<grammar::job_list> job_list{&node_tree, job_parent};
+            auto first_job = job_list.next_in_list<grammar::job>();
+            assert(first_job.node() == node && "Expected first job to be the node we found");
+            (void)first_job;
+            // Try getting the next job as a boolean statement.
+            auto next_job = job_list.next_in_list<grammar::job>();
+            tnode_t<grammar::statement> next_stmt = next_job.child<0>();
+            if (auto bool_stmt = next_stmt.try_get_child<grammar::boolean_statement, 0>()) {
+                // The next job is indeed a boolean statement.
+                parse_bool_statement_type_t bool_type =
+                    parse_node_tree_t::statement_boolean_type(*bool_stmt.node());
+                if (bool_type == parse_bool_and) {  // this is not allowed
+                    errored = append_syntax_error(parse_errors, bool_stmt.source_range()->start,
+                                                  BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
+                } else if (bool_type == parse_bool_or) {  // this is not allowed
+                    errored = append_syntax_error(parse_errors, bool_stmt.source_range()->start,
+                                                  BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
+                }
+            }
+            break;
+        }
+        default:
+            break;
+    }
+    return errored;
+}
+
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors,
                                                   bool allow_incomplete,
@@ -1097,9 +1147,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // Verify no variable expansions.
 
     if (!errored) {
-        const size_t node_tree_size = node_tree.size();
-        for (size_t i = 0; i < node_tree_size; i++) {
-            const parse_node_t &node = node_tree.at(i);
+        for (const parse_node_t &node : node_tree) {
             if (node.type == symbol_end_command && !node.has_source()) {
                 // An 'end' without source is an unclosed block.
                 has_unclosed_block = true;
@@ -1115,63 +1163,16 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                 const wcstring arg_src = node.get_source(buff_src);
                 res |= parse_util_detect_errors_in_argument(node, arg_src, &parse_errors);
             } else if (node.type == symbol_job) {
-                if (node_tree.job_should_be_backgrounded(node)) {
-                    // Disallow background in the following cases:
-                    //
-                    // foo & ; and bar
-                    // foo & ; or bar
-                    // if foo & ; end
-                    // while foo & ; end
-                    const parse_node_t *job_parent = node_tree.get_parent(node);
-                    assert(job_parent != NULL);
-                    switch (job_parent->type) {
-                        case symbol_if_clause:
-                        case symbol_while_header: {
-                            assert(node_tree.get_child(*job_parent, 1) == &node);
-                            errored = append_syntax_error(&parse_errors, node.source_start,
-                                                          BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-                            break;
-                        }
-                        case symbol_job_list: {
-                            // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
-                            assert(node_tree.get_child(*job_parent, 0) == &node);
-                            const parse_node_t *next_job_list =
-                                node_tree.get_child(*job_parent, 1, symbol_job_list);
-                            assert(next_job_list != NULL);
-                            const parse_node_t *next_job =
-                                node_tree.next_node_in_node_list(*next_job_list, symbol_job, NULL);
-                            if (next_job == NULL) {
-                                break;
-                            }
-
-                            const parse_node_t *next_statement =
-                                node_tree.get_child(*next_job, 0, symbol_statement);
-                            if (next_statement == NULL) {
-                                break;
-                            }
-
-                            const parse_node_t *spec_statement =
-                                node_tree.get_child(*next_statement, 0);
-                            if (!spec_statement ||
-                                spec_statement->type != symbol_boolean_statement) {
-                                break;
-                            }
-
-                            parse_bool_statement_type_t bool_type =
-                                parse_node_tree_t::statement_boolean_type(*spec_statement);
-                            if (bool_type == parse_bool_and) {  // this is not allowed
-                                errored =
-                                    append_syntax_error(&parse_errors, spec_statement->source_start,
-                                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
-                            } else if (bool_type == parse_bool_or) {  // this is not allowed
-                                errored =
-                                    append_syntax_error(&parse_errors, spec_statement->source_start,
-                                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
-                            }
-                            break;
-                        }
-                        default: { break; }
-                    }
+                // Disallow background in the following cases:
+                //
+                // foo & ; and bar
+                // foo & ; or bar
+                // if foo & ; end
+                // while foo & ; end
+                // If it's not a background job, nothing to do.
+                auto job = tnode_t<grammar::job>{&node_tree, &node};
+                if (node_tree.job_should_be_backgrounded(job)) {
+                    errored |= detect_errors_in_backgrounded_job(node_tree, job, &parse_errors);
                 }
             } else if (node.type == symbol_plain_statement) {
                 // In a few places below, we want to know if we are in a pipeline.

@@ -159,19 +159,19 @@ class completion_entry_t {
 
 /// Set of all completion entries.
 namespace std {
-    template<>
-    struct hash<completion_entry_t> {
-        size_t operator()(const completion_entry_t &c) const {
-            std::hash<wcstring> hasher;
-            return hasher((wcstring) c.cmd);
-        }
-    };
-    template <>
-    struct equal_to<completion_entry_t> {
-        bool operator()(const completion_entry_t &c1, const completion_entry_t &c2) const {
-            return c1.cmd == c2.cmd;
-        }
-    };
+template <>
+struct hash<completion_entry_t> {
+    size_t operator()(const completion_entry_t &c) const {
+        std::hash<wcstring> hasher;
+        return hasher((wcstring)c.cmd);
+    }
+};
+template <>
+struct equal_to<completion_entry_t> {
+    bool operator()(const completion_entry_t &c1, const completion_entry_t &c2) const {
+        return c1.cmd == c2.cmd;
+    }
+};
 }
 typedef std::unordered_set<completion_entry_t> completion_entry_set_t;
 static completion_entry_set_t completion_set;
@@ -1281,10 +1281,9 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
 
     if (!done) {
         parse_node_tree_t tree;
-        parse_tree_from_string(cmd,
-                               parse_flag_continue_after_error |
-                                   parse_flag_accept_incomplete_tokens |
-                                   parse_flag_include_comments,
+        parse_tree_from_string(cmd, parse_flag_continue_after_error |
+                                        parse_flag_accept_incomplete_tokens |
+                                        parse_flag_include_comments,
                                &tree, NULL);
 
         // Find the plain statement to operate on. The cursor may be past it (#1261), so backtrack

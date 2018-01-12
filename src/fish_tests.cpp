@@ -2314,8 +2314,8 @@ static void test_completion_insertions() {
     TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_REPLACES_TOKEN, false, L"bar ^");
 }
 
-static void perform_one_autosuggestion_cd_test(const wcstring &command,
-                                               const wcstring &expected, long line) {
+static void perform_one_autosuggestion_cd_test(const wcstring &command, const wcstring &expected,
+                                               long line) {
     std::vector<completion_t> comps;
     complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION);
 
@@ -2350,8 +2350,8 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command,
     }
 }
 
-static void perform_one_completion_cd_test(const wcstring &command,
-                                               const wcstring &expected, long line) {
+static void perform_one_completion_cd_test(const wcstring &command, const wcstring &expected,
+                                           long line) {
     std::vector<completion_t> comps;
     complete(command, &comps, COMPLETION_REQUEST_DEFAULT);
 
@@ -2375,10 +2375,10 @@ static void perform_one_completion_cd_test(const wcstring &command,
         const completion_t &suggestion = comps.at(0);
 
         if (suggestion.completion != expected) {
-            fwprintf(
-                stderr,
-                L"line %ld: complete() for cd tab completion returned the wrong expected string for command %ls\n",
-                line, command.c_str());
+            fwprintf(stderr,
+                     L"line %ld: complete() for cd tab completion returned the wrong expected "
+                     L"string for command %ls\n",
+                     line, command.c_str());
             fwprintf(stderr, L"  actual: %ls\n", suggestion.completion.c_str());
             fwprintf(stderr, L"expected: %ls\n", expected.c_str());
             do_test_from(suggestion.completion == expected, line);
@@ -2660,9 +2660,9 @@ static void test_universal_callbacks() {
     uvars2.sync(callbacks);
 
     // Change uvars1.
-    uvars1.set(L"alpha", {L"2"}, false);  // changes value
-    uvars1.set(L"beta", {L"1"}, true);    // changes export
-    uvars1.remove(L"delta");              // erases value
+    uvars1.set(L"alpha", {L"2"}, false);    // changes value
+    uvars1.set(L"beta", {L"1"}, true);      // changes export
+    uvars1.remove(L"delta");                // erases value
     uvars1.set(L"epsilon", {L"1"}, false);  // changes nothing
     uvars1.sync(callbacks);
 
@@ -4287,7 +4287,7 @@ static void test_illegal_command_exit_code(void) {
 
 void test_maybe() {
     say(L"Testing maybe_t");
-    do_test(! bool(maybe_t<int>()));
+    do_test(!bool(maybe_t<int>()));
     maybe_t<int> m(3);
     do_test(m.has_value());
     do_test(m.value() == 3);
@@ -4306,7 +4306,7 @@ void test_maybe() {
     do_test(maybe_t<int>() == none());
     do_test(!maybe_t<int>(none()).has_value());
     m = none();
-    do_test(! bool(m));
+    do_test(!bool(m));
 
     maybe_t<std::string> m2("abc");
     do_test(!m2.missing_or_empty());

@@ -21,6 +21,10 @@ function help --description 'Show help for the fish shell'
     set -l fish_browser
     set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape rekonq google-chrome chromium-browser
 
+    # On mac we may have to write a temporary file that redirects to the desired
+    # help page, since `open` will drop fragments from file URIs (issue #4480).
+    set -l need_trampoline
+
     if set -q fish_help_browser[1]
         # User has set a fish-specific help browser. This overrides the
         # browser that may be defined by $BROWSER. The fish_help_browser
@@ -61,10 +65,11 @@ function help --description 'Show help for the fish shell'
                 set fish_browser xdg-open
             end
 
-            # On OS X, we go through osascript by default
+            # On OS X, we go through open by default
             if test (uname) = Darwin
-                if type -q osascript
-                    set fish_browser osascript
+                if type -q open
+                    set fish_browser open
+                    set need_trampoline 1
                 end
             end
         end
@@ -127,16 +132,23 @@ function help --description 'Show help for the fish shell'
         # Go to the web. Only include one dot in the version string
         set -l version_string (echo $version| cut -d . -f 1,2)
         set page_url https://fishshell.com/docs/$version_string/$fish_help_page
+        # We don't need a trampoline for a remote URL.
+        set need_trampoline
     end
 
-    # OS X /usr/bin/open swallows fragments (anchors), so use osascript
-    # Eval is just a cheesy way of removing the hash escaping
-    if test "$fish_browser" = osascript
-        set -l opencmd 'open location "'(eval echo $page_url)'"'
-        osascript -e 'try' -e $opencmd -e 'on error' -e $opencmd -e 'end try'
-        return
+    if set -q need_trampoline[1]
+        # If string replace doesn't replace anything, we don't actually need a
+        # trampoline (they're only needed if there's a fragment in the path)
+        if set -l clean_url (string replace '\\#' '#' $page_url)
+            # Write a temporary file that will redirect where we want.
+            set -q TMPDIR
+            or set -l TMPDIR /tmp
+            set -l tmpdir (mktemp -d $TMPDIR/help.XXXXXX)
+            set -l tmpname $tmpdir/help.html
+            echo '<meta http-equiv="refresh" content="0;URL=\''$clean_url'\'" />' > $tmpname
+            set page_url file://$tmpname
+        end
     end
-
 
     # If browser is known to be graphical, put into background
     if contains -- $fish_browser[1] $graphical_browsers

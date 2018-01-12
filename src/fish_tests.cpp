@@ -3394,14 +3394,12 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     }
 
     // Get the statement. Should only have one.
-    const parse_node_tree_t::parse_node_list_t stmt_nodes =
-        tree.find_nodes(tree.at(0), symbol_plain_statement);
-    if (stmt_nodes.size() != 1) {
-        say(L"Unexpected number of statements (%lu) found in '%ls'", stmt_nodes.size(),
-            src.c_str());
+    auto stmts = tnode_t<grammar::plain_statement>::find_nodes(&tree, &tree.at(0));
+    if (stmts.size() != 1) {
+        say(L"Unexpected number of statements (%lu) found in '%ls'", stmts.size(), src.c_str());
         return false;
     }
-    const parse_node_t &stmt = *stmt_nodes.at(0);
+    tnode_t<grammar::plain_statement> stmt = stmts.at(0);
 
     // Return its decoration.
     *out_deco = tree.decoration_for_plain_statement(stmt);

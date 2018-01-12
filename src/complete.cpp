@@ -1294,9 +1294,9 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
         while (position_in_statement > 0 && cmd.at(position_in_statement - 1) == L' ') {
             position_in_statement--;
         }
-        auto plain_statement = tnode_t<grammar::plain_statement>{
-            &tree, tree.find_node_matching_source_location(symbol_plain_statement,
-                                                           position_in_statement, NULL)};
+        auto plain_statement =
+            tnode_t<grammar::plain_statement>::find_node_matching_source_location(
+                &tree, position_in_statement, nullptr);
         if (!plain_statement) {
             // Not part of a plain statement. This could be e.g. a for loop header, case expression,
             // etc. Do generic file completions (issue #1309). If we had to backtrack, it means
@@ -1368,15 +1368,14 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                                        use_implicit_cd);
             } else {
                 // Get all the arguments.
-                const parse_node_tree_t::parse_node_list_t all_arguments =
-                    tree.find_nodes(*plain_statement, symbol_argument);
+                auto all_arguments = tnode_t<grammar::argument>::find_nodes(&tree, plain_statement);
 
                 // See whether we are in an argument. We may also be in a redirection, or nothing at
                 // all.
                 size_t matching_arg_index = -1;
                 for (size_t i = 0; i < all_arguments.size(); i++) {
-                    const parse_node_t *node = all_arguments.at(i);
-                    if (node->location_in_or_at_end_of_source_range(position_in_statement)) {
+                    tnode_t<grammar::argument> arg = all_arguments.at(i);
+                    if (arg.location_in_or_at_end_of_source_range(position_in_statement)) {
                         matching_arg_index = i;
                         break;
                     }
@@ -1386,7 +1385,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                 wcstring current_argument, previous_argument;
                 if (matching_arg_index != (size_t)(-1)) {
                     const wcstring matching_arg =
-                        all_arguments.at(matching_arg_index)->get_source(cmd);
+                        all_arguments.at(matching_arg_index).get_source(cmd);
 
                     // If the cursor is in whitespace, then the "current" argument is empty and the
                     // previous argument is the matching one. But if the cursor was in or at the end
@@ -1401,13 +1400,13 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                         current_argument = matching_arg;
                         if (matching_arg_index > 0) {
                             previous_argument =
-                                all_arguments.at(matching_arg_index - 1)->get_source(cmd);
+                                all_arguments.at(matching_arg_index - 1).get_source(cmd);
                         }
                     }
 
                     // Check to see if we have a preceding double-dash.
                     for (size_t i = 0; i < matching_arg_index; i++) {
-                        if (all_arguments.at(i)->get_source(cmd) == L"--") {
+                        if (all_arguments.at(i).get_source(cmd) == L"--") {
                             had_ddash = true;
                             break;
                         }
@@ -1417,9 +1416,10 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                 // If we are not in an argument, we may be in a redirection.
                 bool in_redirection = false;
                 if (matching_arg_index == (size_t)(-1)) {
-                    const parse_node_t *redirection = tree.find_node_matching_source_location(
-                        symbol_redirection, position_in_statement, plain_statement);
-                    in_redirection = (redirection != NULL);
+                    if (tnode_t<grammar::redirection>::find_node_matching_source_location(
+                            &tree, position_in_statement, plain_statement)) {
+                        in_redirection = true;
+                    }
                 }
 
                 bool do_file = false, handle_as_special_cd = false;

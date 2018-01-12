@@ -166,7 +166,7 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     // Find all the nodes of a given type underneath a given node, up to max_count of them.
     typedef std::vector<const parse_node_t *> parse_node_list_t;
     parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type,
-                                 size_t max_count = (size_t)(-1)) const;
+                                 size_t max_count = size_t(-1)) const;
 
     // Finds the last node of a given type underneath a given node, or NULL if it could not be
     // found. If parent is NULL, this finds the last node in the tree of that type.
@@ -286,6 +286,14 @@ class tnode_t {
         return nodeptr && nodeptr->location_in_or_at_end_of_source_range(loc);
     }
 
+    static tnode_t find_node_matching_source_location(const parse_node_tree_t *tree,
+                                                      size_t source_loc,
+                                                      const parse_node_t *parent) {
+        assert(tree && "null tree");
+        return tnode_t{tree,
+                       tree->find_node_matching_source_location(Type::token, source_loc, parent)};
+    }
+
     /// Type-safe access to a child at the given index.
     template <node_offset_t Index>
     tnode_t<child_at<Type, Index>> child() const {
@@ -302,6 +310,20 @@ class tnode_t {
     tnode_t<ParentType> try_get_parent() const {
         if (!nodeptr) return {};
         return {tree, tree->get_parent(*nodeptr, ParentType::token)};
+    }
+
+    static std::vector<tnode_t> find_nodes(const parse_node_tree_t *tree,
+                                           const parse_node_t *parent,
+                                           size_t max_count = size_t(-1)) {
+        assert(tree && "null tree");
+        assert(parent && "null parent");
+        auto ptrs = tree->find_nodes(*parent, Type::token, max_count);
+        std::vector<tnode_t> result;
+        result.reserve(ptrs.size());
+        for (const parse_node_t *np : ptrs) {
+            result.emplace_back(tree, np);
+        }
+        return result;
     }
 };
 

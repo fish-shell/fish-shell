@@ -940,11 +940,11 @@ static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offse
 /// Test if this argument contains any errors. Detected errors include syntax errors in command
 /// substitutions, improperly escaped characters and improper use of the variable expansion
 /// operator.
-parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t &node,
+parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::argument> node,
                                                               const wcstring &arg_src,
                                                               parse_error_list_t *out_errors) {
-    assert(node.type == symbol_argument);
-
+    assert(node.has_source() && "argument has no source");
+    auto source_start = node.source_range()->start;
     int err = 0;
     wchar_t *paran_begin, *paran_end;
     int do_loop = 1;
@@ -956,7 +956,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
             case -1: {
                 err = 1;
                 if (out_errors) {
-                    append_syntax_error(out_errors, node.source_start, L"Mismatched parenthesis");
+                    append_syntax_error(out_errors, source_start, L"Mismatched parenthesis");
                 }
                 return err;
             }
@@ -979,7 +979,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 // Our command substitution produced error offsets relative to its source. Tweak the
                 // offsets of the errors in the command substitution to account for both its offset
                 // within the string, and the offset of the node.
-                size_t error_offset = cmd_sub_start + 1 + node.source_start;
+                size_t error_offset = cmd_sub_start + 1 + source_start;
                 parse_error_offset_source_start(&subst_errors, error_offset);
 
                 if (out_errors != NULL) {
@@ -990,9 +990,8 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                     // "" and (), and also we no longer have the source of the command substitution.
                     // As an optimization, this is only necessary if the last character is a $.
                     if (cmd_sub_start > 0 && working_copy.at(cmd_sub_start - 1) == L'$') {
-                        err |= detect_dollar_cmdsub_errors(node.source_start,
-                                                           working_copy.substr(0, cmd_sub_start),
-                                                           subst, out_errors);
+                        err |= detect_dollar_cmdsub_errors(
+                            source_start, working_copy.substr(0, cmd_sub_start), subst, out_errors);
                     }
                 }
                 break;
@@ -1007,7 +1006,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
     wcstring unesc;
     if (!unescape_string(working_copy, &unesc, UNESCAPE_SPECIAL)) {
         if (out_errors) {
-            append_syntax_error(out_errors, node.source_start, L"Invalid token '%ls'",
+            append_syntax_error(out_errors, source_start, L"Invalid token '%ls'",
                                 working_copy.c_str());
         }
         return 1;
@@ -1031,8 +1030,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                                             unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
                     first_dollar--;
                 }
-                parse_util_expand_variable_error(unesc, node.source_start, first_dollar,
-                                                 out_errors);
+                parse_util_expand_variable_error(unesc, source_start, first_dollar, out_errors);
             }
         }
     }
@@ -1160,8 +1158,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   (type == parse_bool_and) ? L"and" : L"or");
                 }
             } else if (node.type == symbol_argument) {
+                tnode_t<grammar::argument> arg{&node_tree, &node};
                 const wcstring arg_src = node.get_source(buff_src);
-                res |= parse_util_detect_errors_in_argument(node, arg_src, &parse_errors);
+                res |= parse_util_detect_errors_in_argument(arg, arg_src, &parse_errors);
             } else if (node.type == symbol_job) {
                 // Disallow background in the following cases:
                 //

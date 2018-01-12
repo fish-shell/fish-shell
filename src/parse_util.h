@@ -136,7 +136,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 /// operator. This does NOT currently detect unterminated quotes.
 class parse_node_t;
 parser_test_error_bits_t parse_util_detect_errors_in_argument(
-    const parse_node_t &node, const wcstring &arg_src, parse_error_list_t *out_errors = NULL);
+    tnode_t<grammar::argument> node, const wcstring &arg_src,
+    parse_error_list_t *out_errors = NULL);
 
 /// Given a string containing a variable expansion error, append an appropriate error to the errors
 /// list. The global_token_pos is the offset of the token in the larger source, and the dollar_pos

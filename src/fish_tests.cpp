@@ -601,9 +601,9 @@ static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
     }
 
     assert(!tree.empty());  //!OCLINT(multiple unary operator)
-    const parse_node_t *first_arg = tree.next_node_in_node_list(tree.at(0), symbol_argument, NULL);
-    assert(first_arg != NULL);
-    return parse_util_detect_errors_in_argument(*first_arg, first_arg->get_source(src));
+    tnode_t<grammar::argument_list> arg_list{&tree, &tree.at(0)};
+    auto first_arg = arg_list.next_in_list<grammar::argument>();
+    return parse_util_detect_errors_in_argument(first_arg, first_arg.get_source(src));
 }
 
 /// Test the parser.

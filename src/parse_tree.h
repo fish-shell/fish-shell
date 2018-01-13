@@ -171,6 +171,10 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type,
                                  size_t max_count = size_t(-1)) const;
 
+    // Find all the nodes of a given type underneath a given node, up to max_count of them.
+    template <typename Type>
+    std::vector<tnode_t<Type>> find_nodes(const parse_node_t &parent, size_t max_count = -1) const;
+
     // Finds the last node of a given type, or empty if it could not be found. If parent is NULL,
     // this finds the last node in the tree of that type.
     template <typename Type>
@@ -343,25 +347,23 @@ class tnode_t {
             tree->next_node_in_node_list(*nodeptr, ItemType::token, &nodeptr);
         return {tree, next};
     }
-
-    static std::vector<tnode_t> find_nodes(const parse_node_tree_t *tree,
-                                           const parse_node_t *parent,
-                                           size_t max_count = size_t(-1)) {
-        assert(tree && "null tree");
-        assert(parent && "null parent");
-        auto ptrs = tree->find_nodes(*parent, Type::token, max_count);
-        std::vector<tnode_t> result;
-        result.reserve(ptrs.size());
-        for (const parse_node_t *np : ptrs) {
-            result.emplace_back(tree, np);
-        }
-        return result;
-    }
 };
 
 template <typename Type>
 tnode_t<Type> parse_node_tree_t::find_last_node(const parse_node_t *parent) const {
     return tnode_t<Type>(this, this->find_last_node_of_type(Type::token, parent));
+}
+
+template <typename Type>
+std::vector<tnode_t<Type>> parse_node_tree_t::find_nodes(const parse_node_t &parent,
+                                                         size_t max_count) const {
+    auto ptrs = this->find_nodes(parent, Type::token, max_count);
+    std::vector<tnode_t<Type>> result;
+    result.reserve(ptrs.size());
+    for (const parse_node_t *np : ptrs) {
+        result.emplace_back(this, np);
+    }
+    return result;
 }
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.

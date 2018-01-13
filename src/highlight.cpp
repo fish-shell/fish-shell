@@ -670,9 +670,9 @@ class highlighter_t {
     // The parse tree of the buff.
     parse_node_tree_t parse_tree;
     // Color an argument.
-    void color_argument(const parse_node_t &node);
+    void color_argument(tnode_t<grammar::tok_string> node);
     // Color a redirection.
-    void color_redirection(const parse_node_t &node);
+    void color_redirection(tnode_t<grammar::redirection> node);
     // Color the arguments of the given node.
     void color_arguments(const parse_node_t &list_node);
     // Color the redirections of the given node.
@@ -716,13 +716,14 @@ void highlighter_t::color_node(const parse_node_t &node, highlight_spec_t color)
 }
 
 // node does not necessarily have type symbol_argument here.
-void highlighter_t::color_argument(const parse_node_t &node) {
-    if (!node.has_source()) return;
+void highlighter_t::color_argument(tnode_t<grammar::tok_string> node) {
+    auto source_range = node.source_range();
+    if (!source_range) return;
 
     const wcstring arg_str = node.get_source(this->buff);
 
     // Get an iterator to the colors associated with the argument.
-    const size_t arg_start = node.source_start;
+    const size_t arg_start = source_range->start;
     const color_array_t::iterator arg_colors = color_array.begin() + arg_start;
 
     // Color this argument without concern for command substitutions.
@@ -810,53 +811,45 @@ void highlighter_t::color_arguments(const parse_node_t &list_node) {
     }
 
     // Find all the arguments of this list.
-    const parse_node_tree_t::parse_node_list_t nodes =
-        this->parse_tree.find_nodes(list_node, symbol_argument);
-
-    for (size_t i = 0; i < nodes.size(); i++) {
-        const parse_node_t *child = nodes.at(i);
-        assert(child != NULL && child->type == symbol_argument);
-        this->color_argument(*child);
+    auto args = this->parse_tree.find_nodes<grammar::argument>(list_node);
+    for (tnode_t<grammar::argument> arg : args) {
+        this->color_argument(arg.child<0>());
 
         if (cmd_is_cd) {
             // Mark this as an error if it's not 'help' and not a valid cd path.
-            wcstring param = child->get_source(this->buff);
+            wcstring param = arg.get_source(this->buff);
             if (expand_one(param, EXPAND_SKIP_CMDSUBST)) {
                 bool is_help = string_prefixes_string(param, L"--help") ||
                                string_prefixes_string(param, L"-h");
                 if (!is_help && this->io_ok &&
                     !is_potential_cd_path(param, working_directory, PATH_EXPAND_TILDE)) {
-                    this->color_node(*child, highlight_spec_error);
+                    this->color_node(arg, highlight_spec_error);
                 }
             }
         }
     }
 }
 
-void highlighter_t::color_redirection(const parse_node_t &redirection_node) {
-    assert(redirection_node.type == symbol_redirection);
+void highlighter_t::color_redirection(tnode_t<grammar::redirection> redirection_node) {
     if (!redirection_node.has_source()) return;
 
-    const parse_node_t *redirection_primitive =
-        this->parse_tree.get_child(redirection_node, 0, parse_token_type_redirection);  // like 2>
-    const parse_node_t *redirection_target = this->parse_tree.get_child(
-        redirection_node, 1, parse_token_type_string);  // like &1 or file path
+    tnode_t<grammar::tok_redirection> redir_prim = redirection_node.child<0>();  // like 2>
+    tnode_t<grammar::tok_string> redir_target =
+        redirection_node.child<1>();  // like &1 or file path
 
-    if (redirection_primitive != NULL) {
+    if (redir_prim) {
         wcstring target;
         const enum token_type redirect_type =
             this->parse_tree.type_for_redirection(redirection_node, this->buff, NULL, &target);
 
         // We may get a TOK_NONE redirection type, e.g. if the redirection is invalid.
         auto hl = redirect_type == TOK_NONE ? highlight_spec_error : highlight_spec_redirection;
-        this->color_node(*redirection_primitive, hl);
+        this->color_node(redir_prim, hl);
 
         // Check if the argument contains a command substitution. If so, highlight it as a param
         // even though it's a command redirection, and don't try to do any other validation.
         if (parse_util_locate_cmdsubst(target.c_str(), NULL, NULL, true) != 0) {
-            if (redirection_target != NULL) {
-                this->color_argument(*redirection_target);
-            }
+            this->color_argument(redir_target);
         } else {
             // No command substitution, so we can highlight the target file or fd. For example,
             // disallow redirections into a non-existent directory.
@@ -945,9 +938,9 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node) {
                 }
             }
 
-            if (redirection_target != NULL) {
+            if (redir_target) {
                 auto hl = target_is_valid ? highlight_spec_redirection : highlight_spec_error;
-                this->color_node(*redirection_target, hl);
+                this->color_node(redir_target, hl);
             }
         }
     }
@@ -955,10 +948,9 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node) {
 
 /// Color all of the redirections of the given command.
 void highlighter_t::color_redirections(const parse_node_t &list_node) {
-    const parse_node_tree_t::parse_node_list_t nodes =
-        this->parse_tree.find_nodes(list_node, symbol_redirection);
-    for (size_t i = 0; i < nodes.size(); i++) {
-        this->color_redirection(*nodes.at(i));
+    auto nodes = this->parse_tree.find_nodes<grammar::redirection>(list_node);
+    for (const auto &node : nodes) {
+        this->color_redirection(node);
     }
 }
 
@@ -1066,18 +1058,15 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                 break;
             }
             case symbol_for_header: {
+                tnode_t<grammar::for_header> fhead(&parse_tree, &node);
                 // Color the 'for' and 'in' as commands.
-                const parse_node_t *literal_for_node =
-                    this->parse_tree.get_child(node, 0, parse_token_type_string);
-                const parse_node_t *literal_in_node =
-                    this->parse_tree.get_child(node, 2, parse_token_type_string);
-                this->color_node(*literal_for_node, highlight_spec_command);
-                this->color_node(*literal_in_node, highlight_spec_command);
+                auto literal_for = fhead.child<0>();
+                auto literal_in = fhead.child<2>();
+                this->color_node(literal_for, highlight_spec_command);
+                this->color_node(literal_in, highlight_spec_command);
 
                 // Color the variable name as a parameter.
-                const parse_node_t *var_name_node =
-                    this->parse_tree.get_child(node, 1, parse_token_type_string);
-                this->color_argument(*var_name_node);
+                this->color_argument(fhead.child<1>());
                 break;
             }
             case parse_token_type_pipe:

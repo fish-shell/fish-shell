@@ -33,6 +33,7 @@ using tok_redirection = primitive<parse_token_type_redirection>;
 template <parse_keyword_t Keyword>
 struct keyword {
     using type_tuple = std::tuple<>;
+    static constexpr parse_token_type_t token = parse_token_type_string;
     static constexpr production_element_t element() {
         // Convert a parse_keyword_t enum to a production_element_t enum.
         return Keyword + LAST_TOKEN_OR_SYMBOL + 1;
@@ -198,7 +199,9 @@ DEF_ALT(block_header) {
 
 DEF(for_header)
 produces_sequence<keyword<parse_keyword_for>, tok_string, keyword<parse_keyword_in>, argument_list,
-                  tok_end>{};
+                  tok_end> {
+    BODY(for_header);
+};
 
 DEF(while_header)
 produces_sequence<keyword<parse_keyword_while>, job, tok_end, andor_job_list>{BODY(while_header)};

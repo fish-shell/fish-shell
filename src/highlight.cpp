@@ -1027,10 +1027,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
 #endif
 
     // Walk the node tree.
-    for (parse_node_tree_t::const_iterator iter = parse_tree.begin(); iter != parse_tree.end();
-         ++iter) {
-        const parse_node_t &node = *iter;
-
+    for (const parse_node_t &node : parse_tree) {
         switch (node.type) {
             // Color direct string descendants, e.g. 'for' and 'in'.
             case symbol_while_header:
@@ -1046,12 +1043,11 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                 break;
             }
             case symbol_switch_statement: {
-                const parse_node_t *literal_switch =
-                    this->parse_tree.get_child(node, 0, parse_token_type_string);
-                const parse_node_t *switch_arg =
-                    this->parse_tree.get_child(node, 1, symbol_argument);
-                this->color_node(*literal_switch, highlight_spec_command);
-                this->color_node(*switch_arg, highlight_spec_param);
+                tnode_t<grammar::switch_statement> switchn(&parse_tree, &node);
+                auto literal_switch = switchn.child<0>();
+                auto switch_arg = switchn.child<1>();
+                this->color_node(literal_switch, highlight_spec_command);
+                this->color_node(switch_arg, highlight_spec_param);
                 break;
             }
             case symbol_for_header: {

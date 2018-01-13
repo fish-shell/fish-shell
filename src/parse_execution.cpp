@@ -104,8 +104,9 @@ node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) co
     return offset;
 }
 
-const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_job_list(
-    const parse_node_t &job_list, wcstring *out_func_name) const {
+tnode_t<grammar::plain_statement>
+parse_execution_context_t::infinite_recursive_statement_in_job_list(const parse_node_t &job_list,
+                                                                    wcstring *out_func_name) const {
     assert(job_list.type == symbol_job_list);
     // This is a bit fragile. It is a test to see if we are inside of function call, but not inside
     // a block in that function call. If, in the future, the rules for what block scopes are pushed
@@ -114,23 +115,23 @@ const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_j
     bool is_within_function_call =
         (current && parent && current->type() == TOP && parent->type() == FUNCTION_CALL);
     if (!is_within_function_call) {
-        return NULL;
+        return {};
     }
 
     // Check to see which function call is forbidden.
     if (parser->forbidden_function.empty()) {
-        return NULL;
+        return {};
     }
     const wcstring &forbidden_function_name = parser->forbidden_function.back();
 
     // Get the first job in the job list.
     const parse_node_t *first_job = tree().next_node_in_node_list(job_list, symbol_job, NULL);
     if (first_job == NULL) {
-        return NULL;
+        return {};
     }
 
     // Here's the statement node we find that's infinite recursive.
-    const parse_node_t *infinite_recursive_statement = NULL;
+    tnode_t<grammar::plain_statement> infinite_recursive_statement;
 
     // Get the list of statements.
     const parse_node_tree_t::parse_node_list_t statements =
@@ -144,8 +145,9 @@ const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_j
         if (statement.type != symbol_decorated_statement) {
             continue;
         }
+        tnode_t<grammar::decorated_statement> dec_statement(&tree(), &statement);
 
-        const parse_node_t &plain_statement = tree().find_child(statement, symbol_plain_statement);
+        auto plain_statement = tree().find_child<grammar::plain_statement>(dec_statement);
         if (tree().decoration_for_plain_statement(plain_statement) !=
             parse_statement_decoration_none) {
             // This statement has a decoration like 'builtin' or 'command', and therefore is not
@@ -154,22 +156,17 @@ const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_j
         }
 
         // Ok, this is an undecorated plain statement. Get and expand its command.
-        wcstring cmd;
-        tree().command_for_plain_statement(plain_statement, pstree->src, &cmd);
-
-        if (expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL) &&
+        maybe_t<wcstring> cmd = command_for_plain_statement(plain_statement, pstree->src);
+        if (cmd && expand_one(*cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL) &&
             cmd == forbidden_function_name) {
             // This is it.
-            infinite_recursive_statement = &statement;
+            infinite_recursive_statement = plain_statement;
             if (out_func_name != NULL) {
                 *out_func_name = forbidden_function_name;
             }
             break;
         }
     }
-
-    assert(infinite_recursive_statement == NULL ||
-           infinite_recursive_statement->type == symbol_decorated_statement);
     return infinite_recursive_statement;
 }
 
@@ -829,9 +826,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     bool use_implicit_cd = false;
 
     // Get the command. We expect to always get it here.
-    wcstring cmd;
-    bool got_cmd = tree().command_for_plain_statement(statement, pstree->src, &cmd);
-    assert(got_cmd);
+    wcstring cmd = *command_for_plain_statement({&tree(), &statement}, pstree->src);
 
     // Expand it as a command. Return an error on failure.
     bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
@@ -1389,11 +1384,11 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
             // execution (which does block statements, but never job lists).
             assert(offset == 0);
             wcstring func_name;
-            const parse_node_t *infinite_recursive_node =
+            auto infinite_recursive_node =
                 this->infinite_recursive_statement_in_job_list(node, &func_name);
-            if (infinite_recursive_node != NULL) {
+            if (infinite_recursive_node) {
                 // We have an infinite recursion.
-                this->report_error(*infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,
+                this->report_error(infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,
                                    func_name.c_str());
                 status = parse_execution_errored;
             } else {

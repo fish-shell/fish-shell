@@ -1188,8 +1188,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   L"exec");
                 }
 
-                wcstring command;
-                if (node_tree.command_for_plain_statement(node, buff_src, &command)) {
+                if (maybe_t<wcstring> mcommand =
+                        command_for_plain_statement({&node_tree, &node}, buff_src)) {
+                    wcstring command = std::move(*mcommand);
                     // Check that we can expand the command.
                     if (!expand_one(command,
                                     EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS,

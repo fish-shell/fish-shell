@@ -1915,11 +1915,11 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
                 impending_exit = true;
             }
 
-            wcstring command;
-            tree.command_for_plain_statement(node, str, &command);
-            unescape_string_in_place(&command, UNESCAPE_DEFAULT);
-            if (command == L"exit" || command == L"reboot") {
-                impending_exit = true;
+            if (maybe_t<wcstring> command = command_for_plain_statement({&tree, &node}, str)) {
+                unescape_string_in_place(&*command, UNESCAPE_DEFAULT);
+                if (*command == L"exit" || *command == L"reboot") {
+                    impending_exit = true;
+                }
             }
         }
     }

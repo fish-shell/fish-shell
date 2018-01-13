@@ -240,16 +240,14 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
 
 // Given a plain statement node in a parse tree, get the command and return it, expanded
 // appropriately for commands. If we succeed, return true.
-bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_tree_t &tree,
-                                          const parse_node_t &plain_statement, wcstring *out_cmd) {
-    assert(plain_statement.type == symbol_plain_statement);
-
+static bool plain_statement_get_expanded_command(const wcstring &src,
+                                                 tnode_t<grammar::plain_statement> stmt,
+                                                 wcstring *out_cmd) {
     // Get the command. Try expanding it. If we cannot, it's an error.
-    wcstring cmd;
-    if (tree.command_for_plain_statement(plain_statement, src, &cmd) &&
-        expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS)) {
+    maybe_t<wcstring> cmd = command_for_plain_statement(stmt, src);
+    if (cmd && expand_one(*cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS)) {
         // Success, return the expanded string by reference.
-        *out_cmd = std::move(cmd);
+        *out_cmd = std::move(*cmd);
         return true;
     }
     return false;
@@ -324,8 +322,8 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
 
     // Find the last statement.
     auto last_statement = parse_tree.find_last_node<grammar::plain_statement>();
-    if (last_statement && plain_statement_get_expanded_command(buff, parse_tree, *last_statement,
-                                                               out_expanded_command)) {
+    if (last_statement &&
+        plain_statement_get_expanded_command(buff, last_statement, out_expanded_command)) {
         // Find the last argument. If we don't get one, return an invalid node.
         if (auto last_arg = parse_tree.find_last_node<grammar::argument>(last_statement)) {
             *out_last_arg = last_arg.get_source(buff);
@@ -803,8 +801,7 @@ void highlighter_t::color_arguments(const parse_node_t &list_node) {
         const parse_node_t *parent = this->parse_tree.get_parent(list_node, symbol_plain_statement);
         if (parent != NULL) {
             wcstring cmd_str;
-            if (plain_statement_get_expanded_command(this->buff, this->parse_tree, *parent,
-                                                     &cmd_str)) {
+            if (plain_statement_get_expanded_command(this->buff, {&parse_tree, parent}, &cmd_str)) {
                 cmd_is_cd = (cmd_str == L"cd");
             }
         }

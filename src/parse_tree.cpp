@@ -1330,20 +1330,6 @@ enum parse_statement_decoration_t parse_node_tree_t::decoration_for_plain_statem
     return decoration;
 }
 
-bool parse_node_tree_t::command_for_plain_statement(const parse_node_t &node, const wcstring &src,
-                                                    wcstring *out_cmd) const {
-    bool result = false;
-    assert(node.type == symbol_plain_statement);
-    const parse_node_t *cmd_node = this->get_child(node, 0, parse_token_type_string);
-    if (cmd_node != NULL && cmd_node->has_source()) {
-        out_cmd->assign(src, cmd_node->source_start, cmd_node->source_length);
-        result = true;
-    } else {
-        out_cmd->clear();
-    }
-    return result;
-}
-
 bool parse_node_tree_t::statement_is_in_pipeline(const parse_node_t &node,
                                                  bool include_first) const {
     // Moderately nasty hack! Walk up our ancestor chain and see if we are in a job_continuation.
@@ -1494,4 +1480,13 @@ const parse_node_t *parse_node_tree_t::next_node_in_node_list(
     assert(list_entry == NULL || list_entry->type == entry_type);
     if (out_list_tail != NULL) *out_list_tail = list_cursor;
     return list_entry;
+}
+
+maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> stmt,
+                                              const wcstring &src) {
+    tnode_t<grammar::tok_string> cmd = stmt.child<0>();
+    if (cmd && cmd.has_source()) {
+        return cmd.get_source(src);
+    }
+    return none();
 }

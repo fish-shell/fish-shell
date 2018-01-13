@@ -159,6 +159,9 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     // Find the first direct child of the given node of the given type. asserts on failure.
     const parse_node_t &find_child(const parse_node_t &parent, parse_token_type_t type) const;
 
+    template <typename Type>
+    tnode_t<Type> find_child(const parse_node_t &parent) const;
+
     // Get the node corresponding to the parent of the given node, or NULL if there is no such
     // child. If expected_type is provided, only returns the parent if it is of that type. Note the
     // asymmetry: get_child asserts since the children are known, but get_parent does not, since the
@@ -196,11 +199,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     /// decoration.
     enum parse_statement_decoration_t decoration_for_plain_statement(
         const parse_node_t &node) const;
-
-    /// Given a plain statement, get the command by reference (from the child node). Returns true if
-    /// successful. Clears the command on failure.
-    bool command_for_plain_statement(const parse_node_t &node, const wcstring &src,
-                                     wcstring *out_cmd) const;
 
     /// Given a plain statement, return true if the statement is part of a pipeline. If
     /// include_first is set, the first command in a pipeline is considered part of it; otherwise
@@ -350,6 +348,11 @@ class tnode_t {
 };
 
 template <typename Type>
+tnode_t<Type> parse_node_tree_t::find_child(const parse_node_t &parent) const {
+    return tnode_t<Type>(this, &this->find_child(parent, Type::token));
+}
+
+template <typename Type>
 tnode_t<Type> parse_node_tree_t::find_last_node(const parse_node_t *parent) const {
     return tnode_t<Type>(this, this->find_last_node_of_type(Type::token, parent));
 }
@@ -365,6 +368,11 @@ std::vector<tnode_t<Type>> parse_node_tree_t::find_nodes(const parse_node_t &par
     }
     return result;
 }
+
+/// Given a plain statement, get the command from the child node. Returns the command string on
+/// success, none on failure.
+maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> stmt,
+                                              const wcstring &src);
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.
 bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags,

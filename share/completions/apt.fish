@@ -11,7 +11,7 @@ end
 
 function __fish_apt_use_package -d 'Test if apt command should have packages as potential completion'
 	for i in (commandline -opc)
-		if contains -- $i install remove upgrade full-upgrade show search purge changelog
+		if contains -- $i install remove upgrade full-upgrade show search purge changelog policy
 			return 0
 		end
 	end
@@ -88,3 +88,6 @@ __fish_apt_subcommand changelog -r     -d 'Download and display package changelo
 
 # Autoremove
 __fish_apt_subcommand autoremove       -d 'Remove packages no longer needed as dependencies'
+
+# Policy
+__fish_apt_subcommand policy -x        -d 'Display source or package priorities'

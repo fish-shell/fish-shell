@@ -139,6 +139,9 @@ class parse_node_t {
     }
 };
 
+template <typename Type>
+class tnode_t;
+
 /// The parse tree itself.
 class parse_node_tree_t : public std::vector<parse_node_t> {
    public:
@@ -168,10 +171,10 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type,
                                  size_t max_count = size_t(-1)) const;
 
-    // Finds the last node of a given type underneath a given node, or NULL if it could not be
-    // found. If parent is NULL, this finds the last node in the tree of that type.
-    const parse_node_t *find_last_node_of_type(parse_token_type_t type,
-                                               const parse_node_t *parent = NULL) const;
+    // Finds the last node of a given type, or empty if it could not be found. If parent is NULL,
+    // this finds the last node in the tree of that type.
+    template <typename Type>
+    tnode_t<Type> find_last_node(const parse_node_t *parent = NULL) const;
 
     // Finds a node containing the given source location. If 'parent' is not NULL, it must be an
     // ancestor.
@@ -227,6 +230,12 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
 
     /// Given a job, return whether it should be backgrounded, because it has a & specifier.
     bool job_should_be_backgrounded(const parse_node_t &job) const;
+
+   private:
+    // Finds the last node of a given type underneath a given node, or NULL if it could not be
+    // found. If parent is NULL, this finds the last node in the tree of that type.
+    const parse_node_t *find_last_node_of_type(parse_token_type_t type,
+                                               const parse_node_t *parent) const;
 };
 
 struct source_range_t {
@@ -349,6 +358,11 @@ class tnode_t {
         return result;
     }
 };
+
+template <typename Type>
+tnode_t<Type> parse_node_tree_t::find_last_node(const parse_node_t *parent) const {
+    return tnode_t<Type>(this, this->find_last_node_of_type(Type::token, parent));
+}
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.
 bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags,

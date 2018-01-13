@@ -313,9 +313,9 @@ static bool has_expand_reserved(const wcstring &str) {
 }
 
 // Parse a command line. Return by reference the last command, and the last argument to that command
-// (as a copied node), if any. This is used by autosuggestions.
+// (as a string), if any. This is used by autosuggestions.
 static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expanded_command,
-                                      parse_node_t *out_last_arg) {
+                                      wcstring *out_last_arg) {
     // Parse the buffer.
     parse_node_tree_t parse_tree;
     parse_tree_from_string(buff,
@@ -323,15 +323,12 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
                            &parse_tree, NULL);
 
     // Find the last statement.
-    const parse_node_t *last_statement =
-        parse_tree.find_last_node_of_type(symbol_plain_statement, NULL);
-    if (last_statement != NULL && plain_statement_get_expanded_command(
-                                      buff, parse_tree, *last_statement, out_expanded_command)) {
+    auto last_statement = parse_tree.find_last_node<grammar::plain_statement>();
+    if (last_statement && plain_statement_get_expanded_command(buff, parse_tree, *last_statement,
+                                                               out_expanded_command)) {
         // Find the last argument. If we don't get one, return an invalid node.
-        const parse_node_t *last_arg =
-            parse_tree.find_last_node_of_type(symbol_argument, last_statement);
-        if (last_arg != NULL) {
-            *out_last_arg = *last_arg;
+        if (auto last_arg = parse_tree.find_last_node<grammar::argument>(last_statement)) {
+            *out_last_arg = last_arg.get_source(buff);
         }
         return true;
     }
@@ -347,20 +344,18 @@ bool autosuggest_validate_from_history(const history_item_t &item,
 
     // Parse the string.
     wcstring parsed_command;
-    parse_node_t last_arg_node(token_type_invalid);
-    if (!autosuggest_parse_command(item.str(), &parsed_command, &last_arg_node)) return false;
+    wcstring cd_dir;
+    if (!autosuggest_parse_command(item.str(), &parsed_command, &cd_dir)) return false;
 
-    if (parsed_command == L"cd" && last_arg_node.type == symbol_argument &&
-        last_arg_node.has_source()) {
+    if (parsed_command == L"cd" && !cd_dir.empty()) {
         // We can possibly handle this specially.
-        wcstring dir = last_arg_node.get_source(item.str());
-        if (expand_one(dir, EXPAND_SKIP_CMDSUBST)) {
+        if (expand_one(cd_dir, EXPAND_SKIP_CMDSUBST)) {
             handled = true;
             bool is_help =
-                string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
+                string_prefixes_string(cd_dir, L"--help") || string_prefixes_string(cd_dir, L"-h");
             if (!is_help) {
                 wcstring path;
-                env_var_t dir_var(L"n/a", dir);
+                env_var_t dir_var(L"n/a", cd_dir);
                 bool can_cd = path_get_cdpath(dir_var, &path, working_directory.c_str(), vars);
                 if (can_cd && !paths_are_same_file(working_directory, path)) {
                     suggestionOK = true;

@@ -97,7 +97,7 @@ class parse_execution_context_t {
     parse_execution_result_t run_block_statement(tnode_t<grammar::block_statement> statement);
     parse_execution_result_t run_for_statement(tnode_t<grammar::for_header> header,
                                                tnode_t<grammar::job_list> contents);
-    parse_execution_result_t run_if_statement(const parse_node_t &statement);
+    parse_execution_result_t run_if_statement(tnode_t<grammar::if_statement> statement);
     parse_execution_result_t run_switch_statement(const parse_node_t &statement);
     parse_execution_result_t run_while_statement(const parse_node_t &header,
                                                  const parse_node_t &contents);

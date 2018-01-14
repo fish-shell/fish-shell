@@ -251,20 +251,18 @@ bool parse_execution_context_t::job_is_simple_block(const parse_node_t &job_node
 }
 
 parse_execution_result_t parse_execution_context_t::run_if_statement(
-    const parse_node_t &statement) {
-    assert(statement.type == symbol_if_statement);
-
+    tnode_t<g::if_statement> statement) {
     // Push an if block.
     if_block_t *ib = parser->push_block<if_block_t>();
-    ib->node_offset = this->get_offset(statement);
+    ib->node_offset = this->get_offset(*statement);
 
     parse_execution_result_t result = parse_execution_success;
 
     // We have a sequence of if clauses, with a final else, resulting in a single job list that we
     // execute.
-    const parse_node_t *job_list_to_execute = NULL;
-    const parse_node_t *if_clause = get_child(statement, 0, symbol_if_clause);
-    const parse_node_t *else_clause = get_child(statement, 1, symbol_else_clause);
+    tnode_t<g::job_list> job_list_to_execute;
+    tnode_t<g::if_clause> if_clause = statement.child<0>();
+    tnode_t<g::else_clause> else_clause = statement.child<1>();
     for (;;) {
         if (should_cancel_execution(ib)) {
             result = parse_execution_cancelled;
@@ -272,10 +270,8 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
         }
 
         // An if condition has a job and a "tail" of andor jobs, e.g. "foo ; and bar; or baz".
-        assert(if_clause != NULL && else_clause != NULL);
-        const parse_node_t &condition_head = *get_child(*if_clause, 1, symbol_job);
-        const parse_node_t &condition_boolean_tail =
-            *get_child(*if_clause, 3, symbol_andor_job_list);
+        tnode_t<g::job> condition_head = if_clause.child<1>();
+        tnode_t<g::andor_job_list> condition_boolean_tail = if_clause.child<3>();
 
         // Check the condition and the tail. We treat parse_execution_errored here as failure, in
         // accordance with historic behavior.
@@ -288,24 +284,25 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
 
         if (take_branch) {
             // Condition succeeded.
-            job_list_to_execute = get_child(*if_clause, 4, symbol_job_list);
+            job_list_to_execute = if_clause.child<4>();
             break;
-        } else if (else_clause->child_count == 0) {
+        }
+        auto else_cont = else_clause.try_get_child<g::else_continuation, 1>();
+        if (!else_cont) {
             // 'if' condition failed, no else clause, return 0, we're done.
-            job_list_to_execute = NULL;
             proc_set_last_status(STATUS_CMD_OK);
             break;
         } else {
             // We have an 'else continuation' (either else-if or else).
-            const parse_node_t &else_cont = *get_child(*else_clause, 1, symbol_else_continuation);
-            const parse_node_t *maybe_if_clause = get_child(else_cont, 0);
-            if (maybe_if_clause && maybe_if_clause->type == symbol_if_clause) {
+            if (auto maybe_if_clause = else_cont.try_get_child<g::if_clause, 0>()) {
                 // it's an 'else if', go to the next one.
                 if_clause = maybe_if_clause;
-                else_clause = get_child(else_cont, 1, symbol_else_clause);
+                else_clause = else_cont.try_get_child<g::else_clause, 1>();
+                assert(else_clause && "Expected to have an else clause");
             } else {
                 // It's the final 'else', we're done.
-                job_list_to_execute = get_child(else_cont, 1, symbol_job_list);
+                job_list_to_execute = else_cont.try_get_child<g::job_list, 1>();
+                assert(job_list_to_execute && "Should have a job list");
                 break;
             }
         }
@@ -1216,7 +1213,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
                 break;
             }
             case symbol_if_statement: {
-                result = this->run_if_statement(specific_statement);
+                result = this->run_if_statement({&tree(), &specific_statement});
                 break;
             }
             case symbol_switch_statement: {
@@ -1377,7 +1374,7 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
             break;
         }
         case symbol_if_statement: {
-            status = this->run_if_statement(node);
+            status = this->run_if_statement({&tree(), &node});
             break;
         }
         case symbol_switch_statement: {

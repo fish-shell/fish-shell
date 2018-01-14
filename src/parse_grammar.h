@@ -248,7 +248,8 @@ DEF(case_item) produces_sequence<keyword<parse_keyword_case>, argument_list, tok
 };
 
 DEF(block_statement)
-produces_sequence<block_header, job_list, end_command, arguments_or_redirections_list>{};
+produces_sequence<block_header, job_list, end_command, arguments_or_redirections_list>{
+    BODY(block_statement)};
 
 DEF_ALT(block_header) {
     using forh = single<for_header>;
@@ -271,7 +272,8 @@ DEF(begin_header) produces_single<keyword<parse_keyword_begin>>{BODY(begin_heade
 
 // Functions take arguments, and require at least one (the name). No redirections allowed.
 DEF(function_header)
-produces_sequence<keyword<parse_keyword_function>, argument, argument_list, tok_end>{};
+produces_sequence<keyword<parse_keyword_function>, argument, argument_list, tok_end>{
+    BODY(function_header)};
 
 //  A boolean statement is AND or OR or NOT
 DEF_ALT(boolean_statement) {

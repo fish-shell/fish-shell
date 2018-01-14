@@ -392,42 +392,24 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
 }
 
 parse_execution_result_t parse_execution_context_t::run_block_statement(
-    const parse_node_t &statement) {
-    assert(statement.type == symbol_block_statement);
-
-    const parse_node_t &block_header =
-        *get_child(statement, 0, symbol_block_header);  // block header
-    const parse_node_t &header =
-        *get_child(block_header, 0);  // specific header type (e.g. for loop)
-    const parse_node_t &contents = *get_child(statement, 1, symbol_job_list);  // block contents
+    tnode_t<g::block_statement> statement) {
+    tnode_t<g::block_header> bheader = statement.child<0>();
+    tnode_t<g::job_list> contents = statement.child<1>();
 
     parse_execution_result_t ret = parse_execution_success;
-    switch (header.type) {
-        case symbol_for_header: {
-            ret = run_for_statement(header, contents);
-            break;
-        }
-        case symbol_while_header: {
-            ret = run_while_statement(header, contents);
-            break;
-        }
-        case symbol_function_header: {
-            const parse_node_t &function_end = *get_child(
-                statement, 2, symbol_end_command);  // the 'end' associated with the block
-            ret = run_function_statement(header, function_end);
-            break;
-        }
-        case symbol_begin_header: {
-            ret = run_begin_statement(header, contents);
-            break;
-        }
-        default: {
-            debug(0, L"Unexpected block header: %ls\n", header.describe().c_str());
-            PARSER_DIE();
-            break;
-        }
+    if (auto header = bheader.try_get_child<g::for_header, 0>()) {
+        ret = run_for_statement(header, contents);
+    } else if (auto header = bheader.try_get_child<g::while_header, 0>()) {
+        ret = run_while_statement(header, contents);
+    } else if (auto header = bheader.try_get_child<g::function_header, 0>()) {
+        tnode_t<g::end_command> func_end = statement.child<2>();
+        ret = run_function_statement(header, func_end);
+    } else if (auto header = bheader.try_get_child<g::begin_header, 0>()) {
+        ret = run_begin_statement(header, contents);
+    } else {
+        debug(0, L"Unexpected block header: %ls\n", bheader.node()->describe().c_str());
+        PARSER_DIE();
     }
-
     return ret;
 }
 
@@ -1233,7 +1215,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         assert(specific_statement_type_is_redirectable_block(specific_statement));
         switch (specific_statement.type) {
             case symbol_block_statement: {
-                result = this->run_block_statement(specific_statement);
+                result = this->run_block_statement({&tree(), &specific_statement});
                 break;
             }
             case symbol_if_statement: {
@@ -1394,7 +1376,7 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
             break;
         }
         case symbol_block_statement: {
-            status = this->run_block_statement(node);
+            status = this->run_block_statement({&tree(), &node});
             break;
         }
         case symbol_if_statement: {

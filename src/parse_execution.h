@@ -94,7 +94,7 @@ class parse_execution_context_t {
                                                     const parse_node_t &statement_node);
 
     // These encapsulate the actual logic of various (block) statements.
-    parse_execution_result_t run_block_statement(const parse_node_t &statement);
+    parse_execution_result_t run_block_statement(tnode_t<grammar::block_statement> statement);
     parse_execution_result_t run_for_statement(const parse_node_t &header,
                                                const parse_node_t &contents);
     parse_execution_result_t run_if_statement(const parse_node_t &statement);

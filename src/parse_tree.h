@@ -335,6 +335,13 @@ class tnode_t {
         return {tree, tree->get_parent(*nodeptr, ParentType::token)};
     }
 
+    /// Finds all descendants (up to max_count) under this node of the given type.
+    template <typename DescendantType>
+    std::vector<tnode_t<DescendantType>> descendants(size_t max_count = -1) const {
+        if (!nodeptr) return {};
+        return tree->find_nodes<DescendantType>(*nodeptr);
+    }
+
     /// Given that we are a list type, \return the next node of some Item in some node list,
     /// adjusting 'this' to be the remainder of the list.
     /// Returns an empty item on failure.

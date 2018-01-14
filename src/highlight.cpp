@@ -671,15 +671,18 @@ class highlighter_t {
     void color_argument(tnode_t<grammar::tok_string> node);
     // Color a redirection.
     void color_redirection(tnode_t<grammar::redirection> node);
-    // Color the arguments of the given node.
-    void color_arguments(const parse_node_t &list_node);
+    // Color a list of arguments. If cmd_is_cd is true, then the arguments are for 'cd'; detect
+    // invalid directories.
+    void color_arguments(const std::vector<tnode_t<grammar::argument>> &args, bool cmd_is_cd);
     // Color the redirections of the given node.
-    void color_redirections(const parse_node_t &list_node);
+    void color_redirections(tnode_t<grammar::arguments_or_redirections_list> list);
     // Color all the children of the command with the given type.
     void color_children(const parse_node_t &parent, parse_token_type_t type,
                         highlight_spec_t color);
     // Colors the source range of a node with a given color.
     void color_node(const parse_node_t &node, highlight_spec_t color);
+    // return whether a plain statement is 'cd'.
+    bool is_cd(tnode_t<grammar::plain_statement> stmt) const;
 
    public:
     // Constructor
@@ -792,23 +795,22 @@ static bool node_is_potential_path(const wcstring &src, const parse_node_t &node
     return result;
 }
 
-// Color all of the arguments of the given command.
-void highlighter_t::color_arguments(const parse_node_t &list_node) {
-    // Hack: determine whether the parent is the cd command, so we can show errors for
-    // non-directories.
+bool highlighter_t::is_cd(tnode_t<grammar::plain_statement> stmt) const {
     bool cmd_is_cd = false;
-    if (this->io_ok) {
-        const parse_node_t *parent = this->parse_tree.get_parent(list_node, symbol_plain_statement);
-        if (parent != NULL) {
-            wcstring cmd_str;
-            if (plain_statement_get_expanded_command(this->buff, {&parse_tree, parent}, &cmd_str)) {
-                cmd_is_cd = (cmd_str == L"cd");
-            }
+    if (this->io_ok && stmt.has_source()) {
+        wcstring cmd_str;
+        if (plain_statement_get_expanded_command(this->buff, stmt, &cmd_str)) {
+            cmd_is_cd = (cmd_str == L"cd");
         }
     }
+    return cmd_is_cd;
+}
 
+// Color all of the arguments of the given node list, which should be argument_list or
+// argument_or_redirection_list.
+void highlighter_t::color_arguments(const std::vector<tnode_t<grammar::argument>> &args,
+                                    bool cmd_is_cd) {
     // Find all the arguments of this list.
-    auto args = this->parse_tree.find_nodes<grammar::argument>(list_node);
     for (tnode_t<grammar::argument> arg : args) {
         this->color_argument(arg.child<0>());
 
@@ -944,9 +946,8 @@ void highlighter_t::color_redirection(tnode_t<grammar::redirection> redirection_
 }
 
 /// Color all of the redirections of the given command.
-void highlighter_t::color_redirections(const parse_node_t &list_node) {
-    auto nodes = this->parse_tree.find_nodes<grammar::redirection>(list_node);
-    for (const auto &node : nodes) {
+void highlighter_t::color_redirections(tnode_t<grammar::arguments_or_redirections_list> list) {
+    for (const auto &node : list.descendants<grammar::redirection>()) {
         this->color_redirection(node);
     }
 }
@@ -1100,12 +1101,21 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                                  is_valid_cmd ? highlight_spec_command : highlight_spec_error);
                 break;
             }
-            case symbol_arguments_or_redirections_list:
-            case symbol_argument_list: {
-                // Only work on root lists, so that we don't re-color child lists.
+            // Only work on root lists, so that we don't re-color child lists.
+            case symbol_arguments_or_redirections_list: {
                 if (parse_tree.argument_list_is_root(node)) {
-                    this->color_arguments(node);
-                    this->color_redirections(node);
+                    tnode_t<grammar::arguments_or_redirections_list> list(&parse_tree, &node);
+                    bool cmd_is_cd = is_cd(list.try_get_parent<grammar::plain_statement>());
+                    this->color_arguments(list.descendants<grammar::argument>(), cmd_is_cd);
+                    this->color_redirections(list);
+                }
+                break;
+            }
+            case symbol_argument_list: {
+                if (parse_tree.argument_list_is_root(node)) {
+                    tnode_t<grammar::argument_list> list(&parse_tree, &node);
+                    bool cmd_is_cd = is_cd(list.try_get_parent<grammar::plain_statement>());
+                    this->color_arguments(list.descendants<grammar::argument>(), cmd_is_cd);
                 }
                 break;
             }

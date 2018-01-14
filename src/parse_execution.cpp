@@ -47,6 +47,8 @@
 #include "wildcard.h"
 #include "wutil.h"
 
+namespace g = grammar;
+
 /// These are the specific statement types that support redirections.
 static bool specific_statement_type_is_redirectable_block(const parse_node_t &node) {
     return node.type == symbol_block_statement || node.type == symbol_if_statement ||
@@ -1136,17 +1138,16 @@ parse_execution_result_t parse_execution_context_t::populate_job_process(
 }
 
 parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
-    job_t *j, const parse_node_t &job_node, const block_t *associated_block) {
+    job_t *j, tnode_t<grammar::job> job_node, const block_t *associated_block) {
     UNUSED(associated_block);
-    assert(job_node.type == symbol_job);
 
     // Tell the job what its command is.
     j->set_command(get_source(job_node));
 
     // We are going to construct process_t structures for every statement in the job. Get the first
     // statement.
-    const parse_node_t *statement_node = get_child(job_node, 0, symbol_statement);
-    assert(statement_node != NULL);
+    tnode_t<g::statement> statement_node = job_node.child<0>();
+    assert(statement_node);
 
     parse_execution_result_t result = parse_execution_success;
 
@@ -1157,31 +1158,29 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
 
     // Construct process_ts for job continuations (pipelines), by walking the list until we hit the
     // terminal (empty) job continuation.
-    const parse_node_t *job_cont = get_child(job_node, 1, symbol_job_continuation);
-    assert(job_cont != NULL);
-    while (result == parse_execution_success && job_cont->child_count > 0) {
-        assert(job_cont->type == symbol_job_continuation);
+    tnode_t<g::job_continuation> job_cont = job_node.child<1>();
+    assert(job_cont);
+    while (auto pipe = job_cont.try_get_child<g::tok_pipe, 0>()) {
+        if (result != parse_execution_success) {
+            break;
+        }
+        tnode_t<g::statement> statement = job_cont.require_get_child<g::statement, 1>();
 
         // Handle the pipe, whose fd may not be the obvious stdout.
-        const parse_node_t &pipe_node = *get_child(*job_cont, 0, parse_token_type_pipe);
-        int pipe_write_fd = fd_redirected_by_pipe(get_source(pipe_node));
+        int pipe_write_fd = fd_redirected_by_pipe(get_source(pipe));
         if (pipe_write_fd == -1) {
-            result = report_error(pipe_node, ILLEGAL_FD_ERR_MSG, get_source(pipe_node).c_str());
+            result = report_error(pipe, ILLEGAL_FD_ERR_MSG, get_source(pipe).c_str());
             break;
         }
         processes.back()->pipe_write_fd = pipe_write_fd;
 
-        // Get the statement node and make a process from it.
-        const parse_node_t *statement_node = get_child(*job_cont, 1, symbol_statement);
-        assert(statement_node != NULL);
-
         // Store the new process (and maybe with an error).
         processes.emplace_back(new process_t());
-        result = this->populate_job_process(j, processes.back().get(), *statement_node);
+        result = this->populate_job_process(j, processes.back().get(), statement);
 
         // Get the next continuation.
-        job_cont = get_child(*job_cont, 2, symbol_job_continuation);
-        assert(job_cont != NULL);
+        job_cont = job_cont.require_get_child<g::job_continuation, 2>();
+        assert(job_cont);
     }
 
     // Inform our processes of who is first and last
@@ -1289,7 +1288,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     // Populate the job. This may fail for reasons like command_not_found. If this fails, an error
     // will have been printed.
     parse_execution_result_t pop_result =
-        this->populate_job_from_job_node(job.get(), job_node, associated_block);
+        this->populate_job_from_job_node(job.get(), {&tree(), &job_node}, associated_block);
 
     // Clean up the job on failure or cancellation.
     bool populated_job = (pop_result == parse_execution_success);

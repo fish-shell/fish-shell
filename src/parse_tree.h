@@ -347,6 +347,16 @@ class tnode_t {
         return {};
     }
 
+    /// assert that this is not empty and that the child at index Index has the given type, then
+    /// return that child. Note this will refuse to compile if the child type is not possible.
+    template <class ChildType, node_offset_t Index>
+    tnode_t<ChildType> require_get_child() const {
+        assert(nodeptr && "receiver is missing in require_get_child()");
+        auto result = try_get_child<ChildType, Index>();
+        assert(result && "require_get_child(): wrong child type");
+        return result;
+    }
+
     /// Type-safe access to a node's parent.
     /// If the parent exists and has type ParentType, return it.
     /// Otherwise return a missing tnode.

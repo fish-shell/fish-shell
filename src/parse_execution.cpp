@@ -576,10 +576,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
 }
 
 parse_execution_result_t parse_execution_context_t::run_while_statement(
-    const parse_node_t &header, const parse_node_t &block_contents) {
-    assert(header.type == symbol_while_header);
-    assert(block_contents.type == symbol_job_list);
-
+    tnode_t<grammar::while_header> header, tnode_t<grammar::job_list> contents) {
     // Push a while block.
     while_block_t *wb = parser->push_block<while_block_t>();
     wb->node_offset = this->get_offset(header);
@@ -587,8 +584,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     parse_execution_result_t ret = parse_execution_success;
 
     // The conditions of the while loop.
-    const parse_node_t &condition_head = *get_child(header, 1, symbol_job);
-    const parse_node_t &condition_boolean_tail = *get_child(header, 3, symbol_andor_job_list);
+    tnode_t<g::job> condition_head = header.child<1>();
+    tnode_t<g::andor_job_list> condition_boolean_tail = header.child<3>();
 
     // Run while the condition is true.
     for (;;) {
@@ -610,7 +607,7 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         }
 
         // The block ought to go inside the loop (see issue #1212).
-        this->run_job_list(block_contents, wb);
+        this->run_job_list(contents, wb);
 
         if (this->cancellation_reason(wb) == execution_cancellation_loop_control) {
             // Handle break or continue.

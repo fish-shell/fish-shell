@@ -582,20 +582,16 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
     // Look for plain statements where the cursor is at the end of the command.
     using namespace grammar;
     tnode_t<tok_string> matching_cmd_node;
-    const size_t len = parse_tree.size();
-    for (size_t i = 0; i < len; i++) {
-        const parse_node_t &node = parse_tree.at(i);
-
+    for (const parse_node_t &node : parse_tree) {
         // Only interested in plain statements with source.
         if (node.type != symbol_plain_statement || !node.has_source()) continue;
-
-        // Skip decorated statements.
-        if (parse_tree.decoration_for_plain_statement(node) != parse_statement_decoration_none)
-            continue;
 
         // Get the command node. Skip it if we can't or it has no source.
         tnode_t<plain_statement> statement(&parse_tree, &node);
         tnode_t<tok_string> cmd_node = statement.child<0>();
+
+        // Skip decorated statements.
+        if (get_decoration(statement) != parse_statement_decoration_none) continue;
 
         auto msource = cmd_node.source_range();
         if (!msource) continue;

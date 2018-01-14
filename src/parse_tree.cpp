@@ -1319,13 +1319,10 @@ bool parse_node_tree_t::argument_list_is_root(const parse_node_t &node) const {
     return result;
 }
 
-enum parse_statement_decoration_t parse_node_tree_t::decoration_for_plain_statement(
-    const parse_node_t &node) const {
-    assert(node.type == symbol_plain_statement);
+enum parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> stmt) {
     parse_statement_decoration_t decoration = parse_statement_decoration_none;
-    const parse_node_t *decorated_statement = this->get_parent(node, symbol_decorated_statement);
-    if (decorated_statement) {
-        decoration = static_cast<parse_statement_decoration_t>(decorated_statement->tag);
+    if (auto decorated_statement = stmt.try_get_parent<grammar::decorated_statement>()) {
+        decoration = static_cast<parse_statement_decoration_t>(decorated_statement.tag());
     }
     return decoration;
 }

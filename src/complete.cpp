@@ -1336,7 +1336,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
             current_command = cmd_node.get_source(cmd);
 
             // Check the decoration.
-            switch (tree.decoration_for_plain_statement(*plain_statement)) {
+            switch (get_decoration(plain_statement)) {
                 case parse_statement_decoration_none: {
                     use_command = true;
                     use_function = true;

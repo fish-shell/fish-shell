@@ -195,11 +195,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
 
     // Utilities
 
-    /// Given a plain statement, get the decoration (from the parent node), or none if there is no
-    /// decoration.
-    enum parse_statement_decoration_t decoration_for_plain_statement(
-        const parse_node_t &node) const;
-
     /// Given a plain statement, return true if the statement is part of a pipeline. If
     /// include_first is set, the first command in a pipeline is considered part of it; otherwise
     /// only the second or additional commands are.
@@ -286,6 +281,9 @@ class tnode_t {
     bool operator!=(const tnode_t &rhs) const { return !(*this == rhs); }
 
     bool has_source() const { return nodeptr && nodeptr->has_source(); }
+
+    // return the tag, or 0 if missing.
+    parse_node_tag_t tag() const { return nodeptr ? nodeptr->tag : 0; }
 
     maybe_t<source_range_t> source_range() const {
         if (!has_source()) return none();
@@ -384,6 +382,9 @@ std::vector<tnode_t<Type>> parse_node_tree_t::find_nodes(const parse_node_t &par
 /// success, none on failure.
 maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> stmt,
                                               const wcstring &src);
+
+/// Return the decoration for a plain statement.
+parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> stmt);
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.
 bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags,

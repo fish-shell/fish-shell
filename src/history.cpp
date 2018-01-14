@@ -1892,11 +1892,9 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
     bool impending_exit = false;
     parse_node_tree_t tree;
     parse_tree_from_string(str, parse_flag_none, &tree, NULL);
-    size_t count = tree.size();
 
     path_list_t potential_paths;
-    for (size_t i = 0; i < count; i++) {
-        const parse_node_t &node = tree.at(i);
+    for (const parse_node_t &node : tree) {
         if (!node.has_source()) {
             continue;
         }
@@ -1911,7 +1909,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
             // Hack hack hack - if the command is likely to trigger an exit, then don't do
             // background file detection, because we won't be able to write it to our history file
             // before we exit.
-            if (tree.decoration_for_plain_statement(node) == parse_statement_decoration_exec) {
+            if (get_decoration({&tree, &node}) == parse_statement_decoration_exec) {
                 impending_exit = true;
             }
 

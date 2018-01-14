@@ -148,8 +148,7 @@ parse_execution_context_t::infinite_recursive_statement_in_job_list(const parse_
         tnode_t<grammar::decorated_statement> dec_statement(&tree(), &statement);
 
         auto plain_statement = tree().find_child<grammar::plain_statement>(dec_statement);
-        if (tree().decoration_for_plain_statement(plain_statement) !=
-            parse_statement_decoration_none) {
+        if (get_decoration(plain_statement) != parse_statement_decoration_none) {
             // This statement has a decoration like 'builtin' or 'command', and therefore is not
             // infinite recursion. In particular this is what enables 'wrapper functions'.
             continue;
@@ -177,8 +176,7 @@ enum process_type_t parse_execution_context_t::process_type_for_command(
 
     // Determine the process type, which depends on the statement decoration (command, builtin,
     // etc).
-    enum parse_statement_decoration_t decoration =
-        tree().decoration_for_plain_statement(plain_statement);
+    enum parse_statement_decoration_t decoration = get_decoration({&tree(), &plain_statement});
 
     if (decoration == parse_statement_decoration_exec) {
         // Always exec.
@@ -857,7 +855,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
 
         // If the specified command does not exist, and is undecorated, try using an implicit cd.
         if (!has_command &&
-            tree().decoration_for_plain_statement(statement) == parse_statement_decoration_none) {
+            get_decoration({&tree(), &statement}) == parse_statement_decoration_none) {
             // Implicit cd requires an empty argument and redirection list.
             const parse_node_t *args =
                 get_child(statement, 1, symbol_arguments_or_redirections_list);

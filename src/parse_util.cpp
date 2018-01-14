@@ -1174,7 +1174,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 
                 // We need to know the decoration.
                 const enum parse_statement_decoration_t decoration =
-                    node_tree.decoration_for_plain_statement(node);
+                    get_decoration({&node_tree, &node});
 
                 // Check that we don't try to pipe through exec.
                 if (is_in_pipeline && decoration == parse_statement_decoration_exec) {

@@ -3402,7 +3402,7 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     tnode_t<grammar::plain_statement> stmt = stmts.at(0);
 
     // Return its decoration and command.
-    *out_deco = tree.decoration_for_plain_statement(stmt);
+    *out_deco = get_decoration(stmt);
     *out_cmd = *command_for_plain_statement(stmt, src);
 
     // Return arguments separated by spaces.

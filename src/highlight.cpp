@@ -1071,14 +1071,14 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                 break;
             }
             case symbol_plain_statement: {
+                tnode_t<g::plain_statement> stmt(&parse_tree, &node);
                 // Get the decoration from the parent.
-                enum parse_statement_decoration_t decoration =
-                    parse_tree.decoration_for_plain_statement(node);
+                enum parse_statement_decoration_t decoration = get_decoration(stmt);
 
                 // Color the command.
-                const parse_node_t *cmd_node =
-                    parse_tree.get_child(node, 0, parse_token_type_string);
-                if (cmd_node == NULL || !cmd_node->has_source()) {
+                tnode_t<g::tok_string> cmd_node = stmt.child<0>();
+                maybe_t<wcstring> cmd = cmd_node.get_source(buff);
+                if (!cmd) {
                     break;  // not much as we can do without a node that has source text
                 }
 
@@ -1088,13 +1088,11 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                     is_valid_cmd = true;
                 } else {
                     // Check to see if the command is valid.
-                    wcstring cmd(buff, cmd_node->source_start, cmd_node->source_length);
-
                     // Try expanding it. If we cannot, it's an error.
                     bool expanded = expand_one(
-                        cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
-                    if (expanded && !has_expand_reserved(cmd)) {
-                        is_valid_cmd = command_is_valid(cmd, decoration, working_directory, vars);
+                        *cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
+                    if (expanded && !has_expand_reserved(*cmd)) {
+                        is_valid_cmd = command_is_valid(*cmd, decoration, working_directory, vars);
                     }
                 }
                 this->color_node(*cmd_node,

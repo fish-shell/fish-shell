@@ -115,6 +115,6 @@ ADD_DEPENDENCIES(test test_high_level)
 # Group test targets into a TestTargets folder
 SET_PROPERTY(TARGET test test_low_level test_high_level tests_dir
                     test_invocation test_fishscript test_prep
-                    tests_buildroot_target build_lexicon_filter
+                    tests_buildroot_target
                     symlink_functions
              PROPERTY FOLDER cmake/TestTargets)

@@ -102,5 +102,5 @@ ADD_CUSTOM_COMMAND(OUTPUT share/man/
 ADD_CUSTOM_TARGET(BUILD_MANUALS ALL DEPENDS share/man/)
 
 # Group docs targets into a DocsTargets folder
-SET_PROPERTY(TARGET doc BUILD_MANUALS
+SET_PROPERTY(TARGET doc BUILD_MANUALS build_lexicon_filter
              PROPERTY FOLDER cmake/DocTargets)

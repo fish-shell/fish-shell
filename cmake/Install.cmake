@@ -184,7 +184,6 @@ INSTALL(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)
 SET_PROPERTY(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
                     test_invocation test_fishscript
                     test_prep tests_buildroot_target
-                    build_lexicon_filter
              PROPERTY FOLDER cmake/InstallTargets)
 
 # Make a target build_root that installs into the buildroot directory, for testing.

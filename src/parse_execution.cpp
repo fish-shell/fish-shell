@@ -423,13 +423,10 @@ bool parse_execution_context_t::is_function_context() const {
 }
 
 parse_execution_result_t parse_execution_context_t::run_for_statement(
-    const parse_node_t &header, const parse_node_t &block_contents) {
-    assert(header.type == symbol_for_header);
-    assert(block_contents.type == symbol_job_list);
-
+    tnode_t<grammar::for_header> header, tnode_t<grammar::job_list> block_contents) {
     // Get the variable name: `for var_name in ...`. We expand the variable name. It better result
     // in just one.
-    const parse_node_t &var_name_node = *get_child(header, 1, parse_token_type_string);
+    tnode_t<g::tok_string> var_name_node = header.child<1>();
     wcstring for_var_name = get_source(var_name_node);
     if (!expand_one(for_var_name, 0, NULL)) {
         report_error(var_name_node, FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, for_var_name.c_str());

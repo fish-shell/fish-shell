@@ -483,21 +483,19 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
 }
 
 parse_execution_result_t parse_execution_context_t::run_switch_statement(
-    const parse_node_t &statement) {
-    assert(statement.type == symbol_switch_statement);
-
+    tnode_t<grammar::switch_statement> statement) {
     parse_execution_result_t result = parse_execution_success;
 
     // Get the switch variable.
-    const parse_node_t &switch_value_node = *get_child(statement, 1, symbol_argument);
-    const wcstring switch_value = get_source(switch_value_node);
+    tnode_t<grammar::argument> switch_value_n = statement.child<1>();
+    const wcstring switch_value = get_source(switch_value_n);
 
     // Expand it. We need to offset any errors by the position of the string.
     std::vector<completion_t> switch_values_expanded;
     parse_error_list_t errors;
     int expand_ret =
         expand_string(switch_value, &switch_values_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
-    parse_error_offset_source_start(&errors, switch_value_node.source_start);
+    parse_error_offset_source_start(&errors, switch_value_n.source_range()->start);
 
     switch (expand_ret) {
         case EXPAND_ERROR: {
@@ -505,7 +503,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
             break;
         }
         case EXPAND_WILDCARD_NO_MATCH: {
-            result = report_unmatched_wildcard_error(switch_value_node);
+            result = report_unmatched_wildcard_error(switch_value_n);
             break;
         }
         case EXPAND_WILDCARD_MATCH:
@@ -520,7 +518,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
 
     if (result == parse_execution_success && switch_values_expanded.size() != 1) {
         result =
-            report_error(switch_value_node, _(L"switch: Expected exactly one argument, got %lu\n"),
+            report_error(switch_value_n, _(L"switch: Expected exactly one argument, got %lu\n"),
                          switch_values_expanded.size());
     }
 
@@ -533,26 +531,16 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
     switch_block_t *sb = parser->push_block<switch_block_t>();
 
     // Expand case statements.
-    const parse_node_t *case_item_list = get_child(statement, 3, symbol_case_item_list);
-
-    // Loop while we don't have a match but do have more of the list.
-    const parse_node_t *matching_case_item = NULL;
-    while (matching_case_item == NULL && case_item_list != NULL) {
+    tnode_t<g::case_item_list> case_item_list = statement.child<3>();
+    tnode_t<g::case_item> matching_case_item{};
+    while (auto case_item = case_item_list.next_in_list<g::case_item>()) {
         if (should_cancel_execution(sb)) {
             result = parse_execution_cancelled;
             break;
         }
 
-        // Get the next item and the remainder of the list.
-        const parse_node_t *case_item =
-            tree().next_node_in_node_list(*case_item_list, symbol_case_item, &case_item_list);
-        if (case_item == NULL) {
-            // No more items.
-            break;
-        }
-
         // Pull out the argument list.
-        const parse_node_t &arg_list = *get_child(*case_item, 1, symbol_argument_list);
+        auto arg_list = case_item.child<1>();
 
         // Expand arguments. A case item list may have a wildcard that fails to expand to
         // anything. We also report case errors, but don't stop execution; i.e. a case item that
@@ -561,9 +549,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
         parse_execution_result_t case_result =
             this->determine_arguments(arg_list, &case_args, failglob);
         if (case_result == parse_execution_success) {
-            for (size_t i = 0; i < case_args.size(); i++) {
-                const wcstring &arg = case_args.at(i);
-
+            for (const wcstring &arg : case_args) {
                 // Unescape wildcards so they can be expanded again.
                 wcstring unescaped_arg = parse_util_unescape_wildcards(arg);
                 bool match = wildcard_match(switch_value_expanded, unescaped_arg);
@@ -575,12 +561,14 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
                 }
             }
         }
+        if (matching_case_item) break;
     }
 
-    if (result == parse_execution_success && matching_case_item != NULL) {
+    if (matching_case_item) {
         // Success, evaluate the job list.
-        const parse_node_t *job_list = get_child(*matching_case_item, 3, symbol_job_list);
-        result = this->run_job_list(*job_list, sb);
+        assert(result == parse_execution_success && "Expected success");
+        auto job_list = matching_case_item.child<3>();
+        result = this->run_job_list(job_list, sb);
     }
 
     parser->pop_block(sb);
@@ -1217,7 +1205,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
                 break;
             }
             case symbol_switch_statement: {
-                result = this->run_switch_statement(specific_statement);
+                result = this->run_switch_statement({&tree(), &specific_statement});
                 break;
             }
             default: {
@@ -1378,7 +1366,7 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
             break;
         }
         case symbol_switch_statement: {
-            status = this->run_switch_statement(node);
+            status = this->run_switch_statement({&tree(), &node});
             break;
         }
         default: {

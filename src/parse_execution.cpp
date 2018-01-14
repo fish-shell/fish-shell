@@ -343,10 +343,7 @@ parse_execution_result_t parse_execution_context_t::run_begin_statement(
 
 // Define a function.
 parse_execution_result_t parse_execution_context_t::run_function_statement(
-    const parse_node_t &header, const parse_node_t &block_end_command) {
-    assert(header.type == symbol_function_header);
-    assert(block_end_command.type == symbol_end_command);
-
+    tnode_t<g::function_header> header, tnode_t<g::end_command> block_end_command) {
     // Get arguments.
     wcstring_list_t argument_list;
     parse_execution_result_t result = this->determine_arguments(header, &argument_list, failglob);
@@ -358,9 +355,10 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     // The function definition extends from the end of the header to the function end. It's not
     // just the range of the contents because that loses comments - see issue #1710.
     assert(block_end_command.has_source());
-    size_t contents_start = header.source_start + header.source_length;
-    size_t contents_end =
-        block_end_command.source_start;  // 1 past the last character in the function definition
+    auto header_range = header.source_range();
+    size_t contents_start = header_range->start + header_range->length;
+    size_t contents_end = block_end_command.source_range()
+                              ->start;  // 1 past the last character in the function definition
     assert(contents_end >= contents_start);
 
     // Swallow whitespace at both ends.

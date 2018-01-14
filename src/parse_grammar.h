@@ -2,9 +2,11 @@
 #ifndef FISH_PARSE_GRAMMAR_H
 #define FISH_PARSE_GRAMMAR_H
 
+#include <array>
+#include <tuple>
+#include <type_traits>
 #include "parse_constants.h"
 #include "tokenizer.h"
-#include <array>
 
 struct parse_token_t;
 typedef uint8_t parse_node_tag_t;
@@ -44,7 +46,6 @@ struct keyword {
 #define ELEM(T) struct T;
 #include "parse_grammar_elements.inc"
 
-
 // A production is a sequence of production elements.
 // +1 to hold the terminating token_type_invalid
 template <size_t Count>
@@ -64,6 +65,55 @@ constexpr production_element_t element() {
     return T::element();
 }
 
+// Template goo.
+namespace detail {
+template <typename T, typename Tuple>
+struct tuple_contains;
+
+template <typename T>
+struct tuple_contains<T, std::tuple<>> : std::false_type {};
+
+template <typename T, typename U, typename... Ts>
+struct tuple_contains<T, std::tuple<U, Ts...>> : tuple_contains<T, std::tuple<Ts...>> {};
+
+template <typename T, typename... Ts>
+struct tuple_contains<T, std::tuple<T, Ts...>> : std::true_type {};
+
+struct void_type {
+    using type = void;
+};
+
+// Support for checking whether the index N is valid for T::type_tuple.
+template <size_t N, typename T>
+static constexpr bool index_valid() {
+    return N < std::tuple_size<typename T::type_tuple>::value;
+}
+
+// Get the Nth type of T::type_tuple.
+template <size_t N, typename T>
+using tuple_element = std::tuple_element<N, typename T::type_tuple>;
+
+// Get the Nth type of T::type_tuple, or void if N is out of bounds.
+template <size_t N, typename T>
+using tuple_element_or_void =
+    typename std::conditional<index_valid<N, T>(), tuple_element<N, T>, void_type>::type::type;
+
+// Make a tuple by mapping the Nth item of a list of 'seq's.
+template <size_t N, typename... Ts>
+struct tuple_nther {
+    // A tuple of the Nth types of tuples (or voids).
+    using type = std::tuple<tuple_element_or_void<N, Ts>...>;
+};
+
+// Given a list of Options, each one a seq, check to see if any of them contain type Desired at
+// index Index.
+template <typename Desired, size_t Index, typename... Options>
+inline constexpr bool type_possible() {
+    using nths = typename tuple_nther<Index, Options...>::type;
+    return tuple_contains<Desired, nths>::value;
+}
+}  // namespace detail
+
 // Partial specialization hack.
 #define ELEM(T)                                   \
     template <>                                   \
@@ -74,6 +124,7 @@ constexpr production_element_t element() {
 
 // Empty produces nothing.
 struct empty {
+    using type_tuple = std::tuple<>;
     static constexpr production_t<0> production = {{token_type_invalid}};
     static const production_element_t *resolve(const parse_token_t &, const parse_token_t &,
                                                parse_node_tag_t *) {
@@ -88,6 +139,12 @@ struct seq {
         {element<T0>(), element<Ts>()..., token_type_invalid}};
 
     using type_tuple = std::tuple<T0, Ts...>;
+
+    template <typename Desired, size_t Index>
+    static constexpr bool type_possible() {
+        using element_t = detail::tuple_element_or_void<Index, seq>;
+        return std::is_same<Desired, element_t>::value;
+    }
 
     static const production_element_t *resolve(const parse_token_t &, const parse_token_t &,
                                                parse_node_tag_t *) {
@@ -106,8 +163,7 @@ template <class T>
 using produces_single = single<T>;
 
 // Alternative represents a choice.
-struct alternative {
-};
+struct alternative {};
 
 // Following are the grammar productions.
 #define BODY(T) static constexpr parse_token_type_t token = symbol_##T;
@@ -115,9 +171,13 @@ struct alternative {
 #define DEF(T) struct T : public
 
 #define DEF_ALT(T) struct T : public alternative
-#define ALT_BODY(T)                                                                          \
+#define ALT_BODY(T, ...)                                                                     \
     BODY(T)                                                                                  \
     using type_tuple = std::tuple<>;                                                         \
+    template <typename Desired, size_t Index>                                                \
+    static constexpr bool type_possible() {                                                  \
+        return detail::type_possible<Desired, Index, __VA_ARGS__>();                         \
+    }                                                                                        \
     static const production_element_t *resolve(const parse_token_t &, const parse_token_t &, \
                                                parse_node_tag_t *);
 
@@ -126,7 +186,7 @@ DEF_ALT(job_list) {
     using normal = seq<job, job_list>;
     using empty_line = seq<tok_end, job_list>;
     using empty = grammar::empty;
-    ALT_BODY(job_list);
+    ALT_BODY(job_list, normal, empty_line, empty);
 };
 
 // A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
@@ -137,7 +197,8 @@ DEF(job) produces_sequence<statement, job_continuation, optional_background>{BOD
 
 DEF_ALT(job_continuation) {
     using piped = seq<tok_pipe, statement, job_continuation>;
-    ALT_BODY(job_continuation);
+    using empty = grammar::empty;
+    ALT_BODY(job_continuation, piped, empty);
 };
 
 // A statement is a normal command, or an if / while / and etc
@@ -147,7 +208,7 @@ DEF_ALT(statement) {
     using ifs = single<if_statement>;
     using switchs = single<switch_statement>;
     using decorated = single<decorated_statement>;
-    ALT_BODY(statement);
+    ALT_BODY(statement, boolean, block, ifs, switchs, decorated);
 };
 
 // A block is a conditional, loop, or begin/end
@@ -162,13 +223,13 @@ produces_sequence<keyword<parse_keyword_if>, job, tok_end, andor_job_list, job_l
 DEF_ALT(else_clause) {
     using empty = grammar::empty;
     using else_cont = seq<keyword<parse_keyword_else>, else_continuation>;
-    ALT_BODY(else_clause);
+    ALT_BODY(else_clause, empty, else_cont);
 };
 
 DEF_ALT(else_continuation) {
     using else_if = seq<if_clause, else_clause>;
     using else_only = seq<tok_end, job_list>;
-    ALT_BODY(else_continuation);
+    ALT_BODY(else_continuation, else_if, else_only);
 };
 
 DEF(switch_statement)
@@ -179,7 +240,7 @@ DEF_ALT(case_item_list) {
     using empty = grammar::empty;
     using case_items = seq<case_item, case_item_list>;
     using blank_line = seq<tok_end, case_item_list>;
-    ALT_BODY(case_item_list);
+    ALT_BODY(case_item_list, empty, case_items, blank_line);
 };
 
 DEF(case_item) produces_sequence<keyword<parse_keyword_case>, argument_list, tok_end, job_list> {
@@ -194,7 +255,7 @@ DEF_ALT(block_header) {
     using whileh = single<while_header>;
     using funch = single<function_header>;
     using beginh = single<begin_header>;
-    ALT_BODY(block_header);
+    ALT_BODY(block_header, forh, whileh, funch, beginh);
 };
 
 DEF(for_header)
@@ -217,7 +278,7 @@ DEF_ALT(boolean_statement) {
     using ands = seq<keyword<parse_keyword_and>, statement>;
     using ors = seq<keyword<parse_keyword_or>, statement>;
     using nots = seq<keyword<parse_keyword_not>, statement>;
-    ALT_BODY(boolean_statement);
+    ALT_BODY(boolean_statement, ands, ors, nots);
 };
 
 // An andor_job_list is zero or more job lists, where each starts with an `and` or `or` boolean
@@ -226,7 +287,7 @@ DEF_ALT(andor_job_list) {
     using empty = grammar::empty;
     using andor_job = seq<job, andor_job_list>;
     using empty_line = seq<tok_end, andor_job_list>;
-    ALT_BODY(andor_job_list);
+    ALT_BODY(andor_job_list, empty, andor_job, empty_line);
 };
 
 // A decorated_statement is a command with a list of arguments_or_redirections, possibly with
@@ -236,7 +297,7 @@ DEF_ALT(decorated_statement) {
     using cmds = seq<keyword<parse_keyword_command>, plain_statement>;
     using builtins = seq<keyword<parse_keyword_builtin>, plain_statement>;
     using execs = seq<keyword<parse_keyword_exec>, plain_statement>;
-    ALT_BODY(decorated_statement);
+    ALT_BODY(decorated_statement, plains, cmds, builtins, execs);
 };
 
 DEF(plain_statement)
@@ -245,19 +306,19 @@ produces_sequence<tok_string, arguments_or_redirections_list>{BODY(plain_stateme
 DEF_ALT(argument_list) {
     using empty = grammar::empty;
     using arg = seq<argument, argument_list>;
-    ALT_BODY(argument_list);
+    ALT_BODY(argument_list, empty, arg);
 };
 
 DEF_ALT(arguments_or_redirections_list) {
     using empty = grammar::empty;
     using value = seq<argument_or_redirection, arguments_or_redirections_list>;
-    ALT_BODY(arguments_or_redirections_list);
+    ALT_BODY(arguments_or_redirections_list, empty, value);
 };
 
 DEF_ALT(argument_or_redirection) {
     using arg = single<argument>;
     using redir = single<redirection>;
-    ALT_BODY(argument_or_redirection);
+    ALT_BODY(argument_or_redirection, arg, redir);
 };
 
 DEF(argument) produces_single<tok_string>{BODY(argument)};
@@ -266,7 +327,7 @@ DEF(redirection) produces_sequence<tok_redirection, tok_string>{BODY(redirection
 DEF_ALT(optional_background) {
     using empty = grammar::empty;
     using background = single<tok_background>;
-    ALT_BODY(optional_background);
+    ALT_BODY(optional_background, empty, background);
 };
 
 DEF(end_command) produces_single<keyword<parse_keyword_end>>{BODY(end_command)};
@@ -277,7 +338,7 @@ DEF_ALT(freestanding_argument_list) {
     using empty = grammar::empty;
     using arg = seq<argument, freestanding_argument_list>;
     using semicolon = seq<tok_end, freestanding_argument_list>;
-    ALT_BODY(freestanding_argument_list);
+    ALT_BODY(freestanding_argument_list, empty, arg, semicolon);
 };
-}
+}  // namespace grammar
 #endif

@@ -675,7 +675,7 @@ class highlighter_t {
     void color_redirection(tnode_t<g::redirection> node);
     // Color a list of arguments. If cmd_is_cd is true, then the arguments are for 'cd'; detect
     // invalid directories.
-    void color_arguments(const std::vector<tnode_t<g::argument>> &args, bool cmd_is_cd);
+    void color_arguments(const std::vector<tnode_t<g::argument>> &args, bool cmd_is_cd = false);
     // Color the redirections of the given node.
     void color_redirections(tnode_t<g::arguments_or_redirections_list> list);
     // Color all the children of the command with the given type.
@@ -1112,8 +1112,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
             case symbol_argument_list: {
                 if (parse_tree.argument_list_is_root(node)) {
                     tnode_t<g::argument_list> list(&parse_tree, &node);
-                    bool cmd_is_cd = is_cd(list.try_get_parent<g::plain_statement>());
-                    this->color_arguments(list.descendants<g::argument>(), cmd_is_cd);
+                    this->color_arguments(list.descendants<g::argument>());
                 }
                 break;
             }

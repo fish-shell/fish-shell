@@ -240,6 +240,24 @@ struct source_range_t {
     uint32_t length;
 };
 
+// Check if a child type is possible for a parent type at a given index.
+template <typename Parent, typename Child, size_t Index>
+constexpr bool child_type_possible_at_index() {
+    return Parent::template type_possible<Child, Index>();
+}
+
+// Check if a child type is possible for a parent type at any index.
+// 5 is arbitrary and represents the longest production we have.
+template <typename Parent, typename Child>
+constexpr bool child_type_possible() {
+    return child_type_possible_at_index<Parent, Child, 0>() ||
+           child_type_possible_at_index<Parent, Child, 1>() ||
+           child_type_possible_at_index<Parent, Child, 2>() ||
+           child_type_possible_at_index<Parent, Child, 3>() ||
+           child_type_possible_at_index<Parent, Child, 4>() ||
+           child_type_possible_at_index<Parent, Child, 5>();
+}
+
 /// A helper for type-safe manipulation of parse nodes.
 /// This is a lightweight value-type class.
 template <typename Type>
@@ -317,11 +335,12 @@ class tnode_t {
     }
 
     /// If the child at the given index has the given type, return it; otherwise return an empty
-    /// child.
+    /// child. Note this will refuse to compile if the child type is not possible.
     /// This is used for e.g. alternations.
-    /// TODO: check that the type is possible (i.e. sum type).
     template <class ChildType, node_offset_t Index>
     tnode_t<ChildType> try_get_child() const {
+        static_assert(child_type_possible_at_index<Type, ChildType, Index>(),
+                      "Cannot contain a child of this type");
         const parse_node_t *child = nullptr;
         if (nodeptr) child = tree->get_child(*nodeptr, Index);
         if (child && child->type == ChildType::token) return {tree, child};
@@ -333,6 +352,7 @@ class tnode_t {
     /// Otherwise return a missing tnode.
     template <class ParentType>
     tnode_t<ParentType> try_get_parent() const {
+        static_assert(child_type_possible<ParentType, Type>(), "Parent cannot have us as a child");
         if (!nodeptr) return {};
         return {tree, tree->get_parent(*nodeptr, ParentType::token)};
     }

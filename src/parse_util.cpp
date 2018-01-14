@@ -1040,50 +1040,44 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::a
 
 /// Given that the job given by node should be backgrounded, return true if we detect any errors.
 static bool detect_errors_in_backgrounded_job(const parse_node_tree_t &node_tree,
-                                              tnode_t<grammar::job> node,
+                                              tnode_t<grammar::job> job,
                                               parse_error_list_t *parse_errors) {
+    auto source_range = job.source_range();
+    if (!source_range) return false;
+
     bool errored = false;
     // Disallow background in the following cases:
     // foo & ; and bar
     // foo & ; or bar
     // if foo & ; end
     // while foo & ; end
-    const parse_node_t *job_parent = node_tree.get_parent(node);
-    assert(job_parent != NULL);
-    switch (job_parent->type) {
-        case symbol_if_clause:
-        case symbol_while_header: {
-            assert(node_tree.get_child(*job_parent, 1) == node);
-            errored = append_syntax_error(parse_errors, node.source_range()->start,
-                                          BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-            break;
-        }
-        case symbol_job_list: {
-            // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
-            // Build the job list and then advance it by one.
-            tnode_t<grammar::job_list> job_list{&node_tree, job_parent};
-            auto first_job = job_list.next_in_list<grammar::job>();
-            assert(first_job.node() == node && "Expected first job to be the node we found");
-            (void)first_job;
-            // Try getting the next job as a boolean statement.
-            auto next_job = job_list.next_in_list<grammar::job>();
-            tnode_t<grammar::statement> next_stmt = next_job.child<0>();
-            if (auto bool_stmt = next_stmt.try_get_child<grammar::boolean_statement, 0>()) {
-                // The next job is indeed a boolean statement.
-                parse_bool_statement_type_t bool_type =
-                    parse_node_tree_t::statement_boolean_type(*bool_stmt.node());
-                if (bool_type == parse_bool_and) {  // this is not allowed
-                    errored = append_syntax_error(parse_errors, bool_stmt.source_range()->start,
-                                                  BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
-                } else if (bool_type == parse_bool_or) {  // this is not allowed
-                    errored = append_syntax_error(parse_errors, bool_stmt.source_range()->start,
-                                                  BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
-                }
+    if (job.try_get_parent<grammar::if_clause>()) {
+        errored = append_syntax_error(parse_errors, source_range->start,
+                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+    } else if (job.try_get_parent<grammar::while_header>()) {
+        errored = append_syntax_error(parse_errors, source_range->start,
+                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+    } else if (auto job_list = job.try_get_parent<grammar::job_list>()) {
+        // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
+        // Build the job list and then advance it by one.
+        auto first_job = job_list.next_in_list<grammar::job>();
+        assert(first_job == job && "Expected first job to be the node we found");
+        (void)first_job;
+        // Try getting the next job as a boolean statement.
+        auto next_job = job_list.next_in_list<grammar::job>();
+        tnode_t<grammar::statement> next_stmt = next_job.child<0>();
+        if (auto bool_stmt = next_stmt.try_get_child<grammar::boolean_statement, 0>()) {
+            // The next job is indeed a boolean statement.
+            parse_bool_statement_type_t bool_type =
+                parse_node_tree_t::statement_boolean_type(*bool_stmt.node());
+            if (bool_type == parse_bool_and) {  // this is not allowed
+                errored = append_syntax_error(parse_errors, bool_stmt.source_range()->start,
+                                              BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
+            } else if (bool_type == parse_bool_or) {  // this is not allowed
+                errored = append_syntax_error(parse_errors, bool_stmt.source_range()->start,
+                                              BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
             }
-            break;
         }
-        default:
-            break;
     }
     return errored;
 }

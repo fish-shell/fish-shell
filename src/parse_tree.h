@@ -281,6 +281,10 @@ class tnode_t {
     /// Check whether we're populated.
     explicit operator bool() const { return nodeptr != nullptr; }
 
+    bool operator==(const tnode_t &rhs) const { return tree == rhs.tree && nodeptr == rhs.nodeptr; }
+
+    bool operator!=(const tnode_t &rhs) const { return !(*this == rhs); }
+
     bool has_source() const { return nodeptr && nodeptr->has_source(); }
 
     maybe_t<source_range_t> source_range() const {

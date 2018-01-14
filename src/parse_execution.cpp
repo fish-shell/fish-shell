@@ -106,10 +106,8 @@ node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) co
     return offset;
 }
 
-tnode_t<grammar::plain_statement>
-parse_execution_context_t::infinite_recursive_statement_in_job_list(const parse_node_t &job_list,
-                                                                    wcstring *out_func_name) const {
-    assert(job_list.type == symbol_job_list);
+tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statement_in_job_list(
+    tnode_t<g::job_list> job_list, wcstring *out_func_name) const {
     // This is a bit fragile. It is a test to see if we are inside of function call, but not inside
     // a block in that function call. If, in the future, the rules for what block scopes are pushed
     // on function invocation changes, then this check will break.
@@ -127,8 +125,8 @@ parse_execution_context_t::infinite_recursive_statement_in_job_list(const parse_
     const wcstring &forbidden_function_name = parser->forbidden_function.back();
 
     // Get the first job in the job list.
-    const parse_node_t *first_job = tree().next_node_in_node_list(job_list, symbol_job, NULL);
-    if (first_job == NULL) {
+    auto first_job = job_list.next_in_list<g::job>();
+    if (!first_job) {
         return {};
     }
 
@@ -1380,9 +1378,10 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
             // the entry point for both top-level execution (the first node) and INTERNAL_BLOCK_NODE
             // execution (which does block statements, but never job lists).
             assert(offset == 0);
+            tnode_t<g::job_list> job_list{&tree(), &node};
             wcstring func_name;
             auto infinite_recursive_node =
-                this->infinite_recursive_statement_in_job_list(node, &func_name);
+                this->infinite_recursive_statement_in_job_list(job_list, &func_name);
             if (infinite_recursive_node) {
                 // We have an infinite recursion.
                 this->report_error(infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,

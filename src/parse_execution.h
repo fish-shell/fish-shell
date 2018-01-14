@@ -74,7 +74,7 @@ class parse_execution_context_t {
                                   parse_token_type_t expected_type = token_type_invalid) const;
     node_offset_t get_offset(const parse_node_t &node) const;
     tnode_t<grammar::plain_statement> infinite_recursive_statement_in_job_list(
-        const parse_node_t &job_list, wcstring *out_func_name) const;
+        tnode_t<grammar::job_list> job_list, wcstring *out_func_name) const;
     bool is_function_context() const;
 
     /// Indicates whether a job is a simple block (one block, no redirections).

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Originally from the git sources (GIT-VERSION-GEN)
 # Presumably (C) Junio C Hamano <junkio@cox.net>
 # Reused under GPL v2.0

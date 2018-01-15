@@ -76,11 +76,17 @@
 # to search                                               rechercher
 # array (RAID)                                            ensemble
 #
+#: /tmp/fish/implicit/share/completions/rustc.fish:3
+#: /tmp/fish/implicit/share/completions/rustc.fish:4
+#: /tmp/fish/implicit/share/completions/rustc.fish:5
+#: /tmp/fish/implicit/share/completions/rustc.fish:6
+#: /tmp/fish/implicit/share/completions/rustc.fish:7
+#: /tmp/fish/implicit/share/completions/rustc.fish:8
 msgid ""
 msgstr ""
 "Project-Id-Version: 1.2.8POT-Creation-Date: 2006-07-10 13:44-0400\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-08 16:50+0100\n"
+"POT-Creation-Date: 2018-01-10 21:58+0100\n"
 "PO-Revision-Date: 2017-12-08 17:27+0100\n"
 "Last-Translator: David Guyot <david.guyot@europecamions-interactive.com>\n"
 "Language-Team: français <david.guyot@europecamions-interactive.com>\n"
@@ -91,7 +97,7 @@ msgstr ""
 "X-Generator: Gtranslator 2.91.7\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: src/autoload.cpp:96
+#: src/autoload.cpp:95
 #, c-format
 msgid ""
 "Could not autoload item '%ls', it is already being autoloaded. This is a "
@@ -199,12 +205,12 @@ msgstr "%ls: Impossible de trouver la tâche '%d'\n"
 #: src/builtin_bind.cpp:141
 #, c-format
 msgid "%ls: No key with name '%ls' found\n"
-msgstr "%ls: Aucune clef avec le nom '%ls' n'a été trouvée\n"
+msgstr "%ls: Aucune clé avec le nom '%ls' n'a été trouvée\n"
 
 #: src/builtin_bind.cpp:143
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Key with name '%ls' does not have any mapping\n"
-msgstr "%ls: La fonction '%ls' n'existe pas\n"
+msgstr "%ls: La clé avec le nom '%ls' n'a aucune correspondance\n"
 
 #: src/builtin_bind.cpp:146
 #, fuzzy, c-format
@@ -247,9 +253,9 @@ msgid "%ls: '%ls' is not a directory\n"
 msgstr "%ls: '%ls' n'est pas un dossier\n"
 
 #: src/builtin_cd.cpp:55
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: The directory '%ls' does not exist\n"
-msgstr "%ls: La fonction '%ls' n'existe pas\n"
+msgstr "%ls: Le dossier '%ls' n'existe pas\n"
 
 #: src/builtin_cd.cpp:58
 #, fuzzy, c-format
@@ -262,9 +268,9 @@ msgid "%ls: Unknown error trying to locate directory '%ls'\n"
 msgstr "%ls: Option '%ls' inconnue\n"
 
 #: src/builtin_cd.cpp:76
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Permission denied: '%ls'\n"
-msgstr "%ls: Nom de fonction illégal '%ls'\n"
+msgstr "%ls: Permission non accordée: '%ls'\n"
 
 #: src/builtin_cd.cpp:90
 #, c-format
@@ -592,7 +598,7 @@ msgid "%ls: Expected function name"
 msgstr "%ls: Exactement un nom de fonction est attendu"
 
 #: src/builtin_function.cpp:185
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Illegal function name '%ls'"
 msgstr "%ls: Nom de fonction illégal '%ls'"
 
@@ -714,17 +720,7 @@ msgstr "%ls: Il n'y a aucune tâche\n"
 msgid "%ls: '%ls' is not a valid scale value\n"
 msgstr "%ls: '%ls' est un nom de variable invalide\n"
 
-#: src/builtin_math.cpp:148
-#, c-format
-msgid "Var '%ls' not a valid floating point number: '%ls'."
-msgstr ""
-
-#: src/builtin_math.cpp:157
-#, c-format
-msgid "More than %d var names in math expression."
-msgstr ""
-
-#: src/builtin_math.cpp:194
+#: src/builtin_math.cpp:128
 #, fuzzy, c-format
 msgid "%ls: Invalid expression: %ls\n"
 msgstr "%ls: id de processus invalide '%ls'\n"
@@ -812,85 +808,85 @@ msgstr "%ls: Un argument attendu\n"
 msgid "%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n"
 msgstr "%ls: Attention : dans $%ls, l’entrée '%ls' n'est pas valide (%s)\n"
 
-#: src/builtin_set.cpp:64
+#: src/builtin_set.cpp:63
 #, c-format
 msgid "%ls: Did you mean 'set %ls $%ls %ls'?\n"
 msgstr ""
 
-#: src/builtin_set.cpp:65
+#: src/builtin_set.cpp:64
 #, c-format
 msgid "%ls: You provided %d indexes but %d values\n"
 msgstr ""
 
-#: src/builtin_set.cpp:66
+#: src/builtin_set.cpp:65
 #, c-format
 msgid "%ls: Erase needs a variable name\n"
 msgstr "%ls: 'Erase' requiert un nom de variable\n"
 
-#: src/builtin_set.cpp:67
+#: src/builtin_set.cpp:66
 #, c-format
 msgid "%ls: Array index out of bounds\n"
 msgstr "%ls: Indice de liste hors limite\n"
 
-#: src/builtin_set.cpp:69
+#: src/builtin_set.cpp:68
 #, c-format
 msgid ""
 "%ls: Universal variable '%ls' is shadowed by the global variable of the same "
 "name.\n"
 msgstr ""
 
-#: src/builtin_set.cpp:303
+#: src/builtin_set.cpp:297
 #, c-format
 msgid "%ls: Tried to change the read-only variable '%ls'\n"
 msgstr ""
 "%ls: Impossible de modifier la valeur de la variable en lecture seule '%ls'\n"
 
-#: src/builtin_set.cpp:310
+#: src/builtin_set.cpp:304
 #, fuzzy, c-format
 msgid "%ls: Tried to set the special variable '%ls' with the wrong scope\n"
 msgstr ""
 "%ls: Impossible de changer la valeur de la variable en lecture seule '%ls'\n"
 
-#: src/builtin_set.cpp:317
+#: src/builtin_set.cpp:311
 #, fuzzy, c-format
 msgid "%ls: Tried to set the special variable '%ls' to an invalid value\n"
 msgstr ""
 "%ls: Impossible de changer la valeur de la variable en lecture seule '%ls'\n"
 
-#: src/builtin_set.cpp:355
+#: src/builtin_set.cpp:349
 #, c-format
 msgid "%ls: Invalid index starting at '%ls'\n"
 msgstr "%ls: Index invalide commençant à '%ls'\n"
 
-#: src/builtin_set.cpp:537
+#: src/builtin_set.cpp:531
 #, c-format
 msgid "$%ls: not set in %ls scope\n"
 msgstr "%ls: non paramétré dans la portée %ls\n"
 
-#: src/builtin_set.cpp:542
+#: src/builtin_set.cpp:536
 msgid "exported"
 msgstr ""
 
-#: src/builtin_set.cpp:542
+#: src/builtin_set.cpp:536
 msgid "unexported"
 msgstr ""
 
-#: src/builtin_set.cpp:544
+#: src/builtin_set.cpp:538
 #, c-format
 msgid "$%ls: set in %ls scope, %ls, with %d elements\n"
 msgstr ""
 
-#: src/builtin_set.cpp:554
+#: src/builtin_set.cpp:548
 #, c-format
 msgid "$%ls[%d]: length=%d value=|%ls|\n"
 msgstr "$%ls[%d]: taille=%d valeur=|%ls|\n"
 
-#: src/builtin_set.cpp:578
+#: src/builtin_set.cpp:572
 #, c-format
 msgid "$%ls: invalid var name\n"
 msgstr "$%ls: nom de variable invalide\n"
 
-#: src/builtin_set.cpp:584
+#: src/builtin_set.cpp:578
 #, c-format
 msgid "%ls: `set --show` does not allow slices with the var names\n"
 msgstr ""
@@ -953,51 +949,51 @@ msgstr "Pasonction"
 msgid "%ls: Expected argument\n"
 msgstr "%ls: Argument attendu\n"
 
-#: src/builtin_string.cpp:160
+#: src/builtin_string.cpp:189
 #, fuzzy, c-format
 msgid "%ls: Invalid escape style '%ls'\n"
 msgstr "%ls: Index invalide commençant à '%ls'\n"
 
-#: src/builtin_string.cpp:238
+#: src/builtin_string.cpp:267
 #, fuzzy, c-format
 msgid "%ls: Invalid length value '%ls'\n"
 msgstr "%ls: Nom de variable invalide '%ls'\n"
 
-#: src/builtin_string.cpp:258
+#: src/builtin_string.cpp:287
 #, fuzzy, c-format
 msgid "%ls: Invalid max value '%ls'\n"
 msgstr "%ls: Nom de variable invalide '%ls'\n"
 
-#: src/builtin_string.cpp:275
+#: src/builtin_string.cpp:304
 #, fuzzy, c-format
 msgid "%ls: Invalid count value '%ls'\n"
 msgstr "%ls: Nom de variable invalide '%ls'\n"
 
-#: src/builtin_string.cpp:321
+#: src/builtin_string.cpp:350
 #, fuzzy, c-format
 msgid "%ls: Invalid start value '%ls'\n"
 msgstr "%ls: Index invalide commençant à '%ls'\n"
 
-#: src/builtin_string.cpp:743
+#: src/builtin_string.cpp:770
 #, c-format
 msgid "%ls: Regular expression compile error: %ls\n"
 msgstr "%ls: Erreur lors de la compilation de l’expression régulière: %ls\n"
 
-#: src/builtin_string.cpp:782
+#: src/builtin_string.cpp:809
 #, c-format
 msgid "%ls: Regular expression match error: %ls\n"
 msgstr "%ls: Erreur lors de la recherche de l’expression régulière: %ls\n"
 
-#: src/builtin_string.cpp:787
+#: src/builtin_string.cpp:814
 #, c-format
 msgid "%ls: Regular expression internal error\n"
 msgstr "%ls: Erreur interne à l'expression régulière\n"
 
-#: src/builtin_string.cpp:903
+#: src/builtin_string.cpp:930
 msgid "--entire and --index are mutually exclusive"
 msgstr "--entire et --index sont mutuellement exclusifs"
 
-#: src/builtin_string.cpp:1055
+#: src/builtin_string.cpp:1081
 #, c-format
 msgid "%ls: Regular expression substitute error: %ls\n"
 msgstr "%ls: Erreur lors de la substitution de l’expression régulière: %ls\n"
@@ -1017,36 +1013,36 @@ msgstr "%ls: Le nom de variable ne peut pas être une chaîne vide\n"
 msgid "%ls: Invalid limit '%ls'\n"
 msgstr "%ls: Nom de variable invalide '%ls'\n"
 
-#: src/common.cpp:1551
+#: src/common.cpp:1547
 msgid "Current terminal parameters have rows and/or columns set to zero."
 msgstr "Le terminal actuel a zéro lignes ou colonnes."
 
-#: src/common.cpp:1552
+#: src/common.cpp:1548
 msgid ""
 "The stty command can be used to correct this (e.g., stty rows 80 columns 24)."
 msgstr ""
 "La commande stty peut être utilisée pour corriger cela (par ex., stty rows "
 "80 colums 24)."
 
-#: src/common.cpp:1574
+#: src/common.cpp:1570
 msgid "Current terminal parameters set terminal size to unreasonable value."
 msgstr "Le terminal actuel a un nombre déraisonnable de lignes ou colonnes."
 
-#: src/common.cpp:1575
+#: src/common.cpp:1571
 msgid "Defaulting terminal size to 80x24."
 msgstr "Utilisation par défaut de 80x24 comme dimensions du terminal."
 
-#: src/common.cpp:1781
+#: src/common.cpp:1777
 msgid "This is a bug. Break on bugreport to debug."
 msgstr "Ceci est un bogue. Utilisez bugreport pour déboguer."
 
-#: src/common.cpp:1782
+#: src/common.cpp:1778
 #, c-format
 msgid "If you can reproduce it, please send a bug report to %s."
 msgstr ""
 "Si cette erreur peut être reproduite, envoyez un rapport de bogue à %s."
 
-#: src/common.cpp:1792
+#: src/common.cpp:1788
 msgid "empty"
 msgstr "vide"
 
@@ -1060,38 +1056,38 @@ msgstr ""
 msgid "Variable: %ls"
 msgstr "Variable: %ls"
 
-#: src/env.cpp:242
+#: src/env.cpp:243
 msgid "Tried to pop empty environment stack."
 msgstr "Impossible de dépiler une pile d'environnement vide"
 
-#: src/env.cpp:537
+#: src/env.cpp:530
 #, c-format
 msgid "Using fallback terminal type '%s'."
 msgstr "Utilisation du terminal de type '%s' par défaut."
 
-#: src/env.cpp:542
+#: src/env.cpp:535
 #, c-format
 msgid "Could not set up terminal using the fallback terminal type '%s'."
 msgstr "Impossible de paramétrer le terminal de type '%s' défini par défaut."
 
-#: src/env.cpp:574
+#: src/env.cpp:567
 msgid "Could not set up terminal."
 msgstr "Impossible de paramétrer le terminal"
 
-#: src/env.cpp:576
+#: src/env.cpp:569
 msgid "TERM environment variable not set."
 msgstr "Variable d’environnement TERM non paramétrée"
 
-#: src/env.cpp:578
+#: src/env.cpp:571
 #, c-format
 msgid "TERM environment variable set to '%ls'."
 msgstr "Variable d’environnement TERM paramétrée à '%ls'"
 
-#: src/env.cpp:579
+#: src/env.cpp:572
 msgid "Check that this terminal type is supported on this system."
 msgstr "Vérifiez que votre type de terminal est supporté sur ce système"
 
-#: src/env.cpp:673
+#: src/env.cpp:666
 msgid ""
 "Could not determine current working directory. Is your locale set correctly?"
 msgstr ""
@@ -1223,15 +1219,15 @@ msgstr "Une erreur est survenue lors du paramétrage du tube"
 msgid "An error occurred while redirecting file '%s'"
 msgstr "Une erreur est survenue pendant la redirection du fichier '%ls'"
 
-#: src/exec.cpp:714
-#, c-format
-msgid "Unknown function '%ls'"
-msgstr "Fonction inconnue '%ls'"
-
-#: src/exec.cpp:801
+#: src/exec.cpp:458
 #, c-format
 msgid "Unknown input redirection type %d"
 msgstr "Type de redirection d'entrée inconnu: %d"
+
+#: src/exec.cpp:827
+#, c-format
+msgid "Unknown function '%ls'"
+msgstr "Fonction '%ls' inconnue"
 
 #: src/expand.cpp:55
 msgid "Child process"
@@ -1263,11 +1259,11 @@ msgstr "Dernière tâche mise en arrière-plan"
 msgid "Unexpected failure to convert pid '%ls' to integer\n"
 msgstr "Erreur inopinée lors de la conversion du PID '%ls' en nombre entier\n"
 
-#: src/expand.cpp:984
+#: src/expand.cpp:993
 msgid "Mismatched brackets"
 msgstr "Les crochets ne concordent pas"
 
-#: src/expand.cpp:1063
+#: src/expand.cpp:1072
 msgid "Too much data emitted by command substitution so it was discarded\n"
 msgstr ""
 
@@ -1384,12 +1380,12 @@ msgstr "lignes %lu à %lu de %lu"
 msgid "(no matches)"
 msgstr "(pas d’occurrence)"
 
-#: src/parse_execution.cpp:556
+#: src/parse_execution.cpp:552
 #, c-format
 msgid "switch: Expected exactly one argument, got %lu\n"
 msgstr "switch: Exactement un argument attendu, %lu obtenu(s)\n"
 
-#: src/parse_execution.cpp:791
+#: src/parse_execution.cpp:787
 #, c-format
 msgid ""
 "Variables may not be used as commands. In fish, please define a function or "
@@ -1398,17 +1394,17 @@ msgstr ""
 "Les variables ne doivent pas être utilisées comme des commandes. Dans fish, "
 "veuillez définir une fonction ou utiliser 'eval %ls'."
 
-#: src/parse_execution.cpp:796
+#: src/parse_execution.cpp:792
 #, c-format
 msgid "The file '%ls' is not executable by this user"
 msgstr "Le fichier '%ls' n’est pas exécutable par cet utilisateur"
 
-#: src/parse_execution.cpp:1007
+#: src/parse_execution.cpp:1003
 #, c-format
 msgid "Invalid redirection target: %ls"
 msgstr "Cible de redirection invalide: %ls"
 
-#: src/parse_execution.cpp:1021
+#: src/parse_execution.cpp:1017
 #, c-format
 msgid "Requested redirection to '%ls', which is not a valid file descriptor"
 msgstr ""
@@ -1533,12 +1529,12 @@ msgstr "Démarrage"
 msgid "Job inconsistency"
 msgstr "Inconsistance de tâche"
 
-#: src/parser.cpp:797
+#: src/parser.cpp:795
 #, c-format
 msgid "%ls (line %lu): "
 msgstr "%ls (ligne %lu): "
 
-#: src/parser.cpp:800
+#: src/parser.cpp:798
 #, c-format
 msgid "%ls: "
 msgstr "%ls: "
@@ -1684,15 +1680,15 @@ msgstr ""
 "Il semblerait que je sois un processus orphelin, je m'arrête donc. Mon pid "
 "est %d."
 
-#: src/reader.cpp:1994
+#: src/reader.cpp:1997
 msgid "Pop null reader block"
 msgstr "Pop null reader block"
 
-#: src/reader.cpp:2160
+#: src/reader.cpp:2163
 msgid "There are still jobs active:\n"
 msgstr "Des tâches sont toujours actives :\n"
 
-#: src/reader.cpp:2161
+#: src/reader.cpp:2164
 #, fuzzy
 msgid ""
 "\n"
@@ -1701,29 +1697,29 @@ msgstr ""
 "\n"
 "   Commande\n"
 
-#: src/reader.cpp:2170
+#: src/reader.cpp:2173
 msgid "A second attempt to exit will terminate them.\n"
 msgstr "Une seconde tentative d’arrêt les terminera.\n"
 
-#: src/reader.cpp:2171
+#: src/reader.cpp:2174
 msgid ""
 "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr ""
 
-#: src/reader.cpp:3205
+#: src/reader.cpp:3208
 #, c-format
 msgid "Unknown key binding 0x%X"
 msgstr "Raccourci clavier inconnu 0x%X"
 
-#: src/reader.cpp:3294
+#: src/reader.cpp:3297
 msgid "Error while reading from file descriptor"
 msgstr "Erreur lors de la lecture depuis le descripteur de fichier"
 
-#: src/reader.cpp:3308
+#: src/reader.cpp:3311
 msgid "Error while closing input stream"
 msgstr "Erreur lors de la fermeture du flux d'entrée"
 
-#: src/reader.cpp:3329
+#: src/reader.cpp:3333
 msgid "Error while opening input stream"
 msgstr "Erreur d'ouverture du flux d'entrée"
 
@@ -1968,7 +1964,6 @@ msgstr "Lien exécutable"
 #: /tmp/fish/implicit/share/completions/git.fish:133
 #: /tmp/fish/implicit/share/completions/git.fish:137
 #: /tmp/fish/implicit/share/completions/git.fish:208
-#: /tmp/fish/implicit/share/completions/git.fish:268
 #: /tmp/fish/implicit/share/completions/git.fish:269
 msgid "File"
 msgstr "Fichier"
@@ -3738,6 +3733,7 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/aptitude.fish:3
 #: /tmp/fish/implicit/share/completions/apt-mark.fish:3
 #: /tmp/fish/implicit/share/completions/dpkg-reconfigure.fish:1
+#: /tmp/fish/implicit/share/completions/eopkg.fish:4
 #: /tmp/fish/implicit/share/completions/pkg_delete.fish:1
 #: /tmp/fish/implicit/share/completions/pkg_info.fish:1
 #: /tmp/fish/implicit/share/completions/prt-get.fish:1
@@ -8525,6 +8521,7 @@ msgid "Set the hash table size close"
 msgstr "Paramétrer la taille du papier"
 
 #: /tmp/fish/implicit/share/completions/as.fish:27
+#: /tmp/fish/implicit/share/completions/eopkg.fish:11
 #, fuzzy
 msgid "Show help message and exit"
 msgstr "Afficher ce message d’aide et quitter"
@@ -10065,269 +10062,272 @@ msgid "Optimize for the specified CPU architecture"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/brew.fish:58
+msgid "List installed top level formulae"
+msgstr "Limiter aux formules de premier niveau installées"
+
+#: /tmp/fish/implicit/share/completions/brew.fish:59
 msgid "Symlink installed formula"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:59
 #: /tmp/fish/implicit/share/completions/brew.fish:60
+#: /tmp/fish/implicit/share/completions/brew.fish:61
 msgid "Overwrite existing files"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:61
 #: /tmp/fish/implicit/share/completions/brew.fish:62
+#: /tmp/fish/implicit/share/completions/brew.fish:63
 msgid "Show what files would be linked or overwritten"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:63
 #: /tmp/fish/implicit/share/completions/brew.fish:64
+#: /tmp/fish/implicit/share/completions/brew.fish:65
 msgid "Allow keg-only formulae to be linked"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:65
+#: /tmp/fish/implicit/share/completions/brew.fish:66
 msgid "Symlink .app bundles into /Applications"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:66
+#: /tmp/fish/implicit/share/completions/brew.fish:67
 msgid "Link .app bundles into ~/Applications instead"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:67
-#, fuzzy
-msgid "List all installed formula"
-msgstr "Limiter aux installés"
-
 #: /tmp/fish/implicit/share/completions/brew.fish:68
-#: /tmp/fish/implicit/share/completions/brew.fish:71
-msgid "List all files in the Homebrew prefix not installed by brew"
-msgstr ""
+msgid "List all installed formula"
+msgstr "Limiter aux formules installées"
 
 #: /tmp/fish/implicit/share/completions/brew.fish:69
 #: /tmp/fish/implicit/share/completions/brew.fish:72
-msgid "Show the version number"
-msgstr "Afficher le numéro de version"
+msgid "List all files in the Homebrew prefix not installed by brew"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/brew.fish:70
 #: /tmp/fish/implicit/share/completions/brew.fish:73
-msgid "Show the versions of pinned formulae"
-msgstr ""
+msgid "Show the version number"
+msgstr "Afficher le numéro de version"
 
+#: /tmp/fish/implicit/share/completions/brew.fish:71
 #: /tmp/fish/implicit/share/completions/brew.fish:74
+msgid "Show the versions of pinned formulae"
+msgstr "Montrer les versions des formules épinglées"
+
+#: /tmp/fish/implicit/share/completions/brew.fish:75
 msgid "Show log for formula"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:75
-#: /tmp/fish/implicit/share/completions/brew.fish:77
-#: /tmp/fish/implicit/share/completions/brew.fish:82
-#: /tmp/fish/implicit/share/completions/brew.fish:86
-#: /tmp/fish/implicit/share/completions/brew.fish:99
-#: /tmp/fish/implicit/share/completions/brew.fish:106
+#: /tmp/fish/implicit/share/completions/brew.fish:76
+#: /tmp/fish/implicit/share/completions/brew.fish:78
+#: /tmp/fish/implicit/share/completions/brew.fish:83
+#: /tmp/fish/implicit/share/completions/brew.fish:87
+#: /tmp/fish/implicit/share/completions/brew.fish:100
+#: /tmp/fish/implicit/share/completions/brew.fish:107
 msgid "formula"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:76
+#: /tmp/fish/implicit/share/completions/brew.fish:77
 #, fuzzy
 msgid "Check formula for missing dependencies"
 msgstr "Corriger les dépendances brisées"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:78
+#: /tmp/fish/implicit/share/completions/brew.fish:79
 msgid "Display install options for formula"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:79
+#: /tmp/fish/implicit/share/completions/brew.fish:80
 msgid "Show all options as a space-delimited list"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:80
+#: /tmp/fish/implicit/share/completions/brew.fish:81
 msgid "Show options for all formulae"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:81
+#: /tmp/fish/implicit/share/completions/brew.fish:82
 #, fuzzy
 msgid "Show options for all installed formulae"
 msgstr "Reconstruire et installer un paquet installé"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:83
+#: /tmp/fish/implicit/share/completions/brew.fish:84
 msgid "Show formula that have updated versions"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:84
+#: /tmp/fish/implicit/share/completions/brew.fish:85
 msgid "Display only names"
 msgstr "N’afficher que les noms"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:85
+#: /tmp/fish/implicit/share/completions/brew.fish:86
 msgid "Pin the specified formulae to their current versions"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:87
+#: /tmp/fish/implicit/share/completions/brew.fish:88
 msgid "Remove dead symlinks"
 msgstr "Supprimer les liens symboliques brisés"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:88
+#: /tmp/fish/implicit/share/completions/brew.fish:89
 #, fuzzy
 msgid "Search for formula by name"
 msgstr "Rechercher un autre système"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:89
-#: /tmp/fish/implicit/share/completions/brew.fish:91
+#: /tmp/fish/implicit/share/completions/brew.fish:90
+#: /tmp/fish/implicit/share/completions/brew.fish:92
 msgid "Search on MacPorts"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:90
-#: /tmp/fish/implicit/share/completions/brew.fish:92
+#: /tmp/fish/implicit/share/completions/brew.fish:91
+#: /tmp/fish/implicit/share/completions/brew.fish:93
 msgid "Search on Fink"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:93
+#: /tmp/fish/implicit/share/completions/brew.fish:94
 msgid "Manage Homebrew services"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:94
+#: /tmp/fish/implicit/share/completions/brew.fish:95
 msgid "Get rid of stale services and unused plist"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:95
+#: /tmp/fish/implicit/share/completions/brew.fish:96
 msgid "List all services managed by Homebrew"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:96
+#: /tmp/fish/implicit/share/completions/brew.fish:97
 msgid "Gracefully restart a service"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:97
+#: /tmp/fish/implicit/share/completions/brew.fish:98
 msgid "Start a service"
 msgstr "Démarrer un service"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:98
+#: /tmp/fish/implicit/share/completions/brew.fish:99
 msgid "Stop a service"
 msgstr "Arrêter un service"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:100
+#: /tmp/fish/implicit/share/completions/brew.fish:101
 msgid "All Services"
 msgstr "Tous les services"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:101
+#: /tmp/fish/implicit/share/completions/brew.fish:102
 msgid "Instantiate a Homebrew build enviornment"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:102
+#: /tmp/fish/implicit/share/completions/brew.fish:103
 #, fuzzy
 msgid "Use stdenv instead of superenv"
 msgstr "Purger au lieu de supprimer"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:103
+#: /tmp/fish/implicit/share/completions/brew.fish:104
 msgid "Tap a new formula repository on GitHub"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:104
+#: /tmp/fish/implicit/share/completions/brew.fish:105
 msgid "Create and prune tap symlinks as appropriate"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:105
+#: /tmp/fish/implicit/share/completions/brew.fish:106
 msgid "Run tests for formula"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:107
+#: /tmp/fish/implicit/share/completions/brew.fish:108
 #, fuzzy
 msgid "Uninstall formula"
 msgstr "Installer après la construction"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:108
 #: /tmp/fish/implicit/share/completions/brew.fish:109
 #: /tmp/fish/implicit/share/completions/brew.fish:110
+#: /tmp/fish/implicit/share/completions/brew.fish:111
 msgid "Delete all installed versions"
 msgstr "Supprimer toutes les versions installées"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:111
+#: /tmp/fish/implicit/share/completions/brew.fish:112
 msgid "Unlink formula"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:112
+#: /tmp/fish/implicit/share/completions/brew.fish:113
 msgid "Remove links created by brew linkapps"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:113
+#: /tmp/fish/implicit/share/completions/brew.fish:114
 msgid "Remove links from ~/Applications created by brew linkapps"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:114
+#: /tmp/fish/implicit/share/completions/brew.fish:115
 msgid "Extract source code"
 msgstr "Extraire le code source"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:115
+#: /tmp/fish/implicit/share/completions/brew.fish:116
 #, fuzzy
 msgid "Unpin specified formulae"
 msgstr "Utiliser le format unifié"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:116
+#: /tmp/fish/implicit/share/completions/brew.fish:117
 #, fuzzy
 msgid "Remove a tapped repository"
 msgstr "Enlever un fichier du référentiel"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:117
+#: /tmp/fish/implicit/share/completions/brew.fish:118
 msgid "Fetch newest version of Homebrew and formulas"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:118
+#: /tmp/fish/implicit/share/completions/brew.fish:119
 msgid "Use git pull --rebase"
 msgstr "Utiliser git pull --rebase"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:119
+#: /tmp/fish/implicit/share/completions/brew.fish:120
 #, fuzzy
 msgid "Upgrade outdated brews"
 msgstr "Mettre à niveau des paquets source"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:120
+#: /tmp/fish/implicit/share/completions/brew.fish:121
 #, fuzzy
 msgid "Show formulas that depend on specified formula"
 msgstr "Afficher les versions complètes pour les paquets"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:121
+#: /tmp/fish/implicit/share/completions/brew.fish:122
 #, fuzzy
 msgid "List only installed formulae"
 msgstr "Limiter aux installés"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:122
+#: /tmp/fish/implicit/share/completions/brew.fish:123
 msgid "Resolve more than one level of dependencies"
 msgstr "Résoudre les dépendances sur plus d’un niveau"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:123
+#: /tmp/fish/implicit/share/completions/brew.fish:124
 msgid "Print version number of brew"
 msgstr "Afficher le numéro de version de brew"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:124
+#: /tmp/fish/implicit/share/completions/brew.fish:125
 msgid "Show Homebrew a summary of the build environment"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:125
+#: /tmp/fish/implicit/share/completions/brew.fish:126
 msgid "Display where Homebrew's .git directory is located"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:126
+#: /tmp/fish/implicit/share/completions/brew.fish:127
 msgid "Show Homebrew and system configuration"
 msgstr "Afficher les configurations de Homebrew et du système"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:127
+#: /tmp/fish/implicit/share/completions/brew.fish:128
 msgid "Display Homebrew's install path"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:128
+#: /tmp/fish/implicit/share/completions/brew.fish:129
 #, fuzzy
 msgid "Display formula's install path"
 msgstr "Afficher la page de manuel"
 
-#: /tmp/fish/implicit/share/completions/brew.fish:129
+#: /tmp/fish/implicit/share/completions/brew.fish:130
 msgid "Display Homebrew's download cache"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:130
+#: /tmp/fish/implicit/share/completions/brew.fish:131
 msgid "Display the file or directory used to cache formula"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:131
+#: /tmp/fish/implicit/share/completions/brew.fish:132
 msgid "Display Homebrew's Cellar path"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/brew.fish:132
+#: /tmp/fish/implicit/share/completions/brew.fish:133
 msgid "Display formula's install path in Cellar"
 msgstr ""
 
@@ -17591,6 +17591,54 @@ msgstr "Démarrer avec un environnement vide"
 msgid "Remove variable from the environment"
 msgstr "Supprimer la variable de l’environnement"
 
+#: /tmp/fish/implicit/share/completions/eopkg.fish:1
+#, fuzzy
+msgid "Print list of components"
+msgstr "Afficher le nombre de paquets compressés en entrée"
+
+#: /tmp/fish/implicit/share/completions/eopkg.fish:2
+#, fuzzy
+msgid "Print list of repositories"
+msgstr "Rafraîchir également les dépôt"
+
+#: /tmp/fish/implicit/share/completions/eopkg.fish:3
+#, fuzzy
+msgid "Component"
+msgstr "Compléter go"
+
+#: /tmp/fish/implicit/share/completions/eopkg.fish:5
+#: /tmp/fish/implicit/share/completions/helm.fish:66
+msgid "Repository"
+msgstr "Dépôt"
+
+#: /tmp/fish/implicit/share/completions/eopkg.fish:6
+msgid "Change the system root for eopkg commands"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/eopkg.fish:7
+msgid "Keep bandwidth usage under specified KB's"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/eopkg.fish:8
+#, fuzzy
+msgid "Assume yes for all yes/no queries"
+msgstr "Présumer oui à toutes les questions"
+
+#: /tmp/fish/implicit/share/completions/eopkg.fish:9
+#, fuzzy
+msgid "Detailed output"
+msgstr "Sortie large"
+
+#: /tmp/fish/implicit/share/completions/eopkg.fish:10
+#, fuzzy
+msgid "Show debugging information"
+msgstr "Afficher les informations de débogage"
+
+#: /tmp/fish/implicit/share/completions/eopkg.fish:12
+#, fuzzy
+msgid "Show program's version number and exit"
+msgstr "Afficher le numéro de version du programme et quitter"
+
 #: /tmp/fish/implicit/share/completions/equery.fish:3
 #, fuzzy
 msgid ""
@@ -19912,7 +19960,7 @@ msgstr "Lister les fichiers"
 #: /tmp/fish/implicit/share/completions/fossil.fish:280
 #: /tmp/fish/implicit/share/completions/git.fish:64
 #: /tmp/fish/implicit/share/completions/git.fish:86
-#: /tmp/fish/implicit/share/completions/git.fish:246
+#: /tmp/fish/implicit/share/completions/git.fish:247
 #: /tmp/fish/implicit/share/completions/git.fish:295
 #: /tmp/fish/implicit/share/completions/git.fish:296
 msgid "Tag"
@@ -26558,8 +26606,8 @@ msgstr "Distant"
 #: /tmp/fish/implicit/share/completions/git.fish:185
 #: /tmp/fish/implicit/share/completions/git.fish:221
 #: /tmp/fish/implicit/share/completions/git.fish:224
-#: /tmp/fish/implicit/share/completions/git.fish:244
-#: /tmp/fish/implicit/share/completions/git.fish:267
+#: /tmp/fish/implicit/share/completions/git.fish:245
+#: /tmp/fish/implicit/share/completions/git.fish:268
 #: /tmp/fish/implicit/share/completions/git.fish:287
 #: /tmp/fish/implicit/share/completions/git.fish:309
 msgid "Branch"
@@ -26568,8 +26616,8 @@ msgstr "Branche"
 #: /tmp/fish/implicit/share/completions/git.fish:23
 #: /tmp/fish/implicit/share/completions/git.fish:200
 #: /tmp/fish/implicit/share/completions/git.fish:212
-#: /tmp/fish/implicit/share/completions/git.fish:239
-#: /tmp/fish/implicit/share/completions/git.fish:252
+#: /tmp/fish/implicit/share/completions/git.fish:240
+#: /tmp/fish/implicit/share/completions/git.fish:253
 #: /tmp/fish/implicit/share/completions/git.fish:276
 #: /tmp/fish/implicit/share/completions/mdadm.fish:12
 #: /tmp/fish/implicit/share/completions/update-eix-remote.fish:1
@@ -26581,8 +26629,8 @@ msgstr "Être silencieux"
 #: /tmp/fish/implicit/share/completions/git.fish:70
 #: /tmp/fish/implicit/share/completions/git.fish:201
 #: /tmp/fish/implicit/share/completions/git.fish:213
-#: /tmp/fish/implicit/share/completions/git.fish:240
-#: /tmp/fish/implicit/share/completions/git.fish:253
+#: /tmp/fish/implicit/share/completions/git.fish:241
+#: /tmp/fish/implicit/share/completions/git.fish:254
 #: /tmp/fish/implicit/share/completions/prt-get.fish:53
 #: /tmp/fish/implicit/share/completions/prt-get.fish:111
 #: /tmp/fish/implicit/share/completions/xz.fish:32
@@ -26793,7 +26841,7 @@ msgid "Allow adding otherwise ignored files"
 msgstr "Autoriser l’ajout de fichiers normalement ignorés"
 
 #: /tmp/fish/implicit/share/completions/git.fish:72
-#: /tmp/fish/implicit/share/completions/git.fish:259
+#: /tmp/fish/implicit/share/completions/git.fish:260
 msgid "Interactive mode"
 msgstr "Mode interactif"
 
@@ -26848,7 +26896,7 @@ msgid "Remote Branch"
 msgstr "Branche distante"
 
 #: /tmp/fish/implicit/share/completions/git.fish:84
-#: /tmp/fish/implicit/share/completions/git.fish:245
+#: /tmp/fish/implicit/share/completions/git.fish:246
 msgid "Head"
 msgstr "Head"
 
@@ -27309,7 +27357,7 @@ msgstr "Ne pas compresser les modifications"
 
 #: /tmp/fish/implicit/share/completions/git.fish:202
 #: /tmp/fish/implicit/share/completions/git.fish:219
-#: /tmp/fish/implicit/share/completions/git.fish:241
+#: /tmp/fish/implicit/share/completions/git.fish:242
 msgid "Force progress status"
 msgstr "Forcer l’affichage de la progression"
 
@@ -27362,7 +27410,7 @@ msgstr "Désactiver le suivi automatique des étiquettes"
 
 #: /tmp/fish/implicit/share/completions/git.fish:220
 #: /tmp/fish/implicit/share/completions/git.fish:223
-#: /tmp/fish/implicit/share/completions/git.fish:243
+#: /tmp/fish/implicit/share/completions/git.fish:244
 msgid "Remote alias"
 msgstr "Alias distant"
 
@@ -27376,129 +27424,133 @@ msgid "Force-push branch"
 msgstr "Pousser autoritairement la branche"
 
 #: /tmp/fish/implicit/share/completions/git.fish:226
+msgid "Delete remote branch"
+msgstr "Supprimer la branche distante"
+
+#: /tmp/fish/implicit/share/completions/git.fish:227
 msgid "Force-push local branch to remote branch"
 msgstr "Pousser autoritairement la branche locale vers la branche distante"
 
-#: /tmp/fish/implicit/share/completions/git.fish:227
+#: /tmp/fish/implicit/share/completions/git.fish:228
 msgid "Push local branch to remote branch"
 msgstr "Pousser la branche locale vers la branche distante"
 
-#: /tmp/fish/implicit/share/completions/git.fish:228
+#: /tmp/fish/implicit/share/completions/git.fish:229
 msgid "Push all refs under refs/heads/"
 msgstr "Pousser toutes les références de refs/heads/"
 
-#: /tmp/fish/implicit/share/completions/git.fish:229
+#: /tmp/fish/implicit/share/completions/git.fish:230
 msgid "Remove remote branches that don't have a local counterpart"
 msgstr "Supprimer les branches distantes sans contrepartie locale"
 
-#: /tmp/fish/implicit/share/completions/git.fish:230
+#: /tmp/fish/implicit/share/completions/git.fish:231
 msgid "Push all refs under refs/"
 msgstr "Pousser toutes les références de refs/"
 
-#: /tmp/fish/implicit/share/completions/git.fish:231
+#: /tmp/fish/implicit/share/completions/git.fish:232
 msgid "Delete all listed refs from the remote repository"
 msgstr "Supprimer toutes les références listées du dépôt distant"
 
-#: /tmp/fish/implicit/share/completions/git.fish:232
+#: /tmp/fish/implicit/share/completions/git.fish:233
 msgid "Push all refs under refs/tags"
 msgstr "Pousser toutes les références de refs/tags"
 
-#: /tmp/fish/implicit/share/completions/git.fish:233
+#: /tmp/fish/implicit/share/completions/git.fish:234
 #, fuzzy
 msgid "Push all usual refs plus the ones under refs/tags"
 msgstr "Pousser toutes les références de refs/tags"
 
-#: /tmp/fish/implicit/share/completions/git.fish:234
+#: /tmp/fish/implicit/share/completions/git.fish:235
 msgid "Do everything except actually send the updates"
 msgstr "Tout faire sauf l’envoi proprement dit des mises à jour"
 
-#: /tmp/fish/implicit/share/completions/git.fish:235
+#: /tmp/fish/implicit/share/completions/git.fish:236
 msgid "Produce machine-readable output"
 msgstr "Produire une sortie lisible par un programme"
 
-#: /tmp/fish/implicit/share/completions/git.fish:236
+#: /tmp/fish/implicit/share/completions/git.fish:237
 msgid "Force update of remote refs"
 msgstr "Forcer la mise à jour des références distantes"
 
-#: /tmp/fish/implicit/share/completions/git.fish:237
+#: /tmp/fish/implicit/share/completions/git.fish:238
 msgid ""
 "Force update of remote refs, stopping if other's changes would be overwritten"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/git.fish:238
+#: /tmp/fish/implicit/share/completions/git.fish:239
 msgid "Add upstream (tracking) reference"
 msgstr "Ajouter une référence amont (suivi)"
 
-#: /tmp/fish/implicit/share/completions/git.fish:242
+#: /tmp/fish/implicit/share/completions/git.fish:243
 msgid "Forward-port local commits to the updated upstream head"
 msgstr ""
 "Reporter les validations locales sur le sommet mis à jour d’une branche"
 
-#: /tmp/fish/implicit/share/completions/git.fish:247
+#: /tmp/fish/implicit/share/completions/git.fish:248
 msgid "Restart the rebasing process"
 msgstr "Redémarrer le processus de rebasage"
 
-#: /tmp/fish/implicit/share/completions/git.fish:248
+#: /tmp/fish/implicit/share/completions/git.fish:249
 msgid "Abort the rebase operation"
 msgstr "Annuler le rebasage"
 
-#: /tmp/fish/implicit/share/completions/git.fish:249
+#: /tmp/fish/implicit/share/completions/git.fish:250
 msgid "Keep the commits that don't cahnge anything"
 msgstr "Conserver les modifications sans effet"
 
-#: /tmp/fish/implicit/share/completions/git.fish:250
+#: /tmp/fish/implicit/share/completions/git.fish:251
 msgid "Restart the rebasing process by skipping the current patch"
 msgstr "Redémarrer le processus de rebasage en passant le patch actuel"
 
-#: /tmp/fish/implicit/share/completions/git.fish:251
+#: /tmp/fish/implicit/share/completions/git.fish:252
 msgid "Use merging strategies to rebase"
 msgstr "Utiliser des stratégies de fusion pour le rebasage"
 
-#: /tmp/fish/implicit/share/completions/git.fish:254
+#: /tmp/fish/implicit/share/completions/git.fish:255
 msgid "Show diffstat of the rebase"
 msgstr "Afficher le diffstat du rebasage"
 
-#: /tmp/fish/implicit/share/completions/git.fish:255
+#: /tmp/fish/implicit/share/completions/git.fish:256
 msgid "Don't show diffstat of the rebase"
 msgstr "Ne pas afficher le diffstat du rebasage"
 
-#: /tmp/fish/implicit/share/completions/git.fish:256
+#: /tmp/fish/implicit/share/completions/git.fish:257
 msgid "Allow the pre-rebase hook to run"
 msgstr "Autoriser l’exécution du crochet pré-rebasage"
 
-#: /tmp/fish/implicit/share/completions/git.fish:257
+#: /tmp/fish/implicit/share/completions/git.fish:258
 msgid "Don't allow the pre-rebase hook to run"
 msgstr "Refuser l’exécution du crochet pré-rebasage"
 
-#: /tmp/fish/implicit/share/completions/git.fish:258
+#: /tmp/fish/implicit/share/completions/git.fish:259
 msgid "Force the rebase"
 msgstr "Forcer le rebasage"
 
-#: /tmp/fish/implicit/share/completions/git.fish:260
+#: /tmp/fish/implicit/share/completions/git.fish:261
 msgid "Try to recreate merges"
 msgstr "Tenter de re-créer les fusions"
 
-#: /tmp/fish/implicit/share/completions/git.fish:261
+#: /tmp/fish/implicit/share/completions/git.fish:262
 msgid "Rebase all reachable commits"
 msgstr "Rebaser toutes les validations atteignables"
 
-#: /tmp/fish/implicit/share/completions/git.fish:262
+#: /tmp/fish/implicit/share/completions/git.fish:263
 msgid "Automatic squashing"
 msgstr "Compression automatique"
 
-#: /tmp/fish/implicit/share/completions/git.fish:263
+#: /tmp/fish/implicit/share/completions/git.fish:264
 msgid "No automatic squashing"
 msgstr "Pas de compression automatique"
 
-#: /tmp/fish/implicit/share/completions/git.fish:264
+#: /tmp/fish/implicit/share/completions/git.fish:265
 msgid "No fast-forward"
 msgstr "Pas d’avance rapide"
 
-#: /tmp/fish/implicit/share/completions/git.fish:265
+#: /tmp/fish/implicit/share/completions/git.fish:266
 msgid "Reset current HEAD to the specified state"
 msgstr "Réinitialiser la HEAD actuelle vers l’état spécifié"
 
-#: /tmp/fish/implicit/share/completions/git.fish:266
+#: /tmp/fish/implicit/share/completions/git.fish:267
 msgid "Reset files in working directory"
 msgstr "Réinitialiser les fichiers du dossier de travail"
 
@@ -30869,10 +30921,6 @@ msgstr ""
 msgid "URL of chart repository"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/helm.fish:66
-msgid "Repository"
-msgstr "Dépôt"
-
 #: /tmp/fish/implicit/share/completions/helm.fish:69
 msgid "Simulate a rollback"
 msgstr ""
@@ -31055,7 +31103,7 @@ msgstr "Fichier de configuration"
 #: /tmp/fish/implicit/share/completions/help.fish:31
 #, fuzzy
 msgid "Introduction"
-msgstr "Instruction illégale"
+msgstr "Introduction"
 
 #: /tmp/fish/implicit/share/completions/help.fish:32
 msgid "Common issues with fish"
@@ -33129,14 +33177,12 @@ msgid "Debug output"
 msgstr "Option de débogage"
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:3
-#, fuzzy
 msgid "Enable logging"
-msgstr "Activer le débogage"
+msgstr "Activer la journalisation"
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:4
-#, fuzzy
 msgid "Log file"
-msgstr "Ficher de configuration"
+msgstr "Fichier de journalisation"
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:6
 #: /tmp/fish/implicit/share/completions/iptables.fish:25
@@ -39348,7 +39394,7 @@ msgstr "Afficher l’utilisation et quitter"
 
 #: /tmp/fish/implicit/share/completions/mocp.fish:3
 msgid "Turn on logging to a file"
-msgstr ""
+msgstr "Activer la journalisation vers un fichier"
 
 #: /tmp/fish/implicit/share/completions/mocp.fish:4
 msgid "Run only the server"
@@ -44465,6 +44511,128 @@ msgstr "Ouvrir le profil spécifié dans un éditeur"
 #: /tmp/fish/implicit/share/completions/prevd.fish:1
 msgid "Also print directory history"
 msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:1
+#, fuzzy
+msgid "Save authtoken to configuration file"
+msgstr "Paramétrer l’emplacement du fichier de configuration alternatif"
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:2
+#, fuzzy
+msgid "Prints author and licensing information"
+msgstr "Afficher les droits d’auteur et les informations de version"
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:3
+msgid "Start an HTTP tunnel"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:4
+#, fuzzy
+msgid "Start tunnels by name from the configuration file"
+msgstr "Paramétrer l’emplacement du fichier de configuration alternatif"
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:5
+msgid "Start a TCP tunnel"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:6
+msgid "Start a TLS tunnel"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:7
+#, fuzzy
+msgid "Update ngrok to the latest version"
+msgstr "Mettre à jour vers la dernière version"
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:8
+#, fuzzy
+msgid "Print the version string"
+msgstr "Afficher la version"
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:9
+#, fuzzy
+msgid "Shows a list of commands or help for one command"
+msgstr "Afficher l’aide pour une commande"
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:10
+msgid "ngrok.com authtoken identifying a user"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:11
+msgid "path to config files; they are merged if multiple"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:12
+msgid "path to log file, 'stdout', 'stderr' or 'false'"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:13
+msgid "log record format: 'term', 'logfmt', 'json'"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:14
+msgid "logging level"
+msgstr "niveau de journalisation"
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:15
+msgid "ngrok server region [us , eu, au, ap] (default: us)"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:16
+msgid "host tunnel on custom hostname (requires DNS CNAME)"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:17
+msgid "host tunnel on a custom subdomain"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:18
+msgid "enforce basic auth on tunnel endpoint, 'user:password'"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:19
+msgid "listen for http, https or both: true/false/both"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:20
+msgid "set Host header; if 'rewrite' use local address hostname"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:21
+#, fuzzy
+msgid "enable/disable http introspection"
+msgstr "(Dés)activer une session"
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:22
+msgid "path to TLS certificate authority to verify client certs"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:23
+msgid "path to a TLS certificate for TLS termination"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:24
+msgid "path to a TLS key for TLS termination"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:25
+#, fuzzy
+msgid "start all tunnels in the configuration file"
+msgstr "Paramétrer l’emplacement du fichier de configuration alternatif"
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:26
+#, fuzzy
+msgid "start running no tunnels"
+msgstr "Redémarrer la machine en fonctionnement"
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:27
+msgid "bind remote address (requires you reserve an address)"
+msgstr ""
+
+#: /tmp/fish/implicit/share/completions/ngrok.fish:28
+#, fuzzy
+msgid "update channel (stable, beta)"
+msgstr "Mettre à jour la barre d’état du client"
 
 #: /tmp/fish/implicit/share/completions/nice.fish:2
 msgid "Add specified amount to niceness value"
@@ -49739,8 +49907,9 @@ msgid ""
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/quilt.fish:10
+#, fuzzy
 msgid "Edit the specified file(s) in /usr/bin/vim"
-msgstr ""
+msgstr "Ouvrir le profil spécifié dans un éditeur"
 
 #: /tmp/fish/implicit/share/completions/quilt.fish:11
 msgid "Print the list of files that the topmost or specified patch changes"
@@ -51430,9 +51599,8 @@ msgid "Prefix for access logs"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:92
-#, fuzzy
 msgid "Disable access logging"
-msgstr "Désactiver le téléchargement de paquets"
+msgstr "Désactiver la journalisation des accès"
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:93
 msgid "Default MIME-type for objects"
@@ -60290,7 +60458,7 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:20
 msgid "Turn off logging"
-msgstr ""
+msgstr "Désactiver la journalisation"
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:21
 msgid "Turn off support for encodings according the locale setting"
@@ -60702,7 +60870,7 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:124
 msgid "Turn on logging"
-msgstr ""
+msgstr "Activer la journalisation"
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:125
 msgid "Turn on asynchronous scrolling"

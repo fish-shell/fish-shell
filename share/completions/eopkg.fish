@@ -38,9 +38,9 @@ function __fish_eopkg_print_repos -d "Print list of repositories"
 end
 
 # Setup additional completion
-complete -f -c eopkg -n '__fish_seen_subcommand_from upgrade up remove rm install it info check' -s c -l component -a "(__fish_eopkg_print_components)" -d "Component"
-complete -f -c eopkg -n '__fish_seen_subcommand_from upgrade up remove rm install it info check' -a "(__fish_print_packages)" -d "Package"
-complete -f -c eopkg -n '__fish_seen_subcommand_from remove-repo rr enable-repo er disable-repo dr' -a "(__fish_eopkg_print_repos)" -d "Repository"
+complete -f -c eopkg -n '__fish_seen_subcommand_from remove-repo rr enable-repo er disable-repo dr list-available la' -a "(__fish_eopkg_print_repos)" -d "Repository"
+complete -f -c eopkg -n '__fish_seen_subcommand_from upgrade up remove rm autoremove rmf install it info check' -a "(__fish_print_packages)" -d "Package"
+complete -f -c eopkg -n '__fish_seen_subcommand_from upgrade up remove rm install it info check list-available la list-installed li list-upgrades lu' -s c -l component -a "(__fish_eopkg_print_components)" -d "Component"
 
 # Setup eopkg subcommand with shortcut
 __fish_eopkg_subcommand_with_shortcut upgrade up -d "Upgrades packages"

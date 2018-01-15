@@ -329,10 +329,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
 }
 
 parse_execution_result_t parse_execution_context_t::run_begin_statement(
-    const parse_node_t &header, const parse_node_t &contents) {
-    assert(header.type == symbol_begin_header);
-    assert(contents.type == symbol_job_list);
-
+    tnode_t<g::begin_header> header, tnode_t<g::job_list> contents) {
     // Basic begin/end block. Push a scope block, run jobs, pop it
     scope_block_t *sb = parser->push_block<scope_block_t>(BEGIN);
     parse_execution_result_t ret = run_job_list(contents, sb);

@@ -839,7 +839,7 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
     if (redir_prim) {
         wcstring target;
         const enum token_type redirect_type =
-            this->parse_tree.type_for_redirection(redirection_node, this->buff, NULL, &target);
+            redirection_type(redirection_node, this->buff, nullptr, &target);
 
         // We may get a TOK_NONE redirection type, e.g. if the redirection is invalid.
         auto hl = redirect_type == TOK_NONE ? highlight_spec_error : highlight_spec_redirection;

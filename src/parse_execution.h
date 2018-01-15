@@ -90,8 +90,10 @@ class parse_execution_context_t {
         job_t *job, process_t *proc, tnode_t<grammar::boolean_statement> bool_statement);
     parse_execution_result_t populate_plain_process(job_t *job, process_t *proc,
                                                     tnode_t<grammar::plain_statement> statement);
+
+    template <typename Type>
     parse_execution_result_t populate_block_process(job_t *job, process_t *proc,
-                                                    const parse_node_t &statement_node);
+                                                    tnode_t<Type> statement_node);
 
     // These encapsulate the actual logic of various (block) statements.
     parse_execution_result_t run_block_statement(tnode_t<grammar::block_statement> statement);
@@ -113,7 +115,8 @@ class parse_execution_context_t {
                                                          globspec_t glob_behavior);
 
     // Determines the IO chain. Returns true on success, false on error.
-    bool determine_io_chain(const parse_node_t &statement, io_chain_t *out_chain);
+    bool determine_io_chain(tnode_t<grammar::arguments_or_redirections_list> node,
+                            io_chain_t *out_chain);
 
     parse_execution_result_t run_1_job(const parse_node_t &job_node,
                                        const block_t *associated_block);

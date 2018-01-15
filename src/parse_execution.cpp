@@ -843,7 +843,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         argument_list.insert(argument_list.begin(), cmd);
 
         // The set of IO redirections that we construct for the process.
-        if (!this->determine_io_chain(statement, &process_io_chain)) {
+        if (!this->determine_io_chain(statement.child<1>(), &process_io_chain)) {
             return parse_execution_errored;
         }
 
@@ -912,26 +912,18 @@ parse_execution_result_t parse_execution_context_t::expand_arguments_from_nodes(
     return parse_execution_success;
 }
 
-bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement_node,
+bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redirections_list> node,
                                                    io_chain_t *out_chain) {
     io_chain_t result;
     bool errored = false;
 
-    // We are called with a statement of varying types. We require that the statement have an
-    // arguments_or_redirections_list child.
-    const parse_node_t &args_and_redirections_list =
-        tree().find_child(statement_node, symbol_arguments_or_redirections_list);
-
     // Get all redirection nodes underneath the statement.
-    const parse_node_tree_t::parse_node_list_t redirect_nodes =
-        tree().find_nodes(args_and_redirections_list, symbol_redirection);
-    for (size_t i = 0; i < redirect_nodes.size(); i++) {
-        const parse_node_t &redirect_node = *redirect_nodes.at(i);
-
+    auto redirect_nodes = node.descendants<g::redirection>();
+    for (tnode_t<g::redirection> redirect_node : redirect_nodes) {
         int source_fd = -1;  // source fd
         wcstring target;     // file path or target fd
         enum token_type redirect_type =
-            tree().type_for_redirection(redirect_node, pstree->src, &source_fd, &target);
+            redirection_type(redirect_node, pstree->src, &source_fd, &target);
 
         // PCA: I can't justify this EXPAND_SKIP_VARIABLES flag. It was like this when I got here.
         bool target_expanded = expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0, NULL);
@@ -1019,22 +1011,26 @@ parse_execution_result_t parse_execution_context_t::populate_boolean_process(
                                       bool_statement.require_get_child<g::statement, 1>());
 }
 
-parse_execution_result_t parse_execution_context_t::populate_block_process(
-    job_t *job, process_t *proc, const parse_node_t &statement_node) {
+template <typename Type>
+parse_execution_result_t parse_execution_context_t::populate_block_process(job_t *job,
+                                                                           process_t *proc,
+                                                                           tnode_t<Type> node) {
     // We handle block statements by creating INTERNAL_BLOCK_NODE, that will bounce back to us when
     // it's time to execute them.
     UNUSED(job);
-    assert(statement_node.type == symbol_block_statement ||
-           statement_node.type == symbol_if_statement ||
-           statement_node.type == symbol_switch_statement);
+    static_assert(Type::token == symbol_block_statement || Type::token == symbol_if_statement ||
+                      Type::token == symbol_switch_statement,
+                  "Invalid block process");
 
     // The set of IO redirections that we construct for the process.
+    // TODO: fix this ugly find_child.
+    auto arguments = node.template find_child<g::arguments_or_redirections_list>();
     io_chain_t process_io_chain;
-    bool errored = !this->determine_io_chain(statement_node, &process_io_chain);
+    bool errored = !this->determine_io_chain(arguments, &process_io_chain);
     if (errored) return parse_execution_errored;
 
     proc->type = INTERNAL_BLOCK_NODE;
-    proc->internal_block_node = this->get_offset(statement_node);
+    proc->internal_block_node = this->get_offset(node);
     proc->set_io_chain(process_io_chain);
     return parse_execution_success;
 }
@@ -1052,11 +1048,17 @@ parse_execution_result_t parse_execution_context_t::populate_job_process(
             break;
         }
         case symbol_block_statement:
-        case symbol_if_statement:
-        case symbol_switch_statement: {
-            result = this->populate_block_process(job, proc, specific_statement);
+            result = this->populate_block_process(
+                job, proc, tnode_t<g::block_statement>(&tree(), &specific_statement));
             break;
-        }
+        case symbol_if_statement:
+            result = this->populate_block_process(
+                job, proc, tnode_t<g::if_statement>(&tree(), &specific_statement));
+            break;
+        case symbol_switch_statement:
+            result = this->populate_block_process(
+                job, proc, tnode_t<g::switch_statement>(&tree(), &specific_statement));
+            break;
         case symbol_decorated_statement: {
             // Get the plain statement. It will pull out the decoration itself.
             tnode_t<g::decorated_statement> dec_stat{&tree(), &specific_statement};

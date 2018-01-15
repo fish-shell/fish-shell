@@ -1331,6 +1331,23 @@ enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_st
     return static_cast<parse_bool_statement_type_t>(stmt.tag());
 }
 
+enum token_type redirection_type(tnode_t<grammar::redirection> redirection, const wcstring &src,
+                                 int *out_fd, wcstring *out_target) {
+    assert(redirection && "redirection is missing");
+    enum token_type result = TOK_NONE;
+    tnode_t<grammar::tok_redirection> prim = redirection.child<0>();  // like 2>
+    assert(prim && "expected to have primitive");
+
+    if (prim.has_source()) {
+        result = redirection_type_for_string(prim.get_source(src), out_fd);
+    }
+    if (out_target != NULL) {
+        tnode_t<grammar::tok_string> target = redirection.child<1>();  // like &1 or file path
+        *out_target = target ? target.get_source(src) : wcstring();
+    }
+    return result;
+}
+
 bool parse_node_tree_t::statement_is_in_pipeline(const parse_node_t &node,
                                                  bool include_first) const {
     // Moderately nasty hack! Walk up our ancestor chain and see if we are in a job_continuation.
@@ -1357,25 +1374,6 @@ bool parse_node_tree_t::statement_is_in_pipeline(const parse_node_t &node,
         }
     }
 
-    return result;
-}
-
-enum token_type parse_node_tree_t::type_for_redirection(const parse_node_t &redirection_node,
-                                                        const wcstring &src, int *out_fd,
-                                                        wcstring *out_target) const {
-    assert(redirection_node.type == symbol_redirection);
-    enum token_type result = TOK_NONE;
-    const parse_node_t *redirection_primitive =
-        this->get_child(redirection_node, 0, parse_token_type_redirection);  // like 2>
-    const parse_node_t *redirection_target =
-        this->get_child(redirection_node, 1, parse_token_type_string);  // like &1 or file path
-
-    if (redirection_primitive != NULL && redirection_primitive->has_source()) {
-        result = redirection_type_for_string(redirection_primitive->get_source(src), out_fd);
-    }
-    if (out_target != NULL) {
-        *out_target = redirection_target ? redirection_target->get_source(src) : L"";
-    }
     return result;
 }
 

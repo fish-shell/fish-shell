@@ -200,10 +200,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     /// only the second or additional commands are.
     bool statement_is_in_pipeline(const parse_node_t &node, bool include_first) const;
 
-    /// Given a redirection, get the redirection type (or TOK_NONE) and target (file path, or fd).
-    enum token_type type_for_redirection(const parse_node_t &node, const wcstring &src, int *out_fd,
-                                         wcstring *out_target) const;
-
     /// If the given node is a block statement, returns the header node (for_header, while_header,
     /// begin_header, or function_header). Otherwise returns NULL.
     const parse_node_t *header_node_for_block_statement(const parse_node_t &node) const;
@@ -427,6 +423,10 @@ parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> st
 
 /// Return the type for a boolean statement.
 enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_statement> stmt);
+
+/// Given a redirection, get the redirection type (or TOK_NONE) and target (file path, or fd).
+enum token_type redirection_type(tnode_t<grammar::redirection> redirection, const wcstring &src,
+                                 int *out_fd, wcstring *out_target);
 
 /// Return the arguments under an arguments_list or arguments_or_redirection_list
 using arguments_node_list_t = std::vector<tnode_t<grammar::argument>>;

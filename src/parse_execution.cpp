@@ -700,7 +700,8 @@ static wcstring reconstruct_orig_str(wcstring tokenized_str) {
 
 /// Handle the case of command not found.
 parse_execution_result_t parse_execution_context_t::handle_command_not_found(
-    const wcstring &cmd_str, tnode_t<g::plain_statement> statement_node, int err_code) {
+    const wcstring &cmd_str, tnode_t<g::plain_statement> statement, int err_code) {
+
     // We couldn't find the specified command. This is a non-fatal error. We want to set the exit
     // status to 127, which is the standard number used by other shells like bash and zsh.
 
@@ -712,22 +713,20 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
         const wcstring name_str = wcstring(cmd, equals_ptr - cmd);  // variable name, up to the =
         const wcstring val_str = wcstring(equals_ptr + 1);          // variable value, past the =
 
-        const parse_node_tree_t::parse_node_list_t args =
-            tree().find_nodes(statement_node, symbol_argument, 1);
-
+        auto args = statement.descendants<g::argument>(1);
         if (!args.empty()) {
-            const wcstring argument = get_source(*args.at(0));
+            const wcstring argument = get_source(args.at(0));
 
             wcstring ellipsis_str = wcstring(1, ellipsis_char);
             if (ellipsis_str == L"$") ellipsis_str = L"...";
 
             // Looks like a command.
-            this->report_error(statement_node, ERROR_BAD_EQUALS_IN_COMMAND5, argument.c_str(),
+            this->report_error(statement, ERROR_BAD_EQUALS_IN_COMMAND5, argument.c_str(),
                                name_str.c_str(), val_str.c_str(), argument.c_str(),
                                ellipsis_str.c_str());
         } else {
             wcstring assigned_val = reconstruct_orig_str(val_str);
-            this->report_error(statement_node, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, name_str.c_str(),
+            this->report_error(statement, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, name_str.c_str(),
                                assigned_val.c_str());
         }
     } else if (wcschr(cmd, L'$') || wcschr(cmd, VARIABLE_EXPAND_SINGLE) ||
@@ -736,17 +735,16 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
             _(L"Variables may not be used as commands. In fish, "
               L"please define a function or use 'eval %ls'.");
         wcstring eval_cmd = reconstruct_orig_str(cmd_str);
-        this->report_error(statement_node, msg, eval_cmd.c_str());
+        this->report_error(statement, msg, eval_cmd.c_str());
     } else if (err_code != ENOENT) {
-        this->report_error(statement_node, _(L"The file '%ls' is not executable by this user"),
-                           cmd);
+        this->report_error(statement, _(L"The file '%ls' is not executable by this user"), cmd);
     } else {
         // Handle unrecognized commands with standard command not found handler that can make better
         // error messages.
         wcstring_list_t event_args;
         {
             parse_execution_result_t arg_result =
-                this->determine_arguments(statement_node, &event_args, failglob);
+                this->determine_arguments(statement, &event_args, failglob);
 
             if (arg_result != parse_execution_success) {
                 return arg_result;
@@ -758,7 +756,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
         event_fire_generic(L"fish_command_not_found", &event_args);
 
         // Here we want to report an error (so it shows a backtrace), but with no text.
-        this->report_error(statement_node, L"");
+        this->report_error(statement, L"");
     }
 
     // Set the last proc status appropriately.

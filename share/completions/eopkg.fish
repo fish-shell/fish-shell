@@ -119,7 +119,7 @@ __fish_eopkg_option info -s f -l files -d "Show a list of package files"
 __fish_eopkg_option info -s F -l files-path -d "Show only paths"
 __fish_eopkg_option info -s s -l short -d "Do not show details"
 
-__fish_eopkg_subcommand help -d "Prints help for given command" -a "upgrade remove install check info "
+__fish_eopkg_subcommand help -d "Prints help for given command"
 
 # Setup eopkg general option
 complete -c eopkg -l version -d "Show program's version number and exit"

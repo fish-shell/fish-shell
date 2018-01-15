@@ -1485,3 +1485,11 @@ maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> 
     }
     return none();
 }
+
+arguments_node_list_t get_argument_nodes(tnode_t<grammar::argument_list> list) {
+    return list.descendants<grammar::argument>();
+}
+
+arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirections_list> list) {
+    return list.descendants<grammar::argument>();
+}

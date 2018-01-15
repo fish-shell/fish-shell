@@ -428,6 +428,11 @@ parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> st
 /// Return the type for a boolean statement.
 enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_statement> stmt);
 
+/// Return the arguments under an arguments_list or arguments_or_redirection_list
+using arguments_node_list_t = std::vector<tnode_t<grammar::argument>>;
+arguments_node_list_t get_argument_nodes(tnode_t<grammar::argument_list>);
+arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirections_list>);
+
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.
 bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags,
                             parse_node_tree_t *output, parse_error_list_t *errors,

@@ -80,7 +80,7 @@ class parse_execution_context_t {
     /// Indicates whether a job is a simple block (one block, no redirections).
     bool job_is_simple_block(const parse_node_t &node) const;
 
-    enum process_type_t process_type_for_command(const parse_node_t &plain_statement,
+    enum process_type_t process_type_for_command(tnode_t<grammar::plain_statement> statement,
                                                  const wcstring &cmd) const;
 
     // These create process_t structures from statements.
@@ -107,9 +107,10 @@ class parse_execution_context_t {
                                                  tnode_t<grammar::job_list> contents);
 
     enum globspec_t { failglob, nullglob };
-    parse_execution_result_t determine_arguments(const parse_node_t &parent,
-                                                 wcstring_list_t *out_arguments,
-                                                 globspec_t glob_behavior);
+    using argument_node_list_t = std::vector<tnode_t<grammar::argument>>;
+    parse_execution_result_t expand_arguments_from_nodes(const argument_node_list_t &argument_nodes,
+                                                         wcstring_list_t *out_arguments,
+                                                         globspec_t glob_behavior);
 
     // Determines the IO chain. Returns true on success, false on error.
     bool determine_io_chain(const parse_node_t &statement, io_chain_t *out_chain);

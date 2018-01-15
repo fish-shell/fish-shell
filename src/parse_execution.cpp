@@ -170,13 +170,12 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
 }
 
 enum process_type_t parse_execution_context_t::process_type_for_command(
-    const parse_node_t &plain_statement, const wcstring &cmd) const {
-    assert(plain_statement.type == symbol_plain_statement);
+    tnode_t<grammar::plain_statement> statement, const wcstring &cmd) const {
     enum process_type_t process_type = EXTERNAL;
 
     // Determine the process type, which depends on the statement decoration (command, builtin,
     // etc).
-    enum parse_statement_decoration_t decoration = get_decoration({&tree(), &plain_statement});
+    enum parse_statement_decoration_t decoration = get_decoration(statement);
 
     if (decoration == parse_statement_decoration_exec) {
         // Always exec.
@@ -342,8 +341,10 @@ parse_execution_result_t parse_execution_context_t::run_begin_statement(
 parse_execution_result_t parse_execution_context_t::run_function_statement(
     tnode_t<g::function_header> header, tnode_t<g::end_command> block_end_command) {
     // Get arguments.
-    wcstring_list_t argument_list;
-    parse_execution_result_t result = this->determine_arguments(header, &argument_list, failglob);
+    wcstring_list_t arguments;
+    argument_node_list_t arg_nodes = header.descendants<g::argument>();
+    parse_execution_result_t result =
+        this->expand_arguments_from_nodes(arg_nodes, &arguments, failglob);
 
     if (result != parse_execution_success) {
         return result;
@@ -371,8 +372,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
         wcstring(pstree->src, contents_start, contents_end - contents_start);
     int definition_line_offset = this->line_offset_of_character_at_offset(contents_start);
     io_streams_t streams(0);  // no limit on the amount of output from builtin_function()
-    int err =
-        builtin_function(*parser, streams, argument_list, contents_str, definition_line_offset);
+    int err = builtin_function(*parser, streams, arguments, contents_str, definition_line_offset);
     proc_set_last_status(err);
 
     if (!streams.err.empty()) {
@@ -426,8 +426,9 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
     }
 
     // Get the contents to iterate over.
-    wcstring_list_t argument_sequence;
-    parse_execution_result_t ret = this->determine_arguments(header, &argument_sequence, nullglob);
+    wcstring_list_t arguments;
+    parse_execution_result_t ret = this->expand_arguments_from_nodes(
+        get_argument_nodes(header.child<3>()), &arguments, nullglob);
     if (ret != parse_execution_success) {
         return ret;
     }
@@ -446,14 +447,12 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
     for_block_t *fb = parser->push_block<for_block_t>();
 
     // Now drive the for loop.
-    const size_t arg_count = argument_sequence.size();
-    for (size_t i = 0; i < arg_count; i++) {
+    for (const wcstring &val : arguments) {
         if (should_cancel_execution(fb)) {
             ret = parse_execution_cancelled;
             break;
         }
 
-        const wcstring &val = argument_sequence.at(i);
         int retval = env_set_one(for_var_name, ENV_DEFAULT | ENV_USER, val);
         assert(retval == ENV_OK && "for loop variable should have been successfully set");
         (void)retval;
@@ -534,15 +533,13 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
             break;
         }
 
-        // Pull out the argument list.
-        auto arg_list = case_item.child<1>();
-
         // Expand arguments. A case item list may have a wildcard that fails to expand to
         // anything. We also report case errors, but don't stop execution; i.e. a case item that
         // contains an unexpandable process will report and then fail to match.
+        auto arg_nodes = get_argument_nodes(case_item.child<1>());
         wcstring_list_t case_args;
         parse_execution_result_t case_result =
-            this->determine_arguments(arg_list, &case_args, failglob);
+            this->expand_arguments_from_nodes(arg_nodes, &case_args, failglob);
         if (case_result == parse_execution_success) {
             for (const wcstring &arg : case_args) {
                 // Unescape wildcards so they can be expanded again.
@@ -743,8 +740,9 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
         // error messages.
         wcstring_list_t event_args;
         {
+            auto args = get_argument_nodes(statement.child<1>());
             parse_execution_result_t arg_result =
-                this->determine_arguments(statement, &event_args, failglob);
+                this->expand_arguments_from_nodes(args, &event_args, failglob);
 
             if (arg_result != parse_execution_success) {
                 return arg_result;
@@ -836,8 +834,9 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     } else {
         const globspec_t glob_behavior = (cmd == L"set" || cmd == L"count") ? nullglob : failglob;
         // Form the list of arguments. The command is the first argument.
+        argument_node_list_t arg_nodes = statement.descendants<g::argument>();
         parse_execution_result_t arg_result =
-            this->determine_arguments(statement, &argument_list, glob_behavior);
+            this->expand_arguments_from_nodes(arg_nodes, &argument_list, glob_behavior);
         if (arg_result != parse_execution_success) {
             return arg_result;
         }
@@ -862,17 +861,14 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
 
 // Determine the list of arguments, expanding stuff. Reports any errors caused by expansion. If we
 // have a wildcard that could not be expanded, report the error and continue.
-parse_execution_result_t parse_execution_context_t::determine_arguments(
-    const parse_node_t &parent, wcstring_list_t *out_arguments, globspec_t glob_behavior) {
+parse_execution_result_t parse_execution_context_t::expand_arguments_from_nodes(
+    const argument_node_list_t &argument_nodes, wcstring_list_t *out_arguments,
+    globspec_t glob_behavior) {
     // Get all argument nodes underneath the statement. We guess we'll have that many arguments (but
     // may have more or fewer, if there are wildcards involved).
-    const parse_node_tree_t::parse_node_list_t argument_nodes =
-        tree().find_nodes(parent, symbol_argument);
     out_arguments->reserve(out_arguments->size() + argument_nodes.size());
     std::vector<completion_t> arg_expanded;
-    for (size_t i = 0; i < argument_nodes.size(); i++) {
-        const parse_node_t &arg_node = *argument_nodes.at(i);
-
+    for (const auto arg_node : argument_nodes) {
         // Expect all arguments to have source.
         assert(arg_node.has_source());
         const wcstring arg_str = arg_node.get_source(pstree->src);
@@ -881,7 +877,7 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(
         parse_error_list_t errors;
         arg_expanded.clear();
         int expand_ret = expand_string(arg_str, &arg_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
-        parse_error_offset_source_start(&errors, arg_node.source_start);
+        parse_error_offset_source_start(&errors, arg_node.source_range()->start);
         switch (expand_ret) {
             case EXPAND_ERROR: {
                 this->report_errors(errors);

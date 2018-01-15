@@ -17,17 +17,13 @@ function __fish_eopkg_subcommand_with_shortcut -a subcommand shortcut
 end
 
 # Eopkg subcommand's option
-function __fish_eopkg_option
-    set subcommand $argv[1]
+function __fish_eopkg_option -a subcommand
     set -e argv[1]
     complete -f -c eopkg -n "__fish_seen_subcommand_from $subcommand" $argv
 end
 
-function __fish_eopkg_option_with_shortcut
-    set subcommand $argv[1]
-    set -e argv[1]
-    set shortcut $argv[1]
-    set -e argv[1]
+function __fish_eopkg_option_with_shortcut -a subcommand shortcut
+    set -e argv[1..2]
     complete -f -c eopkg -n "__fish_seen_subcommand_from $subcommand" $argv
     complete -f -c eopkg -n "__fish_seen_subcommand_from $shortcut" $argv
 end

@@ -1327,6 +1327,10 @@ enum parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statemen
     return decoration;
 }
 
+enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_statement> stmt) {
+    return static_cast<parse_bool_statement_type_t>(stmt.tag());
+}
+
 bool parse_node_tree_t::statement_is_in_pipeline(const parse_node_t &node,
                                                  bool include_first) const {
     // Moderately nasty hack! Walk up our ancestor chain and see if we are in a job_continuation.
@@ -1427,12 +1431,6 @@ parse_node_tree_t::parse_node_list_t parse_node_tree_t::comment_nodes_for_node(
         }
     }
     return result;
-}
-
-enum parse_bool_statement_type_t parse_node_tree_t::statement_boolean_type(
-    const parse_node_t &node) {
-    assert(node.type == symbol_boolean_statement);
-    return static_cast<parse_bool_statement_type_t>(node.tag);
 }
 
 bool parse_node_tree_t::job_should_be_backgrounded(const parse_node_t &job) const {

@@ -1068,8 +1068,7 @@ static bool detect_errors_in_backgrounded_job(const parse_node_tree_t &node_tree
         tnode_t<grammar::statement> next_stmt = next_job.child<0>();
         if (auto bool_stmt = next_stmt.try_get_child<grammar::boolean_statement, 0>()) {
             // The next job is indeed a boolean statement.
-            parse_bool_statement_type_t bool_type =
-                parse_node_tree_t::statement_boolean_type(*bool_stmt.node());
+            parse_bool_statement_type_t bool_type = bool_statement_type(bool_stmt);
             if (bool_type == parse_bool_and) {  // this is not allowed
                 errored = append_syntax_error(parse_errors, bool_stmt.source_range()->start,
                                               BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
@@ -1145,7 +1144,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                 has_unclosed_block = true;
             } else if (node.type == symbol_boolean_statement) {
                 // 'or' and 'and' can be in a pipeline, as long as they're first.
-                parse_bool_statement_type_t type = parse_node_tree_t::statement_boolean_type(node);
+                parse_bool_statement_type_t type = bool_statement_type({&node_tree, &node});
                 if ((type == parse_bool_and || type == parse_bool_or) &&
                     node_tree.statement_is_in_pipeline(node, false /* don't count first */)) {
                     errored = append_syntax_error(&parse_errors, node.source_start, EXEC_ERR_MSG,

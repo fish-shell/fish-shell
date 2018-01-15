@@ -85,9 +85,9 @@ class parse_execution_context_t {
 
     // These create process_t structures from statements.
     parse_execution_result_t populate_job_process(job_t *job, process_t *proc,
-                                                  const parse_node_t &statement_node);
-    parse_execution_result_t populate_boolean_process(job_t *job, process_t *proc,
-                                                      const parse_node_t &bool_statement);
+                                                  tnode_t<grammar::statement> statement);
+    parse_execution_result_t populate_boolean_process(
+        job_t *job, process_t *proc, tnode_t<grammar::boolean_statement> bool_statement);
     parse_execution_result_t populate_plain_process(job_t *job, process_t *proc,
                                                     const parse_node_t &statement);
     parse_execution_result_t populate_block_process(job_t *job, process_t *proc,

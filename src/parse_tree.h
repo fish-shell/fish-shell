@@ -222,9 +222,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     /// Given a node, return all of its comment nodes.
     parse_node_list_t comment_nodes_for_node(const parse_node_t &node) const;
 
-    /// Returns the boolean type for a boolean node.
-    static enum parse_bool_statement_type_t statement_boolean_type(const parse_node_t &node);
-
     /// Given a job, return whether it should be backgrounded, because it has a & specifier.
     bool job_should_be_backgrounded(const parse_node_t &job) const;
 
@@ -302,6 +299,9 @@ class tnode_t {
 
     // return the tag, or 0 if missing.
     parse_node_tag_t tag() const { return nodeptr ? nodeptr->tag : 0; }
+
+    // return the number of children, or 0 if missing.
+    uint8_t child_count() const { return nodeptr ? nodeptr->child_count : 0; }
 
     maybe_t<source_range_t> source_range() const {
         if (!has_source()) return none();
@@ -415,6 +415,9 @@ maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> 
 
 /// Return the decoration for a plain statement.
 parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> stmt);
+
+/// Return the type for a boolean statement.
+enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_statement> stmt);
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.
 bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags,

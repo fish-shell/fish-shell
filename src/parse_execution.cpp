@@ -1002,11 +1002,10 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
 }
 
 parse_execution_result_t parse_execution_context_t::populate_boolean_process(
-    job_t *job, process_t *proc, const parse_node_t &bool_statement) {
+    job_t *job, process_t *proc, tnode_t<g::boolean_statement> bool_statement) {
     // Handle a boolean statement.
     bool skip_job = false;
-    assert(bool_statement.type == symbol_boolean_statement);
-    switch (parse_node_tree_t::statement_boolean_type(bool_statement)) {
+    switch (bool_statement_type(bool_statement)) {
         case parse_bool_and: {
             // AND. Skip if the last job failed.
             skip_job = (proc_get_last_status() != 0);
@@ -1027,8 +1026,8 @@ parse_execution_result_t parse_execution_context_t::populate_boolean_process(
     if (skip_job) {
         return parse_execution_skipped;
     }
-    const parse_node_t &subject = *tree().get_child(bool_statement, 1, symbol_statement);
-    return this->populate_job_process(job, proc, subject);
+    return this->populate_job_process(job, proc,
+                                      bool_statement.require_get_child<g::statement, 1>());
 }
 
 parse_execution_result_t parse_execution_context_t::populate_block_process(
@@ -1051,20 +1050,16 @@ parse_execution_result_t parse_execution_context_t::populate_block_process(
     return parse_execution_success;
 }
 
-// Returns a process_t allocated with new. It's the caller's responsibility to delete it (!).
 parse_execution_result_t parse_execution_context_t::populate_job_process(
-    job_t *job, process_t *proc, const parse_node_t &statement_node) {
-    assert(statement_node.type == symbol_statement);
-    assert(statement_node.child_count == 1);
-
+    job_t *job, process_t *proc, tnode_t<grammar::statement> statement) {
     // Get the "specific statement" which is boolean / block / if / switch / decorated.
-    const parse_node_t &specific_statement = *get_child(statement_node, 0);
+    const parse_node_t &specific_statement = *get_child(statement, 0);
 
     parse_execution_result_t result = parse_execution_success;
 
     switch (specific_statement.type) {
         case symbol_boolean_statement: {
-            result = this->populate_boolean_process(job, proc, specific_statement);
+            result = this->populate_boolean_process(job, proc, {&tree(), &specific_statement});
             break;
         }
         case symbol_block_statement:
@@ -1100,15 +1095,15 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
 
     // We are going to construct process_t structures for every statement in the job. Get the first
     // statement.
-    tnode_t<g::statement> statement_node = job_node.child<0>();
-    assert(statement_node);
+    tnode_t<g::statement> statement = job_node.child<0>();
+    assert(statement);
 
     parse_execution_result_t result = parse_execution_success;
 
     // Create processes. Each one may fail.
     process_list_t processes;
     processes.emplace_back(new process_t());
-    result = this->populate_job_process(j, processes.back().get(), *statement_node);
+    result = this->populate_job_process(j, processes.back().get(), statement);
 
     // Construct process_ts for job continuations (pipelines), by walking the list until we hit the
     // terminal (empty) job continuation.

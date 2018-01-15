@@ -38,7 +38,7 @@ function __fish_eopkg_print_repos -d "Print list of repositories"
 end
 
 # Setup additional completion
-complete -f -c eopkg -n '__fish_seen_subcommand_from remove-repo rr enable-repo er disable-repo dr list-available la' -a "(__fish_eopkg_print_repos)" -d "Repository"
+complete -f -c eopkg -n '__fish_seen_subcommand_from remove-repo rr enable-repo er disable-repo dr search sr list-available la' -a "(__fish_eopkg_print_repos)" -d "Repository"
 complete -f -c eopkg -n '__fish_seen_subcommand_from upgrade up remove rm autoremove rmf install it info check' -a "(__fish_print_packages)" -d "Package"
 complete -f -c eopkg -n '__fish_seen_subcommand_from upgrade up remove rm install it info check list-available la list-installed li list-upgrades lu' -s c -l component -a "(__fish_eopkg_print_components)" -d "Component"
 
@@ -74,6 +74,7 @@ __fish_eopkg_subcommand_with_shortcut search sr -d "Search packages"
 __fish_eopkg_option_with_shortcut search sr -l description -d "Search in package name"
 __fish_eopkg_option_with_shortcut search sr -l name -d "Search in package name"
 __fish_eopkg_option_with_shortcut search sr -l summary -d "Search in package name"
+__fish_eopkg_option_with_shortcut search sr -s i -l installdb -d "Search only installed package"
 __fish_eopkg_option_with_shortcut search sr -s r -l repository -x -d "Name of the source or package repository"
 
 __fish_eopkg_subcommand_with_shortcut search-file sf -d "Search for a file in installed packages"

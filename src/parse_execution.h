@@ -65,7 +65,7 @@ class parse_execution_context_t {
 
     /// Command not found support.
     parse_execution_result_t handle_command_not_found(const wcstring &cmd,
-                                                      const parse_node_t &statement_node,
+                                                      tnode_t<grammar::plain_statement> statement,
                                                       int err_code);
 
     // Utilities
@@ -89,7 +89,7 @@ class parse_execution_context_t {
     parse_execution_result_t populate_boolean_process(
         job_t *job, process_t *proc, tnode_t<grammar::boolean_statement> bool_statement);
     parse_execution_result_t populate_plain_process(job_t *job, process_t *proc,
-                                                    const parse_node_t &statement);
+                                                    tnode_t<grammar::plain_statement> statement);
     parse_execution_result_t populate_block_process(job_t *job, process_t *proc,
                                                     const parse_node_t &statement_node);
 

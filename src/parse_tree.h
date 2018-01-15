@@ -357,6 +357,15 @@ class tnode_t {
         return result;
     }
 
+    /// Find the first direct child of the given node of the given type. asserts on failure.
+    template <class ChildType>
+    tnode_t<ChildType> find_child() const {
+        assert(nodeptr && "receiver is missing in find_child()");
+        tnode_t<ChildType> result{tree, &tree->find_child(*nodeptr, ChildType::token)};
+        assert(result && "cannot find child");
+        return result;
+    }
+
     /// Type-safe access to a node's parent.
     /// If the parent exists and has type ParentType, return it.
     /// Otherwise return a missing tnode.

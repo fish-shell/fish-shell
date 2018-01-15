@@ -700,9 +700,7 @@ static wcstring reconstruct_orig_str(wcstring tokenized_str) {
 
 /// Handle the case of command not found.
 parse_execution_result_t parse_execution_context_t::handle_command_not_found(
-    const wcstring &cmd_str, const parse_node_t &statement_node, int err_code) {
-    assert(statement_node.type == symbol_plain_statement);
-
+    const wcstring &cmd_str, tnode_t<g::plain_statement> statement_node, int err_code) {
     // We couldn't find the specified command. This is a non-fatal error. We want to set the exit
     // status to 127, which is the standard number used by other shells like bash and zsh.
 
@@ -771,16 +769,15 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
 
 /// Creates a 'normal' (non-block) process.
 parse_execution_result_t parse_execution_context_t::populate_plain_process(
-    job_t *job, process_t *proc, const parse_node_t &statement) {
+    job_t *job, process_t *proc, tnode_t<grammar::plain_statement> statement) {
     assert(job != NULL);
     assert(proc != NULL);
-    assert(statement.type == symbol_plain_statement);
 
     // We may decide that a command should be an implicit cd.
     bool use_implicit_cd = false;
 
     // Get the command. We expect to always get it here.
-    wcstring cmd = *command_for_plain_statement({&tree(), &statement}, pstree->src);
+    wcstring cmd = *command_for_plain_statement(statement, pstree->src);
 
     // Expand it as a command. Return an error on failure.
     bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
@@ -810,12 +807,10 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         const int no_cmd_err_code = errno;
 
         // If the specified command does not exist, and is undecorated, try using an implicit cd.
-        if (!has_command &&
-            get_decoration({&tree(), &statement}) == parse_statement_decoration_none) {
+        if (!has_command && get_decoration(statement) == parse_statement_decoration_none) {
             // Implicit cd requires an empty argument and redirection list.
-            const parse_node_t *args =
-                get_child(statement, 1, symbol_arguments_or_redirections_list);
-            if (args->child_count == 0) {
+            tnode_t<g::arguments_or_redirections_list> args = statement.child<1>();
+            if (!args.try_get_child<g::argument_or_redirection, 0>()) {
                 // Ok, no arguments or redirections; check to see if the first argument is a
                 // directory.
                 wcstring implicit_cd_path;
@@ -1070,8 +1065,8 @@ parse_execution_result_t parse_execution_context_t::populate_job_process(
         }
         case symbol_decorated_statement: {
             // Get the plain statement. It will pull out the decoration itself.
-            const parse_node_t &plain_statement =
-                tree().find_child(specific_statement, symbol_plain_statement);
+            tnode_t<g::decorated_statement> dec_stat{&tree(), &specific_statement};
+            auto plain_statement = dec_stat.find_child<g::plain_statement>();
             result = this->populate_plain_process(job, proc, plain_statement);
             break;
         }

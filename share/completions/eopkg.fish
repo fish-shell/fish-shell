@@ -86,9 +86,24 @@ __fish_eopkg_subcommand_with_shortcut enable-repo er -x -d "Enable repositories"
 __fish_eopkg_subcommand_with_shortcut disable-repo dr -x -d "Disable repositories"
 
 __fish_eopkg_subcommand_with_shortcut list-available la -d "List available packages in the repositories"
+__fish_eopkg_option_with_shortcut list-available la -s c -l component -x -d "List available package under given component"
+__fish_eopkg_option_with_shortcut list-available la -s l -l long -d "Show in long format"
+__fish_eopkg_option_with_shortcut list-available la -s U -l uninstalled -d "Show only uninstalled packages"
+
 __fish_eopkg_subcommand_with_shortcut list-components lc -d "List available components"
+__fish_eopkg_option_with_shortcut list-components lc -s l -l long -d "Show in long format"
+
 __fish_eopkg_subcommand_with_shortcut list-installed li -d "List of all installed packages"
+__fish_eopkg_option_with_shortcut list-installed li -s a -l automatic -d "Show automatically installed packages and the parent dependency"
+__fish_eopkg_option_with_shortcut list-installed li -s c -l component -x -d "List installed packages under given component"
+__fish_eopkg_option_with_shortcut list-installed li -s i -l install-info -d "Show detailed install info"
+__fish_eopkg_option_with_shortcut list-installed li -s l -l long -d "Show in long format"
+
 __fish_eopkg_subcommand_with_shortcut list-upgrades lu -d "List packages to be upgraded"
+__fish_eopkg_option_with_shortcut list-upgrades lu -s c -l component -x -d "List upgradable packages under given component"
+__fish_eopkg_option_with_shortcut list-upgrades lu -s i -l install-info -d "Show detailed install info"
+__fish_eopkg_option_with_shortcut list-upgrades lu -s l -l long -d "Show in long format"
+
 __fish_eopkg_subcommand_with_shortcut list-repo lr -d "List repositories"
 __fish_eopkg_subcommand_with_shortcut rebuild-db rdb -d "Rebuild the eopkg database"
 

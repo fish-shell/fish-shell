@@ -218,11 +218,9 @@ parse_execution_context_t::cancellation_reason(const block_t *block) const {
 }
 
 /// Return whether the job contains a single statement, of block type, with no redirections.
-bool parse_execution_context_t::job_is_simple_block(const parse_node_t &job_node) const {
-    assert(job_node.type == symbol_job);
-
+bool parse_execution_context_t::job_is_simple_block(tnode_t<g::job> job_node) const {
     // Must have one statement.
-    const parse_node_t &statement = *get_child(job_node, 0, symbol_statement);
+    tnode_t<g::statement> statement = job_node.child<0>();
     const parse_node_t &specific_statement = *get_child(statement, 0);
     if (!specific_statement_type_is_redirectable_block(specific_statement)) {
         // Not an appropriate block type.
@@ -230,9 +228,7 @@ bool parse_execution_context_t::job_is_simple_block(const parse_node_t &job_node
     }
 
     // Must be no pipes.
-    const parse_node_t &continuation = *get_child(job_node, 1, symbol_job_continuation);
-    if (continuation.child_count > 0) {
-        // Multiple statements in this job, so there's pipes involved.
+    if (job_node.child<1>().try_get_child<g::tok_pipe, 0>()) {
         return false;
     }
 
@@ -1136,7 +1132,7 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
     return result;
 }
 
-parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t &job_node,
+parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_node,
                                                               const block_t *associated_block) {
     if (should_cancel_execution(associated_block)) {
         return parse_execution_cancelled;
@@ -1170,7 +1166,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     if (job_is_simple_block(job_node)) {
         parse_execution_result_t result = parse_execution_success;
 
-        const parse_node_t &statement = *get_child(job_node, 0, symbol_statement);
+        tnode_t<g::statement> statement = job_node.child<0>();
         const parse_node_t &specific_statement = *get_child(statement, 0);
         assert(specific_statement_type_is_redirectable_block(specific_statement));
         switch (specific_statement.type) {
@@ -1228,7 +1224,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     // Populate the job. This may fail for reasons like command_not_found. If this fails, an error
     // will have been printed.
     parse_execution_result_t pop_result =
-        this->populate_job_from_job_node(job.get(), {&tree(), &job_node}, associated_block);
+        this->populate_job_from_job_node(job.get(), job_node, associated_block);
 
     // Clean up the job on failure or cancellation.
     bool populated_job = (pop_result == parse_execution_success);
@@ -1291,7 +1287,7 @@ parse_execution_result_t parse_execution_context_t::run_job_list(const parse_nod
         const parse_node_t *job = tree().next_node_in_node_list(*job_list, symbol_job, &job_list);
 
         if (job != NULL) {
-            result = this->run_1_job(*job, associated_block);
+            result = this->run_1_job({&tree(), job}, associated_block);
         }
     }
 

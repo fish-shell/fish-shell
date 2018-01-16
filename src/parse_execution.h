@@ -78,7 +78,7 @@ class parse_execution_context_t {
     bool is_function_context() const;
 
     /// Indicates whether a job is a simple block (one block, no redirections).
-    bool job_is_simple_block(const parse_node_t &node) const;
+    bool job_is_simple_block(tnode_t<grammar::job> job) const;
 
     enum process_type_t process_type_for_command(tnode_t<grammar::plain_statement> statement,
                                                  const wcstring &cmd) const;
@@ -118,8 +118,7 @@ class parse_execution_context_t {
     bool determine_io_chain(tnode_t<grammar::arguments_or_redirections_list> node,
                             io_chain_t *out_chain);
 
-    parse_execution_result_t run_1_job(const parse_node_t &job_node,
-                                       const block_t *associated_block);
+    parse_execution_result_t run_1_job(tnode_t<grammar::job> job, const block_t *associated_block);
     parse_execution_result_t run_job_list(const parse_node_t &job_list_node,
                                           const block_t *associated_block);
     parse_execution_result_t populate_job_from_job_node(job_t *j, tnode_t<grammar::job> job_node,

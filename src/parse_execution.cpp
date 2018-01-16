@@ -66,13 +66,9 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     const size_t src_start = node.source_start;
     size_t src_len = node.source_length;
 
-    const parse_node_tree_t::parse_node_list_t statement_terminator_nodes =
-        tree.find_nodes(node, parse_token_type_end, 1);
-    if (!statement_terminator_nodes.empty()) {
-        const parse_node_t *term = statement_terminator_nodes.at(0);
-        assert(term->source_start >= src_start);
-        src_len = term->source_start - src_start;
-    }
+    auto term = tree.find_child<g::end_command>(node);
+    assert(term.has_source() && term.source_range()->start >= src_start);
+    src_len = term.source_range()->start - src_start;
 
     wcstring result = wcstring(src, src_start, src_len);
     result.append(L"...");

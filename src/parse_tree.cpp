@@ -1231,27 +1231,6 @@ const parse_node_t *parse_node_tree_t::get_parent(const parse_node_t &node,
     return result;
 }
 
-static void find_nodes_recursive(const parse_node_tree_t &tree, const parse_node_t &parent,
-                                 parse_token_type_t type,
-                                 parse_node_tree_t::parse_node_list_t *result, size_t max_count) {
-    if (result->size() < max_count) {
-        if (parent.type == type) result->push_back(&parent);
-        for (node_offset_t i = 0; i < parent.child_count; i++) {
-            const parse_node_t *child = tree.get_child(parent, i);
-            assert(child != NULL);
-            find_nodes_recursive(tree, *child, type, result, max_count);
-        }
-    }
-}
-
-parse_node_tree_t::parse_node_list_t parse_node_tree_t::find_nodes(const parse_node_t &parent,
-                                                                   parse_token_type_t type,
-                                                                   size_t max_count) const {
-    parse_node_list_t result;
-    find_nodes_recursive(*this, parent, type, &result, max_count);
-    return result;
-}
-
 /// Return true if the given node has the proposed ancestor as an ancestor (or is itself that
 /// ancestor).
 static bool node_has_ancestor(const parse_node_tree_t &tree, const parse_node_t &node,
@@ -1365,16 +1344,16 @@ bool parse_node_tree_t::statement_is_in_pipeline(const parse_node_t &node,
     return result;
 }
 
-parse_node_tree_t::parse_node_list_t parse_node_tree_t::comment_nodes_for_node(
+std::vector<tnode_t<grammar::comment>> parse_node_tree_t::comment_nodes_for_node(
     const parse_node_t &parent) const {
-    parse_node_list_t result;
+    std::vector<tnode_t<grammar::comment>> result;
     if (parent.has_comments()) {
         // Walk all our nodes, looking for comment nodes that have the given node as a parent.
         for (size_t i = 0; i < this->size(); i++) {
             const parse_node_t &potential_comment = this->at(i);
             if (potential_comment.type == parse_special_type_comment &&
                 this->get_parent(potential_comment) == &parent) {
-                result.push_back(&potential_comment);
+                result.emplace_back(this, &potential_comment);
             }
         }
     }
@@ -1428,12 +1407,13 @@ maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> 
     return none();
 }
 
-arguments_node_list_t get_argument_nodes(tnode_t<grammar::argument_list> list) {
-    return list.descendants<grammar::argument>();
+arguments_node_list_t get_argument_nodes(tnode_t<grammar::argument_list> list, size_t max) {
+    return list.descendants<grammar::argument>(max);
 }
 
-arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirections_list> list) {
-    return list.descendants<grammar::argument>();
+arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirections_list> list,
+                                         size_t max) {
+    return list.descendants<grammar::argument>(max);
 }
 
 bool job_node_is_background(tnode_t<grammar::job> job) {

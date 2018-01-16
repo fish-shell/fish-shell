@@ -760,15 +760,13 @@ bool parse_util_argument_is_help(const wchar_t *s) {
 }
 
 /// Check if the first argument under the given node is --help.
-static bool first_argument_is_help(const parse_node_tree_t &node_tree, const parse_node_t &node,
+static bool first_argument_is_help(tnode_t<grammar::plain_statement> statement,
                                    const wcstring &src) {
     bool is_help = false;
-    const parse_node_tree_t::parse_node_list_t arg_nodes =
-        node_tree.find_nodes(node, symbol_argument, 1);
+    auto arg_nodes = get_argument_nodes(statement.child<1>());
     if (!arg_nodes.empty()) {
         // Check the first argument only.
-        const parse_node_t &arg = *arg_nodes.at(0);
-        const wcstring first_arg_src = arg.get_source(src);
+        wcstring first_arg_src = arg_nodes.front().get_source(src);
         is_help = parse_util_argument_is_help(first_arg_src.c_str());
     }
     return is_help;
@@ -1167,13 +1165,14 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                     errored |= detect_errors_in_backgrounded_job(node_tree, job, &parse_errors);
                 }
             } else if (node.type == symbol_plain_statement) {
+                using namespace grammar;
+                tnode_t<plain_statement> statement{&node_tree, &node};
                 // In a few places below, we want to know if we are in a pipeline.
                 const bool is_in_pipeline =
-                    node_tree.statement_is_in_pipeline(node, true /* count first */);
+                    node_tree.statement_is_in_pipeline(statement, true /* count first */);
 
                 // We need to know the decoration.
-                const enum parse_statement_decoration_t decoration =
-                    get_decoration({&node_tree, &node});
+                const enum parse_statement_decoration_t decoration = get_decoration(statement);
 
                 // Check that we don't try to pipe through exec.
                 if (is_in_pipeline && decoration == parse_statement_decoration_exec) {
@@ -1183,7 +1182,6 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 
                 if (maybe_t<wcstring> mcommand =
                         command_for_plain_statement({&node_tree, &node}, buff_src)) {
-                    using namespace grammar;
                     wcstring command = std::move(*mcommand);
                     // Check that we can expand the command.
                     if (!expand_one(command,
@@ -1214,7 +1212,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                 break;
                             }
                         }
-                        if (!found_function && !first_argument_is_help(node_tree, node, buff_src)) {
+                        if (!found_function && !first_argument_is_help(statement, buff_src)) {
                             errored = append_syntax_error(&parse_errors, node.source_start,
                                                           INVALID_RETURN_ERR_MSG);
                         }
@@ -1246,7 +1244,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                             }
                         }
 
-                        if (!found_loop && !first_argument_is_help(node_tree, node, buff_src)) {
+                        if (!found_loop && !first_argument_is_help(statement, buff_src)) {
                             errored = append_syntax_error(
                                 &parse_errors, node.source_start,
                                 (command == L"break" ? INVALID_BREAK_ERR_MSG

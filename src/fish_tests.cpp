@@ -2418,7 +2418,6 @@ static void test_autosuggest_suggest_special() {
     }
 
     const wcstring wd = L"test/autosuggest_test";
-    const env_vars_snapshot_t &vars = env_vars_snapshot_t::current();
 
     perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/0", L"foobar/", __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/0", L"foobar/", __LINE__);
@@ -3394,7 +3393,8 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     }
 
     // Get the statement. Should only have one.
-    auto stmts = tree.find_nodes<grammar::plain_statement>(tree.at(0));
+    tnode_t<grammar::job_list> job_list{&tree, &tree.at(0)};
+    auto stmts = job_list.descendants<grammar::plain_statement>();
     if (stmts.size() != 1) {
         say(L"Unexpected number of statements (%lu) found in '%ls'", stmts.size(), src.c_str());
         return false;
@@ -3406,13 +3406,32 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     *out_cmd = *command_for_plain_statement(stmt, src);
 
     // Return arguments separated by spaces.
-    const parse_node_tree_t::parse_node_list_t arg_nodes = tree.find_nodes(stmt, symbol_argument);
-    for (size_t i = 0; i < arg_nodes.size(); i++) {
-        if (i > 0) out_joined_args->push_back(L' ');
-        out_joined_args->append(arg_nodes.at(i)->get_source(src));
+    bool first = true;
+    for (auto arg_node : stmt.descendants<grammar::argument>()) {
+        if (!first) out_joined_args->push_back(L' ');
+        out_joined_args->append(arg_node.get_source(src));
+        first = false;
     }
 
     return true;
+}
+
+// Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
+// not (issue #1240).
+template <typename Type>
+static void check_function_help(const wchar_t *src) {
+    parse_node_tree_t tree;
+    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL)) {
+        err(L"Failed to parse '%ls'", src);
+    }
+
+    tnode_t<grammar::job_list> node{&tree, &tree.at(0)};
+    auto node_list = node.descendants<Type>();
+    if (node_list.size() == 0) {
+        err(L"Failed to find node of type '%ls'", token_type_description(Type::token));
+    } else if (node_list.size() > 1) {
+        err(L"Found too many nodes of type '%ls'", token_type_description(Type::token));
+    }
 }
 
 // Test the LL2 (two token lookahead) nature of the parser by exercising the special builtin and
@@ -3459,31 +3478,10 @@ static void test_new_parser_ll2(void) {
                 tests[i].src.c_str(), (int)tests[i].deco, (int)deco, (long)__LINE__);
     }
 
-    // Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
-    // not (issue #1240).
-    const struct {
-        wcstring src;
-        parse_token_type_t type;
-    } tests2[] = {
-        {L"function -h", symbol_plain_statement},
-        {L"function --help", symbol_plain_statement},
-        {L"function --foo ; end", symbol_function_header},
-        {L"function foo ; end", symbol_function_header},
-    };
-    for (size_t i = 0; i < sizeof tests2 / sizeof *tests2; i++) {
-        parse_node_tree_t tree;
-        if (!parse_tree_from_string(tests2[i].src, parse_flag_none, &tree, NULL)) {
-            err(L"Failed to parse '%ls'", tests2[i].src.c_str());
-        }
-
-        const parse_node_tree_t::parse_node_list_t node_list =
-            tree.find_nodes(tree.at(0), tests2[i].type);
-        if (node_list.size() == 0) {
-            err(L"Failed to find node of type '%ls'", token_type_description(tests2[i].type));
-        } else if (node_list.size() > 1) {
-            err(L"Found too many nodes of type '%ls'", token_type_description(tests2[i].type));
-        }
-    }
+    check_function_help<grammar::plain_statement>(L"function -h");
+    check_function_help<grammar::plain_statement>(L"function --help");
+    check_function_help<grammar::function_header>(L"function --foo; end");
+    check_function_help<grammar::function_header>(L"function foo; end");
 }
 
 static void test_new_parser_ad_hoc() {
@@ -3500,9 +3498,8 @@ static void test_new_parser_ad_hoc() {
 
     // Expect three case_item_lists: one for each case, and a terminal one. The bug was that we'd
     // try to run a command 'case'.
-    const parse_node_t &root = parse_tree.at(0);
-    const parse_node_tree_t::parse_node_list_t node_list =
-        parse_tree.find_nodes(root, symbol_case_item_list);
+    tnode_t<grammar::job_list> root{&parse_tree, &parse_tree.at(0)};
+    auto node_list = root.descendants<grammar::case_item_list>();
     if (node_list.size() != 3) {
         err(L"Expected 3 case item nodes, found %lu", node_list.size());
     }

@@ -169,15 +169,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     const parse_node_t *get_parent(const parse_node_t &node,
                                    parse_token_type_t expected_type = token_type_invalid) const;
 
-    // Find all the nodes of a given type underneath a given node, up to max_count of them.
-    typedef std::vector<const parse_node_t *> parse_node_list_t;
-    parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type,
-                                 size_t max_count = size_t(-1)) const;
-
-    // Find all the nodes of a given type underneath a given node, up to max_count of them.
-    template <typename Type>
-    std::vector<tnode_t<Type>> find_nodes(const parse_node_t &parent, size_t max_count = -1) const;
-
     // Finds the last node of a given type, or empty if it could not be found. If parent is NULL,
     // this finds the last node in the tree of that type.
     template <typename Type>
@@ -196,7 +187,7 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     bool statement_is_in_pipeline(const parse_node_t &node, bool include_first) const;
 
     /// Given a node, return all of its comment nodes.
-    parse_node_list_t comment_nodes_for_node(const parse_node_t &node) const;
+    std::vector<tnode_t<grammar::comment>> comment_nodes_for_node(const parse_node_t &node) const;
 
    private:
     template <typename Type>
@@ -377,7 +368,18 @@ class tnode_t {
     template <typename DescendantType>
     std::vector<tnode_t<DescendantType>> descendants(size_t max_count = -1) const {
         if (!nodeptr) return {};
-        return tree->find_nodes<DescendantType>(*nodeptr);
+        std::vector<tnode_t<DescendantType>> result;
+        std::vector<const parse_node_t *> stack{nodeptr};
+        while (!stack.empty() && result.size() < max_count) {
+            const parse_node_t *node = stack.back();
+            if (node->type == DescendantType::token) result.emplace_back(tree, node);
+            stack.pop_back();
+            node_offset_t index = node->child_count;
+            while (index--) {
+                stack.push_back(tree->get_child(*node, index));
+            }
+        }
+        return result;
     }
 
     /// Given that we are a list type, \return the next node of some Item in some node list,
@@ -402,18 +404,6 @@ tnode_t<Type> parse_node_tree_t::find_last_node(const parse_node_t *parent) cons
     return tnode_t<Type>(this, this->find_last_node_of_type(Type::token, parent));
 }
 
-template <typename Type>
-std::vector<tnode_t<Type>> parse_node_tree_t::find_nodes(const parse_node_t &parent,
-                                                         size_t max_count) const {
-    auto ptrs = this->find_nodes(parent, Type::token, max_count);
-    std::vector<tnode_t<Type>> result;
-    result.reserve(ptrs.size());
-    for (const parse_node_t *np : ptrs) {
-        result.emplace_back(this, np);
-    }
-    return result;
-}
-
 /// Given a plain statement, get the command from the child node. Returns the command string on
 /// success, none on failure.
 maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> stmt,
@@ -430,9 +420,11 @@ enum token_type redirection_type(tnode_t<grammar::redirection> redirection, cons
                                  int *out_fd, wcstring *out_target);
 
 /// Return the arguments under an arguments_list or arguments_or_redirection_list
+/// Do not return more than max.
 using arguments_node_list_t = std::vector<tnode_t<grammar::argument>>;
-arguments_node_list_t get_argument_nodes(tnode_t<grammar::argument_list>);
-arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirections_list>);
+arguments_node_list_t get_argument_nodes(tnode_t<grammar::argument_list>, size_t max = -1);
+arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirections_list>,
+                                         size_t max = -1);
 
 /// Return whether the given job is background because it has a & symbol.
 bool job_node_is_background(tnode_t<grammar::job>);

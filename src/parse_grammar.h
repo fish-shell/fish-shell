@@ -42,6 +42,13 @@ struct keyword {
     }
 };
 
+// Define special types.
+// Comments are not emitted as part of productions, but specially by the parser.
+struct comment {
+    using type_tuple = std::tuple<>;
+    static constexpr parse_token_type_t token = parse_special_type_comment;
+};
+
 // Forward declare all the symbol types.
 #define ELEM(T) struct T;
 #include "parse_grammar_elements.inc"

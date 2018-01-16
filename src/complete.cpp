@@ -1367,7 +1367,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                                        use_implicit_cd);
             } else {
                 // Get all the arguments.
-                auto all_arguments = tree.find_nodes<grammar::argument>(plain_statement);
+                auto all_arguments = plain_statement.descendants<grammar::argument>();
 
                 // See whether we are in an argument. We may also be in a redirection, or nothing at
                 // all.

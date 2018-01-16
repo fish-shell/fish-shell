@@ -330,6 +330,14 @@ class tnode_t {
         return tnode_t<child_type>{tree, child};
     }
 
+    /// Return a parse_node_t for a child.
+    /// This is used to disambiguate alts.
+    template <node_offset_t Index>
+    const parse_node_t &get_child_node() const {
+        assert(nodeptr && "receiver is missing in get_child_node");
+        return *tree->get_child(*nodeptr, Index);
+    }
+
     /// If the child at the given index has the given type, return it; otherwise return an empty
     /// child. Note this will refuse to compile if the child type is not possible.
     /// This is used for e.g. alternations.
@@ -338,7 +346,7 @@ class tnode_t {
         static_assert(child_type_possible_at_index<Type, ChildType, Index>(),
                       "Cannot contain a child of this type");
         const parse_node_t *child = nullptr;
-        if (nodeptr) child = tree->get_child(*nodeptr, Index);
+        if (nodeptr) child = &get_child_node<Index>();
         if (child && child->type == ChildType::token) return {tree, child};
         return {};
     }

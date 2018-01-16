@@ -89,12 +89,6 @@ wcstring parse_execution_context_t::get_source(const parse_node_t &node) const {
     return node.get_source(pstree->src);
 }
 
-const parse_node_t *parse_execution_context_t::get_child(const parse_node_t &parent,
-                                                         node_offset_t which,
-                                                         parse_token_type_t expected_type) const {
-    return this->tree().get_child(parent, which, expected_type);
-}
-
 node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) const {
     // Get the offset of a node via pointer arithmetic, very hackish.
     const parse_node_t *addr = &node;
@@ -221,7 +215,7 @@ parse_execution_context_t::cancellation_reason(const block_t *block) const {
 bool parse_execution_context_t::job_is_simple_block(tnode_t<g::job> job_node) const {
     // Must have one statement.
     tnode_t<g::statement> statement = job_node.child<0>();
-    const parse_node_t &specific_statement = *get_child(statement, 0);
+    const parse_node_t &specific_statement = statement.get_child_node<0>();
     if (!specific_statement_type_is_redirectable_block(specific_statement)) {
         // Not an appropriate block type.
         return false;
@@ -1034,7 +1028,7 @@ parse_execution_result_t parse_execution_context_t::populate_block_process(job_t
 parse_execution_result_t parse_execution_context_t::populate_job_process(
     job_t *job, process_t *proc, tnode_t<grammar::statement> statement) {
     // Get the "specific statement" which is boolean / block / if / switch / decorated.
-    const parse_node_t &specific_statement = *get_child(statement, 0);
+    const parse_node_t &specific_statement = statement.get_child_node<0>();
 
     parse_execution_result_t result = parse_execution_success;
 
@@ -1167,7 +1161,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         parse_execution_result_t result = parse_execution_success;
 
         tnode_t<g::statement> statement = job_node.child<0>();
-        const parse_node_t &specific_statement = *get_child(statement, 0);
+        const parse_node_t &specific_statement = statement.get_child_node<0>();
         assert(specific_statement_type_is_redirectable_block(specific_statement));
         switch (specific_statement.type) {
             case symbol_block_statement: {

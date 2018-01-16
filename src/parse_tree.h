@@ -211,10 +211,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
                                                parse_token_type_t item_type,
                                                const parse_node_t **list_tail) const;
 
-    /// Given a job, return all of its statements. These are 'specific statements' (e.g.
-    /// symbol_decorated_statement, not symbol_statement).
-    parse_node_list_t specific_statements_for_job(const parse_node_t &job) const;
-
     /// Given a node, return all of its comment nodes.
     parse_node_list_t comment_nodes_for_node(const parse_node_t &node) const;
 

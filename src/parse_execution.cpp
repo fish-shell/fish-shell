@@ -127,39 +127,30 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
     // Here's the statement node we find that's infinite recursive.
     tnode_t<grammar::plain_statement> infinite_recursive_statement;
 
-    // Get the list of statements.
-    const parse_node_tree_t::parse_node_list_t statements =
-        tree().specific_statements_for_job(*first_job);
-
-    // Find all the decorated statements. We are interested in statements with no decoration (i.e.
-    // not command, not builtin) whose command expands to the forbidden function.
-    for (size_t i = 0; i < statements.size(); i++) {
-        // We only care about decorated statements, not while statements, etc.
-        const parse_node_t &statement = *statements.at(i);
-        if (statement.type != symbol_decorated_statement) {
-            continue;
-        }
-        tnode_t<grammar::decorated_statement> dec_statement(&tree(), &statement);
-
-        auto plain_statement = tree().find_child<grammar::plain_statement>(dec_statement);
-        if (get_decoration(plain_statement) != parse_statement_decoration_none) {
-            // This statement has a decoration like 'builtin' or 'command', and therefore is not
-            // infinite recursion. In particular this is what enables 'wrapper functions'.
-            continue;
-        }
-
-        // Ok, this is an undecorated plain statement. Get and expand its command.
-        maybe_t<wcstring> cmd = command_for_plain_statement(plain_statement, pstree->src);
-        if (cmd && expand_one(*cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL) &&
-            cmd == forbidden_function_name) {
-            // This is it.
-            infinite_recursive_statement = plain_statement;
-            if (out_func_name != NULL) {
-                *out_func_name = forbidden_function_name;
+    // Get the list of plain statements.
+    // Ignore statements with decorations like 'builtin' or 'command', since those
+    // are not infinite recursion. In particular that is what enables 'wrapper functions'.
+    tnode_t<g::statement> statement = first_job.child<0>();
+    tnode_t<g::job_continuation> continuation = first_job.child<1>();
+    while (statement) {
+        tnode_t<g::plain_statement> plain_statement =
+            statement.try_get_child<g::decorated_statement, 0>()
+                .try_get_child<g::plain_statement, 0>();
+        if (plain_statement) {
+            maybe_t<wcstring> cmd = command_for_plain_statement(plain_statement, pstree->src);
+            if (cmd && expand_one(*cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL) &&
+                cmd == forbidden_function_name) {
+                // This is it.
+                infinite_recursive_statement = plain_statement;
+                if (out_func_name != NULL) {
+                    *out_func_name = forbidden_function_name;
+                }
+                break;
             }
-            break;
         }
+        statement = continuation.next_in_list<g::statement>();
     }
+
     return infinite_recursive_statement;
 }
 

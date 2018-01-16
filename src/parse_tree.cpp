@@ -1389,32 +1389,6 @@ const parse_node_t *parse_node_tree_t::header_node_for_block_statement(
     return result;
 }
 
-parse_node_tree_t::parse_node_list_t parse_node_tree_t::specific_statements_for_job(
-    const parse_node_t &job) const {
-    assert(job.type == symbol_job);
-    parse_node_list_t result;
-
-    // Initial statement (non-specific).
-    result.push_back(get_child(job, 0, symbol_statement));
-
-    // Our cursor variable. Walk over the list of continuations.
-    const parse_node_t *continuation = get_child(job, 1, symbol_job_continuation);
-    while (continuation != NULL && continuation->child_count > 0) {
-        result.push_back(get_child(*continuation, 1, symbol_statement));
-        continuation = get_child(*continuation, 2, symbol_job_continuation);
-    }
-
-    // Result now contains a list of statements. But we want a list of specific statements e.g.
-    // symbol_switch_statement. So replace them in-place in the vector.
-    for (size_t i = 0; i < result.size(); i++) {
-        const parse_node_t *statement = result.at(i);
-        assert(statement->type == symbol_statement);
-        result.at(i) = this->get_child(*statement, 0);
-    }
-
-    return result;
-}
-
 parse_node_tree_t::parse_node_list_t parse_node_tree_t::comment_nodes_for_node(
     const parse_node_t &parent) const {
     parse_node_list_t result;

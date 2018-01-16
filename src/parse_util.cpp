@@ -1183,6 +1183,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 
                 if (maybe_t<wcstring> mcommand =
                         command_for_plain_statement({&node_tree, &node}, buff_src)) {
+                    using namespace grammar;
                     wcstring command = std::move(*mcommand);
                     // Check that we can expand the command.
                     if (!expand_one(command,
@@ -1202,17 +1203,16 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                     // Check that we don't return from outside a function. But we allow it if it's
                     // 'return --help'.
                     if (!errored && command == L"return") {
-                        const parse_node_t *ancestor = &node;
                         bool found_function = false;
-                        while (ancestor != NULL) {
-                            const parse_node_t *possible_function_header =
-                                node_tree.header_node_for_block_statement(*ancestor);
-                            if (possible_function_header != NULL &&
-                                possible_function_header->type == symbol_function_header) {
+                        for (const parse_node_t *ancestor = &node; ancestor != nullptr;
+                             ancestor = node_tree.get_parent(*ancestor)) {
+                            auto fh = tnode_t<block_statement>::try_create(&node_tree, ancestor)
+                                          .child<0>()
+                                          .try_get_child<function_header, 0>();
+                            if (fh) {
                                 found_function = true;
                                 break;
                             }
-                            ancestor = node_tree.get_parent(*ancestor);
                         }
                         if (!found_function && !first_argument_is_help(node_tree, node, buff_src)) {
                             errored = append_syntax_error(&parse_errors, node.source_start,
@@ -1227,35 +1227,23 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                         // This is a little funny because we can't tell if it's a 'for' or 'while'
                         // loop from the ancestor alone; we need the header. That is, we hit a
                         // block_statement, and have to check its header.
-                        bool found_loop = false, end_search = false;
-                        const parse_node_t *ancestor = &node;
-                        while (ancestor != NULL && !end_search) {
-                            const parse_node_t *loop_or_function_header =
-                                node_tree.header_node_for_block_statement(*ancestor);
-                            if (loop_or_function_header != NULL) {
-                                switch (loop_or_function_header->type) {
-                                    case symbol_while_header:
-                                    case symbol_for_header: {
-                                        // This is a loop header, so we can break or continue.
-                                        found_loop = true;
-                                        end_search = true;
-                                        break;
-                                    }
-                                    case symbol_function_header: {
-                                        // This is a function header, so we cannot break or
-                                        // continue. We stop our search here.
-                                        found_loop = false;
-                                        end_search = true;
-                                        break;
-                                    }
-                                    default: {
-                                        // Most likely begin / end style block, which makes no
-                                        // difference.
-                                        break;
-                                    }
-                                }
+                        bool found_loop = false;
+                        for (const parse_node_t *ancestor = &node; ancestor != nullptr;
+                             ancestor = node_tree.get_parent(*ancestor)) {
+                            tnode_t<block_header> bh =
+                                tnode_t<block_statement>::try_create(&node_tree, ancestor)
+                                    .child<0>();
+                            if (bh.try_get_child<while_header, 0>() ||
+                                bh.try_get_child<for_header, 0>()) {
+                                // This is a loop header, so we can break or continue.
+                                found_loop = true;
+                                break;
+                            } else if (bh.try_get_child<function_header, 0>()) {
+                                // This is a function header, so we cannot break or
+                                // continue. We stop our search here.
+                                found_loop = false;
+                                break;
                             }
-                            ancestor = node_tree.get_parent(*ancestor);
                         }
 
                         if (!found_loop && !first_argument_is_help(node_tree, node, buff_src)) {

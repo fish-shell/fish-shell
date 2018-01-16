@@ -1377,18 +1377,6 @@ bool parse_node_tree_t::statement_is_in_pipeline(const parse_node_t &node,
     return result;
 }
 
-const parse_node_t *parse_node_tree_t::header_node_for_block_statement(
-    const parse_node_t &node) const {
-    const parse_node_t *result = NULL;
-    if (node.type == symbol_block_statement) {
-        const parse_node_t *block_header = this->get_child(node, 0, symbol_block_header);
-        if (block_header != NULL) {
-            result = this->get_child(*block_header, 0);
-        }
-    }
-    return result;
-}
-
 parse_node_tree_t::parse_node_list_t parse_node_tree_t::comment_nodes_for_node(
     const parse_node_t &parent) const {
     parse_node_list_t result;

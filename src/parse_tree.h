@@ -200,10 +200,12 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     /// only the second or additional commands are.
     bool statement_is_in_pipeline(const parse_node_t &node, bool include_first) const;
 
-    /// If the given node is a block statement, returns the header node (for_header, while_header,
-    /// begin_header, or function_header). Otherwise returns NULL.
-    const parse_node_t *header_node_for_block_statement(const parse_node_t &node) const;
+    /// Given a node, return all of its comment nodes.
+    parse_node_list_t comment_nodes_for_node(const parse_node_t &node) const;
 
+   private:
+    template <typename Type>
+    friend class tnode_t;
     /// Given a node list (e.g. of type symbol_job_list) and a node type (e.g. symbol_job), return
     /// the next element of the given type in that list, and the tail (by reference). Returns NULL
     /// if we've exhausted the list.
@@ -211,10 +213,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
                                                parse_token_type_t item_type,
                                                const parse_node_t **list_tail) const;
 
-    /// Given a node, return all of its comment nodes.
-    parse_node_list_t comment_nodes_for_node(const parse_node_t &node) const;
-
-   private:
     // Finds the last node of a given type underneath a given node, or NULL if it could not be
     // found. If parent is NULL, this finds the last node in the tree of that type.
     const parse_node_t *find_last_node_of_type(parse_token_type_t type,
@@ -264,6 +262,13 @@ class tnode_t {
     tnode_t(const parse_node_tree_t *t, const parse_node_t *n) : tree(t), nodeptr(n) {
         assert(t && "tree cannot be null in this constructor");
         assert((!n || n->type == Type::token) && "node has wrong type");
+    }
+
+    // Try to create a tnode from the given tree and parse node.
+    // Returns an empty node if the parse node is null, or has the wrong type.
+    static tnode_t try_create(const parse_node_tree_t *tree, const parse_node_t *node) {
+        assert(tree && "tree cannot be null");
+        return tnode_t(tree, node && node->type == Type::token ? node : nullptr);
     }
 
     /// Temporary conversion to parse_node_t to assist in migration.

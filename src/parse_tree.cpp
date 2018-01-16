@@ -1307,18 +1307,6 @@ const parse_node_t *parse_node_tree_t::find_node_matching_source_location(
     return result;
 }
 
-bool parse_node_tree_t::argument_list_is_root(const parse_node_t &node) const {
-    bool result = true;
-    assert(node.type == symbol_argument_list || node.type == symbol_arguments_or_redirections_list);
-    const parse_node_t *parent = this->get_parent(node);
-    if (parent != NULL) {
-        // We have a parent - check to make sure it's not another list!
-        result = parent->type != symbol_arguments_or_redirections_list &&
-                 parent->type != symbol_argument_list;
-    }
-    return result;
-}
-
 enum parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> stmt) {
     parse_statement_decoration_t decoration = parse_statement_decoration_none;
     if (auto decorated_statement = stmt.try_get_parent<grammar::decorated_statement>()) {

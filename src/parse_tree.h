@@ -188,11 +188,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     const parse_node_t *find_node_matching_source_location(parse_token_type_t type,
                                                            size_t source_loc,
                                                            const parse_node_t *parent) const;
-
-    // Indicate if the given argument_list or arguments_or_redirections_list is a root list, or has
-    // a parent.
-    bool argument_list_is_root(const parse_node_t &node) const;
-
     // Utilities
 
     /// Given a plain statement, return true if the statement is part of a pipeline. If
@@ -441,6 +436,15 @@ arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirecti
 
 /// Return whether the given job is background because it has a & symbol.
 bool job_node_is_background(tnode_t<grammar::job>);
+
+/// Check whether an argument_list is a root list.
+inline bool argument_list_is_root(tnode_t<grammar::argument_list> list) {
+    return !list.try_get_parent<grammar::argument_list>();
+}
+
+inline bool argument_list_is_root(tnode_t<grammar::arguments_or_redirections_list> list) {
+    return !list.try_get_parent<grammar::arguments_or_redirections_list>();
+}
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.
 bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags,

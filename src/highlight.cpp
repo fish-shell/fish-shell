@@ -1101,8 +1101,8 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
             }
             // Only work on root lists, so that we don't re-color child lists.
             case symbol_arguments_or_redirections_list: {
-                if (parse_tree.argument_list_is_root(node)) {
-                    tnode_t<g::arguments_or_redirections_list> list(&parse_tree, &node);
+                tnode_t<g::arguments_or_redirections_list> list(&parse_tree, &node);
+                if (argument_list_is_root(list)) {
                     bool cmd_is_cd = is_cd(list.try_get_parent<g::plain_statement>());
                     this->color_arguments(list.descendants<g::argument>(), cmd_is_cd);
                     this->color_redirections(list);
@@ -1110,8 +1110,8 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                 break;
             }
             case symbol_argument_list: {
-                if (parse_tree.argument_list_is_root(node)) {
-                    tnode_t<g::argument_list> list(&parse_tree, &node);
+                tnode_t<g::argument_list> list(&parse_tree, &node);
+                if (argument_list_is_root(list)) {
                     this->color_arguments(list.descendants<g::argument>());
                 }
                 break;

@@ -214,9 +214,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     /// Given a node, return all of its comment nodes.
     parse_node_list_t comment_nodes_for_node(const parse_node_t &node) const;
 
-    /// Given a job, return whether it should be backgrounded, because it has a & specifier.
-    bool job_should_be_backgrounded(const parse_node_t &job) const;
-
    private:
     // Finds the last node of a given type underneath a given node, or NULL if it could not be
     // found. If parent is NULL, this finds the last node in the tree of that type.
@@ -436,6 +433,9 @@ enum token_type redirection_type(tnode_t<grammar::redirection> redirection, cons
 using arguments_node_list_t = std::vector<tnode_t<grammar::argument>>;
 arguments_node_list_t get_argument_nodes(tnode_t<grammar::argument_list>);
 arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirections_list>);
+
+/// Return whether the given job is background because it has a & symbol.
+bool job_node_is_background(tnode_t<grammar::job>);
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.
 bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags,

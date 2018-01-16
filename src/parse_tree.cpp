@@ -1405,12 +1405,6 @@ parse_node_tree_t::parse_node_list_t parse_node_tree_t::comment_nodes_for_node(
     return result;
 }
 
-bool parse_node_tree_t::job_should_be_backgrounded(const parse_node_t &job) const {
-    assert(job.type == symbol_job);
-    const parse_node_t *opt_background = get_child(job, 2, symbol_optional_background);
-    return opt_background != NULL && opt_background->tag == parse_background;
-}
-
 const parse_node_t *parse_node_tree_t::next_node_in_node_list(
     const parse_node_t &node_list, parse_token_type_t entry_type,
     const parse_node_t **out_list_tail) const {
@@ -1464,4 +1458,9 @@ arguments_node_list_t get_argument_nodes(tnode_t<grammar::argument_list> list) {
 
 arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirections_list> list) {
     return list.descendants<grammar::argument>();
+}
+
+bool job_node_is_background(tnode_t<grammar::job> job) {
+    tnode_t<grammar::optional_background> bg = job.child<2>();
+    return bg.tag() == parse_background;
 }

@@ -1163,7 +1163,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                 // while foo & ; end
                 // If it's not a background job, nothing to do.
                 auto job = tnode_t<grammar::job>{&node_tree, &node};
-                if (node_tree.job_should_be_backgrounded(job)) {
+                if (job_node_is_background(job)) {
                     errored |= detect_errors_in_backgrounded_job(node_tree, job, &parse_errors);
                 }
             } else if (node.type == symbol_plain_statement) {

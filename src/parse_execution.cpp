@@ -1196,7 +1196,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
                   (job_control_mode == JOB_CONTROL_ALL) ||
                       ((job_control_mode == JOB_CONTROL_INTERACTIVE) && shell_is_interactive()));
 
-    job->set_flag(JOB_FOREGROUND, !tree().job_should_be_backgrounded(job_node));
+    job->set_flag(JOB_FOREGROUND, !job_node_is_background(job_node));
 
     job->set_flag(JOB_TERMINAL, job->get_flag(JOB_CONTROL) && !is_event);
 

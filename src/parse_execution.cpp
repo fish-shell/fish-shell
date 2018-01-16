@@ -304,8 +304,8 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
     }
 
     // Execute any job list we got.
-    if (job_list_to_execute != NULL) {
-        run_job_list(*job_list_to_execute, ib);
+    if (job_list_to_execute) {
+        run_job_list(job_list_to_execute, ib);
     } else {
         // No job list means no sucessful conditions, so return 0 (issue #1443).
         proc_set_last_status(STATUS_CMD_OK);
@@ -1274,21 +1274,16 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     return parse_execution_success;
 }
 
-parse_execution_result_t parse_execution_context_t::run_job_list(const parse_node_t &job_list_node,
+template <typename Type>
+parse_execution_result_t parse_execution_context_t::run_job_list(tnode_t<Type> job_list,
                                                                  const block_t *associated_block) {
-    assert(job_list_node.type == symbol_job_list || job_list_node.type == symbol_andor_job_list);
+    static_assert(Type::token == symbol_job_list || Type::token == symbol_andor_job_list,
+                  "Not a job list");
 
     parse_execution_result_t result = parse_execution_success;
-    const parse_node_t *job_list = &job_list_node;
-    while (job_list != NULL && !should_cancel_execution(associated_block)) {
-        assert(job_list->type == symbol_job_list || job_list_node.type == symbol_andor_job_list);
-
-        // Try pulling out a job.
-        const parse_node_t *job = tree().next_node_in_node_list(*job_list, symbol_job, &job_list);
-
-        if (job != NULL) {
-            result = this->run_1_job({&tree(), job}, associated_block);
-        }
+    while (tnode_t<g::job> job = job_list.template next_in_list<g::job>()) {
+        if (should_cancel_execution(associated_block)) break;
+        result = this->run_1_job(job, associated_block);
     }
 
     // Returns the last job executed.
@@ -1327,7 +1322,7 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
                 status = parse_execution_errored;
             } else {
                 // No infinite recursion.
-                status = this->run_job_list(node, associated_block);
+                status = this->run_job_list(job_list, associated_block);
             }
             break;
         }

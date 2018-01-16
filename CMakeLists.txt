@@ -103,7 +103,7 @@ ADD_LIBRARY(fishlib STATIC ${FISH_SRCS})
 TARGET_SOURCES(fishlib PRIVATE ${FISH_HEADERS})
 TARGET_LINK_LIBRARIES(fishlib
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}
-  ${PCRE2_LIB} muparser)
+  ${PCRE2_LIB} muparser ${Intl_LIBRARIES})
 
 # Define fish.
 ADD_EXECUTABLE(fish src/fish.cpp)

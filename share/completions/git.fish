@@ -67,16 +67,24 @@ function __fish_git_remotes
 end
 
 function __fish_git_modified_files
+    set -l matching_files *(commandline -ct)*
+    if not set -q matching_files[1]
+        return
+    end
     # git diff --name-only hands us filenames relative to the git toplevel
     set -l root (command git rev-parse --show-toplevel ^/dev/null)
     # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
     # This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
-    string replace -- "$PWD/" "" "$root/"(command git diff --name-only $argv ^/dev/null) | string replace "$root/" ":/"
+    string replace -- "$PWD/" "" "$root/"(command git -C $root diff --name-only $argv -- $matching_files ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_add_files
+    set -l matching_files *(commandline -ct)*
+    if not set -q matching_files[1]
+        return
+    end
     set -l root (command git rev-parse --show-toplevel ^/dev/null)
-    string replace -- "$PWD/" "" "$root/"(command git -C $root ls-files -mo --exclude-standard ^/dev/null) | string replace "$root/" ":/"
+    string replace -- "$PWD/" "" "$root/"(command git -C $root ls-files -mo --exclude-standard -- $matching_files ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_ranges
@@ -258,7 +266,7 @@ function __fish_git_possible_commithash
 end
 
 function __fish_git_reflog
-	command git reflog ^/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
+    command git reflog ^/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
 end
 
 # general options

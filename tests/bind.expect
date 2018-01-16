@@ -21,7 +21,7 @@ expect_prompt -re {\r\ndef abc\r\n} {
 # the words.
 send "echo ghi jkl"
 send "\033"
-sleep 0.250
+sleep 0.050
 send "t\r"
 expect_prompt -re {\r\njkl ghi\r\n} {
     puts "emacs transpose words, default timeout: short delay"
@@ -104,7 +104,7 @@ expect_prompt -re {\r\nTAXT\r\n} {
 send "echo MORE-TEXT"
 send "\033"
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep 0.150
+sleep 0.250
 send "xxxxx\r"
 expect_prompt -re {\r\nMORE\r\n} {
     puts "vi mode delete char, default timeout: long delay"
@@ -118,7 +118,7 @@ expect_prompt
 
 send "echo fail: lengthened escape timeout"
 send "\033"
-sleep 0.250
+sleep 0.350
 send "ddi"
 send "echo success: lengthened escape timeout\r"
 expect_prompt -re {\r\nsuccess: lengthened escape timeout\r\n} {
@@ -131,7 +131,7 @@ expect_prompt -re {\r\nsuccess: lengthened escape timeout\r\n} {
 # after sending escape.
 send "echo fail: no normal mode"
 send "\033"
-sleep 0.100
+sleep 0.050
 send "ddi"
 send "inserted\r"
 expect_prompt -re {\r\nfail: no normal modediinserted\r\n} {
@@ -143,9 +143,9 @@ expect_prompt -re {\r\nfail: no normal modediinserted\r\n} {
 # Test 't' binding that contains non-zero arity function (forward-jump) followed
 # by another function (and) https://github.com/fish-shell/fish-shell/issues/2357
 send "\033"
-sleep 0.250
+sleep 0.300
 send "ddiecho TEXT\033"
-sleep 0.250
+sleep 0.300
 send "hhtTrN\r"
 expect_prompt -re {\r\nTENT\r\n} {
     puts "t-binding success"

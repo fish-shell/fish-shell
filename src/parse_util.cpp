@@ -1142,9 +1142,11 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                 has_unclosed_block = true;
             } else if (node.type == symbol_boolean_statement) {
                 // 'or' and 'and' can be in a pipeline, as long as they're first.
-                parse_bool_statement_type_t type = bool_statement_type({&node_tree, &node});
+                tnode_t<grammar::boolean_statement> gbs{&node_tree, &node};
+                parse_bool_statement_type_t type = bool_statement_type(gbs);
                 if ((type == parse_bool_and || type == parse_bool_or) &&
-                    node_tree.statement_is_in_pipeline(node, false /* don't count first */)) {
+                    statement_is_in_pipeline(gbs.try_get_parent<grammar::statement>(),
+                                             false /* don't count first */)) {
                     errored = append_syntax_error(&parse_errors, node.source_start, EXEC_ERR_MSG,
                                                   (type == parse_bool_and) ? L"and" : L"or");
                 }
@@ -1166,13 +1168,14 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                 }
             } else if (node.type == symbol_plain_statement) {
                 using namespace grammar;
-                tnode_t<plain_statement> statement{&node_tree, &node};
+                tnode_t<plain_statement> pst{&node_tree, &node};
                 // In a few places below, we want to know if we are in a pipeline.
-                const bool is_in_pipeline =
-                    node_tree.statement_is_in_pipeline(statement, true /* count first */);
+                tnode_t<statement> st =
+                    pst.try_get_parent<decorated_statement>().try_get_parent<statement>();
+                const bool is_in_pipeline = statement_is_in_pipeline(st, true /* count first */);
 
                 // We need to know the decoration.
-                const enum parse_statement_decoration_t decoration = get_decoration(statement);
+                const enum parse_statement_decoration_t decoration = get_decoration(pst);
 
                 // Check that we don't try to pipe through exec.
                 if (is_in_pipeline && decoration == parse_statement_decoration_exec) {
@@ -1180,8 +1183,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   L"exec");
                 }
 
-                if (maybe_t<wcstring> mcommand =
-                        command_for_plain_statement({&node_tree, &node}, buff_src)) {
+                if (maybe_t<wcstring> mcommand = command_for_plain_statement(pst, buff_src)) {
                     wcstring command = std::move(*mcommand);
                     // Check that we can expand the command.
                     if (!expand_one(command,
@@ -1212,7 +1214,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                 break;
                             }
                         }
-                        if (!found_function && !first_argument_is_help(statement, buff_src)) {
+                        if (!found_function && !first_argument_is_help(pst, buff_src)) {
                             errored = append_syntax_error(&parse_errors, node.source_start,
                                                           INVALID_RETURN_ERR_MSG);
                         }
@@ -1244,7 +1246,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                             }
                         }
 
-                        if (!found_loop && !first_argument_is_help(statement, buff_src)) {
+                        if (!found_loop && !first_argument_is_help(pst, buff_src)) {
                             errored = append_syntax_error(
                                 &parse_errors, node.source_start,
                                 (command == L"break" ? INVALID_BREAK_ERR_MSG

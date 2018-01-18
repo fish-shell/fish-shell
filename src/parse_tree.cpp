@@ -1315,35 +1315,6 @@ enum token_type redirection_type(tnode_t<grammar::redirection> redirection, cons
     return result;
 }
 
-bool parse_node_tree_t::statement_is_in_pipeline(const parse_node_t &node,
-                                                 bool include_first) const {
-    // Moderately nasty hack! Walk up our ancestor chain and see if we are in a job_continuation.
-    // This checks if we are in the second or greater element in a pipeline; if we are the first
-    // element we treat this as false. This accepts a few statement types.
-    bool result = false;
-    const parse_node_t *ancestor = &node;
-
-    // If we're given a plain statement, try to get its decorated statement parent.
-    if (ancestor && ancestor->type == symbol_plain_statement)
-        ancestor = this->get_parent(*ancestor, symbol_decorated_statement);
-    if (ancestor) ancestor = this->get_parent(*ancestor, symbol_statement);
-    if (ancestor) ancestor = this->get_parent(*ancestor);
-
-    if (ancestor) {
-        if (ancestor->type == symbol_job_continuation) {
-            // Second or more in a pipeline.
-            result = true;
-        } else if (ancestor->type == symbol_job && include_first) {
-            // Check to see if we have a job continuation that's not empty.
-            const parse_node_t *continuation =
-                this->get_child(*ancestor, 1, symbol_job_continuation);
-            result = (continuation != NULL && continuation->child_count > 0);
-        }
-    }
-
-    return result;
-}
-
 std::vector<tnode_t<grammar::comment>> parse_node_tree_t::comment_nodes_for_node(
     const parse_node_t &parent) const {
     std::vector<tnode_t<grammar::comment>> result;
@@ -1419,4 +1390,26 @@ arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirecti
 bool job_node_is_background(tnode_t<grammar::job> job) {
     tnode_t<grammar::optional_background> bg = job.child<2>();
     return bg.tag() == parse_background;
+}
+
+bool statement_is_in_pipeline(tnode_t<grammar::statement> st, bool include_first) {
+    using namespace grammar;
+    if (!st) {
+        return false;
+    }
+
+    // If we're part of a job continuation, we're definitely in a pipeline.
+    if (st.try_get_parent<job_continuation>()) {
+        return true;
+    }
+
+    // If include_first is set, check if we're the beginning of a job, and if so, whether that job
+    // has a non-empty continuation.
+    if (include_first) {
+        tnode_t<job_continuation> jc = st.try_get_parent<job>().child<1>();
+        if (jc.try_get_child<statement, 1>()) {
+            return true;
+        }
+    }
+    return false;
 }

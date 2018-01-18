@@ -181,11 +181,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
                                                            const parse_node_t *parent) const;
     // Utilities
 
-    /// Given a plain statement, return true if the statement is part of a pipeline. If
-    /// include_first is set, the first command in a pipeline is considered part of it; otherwise
-    /// only the second or additional commands are.
-    bool statement_is_in_pipeline(const parse_node_t &node, bool include_first) const;
-
     /// Given a node, return all of its comment nodes.
     std::vector<tnode_t<grammar::comment>> comment_nodes_for_node(const parse_node_t &node) const;
 
@@ -428,6 +423,10 @@ arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirecti
 
 /// Return whether the given job is background because it has a & symbol.
 bool job_node_is_background(tnode_t<grammar::job>);
+
+/// Return whether the statement is part of a pipeline. If include_first is set, the first command
+/// in a pipeline is considered part of it; otherwise only the second or additional commands are.
+bool statement_is_in_pipeline(tnode_t<grammar::statement> st, bool include_first);
 
 /// Check whether an argument_list is a root list.
 inline bool argument_list_is_root(tnode_t<grammar::argument_list> list) {

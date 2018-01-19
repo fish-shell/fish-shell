@@ -1534,8 +1534,7 @@
 			inputPaths = (
 			);
 			outputPaths = (
-				"$(SHARED_DERIVED_FILE_DIR)/fish-build-version.h",
-				"$(SHARED_DERIVED_FILE_DIR)/force-fish-build-version.h",
+				"$(SHARED_DERIVED_FILE_DIR)/FISH-BUILD-VERSION-FILE",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

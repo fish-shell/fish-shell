@@ -34,11 +34,11 @@
 #include "function.h"
 #include "iothread.h"
 #include "parse_constants.h"
-#include "parse_tree.h"
 #include "parse_util.h"
 #include "parser.h"
 #include "path.h"
 #include "proc.h"
+#include "tnode.h"
 #include "util.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep

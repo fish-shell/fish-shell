@@ -36,12 +36,12 @@
 #include "iothread.h"
 #include "lru.h"
 #include "parse_constants.h"
-#include "parse_tree.h"
 #include "parse_util.h"
 #include "path.h"
 #include "reader.h"
+#include "tnode.h"
 #include "wildcard.h"  // IWYU pragma: keep
-#include "wutil.h"  // IWYU pragma: keep
+#include "wutil.h"     // IWYU pragma: keep
 
 // Our history format is intended to be valid YAML. Here it is:
 //

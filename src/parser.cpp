@@ -16,12 +16,12 @@
 #include "intern.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
-#include "parse_tree.h"
 #include "parse_util.h"
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "sanity.h"
+#include "tnode.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class io_chain_t;

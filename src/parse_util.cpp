@@ -17,8 +17,8 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "parse_constants.h"
-#include "parse_tree.h"
 #include "parse_util.h"
+#include "tnode.h"
 #include "tokenizer.h"
 #include "util.h"
 #include "wildcard.h"

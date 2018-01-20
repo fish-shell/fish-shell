@@ -63,6 +63,7 @@
 #include "reader.h"
 #include "screen.h"
 #include "signal.h"
+#include "tnode.h"
 #include "tokenizer.h"
 #include "utf8.h"
 #include "util.h"

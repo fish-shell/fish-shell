@@ -43,6 +43,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "tokenizer.h"
+#include "tnode.h"
 #include "util.h"
 #include "wildcard.h"
 #include "wutil.h"

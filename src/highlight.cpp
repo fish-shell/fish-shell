@@ -27,9 +27,9 @@
 #include "history.h"
 #include "output.h"
 #include "parse_constants.h"
-#include "parse_tree.h"
 #include "parse_util.h"
 #include "path.h"
+#include "tnode.h"
 #include "tokenizer.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep

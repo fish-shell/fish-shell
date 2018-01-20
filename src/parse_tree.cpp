@@ -17,6 +17,7 @@
 #include "parse_productions.h"
 #include "parse_tree.h"
 #include "proc.h"
+#include "tnode.h"
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 

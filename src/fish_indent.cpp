@@ -38,8 +38,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "highlight.h"
 #include "output.h"
 #include "parse_constants.h"
-#include "parse_tree.h"
 #include "print_help.h"
+#include "tnode.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 #define SPACES_PER_INDENT 4

@@ -62,7 +62,6 @@
 #include "output.h"
 #include "pager.h"
 #include "parse_constants.h"
-#include "parse_tree.h"
 #include "parse_util.h"
 #include "parser.h"
 #include "proc.h"
@@ -70,6 +69,7 @@
 #include "sanity.h"
 #include "screen.h"
 #include "signal.h"
+#include "tnode.h"
 #include "tokenizer.h"
 #include "util.h"
 #include "wutil.h"  // IWYU pragma: keep

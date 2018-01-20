@@ -63,6 +63,7 @@
 #include "reader.h"
 #include "screen.h"
 #include "signal.h"
+#include "tnode.h"
 #include "tokenizer.h"
 #include "utf8.h"
 #include "util.h"
@@ -601,9 +602,9 @@ static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
     }
 
     assert(!tree.empty());  //!OCLINT(multiple unary operator)
-    const parse_node_t *first_arg = tree.next_node_in_node_list(tree.at(0), symbol_argument, NULL);
-    assert(first_arg != NULL);
-    return parse_util_detect_errors_in_argument(*first_arg, first_arg->get_source(src));
+    tnode_t<grammar::argument_list> arg_list{&tree, &tree.at(0)};
+    auto first_arg = arg_list.next_in_list<grammar::argument>();
+    return parse_util_detect_errors_in_argument(first_arg, first_arg.get_source(src));
 }
 
 /// Test the parser.
@@ -2314,8 +2315,8 @@ static void test_completion_insertions() {
     TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_REPLACES_TOKEN, false, L"bar ^");
 }
 
-static void perform_one_autosuggestion_cd_test(const wcstring &command,
-                                               const wcstring &expected, long line) {
+static void perform_one_autosuggestion_cd_test(const wcstring &command, const wcstring &expected,
+                                               long line) {
     std::vector<completion_t> comps;
     complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION);
 
@@ -2350,8 +2351,8 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command,
     }
 }
 
-static void perform_one_completion_cd_test(const wcstring &command,
-                                               const wcstring &expected, long line) {
+static void perform_one_completion_cd_test(const wcstring &command, const wcstring &expected,
+                                           long line) {
     std::vector<completion_t> comps;
     complete(command, &comps, COMPLETION_REQUEST_DEFAULT);
 
@@ -2375,10 +2376,10 @@ static void perform_one_completion_cd_test(const wcstring &command,
         const completion_t &suggestion = comps.at(0);
 
         if (suggestion.completion != expected) {
-            fwprintf(
-                stderr,
-                L"line %ld: complete() for cd tab completion returned the wrong expected string for command %ls\n",
-                line, command.c_str());
+            fwprintf(stderr,
+                     L"line %ld: complete() for cd tab completion returned the wrong expected "
+                     L"string for command %ls\n",
+                     line, command.c_str());
             fwprintf(stderr, L"  actual: %ls\n", suggestion.completion.c_str());
             fwprintf(stderr, L"expected: %ls\n", expected.c_str());
             do_test_from(suggestion.completion == expected, line);
@@ -2418,7 +2419,6 @@ static void test_autosuggest_suggest_special() {
     }
 
     const wcstring wd = L"test/autosuggest_test";
-    const env_vars_snapshot_t &vars = env_vars_snapshot_t::current();
 
     perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/0", L"foobar/", __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/0", L"foobar/", __LINE__);
@@ -2660,9 +2660,9 @@ static void test_universal_callbacks() {
     uvars2.sync(callbacks);
 
     // Change uvars1.
-    uvars1.set(L"alpha", {L"2"}, false);  // changes value
-    uvars1.set(L"beta", {L"1"}, true);    // changes export
-    uvars1.remove(L"delta");              // erases value
+    uvars1.set(L"alpha", {L"2"}, false);    // changes value
+    uvars1.set(L"beta", {L"1"}, true);      // changes export
+    uvars1.remove(L"delta");                // erases value
     uvars1.set(L"epsilon", {L"1"}, false);  // changes nothing
     uvars1.sync(callbacks);
 
@@ -3394,29 +3394,45 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     }
 
     // Get the statement. Should only have one.
-    const parse_node_tree_t::parse_node_list_t stmt_nodes =
-        tree.find_nodes(tree.at(0), symbol_plain_statement);
-    if (stmt_nodes.size() != 1) {
-        say(L"Unexpected number of statements (%lu) found in '%ls'", stmt_nodes.size(),
-            src.c_str());
+    tnode_t<grammar::job_list> job_list{&tree, &tree.at(0)};
+    auto stmts = job_list.descendants<grammar::plain_statement>();
+    if (stmts.size() != 1) {
+        say(L"Unexpected number of statements (%lu) found in '%ls'", stmts.size(), src.c_str());
         return false;
     }
-    const parse_node_t &stmt = *stmt_nodes.at(0);
+    tnode_t<grammar::plain_statement> stmt = stmts.at(0);
 
-    // Return its decoration.
-    *out_deco = tree.decoration_for_plain_statement(stmt);
-
-    // Return its command.
-    tree.command_for_plain_statement(stmt, src, out_cmd);
+    // Return its decoration and command.
+    *out_deco = get_decoration(stmt);
+    *out_cmd = *command_for_plain_statement(stmt, src);
 
     // Return arguments separated by spaces.
-    const parse_node_tree_t::parse_node_list_t arg_nodes = tree.find_nodes(stmt, symbol_argument);
-    for (size_t i = 0; i < arg_nodes.size(); i++) {
-        if (i > 0) out_joined_args->push_back(L' ');
-        out_joined_args->append(arg_nodes.at(i)->get_source(src));
+    bool first = true;
+    for (auto arg_node : stmt.descendants<grammar::argument>()) {
+        if (!first) out_joined_args->push_back(L' ');
+        out_joined_args->append(arg_node.get_source(src));
+        first = false;
     }
 
     return true;
+}
+
+// Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
+// not (issue #1240).
+template <typename Type>
+static void check_function_help(const wchar_t *src) {
+    parse_node_tree_t tree;
+    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL)) {
+        err(L"Failed to parse '%ls'", src);
+    }
+
+    tnode_t<grammar::job_list> node{&tree, &tree.at(0)};
+    auto node_list = node.descendants<Type>();
+    if (node_list.size() == 0) {
+        err(L"Failed to find node of type '%ls'", token_type_description(Type::token));
+    } else if (node_list.size() > 1) {
+        err(L"Found too many nodes of type '%ls'", token_type_description(Type::token));
+    }
 }
 
 // Test the LL2 (two token lookahead) nature of the parser by exercising the special builtin and
@@ -3463,31 +3479,10 @@ static void test_new_parser_ll2(void) {
                 tests[i].src.c_str(), (int)tests[i].deco, (int)deco, (long)__LINE__);
     }
 
-    // Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
-    // not (issue #1240).
-    const struct {
-        wcstring src;
-        parse_token_type_t type;
-    } tests2[] = {
-        {L"function -h", symbol_plain_statement},
-        {L"function --help", symbol_plain_statement},
-        {L"function --foo ; end", symbol_function_header},
-        {L"function foo ; end", symbol_function_header},
-    };
-    for (size_t i = 0; i < sizeof tests2 / sizeof *tests2; i++) {
-        parse_node_tree_t tree;
-        if (!parse_tree_from_string(tests2[i].src, parse_flag_none, &tree, NULL)) {
-            err(L"Failed to parse '%ls'", tests2[i].src.c_str());
-        }
-
-        const parse_node_tree_t::parse_node_list_t node_list =
-            tree.find_nodes(tree.at(0), tests2[i].type);
-        if (node_list.size() == 0) {
-            err(L"Failed to find node of type '%ls'", token_type_description(tests2[i].type));
-        } else if (node_list.size() > 1) {
-            err(L"Found too many nodes of type '%ls'", token_type_description(tests2[i].type));
-        }
-    }
+    check_function_help<grammar::plain_statement>(L"function -h");
+    check_function_help<grammar::plain_statement>(L"function --help");
+    check_function_help<grammar::function_header>(L"function --foo; end");
+    check_function_help<grammar::function_header>(L"function foo; end");
 }
 
 static void test_new_parser_ad_hoc() {
@@ -3504,9 +3499,8 @@ static void test_new_parser_ad_hoc() {
 
     // Expect three case_item_lists: one for each case, and a terminal one. The bug was that we'd
     // try to run a command 'case'.
-    const parse_node_t &root = parse_tree.at(0);
-    const parse_node_tree_t::parse_node_list_t node_list =
-        parse_tree.find_nodes(root, symbol_case_item_list);
+    tnode_t<grammar::job_list> root{&parse_tree, &parse_tree.at(0)};
+    auto node_list = root.descendants<grammar::case_item_list>();
     if (node_list.size() != 3) {
         err(L"Expected 3 case item nodes, found %lu", node_list.size());
     }
@@ -4289,7 +4283,7 @@ static void test_illegal_command_exit_code(void) {
 
 void test_maybe() {
     say(L"Testing maybe_t");
-    do_test(! bool(maybe_t<int>()));
+    do_test(!bool(maybe_t<int>()));
     maybe_t<int> m(3);
     do_test(m.has_value());
     do_test(m.value() == 3);
@@ -4308,7 +4302,7 @@ void test_maybe() {
     do_test(maybe_t<int>() == none());
     do_test(!maybe_t<int>(none()).has_value());
     m = none();
-    do_test(! bool(m));
+    do_test(!bool(m));
 
     maybe_t<std::string> m2("abc");
     do_test(!m2.missing_or_empty());

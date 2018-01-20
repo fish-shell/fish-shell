@@ -10,7 +10,9 @@
 #include <vector>
 
 #include "common.h"
+#include "maybe.h"
 #include "parse_constants.h"
+#include "parse_grammar.h"
 #include "tokenizer.h"
 
 class parse_node_tree_t;
@@ -137,6 +139,9 @@ class parse_node_t {
     }
 };
 
+template <typename Type>
+class tnode_t;
+
 /// The parse tree itself.
 class parse_node_tree_t : public std::vector<parse_node_t> {
    public:
@@ -154,6 +159,9 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     // Find the first direct child of the given node of the given type. asserts on failure.
     const parse_node_t &find_child(const parse_node_t &parent, parse_token_type_t type) const;
 
+    template <typename Type>
+    tnode_t<Type> find_child(const parse_node_t &parent) const;
+
     // Get the node corresponding to the parent of the given node, or NULL if there is no such
     // child. If expected_type is provided, only returns the parent if it is of that type. Note the
     // asymmetry: get_child asserts since the children are known, but get_parent does not, since the
@@ -161,51 +169,24 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     const parse_node_t *get_parent(const parse_node_t &node,
                                    parse_token_type_t expected_type = token_type_invalid) const;
 
-    // Find all the nodes of a given type underneath a given node, up to max_count of them.
-    typedef std::vector<const parse_node_t *> parse_node_list_t;
-    parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type,
-                                 size_t max_count = (size_t)(-1)) const;
-
-    // Finds the last node of a given type underneath a given node, or NULL if it could not be
-    // found. If parent is NULL, this finds the last node in the tree of that type.
-    const parse_node_t *find_last_node_of_type(parse_token_type_t type,
-                                               const parse_node_t *parent = NULL) const;
+    // Finds the last node of a given type, or empty if it could not be found. If parent is NULL,
+    // this finds the last node in the tree of that type.
+    template <typename Type>
+    tnode_t<Type> find_last_node(const parse_node_t *parent = NULL) const;
 
     // Finds a node containing the given source location. If 'parent' is not NULL, it must be an
     // ancestor.
     const parse_node_t *find_node_matching_source_location(parse_token_type_t type,
                                                            size_t source_loc,
                                                            const parse_node_t *parent) const;
-
-    // Indicate if the given argument_list or arguments_or_redirections_list is a root list, or has
-    // a parent.
-    bool argument_list_is_root(const parse_node_t &node) const;
-
     // Utilities
 
-    /// Given a plain statement, get the decoration (from the parent node), or none if there is no
-    /// decoration.
-    enum parse_statement_decoration_t decoration_for_plain_statement(
-        const parse_node_t &node) const;
+    /// Given a node, return all of its comment nodes.
+    std::vector<tnode_t<grammar::comment>> comment_nodes_for_node(const parse_node_t &node) const;
 
-    /// Given a plain statement, get the command by reference (from the child node). Returns true if
-    /// successful. Clears the command on failure.
-    bool command_for_plain_statement(const parse_node_t &node, const wcstring &src,
-                                     wcstring *out_cmd) const;
-
-    /// Given a plain statement, return true if the statement is part of a pipeline. If
-    /// include_first is set, the first command in a pipeline is considered part of it; otherwise
-    /// only the second or additional commands are.
-    bool statement_is_in_pipeline(const parse_node_t &node, bool include_first) const;
-
-    /// Given a redirection, get the redirection type (or TOK_NONE) and target (file path, or fd).
-    enum token_type type_for_redirection(const parse_node_t &node, const wcstring &src, int *out_fd,
-                                         wcstring *out_target) const;
-
-    /// If the given node is a block statement, returns the header node (for_header, while_header,
-    /// begin_header, or function_header). Otherwise returns NULL.
-    const parse_node_t *header_node_for_block_statement(const parse_node_t &node) const;
-
+   private:
+    template <typename Type>
+    friend class tnode_t;
     /// Given a node list (e.g. of type symbol_job_list) and a node type (e.g. symbol_job), return
     /// the next element of the given type in that list, and the tail (by reference). Returns NULL
     /// if we've exhausted the list.
@@ -213,18 +194,10 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
                                                parse_token_type_t item_type,
                                                const parse_node_t **list_tail) const;
 
-    /// Given a job, return all of its statements. These are 'specific statements' (e.g.
-    /// symbol_decorated_statement, not symbol_statement).
-    parse_node_list_t specific_statements_for_job(const parse_node_t &job) const;
-
-    /// Given a node, return all of its comment nodes.
-    parse_node_list_t comment_nodes_for_node(const parse_node_t &node) const;
-
-    /// Returns the boolean type for a boolean node.
-    static enum parse_bool_statement_type_t statement_boolean_type(const parse_node_t &node);
-
-    /// Given a job, return whether it should be backgrounded, because it has a & specifier.
-    bool job_should_be_backgrounded(const parse_node_t &job) const;
+    // Finds the last node of a given type underneath a given node, or NULL if it could not be
+    // found. If parent is NULL, this finds the last node in the tree of that type.
+    const parse_node_t *find_last_node_of_type(parse_token_type_t type,
+                                               const parse_node_t *parent) const;
 };
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.

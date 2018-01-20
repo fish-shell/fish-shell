@@ -65,60 +65,62 @@ class parse_execution_context_t {
 
     /// Command not found support.
     parse_execution_result_t handle_command_not_found(const wcstring &cmd,
-                                                      const parse_node_t &statement_node,
+                                                      tnode_t<grammar::plain_statement> statement,
                                                       int err_code);
 
     // Utilities
     wcstring get_source(const parse_node_t &node) const;
-    const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which,
-                                  parse_token_type_t expected_type = token_type_invalid) const;
     node_offset_t get_offset(const parse_node_t &node) const;
-    const parse_node_t *infinite_recursive_statement_in_job_list(const parse_node_t &job_list,
-                                                                 wcstring *out_func_name) const;
+    tnode_t<grammar::plain_statement> infinite_recursive_statement_in_job_list(
+        tnode_t<grammar::job_list> job_list, wcstring *out_func_name) const;
     bool is_function_context() const;
 
     /// Indicates whether a job is a simple block (one block, no redirections).
-    bool job_is_simple_block(const parse_node_t &node) const;
+    bool job_is_simple_block(tnode_t<grammar::job> job) const;
 
-    enum process_type_t process_type_for_command(const parse_node_t &plain_statement,
+    enum process_type_t process_type_for_command(tnode_t<grammar::plain_statement> statement,
                                                  const wcstring &cmd) const;
 
     // These create process_t structures from statements.
     parse_execution_result_t populate_job_process(job_t *job, process_t *proc,
-                                                  const parse_node_t &statement_node);
-    parse_execution_result_t populate_boolean_process(job_t *job, process_t *proc,
-                                                      const parse_node_t &bool_statement);
+                                                  tnode_t<grammar::statement> statement);
+    parse_execution_result_t populate_boolean_process(
+        job_t *job, process_t *proc, tnode_t<grammar::boolean_statement> bool_statement);
     parse_execution_result_t populate_plain_process(job_t *job, process_t *proc,
-                                                    const parse_node_t &statement);
+                                                    tnode_t<grammar::plain_statement> statement);
+
+    template <typename Type>
     parse_execution_result_t populate_block_process(job_t *job, process_t *proc,
-                                                    const parse_node_t &statement_node);
+                                                    tnode_t<Type> statement_node);
 
     // These encapsulate the actual logic of various (block) statements.
-    parse_execution_result_t run_block_statement(const parse_node_t &statement);
-    parse_execution_result_t run_for_statement(const parse_node_t &header,
-                                               const parse_node_t &contents);
-    parse_execution_result_t run_if_statement(const parse_node_t &statement);
-    parse_execution_result_t run_switch_statement(const parse_node_t &statement);
-    parse_execution_result_t run_while_statement(const parse_node_t &header,
-                                                 const parse_node_t &contents);
-    parse_execution_result_t run_function_statement(const parse_node_t &header,
-                                                    const parse_node_t &block_end_command);
-    parse_execution_result_t run_begin_statement(const parse_node_t &header,
-                                                 const parse_node_t &contents);
+    parse_execution_result_t run_block_statement(tnode_t<grammar::block_statement> statement);
+    parse_execution_result_t run_for_statement(tnode_t<grammar::for_header> header,
+                                               tnode_t<grammar::job_list> contents);
+    parse_execution_result_t run_if_statement(tnode_t<grammar::if_statement> statement);
+    parse_execution_result_t run_switch_statement(tnode_t<grammar::switch_statement> statement);
+    parse_execution_result_t run_while_statement(tnode_t<grammar::while_header> statement,
+                                                 tnode_t<grammar::job_list> contents);
+    parse_execution_result_t run_function_statement(tnode_t<grammar::function_header> header,
+                                                    tnode_t<grammar::end_command> block_end);
+    parse_execution_result_t run_begin_statement(tnode_t<grammar::begin_header> header,
+                                                 tnode_t<grammar::job_list> contents);
 
     enum globspec_t { failglob, nullglob };
-    parse_execution_result_t determine_arguments(const parse_node_t &parent,
-                                                 wcstring_list_t *out_arguments,
-                                                 globspec_t glob_behavior);
+    using argument_node_list_t = std::vector<tnode_t<grammar::argument>>;
+    parse_execution_result_t expand_arguments_from_nodes(const argument_node_list_t &argument_nodes,
+                                                         wcstring_list_t *out_arguments,
+                                                         globspec_t glob_behavior);
 
     // Determines the IO chain. Returns true on success, false on error.
-    bool determine_io_chain(const parse_node_t &statement, io_chain_t *out_chain);
+    bool determine_io_chain(tnode_t<grammar::arguments_or_redirections_list> node,
+                            io_chain_t *out_chain);
 
-    parse_execution_result_t run_1_job(const parse_node_t &job_node,
-                                       const block_t *associated_block);
-    parse_execution_result_t run_job_list(const parse_node_t &job_list_node,
+    parse_execution_result_t run_1_job(tnode_t<grammar::job> job, const block_t *associated_block);
+    template <typename Type>
+    parse_execution_result_t run_job_list(tnode_t<Type> job_list_node,
                                           const block_t *associated_block);
-    parse_execution_result_t populate_job_from_job_node(job_t *j, const parse_node_t &job_node,
+    parse_execution_result_t populate_job_from_job_node(job_t *j, tnode_t<grammar::job> job_node,
                                                         const block_t *associated_block);
 
     // Returns the line number of the node at the given index, indexed from 0. Not const since it

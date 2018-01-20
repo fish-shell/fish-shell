@@ -28,8 +28,21 @@ constexpr bool child_type_possible() {
            child_type_possible_at_index<Parent, Child, 5>();
 }
 
-/// A helper for type-safe manipulation of parse nodes.
-/// This is a lightweight value-type class.
+/// tnode_t ("typed node") is type-safe access to a parse_tree. A tnode_t holds both a pointer to a
+/// parse_node_tree_t and a pointer to a parse_node_t. (Note that the parse_node_tree_t is unowned;
+/// the caller must ensure that the tnode does not outlive the tree.
+///
+/// tnode_t is a lightweight value-type class. It ought to be passed by value. A tnode_t may also be
+/// "missing", associated with a null parse_node_t pointer. operator bool() may be used to check if
+/// a tnode_t is misisng.
+///
+/// A tnode_t is parametrized by a grammar element, and uses the fish grammar to statically
+/// type-check accesses to children and parents. Any particular tnode either corresponds to a
+/// sequence (a single child) or an alternation (multiple possible children). A sequence may have
+/// its children accessed directly via child(), which is templated on the index  (and returns a
+/// tnode of the proper type). Alternations may be disambiguated via try_get_child(), which returns
+/// an empty child if the child has the wrong type, or require_get_child() which aborts if the child
+/// has the wrong type.
 template <typename Type>
 class tnode_t {
     /// The tree containing our node.
@@ -65,7 +78,7 @@ class tnode_t {
 
     /* implicit */ operator const parse_node_t *() const { return nodeptr; }
 
-    /// Return the underlying (type-erased) node.
+    /// \return the underlying (type-erased) node.
     const parse_node_t *node() const { return nodeptr; }
 
     /// Check whether we're populated.

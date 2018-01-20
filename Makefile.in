@@ -124,8 +124,8 @@ FISH_OBJS := obj/autoload.o obj/builtin.o obj/builtin_bg.o obj/builtin_bind.o ob
 	obj/iothread.o obj/kill.o obj/output.o obj/pager.o obj/parse_execution.o \
 	obj/parse_productions.o obj/parse_tree.o obj/parse_util.o obj/parser.o \
 	obj/parser_keywords.o obj/path.o obj/postfork.o obj/proc.o obj/reader.o \
-	obj/sanity.o obj/screen.o obj/signal.o obj/tokenizer.o obj/utf8.o obj/util.o \
-	obj/wcstringutil.o obj/wgetopt.o obj/wildcard.o obj/wutil.o
+	obj/sanity.o obj/screen.o obj/signal.o obj/tokenizer.o obj/tnode.o obj/utf8.o \
+	obj/util.o obj/wcstringutil.o obj/wgetopt.o obj/wildcard.o obj/wutil.o
 
 FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS)
 

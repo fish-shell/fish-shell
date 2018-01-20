@@ -1037,8 +1037,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::a
 }
 
 /// Given that the job given by node should be backgrounded, return true if we detect any errors.
-static bool detect_errors_in_backgrounded_job(const parse_node_tree_t &node_tree,
-                                              tnode_t<grammar::job> job,
+static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
                                               parse_error_list_t *parse_errors) {
     auto source_range = job.source_range();
     if (!source_range) return false;
@@ -1164,7 +1163,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                 // If it's not a background job, nothing to do.
                 auto job = tnode_t<grammar::job>{&node_tree, &node};
                 if (job_node_is_background(job)) {
-                    errored |= detect_errors_in_backgrounded_job(node_tree, job, &parse_errors);
+                    errored |= detect_errors_in_backgrounded_job(job, &parse_errors);
                 }
             } else if (node.type == symbol_plain_statement) {
                 using namespace grammar;

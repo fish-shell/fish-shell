@@ -304,8 +304,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
     return result;
 }
 
-parse_execution_result_t parse_execution_context_t::run_begin_statement(
-    tnode_t<g::begin_header> header, tnode_t<g::job_list> contents) {
+parse_execution_result_t parse_execution_context_t::run_begin_statement(tnode_t<g::job_list> contents) {
     // Basic begin/end block. Push a scope block, run jobs, pop it
     scope_block_t *sb = parser->push_block<scope_block_t>(BEGIN);
     parse_execution_result_t ret = run_job_list(contents, sb);
@@ -374,7 +373,7 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(
         tnode_t<g::end_command> func_end = statement.child<2>();
         ret = run_function_statement(header, func_end);
     } else if (auto header = bheader.try_get_child<g::begin_header, 0>()) {
-        ret = run_begin_statement(header, contents);
+        ret = run_begin_statement(contents);
     } else {
         debug(0, L"Unexpected block header: %ls\n", bheader.node()->describe().c_str());
         PARSER_DIE();

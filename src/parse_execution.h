@@ -103,8 +103,7 @@ class parse_execution_context_t {
                                                  tnode_t<grammar::job_list> contents);
     parse_execution_result_t run_function_statement(tnode_t<grammar::function_header> header,
                                                     tnode_t<grammar::end_command> block_end);
-    parse_execution_result_t run_begin_statement(tnode_t<grammar::begin_header> header,
-                                                 tnode_t<grammar::job_list> contents);
+    parse_execution_result_t run_begin_statement(tnode_t<grammar::job_list> contents);
 
     enum globspec_t { failglob, nullglob };
     using argument_node_list_t = std::vector<tnode_t<grammar::argument>>;

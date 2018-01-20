@@ -138,6 +138,8 @@ INSTALL(DIRECTORY share/groff
         DESTINATION ${rel_datadir}/fish)
 
 # $v test -z "$(wildcard share/man/man1/*.1)" || $(INSTALL) -m 644 $(filter-out $(addprefix share/man/man1/, $(CONDEMNED_PAGES)), $(wildcard share/man/man1/*.1)) $(DESTDIR)$(datadir)/fish/man/man1/
+# CONDEMNED_PAGES is managed by the LIST() function after the glob
+# Building the man pages is optional: if doxygen isn't installed, they're not built
 INSTALL(FILES ${HELP_MANPAGES}
         DESTINATION ${rel_datadir}/fish/man/man1)
 
@@ -161,12 +163,6 @@ INSTALL(DIRECTORY share/tools/web_config
         PATTERN "*.py"
         PATTERN "*.js"
         PATTERN "*.fish")
-
-#$v test -z "$(wildcard share/man/man1/*.1)" || $(INSTALL) -m 644 $(filter-out $(addprefix share/man/man1/, $(CONDEMNED_PAGES)), $(wildcard share/man/man1/*.1)) #$(DESTDIR)$(datadir)/fish/man/man1/
-#TODO: CONDEMNED_PAGES
-# Building the man pages is optional: if doxygen isn't installed, they're not built
-INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share/man/
-        DESTINATION ${rel_datadir}/fish/man/ OPTIONAL)
 
 # @echo "Installing more man pages";
 # $v $(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;

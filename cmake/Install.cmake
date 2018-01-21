@@ -183,8 +183,9 @@ INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
 #            $(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
 #        fi; \
 #    done;
+# Building the manual is optional
 INSTALL(DIRECTORY user_doc/html/ # Trailing slash is important!
-        DESTINATION ${docdir})
+        DESTINATION ${docdir} OPTIONAL)
 INSTALL(FILES CHANGELOG.md DESTINATION ${docdir})
 
 # $v $(INSTALL) -m 644 share/lynx.lss $(DESTDIR)$(datadir)/fish/

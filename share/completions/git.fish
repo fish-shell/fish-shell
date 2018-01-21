@@ -90,8 +90,12 @@ function __fish_git_files
     #
     # Unfortunately, the v2 format is really 4 different subformats
     # - see the explanation inline. (Or on https://git-scm.com/docs/git-status)
+    #
+    # Also, we ignore submodules because they aren't useful as arguments (generally),
+    # and they slow things down quite significantly.
+    # E.g. `git reset $submodule` won't do anything (not even print an error).
     set -l use_next
-    command git status --porcelain=2 -z \
+    command git status --porcelain=2 -z --ignore-submodules=all \
     | while read -laz -d ' ' line
         # The entire line is the "from" from a rename.
         if set -q use_next[1]

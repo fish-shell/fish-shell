@@ -17,6 +17,8 @@ SET(mandir ${CMAKE_INSTALL_MANDIR})
 SET(rel_datadir ${CMAKE_INSTALL_DATADIR})
 SET(datadir ${CMAKE_INSTALL_FULL_DATADIR})
 
+SET(docdir ${CMAKE_INSTALL_DOCDIR})
+
 # Comment at the top of some .in files
 SET(configure_input
 "This file was generated from a corresponding .in file.\
@@ -172,6 +174,18 @@ INSTALL(DIRECTORY share/tools/web_config
 # done;
 # Building the man pages is optional: if doxygen isn't installed, they're not built
 INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
+
+#install-doc: $(user_doc)
+#    @echo "Installing online user documentation";
+#    $v $(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
+#    $v for i in user_doc/html/* CHANGELOG.md; do \
+#        if test -f $$i; then \
+#            $(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
+#        fi; \
+#    done;
+INSTALL(DIRECTORY user_doc/html/ # Trailing slash is important!
+        DESTINATION ${docdir})
+INSTALL(FILES CHANGELOG.md DESTINATION ${docdir})
 
 # $v $(INSTALL) -m 644 share/lynx.lss $(DESTDIR)$(datadir)/fish/
 INSTALL(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)

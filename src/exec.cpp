@@ -586,12 +586,13 @@ void exec_job(parser_t &parser, job_t *j) {
 
     if (needs_keepalive) {
         // Call fork. No need to wait for threads since our use is confined and simple.
+        pid_t parent_pid = getpid();
         keepalive.pid = execute_fork(false);
         if (keepalive.pid == 0) {
             // Child
             keepalive.pid = getpid();
             child_set_group(j, &keepalive);
-            pause();
+            run_as_keepalive(parent_pid);
             exit_without_destructors(0);
         } else {
             // Parent

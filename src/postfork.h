@@ -47,6 +47,9 @@ bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errle
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
                             const char *const *envv);
 
+/// Runs the process as a keepalive, until the parent process given by parent_pid exits.
+void run_as_keepalive(pid_t parent_pid);
+
 #if FISH_USE_POSIX_SPAWN
 /// Initializes and fills in a posix_spawnattr_t; on success, the caller should destroy it via
 /// posix_spawnattr_destroy.

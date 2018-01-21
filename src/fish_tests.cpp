@@ -3808,10 +3808,17 @@ static void test_highlighting(void) {
         {L"[3]", highlight_spec_param},  // two dollar signs, so last one is not an expansion
         {NULL, -1}};
 
-    const highlight_component_t *tests[] = {components1, components2,  components3,  components4,
-                                            components5, components6,  components7,  components8,
-                                            components9, components10, components11, components12,
-                                            components13};
+    const highlight_component_t components14[] = {{L"cat", highlight_spec_command},
+                                                  {L"/dev/null", highlight_spec_param},
+                                                  {L"|", highlight_spec_statement_terminator},
+                                                  {L"less", highlight_spec_command},
+                                                  {L"2>", highlight_spec_redirection},
+                                                  {NULL, -1}};
+
+    const highlight_component_t *tests[] = {components1,  components2,  components3,  components4,
+                                            components5,  components6,  components7,  components8,
+                                            components9,  components10, components11, components12,
+                                            components13, components14};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++) {
         const highlight_component_t *components = tests[which];
         // Count how many we have.

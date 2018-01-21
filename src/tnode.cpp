@@ -62,7 +62,7 @@ enum token_type redirection_type(tnode_t<grammar::redirection> redirection, cons
     }
     if (out_target != NULL) {
         tnode_t<grammar::tok_string> target = redirection.child<1>();  // like &1 or file path
-        *out_target = target ? target.get_source(src) : wcstring();
+        *out_target = target.has_source() ? target.get_source(src) : wcstring();
     }
     return result;
 }

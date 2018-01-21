@@ -60,15 +60,7 @@ static void debug_safe_int(int level, const char *format, int val) {
 }
 
 /// Called only by the child to set its own process group (possibly creating a new group in the
-/// process if it is the first in a JOB_CONTROL job. The parent will wait for this to finish.
-/// A process that isn't already in control of the terminal can't give itself control of the
-/// terminal without hanging, but it's not right for the child to try and give itself control
-/// from the very beginning because the parent may not have gotten around to doing so yet. Let
-/// the parent figure it out; if the child doesn't have terminal control and it later tries to
-/// read from the terminal, the kernel will send it SIGTTIN and it'll hang anyway.
-/// The key here is that the parent should transfer control of the terminal (if appropriate)
-/// prior to sending the child SIGCONT to wake it up to exec.
-///
+/// process if it is the first in a JOB_CONTROL job.
 /// Returns true on sucess, false on failiure.
 bool child_set_group(job_t *j, process_t *p) {
     bool retval = true;
@@ -100,7 +92,7 @@ bool child_set_group(job_t *j, process_t *p) {
             retval = false;
         }
     } else {
-        // This is probably stays unused in the child.
+        // The child does not actualyl use this field.
         j->pgid = getpgrp();
     }
 

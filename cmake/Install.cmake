@@ -191,6 +191,16 @@ INSTALL(FILES CHANGELOG.md DESTINATION ${docdir})
 # $v $(INSTALL) -m 644 share/lynx.lss $(DESTDIR)$(datadir)/fish/
 INSTALL(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)
 
+# These files are built by cmake/gettext.cmake, but using GETTEXT_PROCESS_PO_FILES's
+# INSTALL_DESTINATION leads to them being installed as ${lang}.gmo, not fish.mo
+# The ${languages} array comes from cmake/gettext.cmake
+IF(GETTEXT_FOUND)
+  FOREACH(lang ${languages})
+    INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/${lang}.gmo DESTINATION
+            ${CMAKE_INSTALL_LOCALEDIR}/${lang}/LC_MESSAGES/ RENAME fish.mo)
+  ENDFOREACH()
+ENDIF()
+
 # Group install targets into a InstallTargets folder
 SET_PROPERTY(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
                     test_invocation test_fishscript

@@ -16,8 +16,9 @@ ADD_FEATURE_INFO(gettext GETTEXT_FOUND "translate messages with gettext")
 # Define translations
 IF(GETTEXT_FOUND)
   FOREACH(lang ${languages})
+    # Our translations aren't set up entirely as CMake expects, so installation is done in
+    # cmake/Install.cmake instead of using INSTALL_DESTINATION
     GETTEXT_PROCESS_PO_FILES(${lang} ALL
-                             INSTALL_DESTINATION ${CMAKE_INSTALL_FULL_LOCALEDIR}
                              PO_FILES po/${lang}.po)
   ENDFOREACH()
 ENDIF()

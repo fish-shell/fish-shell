@@ -213,7 +213,7 @@ bool parse_execution_context_t::job_is_simple_block(tnode_t<g::job> job_node) co
 
     // Helper to check if an argument or redirection list has no redirections.
     auto is_empty = [](tnode_t<g::arguments_or_redirections_list> lst) -> bool {
-        return !lst.next_in_list<g::argument_or_redirection>();
+        return !lst.next_in_list<g::redirection>();
     };
 
     // Check if we're a block statement with redirections. We do it this obnoxious way to preserve
@@ -793,7 +793,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         if (!has_command && get_decoration(statement) == parse_statement_decoration_none) {
             // Implicit cd requires an empty argument and redirection list.
             tnode_t<g::arguments_or_redirections_list> args = statement.child<1>();
-            if (!args.try_get_child<g::argument_or_redirection, 0>()) {
+            if (!args.try_get_child<g::argument, 0>() && !args.try_get_child<g::redirection, 0>()) {
                 // Ok, no arguments or redirections; check to see if the first argument is a
                 // directory.
                 wcstring implicit_cd_path;
@@ -905,10 +905,7 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
     bool errored = false;
 
     // Get all redirection nodes underneath the statement.
-    while (auto arg_or_redir = node.next_in_list<g::argument_or_redirection>()) {
-        tnode_t<g::redirection> redirect_node = arg_or_redir.try_get_child<g::redirection, 0>();
-        if (!redirect_node) continue;
-
+    while (auto redirect_node = node.next_in_list<g::redirection>()) {
         int source_fd = -1;  // source fd
         wcstring target;     // file path or target fd
         enum token_type redirect_type =

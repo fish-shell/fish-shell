@@ -327,14 +327,9 @@ DEF_ALT(argument_list) {
 
 DEF_ALT(arguments_or_redirections_list) {
     using empty = grammar::empty;
-    using value = seq<argument_or_redirection, arguments_or_redirections_list>;
-    ALT_BODY(arguments_or_redirections_list, empty, value);
-};
-
-DEF_ALT(argument_or_redirection) {
-    using arg = single<argument>;
-    using redir = single<redirection>;
-    ALT_BODY(argument_or_redirection, arg, redir);
+    using arg = seq<argument, arguments_or_redirections_list>;
+    using redir = seq<redirection, arguments_or_redirections_list>;
+    ALT_BODY(arguments_or_redirections_list, empty, arg, redir);
 };
 
 DEF(argument) produces_single<tok_string>{BODY(argument)};

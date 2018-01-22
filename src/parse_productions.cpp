@@ -301,25 +301,11 @@ RESOLVE(arguments_or_redirections_list) {
 
     switch (token1.type) {
         case parse_token_type_string:
-        case parse_token_type_redirection: {
-            return production_for<value>();
-        }
-        default: { return production_for<empty>(); }
-    }
-}
-
-RESOLVE(argument_or_redirection) {
-    UNUSED(token2);
-    UNUSED(out_tag);
-
-    switch (token1.type) {
-        case parse_token_type_string: {
             return production_for<arg>();
-        }
-        case parse_token_type_redirection: {
+        case parse_token_type_redirection:
             return production_for<redir>();
-        }
-        default: { return NO_PRODUCTION; }
+        default:
+            return production_for<empty>();
     }
 }
 
@@ -380,7 +366,6 @@ const production_element_t *parse_productions::production_for_token(parse_token_
         TEST(plain_statement)
         TEST(andor_job_list)
         TEST(arguments_or_redirections_list)
-        TEST(argument_or_redirection)
         TEST(argument)
         TEST(redirection)
         TEST(optional_background)

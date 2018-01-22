@@ -37,7 +37,6 @@ enum parse_token_type_t {
     symbol_decorated_statement,
     symbol_plain_statement,
     symbol_arguments_or_redirections_list,
-    symbol_argument_or_redirection,
     symbol_andor_job_list,
     symbol_argument_list,
     // Freestanding argument lists are parsed from the argument list supplied to 'complete -a'.
@@ -81,7 +80,6 @@ const enum_map<parse_token_type_t> token_enum_map[] = {
     {symbol_andor_job_list, L"symbol_andor_job_list"},
     {symbol_argument, L"symbol_argument"},
     {symbol_argument_list, L"symbol_argument_list"},
-    {symbol_argument_or_redirection, L"symbol_argument_or_redirection"},
     {symbol_arguments_or_redirections_list, L"symbol_arguments_or_redirections_list"},
     {symbol_begin_header, L"symbol_begin_header"},
     {symbol_block_header, L"symbol_block_header"},

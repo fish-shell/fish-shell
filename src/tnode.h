@@ -161,6 +161,7 @@ class tnode_t {
     /// Find the first direct child of the given node of the given type. asserts on failure.
     template <class ChildType>
     tnode_t<ChildType> find_child() const {
+        static_assert(child_type_possible<Type, ChildType>(), "Cannot have that type as a child");
         assert(nodeptr && "receiver is missing in find_child()");
         tnode_t<ChildType> result{tree, &tree->find_child(*nodeptr, ChildType::token)};
         assert(result && "cannot find child");

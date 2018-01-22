@@ -50,9 +50,13 @@
 namespace g = grammar;
 
 /// These are the specific statement types that support redirections.
+static constexpr bool type_is_redirectable_block(parse_token_type_t type) {
+    return type == symbol_block_statement || type == symbol_if_statement ||
+           type == symbol_switch_statement;
+}
+
 static bool specific_statement_type_is_redirectable_block(const parse_node_t &node) {
-    return node.type == symbol_block_statement || node.type == symbol_if_statement ||
-           node.type == symbol_switch_statement;
+    return type_is_redirectable_block(node.type);
 }
 
 /// Get the name of a redirectable block, for profiling purposes.
@@ -200,30 +204,37 @@ parse_execution_context_t::cancellation_reason(const block_t *block) const {
 
 /// Return whether the job contains a single statement, of block type, with no redirections.
 bool parse_execution_context_t::job_is_simple_block(tnode_t<g::job> job_node) const {
-    // Must have one statement.
     tnode_t<g::statement> statement = job_node.child<0>();
-    const parse_node_t &specific_statement = statement.get_child_node<0>();
-    if (!specific_statement_type_is_redirectable_block(specific_statement)) {
-        // Not an appropriate block type.
-        return false;
-    }
 
     // Must be no pipes.
     if (job_node.child<1>().try_get_child<g::tok_pipe, 0>()) {
         return false;
     }
 
-    // Check for arguments and redirections. All of the above types have an arguments / redirections
-    // list. It must be empty.
-    const parse_node_t &args_and_redirections =
-        tree().find_child(specific_statement, symbol_arguments_or_redirections_list);
-    if (args_and_redirections.child_count > 0) {
-        // Non-empty, we have an argument or redirection.
-        return false;
-    }
+    // Helper to check if an argument or redirection list has no redirections.
+    auto is_empty = [](tnode_t<g::arguments_or_redirections_list> lst) -> bool {
+        return !lst.next_in_list<g::argument_or_redirection>();
+    };
 
-    // Ok, we are a simple block!
-    return true;
+    // Check if we're a block statement with redirections. We do it this obnoxious way to preserve
+    // type safety (in case we add more specific statement types).
+    const parse_node_t &specific_statement = statement.get_child_node<0>();
+    tnode_t<g::arguments_or_redirections_list> args_and_redirs;
+    switch (specific_statement.type) {
+        case symbol_block_statement:
+            return is_empty(statement.require_get_child<g::block_statement, 0>().child<3>());
+        case symbol_switch_statement:
+            return is_empty(statement.require_get_child<g::switch_statement, 0>().child<5>());
+        case symbol_if_statement:
+            return is_empty(statement.require_get_child<g::if_statement, 0>().child<3>());
+        case symbol_boolean_statement:
+        case symbol_decorated_statement:
+            // not block statements
+            return false;
+        default:
+            assert(0 && "Unexpected child block type");
+            return false;
+    }
 }
 
 parse_execution_result_t parse_execution_context_t::run_if_statement(
@@ -304,7 +315,8 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
     return result;
 }
 
-parse_execution_result_t parse_execution_context_t::run_begin_statement(tnode_t<g::job_list> contents) {
+parse_execution_result_t parse_execution_context_t::run_begin_statement(
+    tnode_t<g::job_list> contents) {
     // Basic begin/end block. Push a scope block, run jobs, pop it
     scope_block_t *sb = parser->push_block<scope_block_t>(BEGIN);
     parse_execution_result_t ret = run_job_list(contents, sb);
@@ -674,7 +686,6 @@ static wcstring reconstruct_orig_str(wcstring tokenized_str) {
 /// Handle the case of command not found.
 parse_execution_result_t parse_execution_context_t::handle_command_not_found(
     const wcstring &cmd_str, tnode_t<g::plain_statement> statement, int err_code) {
-
     // We couldn't find the specified command. This is a non-fatal error. We want to set the exit
     // status to 127, which is the standard number used by other shells like bash and zsh.
 
@@ -894,8 +905,10 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
     bool errored = false;
 
     // Get all redirection nodes underneath the statement.
-    auto redirect_nodes = node.descendants<g::redirection>();
-    for (tnode_t<g::redirection> redirect_node : redirect_nodes) {
+    while (auto arg_or_redir = node.next_in_list<g::argument_or_redirection>()) {
+        tnode_t<g::redirection> redirect_node = arg_or_redir.try_get_child<g::redirection, 0>();
+        if (!redirect_node) continue;
+
         int source_fd = -1;  // source fd
         wcstring target;     // file path or target fd
         enum token_type redirect_type =

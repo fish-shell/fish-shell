@@ -17,7 +17,7 @@ constexpr bool child_type_possible_at_index() {
 }
 
 // Check if a child type is possible for a parent type at any index.
-// 5 is arbitrary and represents the longest production we have.
+// The number of cases here should match MAX_PRODUCTION_LENGTH.
 template <typename Parent, typename Child>
 constexpr bool child_type_possible() {
     return child_type_possible_at_index<Parent, Child, 0>() ||
@@ -201,6 +201,9 @@ class tnode_t {
     /// Returns an empty item on failure.
     template <class ItemType>
     tnode_t<ItemType> next_in_list() {
+        // We require that we can contain ourselves, and ItemType as well.
+        static_assert(child_type_possible<Type, Type>(), "Is not a list");
+        static_assert(child_type_possible<Type, ItemType>(), "Is not a list of that type");
         if (!nodeptr) return {};
         const parse_node_t *next =
             tree->next_node_in_node_list(*nodeptr, ItemType::token, &nodeptr);

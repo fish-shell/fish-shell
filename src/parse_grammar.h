@@ -17,6 +17,11 @@ namespace grammar {
 
 using production_element_t = uint8_t;
 
+enum {
+    // The maximum length of any seq production.
+    MAX_PRODUCTION_LENGTH = 6
+};
+
 // Define primitive types.
 template <enum parse_token_type_t Token>
 struct primitive {
@@ -144,6 +149,8 @@ template <class T0, class... Ts>
 struct seq {
     static constexpr production_t<1 + sizeof...(Ts)> production = {
         {element<T0>(), element<Ts>()..., token_type_invalid}};
+
+    static_assert(1 + sizeof...(Ts) <= MAX_PRODUCTION_LENGTH, "MAX_PRODUCTION_LENGTH too small");
 
     using type_tuple = std::tuple<T0, Ts...>;
 

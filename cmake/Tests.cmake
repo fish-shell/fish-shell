@@ -16,13 +16,15 @@ SET(TEST_ROOT_DIR ${TEST_DIR}/root)
 FILE(GLOB TESTS_FILES tests/*)
 ADD_CUSTOM_TARGET(tests_dir DEPENDS tests)
 
-ADD_CUSTOM_COMMAND(TARGET tests_dir
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory
-                   ${CMAKE_SOURCE_DIR}/tests/ ${CMAKE_BINARY_DIR}/tests/
-                   COMMENT "Copying test files to binary dir"
-                   VERBATIM)
+IF(NOT FISH_IN_TREE_BUILD)
+    ADD_CUSTOM_COMMAND(TARGET tests_dir
+                       COMMAND ${CMAKE_COMMAND} -E copy_directory
+                       ${CMAKE_SOURCE_DIR}/tests/ ${CMAKE_BINARY_DIR}/tests/
+                       COMMENT "Copying test files to binary dir"
+                       VERBATIM)
 
-ADD_DEPENDENCIES(fish_tests tests_dir)
+    ADD_DEPENDENCIES(fish_tests tests_dir)
+ENDIF()
 
 # Create the 'test' target.
 # Set a policy so CMake stops complaining about the name 'test'.
@@ -51,13 +53,17 @@ ADD_CUSTOM_TARGET(tests_buildroot_target
                           ${TEST_ROOT_DIR}
                   DEPENDS fish)
 
-# We need to symlink share/functions for the tests.
-# This should be simplified.
-ADD_CUSTOM_TARGET(symlink_functions
-  COMMAND ${CMAKE_COMMAND} -E create_symlink
-          ${CMAKE_CURRENT_SOURCE_DIR}/share/functions
-          ${CMAKE_CURRENT_BINARY_DIR}/share/functions)
-ADD_DEPENDENCIES(tests_buildroot_target symlink_functions)
+IF(NOT FISH_IN_TREE_BUILD)
+  # We need to symlink share/functions for the tests.
+  # This should be simplified.
+  ADD_CUSTOM_TARGET(symlink_functions
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+            ${CMAKE_CURRENT_SOURCE_DIR}/share/functions
+            ${CMAKE_CURRENT_BINARY_DIR}/share/functions)
+  ADD_DEPENDENCIES(tests_buildroot_target symlink_functions)
+ELSE()
+  ADD_CUSTOM_TARGET(symlink_functions)
+ENDIF()
 
 #
 # Prep the environment for running the unit tests.

@@ -605,7 +605,7 @@ class string_matcher_t {
         : opts(std::move(opts_)), streams(streams_), total_matched(0) {}
 
     virtual ~string_matcher_t() = default;
-    virtual bool report_matches(const wchar_t *arg) = 0;
+    virtual bool report_matches(const wcstring &arg) = 0;
     int match_count() { return total_matched; }
 };
 
@@ -614,7 +614,7 @@ class wildcard_matcher_t : public string_matcher_t {
     wcstring wcpattern;
 
    public:
-    wildcard_matcher_t(const wchar_t * /*argv0*/, const wchar_t *pattern, const options_t &opts,
+    wildcard_matcher_t(const wchar_t * /*argv0*/, const wcstring &pattern, const options_t &opts,
                        io_streams_t &streams)
         : string_matcher_t(opts, streams), wcpattern(parse_util_unescape_wildcards(pattern)) {
         if (opts.ignore_case) {
@@ -630,7 +630,7 @@ class wildcard_matcher_t : public string_matcher_t {
 
     ~wildcard_matcher_t() override = default;
 
-    bool report_matches(const wchar_t *arg) override {
+    bool report_matches(const wcstring &arg) override {
         // Note: --all is a no-op for glob matching since the pattern is always matched
         // against the entire argument.
         bool match;
@@ -649,7 +649,7 @@ class wildcard_matcher_t : public string_matcher_t {
 
             if (!opts.quiet) {
                 if (opts.index) {
-                    streams.out.append_format(L"1 %lu\n", wcslen(arg));
+                    streams.out.append_format(L"1 %lu\n", arg.length());
                 } else {
                     streams.out.append(arg);
                     streams.out.append(L'\n');
@@ -670,7 +670,7 @@ struct compiled_regex_t {
     pcre2_code *code;
     pcre2_match_data *match;
 
-    compiled_regex_t(const wchar_t *argv0, const wchar_t *pattern, bool ignore_case,
+    compiled_regex_t(const wchar_t *argv0, const wcstring &pattern, bool ignore_case,
                      io_streams_t &streams)
         : code(0), match(0) {
         // Disable some sequences that can lead to security problems.
@@ -682,13 +682,12 @@ struct compiled_regex_t {
         int err_code = 0;
         PCRE2_SIZE err_offset = 0;
 
-        code =
-            pcre2_compile(PCRE2_SPTR(pattern), PCRE2_ZERO_TERMINATED,
-                          options | (ignore_case ? PCRE2_CASELESS : 0), &err_code, &err_offset, 0);
+        code = pcre2_compile(PCRE2_SPTR(pattern.c_str()), pattern.length(),
+                             options | (ignore_case ? PCRE2_CASELESS : 0), &err_code, &err_offset, 0);
         if (code == 0) {
             string_error(streams, _(L"%ls: Regular expression compile error: %ls\n"), argv0,
                          pcre2_strerror(err_code).c_str());
-            string_error(streams, L"%ls: %ls\n", argv0, pattern);
+            string_error(streams, L"%ls: %ls\n", argv0, pattern.c_str());
             string_error(streams, L"%ls: %*ls\n", argv0, err_offset, L"^");
             return;
         }
@@ -711,12 +710,12 @@ class pcre2_matcher_t : public string_matcher_t {
     const wchar_t *argv0;
     compiled_regex_t regex;
 
-    int report_match(const wchar_t *arg, int pcre2_rc) {
+    int report_match(const wcstring &arg, int pcre2_rc) {
         // Return values: -1 = error, 0 = no match, 1 = match.
         if (pcre2_rc == PCRE2_ERROR_NOMATCH) {
             if (opts.invert_match && !opts.quiet) {
                 if (opts.index) {
-                    streams.out.append_format(L"1 %lu\n", wcslen(arg));
+                    streams.out.append_format(L"1 %lu\n", arg.length());
                 } else {
                     streams.out.append(arg);
                     streams.out.push_back(L'\n');
@@ -762,7 +761,7 @@ class pcre2_matcher_t : public string_matcher_t {
     }
 
    public:
-    pcre2_matcher_t(const wchar_t *argv0_, const wchar_t *pattern, const options_t &opts,
+    pcre2_matcher_t(const wchar_t *argv0_, const wcstring &pattern, const options_t &opts,
                     io_streams_t &streams)
         : string_matcher_t(opts, streams),
           argv0(argv0_),
@@ -770,7 +769,7 @@ class pcre2_matcher_t : public string_matcher_t {
 
     ~pcre2_matcher_t() override = default;
 
-    bool report_matches(const wchar_t *arg) override {
+    bool report_matches(const wcstring &arg) override {
         // A return value of true means all is well (even if no matches were found), false indicates
         // an unrecoverable error.
         if (regex.code == 0) {
@@ -781,9 +780,9 @@ class pcre2_matcher_t : public string_matcher_t {
         int matched = 0;
 
         // See pcre2demo.c for an explanation of this logic.
-        PCRE2_SIZE arglen = wcslen(arg);
+        PCRE2_SIZE arglen = arg.length();
         int rc = report_match(
-            arg, pcre2_match(regex.code, PCRE2_SPTR(arg), arglen, 0, 0, regex.match, 0));
+                              arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0, regex.match, 0));
         if (rc < 0) {  // pcre2 match error.
             return false;
         } else if (rc == 0) {  // no match
@@ -809,7 +808,7 @@ class pcre2_matcher_t : public string_matcher_t {
                 options = PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED;
             }
 
-            rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg), arglen, offset, options,
+            rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, offset, options,
                                                regex.match, 0));
             if (rc < 0) {
                 return false;
@@ -858,8 +857,8 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     }
 
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        if (!matcher->report_matches(arg)) {
+    while (auto arg = aiter.nextstr()) {
+        if (!matcher->report_matches(*arg)) {
             return STATUS_INVALID_ARGS;
         }
     }
@@ -880,30 +879,32 @@ class string_replacer_t {
 
     virtual ~string_replacer_t() = default;
     int replace_count() { return total_replaced; }
-    virtual bool replace_matches(const wchar_t *arg) = 0;
+    virtual bool replace_matches(const wcstring &arg) = 0;
 };
 
 class literal_replacer_t : public string_replacer_t {
-    const wchar_t *pattern;
-    const wchar_t *replacement;
+    const wcstring pattern;
+    const wcstring replacement;
     size_t patlen;
 
    public:
-    literal_replacer_t(const wchar_t *argv0, const wchar_t *pattern_, const wchar_t *replacement_,
+    literal_replacer_t(const wchar_t *argv0, const wcstring &pattern_, const wchar_t *replacement_,
                        const options_t &opts, io_streams_t &streams)
         : string_replacer_t(argv0, opts, streams),
           pattern(pattern_),
           replacement(replacement_),
-          patlen(wcslen(pattern)) {}
+          patlen(pattern.length()) {}
 
     ~literal_replacer_t() override = default;
-    bool replace_matches(const wchar_t *arg) override;
+    bool replace_matches(const wcstring &arg) override;
 };
 
-static wcstring interpret_escapes(const wchar_t *orig) {
+static wcstring interpret_escapes(const wcstring &arg) {
     wcstring result;
 
-    while (*orig != L'\0') {
+    const wchar_t *orig = arg.c_str();
+    const wchar_t *start = arg.c_str();
+    while (orig - start < arg.size()) {
         if (*orig == L'\\') {
             orig += read_unquoted_escape(orig, &result, true, false);
         } else {
@@ -920,18 +921,18 @@ class regex_replacer_t : public string_replacer_t {
     wcstring replacement;
 
    public:
-    regex_replacer_t(const wchar_t *argv0, const wchar_t *pattern, const wchar_t *replacement_,
+    regex_replacer_t(const wchar_t *argv0, const wcstring &pattern, const wcstring &replacement_,
                      const options_t &opts, io_streams_t &streams)
         : string_replacer_t(argv0, opts, streams),
           regex(argv0, pattern, opts.ignore_case, streams),
           replacement(interpret_escapes(replacement_)) {}
 
-    bool replace_matches(const wchar_t *arg) override;
+    bool replace_matches(const wcstring &arg) override;
 };
 
 /// A return value of true means all is well (even if no replacements were performed), false
 /// indicates an unrecoverable error.
-bool literal_replacer_t::replace_matches(const wchar_t *arg) {
+bool literal_replacer_t::replace_matches(const wcstring &arg) {
     wcstring result;
     bool replacement_occurred = false;
 
@@ -940,9 +941,10 @@ bool literal_replacer_t::replace_matches(const wchar_t *arg) {
         result = arg;
     } else {
         auto &cmp_func = opts.ignore_case ? wcsncasecmp : wcsncmp;
-        const wchar_t *cur = arg;
-        while (*cur != L'\0') {
-            if ((opts.all || !replacement_occurred) && cmp_func(cur, pattern, patlen) == 0) {
+        const wchar_t *cur = arg.c_str();
+        const wchar_t *start = arg.c_str();
+        while (cur - start < arg.size()) {
+            if ((opts.all || !replacement_occurred) && cmp_func(cur, pattern.c_str(), patlen) == 0) {
                 result += replacement;
                 cur += patlen;
                 replacement_occurred = true;
@@ -964,26 +966,26 @@ bool literal_replacer_t::replace_matches(const wchar_t *arg) {
 
 /// A return value of true means all is well (even if no replacements were performed), false
 /// indicates an unrecoverable error.
-bool regex_replacer_t::replace_matches(const wchar_t *arg) {
+bool regex_replacer_t::replace_matches(const wcstring &arg) {
     if (!regex.code) return false;  // pcre2_compile() failed
 
     uint32_t options = PCRE2_SUBSTITUTE_OVERFLOW_LENGTH | PCRE2_SUBSTITUTE_EXTENDED |
                        (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
-    size_t arglen = wcslen(arg);
+    size_t arglen = arg.length();
     PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
     wchar_t *output = (wchar_t *)malloc(sizeof(wchar_t) * bufsize);
     int pcre2_rc;
+    PCRE2_SIZE outlen = bufsize;
 
     bool done = false;
     while (!done) {
         assert(output);
 
-        PCRE2_SIZE outlen = bufsize;
-        pcre2_rc = pcre2_substitute(regex.code, PCRE2_SPTR(arg), arglen,
+        pcre2_rc = pcre2_substitute(regex.code, PCRE2_SPTR(arg.c_str()), arglen,
                                     0,  // start offset
                                     options, regex.match,
                                     0,  // match context
-                                    PCRE2_SPTR(replacement.c_str()), PCRE2_ZERO_TERMINATED,
+                                    PCRE2_SPTR(replacement.c_str()), replacement.length(),
                                     (PCRE2_UCHAR *)output, &outlen);
 
         if (pcre2_rc != PCRE2_ERROR_NOMEMORY || bufsize >= outlen) {
@@ -995,6 +997,7 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
         }
     }
 
+    wcstring outstr(output, outlen);
     bool rc = true;
     if (pcre2_rc < 0) {
         string_error(streams, _(L"%ls: Regular expression substitute error: %ls\n"), argv0,
@@ -1003,7 +1006,7 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
     } else {
         bool replacement_occurred = pcre2_rc > 0;
         if (!opts.quiet && (!opts.filter || replacement_occurred)) {
-            streams.out.append(output);
+            streams.out.append(outstr);
             streams.out.append(L'\n');
         }
         total_replaced += pcre2_rc;
@@ -1035,8 +1038,8 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
     }
 
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        if (!replacer->replace_matches(arg)) return STATUS_INVALID_ARGS;
+    while (auto arg = aiter.nextstr()) {
+        if (!replacer->replace_matches(*arg)) return STATUS_INVALID_ARGS;
     }
 
     return replacer->replace_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;

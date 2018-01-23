@@ -2970,9 +2970,9 @@ const wchar_t *reader_readline(int nchars) {
 
                     // Now do the selection.
                     select_completion_in_direction(direction);
-                } else if (c == R_DOWN_LINE && !data->pager.empty()) {
-                    // We pressed down with a non-empty pager contents, begin navigation.
-                    select_completion_in_direction(direction_south);
+                } else if (!data->pager.empty()) {
+                    // We pressed a direction with a non-empty pager, begin navigation.
+                    select_completion_in_direction(c == R_DOWN_LINE ? direction_south : direction_north);
                 } else {
                     // Not navigating the pager contents.
                     editable_line_t *el = data->active_edit_line();

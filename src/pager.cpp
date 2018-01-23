@@ -608,16 +608,17 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
             case direction_south:
             case direction_page_south:
             case direction_next:
+            case direction_north:
             case direction_prev: {
                 // These directions do something sane.
-                if (direction == direction_prev) {
+                if (direction == direction_prev
+                    || direction == direction_north) {
                     selected_completion_idx = completion_infos.size() - 1;
                 } else {
                     selected_completion_idx = 0;
                 }
                 return true;
             }
-            case direction_north:
             case direction_page_north:
             case direction_east:
             case direction_west:

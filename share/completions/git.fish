@@ -468,7 +468,7 @@ complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_rem
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' -d 'Head'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' -d 'Tag'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_files modified deleted)' -d 'File'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_files modified deleted)'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -l theirs -d 'Keep staged changes'
@@ -539,14 +539,14 @@ complete -c git -n '__fish_git_needs_command' -a diff -d 'Show changes between c
 complete -c git -n '__fish_git_using_command diff' -a '(__fish_git_ranges)' -d 'Branch'
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
-complete -f -c git -n '__fish_git_using_command diff' -a '(__fish_git_files modified deleted)' -d 'File'
+complete -f -c git -n '__fish_git_using_command diff' -a '(__fish_git_files modified deleted)'
 # TODO options
 
 ### difftool
 complete -c git -n '__fish_git_needs_command' -a difftool -d 'Open diffs in a visual tool'
 complete -c git -n '__fish_git_using_command difftool' -a '(__fish_git_ranges)' -d 'Branch'
 complete -c git -n '__fish_git_using_command difftool' -l cached -d 'Visually show diff of changes in the index'
-complete -f -c git -n '__fish_git_using_command difftool' -a '(__fish_git_files modified deleted)' -d 'File'
+complete -f -c git -n '__fish_git_using_command difftool' -a '(__fish_git_files modified deleted)'
 # TODO options
 
 

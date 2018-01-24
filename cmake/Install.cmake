@@ -113,7 +113,9 @@ FISH_CREATE_DIRS(${rel_datadir}/pkgconfig ${extra_completionsdir}
 # $v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
 CONFIGURE_FILE(fish.pc.in fish.pc.noversion)
 ADD_CUSTOM_COMMAND(OUTPUT fish.pc
-  COMMAND awk -v `cat ${FBVF} | tr -d '\"'` '/^Version:/ {$$0=$$0 FISH_BUILD_VERSION} 1' fish.pc.noversion  > fish.pc
+  COMMAND sed '/Version/d' fish.pc.noversion > fish.pc
+  COMMAND echo -n "Version: " >> fish.pc
+  COMMAND sed 's/FISH_BUILD_VERSION=//\;s/\"//g' ${FBVF} >> fish.pc
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS ${FBVF} ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
 

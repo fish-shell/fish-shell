@@ -1683,37 +1683,30 @@ static void test_pager_navigation() {
         // Tab completion to get into the list.
         {direction_next, 0},
 
-        // Westward motion in upper left wraps along the top row.
-        {direction_west, 16},
-        {direction_east, 1},
+        // Westward motion in upper left goes to the last filled column in the last row.
+        {direction_west, 15},
+        // East goes back.
+        {direction_east, 0},
 
         // "Next" motion goes down the column.
+        {direction_next, 1},
         {direction_next, 2},
-        {direction_next, 3},
 
-        {direction_west, 18},
-        {direction_east, 3},
-        {direction_east, 7},
-        {direction_east, 11},
-        {direction_east, 15},
-        {direction_east, 3},
+        {direction_west, 17},
+        {direction_east, 2},
+        {direction_east, 6},
+        {direction_east, 10},
+        {direction_east, 14},
+        {direction_east, 18},
 
-        {direction_west, 18},
-        {direction_east, 3},
-
-        // Eastward motion wraps along the bottom, westward goes to the prior column.
-        {direction_east, 7},
-        {direction_east, 11},
-        {direction_east, 15},
-        {direction_east, 3},
-
-        // Column memory.
-        {direction_west, 18},
-        {direction_south, 15},
-        {direction_north, 18},
         {direction_west, 14},
-        {direction_south, 15},
-        {direction_north, 14},
+        {direction_east, 18},
+
+        // Eastward motion wraps back to the upper left, westward goes to the prior column.
+        {direction_east, 3},
+        {direction_east, 7},
+        {direction_east, 11},
+        {direction_east, 15},
 
         // Pages.
         {direction_page_north, 12},

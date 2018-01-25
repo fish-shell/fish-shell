@@ -31,6 +31,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `cd` tab completions no longer descend into the deepest unambiguous path (#4649)
 - Setting `$PATH` no longer warns on non-existent directories, allowing for a single $PATH to be shared across machines (e.g. via dotfiles).
 - `funced` now has a `-s` and `--save` option to automatically save the edited function after successfully editing (#4668).
+- Pager navigation has been improved. Most notably, moving down now wraps around, moving up from the commandline now jumps to the last element and moving right and left now reverse each other even when wrapping around (#4680).
 - Arguments to `end` are now errors, instead of being silently ignored.
 - Pager navigation has been improved. Most notably, moving down now wraps around, moving up from the commandline now jumps to the last element and moving right and left now reverse each other even when wrapping around (#4680).
 

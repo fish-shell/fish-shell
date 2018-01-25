@@ -32,6 +32,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Setting `$PATH` no longer warns on non-existent directories, allowing for a single $PATH to be shared across machines (e.g. via dotfiles).
 - `funced` now has a `-s` and `--save` option to automatically save the edited function after successfully editing (#4668).
 - Arguments to `end` are now errors, instead of being silently ignored.
+- Pager navigation has been improved. Most notably, moving down now wraps around, moving up from the commandline now jumps to the last element and moving right and left now reverse each other even when wrapping around (#4680).
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).
@@ -109,8 +110,6 @@ Xcode builds and macOS packages could not be produced with 2.7b1, but this is fi
 - Lots of improvements to completions.
 - Updated Chinese and French translations.
 
-<<<<<<< Local Changes
-
 - Improved completions for:
   - `apt`
   - `cd` (#4061)
@@ -125,9 +124,7 @@ Xcode builds and macOS packages could not be produced with 2.7b1, but this is fi
   - `tail`
   - `xdg-mime` (#4333)
   - `zypper` (#4325)
-=======
 ---
->>>>>>> External Changes
 
 # fish 2.6.0 (released June 3, 2017)
 

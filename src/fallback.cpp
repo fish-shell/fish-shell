@@ -266,7 +266,7 @@ int killpg(int pgr, int sig) {
 // Big hack to use our versions of wcswidth where we know them to be broken, which is
 // EVERYWHERE (https://github.com/fish-shell/fish-shell/issues/2199)
 #ifndef HAVE_BROKEN_WCWIDTH
-#define HAVE_BROKEN_WCWIDTH 1
+#define HAVE_BROKEN_WCWIDTH 0
 #endif
 
 #if !HAVE_BROKEN_WCWIDTH

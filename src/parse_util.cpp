@@ -35,6 +35,9 @@
 #define BACKGROUND_IN_CONDITIONAL_ERROR_MSG \
     _(L"Backgrounded commands can not be used as conditionals")
 
+/// Error message for arguments to 'end'
+#define END_ARG_ERR_MSG _(L"'end' does not take arguments. Did you forget a ';'?")
+
 int parse_util_lineno(const wchar_t *str, size_t offset) {
     if (!str) return 0;
 
@@ -1082,6 +1085,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors,
                                                   bool allow_incomplete,
                                                   parsed_source_ref_t *out_pstree) {
+    namespace g = grammar;
     parse_node_tree_t node_tree;
     parse_error_list_t parse_errors;
 
@@ -1141,16 +1145,16 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                 has_unclosed_block = true;
             } else if (node.type == symbol_boolean_statement) {
                 // 'or' and 'and' can be in a pipeline, as long as they're first.
-                tnode_t<grammar::boolean_statement> gbs{&node_tree, &node};
+                tnode_t<g::boolean_statement> gbs{&node_tree, &node};
                 parse_bool_statement_type_t type = bool_statement_type(gbs);
                 if ((type == parse_bool_and || type == parse_bool_or) &&
-                    statement_is_in_pipeline(gbs.try_get_parent<grammar::statement>(),
+                    statement_is_in_pipeline(gbs.try_get_parent<g::statement>(),
                                              false /* don't count first */)) {
                     errored = append_syntax_error(&parse_errors, node.source_start, EXEC_ERR_MSG,
                                                   (type == parse_bool_and) ? L"and" : L"or");
                 }
             } else if (node.type == symbol_argument) {
-                tnode_t<grammar::argument> arg{&node_tree, &node};
+                tnode_t<g::argument> arg{&node_tree, &node};
                 const wcstring arg_src = node.get_source(buff_src);
                 res |= parse_util_detect_errors_in_argument(arg, arg_src, &parse_errors);
             } else if (node.type == symbol_job) {
@@ -1161,9 +1165,20 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                 // if foo & ; end
                 // while foo & ; end
                 // If it's not a background job, nothing to do.
-                auto job = tnode_t<grammar::job>{&node_tree, &node};
+                auto job = tnode_t<g::job>{&node_tree, &node};
                 if (job_node_is_background(job)) {
                     errored |= detect_errors_in_backgrounded_job(job, &parse_errors);
+                }
+            } else if (node.type == symbol_arguments_or_redirections_list) {
+                // verify no arguments to the end command of if, switch, begin (#986).
+                auto list = tnode_t<g::arguments_or_redirections_list>{&node_tree, &node};
+                if (list.try_get_parent<g::if_statement>() ||
+                    list.try_get_parent<g::switch_statement>() ||
+                    list.try_get_parent<g::block_statement>()) {
+                    if (auto arg = list.next_in_list<g::argument>()) {
+                        errored = append_syntax_error(&parse_errors, arg.source_range()->start,
+                                                      END_ARG_ERR_MSG);
+                    }
                 }
             } else if (node.type == symbol_plain_statement) {
                 using namespace grammar;

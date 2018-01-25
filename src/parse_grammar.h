@@ -17,6 +17,11 @@ namespace grammar {
 
 using production_element_t = uint8_t;
 
+enum {
+    // The maximum length of any seq production.
+    MAX_PRODUCTION_LENGTH = 6
+};
+
 // Define primitive types.
 template <enum parse_token_type_t Token>
 struct primitive {
@@ -144,6 +149,8 @@ template <class T0, class... Ts>
 struct seq {
     static constexpr production_t<1 + sizeof...(Ts)> production = {
         {element<T0>(), element<Ts>()..., token_type_invalid}};
+
+    static_assert(1 + sizeof...(Ts) <= MAX_PRODUCTION_LENGTH, "MAX_PRODUCTION_LENGTH too small");
 
     using type_tuple = std::tuple<T0, Ts...>;
 
@@ -320,14 +327,9 @@ DEF_ALT(argument_list) {
 
 DEF_ALT(arguments_or_redirections_list) {
     using empty = grammar::empty;
-    using value = seq<argument_or_redirection, arguments_or_redirections_list>;
-    ALT_BODY(arguments_or_redirections_list, empty, value);
-};
-
-DEF_ALT(argument_or_redirection) {
-    using arg = single<argument>;
-    using redir = single<redirection>;
-    ALT_BODY(argument_or_redirection, arg, redir);
+    using arg = seq<argument, arguments_or_redirections_list>;
+    using redir = seq<redirection, arguments_or_redirections_list>;
+    ALT_BODY(arguments_or_redirections_list, empty, arg, redir);
 };
 
 DEF(argument) produces_single<tok_string>{BODY(argument)};

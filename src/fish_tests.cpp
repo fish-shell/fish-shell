@@ -675,6 +675,26 @@ static void test_parser() {
         err(L"'exec' command in pipeline not reported as error");
     }
 
+    if (!parse_util_detect_errors(L"begin ; end arg")) {
+        err(L"argument to 'end' not reported as error");
+    }
+
+    if (!parse_util_detect_errors(L"switch foo ; end arg")) {
+        err(L"argument to 'end' not reported as error");
+    }
+
+    if (!parse_util_detect_errors(L"if true; else if false ; end arg")) {
+        err(L"argument to 'end' not reported as error");
+    }
+
+    if (!parse_util_detect_errors(L"if true; else ; end arg")) {
+        err(L"argument to 'end' not reported as error");
+    }
+
+    if (parse_util_detect_errors(L"begin ; end 2> /dev/null")) {
+        err(L"redirection after 'end' wrongly reported as error");
+    }
+
     if (detect_argument_errors(L"foo")) {
         err(L"simple argument reported as error");
     }

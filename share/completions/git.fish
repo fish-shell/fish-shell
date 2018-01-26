@@ -833,7 +833,7 @@ complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_
 # The "refspec" here is an optional "+" to signify a force-push
 complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q "+*" -- (commandline -ct)' -a '+(__fish_git_branches)' -d 'Force-push branch'
 # git push REMOTE :BRANCH deletes BRANCH on remote REMOTE
-complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q ":" -- (commandline -ct)' -a '(__fish_git_branch_for_remote_delete)' -d 'Delete remote branch'
+complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q ":*" -- (commandline -ct)' -a '(__fish_git_branch_for_remote_delete)' -d 'Delete remote branch'
 # then src:dest (where both src and dest are git objects, so we want to complete branches)
 complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q "+*:*" -- (commandline -ct)' -a '+(__fish_git_branches):(__fish_git_branch_for_remote)' -d 'Force-push local branch to remote branch'
 complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q "*:*" -- (commandline -ct)' -a '(__fish_git_branches):(__fish_git_branch_for_remote)' -d 'Push local branch to remote branch'

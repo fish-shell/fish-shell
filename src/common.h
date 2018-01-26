@@ -606,7 +606,7 @@ wcstring vformat_string(const wchar_t *format, va_list va_orig);
 void append_format(wcstring &str, const wchar_t *format, ...);
 void append_formatv(wcstring &str, const wchar_t *format, va_list ap);
 
-#ifdef __cpp_lib_make_unique
+#if defined(__cpp_lib_make_unique) || (__cplusplus >= 201402L)
 using std::make_unique;
 #else
 /// make_unique implementation

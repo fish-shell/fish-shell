@@ -157,6 +157,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind dB backward-kill-bigword
     bind dge backward-kill-word
     bind dgE backward-kill-bigword
+    bind df begin-selection forward-jump kill-selection end-selection
+    bind dt begin-selection forward-jump backward-char kill-selection end-selection
+    bind dF begin-selection backward-jump kill-selection end-selection
+    bind dT begin-selection backward-jump forward-char kill-selection end-selection
 
     bind -m insert s delete-char force-repaint
     bind -m insert S kill-whole-line force-repaint
@@ -239,6 +243,11 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -M visual e forward-word
     bind -M visual E forward-bigword
     bind -M visual o swap-selection-start-stop force-repaint
+
+    bind -M visual f forward-jump
+    bind -M visual t forward-jump backward-char
+    bind -M visual F backward-jump
+    bind -M visual T backward-jump forward-char
 
     for key in $eol_keys
         bind -M visual $key end-of-line

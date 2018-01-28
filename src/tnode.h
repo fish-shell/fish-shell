@@ -132,7 +132,9 @@ class tnode_t {
     template <node_offset_t Index>
     const parse_node_t &get_child_node() const {
         assert(nodeptr && "receiver is missing in get_child_node");
-        return *tree->get_child(*nodeptr, Index);
+        const parse_node_t *child = tree->get_child(*nodeptr, Index);
+        assert(child && "no child at given index");
+        return *child;
     }
 
     /// If the child at the given index has the given type, return it; otherwise return an empty

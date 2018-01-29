@@ -83,6 +83,9 @@ function __fish_git_files
     # and as a convenience "all-staged"
     # to get _all_ kinds of staged files.
 
+    # Save the repo root to remove it from the path later.
+    set -l root (command git rev-parse --show-toplevel ^/dev/null)
+
     # git status --porcelain gives us all the info we need, in a format we don't.
     # The v2 format has better documentation and doesn't use " " to denote anything,
     # but it's only been added in git 2.11.0, which was released November 2016.
@@ -98,7 +101,7 @@ function __fish_git_files
         # The entire line is the "from" from a rename.
         if set -q use_next[1]
             contains -- $use_next $argv
-            and echo "$line"
+            and string replace -- "$PWD/" "" "$root/$line" | string replace "$root/" ":/"
             set -e use_next[1]
             continue
         end
@@ -110,6 +113,9 @@ function __fish_git_files
         set -l IFS
         set -l stat (string sub -l 2 -- $line)
         set -l file (string sub -s 4 -- $line)
+        # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
+        # This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
+        set file (string replace -- "$PWD/" "" "$root/$file" | string replace "$root/" ":/")
         set -e IFS
 
         # The basic status format is "XY", where X is "our" state (meaning the staging area),

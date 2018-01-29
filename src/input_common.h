@@ -73,10 +73,7 @@ enum {
     R_AND,
     R_CANCEL,
     R_TIMEOUT,  // we didn't get interactive input within wait_on_escape_ms
-    R_MAX = R_CANCEL,
-    // This is a special psuedo-char that is not used other than to mark the end of the the special
-    // characters so we can sanity check the enum range.
-    R_SENTINAL
+    R_MAX = R_CANCEL
 };
 
 /// Init the library.

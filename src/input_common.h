@@ -14,11 +14,7 @@ enum {
     // delivered, or when an exception happened.
     R_NULL = R_MIN,
     R_EOF,
-    // Key codes for inputrc-style keyboard functions that are passed on to the caller of
-    // input_read().
-    //
-    // NOTE: If you modify this sequence of symbols you must update the name_arr, code_arr and
-    // desc_arr variables in input.cpp to match!
+
     R_BEGINNING_OF_LINE,
     R_END_OF_LINE,
     R_FORWARD_CHAR,
@@ -72,8 +68,13 @@ enum {
     R_BACKWARD_JUMP,
     R_AND,
     R_CANCEL,
+
     R_TIMEOUT,  // we didn't get interactive input within wait_on_escape_ms
-    R_MAX = R_CANCEL
+
+    // The range of key codes for inputrc-style keyboard functions that are passed on to the caller
+    // of input_read().
+    R_BEGIN_INPUT_FUNCTIONS = R_BEGINNING_OF_LINE,
+    R_END_INPUT_FUNCTIONS = R_CANCEL + 1
 };
 
 /// Init the library.

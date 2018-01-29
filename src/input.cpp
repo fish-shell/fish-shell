@@ -329,7 +329,8 @@ void input_function_push_args(int code) {
         wchar_t arg;
 
         // Skip and queue up any function codes. See issue #2357.
-        while ((arg = input_common_readch(0)) >= R_MIN && arg <= R_MAX) {
+        while ((arg = input_common_readch(0)) >= R_BEGIN_INPUT_FUNCTIONS &&
+               arg < R_END_INPUT_FUNCTIONS) {
             skipped.push_back(arg);
         }
 
@@ -483,7 +484,8 @@ static wchar_t input_read_characters_only() {
     wchar_t char_to_return;
     for (;;) {
         char_to_return = input_common_readch(0);
-        bool is_readline_function = (char_to_return >= R_MIN && char_to_return <= R_MAX);
+        bool is_readline_function =
+            (char_to_return >= R_BEGIN_INPUT_FUNCTIONS && char_to_return < R_END_INPUT_FUNCTIONS);
         // R_NULL and R_EOF are more control characters than readline functions, so check specially
         // for those.
         if (!is_readline_function || char_to_return == R_NULL || char_to_return == R_EOF) {
@@ -509,7 +511,7 @@ wint_t input_readch(bool allow_commands) {
     while (1) {
         wchar_t c = input_common_readch(0);
 
-        if (c >= R_MIN && c <= R_MAX) {
+        if (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
             switch (c) {
                 case R_EOF:  // if it's closed, then just return
                 {
@@ -525,7 +527,7 @@ wint_t input_readch(bool allow_commands) {
                         return input_readch();
                     }
                     c = input_common_readch(0);
-                    while (c >= R_MIN && c <= R_MAX) {
+                    while (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
                         c = input_common_readch(0);
                     }
                     input_common_next_ch(c);

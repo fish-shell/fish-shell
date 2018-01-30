@@ -37,7 +37,7 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wcstring dir;
 
     if (argv[optind]) {
-        dir_in = env_var_t(L"", argv[optind]);  // unamed var
+        dir_in = env_var_t(wcstring(argv[optind]), 0);  // unamed var
     } else {
         auto maybe_dir_in = env_get(L"HOME");
         if (maybe_dir_in.missing_or_empty()) {

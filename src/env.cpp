@@ -218,7 +218,7 @@ void var_stack_t::push(bool new_scope) {
     // "--no-scope-shadowing".
     if (new_scope && top_node != this->global_env) {
         for (const auto &var : top_node->env) {
-            if (var.second.exportv) node->env.insert(var);
+            if (var.second.exports()) node->env.insert(var);
         }
     }
 
@@ -265,7 +265,7 @@ void var_stack_t::pop() {
 
     for (const auto &entry_pair : old_top->env) {
         const env_var_t &var = entry_pair.second;
-        if (var.exportv) {
+        if (var.exports()) {
             this->mark_changed_exported();
             break;
         }
@@ -322,8 +322,6 @@ static const_string_set_t env_read_only;
 static bool is_read_only(const wcstring &key) {
     return env_read_only.find(key) != env_read_only.end();
 }
-
-bool env_var_t::read_only() const { return is_read_only(name); }
 
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
 static const_string_set_t env_electric;
@@ -1090,7 +1088,7 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, wcst
             var_table_t::const_iterator result = preexisting_node->env.find(key);
             assert(result != preexisting_node->env.end());
             const env_var_t &var = result->second;
-            if (var.exportv) {
+            if (var.exports()) {
                 preexisting_entry_exportv = true;
                 has_changed_new = true;
             }
@@ -1137,7 +1135,7 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, wcst
             // Set the entry in the node. Note that operator[] accesses the existing entry, or
             // creates a new one.
             env_var_t &var = node->env[key];
-            if (var.exportv) {
+            if (var.exports()) {
                 // This variable already existed, and was exported.
                 has_changed_new = true;
             }
@@ -1146,11 +1144,11 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, wcst
 
             if (var_mode & ENV_EXPORT) {
                 // The new variable is exported.
-                var.exportv = true;
+                var.set_exports(true);
                 node->exportv = true;
                 has_changed_new = true;
             } else {
-                var.exportv = false;
+                var.set_exports(false);
                 // Set the node's exported when it changes something about exports
                 // (also when it redefines a variable to not be exported).
                 node->exportv = has_changed_old != has_changed_new;
@@ -1201,7 +1199,7 @@ static bool try_remove(env_node_t *n, const wchar_t *key, int var_mode) {
 
     var_table_t::iterator result = n->env.find(key);
     if (result != n->env.end()) {
-        if (result->second.exportv) {
+        if (result->second.exports()) {
             vars_stack().mark_changed_exported();
         }
         n->env.erase(result);
@@ -1272,7 +1270,7 @@ const wcstring_list_t &env_var_t::as_list() const { return vals; }
 wcstring env_var_t::as_string(void) const {
     if (this->vals.empty()) return wcstring(ENV_NULL);
 
-    wchar_t sep = variable_is_colon_delimited_var(this->name) ? L':' : ARRAY_SEP;
+    wchar_t sep = (flags & flag_colon_delimit) ? L':' : ARRAY_SEP;
     auto it = this->vals.cbegin();
     wcstring result(*it);
     while (++it != vals.end()) {
@@ -1284,6 +1282,14 @@ wcstring env_var_t::as_string(void) const {
 
 void env_var_t::to_list(wcstring_list_t &out) const {
     out = vals;
+}
+
+env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
+    env_var_flags_t result = 0;
+    wcstring tmp(name);  // todo: eliminate
+    if (is_read_only(tmp)) result |= flag_read_only;
+    if (variable_is_colon_delimited_var(tmp)) result |= flag_colon_delimit;
+    return result;
 }
 
 maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode) {
@@ -1334,7 +1340,7 @@ maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode) {
             var_table_t::const_iterator result = env->env.find(key);
             if (result != env->env.end()) {
                 const env_var_t &var = result->second;
-                if (var.exportv ? search_exported : search_unexported) {
+                if (var.exports() ? search_exported : search_unexported) {
                     return var;
                 }
             }
@@ -1387,7 +1393,7 @@ static void add_key_to_string_set(const var_table_t &envs, std::set<wcstring> *s
     for (iter = envs.begin(); iter != envs.end(); ++iter) {
         const env_var_t &var = iter->second;
 
-        if ((var.exportv && show_exported) || (!var.exportv && show_unexported)) {
+        if ((var.exports() && show_exported) || (!var.exports() && show_unexported)) {
             // Insert this key.
             str_set->insert(iter->first);
         }
@@ -1454,7 +1460,7 @@ static void get_exported(const env_node_t *n, var_table_t &h) {
         const wcstring &key = iter->first;
         const env_var_t var = iter->second;
 
-        if (var.exportv) {
+        if (var.exports()) {
             // Export the variable. Don't use std::map::insert here, since we need to overwrite
             // existing values from previous scopes.
             h[key] = var;
@@ -1570,7 +1576,7 @@ maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key) const {
     }
     auto iter = vars.find(key);
     if (iter == vars.end()) return none();
-    return env_var_t(iter->second);
+    return iter->second;
 }
 
 const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH",

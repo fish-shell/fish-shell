@@ -532,8 +532,7 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
         return;
     }
 
-
-    const wchar_t *exportv = var->exportv ? _(L"exported") : _(L"unexported");
+    const wchar_t *exportv = var->exports() ? _(L"exported") : _(L"unexported");
     wcstring_list_t vals = var->as_list();
     streams.out.append_format(_(L"$%ls: set in %ls scope, %ls, with %d elements\n"), var_name,
                               scope_name, exportv, vals.size());

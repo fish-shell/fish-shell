@@ -3195,15 +3195,10 @@ const wchar_t *reader_readline(int nchars) {
                 // Other, if a normal character, we add it to the command.
                 if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
                     c != 0x7F) {
-                    bool allow_expand_abbreviations = false;
-                    if (data->is_navigating_pager_contents()) {
-                        data->pager.set_search_field_shown(true);
-                    } else {
-                        allow_expand_abbreviations = true;
-                    }
 
                     // Regular character.
                     editable_line_t *el = data->active_edit_line();
+                    bool allow_expand_abbreviations = (el == &data->command_line);
                     insert_char(data->active_edit_line(), c, allow_expand_abbreviations);
 
                     // End paging upon inserting into the normal command line.

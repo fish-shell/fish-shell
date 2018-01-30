@@ -30,6 +30,7 @@
 #endif
 
 #include <algorithm>
+#include <iterator>
 #include <set>
 #include <type_traits>
 #include <unordered_map>
@@ -316,12 +317,25 @@ static env_universal_t *uvars() { return s_universal_variables; }
 // Comparer for const string set.
 typedef std::unordered_set<wcstring> const_string_set_t;
 
-/// Table of variables that may not be set using the set command.
-static const_string_set_t env_read_only;
+// A typedef for a set of constant strings. Note our sets are typically on the order of 6 elements,
+// so we don't bother to sort them.
+using string_set_t = const wchar_t *const[];
 
-static bool is_read_only(const wcstring &key) {
-    return env_read_only.find(key) != env_read_only.end();
+template <typename T>
+bool string_set_contains(const T &set, const wchar_t *val) {
+    for (const wchar_t *entry : set) {
+        if (!wcscmp(val, entry)) return true;
+    }
+    return false;
 }
+
+/// Check if a variable may not be set using the set command.
+static bool is_read_only(const wchar_t *val) {
+    const string_set_t env_read_only = {L"PWD", L"SHLVL", L"_", L"history", L"status", L"version"};
+    return string_set_contains(env_read_only, val);
+}
+
+static bool is_read_only(const wcstring &val) { return is_read_only(val.c_str()); }
 
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
 static const_string_set_t env_electric;
@@ -845,9 +859,6 @@ static void setup_var_dispatch_table() {
 void env_init(const struct config_paths_t *paths /* or NULL */) {
     setup_var_dispatch_table();
 
-    // These variables can not be altered directly by the user.
-    env_read_only.insert({L"status", L"history", L"_", L"PWD", L"version"});
-
     // Names of all dynamically calculated variables.
     env_electric.insert({L"history", L"status", L"umask"});
 
@@ -909,19 +920,18 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     wcstring version = str2wcstring(get_fish_version());
     env_set_one(L"version", ENV_GLOBAL, version);
 
-    // Set up SHLVL variable.
-    const auto shlvl_var = env_get(L"SHLVL");
+    // Set up SHLVL variable. Not we can't use env_get because SHLVL is read-only, and therefore was
+    // not inherited from the environment.
     wcstring nshlvl_str = L"1";
-    if (!shlvl_var.missing_or_empty()) {
+    if (const char *shlvl_var = getenv("SHLVL")) {
         const wchar_t *end;
         // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a diagnostic?
-        long shlvl_i = fish_wcstol(shlvl_var->as_string().c_str(), &end);
+        long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str(), &end);
         if (!errno && shlvl_i >= 0) {
             nshlvl_str = to_string<long>(shlvl_i + 1);
         }
     }
     env_set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
-    env_read_only.emplace(L"SHLVL");
 
     // Set up the HOME variable.
     // Unlike $USER, it doesn't seem that `su`s pass this along
@@ -1286,9 +1296,8 @@ void env_var_t::to_list(wcstring_list_t &out) const {
 
 env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
     env_var_flags_t result = 0;
-    wcstring tmp(name);  // todo: eliminate
-    if (is_read_only(tmp)) result |= flag_read_only;
-    if (variable_is_colon_delimited_var(tmp)) result |= flag_colon_delimit;
+    if (is_read_only(name)) result |= flag_read_only;
+    if (variable_is_colon_delimited_var(name)) result |= flag_colon_delimit;
     return result;
 }
 

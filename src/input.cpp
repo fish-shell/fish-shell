@@ -84,6 +84,7 @@ static const input_function_metadata_t input_function_metadata[] = {
     {R_YANK_POP, L"yank-pop"},
     {R_COMPLETE, L"complete"},
     {R_COMPLETE_AND_SEARCH, L"complete-and-search"},
+    {R_PAGER_TOGGLE_SEARCH, L"pager-toggle-search"},
     {R_BEGINNING_OF_HISTORY, L"beginning-of-history"},
     {R_END_OF_HISTORY, L"end-of-history"},
     {R_BACKWARD_KILL_LINE, L"backward-kill-line"},

@@ -33,6 +33,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `funced` now has a `-s` and `--save` option to automatically save the edited function after successfully editing (#4668).
 - Arguments to `end` are now errors, instead of being silently ignored.
 - Pager navigation has been improved. Most notably, moving down now wraps around, moving up from the commandline now jumps to the last element and moving right and left now reverse each other even when wrapping around (#4680).
+- A new input binding `pager-toggle-search` toggles the search field in the completions pager on and off.
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

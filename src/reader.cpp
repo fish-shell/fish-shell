@@ -2591,6 +2591,15 @@ const wchar_t *reader_readline(int nchars) {
                 }
                 break;
             }
+            case R_PAGER_TOGGLE_SEARCH: {
+                if (data->is_navigating_pager_contents()) {
+                    bool sfs = data->pager.is_search_field_shown();
+                    data->pager.set_search_field_shown(!sfs);
+                    data->pager.set_fully_disclosed(true);
+                    reader_repaint_needed();
+                }
+                break;
+            }
             case R_KILL_LINE: {
                 editable_line_t *el = data->active_edit_line();
                 const wchar_t *buff = el->text.c_str();

@@ -103,11 +103,6 @@ static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", 
 /// subsystem.
 static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
 
-/// List of "path" like variable names that need special handling. This includes automatic
-/// splitting and joining on import/export. As well as replacing empty elements, which implicitly
-/// refer to the CWD, with an explicit '.' in the case of PATH and CDPATH.
-static const wcstring_list_t colon_delimited_variable({L"PATH", L"MANPATH", L"CDPATH"});
-
 // Some forward declarations to make it easy to logically group the code.
 static void init_locale();
 static void init_curses();
@@ -315,6 +310,7 @@ static env_universal_t *uvars() { return s_universal_variables; }
 // Helper class for storing constant strings, without needing to wrap them in a wcstring.
 
 // Comparer for const string set.
+// Note our sets are small so we don't bother to sort them.
 typedef std::unordered_set<wcstring> const_string_set_t;
 
 // A typedef for a set of constant strings. Note our sets are typically on the order of 6 elements,
@@ -336,6 +332,22 @@ static bool is_read_only(const wchar_t *val) {
 }
 
 static bool is_read_only(const wcstring &val) { return is_read_only(val.c_str()); }
+
+// Here is the whitelist of variables that we colon-delimit, both incoming from the environment and
+// outgoing back to it. This is deliberately very short - we don't want to add language-specific
+// values like CLASSPATH.
+static const string_set_t colon_delimited_variable = {L"PATH", L"CDPATH", L"MANPATH"};
+static bool variable_is_colon_delimited_var(const wchar_t *str) {
+    /// List of "path" like variable names that need special handling. This includes automatic
+    /// splitting and joining on import/export. As well as replacing empty elements, which
+    /// implicitly refer to the CWD, with an explicit '.' in the case of PATH and CDPATH. Note this
+    /// is sorted
+    return string_set_contains(colon_delimited_variable, str);
+}
+
+static bool variable_is_colon_delimited_var(const wcstring &str) {
+    return variable_is_colon_delimited_var(str.c_str());
+}
 
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
 static const_string_set_t env_electric;
@@ -552,7 +564,7 @@ static bool initialize_curses_using_fallback(const char *term) {
 /// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path
 /// elements are converted to explicit "." to make the vars easier to use in fish scripts.
 static void init_path_vars() {
-    for (const auto &var_name : colon_delimited_variable) {
+    for (const wchar_t *var_name : colon_delimited_variable) {
         fix_colon_delimited_var(var_name);
     }
 }
@@ -596,13 +608,6 @@ static void init_curses() {
     // Invalidate the cached escape sequences since they may no longer be valid.
     cached_esc_sequences.clear();
     curses_initialized = true;
-}
-
-// Here is the whitelist of variables that we colon-delimit, both incoming from the environment and
-// outgoing back to it. This is deliberately very short - we don't want to add language-specific
-// values like CLASSPATH.
-static bool variable_is_colon_delimited_var(const wcstring &str) {
-    return contains(colon_delimited_variable, str);
 }
 
 /// React to modifying the given variable.

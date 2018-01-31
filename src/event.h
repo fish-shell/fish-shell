@@ -8,10 +8,12 @@
 
 #include <unistd.h>
 
+#include <map>
 #include <memory>
 #include <vector>
 
 #include "common.h"
+#include "io.h"
 
 /// The signal number that is used to match any signal.
 #define EVENT_ANY_SIGNAL -1
@@ -124,6 +126,10 @@ void event_fire(const event_t *event);
 /// Like event_fire, but takes a signal directly.
 /// May be called from signal handlers
 void event_fire_signal(int signal);
+
+/// Called by builtin functions
+/// Dumped all events
+void event_print(io_streams_t &streams, const wcstring *filter);
 
 /// Initialize the event-handling library.
 void event_init();

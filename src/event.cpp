@@ -448,6 +448,67 @@ void event_fire(const event_t *event) {
     }
 }
 
+void event_print(io_streams_t &streams, const wcstring *filter) {
+    std::vector<shared_ptr<event_t>> tmp;
+
+    static std::map<int, wcstring> dico = {
+        {EVENT_ANY, L"any"},
+        {EVENT_SIGNAL, L"signal"},
+        {EVENT_VARIABLE, L"any"},
+        {EVENT_EXIT, L"exit"},
+        {EVENT_JOB_ID, L"job-id"},
+        {EVENT_GENERIC, L"generic"}
+    };
+
+    tmp = s_event_handlers;
+    std::sort(tmp.begin(), tmp.end(),
+            [](const shared_ptr<event_t> &e1, const shared_ptr<event_t> &e2) {
+                if (e1.get()->type == e2.get()->type) {
+                    switch (e1.get()->type) {
+                        case EVENT_SIGNAL:
+                            return e1.get()->param1.signal < e2.get()->param1.signal;
+                        case EVENT_JOB_ID:
+                            return e1.get()->param1.job_id < e2.get()->param1.job_id;
+                        case EVENT_VARIABLE:
+                        case EVENT_GENERIC:
+                            return e1.get()->str_param1 < e2.get()->str_param1;
+                    }
+                } else {
+                    return e1.get()->type < e2.get()->type;
+                }
+            });
+
+    int type = -1;
+    for (std::vector<shared_ptr<event_t>>::iterator iter = tmp.begin();
+            iter != tmp.end(); ++iter) {
+        if (!filter || *filter == iter->get()->str_param1) {
+            if (iter->get()->type != type) {
+                type = iter->get()->type;
+                streams.out.append_format(L"Event %ls\n", dico[iter->get()->type].c_str());
+            }
+            switch (iter->get()->type) {
+                case EVENT_SIGNAL:
+                    streams.out.append_format(L"%ls %ls\n", sig2wcs(iter->get()->param1.signal),
+                            iter->get()->function_name.c_str());
+                    break;
+                case EVENT_JOB_ID:
+                    streams.out.append_format(L"%d %ls\n", iter->get()->param1,
+                            iter->get()->function_name.c_str());
+                    break;
+                case EVENT_VARIABLE:
+                case EVENT_GENERIC:
+                    streams.out.append_format(L"%ls %ls\n", iter->get()->str_param1.c_str(),
+                            iter->get()->function_name.c_str());
+                    break;
+                default:
+                    streams.out.append_format(L"%ls\n", iter->get()->function_name.c_str());
+                    break;
+
+            }
+        }
+    }
+}
+
 void event_init() {}
 
 void event_destroy() { s_event_handlers.clear(); }

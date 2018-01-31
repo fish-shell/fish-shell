@@ -35,15 +35,18 @@ struct functions_cmd_opts_t {
     bool copy = false;
     bool report_metadata = false;
     bool verbose = false;
+    bool hooks = false;
+    wchar_t *hooks_type = NULL;
     wchar_t *description = NULL;
 };
-static const wchar_t *short_options = L":Dacehnqv";
+static const wchar_t *short_options = L":oDacehnqv";
 static const struct woption long_options[] = {
     {L"erase", no_argument, NULL, 'e'},   {L"description", required_argument, NULL, 'd'},
     {L"names", no_argument, NULL, 'n'},   {L"all", no_argument, NULL, 'a'},
     {L"help", no_argument, NULL, 'h'},    {L"query", no_argument, NULL, 'q'},
     {L"copy", no_argument, NULL, 'c'},    {L"details", no_argument, NULL, 'D'},
-    {L"verbose", no_argument, NULL, 'v'}, {NULL, 0, NULL, 0}};
+    {L"verbose", no_argument, NULL, 'v'}, {L"hooks", optional_argument, NULL, 'o'},
+    {NULL, 0, NULL, 0}};
 
 static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
@@ -87,6 +90,11 @@ static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(hi
             case 'c': {
                 opts.copy = true;
                 break;
+            }
+            case 'o': {
+                opts.hooks = true;
+                opts.hooks_type = w.woptarg;
+                break ;
             }
             case ':': {
                 builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
@@ -311,6 +319,15 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         const wchar_t *funcname = argv[optind];
         return report_function_metadata(funcname, opts.verbose, streams, false);
+    }
+
+    if (opts.hooks) {
+        if (opts.hooks_type) {
+            wcstring tmp = wcstring(opts.hooks_type);
+            event_print(streams, &tmp);
+        } else
+            event_print(streams, NULL);
+        return STATUS_CMD_OK;
     }
 
     if (opts.list || argc == optind) {

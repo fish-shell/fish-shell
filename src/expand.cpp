@@ -39,11 +39,13 @@
 #include "exec.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "history.h"
 #include "iothread.h"
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "path.h"
 #include "proc.h"
+#include "reader.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 #ifdef KERN_PROCARGS2
@@ -762,24 +764,40 @@ static bool expand_variables(const wcstring &instr, std::vector<completion_t> *o
 
     // Get the variable name as a string, then try to get the variable from env.
     const wcstring var_name(instr, var_name_start, var_name_len);
-    const maybe_t<env_var_t> var =
-        (var_name == wcstring{VARIABLE_EXPAND_EMPTY} ? none() : env_get(var_name));
+    // Do a dirty hack to make sliced history fast (#4650). We expand from either a variable, or a
+    // history_t. Note that "history" is read only in env.cpp so it's safe to special-case it in
+    // this way (it cannot be shadowed, etc).
+    history_t *history = nullptr;
+    maybe_t<env_var_t> var{};
+    if (var_name == L"history") {
+        // We do this only on the main thread, matching env.cpp.
+        if (is_main_thread()) {
+            history = reader_get_history();
+        }
+    } else if (var_name != wcstring{VARIABLE_EXPAND_EMPTY}) {
+        var = env_get(var_name);
+    }
 
     // Parse out any following slice.
     // Record the end of the variable name and any following slice.
     size_t var_name_and_slice_stop = var_name_stop;
-    bool all_vars = true;
+    bool all_values = true;
     const size_t slice_start = var_name_stop;
     // List of indexes, and parallel array of source positions of each index in the variable list.
     std::vector<long> var_idx_list;
     std::vector<size_t> var_pos_list;
     if (slice_start < insize && instr.at(slice_start) == L'[') {
-        all_vars = false;
+        all_values = false;
         const wchar_t *in = instr.c_str();
         wchar_t *slice_end;
         // If a variable is missing, behave as though we have one value, so that $var[1] always
         // works.
-        size_t effective_val_count = var ? var->as_list().size() : 1;
+        size_t effective_val_count = 1;
+        if (var) {
+            effective_val_count = var->as_list().size();
+        } else if (history) {
+            effective_val_count = history->size();
+        }
         size_t bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list,
                                      effective_val_count);
         if (bad_pos != 0) {
@@ -789,7 +807,7 @@ static bool expand_variables(const wcstring &instr, std::vector<completion_t> *o
         var_name_and_slice_stop = (slice_end - in);
     }
 
-    if (!var) {
+    if (!var && !history) {
         // Expanding a non-existent variable.
         if (!is_single) {
             // Normal expansions of missing variables successfully expand to nothing.
@@ -806,22 +824,40 @@ static bool expand_variables(const wcstring &instr, std::vector<completion_t> *o
         }
     }
 
-    // Ok, we have a variable. Let's expand it.
+    // Ok, we have a variable or a history. Let's expand it.
     // Start by respecting the sliced elements.
-    assert(var && "Should have variable here");
-    wcstring_list_t var_item_list = var->as_list();
-    if (!all_vars) {
-        wcstring_list_t sliced_items;
-        for (long item_index : var_idx_list) {
-            // Check that we are within array bounds. If not, skip the element. Note:
-            // Negative indices (`echo $foo[-1]`) are already converted to positive ones
-            // here, So tmp < 1 means it's definitely not in.
-            // Note we are 1-based.
-            if (item_index >= 1 && size_t(item_index) <= var_item_list.size()) {
-                sliced_items.push_back(var_item_list.at(item_index - 1));
+    assert((var || history) && "Should have variable or history here");
+    wcstring_list_t var_item_list;
+    if (all_values) {
+        if (history) {
+            history->get_history(var_item_list);
+        } else {
+            var->to_list(var_item_list);
+        }
+    } else {
+        // We have to respect the slice.
+        if (history) {
+            // Ask history to map indexes to item strings.
+            // Note this may have missing entries for out-of-bounds.
+            auto item_map = history->items_at_indexes(var_idx_list);
+            for (long item_index : var_idx_list) {
+                auto iter = item_map.find(item_index);
+                if (iter != item_map.end()) {
+                    var_item_list.push_back(iter->second);
+                }
+            }
+        } else {
+            const wcstring_list_t &all_var_items = var->as_list();
+            for (long item_index : var_idx_list) {
+                // Check that we are within array bounds. If not, skip the element. Note:
+                // Negative indices (`echo $foo[-1]`) are already converted to positive ones
+                // here, So tmp < 1 means it's definitely not in.
+                // Note we are 1-based.
+                if (item_index >= 1 && size_t(item_index) <= all_var_items.size()) {
+                    var_item_list.push_back(all_var_items.at(item_index - 1));
+                }
             }
         }
-        var_item_list = std::move(sliced_items);
     }
 
     if (is_single) {

@@ -35,6 +35,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Pager navigation has been improved. Most notably, moving down now wraps around, moving up from the commandline now jumps to the last element and moving right and left now reverse each other even when wrapping around (#4680).
 - Typing normal characters while the completion pager is active no longer shows the search field. Instead it enters them into the command line, and ends paging (#2249).
 - A new input binding `pager-toggle-search` toggles the search field in the completions pager on and off. By default this is bound to control-s.
+- Slicing $history (in particular, `$history[1]` for the last executed command) is much faster.
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

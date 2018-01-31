@@ -890,8 +890,8 @@ size_t history_t::size() {
     return new_item_count + old_item_count;
 }
 
-history_item_t history_t::item_at_index(size_t idx) {
-    scoped_lock locker(lock);
+history_item_t history_t::item_at_index_assume_locked(size_t idx) {
+    ASSERT_IS_LOCKED(lock);
 
     // 0 is considered an invalid index.
     assert(idx > 0);
@@ -921,6 +921,31 @@ history_item_t history_t::item_at_index(size_t idx) {
 
     // Index past the valid range, so return an empty history item.
     return history_item_t(wcstring(), 0);
+}
+
+history_item_t history_t::item_at_index(size_t idx) {
+    scoped_lock locker(lock);
+    return item_at_index_assume_locked(idx);
+}
+
+std::unordered_map<long, wcstring> history_t::items_at_indexes(const std::vector<long> &idxs) {
+    scoped_lock locker(lock);
+    std::unordered_map<long, wcstring> result;
+    for (long idx : idxs) {
+        if (idx <= 0) {
+            // Skip non-positive entries.
+            continue;
+        }
+        // Insert an empty string to see if this is the first time the index is encountered. If so,
+        // we have to go fetch the item.
+        auto iter_inserted = result.emplace(idx, wcstring{});
+        if (iter_inserted.second) {
+            // New key.
+            auto item = item_at_index_assume_locked(size_t(idx));
+            iter_inserted.first->second = std::move(item.contents);
+        }
+    }
+    return result;
 }
 
 void history_t::populate_from_mmap(void) {

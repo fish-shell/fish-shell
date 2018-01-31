@@ -483,6 +483,8 @@ void event_print(io_streams_t &streams, const wcstring *filter) {
             iter != tmp.end(); ++iter) {
         if (!filter || *filter == dico[iter->get()->type]) {
             if (iter->get()->type != type) {
+                if (type != -1)
+                    streams.out.append(L"\n");
                 type = iter->get()->type;
                 streams.out.append_format(L"Event %ls\n", dico[iter->get()->type].c_str());
             }

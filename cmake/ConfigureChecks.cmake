@@ -113,4 +113,14 @@ IF(NOT TPARM_TAKES_VARARGS)
   SET(TPARM_SOLARIS_KLUDGE 1)
 ENDIF()
 
+CHECK_CXX_SOURCE_COMPILES("
+#include <memory>
+
+int main () {
+  std::unique_ptr<int> foo = std::make_unique<int>();
+}
+"
+  HAVE_STD__MAKE_UNIQUE
+)
+
 FIND_PROGRAM(SED sed)

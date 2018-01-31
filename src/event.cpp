@@ -481,7 +481,7 @@ void event_print(io_streams_t &streams, const wcstring *filter) {
     int type = -1;
     for (std::vector<shared_ptr<event_t>>::iterator iter = tmp.begin();
             iter != tmp.end(); ++iter) {
-        if (!filter || *filter == iter->get()->str_param1) {
+        if (!filter || *filter == dico[iter->get()->type]) {
             if (iter->get()->type != type) {
                 type = iter->get()->type;
                 streams.out.append_format(L"Event %ls\n", dico[iter->get()->type].c_str());

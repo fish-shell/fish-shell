@@ -454,7 +454,7 @@ void event_print(io_streams_t &streams, const wcstring *filter) {
     static std::map<int, wcstring> dico = {
         {EVENT_ANY, L"any"},
         {EVENT_SIGNAL, L"signal"},
-        {EVENT_VARIABLE, L"any"},
+        {EVENT_VARIABLE, L"variable"},
         {EVENT_EXIT, L"exit"},
         {EVENT_JOB_ID, L"job-id"},
         {EVENT_GENERIC, L"generic"}

@@ -5,10 +5,27 @@ INCLUDE(FeatureSummary)
 IF(DOXYGEN_FOUND)
     OPTION(BUILD_DOCS "build documentation (requires Doxygen)" ON)
 ELSE(DOXYGEN_FOUND)
-    SET(BUILD_DOCS OFF)
+    OPTION(BUILD_DOCS "build documentation (requires Doxygen)" OFF)
 ENDIF(DOXYGEN_FOUND)
 
-ADD_FEATURE_INFO(Documentation BUILD_DOCS "user manual and documentation")
+IF(BUILD_DOCS AND NOT DOXYGEN_FOUND)
+    MESSAGE(FATAL_ERROR "build documentation selected, but Doxygen could not be found")
+ENDIF()
+
+IF(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/user_doc/html
+   AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/share/man/man1)
+    SET(HAVE_PREBUILT_DOCS TRUE)
+ELSE()
+    SET(HAVE_PREBUILT_DOCS FALSE)
+ENDIF()
+
+IF(BUILD_DOCS OR HAVE_PREBUILT_DOCS)
+    SET(INSTALL_DOCS ON)
+ELSE()
+    SET(INSTALL_DOCS OFF)
+ENDIF()
+
+ADD_FEATURE_INFO(Documentation INSTALL_DOCS "user manual and documentation")
 
 IF(BUILD_DOCS)
     # Files in ./share/completions/

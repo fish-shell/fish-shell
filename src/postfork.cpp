@@ -103,11 +103,7 @@ bool child_set_group(job_t *j, process_t *p) {
 /// guaranteeing the job control process group has been created and that the child belongs to the
 /// correct process group. Here we can update our job_t structure to reflect the correct process
 /// group in the case of JOB_CONTROL, and we can give the new process group control of the terminal
-/// if it's to run in the foreground. Note that we can guarantee the child won't try to read from
-/// the terminal before we've had a chance to run this code, because we haven't woken them up with a
-/// SIGCONT yet. This musn't be called as a part of setup_child_process because that can hang
-/// indefinitely until data is available to read/write in the case of IO_FILE, which means we'll
-/// never reach our SIGSTOP and everything hangs.
+/// if it's to run in the foreground.
 bool set_child_group(job_t *j, pid_t child_pid) {
     bool retval = true;
 

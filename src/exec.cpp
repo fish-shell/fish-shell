@@ -489,6 +489,8 @@ static bool exec_internal_builtin_proc(parser_t &parser, job_t *j, process_t *p,
     // make exec handle things.
     const int fg = j->get_flag(JOB_FOREGROUND);
     j->set_flag(JOB_FOREGROUND, false);
+
+    // Note this call may block for a long time, while the builtin performs I/O.
     p->status = builtin_run(parser, p->get_argv(), streams);
 
     // Restore the fg flag, which is temporarily set to false during builtin

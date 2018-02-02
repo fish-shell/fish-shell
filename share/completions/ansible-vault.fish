@@ -4,4 +4,4 @@ complete -c ansible-vault -l new-vault-password-file -r -d "New vault password f
 complete -c ansible-vault -l output -r -d "Output file name for encrypt or decrypt; use - for stdout"
 complete -c ansible-vault -l vault-password-file -r -d "Vault password file"
 complete -c ansible-vault -s v -l verbose -d "Verbose mode (-vvv for more, -vvvv to enable connection debugging)"
-complete -c ansible-vault -l version -d "Show program's version number and exit"
+complete -c ansible-vault -l version -d "Display version and exit"

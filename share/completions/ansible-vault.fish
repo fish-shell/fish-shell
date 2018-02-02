@@ -1,0 +1,7 @@
+complete -c ansible-vault -l ask-vault-pass -f -d "ask for vault password"
+complete -c ansible-vault -s h -l help -f -d "show this help message and exit"
+complete -c ansible-vault -l new-vault-password-file -r -d "new vault password file for rekey"
+complete -c ansible-vault -l output -r -d "output file name for encrypt or decrypt; use - for stdout"
+complete -c ansible-vault -l vault-password-file -r -d "vault password file"
+complete -c ansible-vault -s v -l verbose -d "verbose mode (-vvv for more, -vvvv to enable connection debugging)"
+complete -c ansible-vault -l version -d "show program's version number and exit"

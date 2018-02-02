@@ -617,7 +617,13 @@ static int process_clean_after_marking(bool allow_interactive) {
                 format_job_info(j, JOB_ENDED);
                 found = 1;
             }
-            proc_fire_event(L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0);
+            // Don't fire the exit-event for jobs with pgid -2.
+            // That's our "sentinel" pgid, for jobs that don't (yet) have a pgid,
+            // or jobs that consist entirely of builtins (and hence don't have a process).
+            // This causes issues if fish is PID 2, which is quite common on WSL. See #4582.
+            if (j->pgid != -2) {
+                proc_fire_event(L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0);
+            }
             proc_fire_event(L"JOB_EXIT", EVENT_JOB_ID, j->job_id, 0);
 
             job_remove(j);

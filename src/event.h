@@ -127,9 +127,15 @@ void event_fire(const event_t *event);
 /// May be called from signal handlers
 void event_fire_signal(int signal);
 
+/// Convert a string to the corresponding type
+int wcs2event(wcstring const &event);
+
+/// Convert a type to the corresponding string
+wcstring event2wcs(int type);
+
 /// Called by builtin functions
 /// Dumped all events
-void event_print(io_streams_t &streams, const wcstring *filter);
+void event_print(io_streams_t &streams, int event_type);
 
 /// Initialize the event-handling library.
 void event_init();

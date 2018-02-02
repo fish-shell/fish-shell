@@ -50,6 +50,14 @@ static event_list_t s_event_handlers;
 /// List of events that have been sent but have not yet been delivered because they are blocked.
 static event_list_t blocked;
 
+static std::map<int, wcstring> events_map = {
+    {EVENT_SIGNAL, L"signal"},
+    {EVENT_VARIABLE, L"variable"},
+    {EVENT_EXIT, L"exit"},
+    {EVENT_JOB_ID, L"job-id"},
+    {EVENT_GENERIC, L"generic"}
+};
+
 /// Variables (one per signal) set when a signal is observed. This is inspected by a signal handler.
 static volatile bool s_observed_signals[NSIG] = {};
 static void set_signal_observed(int sig, bool val) {
@@ -448,19 +456,24 @@ void event_fire(const event_t *event) {
     }
 }
 
-void event_print(io_streams_t &streams, const wcstring *filter) {
-    std::vector<shared_ptr<event_t>> tmp;
+wcstring event2wcs(int type) {
+    std::map<int, wcstring>::iterator it = events_map.find(type);
 
-    static std::map<int, wcstring> dico = {
-        {EVENT_ANY, L"any"},
-        {EVENT_SIGNAL, L"signal"},
-        {EVENT_VARIABLE, L"variable"},
-        {EVENT_EXIT, L"exit"},
-        {EVENT_JOB_ID, L"job-id"},
-        {EVENT_GENERIC, L"generic"}
-    };
+    if (it != events_map.end())
+        return it->second;
+    return L"";
+}
 
-    tmp = s_event_handlers;
+int wcs2event(wcstring const &event) {
+    for (std::map<int, wcstring>::iterator it = events_map.begin(); it != events_map.end(); ++it) {
+        if (it->second == event)
+            return it->first;
+    }
+    return -1;
+}
+
+void event_print(io_streams_t &streams, int event_type) {
+    std::vector<shared_ptr<event_t>> tmp = s_event_handlers;
     std::sort(tmp.begin(), tmp.end(),
             [](const shared_ptr<event_t> &e1, const shared_ptr<event_t> &e2) {
                 if (e1.get()->type == e2.get()->type) {
@@ -470,6 +483,7 @@ void event_print(io_streams_t &streams, const wcstring *filter) {
                         case EVENT_JOB_ID:
                             return e1.get()->param1.job_id < e2.get()->param1.job_id;
                         case EVENT_VARIABLE:
+                        case EVENT_ANY:
                         case EVENT_GENERIC:
                             return e1.get()->str_param1 < e2.get()->str_param1;
                     }
@@ -481,12 +495,12 @@ void event_print(io_streams_t &streams, const wcstring *filter) {
     int type = -1;
     for (std::vector<shared_ptr<event_t>>::iterator iter = tmp.begin();
             iter != tmp.end(); ++iter) {
-        if (!filter || *filter == dico[iter->get()->type]) {
+        if (event_type == -1 || event_type == iter->get()->type) {
             if (iter->get()->type != type) {
                 if (type != -1)
                     streams.out.append(L"\n");
                 type = iter->get()->type;
-                streams.out.append_format(L"Event %ls\n", dico[iter->get()->type].c_str());
+                streams.out.append_format(L"Event %ls\n", event2wcs(iter->get()->type).c_str());
             }
             switch (iter->get()->type) {
                 case EVENT_SIGNAL:

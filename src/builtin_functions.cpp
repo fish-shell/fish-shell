@@ -35,18 +35,18 @@ struct functions_cmd_opts_t {
     bool copy = false;
     bool report_metadata = false;
     bool verbose = false;
-    bool hooks = false;
-    wchar_t *hooks_type = NULL;
+    bool handlers = false;
+    wchar_t *handlers_type = NULL;
     wchar_t *description = NULL;
 };
-static const wchar_t *short_options = L":oDacehnqv";
+static const wchar_t *short_options = L":HDacehnqv";
 static const struct woption long_options[] = {
     {L"erase", no_argument, NULL, 'e'},   {L"description", required_argument, NULL, 'd'},
     {L"names", no_argument, NULL, 'n'},   {L"all", no_argument, NULL, 'a'},
     {L"help", no_argument, NULL, 'h'},    {L"query", no_argument, NULL, 'q'},
     {L"copy", no_argument, NULL, 'c'},    {L"details", no_argument, NULL, 'D'},
-    {L"verbose", no_argument, NULL, 'v'}, {L"hooks", optional_argument, NULL, 'o'},
-    {NULL, 0, NULL, 0}};
+    {L"verbose", no_argument, NULL, 'v'}, {L"handlers", no_argument, NULL, 'H'},
+    {L"handlers-type", required_argument, NULL, 't'}, {NULL, 0, NULL, 0}};
 
 static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
@@ -91,10 +91,14 @@ static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(hi
                 opts.copy = true;
                 break;
             }
-            case 'o': {
-                opts.hooks = true;
-                opts.hooks_type = w.woptarg;
-                break ;
+            case 'H': {
+                opts.handlers = true;
+                break;
+            }
+            case 't': {
+                opts.handlers_type = w.woptarg;
+                opts.handlers = true;
+                break;
             }
             case ':': {
                 builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
@@ -321,12 +325,17 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return report_function_metadata(funcname, opts.verbose, streams, false);
     }
 
-    if (opts.hooks) {
-        if (opts.hooks_type) {
-            wcstring tmp = wcstring(opts.hooks_type);
-            event_print(streams, &tmp);
-        } else
-            event_print(streams, NULL);
+    if (opts.handlers) {
+        int type = -1;
+        if (opts.handlers_type) {
+            type = wcs2event(opts.handlers_type);
+            if (type == -1) {
+                streams.err.append_format(_(L"%ls: Expected generic | variable | signal | exit | job-id for --handlers_type\n"),
+                        cmd);
+                return STATUS_INVALID_ARGS;
+            }
+        }
+        event_print(streams, type);
         return STATUS_CMD_OK;
     }
 

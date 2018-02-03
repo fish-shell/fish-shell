@@ -114,20 +114,13 @@
 /// current contents of the kill buffer.
 #define KILL_PREPEND 1
 
-/// History search mode. This value means that no search is currently performed.
-#define NO_SEARCH 0
+enum class history_search_mode_t {
+    none,  // no search
+    line,  // searching by line
+    token  // searching by token
+};
 
-/// History search mode. This value means that we are performing a line history search.
-#define LINE_SEARCH 1
-
-/// History search mode. This value means that we are performing a token history search.
-#define TOKEN_SEARCH 2
-
-/// History search mode. This value means we are searching backwards.
-#define SEARCH_BACKWARD 0
-
-/// History search mode. This value means we are searching forwards.
-#define SEARCH_FORWARD 1
+enum class history_search_direction_t { forward, backward };
 
 /// Any time the contents of a buffer changes, we update the generation count. This allows for our
 /// background threads to notice it and skip doing work that they would otherwise have to do.
@@ -230,7 +223,7 @@ class reader_data_t {
     /// Pointer to previous reader_data.
     reader_data_t *next;
     /// This variable keeps state on if we are in search mode, and if yes, what mode.
-    int search_mode;
+    history_search_mode_t search_mode = history_search_mode_t::none;
     /// Keep track of whether any internal code has done something which is known to require a
     /// repaint.
     bool repaint_needed;
@@ -279,7 +272,6 @@ class reader_data_t {
           end_loop(false),
           prev_end_loop(false),
           next(0),
-          search_mode(0),
           repaint_needed(false),
           screen_reset_needed(false),
           exit_on_interrupt(false) {}
@@ -1699,10 +1691,11 @@ static void reset_token_history() {
 
 /// Handles a token search command.
 ///
-/// \param forward if the search should be forward or reverse
+/// \param dir if the search should be forward or reverse
 /// \param reset whether the current token should be made the new search token
-static void handle_token_history(int forward, int reset) {
+static void handle_token_history(history_search_direction_t dir, bool reset = false) {
     if (!data) return;
+    const bool forward = (dir == history_search_direction_t::forward);
 
     wcstring str;
     size_t current_pos;
@@ -1773,7 +1766,7 @@ static void handle_token_history(int forward, int reset) {
             data->search_prev.push_back(str);
         } else if (!reader_interrupted()) {
             data->token_history_pos = -1;
-            handle_token_history(0, 0);
+            handle_token_history(history_search_direction_t::forward);
         }
     }
 }
@@ -1851,7 +1844,7 @@ static void reader_set_buffer_maintaining_pager(const wcstring &b, size_t pos) {
     update_buff_pos(&data->command_line, pos);
 
     // Clear history search and pager contents.
-    data->search_mode = NO_SEARCH;
+    data->search_mode = history_search_mode_t::none;
     data->search_buff.clear();
     data->history_search.go_to_end();
 
@@ -2352,7 +2345,7 @@ const wchar_t *reader_readline(int nchars) {
     data->cycle_cursor_pos = 0;
 
     data->search_buff.clear();
-    data->search_mode = NO_SEARCH;
+    data->search_mode = history_search_mode_t::none;
 
     exec_prompt();
 
@@ -2687,8 +2680,8 @@ const wchar_t *reader_readline(int nchars) {
             }
             // Escape was pressed.
             case L'\e': {
-                if (data->search_mode) {
-                    data->search_mode = NO_SEARCH;
+                if (data->search_mode != history_search_mode_t::none) {
+                    data->search_mode = history_search_mode_t::none;
 
                     if (data->token_history_pos == (size_t)-1) {
                         // history_reset();
@@ -2809,12 +2802,12 @@ const wchar_t *reader_readline(int nchars) {
             case R_HISTORY_SEARCH_FORWARD:
             case R_HISTORY_TOKEN_SEARCH_FORWARD: {
                 int reset = 0;
-                if (data->search_mode == NO_SEARCH) {
+                if (data->search_mode == history_search_mode_t::none) {
                     reset = 1;
                     if ((c == R_HISTORY_SEARCH_BACKWARD) || (c == R_HISTORY_SEARCH_FORWARD)) {
-                        data->search_mode = LINE_SEARCH;
+                        data->search_mode = history_search_mode_t::line;
                     } else {
-                        data->search_mode = TOKEN_SEARCH;
+                        data->search_mode = history_search_mode_t::token;
                     }
 
                     const editable_line_t *el = &data->command_line;
@@ -2833,7 +2826,7 @@ const wchar_t *reader_readline(int nchars) {
                     data->history_search.skip_matches(skip_list);
                 }
 
-                if (data->search_mode == LINE_SEARCH) {
+                if (data->search_mode == history_search_mode_t::line) {
                     if ((c == R_HISTORY_SEARCH_BACKWARD) ||
                         (c == R_HISTORY_TOKEN_SEARCH_BACKWARD)) {
                         data->history_search.go_backwards();
@@ -2851,12 +2844,12 @@ const wchar_t *reader_readline(int nchars) {
                         new_text = data->history_search.current_string();
                     }
                     set_command_line_and_position(&data->command_line, new_text, new_text.size());
-                } else if (data->search_mode == TOKEN_SEARCH) {
+                } else if (data->search_mode == history_search_mode_t::token) {
                     if ((c == R_HISTORY_SEARCH_BACKWARD) ||
                         (c == R_HISTORY_TOKEN_SEARCH_BACKWARD)) {
-                        handle_token_history(SEARCH_BACKWARD, reset);
+                        handle_token_history(history_search_direction_t::backward, reset);
                     } else {
-                        handle_token_history(SEARCH_FORWARD, reset);
+                        handle_token_history(history_search_direction_t::forward, reset);
                     }
                 }
                 break;
@@ -3217,7 +3210,7 @@ const wchar_t *reader_readline(int nchars) {
         if ((c != R_HISTORY_SEARCH_BACKWARD) && (c != R_HISTORY_SEARCH_FORWARD) &&
             (c != R_HISTORY_TOKEN_SEARCH_BACKWARD) && (c != R_HISTORY_TOKEN_SEARCH_FORWARD) &&
             (c != R_NULL) && (c != R_REPAINT) && (c != R_FORCE_REPAINT)) {
-            data->search_mode = NO_SEARCH;
+            data->search_mode = history_search_mode_t::none;
             data->search_buff.clear();
             data->history_search.go_to_end();
             data->token_history_pos = -1;
@@ -3253,7 +3246,7 @@ int reader_search_mode() {
     if (!data) {
         return -1;
     }
-    return data->search_mode == NO_SEARCH ? 0 : 1;
+    return data->search_mode == history_search_mode_t::none ? 0 : 1;
 }
 
 int reader_has_pager_contents() {

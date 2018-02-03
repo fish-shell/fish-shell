@@ -537,6 +537,8 @@ static int process_clean_after_marking(bool allow_interactive) {
 
             s = p->status;
 
+            // TODO: The generic process-exit event is useless and unused.
+            // Remove this in future.
             proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, p->pid,
                             (WIFSIGNALED(s) ? -1 : WEXITSTATUS(s)));
 
@@ -601,6 +603,8 @@ static int process_clean_after_marking(bool allow_interactive) {
                 format_job_info(j, JOB_ENDED);
                 found = 1;
             }
+            // TODO: The generic process-exit event is useless and unused.
+            // Remove this in future.
             // Don't fire the exit-event for jobs with pgid -2.
             // That's our "sentinel" pgid, for jobs that don't (yet) have a pgid,
             // or jobs that consist entirely of builtins (and hence don't have a process).

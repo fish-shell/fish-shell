@@ -360,23 +360,6 @@ static size_t calc_prompt_lines(const wcstring &prompt) {
 /// Stat stdout and stderr and save result. This should be done before calling a function that may
 /// cause output.
 static void s_save_status(screen_t *s) {
-// PCA Let's not do this futimes stuff, because sudo dumbly uses the tty's ctime as part of its
-// tty_tickets feature. Disabling this should fix issue #122.
-#if 0
-    // This futimes call tries to trick the system into using st_mtime as a tampering flag. This of
-    // course only works on systems where futimes is defined, but it should make the status saving
-    // stuff failsafe.
-    struct timeval t[] = {
-        { time(0)-1, 0 },
-        { time(0)-1, 0 }
-    };
-
-    // Don't check return value on these. We don't care if they fail, really.  This is all just to
-    // make the prompt look ok, which is impossible to do 100% reliably. We try, at least.
-    futimes(1, t);
-    futimes(2, t);
-#endif
-
     fstat(1, &s->prev_buff_1);
     fstat(2, &s->prev_buff_2);
 }
@@ -508,11 +491,6 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
     int x_steps, y_steps;
 
     char *str;
-    /*
-      debug( 0, L"move from %d %d to %d %d",
-      s->screen_cursor[0], s->screen_cursor[1],
-      new_x, new_y );
-    */
     scoped_buffer_t scoped_buffer(b);
 
     y_steps = new_y - s->actual.cursor.y;
@@ -645,64 +623,6 @@ static bool perform_any_impending_soft_wrap(screen_t *scr, int x, int y) {
 /// Make sure we don't soft wrap.
 static void invalidate_soft_wrap(screen_t *scr) { scr->soft_wrap_location = INVALID_LOCATION; }
 
-#if 0
-/// Various code for testing term behavior.
-static bool test_stuff(screen_t *scr)
-{
-    data_buffer_t output;
-    scoped_buffer_t scoped_buffer(&output);
-
-    s_move(scr, &output, 0, 0);
-    int screen_width = common_get_width();
-
-    const wchar_t *left = L"left";
-    const wchar_t *right = L"right";
-
-    for (size_t idx = 0; idx < 80; idx++)
-    {
-        output.push_back('A');
-    }
-
-    if (! output.empty())
-    {
-        write_loop(STDOUT_FILENO, &output.at(0), output.size());
-        output.clear();
-    }
-
-    sleep(5);
-
-    for (size_t i=0; i < 1; i++)
-    {
-        writembs(cursor_left);
-    }
-
-    if (! output.empty())
-    {
-        write_loop(1, &output.at(0), output.size());
-        output.clear();
-    }
-
-
-
-    while (1)
-    {
-        int c = getchar();
-        if (c != EOF) break;
-    }
-
-
-    while (1)
-    {
-        int c = getchar();
-        if (c != EOF) break;
-    }
-    fwprintf(stdout, L"Bye\n");
-    exit(0);
-    while (1) sleep(10000);
-    return true;
-}
-#endif
-
 /// Update the screen to match the desired output.
 static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *right_prompt) {
     // if (test_stuff(scr)) return;
@@ -741,12 +661,6 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
     // Determine how many lines have stuff on them; we need to clear lines with stuff that we don't
     // want.
     const size_t lines_with_stuff = maxi(actual_lines_before_reset, scr->actual.line_count());
-#if 0
-    if (lines_with_stuff > scr->desired.line_count()) {
-        // There are lines that we output to previously that will need to be cleared.
-        need_clear_lines = true;
-    }
-#endif
 
     if (wcscmp(left_prompt, scr->actual_left_prompt.c_str())) {
         s_move(scr, &output, 0, 0);

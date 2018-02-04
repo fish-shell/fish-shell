@@ -2734,14 +2734,14 @@ const wchar_t *reader_readline(int nchars) {
                 bool continue_on_next_line = false;
                 if (el->position >= el->size()) {
                     // We're at the end of the text and not in a comment (issue #1225).
-                    continue_on_next_line = is_backslashed(el->text, el->position) &&
-                                            !text_ends_in_comment(el->text);
+                    continue_on_next_line =
+                        is_backslashed(el->text, el->position) && !text_ends_in_comment(el->text);
                 } else {
                     // Allow mid line split if the following character is whitespace (issue #613).
                     if (is_backslashed(el->text, el->position) &&
                         iswspace(el->text.at(el->position))) {
                         continue_on_next_line = true;
-                    // Check if the end of the line is backslashed (issue #4467).
+                        // Check if the end of the line is backslashed (issue #4467).
                     } else if (is_backslashed(el->text, el->size()) &&
                                !text_ends_in_comment(el->text)) {
                         // Move the cursor to the end of the line.
@@ -2974,7 +2974,8 @@ const wchar_t *reader_readline(int nchars) {
                     select_completion_in_direction(direction);
                 } else if (!data->pager.empty()) {
                     // We pressed a direction with a non-empty pager, begin navigation.
-                    select_completion_in_direction(c == R_DOWN_LINE ? direction_south : direction_north);
+                    select_completion_in_direction(c == R_DOWN_LINE ? direction_south
+                                                                    : direction_north);
                 } else {
                     // Not navigating the pager contents.
                     editable_line_t *el = data->active_edit_line();
@@ -3188,7 +3189,6 @@ const wchar_t *reader_readline(int nchars) {
                 // Other, if a normal character, we add it to the command.
                 if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
                     c != 0x7F) {
-
                     // Regular character.
                     editable_line_t *el = data->active_edit_line();
                     bool allow_expand_abbreviations = (el == &data->command_line);

@@ -81,7 +81,7 @@ class scoped_buffer_t {
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.
 // Note this is deliberately exported so that init_curses can clear it.
-cached_esc_sequences_t cached_esc_sequences;
+layout_cache_t cached_layouts;
 
 /// Tests if the specified narrow character sequence is present at the specified position of the
 /// specified wide character string. All of \c seq must match, but str may be longer than seq.
@@ -269,7 +269,7 @@ size_t escape_code_length(const wchar_t *code) {
     assert(code != NULL);
     if (*code != L'\e') return 0;
 
-    size_t esc_seq_len = cached_esc_sequences.find_entry(code);
+    size_t esc_seq_len = cached_layouts.find_escape_code(code);
     if (esc_seq_len) return esc_seq_len;
 
     bool found = is_color_escape_seq(code, &esc_seq_len);
@@ -279,16 +279,9 @@ size_t escape_code_length(const wchar_t *code) {
     if (!found) found = is_single_byte_escape_seq(code, &esc_seq_len);
     if (!found) found = is_csi_style_escape_seq(code, &esc_seq_len);
     if (!found) found = is_two_byte_escape_seq(code, &esc_seq_len);
-    if (found) cached_esc_sequences.add_entry(wcstring(code, esc_seq_len));
+    if (found) cached_layouts.add_escape_code(wcstring(code, esc_seq_len));
     return esc_seq_len;
 }
-
-// Information about the layout of a prompt.
-struct prompt_layout_t {
-    size_t line_count;       // how many lines the prompt consumes
-    size_t max_line_width;   // width of the longest line
-    size_t last_line_width;  // width of the last line
-};
 
 // These are used by `calc_prompt_layout()` to avoid redundant calculations.
 static const wchar_t *cached_left_prompt = wcsdup(L"");

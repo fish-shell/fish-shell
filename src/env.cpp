@@ -606,7 +606,7 @@ static void init_curses() {
     term_has_xn = tigetflag((char *)"xenl") == 1;  // does terminal have the eat_newline_glitch
     update_fish_color_support();
     // Invalidate the cached escape sequences since they may no longer be valid.
-    cached_esc_sequences.clear();
+    cached_layouts.clear();
     curses_initialized = true;
 }
 

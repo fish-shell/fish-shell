@@ -4333,27 +4333,27 @@ void test_maybe() {
 }
 
 void test_cached_esc_sequences() {
-    cached_esc_sequences_t seqs;
-    do_test(seqs.find_entry(L"abc") == 0);
-    seqs.add_entry(L"abc");
-    seqs.add_entry(L"abc");
-    do_test(seqs.size() == 1);
-    do_test(seqs.find_entry(L"abc") == 3);
-    do_test(seqs.find_entry(L"abcd") == 3);
-    do_test(seqs.find_entry(L"abcde") == 3);
-    do_test(seqs.find_entry(L"xabcde") == 0);
-    seqs.add_entry(L"ac");
-    do_test(seqs.find_entry(L"abcd") == 3);
-    do_test(seqs.find_entry(L"acbd") == 2);
-    seqs.add_entry(L"wxyz");
-    do_test(seqs.find_entry(L"abc") == 3);
-    do_test(seqs.find_entry(L"abcd") == 3);
-    do_test(seqs.find_entry(L"wxyz123") == 4);
-    do_test(seqs.find_entry(L"qwxyz123") == 0);
-    do_test(seqs.size() == 3);
+    layout_cache_t seqs;
+    do_test(seqs.find_escape_code(L"abc") == 0);
+    seqs.add_escape_code(L"abc");
+    seqs.add_escape_code(L"abc");
+    do_test(seqs.esc_cache_size() == 1);
+    do_test(seqs.find_escape_code(L"abc") == 3);
+    do_test(seqs.find_escape_code(L"abcd") == 3);
+    do_test(seqs.find_escape_code(L"abcde") == 3);
+    do_test(seqs.find_escape_code(L"xabcde") == 0);
+    seqs.add_escape_code(L"ac");
+    do_test(seqs.find_escape_code(L"abcd") == 3);
+    do_test(seqs.find_escape_code(L"acbd") == 2);
+    seqs.add_escape_code(L"wxyz");
+    do_test(seqs.find_escape_code(L"abc") == 3);
+    do_test(seqs.find_escape_code(L"abcd") == 3);
+    do_test(seqs.find_escape_code(L"wxyz123") == 4);
+    do_test(seqs.find_escape_code(L"qwxyz123") == 0);
+    do_test(seqs.esc_cache_size() == 3);
     seqs.clear();
-    do_test(seqs.size() == 0);
-    do_test(seqs.find_entry(L"abcd") == 0);
+    do_test(seqs.esc_cache_size() == 0);
+    do_test(seqs.find_escape_code(L"abcd") == 0);
 }
 
 /// Main test.

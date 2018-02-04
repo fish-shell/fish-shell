@@ -95,6 +95,7 @@ function __check_subcommand_group
 	not __fish_seen_subcommand_from info install list remove upgrade mark
 end
 
+#TODO: Add descriptions
 complete -c dnf -n '__check_subcommand_group; and __fish_seen_subcommand_from group' -xa info
 complete -c dnf -n '__check_subcommand_group; and __fish_seen_subcommand_from group' -xa install
 complete -c dnf -n '__check_subcommand_group; and __fish_seen_subcommand_from group' -xa list
@@ -110,6 +111,7 @@ function __check_subcommand_history
 	not __fish_seen_subcommand_from info redo rollback undo userinstalled
 end
 
+#TODO: Add descriptions
 complete -c dnf -n '__check_subcommand_history; and __fish_seen_subcommand_from history' -xa info
 complete -c dnf -n '__check_subcommand_history; and __fish_seen_subcommand_from history' -xa redo
 complete -c dnf -n '__check_subcommand_history; and __fish_seen_subcommand_from history' -xa rollback
@@ -136,6 +138,7 @@ function __check_subcommand_mark
 	not __fish_seen_subcommand_from install remove group
 end
 
+#TODO: Add descriptions
 complete -c dnf -n '__check_subcommand_mark; and __fish_seen_subcommand_from mark' -xa install
 complete -c dnf -n '__check_subcommand_mark; and __fish_seen_subcommand_from mark' -xa remove
 complete -c dnf -n '__check_subcommand_mark; and __fish_seen_subcommand_from mark' -xa group

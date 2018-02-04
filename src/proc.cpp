@@ -10,16 +10,17 @@
 #include <signal.h>
 #include <stdio.h>
 #include <sys/wait.h>
-#include <termios.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
 
 #if HAVE_TERM_H
+#include <curses.h>
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
+#include <termios.h>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif

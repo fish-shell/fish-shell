@@ -2,14 +2,15 @@
 #include "config.h"
 
 #include <errno.h>
-#include <termios.h>
 #include <wchar.h>
 #include <wctype.h>
 #if HAVE_TERM_H
+#include <curses.h>
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
+#include <termios.h>
 
 #include <algorithm>
 #include <memory>

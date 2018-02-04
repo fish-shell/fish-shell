@@ -434,9 +434,11 @@ static void reader_repaint() {
     std::vector<int> indents = data->indents;
     indents.resize(len);
 
-    // Re-render our completions page if necessary. We set the term size to 1 less than the true
-    // term height. This means we will always show the (bottom) line of the prompt.
-    data->pager.set_term_size(maxi(1, common_get_width()), maxi(1, common_get_height() - 1));
+    // Re-render our completions page if necessary. We set the term size to less than the true
+    // term height by the number of prompt lines. This means we will always show the entire line of
+    // the prompt.
+    data->pager.set_term_size(maxi(1, common_get_width()),
+                              maxi(1, common_get_height() - (int)calc_prompt_lines(full_line)));
     data->pager.update_rendering(&data->current_page_rendering);
 
     bool focused_on_pager = data->active_edit_line() == &data->pager.search_field_line;

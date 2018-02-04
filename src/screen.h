@@ -240,4 +240,7 @@ class cached_esc_sequences_t {
 // change by calling `cached_esc_sequences.clear()`.
 extern cached_esc_sequences_t cached_esc_sequences;
 
+// Calculates the number of prompt lines.
+size_t calc_prompt_lines(const wcstring &prompt);
+
 #endif

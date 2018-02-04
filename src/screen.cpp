@@ -346,7 +346,7 @@ static prompt_layout_t calc_prompt_layout(const wchar_t *prompt, prompt_type_t w
     return prompt_layout;
 }
 
-static size_t calc_prompt_lines(const wcstring &prompt) {
+size_t calc_prompt_lines(const wcstring &prompt) {
     // Hack for the common case where there's no newline at all. I don't know if a newline can
     // appear in an escape sequence, so if we detect a newline we have to defer to
     // calc_prompt_width_and_lines.

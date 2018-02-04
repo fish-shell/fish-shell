@@ -4332,8 +4332,10 @@ void test_maybe() {
     do_test(m2.missing_or_empty());
 }
 
-void test_cached_esc_sequences() {
+void test_layout_cache() {
     layout_cache_t seqs;
+
+    // Verify escape code cache.
     do_test(seqs.find_escape_code(L"abc") == 0);
     seqs.add_escape_code(L"abc");
     seqs.add_escape_code(L"abc");
@@ -4354,6 +4356,24 @@ void test_cached_esc_sequences() {
     seqs.clear();
     do_test(seqs.esc_cache_size() == 0);
     do_test(seqs.find_escape_code(L"abcd") == 0);
+
+    // Verify prompt layout cache.
+    for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
+        wcstring input = std::to_wstring(i);
+        do_test(!seqs.find_prompt_layout(input));
+        seqs.add_prompt_layout(input, {i});
+        do_test(seqs.find_prompt_layout(input)->line_count == i);
+    }
+
+    size_t expected_evictee = 3;
+    for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
+        if (i != expected_evictee)
+            do_test(seqs.find_prompt_layout(std::to_wstring(i))->line_count == i);
+    }
+
+    seqs.add_prompt_layout(L"whatever", {100});
+    do_test(!seqs.find_prompt_layout(std::to_wstring(expected_evictee)));
+    do_test(seqs.find_prompt_layout(L"whatever")->line_count == 100);
 }
 
 /// Main test.
@@ -4452,7 +4472,7 @@ int main(int argc, char **argv) {
     if (should_test_function("string")) test_string();
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
     if (should_test_function("maybe")) test_maybe();
-    if (should_test_function("cached_esc_sequences")) test_cached_esc_sequences();
+    if (should_test_function("layout_cache")) test_layout_cache();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

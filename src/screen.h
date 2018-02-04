@@ -220,6 +220,8 @@ class layout_cache_t {
     std::list<prompt_layout_pair_t> prompt_cache_;
 
    public:
+    static constexpr size_t prompt_cache_max_size = 8;
+
     /// \return the size of the escape code cache.
     size_t esc_cache_size() const { return esc_cache_.size(); }
 
@@ -245,6 +247,12 @@ class layout_cache_t {
         }
         return 0;
     }
+
+    // Finds the layout for a prompt, promoting it to the front. Returns none() if not found.
+    maybe_t<prompt_layout_t> find_prompt_layout(const wcstring &input);
+
+    // Adds a prompt layout for a given string.
+    void add_prompt_layout(wcstring input, prompt_layout_t layout);
 
     void clear() {
         esc_cache_.clear();

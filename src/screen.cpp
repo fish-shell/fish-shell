@@ -283,6 +283,27 @@ size_t escape_code_length(const wchar_t *code) {
     return esc_seq_len;
 }
 
+maybe_t<prompt_layout_t> layout_cache_t::find_prompt_layout(const wcstring &input) {
+    auto start = prompt_cache_.begin();
+    auto end = prompt_cache_.end();
+    for (auto iter = start; iter != end; ++iter) {
+        if (iter->first == input) {
+            // Found it. Move it to the front if not already there.
+            if (iter != start) prompt_cache_.splice(start, prompt_cache_, iter);
+            return iter->second;
+        }
+    }
+    return none();
+}
+
+void layout_cache_t::add_prompt_layout(wcstring input, prompt_layout_t layout) {
+    assert(!find_prompt_layout(input) && "Should not have a prompt layout for this input");
+    prompt_cache_.emplace_front(std::move(input), std::move(layout));
+    if (prompt_cache_.size() > prompt_cache_max_size) {
+        prompt_cache_.pop_back();
+    }
+}
+
 // These are used by `calc_prompt_layout()` to avoid redundant calculations.
 static const wchar_t *cached_left_prompt = wcsdup(L"");
 static const wchar_t *cached_right_prompt = wcsdup(L"");

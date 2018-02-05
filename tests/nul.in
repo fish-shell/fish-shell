@@ -1,0 +1,16 @@
+# Check that splitting on NUL works
+set -l var (printf '%s\0' "one line" two\nlines banana)
+string escape -- $var
+echo $var[2]
+
+echo
+
+# This is split into one element - keeping the trailing newline.
+set -l var (printf '%s\n' "one line" two\nlines banana; printf '\0')
+string escape -- $var
+
+echo
+
+# This is still split on newlines
+set -l var (printf '%s\n' "one line" two\nlines banana)
+string escape -- $var

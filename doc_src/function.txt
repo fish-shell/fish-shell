@@ -49,6 +49,7 @@ By using one of the event handler switches, a function can be made to run automa
 
   Note: This event will be emitted even if the command is invalid. The commandline parameter includes the entire commandline verbatim, and may potentially include newlines.
 
+- `fish_exit` is emitted right before fish exits.
 
 \subsection function-example Example
 

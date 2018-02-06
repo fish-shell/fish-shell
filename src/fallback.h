@@ -15,9 +15,6 @@
 // in <wchar.h>. At least on OS X if we don't do this we get compilation errors do to the macro
 // substitution if wchar.h is included after this header.
 #include <wchar.h>  // IWYU pragma: keep
-#if HAVE_NCURSES_H
-#include <ncurses.h>  // IWYU pragma: keep
-#endif
 
 /// fish's internal versions of wcwidth and wcswidth, which can use an internal implementation if
 /// the system one is busted.

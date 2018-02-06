@@ -40,6 +40,9 @@
 /* Define to 1 if you have the `mkostemp' function. */
 #cmakedefine HAVE_MKOSTEMP 1
 
+/* Define to 1 if you have the <curses.h> header file. */
+#cmakedefine HAVE_CURSES_H 1
+
 /* Define to 1 if you have the <ncurses/curses.h> header file. */
 #cmakedefine HAVE_NCURSES_CURSES_H 1
 

@@ -4,6 +4,11 @@
 # should be running it via `make test` to ensure the environment is properly
 # setup.
 
+if test "$TRAVIS_OS_NAME" = osx
+    echo "Skipping interactive tests on macOS on Travis"
+    exit 0
+end
+
 # This is a list of flakey tests that often succeed when rerun.
 set TESTS_TO_RETRY bind.expect
 

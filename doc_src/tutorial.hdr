@@ -450,6 +450,22 @@ else
 end
 \endfish
 
+To check string, number or file properties, use <a href="commands.html#test">test</a>, like
+
+\fish{cli-dark}
+if test "$fish" = "flounder"
+    echo FLOUNDER
+end
+
+# or
+
+if test "$number" -gt 5
+    echo $number is greater than five
+else
+    echo $number is five or less
+end
+\endfish
+
 <a href="#tut_combiners">Combiners</a> can also be used to make more complex conditions, like
 
 \fish

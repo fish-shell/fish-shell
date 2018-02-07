@@ -60,36 +60,16 @@ static void debug_safe_int(int level, const char *format, int val) {
 }
 
 /// Called only by the child to set its own process group (possibly creating a new group in the
-/// process if it is the first in a JOB_CONTROL job. The parent will wait for this to finish.
-/// A process that isn't already in control of the terminal can't give itself control of the
-/// terminal without hanging, but it's not right for the child to try and give itself control
-/// from the very beginning because the parent may not have gotten around to doing so yet. Let
-/// the parent figure it out; if the child doesn't have terminal control and it later tries to
-/// read from the terminal, the kernel will send it SIGTTIN and it'll hang anyway.
-/// The key here is that the parent should transfer control of the terminal (if appropriate)
-/// prior to sending the child SIGCONT to wake it up to exec.
-///
+/// process if it is the first in a JOB_CONTROL job.
 /// Returns true on sucess, false on failiure.
 bool child_set_group(job_t *j, process_t *p) {
     bool retval = true;
-
     if (j->get_flag(JOB_CONTROL)) {
         // New jobs have the pgid set to -2
         if (j->pgid == -2) {
             j->pgid = p->pid;
         }
-        // Retry on EPERM because there's no way that a child cannot join an existing progress group
-        // because we are SIGSTOPing the previous job in the chain. Sometimes we have to try a few
-        // times to get the kernel to see the new group. (Linux 4.4.0)
-        int failure = setpgid(p->pid, j->pgid);
-        while (failure == -1 && (errno == EPERM || errno == EINTR)) {
-            debug_safe(4, "Retrying setpgid in child process");
-            failure = setpgid(p->pid, j->pgid);
-        }
-        // TODO: Figure out why we're testing whether the pgid is correct after attempting to
-        // set it failed. This was added in commit 4e912ef8 from 2012-02-27.
-        failure = failure && getpgid(p->pid) != j->pgid;
-        if (failure) {  //!OCLINT(collapsible if statements)
+        if (setpgid(p->pid, j->pgid) < 0) {
             char pid_buff[128];
             char job_id_buff[128];
             char getpgid_buff[128];
@@ -112,7 +92,7 @@ bool child_set_group(job_t *j, process_t *p) {
             retval = false;
         }
     } else {
-        // This is probably stays unused in the child.
+        // The child does not actualyl use this field.
         j->pgid = getpgrp();
     }
 
@@ -123,11 +103,7 @@ bool child_set_group(job_t *j, process_t *p) {
 /// guaranteeing the job control process group has been created and that the child belongs to the
 /// correct process group. Here we can update our job_t structure to reflect the correct process
 /// group in the case of JOB_CONTROL, and we can give the new process group control of the terminal
-/// if it's to run in the foreground. Note that we can guarantee the child won't try to read from
-/// the terminal before we've had a chance to run this code, because we haven't woken them up with a
-/// SIGCONT yet. This musn't be called as a part of setup_child_process because that can hang
-/// indefinitely until data is available to read/write in the case of IO_FILE, which means we'll
-/// never reach our SIGSTOP and everything hangs.
+/// if it's to run in the foreground.
 bool set_child_group(job_t *j, pid_t child_pid) {
     bool retval = true;
 
@@ -135,6 +111,13 @@ bool set_child_group(job_t *j, pid_t child_pid) {
         // New jobs have the pgid set to -2
         if (j->pgid == -2) {
             j->pgid = child_pid;
+        }
+        // The parent sets the child's group. This incurs the well-known unavoidable race with the
+        // child exiting, so ignore ESRCH and EPERM (in case the pid was recycled).
+        if (setpgid(child_pid, j->pgid) < 0) {
+            if (errno != ESRCH && errno != EPERM) {
+                safe_perror("setpgid");
+            }
         }
     } else {
         j->pgid = getpgrp();
@@ -550,4 +533,16 @@ bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errle
 
     errno = saved_errno;
     return success;
+}
+
+void run_as_keepalive(pid_t parent_pid) {
+    // Run this process as a keepalive. In typical usage the parent process will kill us. However
+    // this may not happen if the parent process exits abruptly, either via kill or exec. What we do
+    // is poll our ppid() and exit when it differs from parent_pid. We can afford to do this with
+    // low frequency because in the great majority of cases, fish will kill(9) us.
+    for (;;) {
+        // Note sleep is async-safe.
+        if (sleep(1)) break;
+        if (getppid() != parent_pid) break;
+    }
 }

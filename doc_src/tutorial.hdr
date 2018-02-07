@@ -450,7 +450,7 @@ else
 end
 \endfish
 
-To check string, number or file properties, use <a href="commands.html#test">test</a>, like
+To compare strings or number or check file properties (whether a file exists or is writeable and such), use <a href="commands.html#test">test</a>, like
 
 \fish{cli-dark}
 if test "$fish" = "flounder"

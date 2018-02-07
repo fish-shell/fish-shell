@@ -493,31 +493,30 @@ void event_print(io_streams_t &streams, int event_type) {
             });
 
     int type = -1;
-    for (std::vector<shared_ptr<event_t>>::iterator iter = tmp.begin();
-            iter != tmp.end(); ++iter) {
-        if (event_type == -1 || event_type == iter->get()->type) {
-            if (iter->get()->type != type) {
+    for (const shared_ptr<event_t> &evt : tmp) {
+        if (event_type == -1 || event_type == evt.get()->type) {
+            if (evt.get()->type != type) {
                 if (type != -1)
                     streams.out.append(L"\n");
-                type = iter->get()->type;
-                streams.out.append_format(L"Event %ls\n", event2wcs(iter->get()->type).c_str());
+                type = evt.get()->type;
+                streams.out.append_format(L"Event %ls\n", event2wcs(evt.get()->type).c_str());
             }
-            switch (iter->get()->type) {
+            switch (evt.get()->type) {
                 case EVENT_SIGNAL:
-                    streams.out.append_format(L"%ls %ls\n", sig2wcs(iter->get()->param1.signal),
-                            iter->get()->function_name.c_str());
+                    streams.out.append_format(L"%ls %ls\n", sig2wcs(evt.get()->param1.signal),
+                            evt.get()->function_name.c_str());
                     break;
                 case EVENT_JOB_ID:
-                    streams.out.append_format(L"%d %ls\n", iter->get()->param1,
-                            iter->get()->function_name.c_str());
+                    streams.out.append_format(L"%d %ls\n", evt.get()->param1,
+                            evt.get()->function_name.c_str());
                     break;
                 case EVENT_VARIABLE:
                 case EVENT_GENERIC:
-                    streams.out.append_format(L"%ls %ls\n", iter->get()->str_param1.c_str(),
-                            iter->get()->function_name.c_str());
+                    streams.out.append_format(L"%ls %ls\n", evt.get()->str_param1.c_str(),
+                            evt.get()->function_name.c_str());
                     break;
                 default:
-                    streams.out.append_format(L"%ls\n", iter->get()->function_name.c_str());
+                    streams.out.append_format(L"%ls\n", evt.get()->function_name.c_str());
                     break;
 
             }

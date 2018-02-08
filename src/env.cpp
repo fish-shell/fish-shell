@@ -549,7 +549,7 @@ static bool initialize_curses_using_fallback(const char *term) {
     if (term_var.missing_or_empty()) return false;
 
     auto term_env = wcs2string(term_var->as_string());
-    if (term_env != DEFAULT_TERM1 || term_env != DEFAULT_TERM2) return false;
+    if (term_env == DEFAULT_TERM1 || term_env == DEFAULT_TERM2) return false;
 
     if (is_interactive_session) debug(1, _(L"Using fallback terminal type '%s'."), term);
 

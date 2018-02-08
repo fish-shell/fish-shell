@@ -28,11 +28,11 @@ matrix:
         - CXXFLAGS="-g -O2 -m32" CFLAGS="-g -m32"
         - USE_CMAKE="1" # Dummy value, shows up in the Travis UI only
       script:
-        - mkdir build && cd build &&
-          cmake -DCMAKE_INSTALL_PREFIX=$HOME/prefix .. || cat CMakeFiles/CMakeError.log &&
-          make -j2 &&
-          make install &&
-          make test SHOW_INTERACTIVE_LOG=1
+        - mkdir -p build && cd build &&
+          cmake -DCMAKE_INSTALL_PREFIX=$HOME/prefix -G Ninja .. || cat CMakeFiles/CMakeError.log &&
+          ninja &&
+          ninja install &&
+          ninja test SHOW_INTERACTIVE_LOG=1
   fast_finish: true
 
 notifications:

@@ -12,7 +12,7 @@ matrix:
             - expect
             - gettext
             - libncurses5-dev
-            - g++-multilib
+            - g++-
             - ninja-build
             - cmake
         coverity_scan:
@@ -25,7 +25,7 @@ matrix:
           build_command: "ninja"
           branch_pattern: coverity_scan_master
       env:
-        - CXXFLAGS="-g -O2 -m32" CFLAGS="-g -m32"
+        - CXXFLAGS="-g -O2" CFLAGS="-g"
         - USE_CMAKE="1" # Dummy value, shows up in the Travis UI only
         - CMAKE_CXX_COMPILER=`which g++`
       script:

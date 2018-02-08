@@ -313,7 +313,10 @@ char *wcs2str(const wchar_t *in) {
     // Here we probably allocate a buffer probably much larger than necessary.
     char *out = (char *)malloc(MAX_UTF8_BYTES * wcslen(in) + 1);
     assert(out);
-    return wcs2str_internal(in, out);
+    //Instead of returning the return value of wcs2str_internal, return `out` directly.
+    //This eliminates false warnings in coverity about resource leaks.
+    wcs2str_internal(in, out);
+    return out;
 }
 
 char *wcs2str(const wcstring &in) { return wcs2str(in.c_str()); }

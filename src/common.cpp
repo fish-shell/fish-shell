@@ -1848,11 +1848,7 @@ void format_size_safe(char buff[128], unsigned long long sz) {
                 if (isz > 9) {
                     append_ull(buff, isz, &idx, max_len);
                 } else {
-                    if (isz == 0) {
-                        append_str(buff, "0", &idx, max_len);
-                    } else {
-                        append_ull(buff, isz, &idx, max_len);
-                    }
+                    append_ull(buff, isz, &idx, max_len);
 
                     // Maybe append a single fraction digit.
                     unsigned long long remainder = sz % 1024;

@@ -36,11 +36,12 @@
 #include "iothread.h"
 #include "lru.h"
 #include "parse_constants.h"
-#include "parse_tree.h"
 #include "parse_util.h"
 #include "path.h"
 #include "reader.h"
-#include "wutil.h"  // IWYU pragma: keep
+#include "tnode.h"
+#include "wildcard.h"  // IWYU pragma: keep
+#include "wutil.h"     // IWYU pragma: keep
 
 // Our history format is intended to be valid YAML. Here it is:
 //
@@ -456,31 +457,36 @@ history_item_t::history_item_t(const wcstring &str, time_t when, history_identif
 
 bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type,
                                     bool case_sensitive) const {
-    // We don't use a switch below because there are only three cases and if the strings are the
-    // same length we can use the faster HISTORY_SEARCH_TYPE_EXACT for the other two cases.
-    //
-    // Too, we consider equal strings to match a prefix search, so that autosuggest will allow
-    // suggesting what you've typed.
-    if (case_sensitive) {
-        if (type == HISTORY_SEARCH_TYPE_EXACT || term.size() == contents.size()) {
-            return term == contents;
-        } else if (type == HISTORY_SEARCH_TYPE_CONTAINS) {
-            return contents.find(term) != wcstring::npos;
-        } else if (type == HISTORY_SEARCH_TYPE_PREFIX) {
-            return string_prefixes_string(term, contents);
-        }
-    } else {
-        wcstring lterm(L"");
-        for (wcstring::const_iterator it = term.begin(); it != term.end(); ++it) {
-            lterm.push_back(towlower(*it));
-        }
+    // Note that this->term has already been lowercased when constructing the
+    // search object if we're doing a case insensitive search.
+    const wcstring &content_to_match = case_sensitive ? contents : contents_lower;
 
-        if (type == HISTORY_SEARCH_TYPE_EXACT || lterm.size() == contents.size()) {
-            return lterm == contents_lower;
-        } else if (type == HISTORY_SEARCH_TYPE_CONTAINS) {
-            return contents_lower.find(lterm) != wcstring::npos;
-        } else if (type == HISTORY_SEARCH_TYPE_PREFIX) {
-            return string_prefixes_string(lterm, contents_lower);
+    switch (type) {
+        case HISTORY_SEARCH_TYPE_EXACT: {
+            return term == content_to_match;
+        }
+        case HISTORY_SEARCH_TYPE_CONTAINS: {
+            return content_to_match.find(term) != wcstring::npos;
+        }
+        case HISTORY_SEARCH_TYPE_PREFIX: {
+            return string_prefixes_string(term, content_to_match);
+        }
+        case HISTORY_SEARCH_TYPE_CONTAINS_GLOB: {
+            wcstring wcpattern1 = parse_util_unescape_wildcards(term);
+            if (wcpattern1.front() != ANY_STRING) wcpattern1.insert(0, 1, ANY_STRING);
+            if (wcpattern1.back() != ANY_STRING) wcpattern1.push_back(ANY_STRING);
+            return wildcard_match(content_to_match, wcpattern1);
+        }
+        case HISTORY_SEARCH_TYPE_PREFIX_GLOB: {
+            wcstring wcpattern2 = parse_util_unescape_wildcards(term);
+            if (wcpattern2.back() != ANY_STRING) wcpattern2.push_back(ANY_STRING);
+            return wildcard_match(content_to_match, wcpattern2);
+        }
+        case HISTORY_SEARCH_TYPE_CONTAINS_PCRE: {
+            abort();
+        }
+        case HISTORY_SEARCH_TYPE_PREFIX_PCRE: {
+            abort();
         }
     }
     DIE("unexpected history_search_type_t value");
@@ -1886,11 +1892,9 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
     bool impending_exit = false;
     parse_node_tree_t tree;
     parse_tree_from_string(str, parse_flag_none, &tree, NULL);
-    size_t count = tree.size();
 
     path_list_t potential_paths;
-    for (size_t i = 0; i < count; i++) {
-        const parse_node_t &node = tree.at(i);
+    for (const parse_node_t &node : tree) {
         if (!node.has_source()) {
             continue;
         }
@@ -1905,15 +1909,15 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
             // Hack hack hack - if the command is likely to trigger an exit, then don't do
             // background file detection, because we won't be able to write it to our history file
             // before we exit.
-            if (tree.decoration_for_plain_statement(node) == parse_statement_decoration_exec) {
+            if (get_decoration({&tree, &node}) == parse_statement_decoration_exec) {
                 impending_exit = true;
             }
 
-            wcstring command;
-            tree.command_for_plain_statement(node, str, &command);
-            unescape_string_in_place(&command, UNESCAPE_DEFAULT);
-            if (command == L"exit" || command == L"reboot") {
-                impending_exit = true;
+            if (maybe_t<wcstring> command = command_for_plain_statement({&tree, &node}, str)) {
+                unescape_string_in_place(&*command, UNESCAPE_DEFAULT);
+                if (*command == L"exit" || *command == L"reboot") {
+                    impending_exit = true;
+                }
             }
         }
     }

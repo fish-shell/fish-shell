@@ -3,4 +3,11 @@
 # Validate basic expressions
 
 ####################
-# Validate how bare variables in an epxression are handled
+# Validate how variables in an expression are handled
+
+####################
+# Validate math error reporting
+math: Invalid expression: Too few parameters for function "min" at expression position 5
+math: Invalid expression: String value used where a numerical argument is expected.
+math: Invalid expression: Too few parameters for function "max" at expression position 5
+math: Invalid expression: Too few parameters for function "sum" at expression position 5

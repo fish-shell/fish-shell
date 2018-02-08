@@ -62,6 +62,10 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
                 end
             end
 
+            # Skip unusable paths.
+            test -d "$relative_path" -a -x "$relative_path"
+            or return
+
             builtin cd $relative_path
             set -l new_paths
             for path in $paths

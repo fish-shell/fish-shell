@@ -290,6 +290,11 @@ wcstring str2wcstring(const std::string &in) {
     return str2wcs_internal(in.data(), in.size());
 }
 
+wcstring str2wcstring(const std::string &in, size_t len) {
+    // Handles embedded nulls!
+    return str2wcs_internal(in.data(), len);
+}
+
 char *wcs2str(const wchar_t *in) {
     if (!in) return NULL;
     size_t desired_size = MAX_UTF8_BYTES * wcslen(in) + 1;
@@ -549,12 +554,6 @@ bool should_suppress_stderr_for_tests() {
     return program_name && !wcscmp(program_name, TESTS_PROGRAM_NAME);
 }
 
-/// Return true if we should emit a `debug()` message. This used to call
-/// `should_suppress_stderr_for_tests()`. It no longer does so because it can suppress legitimate
-/// errors we want to see if things go wrong. Too, calling that function is no longer necessary, if
-/// it ever was, to suppress unwanted diagnostic output that might confuse people running `make
-/// test`.
-static bool should_debug(int level) { return level <= debug_level; }
 
 static void debug_shared(const wchar_t level, const wcstring &msg) {
     pid_t current_pid = getpid();
@@ -568,8 +567,7 @@ static void debug_shared(const wchar_t level, const wcstring &msg) {
 }
 
 static wchar_t level_char[] = {L'E', L'W', L'2', L'3', L'4', L'5'};
-void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...) {
-    if (!should_debug(level)) return;
+void __attribute__((noinline)) debug_impl(int level, const wchar_t *msg, ...) {
     int errno_old = errno;
     va_list va;
     va_start(va, msg);
@@ -583,7 +581,7 @@ void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...) {
     errno = errno_old;
 }
 
-void __attribute__((noinline)) debug(int level, const char *msg, ...) {
+void __attribute__((noinline)) debug_impl(int level, const char *msg, ...) {
     if (!should_debug(level)) return;
     int errno_old = errno;
     char local_msg[512];
@@ -1356,9 +1354,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     break;
                 }
                 case L',': {
-                    // If the last character was a separator, then treat this as a literal comma.
-                    if (unescape_special && bracket_count > 0 &&
-                        string_last_char(result) != BRACKET_SEP) {
+                    if (unescape_special && bracket_count > 0) {
                         to_append_or_none = BRACKET_SEP;
                     }
                     break;
@@ -1592,7 +1588,10 @@ static void export_new_termsize(struct winsize *new_termsize) {
     env_set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
 
 #ifdef HAVE_WINSIZE
-    ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);
+    // Only write the new terminal size if we are in the foreground (#4477)
+    if (tcgetpgrp(STDOUT_FILENO) == getpgrp()) {
+        ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);
+    }
 #endif
 }
 

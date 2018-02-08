@@ -15,8 +15,6 @@ function __fish_default_command_not_found_handler
     echo "fish: Unknown command '$argv'" >&2
 end
 
-set -g version $FISH_VERSION
-
 if status --is-interactive
     # The user has seemingly explicitly launched an old fish with too-new scripts installed.
     if not contains -- "string" (builtin -n)

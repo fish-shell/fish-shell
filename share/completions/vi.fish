@@ -9,17 +9,17 @@ if type -q vi
     if vi --version > /dev/null ^ /dev/null
         complete -c vi -w vim
     else
-        complete -c vi -s s --description 'Suppress all interactive user feedback'
-        complete -c vi -s C --description 'Encrypt/decrypt text'
-        complete -c vi -s l --description 'Set up for editing LISP programs'
-        complete -c vi -s L --description 'List saved file names after crash'
-        complete -c vi -s R --description 'Read-only mode'
-        complete -c vi -s S --description 'Use linear search for tags if tag file not sorted'
-        complete -c vi -s v --description 'Start in display editing state'
-        complete -c vi -s V --description 'Verbose mode'
-        complete -c vi -s x --description 'Encrypt/decrypt text'
-        complete -c vi -r -s r --description 'Recover file after crash'
-        complete -c vi -r -s t --description 'Edit the file containing a tag'
-        complete -c vi -r -c t --description 'Begin editing by executing the specified  editor command'
+        complete -c vi -s s -d 'Suppress all interactive user feedback'
+        complete -c vi -s C -d 'Encrypt/decrypt text'
+        complete -c vi -s l -d 'Set up for editing LISP programs'
+        complete -c vi -s L -d 'List saved file names after crash'
+        complete -c vi -s R -d 'Read-only mode'
+        complete -c vi -s S -d 'Use linear search for tags if tag file not sorted'
+        complete -c vi -s v -d 'Start in display editing state'
+        complete -c vi -s V -d 'Verbose mode'
+        complete -c vi -s x -d 'Encrypt/decrypt text'
+        complete -c vi -r -s r -d 'Recover file after crash'
+        complete -c vi -r -s t -d 'Edit the file containing a tag'
+        complete -c vi -r -c t -d 'Begin editing by executing the specified  editor command'
     end
 end

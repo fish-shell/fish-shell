@@ -1,6 +1,6 @@
 # Completions for Android adb command
 
-function __fish_adb_no_subcommand --description 'Test if adb has yet to be given the subcommand'
+function __fish_adb_no_subcommand -d 'Test if adb has yet to be given the subcommand'
     for i in (commandline -opc)
         if contains -- $i connect disconnect devices push pull sync shell emu logcat install uninstall jdwp forward bugreport backup restore version help wait-for-device start-server kill-server remount reboot get-state get-serialno get-devpath status-window root usb tcpip ppp sideload reconnect
             return 1
@@ -9,7 +9,7 @@ function __fish_adb_no_subcommand --description 'Test if adb has yet to be given
     return 0
 end
 
-function __fish_adb_get_devices --description 'Run adb devices and parse output'
+function __fish_adb_get_devices -d 'Run adb devices and parse output'
     # This seems reasonably portable for all the platforms adb runs on
     set -l procs (ps -Ao comm= | string match 'adb')
     # Don't run adb devices unless the server is already started - it takes a while to init
@@ -18,7 +18,7 @@ function __fish_adb_get_devices --description 'Run adb devices and parse output'
     end
 end
 
-function __fish_adb_run_command --description 'Runs adb with any -s parameters already given on the command line'
+function __fish_adb_run_command -d 'Runs adb with any -s parameters already given on the command line'
     set -l sopt
     set -l sopt_is_next
     set -l cmd (commandline -poc)

@@ -1082,7 +1082,7 @@ for cmd in recor record
     complete -c hg -n "__fish_hg_using_command $cmd" -s u -l user -x -d "record the specified user as committer"
     complete -c hg -n "__fish_hg_using_command $cmd" -s S -l subrepos -d "recurse into subrepositories"
     complete -c hg -n "__fish_hg_using_command $cmd" -s w -l ignore-all-space -d "ignore white space when comparing lines"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s b -l ignore-space-change -d "ignore chnages in the amount of white space"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s b -l ignore-space-change -d "ignore changes in the amount of white space"
     complete -c hg -n "__fish_hg_using_command $cmd" -s B -l ignore-blank-lines -d "ignore changes whose lines are all blank"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end

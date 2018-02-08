@@ -1,6 +1,6 @@
 # Fish Shell command-line completions for Test Kitchen
 
-function __fish_kitchen_no_command --description 'Test if kitchen has yet to be given the main command'
+function __fish_kitchen_no_command -d 'Test if kitchen has yet to be given the main command'
   set -l cmd (commandline -opc)
   test (count $cmd) -eq 1
 end

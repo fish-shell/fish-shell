@@ -34,7 +34,7 @@ function __fish_npm_needs_option
     return 1
 end
 
-function __fish_complete_npm --description "Complete the commandline using npm's 'completion' tool"
+function __fish_complete_npm -d "Complete the commandline using npm's 'completion' tool"
     # Note that this function will generate undescribed completion options, and current fish
     # will sometimes pick these over versions with descriptions.
     # However, this seems worth it because it means automatically getting _some_ completions if npm updates.

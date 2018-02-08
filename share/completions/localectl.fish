@@ -29,10 +29,10 @@ complete -c localectl -n "__fish_seen_subcommand_from set-x11-keymap; and __fish
 # Only complete variants for the current layout
 complete -c localectl -n "__fish_seen_subcommand_from set-x11-keymap; and __fish_seen_subcommand_from (localectl list-x11-keymap-models); and not __fish_seen_subcommand_from (localectl list-x11-keymap-variants)" -a "(localectl list-x11-keymap-variants (__fish_localectl_layout))"
 complete -c localectl -n "__fish_seen_subcommand_from set-x11-keymap; and __fish_seen_subcommand_from (localectl list-x11-keymap-variants)" -a "(localectl list-x11-keymap-options)"
-complete -c localectl -l no-ask-password --description "Don't ask for password"
-complete -c localectl -l no-convert --description "Don't convert keymap from console to X11 and vice-versa"
-complete -c localectl -s H -l host --description 'Execute the operation on a remote host'
-complete -c localectl -s h -l help --description 'Print a short help text and exit'
-complete -c localectl -l version --description 'Print a short version string and exit'
-complete -c localectl -l no-pager --description 'Do not pipe output into a pager'
+complete -c localectl -l no-ask-password -d "Don't ask for password"
+complete -c localectl -l no-convert -d "Don't convert keymap from console to X11 and vice-versa"
+complete -c localectl -s H -l host -d 'Execute the operation on a remote host'
+complete -c localectl -s h -l help -d 'Print a short help text and exit'
+complete -c localectl -l version -d 'Print a short version string and exit'
+complete -c localectl -l no-pager -d 'Do not pipe output into a pager'
 

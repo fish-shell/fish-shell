@@ -1,5 +1,5 @@
-complete -x -c ifconfig -a down --description "Stop interface"
-complete -x -c ifconfig -a up --description "Start interface"
+complete -x -c ifconfig -a down -d "Stop interface"
+complete -x -c ifconfig -a up -d "Start interface"
 complete -x -c ifconfig -a "
 	{,-}arp
 	{,-}promisc
@@ -22,4 +22,4 @@ complete -x -c ifconfig -a "
 	address
 	txqueuelen
 "
-complete -x -c ifconfig -a "(__fish_print_interfaces)" --description "Network interface"
+complete -x -c ifconfig -a "(__fish_print_interfaces)" -d "Network interface"

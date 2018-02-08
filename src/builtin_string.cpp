@@ -38,6 +38,11 @@ class parser_t;
 
 #define STRING_ERR_MISSING _(L"%ls: Expected argument\n")
 
+// How many bytes we read() at once.
+// Bash uses 128 here, so we do too (see READ_CHUNK_SIZE).
+// This should be about the size of a line.
+#define STRING_CHUNK_SIZE 128
+
 static void string_error(io_streams_t &streams, const wchar_t *fmt, ...) {
     streams.err.append(L"string ");
     va_list va;
@@ -57,44 +62,68 @@ static bool string_args_from_stdin(const io_streams_t &streams) {
     return streams.stdin_is_directly_redirected;
 }
 
-static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t &streams) {
-    std::string arg;
-    for (;;) {
-        char ch = '\0';
-        long rc = read_blocked(streams.stdin_fd, &ch, 1);
-
-        if (rc < 0) {  // failure
-            return NULL;
-        }
-
-        if (rc == 0) {  // EOF
-            if (arg.empty()) {
-                return NULL;
-            }
-            break;
-        }
-
-        if (ch == '\n') {
-            break;
-        }
-
-        arg += ch;
-    }
-
-    *storage = str2wcstring(arg);
-    return storage->c_str();
-}
-
-static const wchar_t *string_get_arg_argv(int *argidx, wchar_t **argv) {
+static const wchar_t *string_get_arg_argv(int *argidx, const wchar_t *const *argv) {
     return argv && argv[*argidx] ? argv[(*argidx)++] : NULL;
 }
 
-static const wchar_t *string_get_arg(int *argidx, wchar_t **argv, wcstring *storage,
-                                     const io_streams_t &streams) {
-    if (string_args_from_stdin(streams)) {
-        return string_get_arg_stdin(storage, streams);
+// A helper type for extracting arguments from either argv or stdin.
+namespace {
+class arg_iterator_t {
+    // The list of arguments passed to the string builtin.
+    const wchar_t *const *argv_;
+    // If using argv, index of the next argument to return.
+    int argidx_;
+    // If not using argv, a string to store bytes that have been read but not yet returned.
+    std::string buffer_;
+    // Backing storage for the next() string.
+    wcstring storage_;
+    const io_streams_t &streams_;
+
+    /// \return the next argument from stdin
+    const wchar_t *get_arg_stdin() {
+        assert(string_args_from_stdin(streams_) && "should not be reading from stdin");
+        // Read in chunks from fd until buffer has a line.
+        size_t pos;
+        while ((pos = buffer_.find('\n')) == std::string::npos) {
+            char buf[STRING_CHUNK_SIZE];
+            long n = read_blocked(streams_.stdin_fd, buf, STRING_CHUNK_SIZE);
+            if (n == 0) {
+                // If we still have buffer contents, flush them,
+                // in case there was no trailing '\n'.
+                if (buffer_.empty()) return NULL;
+                storage_ = str2wcstring(buffer_);
+                buffer_.clear();
+                return storage_.c_str();
+            }
+            if (n == -1) {
+                // Some error happened. We can't do anything about it,
+                // so ignore it.
+                // (read_blocked already retries for EAGAIN and EINTR)
+                storage_ = str2wcstring(buffer_);
+                buffer_.clear();
+                return NULL;
+            }
+            buffer_.append(buf, n);
+        }
+
+        // Split the buffer on the '\n' and return the first part.
+        storage_ = str2wcstring(buffer_, pos);
+        buffer_.erase(0, pos + 1);
+        return storage_.c_str();
     }
-    return string_get_arg_argv(argidx, argv);
+
+   public:
+    arg_iterator_t(const wchar_t *const *argv, int argidx, const io_streams_t &streams)
+        : argv_(argv), argidx_(argidx), streams_(streams) {}
+
+    /// \return the next argument, or null if the argument list is exhausted.
+    const wchar_t *next() {
+        if (string_args_from_stdin(streams_)) {
+            return get_arg_stdin();
+        }
+        return string_get_arg_argv(&argidx_, argv_);
+    }
+};
 }
 
 // This is used by the string subcommands to communicate with the option parser which flags are
@@ -447,12 +476,12 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wc
 /// Escape a string so that it can be used in a fish script without further word splitting.
 static int string_escape_script(options_t &opts, int optind, wchar_t **argv,
                                 io_streams_t &streams) {
-    wcstring storage;
     int nesc = 0;
     escape_flags_t flags = ESCAPE_ALL;
     if (opts.no_quoted) flags |= ESCAPE_NO_QUOTED;
 
-    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         streams.out.append(escape_string(arg, flags, STRING_STYLE_SCRIPT));
         streams.out.append(L'\n');
         nesc++;
@@ -464,11 +493,11 @@ static int string_escape_script(options_t &opts, int optind, wchar_t **argv,
 /// Escape a string so that it can be used as a URL.
 static int string_escape_url(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
     UNUSED(opts);
-    wcstring storage;
     int nesc = 0;
     escape_flags_t flags = 0;
 
-    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         streams.out.append(escape_string(arg, flags, STRING_STYLE_URL));
         streams.out.append(L'\n');
         nesc++;
@@ -480,11 +509,11 @@ static int string_escape_url(options_t &opts, int optind, wchar_t **argv, io_str
 /// Escape a string so that it can be used as a fish var name.
 static int string_escape_var(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
     UNUSED(opts);
-    wcstring storage;
     int nesc = 0;
     escape_flags_t flags = 0;
 
-    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         streams.out.append(escape_string(arg, flags, STRING_STYLE_VAR));
         streams.out.append(L'\n');
         nesc++;
@@ -497,11 +526,11 @@ static int string_escape_var(options_t &opts, int optind, wchar_t **argv, io_str
 static int string_unescape_script(options_t &opts, int optind, wchar_t **argv,
                                   io_streams_t &streams) {
     UNUSED(opts);
-    wcstring storage;
     int nesc = 0;
     unescape_flags_t flags = 0;
 
-    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         wcstring result;
         if (unescape_string(arg, &result, flags, STRING_STYLE_SCRIPT)) {
             streams.out.append(result);
@@ -516,11 +545,11 @@ static int string_unescape_script(options_t &opts, int optind, wchar_t **argv,
 /// Unescape an encoded URL.
 static int string_unescape_url(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
     UNUSED(opts);
-    wcstring storage;
     int nesc = 0;
     unescape_flags_t flags = 0;
 
-    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         wcstring result;
         if (unescape_string(arg, &result, flags, STRING_STYLE_URL)) {
             streams.out.append(result);
@@ -535,11 +564,11 @@ static int string_unescape_url(options_t &opts, int optind, wchar_t **argv, io_s
 /// Unescape an encoded var name.
 static int string_unescape_var(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
     UNUSED(opts);
-    wcstring storage;
     int nesc = 0;
     unescape_flags_t flags = 0;
 
-    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         wcstring result;
         if (unescape_string(arg, &result, flags, STRING_STYLE_VAR)) {
             streams.out.append(result);
@@ -606,9 +635,8 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
 
     const wchar_t *sep = opts.arg1;
     int nargs = 0;
-    const wchar_t *arg;
-    wcstring storage;
-    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != 0) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         if (!opts.quiet) {
             if (nargs > 0) {
                 streams.out.append(sep);
@@ -631,10 +659,9 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    const wchar_t *arg;
     int nnonempty = 0;
-    wcstring storage;
-    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != 0) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         size_t n = wcslen(arg);
         if (n > 0) {
             nnonempty++;
@@ -911,9 +938,8 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         matcher = make_unique<wildcard_matcher_t>(cmd, pattern, opts, streams);
     }
 
-    const wchar_t *arg;
-    wcstring storage;
-    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != 0) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         if (!matcher->report_matches(arg)) {
             return STATUS_INVALID_ARGS;
         }
@@ -1089,8 +1115,8 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
         replacer = make_unique<literal_replacer_t>(argv[0], pattern, replacement, opts, streams);
     }
 
-    wcstring storage;
-    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         if (!replacer->replace_matches(arg)) return STATUS_INVALID_ARGS;
     }
 
@@ -1112,9 +1138,8 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
 
     wcstring_list_t splits;
     size_t arg_count = 0;
-    wcstring storage;
-    const wchar_t *arg;
-    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != 0) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         const wchar_t *arg_end = arg + wcslen(arg);
         if (opts.right) {
             typedef std::reverse_iterator<const wchar_t *> reverser;
@@ -1178,10 +1203,10 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
     if (retval != STATUS_CMD_OK) return retval;
 
     const wchar_t *to_repeat;
-    wcstring storage;
     bool is_empty = true;
 
-    if ((to_repeat = string_get_arg(&optind, argv, &storage, streams)) != NULL && *to_repeat) {
+    arg_iterator_t aiter(argv, optind, streams);
+    if ((to_repeat = aiter.next()) != NULL && *to_repeat) {
         const wcstring word(to_repeat);
         const bool limit_repeat =
             (opts.max > 0 && word.length() * opts.count > (size_t)opts.max) || !opts.count;
@@ -1209,9 +1234,8 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
     if (retval != STATUS_CMD_OK) return retval;
 
     int nsub = 0;
-    const wchar_t *arg;
-    wcstring storage;
-    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != NULL) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         typedef wcstring::size_type size_type;
         size_type pos = 0;
         size_type count = wcstring::npos;
@@ -1257,12 +1281,11 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
         opts.left = opts.right = true;
     }
 
-    const wchar_t *arg;
     size_t ntrim = 0;
 
     wcstring argstr;
-    wcstring storage;
-    while ((arg = string_get_arg(&optind, argv, &storage, streams)) != 0) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         argstr = arg;
         // Begin and end are respectively the first character to keep on the left, and first
         // character to trim on the right. The length is thus end - start.
@@ -1295,8 +1318,8 @@ static int string_lower(parser_t &parser, io_streams_t &streams, int argc, wchar
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
-    wcstring storage;
-    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         wcstring transformed(arg);
         std::transform(transformed.begin(), transformed.end(), transformed.begin(), std::towlower);
         if (wcscmp(transformed.c_str(), arg)) n_transformed++;
@@ -1318,8 +1341,8 @@ static int string_upper(parser_t &parser, io_streams_t &streams, int argc, wchar
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
-    wcstring storage;
-    while (const wchar_t *arg = string_get_arg(&optind, argv, &storage, streams)) {
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wchar_t *arg = aiter.next()) {
         wcstring transformed(arg);
         std::transform(transformed.begin(), transformed.end(), transformed.begin(), std::towupper);
         if (wcscmp(transformed.c_str(), arg)) n_transformed++;

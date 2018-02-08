@@ -17,8 +17,11 @@
 -8
 
 ####################
-# Validate how bare variables in an epxression are handled
+# Validate how variables in an expression are handled
 1
 2
 -4
 -4.5
+
+####################
+# Validate math error reporting

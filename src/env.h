@@ -74,60 +74,35 @@ class env_var_t {
     wcstring_list_t vals;  // list of values assigned to the var
 
    public:
-    bool exportv;  // whether the variable should be exported
+    bool exportv = false;  // whether the variable should be exported
 
     // Constructors.
-    env_var_t(const env_var_t &v) : name(v.name), vals(v.vals), exportv(v.exportv) {}
-    env_var_t(const wcstring &our_name, const wcstring_list_t &l)
-        : name(our_name), vals(l), exportv(false) {}
-    env_var_t(const wcstring &our_name, const wcstring &s)
-        : name(our_name),
+    env_var_t(const env_var_t &) = default;
+    env_var_t(env_var_t &&) = default;
+    env_var_t(wcstring name, wcstring_list_t vals) : name(std::move(name)), vals(std::move(vals)) {}
+
+    env_var_t(wcstring name, wcstring val)
+        : name(std::move(name)),
           vals({
-              s,
+              std::move(val),
           }),
           exportv(false) {}
-    env_var_t(const wcstring &our_name, const wchar_t *s)
-        : name(our_name),
-          vals({
-              wcstring(s),
-          }),
-          exportv(false) {}
-    env_var_t() : name(), vals(), exportv(false) {}
 
-    bool empty(void) const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
-    bool read_only(void) const;
+    env_var_t() = default;
 
-    bool matches_string(const wcstring &str) {
-        if (vals.size() > 1) return false;
-        return vals[0] == str;
-    }
+    bool empty() const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
+    bool read_only() const;
 
     wcstring as_string() const;
     void to_list(wcstring_list_t &out) const;
     const wcstring_list_t &as_list() const;
 
-    const wcstring get_name() const { return name; }
-
     void set_vals(wcstring_list_t v) { vals = std::move(v); }
 
-    env_var_t &operator=(const env_var_t &var) {
-        this->name = var.name;
-        this->vals = var.vals;
-        this->exportv = var.exportv;
-        return *this;
-    }
-
-    /// Compare a simple string to the var. Returns true iff the var has a single
-    /// value and that value matches the string being compared to.
-    bool operator==(const wcstring &str) const {
-        if (vals.size() > 1) return false;
-        return vals[0] == str;
-    }
+    env_var_t &operator=(const env_var_t &var) = default;
+    env_var_t &operator=(env_var_t &&) = default;
 
     bool operator==(const env_var_t &var) const { return vals == var.vals; }
-
-    bool operator==(const wcstring_list_t &values) const { return vals == values; }
-
     bool operator!=(const env_var_t &var) const { return vals != var.vals; }
 };
 

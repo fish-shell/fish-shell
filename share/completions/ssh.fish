@@ -6,14 +6,7 @@ __fish_complete_ssh ssh
 #
 # ssh specific completions
 #
-complete -x -c ssh -d Hostname -a "
-(__fish_print_hostnames)
-
-(
-	# Prepend any username specified in the completion to the hostname
-	echo (commandline -ct)|sed -ne 's/\(.*@\).*/\1/p'
-)(__fish_print_hostnames)
-"
+complete -x -c ssh -d Hostname -a "(__fish_complete_user_at_hosts)"
 
 # Disable as username completion is not very useful.
 # complete -x -c ssh -d User -a "

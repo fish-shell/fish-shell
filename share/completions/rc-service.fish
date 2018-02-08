@@ -1,6 +1,6 @@
 # First argument is the names of the service, i.e. a file in /etc/init.d
 complete -c rc-service -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \
-    -xa "(__fish_print_service_names)" --description "Service name"
+    -xa "(__fish_print_service_names)" -d "Service name"
 
 # The second argument is what action to take with the service
 complete -c rc-service -n "test (__fish_number_of_cmd_args_wo_opts) -gt 1" \

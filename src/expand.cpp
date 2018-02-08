@@ -980,6 +980,15 @@ static expand_error_t expand_brackets(const wcstring &instr, expand_flags_t flag
         }
     }
 
+    // Expand a literal "{}" to itself because it is useless otherwise,
+    // and this eases e.g. `find -exec {}`. See #1109.
+    if (bracket_begin + 1 == bracket_end) {
+        wcstring newstr = instr;
+        newstr.at(bracket_begin - in) = L'{';
+        newstr.at(bracket_end - in) = L'}';
+        return expand_brackets(newstr, flags, out, errors);
+    }
+
     if (syntax_error) {
         append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, _(L"Mismatched brackets"));
         return EXPAND_ERROR;
@@ -1182,13 +1191,15 @@ static void expand_home_directory(wcstring &input) {
             }
         }
 
-        const wchar_t *realhome = home ? wrealpath(home->as_string(), NULL) : nullptr;
+        maybe_t<wcstring> realhome;
+        if (home)
+            realhome = wrealpath(home->as_string());
+
         if (realhome) {
-            input.replace(input.begin(), input.begin() + tail_idx, realhome);
+            input.replace(input.begin(), input.begin() + tail_idx, *realhome);
         } else {
             input[0] = L'~';
         }
-        free((void *)realhome);
     }
 }
 

@@ -12,7 +12,7 @@ m4_syscmd([build_tools/git_version_gen.sh 2>/dev/null])
 
 AC_PREREQ([2.60])
 AC_INIT(fish,
-        m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),
+        m4_esyscmd([cut -f 2 -d '=' FISH-BUILD-VERSION-FILE | tr -d '"\n']),
         fish-users@lists.sourceforge.net)
 ac_clean_files=a.out.dSYM
 
@@ -212,11 +212,8 @@ AS_IF([test "$use_doxygen" != "no"],
 AC_SYS_LARGEFILE
 
 
-# Fish does not use exceptions itself. However the MuParser library does so we
-# need to enable support for them and pay the cost of larger code. Note:
-# Enabling exceptions increases the compiled code size but to avoid that we
-# would have to maintain our own patches to the MuParser code.
-#CXXFLAGS="$CXXFLAGS -fno-exceptions"
+# Fish does not use exceptions.
+CXXFLAGS="$CXXFLAGS -fno-exceptions"
 
 #
 # Set some warning flags

@@ -2,7 +2,7 @@
 set -l __fish_status_all_commands is-login is-interactive is-block is-breakpoint is-command-substitution is-no-job-control is-interactive-job-control is-full-job-control current-filename current-line-number print-stack-trace job-control
 
 # These are the recognized flags.
-complete -c status -s h -l help --description "Display help and exit"
+complete -c status -s h -l help -d "Display help and exit"
 
 # The "is-something" subcommands.
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-login -d "Test if this is a login shell"

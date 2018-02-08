@@ -159,9 +159,20 @@ enum selection_direction_t {
 ///
 /// will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that
 /// program_name is 'fish'.
-void __attribute__((noinline)) debug(int level, const char *msg, ...)
+void __attribute__((noinline)) debug_impl(int level, const char *msg, ...)
     __attribute__((format(printf, 2, 3)));
-void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...);
+void __attribute__((noinline)) debug_impl(int level, const wchar_t *msg, ...);
+
+/// The verbosity level of fish. If a call to debug has a severity level higher than \c debug_level,
+/// it will not be printed.
+extern int debug_level;
+
+inline bool should_debug(int level) { return level <= debug_level; }
+
+#define debug(level, ...)                                            \
+    do {                                                             \
+        if (should_debug((level))) debug_impl((level), __VA_ARGS__); \
+    } while (0)
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 [[noreturn]] void exit_without_destructors(int code);
@@ -178,10 +189,6 @@ extern wchar_t omitted_newline_char;
 
 /// Character used for the silent mode of the read command
 extern wchar_t obfuscation_read_char;
-
-/// The verbosity level of fish. If a call to debug has a severity level higher than \c debug_level,
-/// it will not be printed.
-extern int debug_level;
 
 /// How many stack frames to show when a debug() call is made.
 extern int debug_stack_frames;
@@ -285,6 +292,7 @@ int fgetws2(wcstring *s, FILE *f);
 wcstring str2wcstring(const char *in);
 wcstring str2wcstring(const char *in, size_t len);
 wcstring str2wcstring(const std::string &in);
+wcstring str2wcstring(const std::string &in, size_t len);
 
 /// Returns a newly allocated multibyte character string equivalent of the specified wide character
 /// string.

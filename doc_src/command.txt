@@ -13,6 +13,8 @@ The following options are available:
 
 - `-a` or `--all` returns all the external commands that are found in `$PATH` in the order they are found.
 
+- `-q` or `--quiet`, in conjunction with `-s`, silences the output and prints nothing, setting only the exit code.
+
 - `-s` or `--search` returns the name of the external command that would be executed, or nothing if no file with the specified name could be found in the `$PATH`.
 
 With the `-s` option, `command` treats every argument as a separate command to look up and sets the exit status to 0 if any of the specified commands were found, or 1 if no commands could be found. Additionally passing a `-q` or `--quiet` option prevents any paths from being printed, like the `type -q`, for testing only the exit status.

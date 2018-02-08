@@ -16,12 +16,12 @@
 #include "intern.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
-#include "parse_tree.h"
 #include "parse_util.h"
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "sanity.h"
+#include "tnode.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class io_chain_t;
@@ -329,20 +329,13 @@ void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t
         return;
     }
 
-    // Get the root argument list.
+    // Get the root argument list and extract arguments from it.
     assert(!tree.empty());  //!OCLINT(multiple unary operator)
-    const parse_node_t *arg_list = &tree.at(0);
-    assert(arg_list->type == symbol_freestanding_argument_list);
-
-    // Extract arguments from it.
-    while (arg_list != NULL) {
-        const parse_node_t *arg_node =
-            tree.next_node_in_node_list(*arg_list, symbol_argument, &arg_list);
-        if (arg_node != NULL) {
-            const wcstring arg_src = arg_node->get_source(arg_list_src);
-            if (expand_string(arg_src, output_arg_list, eflags, NULL) == EXPAND_ERROR) {
-                break;  // failed to expand a string
-            }
+    tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
+    while (auto arg = arg_list.next_in_list<grammar::argument>()) {
+        const wcstring arg_src = arg.get_source(arg_list_src);
+        if (expand_string(arg_src, output_arg_list, eflags, NULL) == EXPAND_ERROR) {
+            break;  // failed to expand a string
         }
     }
 }
@@ -641,11 +634,11 @@ profile_item_t *parser_t::create_profile_item() {
     return result;
 }
 
-int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type) {
+int parser_t::eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
-    parse_node_tree_t tree;
     parse_error_list_t error_list;
-    if (!parse_tree_from_string(cmd, parse_flag_none, &tree, &error_list)) {
+    parsed_source_ref_t ps = parse_source(cmd, parse_flag_none, &error_list);
+    if (!ps) {
         // Get a backtrace. This includes the message.
         wcstring backtrace_and_desc;
         this->get_backtrace(cmd, error_list, backtrace_and_desc);
@@ -654,15 +647,14 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
         fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
         return 1;
     }
-    return this->eval(cmd, io, block_type, std::move(tree));
+    return this->eval(ps, io, block_type);
 }
 
-int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type,
-                   parse_node_tree_t tree) {
+int parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type) {
     CHECK_BLOCK(1);
     assert(block_type == TOP || block_type == SUBST);
 
-    if (tree.empty()) {
+    if (ps->tree.empty()) {
         return 0;
     }
 
@@ -674,8 +666,7 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
         (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
 
     // Append to the execution context stack.
-    execution_contexts.push_back(
-        make_unique<parse_execution_context_t>(std::move(tree), cmd, this, exec_eval_level));
+    execution_contexts.push_back(make_unique<parse_execution_context_t>(ps, this, exec_eval_level));
     const parse_execution_context_t *ctx = execution_contexts.back().get();
 
     // Execute the first node.
@@ -744,20 +735,13 @@ bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcst
     }
 
     if (!errored) {
-        // Get the root argument list.
+        // Get the root argument list and extract arguments from it.
         assert(!tree.empty());  //!OCLINT(multiple unary operator)
-        const parse_node_t *arg_list = &tree.at(0);
-        assert(arg_list->type == symbol_freestanding_argument_list);
-
-        // Extract arguments from it.
-        while (arg_list != NULL && !errored) {
-            const parse_node_t *arg_node =
-                tree.next_node_in_node_list(*arg_list, symbol_argument, &arg_list);
-            if (arg_node != NULL) {
-                const wcstring arg_src = arg_node->get_source(arg_list_src);
-                if (parse_util_detect_errors_in_argument(*arg_node, arg_src, &errors)) {
-                    errored = true;
-                }
+        tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
+        while (auto arg = arg_list.next_in_list<grammar::argument>()) {
+            const wcstring arg_src = arg.get_source(arg_list_src);
+            if (parse_util_detect_errors_in_argument(arg, arg_src, &errors)) {
+                errored = true;
             }
         }
     }

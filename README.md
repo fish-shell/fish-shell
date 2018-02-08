@@ -46,7 +46,7 @@ Instructions for other distributions may be found at [fishshell.com](https://fis
 
 fish can be installed using [Cygwin](https://cygwin.com/) Setup (under the **Shells** category).
 
-fish can be installed into Windows Services for Linux using the instructions under *Packages for
+fish can be installed into Windows Subsystem for Linux using the instructions under *Packages for
 Linux* for the appropriate image (eg Ubuntu).
 
 ### Building from source
@@ -120,7 +120,7 @@ You may need to logout/login for the change (chsh) to take effect.
 Compiling fish requires:
 
 * a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
-* either GNU Make (all platforms) or Xcode (macOS only)
+* CMake, or GNU Make (all platforms), or Xcode (macOS only)
 * a curses implementation such as ncurses (headers and libraries)
 * PCRE2 (headers and libraries) - a copy is included with fish
 * MuParser (headers and libraries) - a copy is included with fish
@@ -134,6 +134,16 @@ Compiling from git (that is, not a released tarball) also requires:
 * Doxygen (1.8.7 or later) - optional, for documentation
 
 ### Building from source
+
+#### Using CMake
+
+```bash
+mkdir build; cd build
+cmake .. #  add -DCMAKE_BUILD_TYPE=Release for release build
+make install
+```
+
+#### Using autotools
 
 ```bash
 autoreconf --no-recursive #if building from Git

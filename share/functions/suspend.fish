@@ -1,23 +1,28 @@
-function suspend -d "Suspend the current shell."
-    if contains -- $argv --help
-        or contains -- $argv -h
+function suspend --description 'Suspend the current shell.'
+    set -l options 'h/help' 'f/force'
+    argparse -n suspend --max-args=1 $options -- $argv
+    or return
+
+    if set -q _flag_help
         __fish_print_help suspend
-        and return 0
+        return 0
     end
-    if begin contains -- $argv --force
-            or not status --is-interactive and not status --is-login
-        end
-        printf "Suspending %d: %sfg%s to resume" %self (set_color --bold) (set_color normal)
-        if contains -- $argv --force
-            printf " (or%s kill -CONT %d%s from another terminal)" (set_color --bold) %self (set_color normal)
-        end
-        # XXX not sure if this echo should be necessary, but without it, it seems
-        # everything printf'd above will not get pushed back to stdout before the suspend
-        echo ""
-        # XXX always causes a zombie until one fg's when we do this:
-        kill -STOP %self
-    else
-        echo 2>&1 "Refusing to suspend login shell."
-        echo 2>&1 "Use --force to override. This might hang your terminal."
+
+    if not set -q _flag_force
+        and status is-login
+        and status is-interactive
+
+        echo 2>&1 'Refusing to suspend interactive login shell.'
+        echo 2>&1 'Use --force to override. This might hang your terminal.'
+        return 1
     end
+
+    if status is-interactive
+        echo -ns 'Suspending ' %self ': run'
+        echo -n (set_color --bold) 'kill -CONT' %self (set_color normal)
+        echo 'from another terminal to resume'
+    end
+
+    # XXX always causes a zombie until one fg's when we do this:
+    kill -STOP %self
 end

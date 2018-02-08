@@ -10,4 +10,4 @@ complete -c bzcat -x -a "(
 )
 "
 
-complete -c bzcat -s s -l small --description "Reduce memory usage"
+complete -c bzcat -s s -l small -d "Reduce memory usage"

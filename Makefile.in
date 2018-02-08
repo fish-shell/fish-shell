@@ -117,15 +117,15 @@ FISH_OBJS := obj/autoload.o obj/builtin.o obj/builtin_bg.o obj/builtin_bind.o ob
 	obj/builtin_random.o obj/builtin_read.o obj/builtin_realpath.o \
 	obj/builtin_return.o obj/builtin_set.o obj/builtin_set_color.o \
 	obj/builtin_source.o obj/builtin_status.o obj/builtin_string.o \
-	obj/builtin_test.o obj/builtin_ulimit.o obj/color.o obj/common.o \
+	obj/builtin_test.o obj/builtin_ulimit.o obj/builtin_wait.o obj/color.o obj/common.o \
 	obj/complete.o obj/env.o obj/env_universal_common.o obj/event.o obj/exec.o \
 	obj/expand.o obj/fallback.o obj/fish_version.o obj/function.o obj/highlight.o \
 	obj/history.o obj/input.o obj/input_common.o obj/intern.o obj/io.o \
 	obj/iothread.o obj/kill.o obj/output.o obj/pager.o obj/parse_execution.o \
 	obj/parse_productions.o obj/parse_tree.o obj/parse_util.o obj/parser.o \
 	obj/parser_keywords.o obj/path.o obj/postfork.o obj/proc.o obj/reader.o \
-	obj/sanity.o obj/screen.o obj/signal.o obj/tokenizer.o obj/utf8.o obj/util.o \
-	obj/wcstringutil.o obj/wgetopt.o obj/wildcard.o obj/wutil.o
+	obj/sanity.o obj/screen.o obj/signal.o obj/tokenizer.o obj/tnode.o obj/utf8.o \
+	obj/util.o obj/wcstringutil.o obj/wgetopt.o obj/wildcard.o obj/wutil.o
 
 FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS)
 
@@ -317,8 +317,7 @@ prof: all
 #
 doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
 	@echo "  doxygen  $(em)user_doc$(sgr0)"
-	$v (cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | doxygen - && touch user_doc
-	$v rm -f $(wildcard $(addprefix ./user_doc/html/,arrow*.png bc_s.png bdwn.png closed.png doc.png folder*.png ftv2*.png nav*.png open.png splitbar.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html))
+	$v env FISH_BUILD_VERSION=$(FISH_BUILD_VERSION) ./build_tools/build_user_doc.sh Doxyfile.user ./lexicon_filter
 
 #
 # PDF version of the source code documentation.
@@ -403,72 +402,16 @@ test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
 # commands.hdr collects documentation on all commands, functions and
 # builtins
 #
-doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in |
-	@echo "  CAT AWK  $(em)$@$(sgr0)"
-	$v rm -f command_list.tmp command_list_toc.tmp $@
-	$v for i in `printf "%s\n" $(HELP_SRC) | LC_ALL=C.UTF-8 sort`; do \
-		echo "<hr>" >>command_list.tmp; \
-		cat $$i >>command_list.tmp; \
-		echo >>command_list.tmp; \
-		echo >>command_list.tmp; \
-		NAME=`basename $$i .txt`; \
-		echo '- <a href="#'$$NAME'">'$$NAME'</a>' >> command_list_toc.tmp; \
-		echo "Back to <a href='index.html#toc-commands'>command index</a>". >>command_list.tmp; \
-	done
-	$v mv command_list.tmp command_list.txt
-	$v mv command_list_toc.tmp command_list_toc.txt
-	$v cat $@.in | $(AWK) '{if ($$0 ~ /@command_list_toc@/) { system("cat command_list_toc.txt"); } else if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
+doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in build_tools/build_commands_hdr.sh
+	build_tools/build_commands_hdr.sh ${HELP_SRC} < doc_src/commands.hdr.in > $@
 
-toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) | show-SED
-	@echo "  SED      $(em)$@$(sgr0)"
-	$v rm -f toc.tmp $@
-# Ugly hack to set the toc initial title for the main page
-	$v echo '- <a href="index.html" id="toc-index">fish shell documentation - $(FISH_BUILD_VERSION)</a>' > toc.tmp
-# The first sed command captures the page name, followed by the description
-# The second sed command captures the command name \1 and the description \2, but only up to a dash
-# This is to reduce the size of the TOC in the command listing on the main page
-	$v for i in $(HDR_FILES:index.hdr=index.hdr.in); do\
-		NAME=`basename $$i .hdr`; \
-		NAME=`basename $$NAME .hdr.in`; \
-		$(SED) <$$i >>toc.tmp -n \
-		-e 's,.*\\page *\([^ ]*\) *\(.*\)$$,- <a href="'$$NAME'.html" id="toc-'$$NAME'">\2</a>,p' \
-		-e 's,.*\\section *\([^ ]*\) *\([^-]*\)\(.*\)$$,  - <a href="'$$NAME'.html#\1">\2</a>,p'; \
-	done
-	$v mv toc.tmp $@
+toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) build_tools/build_toc_txt.sh | show-SED
+	FISH_BUILD_VERSION=${FISH_BUILD_VERSION} build_tools/build_toc_txt.sh \
+	    $(HDR_FILES:index.hdr=index.hdr.in) > toc.txt
 
 doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
 	@echo "  AWK CAT  $(em)$@$(sgr0)"
-	$v cat $@.in | $(AWK) '{if ($$0 ~ /@toc@/){ system("cat toc.txt");} else{ print $$0;}}' >$@
-
-#
-# To enable the lexicon filter, we first need to be aware of what fish
-# considers to be a command, function, or external binary. We use
-# command_list_toc.txt for the base commands. Scan the share/functions
-# directory for other functions, some of which are mentioned in the docs, and
-# use /share/completions to find a good selection of binaries. Additionally,
-# colour defaults from __fish_config_interactive to set the docs colours when
-# used in a 'cli' style context.
-#
-lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish | show-SED show-FGREP
-	$v rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
-# Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
-	@echo "  SEDFGREP $(em)$@$(sgr0)"
-	$v $(SED) <command_list_toc.txt >>lexicon.tmp -n \
-		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
-		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt
-	$v printf "%s\n" $(COMPLETIONS_DIR_FILES) | $(SED) -n \
-		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | $(FGREP) -vx -f lexicon_catalog.txt | $(SED) >>lexicon.tmp -n \
-		-e 'w lexicon_catalog.tmp' \
-		-e "s|'\(.*\)'|cmnd \1|p"; cat lexicon_catalog.tmp >> lexicon_catalog.txt;
-	$v printf "%s\n" $(FUNCTIONS_DIR_FILES) | $(SED) -n \
-		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | $(FGREP) -vx -f lexicon_catalog.txt | $(SED) >>lexicon.tmp -n \
-		-e 'w lexicon_catalog.tmp' \
-		-e "s|'\(.*\)'|func \1|p";
-	$v $(SED) <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n  \
-		-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p'; \
-	$(SED) <lexicon_filter.in >>lexicon.tmp -n \
-		-e '/^#.!#/s/^#.!# \(.... [a-z][a-z_]*\)/\1/p';
-	$v mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
+	$v build_tools/build_index_hdr.sh toc.txt < $@.in > $@
 
 #
 # Compile Doxygen Input Filter from the lexicon. This is an executable sed
@@ -480,19 +423,11 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 # HTML, a style context can be applied through the /fish{style} block and
 # providing suitable CSS in user_doc.css.in
 #
-lexicon_filter: lexicon.txt lexicon_filter.in | show-SED
-	$v rm -f $@.tmp $@
-	@echo "  SED      $(em)$@.tmp$(sgr0)"
-# Set the shebang as sed can reside in multiple places.
-	$v $(SED) <$@.in >$@.tmp -e 's|@sed@|'$(SED)'|'
-# Scan through the lexicon, transforming each line to something useful to Doxygen.
-	$v if echo x | $(SED) "/[[:<:]]x/d" 2>/dev/null; then \
-		WORDBL='[[:<:]]'; WORDBR='[[:>:]]'; \
-	else \
-		WORDBL='\\<'; WORDBR='\\>'; \
-	fi; $(SED) <lexicon.txt >>$@.tmp -n -e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" -e '$$G;s/.*\n/b tidy/p';
-	$v mv $@.tmp $@; test -x $@ || chmod a+x $@;
-
+lexicon_filter: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) \
+                lexicon_filter.in build_tools/build_lexicon_filter.sh \
+                share/functions/__fish_config_interactive.fish
+	$v build_tools/build_lexicon_filter.sh share/functions/ share/completions/ $(SED) < lexicon_filter.in > $@
+	$v chmod a+x lexicon_filter
 
 #
 # doc.h is a compilation of the various snipptes of text used both for
@@ -603,8 +538,8 @@ share/man: $(HELP_SRC) lexicon_filter | show-FISH_BUILD_VERSION show-SED
 	@echo "  doxygen  $(em)$@$(sgr0)"
 	$v touch share/man
 	-$v rm -Rf share/man/man1
-	$v echo "$(dim)" && PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION) \
-		| $(SED) "s/-.*//"` INPUT_FILTER=./lexicon_filter build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share;
+	$v echo "$(dim)" && FISH_BUILD_VERSION=${FISH_BUILD_VERSION} INPUT_FILTER=./lexicon_filter \
+	                    build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share;
 
 #
 # The build rules for installing/uninstalling fish
@@ -648,7 +583,8 @@ install: all install-force | check-legacy-binaries
 	@echo
 	@if type chsh >/dev/null 2>&1; then \
 		echo To use fish as your login shell:; \
-		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo \ \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'; \
+		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo -e " * add the line '$(DESTDIR)$(bindir)/fish' to the file '/etc/shells':" \
+		"\n   echo '$(DESTDIR)$(bindir)/fish' | sudo tee -a /etc/shells > /dev/null"; \
 		echo " * run '$(yellow)chsh -s $(DESTDIR)$(bindir)/fish$(sgr0)'"; \
 		echo; \
 	fi;

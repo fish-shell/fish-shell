@@ -45,44 +45,9 @@
 #ifdef TPARM_SOLARIS_KLUDGE
 #undef tparm
 
-/// Checks for known string values and maps to correct number of parameters.
-char *tparm_solaris_kludge(char *str, ...) {
-    long int param[9] = {};
-
-    va_list ap;
-    va_start(ap, str);
-
-    if ((set_a_foreground && !strcmp(str, set_a_foreground)) ||
-        (set_a_background && !strcmp(str, set_a_background)) ||
-        (set_foreground && !strcmp(str, set_foreground)) ||
-        (set_background && !strcmp(str, set_background)) ||
-        (enter_underline_mode && !strcmp(str, enter_underline_mode)) ||
-        (exit_underline_mode && !strcmp(str, exit_underline_mode)) ||
-        (enter_standout_mode && !strcmp(str, enter_standout_mode)) ||
-        (exit_standout_mode && !strcmp(str, exit_standout_mode)) ||
-        (flash_screen && !strcmp(str, flash_screen)) ||
-        (enter_subscript_mode && !strcmp(str, enter_subscript_mode)) ||
-        (exit_subscript_mode && !strcmp(str, exit_subscript_mode)) ||
-        (enter_superscript_mode && !strcmp(str, enter_superscript_mode)) ||
-        (exit_superscript_mode && !strcmp(str, exit_superscript_mode)) ||
-        (enter_blink_mode && !strcmp(str, enter_blink_mode)) ||
-        (enter_italics_mode && !strcmp(str, enter_italics_mode)) ||
-        (exit_italics_mode && !strcmp(str, exit_italics_mode)) ||
-        (enter_reverse_mode && !strcmp(str, enter_reverse_mode)) ||
-        (enter_shadow_mode && !strcmp(str, enter_shadow_mode)) ||
-        (exit_shadow_mode && !strcmp(str, exit_shadow_mode)) ||
-        (enter_secure_mode && !strcmp(str, enter_secure_mode)) ||
-        (enter_bold_mode && !strcmp(str, enter_bold_mode))) {
-        param[0] = va_arg(ap, long int);
-    } else if (cursor_address && !strcmp(str, cursor_address)) {
-        param[0] = va_arg(ap, long int);
-        param[1] = va_arg(ap, long int);
-    }
-
-    va_end(ap);
-
-    return tparm(str, param[0], param[1], param[2], param[3], param[4], param[5], param[6],
-                 param[7], param[8]);
+char *tparm_solaris_kludge(char *str, long p1, long p2, long p3, long p4,
+                           long p5, long p6, long p7, long p8, long p9) {
+    return tparm(str, p1, p2, p3, p4, p5, p6, p7, p8, p9);
 }
 
 // Re-defining just to make sure nothing breaks further down in this file.

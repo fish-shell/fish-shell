@@ -35,7 +35,7 @@ function __fish_complete_suffix -d "Complete using files"
 
     # Perform the completion
 
-    set base (echo $comp |sed -e 's/\.[a-zA-Z0-9]*$//')
+    set base (string replace -r '\.[^.]*$' '' -- $comp | string trim -c '\'"') # " make emacs syntax highlighting happy
     eval "set files $base*$suff"
 
     if test $files[1]

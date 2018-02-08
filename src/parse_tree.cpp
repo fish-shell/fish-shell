@@ -17,6 +17,7 @@
 #include "parse_productions.h"
 #include "parse_tree.h"
 #include "proc.h"
+#include "tnode.h"
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -1199,6 +1200,13 @@ const parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, nod
     return result;
 }
 
+parsed_source_ref_t parse_source(wcstring src, parse_tree_flags_t flags, parse_error_list_t *errors,
+                                 parse_token_type_t goal) {
+    parse_node_tree_t tree;
+    if (!parse_tree_from_string(src, flags, &tree, errors, goal)) return {};
+    return std::make_shared<parsed_source_t>(std::move(src), std::move(tree));
+}
+
 const parse_node_t &parse_node_tree_t::find_child(const parse_node_t &parent,
                                                   parse_token_type_t type) const {
     for (node_offset_t i = 0; i < parent.child_count; i++) {
@@ -1224,27 +1232,6 @@ const parse_node_t *parse_node_tree_t::get_parent(const parse_node_t &node,
     return result;
 }
 
-static void find_nodes_recursive(const parse_node_tree_t &tree, const parse_node_t &parent,
-                                 parse_token_type_t type,
-                                 parse_node_tree_t::parse_node_list_t *result, size_t max_count) {
-    if (result->size() < max_count) {
-        if (parent.type == type) result->push_back(&parent);
-        for (node_offset_t i = 0; i < parent.child_count; i++) {
-            const parse_node_t *child = tree.get_child(parent, i);
-            assert(child != NULL);
-            find_nodes_recursive(tree, *child, type, result, max_count);
-        }
-    }
-}
-
-parse_node_tree_t::parse_node_list_t parse_node_tree_t::find_nodes(const parse_node_t &parent,
-                                                                   parse_token_type_t type,
-                                                                   size_t max_count) const {
-    parse_node_list_t result;
-    find_nodes_recursive(*this, parent, type, &result, max_count);
-    return result;
-}
-
 /// Return true if the given node has the proposed ancestor as an ancestor (or is itself that
 /// ancestor).
 static bool node_has_ancestor(const parse_node_tree_t &tree, const parse_node_t &node,
@@ -1257,23 +1244,6 @@ static bool node_has_ancestor(const parse_node_tree_t &tree, const parse_node_t 
 
     // Recurse to the parent.
     return node_has_ancestor(tree, tree.at(node.parent), proposed_ancestor);
-}
-
-const parse_node_t *parse_node_tree_t::find_last_node_of_type(parse_token_type_t type,
-                                                              const parse_node_t *parent) const {
-    const parse_node_t *result = NULL;
-    // Find nodes of the given type in the tree, working backwards.
-    size_t idx = this->size();
-    while (idx--) {
-        const parse_node_t &node = this->at(idx);
-        bool expected_type = (node.type == type);
-        if (expected_type && (parent == NULL || node_has_ancestor(*this, node, *parent))) {
-            // The types match and it has the right parent.
-            result = &node;
-            break;
-        }
-    }
-    return result;
 }
 
 const parse_node_t *parse_node_tree_t::find_node_matching_source_location(
@@ -1300,191 +1270,20 @@ const parse_node_t *parse_node_tree_t::find_node_matching_source_location(
     return result;
 }
 
-bool parse_node_tree_t::argument_list_is_root(const parse_node_t &node) const {
-    bool result = true;
-    assert(node.type == symbol_argument_list || node.type == symbol_arguments_or_redirections_list);
-    const parse_node_t *parent = this->get_parent(node);
-    if (parent != NULL) {
-        // We have a parent - check to make sure it's not another list!
-        result = parent->type != symbol_arguments_or_redirections_list &&
-                 parent->type != symbol_argument_list;
-    }
-    return result;
-}
-
-enum parse_statement_decoration_t parse_node_tree_t::decoration_for_plain_statement(
-    const parse_node_t &node) const {
-    assert(node.type == symbol_plain_statement);
-    parse_statement_decoration_t decoration = parse_statement_decoration_none;
-    const parse_node_t *decorated_statement = this->get_parent(node, symbol_decorated_statement);
-    if (decorated_statement) {
-        decoration = static_cast<parse_statement_decoration_t>(decorated_statement->tag);
-    }
-    return decoration;
-}
-
-bool parse_node_tree_t::command_for_plain_statement(const parse_node_t &node, const wcstring &src,
-                                                    wcstring *out_cmd) const {
-    bool result = false;
-    assert(node.type == symbol_plain_statement);
-    const parse_node_t *cmd_node = this->get_child(node, 0, parse_token_type_string);
-    if (cmd_node != NULL && cmd_node->has_source()) {
-        out_cmd->assign(src, cmd_node->source_start, cmd_node->source_length);
-        result = true;
-    } else {
-        out_cmd->clear();
-    }
-    return result;
-}
-
-bool parse_node_tree_t::statement_is_in_pipeline(const parse_node_t &node,
-                                                 bool include_first) const {
-    // Moderately nasty hack! Walk up our ancestor chain and see if we are in a job_continuation.
-    // This checks if we are in the second or greater element in a pipeline; if we are the first
-    // element we treat this as false. This accepts a few statement types.
-    bool result = false;
-    const parse_node_t *ancestor = &node;
-
-    // If we're given a plain statement, try to get its decorated statement parent.
-    if (ancestor && ancestor->type == symbol_plain_statement)
-        ancestor = this->get_parent(*ancestor, symbol_decorated_statement);
-    if (ancestor) ancestor = this->get_parent(*ancestor, symbol_statement);
-    if (ancestor) ancestor = this->get_parent(*ancestor);
-
-    if (ancestor) {
-        if (ancestor->type == symbol_job_continuation) {
-            // Second or more in a pipeline.
-            result = true;
-        } else if (ancestor->type == symbol_job && include_first) {
-            // Check to see if we have a job continuation that's not empty.
-            const parse_node_t *continuation =
-                this->get_child(*ancestor, 1, symbol_job_continuation);
-            result = (continuation != NULL && continuation->child_count > 0);
-        }
-    }
-
-    return result;
-}
-
-enum token_type parse_node_tree_t::type_for_redirection(const parse_node_t &redirection_node,
-                                                        const wcstring &src, int *out_fd,
-                                                        wcstring *out_target) const {
-    assert(redirection_node.type == symbol_redirection);
-    enum token_type result = TOK_NONE;
-    const parse_node_t *redirection_primitive =
-        this->get_child(redirection_node, 0, parse_token_type_redirection);  // like 2>
-    const parse_node_t *redirection_target =
-        this->get_child(redirection_node, 1, parse_token_type_string);  // like &1 or file path
-
-    if (redirection_primitive != NULL && redirection_primitive->has_source()) {
-        result = redirection_type_for_string(redirection_primitive->get_source(src), out_fd);
-    }
-    if (out_target != NULL) {
-        *out_target = redirection_target ? redirection_target->get_source(src) : L"";
-    }
-    return result;
-}
-
-const parse_node_t *parse_node_tree_t::header_node_for_block_statement(
-    const parse_node_t &node) const {
+const parse_node_t *parse_node_tree_t::find_last_node_of_type(parse_token_type_t type,
+                                                              const parse_node_t *parent) const {
     const parse_node_t *result = NULL;
-    if (node.type == symbol_block_statement) {
-        const parse_node_t *block_header = this->get_child(node, 0, symbol_block_header);
-        if (block_header != NULL) {
-            result = this->get_child(*block_header, 0);
+    // Find nodes of the given type in the tree, working backwards.
+    size_t idx = this->size();
+    while (idx--) {
+        const parse_node_t &node = this->at(idx);
+        bool expected_type = (node.type == type);
+        if (expected_type && (parent == NULL || node_has_ancestor(*this, node, *parent))) {
+            // The types match and it has the right parent.
+            result = &node;
+            break;
         }
     }
     return result;
 }
 
-parse_node_tree_t::parse_node_list_t parse_node_tree_t::specific_statements_for_job(
-    const parse_node_t &job) const {
-    assert(job.type == symbol_job);
-    parse_node_list_t result;
-
-    // Initial statement (non-specific).
-    result.push_back(get_child(job, 0, symbol_statement));
-
-    // Our cursor variable. Walk over the list of continuations.
-    const parse_node_t *continuation = get_child(job, 1, symbol_job_continuation);
-    while (continuation != NULL && continuation->child_count > 0) {
-        result.push_back(get_child(*continuation, 1, symbol_statement));
-        continuation = get_child(*continuation, 2, symbol_job_continuation);
-    }
-
-    // Result now contains a list of statements. But we want a list of specific statements e.g.
-    // symbol_switch_statement. So replace them in-place in the vector.
-    for (size_t i = 0; i < result.size(); i++) {
-        const parse_node_t *statement = result.at(i);
-        assert(statement->type == symbol_statement);
-        result.at(i) = this->get_child(*statement, 0);
-    }
-
-    return result;
-}
-
-parse_node_tree_t::parse_node_list_t parse_node_tree_t::comment_nodes_for_node(
-    const parse_node_t &parent) const {
-    parse_node_list_t result;
-    if (parent.has_comments()) {
-        // Walk all our nodes, looking for comment nodes that have the given node as a parent.
-        for (size_t i = 0; i < this->size(); i++) {
-            const parse_node_t &potential_comment = this->at(i);
-            if (potential_comment.type == parse_special_type_comment &&
-                this->get_parent(potential_comment) == &parent) {
-                result.push_back(&potential_comment);
-            }
-        }
-    }
-    return result;
-}
-
-enum parse_bool_statement_type_t parse_node_tree_t::statement_boolean_type(
-    const parse_node_t &node) {
-    assert(node.type == symbol_boolean_statement);
-    return static_cast<parse_bool_statement_type_t>(node.tag);
-}
-
-bool parse_node_tree_t::job_should_be_backgrounded(const parse_node_t &job) const {
-    assert(job.type == symbol_job);
-    const parse_node_t *opt_background = get_child(job, 2, symbol_optional_background);
-    return opt_background != NULL && opt_background->tag == parse_background;
-}
-
-const parse_node_t *parse_node_tree_t::next_node_in_node_list(
-    const parse_node_t &node_list, parse_token_type_t entry_type,
-    const parse_node_t **out_list_tail) const {
-    parse_token_type_t list_type = node_list.type;
-
-    // Paranoia - it doesn't make sense for a list type to contain itself.
-    assert(list_type != entry_type);
-
-    const parse_node_t *list_cursor = &node_list;
-    const parse_node_t *list_entry = NULL;
-
-    // Loop while we don't have an item but do have a list. Note that some nodes may contain
-    // nothing; e.g. job_list contains blank lines as a production.
-    while (list_entry == NULL && list_cursor != NULL) {
-        const parse_node_t *next_cursor = NULL;
-
-        // Walk through the children.
-        for (node_offset_t i = 0; i < list_cursor->child_count; i++) {
-            const parse_node_t *child = this->get_child(*list_cursor, i);
-            if (child->type == entry_type) {
-                // This is the list entry.
-                list_entry = child;
-            } else if (child->type == list_type) {
-                // This is the next in the list.
-                next_cursor = child;
-            }
-        }
-        // Go to the next entry, even if it's NULL.
-        list_cursor = next_cursor;
-    }
-
-    // Return what we got.
-    assert(list_cursor == NULL || list_cursor->type == list_type);
-    assert(list_entry == NULL || list_entry->type == entry_type);
-    if (out_list_tail != NULL) *out_list_tail = list_cursor;
-    return list_entry;
-}

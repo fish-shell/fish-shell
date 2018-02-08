@@ -4,7 +4,7 @@ The fish documentation has been updated to support Doxygen 1.8.7+, and while the
 
 Initially my motivation was to fix a problem with long options ([Issue #1557](https://github.com/fish-shell/fish-shell/issues/1557) on GitHub), but as I worked on fixing the issue I realised there was an opportunity to simplify, reinforce and clarify the current documentation, hopefully making further contribution easier and cleaner, while allowing the documentation examples to presented more clearly with less author effort.
 
-While the documentation is pretty robust to variations in the documentation source, adherence to the following style guide will help keep the already excellent documention in good shape moving forward.
+While the documentation is pretty robust to variations in the documentation source, adherence to the following style guide will help keep the already excellent documentation in good shape moving forward.
 
 ## Line breaks and wrapping
 
@@ -68,13 +68,13 @@ __echo__ hello world
 
 In older browsers, it was easy to set the fonts used for the three basic type styles (serif, sans-serif and monospace). Modern browsers have removed these options in their respective quests for simplification, assuming the content author will provide suitable styles for the content in the site's CSS, or the end user will provide overriding styles manually. Doxygen's default styling is very simple and most users will just accept this default.
 
-I've tried to use a sensible set of fonts in the documentation's CSS based on 'good' terminal fonts and as a result the firt preference font used throughout the documentation is '[DejaVu](http://dejavu-fonts.org)'. The rationale behaind this is that while DejaVu is getting a little long in the tooth, it still provides the most complete support across serif, sans-serif and monospace styles (giving a well balanced feel and consistent [x-height](http://en.wikipedia.org/wiki/X-height)), has the widest support for extended Unicode characters and has a free, permissive licenses (though it's still incompatible with GPLv2, though arguably less so than the SIL Open Font license, though this is a moot point when using it solely in the docs).
+I've tried to use a sensible set of fonts in the documentation's CSS based on 'good' terminal fonts and as a result the first preference font used throughout the documentation is '[DejaVu](https://dejavu-fonts.github.io)'. The rationale behind this is that while DejaVu is getting a little long in the tooth, it still provides the most complete support across serif, sans-serif and monospace styles (giving a well balanced feel and consistent [x-height](https://en.wikipedia.org/wiki/X-height)), has the widest support for extended Unicode characters and has a free, permissive licenses (though it's still incompatible with GPLv2, though arguably less so than the SIL Open Font license, though this is a moot point when using it solely in the docs).
 
 #### Fonts inside \\fish blocks and \`backticks\`
 
-As the point of these contructs is to make fish's syntax clearer to the user, it makes sense to mimic what the user will see in the console, therefore any content is formatted using the monospaced style, specifically monospaced fonts are chosen in the following order:
+As the point of these constructs is to make fish's syntax clearer to the user, it makes sense to mimic what the user will see in the console, therefore any content is formatted using the monospaced style, specifically monospaced fonts are chosen in the following order:
 
-1. __DejaVu Sans Mono__: Explained above. [[&darr;](http://dejavu-fonts.org)]
+1. __DejaVu Sans Mono__: Explained above. [[&darr;](https://dejavu-fonts.github.io)]
 2. __Source Code Pro__: Monospaced code font, part of Adobe's free Edge Web Fonts. [[&darr;](https://edgewebfonts.adobe.com)]
 3. __Menlo__: Apple supplied variant of DejaVu.
 4. __Ubuntu Mono__: Ubuntu Linux's default monospaced font. [[&darr;](http://font.ubuntu.com)]
@@ -86,8 +86,8 @@ As the point of these contructs is to make fish's syntax clearer to the user, it
 
 #### General Fonts
 
-1. __DejaVu Sans__: As above.[[&darr;](http://dejavu-fonts.org)]
-2. __Roboto__: Elegant Google free font and is Doxygen's default [[&darr;](http://www.google.com/fonts/specimen/Roboto)]
+1. __DejaVu Sans__: As above.[[&darr;](https://dejavu-fonts.github.io)]
+2. __Roboto__: Elegant Google free font and is Doxygen's default [[&darr;](https://fonts.google.com/specimen/Roboto)]
 3. __Lucida Grande__: Default Apple OS X content font.
 4. __Calibri__: Default Microsoft Office font (since 2007).
 5. __Verdana__: Good general font found in a lot of OSs.
@@ -102,7 +102,7 @@ On OS X, with nothing extra installed, the docs will default to Menlo and Lucida
 
 #### Other sources:
 
-- [Font Squirrel](http://www.fontsquirrel.com): Good source of open source font packages.
+- [Font Squirrel](https://www.fontsquirrel.com): Good source of open source font packages.
 
 ### Choosing a CLI style: using a \\fish{style} block
 
@@ -132,7 +132,7 @@ The documentation currently defines a couple of additional styles:
 
 Apart from the exceptions discussed above, the rest of the documentation now supports the use of Markdown. As such the use of Doxygen special commands for HTML tags is unnecessary.
 
-There are a few exceptions and extensions to the Markdown [standard](http://daringfireball.net/projects/markdown/) that are documented in the Doxygen [documentation](http://www.stack.nl/~dimitri/doxygen/manual/markdown.html).
+There are a few exceptions and extensions to the Markdown [standard](https://daringfireball.net/projects/markdown/) that are documented in the Doxygen [documentation](https://www.stack.nl/~dimitri/doxygen/manual/markdown.html).
 
 ### \`Backticks\`
 
@@ -220,7 +220,7 @@ As fish ships with pre-built documentation, I don't see this as an issue.
 ### HTML output
 
 - The output HTML is HTML5 compliant, but should quickly and elegantly degrade on older browsers without losing basic structure.
-- The CSS avoids the use or browser specific extenstions (i.e. -webkit, -moz etc), using the W3C HTML5 standard instead.
+- The CSS avoids the use or browser specific extensions (i.e. -webkit, -moz etc), using the W3C HTML5 standard instead.
 - It's been tested in Chrome 37.0 and Firefox 32.0 on Mac OS X 10.9 (+Safari 7), Windows 8.1 (+Internet Explorer 11) and Ubuntu Desktop 14.04.
 - My assumption is basically that if someone cares enough to want to install fish, they'll be keeping a browser current.
 

@@ -43,65 +43,65 @@ set -l unlock unlock
 set -l update 'up update'
 set -l upgrade upgrade
 
-complete -c svn -n '__fish_use_subcommand' -x -a $add --description 'Put files and directories under version control, scheduling them for addition to repository.  They will be added in next commit.'
-complete -c svn -n '__fish_use_subcommand' -x -a $blame --description 'Output the content of specified files or URLs with revision and author information in-line.'
-complete -c svn -n '__fish_use_subcommand' -x -a $cat --description 'Output the content of specified files or URLs.'
-complete -c svn -n '__fish_use_subcommand' -x -a $changelist --description 'Output the content of specified files or URLs with revision and author information in-line.'
-complete -c svn -n '__fish_use_subcommand' -x -a $checkout --description 'Check out a working copy from a repository.'
-complete -c svn -n '__fish_use_subcommand' -x -a $cleanup --description 'Recursively clean up the working copy, removing locks, resuming unfinished operations, etc.'
-complete -c svn -n '__fish_use_subcommand' -x -a $commit --description 'Send changes from your working copy to the repository.'
-complete -c svn -n '__fish_use_subcommand' -x -a $copy --description 'Duplicate something in working copy or repository, remembering history.'
-complete -c svn -n '__fish_use_subcommand' -x -a $diff --description 'Display the differences between two revisions or paths.'
-complete -c svn -n '__fish_use_subcommand' -x -a $export --description 'Create an unversioned copy of a tree.'
-complete -c svn -n '__fish_use_subcommand' -x -a $help --description 'Describe the usage of this program or its subcommands.'
-complete -c svn -n '__fish_use_subcommand' -x -a $import --description 'Commit an unversioned file or tree into the repository.'
-complete -c svn -n '__fish_use_subcommand' -x -a $info --description 'Display information about a local or remote item.'
-complete -c svn -n '__fish_use_subcommand' -x -a $list --description 'List directory entries in the repository.'
-complete -c svn -n '__fish_use_subcommand' -x -a $lock --description 'Lock working copy paths or URLs in the repository, so that no other user can commit changes to them.'
-complete -c svn -n '__fish_use_subcommand' -x -a $log --description 'Show the log messages for a set of revision(s) and/or file(s).'
-complete -c svn -n '__fish_use_subcommand' -x -a $merge --description 'Apply the differences between two sources to a working copy path.'
-complete -c svn -n '__fish_use_subcommand' -x -a $mergeinfo --description 'Display information related to merges'
-complete -c svn -n '__fish_use_subcommand' -x -a $mkdir --description 'Create a new directory under version control.'
-complete -c svn -n '__fish_use_subcommand' -x -a $move --description 'Move and/or rename something in working copy or repository.'
-complete -c svn -n '__fish_use_subcommand' -x -a $patch --description 'Apply a unidiff patch to the working copy'
-complete -c svn -n '__fish_use_subcommand' -x -a $propdel --description 'Remove a property from files, dirs, or revisions.'
-complete -c svn -n '__fish_use_subcommand' -x -a $propedit --description 'Edit a property with an external editor.'
-complete -c svn -n '__fish_use_subcommand' -x -a $propget --description 'Print the value of a property on files, dirs, or revisions.'
-complete -c svn -n '__fish_use_subcommand' -x -a $proplist --description 'List all properties on files, dirs, or revisions.'
-complete -c svn -n '__fish_use_subcommand' -x -a $propset --description 'Set the value of a property on files, dirs, or revisions.'
-complete -c svn -n '__fish_use_subcommand' -x -a $relocate --description 'Rewrite working copy url metadata'
-complete -c svn -n '__fish_use_subcommand' -x -a $remove --description 'Remove files and directories from version control.'
-complete -c svn -n '__fish_use_subcommand' -x -a $resolve --description 'Remove conflicts on working copy files or directories.'
-complete -c svn -n '__fish_use_subcommand' -x -a $resolved --description 'Remove \'conflicted\' state on working copy files or directories.'
-complete -c svn -n '__fish_use_subcommand' -x -a $revert --description 'Restore pristine working copy file (undo most local edits).'
-complete -c svn -n '__fish_use_subcommand' -x -a $stat --description 'Print the status of working copy files and directories.'
-complete -c svn -n '__fish_use_subcommand' -x -a $switch --description 'Update the working copy to a different URL.'
-complete -c svn -n '__fish_use_subcommand' -x -a $unlock --description 'Unlock working copy paths or URLs.'
-complete -c svn -n '__fish_use_subcommand' -x -a $update --description 'Bring changes from the repository into the working copy.'
-complete -c svn -n '__fish_use_subcommand' -x -a $upgrade --description 'Upgrade the metadata storage format for a working copy.'
+complete -c svn -n '__fish_use_subcommand' -x -a $add -d 'Put files and directories under version control, scheduling them for addition to repository.  They will be added in next commit.'
+complete -c svn -n '__fish_use_subcommand' -x -a $blame -d 'Output the content of specified files or URLs with revision and author information in-line.'
+complete -c svn -n '__fish_use_subcommand' -x -a $cat -d 'Output the content of specified files or URLs.'
+complete -c svn -n '__fish_use_subcommand' -x -a $changelist -d 'Output the content of specified files or URLs with revision and author information in-line.'
+complete -c svn -n '__fish_use_subcommand' -x -a $checkout -d 'Check out a working copy from a repository.'
+complete -c svn -n '__fish_use_subcommand' -x -a $cleanup -d 'Recursively clean up the working copy, removing locks, resuming unfinished operations, etc.'
+complete -c svn -n '__fish_use_subcommand' -x -a $commit -d 'Send changes from your working copy to the repository.'
+complete -c svn -n '__fish_use_subcommand' -x -a $copy -d 'Duplicate something in working copy or repository, remembering history.'
+complete -c svn -n '__fish_use_subcommand' -x -a $diff -d 'Display the differences between two revisions or paths.'
+complete -c svn -n '__fish_use_subcommand' -x -a $export -d 'Create an unversioned copy of a tree.'
+complete -c svn -n '__fish_use_subcommand' -x -a $help -d 'Describe the usage of this program or its subcommands.'
+complete -c svn -n '__fish_use_subcommand' -x -a $import -d 'Commit an unversioned file or tree into the repository.'
+complete -c svn -n '__fish_use_subcommand' -x -a $info -d 'Display information about a local or remote item.'
+complete -c svn -n '__fish_use_subcommand' -x -a $list -d 'List directory entries in the repository.'
+complete -c svn -n '__fish_use_subcommand' -x -a $lock -d 'Lock working copy paths or URLs in the repository, so that no other user can commit changes to them.'
+complete -c svn -n '__fish_use_subcommand' -x -a $log -d 'Show the log messages for a set of revision(s) and/or file(s).'
+complete -c svn -n '__fish_use_subcommand' -x -a $merge -d 'Apply the differences between two sources to a working copy path.'
+complete -c svn -n '__fish_use_subcommand' -x -a $mergeinfo -d 'Display information related to merges'
+complete -c svn -n '__fish_use_subcommand' -x -a $mkdir -d 'Create a new directory under version control.'
+complete -c svn -n '__fish_use_subcommand' -x -a $move -d 'Move and/or rename something in working copy or repository.'
+complete -c svn -n '__fish_use_subcommand' -x -a $patch -d 'Apply a unidiff patch to the working copy'
+complete -c svn -n '__fish_use_subcommand' -x -a $propdel -d 'Remove a property from files, dirs, or revisions.'
+complete -c svn -n '__fish_use_subcommand' -x -a $propedit -d 'Edit a property with an external editor.'
+complete -c svn -n '__fish_use_subcommand' -x -a $propget -d 'Print the value of a property on files, dirs, or revisions.'
+complete -c svn -n '__fish_use_subcommand' -x -a $proplist -d 'List all properties on files, dirs, or revisions.'
+complete -c svn -n '__fish_use_subcommand' -x -a $propset -d 'Set the value of a property on files, dirs, or revisions.'
+complete -c svn -n '__fish_use_subcommand' -x -a $relocate -d 'Rewrite working copy url metadata'
+complete -c svn -n '__fish_use_subcommand' -x -a $remove -d 'Remove files and directories from version control.'
+complete -c svn -n '__fish_use_subcommand' -x -a $resolve -d 'Remove conflicts on working copy files or directories.'
+complete -c svn -n '__fish_use_subcommand' -x -a $resolved -d 'Remove \'conflicted\' state on working copy files or directories.'
+complete -c svn -n '__fish_use_subcommand' -x -a $revert -d 'Restore pristine working copy file (undo most local edits).'
+complete -c svn -n '__fish_use_subcommand' -x -a $stat -d 'Print the status of working copy files and directories.'
+complete -c svn -n '__fish_use_subcommand' -x -a $switch -d 'Update the working copy to a different URL.'
+complete -c svn -n '__fish_use_subcommand' -x -a $unlock -d 'Unlock working copy paths or URLs.'
+complete -c svn -n '__fish_use_subcommand' -x -a $update -d 'Bring changes from the repository into the working copy.'
+complete -c svn -n '__fish_use_subcommand' -x -a $upgrade -d 'Upgrade the metadata storage format for a working copy.'
 
 #
 # Global commands
 #
-complete -c svn -n 'not __fish_use_subcommand' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'not __fish_use_subcommand' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'not __fish_use_subcommand' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'not __fish_use_subcommand' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'not __fish_use_subcommand' -l trust-server-cert --description 'Accept SSL server certificates from unknown authorities (ony with --non-interactive)'
-complete -c svn -n 'not __fish_use_subcommand' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'not __fish_use_subcommand' -l config-option -x --description 'Set user configuration option in the format: FILE:SECTION:OPTION=[VALUE]'
+complete -c svn -n 'not __fish_use_subcommand' -l username -x -d 'Specify a username ARG'
+complete -c svn -n 'not __fish_use_subcommand' -l password -x -d 'Specify a password ARG'
+complete -c svn -n 'not __fish_use_subcommand' -l no-auth-cache -d 'Do not cache authentication tokens'
+complete -c svn -n 'not __fish_use_subcommand' -l non-interactive -d 'Do no interactive prompting'
+complete -c svn -n 'not __fish_use_subcommand' -l trust-server-cert -d 'Accept SSL server certificates from unknown authorities (ony with --non-interactive)'
+complete -c svn -n 'not __fish_use_subcommand' -l config-dir -x -d 'Read user configuration files from directory ARG'
+complete -c svn -n 'not __fish_use_subcommand' -l config-option -x -d 'Set user configuration option in the format: FILE:SECTION:OPTION=[VALUE]'
 
 #
 # local commands
 #
 for cmd in $commit $copy $import $lock $mkdir $move $propedit $remove
     if not test $cmd = lock
-        _svn_cmpl_ $cmd -l editor-cmd -x --description 'Use ARG as external editor'
+        _svn_cmpl_ $cmd -l editor-cmd -x -d 'Use ARG as external editor'
     end
-    _svn_cmpl_ $cmd -l message -s m --description 'Specify log message'
-    _svn_cmpl_ $cmd -l encoding -x --description 'Treat value as being in charset encoding ARG'
-    _svn_cmpl_ $cmd -l file -s F --description 'Read log message from file'
-    _svn_cmpl_ $cmd -l force-log --description 'Force validity of log message source'
+    _svn_cmpl_ $cmd -l message -s m -d 'Specify log message'
+    _svn_cmpl_ $cmd -l encoding -x -d 'Treat value as being in charset encoding ARG'
+    _svn_cmpl_ $cmd -l file -s F -d 'Read log message from file'
+    _svn_cmpl_ $cmd -l force-log -d 'Force validity of log message source'
 end
 
 for cmd in $merge $resolve $switch $update
@@ -113,27 +113,27 @@ for cmd in $add $changelist $checkout $commit $diff $export $import $info $list 
 end
 
 for cmd in $add $changelist $checkout $commit $copy $delete $elog $export $import $merge $mkdir $move $patch $propdel $proplist $propset $resolve $resolved $revert $stat $switch $update $upgrade
-    _svn_cmpl_ $cmd -l quiet -s q --description 'Print nothing, or only summary information'
+    _svn_cmpl_ $cmd -l quiet -s q -d 'Print nothing, or only summary information'
 end
 
 for cmd in $add $blame $checkout $delete $diff $export $import $lock $merge $move $propedit $propset $remove $switch $unlock $update
-    _svn_cmpl_ $cmd -l force --description 'Force operation to run'
+    _svn_cmpl_ $cmd -l force -d 'Force operation to run'
 end
 
 for cmd in $add $changelist $commit $delete $info $lock $log $propset $resolve $resolved $revert $unlock
-    _svn_cmpl_ $cmd -l targets --description 'Process contents of file ARG as additional args' -r
+    _svn_cmpl_ $cmd -l targets -d 'Process contents of file ARG as additional args' -r
 end
 
 for cmd in $changelist $commit $diff $info $propdel $propget $proplist $propset $revert $stat $update
-    _svn_cmpl_ $cmd -l changelist -l cl --description 'Operate only on members of changelist' -r
+    _svn_cmpl_ $cmd -l changelist -l cl -d 'Operate only on members of changelist' -r
 end
 
 for cmd in $blame $diff $info $list $log $propget $proplist $stat
-    _svn_cmpl_ $cmd -l xml --description 'Output in xml'
+    _svn_cmpl_ $cmd -l xml -d 'Output in xml'
 end
 
 for cmd in $commit $copy $delete $import $log $mkdir $move $propedit
-    _svn_cmpl_ $cmd -l with-revprop --description 'Retrieve revision property' -x
+    _svn_cmpl_ $cmd -l with-revprop -d 'Retrieve revision property' -x
 end
 
 for cmd in $diff $log $merge
@@ -145,19 +145,19 @@ for cmd in $blame $cat $checkout $copy $diff $export $info $list $log $merge $me
 end
 
 for cmd in $checkout $copy $export $relocate $stat $switch $update
-    _svn_cmpl_ $cmd -l ignore-externals --description 'Ignore externals definitions'
+    _svn_cmpl_ $cmd -l ignore-externals -d 'Ignore externals definitions'
 end
 
 for cmd in $blame $list $log $propget $proplist $stat
-    _svn_cmpl_ $cmd -l verbose -s v --description 'Print extra information'
+    _svn_cmpl_ $cmd -l verbose -s v -d 'Print extra information'
 end
 
 for cmd in $propdel $propedit $propget $proplist $propset
-    _svn_cmpl_ $cmd -l revprop --description 'Operate on a revision property (use with -r)'
+    _svn_cmpl_ $cmd -l revprop -d 'Operate on a revision property (use with -r)'
 end
 
 for cmd in $add $copy $mkdir $move $update
-    _svn_cmpl_ $cmd -l parents --description 'Add intermediate parents'
+    _svn_cmpl_ $cmd -l parents -d 'Add intermediate parents'
 end
 
 for cmd in $blame $diff $log $merge
@@ -184,24 +184,24 @@ for cmd in $add $import $stat
 end
 
 for cmd in $merge $patch
-    _svn_cmpl_ $cmd -l dry-run --description 'Try operation but make no changes'
+    _svn_cmpl_ $cmd -l dry-run -d 'Try operation but make no changes'
 end
 
 for cmd in $merge $switch
-    _svn_cmpl_ $cmd -l ignore-ancestry --description 'Ignore ancestry when calculating merges'
+    _svn_cmpl_ $cmd -l ignore-ancestry -d 'Ignore ancestry when calculating merges'
 end
 
 for cmd in $diff $log
-    _svn_cmpl_ $cmd -l internal-diff --description 'Override diff-cmd specified in config file'
-    _svn_cmpl_ $cmd -l diff-cmd --description 'Use external diff command' -xa "(complete -C(commandline -ct))"
+    _svn_cmpl_ $cmd -l internal-diff -d 'Override diff-cmd specified in config file'
+    _svn_cmpl_ $cmd -l diff-cmd -d 'Use external diff command' -xa "(complete -C(commandline -ct))"
 end
 
 for cmd in $add $import
-    _svn_cmpl_ $cmd -l no-auto-props --description 'Disable automatic properties'
+    _svn_cmpl_ $cmd -l no-auto-props -d 'Disable automatic properties'
 end
 
 for cmd in $switch $update
-    _svn_cmpl_ $cmd -l set-depth --description 'Set new working copy depth' -xa 'exclude empty files immediates infinity'
+    _svn_cmpl_ $cmd -l set-depth -d 'Set new working copy depth' -xa 'exclude empty files immediates infinity'
 end
 
 for cmd in $blame $log
@@ -225,36 +225,36 @@ _svn_cmpl_ $changelist -l remove -d 'Remove changelist association'
 #
 # Completions for the 'commit', 'ci' subcommands
 #
-_svn_cmpl_ $commit -l keep-changelists --description 'don\'t delete changelists after commit'
-_svn_cmpl_ $commit -l no-unlock --description 'Don\'t unlock the targets'
+_svn_cmpl_ $commit -l keep-changelists -d 'don\'t delete changelists after commit'
+_svn_cmpl_ $commit -l no-unlock -d 'Don\'t unlock the targets'
 
 #
 # Completions for the 'remove', 'rm', 'delete', 'del' subcommands
 #
-_svn_cmpl_ $remove -l keep-local -x --description 'Keep path in working copy'
+_svn_cmpl_ $remove -l keep-local -x -d 'Keep path in working copy'
 
 #
 # Completions for the 'diff', 'di' subcommands
 #
-_svn_cmpl_ $diff -l old --description 'Use ARG as the older target' -xa '(__fish_print_svn_rev)'
-_svn_cmpl_ $diff -l new --description 'Use ARG as the newer target' -xa '(__fish_print_svn_rev)'
-_svn_cmpl_ $diff -l no-diff-deleted --description 'Do not print differences for deleted files'
-_svn_cmpl_ $diff -l notice-ancestry --description 'Notice ancestry when calculating differences'
-_svn_cmpl_ $diff -l summarize --description 'Show a summary of the results'
+_svn_cmpl_ $diff -l old -d 'Use ARG as the older target' -xa '(__fish_print_svn_rev)'
+_svn_cmpl_ $diff -l new -d 'Use ARG as the newer target' -xa '(__fish_print_svn_rev)'
+_svn_cmpl_ $diff -l no-diff-deleted -d 'Do not print differences for deleted files'
+_svn_cmpl_ $diff -l notice-ancestry -d 'Notice ancestry when calculating differences'
+_svn_cmpl_ $diff -l summarize -d 'Show a summary of the results'
 _svn_cmpl_ $diff -l git -d 'Use git\'s extended diff format'
 _svn_cmpl_ $diff -l show-copies-as-adds -d 'Don\'t diff copied or moved files with their source'
 
 #
 # Completions for the 'export' subcommand
 #
-_svn_cmpl_ $export -l native-eol -x --description 'Use a different EOL marker than the standard'
+_svn_cmpl_ $export -l native-eol -x -d 'Use a different EOL marker than the standard'
 
 #
 # Completions for the 'log' subcommand
 #
-_svn_cmpl_ $log -l stop-on-copy --description 'Do not cross copies while traversing history'
-_svn_cmpl_ $log -l limit -s l -x --description 'Maximum number of log entries'
-_svn_cmpl_ $log -l diff --description 'Produce diff output'
+_svn_cmpl_ $log -l stop-on-copy -d 'Do not cross copies while traversing history'
+_svn_cmpl_ $log -l limit -s l -x -d 'Maximum number of log entries'
+_svn_cmpl_ $log -l diff -d 'Produce diff output'
 _svn_cmpl_ $log -l with-all-revprops -d 'Retrieve all revision properties'
 _svn_cmpl_ $log -l with-no-revprops -d 'Retrieve no revision properties'
 
@@ -274,7 +274,7 @@ _svn_cmpl_ $patch -l strip -x -d 'Number of leading path components to strip fro
 #
 # Completions for the 'propget', 'pget', 'pg' subcommands
 #
-_svn_cmpl_ $propget -l strict --description 'Use strict semantics'
+_svn_cmpl_ $propget -l strict -d 'Use strict semantics'
 
 #
 # Complete pget, pset, pedit options with svn props
@@ -301,7 +301,7 @@ _svn_cmpl_ $relocate -xa '( svn info | grep URL: | cut -d " " -f 2 ) http:// ftp
 #
 # Completions for the 'switch', 'sw' subcommands
 #
-_svn_cmpl_ $switch -l relocate --description 'Relocate via URL-rewriting' -xa '( svn info | grep URL: | cut -d " " -f 2 ) http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
+_svn_cmpl_ $switch -l relocate -d 'Relocate via URL-rewriting' -xa '( svn info | grep URL: | cut -d " " -f 2 ) http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
 
 #
 # Completions for the 'status', 'st' subcommands
@@ -311,6 +311,6 @@ _svn_cmpl_ $stat -l show-updates -s u -d 'Display update information'
 #
 # Completions for the 'update', 'up' subcommand
 #
-_svn_cmpl_ $update -l editor-cmd -x --description 'Use ARG as external editor'
+_svn_cmpl_ $update -l editor-cmd -x -d 'Use ARG as external editor'
 
 functions -e _svn_cmpl_

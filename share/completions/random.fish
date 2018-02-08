@@ -1,2 +1,2 @@
 
-complete -c random -s h -l help --description "Display help and exit"
+complete -c random -s h -l help -d "Display help and exit"

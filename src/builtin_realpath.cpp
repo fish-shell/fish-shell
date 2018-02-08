@@ -37,10 +37,8 @@ int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_INVALID_ARGS;
     }
 
-    wchar_t *real_path = wrealpath(argv[optind], NULL);
-    if (real_path) {
-        streams.out.append(real_path);
-        free((void *)real_path);
+    if (auto real_path = wrealpath(argv[optind])) {
+        streams.out.append(*real_path);
     } else {
         // We don't actually know why it failed. We should check errno.
         streams.err.append_format(_(L"%ls: Invalid path: %ls\n"), cmd, argv[optind]);

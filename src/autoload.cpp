@@ -70,8 +70,7 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
     // Do we know where to look?
     if (path_var.missing_or_empty()) return 0;
 
-    // Check if the lookup path has changed. If so, drop all loaded files. path_var may only be
-    // inspected on the main thread.
+    // Check if the lookup path has changed. If so, drop all loaded files.
     if (*path_var != this->last_path) {
         this->last_path = *path_var;
         this->last_path_tokenized.clear();

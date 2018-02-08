@@ -62,7 +62,6 @@
 #include "output.h"
 #include "pager.h"
 #include "parse_constants.h"
-#include "parse_tree.h"
 #include "parse_util.h"
 #include "parser.h"
 #include "proc.h"
@@ -70,13 +69,14 @@
 #include "sanity.h"
 #include "screen.h"
 #include "signal.h"
+#include "tnode.h"
 #include "tokenizer.h"
 #include "util.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // Name of the variable that tells how long it took, in milliseconds, for the previous
 // interactive command to complete.
-#define ENV_CMD_DURATION L"CMD_DURATION"
+#define ENV_cmd_duration L"cmd_duration"
 
 /// Maximum length of prefix string when printing completion list. Longer prefixes will be
 /// ellipsized.
@@ -580,25 +580,25 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
                            &parse_tree, NULL);
 
     // Look for plain statements where the cursor is at the end of the command.
-    const parse_node_t *matching_cmd_node = NULL;
-    const size_t len = parse_tree.size();
-    for (size_t i = 0; i < len; i++) {
-        const parse_node_t &node = parse_tree.at(i);
-
+    using namespace grammar;
+    tnode_t<tok_string> matching_cmd_node;
+    for (const parse_node_t &node : parse_tree) {
         // Only interested in plain statements with source.
         if (node.type != symbol_plain_statement || !node.has_source()) continue;
 
-        // Skip decorated statements.
-        if (parse_tree.decoration_for_plain_statement(node) != parse_statement_decoration_none)
-            continue;
-
         // Get the command node. Skip it if we can't or it has no source.
-        const parse_node_t *cmd_node = parse_tree.get_child(node, 0, parse_token_type_string);
-        if (cmd_node == NULL || !cmd_node->has_source()) continue;
+        tnode_t<plain_statement> statement(&parse_tree, &node);
+        tnode_t<tok_string> cmd_node = statement.child<0>();
+
+        // Skip decorated statements.
+        if (get_decoration(statement) != parse_statement_decoration_none) continue;
+
+        auto msource = cmd_node.source_range();
+        if (!msource) continue;
 
         // Now see if its source range contains our cursor, including at the end.
-        if (subcmd_cursor_pos >= cmd_node->source_start &&
-            subcmd_cursor_pos <= cmd_node->source_start + cmd_node->source_length) {
+        if (subcmd_cursor_pos >= msource->start &&
+            subcmd_cursor_pos <= msource->start + msource->length) {
             // Success!
             matching_cmd_node = cmd_node;
             break;
@@ -607,17 +607,16 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
 
     // Now if we found a command node, expand it.
     bool result = false;
-    if (matching_cmd_node != NULL) {
-        assert(matching_cmd_node->type == parse_token_type_string);
-        const wcstring token = matching_cmd_node->get_source(subcmd);
+    if (matching_cmd_node) {
+        const wcstring token = matching_cmd_node.get_source(subcmd);
         wcstring abbreviation;
         if (expand_abbreviation(token, &abbreviation)) {
             // There was an abbreviation! Replace the token in the full command. Maintain the
             // relative position of the cursor.
             if (output != NULL) {
                 output->assign(cmdline);
-                output->replace(subcmd_offset + matching_cmd_node->source_start,
-                                matching_cmd_node->source_length, abbreviation);
+                source_range_t r = *matching_cmd_node.source_range();
+                output->replace(subcmd_offset + r.start, r.length, abbreviation);
             }
             result = true;
         }
@@ -766,7 +765,7 @@ void reader_init() {
     // Ensure this var is present even before an interactive command is run so that if it is used
     // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
     // prompt is written.
-    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, L"0");
+    env_set_one(ENV_cmd_duration, ENV_UNEXPORT, L"0");
 
     // Save the initial terminal mode.
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
@@ -1895,7 +1894,7 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before) {
     }
 
     swprintf(buf, 16, L"%d", (secs * 1000) + (usecs / 1000));
-    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, buf);
+    env_set_one(ENV_cmd_duration, ENV_UNEXPORT, buf);
 }
 
 void reader_run_command(parser_t &parser, const wcstring &cmd) {
@@ -1962,8 +1961,11 @@ static parser_test_error_bits_t default_test(const wchar_t *b) {
 }
 
 void reader_change_history(const wchar_t *name) {
-    data->history->save();
-    data->history = &history_t::history_with_name(name);
+    // We don't need to _change_ if we're not initialized yet.
+    if (data && data->history) {
+        data->history->save();
+        data->history = &history_t::history_with_name(name);
+    }
 }
 
 void reader_push(const wchar_t *name) {
@@ -2163,12 +2165,12 @@ static void bg_job_warning() {
     job_iterator_t jobs;
     while (job_t *j = jobs.next()) {
         if (!job_is_completed(j)) {
-            fwprintf(stdout, L"%6d  %ls\n", j->pgid, j->command_wcstr());
+            fwprintf(stdout, L"%6d  %ls\n", j->processes[0]->pid, j->command_wcstr());
         }
     }
     fputws(L"\n", stdout);
-    fputws(_(L"Use `disown PID` to let them live independently from fish.\n"), stdout);
     fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
+    fputws(_(L"Use 'disown PID' to remove jobs from the list without terminating them.\n"), stdout);
 }
 
 /// This function is called when the main loop notices that end_loop has been set while in
@@ -2726,20 +2728,29 @@ const wchar_t *reader_readline(int nchars) {
                 // We only execute the command line.
                 editable_line_t *el = &data->command_line;
 
-                // Allow backslash-escaped newlines, but only if the following character is
-                // whitespace, or we're at the end of the text (see issue #613) and not in a comment
-                // (issue #1255).
-                if (is_backslashed(el->text, el->position)) {
-                    bool continue_on_next_line = false;
-                    if (el->position >= el->size()) {
-                        continue_on_next_line = !text_ends_in_comment(el->text);
-                    } else {
-                        continue_on_next_line = iswspace(el->text.at(el->position));
+                // Allow backslash-escaped newlines.
+                bool continue_on_next_line = false;
+                if (el->position >= el->size()) {
+                    // We're at the end of the text and not in a comment (issue #1225).
+                    continue_on_next_line = is_backslashed(el->text, el->position) &&
+                                            !text_ends_in_comment(el->text);
+                } else {
+                    // Allow mid line split if the following character is whitespace (issue #613).
+                    if (is_backslashed(el->text, el->position) &&
+                        iswspace(el->text.at(el->position))) {
+                        continue_on_next_line = true;
+                    // Check if the end of the line is backslashed (issue #4467).
+                    } else if (is_backslashed(el->text, el->size()) &&
+                               !text_ends_in_comment(el->text)) {
+                        // Move the cursor to the end of the line.
+                        el->position = el->size();
+                        continue_on_next_line = true;
                     }
-                    if (continue_on_next_line) {
-                        insert_char(el, '\n');
-                        break;
-                    }
+                }
+                // If the conditions are met, insert a new line at the position of the cursor.
+                if (continue_on_next_line) {
+                    insert_char(el, '\n');
+                    break;
                 }
 
                 // See if this command is valid.
@@ -2959,9 +2970,9 @@ const wchar_t *reader_readline(int nchars) {
 
                     // Now do the selection.
                     select_completion_in_direction(direction);
-                } else if (c == R_DOWN_LINE && !data->pager.empty()) {
-                    // We pressed down with a non-empty pager contents, begin navigation.
-                    select_completion_in_direction(direction_south);
+                } else if (!data->pager.empty()) {
+                    // We pressed a direction with a non-empty pager, begin navigation.
+                    select_completion_in_direction(c == R_DOWN_LINE ? direction_south : direction_north);
                 } else {
                     // Not navigating the pager contents.
                     editable_line_t *el = data->active_edit_line();
@@ -3307,9 +3318,10 @@ static int read_ni(int fd, const io_chain_t &io) {
         }
 
         parse_error_list_t errors;
-        parse_node_tree_t tree;
-        if (!parse_util_detect_errors(str, &errors, false /* do not accept incomplete */, &tree)) {
-            parser.eval(str, io, TOP, std::move(tree));
+        parsed_source_ref_t pstree;
+        if (!parse_util_detect_errors(str, &errors, false /* do not accept incomplete */,
+                                      &pstree)) {
+            parser.eval(pstree, io, TOP);
         } else {
             wcstring sb;
             parser.get_backtrace(str, errors, sb);

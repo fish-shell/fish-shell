@@ -30,9 +30,9 @@ complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a build-i
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a build-sign          -d 'Sign an application or runtime'
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a build-update-repo   -d 'Update the summary file in a repository'
 
-complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app | string trim)"
-complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(flatpak list | string trim)"
-complete -f -c flatpak -n "__fish_seen_subcommand_from remote-ls remote-modify remote-delete" -a "(flatpak remote-list | string trim)"
+complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app | string match -r '\S+')"
+complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(flatpak list | string match -r '\S+')"
+complete -f -c flatpak -n "__fish_seen_subcommand_from remote-ls remote-modify remote-delete" -a "(flatpak remote-list | string match -r '\S+')"
 
 # Note that "remote-ls" opens an internet connection, so we don't want to complete "install"
 # Plenty of the other stuff is too free-form to complete (e.g. remote-add).

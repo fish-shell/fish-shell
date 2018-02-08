@@ -167,6 +167,11 @@
 #     dirtystate        Defaults to red
 #     stagedstate       Defaults to green
 #     flags             Defaults to --bold blue
+#
+#
+# The branch name could be shorten via
+# __fish_git_prompt_shorten_branch_len. Define the branch max len.
+# __fish_git_prompt_shorten_branch_char_suffix. Customize suffixed char of shorten branch. Defaults to (…).
 
 function __fish_git_prompt_show_upstream --description "Helper function for __fish_git_prompt"
     set -q __fish_git_prompt_showupstream
@@ -416,10 +421,17 @@ function __fish_git_prompt --description "Prompt function for Git"
     if test -n "$u"
         set u "$___fish_git_prompt_color_untrackedfiles$u$___fish_git_prompt_color_untrackedfiles_done"
     end
+
     set b (string replace refs/heads/ '' -- $b)
+    set -q __fish_git_prompt_shorten_branch_char_suffix
+    or set -l __fish_git_prompt_shorten_branch_char_suffix "…"
+    if string match -qr '^\d+$' "$__fish_git_prompt_shorten_branch_len"; and test (string length "$b") -gt $__fish_git_prompt_shorten_branch_len
+        set b (string sub -l "$__fish_git_prompt_shorten_branch_len" "$b")"$__fish_git_prompt_shorten_branch_char_suffix"
+    end
     if test -n "$b"
         set b "$branch_color$b$branch_done"
     end
+
     if test -n "$c"
         set c "$___fish_git_prompt_color_bare$c$___fish_git_prompt_color_bare_done"
     end

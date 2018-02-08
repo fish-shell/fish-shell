@@ -4,31 +4,31 @@
 
 
 # help commands
-complete -f -c bzr -n '__fish_use_subcommand' -a help --description 'Show help'
-complete -f -c bzr -n '__fish_seen_subcommand_from help' -a topics --description 'List all help topics'
-complete -f -c bzr -n '__fish_seen_subcommand_from help' -a commands --description 'List all commands'
-complete -f -c bzr -n '__fish_seen_subcommand_from help' -a formats --description 'Help about supported formats'
-complete -f -c bzr -n '__fish_seen_subcommand_from help' -a current-formats --description 'Help about current supported formats'
+complete -f -c bzr -n '__fish_use_subcommand' -a help -d 'Show help'
+complete -f -c bzr -n '__fish_seen_subcommand_from help' -a topics -d 'List all help topics'
+complete -f -c bzr -n '__fish_seen_subcommand_from help' -a commands -d 'List all commands'
+complete -f -c bzr -n '__fish_seen_subcommand_from help' -a formats -d 'Help about supported formats'
+complete -f -c bzr -n '__fish_seen_subcommand_from help' -a current-formats -d 'Help about current supported formats'
 complete -f -c bzr -n '__fish_seen_subcommand_from help' -a revisionspec -d 'How to specify revisions in bzr'
 complete -f -c bzr -n '__fish_seen_subcommand_from help' -a bugs -d 'Show bug tracker settings in bzr'
 # TODO: Add help about specific commands generating the output
 
 # init command
-complete -f -c bzr -n '__fish_use_subcommand' -a init --description 'Makes this directory a versioned branch'
-complete -f -c bzr -n '__fish_seen_subcommand_from init' -l create-prefix --description 'Create the path leading up to the branch if it does not already exists'
-complete -f -c bzr -n '__fish_seen_subcommand_from init' -l no-tree --description 'Create a branch without a working tree'
-complete -f -c bzr -n '__fish_seen_subcommand_from init' -l append-revisions-only --description 'Never change revnos or the existing log. Append revisions to it only'
+complete -f -c bzr -n '__fish_use_subcommand' -a init -d 'Makes this directory a versioned branch'
+complete -f -c bzr -n '__fish_seen_subcommand_from init' -l create-prefix -d 'Create the path leading up to the branch if it does not already exists'
+complete -f -c bzr -n '__fish_seen_subcommand_from init' -l no-tree -d 'Create a branch without a working tree'
+complete -f -c bzr -n '__fish_seen_subcommand_from init' -l append-revisions-only -d 'Never change revnos or the existing log. Append revisions to it only'
 # TODO: Add init using path directory
 
 # branch command
-complete -f -c bzr -n '__fish_use_subcommand' -a branch --description 'Make a copy of another branch'
-complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l use-existing-dir --description 'Proceed even if directory exits'
-complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l stacked --description 'Create a stacked branch referring to the source branch'
-complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l standalone --description 'Do not use a shared repository, even if available'
-complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l switch --description 'Switch the checkout in the current directory to the new branch'
-complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l hardlink --description 'Hard-link working tree files where possible'
-complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l bind --description 'Bind new branch to from location'
-complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l no-tree --description 'Create a branch without a working-tree'
+complete -f -c bzr -n '__fish_use_subcommand' -a branch -d 'Make a copy of another branch'
+complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l use-existing-dir -d 'Proceed even if directory exits'
+complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l stacked -d 'Create a stacked branch referring to the source branch'
+complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l standalone -d 'Do not use a shared repository, even if available'
+complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l switch -d 'Switch the checkout in the current directory to the new branch'
+complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l hardlink -d 'Hard-link working tree files where possible'
+complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l bind -d 'Bind new branch to from location'
+complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l no-tree -d 'Create a branch without a working-tree'
 # TODO: Add source/destination branch or directory
 
 # add command
@@ -105,10 +105,10 @@ complete -f -c bzr -n '__fish_seen_subcommand_from check' -l branch -d 'Check th
 
 # Common long/short options 
 set -l $cmds init branch add ignore mv status diff merge commit send log check
-complete -f -c bzr -n '__fish_seen_subcommand_from $cmds' -l usage --description 'Show usage message and options'
-complete -f -c bzr -n '__fish_seen_subcommand_from $cmds' -s h -l help --description 'Show help message'
-complete -f -c bzr -n '__fish_seen_subcommand_from $cmds' -s q -l quiet --description 'Only displays errors and warnings'
-complete -f -c bzr -n '__fish_seen_subcommand_from $cmds' -s v -l verbose --description 'Display more information'
+complete -f -c bzr -n '__fish_seen_subcommand_from $cmds' -l usage -d 'Show usage message and options'
+complete -f -c bzr -n '__fish_seen_subcommand_from $cmds' -s h -l help -d 'Show help message'
+complete -f -c bzr -n '__fish_seen_subcommand_from $cmds' -s q -l quiet -d 'Only displays errors and warnings'
+complete -f -c bzr -n '__fish_seen_subcommand_from $cmds' -s v -l verbose -d 'Display more information'
 
 # Commands with dry-run option
-complete -f -c bzr -n '__fish_seen_subcommand_from add mv' -l dry-run --description 'Show what would be done'
+complete -f -c bzr -n '__fish_seen_subcommand_from add mv' -l dry-run -d 'Show what would be done'

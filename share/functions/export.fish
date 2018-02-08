@@ -13,6 +13,8 @@ function export --description 'Set env variable. Alias for `set -gx` for bash co
                     set -l colonized_path (string replace -- "$$v[1]" (string join ":" -- $$v[1]) $v[2])
                     set -gx $v[1] (string split ":" -- $colonized_path)
                 else
+                    # status is 1 from the contains check, and `set` does not change the status on success: reset it.
+                    true
                     set -gx $v[1] $v[2]
                 end
         end

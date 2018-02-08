@@ -271,7 +271,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     or set -l VTE_VERSION 0
     set -q TERM_PROGRAM
     or set -l TERM_PROGRAM
-    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal" -o "$TERM_PROGRAM" = "iTerm.app"
+    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             if status --is-command-substitution
                 or set -q INSIDE_EMACS
@@ -297,7 +297,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
         # First check if we are on OpenSUSE since SUSE's handler has no options
         # but the same name and path as Ubuntu's.
-        if contains -- suse $os
+        if contains -- suse $os; or contains -- sles $os
             and type -q command-not-found
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 /usr/bin/command-not-found $argv[1]

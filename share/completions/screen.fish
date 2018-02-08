@@ -1,11 +1,11 @@
-function __fish_detect_screen_socket_dir --description "Detect which folder screen uses"
+function __fish_detect_screen_socket_dir -d "Detect which folder screen uses"
     set screen_bin screen
     if not set -q __fish_screen_socket_dir
         set -g __fish_screen_socket_dir (eval $screen_bin -ls __fish_i_don_t_think_this_will_be_matched | string match -r "(?<=No Sockets found in ).*(?=\.)")
     end
 end
 
-function __fish_complete_screen_general_list_mac --description "Get the socket list on mac"
+function __fish_complete_screen_general_list_mac -d "Get the socket list on mac"
     pushd $__fish_screen_socket_dir > /dev/null
     set -l sockets (ls)
     if test (count $sockets) -ne 0
@@ -19,11 +19,11 @@ function __fish_complete_screen_general_list_mac --description "Get the socket l
     popd > /dev/null
 end
 
-function __fish_complete_screen_general_list --description "Get the socket list"
+function __fish_complete_screen_general_list -d "Get the socket list"
     screen -list | string match -r '^\t.*\(.*\)\s*\('$argv'\)\s*$'| string replace -r '\t(.*)\s+\((.*)\)\s*\((.*)\)' '$1\t$2 $3'
 end
 
-function __fish_complete_screen_detached --description "Print a list of detached screen sessions"
+function __fish_complete_screen_detached -d "Print a list of detached screen sessions"
     switch (uname)
         case Darwin
             __fish_complete_screen_general_list_mac Detached
@@ -32,7 +32,7 @@ function __fish_complete_screen_detached --description "Print a list of detached
     end
 end
 
-function __fish_complete_screen_attached --description "Print a list of attached screen sessions"
+function __fish_complete_screen_attached -d "Print a list of attached screen sessions"
     switch (uname)
         case Darwin
             __fish_complete_screen_general_list_mac Attached
@@ -41,7 +41,7 @@ function __fish_complete_screen_attached --description "Print a list of attached
     end
 end
 
-function __fish_complete_screen --description "Print a list of running screen sessions"
+function __fish_complete_screen -d "Print a list of running screen sessions"
     string join \n (__fish_complete_screen_attached) (__fish_complete_screen_detached)
 end
 

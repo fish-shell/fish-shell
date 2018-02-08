@@ -69,7 +69,7 @@
 extern char **environ;
 
 // Limit `read` to 10 MiB (bytes not wide chars) by default. This can be overridden by the
-// FISH_READ_BYTE_LIMIT variable.
+// fish_read_limit variable.
 #define READ_BYTE_LIMIT 10 * 1024 * 1024
 size_t read_byte_limit = READ_BYTE_LIMIT;
 
@@ -86,8 +86,9 @@ bool term_has_xn = false;
 /// found in `TERMINFO_DIRS` we don't to call `handle_curses()` before we've imported the latter.
 static bool env_initialized = false;
 
-typedef std::unordered_map<const wcstring, void (*)(const wcstring &, const wcstring &)> var_dispatch_table_t;
-var_dispatch_table_t var_dispatch_table;
+typedef std::unordered_map<wcstring, void (*)(const wcstring &, const wcstring &)>
+    var_dispatch_table_t;
+static var_dispatch_table_t var_dispatch_table;
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
@@ -157,6 +158,8 @@ class env_node_t {
     std::unique_ptr<env_node_t> next;
 
     maybe_t<env_var_t> find_entry(const wcstring &key);
+
+    bool contains_any_of(const wcstring_list_t &vars) const;
 };
 
 class variable_entry_t {
@@ -196,8 +199,6 @@ struct var_stack_t {
     // Pops the top node if it's not global
     void pop();
 
-    bool var_changed(const wcstring_list_t &vars);
-
     // Returns the next scope to search for a given node, respecting the new_scope lag
     // Returns NULL if we're done
     env_node_t *next_scope_to_search(env_node_t *node);
@@ -216,7 +217,7 @@ void var_stack_t::push(bool new_scope) {
     // Only if we introduce a new shadowing scope; i.e. not if it's just `begin; end` or
     // "--no-scope-shadowing".
     if (new_scope && top_node != this->global_env) {
-        for (auto &var : top_node->env) {
+        for (const auto &var : top_node->env) {
             if (var.second.exportv) node->env.insert(var);
         }
     }
@@ -228,10 +229,10 @@ void var_stack_t::push(bool new_scope) {
     }
 }
 
-/// Return true if one of the vars in the passed list was changed in the current var scope.
-bool var_stack_t::var_changed(const wcstring_list_t &vars) {
-    for (auto v : vars) {
-        if (top->env.find(v) != top->env.end()) return true;
+/// Return true if if the node contains any of the entries in the vars list.
+bool env_node_t::contains_any_of(const wcstring_list_t &vars) const {
+    for (const auto &v : vars) {
+        if (env.count(v)) return true;
     }
     return false;
 }
@@ -244,8 +245,8 @@ void var_stack_t::pop() {
         return;
     }
 
-    bool locale_changed = this->var_changed(locale_variables);
-    bool curses_changed = this->var_changed(curses_variables);
+    bool locale_changed = top->contains_any_of(locale_variables);
+    bool curses_changed = top->contains_any_of(curses_variables);
 
     if (top->new_scope) {  //!OCLINT(collapsible if statements)
         if (top->exportv || local_scope_exports(top->next.get())) {
@@ -371,25 +372,17 @@ static void fix_colon_delimited_var(const wcstring &var_name) {
     const auto paths = env_get(var_name);
     if (paths.missing_or_empty()) return;
 
-    bool modified = false;
-    wcstring_list_t pathsv;
-    wcstring_list_t new_pathsv;
-    paths->to_list(pathsv);
-    for (auto next_path : pathsv) {
-        if (next_path.empty()) {
-            next_path = L".";
-            modified = true;
+    // See if there's any empties.
+    const wcstring empty = wcstring();
+    const wcstring_list_t &strs = paths->as_list();
+    if (std::find(strs.begin(), strs.end(), empty) != strs.end()) {
+        // Copy the list and replace empties with L"."
+        wcstring_list_t newstrs = strs;
+        std::replace(newstrs.begin(), newstrs.end(), empty, wcstring(L"."));
+        int retval = env_set(var_name, ENV_DEFAULT | ENV_USER, std::move(newstrs));
+        if (retval != ENV_OK) {
+            debug(0, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
         }
-        new_pathsv.push_back(next_path);
-    }
-
-    if (!modified) {
-        return;
-    }
-
-    int retval = env_set(var_name, ENV_DEFAULT | ENV_USER, new_pathsv);
-    if (retval != ENV_OK) {
-        debug(0, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
     }
 }
 
@@ -399,7 +392,7 @@ static void init_locale() {
     // invalidate the pointer from the this setlocale() call.
     char *old_msg_locale = strdup(setlocale(LC_MESSAGES, NULL));
 
-    for (auto var_name : locale_variables) {
+    for (const auto &var_name : locale_variables) {
         const auto var = env_get(var_name, ENV_EXPORT);
         const std::string &name = wcs2string(var_name);
         if (var.missing_or_empty()) {
@@ -547,21 +540,21 @@ static bool initialize_curses_using_fallback(const char *term) {
 /// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path
 /// elements are converted to explicit "." to make the vars easier to use in fish scripts.
 static void init_path_vars() {
-    for (auto var_name : colon_delimited_variable) {
+    for (const auto &var_name : colon_delimited_variable) {
         fix_colon_delimited_var(var_name);
     }
 }
 
 /// Initialize the curses subsystem.
 static void init_curses() {
-    for (auto var_name : curses_variables) {
+    for (const auto &var_name : curses_variables) {
+        std::string name = wcs2string(var_name);
         const auto var = env_get(var_name, ENV_EXPORT);
-        const std::string &name = wcs2string(var_name);
         if (var.missing_or_empty()) {
             debug(2, L"curses var %s missing or empty", name.c_str());
             unsetenv(name.c_str());
         } else {
-            const std::string &value = wcs2string(var->as_string());
+            std::string value = wcs2string(var->as_string());
             debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
             setenv(name.c_str(), value.c_str(), 1);
         }
@@ -680,11 +673,11 @@ bool env_set_pwd() {
 /// Allow the user to override the limit on how much data the `read` command will process.
 /// This is primarily for testing but could be used by users in special situations.
 void env_set_read_limit() {
-    auto read_byte_limit_var = env_get(L"FISH_READ_BYTE_LIMIT");
+    auto read_byte_limit_var = env_get(L"fish_read_limit");
     if (!read_byte_limit_var.missing_or_empty()) {
         size_t limit = fish_wcstoull(read_byte_limit_var->as_string().c_str());
         if (errno) {
-            debug(1, "Ignoring FISH_READ_BYTE_LIMIT since it is not valid");
+            debug(1, "Ignoring fish_read_limit since it is not valid");
         } else {
             read_byte_limit = limit;
         }
@@ -829,15 +822,15 @@ static void handle_curses_change(const wcstring &op, const wcstring &var_name) {
 /// Populate the dispatch table used by `react_to_variable_change()` to efficiently call the
 /// appropriate function to handle a change to a variable.
 static void setup_var_dispatch_table() {
-    for (auto var_name : locale_variables) {
+    for (const auto &var_name : locale_variables) {
         var_dispatch_table.emplace(var_name, handle_locale_change);
     }
 
-    for (auto var_name : curses_variables) {
+    for (const auto &var_name : curses_variables) {
         var_dispatch_table.emplace(var_name, handle_curses_change);
     }
 
-    for (auto var_name : colon_delimited_variable) {
+    for (const auto &var_name : colon_delimited_variable) {
         var_dispatch_table.emplace(var_name, handle_magic_colon_var_change);
     }
 
@@ -846,7 +839,7 @@ static void setup_var_dispatch_table() {
     var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
     var_dispatch_table.emplace(L"LINES", handle_term_size_change);
     var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
-    var_dispatch_table.emplace(L"FISH_READ_BYTE_LIMIT", handle_read_limit_change);
+    var_dispatch_table.emplace(L"fish_read_limit", handle_read_limit_change);
     var_dispatch_table.emplace(L"fish_history", handle_fish_history_change);
     var_dispatch_table.emplace(L"TZ", handle_tz_change);
 }
@@ -855,20 +848,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     setup_var_dispatch_table();
 
     // These variables can not be altered directly by the user.
-    for (auto &k : {
-             wcstring(L"status"),
-             wcstring(L"history"),
-             wcstring(L"_"),
-             wcstring(L"PWD"),
-             wcstring(L"FISH_VERSION") }) {
-        env_read_only.emplace(std::move(k));
-        // L"SHLVL" is readonly but will be inserted below after we increment it.
-    };
+    env_read_only.insert({L"status", L"history", L"_", L"PWD", L"version"});
 
     // Names of all dynamically calculated variables.
-    env_electric.emplace(L"history");
-    env_electric.emplace(L"status");
-    env_electric.emplace(L"umask");
+    env_electric.insert({L"history", L"status", L"umask"});
 
     // Now the environment variable handling is set up, the next step is to insert valid data.
 
@@ -926,7 +909,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
-    env_set_one(L"FISH_VERSION", ENV_GLOBAL, version);
+    env_set_one(L"version", ENV_GLOBAL, version);
 
     // Set up SHLVL variable.
     const auto shlvl_var = env_get(L"SHLVL");
@@ -1350,7 +1333,7 @@ maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode) {
 
             var_table_t::const_iterator result = env->env.find(key);
             if (result != env->env.end()) {
-                const env_var_t var = result->second;
+                const env_var_t &var = result->second;
                 if (var.exportv ? search_exported : search_unexported) {
                     return var;
                 }

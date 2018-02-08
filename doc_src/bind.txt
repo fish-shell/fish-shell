@@ -3,7 +3,7 @@
 \subsection bind-synopsis Synopsis
 \fish{synopsis}
 bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE]
-     [(-k | --key)] SEQUENCE COMMAND [COMMAND...]
+     [(-s | --silent)] [(-k | --key)] SEQUENCE COMMAND [COMMAND...]
 bind [(-M | --mode) MODE] [(-k | --key)] SEQUENCE
 bind (-K | --key-names) [(-a | --all)]
 bind (-f | --function-names)
@@ -20,7 +20,7 @@ SEQUENCE is the character sequence to bind to. These should be written as <a hre
 
 The default key binding can be set by specifying a `SEQUENCE` of the empty string (that is, ```''``` ). It will be used whenever no other binding matches. For most key bindings, it makes sense to use the `self-insert` function (i.e. ```bind '' self-insert```) as the default keybinding. This will insert any keystrokes not specifically bound to into the editor. Non- printable characters are ignored by the editor, so this will not result in control sequences being printable.
 
-If the `-k` switch is used, the name of the key (such as 'down', 'up' or 'backspace') is used instead of a sequence. The names used are the same as the corresponding curses variables, but without the 'key_' prefix. (See `terminfo(5)` for more information, or use `bind --key-names` for a list of all available named keys.)
+If the `-k` switch is used, the name of the key (such as 'down', 'up' or 'backspace') is used instead of a sequence. The names used are the same as the corresponding curses variables, but without the 'key_' prefix. (See `terminfo(5)` for more information, or use `bind --key-names` for a list of all available named keys.) If used in conjunction with the `-s` switch, `bind` will silently ignore bindings to named keys that are not found in termcap for the current `$TERMINAL`, otherwise a warning is emitted.
 
 `COMMAND` can be any fish command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use `bind --function-names` for a complete list of these input functions.
 

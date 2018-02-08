@@ -12,7 +12,7 @@ function __funced_md5
 end
 
 function funced --description 'Edit function definition'
-    set -l options 'h/help' 'e/editor=' 'i/interactive'
+    set -l options 'h/help' 'e/editor=' 'i/interactive' 's/save'
     argparse -n funced --min-args=1 --max-args=1 $options -- $argv
     or return
 
@@ -65,6 +65,9 @@ function funced --description 'Edit function definition'
             echo -n $cmd | fish_indent | read -lz cmd
             eval "$cmd"
         end
+        if set -q _flag_save
+            funcsave $funcname
+        end
         return 0
     end
 
@@ -115,6 +118,8 @@ function funced --description 'Edit function definition'
                     continue
                 end
                 echo (_ "Cancelled function editing")
+            else if set -q _flag_save
+                funcsave $funcname
             end
         end
         break

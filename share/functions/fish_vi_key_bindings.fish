@@ -17,6 +17,11 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         bind --erase --all # clear earlier bindings, if any
     end
 
+    # Silence warnings about unavailable keys. See #4431, 4188
+    if not contains -- -s $argv
+        set argv "-s" $argv
+    end
+
     # Allow just calling this function to correctly set the bindings.
     # Because it's a rather discoverable name, users will execute it
     # and without this would then have subtly broken bindings.

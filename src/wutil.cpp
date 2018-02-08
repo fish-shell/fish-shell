@@ -338,10 +338,10 @@ void safe_perror(const char *message) {
     errno = err;
 }
 
-wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
-    if (pathname.size() == 0) return NULL;
+maybe_t<wcstring> wrealpath(const wcstring &pathname) {
+    if (pathname.empty()) return none();
 
-    cstring real_path("");
+    cstring real_path;
     cstring narrow_path = wcs2string(pathname);
 
     // Strip trailing slashes. This is needed to be bug-for-bug compatible with GNU realpath which
@@ -350,7 +350,8 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
         narrow_path.erase(narrow_path.size() - 1, 1);
     }
 
-    char *narrow_res = realpath(narrow_path.c_str(), NULL);
+    char tmpbuf[PATH_MAX];
+    char *narrow_res = realpath(narrow_path.c_str(), tmpbuf);
     if (narrow_res) {
         real_path.append(narrow_res);
     } else {
@@ -360,15 +361,16 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
             // single path component and thus doesn't need conversion.
             real_path = narrow_path;
         } else {
+            char tmpbuff[PATH_MAX];
             if (pathsep_idx == cstring::npos) {
                 // No pathsep means a single path component relative to pwd.
-                narrow_res = realpath(".", NULL);
-                assert(narrow_res != NULL);
+                narrow_res = realpath(".", tmpbuff);
+                assert(narrow_res != NULL && "realpath unexpectedly returned null");
                 pathsep_idx = 0;
             } else {
                 // Only call realpath() on the portion up to the last component.
-                narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), NULL);
-                if (!narrow_res) return NULL;
+                narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), tmpbuff);
+                if (!narrow_res) return none();
                 pathsep_idx++;
             }
             real_path.append(narrow_res);
@@ -377,20 +379,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path) {
             real_path.append(narrow_path.substr(pathsep_idx, cstring::npos));
         }
     }
-#if __APPLE__ && __DARWIN_C_LEVEL < 200809L
-// OS X Snow Leopard is broken with respect to the dynamically allocated buffer returned by
-// realpath(). It's not dynamically allocated so attempting to free that buffer triggers a
-// malloc/free error. Thus we don't attempt the free in this case.
-#else
-    free(narrow_res);
-#endif
-
-    wcstring wreal_path = str2wcstring(real_path);
-    if (resolved_path) {
-        wcslcpy(resolved_path, wreal_path.c_str(), PATH_MAX);
-        return resolved_path;
-    }
-    return wcsdup(wreal_path.c_str());
+    return str2wcstring(real_path);
 }
 
 wcstring wdirname(const wcstring &path) {

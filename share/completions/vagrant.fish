@@ -1,6 +1,6 @@
 # vagrant autocompletion
 
-function __fish_vagrant_no_command --description 'Test if vagrant has yet to be given the main command'
+function __fish_vagrant_no_command -d 'Test if vagrant has yet to be given the main command'
     set -l cmd (commandline -opc)
     test (count $cmd) -eq 1
 end
@@ -23,7 +23,7 @@ function __fish_vagrant_using_subcommand --argument-names cmd_main cmd_sub
     and test "$cmd_main" = $cmd[2] -a "$cmd_sub" = $cmd[3]
 end
 
-function __fish_vagrant_boxes --description 'Lists all available Vagrant boxes'
+function __fish_vagrant_boxes -d 'Lists all available Vagrant boxes'
     command vagrant box list | while read -l name _
         echo $name
     end

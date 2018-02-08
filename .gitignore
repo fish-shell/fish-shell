@@ -78,6 +78,7 @@ messages.pot
 /lexicon_filter
 /toc.txt
 /version
+fish-build-version-witness.txt
 
 # File names that can appear below the project root that represent artifacts
 # from building and testing.
@@ -90,6 +91,7 @@ messages.pot
 /muparser-*/bk-deps
 /muparser-*/shared-ld-sh
 /muparser-*/build/autoconf/muparser.pc
+/muparser-2.2.5/samples/example1/example1
 /pcre2-*/configure.lineno
 
 # xcode
@@ -100,4 +102,5 @@ xcuserdata/
 *.moved-aside
 *.xccheckout
 *.xcscmblueprin
+.vscode
 

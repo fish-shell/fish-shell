@@ -55,9 +55,10 @@ struct winsize {
 #endif
 
 #ifdef TPARM_SOLARIS_KLUDGE
-/// Solaris tparm has a set fixed of paramters in it's curses implementation, work around this here.
+/// Solaris tparm has a set fixed of paramters in its curses implementation, work around this here.
 #define tparm tparm_solaris_kludge
-char *tparm_solaris_kludge(char *str, ...);
+char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, long p4 = 0,
+                           long p5 = 0, long p6 = 0, long p7 = 0, long p8 = 0, long p9 = 0);
 #endif
 
 /// On OS X, use weak linking for wcsdup and wcscasecmp. Weak linking allows you to call the

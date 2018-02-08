@@ -395,6 +395,119 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
     }
 }
 
+/// Execute an internal builtin. Given a parser, a job within that parser, and a process within that
+/// job corresponding to a builtin, execute the builtin with the given streams. If pipe_read is set,
+/// assign stdin to it; otherwise infer stdin from the IO chain. unblock_previous is a hack used to
+/// prevent jobs from finishing; see commit cdb72b7024.
+/// return true on success, false if there is an exec error.
+static bool exec_internal_builtin_proc(parser_t &parser, job_t *j, process_t *p,
+                                       const io_pipe_t *pipe_read, const io_chain_t &proc_io_chain,
+                                       io_streams_t &streams,
+                                       const std::function<void(void)> &unblock_previous) {
+    assert(p->type == INTERNAL_BUILTIN && "Process must be a builtin");
+    int local_builtin_stdin = STDIN_FILENO;
+    bool close_stdin = false;
+
+    // If this is the first process, check the io redirections and see where we should
+    // be reading from.
+    if (pipe_read) {
+        local_builtin_stdin = pipe_read->pipe_fd[0];
+    } else if (const auto in = proc_io_chain.get_io_for_fd(STDIN_FILENO)) {
+        switch (in->io_mode) {
+            case IO_FD: {
+                const io_fd_t *in_fd = static_cast<const io_fd_t *>(in.get());
+                // Ignore user-supplied fd redirections from an fd other than the
+                // standard ones. e.g. in source <&3 don't actually read from fd 3,
+                // which is internal to fish. We still respect this redirection in
+                // that we pass it on as a block IO to the code that source runs,
+                // and therefore this is not an error. Non-user supplied fd
+                // redirections come about through transmogrification, and we need
+                // to respect those here.
+                if (!in_fd->user_supplied || (in_fd->old_fd >= 0 && in_fd->old_fd < 3)) {
+                    local_builtin_stdin = in_fd->old_fd;
+                }
+                break;
+            }
+            case IO_PIPE: {
+                const io_pipe_t *in_pipe = static_cast<const io_pipe_t *>(in.get());
+                local_builtin_stdin = in_pipe->pipe_fd[0];
+                break;
+            }
+            case IO_FILE: {
+                // Do not set CLO_EXEC because child needs access.
+                const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
+                local_builtin_stdin = open(in_file->filename_cstr, in_file->flags, OPEN_MASK);
+                if (local_builtin_stdin == -1) {
+                    debug(1, FILE_ERROR, in_file->filename_cstr);
+                    wperror(L"open");
+                } else {
+                    close_stdin = true;
+                }
+
+                break;
+            }
+            case IO_CLOSE: {
+                // FIXME: When requesting that stdin be closed, we really don't do
+                // anything. How should this be handled?
+                local_builtin_stdin = -1;
+
+                break;
+            }
+            default: {
+                local_builtin_stdin = -1;
+                debug(1, _(L"Unknown input redirection type %d"), in->io_mode);
+                break;
+            }
+        }
+    }
+
+    if (local_builtin_stdin == -1) return false;
+
+    // Determine if we have a "direct" redirection for stdin.
+    bool stdin_is_directly_redirected;
+    if (!p->is_first_in_job) {
+        // We must have a pipe
+        stdin_is_directly_redirected = true;
+    } else {
+        // We are not a pipe. Check if there is a redirection local to the process
+        // that's not IO_CLOSE.
+        const shared_ptr<const io_data_t> stdin_io = io_chain_get(p->io_chain(), STDIN_FILENO);
+        stdin_is_directly_redirected = stdin_io && stdin_io->io_mode != IO_CLOSE;
+    }
+
+    streams.stdin_fd = local_builtin_stdin;
+    streams.out_is_redirected = has_fd(proc_io_chain, STDOUT_FILENO);
+    streams.err_is_redirected = has_fd(proc_io_chain, STDERR_FILENO);
+    streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
+    streams.io_chain = &proc_io_chain;
+
+    // Since this may be the foreground job, and since a builtin may execute another
+    // foreground job, we need to pretend to suspend this job while running the
+    // builtin, in order to avoid a situation where two jobs are running at once.
+    //
+    // The reason this is done here, and not by the relevant builtins, is that this
+    // way, the builtin does not need to know what job it is part of. It could
+    // probably figure that out by walking the job list, but it seems more robust to
+    // make exec handle things.
+    const int fg = j->get_flag(JOB_FOREGROUND);
+    j->set_flag(JOB_FOREGROUND, false);
+
+    // Main loop may need to perform a blocking read from previous command's output.
+    // Make sure read source is not blocked.
+    unblock_previous();
+    p->status = builtin_run(parser, p->get_argv(), streams);
+
+    // Restore the fg flag, which is temporarily set to false during builtin
+    // execution so as not to confuse some job-handling builtins.
+    j->set_flag(JOB_FOREGROUND, fg);
+
+    // If stdin has been redirected, close the redirection stream.
+    if (close_stdin) {
+        exec_close(local_builtin_stdin);
+    }
+    return true;  // "success"
+}
+
 void exec_job(parser_t &parser, job_t *j) {
     pid_t pid = 0;
 
@@ -744,118 +857,9 @@ void exec_job(parser_t &parser, job_t *j) {
             }
 
             case INTERNAL_BUILTIN: {
-                int local_builtin_stdin = STDIN_FILENO;
-                bool close_stdin = false;
-
-                // If this is the first process, check the io redirections and see where we should
-                // be reading from.
-                if (p->is_first_in_job) {
-                    const shared_ptr<const io_data_t> in =
-                        process_net_io_chain.get_io_for_fd(STDIN_FILENO);
-
-                    if (in) {
-                        switch (in->io_mode) {
-                            case IO_FD: {
-                                const io_fd_t *in_fd = static_cast<const io_fd_t *>(in.get());
-                                // Ignore user-supplied fd redirections from an fd other than the
-                                // standard ones. e.g. in source <&3 don't actually read from fd 3,
-                                // which is internal to fish. We still respect this redirection in
-                                // that we pass it on as a block IO to the code that source runs,
-                                // and therefore this is not an error. Non-user supplied fd
-                                // redirections come about through transmogrification, and we need
-                                // to respect those here.
-                                if (!in_fd->user_supplied ||
-                                    (in_fd->old_fd >= 0 && in_fd->old_fd < 3)) {
-                                    local_builtin_stdin = in_fd->old_fd;
-                                }
-                                break;
-                            }
-                            case IO_PIPE: {
-                                const io_pipe_t *in_pipe = static_cast<const io_pipe_t *>(in.get());
-                                local_builtin_stdin = in_pipe->pipe_fd[0];
-                                break;
-                            }
-                            case IO_FILE: {
-                                // Do not set CLO_EXEC because child needs access.
-                                const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
-                                local_builtin_stdin =
-                                    open(in_file->filename_cstr, in_file->flags, OPEN_MASK);
-                                if (local_builtin_stdin == -1) {
-                                    debug(1, FILE_ERROR, in_file->filename_cstr);
-                                    wperror(L"open");
-                                } else {
-                                    close_stdin = true;
-                                }
-
-                                break;
-                            }
-                            case IO_CLOSE: {
-                                // FIXME: When requesting that stdin be closed, we really don't do
-                                // anything. How should this be handled?
-                                local_builtin_stdin = -1;
-
-                                break;
-                            }
-                            default: {
-                                local_builtin_stdin = -1;
-                                debug(1, _(L"Unknown input redirection type %d"), in->io_mode);
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    local_builtin_stdin = pipe_read->pipe_fd[0];
-                }
-
-                if (local_builtin_stdin == -1) {
+                if (!exec_internal_builtin_proc(parser, j, p, pipe_read.get(), process_net_io_chain,
+                                                *builtin_io_streams, unblock_previous)) {
                     exec_error = true;
-                    break;
-                } else {
-                    // Determine if we have a "direct" redirection for stdin.
-                    bool stdin_is_directly_redirected;
-                    if (!p->is_first_in_job) {
-                        // We must have a pipe
-                        stdin_is_directly_redirected = true;
-                    } else {
-                        // We are not a pipe. Check if there is a redirection local to the process
-                        // that's not IO_CLOSE.
-                        const shared_ptr<const io_data_t> stdin_io =
-                            io_chain_get(p->io_chain(), STDIN_FILENO);
-                        stdin_is_directly_redirected = stdin_io && stdin_io->io_mode != IO_CLOSE;
-                    }
-
-                    builtin_io_streams->stdin_fd = local_builtin_stdin;
-                    builtin_io_streams->out_is_redirected =
-                        has_fd(process_net_io_chain, STDOUT_FILENO);
-                    builtin_io_streams->err_is_redirected =
-                        has_fd(process_net_io_chain, STDERR_FILENO);
-                    builtin_io_streams->stdin_is_directly_redirected = stdin_is_directly_redirected;
-                    builtin_io_streams->io_chain = &process_net_io_chain;
-
-                    // Since this may be the foreground job, and since a builtin may execute another
-                    // foreground job, we need to pretend to suspend this job while running the
-                    // builtin, in order to avoid a situation where two jobs are running at once.
-                    //
-                    // The reason this is done here, and not by the relevant builtins, is that this
-                    // way, the builtin does not need to know what job it is part of. It could
-                    // probably figure that out by walking the job list, but it seems more robust to
-                    // make exec handle things.
-                    const int fg = j->get_flag(JOB_FOREGROUND);
-                    j->set_flag(JOB_FOREGROUND, false);
-
-                    // Main loop may need to perform a blocking read from previous command's output.
-                    // Make sure read source is not blocked.
-                    unblock_previous();
-                    p->status = builtin_run(parser, p->get_argv(), *builtin_io_streams);
-
-                    // Restore the fg flag, which is temporarily set to false during builtin
-                    // execution so as not to confuse some job-handling builtins.
-                    j->set_flag(JOB_FOREGROUND, fg);
-                }
-
-                // If stdin has been redirected, close the redirection stream.
-                if (close_stdin) {
-                    exec_close(local_builtin_stdin);
                 }
                 break;
             }

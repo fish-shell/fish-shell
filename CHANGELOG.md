@@ -9,8 +9,11 @@ This section is for changes merged to the `major` branch that are not also merge
 - `read` now requires at least one var name (#4220).
 - `set x[1] x[2] a b` is no longer valid syntax (#4236).
 - For loop control variables are no longer local to the for block (#1935).
+- A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier. (#1109, #4632)
+- Successive commas in brace expansions are handled in less surprising manner (`{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again). (#3002, #4632).
 
 ## Notable fixes and improvements
+- `wait` builtin is added for waiting on processes (#4498).
 - `read` has a new `--delimiter` option as a better alternative to the `IFS` variable (#4256).
 - `set` has a new `--append` and `--prepend` option (#1326).
 - `set` has a new `--show` option to show lots of information about variables (#4265).
@@ -20,67 +23,98 @@ This section is for changes merged to the `major` branch that are not also merge
 - Setting variables is much faster (#4200, #4341).
 - Using a read-only variable in a for loop is now an error. Note that this never worked. It simply failed to set the for loop var and thus silently produced incorrect results (#4342).
 - `math` is now a builtin rather than a wrapper around `bc` (#3157).
+- `history search` supports globs for wildcard searching (#3136).
+- `bind` has a new `--silent` option to ignore bind requests for named keys not available under the current `$TERMINAL` (#4188, #4431)
+- `read` writes directly to stdout if called without arguments (#4407)
+- Globs are faster (#4579)
+- `string` reads from stdin faster (#4610)
+- `cd` tab completions no longer descend into the deepest unambiguous path (#4649)
+- Setting `$PATH` no longer warns on non-existent directories, allowing for a single $PATH to be shared across machines (e.g. via dotfiles).
+- `funced` now has a `-s` and `--save` option to automatically save the edited function after successfully editing (#4668).
+- Arguments to `end` are now errors, instead of being silently ignored.
+- Pager navigation has been improved. Most notably, moving down now wraps around, moving up from the commandline now jumps to the last element and moving right and left now reverse each other even when wrapping around (#4680).
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).
 - Added completions for
   - `j` (autojump #4344)
+  - `bd` (#4472)
+  - `jhipster` (#4472)
+  - `ngrok` (#4642)
 - Improved completions for
-  - `git` (#4395, #4396)
+  - `git` (#4395, #4396, #4592)
+  - `brew`
+  - `diskutil`
 
+--
 
-# fish 2.7b1
+# fish 2.7.1 (released December 23, 2017)
 
-## Notable fixes and improvements
+This release of fish fixes an issue where iTerm 2 on macOS would display a warning about paste bracketing being left on when starting a new fish session (#4521).
+
+If you are upgrading from version 2.6.0 or before, please also review the release notes for 2.7.0 and 2.7b1 (included below).
+
+--
+
+# fish 2.7.0 (released November 23, 2017)
+
+There are no major changes between 2.7b1 and 2.7.0. If you are upgrading from version 2.6.0 or before, please also review the release notes for 2.7b1 (included below).
+
+Xcode builds and macOS packages could not be produced with 2.7b1, but this is fixed in 2.7.0.
+
+--
+
+# fish 2.7b1 (released October 31, 2017)
+
+## Notable improvements
+- A new `cdh` (change directory using recent history) command provides a more friendly alternative to prevd/nextd and pushd/popd (#2847).
 - A new `argparse` command is available to allow fish script to parse arguments with the same behavior as builtin commands. This also includes the `fish_opt` helper command. (#4190).
-- The `COLUMNS` and `LINES` env vars are now correctly set the first time `fish_prompt` is run (#4141).
-- New `status is-breakpoint` command that is true when a prompt is displayed in response to a `breakpoint` command (#1310).
 - Invalid array indexes are now silently ignored (#826, #4127).
-- `string escape` has a new `--style=xxx` flag where `xxx` can be `script`, `var`, or `url` (#4150).
-- `string unescape` has been implemented to reverse the effects of `string escape` (#3543).
-- The history file can now be specified by setting the `fish_history` variable (#102).
+- Improvements to the debugging facility, including a prompt specific to the debugger (`fish_breakpoint_prompt`) and a `status is-breakpoint` subcommand (#1310).
+- `string` supports new `lower` and `upper` subcommands, for altering the case of strings (#4080). The case changing is not locale-aware yet.- `string escape` has a new `--style=xxx` flag where `xxx` can be `script`, `var`, or `url` (#4150), and can be reversed with `string unescape` (#3543).
+- History can now be split into sessions with the `fish_history` variable, or not saved to disk at all (#102).
 - Read history is now controlled by the `fish_history` variable rather than the `--mode-name` flag (#1504).
-- Implement a `cdh` (change directory using recent history) command to provide a more friendly alternative to prevd/nextd and pushd/popd (#2847).
-- `command` now supports a `-a` flag to report all directories with the command. This means that `which -a $cmd` is no longer necessary (#2778).
-- `--init-command`/`-C` added to the command line switches, to allow execution of commands before starting the interactive shell (#4164).
+- `command` now supports an `--all` flag to report all directories with the command. `which` is no longer a runtime dependency (#2778).
+- fish can run commands before starting an interactive session using the new `--init-command`/`-C` options (#4164).
 - `set` has a new `--show` option to show lots of information about variables (#4265).
 
 ## Other significant changes
-
+- The `COLUMNS` and `LINES` environment variables are now correctly set the first time `fish_prompt` is run (#4141).
 - `complete`'s `--no-files` option works as intended (#112).
-- `pushd +1` works as documented again (#4091).
-- Improved completions for `killall` (#4052), `ln` (#4090) and `zypper` (#4079).
-- Implemented `string lower` and `string upper` (#4080).
-- `help` can now open the tutorial.
-- `echo -h` now correctly echoes `-h` (#4120).
+- `echo -h` now correctly echoes `-h` in line with other shells (#4120).
+- The `export` compatibility function now returns zero on success, rather than always returning 1 (#4435).
 - Stop converting empty elements in MANPATH to "." (#4158). The behavior being changed was introduced in fish 2.6.0.
-- `count -h` and `count --help` now return one rather than produce command help output (#4189).
-- Fix setting `$COLUMNS` and `$LINES` before first prompt is displayed (#4141).
-- `read` failures due to too much data should define the var (#4180).
-- multiple `read` commands in non-interactive scripts were broken in fish 2.6.0 (#4206).
-- Fix regression involving universal variables with side-effects at startup such as `set -U fish_escape_delay_ms 10` (#4196).
-- Option completion for `apt list` now works properly (#4350).
+- `count -h` and `count --help` now return 1 rather than produce command help output (#4189).
+- An attempt to `read` which stops because too much data is available still defines the variables given as parameters (#4180).
+- A regression in fish 2.4.0 which prevented `pushd +1` from working has been fixed (#4091).
+- A regression in fish 2.6.0 where multiple `read` commands in non-interactive scripts were broken has been fixed (#4206).
+- A regression in fish 2.6.0 involving universal variables with side-effects at startup such as `set -U fish_escape_delay_ms 10` has been fixed (#4196).
 - Added completions for:
   - `as` (#4130)
   - `cdh` (#2847)
-  - `dhcpd`
+  - `dhcpd` (#4115)
   - `ezjail-admin` (#4324)
-  - `fab` (fabric, #4153)
+  - Fabric's `fab` (#4153)
   - `grub-file` (#4119)
   - `grub-install` (#4119)
   - `jest` (#4142)
   - `kdeconnect-cli`
   - `magneto` (#4043, #4108)
   - `mdadm` (#4198)
+  - `passwd` (#4209)
+  - `pip` and `pipenv` (#4448)
   - `s3cmd` (#4332)
   - `sbt` (#4347)
   - `snap` (#4215)
-  - `subl` (Sublime Text 3 editor, #4277)
+  - Sublime Text 3's `subl` (#4277)
+- Lots of improvements to completions.
+- Updated Chinese and French translations.
 
 - Improved completions for:
   - `apt`
   - `cd` (#4061)
   - `composer` (#4295)
+  - `flatpak` (#4456)
   - `git` (#4117, #4147, #4329, #4368)
   - `gphoto2`
   - `killall` (#4052)
@@ -90,8 +124,6 @@ This section is for changes merged to the `major` branch that are not also merge
   - `tail`
   - `xdg-mime` (#4333)
   - `zypper` (#4325)
-
-
 ---
 
 # fish 2.6.0 (released June 3, 2017)

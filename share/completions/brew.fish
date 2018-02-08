@@ -6,38 +6,12 @@ function __fish_brew_get_cmd
   end
 end
 
-function __fish_brew_is_subcommand_services
-  if __fish_brew_using_command services
-    for action in $argv
-      if __fish_brew_using_command $action 3
-        return 0
-      end
-    end
-  end
-
-  return 1
-end
-
 function __fish_brew_needs_command
   set cmd (__fish_brew_get_cmd)
   if not set -q cmd[2]
     return 0
   end
   return 1
-end
-
-function __fish_brew_needs_services_action
-  if __fish_brew_using_command services
-    set cmd (__fish_brew_get_cmd)
-    if not set -q cmd[3]
-      return 0
-    end
-  end
-  return 1
-end
-
-function __fish_brew_services
-  brew services list | awk '{if (NR>1) print $1}'
 end
 
 function __fish_brew_using_command
@@ -74,6 +48,10 @@ function __fish_brew_installed_formulas
     brew list
 end
 
+function __fish_brew_leaves
+    brew leaves
+end
+
 function __fish_brew_outdated_formulas
     brew outdated
 end
@@ -87,22 +65,93 @@ function __fish_brew_taps
 end
 
 
+###########################
+# subcommand initializing #
+###########################
+
+########
+# cask #
+########
+
+function __fish_brew_is_subcommand_cask
+  if __fish_brew_using_command cask
+    for action in $argv
+      if __fish_brew_using_command $action 3
+        return 0
+      end
+    end
+  end
+  return 1
+end
+
+function __fish_brew_needs_cask_action
+  if __fish_brew_using_command cask
+    set cmd (__fish_brew_get_cmd)
+    if not set -q cmd[3]
+      return 0
+    end
+  end
+  return 1
+end
+
+function __fish_brew_casks
+  brew cask search
+end
+
+function __fish_brew_casks_installed
+  brew cask list
+end
+
+
 ############
-# commands #
+# services #
 ############
+
+function __fish_brew_is_subcommand_services
+  if __fish_brew_using_command services
+    for action in $argv
+      if __fish_brew_using_command $action 3
+        return 0
+      end
+    end
+  end
+  return 1
+end
+
+function __fish_brew_needs_services_action
+  if __fish_brew_using_command services
+    set cmd (__fish_brew_get_cmd)
+    if not set -q cmd[3]
+      return 0
+    end
+  end
+  return 1
+end
+
+function __fish_brew_services
+  brew services list | awk '{if (NR>1) print $1}'
+end
+
+
+#####################
+# brew commands     #
+# (brew cask below) #
+#####################
 
 # audit
 complete -f -c brew -n '__fish_brew_needs_command' -a audit -d 'Check formula'
 complete -f -c brew -n '__fish_brew_using_command audit' -a '(__fish_brew_formulae)'
 
 # bottle
-
 complete -f -c brew -n '__fish_brew_needs_command' -a bottle -d 'Create a binary package'
 complete -f -c brew -n '__fish_brew_using_command bottle' -l 'homebrew-developer' -d 'Output developer debug information'
 complete -f -c brew -n '__fish_brew_using_command bottle' -l 'no-revision' -d 'Do not bump the bottle revision number'
 complete -f -c brew -n '__fish_brew_using_command bottle' -l 'rb' -d 'Write bottle block to a Ruby source file'
 complete -f -c brew -n '__fish_brew_using_command bottle' -l 'write' -d 'Write bottle block to formula file'
 complete -f -c brew -n '__fish_brew_using_command bottle' -l 'merge' -d 'Merge multiple bottle outputs'
+
+# cask
+complete -f -c brew -n '__fish_brew_needs_command' -a cask -d 'Manage installed casks'
 
 # cat
 complete -f -c brew -n '__fish_brew_needs_command' -a cat -d 'Display formula'
@@ -187,6 +236,10 @@ complete -f -c brew -n '__fish_brew_using_command install' -l build-bottle -d 'O
 complete -f -c brew -n '__fish_brew_using_command install' -l bottle-arch -a 'core core2 penryn g3 g4 g4e g5' -d 'Optimize for the specified CPU architecture'
 complete -c brew -n '__fish_brew_using_command install' -a '(__fish_brew_formulae)'
 
+# leaves
+complete -f -c brew -n '__fish_brew_needs_command' -a 'leaves' -d 'List installed top level formulae'
+complete -f -c brew -n '__fish_brew_using_command leaves' -a '(__fish_brew_leaves)'
+
 # link
 complete -f -c brew -n '__fish_brew_needs_command' -a 'link ln' -d 'Symlink installed formula'
 complete -f -c brew -n '__fish_brew_using_command link' -l overwrite -d 'Overwrite existing files'
@@ -209,7 +262,7 @@ complete -f -c brew -n '__fish_brew_using_command list' -l versions -d 'Show the
 complete -f -c brew -n '__fish_brew_using_command list' -l pinned -d 'Show the versions of pinned formulae'
 complete -c brew -n '__fish_brew_using_command list' -a '(__fish_brew_formulae)'
 
-#ls
+# ls
 complete -f -c brew -n '__fish_brew_using_command ls' -l unbrewed -d 'List all files in the Homebrew prefix not installed by brew'
 complete -f -c brew -n '__fish_brew_using_command ls' -l versions -d 'Show the version number'
 complete -f -c brew -n '__fish_brew_using_command ls' -l pinned -d 'Show the versions of pinned formulae'
@@ -314,9 +367,10 @@ complete -f -c brew -n '__fish_brew_using_command uses' -l recursive -d 'Resolve
 complete -c brew -n '__fish_brew_using_command uses' -a '(__fish_brew_formulae)'
 
 
-############
-# switches #
-############
+#################
+# brew switches #
+#################
+
 complete -f -c brew -n '__fish_brew_needs_command' -a '-v --version' -d 'Print version number of brew'
 complete -f -c brew -n '__fish_brew_needs_command' -l env -x -d 'Show Homebrew a summary of the build environment'
 complete -f -c brew -n '__fish_brew_needs_command' -l repository -x -d 'Display where Homebrew\'s .git directory is located'
@@ -333,3 +387,115 @@ complete -f -c brew -n '__fish_brew_needs_command' -n '__fish_brew_using_command
 # --cellar
 complete -f -c brew -n '__fish_brew_needs_command' -l cellar -d 'Display Homebrew\'s Cellar path'
 complete -f -c brew -n '__fish_brew_using_command --cellar' -a '(__fish_brew_formulae)' -d 'Display formula\'s install path in Cellar'
+
+
+######################
+# brew cask commands #
+#####################
+
+# audit
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a audit -d 'Audit casks, add token to audit specific cask'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask audit' -a '(__fish_brew_casks)'
+
+# cat
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a cat -d 'Display cask'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask cat' -a '(__fish_brew_casks)'
+
+
+# cleanup
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a cleanup -d 'Cleans up cached downloads and tracker symlinks'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask cleanup' -l outdated -d 'Only clean cached downloads older than 10 days'
+
+# create
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a create -d 'Create a new cask'
+
+# doctor/dr
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a 'doctor dr' -d 'Checks for configuration issues'
+
+# edit
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a edit -d 'Edit cask'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask edit' -a '(__fish_brew_casks)'
+
+# fetch
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a fetch -d 'Fetch cask'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask fetch' -l force -d 'Force a redownload of cask'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask fetch' -a '(__fish_brew_casks)'
+
+# home
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a 'home homepage' -d 'Open cask/cask\'s homepage'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask home' -a '(__fish_brew_casks)'
+
+# homepage
+complete -f -c brew -n '__fish_brew_is_subcommand_cask homepage' -a '(__fish_brew_casks_installed)'
+
+# info
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a 'info abv' -d 'Dislay info about cask'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask info' -a '(__fish_brew_casks)'
+# adv
+complete -f -c brew -n '__fish_brew_is_subcommand_cask abv' -a '(__fish_brew_casks)'
+
+# install
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a install -d 'Install cask indentified by token'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask install' -l force -d 'Force install of cask'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask install' -l require-sha -d 'Require SHA, fails otherwise'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask install' -l skip-cask-deps -d 'Skip any cask dependencies'
+complete -c brew -n '__fish_brew_is_subcommand_cask install' -a '(__fish_brew_casks)'
+
+# list
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a 'list ls' -d 'List installed casks'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask list' -s 1 -d 'Format output as a single column'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask list' -l versions -d 'Show all installed versions'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask list' -a '(__fish_brew_casks_installed)' -d 'List staged files'
+
+# ls
+complete -f -c brew -n '__fish_brew_is_subcommand_cask ls' -s 1 -d 'Format output as a single column'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask ls' -l versions -d 'Show all installed versions'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask ls' -a '(__fish_brew_casks_installed)' -d 'List staged files'
+
+# outdated
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a outdated -d 'List outdated casks'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask outdated' -l greedy -d 'Include casks having auto_updates true or version :latest'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask outdated' -l quiet -d 'Suppresses the display of versions'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask outdated' -l verbose -d 'Forces the display of the outdated and latest version'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask outdated' -a '(__fish_brew_casks_installed)'
+
+# reinstall
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a reinstall -d 'Reinstall cask'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask reinstall' -a '(__fish_brew_casks_installed)'
+
+# search
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a 'search -S' -d 'Search all known casks. RexEx by delimiting using /regex/'
+
+# style
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a style -d 'Check all or the given casks for correct style using RuboCop'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask style' -l fix -d 'Auto-correct any style errors if possible'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask style' -a '(__fish_brew_casks)'
+
+# uninstall
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a 'remove rm uninstall' -d 'Uninstall cask'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask uninstall' -l force -d 'Force the uninstall'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask uninstall' -a '(__fish_brew_casks_installed)'
+# remove
+complete -f -c brew -n '__fish_brew_is_subcommand_cask remove' -l force -d 'Force the uninstall'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask remove' -a '(__fish_brew_casks_installed)'
+# rm
+complete -f -c brew -n '__fish_brew_is_subcommand_cask rm' -l force -d 'Force the uninstall'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask rm' -a '(__fish_brew_casks_installed)'
+
+# upgrade
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a upgrade -d 'Upgrade all or given cask'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask upgrade' -l force -d 'Force upgrade'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask upgrade' -l greedy -d 'Include casks having auto_updates true or version :latest'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask upgrade' -a '(__fish_brew_casks_installed)'
+
+# zap
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a zap -d 'Unconditionally remove all files associated with the given Cask'
+complete -f -c brew -n '__fish_brew_is_subcommand_cask zap' -a '(__fish_brew_casks_installed)'
+
+
+######################
+# brew cask switches #
+######################
+
+# version
+complete -f -c brew -n '__fish_brew_needs_cask_action' -a --version -d 'Print version number of Caskroom'

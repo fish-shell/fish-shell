@@ -1264,8 +1264,9 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
     // debug( 1, L"Complete '%ls'", cmd.c_str() );
 
     const wchar_t *cmd_cstr = cmd.c_str();
-    const wchar_t *tok_begin = NULL, *prev_begin = NULL, *prev_end = NULL;
+    const wchar_t *tok_begin = nullptr, *prev_begin = nullptr, *prev_end = nullptr;
     parse_util_token_extent(cmd_cstr, cmd.size(), &tok_begin, NULL, &prev_begin, &prev_end);
+    assert(tok_begin != nullptr);
 
     // If we are completing a variable name or a tilde expansion user name, we do that and return.
     // No need for any other completions.

@@ -476,47 +476,47 @@ void event_print(io_streams_t &streams, int event_type) {
     std::vector<shared_ptr<event_t>> tmp = s_event_handlers;
     std::sort(tmp.begin(), tmp.end(),
             [](const shared_ptr<event_t> &e1, const shared_ptr<event_t> &e2) {
-                if (e1.get()->type == e2.get()->type) {
-                    switch (e1.get()->type) {
+                if (e1->type == e2->type) {
+                    switch (e1->type) {
                         case EVENT_SIGNAL:
-                            return e1.get()->param1.signal < e2.get()->param1.signal;
+                            return e1->param1.signal < e2->param1.signal;
                         case EVENT_JOB_ID:
-                            return e1.get()->param1.job_id < e2.get()->param1.job_id;
+                            return e1->param1.job_id < e2->param1.job_id;
                         case EVENT_VARIABLE:
                         case EVENT_ANY:
                         case EVENT_GENERIC:
-                            return e1.get()->str_param1 < e2.get()->str_param1;
+                            return e1->str_param1 < e2->str_param1;
                     }
                 } else {
-                    return e1.get()->type < e2.get()->type;
+                    return e1->type < e2->type;
                 }
             });
 
     int type = -1;
     for (const shared_ptr<event_t> &evt : tmp) {
-        if (event_type == -1 || event_type == evt.get()->type) {
-            if (evt.get()->type != type) {
+        if (event_type == -1 || event_type == evt->type) {
+            if (evt->type != type) {
                 if (type != -1)
                     streams.out.append(L"\n");
-                type = evt.get()->type;
-                streams.out.append_format(L"Event %ls\n", event2wcs(evt.get()->type).c_str());
+                type = evt->type;
+                streams.out.append_format(L"Event %ls\n", event2wcs(evt->type).c_str());
             }
-            switch (evt.get()->type) {
+            switch (evt->type) {
                 case EVENT_SIGNAL:
-                    streams.out.append_format(L"%ls %ls\n", sig2wcs(evt.get()->param1.signal),
-                            evt.get()->function_name.c_str());
+                    streams.out.append_format(L"%ls %ls\n", sig2wcs(evt->param1.signal),
+                            evt->function_name.c_str());
                     break;
                 case EVENT_JOB_ID:
-                    streams.out.append_format(L"%d %ls\n", evt.get()->param1,
-                            evt.get()->function_name.c_str());
+                    streams.out.append_format(L"%d %ls\n", evt->param1,
+                            evt->function_name.c_str());
                     break;
                 case EVENT_VARIABLE:
                 case EVENT_GENERIC:
-                    streams.out.append_format(L"%ls %ls\n", evt.get()->str_param1.c_str(),
-                            evt.get()->function_name.c_str());
+                    streams.out.append_format(L"%ls %ls\n", evt->str_param1.c_str(),
+                            evt->function_name.c_str());
                     break;
                 default:
-                    streams.out.append_format(L"%ls\n", evt.get()->function_name.c_str());
+                    streams.out.append_format(L"%ls\n", evt->function_name.c_str());
                     break;
 
             }

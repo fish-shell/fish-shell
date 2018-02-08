@@ -31,6 +31,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     bind $argv \e cancel
     bind $argv \t complete
+    bind $argv \cs pager-toggle-search
     # shift-tab does a tab complete followed by a search.
     bind $argv --key btab complete-and-search
 

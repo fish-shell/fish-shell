@@ -18,25 +18,14 @@ function __fish_git_recent_commits
     | string replace -r '(.{73}).+' '$1…'
 end
 
-function __fish_git_local_branches
-    command git branch --no-color | string trim -c ' *'
-end
-
-function __fish_git_remote_branches
-    command git branch --no-color --remote | string trim -c ' *'
-end
-
 function __fish_git_branches
-    # In some cases, git can end up on no branch - e.g. with a detached head
-    # This will result in output like `* (no branch)` or a localized `* (HEAD detached at SHA)`
-    # The first `string match -v` filters it out because it's not useful as a branch argument
-    command git branch --no-color -a $argv ^/dev/null | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
-end
-
-function __fish_git_unique_remote_branches
-    # Allow all remote branches with one remote without the remote part
-    # This is useful for `git checkout` to automatically create a remote-tracking branch
-    command git branch --no-color -a $argv ^/dev/null | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
+    command git branch --no-color -a --format='%(refname)' $argv ^/dev/null \
+    # Filter out anything that's not in "refs/" notation -
+    # this happens mostly with a detached head ("(HEAD detached at SOMESHA)", localized).
+    | string replace -rf '^refs/' '' \
+    # We assume anything that's not remote is a local branch.
+    | string replace -r '^(?!remotes/)[^/]+/(.*)' '$1\tLocal Branch' \
+    | string replace -r "^remotes/(.*)" '$1\tRemote Branch'
 end
 
 function __fish_git_tags
@@ -83,89 +72,92 @@ function __fish_git_files
     # and as a convenience "all-staged"
     # to get _all_ kinds of staged files.
 
+    # Save the repo root to remove it from the path later.
+    set -l root (command git rev-parse --show-toplevel ^/dev/null)
+
     # git status --porcelain gives us all the info we need, in a format we don't.
-    # The v2 format thankfully doesn't use " M" to denote a changed unstaged file
-    # and "M " to denote a changed staged file, opting for a "." in place of the space.
-    # So the v1 format would require something other than this `while read` loop.
-    #
-    # Unfortunately, the v2 format is really 4 different subformats
-    # - see the explanation inline. (Or on https://git-scm.com/docs/git-status)
+    # The v2 format has better documentation and doesn't use " " to denote anything,
+    # but it's only been added in git 2.11.0, which was released November 2016.
+    # Instead, we use the v1 format, without explicitly specifying it (since that errors out as well).
     #
     # Also, we ignore submodules because they aren't useful as arguments (generally),
     # and they slow things down quite significantly.
     # E.g. `git reset $submodule` won't do anything (not even print an error).
+    # --ignore-submodules=all was added in git 1.7.2, released July 2010.
     set -l use_next
-    command git status --porcelain=2 -z --ignore-submodules=all \
-    | while read -laz -d ' ' line
+    command git status --porcelain -z --ignore-submodules=all \
+    | while read -lz -d '' line
         # The entire line is the "from" from a rename.
         if set -q use_next[1]
             contains -- $use_next $argv
-            and echo "$line"
+            and string replace -- "$PWD/" "" "$root/$line" | string replace "$root/" ":/"
             set -e use_next[1]
             continue
         end
 
+        # The format is two characters for status, then a space and then
+        # up to a NUL for the filename.
+        #
+        # Use IFS to handle newlines in filenames.
+        set -l IFS
+        set -l stat (string sub -l 2 -- $line)
+        set -l file (string sub -s 4 -- $line)
+        # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
+        # This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
+        set file (string replace -- "$PWD/" "" "$root/$file" | string replace "$root/" ":/")
+        set -e IFS
+
         # The basic status format is "XY", where X is "our" state (meaning the staging area),
-        # and "Y" is "their" state.
-        # A "." means it's unmodified.
-        switch "$line[1..2]"
-            case 'u *'
+        # and "Y" is "their" state (meaning the work tree).
+        # A " " means it's unmodified.
+        switch "$stat"
+            case DD AU UD UA DU AA UU
                 # Unmerged
-                # "Unmerged entries have the following format; the first character is a "u" to distinguish from ordinary changed entries."
-                # "u <xy> <sub> <m1> <m2> <m3> <mW> <h1> <h2> <h3> <path>"
-                # This is first to distinguish it from normal modifications et al.
                 contains -- unmerged $argv
-                and printf '%s\t%s\n' "$line[11..-1]" (_ "Unmerged file")
-            case '? .R*' '? R.*'
+                and printf '%s\t%s\n' "$file" (_ "Unmerged file")
+            case 'R ' RM RD
                 # Renamed/Copied
-                # From the docs: "Renamed or copied entries have the following format:"
-                # "2 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <X><score> <path><sep><origPath>"
-                # Since <sep> is NUL, the <origPath> (meaning the old name) is in the next batch.
-                # TODO: Do we care about the new one?
+                # These have the "from" name as the next batch.
+                # TODO: Do we care about the new name?
                 set use_next renamed
                 continue
-            case '? .C*' '? C.*'
+            case 'C ' CM CD
                 set use_next copied
                 continue
-            case '? A.*'
+            case 'A ' AM AD
                 # Additions are only shown here if they are staged.
                 # Otherwise it's an untracked file.
                 contains -- added $argv; or contains -- all-staged $argv
-                and printf '%s\t%s\n' "$line[9..-1]" (_ "Added file")
-            case '? .M*'
+                and printf '%s\t%s\n' "$file" (_ "Added file")
+            case '?M'
                 # Modified
-                # From the docs: "Ordinary changed entries have the following format:"
-                # "1 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <path>"
-                # Since <path> can contain spaces, print from element 9 onwards
                 contains -- modified $argv
-                and printf '%s\t%s\n' "$line[9..-1]" (_ "Modified file")
-            case '? M.*'
-                # If the character is first ("M."), then that means it's "our" change,
+                and printf '%s\t%s\n' "$file" (_ "Modified file")
+            case 'M?'
+                # If the character is first ("M "), then that means it's "our" change,
                 # which means it is staged.
                 # This is useless for many commands - e.g. `checkout` won't do anything with this.
                 # So it needs to be requested explicitly.
                 contains -- modified-staged $argv; or contains -- all-staged $argv
-                and printf '%s\t%s\n' "$line[9..-1]" (_ "Staged modified file")
-            case '? .D*'
+                and printf '%s\t%s\n' "$file" (_ "Staged modified file")
+            case '?D'
                 contains -- deleted $argv
-                and printf '%s\t%s\n' "$line[9..-1]" (_ "Deleted file")
-            case '? D.*'
+                and printf '%s\t%s\n' "$file" (_ "Deleted file")
+            case 'D?'
                 # TODO: The docs are unclear on this.
                 # There is both X unmodified and Y either M or D ("not updated")
                 # and Y is D and X is unmodified or [MARC] ("deleted in work tree").
                 # For our purposes, we assume this is a staged deletion.
                 contains -- deleted-staged $argv; or contains -- all-staged $argv
-                and printf '%s\t%s\n' "$line[9..-1]" (_ "Staged deleted file")
-            case '\? *'
+                and printf '%s\t%s\n' "$file" (_ "Staged deleted file")
+            case '\?\?'
                 # Untracked
-                # "? <path>" - print from element 2 on.
                 contains -- untracked $argv
-                and printf '%s\t%s\n' "$line[2..-1]" (_ "Untracked file")
-            case '! *'
+                and printf '%s\t%s\n' "$file" (_ "Untracked file")
+            case '!!'
                 # Ignored
-                # "! <path>" - print from element 2 on.
                 contains -- ignored $argv
-                and printf '%s\t%s\n' "$line[2..-1]" (_ "Ignored file")
+                and printf '%s\t%s\n' "$file" (_ "Ignored file")
         end
     end
 end
@@ -181,7 +173,8 @@ function __fish_git_ranges
     end
 
     set -l to (set -q both[2]; and echo $both[2])
-    for from_ref in (__fish_git_refs | string match "$from")
+    # Remove description from the from-ref, not the to-ref.
+    for from_ref in (__fish_git_refs | string match "$from" | string replace -r \t'.*$' '')
         for to_ref in (__fish_git_refs | string match "*$to*") # if $to is empty, this correctly matches everything
             printf "%s..%s\n" $from_ref $to_ref
         end
@@ -380,7 +373,7 @@ complete -f -c git -n '__fish_git_using_command log show diff-tree rev-list' -l 
 complete -f -c git -n '__fish_git_needs_command' -a fetch -d 'Download objects and refs from another repository'
 # Suggest "repository", then "refspec" - this also applies to e.g. push/pull
 complete -f -c git -n '__fish_git_using_command fetch; and not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote'
-complete -f -c git -n '__fish_git_using_command fetch; and __fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command fetch; and __fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)'
 complete -f -c git -n '__fish_git_using_command fetch' -s q -l quiet -d 'Be quiet'
 complete -f -c git -n '__fish_git_using_command fetch' -s v -l verbose -d 'Be verbose'
 complete -f -c git -n '__fish_git_using_command fetch' -s a -l append -d 'Append ref names and object names'
@@ -430,8 +423,7 @@ complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcomma
 
 ### show
 complete -f -c git -n '__fish_git_needs_command' -a show -d 'Shows the last commit of a branch'
-complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)' -d 'Branch'
-complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
+complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_tags)' -d 'Tag'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command show' -l stat -d 'Generate a diffstat, showing the number of changed lines of each file'
@@ -463,10 +455,8 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_files modif
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command' -a checkout -d 'Checkout and switch to a branch'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_local_branches)' -d 'Local Branch'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_remote_branches)' -d 'Remote Branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_branches)'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' -d 'Head'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' -d 'Tag'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_files modified deleted)'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
@@ -489,7 +479,7 @@ complete -f -c git -n '__fish_git_needs_command' -a bisect -d 'Find the change t
 
 ### branch
 complete -f -c git -n '__fish_git_needs_command' -a branch -d 'List, create, or delete branches'
-complete -f -c git -n '__fish_git_using_command branch' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command branch' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command branch' -s d -d 'Delete branch'
 complete -f -c git -n '__fish_git_using_command branch' -s D -d 'Force deletion of branch'
 complete -f -c git -n '__fish_git_using_command branch' -s m -d 'Rename branch'
@@ -503,8 +493,7 @@ complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List br
 
 ### cherry-pick
 complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'
-complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches --no-merged)' -d 'Branch'
-complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_unique_remote_branches --no-merged)' -d 'Remote branch'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches --no-merged)'
 # TODO: Filter further
 complete -f -c git -n '__fish_git_using_command cherry-pick; and __fish_git_possible_commithash' -a '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s e -l edit -d 'Edit the commit message prior to committing'
@@ -536,7 +525,7 @@ complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt 
 
 ### diff
 complete -c git -n '__fish_git_needs_command' -a diff -d 'Show changes between commits, commit and working tree, etc'
-complete -c git -n '__fish_git_using_command diff' -a '(__fish_git_ranges)' -d 'Branch'
+complete -c git -n '__fish_git_using_command diff' -a '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
 complete -f -c git -n '__fish_git_using_command diff' -a '(__fish_git_files modified deleted)'
@@ -544,7 +533,7 @@ complete -f -c git -n '__fish_git_using_command diff' -a '(__fish_git_files modi
 
 ### difftool
 complete -c git -n '__fish_git_needs_command' -a difftool -d 'Open diffs in a visual tool'
-complete -c git -n '__fish_git_using_command difftool' -a '(__fish_git_ranges)' -d 'Branch'
+complete -c git -n '__fish_git_using_command difftool' -a '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command difftool' -l cached -d 'Visually show diff of changes in the index'
 complete -f -c git -n '__fish_git_using_command difftool' -a '(__fish_git_files modified deleted)'
 # TODO options
@@ -561,7 +550,7 @@ complete -f -c git -n '__fish_git_needs_command' -a init -d 'Create an empty git
 ### log
 complete -c git -n '__fish_git_needs_command'    -a shortlog -d 'Show commit shortlog'
 complete -c git -n '__fish_git_needs_command' -a log -d 'Show commit logs'
-complete -c git -n '__fish_git_using_command log' -a '(__fish_git_refs) (__fish_git_ranges)' -d 'Branch'
+complete -c git -n '__fish_git_using_command log' -a '(__fish_git_refs) (__fish_git_ranges)'
 
 complete -c git -n '__fish_git_using_command log' -l follow -d 'Continue listing file history beyond renames'
 complete -c git -n '__fish_git_using_command log' -l no-decorate -d 'Don\'t print ref names'
@@ -762,8 +751,7 @@ complete -c git -n '__fish_git_using_command log' -l ita-invisible-in-index
 
 ### merge
 complete -f -c git -n '__fish_git_needs_command' -a merge -d 'Join two or more development histories together'
-complete -f -c git -n '__fish_git_using_command merge' -a '(__fish_git_branches)' -d 'Branch'
-complete -f -c git -n '__fish_git_using_command merge' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
+complete -f -c git -n '__fish_git_using_command merge' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command merge' -l commit -d "Autocommit the merge"
 complete -f -c git -n '__fish_git_using_command merge' -l no-commit -d "Don't autocommit the merge"
 complete -f -c git -n '__fish_git_using_command merge' -l edit -d 'Edit auto-generated merge message'
@@ -823,13 +811,13 @@ complete -f -c git -n '__fish_git_using_command pull' -l no-tags -d 'Disable aut
 # TODO --upload-pack
 complete -f -c git -n '__fish_git_using_command pull' -l progress -d 'Force progress status'
 complete -f -c git -n '__fish_git_using_command pull; and not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'
-complete -f -c git -n '__fish_git_using_command pull; and __fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command pull; and __fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)'
 # TODO other options
 
 ### push
 complete -f -c git -n '__fish_git_needs_command' -a push -d 'Update remote refs along with associated objects'
 complete -f -c git -n '__fish_git_using_command push; and not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'
-complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote' -a '(__fish_git_branches)'
 # The "refspec" here is an optional "+" to signify a force-push
 complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q "+*" -- (commandline -ct)' -a '+(__fish_git_branches)' -d 'Force-push branch'
 # git push REMOTE :BRANCH deletes BRANCH on remote REMOTE
@@ -856,7 +844,7 @@ complete -f -c git -n '__fish_git_using_command push' -l progress -d 'Force prog
 ### rebase
 complete -f -c git -n '__fish_git_needs_command' -a rebase -d 'Forward-port local commits to the updated upstream head'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_remotes)' -d 'Remote alias'
-complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_heads)' -d 'Head'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_tags)' -d 'Tag'
 complete -f -c git -n '__fish_git_using_command rebase' -l continue -d 'Restart the rebasing process'
@@ -881,7 +869,7 @@ complete -f -c git -n '__fish_git_using_command rebase' -l no-ff -d 'No fast-for
 ### reset
 complete -c git -n '__fish_git_needs_command' -a reset -d 'Reset current HEAD to the specified state'
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
-complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)' -d 'Branch'
+complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)'
 # reset can either undo changes to versioned modified files,
 # or remove files from the staging area.
 # TODO: Deleted files seem to need a "--" separator.
@@ -917,7 +905,7 @@ complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x 
 
 ### tag
 complete -f -c git -n '__fish_git_needs_command' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
-complete -f -c git -n '__fish_git_using_command tag; and __fish_not_contain_opt -s d; and __fish_not_contain_opt -s v; and test (count (commandline -opc | string match -r -v \'^-\')) -eq 3' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command tag; and __fish_not_contain_opt -s d; and __fish_not_contain_opt -s v; and test (count (commandline -opc | string match -r -v \'^-\')) -eq 3' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command tag' -s a -l annotate -d 'Make an unsigned, annotated tag object'
 complete -f -c git -n '__fish_git_using_command tag' -s s -l sign -d 'Make a GPG-signed tag'
 complete -f -c git -n '__fish_git_using_command tag' -s d -l delete -d 'Remove a tag'
@@ -953,7 +941,7 @@ complete -f -c git -n '__fish_git_needs_command' -a config -d 'Set and read git 
 
 ### format-patch
 complete -f -c git -n '__fish_git_needs_command' -a format-patch -d 'Generate patch series to send upstream'
-complete -f -c git -n '__fish_git_using_command format-patch' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command format-patch' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command format-patch' -s p -l no-stat -d "Generate plain patches without diffstat"
 complete -f -c git -n '__fish_git_using_command format-patch' -s s -l no-patch -d "Suppress diff output"
 complete -f -c git -n '__fish_git_using_command format-patch' -l minimal -d "Spend more time to create smaller diffs"

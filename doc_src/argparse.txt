@@ -34,7 +34,7 @@ The following `argparse` options are available. They must appear before all OPTI
 Using this command involves passing two sets of arguments separated by `--`. The first set consists of one or more option specifications (`OPTION_SPEC` above) and options that modify the behavior of `argparse`. These must be listed before the `--` argument. The second set are the arguments to be parsed in accordance with the option specifications. They occur after the `--` argument and can be empty. More about this below but here is a simple example that might be used in a function named `my_function`:
 
 \fish
-argparse --name=my_function 'h/help' 'n/name:' -- $argv
+argparse --name=my_function 'h/help' 'n/name=' -- $argv
 or return
 \endfish
 

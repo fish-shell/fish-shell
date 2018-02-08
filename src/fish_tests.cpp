@@ -2634,7 +2634,7 @@ static void test_universal() {
             if (j == 0) {
                 expected_val = none();
             } else {
-                expected_val = env_var_t(L"", format_string(L"val_%d_%d", i, j));
+                expected_val = env_var_t(format_string(L"val_%d_%d", i, j), 0);
             }
             const maybe_t<env_var_t> var = uvars.get(key);
             if (j == 0) assert(!expected_val);
@@ -4332,28 +4332,48 @@ void test_maybe() {
     do_test(m2.missing_or_empty());
 }
 
-void test_cached_esc_sequences() {
-    cached_esc_sequences_t seqs;
-    do_test(seqs.find_entry(L"abc") == 0);
-    seqs.add_entry(L"abc");
-    seqs.add_entry(L"abc");
-    do_test(seqs.size() == 1);
-    do_test(seqs.find_entry(L"abc") == 3);
-    do_test(seqs.find_entry(L"abcd") == 3);
-    do_test(seqs.find_entry(L"abcde") == 3);
-    do_test(seqs.find_entry(L"xabcde") == 0);
-    seqs.add_entry(L"ac");
-    do_test(seqs.find_entry(L"abcd") == 3);
-    do_test(seqs.find_entry(L"acbd") == 2);
-    seqs.add_entry(L"wxyz");
-    do_test(seqs.find_entry(L"abc") == 3);
-    do_test(seqs.find_entry(L"abcd") == 3);
-    do_test(seqs.find_entry(L"wxyz123") == 4);
-    do_test(seqs.find_entry(L"qwxyz123") == 0);
-    do_test(seqs.size() == 3);
+void test_layout_cache() {
+    layout_cache_t seqs;
+
+    // Verify escape code cache.
+    do_test(seqs.find_escape_code(L"abc") == 0);
+    seqs.add_escape_code(L"abc");
+    seqs.add_escape_code(L"abc");
+    do_test(seqs.esc_cache_size() == 1);
+    do_test(seqs.find_escape_code(L"abc") == 3);
+    do_test(seqs.find_escape_code(L"abcd") == 3);
+    do_test(seqs.find_escape_code(L"abcde") == 3);
+    do_test(seqs.find_escape_code(L"xabcde") == 0);
+    seqs.add_escape_code(L"ac");
+    do_test(seqs.find_escape_code(L"abcd") == 3);
+    do_test(seqs.find_escape_code(L"acbd") == 2);
+    seqs.add_escape_code(L"wxyz");
+    do_test(seqs.find_escape_code(L"abc") == 3);
+    do_test(seqs.find_escape_code(L"abcd") == 3);
+    do_test(seqs.find_escape_code(L"wxyz123") == 4);
+    do_test(seqs.find_escape_code(L"qwxyz123") == 0);
+    do_test(seqs.esc_cache_size() == 3);
     seqs.clear();
-    do_test(seqs.size() == 0);
-    do_test(seqs.find_entry(L"abcd") == 0);
+    do_test(seqs.esc_cache_size() == 0);
+    do_test(seqs.find_escape_code(L"abcd") == 0);
+
+    // Verify prompt layout cache.
+    for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
+        wcstring input = std::to_wstring(i);
+        do_test(!seqs.find_prompt_layout(input));
+        seqs.add_prompt_layout(input, {i});
+        do_test(seqs.find_prompt_layout(input)->line_count == i);
+    }
+
+    size_t expected_evictee = 3;
+    for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
+        if (i != expected_evictee)
+            do_test(seqs.find_prompt_layout(std::to_wstring(i))->line_count == i);
+    }
+
+    seqs.add_prompt_layout(L"whatever", {100});
+    do_test(!seqs.find_prompt_layout(std::to_wstring(expected_evictee)));
+    do_test(seqs.find_prompt_layout(L"whatever")->line_count == 100);
 }
 
 /// Main test.
@@ -4452,7 +4472,7 @@ int main(int argc, char **argv) {
     if (should_test_function("string")) test_string();
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
     if (should_test_function("maybe")) test_maybe();
-    if (should_test_function("cached_esc_sequences")) test_cached_esc_sequences();
+    if (should_test_function("layout_cache")) test_layout_cache();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

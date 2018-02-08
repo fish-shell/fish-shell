@@ -12,8 +12,9 @@
 
 #include <deque>
 #include <memory>
-#include <unordered_set>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -52,11 +53,7 @@ enum history_search_type_t {
     // Search for commands containing the given glob pattern.
     HISTORY_SEARCH_TYPE_CONTAINS_GLOB,
     // Search for commands starting with the given glob pattern.
-    HISTORY_SEARCH_TYPE_PREFIX_GLOB,
-    // Search for commands containing the given PCRE pattern.
-    HISTORY_SEARCH_TYPE_CONTAINS_PCRE,
-    // Search for commands starting with the given PCRE pattern.
-    HISTORY_SEARCH_TYPE_PREFIX_PCRE
+    HISTORY_SEARCH_TYPE_PREFIX_GLOB
 };
 
 typedef uint32_t history_identifier_t;
@@ -215,6 +212,9 @@ class history_t {
     // Whether we're in maximum chaos mode, useful for testing.
     bool chaos_mode;
 
+    // Implementation of item_at_index and items_at_indexes
+    history_item_t item_at_index_assume_locked(size_t idx);
+
    public:
     explicit history_t(const wcstring &);  // constructor
 
@@ -271,6 +271,11 @@ class history_t {
     // Gets all the history into a list. This is intended for the $history environment variable.
     // This may be long!
     void get_history(wcstring_list_t &result);
+
+    // Let indexes be a list of one-based indexes into the history, matching the interpretation of
+    // $history. That is, $history[1] is the most recently executed command. Values less than one
+    // are skipped. Return a mapping from index to history item text.
+    std::unordered_map<long, wcstring> items_at_indexes(const std::vector<long> &idxs);
 
     // Sets the valid file paths for the history item with the given identifier.
     void set_valid_file_paths(const wcstring_list_t &valid_file_paths, history_identifier_t ident);

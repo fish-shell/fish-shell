@@ -114,20 +114,13 @@
 /// current contents of the kill buffer.
 #define KILL_PREPEND 1
 
-/// History search mode. This value means that no search is currently performed.
-#define NO_SEARCH 0
+enum class history_search_mode_t {
+    none,  // no search
+    line,  // searching by line
+    token  // searching by token
+};
 
-/// History search mode. This value means that we are performing a line history search.
-#define LINE_SEARCH 1
-
-/// History search mode. This value means that we are performing a token history search.
-#define TOKEN_SEARCH 2
-
-/// History search mode. This value means we are searching backwards.
-#define SEARCH_BACKWARD 0
-
-/// History search mode. This value means we are searching forwards.
-#define SEARCH_FORWARD 1
+enum class history_search_direction_t { forward, backward };
 
 /// Any time the contents of a buffer changes, we update the generation count. This allows for our
 /// background threads to notice it and skip doing work that they would otherwise have to do.
@@ -230,7 +223,7 @@ class reader_data_t {
     /// Pointer to previous reader_data.
     reader_data_t *next;
     /// This variable keeps state on if we are in search mode, and if yes, what mode.
-    int search_mode;
+    history_search_mode_t search_mode = history_search_mode_t::none;
     /// Keep track of whether any internal code has done something which is known to require a
     /// repaint.
     bool repaint_needed;
@@ -279,7 +272,6 @@ class reader_data_t {
           end_loop(false),
           prev_end_loop(false),
           next(0),
-          search_mode(0),
           repaint_needed(false),
           screen_reset_needed(false),
           exit_on_interrupt(false) {}
@@ -442,9 +434,12 @@ static void reader_repaint() {
     std::vector<int> indents = data->indents;
     indents.resize(len);
 
-    // Re-render our completions page if necessary. We set the term size to 1 less than the true
-    // term height. This means we will always show the (bottom) line of the prompt.
-    data->pager.set_term_size(maxi(1, common_get_width()), maxi(1, common_get_height() - 1));
+    // Re-render our completions page if necessary. Limit the term size of the pager to the true
+    // term size, minus the number of lines consumed by our string. (Note this doesn't yet consider
+    // wrapping).
+    int full_line_count = 1 + std::count(full_line.begin(), full_line.end(), '\n');
+    data->pager.set_term_size(maxi(1, common_get_width()),
+                              maxi(1, common_get_height() - full_line_count));
     data->pager.update_rendering(&data->current_page_rendering);
 
     bool focused_on_pager = data->active_edit_line() == &data->pager.search_field_line;
@@ -1699,10 +1694,11 @@ static void reset_token_history() {
 
 /// Handles a token search command.
 ///
-/// \param forward if the search should be forward or reverse
+/// \param dir if the search should be forward or reverse
 /// \param reset whether the current token should be made the new search token
-static void handle_token_history(int forward, int reset) {
+static void handle_token_history(history_search_direction_t dir, bool reset = false) {
     if (!data) return;
+    const bool forward = (dir == history_search_direction_t::forward);
 
     wcstring str;
     size_t current_pos;
@@ -1773,7 +1769,7 @@ static void handle_token_history(int forward, int reset) {
             data->search_prev.push_back(str);
         } else if (!reader_interrupted()) {
             data->token_history_pos = -1;
-            handle_token_history(0, 0);
+            handle_token_history(history_search_direction_t::forward);
         }
     }
 }
@@ -1851,7 +1847,7 @@ static void reader_set_buffer_maintaining_pager(const wcstring &b, size_t pos) {
     update_buff_pos(&data->command_line, pos);
 
     // Clear history search and pager contents.
-    data->search_mode = NO_SEARCH;
+    data->search_mode = history_search_mode_t::none;
     data->search_buff.clear();
     data->history_search.go_to_end();
 
@@ -2352,7 +2348,7 @@ const wchar_t *reader_readline(int nchars) {
     data->cycle_cursor_pos = 0;
 
     data->search_buff.clear();
-    data->search_mode = NO_SEARCH;
+    data->search_mode = history_search_mode_t::none;
 
     exec_prompt();
 
@@ -2591,6 +2587,15 @@ const wchar_t *reader_readline(int nchars) {
                 }
                 break;
             }
+            case R_PAGER_TOGGLE_SEARCH: {
+                if (data->is_navigating_pager_contents()) {
+                    bool sfs = data->pager.is_search_field_shown();
+                    data->pager.set_search_field_shown(!sfs);
+                    data->pager.set_fully_disclosed(true);
+                    reader_repaint_needed();
+                }
+                break;
+            }
             case R_KILL_LINE: {
                 editable_line_t *el = data->active_edit_line();
                 const wchar_t *buff = el->text.c_str();
@@ -2678,8 +2683,8 @@ const wchar_t *reader_readline(int nchars) {
             }
             // Escape was pressed.
             case L'\e': {
-                if (data->search_mode) {
-                    data->search_mode = NO_SEARCH;
+                if (data->search_mode != history_search_mode_t::none) {
+                    data->search_mode = history_search_mode_t::none;
 
                     if (data->token_history_pos == (size_t)-1) {
                         // history_reset();
@@ -2732,14 +2737,14 @@ const wchar_t *reader_readline(int nchars) {
                 bool continue_on_next_line = false;
                 if (el->position >= el->size()) {
                     // We're at the end of the text and not in a comment (issue #1225).
-                    continue_on_next_line = is_backslashed(el->text, el->position) &&
-                                            !text_ends_in_comment(el->text);
+                    continue_on_next_line =
+                        is_backslashed(el->text, el->position) && !text_ends_in_comment(el->text);
                 } else {
                     // Allow mid line split if the following character is whitespace (issue #613).
                     if (is_backslashed(el->text, el->position) &&
                         iswspace(el->text.at(el->position))) {
                         continue_on_next_line = true;
-                    // Check if the end of the line is backslashed (issue #4467).
+                        // Check if the end of the line is backslashed (issue #4467).
                     } else if (is_backslashed(el->text, el->size()) &&
                                !text_ends_in_comment(el->text)) {
                         // Move the cursor to the end of the line.
@@ -2800,12 +2805,12 @@ const wchar_t *reader_readline(int nchars) {
             case R_HISTORY_SEARCH_FORWARD:
             case R_HISTORY_TOKEN_SEARCH_FORWARD: {
                 int reset = 0;
-                if (data->search_mode == NO_SEARCH) {
+                if (data->search_mode == history_search_mode_t::none) {
                     reset = 1;
                     if ((c == R_HISTORY_SEARCH_BACKWARD) || (c == R_HISTORY_SEARCH_FORWARD)) {
-                        data->search_mode = LINE_SEARCH;
+                        data->search_mode = history_search_mode_t::line;
                     } else {
-                        data->search_mode = TOKEN_SEARCH;
+                        data->search_mode = history_search_mode_t::token;
                     }
 
                     const editable_line_t *el = &data->command_line;
@@ -2824,7 +2829,7 @@ const wchar_t *reader_readline(int nchars) {
                     data->history_search.skip_matches(skip_list);
                 }
 
-                if (data->search_mode == LINE_SEARCH) {
+                if (data->search_mode == history_search_mode_t::line) {
                     if ((c == R_HISTORY_SEARCH_BACKWARD) ||
                         (c == R_HISTORY_TOKEN_SEARCH_BACKWARD)) {
                         data->history_search.go_backwards();
@@ -2842,12 +2847,12 @@ const wchar_t *reader_readline(int nchars) {
                         new_text = data->history_search.current_string();
                     }
                     set_command_line_and_position(&data->command_line, new_text, new_text.size());
-                } else if (data->search_mode == TOKEN_SEARCH) {
+                } else if (data->search_mode == history_search_mode_t::token) {
                     if ((c == R_HISTORY_SEARCH_BACKWARD) ||
                         (c == R_HISTORY_TOKEN_SEARCH_BACKWARD)) {
-                        handle_token_history(SEARCH_BACKWARD, reset);
+                        handle_token_history(history_search_direction_t::backward, reset);
                     } else {
-                        handle_token_history(SEARCH_FORWARD, reset);
+                        handle_token_history(history_search_direction_t::forward, reset);
                     }
                 }
                 break;
@@ -2972,7 +2977,8 @@ const wchar_t *reader_readline(int nchars) {
                     select_completion_in_direction(direction);
                 } else if (!data->pager.empty()) {
                     // We pressed a direction with a non-empty pager, begin navigation.
-                    select_completion_in_direction(c == R_DOWN_LINE ? direction_south : direction_north);
+                    select_completion_in_direction(c == R_DOWN_LINE ? direction_south
+                                                                    : direction_north);
                 } else {
                     // Not navigating the pager contents.
                     editable_line_t *el = data->active_edit_line();
@@ -3186,15 +3192,9 @@ const wchar_t *reader_readline(int nchars) {
                 // Other, if a normal character, we add it to the command.
                 if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
                     c != 0x7F) {
-                    bool allow_expand_abbreviations = false;
-                    if (data->is_navigating_pager_contents()) {
-                        data->pager.set_search_field_shown(true);
-                    } else {
-                        allow_expand_abbreviations = true;
-                    }
-
                     // Regular character.
                     editable_line_t *el = data->active_edit_line();
+                    bool allow_expand_abbreviations = (el == &data->command_line);
                     insert_char(data->active_edit_line(), c, allow_expand_abbreviations);
 
                     // End paging upon inserting into the normal command line.
@@ -3213,7 +3213,7 @@ const wchar_t *reader_readline(int nchars) {
         if ((c != R_HISTORY_SEARCH_BACKWARD) && (c != R_HISTORY_SEARCH_FORWARD) &&
             (c != R_HISTORY_TOKEN_SEARCH_BACKWARD) && (c != R_HISTORY_TOKEN_SEARCH_FORWARD) &&
             (c != R_NULL) && (c != R_REPAINT) && (c != R_FORCE_REPAINT)) {
-            data->search_mode = NO_SEARCH;
+            data->search_mode = history_search_mode_t::none;
             data->search_buff.clear();
             data->history_search.go_to_end();
             data->token_history_pos = -1;
@@ -3249,7 +3249,7 @@ int reader_search_mode() {
     if (!data) {
         return -1;
     }
-    return data->search_mode == NO_SEARCH ? 0 : 1;
+    return data->search_mode == history_search_mode_t::none ? 0 : 1;
 }
 
 int reader_has_pager_contents() {

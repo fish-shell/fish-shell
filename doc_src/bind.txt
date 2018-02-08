@@ -120,6 +120,8 @@ The following special input functions are available:
 
 - `kill-word`, move the next word to the killring
 
+- `pager-toggle-search`, toggles the search field if the completions pager is visible.
+
 - `suppress-autosuggestion`, remove the current autosuggestion
 
 - `swap-selection-start-stop`, go to the other end of the highlighted text without changing the selection

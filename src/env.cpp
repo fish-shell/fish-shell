@@ -16,12 +16,12 @@
 #include <unistd.h>
 #include <wchar.h>
 
-#if HAVE_NCURSES_H
+#if HAVE_CURSES_H
+#include <curses.h>
+#elif HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
 #include <ncurses/curses.h>
-#else
-#include <curses.h>
 #endif
 #if HAVE_TERM_H
 #include <term.h>
@@ -30,6 +30,7 @@
 #endif
 
 #include <algorithm>
+#include <iterator>
 #include <set>
 #include <type_traits>
 #include <unordered_map>
@@ -101,11 +102,6 @@ static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.
 static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
-
-/// List of "path" like variable names that need special handling. This includes automatic
-/// splitting and joining on import/export. As well as replacing empty elements, which implicitly
-/// refer to the CWD, with an explicit '.' in the case of PATH and CDPATH.
-static const wcstring_list_t colon_delimited_variable({L"PATH", L"MANPATH", L"CDPATH"});
 
 // Some forward declarations to make it easy to logically group the code.
 static void init_locale();
@@ -218,7 +214,7 @@ void var_stack_t::push(bool new_scope) {
     // "--no-scope-shadowing".
     if (new_scope && top_node != this->global_env) {
         for (const auto &var : top_node->env) {
-            if (var.second.exportv) node->env.insert(var);
+            if (var.second.exports()) node->env.insert(var);
         }
     }
 
@@ -265,7 +261,7 @@ void var_stack_t::pop() {
 
     for (const auto &entry_pair : old_top->env) {
         const env_var_t &var = entry_pair.second;
-        if (var.exportv) {
+        if (var.exports()) {
             this->mark_changed_exported();
             break;
         }
@@ -314,16 +310,44 @@ static env_universal_t *uvars() { return s_universal_variables; }
 // Helper class for storing constant strings, without needing to wrap them in a wcstring.
 
 // Comparer for const string set.
+// Note our sets are small so we don't bother to sort them.
 typedef std::unordered_set<wcstring> const_string_set_t;
 
-/// Table of variables that may not be set using the set command.
-static const_string_set_t env_read_only;
+// A typedef for a set of constant strings. Note our sets are typically on the order of 6 elements,
+// so we don't bother to sort them.
+using string_set_t = const wchar_t *const[];
 
-static bool is_read_only(const wcstring &key) {
-    return env_read_only.find(key) != env_read_only.end();
+template <typename T>
+bool string_set_contains(const T &set, const wchar_t *val) {
+    for (const wchar_t *entry : set) {
+        if (!wcscmp(val, entry)) return true;
+    }
+    return false;
 }
 
-bool env_var_t::read_only() const { return is_read_only(name); }
+/// Check if a variable may not be set using the set command.
+static bool is_read_only(const wchar_t *val) {
+    const string_set_t env_read_only = {L"PWD", L"SHLVL", L"_", L"history", L"status", L"version"};
+    return string_set_contains(env_read_only, val);
+}
+
+static bool is_read_only(const wcstring &val) { return is_read_only(val.c_str()); }
+
+// Here is the whitelist of variables that we colon-delimit, both incoming from the environment and
+// outgoing back to it. This is deliberately very short - we don't want to add language-specific
+// values like CLASSPATH.
+static const string_set_t colon_delimited_variable = {L"PATH", L"CDPATH", L"MANPATH"};
+static bool variable_is_colon_delimited_var(const wchar_t *str) {
+    /// List of "path" like variable names that need special handling. This includes automatic
+    /// splitting and joining on import/export. As well as replacing empty elements, which
+    /// implicitly refer to the CWD, with an explicit '.' in the case of PATH and CDPATH. Note this
+    /// is sorted
+    return string_set_contains(colon_delimited_variable, str);
+}
+
+static bool variable_is_colon_delimited_var(const wcstring &str) {
+    return variable_is_colon_delimited_var(str.c_str());
+}
 
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
 static const_string_set_t env_electric;
@@ -524,8 +548,8 @@ static bool initialize_curses_using_fallback(const char *term) {
     auto term_var = env_get(L"TERM");
     if (term_var.missing_or_empty()) return false;
 
-    const char *term_env = wcs2str(term_var->as_string());
-    if (!strcmp(term_env, DEFAULT_TERM1) || !strcmp(term_env, DEFAULT_TERM2)) return false;
+    auto term_env = wcs2string(term_var->as_string());
+    if (term_env != DEFAULT_TERM1 || term_env != DEFAULT_TERM2) return false;
 
     if (is_interactive_session) debug(1, _(L"Using fallback terminal type '%s'."), term);
 
@@ -540,7 +564,7 @@ static bool initialize_curses_using_fallback(const char *term) {
 /// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path
 /// elements are converted to explicit "." to make the vars easier to use in fish scripts.
 static void init_path_vars() {
-    for (const auto &var_name : colon_delimited_variable) {
+    for (const wchar_t *var_name : colon_delimited_variable) {
         fix_colon_delimited_var(var_name);
     }
 }
@@ -582,15 +606,8 @@ static void init_curses() {
     term_has_xn = tigetflag((char *)"xenl") == 1;  // does terminal have the eat_newline_glitch
     update_fish_color_support();
     // Invalidate the cached escape sequences since they may no longer be valid.
-    cached_esc_sequences.clear();
+    cached_layouts.clear();
     curses_initialized = true;
-}
-
-// Here is the whitelist of variables that we colon-delimit, both incoming from the environment and
-// outgoing back to it. This is deliberately very short - we don't want to add language-specific
-// values like CLASSPATH.
-static bool variable_is_colon_delimited_var(const wcstring &str) {
-    return contains(colon_delimited_variable, str);
 }
 
 /// React to modifying the given variable.
@@ -847,9 +864,6 @@ static void setup_var_dispatch_table() {
 void env_init(const struct config_paths_t *paths /* or NULL */) {
     setup_var_dispatch_table();
 
-    // These variables can not be altered directly by the user.
-    env_read_only.insert({L"status", L"history", L"_", L"PWD", L"version"});
-
     // Names of all dynamically calculated variables.
     env_electric.insert({L"history", L"status", L"umask"});
 
@@ -911,19 +925,18 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     wcstring version = str2wcstring(get_fish_version());
     env_set_one(L"version", ENV_GLOBAL, version);
 
-    // Set up SHLVL variable.
-    const auto shlvl_var = env_get(L"SHLVL");
+    // Set up SHLVL variable. Not we can't use env_get because SHLVL is read-only, and therefore was
+    // not inherited from the environment.
     wcstring nshlvl_str = L"1";
-    if (!shlvl_var.missing_or_empty()) {
+    if (const char *shlvl_var = getenv("SHLVL")) {
         const wchar_t *end;
         // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a diagnostic?
-        long shlvl_i = fish_wcstol(shlvl_var->as_string().c_str(), &end);
+        long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str(), &end);
         if (!errno && shlvl_i >= 0) {
             nshlvl_str = to_string<long>(shlvl_i + 1);
         }
     }
     env_set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
-    env_read_only.emplace(L"SHLVL");
 
     // Set up the HOME variable.
     // Unlike $USER, it doesn't seem that `su`s pass this along
@@ -1090,7 +1103,7 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, wcst
             var_table_t::const_iterator result = preexisting_node->env.find(key);
             assert(result != preexisting_node->env.end());
             const env_var_t &var = result->second;
-            if (var.exportv) {
+            if (var.exports()) {
                 preexisting_entry_exportv = true;
                 has_changed_new = true;
             }
@@ -1137,7 +1150,7 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, wcst
             // Set the entry in the node. Note that operator[] accesses the existing entry, or
             // creates a new one.
             env_var_t &var = node->env[key];
-            if (var.exportv) {
+            if (var.exports()) {
                 // This variable already existed, and was exported.
                 has_changed_new = true;
             }
@@ -1146,11 +1159,11 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, wcst
 
             if (var_mode & ENV_EXPORT) {
                 // The new variable is exported.
-                var.exportv = true;
+                var.set_exports(true);
                 node->exportv = true;
                 has_changed_new = true;
             } else {
-                var.exportv = false;
+                var.set_exports(false);
                 // Set the node's exported when it changes something about exports
                 // (also when it redefines a variable to not be exported).
                 node->exportv = has_changed_old != has_changed_new;
@@ -1201,7 +1214,7 @@ static bool try_remove(env_node_t *n, const wchar_t *key, int var_mode) {
 
     var_table_t::iterator result = n->env.find(key);
     if (result != n->env.end()) {
-        if (result->second.exportv) {
+        if (result->second.exports()) {
             vars_stack().mark_changed_exported();
         }
         n->env.erase(result);
@@ -1272,7 +1285,7 @@ const wcstring_list_t &env_var_t::as_list() const { return vals; }
 wcstring env_var_t::as_string(void) const {
     if (this->vals.empty()) return wcstring(ENV_NULL);
 
-    wchar_t sep = variable_is_colon_delimited_var(this->name) ? L':' : ARRAY_SEP;
+    wchar_t sep = (flags & flag_colon_delimit) ? L':' : ARRAY_SEP;
     auto it = this->vals.cbegin();
     wcstring result(*it);
     while (++it != vals.end()) {
@@ -1284,6 +1297,13 @@ wcstring env_var_t::as_string(void) const {
 
 void env_var_t::to_list(wcstring_list_t &out) const {
     out = vals;
+}
+
+env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
+    env_var_flags_t result = 0;
+    if (is_read_only(name)) result |= flag_read_only;
+    if (variable_is_colon_delimited_var(name)) result |= flag_colon_delimit;
+    return result;
 }
 
 maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode) {
@@ -1334,7 +1354,7 @@ maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode) {
             var_table_t::const_iterator result = env->env.find(key);
             if (result != env->env.end()) {
                 const env_var_t &var = result->second;
-                if (var.exportv ? search_exported : search_unexported) {
+                if (var.exports() ? search_exported : search_unexported) {
                     return var;
                 }
             }
@@ -1387,7 +1407,7 @@ static void add_key_to_string_set(const var_table_t &envs, std::set<wcstring> *s
     for (iter = envs.begin(); iter != envs.end(); ++iter) {
         const env_var_t &var = iter->second;
 
-        if ((var.exportv && show_exported) || (!var.exportv && show_unexported)) {
+        if ((var.exports() && show_exported) || (!var.exports() && show_unexported)) {
             // Insert this key.
             str_set->insert(iter->first);
         }
@@ -1454,7 +1474,7 @@ static void get_exported(const env_node_t *n, var_table_t &h) {
         const wcstring &key = iter->first;
         const env_var_t var = iter->second;
 
-        if (var.exportv) {
+        if (var.exports()) {
             // Export the variable. Don't use std::map::insert here, since we need to overwrite
             // existing values from previous scopes.
             h[key] = var;
@@ -1570,7 +1590,7 @@ maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key) const {
     }
     auto iter = vars.find(key);
     if (iter == vars.end()) return none();
-    return env_var_t(iter->second);
+    return iter->second;
 }
 
 const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH",

@@ -28,6 +28,12 @@ SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+IF(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
+  SET(FISH_IN_TREE_BUILD TRUE)
+ELSE()
+  SET(FISH_IN_TREE_BUILD FALSE)
+ENDIF()
+
 # All objects that the system needs to build fish, except fish.cpp
 SET(FISH_SRCS
     src/autoload.cpp src/builtin.cpp src/builtin_bg.cpp src/builtin_bind.cpp

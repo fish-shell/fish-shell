@@ -70,34 +70,50 @@ void misc_init();
 
 class env_var_t {
    private:
-    wcstring name;         // name of the var
+    using env_var_flags_t = uint8_t;
     wcstring_list_t vals;  // list of values assigned to the var
+    env_var_flags_t flags;
 
    public:
-    bool exportv = false;  // whether the variable should be exported
+    enum {
+        flag_export = 1 << 0,         // whether the variable is exported
+        flag_colon_delimit = 1 << 1,  // whether the variable is colon delimited
+        flag_read_only = 1 << 2       // whether the variable is read only
+    };
 
     // Constructors.
     env_var_t(const env_var_t &) = default;
     env_var_t(env_var_t &&) = default;
-    env_var_t(wcstring name, wcstring_list_t vals) : name(std::move(name)), vals(std::move(vals)) {}
+    env_var_t(wcstring_list_t vals, env_var_flags_t flags) : vals(std::move(vals)), flags(flags) {}
+    env_var_t(wcstring val, env_var_flags_t flags)
+        : env_var_t(wcstring_list_t{std::move(val)}, flags) {}
 
-    env_var_t(wcstring name, wcstring val)
-        : name(std::move(name)),
-          vals({
-              std::move(val),
-          }),
-          exportv(false) {}
+    // Constructors that infer the flags from a name.
+    env_var_t(const wchar_t *name, wcstring_list_t vals)
+        : env_var_t(std::move(vals), flags_for(name)) {}
+    env_var_t(const wchar_t *name, wcstring val) : env_var_t(std::move(val), flags_for(name)) {}
 
     env_var_t() = default;
 
     bool empty() const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
-    bool read_only() const;
+    bool read_only() const { return flags & flag_read_only; }
+    bool exports() const { return flags & flag_export; }
 
     wcstring as_string() const;
     void to_list(wcstring_list_t &out) const;
     const wcstring_list_t &as_list() const;
 
     void set_vals(wcstring_list_t v) { vals = std::move(v); }
+
+    void set_exports(bool exportv) {
+        if (exportv) {
+            flags |= flag_export;
+        } else {
+            flags &= ~flag_export;
+        }
+    }
+
+    static env_var_flags_t flags_for(const wchar_t *name);
 
     env_var_t &operator=(const env_var_t &var) = default;
     env_var_t &operator=(env_var_t &&) = default;

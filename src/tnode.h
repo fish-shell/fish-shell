@@ -143,7 +143,7 @@ class tnode_t {
         static_assert(child_type_possible_at_index<Type, ChildType, Index>(),
                       "Cannot contain a child of this type");
         const parse_node_t *child = nullptr;
-        if (nodeptr) child = &get_child_node<Index>();
+        if (nodeptr) child = tree->get_child(*nodeptr, Index);
         if (child && child->type == ChildType::token) return {tree, child};
         return {};
     }

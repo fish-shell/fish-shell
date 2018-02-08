@@ -11,20 +11,6 @@ math [-sN | --scale=N] [--] EXPRESSION
 
 The `math` command is based on the MuParser library which is documented <a href="http://beltoforion.de/article.php?a=muparser&hl=en&p=features&s=idPageTop#idPageTop">here</a>. The stock MuParser does not support the modulo, `%`, operator but fish implements it using integer semantics.
 
-You can, and should, use bare variable names (i.e., without the dollar-sign). If you use the dollar-sign form the fish parser will expand the variable and you will greatly reduce the effectiveness of the expression cache. In other words do this:
-
-\fish
-math x + 1
-\endfish
-
-rather than this:
-
-\fish
-math $x + 1
-\endfish
-
-Note that if the variable has more than one element (e.g., `set x 1 2 3`) only the first element is used in the expression when you use the bare var name. But if you instead write `math $x + 1` all three elements will be inserted yielding an invalid expression.
-
 Keep in mind that parameter expansion takes before expressions are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis and the asterisk glob character have to be escaped or quoted.
 
 The `math` command can evaluate multiple expressions separated by commas. The result of each expression is written on a separate line. This means you can evaluate multiple expressions and capture the results in a single invocation just like you can with commands like `string`. See the examples below.
@@ -53,7 +39,7 @@ Capture the result of three expressions:
 
 \fish
 $ set x 5
-$ set results (math 'x+x, x*3, x^2')
+$ set results (math "$x+$x, $x*3, $x^2")
 $ set --show results
 $results: not set in local scope
 $results: set in global scope, unexported, with 3 elements
@@ -69,4 +55,4 @@ Fish 1.x and 2.x releases relied on the `bc` command for handling `math` express
 
 You don't need to use `--` before the expression even if it begins with a minus sign which might otherwise be interpreted as an invalid option. If you do insert `--` before the expression it will cause option scanning to stop just like for every other command and it won't be part of the expression.
 
-Note that the modulo operator (`x % y`) is not well defined for floating point arithmetic. Fish rounds down all floating point values to the nearest integer before performing the modulo operation. So `10.5 % 6.1` is `4`. Regardless of what `--scale` value is in effect.
+Note that the modulo operator (`x % y`) is not well defined for floating point arithmetic. Fish rounds down all floating point values to the nearest integer before performing the modulo operation. So `10.5 % 6.1` is `4`, regardless of what `--scale` value is in effect.

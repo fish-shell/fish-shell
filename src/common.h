@@ -606,7 +606,7 @@ wcstring vformat_string(const wchar_t *format, va_list va_orig);
 void append_format(wcstring &str, const wchar_t *format, ...);
 void append_formatv(wcstring &str, const wchar_t *format, va_list ap);
 
-#ifdef __cpp_lib_make_unique
+#ifdef HAVE_STD__MAKE_UNIQUE
 using std::make_unique;
 #else
 /// make_unique implementation
@@ -727,6 +727,9 @@ bool is_forked_child(void);
 void assert_is_not_forked_child(const char *who);
 #define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
 #define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
+
+/// Return whether we are running in Windows Subsystem for Linux.
+bool is_windows_subsystem_for_linux();
 
 extern "C" {
 __attribute__((noinline)) void debug_thread_error(void);

@@ -268,7 +268,7 @@ bool env_universal_t::get_export(const wcstring &name) const {
     bool result = false;
     var_table_t::const_iterator where = vars.find(name);
     if (where != vars.end()) {
-        result = where->second.exportv;
+        result = where->second.exports();
     }
     return result;
 }
@@ -282,9 +282,9 @@ void env_universal_t::set_internal(const wcstring &key, wcstring_list_t vals, bo
     }
 
     env_var_t &entry = vars[key];
-    if (entry.exportv != exportv || entry.as_list() != vals) {
+    if (entry.exports() != exportv || entry.as_list() != vals) {
         entry.set_vals(std::move(vals));
-        entry.exportv = exportv;
+        entry.set_exports(exportv);
 
         // If we are overwriting, then this is now modified.
         if (overwrite) {
@@ -319,7 +319,7 @@ wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexpor
     for (iter = vars.begin(); iter != vars.end(); ++iter) {
         const wcstring &key = iter->first;
         const env_var_t &var = iter->second;
-        if ((var.exportv && show_exported) || (!var.exportv && show_unexported)) {
+        if ((var.exports() && show_exported) || (!var.exports() && show_unexported)) {
             result.push_back(key);
         }
     }
@@ -357,11 +357,11 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
         // See if the value has changed.
         const env_var_t &new_entry = iter->second;
         var_table_t::const_iterator existing = this->vars.find(key);
-        if (existing == this->vars.end() || existing->second.exportv != new_entry.exportv ||
+        if (existing == this->vars.end() || existing->second.exports() != new_entry.exports() ||
             existing->second != new_entry) {
             // Value has changed.
-            callbacks.push_back(
-                callback_data_t(new_entry.exportv ? SET_EXPORT : SET, key, new_entry.as_string()));
+            callbacks.push_back(callback_data_t(new_entry.exports() ? SET_EXPORT : SET, key,
+                                                new_entry.as_string()));
         }
     }
 }
@@ -448,7 +448,7 @@ bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
         // variable; soldier on.
         const wcstring &key = iter->first;
         const env_var_t &var = iter->second;
-        append_file_entry(var.exportv ? SET_EXPORT : SET, key, var.as_string(), &contents,
+        append_file_entry(var.exports() ? SET_EXPORT : SET, key, var.as_string(), &contents,
                           &storage);
 
         // Go to next.
@@ -830,7 +830,7 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t
             wcstring val;
             if (unescape_string(tmp + 1, &val, 0)) {
                 env_var_t &entry = (*vars)[key];
-                entry.exportv = exportv;
+                entry.set_exports(exportv);
                 entry.set_vals(decode_serialized(val));
             }
         } else {

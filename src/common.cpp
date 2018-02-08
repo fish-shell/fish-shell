@@ -313,7 +313,10 @@ char *wcs2str(const wchar_t *in) {
     // Here we probably allocate a buffer probably much larger than necessary.
     char *out = (char *)malloc(MAX_UTF8_BYTES * wcslen(in) + 1);
     assert(out);
-    return wcs2str_internal(in, out);
+    //Instead of returning the return value of wcs2str_internal, return `out` directly.
+    //This eliminates false warnings in coverity about resource leaks.
+    wcs2str_internal(in, out);
+    return out;
 }
 
 char *wcs2str(const wcstring &in) { return wcs2str(in.c_str()); }
@@ -1848,11 +1851,7 @@ void format_size_safe(char buff[128], unsigned long long sz) {
                 if (isz > 9) {
                     append_ull(buff, isz, &idx, max_len);
                 } else {
-                    if (isz == 0) {
-                        append_str(buff, "0", &idx, max_len);
-                    } else {
-                        append_ull(buff, isz, &idx, max_len);
-                    }
+                    append_ull(buff, isz, &idx, max_len);
 
                     // Maybe append a single fraction digit.
                     unsigned long long remainder = sz % 1024;
@@ -1997,6 +1996,25 @@ void assert_is_locked(void *vmutex, const char *who, const char *caller) {
     }
 }
 
+/// Detect if we are Windows Subsystem for Linux by inspecting /proc/sys/kernel/osrelease
+/// and checking if "Microsoft" is in the first line.
+/// See https://github.com/Microsoft/WSL/issues/423
+bool is_windows_subsystem_for_linux() {
+    ASSERT_IS_NOT_FORKED_CHILD();
+    static bool s_is_wsl = false;
+    static std::once_flag oflag;
+    std::call_once(oflag, []() {
+        // 'e' sets CLOEXEC if possible.
+        FILE *fp = fopen("/proc/sys/kernel/osrelease", "re");
+        if (fp) {
+            char buff[256];
+            if (fgets(buff, sizeof buff, fp)) s_is_wsl = (strstr(buff, "Microsoft") != NULL);
+            fclose(fp);
+        }
+    });
+    return s_is_wsl;
+}
+
 template <typename CharType_t>
 static CharType_t **make_null_terminated_array_helper(
     const std::vector<std::basic_string<CharType_t> > &argv) {
@@ -2073,6 +2091,9 @@ bool fish_reserved_codepoint(wchar_t c) {
 void redirect_tty_output() {
     struct termios t;
     int fd = open("/dev/null", O_WRONLY);
+    if (fd == -1) {
+        __fish_assert("Could not open /dev/null!", __FILE__, __LINE__, errno);
+    }
     if (tcgetattr(STDIN_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDIN_FILENO);
     if (tcgetattr(STDOUT_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDOUT_FILENO);
     if (tcgetattr(STDERR_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDERR_FILENO);

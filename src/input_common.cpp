@@ -194,7 +194,7 @@ wchar_t input_common_readch(int timed) {
         while (1) {
             wint_t b = readb();
 
-            if (b >= R_NULL && b <= R_MAX) return b;
+            if (b >= R_NULL && b < R_END_INPUT_FUNCTIONS) return b;
 
             if (MB_CUR_MAX == 1) {
                 // return (unsigned char)b;  // single-byte locale, all values are legal

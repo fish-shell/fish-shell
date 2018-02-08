@@ -400,6 +400,15 @@ AC_TRY_LINK( [ #include <wchar.h> ],
              [AC_MSG_RESULT(no)],
              )
 
+AC_MSG_CHECKING([for std::make_unique])
+AC_TRY_LINK( [ #include <memory> ],
+             [ std::unique_ptr<int> foo = std::make_unique<int>(); ],
+             [ AC_MSG_RESULT(yes)
+               AC_DEFINE(HAVE_STD__MAKE_UNIQUE, 1, Define to 1 if you have the `std::make_unique' function.)
+             ],
+             [AC_MSG_RESULT(no)],
+             )
+
 if test x$local_gettext != xno; then
   AC_CHECK_FUNCS( gettext )
 

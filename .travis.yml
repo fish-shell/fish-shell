@@ -32,7 +32,7 @@ matrix:
           cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_INSTALL_PREFIX=$HOME/prefix -G Ninja .. || cat CMakeFiles/CMakeError.log &&
           ninja &&
           ninja install &&
-          ninja test SHOW_INTERACTIVE_LOG=1
+          ninja test
   fast_finish: true
 
 notifications:

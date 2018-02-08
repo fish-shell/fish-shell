@@ -30,7 +30,7 @@ matrix:
         - CMAKE_CXX_COMPILER=`which g++`
       script:
         - mkdir -p build && cd build &&
-          cmake -DCMAKE_INSTALL_PREFIX=$HOME/prefix -G Ninja .. || cat CMakeFiles/CMakeError.log &&
+          cmake -DCMAKE_CXX_COMPILER=`which g++` -DCMAKE_INSTALL_PREFIX=$HOME/prefix -G Ninja .. || cat CMakeFiles/CMakeError.log &&
           ninja &&
           ninja install &&
           ninja test SHOW_INTERACTIVE_LOG=1

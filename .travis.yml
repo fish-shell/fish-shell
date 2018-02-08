@@ -13,7 +13,7 @@ matrix:
             - gettext
             - lib32ncurses5-dev
             - g++-multilib
-            - ninja
+            - ninja-build
             - cmake
         coverity_scan:
           project:

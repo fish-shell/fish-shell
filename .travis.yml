@@ -4,7 +4,7 @@ sudo: false
 matrix:
   include:
     - os: linux
-      compiler: gcc
+      compiler: clang
       addons:
         apt:
           packages:
@@ -12,7 +12,6 @@ matrix:
             - expect
             - gettext
             - libncurses5-dev
-            - g++-
             - ninja-build
             - cmake
         coverity_scan:
@@ -21,16 +20,16 @@ matrix:
             description: "The friendly interactive shell"
           notification_email:
             secure: "lq3AelSInSOqVJI2EZUTrsOrt9ev5c8DHMi7ESyefvv1p+7Qr2gRZmLa+dXLrkPegG+Op9Tykq9zwXRGC4pzC+0OelCKJgqpqkj6LwS8WSamiamAf9ZtPbANwSFMD17f/NTeG/OtBgq6Z87Nur2GEhxmSu3M9IEBOsnOgmCKo84="
-          build_command_prepend: "mkdir -p build; cd build; cmake -G Ninja -DCMAKE_CXX_COMPILER=`which g++` .."
+          build_command_prepend: "mkdir -p build; cd build; cmake -G Ninja -DCMAKE_CXX_COMPILER=clang++ .."
           build_command: "ninja"
           branch_pattern: coverity_scan_master
       env:
-        - CXXFLAGS="-g -O2" CFLAGS="-g"
+        - CFLAGS="-g"
+        - CXXFLAGS="-g -O2"
         - USE_CMAKE="1" # Dummy value, shows up in the Travis UI only
-        - CMAKE_CXX_COMPILER=`which g++`
       script:
         - mkdir -p build && cd build &&
-          cmake -DCMAKE_CXX_COMPILER=`which g++` -DCMAKE_INSTALL_PREFIX=$HOME/prefix -G Ninja .. || cat CMakeFiles/CMakeError.log &&
+          cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_INSTALL_PREFIX=$HOME/prefix -G Ninja .. || cat CMakeFiles/CMakeError.log &&
           ninja &&
           ninja install &&
           ninja test SHOW_INTERACTIVE_LOG=1

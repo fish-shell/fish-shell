@@ -48,7 +48,7 @@ file_access_attempt_t access_file(const wcstring &path, int mode) {
 
 autoload_t::autoload_t(const wcstring &env_var_name_var,
                        command_removed_function_t cmd_removed_callback)
-    : lock(), env_var_name(env_var_name_var), command_removed(cmd_removed_callback) {}
+    : env_var_name(env_var_name_var), command_removed(cmd_removed_callback) {}
 
 void autoload_t::entry_was_evicted(wcstring key, autoload_function_t node) {
     // This should only ever happen on the main thread.

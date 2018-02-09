@@ -46,7 +46,7 @@ class env_vars_snapshot_t;
 class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
    private:
     /// Lock for thread safety.
-    std::mutex lock;
+    fish_mutex_t lock;
     /// The environment variable name.
     const wcstring env_var_name;
     /// The path from which we most recently autoloaded.

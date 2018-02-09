@@ -183,7 +183,7 @@ static bool compare_completions_by_order(const completion_entry_t *p1,
 }
 
 /// The lock that guards the list of completion entries.
-static std::mutex completion_lock;
+static fish_mutex_t completion_lock;
 
 void completion_entry_t::add_option(const complete_entry_opt_t &opt) {
     ASSERT_IS_LOCKED(completion_lock);
@@ -1559,7 +1559,7 @@ wcstring complete_print() {
 }
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
-static std::mutex wrapper_lock;
+static fish_mutex_t wrapper_lock;
 typedef std::unordered_map<wcstring, wcstring_list_t> wrapper_map_t;
 static wrapper_map_t &wrap_map() {
     ASSERT_IS_LOCKED(wrapper_lock);

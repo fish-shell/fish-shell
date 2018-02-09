@@ -162,7 +162,7 @@ class variable_entry_t {
     wcstring value; /**< Value of the variable */
 };
 
-static std::mutex env_lock;
+static fish_mutex_t env_lock;
 
 static bool local_scope_exports(const env_node_t *n);
 

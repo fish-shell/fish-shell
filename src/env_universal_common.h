@@ -39,7 +39,7 @@ class env_universal_t {
     // Path that we save to. If empty, use the default.
     const wcstring explicit_vars_path;
 
-    mutable std::mutex lock;
+    mutable fish_mutex_t lock;
     bool tried_renaming;
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);

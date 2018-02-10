@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <string>
 
+#include "tinyexpr.h"
+
 #include "builtin.h"
 #include "builtin_math.h"
 #include "common.h"
@@ -14,10 +16,6 @@
 #include "io.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-#include "muParser.h"
-#include "muParserBase.h"
-#include "muParserDef.h"
 
 struct math_cmd_opts_t {
     bool print_help = false;
@@ -115,43 +113,25 @@ static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storag
     return math_get_arg_argv(argidx, argv);
 }
 
-/// Implement integer modulo math operator.
-static mu::ValueOrError moduloOperator(double v, double w) { return (int)v % std::max(1, (int)w); };
-
 /// Evaluate math expressions.
 static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_t &streams,
                                math_cmd_opts_t &opts, wcstring &expression) {
     UNUSED(parser);
 
-    // Helper to print an error and return an error code.
-    auto printError = [&streams, cmd](const mu::ParserError &err) {
-        streams.err.append_format(_(L"%ls: Invalid expression: %ls\n"), cmd, err.GetMsg().c_str());
-        return STATUS_CMD_ERROR;
-    };
-
-    mu::Parser p;
-    // MuParser doesn't implement the modulo operator so we add it ourselves since there are
-    // likely users of our old math wrapper around bc that expect it to be available.
-    p.DefineOprtChars(L"%");
-    mu::OptionalError oerr = p.DefineOprt(L"%", moduloOperator, mu::prINFIX);
-    assert(!oerr.has_error() && "Unexpected error defining modulo operator");
-    (void)oerr;
-
-    oerr = p.SetExpr(expression);
-    if (oerr.has_error()) return printError(oerr.error());
-
-    std::vector<mu::ValueOrError> vs;
-    p.Eval(&vs);
-    for (const mu::ValueOrError &v : vs) {
-        if (v.has_error()) return printError(v.error());
-    }
-    for (const mu::ValueOrError &v : vs) {
+    int error;
+    char *narrow_str = wcs2str(expression);
+    double v = te_interp(narrow_str, &error);
+    if (error == 0) {
         if (opts.scale == 0) {
-            streams.out.append_format(L"%ld\n", static_cast<long>(*v));
+            streams.out.append_format(L"%ld\n", static_cast<long>(v));
         } else {
-            streams.out.append_format(L"%.*lf\n", opts.scale, *v);
+            streams.out.append_format(L"%.*lf\n", opts.scale, v);
         }
+    } else {
+        // TODO: Better error reporting!
+        streams.err.append_format(L"'%ls': Error at token %d\n", expression.c_str(), error - 1);
     }
+    free(narrow_str);
     return STATUS_CMD_OK;
 }
 

@@ -227,7 +227,7 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
         path = function_get_definition_file(funcname);
         if (path) {
             autoloaded = function_is_autoloaded(funcname) ? L"autoloaded" : L"not-autoloaded";
-            line_number = function_get_definition_offset(funcname);
+            line_number = function_get_definition_lineno(funcname);
         } else {
             path = L"stdin";
         }

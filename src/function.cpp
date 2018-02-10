@@ -10,11 +10,12 @@
 #include <stddef.h>
 #include <wchar.h>
 
+#include <algorithm>
 #include <map>
 #include <memory>
-#include <unordered_set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "autoload.h"
@@ -117,33 +118,32 @@ static std::map<wcstring, env_var_t> snapshot_vars(const wcstring_list_t &vars) 
 }
 
 function_info_t::function_info_t(const function_data_t &data, const wchar_t *filename,
-                                 int def_offset, bool autoload)
-    : definition(data.definition),
+                                 bool autoload)
+    : parsed_source(data.parsed_source),
+      body_node(data.body_node),
       description(data.description),
       definition_file(intern(filename)),
-      definition_offset(def_offset),
       named_arguments(data.named_arguments),
       inherit_vars(snapshot_vars(data.inherit_vars)),
       is_autoload(autoload),
       shadow_scope(data.shadow_scope) {}
 
 function_info_t::function_info_t(const function_info_t &data, const wchar_t *filename,
-                                 int def_offset, bool autoload)
-    : definition(data.definition),
+                                 bool autoload)
+    : parsed_source(data.parsed_source),
+      body_node(data.body_node),
       description(data.description),
       definition_file(intern(filename)),
-      definition_offset(def_offset),
       named_arguments(data.named_arguments),
       inherit_vars(data.inherit_vars),
       is_autoload(autoload),
       shadow_scope(data.shadow_scope) {}
 
-void function_add(const function_data_t &data, const parser_t &parser, int definition_line_offset) {
+void function_add(const function_data_t &data, const parser_t &parser) {
     UNUSED(parser);
     ASSERT_IS_MAIN_THREAD();
 
     CHECK(!data.name.empty(), );  //!OCLINT(multiple unary operator)
-    CHECK(data.definition, );
     scoped_rlock locker(functions_lock);
 
     // Remove the old function.
@@ -152,8 +152,8 @@ void function_add(const function_data_t &data, const parser_t &parser, int defin
     // Create and store a new function.
     const wchar_t *filename = reader_current_filename();
 
-    const function_map_t::value_type new_pair(
-        data.name, function_info_t(data, filename, definition_line_offset, is_autoload));
+    const function_map_t::value_type new_pair(data.name,
+                                              function_info_t(data, filename, is_autoload));
     loaded_functions.insert(new_pair);
 
     // Add event handlers.
@@ -223,7 +223,7 @@ bool function_get_definition(const wcstring &name, wcstring *out_definition) {
     scoped_rlock locker(functions_lock);
     const function_info_t *func = function_get(name);
     if (func && out_definition) {
-        out_definition->assign(func->definition);
+        out_definition->assign(func->body_node.get_source(func->parsed_source->src));
     }
     return func != NULL;
 }
@@ -275,7 +275,7 @@ bool function_copy(const wcstring &name, const wcstring &new_name) {
         // This new instance of the function shouldn't be tied to the definition file of the
         // original, so pass NULL filename, etc.
         const function_map_t::value_type new_pair(new_name,
-                                                  function_info_t(iter->second, NULL, 0, false));
+                                                  function_info_t(iter->second, NULL, false));
         loaded_functions.insert(new_pair);
         result = true;
     }
@@ -311,10 +311,20 @@ bool function_is_autoloaded(const wcstring &name) {
     return func->is_autoload;
 }
 
-int function_get_definition_offset(const wcstring &name) {
+int function_get_definition_lineno(const wcstring &name) {
     scoped_rlock locker(functions_lock);
     const function_info_t *func = function_get(name);
-    return func ? func->definition_offset : -1;
+    if (!func) return -1;
+    // return one plus the number of newlines at offsets less than the start of our function's statement (which includes the header).
+    // TODO: merge with line_offset_of_character_at_offset?
+    auto block_stat = func->body_node.try_get_parent<grammar::block_statement>();
+    assert(block_stat && "Function body is not part of block statement");
+    auto source_range = block_stat.source_range();
+    assert(source_range && "Function has no source range");
+    uint32_t func_start = source_range->start;
+    const wcstring &source = func->parsed_source->src;
+    assert(func_start <= source.size() && "function start out of bounds");
+    return 1 + std::count(source.begin(), source.begin() + func_start, L'\n');
 }
 
 // Setup the environment for the function. There are three components of the environment:

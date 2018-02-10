@@ -102,7 +102,7 @@ class parse_execution_context_t {
     parse_execution_result_t run_while_statement(tnode_t<grammar::while_header> statement,
                                                  tnode_t<grammar::job_list> contents);
     parse_execution_result_t run_function_statement(tnode_t<grammar::function_header> header,
-                                                    tnode_t<grammar::end_command> block_end);
+                                                    tnode_t<grammar::job_list> body);
     parse_execution_result_t run_begin_statement(tnode_t<grammar::job_list> contents);
 
     enum globspec_t { failglob, nullglob };

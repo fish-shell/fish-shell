@@ -489,7 +489,7 @@ int parser_t::get_lineno() const {
         // If we are executing a function, we have to add in its offset.
         const wchar_t *function_name = is_function();
         if (function_name != NULL) {
-            lineno += function_get_definition_offset(function_name);
+            lineno += function_get_definition_lineno(function_name);
         }
     }
     return lineno;

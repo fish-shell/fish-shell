@@ -2166,9 +2166,10 @@ static void test_complete(void) {
     do_test(completions.at(0).completion == L"space");
 
     // Add a function and test completing it in various ways.
+    // Note we're depending on function_data_t not complaining when given missing parsed_source /
+    // body_node.
     struct function_data_t func_data = {};
     func_data.name = L"scuttlebutt";
-    func_data.definition = L"echo gongoozle";
     function_add(func_data, parser_t::principal_parser());
 
     // Complete a function name.

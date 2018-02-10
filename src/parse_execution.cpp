@@ -327,7 +327,7 @@ parse_execution_result_t parse_execution_context_t::run_begin_statement(
 
 // Define a function.
 parse_execution_result_t parse_execution_context_t::run_function_statement(
-    tnode_t<g::function_header> header, tnode_t<g::end_command> block_end_command) {
+    tnode_t<g::function_header> header, tnode_t<g::job_list> body) {
     // Get arguments.
     wcstring_list_t arguments;
     argument_node_list_t arg_nodes = header.descendants<g::argument>();
@@ -337,30 +337,8 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     if (result != parse_execution_success) {
         return result;
     }
-
-    // The function definition extends from the end of the header to the function end. It's not
-    // just the range of the contents because that loses comments - see issue #1710.
-    assert(block_end_command.has_source());
-    auto header_range = header.source_range();
-    size_t contents_start = header_range->start + header_range->length;
-    size_t contents_end = block_end_command.source_range()
-                              ->start;  // 1 past the last character in the function definition
-    assert(contents_end >= contents_start);
-
-    // Swallow whitespace at both ends.
-    while (contents_start < contents_end && iswspace(pstree->src.at(contents_start))) {
-        contents_start++;
-    }
-    while (contents_start < contents_end && iswspace(pstree->src.at(contents_end - 1))) {
-        contents_end--;
-    }
-
-    assert(contents_end >= contents_start);
-    const wcstring contents_str =
-        wcstring(pstree->src, contents_start, contents_end - contents_start);
-    int definition_line_offset = this->line_offset_of_character_at_offset(contents_start);
     io_streams_t streams(0);  // no limit on the amount of output from builtin_function()
-    int err = builtin_function(*parser, streams, arguments, contents_str, definition_line_offset);
+    int err = builtin_function(*parser, streams, arguments, pstree, body);
     proc_set_last_status(err);
 
     if (!streams.err.empty()) {
@@ -382,8 +360,7 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(
     } else if (auto header = bheader.try_get_child<g::while_header, 0>()) {
         ret = run_while_statement(header, contents);
     } else if (auto header = bheader.try_get_child<g::function_header, 0>()) {
-        tnode_t<g::end_command> func_end = statement.child<2>();
-        ret = run_function_statement(header, func_end);
+        ret = run_function_statement(header, contents);
     } else if (auto header = bheader.try_get_child<g::begin_header, 0>()) {
         ret = run_begin_statement(contents);
     } else {

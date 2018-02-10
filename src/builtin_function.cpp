@@ -200,7 +200,8 @@ static int validate_function_name(int argc, const wchar_t *const *argv, wcstring
 /// Define a function. Calls into `function.cpp` to perform the heavy lifting of defining a
 /// function.
 int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
-                     const wcstring &contents, int definition_line_offset) {
+                     const parsed_source_ref_t &source, tnode_t<grammar::job_list> body) {
+    assert(source && "Missing source in builtin_function");
     // The wgetopt function expects 'function' as the first argument. Make a new wcstring_list with
     // that property. This is needed because this builtin has a different signature than the other
     // builtins.
@@ -257,8 +258,9 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
         e.function_name = d.name;
     }
 
-    d.definition = contents.c_str();
-    function_add(d, parser, definition_line_offset);
+    d.parsed_source = source;
+    d.body_node = body;
+    function_add(d, parser);
 
     // Handle wrap targets by creating the appropriate completions.
     for (size_t w = 0; w < opts.wrap_targets.size(); w++) {

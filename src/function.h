@@ -10,6 +10,8 @@
 #include "common.h"
 #include "env.h"
 #include "event.h"
+#include "parse_tree.h"
+#include "tnode.h"
 
 class parser_t;
 
@@ -21,8 +23,10 @@ struct function_data_t {
     wcstring name;
     /// Description of function.
     wcstring description;
-    /// Function definition.
-    const wchar_t *definition;
+    /// Parsed source containing the function.
+    parsed_source_ref_t parsed_source;
+    /// Node containing the function body, pointing into parsed_source.
+    tnode_t<grammar::job_list> body_node;
     /// List of all event handlers for this function.
     std::vector<event_t> events;
     /// List of all named arguments for this function.
@@ -36,14 +40,14 @@ struct function_data_t {
 
 class function_info_t {
    public:
-    /// Function definition.
-    const wcstring definition;
+    /// Parsed source containing the function.
+    const parsed_source_ref_t parsed_source;
+    /// Node containing the function body, pointing into parsed_source.
+    const tnode_t<grammar::job_list> body_node;
     /// Function description. Only the description may be changed after the function is created.
     wcstring description;
     /// File where this function was defined (intern'd string).
     const wchar_t *const definition_file;
-    /// Line where definition started.
-    const int definition_offset;
     /// List of all named arguments for this function.
     const wcstring_list_t named_arguments;
     /// Mapping of all variables that were inherited from the function definition scope to their
@@ -55,18 +59,14 @@ class function_info_t {
     const bool shadow_scope;
 
     /// Constructs relevant information from the function_data.
-    function_info_t(const function_data_t &data, const wchar_t *filename, int def_offset,
-                    bool autoload);
+    function_info_t(const function_data_t &data, const wchar_t *filename, bool autoload);
 
     /// Used by function_copy.
-    function_info_t(const function_info_t &data, const wchar_t *filename, int def_offset,
-                    bool autoload);
+    function_info_t(const function_info_t &data, const wchar_t *filename, bool autoload);
 };
 
-/// Add a function. definition_line_offset is the line number of the function's definition within
-/// its source file.
-void function_add(const function_data_t &data, const parser_t &parser,
-                  int definition_line_offset = 0);
+/// Add a function.
+void function_add(const function_data_t &data, const parser_t &parser);
 
 /// Remove the function with the specified name.
 void function_remove(const wcstring &name);
@@ -112,7 +112,7 @@ const wchar_t *function_get_definition_file(const wcstring &name);
 ///
 /// This function does not autoload functions, it will only work on functions that have already been
 /// defined.
-int function_get_definition_offset(const wcstring &name);
+int function_get_definition_lineno(const wcstring &name);
 
 /// Returns a list of all named arguments of the specified function.
 wcstring_list_t function_get_named_arguments(const wcstring &name);

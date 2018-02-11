@@ -67,15 +67,6 @@ extra_functionsdir = @extra_functionsdir@
 extra_confdir = @extra_confdir@
 
 #
-# muparser
-#
-MUPARSER_DIR = muparser-2.2.5
-MUPARSER_LIBDIR = $(MUPARSER_DIR)/lib
-MUPARSER_LIB = $(MUPARSER_LIBDIR)/libmuparser.a
-MUPARSER_H = $(MUPARSER_DIR)/include/muParser.h
-EXTRA_MUPARSER = @EXTRA_MUPARSER@
-
-#
 # pcre2
 #
 PCRE2_WIDTH = @WCHAR_T_BITS@
@@ -503,10 +494,6 @@ ifdef EXTRA_PCRE2
 src/builtin_string.cpp: $(PCRE2_H)
 endif
 
-#ifdef EXTRA_MUPARSER
-#src/env.cpp: $(MUPARSER_H)
-#endif
-
 #
 # Generate the internal help functions by making doxygen create
 # man-pages. The convertion path looks like this:
@@ -762,7 +749,7 @@ obj: | show-MKDIR_P
 #
 # Build the fish program.
 #
-fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2) ${EXTRA_MUPARSER}
+fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2)
 	@echo "  CXX LD   $(em)$@$(sgr0)"
 	$v $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
@@ -774,32 +761,24 @@ $(PCRE2_H):
 	@echo "  autoconf $(em)$@$(sgr0)"
 	$v (cd $(PCRE2_DIR) && ./config.status)
 
-$(MUPARSER_LIB): $(MUPARSER_H)
-	@echo "  MAKE     $(em)$@$(sgr0)"
-	$v $(MAKE) V=$(V) -C $(MUPARSER_DIR) CPPFLAGS=-D_UNICODE=1 lib/libmuparser.a
-
-$(MUPARSER_H):
-	@echo "  autoconf $(em)$@$(sgr0)"
-	$v (cd $(MUPARSER_DIR) && ./config.status)
-
 #
 # Build the fish_tests program.
 #
-fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2) ${EXTRA_MUPARSER}
+fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2)
 	@echo "  CXX LD   $(em)$@$(sgr0)"
 	$v $(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_indent program.
 #
-fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2) ${EXTRA_MUPARSER}
+fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
 	@echo "  CXX LD   $(em)$@$(sgr0)"
 	$v $(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 #
 # Build the fish_key_reader program to show input from the terminal.
 #
-fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2) ${EXTRA_MUPARSER}
+fish_key_reader: $(FISH_KEYREAD_OBJS) $(EXTRA_PCRE2)
 	@echo "  CXX LD   $(em)$@$(sgr0)"
 	$v $(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
@@ -852,8 +831,6 @@ style-all:
 distclean: clean
 	-$v test ! -f $(PCRE2_DIR)/Makefile || \
 	$(MAKE) V=$(V) -C $(PCRE2_DIR) distclean
-	-$v test ! -f $(MUPARSER_DIR)/Makefile || \
-	$(MAKE) V=$(V) -C $(MUPARSER_DIR) distclean
 	$v rm -rf config.status config.log config.h Makefile autom4te.cache aclocal.m4
 .PHONY: distclean
 
@@ -872,15 +849,10 @@ clean:
 ifeq ($(V), 0 )
 	-@test ! -f $(PCRE2_DIR)/Makefile || \
 	$(MAKE) -C $(PCRE2_DIR) clean
-	-@test ! -f $(MUPARSER_DIR)/Makefile || \
-	$(MAKE) -C $(MUPARSER_DIR) clean
 else
 	-@test ! -f $(PCRE2_DIR)/Makefile || \
 	$(MAKE) -s -C $(PCRE2_DIR) clean > /dev/null || \
 	$(MAKE) -s -C $(PCRE2_DIR) clean
-	-@test ! -f $(MUPARSER_DIR)/Makefile || \
-	$(MAKE) -s -C $(MUPARSER_DIR) clean > /dev/null || \
-	$(MAKE) -s -C $(MUPARSER_DIR) clean
 endif
 	$v rm -f obj/*.o *.o doc.h doc.tmp
 	$v rm -f doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr

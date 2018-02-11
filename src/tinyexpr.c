@@ -22,33 +22,12 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-/* COMPILE TIME OPTIONS */
-
-/* Exponentiation associativity:
-For a^b^c = (a^b)^c and -a^b = (-a)^b do nothing.
-For a^b^c = a^(b^c) and -a^b = -(a^b) uncomment the next line.*/
-/* #define TE_POW_FROM_RIGHT */
-
-/* Logarithms
-For log = base 10 log do nothing
-For log = natural log uncomment the next line. */
-/* #define TE_NAT_LOG */
-
 #include "tinyexpr.h"
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <limits.h>
-
-#ifndef NAN
-#define NAN (0.0/0.0)
-#endif
-
-#ifndef INFINITY
-#define INFINITY (1.0/0.0)
-#endif
-
 
 typedef double (*te_fun2)(double, double);
 
@@ -164,11 +143,7 @@ static const te_variable functions[] = {
     {"fac", fac,      TE_FUNCTION1 | TE_FLAG_PURE, 0},
     {"floor", floor,  TE_FUNCTION1 | TE_FLAG_PURE, 0},
     {"ln", log,       TE_FUNCTION1 | TE_FLAG_PURE, 0},
-#ifdef TE_NAT_LOG
-    {"log", log,      TE_FUNCTION1 | TE_FLAG_PURE, 0},
-#else
     {"log", log10,    TE_FUNCTION1 | TE_FLAG_PURE, 0},
-#endif
     {"log10", log10,  TE_FUNCTION1 | TE_FLAG_PURE, 0},
     {"ncr", ncr,      TE_FUNCTION2 | TE_FLAG_PURE, 0},
     {"npr", npr,      TE_FUNCTION2 | TE_FLAG_PURE, 0},
@@ -412,46 +387,6 @@ static te_expr *power(state *s) {
     return ret;
 }
 
-#ifdef TE_POW_FROM_RIGHT
-static te_expr *factor(state *s) {
-    /* <factor>    =    <power> {"^" <power>} */
-    te_expr *ret = power(s);
-
-    int neg = 0;
-    te_expr *insertion = 0;
-
-    if (ret->type == (TE_FUNCTION1 | TE_FLAG_PURE) && ret->function == negate) {
-        te_expr *se = ret->parameters[0];
-        free(ret);
-        ret = se;
-        neg = 1;
-    }
-
-    while (s->type == TOK_INFIX && (s->function == pow)) {
-        te_fun2 t = s->function;
-        next_token(s);
-
-        if (insertion) {
-            /* Make exponentiation go right-to-left. */
-            te_expr *insert = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, insertion->parameters[1], power(s));
-            insert->function = t;
-            insertion->parameters[1] = insert;
-            insertion = insert;
-        } else {
-            ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, power(s));
-            ret->function = t;
-            insertion = ret;
-        }
-    }
-
-    if (neg) {
-        ret = NEW_EXPR(TE_FUNCTION1 | TE_FLAG_PURE, ret);
-        ret->function = negate;
-    }
-
-    return ret;
-}
-#else
 static te_expr *factor(state *s) {
     /* <factor>    =    <power> {"^" <power>} */
     te_expr *ret = power(s);
@@ -465,8 +400,6 @@ static te_expr *factor(state *s) {
 
     return ret;
 }
-#endif
-
 
 
 static te_expr *term(state *s) {

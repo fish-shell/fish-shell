@@ -22,6 +22,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
+// This version has been altered for inclusion in fish.
 #include "tinyexpr.h"
 #include <stdlib.h>
 #include <math.h>

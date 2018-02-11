@@ -670,7 +670,8 @@ int parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type
     const parse_execution_context_t *ctx = execution_contexts.back().get();
 
     // Execute the first node.
-    this->eval_block_node(0, io, block_type);
+    tnode_t<grammar::job_list> start{&ps->tree, &ps->tree.front()};
+    this->eval_node(start, io, block_type);
 
     // Clean up the execution context stack.
     assert(!execution_contexts.empty() && execution_contexts.back().get() == ctx);
@@ -679,12 +680,11 @@ int parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type
     return 0;
 }
 
-int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
-                              enum block_type_t block_type) {
-    // Paranoia. It's a little frightening that we're given only a node_idx and we interpret this in
-    // the topmost execution context's tree. What happens if two trees were to be interleaved?
-    // Fortunately that cannot happen (yet); in the future we probably want some sort of reference
-    // counted trees.
+template <typename T>
+int parser_t::eval_node(tnode_t<T> node, const io_chain_t &io, enum block_type_t block_type) {
+    static_assert(
+        std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
+        "Unexpected node type");
     parse_execution_context_t *ctx = execution_contexts.back().get();
     assert(ctx != NULL);
 
@@ -711,12 +711,16 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io,
 
     // Start it up
     scope_block_t *scope_block = this->push_block<scope_block_t>(block_type);
-    int result = ctx->eval_node_at_offset(node_idx, scope_block, io);
+    int result = ctx->eval_node(node, scope_block, io);
     this->pop_block(scope_block);
 
     job_reap(0);  // reap again
     return result;
 }
+
+// Explicit instantiations. TODO: use overloads instead?
+template int parser_t::eval_node(tnode_t<grammar::statement>, const io_chain_t &io, enum block_type_t block_type);
+template int parser_t::eval_node(tnode_t<grammar::job_list>, const io_chain_t &io, enum block_type_t block_type);
 
 bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcstring *out,
                                               const wchar_t *prefix) {

@@ -91,7 +91,8 @@ class parse_execution_context_t {
 
     template <typename Type>
     parse_execution_result_t populate_block_process(job_t *job, process_t *proc,
-                                                    tnode_t<Type> statement_node);
+                                                    tnode_t<grammar::statement> statement,
+                                                    tnode_t<Type> specific_statement);
 
     // These encapsulate the actual logic of various (block) statements.
     parse_execution_result_t run_block_statement(tnode_t<grammar::block_statement> statement);
@@ -146,11 +147,12 @@ class parse_execution_context_t {
     /// Return the parse tree.
     const parse_node_tree_t &tree() const { return pstree->tree; }
 
-    /// Start executing at the given node offset. Returns 0 if there was no error, 1 if there was an
+    /// Start executing at the given node. Returns 0 if there was no error, 1 if there was an
     /// error.
-    parse_execution_result_t eval_node_at_offset(node_offset_t offset,
-                                                 const block_t *associated_block,
-                                                 const io_chain_t &io);
+    parse_execution_result_t eval_node(tnode_t<grammar::statement> statement,
+                                       const block_t *associated_block, const io_chain_t &io);
+    parse_execution_result_t eval_node(tnode_t<grammar::job_list> job_list,
+                                       const block_t *associated_block, const io_chain_t &io);
 };
 
 #endif

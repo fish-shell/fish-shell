@@ -88,6 +88,9 @@ class tnode_t {
 
     bool operator!=(const tnode_t &rhs) const { return !(*this == rhs); }
 
+    // Helper to return whether the given tree is the same as ours.
+    bool matches_node_tree(const parse_node_tree_t &t) const { return &t == tree; }
+
     bool has_source() const { return nodeptr && nodeptr->has_source(); }
 
     // return the tag, or 0 if missing.

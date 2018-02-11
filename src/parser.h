@@ -251,8 +251,10 @@ class parser_t {
     /// Evaluate the parsed source ps.
     int eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type);
 
-    /// Evaluates a block node at the given node offset in the topmost execution context.
-    int eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type);
+    /// Evaluates a node in the topmost execution context.
+    /// The node type must be grammar::statement or grammar::job_list.
+    template <typename T>
+    int eval_node(tnode_t<T> node, const io_chain_t &io, enum block_type_t block_type);
 
     /// Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and
     /// cmdsubst execution on the tokens. The output is inserted into output. Errors are ignored.

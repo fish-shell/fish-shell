@@ -306,13 +306,14 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
 /// clean up morphed redirections.
 ///
 /// \param def the code to evaluate, or the empty string if none
-/// \param node_offset the offset of the node to evalute, or NODE_OFFSET_INVALID
+/// \param statement the statement node to evaluate, or empty
 /// \param block_type the type of block to push on evaluation
 /// \param ios the io redirections to be performed on this block
-static void internal_exec_helper(parser_t &parser, const wcstring &def, node_offset_t node_offset,
+static void internal_exec_helper(parser_t &parser, const wcstring &def,
+                                 tnode_t<grammar::statement> statement,
                                  enum block_type_t block_type, const io_chain_t &ios) {
-    // If we have a valid node offset, then we must not have a string to execute.
-    assert(node_offset == NODE_OFFSET_INVALID || def.empty());
+    // If we have a valid statement node, then we must not have a string to execute.
+    assert(!statement || def.empty());
 
     io_chain_t morphed_chain;
     std::vector<int> opened_fds;
@@ -324,10 +325,10 @@ static void internal_exec_helper(parser_t &parser, const wcstring &def, node_off
         return;
     }
 
-    if (node_offset == NODE_OFFSET_INVALID) {
+    if (!statement) {
         parser.eval(def, morphed_chain, block_type);
     } else {
-        parser.eval_block_node(node_offset, morphed_chain, block_type);
+        parser.eval_node(statement, morphed_chain, block_type);
     }
 
     morphed_chain.clear();
@@ -810,8 +811,7 @@ void exec_job(parser_t &parser, job_t *j) {
                 verify_buffer_output();
 
                 if (!exec_error) {
-                    internal_exec_helper(parser, def, NODE_OFFSET_INVALID, TOP,
-                                         process_net_io_chain);
+                    internal_exec_helper(parser, def, {}, TOP, process_net_io_chain);
                 }
 
                 parser.allow_function();

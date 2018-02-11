@@ -975,25 +975,27 @@ parse_execution_result_t parse_execution_context_t::populate_boolean_process(
 }
 
 template <typename Type>
-parse_execution_result_t parse_execution_context_t::populate_block_process(job_t *job,
-                                                                           process_t *proc,
-                                                                           tnode_t<Type> node) {
+parse_execution_result_t parse_execution_context_t::populate_block_process(
+    job_t *job, process_t *proc, tnode_t<g::statement> statement,
+    tnode_t<Type> specific_statement) {
     // We handle block statements by creating INTERNAL_BLOCK_NODE, that will bounce back to us when
     // it's time to execute them.
     UNUSED(job);
     static_assert(Type::token == symbol_block_statement || Type::token == symbol_if_statement ||
                       Type::token == symbol_switch_statement,
                   "Invalid block process");
+    assert(statement && "statement missing");
+    assert(specific_statement && "specific_statement missing");
 
     // The set of IO redirections that we construct for the process.
     // TODO: fix this ugly find_child.
-    auto arguments = node.template find_child<g::arguments_or_redirections_list>();
+    auto arguments = specific_statement.template find_child<g::arguments_or_redirections_list>();
     io_chain_t process_io_chain;
     bool errored = !this->determine_io_chain(arguments, &process_io_chain);
     if (errored) return parse_execution_errored;
 
     proc->type = INTERNAL_BLOCK_NODE;
-    proc->internal_block_node = this->get_offset(node);
+    proc->internal_block_node = statement;
     proc->set_io_chain(process_io_chain);
     return parse_execution_success;
 }
@@ -1012,15 +1014,15 @@ parse_execution_result_t parse_execution_context_t::populate_job_process(
         }
         case symbol_block_statement:
             result = this->populate_block_process(
-                job, proc, tnode_t<g::block_statement>(&tree(), &specific_statement));
+                job, proc, statement, tnode_t<g::block_statement>(&tree(), &specific_statement));
             break;
         case symbol_if_statement:
             result = this->populate_block_process(
-                job, proc, tnode_t<g::if_statement>(&tree(), &specific_statement));
+                job, proc, statement, tnode_t<g::if_statement>(&tree(), &specific_statement));
             break;
         case symbol_switch_statement:
             result = this->populate_block_process(
-                job, proc, tnode_t<g::switch_statement>(&tree(), &specific_statement));
+                job, proc, statement, tnode_t<g::switch_statement>(&tree(), &specific_statement));
             break;
         case symbol_decorated_statement: {
             // Get the plain statement. It will pull out the decoration itself.
@@ -1127,7 +1129,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     }
 
     // When we encounter a block construct (e.g. while loop) in the general case, we create a "block
-    // process" that has a pointer to its source. This allows us to handle block-level redirections.
+    // process" containing its node. This allows us to handle block-level redirections.
     // However, if there are no redirections, then we can just jump into the block directly, which
     // is significantly faster.
     if (job_is_simple_block(job_node)) {
@@ -1257,63 +1259,48 @@ parse_execution_result_t parse_execution_context_t::run_job_list(tnode_t<Type> j
     return result;
 }
 
-parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
-    node_offset_t offset, const block_t *associated_block, const io_chain_t &io) {
-    // Don't ever expect to have an empty tree if this is called.
-    assert(!tree().empty());  //!OCLINT(multiple unary operator)
-    assert(offset < tree().size());
-
+parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::statement> statement,
+                                                              const block_t *associated_block,
+                                                              const io_chain_t &io) {
+    assert(statement && "Empty node in eval_node");
+    assert(statement.matches_node_tree(tree()) && "statement has unexpected tree");
     // Apply this block IO for the duration of this function.
     scoped_push<io_chain_t> block_io_push(&block_io, io);
-
-    const parse_node_t &node = tree().at(offset);
-
-    // Currently, we only expect to execute the top level job list, or a block node. Assert that.
-    assert(node.type == symbol_job_list || specific_statement_type_is_redirectable_block(node));
-
     enum parse_execution_result_t status = parse_execution_success;
-    switch (node.type) {
-        case symbol_job_list: {
-            // We should only get a job list if it's the very first node. This is because this is
-            // the entry point for both top-level execution (the first node) and INTERNAL_BLOCK_NODE
-            // execution (which does block statements, but never job lists).
-            assert(offset == 0);
-            tnode_t<g::job_list> job_list{&tree(), &node};
-            wcstring func_name;
-            auto infinite_recursive_node =
-                this->infinite_recursive_statement_in_job_list(job_list, &func_name);
-            if (infinite_recursive_node) {
-                // We have an infinite recursion.
-                this->report_error(infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,
-                                   func_name.c_str());
-                status = parse_execution_errored;
-            } else {
-                // No infinite recursion.
-                status = this->run_job_list(job_list, associated_block);
-            }
-            break;
-        }
-        case symbol_block_statement: {
-            status = this->run_block_statement({&tree(), &node});
-            break;
-        }
-        case symbol_if_statement: {
-            status = this->run_if_statement({&tree(), &node});
-            break;
-        }
-        case symbol_switch_statement: {
-            status = this->run_switch_statement({&tree(), &node});
-            break;
-        }
-        default: {
-            // In principle, we could support other node types. However we never expect to be passed
-            // them - see above.
-            debug(0, "Unexpected node %ls found in %s", node.describe().c_str(), __FUNCTION__);
-            PARSER_DIE();
-            break;
-        }
+    if (auto block = statement.try_get_child<g::block_statement, 0>()) {
+        status = this->run_block_statement(block);
+    } else if (auto ifstat = statement.try_get_child<g::if_statement, 0>()) {
+        status = this->run_if_statement(ifstat);
+    } else if (auto switchstat = statement.try_get_child<g::switch_statement, 0>()) {
+        status = this->run_switch_statement(switchstat);
+    } else {
+        debug(0, "Unexpected node %ls found in %s", statement.node()->describe().c_str(),
+              __FUNCTION__);
+        abort();
     }
+    return status;
+}
 
+parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::job_list> job_list,
+                                                              const block_t *associated_block,
+                                                              const io_chain_t &io) {
+    // Apply this block IO for the duration of this function.
+    assert(job_list && "Empty node in eval_node");
+    assert(job_list.matches_node_tree(tree()) && "job_list has unexpected tree");
+    scoped_push<io_chain_t> block_io_push(&block_io, io);
+    enum parse_execution_result_t status = parse_execution_success;
+    wcstring func_name;
+    auto infinite_recursive_node =
+        this->infinite_recursive_statement_in_job_list(job_list, &func_name);
+    if (infinite_recursive_node) {
+        // We have an infinite recursion.
+        this->report_error(infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,
+                           func_name.c_str());
+        status = parse_execution_errored;
+    } else {
+        // No infinite recursion.
+        status = this->run_job_list(job_list, associated_block);
+    }
     return status;
 }
 

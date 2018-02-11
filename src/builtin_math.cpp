@@ -118,7 +118,7 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
                                math_cmd_opts_t &opts, wcstring &expression) {
     UNUSED(parser);
 
-    int error;
+    te_error_t error;
     char *narrow_str = wcs2str(expression);
     // Switch locale while computing stuff.
     char *saved_locale = strdup(setlocale(LC_NUMERIC, NULL));
@@ -126,7 +126,7 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
     double v = te_interp(narrow_str, &error);
     setlocale(LC_NUMERIC, saved_locale);
 
-    if (error == 0) {
+    if (error.position == 0) {
         if (opts.scale == 0) {
             streams.out.append_format(L"%ld\n", static_cast<long>(v));
         } else {
@@ -134,7 +134,8 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
         }
     } else {
         // TODO: Better error reporting!
-        streams.err.append_format(L"'%ls': Error at token %d\n", expression.c_str(), error - 1);
+        streams.err.append_format(L"'%ls': Error at token %d with type %d\n", expression.c_str(), error.position - 1, error.type);
+        streams.err.append_format(L"%*lc^\n", error.position - 1, L' ');
     }
     free(narrow_str);
     free(saved_locale);

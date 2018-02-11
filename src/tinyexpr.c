@@ -50,6 +50,7 @@ typedef struct state {
 
     const te_variable *lookup;
     int lookup_len;
+    int error;
 } state;
 
 
@@ -226,9 +227,7 @@ void next_token(state *s) {
                 const te_variable *var = find_lookup(s, start, s->next - start);
                 if (!var) var = find_builtin(start, s->next - start);
 
-                if (!var) {
-                    s->type = TOK_ERROR;
-                } else {
+                if (var) {
                     switch(TYPE_MASK(var->type))
                     {
                         case TE_VARIABLE:
@@ -246,6 +245,10 @@ void next_token(state *s) {
                             s->function = var->address;
                             break;
                     }
+                } else if (s->type != TOK_ERROR) {
+                    // TODO: Better error - "Not a variable"?
+                    s->type = TOK_ERROR;
+                    s->error = TE_ERROR_UNKNOWN_VARIABLE;
                 }
 
             } else {
@@ -261,7 +264,7 @@ void next_token(state *s) {
                     case ')': s->type = TOK_CLOSE; break;
                     case ',': s->type = TOK_SEP; break;
                     case ' ': case '\t': case '\n': case '\r': break;
-                    default: s->type = TOK_ERROR; break;
+                default: s->type = TOK_ERROR; s->error = TE_ERROR_MISSING_OPERATOR; break;
                 }
             }
         }
@@ -299,10 +302,12 @@ static te_expr *base(state *s) {
             next_token(s);
             if (s->type == TOK_OPEN) {
                 next_token(s);
-                if (s->type != TOK_CLOSE) {
-                    s->type = TOK_ERROR;
-                } else {
+                if (s->type == TOK_CLOSE) {
                     next_token(s);
+                } else if (s->type != TOK_ERROR) {
+                    // TODO: Better error - "Missing closing parenthesis"?
+                    s->type = TOK_ERROR;
+                    s->error = TE_ERROR_MISSING_CLOSING_PAREN;
                 }
             }
             break;
@@ -327,9 +332,7 @@ static te_expr *base(state *s) {
             if (IS_CLOSURE(s->type)) ret->parameters[arity] = s->context;
             next_token(s);
 
-            if (s->type != TOK_OPEN) {
-                s->type = TOK_ERROR;
-            } else {
+            if (s->type == TOK_OPEN) {
                 int i;
                 for(i = 0; i < arity; i++) {
                     next_token(s);
@@ -338,11 +341,19 @@ static te_expr *base(state *s) {
                         break;
                     }
                 }
-                if(s->type != TOK_CLOSE || i != arity - 1) {
-                    s->type = TOK_ERROR;
-                } else {
+                if(s->type == TOK_CLOSE && i == arity - 1) {
                     next_token(s);
+                } else if (s->type != TOK_ERROR) {
+                    // TODO: Either a closing paren was needed,
+                    // or too few arguments were given?
+                    s->type = TOK_ERROR;
+                    s->error = i < arity ? TE_ERROR_TOO_FEW_ARGS
+                        : TE_ERROR_TOO_MANY_ARGS;
                 }
+            } else if (s->type != TOK_ERROR) {
+                // TODO: Better error - "Expected opening parenthesis"?
+                s->type = TOK_ERROR;
+                s->error = TE_ERROR_MISSING_OPENING_PAREN;
             }
 
             break;
@@ -350,16 +361,20 @@ static te_expr *base(state *s) {
         case TOK_OPEN:
             next_token(s);
             ret = list(s);
-            if (s->type != TOK_CLOSE) {
-                s->type = TOK_ERROR;
-            } else {
+            if (s->type == TOK_CLOSE) {
                 next_token(s);
+            } else if (s->type != TOK_ERROR) {
+                // TODO: Error - missing closing paren?
+                s->type = TOK_ERROR;
+                s->error = TE_ERROR_MISSING_CLOSING_PAREN;
             }
             break;
 
         default:
             ret = new_expr(0, 0);
+            // TODO: Error - expression is bogus?
             s->type = TOK_ERROR;
+            s->error = TE_ERROR_BOGUS;
             ret->value = NAN;
             break;
     }
@@ -520,7 +535,7 @@ static void optimize(te_expr *n) {
 }
 
 
-te_expr *te_compile(const char *expression, const te_variable *variables, int var_count, int *error) {
+te_expr *te_compile(const char *expression, const te_variable *variables, int var_count, te_error_t *error) {
     state s;
     s.start = s.next = expression;
     s.lookup = variables;
@@ -532,19 +547,19 @@ te_expr *te_compile(const char *expression, const te_variable *variables, int va
     if (s.type != TOK_END) {
         te_free(root);
         if (error) {
-            *error = (s.next - s.start);
-            if (*error == 0) *error = 1;
+            error->position = (s.next - s.start) + 1;
+            error->type = s.error;
         }
         return 0;
     } else {
         optimize(root);
-        if (error) *error = 0;
+        if (error) error->position = 0;
         return root;
     }
 }
 
 
-double te_interp(const char *expression, int *error) {
+double te_interp(const char *expression, te_error_t *error) {
     te_expr *n = te_compile(expression, 0, 0, error);
     double ret;
     if (n) {

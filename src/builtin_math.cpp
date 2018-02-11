@@ -120,7 +120,12 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
 
     int error;
     char *narrow_str = wcs2str(expression);
+    // Switch locale while computing stuff.
+    char *saved_locale = strdup(setlocale(LC_NUMERIC, NULL));
+    setlocale(LC_NUMERIC, "C");
     double v = te_interp(narrow_str, &error);
+    setlocale(LC_NUMERIC, saved_locale);
+
     if (error == 0) {
         if (opts.scale == 0) {
             streams.out.append_format(L"%ld\n", static_cast<long>(v));
@@ -132,6 +137,7 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
         streams.err.append_format(L"'%ls': Error at token %d\n", expression.c_str(), error - 1);
     }
     free(narrow_str);
+    free(saved_locale);
     return STATUS_CMD_OK;
 }
 

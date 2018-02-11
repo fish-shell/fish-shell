@@ -16,8 +16,8 @@
 class parser_t;
 
 /// Structure describing a function. This is used by the parser to store data on a function while
-/// parsing it. It is not used internally to store functions, the function_internal_data_t structure
-/// is used for that purpose. Parhaps these two should be merged.
+/// parsing it. It is not used internally to store functions, the function_info_t structure
+/// is used for that purpose. Parhaps this should be merged with function_info_t.
 struct function_data_t {
     /// Name of function.
     wcstring name;
@@ -36,33 +36,6 @@ struct function_data_t {
     wcstring_list_t inherit_vars;
     /// Set to true if invoking this function shadows the variables of the underlying function.
     bool shadow_scope;
-};
-
-class function_info_t {
-   public:
-    /// Parsed source containing the function.
-    const parsed_source_ref_t parsed_source;
-    /// Node containing the function body, pointing into parsed_source.
-    const tnode_t<grammar::job_list> body_node;
-    /// Function description. Only the description may be changed after the function is created.
-    wcstring description;
-    /// File where this function was defined (intern'd string).
-    const wchar_t *const definition_file;
-    /// List of all named arguments for this function.
-    const wcstring_list_t named_arguments;
-    /// Mapping of all variables that were inherited from the function definition scope to their
-    /// values.
-    const std::map<wcstring, env_var_t> inherit_vars;
-    /// Flag for specifying that this function was automatically loaded.
-    const bool is_autoload;
-    /// Set to true if invoking this function shadows the variables of the underlying function.
-    const bool shadow_scope;
-
-    /// Constructs relevant information from the function_data.
-    function_info_t(const function_data_t &data, const wchar_t *filename, bool autoload);
-
-    /// Used by function_copy.
-    function_info_t(const function_info_t &data, const wchar_t *filename, bool autoload);
 };
 
 /// Add a function.

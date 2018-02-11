@@ -29,6 +29,34 @@
 #include "reader.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+class function_info_t {
+public:
+    /// Parsed source containing the function.
+    const parsed_source_ref_t parsed_source;
+    /// Node containing the function body, pointing into parsed_source.
+    const tnode_t<grammar::job_list> body_node;
+    /// Function description. Only the description may be changed after the function is created.
+    wcstring description;
+    /// File where this function was defined (intern'd string).
+    const wchar_t *const definition_file;
+    /// List of all named arguments for this function.
+    const wcstring_list_t named_arguments;
+    /// Mapping of all variables that were inherited from the function definition scope to their
+    /// values.
+    const std::map<wcstring, env_var_t> inherit_vars;
+    /// Flag for specifying that this function was automatically loaded.
+    const bool is_autoload;
+    /// Set to true if invoking this function shadows the variables of the underlying function.
+    const bool shadow_scope;
+
+    /// Constructs relevant information from the function_data.
+    function_info_t(const function_data_t &data, const wchar_t *filename, bool autoload);
+
+    /// Used by function_copy.
+    function_info_t(const function_info_t &data, const wchar_t *filename, bool autoload);
+};
+
+
 /// Table containing all functions.
 typedef std::unordered_map<wcstring, function_info_t> function_map_t;
 static function_map_t loaded_functions;

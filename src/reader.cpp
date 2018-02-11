@@ -803,8 +803,6 @@ void reader_init() {
     get_current_winsize();
 }
 
-void reader_destroy() { pthread_key_delete(generation_count_key); }
-
 /// Restore the term mode if we own the terminal. It's important we do this before
 /// restore_foreground_process_group, otherwise we won't think we own the terminal.
 void restore_term_mode() {

@@ -63,9 +63,6 @@ class function_info_t {
                     bool autoload);
 };
 
-/// Initialize function data.
-void function_init();
-
 /// Add a function. definition_line_offset is the line number of the function's definition within
 /// its source file.
 void function_add(const function_data_t &data, const parser_t &parser,

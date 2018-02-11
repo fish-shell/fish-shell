@@ -1836,8 +1836,6 @@ void history_t::incorporate_external_changes() {
     }
 }
 
-void history_init() {}
-
 void history_collection_t::save() {
     // Save all histories
     auto &&h = histories.acquire();
@@ -1846,11 +1844,7 @@ void history_collection_t::save() {
     }
 }
 
-void history_destroy() { histories.save(); }
-
-void history_sanity_check() {
-    // No sanity checking implemented yet...
-}
+void history_save_all() { histories.save(); }
 
 /// Return the prefix for the files to be used for command and read history.
 wcstring history_session_id() {

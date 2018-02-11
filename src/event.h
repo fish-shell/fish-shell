@@ -125,12 +125,6 @@ void event_fire(const event_t *event);
 /// May be called from signal handlers
 void event_fire_signal(int signal);
 
-/// Initialize the event-handling library.
-void event_init();
-
-/// Destroy the event-handling library.
-void event_destroy();
-
 /// Returns a string describing the specified event.
 wcstring event_get_desc(const event_t &e);
 

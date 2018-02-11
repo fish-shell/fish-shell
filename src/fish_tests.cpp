@@ -4412,7 +4412,6 @@ int main(int argc, char **argv) {
     set_main_thread();
     setup_fork_guards();
     proc_init();
-    event_init();
     builtin_init();
     env_init();
     misc_init();
@@ -4478,9 +4477,6 @@ int main(int argc, char **argv) {
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");
 
-    reader_destroy();
-    builtin_destroy();
-    event_destroy();
     proc_destroy();
 
     if (err_count != 0) {

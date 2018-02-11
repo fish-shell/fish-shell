@@ -157,9 +157,8 @@ void function_add(const function_data_t &data, const parser_t &parser) {
     loaded_functions.insert(new_pair);
 
     // Add event handlers.
-    for (std::vector<event_t>::const_iterator iter = data.events.begin(); iter != data.events.end();
-         ++iter) {
-        event_add_handler(*iter);
+    for (const event_t &event : data.events) {
+        event_add_handler(event);
     }
 }
 

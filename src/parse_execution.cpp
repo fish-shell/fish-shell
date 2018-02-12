@@ -88,17 +88,6 @@ wcstring parse_execution_context_t::get_source(const parse_node_t &node) const {
     return node.get_source(pstree->src);
 }
 
-node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) const {
-    // Get the offset of a node via pointer arithmetic, very hackish.
-    const parse_node_t *addr = &node;
-    const parse_node_t *base = &this->tree().at(0);
-    assert(addr >= base);
-    node_offset_t offset = static_cast<node_offset_t>(addr - base);
-    assert(offset < this->tree().size());
-    assert(&tree().at(offset) == &node);
-    return offset;
-}
-
 tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statement_in_job_list(
     tnode_t<g::job_list> job_list, wcstring *out_func_name) const {
     // This is a bit fragile. It is a test to see if we are inside of function call, but not inside

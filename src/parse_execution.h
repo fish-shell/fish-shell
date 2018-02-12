@@ -31,10 +31,8 @@ class parse_execution_context_t {
     parsed_source_ref_t pstree;
     io_chain_t block_io;
     parser_t *const parser;
-    // parse_error_list_t errors;
-    int eval_level;
-    // The currently executing node index, used to indicate the line number.
-    node_offset_t executing_node_idx = NODE_OFFSET_INVALID;
+    // The currently executing job node, used to indicate the line number.
+    tnode_t<grammar::job> executing_job_node{};
     // Cached line number information.
     size_t cached_lineno_offset = 0;
     int cached_lineno_count = 0;
@@ -70,7 +68,6 @@ class parse_execution_context_t {
 
     // Utilities
     wcstring get_source(const parse_node_t &node) const;
-    node_offset_t get_offset(const parse_node_t &node) const;
     tnode_t<grammar::plain_statement> infinite_recursive_statement_in_job_list(
         tnode_t<grammar::job_list> job_list, wcstring *out_func_name) const;
     bool is_function_context() const;
@@ -91,7 +88,8 @@ class parse_execution_context_t {
 
     template <typename Type>
     parse_execution_result_t populate_block_process(job_t *job, process_t *proc,
-                                                    tnode_t<Type> statement_node);
+                                                    tnode_t<grammar::statement> statement,
+                                                    tnode_t<Type> specific_statement);
 
     // These encapsulate the actual logic of various (block) statements.
     parse_execution_result_t run_block_statement(tnode_t<grammar::block_statement> statement);
@@ -102,7 +100,7 @@ class parse_execution_context_t {
     parse_execution_result_t run_while_statement(tnode_t<grammar::while_header> statement,
                                                  tnode_t<grammar::job_list> contents);
     parse_execution_result_t run_function_statement(tnode_t<grammar::function_header> header,
-                                                    tnode_t<grammar::end_command> block_end);
+                                                    tnode_t<grammar::job_list> body);
     parse_execution_result_t run_begin_statement(tnode_t<grammar::job_list> contents);
 
     enum globspec_t { failglob, nullglob };
@@ -122,16 +120,12 @@ class parse_execution_context_t {
     parse_execution_result_t populate_job_from_job_node(job_t *j, tnode_t<grammar::job> job_node,
                                                         const block_t *associated_block);
 
-    // Returns the line number of the node at the given index, indexed from 0. Not const since it
-    // touches cached_lineno_offset.
-    int line_offset_of_node_at_offset(node_offset_t idx);
+    // Returns the line number of the node. Not const since it touches cached_lineno_offset.
+    int line_offset_of_node(tnode_t<grammar::job> node);
     int line_offset_of_character_at_offset(size_t char_idx);
 
    public:
-    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p, int initial_eval_level);
-
-    /// Returns the current eval level.
-    int current_eval_level() const { return eval_level; }
+    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p);
 
     /// Returns the current line number, indexed from 1. Not const since it touches
     /// cached_lineno_offset.
@@ -146,11 +140,12 @@ class parse_execution_context_t {
     /// Return the parse tree.
     const parse_node_tree_t &tree() const { return pstree->tree; }
 
-    /// Start executing at the given node offset. Returns 0 if there was no error, 1 if there was an
+    /// Start executing at the given node. Returns 0 if there was no error, 1 if there was an
     /// error.
-    parse_execution_result_t eval_node_at_offset(node_offset_t offset,
-                                                 const block_t *associated_block,
-                                                 const io_chain_t &io);
+    parse_execution_result_t eval_node(tnode_t<grammar::statement> statement,
+                                       const block_t *associated_block, const io_chain_t &io);
+    parse_execution_result_t eval_node(tnode_t<grammar::job_list> job_list,
+                                       const block_t *associated_block, const io_chain_t &io);
 };
 
 #endif

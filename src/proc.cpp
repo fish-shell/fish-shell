@@ -344,25 +344,7 @@ static void handle_child_status(pid_t pid, int status) {
     return;
 }
 
-process_t::process_t()
-    : is_first_in_job(),
-      is_last_in_job(),
-      type(),  // gets set later
-      internal_block_node(NODE_OFFSET_INVALID),
-      pid(0),
-      pipe_write_fd(0),
-      pipe_read_fd(0),
-      completed(0),
-      stopped(0),
-      status(0),
-      count_help_magic(0)
-#ifdef HAVE__PROC_SELF_STAT
-      ,
-      last_time(),
-      last_jiffies(0)
-#endif
-{
-}
+process_t::process_t() {}
 
 /// The constructor sets the pgid to -2 as a sentinel value
 /// 0 should not be used; although it is not a valid PGID in userspace,

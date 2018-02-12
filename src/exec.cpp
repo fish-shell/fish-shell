@@ -305,14 +305,13 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
 /// Morph an io redirection chain into redirections suitable for passing to eval, call eval, and
 /// clean up morphed redirections.
 ///
-/// \param def the code to evaluate, or the empty string if none
-/// \param node_offset the offset of the node to evalute, or NODE_OFFSET_INVALID
-/// \param block_type the type of block to push on evaluation
+/// \param parsed_source the parsed source code containing the node to evaluate
+/// \param node the node to evaluate
 /// \param ios the io redirections to be performed on this block
-static void internal_exec_helper(parser_t &parser, const wcstring &def, node_offset_t node_offset,
-                                 enum block_type_t block_type, const io_chain_t &ios) {
-    // If we have a valid node offset, then we must not have a string to execute.
-    assert(node_offset == NODE_OFFSET_INVALID || def.empty());
+template <typename T>
+void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, tnode_t<T> node,
+                          const io_chain_t &ios) {
+    assert(parsed_source && node && "exec_helper missing source or without node");
 
     io_chain_t morphed_chain;
     std::vector<int> opened_fds;
@@ -324,11 +323,7 @@ static void internal_exec_helper(parser_t &parser, const wcstring &def, node_off
         return;
     }
 
-    if (node_offset == NODE_OFFSET_INVALID) {
-        parser.eval(def, morphed_chain, block_type);
-    } else {
-        parser.eval_block_node(node_offset, morphed_chain, block_type);
-    }
+    parser.eval_node(parsed_source, node, morphed_chain, TOP);
 
     morphed_chain.clear();
     io_cleanup_fds(opened_fds);
@@ -791,26 +786,24 @@ void exec_job(parser_t &parser, job_t *j) {
         switch (p->type) {
             case INTERNAL_FUNCTION: {
                 const wcstring func_name = p->argv0();
-                wcstring def;
-                bool function_exists = function_get_definition(func_name, &def);
-                bool shadow_scope = function_get_shadow_scope(func_name);
-                const std::map<wcstring, env_var_t> inherit_vars =
-                    function_get_inherit_vars(func_name);
-
-                if (!function_exists) {
+                auto props = function_get_properties(func_name);
+                if (!props) {
                     debug(0, _(L"Unknown function '%ls'"), p->argv0());
                     break;
                 }
 
+                const std::map<wcstring, env_var_t> inherit_vars =
+                    function_get_inherit_vars(func_name);
+
                 function_block_t *fb =
-                    parser.push_block<function_block_t>(p, func_name, shadow_scope);
+                    parser.push_block<function_block_t>(p, func_name, props->shadow_scope);
                 function_prepare_environment(func_name, p->get_argv() + 1, inherit_vars);
                 parser.forbid_function(func_name);
 
                 verify_buffer_output();
 
                 if (!exec_error) {
-                    internal_exec_helper(parser, def, NODE_OFFSET_INVALID, TOP,
+                    internal_exec_helper(parser, props->parsed_source, props->body_node,
                                          process_net_io_chain);
                 }
 
@@ -824,7 +817,9 @@ void exec_job(parser_t &parser, job_t *j) {
                 verify_buffer_output();
 
                 if (!exec_error) {
-                    internal_exec_helper(parser, wcstring(), p->internal_block_node, TOP,
+                    assert(p->block_node_source && p->internal_block_node &&
+                           "Process is missing node info");
+                    internal_exec_helper(parser, p->block_node_source, p->internal_block_node,
                                          process_net_io_chain);
                 }
                 break;

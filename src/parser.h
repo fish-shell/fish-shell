@@ -238,11 +238,11 @@ class parser_t {
     /// \param io io redirections to perform on all started jobs
     /// \param block_type The type of block to push on the block stack
     ///
-    /// \return 0 on success, 1 otherwise
+    /// \return 0 on success, 1 on a parse error.
     int eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_type);
 
     /// Evaluate the parsed source ps.
-    int eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type);
+    void eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type);
 
     /// Evaluates a node.
     /// The node type must be grammar::statement or grammar::job_list.

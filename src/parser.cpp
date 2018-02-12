@@ -644,22 +644,18 @@ int parser_t::eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_t
         fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
         return 1;
     }
-    return this->eval(ps, io, block_type);
+    this->eval(ps, io, block_type);
+    return 0;
 }
 
-int parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type) {
+void parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type) {
     CHECK_BLOCK(1);
     assert(block_type == TOP || block_type == SUBST);
-
-    if (ps->tree.empty()) {
-        return 0;
+    if (!ps->tree.empty()) {
+        // Execute the first node.
+        tnode_t<grammar::job_list> start{&ps->tree, &ps->tree.front()};
+        this->eval_node(ps, start, io, block_type);
     }
-
-    // Execute the first node.
-    tnode_t<grammar::job_list> start{&ps->tree, &ps->tree.front()};
-    this->eval_node(ps, start, io, block_type);
-
-    return 0;
 }
 
 template <typename T>

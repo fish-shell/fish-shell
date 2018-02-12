@@ -483,8 +483,8 @@ const wchar_t *parser_t::get_function_name(int level) {
 
 int parser_t::get_lineno() const {
     int lineno = -1;
-    if (!execution_contexts.empty()) {
-        lineno = execution_contexts.back()->get_current_line_number();
+    if (execution_context) {
+        lineno = execution_context->get_current_line_number();
 
         // If we are executing a function, we have to add in its offset.
         const wchar_t *function_name = is_function();
@@ -518,13 +518,10 @@ const wchar_t *parser_t::current_filename() const {
 }
 
 wcstring parser_t::current_line() {
-    if (execution_contexts.empty()) {
+    if (!execution_context) {
         return wcstring();
     }
-    const parse_execution_context_t *context = execution_contexts.back().get();
-    assert(context != NULL);
-
-    int source_offset = context->get_current_source_offset();
+    int source_offset = execution_context->get_current_source_offset();
     if (source_offset < 0) {
         return wcstring();
     }
@@ -554,8 +551,8 @@ wcstring parser_t::current_line() {
     parse_error_t empty_error = {};
     empty_error.source_start = source_offset;
 
-    wcstring line_info =
-        empty_error.describe_with_prefix(context->get_source(), prefix, is_interactive, skip_caret);
+    wcstring line_info = empty_error.describe_with_prefix(execution_context->get_source(), prefix,
+                                                          is_interactive, skip_caret);
     if (!line_info.empty()) {
         line_info.push_back(L'\n');
     }
@@ -695,16 +692,13 @@ int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_
     // Start it up
     scope_block_t *scope_block = this->push_block<scope_block_t>(block_type);
 
-    // Append to the execution context stack.
-    execution_contexts.push_back(make_unique<parse_execution_context_t>(ps, this));
-    parse_execution_context_t *ctx = execution_contexts.back().get();
-
-    int result = ctx->eval_node(node, scope_block, io);
+    // Create and set a new execution context.
+    using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
+    scoped_push<exc_ctx_ref_t> exc(&execution_context,
+                                   make_unique<parse_execution_context_t>(ps, this));
+    int result = execution_context->eval_node(node, scope_block, io);
+    exc.restore();
     this->pop_block(scope_block);
-
-    // Clean up the execution context stack.
-    assert(!execution_contexts.empty() && execution_contexts.back().get() == ctx);
-    execution_contexts.pop_back();
 
     job_reap(0);  // reap again
     return result;

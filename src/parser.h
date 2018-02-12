@@ -75,30 +75,25 @@ struct block_t {
 
    public:
     /// Whether execution of the commands in this block should be skipped.
-    bool skip;
-    /// The start index of the block.
-    int tok_pos;
-    /// Offset of the node.
-    node_offset_t node_offset;
+    bool skip{false};
     /// Status for the current loop block. Can be any of the values from the loop_status enum.
-    enum loop_status_t loop_status;
+    enum loop_status_t loop_status { LOOP_NORMAL };
     /// The job that is currently evaluated in the specified block.
-    shared_ptr<job_t> job;
+    shared_ptr<job_t> job{};
     /// Name of file that created this block. This string is intern'd.
-    const wchar_t *src_filename;
+    const wchar_t *src_filename{nullptr};
     /// Line number where this block was created.
-    int src_lineno;
+    int src_lineno{0};
     /// Whether we should pop the environment variable stack when we're popped off of the block
     /// stack.
-    bool wants_pop_env;
+    bool wants_pop_env{false};
+    /// List of event blocks.
+    event_blockage_list_t event_blocks{};
 
     block_type_t type() const { return this->block_type; }
 
     /// Description of the block, for debugging.
     wcstring description() const;
-
-    /// List of event blocks.
-    event_blockage_list_t event_blocks;
 
     /// Destructor
     virtual ~block_t();

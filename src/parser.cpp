@@ -802,17 +802,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
     }
 }
 
-block_t::block_t(block_type_t t)
-    : block_type(t),
-      skip(false),
-      tok_pos(),
-      node_offset(NODE_OFFSET_INVALID),
-      loop_status(LOOP_NORMAL),
-      job(),
-      src_filename(),
-      src_lineno(),
-      wants_pop_env(false),
-      event_blocks() {}
+block_t::block_t(block_type_t t) : block_type(t) {}
 
 block_t::~block_t() {}
 

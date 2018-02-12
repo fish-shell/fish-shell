@@ -241,7 +241,6 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
     tnode_t<g::if_statement> statement) {
     // Push an if block.
     if_block_t *ib = parser->push_block<if_block_t>();
-    ib->node_offset = this->get_offset(*statement);
 
     parse_execution_result_t result = parse_execution_success;
 
@@ -536,7 +535,6 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     tnode_t<grammar::while_header> header, tnode_t<grammar::job_list> contents) {
     // Push a while block.
     while_block_t *wb = parser->push_block<while_block_t>();
-    wb->node_offset = this->get_offset(header);
 
     parse_execution_result_t ret = parse_execution_success;
 

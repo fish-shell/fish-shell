@@ -1120,7 +1120,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
 
     // Save the node index.
-    scoped_push<node_offset_t> saved_node_offset(&executing_node_idx, this->get_offset(job_node));
+    scoped_push<tnode_t<grammar::job>> saved_node(&executing_job_node, job_node);
 
     // Profiling support.
     long long start_time = 0, parse_time = 0, exec_time = 0;
@@ -1305,20 +1305,19 @@ parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::job_lis
     return status;
 }
 
-int parse_execution_context_t::line_offset_of_node_at_offset(node_offset_t requested_index) {
+int parse_execution_context_t::line_offset_of_node(tnode_t<g::job> node) {
     // If we're not executing anything, return -1.
-    if (requested_index == NODE_OFFSET_INVALID) {
+    if (!node) {
         return -1;
     }
 
     // If for some reason we're executing a node without source, return -1.
-    const parse_node_t &node = tree().at(requested_index);
-    if (!node.has_source()) {
+    auto range = node.source_range();
+    if (!range) {
         return -1;
     }
 
-    size_t char_offset = tree().at(requested_index).source_start;
-    return this->line_offset_of_character_at_offset(char_offset);
+    return this->line_offset_of_character_at_offset(range->start);
 }
 
 int parse_execution_context_t::line_offset_of_character_at_offset(size_t offset) {
@@ -1357,7 +1356,7 @@ int parse_execution_context_t::line_offset_of_character_at_offset(size_t offset)
 
 int parse_execution_context_t::get_current_line_number() {
     int line_number = -1;
-    int line_offset = this->line_offset_of_node_at_offset(this->executing_node_idx);
+    int line_offset = this->line_offset_of_node(this->executing_job_node);
     if (line_offset >= 0) {
         // The offset is 0 based; the number is 1 based.
         line_number = line_offset + 1;
@@ -1367,10 +1366,9 @@ int parse_execution_context_t::get_current_line_number() {
 
 int parse_execution_context_t::get_current_source_offset() const {
     int result = -1;
-    if (executing_node_idx != NODE_OFFSET_INVALID) {
-        const parse_node_t &node = tree().at(executing_node_idx);
-        if (node.has_source()) {
-            result = static_cast<int>(node.source_start);
+    if (executing_job_node) {
+        if (auto range = executing_job_node.source_range()) {
+            result = static_cast<int>(range->start);
         }
     }
     return result;

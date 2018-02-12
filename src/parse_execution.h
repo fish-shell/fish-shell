@@ -33,8 +33,8 @@ class parse_execution_context_t {
     parser_t *const parser;
     // parse_error_list_t errors;
     int eval_level;
-    // The currently executing node index, used to indicate the line number.
-    node_offset_t executing_node_idx = NODE_OFFSET_INVALID;
+    // The currently executing job node, used to indicate the line number.
+    tnode_t<grammar::job> executing_job_node{};
     // Cached line number information.
     size_t cached_lineno_offset = 0;
     int cached_lineno_count = 0;
@@ -123,9 +123,8 @@ class parse_execution_context_t {
     parse_execution_result_t populate_job_from_job_node(job_t *j, tnode_t<grammar::job> job_node,
                                                         const block_t *associated_block);
 
-    // Returns the line number of the node at the given index, indexed from 0. Not const since it
-    // touches cached_lineno_offset.
-    int line_offset_of_node_at_offset(node_offset_t idx);
+    // Returns the line number of the node. Not const since it touches cached_lineno_offset.
+    int line_offset_of_node(tnode_t<grammar::job> node);
     int line_offset_of_character_at_offset(size_t char_idx);
 
    public:

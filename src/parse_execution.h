@@ -31,8 +31,6 @@ class parse_execution_context_t {
     parsed_source_ref_t pstree;
     io_chain_t block_io;
     parser_t *const parser;
-    // parse_error_list_t errors;
-    int eval_level;
     // The currently executing job node, used to indicate the line number.
     tnode_t<grammar::job> executing_job_node{};
     // Cached line number information.
@@ -128,10 +126,7 @@ class parse_execution_context_t {
     int line_offset_of_character_at_offset(size_t char_idx);
 
    public:
-    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p, int initial_eval_level);
-
-    /// Returns the current eval level.
-    int current_eval_level() const { return eval_level; }
+    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p);
 
     /// Returns the current line number, indexed from 1. Not const since it touches
     /// cached_lineno_offset.

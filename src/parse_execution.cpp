@@ -79,9 +79,8 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
-parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
-                                                     int initial_eval_level)
-    : pstree(std::move(pstree)), parser(p), eval_level(initial_eval_level) {}
+parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p)
+    : pstree(std::move(pstree)), parser(p) {}
 
 // Utilities
 
@@ -1115,7 +1114,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     }
 
     // Increment the eval_level for the duration of this command.
-    scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
+    scoped_push<int> saved_eval_level(&parser->eval_level, parser->eval_level + 1);
 
     // Save the node index.
     scoped_push<tnode_t<grammar::job>> saved_node(&executing_job_node, job_node);
@@ -1162,7 +1161,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
             // Block-types profile a little weird. They have no 'parse' time, and their command is
             // just the block type.
             exec_time = get_time();
-            profile_item->level = eval_level;
+            profile_item->level = parser->eval_level;
             profile_item->parse = 0;
             profile_item->exec = (int)(exec_time - start_time);
             profile_item->cmd = profiling_cmd_name_for_redirectable_block(
@@ -1231,7 +1230,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
 
     if (profile_item != NULL) {
         exec_time = get_time();
-        profile_item->level = eval_level;
+        profile_item->level = parser->eval_level;
         profile_item->parse = (int)(parse_time - start_time);
         profile_item->exec = (int)(exec_time - parse_time);
         profile_item->cmd = job ? job->command() : wcstring();

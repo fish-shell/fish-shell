@@ -185,6 +185,8 @@ class parser_t {
     job_list_t my_job_list;
     /// The list of blocks
     std::vector<std::unique_ptr<block_t>> block_stack;
+    /// The 'depth' of the fish call stack.
+    int eval_level = -1;
 
 #if 0
 // TODO: Lint says this isn't used (which is true). Should this be removed?

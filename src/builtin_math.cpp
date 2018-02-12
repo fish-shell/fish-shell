@@ -113,6 +113,22 @@ static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storag
     return math_get_arg_argv(argidx, argv);
 }
 
+wcstring math_describe_error(te_error_t& error) {
+    if (error.position == 0) return L"";
+    assert(error.type != TE_ERROR_NONE && L"Error has no position");
+
+    switch(error.type) {
+        case TE_ERROR_UNKNOWN_VARIABLE: return _(L"Unknown variable");
+        case TE_ERROR_MISSING_CLOSING_PAREN: return _(L"Missing closing parenthesis");
+        case TE_ERROR_MISSING_OPENING_PAREN: return _(L"Missing opening parenthesis");
+        case TE_ERROR_TOO_FEW_ARGS: return _(L"Too few arguments");
+        case TE_ERROR_TOO_MANY_ARGS: return _(L"Too many arguments");
+        case TE_ERROR_MISSING_OPERATOR: return _(L"Missing operator");
+        case TE_ERROR_BOGUS: return _(L"Expression is bogus");
+        default: return L"";
+    }
+}
+
 /// Evaluate math expressions.
 static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_t &streams,
                                math_cmd_opts_t &opts, wcstring &expression) {
@@ -134,8 +150,11 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
         }
     } else {
         // TODO: Better error reporting!
-        streams.err.append_format(L"'%ls': Error at token %d with type %d\n", expression.c_str(), error.position - 1, error.type);
+        streams.err.append(L"math: Error in expression\n");
+        streams.err.append_format(L"'%ls'\n", expression.c_str());
         streams.err.append_format(L"%*lc^\n", error.position - 1, L' ');
+        streams.err.append(math_describe_error(error));
+        streams.err.append(L"\n");
     }
     free(narrow_str);
     free(saved_locale);

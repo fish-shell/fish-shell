@@ -137,6 +137,8 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
     te_error_t error;
     char *narrow_str = wcs2str(expression);
     // Switch locale while computing stuff.
+    // This means that the "." is always the radix character,
+    // so numbers work the same across locales.
     char *saved_locale = strdup(setlocale(LC_NUMERIC, NULL));
     setlocale(LC_NUMERIC, "C");
     double v = te_interp(narrow_str, &error);

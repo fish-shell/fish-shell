@@ -995,6 +995,7 @@ parse_execution_result_t parse_execution_context_t::populate_block_process(
     if (errored) return parse_execution_errored;
 
     proc->type = INTERNAL_BLOCK_NODE;
+    proc->block_node_source = pstree;
     proc->internal_block_node = statement;
     proc->set_io_chain(process_io_chain);
     return parse_execution_success;

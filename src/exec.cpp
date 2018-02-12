@@ -305,15 +305,13 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
 /// Morph an io redirection chain into redirections suitable for passing to eval, call eval, and
 /// clean up morphed redirections.
 ///
-/// \param def the code to evaluate, or the empty string if none
-/// \param statement the statement node to evaluate, or empty
-/// \param block_type the type of block to push on evaluation
+/// \param parsed_source the parsed source code containing the node to evaluate
+/// \param node the node to evaluate
 /// \param ios the io redirections to be performed on this block
-static void internal_exec_helper(parser_t &parser, const wcstring &def,
-                                 tnode_t<grammar::statement> statement,
-                                 enum block_type_t block_type, const io_chain_t &ios) {
-    // If we have a valid statement node, then we must not have a string to execute.
-    assert(!statement || def.empty());
+template <typename T>
+void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, tnode_t<T> node,
+                          const io_chain_t &ios) {
+    assert(parsed_source && node && "exec_helper missing source or without node");
 
     io_chain_t morphed_chain;
     std::vector<int> opened_fds;
@@ -325,11 +323,7 @@ static void internal_exec_helper(parser_t &parser, const wcstring &def,
         return;
     }
 
-    if (!statement) {
-        parser.eval(def, morphed_chain, block_type);
-    } else {
-        parser.eval_node(statement, morphed_chain, block_type);
-    }
+    parser.eval_node(parsed_source, node, morphed_chain, TOP);
 
     morphed_chain.clear();
     io_cleanup_fds(opened_fds);
@@ -798,8 +792,6 @@ void exec_job(parser_t &parser, job_t *j) {
                     break;
                 }
 
-                wcstring def;
-                function_get_definition(func_name, &def);
                 const std::map<wcstring, env_var_t> inherit_vars =
                     function_get_inherit_vars(func_name);
 
@@ -811,7 +803,8 @@ void exec_job(parser_t &parser, job_t *j) {
                 verify_buffer_output();
 
                 if (!exec_error) {
-                    internal_exec_helper(parser, def, {}, TOP, process_net_io_chain);
+                    internal_exec_helper(parser, props->parsed_source, props->body_node,
+                                         process_net_io_chain);
                 }
 
                 parser.allow_function();
@@ -824,7 +817,9 @@ void exec_job(parser_t &parser, job_t *j) {
                 verify_buffer_output();
 
                 if (!exec_error) {
-                    internal_exec_helper(parser, wcstring(), p->internal_block_node, TOP,
+                    assert(p->block_node_source && p->internal_block_node &&
+                           "Process is missing node info");
+                    internal_exec_helper(parser, p->block_node_source, p->internal_block_node,
                                          process_net_io_chain);
                 }
                 break;

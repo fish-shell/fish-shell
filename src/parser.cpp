@@ -658,36 +658,19 @@ int parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type
         return 0;
     }
 
-    // Determine the initial eval level. If this is the first context, it's -1; otherwise it's the
-    // eval level of the top context. This is sort of wonky because we're stitching together a
-    // global notion of eval level from these separate objects. A better approach would be some
-    // profile object that all contexts share, and that tracks the eval levels on its own.
-    int exec_eval_level =
-        (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
-
-    // Append to the execution context stack.
-    execution_contexts.push_back(make_unique<parse_execution_context_t>(ps, this, exec_eval_level));
-    const parse_execution_context_t *ctx = execution_contexts.back().get();
-
     // Execute the first node.
     tnode_t<grammar::job_list> start{&ps->tree, &ps->tree.front()};
-    this->eval_node(start, io, block_type);
-
-    // Clean up the execution context stack.
-    assert(!execution_contexts.empty() && execution_contexts.back().get() == ctx);
-    execution_contexts.pop_back();
+    this->eval_node(ps, start, io, block_type);
 
     return 0;
 }
 
 template <typename T>
-int parser_t::eval_node(tnode_t<T> node, const io_chain_t &io, enum block_type_t block_type) {
+int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_t &io,
+                        enum block_type_t block_type) {
     static_assert(
         std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
         "Unexpected node type");
-    parse_execution_context_t *ctx = execution_contexts.back().get();
-    assert(ctx != NULL);
-
     CHECK_BLOCK(1);
 
     // Handle cancellation requests. If our block stack is currently empty, then we already did
@@ -711,16 +694,34 @@ int parser_t::eval_node(tnode_t<T> node, const io_chain_t &io, enum block_type_t
 
     // Start it up
     scope_block_t *scope_block = this->push_block<scope_block_t>(block_type);
+
+    // Determine the initial eval level. If this is the first context, it's -1; otherwise it's the
+    // eval level of the top context. This is sort of wonky because we're stitching together a
+    // global notion of eval level from these separate objects. A better approach would be some
+    // profile object that all contexts share, and that tracks the eval levels on its own.
+    int exec_eval_level =
+        (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
+
+    // Append to the execution context stack.
+    execution_contexts.push_back(make_unique<parse_execution_context_t>(ps, this, exec_eval_level));
+    parse_execution_context_t *ctx = execution_contexts.back().get();
+
     int result = ctx->eval_node(node, scope_block, io);
     this->pop_block(scope_block);
+
+    // Clean up the execution context stack.
+    assert(!execution_contexts.empty() && execution_contexts.back().get() == ctx);
+    execution_contexts.pop_back();
 
     job_reap(0);  // reap again
     return result;
 }
 
 // Explicit instantiations. TODO: use overloads instead?
-template int parser_t::eval_node(tnode_t<grammar::statement>, const io_chain_t &io, enum block_type_t block_type);
-template int parser_t::eval_node(tnode_t<grammar::job_list>, const io_chain_t &io, enum block_type_t block_type);
+template int parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::statement>,
+                                 const io_chain_t &, enum block_type_t);
+template int parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::job_list>,
+                                 const io_chain_t &, enum block_type_t);
 
 bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcstring *out,
                                               const wchar_t *prefix) {

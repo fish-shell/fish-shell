@@ -15,6 +15,21 @@
 
 class parser_t;
 
+/// A function's constant properties. These do not change once initialized.
+struct function_properties_t {
+    /// Parsed source containing the function.
+    parsed_source_ref_t parsed_source;
+
+    /// Node containing the function body, pointing into parsed_source.
+    tnode_t<grammar::job_list> body_node;
+
+    /// List of all named arguments for this function.
+    wcstring_list_t named_arguments;
+
+    /// Set to true if invoking this function shadows the variables of the underlying function.
+    bool shadow_scope;
+};
+
 /// Structure describing a function. This is used by the parser to store data on a function while
 /// parsing it. It is not used internally to store functions, the function_info_t structure
 /// is used for that purpose. Parhaps this should be merged with function_info_t.
@@ -23,19 +38,13 @@ struct function_data_t {
     wcstring name;
     /// Description of function.
     wcstring description;
-    /// Parsed source containing the function.
-    parsed_source_ref_t parsed_source;
-    /// Node containing the function body, pointing into parsed_source.
-    tnode_t<grammar::job_list> body_node;
-    /// List of all event handlers for this function.
-    std::vector<event_t> events;
-    /// List of all named arguments for this function.
-    wcstring_list_t named_arguments;
     /// List of all variables that are inherited from the function definition scope. The variable
     /// values are snapshotted when function_add() is called.
     wcstring_list_t inherit_vars;
-    /// Set to true if invoking this function shadows the variables of the underlying function.
-    bool shadow_scope;
+    /// Function's metadata fields
+    function_properties_t props;
+    /// List of all event handlers for this function.
+    std::vector<event_t> events;
 };
 
 /// Add a function.

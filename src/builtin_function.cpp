@@ -249,23 +249,20 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     if (!opts.description.empty()) d.description = opts.description;
     // d.description = opts.description;
     d.events.swap(opts.events);
-    d.shadow_scope = opts.shadow_scope;
-    d.named_arguments.swap(opts.named_arguments);
-    d.inherit_vars.swap(opts.inherit_vars);
+    d.props.shadow_scope = opts.shadow_scope;
+    d.props.named_arguments = std::move(opts.named_arguments);
+    d.inherit_vars = std::move(opts.inherit_vars);
 
     for (size_t i = 0; i < d.events.size(); i++) {
         event_t &e = d.events.at(i);
         e.function_name = d.name;
     }
 
-    d.parsed_source = source;
-    d.body_node = body;
-    function_add(d, parser);
+    d.props.parsed_source = source;
+    d.props.body_node = body;
+    function_add(std::move(d), parser);
 
     // Handle wrap targets by creating the appropriate completions.
-    for (size_t w = 0; w < opts.wrap_targets.size(); w++) {
-        complete_add_wrapper(function_name, opts.wrap_targets.at(w));
-    }
-
+    for (const wcstring &wt : opts.wrap_targets) complete_add_wrapper(function_name, wt);
     return STATUS_CMD_OK;
 }

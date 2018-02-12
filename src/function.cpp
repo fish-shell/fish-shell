@@ -31,29 +31,23 @@
 
 class function_info_t {
 public:
-    /// Parsed source containing the function.
-    const parsed_source_ref_t parsed_source;
-    /// Node containing the function body, pointing into parsed_source.
-    const tnode_t<grammar::job_list> body_node;
-    /// Function description. Only the description may be changed after the function is created.
-    wcstring description;
-    /// File where this function was defined (intern'd string).
-    const wchar_t *const definition_file;
-    /// List of all named arguments for this function.
-    const wcstring_list_t named_arguments;
-    /// Mapping of all variables that were inherited from the function definition scope to their
-    /// values.
-    const std::map<wcstring, env_var_t> inherit_vars;
-    /// Flag for specifying that this function was automatically loaded.
-    const bool is_autoload;
-    /// Set to true if invoking this function shadows the variables of the underlying function.
-    const bool shadow_scope;
+ /// Immutable properties of the function.
+ std::shared_ptr<const function_properties_t> props;
+ /// Function description. This may be changed after the function is created.
+ wcstring description;
+ /// File where this function was defined (intern'd string).
+ const wchar_t *const definition_file;
+ /// Mapping of all variables that were inherited from the function definition scope to their
+ /// values.
+ const std::map<wcstring, env_var_t> inherit_vars;
+ /// Flag for specifying that this function was automatically loaded.
+ const bool is_autoload;
 
-    /// Constructs relevant information from the function_data.
-    function_info_t(const function_data_t &data, const wchar_t *filename, bool autoload);
+ /// Constructs relevant information from the function_data.
+ function_info_t(function_data_t data, const wchar_t *filename, bool autoload);
 
-    /// Used by function_copy.
-    function_info_t(const function_info_t &data, const wchar_t *filename, bool autoload);
+ /// Used by function_copy.
+ function_info_t(const function_info_t &data, const wchar_t *filename, bool autoload);
 };
 
 
@@ -138,34 +132,27 @@ static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) 
 
 static std::map<wcstring, env_var_t> snapshot_vars(const wcstring_list_t &vars) {
     std::map<wcstring, env_var_t> result;
-    for (wcstring_list_t::const_iterator it = vars.begin(), end = vars.end(); it != end; ++it) {
-        auto var = env_get(*it);
-        if (var) result.insert(std::make_pair(*it, std::move(*var)));
+    for (const wcstring &name : vars) {
+        auto var = env_get(name);
+        if (var) result[name] = std::move(*var);
     }
     return result;
 }
 
-function_info_t::function_info_t(const function_data_t &data, const wchar_t *filename,
-                                 bool autoload)
-    : parsed_source(data.parsed_source),
-      body_node(data.body_node),
-      description(data.description),
+function_info_t::function_info_t(function_data_t data, const wchar_t *filename, bool autoload)
+    : props(std::make_shared<const function_properties_t>(std::move(data.props))),
+      description(std::move(data.description)),
       definition_file(intern(filename)),
-      named_arguments(data.named_arguments),
       inherit_vars(snapshot_vars(data.inherit_vars)),
-      is_autoload(autoload),
-      shadow_scope(data.shadow_scope) {}
+      is_autoload(autoload) {}
 
 function_info_t::function_info_t(const function_info_t &data, const wchar_t *filename,
                                  bool autoload)
-    : parsed_source(data.parsed_source),
-      body_node(data.body_node),
+    : props(data.props),
       description(data.description),
       definition_file(intern(filename)),
-      named_arguments(data.named_arguments),
       inherit_vars(data.inherit_vars),
-      is_autoload(autoload),
-      shadow_scope(data.shadow_scope) {}
+      is_autoload(autoload) {}
 
 void function_add(const function_data_t &data, const parser_t &parser) {
     UNUSED(parser);
@@ -250,7 +237,7 @@ bool function_get_definition(const wcstring &name, wcstring *out_definition) {
     scoped_rlock locker(functions_lock);
     const function_info_t *func = function_get(name);
     if (func && out_definition) {
-        out_definition->assign(func->body_node.get_source(func->parsed_source->src));
+        out_definition->assign(func->props->body_node.get_source(func->props->parsed_source->src));
     }
     return func != NULL;
 }
@@ -258,7 +245,7 @@ bool function_get_definition(const wcstring &name, wcstring *out_definition) {
 wcstring_list_t function_get_named_arguments(const wcstring &name) {
     scoped_rlock locker(functions_lock);
     const function_info_t *func = function_get(name);
-    return func ? func->named_arguments : wcstring_list_t();
+    return func ? func->props->named_arguments : wcstring_list_t();
 }
 
 std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name) {
@@ -270,7 +257,7 @@ std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name) {
 bool function_get_shadow_scope(const wcstring &name) {
     scoped_rlock locker(functions_lock);
     const function_info_t *func = function_get(name);
-    return func ? func->shadow_scope : false;
+    return func ? func->props->shadow_scope : false;
 }
 
 bool function_get_desc(const wcstring &name, wcstring *out_desc) {
@@ -344,12 +331,12 @@ int function_get_definition_lineno(const wcstring &name) {
     if (!func) return -1;
     // return one plus the number of newlines at offsets less than the start of our function's statement (which includes the header).
     // TODO: merge with line_offset_of_character_at_offset?
-    auto block_stat = func->body_node.try_get_parent<grammar::block_statement>();
+    auto block_stat = func->props->body_node.try_get_parent<grammar::block_statement>();
     assert(block_stat && "Function body is not part of block statement");
     auto source_range = block_stat.source_range();
     assert(source_range && "Function has no source range");
     uint32_t func_start = source_range->start;
-    const wcstring &source = func->parsed_source->src;
+    const wcstring &source = func->props->parsed_source->src;
     assert(func_start <= source.size() && "function start out of bounds");
     return 1 + std::count(source.begin(), source.begin() + func_start, L'\n');
 }

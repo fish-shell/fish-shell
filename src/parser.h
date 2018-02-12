@@ -131,10 +131,6 @@ struct switch_block_t : public block_t {
     switch_block_t();
 };
 
-struct fake_block_t : public block_t {
-    fake_block_t();
-};
-
 struct scope_block_t : public block_t {
     explicit scope_block_t(block_type_t type);  // must be BEGIN, TOP or SUBST
 };

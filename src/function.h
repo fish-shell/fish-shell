@@ -53,18 +53,24 @@ void function_add(const function_data_t &data, const parser_t &parser);
 /// Remove the function with the specified name.
 void function_remove(const wcstring &name);
 
+/// Returns the properties for a function, or nullptr if none. This does not trigger autoloading.
+std::shared_ptr<const function_properties_t> function_get_properties(const wcstring &name);
+
 /// Returns by reference the definition of the function with the name \c name. Returns true if
 /// successful, false if no function with the given name exists.
+/// This does not trigger autoloading.
 bool function_get_definition(const wcstring &name, wcstring *out_definition);
 
 /// Returns by reference the description of the function with the name \c name. Returns true if the
 /// function exists and has a nonempty description, false if it does not.
+/// This does not trigger autoloading.
 bool function_get_desc(const wcstring &name, wcstring *out_desc);
 
 /// Sets the description of the function with the name \c name.
 void function_set_desc(const wcstring &name, const wcstring &desc);
 
 /// Returns true if the function with the name name exists.
+/// This may autoload.
 int function_exists(const wcstring &name);
 
 /// Attempts to load a function if not yet loaded. This is used by the completion machinery.
@@ -91,13 +97,8 @@ bool function_is_autoloaded(const wcstring &name);
 const wchar_t *function_get_definition_file(const wcstring &name);
 
 /// Returns the linenumber where the definition of the specified function started.
-///
-/// This function does not autoload functions, it will only work on functions that have already been
-/// defined.
+/// This does not trigger autoloading.
 int function_get_definition_lineno(const wcstring &name);
-
-/// Returns a list of all named arguments of the specified function.
-wcstring_list_t function_get_named_arguments(const wcstring &name);
 
 /// Returns a mapping of all variables of the specified function that were inherited from the scope
 /// of the function definition to their values.
@@ -107,8 +108,6 @@ std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name);
 /// is successful.
 bool function_copy(const wcstring &name, const wcstring &new_name);
 
-/// Returns whether this function shadows variables of the underlying function.
-bool function_get_shadow_scope(const wcstring &name);
 
 /// Prepares the environment for executing a function.
 void function_prepare_environment(const wcstring &name, const wchar_t *const *argv,

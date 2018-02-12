@@ -177,6 +177,16 @@ void function_add(const function_data_t &data, const parser_t &parser) {
     }
 }
 
+std::shared_ptr<const function_properties_t> function_get_properties(const wcstring &name) {
+    if (parser_keywords_is_reserved(name)) return nullptr;
+    scoped_rlock locker(functions_lock);
+    auto where = loaded_functions.find(name);
+    if (where != loaded_functions.end()) {
+        return where->second.props;
+    }
+    return nullptr;
+}
+
 int function_exists(const wcstring &cmd) {
     if (parser_keywords_is_reserved(cmd)) return 0;
     scoped_rlock locker(functions_lock);
@@ -242,22 +252,10 @@ bool function_get_definition(const wcstring &name, wcstring *out_definition) {
     return func != NULL;
 }
 
-wcstring_list_t function_get_named_arguments(const wcstring &name) {
-    scoped_rlock locker(functions_lock);
-    const function_info_t *func = function_get(name);
-    return func ? func->props->named_arguments : wcstring_list_t();
-}
-
 std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name) {
     scoped_rlock locker(functions_lock);
     const function_info_t *func = function_get(name);
     return func ? func->inherit_vars : std::map<wcstring, env_var_t>();
-}
-
-bool function_get_shadow_scope(const wcstring &name) {
-    scoped_rlock locker(functions_lock);
-    const function_info_t *func = function_get(name);
-    return func ? func->props->shadow_scope : false;
 }
 
 bool function_get_desc(const wcstring &name, wcstring *out_desc) {
@@ -348,21 +346,20 @@ int function_get_definition_lineno(const wcstring &name) {
 void function_prepare_environment(const wcstring &name, const wchar_t *const *argv,
                                   const std::map<wcstring, env_var_t> &inherited_vars) {
     env_set_argv(argv);
-
-    const wcstring_list_t named_arguments = function_get_named_arguments(name);
-    if (!named_arguments.empty()) {
+    auto props = function_get_properties(name);
+    if (props && !props->named_arguments.empty()) {
         const wchar_t *const *arg = argv;
-        for (size_t i = 0; i < named_arguments.size(); i++) {
+        for (const wcstring &named_arg : props->named_arguments) {
             if (*arg) {
-                env_set_one(named_arguments.at(i), ENV_LOCAL | ENV_USER, *arg);
+                env_set_one(named_arg, ENV_LOCAL | ENV_USER, *arg);
                 arg++;
             } else {
-                env_set_empty(named_arguments.at(i), ENV_LOCAL | ENV_USER);
+                env_set_empty(named_arg, ENV_LOCAL | ENV_USER);
             }
         }
     }
 
-    for (auto it = inherited_vars.begin(), end = inherited_vars.end(); it != end; ++it) {
-        env_set(it->first, ENV_LOCAL | ENV_USER, it->second.as_list());
+    for (const auto &kv : inherited_vars) {
+        env_set(kv.first, ENV_LOCAL | ENV_USER, kv.second.as_list());
     }
 }

@@ -792,19 +792,19 @@ void exec_job(parser_t &parser, job_t *j) {
         switch (p->type) {
             case INTERNAL_FUNCTION: {
                 const wcstring func_name = p->argv0();
-                wcstring def;
-                bool function_exists = function_get_definition(func_name, &def);
-                bool shadow_scope = function_get_shadow_scope(func_name);
-                const std::map<wcstring, env_var_t> inherit_vars =
-                    function_get_inherit_vars(func_name);
-
-                if (!function_exists) {
+                auto props = function_get_properties(func_name);
+                if (!props) {
                     debug(0, _(L"Unknown function '%ls'"), p->argv0());
                     break;
                 }
 
+                wcstring def;
+                function_get_definition(func_name, &def);
+                const std::map<wcstring, env_var_t> inherit_vars =
+                    function_get_inherit_vars(func_name);
+
                 function_block_t *fb =
-                    parser.push_block<function_block_t>(p, func_name, shadow_scope);
+                    parser.push_block<function_block_t>(p, func_name, props->shadow_scope);
                 function_prepare_environment(func_name, p->get_argv() + 1, inherit_vars);
                 parser.forbid_function(func_name);
 

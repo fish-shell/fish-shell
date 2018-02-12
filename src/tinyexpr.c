@@ -314,13 +314,6 @@ static te_expr *base(state *s) {
 
         case TE_FUNCTION1:
         case TE_CLOSURE1:
-            ret = new_expr(s->type, 0);
-            ret->function = s->function;
-            if (IS_CLOSURE(s->type)) ret->parameters[1] = s->context;
-            next_token(s);
-            ret->parameters[0] = power(s);
-            break;
-
         case TE_FUNCTION2: case TE_FUNCTION3: case TE_FUNCTION4:
         case TE_FUNCTION5: case TE_FUNCTION6: case TE_FUNCTION7:
         case TE_CLOSURE2: case TE_CLOSURE3: case TE_CLOSURE4:

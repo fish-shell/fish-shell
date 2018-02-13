@@ -36,12 +36,31 @@ end
 
 
 # Return Groups
-#for i in (dnf group list | grep -v ':')
-#	set -g dnfgroup "$dnfgroup\n$i"
+#TODO: Completion of groups to slow, test other options
+# Available
+#for i in (dnf group list --available | grep -v ':' | sed -e "s/^ *//g" | )
+#	set -g dnfgroup_available "$dnfgroup_available\n$i"
+#end
+#
+## Installed
+#for i in (dnf group list --installed | grep -v ':' | sed -e "s/^ *//g")
+#	set -g dnfgroup_installed "$dnfgroup_installed\n$i"
+#end
+#
+## All
+#for i in (dnf group list | grep -v ':' | sed -e "s/^ *//g")
+#	set -g dnfgroup_all "$dnfgroup_all\n$i"
 #end
 #
 #function __dnf_return_groups
-#	echo -e $dnfgroup
+#	switch $argv
+#		case "available"
+#			echo -e $dnfgroup_available
+#		case "installed"
+#			echo -e $dnfgroup_installed
+#		case "all"
+#			echo -e $dnfgroup_all
+#	end
 #end
 
 
@@ -66,20 +85,23 @@ set cmds autoremove check check-update clean deplist distro-sync downgrade group
 # Completion DNF commands
 for cmd in $cmds
 	if test (echo $cmd | wc -w) -gt 1
-		set cmd (echo $cmd | cut -d " " -f 1)
-		complete -c dnf -n '__fish_use_subcommand' -xa $cmd --description (__dnf_return_help $cmd)
+		set hlp (echo $cmd | cut -d " " -f 1)
+		complete -c dnf -n '__fish_use_subcommand' -xa $cmd --description (__dnf_return_help $hlp)
 	else
 		complete -c dnf -n '__fish_use_subcommand' -xa $cmd --description (__dnf_return_help $cmd)
 	end
 end
 
 # Package listing
-complete -c dnf -n '__fish_dnf_package_installed' -a "(__dnf_return_installed)"
-complete -c dnf -n '__fish_dnf_package_notinstalled' -a "(__dnf_return_notinstalled)"
-complete -c dnf -n '__fish_dnf_package_allavailable' -a "(__dnf_return_allavailable)"
+complete -c dnf -n '__fish_dnf_package_installed' -xa "(__dnf_return_installed)"
+complete -c dnf -n '__fish_dnf_package_notinstalled' -xa "(__dnf_return_notinstalled)"
+complete -c dnf -n '__fish_dnf_package_allavailable' -xa "(__dnf_return_allavailable)"
 
+#TODO: Group listing tests
 # Group listing
-# complete -c dnf -n '__fish_seen_subcommand_from group' -a "(__dnf_return_groups)"
+#complete -c dnf -n '__fish_seen_subcommand_from group; and __fish_seen_subcommand_from info' -a "(__dnf_return_groups all)"
+#complete -c dnf -n '__fish_seen_subcommand_from group; and __fish_seen_subcommand_from install' -a "(__dnf_return_groups available)"
+#complete -c dnf -n '__fish_seen_subcommand_from group; and __fish_seen_subcommand_from remove upgrade' -a "(__dnf_return_groups installed)"
 
 
 # Subcommands
@@ -95,7 +117,6 @@ function __check_subcommand_group
 	not __fish_seen_subcommand_from info install list remove upgrade mark
 end
 
-#TODO: Add descriptions
 complete -c dnf -n '__check_subcommand_group; and __fish_seen_subcommand_from group' -xa info
 complete -c dnf -n '__check_subcommand_group; and __fish_seen_subcommand_from group' -xa install
 complete -c dnf -n '__check_subcommand_group; and __fish_seen_subcommand_from group' -xa list
@@ -111,7 +132,6 @@ function __check_subcommand_history
 	not __fish_seen_subcommand_from info redo rollback undo userinstalled
 end
 
-#TODO: Add descriptions
 complete -c dnf -n '__check_subcommand_history; and __fish_seen_subcommand_from history' -xa info
 complete -c dnf -n '__check_subcommand_history; and __fish_seen_subcommand_from history' -xa redo
 complete -c dnf -n '__check_subcommand_history; and __fish_seen_subcommand_from history' -xa rollback
@@ -138,7 +158,6 @@ function __check_subcommand_mark
 	not __fish_seen_subcommand_from install remove group
 end
 
-#TODO: Add descriptions
 complete -c dnf -n '__check_subcommand_mark; and __fish_seen_subcommand_from mark' -xa install
 complete -c dnf -n '__check_subcommand_mark; and __fish_seen_subcommand_from mark' -xa remove
 complete -c dnf -n '__check_subcommand_mark; and __fish_seen_subcommand_from mark' -xa group

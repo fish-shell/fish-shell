@@ -272,7 +272,6 @@ void next_token(state *s) {
 }
 
 
-static te_expr *list(state *s);
 static te_expr *expr(state *s);
 static te_expr *power(state *s);
 
@@ -353,7 +352,7 @@ static te_expr *base(state *s) {
 
         case TOK_OPEN:
             next_token(s);
-            ret = list(s);
+            ret = expr(s);
             if (s->type == TOK_CLOSE) {
                 next_token(s);
             } else if (s->type != TOK_ERROR) {
@@ -441,20 +440,6 @@ static te_expr *expr(state *s) {
 }
 
 
-static te_expr *list(state *s) {
-    /* <list>      =    <expr> {"," <expr>} */
-    te_expr *ret = expr(s);
-
-    while (s->type == TOK_SEP) {
-        next_token(s);
-        ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, expr(s));
-        ret->function = comma;
-    }
-
-    return ret;
-}
-
-
 #define TE_FUN(...) ((double(*)(__VA_ARGS__))n->function)
 #define M(e) te_eval(n->parameters[e])
 
@@ -535,7 +520,7 @@ te_expr *te_compile(const char *expression, const te_variable *variables, int va
     s.lookup_len = var_count;
 
     next_token(&s);
-    te_expr *root = list(&s);
+    te_expr *root = expr(&s);
 
     if (s.type != TOK_END) {
         te_free(root);

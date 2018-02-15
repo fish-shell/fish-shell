@@ -499,6 +499,19 @@ static bool exec_internal_builtin_proc(parser_t &parser, job_t *j, process_t *p,
     return true;  // "success"
 }
 
+void on_process_created(job_t *j, pid_t child_pid) {
+    // We only need to do this the first time a child is forked/spawned
+    if (j->pgid != -2) {
+        return;
+    }
+
+    if (j->get_flag(JOB_CONTROL)) {
+        j->pgid = child_pid;
+    } else {
+        j->pgid = getpgrp();
+    }
+}
+
 void exec_job(parser_t &parser, job_t *j) {
     pid_t pid = 0;
 
@@ -587,7 +600,9 @@ void exec_job(parser_t &parser, job_t *j) {
             // Parent
             debug(2, L"Fork #%d, pid %d: keepalive fork for '%ls'", g_fork_count, keepalive.pid,
                   j->command_wcstr());
+            on_process_created(j, keepalive.pid);
             set_child_group(j, keepalive.pid);
+            maybe_assign_terminal(j);
         }
     }
 
@@ -732,6 +747,8 @@ void exec_job(parser_t &parser, job_t *j) {
         // This is the io_streams we pass to internal builtins.
         std::unique_ptr<io_streams_t> builtin_io_streams(new io_streams_t(stdout_read_limit));
 
+        // We fork in several different places. Each time the same code must be executed, so unify
+        // it all here.
         auto do_fork = [&j, &p, &pid, &exec_error, &process_net_io_chain,
                         &child_forked](bool drain_threads, const char *fork_type,
                                        std::function<void()> child_action) -> bool {
@@ -744,21 +761,24 @@ void exec_job(parser_t &parser, job_t *j) {
                 setup_child_process(p, process_net_io_chain);
                 child_action();
                 DIE("Child process returned control to do_fork lambda!");
-            } else {
-                if (pid < 0) {
-                    debug(1, L"Failed to fork %s!\n", fork_type);
-                    job_mark_process_as_failed(j, p);
-                    exec_error = true;
-                    return false;
-                }
-                // This is the parent process. Store away information on the child, and
-                // possibly give it control over the terminal.
-                debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type,
-                      p->argv0());
-                child_forked = true;
-                p->pid = pid;
-                set_child_group(j, p->pid);
             }
+
+            if (pid < 0) {
+                debug(1, L"Failed to fork %s!\n", fork_type);
+                job_mark_process_as_failed(j, p);
+                exec_error = true;
+                return false;
+            }
+
+            // This is the parent process. Store away information on the child, and
+            // possibly give it control over the terminal.
+            debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
+            child_forked = true;
+
+            p->pid = pid;
+            on_process_created(j, p->pid);
+            set_child_group(j, p->pid);
+            maybe_assign_terminal(j);
 
             return true;
         };
@@ -1054,9 +1074,14 @@ void exec_job(parser_t &parser, job_t *j) {
                     if (pid == 0) {
                         job_mark_process_as_failed(j, p);
                         exec_error = true;
-                    } else {
-                        child_spawned = true;
+                        break;
                     }
+
+                    // these are all things do_fork() takes care of normally:
+                    p->pid = pid;
+                    child_spawned = true;
+                    on_process_created(j, p->pid);
+                    maybe_assign_terminal(j);
                 } else
 #endif
                 {
@@ -1066,10 +1091,6 @@ void exec_job(parser_t &parser, job_t *j) {
                     }
                 }
 
-                // This is the parent process. Store away information on the child, and possibly
-                // give it control over the terminal.
-                p->pid = pid;
-                set_child_group(j, p->pid);
                 break;
             }
 

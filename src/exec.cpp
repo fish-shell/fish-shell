@@ -305,14 +305,13 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
 /// Morph an io redirection chain into redirections suitable for passing to eval, call eval, and
 /// clean up morphed redirections.
 ///
-/// \param def the code to evaluate, or the empty string if none
-/// \param node_offset the offset of the node to evalute, or NODE_OFFSET_INVALID
-/// \param block_type the type of block to push on evaluation
+/// \param parsed_source the parsed source code containing the node to evaluate
+/// \param node the node to evaluate
 /// \param ios the io redirections to be performed on this block
-static void internal_exec_helper(parser_t &parser, const wcstring &def, node_offset_t node_offset,
-                                 enum block_type_t block_type, const io_chain_t &ios) {
-    // If we have a valid node offset, then we must not have a string to execute.
-    assert(node_offset == NODE_OFFSET_INVALID || def.empty());
+template <typename T>
+void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, tnode_t<T> node,
+                          const io_chain_t &ios) {
+    assert(parsed_source && node && "exec_helper missing source or without node");
 
     io_chain_t morphed_chain;
     std::vector<int> opened_fds;
@@ -324,11 +323,7 @@ static void internal_exec_helper(parser_t &parser, const wcstring &def, node_off
         return;
     }
 
-    if (node_offset == NODE_OFFSET_INVALID) {
-        parser.eval(def, morphed_chain, block_type);
-    } else {
-        parser.eval_block_node(node_offset, morphed_chain, block_type);
-    }
+    parser.eval_node(parsed_source, node, morphed_chain, TOP);
 
     morphed_chain.clear();
     io_cleanup_fds(opened_fds);
@@ -504,6 +499,19 @@ static bool exec_internal_builtin_proc(parser_t &parser, job_t *j, process_t *p,
     return true;  // "success"
 }
 
+void on_process_created(job_t *j, pid_t child_pid) {
+    // We only need to do this the first time a child is forked/spawned
+    if (j->pgid != -2) {
+        return;
+    }
+
+    if (j->get_flag(JOB_CONTROL)) {
+        j->pgid = child_pid;
+    } else {
+        j->pgid = getpgrp();
+    }
+}
+
 void exec_job(parser_t &parser, job_t *j) {
     pid_t pid = 0;
 
@@ -592,7 +600,9 @@ void exec_job(parser_t &parser, job_t *j) {
             // Parent
             debug(2, L"Fork #%d, pid %d: keepalive fork for '%ls'", g_fork_count, keepalive.pid,
                   j->command_wcstr());
+            on_process_created(j, keepalive.pid);
             set_child_group(j, keepalive.pid);
+            maybe_assign_terminal(j);
         }
     }
 
@@ -737,6 +747,8 @@ void exec_job(parser_t &parser, job_t *j) {
         // This is the io_streams we pass to internal builtins.
         std::unique_ptr<io_streams_t> builtin_io_streams(new io_streams_t(stdout_read_limit));
 
+        // We fork in several different places. Each time the same code must be executed, so unify
+        // it all here.
         auto do_fork = [&j, &p, &pid, &exec_error, &process_net_io_chain,
                         &child_forked](bool drain_threads, const char *fork_type,
                                        std::function<void()> child_action) -> bool {
@@ -749,21 +761,24 @@ void exec_job(parser_t &parser, job_t *j) {
                 setup_child_process(p, process_net_io_chain);
                 child_action();
                 DIE("Child process returned control to do_fork lambda!");
-            } else {
-                if (pid < 0) {
-                    debug(1, L"Failed to fork %s!\n", fork_type);
-                    job_mark_process_as_failed(j, p);
-                    exec_error = true;
-                    return false;
-                }
-                // This is the parent process. Store away information on the child, and
-                // possibly give it control over the terminal.
-                debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type,
-                      p->argv0());
-                child_forked = true;
-                p->pid = pid;
-                set_child_group(j, p->pid);
             }
+
+            if (pid < 0) {
+                debug(1, L"Failed to fork %s!\n", fork_type);
+                job_mark_process_as_failed(j, p);
+                exec_error = true;
+                return false;
+            }
+
+            // This is the parent process. Store away information on the child, and
+            // possibly give it control over the terminal.
+            debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
+            child_forked = true;
+
+            p->pid = pid;
+            on_process_created(j, p->pid);
+            set_child_group(j, p->pid);
+            maybe_assign_terminal(j);
 
             return true;
         };
@@ -791,26 +806,24 @@ void exec_job(parser_t &parser, job_t *j) {
         switch (p->type) {
             case INTERNAL_FUNCTION: {
                 const wcstring func_name = p->argv0();
-                wcstring def;
-                bool function_exists = function_get_definition(func_name, &def);
-                bool shadow_scope = function_get_shadow_scope(func_name);
-                const std::map<wcstring, env_var_t> inherit_vars =
-                    function_get_inherit_vars(func_name);
-
-                if (!function_exists) {
+                auto props = function_get_properties(func_name);
+                if (!props) {
                     debug(0, _(L"Unknown function '%ls'"), p->argv0());
                     break;
                 }
 
+                const std::map<wcstring, env_var_t> inherit_vars =
+                    function_get_inherit_vars(func_name);
+
                 function_block_t *fb =
-                    parser.push_block<function_block_t>(p, func_name, shadow_scope);
+                    parser.push_block<function_block_t>(p, func_name, props->shadow_scope);
                 function_prepare_environment(func_name, p->get_argv() + 1, inherit_vars);
                 parser.forbid_function(func_name);
 
                 verify_buffer_output();
 
                 if (!exec_error) {
-                    internal_exec_helper(parser, def, NODE_OFFSET_INVALID, TOP,
+                    internal_exec_helper(parser, props->parsed_source, props->body_node,
                                          process_net_io_chain);
                 }
 
@@ -824,7 +837,9 @@ void exec_job(parser_t &parser, job_t *j) {
                 verify_buffer_output();
 
                 if (!exec_error) {
-                    internal_exec_helper(parser, wcstring(), p->internal_block_node, TOP,
+                    assert(p->block_node_source && p->internal_block_node &&
+                           "Process is missing node info");
+                    internal_exec_helper(parser, p->block_node_source, p->internal_block_node,
                                          process_net_io_chain);
                 }
                 break;
@@ -1059,9 +1074,14 @@ void exec_job(parser_t &parser, job_t *j) {
                     if (pid == 0) {
                         job_mark_process_as_failed(j, p);
                         exec_error = true;
-                    } else {
-                        child_spawned = true;
+                        break;
                     }
+
+                    // these are all things do_fork() takes care of normally:
+                    p->pid = pid;
+                    child_spawned = true;
+                    on_process_created(j, p->pid);
+                    maybe_assign_terminal(j);
                 } else
 #endif
                 {
@@ -1071,10 +1091,6 @@ void exec_job(parser_t &parser, job_t *j) {
                     }
                 }
 
-                // This is the parent process. Store away information on the child, and possibly
-                // give it control over the terminal.
-                p->pid = pid;
-                set_child_group(j, p->pid);
                 break;
             }
 

@@ -299,7 +299,6 @@ static void setup_and_process_keys(bool continuous_mode) {
     restore_term_mode();
     restore_term_foreground_process_group();
     input_destroy();
-    reader_destroy();
 }
 
 static bool parse_debug_level_flag() {

@@ -448,10 +448,6 @@ void event_fire(const event_t *event) {
     }
 }
 
-void event_init() {}
-
-void event_destroy() { s_event_handlers.clear(); }
-
 void event_fire_generic(const wchar_t *name, wcstring_list_t *args) {
     CHECK(name, );
 

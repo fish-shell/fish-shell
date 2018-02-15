@@ -489,9 +489,6 @@ void builtin_init() {
     }
 }
 
-/// Destroy builtin data.
-void builtin_destroy() {}
-
 /// Is there a builtin command with the given name?
 bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_lookup(cmd)); }
 

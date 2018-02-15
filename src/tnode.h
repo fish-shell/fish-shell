@@ -88,6 +88,9 @@ class tnode_t {
 
     bool operator!=(const tnode_t &rhs) const { return !(*this == rhs); }
 
+    // Helper to return whether the given tree is the same as ours.
+    bool matches_node_tree(const parse_node_tree_t &t) const { return &t == tree; }
+
     bool has_source() const { return nodeptr && nodeptr->has_source(); }
 
     // return the tag, or 0 if missing.
@@ -97,12 +100,11 @@ class tnode_t {
     uint8_t child_count() const { return nodeptr ? nodeptr->child_count : 0; }
 
     maybe_t<source_range_t> source_range() const {
-        if (!has_source()) return none();
+        if (nodeptr->source_start == NODE_OFFSET_INVALID) return none();
         return source_range_t{nodeptr->source_start, nodeptr->source_length};
     }
 
     wcstring get_source(const wcstring &str) const {
-        assert(has_source() && "Source missing");
         return nodeptr->get_source(str);
     }
 

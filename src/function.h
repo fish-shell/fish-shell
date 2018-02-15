@@ -10,82 +10,67 @@
 #include "common.h"
 #include "env.h"
 #include "event.h"
+#include "parse_tree.h"
+#include "tnode.h"
 
 class parser_t;
 
+/// A function's constant properties. These do not change once initialized.
+struct function_properties_t {
+    /// Parsed source containing the function.
+    parsed_source_ref_t parsed_source;
+
+    /// Node containing the function body, pointing into parsed_source.
+    tnode_t<grammar::job_list> body_node;
+
+    /// List of all named arguments for this function.
+    wcstring_list_t named_arguments;
+
+    /// Set to true if invoking this function shadows the variables of the underlying function.
+    bool shadow_scope;
+};
+
 /// Structure describing a function. This is used by the parser to store data on a function while
-/// parsing it. It is not used internally to store functions, the function_internal_data_t structure
-/// is used for that purpose. Parhaps these two should be merged.
+/// parsing it. It is not used internally to store functions, the function_info_t structure
+/// is used for that purpose. Parhaps this should be merged with function_info_t.
 struct function_data_t {
     /// Name of function.
     wcstring name;
     /// Description of function.
     wcstring description;
-    /// Function definition.
-    const wchar_t *definition;
-    /// List of all event handlers for this function.
-    std::vector<event_t> events;
-    /// List of all named arguments for this function.
-    wcstring_list_t named_arguments;
     /// List of all variables that are inherited from the function definition scope. The variable
     /// values are snapshotted when function_add() is called.
     wcstring_list_t inherit_vars;
-    /// Set to true if invoking this function shadows the variables of the underlying function.
-    bool shadow_scope;
+    /// Function's metadata fields
+    function_properties_t props;
+    /// List of all event handlers for this function.
+    std::vector<event_t> events;
 };
 
-class function_info_t {
-   public:
-    /// Function definition.
-    const wcstring definition;
-    /// Function description. Only the description may be changed after the function is created.
-    wcstring description;
-    /// File where this function was defined (intern'd string).
-    const wchar_t *const definition_file;
-    /// Line where definition started.
-    const int definition_offset;
-    /// List of all named arguments for this function.
-    const wcstring_list_t named_arguments;
-    /// Mapping of all variables that were inherited from the function definition scope to their
-    /// values.
-    const std::map<wcstring, env_var_t> inherit_vars;
-    /// Flag for specifying that this function was automatically loaded.
-    const bool is_autoload;
-    /// Set to true if invoking this function shadows the variables of the underlying function.
-    const bool shadow_scope;
-
-    /// Constructs relevant information from the function_data.
-    function_info_t(const function_data_t &data, const wchar_t *filename, int def_offset,
-                    bool autoload);
-
-    /// Used by function_copy.
-    function_info_t(const function_info_t &data, const wchar_t *filename, int def_offset,
-                    bool autoload);
-};
-
-/// Initialize function data.
-void function_init();
-
-/// Add a function. definition_line_offset is the line number of the function's definition within
-/// its source file.
-void function_add(const function_data_t &data, const parser_t &parser,
-                  int definition_line_offset = 0);
+/// Add a function.
+void function_add(const function_data_t &data, const parser_t &parser);
 
 /// Remove the function with the specified name.
 void function_remove(const wcstring &name);
 
+/// Returns the properties for a function, or nullptr if none. This does not trigger autoloading.
+std::shared_ptr<const function_properties_t> function_get_properties(const wcstring &name);
+
 /// Returns by reference the definition of the function with the name \c name. Returns true if
 /// successful, false if no function with the given name exists.
+/// This does not trigger autoloading.
 bool function_get_definition(const wcstring &name, wcstring *out_definition);
 
 /// Returns by reference the description of the function with the name \c name. Returns true if the
 /// function exists and has a nonempty description, false if it does not.
+/// This does not trigger autoloading.
 bool function_get_desc(const wcstring &name, wcstring *out_desc);
 
 /// Sets the description of the function with the name \c name.
 void function_set_desc(const wcstring &name, const wcstring &desc);
 
 /// Returns true if the function with the name name exists.
+/// This may autoload.
 int function_exists(const wcstring &name);
 
 /// Attempts to load a function if not yet loaded. This is used by the completion machinery.
@@ -112,13 +97,8 @@ bool function_is_autoloaded(const wcstring &name);
 const wchar_t *function_get_definition_file(const wcstring &name);
 
 /// Returns the linenumber where the definition of the specified function started.
-///
-/// This function does not autoload functions, it will only work on functions that have already been
-/// defined.
-int function_get_definition_offset(const wcstring &name);
-
-/// Returns a list of all named arguments of the specified function.
-wcstring_list_t function_get_named_arguments(const wcstring &name);
+/// This does not trigger autoloading.
+int function_get_definition_lineno(const wcstring &name);
 
 /// Returns a mapping of all variables of the specified function that were inherited from the scope
 /// of the function definition to their values.
@@ -128,8 +108,6 @@ std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name);
 /// is successful.
 bool function_copy(const wcstring &name, const wcstring &new_name);
 
-/// Returns whether this function shadows variables of the underlying function.
-bool function_get_shadow_scope(const wcstring &name);
 
 /// Prepares the environment for executing a function.
 void function_prepare_environment(const wcstring &name, const wchar_t *const *argv,

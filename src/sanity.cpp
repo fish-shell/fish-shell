@@ -20,7 +20,6 @@ void sanity_lose() {
 }
 
 bool sanity_check() {
-    if (!insane && shell_is_interactive()) history_sanity_check();
     if (!insane) reader_sanity_check();
     if (!insane) kill_sanity_check();
     if (!insane) proc_sanity_check();

@@ -79,25 +79,13 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
-parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
-                                                     int initial_eval_level)
-    : pstree(std::move(pstree)), parser(p), eval_level(initial_eval_level) {}
+parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p)
+    : pstree(std::move(pstree)), parser(p) {}
 
 // Utilities
 
 wcstring parse_execution_context_t::get_source(const parse_node_t &node) const {
     return node.get_source(pstree->src);
-}
-
-node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) const {
-    // Get the offset of a node via pointer arithmetic, very hackish.
-    const parse_node_t *addr = &node;
-    const parse_node_t *base = &this->tree().at(0);
-    assert(addr >= base);
-    node_offset_t offset = static_cast<node_offset_t>(addr - base);
-    assert(offset < this->tree().size());
-    assert(&tree().at(offset) == &node);
-    return offset;
 }
 
 tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statement_in_job_list(
@@ -241,7 +229,6 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
     tnode_t<g::if_statement> statement) {
     // Push an if block.
     if_block_t *ib = parser->push_block<if_block_t>();
-    ib->node_offset = this->get_offset(*statement);
 
     parse_execution_result_t result = parse_execution_success;
 
@@ -327,7 +314,7 @@ parse_execution_result_t parse_execution_context_t::run_begin_statement(
 
 // Define a function.
 parse_execution_result_t parse_execution_context_t::run_function_statement(
-    tnode_t<g::function_header> header, tnode_t<g::end_command> block_end_command) {
+    tnode_t<g::function_header> header, tnode_t<g::job_list> body) {
     // Get arguments.
     wcstring_list_t arguments;
     argument_node_list_t arg_nodes = header.descendants<g::argument>();
@@ -337,30 +324,8 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     if (result != parse_execution_success) {
         return result;
     }
-
-    // The function definition extends from the end of the header to the function end. It's not
-    // just the range of the contents because that loses comments - see issue #1710.
-    assert(block_end_command.has_source());
-    auto header_range = header.source_range();
-    size_t contents_start = header_range->start + header_range->length;
-    size_t contents_end = block_end_command.source_range()
-                              ->start;  // 1 past the last character in the function definition
-    assert(contents_end >= contents_start);
-
-    // Swallow whitespace at both ends.
-    while (contents_start < contents_end && iswspace(pstree->src.at(contents_start))) {
-        contents_start++;
-    }
-    while (contents_start < contents_end && iswspace(pstree->src.at(contents_end - 1))) {
-        contents_end--;
-    }
-
-    assert(contents_end >= contents_start);
-    const wcstring contents_str =
-        wcstring(pstree->src, contents_start, contents_end - contents_start);
-    int definition_line_offset = this->line_offset_of_character_at_offset(contents_start);
     io_streams_t streams(0);  // no limit on the amount of output from builtin_function()
-    int err = builtin_function(*parser, streams, arguments, contents_str, definition_line_offset);
+    int err = builtin_function(*parser, streams, arguments, pstree, body);
     proc_set_last_status(err);
 
     if (!streams.err.empty()) {
@@ -382,8 +347,7 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(
     } else if (auto header = bheader.try_get_child<g::while_header, 0>()) {
         ret = run_while_statement(header, contents);
     } else if (auto header = bheader.try_get_child<g::function_header, 0>()) {
-        tnode_t<g::end_command> func_end = statement.child<2>();
-        ret = run_function_statement(header, func_end);
+        ret = run_function_statement(header, contents);
     } else if (auto header = bheader.try_get_child<g::begin_header, 0>()) {
         ret = run_begin_statement(contents);
     } else {
@@ -559,7 +523,6 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     tnode_t<grammar::while_header> header, tnode_t<grammar::job_list> contents) {
     // Push a while block.
     while_block_t *wb = parser->push_block<while_block_t>();
-    wb->node_offset = this->get_offset(header);
 
     parse_execution_result_t ret = parse_execution_success;
 
@@ -998,25 +961,28 @@ parse_execution_result_t parse_execution_context_t::populate_boolean_process(
 }
 
 template <typename Type>
-parse_execution_result_t parse_execution_context_t::populate_block_process(job_t *job,
-                                                                           process_t *proc,
-                                                                           tnode_t<Type> node) {
+parse_execution_result_t parse_execution_context_t::populate_block_process(
+    job_t *job, process_t *proc, tnode_t<g::statement> statement,
+    tnode_t<Type> specific_statement) {
     // We handle block statements by creating INTERNAL_BLOCK_NODE, that will bounce back to us when
     // it's time to execute them.
     UNUSED(job);
     static_assert(Type::token == symbol_block_statement || Type::token == symbol_if_statement ||
                       Type::token == symbol_switch_statement,
                   "Invalid block process");
+    assert(statement && "statement missing");
+    assert(specific_statement && "specific_statement missing");
 
     // The set of IO redirections that we construct for the process.
     // TODO: fix this ugly find_child.
-    auto arguments = node.template find_child<g::arguments_or_redirections_list>();
+    auto arguments = specific_statement.template find_child<g::arguments_or_redirections_list>();
     io_chain_t process_io_chain;
     bool errored = !this->determine_io_chain(arguments, &process_io_chain);
     if (errored) return parse_execution_errored;
 
     proc->type = INTERNAL_BLOCK_NODE;
-    proc->internal_block_node = this->get_offset(node);
+    proc->block_node_source = pstree;
+    proc->internal_block_node = statement;
     proc->set_io_chain(process_io_chain);
     return parse_execution_success;
 }
@@ -1035,15 +1001,15 @@ parse_execution_result_t parse_execution_context_t::populate_job_process(
         }
         case symbol_block_statement:
             result = this->populate_block_process(
-                job, proc, tnode_t<g::block_statement>(&tree(), &specific_statement));
+                job, proc, statement, tnode_t<g::block_statement>(&tree(), &specific_statement));
             break;
         case symbol_if_statement:
             result = this->populate_block_process(
-                job, proc, tnode_t<g::if_statement>(&tree(), &specific_statement));
+                job, proc, statement, tnode_t<g::if_statement>(&tree(), &specific_statement));
             break;
         case symbol_switch_statement:
             result = this->populate_block_process(
-                job, proc, tnode_t<g::switch_statement>(&tree(), &specific_statement));
+                job, proc, statement, tnode_t<g::switch_statement>(&tree(), &specific_statement));
             break;
         case symbol_decorated_statement: {
             // Get the plain statement. It will pull out the decoration itself.
@@ -1137,10 +1103,10 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     }
 
     // Increment the eval_level for the duration of this command.
-    scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
+    scoped_push<int> saved_eval_level(&parser->eval_level, parser->eval_level + 1);
 
     // Save the node index.
-    scoped_push<node_offset_t> saved_node_offset(&executing_node_idx, this->get_offset(job_node));
+    scoped_push<tnode_t<grammar::job>> saved_node(&executing_job_node, job_node);
 
     // Profiling support.
     long long start_time = 0, parse_time = 0, exec_time = 0;
@@ -1150,7 +1116,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     }
 
     // When we encounter a block construct (e.g. while loop) in the general case, we create a "block
-    // process" that has a pointer to its source. This allows us to handle block-level redirections.
+    // process" containing its node. This allows us to handle block-level redirections.
     // However, if there are no redirections, then we can just jump into the block directly, which
     // is significantly faster.
     if (job_is_simple_block(job_node)) {
@@ -1184,7 +1150,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
             // Block-types profile a little weird. They have no 'parse' time, and their command is
             // just the block type.
             exec_time = get_time();
-            profile_item->level = eval_level;
+            profile_item->level = parser->eval_level;
             profile_item->parse = 0;
             profile_item->exec = (int)(exec_time - start_time);
             profile_item->cmd = profiling_cmd_name_for_redirectable_block(
@@ -1253,7 +1219,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
 
     if (profile_item != NULL) {
         exec_time = get_time();
-        profile_item->level = eval_level;
+        profile_item->level = parser->eval_level;
         profile_item->parse = (int)(parse_time - start_time);
         profile_item->exec = (int)(exec_time - parse_time);
         profile_item->cmd = job ? job->command() : wcstring();
@@ -1280,80 +1246,64 @@ parse_execution_result_t parse_execution_context_t::run_job_list(tnode_t<Type> j
     return result;
 }
 
-parse_execution_result_t parse_execution_context_t::eval_node_at_offset(
-    node_offset_t offset, const block_t *associated_block, const io_chain_t &io) {
-    // Don't ever expect to have an empty tree if this is called.
-    assert(!tree().empty());  //!OCLINT(multiple unary operator)
-    assert(offset < tree().size());
-
+parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::statement> statement,
+                                                              const block_t *associated_block,
+                                                              const io_chain_t &io) {
+    assert(statement && "Empty node in eval_node");
+    assert(statement.matches_node_tree(tree()) && "statement has unexpected tree");
     // Apply this block IO for the duration of this function.
     scoped_push<io_chain_t> block_io_push(&block_io, io);
-
-    const parse_node_t &node = tree().at(offset);
-
-    // Currently, we only expect to execute the top level job list, or a block node. Assert that.
-    assert(node.type == symbol_job_list || specific_statement_type_is_redirectable_block(node));
-
     enum parse_execution_result_t status = parse_execution_success;
-    switch (node.type) {
-        case symbol_job_list: {
-            // We should only get a job list if it's the very first node. This is because this is
-            // the entry point for both top-level execution (the first node) and INTERNAL_BLOCK_NODE
-            // execution (which does block statements, but never job lists).
-            assert(offset == 0);
-            tnode_t<g::job_list> job_list{&tree(), &node};
-            wcstring func_name;
-            auto infinite_recursive_node =
-                this->infinite_recursive_statement_in_job_list(job_list, &func_name);
-            if (infinite_recursive_node) {
-                // We have an infinite recursion.
-                this->report_error(infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,
-                                   func_name.c_str());
-                status = parse_execution_errored;
-            } else {
-                // No infinite recursion.
-                status = this->run_job_list(job_list, associated_block);
-            }
-            break;
-        }
-        case symbol_block_statement: {
-            status = this->run_block_statement({&tree(), &node});
-            break;
-        }
-        case symbol_if_statement: {
-            status = this->run_if_statement({&tree(), &node});
-            break;
-        }
-        case symbol_switch_statement: {
-            status = this->run_switch_statement({&tree(), &node});
-            break;
-        }
-        default: {
-            // In principle, we could support other node types. However we never expect to be passed
-            // them - see above.
-            debug(0, "Unexpected node %ls found in %s", node.describe().c_str(), __FUNCTION__);
-            PARSER_DIE();
-            break;
-        }
+    if (auto block = statement.try_get_child<g::block_statement, 0>()) {
+        status = this->run_block_statement(block);
+    } else if (auto ifstat = statement.try_get_child<g::if_statement, 0>()) {
+        status = this->run_if_statement(ifstat);
+    } else if (auto switchstat = statement.try_get_child<g::switch_statement, 0>()) {
+        status = this->run_switch_statement(switchstat);
+    } else {
+        debug(0, "Unexpected node %ls found in %s", statement.node()->describe().c_str(),
+              __FUNCTION__);
+        abort();
     }
-
     return status;
 }
 
-int parse_execution_context_t::line_offset_of_node_at_offset(node_offset_t requested_index) {
+parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::job_list> job_list,
+                                                              const block_t *associated_block,
+                                                              const io_chain_t &io) {
+    // Apply this block IO for the duration of this function.
+    assert(job_list && "Empty node in eval_node");
+    assert(job_list.matches_node_tree(tree()) && "job_list has unexpected tree");
+    scoped_push<io_chain_t> block_io_push(&block_io, io);
+    enum parse_execution_result_t status = parse_execution_success;
+    wcstring func_name;
+    auto infinite_recursive_node =
+        this->infinite_recursive_statement_in_job_list(job_list, &func_name);
+    if (infinite_recursive_node) {
+        // We have an infinite recursion.
+        this->report_error(infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,
+                           func_name.c_str());
+        status = parse_execution_errored;
+    } else {
+        // No infinite recursion.
+        status = this->run_job_list(job_list, associated_block);
+    }
+    return status;
+}
+
+int parse_execution_context_t::line_offset_of_node(tnode_t<g::job> node) {
     // If we're not executing anything, return -1.
-    if (requested_index == NODE_OFFSET_INVALID) {
+    if (!node) {
         return -1;
     }
 
     // If for some reason we're executing a node without source, return -1.
-    const parse_node_t &node = tree().at(requested_index);
-    if (!node.has_source()) {
+    auto range = node.source_range();
+    if (!range) {
         return -1;
     }
 
-    size_t char_offset = tree().at(requested_index).source_start;
-    return this->line_offset_of_character_at_offset(char_offset);
+    return this->line_offset_of_character_at_offset(range->start);
 }
 
 int parse_execution_context_t::line_offset_of_character_at_offset(size_t offset) {
@@ -1392,7 +1342,7 @@ int parse_execution_context_t::line_offset_of_character_at_offset(size_t offset)
 
 int parse_execution_context_t::get_current_line_number() {
     int line_number = -1;
-    int line_offset = this->line_offset_of_node_at_offset(this->executing_node_idx);
+    int line_offset = this->line_offset_of_node(this->executing_job_node);
     if (line_offset >= 0) {
         // The offset is 0 based; the number is 1 based.
         line_number = line_offset + 1;
@@ -1402,10 +1352,9 @@ int parse_execution_context_t::get_current_line_number() {
 
 int parse_execution_context_t::get_current_source_offset() const {
     int result = -1;
-    if (executing_node_idx != NODE_OFFSET_INVALID) {
-        const parse_node_t &node = tree().at(executing_node_idx);
-        if (node.has_source()) {
-            result = static_cast<int>(node.source_start);
+    if (executing_job_node) {
+        if (auto range = executing_job_node.source_range()) {
+            result = static_cast<int>(range->start);
         }
     }
     return result;

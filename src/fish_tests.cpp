@@ -2166,9 +2166,10 @@ static void test_complete(void) {
     do_test(completions.at(0).completion == L"space");
 
     // Add a function and test completing it in various ways.
+    // Note we're depending on function_data_t not complaining when given missing parsed_source /
+    // body_node.
     struct function_data_t func_data = {};
     func_data.name = L"scuttlebutt";
-    func_data.definition = L"echo gongoozle";
     function_add(func_data, parser_t::principal_parser());
 
     // Complete a function name.
@@ -4412,7 +4413,6 @@ int main(int argc, char **argv) {
     set_main_thread();
     setup_fork_guards();
     proc_init();
-    event_init();
     builtin_init();
     env_init();
     misc_init();
@@ -4478,9 +4478,6 @@ int main(int argc, char **argv) {
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");
 
-    reader_destroy();
-    builtin_destroy();
-    event_destroy();
     proc_destroy();
 
     if (err_count != 0) {

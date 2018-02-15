@@ -358,15 +358,8 @@ class history_search_t {
         : history(), term(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), case_sensitive(true) {}
 };
 
-/// Init history library. The history file won't actually be loaded until the first time a history
-/// search is performed.
-void history_init();
-
 /// Saves the new history to disk.
-void history_destroy();
-
-/// Perform sanity checks.
-void history_sanity_check();
+void history_save_all();
 
 /// Return the prefix for the files to be used for command and read history.
 wcstring history_session_id();

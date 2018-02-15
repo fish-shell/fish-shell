@@ -58,9 +58,6 @@ void reader_sanity_check();
 /// Initialize the reader.
 void reader_init();
 
-/// Destroy and free resources used by the reader.
-void reader_destroy();
-
 /// Restore the term mode at startup.
 void restore_term_mode();
 

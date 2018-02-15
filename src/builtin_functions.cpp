@@ -134,12 +134,13 @@ static wcstring functions_def(const wcstring &name) {
         out.append(esc_desc);
     }
 
-    if (!function_get_shadow_scope(name)) {
+    auto props = function_get_properties(name);
+    assert(props && "Should have function properties");
+    if (!props->shadow_scope) {
         out.append(L" --no-scope-shadowing");
     }
 
-    for (size_t i = 0; i < ev.size(); i++) {
-        const event_t *next = ev.at(i).get();
+    for (const auto &next : ev) {
         switch (next->type) {
             case EVENT_SIGNAL: {
                 append_format(out, L" --on-signal %ls", sig2wcs(next->param1.signal));
@@ -172,11 +173,11 @@ static wcstring functions_def(const wcstring &name) {
         }
     }
 
-    wcstring_list_t named = function_get_named_arguments(name);
+    const wcstring_list_t &named = props->named_arguments;
     if (!named.empty()) {
         append_format(out, L" --argument");
-        for (size_t i = 0; i < named.size(); i++) {
-            append_format(out, L" %ls", named.at(i).c_str());
+        for (const auto &name : named) {
+            append_format(out, L" %ls", name.c_str());
         }
     }
 
@@ -188,17 +189,14 @@ static wcstring functions_def(const wcstring &name) {
 
     // Output any inherited variables as `set -l` lines.
     std::map<wcstring, env_var_t> inherit_vars = function_get_inherit_vars(name);
-    for (std::map<wcstring, env_var_t>::const_iterator it = inherit_vars.begin(),
-                                                       end = inherit_vars.end();
-         it != end; ++it) {
+    for (const auto &kv : inherit_vars) {
         wcstring_list_t lst;
-        it->second.to_list(lst);
+        kv.second.to_list(lst);
 
         // This forced tab is crummy, but we don't know what indentation style the function uses.
-        append_format(out, L"\n\tset -l %ls", it->first.c_str());
-        for (wcstring_list_t::const_iterator arg_it = lst.begin(), arg_end = lst.end();
-             arg_it != arg_end; ++arg_it) {
-            wcstring earg = escape_string(*arg_it, ESCAPE_ALL);
+        append_format(out, L"\n\tset -l %ls", kv.first.c_str());
+        for (const auto &arg : lst) {
+            wcstring earg = escape_string(arg, ESCAPE_ALL);
             out.push_back(L' ');
             out.append(earg);
         }
@@ -224,15 +222,15 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
     int line_number = 0;
 
     if (function_exists(funcname)) {
+        auto props = function_get_properties(funcname);
         path = function_get_definition_file(funcname);
         if (path) {
             autoloaded = function_is_autoloaded(funcname) ? L"autoloaded" : L"not-autoloaded";
-            line_number = function_get_definition_offset(funcname);
+            line_number = function_get_definition_lineno(funcname);
         } else {
             path = L"stdin";
         }
-        shadows_scope =
-            function_get_shadow_scope(funcname) ? L"scope-shadowing" : L"no-scope-shadowing";
+        shadows_scope = props->shadow_scope ? L"scope-shadowing" : L"no-scope-shadowing";
         function_get_desc(funcname, &description);
         description = escape_string(description, ESCAPE_NO_QUOTED);
     }

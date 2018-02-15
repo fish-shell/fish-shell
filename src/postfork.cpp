@@ -105,24 +105,23 @@ bool child_set_group(job_t *j, process_t *p) {
 /// group in the case of JOB_CONTROL, and we can give the new process group control of the terminal
 /// if it's to run in the foreground.
 bool set_child_group(job_t *j, pid_t child_pid) {
-    bool retval = true;
-
     if (j->get_flag(JOB_CONTROL)) {
-        // New jobs have the pgid set to -2
-        if (j->pgid == -2) {
-            j->pgid = child_pid;
-        }
         // The parent sets the child's group. This incurs the well-known unavoidable race with the
         // child exiting, so ignore ESRCH and EPERM (in case the pid was recycled).
         if (setpgid(child_pid, j->pgid) < 0) {
             if (errno != ESRCH && errno != EPERM) {
                 safe_perror("setpgid");
+                return false;
             }
         }
     } else {
         j->pgid = getpgrp();
     }
 
+    return true;
+}
+
+bool maybe_assign_terminal(job_t *j) {
     if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {  //!OCLINT(early exit)
         if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
             // We've already assigned the process group control of the terminal when the first
@@ -133,11 +132,11 @@ bool set_child_group(job_t *j, pid_t child_pid) {
             debug(4, L"Process group %d already has control of terminal\n", j->pgid);
         } else {
             // No need to duplicate the code here, a function already exists that does just this.
-            retval = terminal_give_to_job(j, false /*new job, so not continuing*/);
+            return terminal_give_to_job(j, false /*new job, so not continuing*/);
         }
     }
 
-    return retval;
+    return true;
 }
 
 /// Set up a childs io redirections. Should only be called by setup_child_process(). Does the

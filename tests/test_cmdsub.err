@@ -13,8 +13,8 @@ set b (string repeat -n 512 x)
 # Command sub over the limit should fail
 fish: Too much data emitted by command substitution so it was discarded
 
-set -l x (string repeat -n $argv x)
-         ^
+    set -l x (string repeat -n $argv x)
+             ^
 in function 'subme'
 	called on standard input
 	with parameter list '513'

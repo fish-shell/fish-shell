@@ -152,11 +152,9 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
         }
     } else {
         // TODO: Better error reporting!
-        streams.err.append(L"math: Error in expression\n");
+        streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error).c_str());
         streams.err.append_format(L"'%ls'\n", expression.c_str());
         streams.err.append_format(L"%*lc^\n", error.position - 1, L' ');
-        streams.err.append(math_describe_error(error));
-        streams.err.append(L"\n");
     }
     free(narrow_str);
     free(saved_locale);

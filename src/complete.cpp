@@ -1558,6 +1558,8 @@ wcstring complete_print() {
     return out;
 }
 
+void complete_invalidate_path() { completion_autoloader.invalidate(); }
+
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 static fish_mutex_t wrapper_lock;
 typedef std::unordered_map<wcstring, wcstring_list_t> wrapper_map_t;

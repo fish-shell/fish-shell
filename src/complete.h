@@ -193,4 +193,7 @@ wcstring_list_t complete_get_wrap_chain(const wcstring &command);
 // Wonky interface: returns all wraps. Even-values are the commands, odd values are the targets.
 wcstring_list_t complete_get_wrap_pairs();
 
+// Observes that fish_complete_path has changed.
+void complete_invalidate_path();
+
 #endif

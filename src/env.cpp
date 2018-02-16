@@ -40,12 +40,14 @@
 
 #include "builtin_bind.h"
 #include "common.h"
+#include "complete.h"
 #include "env.h"
 #include "env_universal_common.h"
 #include "event.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fish_version.h"
+#include "function.h"
 #include "history.h"
 #include "input.h"
 #include "input_common.h"
@@ -814,6 +816,18 @@ static void handle_fish_history_change(const wcstring &op, const wcstring &var_n
     reader_change_history(history_session_id().c_str());
 }
 
+static void handle_function_path_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    UNUSED(var_name);
+    function_invalidate_path();
+}
+
+static void handle_complete_path_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    UNUSED(var_name);
+    complete_invalidate_path();
+}
+
 static void handle_tz_change(const wcstring &op, const wcstring &var_name) {
     UNUSED(op);
     handle_timezone(var_name.c_str());
@@ -856,6 +870,8 @@ static void setup_var_dispatch_table() {
     var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
     var_dispatch_table.emplace(L"LINES", handle_term_size_change);
     var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
+    var_dispatch_table.emplace(L"fish_complete_path", handle_complete_path_change);
+    var_dispatch_table.emplace(L"fish_function_path", handle_function_path_change);
     var_dispatch_table.emplace(L"fish_read_limit", handle_read_limit_change);
     var_dispatch_table.emplace(L"fish_history", handle_fish_history_change);
     var_dispatch_table.emplace(L"TZ", handle_tz_change);

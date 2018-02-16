@@ -49,10 +49,8 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
     fish_mutex_t lock;
     /// The environment variable name.
     const wcstring env_var_name;
-    /// The path from which we most recently autoloaded.
-    env_var_t last_path;
-    /// the most reecently autoloaded path, tokenized (split on separators).
-    wcstring_list_t last_path_tokenized;
+    /// The paths from which to autoload, or missing if none.
+    maybe_t<wcstring_list_t> paths;
     /// A table containing all the files that are currently being loaded.
     /// This is here to help prevent recursion.
     std::unordered_set<wcstring> is_loading_set;
@@ -91,5 +89,8 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
 
     /// Check whether the given command could be loaded, but do not load it.
     bool can_load(const wcstring &cmd, const env_vars_snapshot_t &vars);
+
+    /// Invalidates all entries. Uesd when the underlying path variable changes.
+    void invalidate();
 };
 #endif

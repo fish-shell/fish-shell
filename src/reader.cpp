@@ -1391,8 +1391,7 @@ static bool handle_completions(const std::vector<completion_t> &comp,
     // Determine whether we are going to replace the token or not. If any commands of the best
     // type do not require replacement, then ignore all those that want to use replacement.
     bool will_replace_token = true;
-    for (size_t i = 0; i < comp.size(); i++) {
-        const completion_t &el = comp.at(i);
+    for (const completion_t &el : comp) {
         if (el.match.type <= best_match_type && !(el.flags & COMPLETE_REPLACES_TOKEN)) {
             will_replace_token = false;
             break;
@@ -1402,8 +1401,7 @@ static bool handle_completions(const std::vector<completion_t> &comp,
     // Decide which completions survived. There may be a lot of them; it would be nice if we could
     // figure out how to avoid copying them here.
     std::vector<completion_t> surviving_completions;
-    for (size_t i = 0; i < comp.size(); i++) {
-        const completion_t &el = comp.at(i);
+    for (const completion_t &el : comp) {
         // Ignore completions with a less suitable match type than the best.
         if (el.match.type > best_match_type) continue;
 
@@ -1424,12 +1422,13 @@ static bool handle_completions(const std::vector<completion_t> &comp,
         wcstring common_prefix;
         complete_flags_t flags = 0;
         bool prefix_is_partial_completion = false;
-        for (size_t i = 0; i < surviving_completions.size(); i++) {
-            const completion_t &el = surviving_completions.at(i);
-            if (i == 0) {
+        bool first = true;
+        for (const completion_t &el : surviving_completions) {
+            if (first) {
                 // First entry, use the whole string.
                 common_prefix = el.completion;
                 flags = el.flags;
+                first = false;
             } else {
                 // Determine the shared prefix length.
                 size_t idx, max = mini(common_prefix.size(), el.completion.size());

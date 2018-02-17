@@ -371,18 +371,23 @@ static void test_escape_quotes() {
     do_test(parse_util_escape_string_with_quote(L"~abc|def", L'\0') == L"\\~abc\\|def");
     do_test(parse_util_escape_string_with_quote(L"|abc~def", L'\0') == L"\\|abc\\~def");
     do_test(parse_util_escape_string_with_quote(L"|abc~def", L'\0', true) == L"\\|abc~def");
+    do_test(parse_util_escape_string_with_quote(L"foo\nbar", L'\0') == L"foo\\nbar");
 
     // Note tildes are not expanded inside quotes, so no_tilde is ignored with a quote.
     do_test(parse_util_escape_string_with_quote(L"abc", L'\'') == L"abc");
-    do_test(parse_util_escape_string_with_quote(L"abc\\def", L'\'') == L"abc\\def");
+    do_test(parse_util_escape_string_with_quote(L"abc\\def", L'\'') == L"abc\\\\def");
     do_test(parse_util_escape_string_with_quote(L"abc'def", L'\'') == L"abc\\'def");
     do_test(parse_util_escape_string_with_quote(L"~abc'def", L'\'') == L"~abc\\'def");
     do_test(parse_util_escape_string_with_quote(L"~abc'def", L'\'', true) == L"~abc\\'def");
+    do_test(parse_util_escape_string_with_quote(L"foo\nba'r", L'\'') == L"foo'\\n'ba\\'r");
+    do_test(parse_util_escape_string_with_quote(L"foo\\\\bar", L'\'') == L"foo\\\\\\\\bar");
 
     do_test(parse_util_escape_string_with_quote(L"abc", L'"') == L"abc");
-    do_test(parse_util_escape_string_with_quote(L"abc\\def", L'"') == L"abc\\def");
+    do_test(parse_util_escape_string_with_quote(L"abc\\def", L'"') == L"abc\\\\def");
     do_test(parse_util_escape_string_with_quote(L"~abc'def", L'"') == L"~abc'def");
     do_test(parse_util_escape_string_with_quote(L"~abc'def", L'"', true) == L"~abc'def");
+    do_test(parse_util_escape_string_with_quote(L"foo\nba'r", L'"') == L"foo\"\\n\"ba'r");
+    do_test(parse_util_escape_string_with_quote(L"foo\\\\bar", L'"') == L"foo\\\\\\\\bar");
 }
 
 static void test_format(void) {

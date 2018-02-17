@@ -517,28 +517,32 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
         escape_flags_t flags = ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0);
         result = escape_string(cmd, flags);
     } else {
-        bool unescapable = false;
-        for (size_t i = 0; i < cmd.size(); i++) {
-            wchar_t c = cmd.at(i);
+        // Here we are going to escape a string with quotes.
+        // A few characters cannot be represented inside quotes, e.g. newlines. In that case,
+        // terminate the quote and then re-enter it.
+        result.reserve(cmd.size());
+        for (wchar_t c : cmd) {
             switch (c) {
                 case L'\n':
-                case L'\t':
-                case L'\b':
-                case L'\r': {
-                    unescapable = true;
+                    result.append({quote, L'\\', L'n', quote});
                     break;
-                }
-                default: {
+                case L'\t':
+                    result.append({quote, L'\\', L't', quote});
+                    break;
+                case L'\b':
+                    result.append({quote, L'\\', L'b', quote});
+                    break;
+                case L'\r':
+                    result.append({quote, L'\\', L'r', quote});
+                    break;
+                case L'\\':
+                    result.append({L'\\', L'\\'});
+                    break;
+                default:
                     if (c == quote) result.push_back(L'\\');
                     result.push_back(c);
                     break;
-                }
             }
-        }
-
-        if (unescapable) {
-            result = escape_string(cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED);
-            result.insert(0, &quote, 1);
         }
     }
     return result;

@@ -195,8 +195,6 @@ const option_list_t &completion_entry_t::get_options() const {
     return options;
 }
 
-completion_t::~completion_t() {}
-
 /// Clear the COMPLETE_AUTO_SPACE flag, and set COMPLETE_NO_SPACE appropriately depending on the
 /// suffix of the string.
 static complete_flags_t resolve_auto_space(const wcstring &comp, complete_flags_t flags) {
@@ -210,25 +208,18 @@ static complete_flags_t resolve_auto_space(const wcstring &comp, complete_flags_
 }
 
 /// completion_t functions. Note that the constructor resolves flags!
-completion_t::completion_t(const wcstring &comp, const wcstring &desc, string_fuzzy_match_t mat,
+completion_t::completion_t(wcstring comp, wcstring desc, string_fuzzy_match_t mat,
                            complete_flags_t flags_val)
-    : completion(comp), description(desc), match(mat), flags(resolve_auto_space(comp, flags_val)) {}
+    : completion(std::move(comp)),
+      description(std::move(desc)),
+      match(mat),
+      flags(resolve_auto_space(completion, flags_val)) {}
 
-completion_t::completion_t(const completion_t &him)
-    : completion(him.completion),
-      description(him.description),
-      match(him.match),
-      flags(him.flags) {}
-
-completion_t &completion_t::operator=(const completion_t &him) {
-    if (this != &him) {
-        this->completion = him.completion;
-        this->description = him.description;
-        this->match = him.match;
-        this->flags = him.flags;
-    }
-    return *this;
-}
+completion_t::completion_t(const completion_t &him) = default;
+completion_t::completion_t(completion_t &&him) = default;
+completion_t &completion_t::operator=(const completion_t &him) = default;
+completion_t &completion_t::operator=(completion_t &&him) = default;
+completion_t::~completion_t() = default;
 
 bool completion_t::is_naturally_less_than(const completion_t &a, const completion_t &b) {
     // For this to work, stable_sort must be used because results aren't interchangeable.
@@ -371,22 +362,10 @@ static void autoloaded_completion_removed(const wcstring &cmd) {
 static autoload_t completion_autoloader(L"fish_complete_path", autoloaded_completion_removed);
 
 /// Create a new completion entry.
-void append_completion(std::vector<completion_t> *completions, const wcstring &comp,
-                       const wcstring &desc, complete_flags_t flags, string_fuzzy_match_t match) {
-    // If we just constructed the completion and used push_back, we would get two string copies. Try
-    // to avoid that by making a stubby completion in the vector first, and then copying our string
-    // in. Note that completion_t's constructor will munge 'flags' so it's important that we pass
-    // those to the constructor.
-    //
-    // Nasty hack for #1241 - since the constructor needs the completion string to resolve
-    // AUTO_SPACE, and we aren't providing it with the completion, we have to do the resolution
-    // ourselves. We should get this resolving out of the constructor.
-    assert(completions != NULL);
-    const wcstring empty;
-    completions->push_back(completion_t(empty, empty, match, resolve_auto_space(comp, flags)));
-    completion_t *last = &completions->back();
-    last->completion = comp;
-    last->description = desc;
+void append_completion(std::vector<completion_t> *completions, wcstring comp, wcstring desc,
+                       complete_flags_t flags, string_fuzzy_match_t match) {
+    completions->emplace_back(std::move(comp), std::move(desc), match,
+                              resolve_auto_space(comp, flags));
 }
 
 /// Test if the specified script returns zero. The result is cached, so that if multiple completions

@@ -69,12 +69,15 @@ class completion_t {
     /// signal that this completion is case insensitive.
     complete_flags_t flags;
 
-    // Construction. Note: defining these so that they are not inlined reduces the executable size.
-    explicit completion_t(const wcstring &comp, const wcstring &desc = wcstring(),
+    // Construction.
+    explicit completion_t(wcstring comp, wcstring desc = wcstring(),
                           string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact),
                           complete_flags_t flags_val = 0);
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
+
+    completion_t(completion_t &&);
+    completion_t &operator=(completion_t &&);
 
     // Compare two completions. No operating overlaoding to make this always explicit (there's
     // potentially multiple ways to compare completions).
@@ -176,8 +179,8 @@ bool complete_is_valid_argument(const wcstring &str, const wcstring &opt, const 
 /// \param comp The completion string
 /// \param desc The description of the completion
 /// \param flags completion flags
-void append_completion(std::vector<completion_t> *completions, const wcstring &comp,
-                       const wcstring &desc = wcstring(), int flags = 0,
+void append_completion(std::vector<completion_t> *completions, wcstring comp,
+                       wcstring desc = wcstring(), int flags = 0,
                        string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact));
 
 /// Function used for testing.

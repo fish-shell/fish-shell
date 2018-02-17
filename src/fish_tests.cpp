@@ -358,6 +358,33 @@ static void test_escape_crazy() {
     }
 }
 
+static void test_escape_quotes() {
+    say(L"Testing escaping with quotes");
+    // These are "raw string literals"
+    do_test(parse_util_escape_string_with_quote(L"abc", L'\0') == L"abc");
+    do_test(parse_util_escape_string_with_quote(L"abc~def", L'\0') == L"abc\\~def");
+    do_test(parse_util_escape_string_with_quote(L"abc~def", L'\0', true) == L"abc~def");
+    do_test(parse_util_escape_string_with_quote(L"abc\\~def", L'\0') == L"abc\\\\\\~def");
+    do_test(parse_util_escape_string_with_quote(L"abc\\~def", L'\0', true) == L"abc\\\\~def");
+    do_test(parse_util_escape_string_with_quote(L"~abc", L'\0') == L"\\~abc");
+    do_test(parse_util_escape_string_with_quote(L"~abc", L'\0', true) == L"~abc");
+    do_test(parse_util_escape_string_with_quote(L"~abc|def", L'\0') == L"\\~abc\\|def");
+    do_test(parse_util_escape_string_with_quote(L"|abc~def", L'\0') == L"\\|abc\\~def");
+    do_test(parse_util_escape_string_with_quote(L"|abc~def", L'\0', true) == L"\\|abc~def");
+
+    // Note tildes are not expanded inside quotes, so no_tilde is ignored with a quote.
+    do_test(parse_util_escape_string_with_quote(L"abc", L'\'') == L"abc");
+    do_test(parse_util_escape_string_with_quote(L"abc\\def", L'\'') == L"abc\\def");
+    do_test(parse_util_escape_string_with_quote(L"abc'def", L'\'') == L"abc\\'def");
+    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'\'') == L"~abc\\'def");
+    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'\'', true) == L"~abc\\'def");
+
+    do_test(parse_util_escape_string_with_quote(L"abc", L'"') == L"abc");
+    do_test(parse_util_escape_string_with_quote(L"abc\\def", L'"') == L"abc\\def");
+    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'"') == L"~abc'def");
+    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'"', true) == L"~abc'def");
+}
+
 static void test_format(void) {
     say(L"Testing formatting functions");
     struct {
@@ -4435,6 +4462,7 @@ int main(int argc, char **argv) {
     if (should_test_function("error_messages")) test_error_messages();
     if (should_test_function("escape")) test_unescape_sane();
     if (should_test_function("escape")) test_escape_crazy();
+    if (should_test_function("escape")) test_escape_quotes();
     if (should_test_function("format")) test_format();
     if (should_test_function("convert")) test_convert();
     if (should_test_function("convert_nulls")) test_convert_nulls();

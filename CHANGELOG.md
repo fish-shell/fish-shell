@@ -37,6 +37,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - A new input binding `pager-toggle-search` toggles the search field in the completions pager on and off. By default this is bound to control-s.
 - Slicing $history (in particular, `$history[1]` for the last executed command) is much faster.
 - The pager will now show the full command instead of just its last line if the number of completions is large (#4702).
+- Tildes in file names are now properly escaped in completions (#2274)
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

@@ -678,7 +678,8 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
         fish_title_command = L"fish_title";
         if (!cmd.empty()) {
             fish_title_command.append(L" ");
-            fish_title_command.append(parse_util_escape_string_with_quote(cmd, L'\0'));
+            fish_title_command.append(
+                escape_string(cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE));
         }
     }
 
@@ -1018,9 +1019,10 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
                                           const wcstring &command_line, size_t *inout_cursor_pos,
                                           bool append_only) {
     const wchar_t *val = val_str.c_str();
-    bool add_space = !static_cast<bool>(flags & COMPLETE_NO_SPACE);
-    bool do_replace = static_cast<bool>(flags & COMPLETE_REPLACES_TOKEN);
-    bool do_escape = !static_cast<bool>(flags & COMPLETE_DONT_ESCAPE);
+    bool add_space = !bool(flags & COMPLETE_NO_SPACE);
+    bool do_replace = bool(flags & COMPLETE_REPLACES_TOKEN);
+    bool do_escape = !bool(flags & COMPLETE_DONT_ESCAPE);
+    bool no_tilde = bool(flags & COMPLETE_DONT_ESCAPE_TILDES);
 
     const size_t cursor_pos = *inout_cursor_pos;
     bool back_into_trailing_quote = false;
@@ -1036,8 +1038,6 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
         wcstring sb(buff, begin - buff);
 
         if (do_escape) {
-            // Respect COMPLETE_DONT_ESCAPE_TILDES.
-            bool no_tilde = static_cast<bool>(flags & COMPLETE_DONT_ESCAPE_TILDES);
             wcstring escaped = escape_string(
                 val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
             sb.append(escaped);
@@ -1061,9 +1061,6 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
     wchar_t quote = L'\0';
     wcstring replaced;
     if (do_escape) {
-        // Note that we ignore COMPLETE_DONT_ESCAPE_TILDES here. We get away with this because
-        // unexpand_tildes only operates on completions that have COMPLETE_REPLACES_TOKEN set,
-        // but we ought to respect them.
         parse_util_get_parameter_info(command_line, cursor_pos, &quote, NULL, NULL);
 
         // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can
@@ -1079,7 +1076,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
             }
         }
 
-        replaced = parse_util_escape_string_with_quote(val_str, quote);
+        replaced = parse_util_escape_string_with_quote(val_str, quote, no_tilde);
     } else {
         replaced = val;
     }

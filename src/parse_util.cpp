@@ -511,10 +511,11 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     free(cmd_tmp);
 }
 
-wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote) {
+wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote, bool no_tilde) {
     wcstring result;
     if (quote == L'\0') {
-        result = escape_string(cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE);
+        escape_flags_t flags = ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0);
+        result = escape_string(cmd, flags);
     } else {
         bool unescapable = false;
         for (size_t i = 0; i < cmd.size(); i++) {
@@ -660,9 +661,8 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
     // were a case item list.
     parse_node_tree_t tree;
-    parse_tree_from_string(src,
-                           parse_flag_continue_after_error | parse_flag_include_comments |
-                               parse_flag_accept_incomplete_tokens,
+    parse_tree_from_string(src, parse_flag_continue_after_error | parse_flag_include_comments |
+                                    parse_flag_accept_incomplete_tokens,
                            &tree, NULL /* errors */);
 
     // Start indenting at the first node. If we have a parse error, we'll have to start indenting

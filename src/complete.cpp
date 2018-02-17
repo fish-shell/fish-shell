@@ -1040,8 +1040,8 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         // Any COMPLETE_REPLACES_TOKEN will also stomp the separator. We need to "repair" them by
         // inserting our separator and prefix.
         const wcstring prefix_with_sep = wcstring(str, 0, sep_index + 1);
-        for (size_t i = 0; i < local_completions.size(); i++) {
-            local_completions.at(i).prepend_token_prefix(prefix_with_sep);
+        for (completion_t &comp : local_completions) {
+            comp.prepend_token_prefix(prefix_with_sep);
         }
         this->completions.insert(this->completions.end(), local_completions.begin(),
                                  local_completions.end());
@@ -1293,11 +1293,11 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                 } else if (pos > 0) {
                     // If the previous character is in one of these types, we don't do file
                     // suggestions.
-                    parse_token_type_t bad_types[] = {parse_token_type_pipe, parse_token_type_end,
-                                                      parse_token_type_background,
-                                                      parse_special_type_comment};
-                    for (size_t i = 0; i < sizeof bad_types / sizeof *bad_types; i++) {
-                        if (tree.find_node_matching_source_location(bad_types[i], pos - 1, NULL)) {
+                    const parse_token_type_t bad_types[] = {
+                        parse_token_type_pipe, parse_token_type_end, parse_token_type_background,
+                        parse_special_type_comment};
+                    for (parse_token_type_t type : bad_types) {
+                        if (tree.find_node_matching_source_location(type, pos - 1, NULL)) {
                             do_file = false;
                             break;
                         }
@@ -1351,7 +1351,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
 
                 // See whether we are in an argument. We may also be in a redirection, or nothing at
                 // all.
-                size_t matching_arg_index = -1;
+                maybe_t<size_t> matching_arg_index;
                 for (size_t i = 0; i < all_arguments.size(); i++) {
                     tnode_t<grammar::argument> arg = all_arguments.at(i);
                     if (arg.location_in_or_at_end_of_source_range(position_in_statement)) {
@@ -1362,9 +1362,9 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
 
                 bool had_ddash = false;
                 wcstring current_argument, previous_argument;
-                if (matching_arg_index != (size_t)(-1)) {
+                if (matching_arg_index) {
                     const wcstring matching_arg =
-                        all_arguments.at(matching_arg_index).get_source(cmd);
+                        all_arguments.at(*matching_arg_index).get_source(cmd);
 
                     // If the cursor is in whitespace, then the "current" argument is empty and the
                     // previous argument is the matching one. But if the cursor was in or at the end
@@ -1377,14 +1377,14 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                         previous_argument = matching_arg;
                     } else {
                         current_argument = matching_arg;
-                        if (matching_arg_index > 0) {
+                        if (*matching_arg_index > 0) {
                             previous_argument =
-                                all_arguments.at(matching_arg_index - 1).get_source(cmd);
+                                all_arguments.at(*matching_arg_index - 1).get_source(cmd);
                         }
                     }
 
                     // Check to see if we have a preceding double-dash.
-                    for (size_t i = 0; i < matching_arg_index; i++) {
+                    for (size_t i = 0; i < *matching_arg_index; i++) {
                         if (all_arguments.at(i).get_source(cmd) == L"--") {
                             had_ddash = true;
                             break;
@@ -1394,7 +1394,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
 
                 // If we are not in an argument, we may be in a redirection.
                 bool in_redirection = false;
-                if (matching_arg_index == (size_t)(-1)) {
+                if (!matching_arg_index) {
                     if (tnode_t<grammar::redirection>::find_node_matching_source_location(
                             &tree, position_in_statement, plain_statement)) {
                         in_redirection = true;

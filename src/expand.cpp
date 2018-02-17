@@ -1419,7 +1419,7 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
                     paths = env_var_t(name, for_cd ? L"." : L"");
                 }
 
-                for (auto next_path : paths->as_list()) {
+                for (const wcstring &next_path : paths->as_list()) {
                     effective_working_dirs.push_back(
                         path_apply_working_directory(next_path, working_dir));
                 }
@@ -1442,7 +1442,7 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
         }
 
         std::sort(expanded.begin(), expanded.end(), completion_t::is_naturally_less_than);
-        out->insert(out->end(), expanded.begin(), expanded.end());
+        std::move(expanded.begin(), expanded.end(), std::back_inserter(*out));
     } else {
         // Can't fully justify this check. I think it's that SKIP_WILDCARDS is used when completing
         // to mean don't do file expansions, so if we're not doing file expansions, just drop this

@@ -102,7 +102,16 @@ bool tokenizer_t::next(struct tok_t *result) {
     }
 
     assert(this->buff >= this->orig_buff);
-    result->length = current_pos >= this->last_pos ? current_pos - this->last_pos : 0;
+    if (this->last_type == TOK_PIPE) {
+        // Ignore subsequent whitespaces or a newline after a pipe (#1285).
+        int pipe_pos = current_pos - 1;
+        while (this->orig_buff[pipe_pos] != L'|') {
+            pipe_pos--;
+        }
+        result->length = pipe_pos - this->last_pos + 1;
+    } else {
+        result->length = current_pos >= this->last_pos ? current_pos - this->last_pos : 0;
+    }
 
     this->tok_next();
     return true;
@@ -557,6 +566,7 @@ void tokenizer_t::tok_next() {
             this->last_token = L"1";
             this->last_type = TOK_PIPE;
             this->buff++;
+            skip_newline_after_pipe();
             break;
         }
         case L'>':
@@ -571,6 +581,9 @@ void tokenizer_t::tok_next() {
                 TOK_CALL_ERROR(this, TOK_OTHER, REDIRECT_ERROR, this->buff);
             } else {
                 this->buff += consumed;
+                if (mode == TOK_PIPE) {
+                    skip_newline_after_pipe();
+                }
                 this->last_type = mode;
                 this->last_token = to_string(fd);
             }
@@ -594,6 +607,9 @@ void tokenizer_t::tok_next() {
                     TOK_CALL_ERROR(this, TOK_OTHER, PIPE_ERROR, error_location);
                 } else {
                     this->buff += consumed;
+                    if (mode == TOK_PIPE) {
+                        skip_newline_after_pipe();
+                    }
                     this->last_type = mode;
                     this->last_token = to_string(fd);
                 }
@@ -601,6 +617,20 @@ void tokenizer_t::tok_next() {
                 // Not a redirection or pipe, so just a string.
                 this->read_string();
             }
+            break;
+        }
+    }
+}
+
+/// If the line ends with pipe, continue to the next line (#1285).
+void tokenizer_t::skip_newline_after_pipe() {
+    while (1) {
+        if (this->buff[0] == L'\n') {
+            this->buff++;
+            break;
+        } else if (my_iswspace(this->buff[0])) {
+            this->buff++;
+        } else {
             break;
         }
     }

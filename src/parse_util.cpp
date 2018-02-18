@@ -1198,6 +1198,10 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // source.
     bool has_unclosed_block = false;
 
+    // Whether we encounter a missing statement, i.e. a newline after a pipe. This is found by
+    // detecting job_continuations that have source for pipes but not the statement.
+    bool has_unclosed_pipe = false;
+
     // Whether there's an unclosed quote, and therefore unfinished. This is only set if
     // allow_incomplete is set.
     bool has_unclosed_quote = false;
@@ -1243,6 +1247,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
             if (node.type == symbol_end_command && !node.has_source()) {
                 // An 'end' without source is an unclosed block.
                 has_unclosed_block = true;
+            } else if (node.type == symbol_statement && !node.has_source()) {
+                // Check for a statement without source in a pipeline, i.e. unterminated pipeline.
+                has_unclosed_pipe |= statement_is_in_pipeline({&node_tree, &node}, false);
             } else if (node.type == symbol_boolean_statement) {
                 // 'or' and 'and' can be in a pipeline, as long as they're first.
                 tnode_t<g::boolean_statement> gbs{&node_tree, &node};
@@ -1290,7 +1297,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 
     if (errored) res |= PARSER_TEST_ERROR;
 
-    if (has_unclosed_block || has_unclosed_quote) res |= PARSER_TEST_INCOMPLETE;
+    if (has_unclosed_block || has_unclosed_quote || has_unclosed_pipe)
+        res |= PARSER_TEST_INCOMPLETE;
 
     if (out_errors != NULL) {
         *out_errors = std::move(parse_errors);

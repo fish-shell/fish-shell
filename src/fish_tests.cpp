@@ -727,6 +727,18 @@ static void test_parser() {
         err(L"redirection after 'end' wrongly reported as error");
     }
 
+    if (parse_util_detect_errors(L"true | ") != PARSER_TEST_INCOMPLETE) {
+        err(L"unterminated pipe not reported properly");
+    }
+
+    if (parse_util_detect_errors(L"begin ; true ; end | ") != PARSER_TEST_INCOMPLETE) {
+        err(L"unterminated pipe not reported properly");
+    }
+
+    if (parse_util_detect_errors(L" | true ") != PARSER_TEST_ERROR) {
+        err(L"leading pipe not reported properly");
+    }
+
     if (detect_argument_errors(L"foo")) {
         err(L"simple argument reported as error");
     }

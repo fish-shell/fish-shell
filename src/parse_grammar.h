@@ -210,7 +210,7 @@ DEF_ALT(job_list) {
 DEF(job) produces_sequence<statement, job_continuation, optional_background>{BODY(job)};
 
 DEF_ALT(job_continuation) {
-    using piped = seq<tok_pipe, statement, job_continuation>;
+    using piped = seq<tok_pipe, optional_newlines, statement, job_continuation>;
     using empty = grammar::empty;
     ALT_BODY(job_continuation, piped, empty);
 };
@@ -342,6 +342,13 @@ DEF_ALT(optional_background) {
 };
 
 DEF(end_command) produces_single<keyword<parse_keyword_end>>{BODY(end_command)};
+
+// Note optional_newlines only allows newline-style tok_end, not semicolons.
+DEF_ALT(optional_newlines) {
+    using empty = grammar::empty;
+    using newlines = seq<tok_end, optional_newlines>;
+    ALT_BODY(optional_newlines, empty, newlines);
+};
 
 // A freestanding_argument_list is equivalent to a normal argument list, except it may contain
 // TOK_END (newlines, and even semicolons, for historical reasons)

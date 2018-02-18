@@ -121,7 +121,7 @@ bool statement_is_in_pipeline(tnode_t<grammar::statement> st, bool include_first
     // has a non-empty continuation.
     if (include_first) {
         tnode_t<job_continuation> jc = st.try_get_parent<job>().child<1>();
-        if (jc.try_get_child<statement, 1>()) {
+        if (jc.try_get_child<statement, 2>()) {
             return true;
         }
     }

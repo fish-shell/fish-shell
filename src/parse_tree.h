@@ -31,6 +31,7 @@ struct parse_token_t {
     enum parse_keyword_t keyword;  // Any keyword represented by this token
     bool has_dash_prefix;          // Hackish: whether the source contains a dash prefix
     bool is_help_argument;         // Hackish: whether the source looks like '-h' or '--help'
+    bool is_newline;               // Hackish: if TOK_END, whether the source is a newline.
     source_offset_t source_start;
     source_offset_t source_length;
 

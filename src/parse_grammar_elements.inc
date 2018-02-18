@@ -25,6 +25,7 @@ ELEM(arguments_or_redirections_list)
 ELEM(argument)
 ELEM(redirection)
 ELEM(optional_background)
+ELEM(optional_newlines)
 ELEM(end_command)
 ELEM(freestanding_argument_list)
 #undef ELEM

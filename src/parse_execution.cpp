@@ -1056,7 +1056,7 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
         if (result != parse_execution_success) {
             break;
         }
-        tnode_t<g::statement> statement = job_cont.require_get_child<g::statement, 1>();
+        tnode_t<g::statement> statement = job_cont.require_get_child<g::statement, 2>();
 
         // Handle the pipe, whose fd may not be the obvious stdout.
         int pipe_write_fd = fd_redirected_by_pipe(get_source(pipe));
@@ -1071,7 +1071,7 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
         result = this->populate_job_process(j, processes.back().get(), statement);
 
         // Get the next continuation.
-        job_cont = job_cont.require_get_child<g::job_continuation, 2>();
+        job_cont = job_cont.require_get_child<g::job_continuation, 3>();
         assert(job_cont);
     }
 

@@ -107,9 +107,6 @@ class tokenizer_t {
     void read_comment();
     void tok_next();
 
-    /// Skip whitespaces and a newline after a pipe at the end of the line.
-    void skip_newline_after_pipe();
-
    public:
     /// Constructor for a tokenizer. b is the string that is to be tokenized. It is not copied, and
     /// should not be freed by the caller until after the tokenizer is destroyed.

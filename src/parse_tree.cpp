@@ -256,9 +256,6 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
     return result;
 }
 
-#if 1
-// Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
-
 /// Helper function for parse_dump_tree().
 static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &src,
                                 node_offset_t node_idx, size_t indent, wcstring *result,
@@ -284,7 +281,6 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
 
     append_format(*result, L"%2lu - %l2u  ", *line, node_idx);
     result->append(indent * spacesPerIndent, L' ');
-    ;
     result->append(node.describe());
     if (node.child_count > 0) {
         append_format(*result, L" <%lu children>", node.child_count);
@@ -335,7 +331,6 @@ wcstring parse_dump_tree(const parse_node_tree_t &nodes, const wcstring &src) {
     }
     return result;
 }
-#endif
 
 /// Struct representing elements of the symbol stack, used in the internal state of the LL parser.
 struct parse_stack_element_t {
@@ -1046,12 +1041,12 @@ static parse_keyword_t keyword_for_token(token_type tok, const wcstring &token) 
 }
 
 /// Placeholder invalid token.
-static const parse_token_t kInvalidToken = {
-    token_type_invalid, parse_keyword_none, false, false, SOURCE_OFFSET_INVALID, 0};
+static constexpr parse_token_t kInvalidToken = {
+    token_type_invalid, parse_keyword_none, false, false, false, SOURCE_OFFSET_INVALID, 0};
 
 /// Terminal token.
-static const parse_token_t kTerminalToken = {
-    parse_token_type_terminate, parse_keyword_none, false, false, SOURCE_OFFSET_INVALID, 0};
+static constexpr parse_token_t kTerminalToken = {
+    parse_token_type_terminate, parse_keyword_none, false, false, false, SOURCE_OFFSET_INVALID, 0};
 
 static inline bool is_help_argument(const wcstring &txt) {
     return txt == L"-h" || txt == L"--help";
@@ -1074,6 +1069,7 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok, tok_t *token) {
     result.keyword = keyword_for_token(token->type, token->text);
     result.has_dash_prefix = !token->text.empty() && token->text.at(0) == L'-';
     result.is_help_argument = result.has_dash_prefix && is_help_argument(token->text);
+    result.is_newline = (result.type == parse_token_type_end && token->text == L"\n");
 
     // These assertions are totally bogus. Basically our tokenizer works in size_t but we work in
     // uint32_t to save some space. If we have a source file larger than 4 GB, we'll probably just
@@ -1155,6 +1151,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
         // Mark a special error token, and then keep going.
         const parse_token_t token = {parse_special_type_parse_error,
                                      parse_keyword_none,
+                                     false,
                                      false,
                                      false,
                                      queue[error_token_idx].source_start,

@@ -45,6 +45,7 @@ enum parse_token_type_t {
     symbol_argument,
     symbol_redirection,
     symbol_optional_background,
+    symbol_optional_newlines,
     symbol_end_command,
     // Terminal types.
     parse_token_type_string,
@@ -99,6 +100,7 @@ const enum_map<parse_token_type_t> token_enum_map[] = {
     {symbol_job, L"symbol_job"},
     {symbol_job_continuation, L"symbol_job_continuation"},
     {symbol_job_list, L"symbol_job_list"},
+    {symbol_optional_newlines, L"symbol_optional_newlines"},
     {symbol_optional_background, L"symbol_optional_background"},
     {symbol_plain_statement, L"symbol_plain_statement"},
     {symbol_redirection, L"symbol_redirection"},

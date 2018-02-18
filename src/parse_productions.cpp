@@ -309,6 +309,12 @@ RESOLVE(arguments_or_redirections_list) {
     }
 }
 
+RESOLVE(optional_newlines) {
+    UNUSED(token2);
+    if (token1.is_newline) return production_for<newlines>();
+    return production_for<empty>();
+}
+
 RESOLVE(optional_background) {
     UNUSED(token2);
 
@@ -324,10 +330,6 @@ RESOLVE(optional_background) {
     }
 }
 
-#define TEST(SYM)                \
-    case (symbol_##SYM):         \
-        resolver = SYM::resolve; \
-        break;
 
 const production_element_t *parse_productions::production_for_token(parse_token_type_t node_type,
                                                                     const parse_token_t &input1,
@@ -342,35 +344,14 @@ const production_element_t *parse_productions::production_for_token(parse_token_
                                             parse_node_tag_t *out_tag) =  //!OCLINT(unused param)
         NULL;
     switch (node_type) {
-        TEST(job_list)
-        TEST(job)
-        TEST(statement)
-        TEST(job_continuation)
-        TEST(boolean_statement)
-        TEST(block_statement)
-        TEST(if_statement)
-        TEST(if_clause)
-        TEST(else_clause)
-        TEST(else_continuation)
-        TEST(switch_statement)
-        TEST(decorated_statement)
-        TEST(case_item_list)
-        TEST(case_item)
-        TEST(argument_list)
-        TEST(freestanding_argument_list)
-        TEST(block_header)
-        TEST(for_header)
-        TEST(while_header)
-        TEST(begin_header)
-        TEST(function_header)
-        TEST(plain_statement)
-        TEST(andor_job_list)
-        TEST(arguments_or_redirections_list)
-        TEST(argument)
-        TEST(redirection)
-        TEST(optional_background)
-        TEST(end_command)
+// Handle all of our grammar elements
+#define ELEM(SYM)                \
+    case (symbol_##SYM):         \
+        resolver = SYM::resolve; \
+        break;
+#include "parse_grammar_elements.inc"
 
+        // Everything else is an error.
         case parse_token_type_string:
         case parse_token_type_pipe:
         case parse_token_type_redirection:

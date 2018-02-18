@@ -739,6 +739,18 @@ static void test_parser() {
         err(L"leading pipe not reported properly");
     }
 
+    if (parse_util_detect_errors(L"true | # comment") != PARSER_TEST_INCOMPLETE) {
+        err(L"comment after pipe not reported as incomplete");
+    }
+
+    if (parse_util_detect_errors(L"true | # comment \n false ")) {
+        err(L"comment and newline after pipe wrongly reported as error");
+    }
+
+    if (parse_util_detect_errors(L"true | ; false ") != PARSER_TEST_ERROR) {
+        err(L"semicolon after pipe not detected as error");
+    }
+
     if (detect_argument_errors(L"foo")) {
         err(L"simple argument reported as error");
     }

@@ -1085,6 +1085,102 @@ static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
     return errored;
 }
 
+static bool detect_errors_in_plain_statement(const wcstring &buff_src,
+                                             const parse_node_tree_t &node_tree,
+                                             tnode_t<grammar::plain_statement> pst,
+                                             parse_error_list_t *parse_errors) {
+    using namespace grammar;
+    bool errored = false;
+    auto source_start = pst.source_range()->start;
+
+    // In a few places below, we want to know if we are in a pipeline.
+    tnode_t<statement> st = pst.try_get_parent<decorated_statement>().try_get_parent<statement>();
+    const bool is_in_pipeline = statement_is_in_pipeline(st, true /* count first */);
+
+    // We need to know the decoration.
+    const enum parse_statement_decoration_t decoration = get_decoration(pst);
+
+    // Check that we don't try to pipe through exec.
+    if (is_in_pipeline && decoration == parse_statement_decoration_exec) {
+        errored = append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, L"exec");
+    }
+
+    if (maybe_t<wcstring> mcommand = command_for_plain_statement(pst, buff_src)) {
+        wcstring command = std::move(*mcommand);
+        // Check that we can expand the command.
+        if (!expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS,
+                        NULL)) {
+            // TODO: leverage the resulting errors.
+            errored = append_syntax_error(parse_errors, source_start, ILLEGAL_CMD_ERR_MSG,
+                                          command.c_str());
+        }
+
+        // Check that pipes are sound.
+        if (!errored && parser_is_pipe_forbidden(command) && is_in_pipeline) {
+            errored =
+                append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, command.c_str());
+        }
+
+        // Check that we don't return from outside a function. But we allow it if it's
+        // 'return --help'.
+        if (!errored && command == L"return") {
+            bool found_function = false;
+            for (const parse_node_t *ancestor = pst.node(); ancestor != nullptr;
+                 ancestor = node_tree.get_parent(*ancestor)) {
+                auto fh = tnode_t<block_statement>::try_create(&node_tree, ancestor)
+                              .child<0>()
+                              .try_get_child<function_header, 0>();
+                if (fh) {
+                    found_function = true;
+                    break;
+                }
+            }
+            if (!found_function && !first_argument_is_help(pst, buff_src)) {
+                errored = append_syntax_error(parse_errors, source_start, INVALID_RETURN_ERR_MSG);
+            }
+        }
+
+        // Check that we don't break or continue from outside a loop.
+        if (!errored && (command == L"break" || command == L"continue")) {
+            // Walk up until we hit a 'for' or 'while' loop. If we hit a function first,
+            // stop the search; we can't break an outer loop from inside a function.
+            // This is a little funny because we can't tell if it's a 'for' or 'while'
+            // loop from the ancestor alone; we need the header. That is, we hit a
+            // block_statement, and have to check its header.
+            bool found_loop = false;
+            for (const parse_node_t *ancestor = pst.node(); ancestor != nullptr;
+                 ancestor = node_tree.get_parent(*ancestor)) {
+                tnode_t<block_header> bh =
+                    tnode_t<block_statement>::try_create(&node_tree, ancestor).child<0>();
+                if (bh.try_get_child<while_header, 0>() || bh.try_get_child<for_header, 0>()) {
+                    // This is a loop header, so we can break or continue.
+                    found_loop = true;
+                    break;
+                } else if (bh.try_get_child<function_header, 0>()) {
+                    // This is a function header, so we cannot break or
+                    // continue. We stop our search here.
+                    found_loop = false;
+                    break;
+                }
+            }
+
+            if (!found_loop && !first_argument_is_help(pst, buff_src)) {
+                errored = append_syntax_error(
+                    parse_errors, source_start,
+                    (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
+            }
+        }
+
+        // Check that we don't do an invalid builtin (issue #1252).
+        if (!errored && decoration == parse_statement_decoration_builtin &&
+            !builtin_exists(command)) {
+            errored = append_syntax_error(parse_errors, source_start, UNKNOWN_BUILTIN_ERR_MSG,
+                                          command.c_str());
+        }
+    }
+    return errored;
+}
+
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors,
                                                   bool allow_incomplete,
@@ -1112,12 +1208,12 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         &parse_errors);
 
     if (allow_incomplete) {
-        for (size_t i = 0; i < parse_errors.size(); i++) {
-            if (parse_errors.at(i).code == parse_error_tokenizer_unterminated_quote) {
+        size_t idx = parse_errors.size();
+        while (idx--) {
+            if (parse_errors.at(idx).code == parse_error_tokenizer_unterminated_quote) {
                 // Remove this error, since we don't consider it a real error.
                 has_unclosed_quote = true;
-                parse_errors.erase(parse_errors.begin() + i);
-                i--;
+                parse_errors.erase(parse_errors.begin() + idx);
             }
         }
     }
@@ -1185,100 +1281,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                     }
                 }
             } else if (node.type == symbol_plain_statement) {
-                using namespace grammar;
-                tnode_t<plain_statement> pst{&node_tree, &node};
-                // In a few places below, we want to know if we are in a pipeline.
-                tnode_t<statement> st =
-                    pst.try_get_parent<decorated_statement>().try_get_parent<statement>();
-                const bool is_in_pipeline = statement_is_in_pipeline(st, true /* count first */);
-
-                // We need to know the decoration.
-                const enum parse_statement_decoration_t decoration = get_decoration(pst);
-
-                // Check that we don't try to pipe through exec.
-                if (is_in_pipeline && decoration == parse_statement_decoration_exec) {
-                    errored = append_syntax_error(&parse_errors, node.source_start, EXEC_ERR_MSG,
-                                                  L"exec");
-                }
-
-                if (maybe_t<wcstring> mcommand = command_for_plain_statement(pst, buff_src)) {
-                    wcstring command = std::move(*mcommand);
-                    // Check that we can expand the command.
-                    if (!expand_one(command,
-                                    EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS,
-                                    NULL)) {
-                        // TODO: leverage the resulting errors.
-                        errored = append_syntax_error(&parse_errors, node.source_start,
-                                                      ILLEGAL_CMD_ERR_MSG, command.c_str());
-                    }
-
-                    // Check that pipes are sound.
-                    if (!errored && parser_is_pipe_forbidden(command) && is_in_pipeline) {
-                        errored = append_syntax_error(&parse_errors, node.source_start,
-                                                      EXEC_ERR_MSG, command.c_str());
-                    }
-
-                    // Check that we don't return from outside a function. But we allow it if it's
-                    // 'return --help'.
-                    if (!errored && command == L"return") {
-                        bool found_function = false;
-                        for (const parse_node_t *ancestor = &node; ancestor != nullptr;
-                             ancestor = node_tree.get_parent(*ancestor)) {
-                            auto fh = tnode_t<block_statement>::try_create(&node_tree, ancestor)
-                                          .child<0>()
-                                          .try_get_child<function_header, 0>();
-                            if (fh) {
-                                found_function = true;
-                                break;
-                            }
-                        }
-                        if (!found_function && !first_argument_is_help(pst, buff_src)) {
-                            errored = append_syntax_error(&parse_errors, node.source_start,
-                                                          INVALID_RETURN_ERR_MSG);
-                        }
-                    }
-
-                    // Check that we don't break or continue from outside a loop.
-                    if (!errored && (command == L"break" || command == L"continue")) {
-                        // Walk up until we hit a 'for' or 'while' loop. If we hit a function first,
-                        // stop the search; we can't break an outer loop from inside a function.
-                        // This is a little funny because we can't tell if it's a 'for' or 'while'
-                        // loop from the ancestor alone; we need the header. That is, we hit a
-                        // block_statement, and have to check its header.
-                        bool found_loop = false;
-                        for (const parse_node_t *ancestor = &node; ancestor != nullptr;
-                             ancestor = node_tree.get_parent(*ancestor)) {
-                            tnode_t<block_header> bh =
-                                tnode_t<block_statement>::try_create(&node_tree, ancestor)
-                                    .child<0>();
-                            if (bh.try_get_child<while_header, 0>() ||
-                                bh.try_get_child<for_header, 0>()) {
-                                // This is a loop header, so we can break or continue.
-                                found_loop = true;
-                                break;
-                            } else if (bh.try_get_child<function_header, 0>()) {
-                                // This is a function header, so we cannot break or
-                                // continue. We stop our search here.
-                                found_loop = false;
-                                break;
-                            }
-                        }
-
-                        if (!found_loop && !first_argument_is_help(pst, buff_src)) {
-                            errored = append_syntax_error(
-                                &parse_errors, node.source_start,
-                                (command == L"break" ? INVALID_BREAK_ERR_MSG
-                                                     : INVALID_CONTINUE_ERR_MSG));
-                        }
-                    }
-
-                    // Check that we don't do an invalid builtin (issue #1252).
-                    if (!errored && decoration == parse_statement_decoration_builtin &&
-                        !builtin_exists(command)) {
-                        errored = append_syntax_error(&parse_errors, node.source_start,
-                                                      UNKNOWN_BUILTIN_ERR_MSG, command.c_str());
-                    }
-                }
+                tnode_t<grammar::plain_statement> pst{&node_tree, &node};
+                errored |=
+                    detect_errors_in_plain_statement(buff_src, node_tree, pst, &parse_errors);
             }
         }
     }

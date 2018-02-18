@@ -302,7 +302,6 @@ static volatile sig_atomic_t interrupted = 0;
 // Prototypes for a bunch of functions defined later on.
 static bool is_backslashed(const wcstring &str, size_t pos);
 static wchar_t unescaped_quote(const wcstring &str, size_t pos);
-static bool ends_with_pipe(const wcstring &str, size_t pos);
 
 /// Mode on startup, which we restore on exit.
 static struct termios terminal_mode_on_startup;
@@ -2303,19 +2302,6 @@ static bool is_backslashed(const wcstring &str, size_t pos) {
     return (count % 2) == 1;
 }
 
-/// Test if the specified string ends with pipe. Whitespaces at the end are ignored. It returns
-/// false if backslashed before the pipe because it should be treated as an escaped character.
-static bool ends_with_pipe(const wcstring &str, size_t pos) {
-    if (pos > str.size()) return false;
-
-    while (pos--) {
-        wchar_t c = str.at(pos);
-        if (c == L'|') return !is_backslashed(str, pos);
-        if (!iswspace(c)) break;
-    }
-    return false;
-}
-
 static wchar_t unescaped_quote(const wcstring &str, size_t pos) {
     wchar_t result = L'\0';
     if (pos < str.size()) {
@@ -2762,12 +2748,6 @@ const wchar_t *reader_readline(int nchars) {
                 }
                 // If the conditions are met, insert a new line at the position of the cursor.
                 if (continue_on_next_line) {
-                    insert_char(el, '\n');
-                    break;
-                }
-                // A newline is inserted if the line ends with a pipe (issue #1285).
-                if (ends_with_pipe(el->text, el->size())) {
-                    el->position = el->size();
                     insert_char(el, '\n');
                     break;
                 }

@@ -801,7 +801,7 @@ bool terminal_give_to_job(job_t *j, int cont) {
     // to hand over control of the terminal to this process group, which is a no-op if it's already
     // been done.
     if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
-        debug(2, L"Process group %d already has control of terminal\n", j->pgid);
+        debug(4, L"Process group %d already has control of terminal\n", j->pgid);
     } else {
         debug(4,
               L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d\n",

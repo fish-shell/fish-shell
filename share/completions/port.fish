@@ -102,7 +102,7 @@ complete -c apt-get -s N --description 'Non-interactive mode, interactive questi
 complete -c apt-get -s n --description "Don't follow dependencies in upgrade (affects upgrade and install)"
 complete -c apt-get -s R --description 'Also upgrade dependents (only for upgrade)'
 complete -c apt-get -s u --description 'Uninstall inactive ports when upgrading and uninstalling'
-complete -c apt-get -s y --description ' Perform a dry run'
+complete -c apt-get -s y --description 'Perform a dry run'
 complete -c apt-get -s s --description 'Source-only mode'
 complete -c apt-get -s b --description 'Binary-only mode, abort if no archive available'
 complete -c apt-get -s c --description 'Autoclean mode, execute clean after install'

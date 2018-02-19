@@ -104,7 +104,6 @@ class tokenizer_t {
     void call_error(enum tokenizer_error error_type, const wchar_t *where,
                     const wchar_t *error_message);
     void read_string();
-    void read_comment();
     bool tok_next();
 
    public:

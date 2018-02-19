@@ -322,16 +322,6 @@ void tokenizer_t::read_string() {
     this->last_type = TOK_STRING;
 }
 
-/// Read the next token as a comment.
-void tokenizer_t::read_comment() {
-    const wchar_t *start = this->buff;
-    while (*(this->buff) != L'\n' && *(this->buff) != L'\0') this->buff++;
-
-    size_t len = this->buff - start;
-    this->last_token.assign(start, len);
-    this->last_type = TOK_COMMENT;
-}
-
 /// Reads a redirection or an "fd pipe" (like 2>|) from a string. Returns how many characters were
 /// consumed. If zero, then this string was not a redirection. Also returns by reference the
 /// redirection mode, and the fd to redirection. If there is overflow, *out_fd is set to -1.
@@ -465,18 +455,30 @@ int oflags_for_redirection_type(enum token_type type) {
 
 /// Test if a character is whitespace. Differs from iswspace in that it does not consider a newline
 /// to be whitespace.
-static bool my_iswspace(wchar_t c) { return c != L'\n' && iswspace(c); }
+static bool iswspace_not_nl(wchar_t c) {
+    switch (c) {
+        case L' ':
+        case L'\t':
+        case L'\r':
+            return true;
+        case L'\n':
+            return false;
+        default:
+            return iswspace(c);
+    }
+}
 
 bool tokenizer_t::tok_next() {
     if (!this->has_next) {
         return false;
     }
 
-    while (1) {
+    // Consume non-newline whitespace. If we get an escaped newline, mark it and continue past it.
+    for (;;) {
         if (this->buff[0] == L'\\' && this->buff[1] == L'\n') {
             this->buff += 2;
             this->continue_line_after_comment = true;
-        } else if (my_iswspace(this->buff[0])) {
+        } else if (iswspace_not_nl(this->buff[0])) {
             this->buff++;
         } else {
             break;
@@ -484,21 +486,26 @@ bool tokenizer_t::tok_next() {
     }
 
     while (*this->buff == L'#') {
-        if (this->show_comments) {
-            this->last_pos = this->buff - this->start;
-            this->read_comment();
+        // We have a comment, walk over the comment.
+        const wchar_t *comment_start = this->buff;
+        while (this->buff[0] != L'\n' && this->buff[0] != L'\0') this->buff++;
+        size_t comment_len = this->buff - comment_start;
 
-            if (this->buff[0] == L'\n' && this->continue_line_after_comment) this->buff++;
+        // If we are going to continue after the comment, skip any trailing newline.
+        if (this->buff[0] == L'\n' && this->continue_line_after_comment) this->buff++;
+
+        // Maybe return the comment.
+        if (this->show_comments) {
+            this->last_pos = comment_start - this->start;
+            this->last_token.assign(comment_start, comment_len);
+            this->last_type = TOK_COMMENT;
             return true;
         }
-
-        while (*this->buff != L'\n' && *this->buff != L'\0') this->buff++;
-        if (this->buff[0] == L'\n' && this->continue_line_after_comment) this->buff++;
-        while (my_iswspace(*this->buff)) this->buff++;
+        while (iswspace_not_nl(this->buff[0])) this->buff++;
     }
 
+    // We made it past the comments and ate any trailing newlines we wanted to ignore.
     this->continue_line_after_comment = false;
-
     this->last_pos = this->buff - this->start;
 
     switch (*this->buff) {

@@ -1028,8 +1028,7 @@ static bool expand_cmdsubst(const wcstring &input, std::vector<completion_t> *ou
 
     const wchar_t *const in = input.c_str();
 
-    int parse_ret;
-    switch (parse_ret = parse_util_locate_cmdsubst(in, &paren_begin, &paren_end, false)) {
+    switch (parse_util_locate_cmdsubst(in, &paren_begin, &paren_end, false)) {
         case -1: {
             append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, L"Mismatched parenthesis");
             return false;

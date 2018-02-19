@@ -75,7 +75,7 @@ void complete_set_variable_names(const wcstring_list_t *names) {
     s_override_variable_names = names;
 }
 
-static inline wcstring_list_t complete_get_variable_names(void) {
+static inline wcstring_list_t complete_get_variable_names() {
     if (s_override_variable_names != NULL) {
         return *s_override_variable_names;
     }
@@ -313,7 +313,7 @@ class completer_t {
     completer_t(const wcstring &c, completion_request_flags_t f) : flags(f), initial_cmd(c) {}
 
     bool empty() const { return completions.empty(); }
-    const std::vector<completion_t> &get_completions(void) { return completions; }
+    const std::vector<completion_t> &get_completions() { return completions; }
 
     bool try_complete_variable(const wcstring &str);
     bool try_complete_user(const wcstring &str);

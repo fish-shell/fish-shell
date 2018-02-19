@@ -166,7 +166,7 @@ static const named_color_t named_colors[] = {
     {L"brcyan", 14, {0x00, 0xFF, 0xFF}, false},    {L"brwhite", 15, {0xFF, 0xFF, 0xFF}, false},
 };
 
-wcstring_list_t rgb_color_t::named_color_names(void) {
+wcstring_list_t rgb_color_t::named_color_names() {
     size_t count = sizeof named_colors / sizeof *named_colors;
     wcstring_list_t result;
     result.reserve(1 + count);

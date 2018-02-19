@@ -374,9 +374,9 @@ class process_iterator_t {
     bool next_process(wcstring *out_str, pid_t *out_pid);
 };
 
-process_iterator_t::process_iterator_t(void) { dir = opendir("/proc"); }
+process_iterator_t::process_iterator_t() { dir = opendir("/proc"); }
 
-process_iterator_t::~process_iterator_t(void) {
+process_iterator_t::~process_iterator_t() {
     if (dir) closedir(dir);
 }
 

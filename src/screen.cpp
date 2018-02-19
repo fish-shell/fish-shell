@@ -105,7 +105,7 @@ static int fish_wcwidth_min_0(wchar_t widechar) { return maxi(0, fish_wcwidth(wi
 
 /// Whether we permit soft wrapping. If so, in some cases we don't explicitly move to the second
 /// physical line on a wrapped logical line; instead we just output it.
-static bool allow_soft_wrap(void) {
+static bool allow_soft_wrap() {
     // Should we be looking at eat_newline_glitch as well?
     return auto_right_margin;
 }
@@ -810,7 +810,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
 }
 
 /// Returns true if we are using a dumb terminal.
-static bool is_dumb(void) {
+static bool is_dumb() {
     if (!cur_term) return true;
     return !cursor_up || !cursor_down || !cursor_left || !cursor_right;
 }

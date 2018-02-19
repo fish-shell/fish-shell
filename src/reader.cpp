@@ -1191,7 +1191,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
     };
 }
 
-static bool can_autosuggest(void) {
+static bool can_autosuggest() {
     // We autosuggest if suppress_autosuggestion is not set, if we're not doing a history search,
     // and our command line contains a non-whitespace character.
     const editable_line_t *el = data->active_edit_line();
@@ -1212,7 +1212,7 @@ static void autosuggest_completed(autosuggestion_result_t result) {
     }
 }
 
-static void update_autosuggestion(void) {
+static void update_autosuggestion() {
     // Updates autosuggestion. We look for an autosuggestion if the command line is non-empty and if
     // we're not doing a history search.
     data->autosuggestion.clear();
@@ -1817,12 +1817,12 @@ static void move_word(editable_line_t *el, bool move_right, bool erase,
     }
 }
 
-const wchar_t *reader_get_buffer(void) {
+const wchar_t *reader_get_buffer() {
     ASSERT_IS_MAIN_THREAD();
     return data ? data->command_line.text.c_str() : NULL;
 }
 
-history_t *reader_get_history(void) {
+history_t *reader_get_history() {
     ASSERT_IS_MAIN_THREAD();
     return data ? data->history : NULL;
 }
@@ -2022,7 +2022,7 @@ void reader_set_exit_on_interrupt(bool i) { data->exit_on_interrupt = i; }
 
 void reader_set_silent_status(bool flag) { data->silent = flag; }
 
-void reader_import_history_if_necessary(void) {
+void reader_import_history_if_necessary() {
     // Import history from older location (config path) if our current history is empty.
     if (data->history && data->history->is_empty()) {
         data->history->populate_from_config_path();
@@ -2045,7 +2045,7 @@ void reader_import_history_if_necessary(void) {
 }
 
 /// Called to set the highlight flag for search results.
-static void highlight_search(void) {
+static void highlight_search() {
     if (!data->search_buff.empty() && !data->history_search.is_at_end()) {
         const editable_line_t *el = &data->command_line;
         const wcstring &needle = data->search_buff;
@@ -2216,7 +2216,7 @@ static bool selection_is_at_top() {
 }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
-static int read_i(void) {
+static int read_i() {
     reader_push(history_session_id().c_str());
     reader_set_complete_function(&complete);
     reader_set_highlight_function(&highlight_shell);

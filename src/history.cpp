@@ -942,7 +942,7 @@ std::unordered_map<long, wcstring> history_t::items_at_indexes(const std::vector
     return result;
 }
 
-void history_t::populate_from_mmap(void) {
+void history_t::populate_from_mmap() {
     mmap_type = infer_file_type(mmap_start, mmap_length);
     size_t cursor = 0;
     for (;;) {
@@ -1011,7 +1011,7 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
     return result;
 }
 
-bool history_t::load_old_if_needed(void) {
+bool history_t::load_old_if_needed() {
     if (loaded_old) return true;
     loaded_old = true;
 
@@ -1078,13 +1078,13 @@ bool history_search_t::go_backwards() {
 }
 
 /// Goes to the end (forwards).
-void history_search_t::go_to_end(void) { prev_matches.clear(); }
+void history_search_t::go_to_end() { prev_matches.clear(); }
 
 /// Returns if we are at the end, which is where we start.
-bool history_search_t::is_at_end(void) const { return prev_matches.empty(); }
+bool history_search_t::is_at_end() const { return prev_matches.empty(); }
 
 /// Goes to the beginning (backwards).
-void history_search_t::go_to_beginning(void) {
+void history_search_t::go_to_beginning() {
     // Go backwards as far as we can.
     while (go_backwards()) {  //!OCLINT(empty while statement)
         // Do nothing.
@@ -1547,7 +1547,7 @@ void history_t::save_internal(bool vacuum) {
     }
 }
 
-void history_t::save(void) {
+void history_t::save() {
     scoped_lock locker(lock);
     this->save_internal(false);
 }
@@ -1667,7 +1667,7 @@ void history_t::enable_automatic_saving() {
     save_internal_unless_disabled();
 }
 
-void history_t::clear(void) {
+void history_t::clear() {
     scoped_lock locker(lock);
     new_items.clear();
     deleted_items.clear();
@@ -1678,7 +1678,7 @@ void history_t::clear(void) {
     this->clear_file_state();
 }
 
-bool history_t::is_empty(void) {
+bool history_t::is_empty() {
     scoped_lock locker(lock);
 
     // If we have new items, we're not empty.

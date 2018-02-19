@@ -390,7 +390,7 @@ static void test_escape_quotes() {
     do_test(parse_util_escape_string_with_quote(L"foo\\\\bar", L'"') == L"foo\\\\\\\\bar");
 }
 
-static void test_format(void) {
+static void test_format() {
     say(L"Testing formatting functions");
     struct {
         unsigned long long val;
@@ -478,7 +478,7 @@ static void test_convert() {
 }
 
 /// Verify correct behavior with embedded nulls.
-static void test_convert_nulls(void) {
+static void test_convert_nulls() {
     say(L"Testing convert_nulls");
     const wchar_t in[] = L"AAA\0BBB";
     const size_t in_len = (sizeof in / sizeof *in) - 1;
@@ -603,7 +603,7 @@ static int test_iothread_thread_call(std::atomic<int> *addr) {
     return after;
 }
 
-static void test_iothread(void) {
+static void test_iothread() {
     say(L"Testing iothreads");
     std::unique_ptr<std::atomic<int>> int_ptr = make_unique<std::atomic<int>>(0);
     int iterations = 50000;
@@ -1284,7 +1284,7 @@ static void test_utf8() {
 #endif
 }
 
-static void test_escape_sequences(void) {
+static void test_escape_sequences() {
     say(L"Testing escape_sequences");
     if (escape_code_length(L"") != 0) err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"abcd") != 0)
@@ -1339,7 +1339,7 @@ class test_lru_t : public lru_cache_t<test_lru_t, int> {
     }
 };
 
-static void test_lru(void) {
+static void test_lru() {
     say(L"Testing LRU cache");
 
     test_lru_t cache;
@@ -1601,7 +1601,7 @@ static void test_expand() {
     popd();
 }
 
-static void test_fuzzy_match(void) {
+static void test_fuzzy_match() {
     say(L"Testing fuzzy string matching");
 
     if (string_fuzzy_match_string(L"", L"").type != fuzzy_match_exact)
@@ -1622,7 +1622,7 @@ static void test_fuzzy_match(void) {
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
 }
 
-static void test_abbreviations(void) {
+static void test_abbreviations() {
     say(L"Testing abbreviations");
     env_push(true);
 
@@ -2155,7 +2155,7 @@ static void test_colors() {
     do_test(rgb_color_t(L"mooganta").is_none());
 }
 
-static void test_complete(void) {
+static void test_complete() {
     say(L"Testing complete");
 
     const wchar_t *name_strs[] = {L"Foo1", L"Foo2", L"Foo3", L"Bar1", L"Bar2", L"Bar3"};
@@ -2869,15 +2869,15 @@ static void test_universal_notifiers() {
 
 class history_tests_t {
    public:
-    static void test_history(void);
-    static void test_history_merge(void);
-    static void test_history_formats(void);
+    static void test_history();
+    static void test_history_merge();
+    static void test_history_formats();
     // static void test_history_speed(void);
-    static void test_history_races(void);
+    static void test_history_races();
     static void test_history_races_pound_on_history(size_t item_count);
 };
 
-static wcstring random_string(void) {
+static wcstring random_string() {
     wcstring result;
     size_t max = 1 + rand() % 32;
     while (max--) {
@@ -2887,7 +2887,7 @@ static wcstring random_string(void) {
     return result;
 }
 
-void history_tests_t::test_history(void) {
+void history_tests_t::test_history() {
     history_search_t searcher;
     say(L"Testing history");
 
@@ -2992,7 +2992,7 @@ void history_tests_t::test_history(void) {
 }
 
 // Wait until the next second.
-static void time_barrier(void) {
+static void time_barrier() {
     time_t start = time(NULL);
     do {
         usleep(1000);
@@ -3019,7 +3019,7 @@ void history_tests_t::test_history_races_pound_on_history(size_t item_count) {
     }
 }
 
-void history_tests_t::test_history_races(void) {
+void history_tests_t::test_history_races() {
     say(L"Testing history race conditions");
 
     // Test concurrent history writing.
@@ -3114,7 +3114,7 @@ void history_tests_t::test_history_races(void) {
     hist.clear();
 }
 
-void history_tests_t::test_history_merge(void) {
+void history_tests_t::test_history_merge() {
     // In a single fish process, only one history is allowed to exist with the given name But it's
     // common to have multiple history instances with the same name active in different processes,
     // e.g. when you have multiple shells open. We try to get that right and merge all their history
@@ -3258,7 +3258,7 @@ static bool history_equals(history_t &hist, const wchar_t *const *strings) {
     return true;
 }
 
-void history_tests_t::test_history_formats(void) {
+void history_tests_t::test_history_formats() {
     const wchar_t *name;
 
     // Test inferring and reading legacy and bash history formats.
@@ -3361,7 +3361,7 @@ void history_tests_t::test_history_speed(void)
 }
 #endif
 
-static void test_new_parser_correctness(void) {
+static void test_new_parser_correctness() {
     say(L"Testing new parser!");
     const struct parser_test_t {
         const wchar_t *src;
@@ -3416,7 +3416,7 @@ static inline bool string_for_permutation(const wcstring *fuzzes, size_t fuzz_co
     return remaining_permutation == 0;
 }
 
-static void test_new_parser_fuzzing(void) {
+static void test_new_parser_fuzzing() {
     say(L"Fuzzing parser (node size: %lu)", sizeof(parse_node_t));
     const wcstring fuzzes[] = {
         L"if",      L"else", L"for", L"in",  L"while", L"begin", L"function",
@@ -3509,7 +3509,7 @@ static void check_function_help(const wchar_t *src) {
 // command handling. In particular, 'command foo' should be a decorated statement 'foo' but 'command
 // -help' should be an undecorated statement 'command' with argument '--help', and NOT attempt to
 // run a command called '--help'.
-static void test_new_parser_ll2(void) {
+static void test_new_parser_ll2() {
     say(L"Testing parser two-token lookahead");
 
     const struct {
@@ -3576,7 +3576,7 @@ static void test_new_parser_ad_hoc() {
     }
 }
 
-static void test_new_parser_errors(void) {
+static void test_new_parser_errors() {
     say(L"Testing new parser error reporting");
     const struct {
         const wchar_t *src;
@@ -3728,7 +3728,7 @@ static void test_error_messages() {
     }
 }
 
-static void test_highlighting(void) {
+static void test_highlighting() {
     say(L"Testing syntax highlighting");
     if (system("mkdir -p test/fish_highlight_test/")) err(L"mkdir failed");
     if (system("touch test/fish_highlight_test/foo")) err(L"touch failed");
@@ -3931,7 +3931,7 @@ static void test_highlighting(void) {
     }
 }
 
-static void test_wcstring_tok(void) {
+static void test_wcstring_tok() {
     say(L"Testing wcstring_tok");
     wcstring buff = L"hello world";
     wcstring needle = L" \t\n";
@@ -3980,7 +3980,7 @@ static void run_one_string_test(const wchar_t **argv, int expected_rc,
     }
 }
 
-static void test_string(void) {
+static void test_string() {
     static struct string_test {
         const wchar_t *argv[15];
         int expected_rc;
@@ -4301,7 +4301,7 @@ long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
 }
 
 /// Verify that setting special env vars have the expected effect on the current shell process.
-static void test_timezone_env_vars(void) {
+static void test_timezone_env_vars() {
     // Confirm changing the timezone affects fish's idea of the local time.
     time_t tstamp = time(NULL);
 
@@ -4314,12 +4314,12 @@ static void test_timezone_env_vars(void) {
 }
 
 /// Verify that setting special env vars have the expected effect on the current shell process.
-static void test_env_vars(void) {
+static void test_env_vars() {
     test_timezone_env_vars();
     // TODO: Add tests for the locale and ncurses vars.
 }
 
-static void test_illegal_command_exit_code(void) {
+static void test_illegal_command_exit_code() {
     say(L"Testing illegal command exit code");
 
     // We need to be in an empty directory so that none of the wildcards match a file that might be

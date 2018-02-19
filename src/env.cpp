@@ -703,7 +703,7 @@ void env_set_read_limit() {
     }
 }
 
-wcstring env_get_pwd_slash(void) {
+wcstring env_get_pwd_slash() {
     auto pwd_var = env_get(L"PWD");
     if (pwd_var.missing_or_empty()) {
         return L"";
@@ -1298,7 +1298,7 @@ const wcstring_list_t &env_var_t::as_list() const { return vals; }
 
 /// Return a string representation of the var. At the present time this uses the legacy 2.x
 /// encoding.
-wcstring env_var_t::as_string(void) const {
+wcstring env_var_t::as_string() const {
     if (this->vals.empty()) return wcstring(ENV_NULL);
 
     wchar_t sep = (flags & flag_colon_delimit) ? L':' : ARRAY_SEP;

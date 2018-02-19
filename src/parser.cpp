@@ -106,7 +106,7 @@ parser_t::~parser_t() {}
 
 static parser_t s_principal_parser;
 
-parser_t &parser_t::principal_parser(void) {
+parser_t &parser_t::principal_parser() {
     ASSERT_IS_NOT_FORKED_CHILD();
     ASSERT_IS_MAIN_THREAD();
     return s_principal_parser;
@@ -116,7 +116,7 @@ void parser_t::set_is_within_fish_initialization(bool flag) {
     is_within_fish_initialization = flag;
 }
 
-void parser_t::skip_all_blocks(void) {
+void parser_t::skip_all_blocks() {
     // Tell all blocks to skip.
     // This may be called from a signal handler!
     s_principal_parser.cancellation_requested = true;

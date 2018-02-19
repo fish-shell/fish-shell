@@ -344,7 +344,7 @@ struct parse_stack_element_t {
     explicit parse_stack_element_t(production_element_t e, node_offset_t idx)
         : type(production_element_type(e)), keyword(production_element_keyword(e)), node_idx(idx) {}
 
-    wcstring describe(void) const {
+    wcstring describe() const {
         wcstring result = token_type_description(type);
         if (keyword != parse_keyword_none) {
             append_format(result, L" <%ls>", keyword_description(keyword));
@@ -353,7 +353,7 @@ struct parse_stack_element_t {
     }
 
     /// Returns a name that we can show to the user, e.g. "a command".
-    wcstring user_presentable_description(void) const {
+    wcstring user_presentable_description() const {
         return token_type_user_presentable_description(type, keyword);
     }
 };
@@ -480,7 +480,7 @@ class parse_ll_t {
     void report_tokenizer_error(const tok_t &tok);
 
     /// Indicate if we hit a fatal error.
-    bool has_fatal_error(void) const { return this->fatal_errored; }
+    bool has_fatal_error() const { return this->fatal_errored; }
 
     /// Indicate whether we want to generate error messages.
     void set_should_generate_error_messages(bool flag) {
@@ -534,7 +534,7 @@ void parse_ll_t::dump_stack(void) const {
 // nodes an empty source range (but with a valid offset). We do this by walking forward. If a child
 // of a node has an invalid source range, we set it equal to the end of the source range of its
 // previous child.
-void parse_ll_t::determine_node_ranges(void) {
+void parse_ll_t::determine_node_ranges() {
     size_t idx = nodes.size();
     while (idx--) {
         parse_node_t *parent = &nodes[idx];

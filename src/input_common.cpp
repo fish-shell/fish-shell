@@ -39,11 +39,11 @@ static std::deque<wchar_t> lookahead_list;
 // Queue of pairs of (function pointer, argument) to be invoked. Expected to be mostly empty.
 typedef std::list<std::function<void(void)>> callback_queue_t;
 static callback_queue_t callback_queue;
-static void input_flush_callbacks(void);
+static void input_flush_callbacks();
 
-static bool has_lookahead(void) { return !lookahead_list.empty(); }
+static bool has_lookahead() { return !lookahead_list.empty(); }
 
-static wint_t lookahead_pop(void) {
+static wint_t lookahead_pop() {
     wint_t result = lookahead_list.front();
     lookahead_list.pop_front();
     return result;
@@ -53,7 +53,7 @@ static void lookahead_push_back(wint_t c) { lookahead_list.push_back(c); }
 
 static void lookahead_push_front(wint_t c) { lookahead_list.push_front(c); }
 
-static wint_t lookahead_front(void) { return lookahead_list.front(); }
+static wint_t lookahead_front() { return lookahead_list.front(); }
 
 /// Callback function for handling interrupts on reading.
 static int (*interrupt_handler)();
@@ -238,7 +238,7 @@ void input_common_add_callback(std::function<void(void)> callback) {
     callback_queue.push_back(std::move(callback));
 }
 
-static void input_flush_callbacks(void) {
+static void input_flush_callbacks() {
     // We move the queue into a local variable, so that events queued up during a callback don't get
     // fired until next round.
     ASSERT_IS_MAIN_THREAD();

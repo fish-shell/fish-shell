@@ -685,7 +685,7 @@ class string_matcher_t {
     string_matcher_t(options_t opts_, io_streams_t &streams_)
         : opts(std::move(opts_)), streams(streams_), total_matched(0) {}
 
-    virtual ~string_matcher_t() {}
+    virtual ~string_matcher_t() = default;
     virtual bool report_matches(const wchar_t *arg) = 0;
     int match_count() { return total_matched; }
 };
@@ -709,7 +709,7 @@ class wildcard_matcher_t : public string_matcher_t {
         }
     }
 
-    virtual ~wildcard_matcher_t() {}
+    virtual ~wildcard_matcher_t() = default;
 
     bool report_matches(const wchar_t *arg) {
         // Note: --all is a no-op for glob matching since the pattern is always matched
@@ -849,7 +849,7 @@ class pcre2_matcher_t : public string_matcher_t {
           argv0(argv0_),
           regex(argv0_, pattern, opts.ignore_case, streams) {}
 
-    virtual ~pcre2_matcher_t() {}
+    virtual ~pcre2_matcher_t() = default;
 
     bool report_matches(const wchar_t *arg) {
         // A return value of true means all is well (even if no matches were found), false indicates
@@ -959,7 +959,7 @@ class string_replacer_t {
     string_replacer_t(const wchar_t *argv0_, options_t opts_, io_streams_t &streams_)
         : argv0(argv0_), opts(std::move(opts_)), total_replaced(0), streams(streams_) {}
 
-    virtual ~string_replacer_t() {}
+    virtual ~string_replacer_t() = default;
     int replace_count() { return total_replaced; }
     virtual bool replace_matches(const wchar_t *arg) = 0;
 };
@@ -977,7 +977,7 @@ class literal_replacer_t : public string_replacer_t {
           replacement(replacement_),
           patlen(wcslen(pattern)) {}
 
-    virtual ~literal_replacer_t() {}
+    virtual ~literal_replacer_t() = default;
     bool replace_matches(const wchar_t *arg);
 };
 

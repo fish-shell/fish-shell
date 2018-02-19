@@ -185,7 +185,7 @@ ParserError::ParserError(const char_type *szMsg, int iPos, string_type sTok)
 }
 
 //------------------------------------------------------------------------------
-ParserError::~ParserError() {}
+ParserError::~ParserError() = default;
 
 //------------------------------------------------------------------------------
 /** \brief Replace all occurrences of a substring with another string.

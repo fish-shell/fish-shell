@@ -1367,9 +1367,9 @@ std::unique_ptr<universal_notifier_t> universal_notifier_t::new_notifier_for_str
 }
 
 // Default implementations.
-universal_notifier_t::universal_notifier_t() {}
+universal_notifier_t::universal_notifier_t() = default;
 
-universal_notifier_t::~universal_notifier_t() {}
+universal_notifier_t::~universal_notifier_t() = default;
 
 int universal_notifier_t::notification_fd() { return -1; }
 

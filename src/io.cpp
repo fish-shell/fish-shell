@@ -13,7 +13,7 @@
 #include "io.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-io_data_t::~io_data_t() {}
+io_data_t::~io_data_t() = default;
 
 void io_close_t::print() const { fwprintf(stderr, L"close %d\n", fd); }
 

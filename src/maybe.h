@@ -28,7 +28,7 @@ class maybe_t {
     explicit operator bool() const { return filled; }
 
     // The default constructor constructs a maybe with no value.
-    maybe_t() {}
+    maybe_t() = default;
 
     // Construct a maybe_t from a none_t
     /* implicit */ maybe_t(none_t n) { (void)n; }

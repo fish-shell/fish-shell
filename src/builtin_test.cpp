@@ -190,7 +190,7 @@ class expression {
     const token_t token;
     range_t range;
 
-    virtual ~expression() {}
+    virtual ~expression() = default;
 
     /// Evaluate returns true if the expression is true (i.e. STATUS_CMD_OK).
     virtual bool evaluate(wcstring_list_t &errors) = 0;
@@ -239,7 +239,7 @@ class combining_expression : public expression {
         assert(subjects.size() == combiners.size() + 1);
     }
 
-    virtual ~combining_expression() {}
+    virtual ~combining_expression() = default;
 
     bool evaluate(wcstring_list_t &errors);
 };

@@ -103,7 +103,7 @@ static wcstring user_presentable_path(const wcstring &path) {
 parser_t::parser_t() : cancellation_requested(false), is_within_fish_initialization(false) {}
 
 // Out of line destructor to enable forward declaration of parse_execution_context_t
-parser_t::~parser_t() {}
+parser_t::~parser_t() = default;
 
 static parser_t s_principal_parser;
 
@@ -788,7 +788,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
 
 block_t::block_t(block_type_t t) : block_type(t) {}
 
-block_t::~block_t() {}
+block_t::~block_t() = default;
 
 wcstring block_t::description() const {
     wcstring result;

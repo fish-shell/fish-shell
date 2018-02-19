@@ -709,9 +709,9 @@ class wildcard_matcher_t : public string_matcher_t {
         }
     }
 
-    virtual ~wildcard_matcher_t() = default;
+    ~wildcard_matcher_t() override = default;
 
-    bool report_matches(const wchar_t *arg) {
+    bool report_matches(const wchar_t *arg) override {
         // Note: --all is a no-op for glob matching since the pattern is always matched
         // against the entire argument.
         bool match;
@@ -849,9 +849,9 @@ class pcre2_matcher_t : public string_matcher_t {
           argv0(argv0_),
           regex(argv0_, pattern, opts.ignore_case, streams) {}
 
-    virtual ~pcre2_matcher_t() = default;
+    ~pcre2_matcher_t() override = default;
 
-    bool report_matches(const wchar_t *arg) {
+    bool report_matches(const wchar_t *arg) override {
         // A return value of true means all is well (even if no matches were found), false indicates
         // an unrecoverable error.
         if (regex.code == 0) {
@@ -977,8 +977,8 @@ class literal_replacer_t : public string_replacer_t {
           replacement(replacement_),
           patlen(wcslen(pattern)) {}
 
-    virtual ~literal_replacer_t() = default;
-    bool replace_matches(const wchar_t *arg);
+    ~literal_replacer_t() override = default;
+    bool replace_matches(const wchar_t *arg) override;
 };
 
 static wcstring interpret_escapes(const wchar_t *orig) {
@@ -1007,7 +1007,7 @@ class regex_replacer_t : public string_replacer_t {
           regex(argv0, pattern, opts.ignore_case, streams),
           replacement(interpret_escapes(replacement_)) {}
 
-    bool replace_matches(const wchar_t *arg);
+    bool replace_matches(const wchar_t *arg) override;
 };
 
 /// A return value of true means all is well (even if no replacements were performed), false

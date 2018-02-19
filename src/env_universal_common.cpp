@@ -1207,13 +1207,13 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         make_pipe(test_path);
     }
 
-    ~universal_notifier_named_pipe_t() {
+    ~universal_notifier_named_pipe_t() override {
         if (pipe_fd >= 0) {
             close(pipe_fd);
         }
     }
 
-    int notification_fd() {
+    int notification_fd() override {
         if (polling_due_to_readable_fd) {
             // We are in polling mode because we think our fd is readable. This means that, if we
             // return it to be select()'d on, we'll be called back immediately. So don't return it.
@@ -1223,7 +1223,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         return pipe_fd;
     }
 
-    bool notification_fd_became_readable(int fd) {
+    bool notification_fd_became_readable(int fd) override {
         // Our fd is readable. We deliberately do not read anything out of it: if we did, other
         // sessions may miss the notification. Instead, we go into "polling mode:" we do not
         // select() on our fd for a while, and sync periodically until the fd is no longer readable.
@@ -1240,7 +1240,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         return should_sync;
     }
 
-    void post_notification() {
+    void post_notification() override {
         if (pipe_fd >= 0) {
             // We need to write some data (any data) to the pipe, then wait for a while, then read
             // it back. Nobody is expected to read it except us.
@@ -1257,7 +1257,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         }
     }
 
-    unsigned long usec_delay_between_polls() const {
+    unsigned long usec_delay_between_polls() const override {
         unsigned long readback_delay = ULONG_MAX;
         if (this->readback_time_usec > 0) {
             // How long until the readback?
@@ -1285,7 +1285,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         return result;
     }
 
-    bool poll() {
+    bool poll() override {
         // Check if we are past the readback time.
         if (this->readback_time_usec > 0 && get_time() >= this->readback_time_usec) {
             // Read back what we wrote. We do nothing with the value.

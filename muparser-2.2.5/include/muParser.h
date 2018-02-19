@@ -50,10 +50,10 @@ namespace mu {
    public:
     Parser();
 
-    virtual void InitCharSets();
-    virtual void InitFun();
-    virtual void InitConst();
-    virtual void InitOprt();
+    void InitCharSets() override;
+    void InitFun() override;
+    void InitConst() override;
+    void InitOprt() override;
 
    protected:
     // Trigonometric functions

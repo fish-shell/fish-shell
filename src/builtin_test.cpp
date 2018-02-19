@@ -202,7 +202,7 @@ class unary_primary : public expression {
     wcstring arg;
     unary_primary(token_t tok, range_t where, wcstring what)
         : expression(tok, where), arg(std::move(what)) {}
-    bool evaluate(wcstring_list_t &errors);
+    bool evaluate(wcstring_list_t &errors) override;
 };
 
 /// Two argument primary like foo != bar.
@@ -213,7 +213,7 @@ class binary_primary : public expression {
 
     binary_primary(token_t tok, range_t where, wcstring left, wcstring right)
         : expression(tok, where), arg_left(std::move(left)), arg_right(std::move(right)) {}
-    bool evaluate(wcstring_list_t &errors);
+    bool evaluate(wcstring_list_t &errors) override;
 };
 
 /// Unary operator like bang.
@@ -222,7 +222,7 @@ class unary_operator : public expression {
     unique_ptr<expression> subject;
     unary_operator(token_t tok, range_t where, unique_ptr<expression> exp)
         : expression(tok, where), subject(move(exp)) {}
-    bool evaluate(wcstring_list_t &errors);
+    bool evaluate(wcstring_list_t &errors) override;
 };
 
 /// Combining expression. Contains a list of AND or OR expressions. It takes more than two so that
@@ -239,9 +239,9 @@ class combining_expression : public expression {
         assert(subjects.size() == combiners.size() + 1);
     }
 
-    virtual ~combining_expression() = default;
+    ~combining_expression() override = default;
 
-    bool evaluate(wcstring_list_t &errors);
+    bool evaluate(wcstring_list_t &errors) override;
 };
 
 /// Parenthetical expression.
@@ -251,7 +251,7 @@ class parenthetical_expression : public expression {
     parenthetical_expression(token_t tok, range_t where, unique_ptr<expression> expr)
         : expression(tok, where), contents(move(expr)) {}
 
-    virtual bool evaluate(wcstring_list_t &errors);
+    bool evaluate(wcstring_list_t &errors) override;
 };
 
 void test_parser::add_error(const wchar_t *fmt, ...) {

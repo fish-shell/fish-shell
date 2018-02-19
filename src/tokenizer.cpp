@@ -45,41 +45,27 @@ void tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *whe
                              const wchar_t *error_message) {
     this->last_type = TOK_ERROR;
     this->error = error_type;
-    this->global_error_offset = where ? where - this->orig_buff : 0;
+    this->global_error_offset = where ? where - this->start : 0;
     this->last_token = error_message;
+    this->has_next = false;
 }
 
-tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags)
-    : buff(b),
-      orig_buff(b),
-      last_type(TOK_NONE),
-      last_pos(0),
-      has_next(false),
-      accept_unfinished(false),
-      show_comments(false),
-      show_blank_lines(false),
-      error(TOK_ERROR_NONE),
-      global_error_offset(-1),
-      squash_errors(false),
-      continue_line_after_comment(false) {
-    assert(b != NULL);
+tokenizer_t::tokenizer_t(const wchar_t *start, tok_flags_t flags) : buff(start), start(start) {
+    assert(start != nullptr && "Invalid start");
 
     this->accept_unfinished = static_cast<bool>(flags & TOK_ACCEPT_UNFINISHED);
     this->show_comments = static_cast<bool>(flags & TOK_SHOW_COMMENTS);
     this->squash_errors = static_cast<bool>(flags & TOK_SQUASH_ERRORS);
     this->show_blank_lines = static_cast<bool>(flags & TOK_SHOW_BLANK_LINES);
-
-    this->has_next = (*b != L'\0');
-    this->tok_next();
 }
 
 bool tokenizer_t::next(struct tok_t *result) {
     assert(result != NULL);
-    if (!this->has_next) {
+    if (!this->tok_next()) {
         return false;
     }
 
-    const size_t current_pos = this->buff - this->orig_buff;
+    const size_t current_pos = this->buff - this->start;
 
     // We want to copy our last_token into result->text. If we just do this naively via =, we are
     // liable to trigger std::string's CoW implementation: result->text's storage will be
@@ -92,7 +78,7 @@ bool tokenizer_t::next(struct tok_t *result) {
     result->type = this->last_type;
     result->offset = this->last_pos;
     result->error = this->last_type == TOK_ERROR ? this->error : TOK_ERROR_NONE;
-    assert(this->buff >= this->orig_buff);
+    assert(this->buff >= this->start);
 
     // Compute error offset.
     result->error_offset = 0;
@@ -101,10 +87,8 @@ bool tokenizer_t::next(struct tok_t *result) {
         result->error_offset = this->global_error_offset - this->last_pos;
     }
 
-    assert(this->buff >= this->orig_buff);
+    assert(this->buff >= this->start);
     result->length = current_pos >= this->last_pos ? current_pos - this->last_pos : 0;
-
-    this->tok_next();
     return true;
 }
 
@@ -149,7 +133,7 @@ void tokenizer_t::read_string() {
     size_t paran_offsets[paran_offsets_max];
     // Where the open bracket is.
     size_t offset_of_bracket = 0;
-    const wchar_t *const start = this->buff;
+    const wchar_t *const buff_start = this->buff;
     bool is_first = true;
 
     enum tok_mode_t {
@@ -186,14 +170,14 @@ void tokenizer_t::read_string() {
                     switch (*this->buff) {
                         case L'(': {
                             paran_count = 1;
-                            paran_offsets[0] = this->buff - this->orig_buff;
+                            paran_offsets[0] = this->buff - this->start;
                             mode = mode_subshell;
                             break;
                         }
                         case L'[': {
-                            if (this->buff != start) {
+                            if (this->buff != buff_start) {
                                 mode = mode_array_brackets;
-                                offset_of_bracket = this->buff - this->orig_buff;
+                                offset_of_bracket = this->buff - this->start;
                             }
                             break;
                         }
@@ -247,7 +231,7 @@ void tokenizer_t::read_string() {
                         }
                         case L'(': {
                             if (paran_count < paran_offsets_max) {
-                                paran_offsets[paran_count] = this->buff - this->orig_buff;
+                                paran_offsets[paran_count] = this->buff - this->start;
                             }
                             paran_count++;
                             break;
@@ -277,7 +261,7 @@ void tokenizer_t::read_string() {
                     switch (*this->buff) {
                         case L'(': {
                             paran_count = 1;
-                            paran_offsets[0] = this->buff - this->orig_buff;
+                            paran_offsets[0] = this->buff - this->start;
                             mode = mode_array_brackets_and_subshell;
                             break;
                         }
@@ -315,13 +299,13 @@ void tokenizer_t::read_string() {
                 }
 
                 TOK_CALL_ERROR(this, TOK_UNTERMINATED_SUBSHELL, PARAN_ERROR,
-                               this->orig_buff + offset_of_open_paran);
+                               this->start + offset_of_open_paran);
                 break;
             }
             case mode_array_brackets:
             case mode_array_brackets_and_subshell: {
                 TOK_CALL_ERROR(this, TOK_UNTERMINATED_SLICE, SQUARE_BRACKET_ERROR,
-                               this->orig_buff + offset_of_bracket);
+                               this->start + offset_of_bracket);
                 break;
             }
             default: {
@@ -332,9 +316,9 @@ void tokenizer_t::read_string() {
         return;
     }
 
-    len = this->buff - start;
+    len = this->buff - buff_start;
 
-    this->last_token.assign(start, len);
+    this->last_token.assign(buff_start, len);
     this->last_type = TOK_STRING;
 }
 
@@ -483,16 +467,9 @@ int oflags_for_redirection_type(enum token_type type) {
 /// to be whitespace.
 static bool my_iswspace(wchar_t c) { return c != L'\n' && iswspace(c); }
 
-void tokenizer_t::tok_next() {
-    if (this->last_type == TOK_ERROR) {
-        this->has_next = false;
-        return;
-    }
-
+bool tokenizer_t::tok_next() {
     if (!this->has_next) {
-        // fwprintf(stdout, L"EOL\n" );
-        this->last_type = TOK_END;
-        return;
+        return false;
     }
 
     while (1) {
@@ -508,29 +485,28 @@ void tokenizer_t::tok_next() {
 
     while (*this->buff == L'#') {
         if (this->show_comments) {
-            this->last_pos = this->buff - this->orig_buff;
+            this->last_pos = this->buff - this->start;
             this->read_comment();
 
             if (this->buff[0] == L'\n' && this->continue_line_after_comment) this->buff++;
-            return;
+            return true;
         }
 
-        while (*(this->buff) != L'\n' && *(this->buff) != L'\0') this->buff++;
+        while (*this->buff != L'\n' && *this->buff != L'\0') this->buff++;
         if (this->buff[0] == L'\n' && this->continue_line_after_comment) this->buff++;
-        while (my_iswspace(*(this->buff))) this->buff++;
+        while (my_iswspace(*this->buff)) this->buff++;
     }
 
     this->continue_line_after_comment = false;
 
-    this->last_pos = this->buff - this->orig_buff;
+    this->last_pos = this->buff - this->start;
 
     switch (*this->buff) {
         case L'\0': {
             this->last_type = TOK_END;
-            // fwprintf( stderr, L"End of string\n" );
             this->has_next = false;
             this->last_token.clear();
-            break;
+            return false;
         }
         case L'\r':  // carriage-return
         case L'\n':  // newline
@@ -604,11 +580,12 @@ void tokenizer_t::tok_next() {
             break;
         }
     }
+    return true;
 }
 
 wcstring tok_first(const wcstring &str) {
     wcstring result;
-    tokenizer_t t(str.c_str(), TOK_SQUASH_ERRORS);
+    tokenizer_t t(str.data(), TOK_SQUASH_ERRORS);
     tok_t token;
     if (t.next(&token) && token.type == TOK_STRING) {
         result = std::move(token.text);

@@ -71,41 +71,41 @@ struct tok_t {
 /// The tokenizer struct.
 class tokenizer_t {
     // No copying, etc.
-    tokenizer_t(const tokenizer_t &);
-    void operator=(const tokenizer_t &);
+    tokenizer_t(const tokenizer_t &) = delete;
+    void operator=(const tokenizer_t &) = delete;
 
     /// A pointer into the original string, showing where the next token begins.
     const wchar_t *buff;
-    /// A copy of the original string.
-    const wchar_t *orig_buff;
+    /// The start of the original string.
+    const wchar_t *const start;
     /// The last token.
     wcstring last_token;
     /// Type of last token.
-    enum token_type last_type;
+    enum token_type last_type { TOK_NONE };
     /// Offset of last token.
-    size_t last_pos;
+    size_t last_pos{0};
     /// Whether there are more tokens.
-    bool has_next;
+    bool has_next{true};
     /// Whether incomplete tokens are accepted.
-    bool accept_unfinished;
+    bool accept_unfinished{false};
     /// Whether comments should be returned.
-    bool show_comments;
+    bool show_comments{false};
     /// Whether all blank lines are returned.
-    bool show_blank_lines;
+    bool show_blank_lines{false};
     /// Last error.
-    tokenizer_error error;
+    tokenizer_error error{TOK_ERROR_NONE};
     /// Last error offset, in "global" coordinates (relative to orig_buff).
-    size_t global_error_offset;
+    size_t global_error_offset{size_t(-1)};
     /// Whether we are squashing errors.
-    bool squash_errors;
+    bool squash_errors{false};
     /// Whether to continue the previous line after the comment.
-    bool continue_line_after_comment;
+    bool continue_line_after_comment{false};
 
     void call_error(enum tokenizer_error error_type, const wchar_t *where,
                     const wchar_t *error_message);
     void read_string();
     void read_comment();
-    void tok_next();
+    bool tok_next();
 
    public:
     /// Constructor for a tokenizer. b is the string that is to be tokenized. It is not copied, and

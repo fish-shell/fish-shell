@@ -509,6 +509,29 @@ static void test_tokenizer() {
     say(L"Testing tokenizer");
     tok_t token;
 
+    {
+        bool got = false;
+        const wchar_t *str = L"alpha beta";
+        tokenizer_t t(str, 0);
+
+        got = t.next(&token);  // alpha
+        do_test(got);
+        do_test(token.type == TOK_STRING);
+        do_test(token.offset == 0);
+        do_test(token.length == 5);
+        do_test(token.text == L"alpha");
+
+        got = t.next(&token);  // beta
+        do_test(got);
+        do_test(token.type == TOK_STRING);
+        do_test(token.offset == 6);
+        do_test(token.length == 4);
+        do_test(token.text == L"beta");
+
+        got = t.next(&token);
+        do_test(!got);
+    }
+
     const wchar_t *str =
         L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells "
         L"){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect "
@@ -524,14 +547,17 @@ static void test_tokenizer() {
         tokenizer_t t(str, 0);
         size_t i = 0;
         while (t.next(&token)) {
-            if (i > sizeof types / sizeof *types) {
+            if (i >= sizeof types / sizeof *types) {
                 err(L"Too many tokens returned from tokenizer");
+                fwprintf(stdout, L"Got excess token type %ld\n", (long)token.type);
                 break;
             }
             if (types[i] != token.type) {
                 err(L"Tokenization error:");
-                fwprintf(stdout, L"Token number %zu of string \n'%ls'\n, got token type %ld\n",
-                         i + 1, str, (long)token.type);
+                fwprintf(stdout,
+                         L"Token number %zu of string \n'%ls'\n, expected type %ld, got token type "
+                         L"%ld\n",
+                         i + 1, str, (long)types[i], (long)token.type);
             }
             i++;
         }

@@ -48,6 +48,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `bd` (#4472)
   - `jhipster` (#4472)
   - `ngrok` (#4642)
+  - `port`
 - Improved completions for
   - `git` (#4395, #4396, #4592)
   - `brew`

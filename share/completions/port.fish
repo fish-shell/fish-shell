@@ -30,43 +30,7 @@ function __fish_port_use_package --description 'Test if port command should have
 	return 1
 end
 
-# TODO: export to __fish_print_packages
-function __fish_print_port_packages
-    switch (commandline -ct)
-        case '-**'
-            return
-    end
-
-    #Get the word 'Package' in the current language
-    set -l package (_ "Package")
-
-    # Set up cache directory
-    if test -z "$XDG_CACHE_HOME"
-        set XDG_CACHE_HOME $HOME/.cache
-    end
-    mkdir -m 700 -p $XDG_CACHE_HOME
-
-		if type -q -f port
-
-        set cache_file $XDG_CACHE_HOME/.port-cache.$USER
-        if test -e $cache_file
-						# Delete if cache is older than 15 minutes
-            find "$cache_file" -ctime +15m | awk '{$1=$1;print}' | xargs rm
-            if test -f $cache_file
-								cat $cache_file
-                return
-            end
-        end
-
-        # Remove package version information from output and pipe into cache file
-        port echo all | awk '{$1=$1};1' >$cache_file
-				cat $cache_file
-				echo "all current active inactive installed uninstalled outdated" >>$cache_file
-        return
-    end
-end
-
-complete -c port -n '__fish_port_use_package' -a '(__fish_print_port_packages)' --description 'Package'
+complete -c port -n '__fish_port_use_package' -a '(__fish_print_packages)' --description 'Package'
 
 complete -f -n '__fish_port_no_subcommand' -c port -a 'activate'  --description 'Set the status of an previously installed version of a port to active'
 complete -f -n '__fish_port_no_subcommand' -c port -a 'archive'  --description "Create the port image (also called archive) for a port but will not actually install the port's files"
@@ -130,8 +94,6 @@ complete -f -n '__fish_port_no_subcommand' -c port -a 'usage'  --description 'Di
 complete -f -n '__fish_port_no_subcommand' -c port -a 'variants'  --description 'Print a list of variants with descriptions provided by a port'
 complete -f -n '__fish_port_no_subcommand' -c port -a 'version'  --description 'Print the MacPorts version'
 complete -f -n '__fish_port_no_subcommand' -c port -a 'work'  --description 'Displays the path to the work directory for portname'
-
-complete -c apt-get -s  --description ''
 
 complete -c apt-get -s v --description 'Verbose mode, generates verbose messages'
 complete -c apt-get -s d --description 'Debug mode, generate debugging messages, implies -v'

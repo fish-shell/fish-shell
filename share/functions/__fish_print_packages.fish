@@ -163,4 +163,25 @@ function __fish_print_packages
         end
     end
 
+    # port needs caching, as it tends to be slow
+    # BSD find is used for determining file age because HFS+ and APFS
+    # don't save unix time, but the actual date. Also BSD stat is vastly
+    # different from linux stat and converting its time format is tedious
+    if type -q -f port
+        set cache_file $XDG_CACHE_HOME/.port-cache.$USER
+        if test -e $cache_file
+            # Delete if cache is older than 15 minutes
+            find "$cache_file" -ctime +15m | awk '{$1=$1;print}' | xargs rm
+            if test -f $cache_file
+                cat $cache_file
+                return
+            end
+        end
+        # Remove trailing whitespace and pipe into cache file
+        port echo all | awk '{$1=$1};1' >$cache_file
+        echo "all current active inactive installed uninstalled outdated" >>$cache_file
+        cat $cache_file
+        return
+    end
+
 end

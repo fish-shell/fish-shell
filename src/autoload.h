@@ -71,7 +71,7 @@ class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {
     void entry_was_evicted(wcstring key, autoload_function_t node);
 
     // Create an autoload_t for the given environment variable name.
-    autoload_t(const wcstring &env_var_name_var, command_removed_function_t callback);
+    autoload_t(wcstring env_var_name_var, command_removed_function_t callback);
 
     /// Autoload the specified file, if it exists in the specified path. Do not load it multiple
     /// times unless its timestamp changes or parse_util_unload is called.

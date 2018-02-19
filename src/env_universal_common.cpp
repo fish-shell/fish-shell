@@ -255,8 +255,8 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
     return success;
 }
 
-env_universal_t::env_universal_t(const wcstring &path)
-    : explicit_vars_path(path), tried_renaming(false), last_read_file(kInvalidFileID) {}
+env_universal_t::env_universal_t(wcstring path)
+    : explicit_vars_path(std::move(path)), tried_renaming(false), last_read_file(kInvalidFileID) {}
 
 maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     var_table_t::const_iterator where = vars.find(name);

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <utility>
 
 #include "common.h"
 #include "env.h"
@@ -857,8 +858,8 @@ if_block_t::if_block_t() : block_t(IF) {}
 
 event_block_t::event_block_t(const event_t &evt) : block_t(EVENT), event(evt) {}
 
-function_block_t::function_block_t(const process_t *p, const wcstring &n, bool shadows)
-    : block_t(shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW), process(p), name(n) {}
+function_block_t::function_block_t(const process_t *p, wcstring n, bool shadows)
+    : block_t(shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW), process(p), name(std::move(n)) {}
 
 source_block_t::source_block_t(const wchar_t *src) : block_t(SOURCE), source_file(src) {}
 

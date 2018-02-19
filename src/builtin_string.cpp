@@ -682,8 +682,8 @@ class string_matcher_t {
     int total_matched;
 
    public:
-    string_matcher_t(const options_t &opts_, io_streams_t &streams_)
-        : opts(opts_), streams(streams_), total_matched(0) {}
+    string_matcher_t(options_t opts_, io_streams_t &streams_)
+        : opts(std::move(opts_)), streams(streams_), total_matched(0) {}
 
     virtual ~string_matcher_t() {}
     virtual bool report_matches(const wchar_t *arg) = 0;
@@ -956,8 +956,8 @@ class string_replacer_t {
     io_streams_t &streams;
 
    public:
-    string_replacer_t(const wchar_t *argv0_, const options_t &opts_, io_streams_t &streams_)
-        : argv0(argv0_), opts(opts_), total_replaced(0), streams(streams_) {}
+    string_replacer_t(const wchar_t *argv0_, options_t opts_, io_streams_t &streams_)
+        : argv0(argv0_), opts(std::move(opts_)), total_replaced(0), streams(streams_) {}
 
     virtual ~string_replacer_t() {}
     int replace_count() { return total_replaced; }

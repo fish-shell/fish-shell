@@ -216,7 +216,7 @@ class history_t {
     history_item_t item_at_index_assume_locked(size_t idx);
 
    public:
-    explicit history_t(const wcstring &);  // constructor
+    explicit history_t(wcstring );  // constructor
 
     // Returns history with the given name, creating it if necessary.
     static history_t &history_with_name(const wcstring &name);

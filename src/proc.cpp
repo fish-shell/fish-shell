@@ -32,6 +32,7 @@
 
 #include <algorithm>  // IWYU pragma: keep
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "common.h"
@@ -351,8 +352,8 @@ process_t::process_t() {}
 ///   the Linux kernel will use it for kernel processes.
 /// -1 should not be used; it is a possible return value of the getpgid()
 ///   function
-job_t::job_t(job_id_t jobid, const io_chain_t &bio)
-    : block_io(bio), pgid(-2), tmodes(), job_id(jobid), flags(0) {}
+job_t::job_t(job_id_t jobid, io_chain_t bio)
+    : block_io(std::move(bio)), pgid(-2), tmodes(), job_id(jobid), flags(0) {}
 
 job_t::~job_t() { release_job_id(job_id); }
 

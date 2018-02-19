@@ -306,9 +306,9 @@ class ParserError {
     ParserError();
     explicit ParserError(EErrorCodes a_iErrc);
     explicit ParserError(const string_type &sMsg);
-    ParserError(EErrorCodes a_iErrc, const string_type &sTok, int a_iPos = -1);
-    ParserError(EErrorCodes a_iErrc, int a_iPos, const string_type &sTok);
-    ParserError(const char_type *a_szMsg, int a_iPos = -1, const string_type &sTok = string_type());
+    ParserError(EErrorCodes a_iErrc, string_type sTok, int a_iPos = -1);
+    ParserError(EErrorCodes a_iErrc, int a_iPos, string_type sTok);
+    ParserError(const char_type *a_szMsg, int a_iPos = -1, string_type sTok = string_type());
     ParserError(ParserError &&) = default;
     ParserError &operator=(ParserError &&) = default;
     ParserError(const ParserError &a_Obj) = default;

@@ -22,8 +22,8 @@ struct callback_data_t {
     wcstring key;
     wcstring val;
 
-    callback_data_t(fish_message_type_t t, const wcstring &k, const wcstring &v)
-        : type(t), key(k), val(v) {}
+    callback_data_t(fish_message_type_t t, wcstring k, wcstring v)
+        : type(t), key(std::move(k)), val(std::move(v)) {}
 };
 
 typedef std::vector<struct callback_data_t> callback_data_list_t;
@@ -68,7 +68,7 @@ class env_universal_t {
     static var_table_t read_message_internal(int fd);
 
    public:
-    explicit env_universal_t(const wcstring &path);
+    explicit env_universal_t(wcstring path);
 
     // Get the value of the variable with the specified name.
     maybe_t<env_var_t> get(const wcstring &name) const;

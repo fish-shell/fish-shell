@@ -45,9 +45,9 @@ struct input_mapping_t {
     /// New mode that should be switched to after command evaluation.
     wcstring sets_mode;
 
-    input_mapping_t(const wcstring &s, const std::vector<wcstring> &c, const wcstring &m,
-                    const wcstring &sm)
-        : seq(s), commands(c), mode(m), sets_mode(sm) {
+    input_mapping_t(wcstring s, std::vector<wcstring> c, wcstring m,
+                    wcstring sm)
+        : seq(std::move(s)), commands(std::move(c)), mode(std::move(m)), sets_mode(std::move(sm)) {
         static unsigned int s_last_input_map_spec_order = 0;
         specification_order = ++s_last_input_map_spec_order;
     }

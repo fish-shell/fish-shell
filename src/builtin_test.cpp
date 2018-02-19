@@ -13,6 +13,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 
 #include "builtin.h"
 #include "common.h"
@@ -155,7 +156,7 @@ class test_parser {
     const wcstring &arg(unsigned int idx) { return strings.at(idx); }
 
    public:
-    explicit test_parser(const wcstring_list_t &val) : strings(val) {}
+    explicit test_parser(wcstring_list_t val) : strings(std::move(val)) {}
 
     unique_ptr<expression> parse_expression(unsigned int start, unsigned int end);
     unique_ptr<expression> parse_3_arg_expression(unsigned int start, unsigned int end);
@@ -183,7 +184,7 @@ struct range_t {
 /// Base class for expressions.
 class expression {
    protected:
-    expression(token_t what, range_t where) : token(what), range(where) {}
+    expression(token_t what, range_t where) : token(what), range(std::move(where)) {}
 
    public:
     const token_t token;
@@ -199,8 +200,8 @@ class expression {
 class unary_primary : public expression {
    public:
     wcstring arg;
-    unary_primary(token_t tok, range_t where, const wcstring &what)
-        : expression(tok, where), arg(what) {}
+    unary_primary(token_t tok, range_t where, wcstring what)
+        : expression(tok, where), arg(std::move(what)) {}
     bool evaluate(wcstring_list_t &errors);
 };
 
@@ -210,8 +211,8 @@ class binary_primary : public expression {
     wcstring arg_left;
     wcstring arg_right;
 
-    binary_primary(token_t tok, range_t where, const wcstring &left, const wcstring &right)
-        : expression(tok, where), arg_left(left), arg_right(right) {}
+    binary_primary(token_t tok, range_t where, wcstring left, wcstring right)
+        : expression(tok, where), arg_left(std::move(left)), arg_right(std::move(right)) {}
     bool evaluate(wcstring_list_t &errors);
 };
 

@@ -26,6 +26,8 @@
 
 #include <assert.h>
 
+#include <utility>
+
 namespace mu {
 //---------------------------------------------------------------------------
 string_type parser_error_for_code(EErrorCodes code) {
@@ -144,8 +146,8 @@ ParserError::ParserError(const string_type &sMsg) {
     \param [in] sTok The token string related to this error.
     \param [in] a_iPos the position in the expression where the error occurred.
 */
-ParserError::ParserError(EErrorCodes iErrc, const string_type &sTok, int iPos)
-    : m_strTok(sTok), m_iPos(iPos), m_iErrc(iErrc) {
+ParserError::ParserError(EErrorCodes iErrc, string_type sTok, int iPos)
+    : m_strTok(std::move(sTok)), m_iPos(iPos), m_iErrc(iErrc) {
     m_strMsg = parser_error_for_code(m_iErrc);
     stringstream_type stream;
     stream << (int)m_iPos;
@@ -159,8 +161,8 @@ ParserError::ParserError(EErrorCodes iErrc, const string_type &sTok, int iPos)
     \param [in] iPos the position in the expression where the error occurred.
     \param [in] sTok The token string related to this error.
 */
-ParserError::ParserError(EErrorCodes iErrc, int iPos, const string_type &sTok)
-    : m_strMsg(), m_strTok(sTok), m_iPos(iPos), m_iErrc(iErrc) {
+ParserError::ParserError(EErrorCodes iErrc, int iPos, string_type sTok)
+    : m_strMsg(), m_strTok(std::move(sTok)), m_iPos(iPos), m_iErrc(iErrc) {
     m_strMsg = parser_error_for_code(m_iErrc);
     stringstream_type stream;
     stream << (int)m_iPos;
@@ -174,8 +176,8 @@ ParserError::ParserError(EErrorCodes iErrc, int iPos, const string_type &sTok)
     \param [in] iPos the position related to the error.
     \param [in] sTok The token string related to this error.
 */
-ParserError::ParserError(const char_type *szMsg, int iPos, const string_type &sTok)
-    : m_strMsg(szMsg), m_strTok(sTok), m_iPos(iPos), m_iErrc(ecGENERIC) {
+ParserError::ParserError(const char_type *szMsg, int iPos, string_type sTok)
+    : m_strMsg(szMsg), m_strTok(std::move(sTok)), m_iPos(iPos), m_iErrc(ecGENERIC) {
     stringstream_type stream;
     stream << (int)m_iPos;
     ReplaceSubString(m_strMsg, _T("$POS$"), stream.str());

@@ -721,8 +721,8 @@ history_t &history_t::history_with_name(const wcstring &name) {
     return histories.get_creating(name);
 }
 
-history_t::history_t(const wcstring &pname)
-    : name(pname),
+history_t::history_t(wcstring pname)
+    : name(std::move(pname)),
       first_unwritten_new_item_index(0),
       has_pending_item(false),
       disable_automatic_save_counter(0),

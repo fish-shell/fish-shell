@@ -687,12 +687,12 @@ class highlighter_t {
    public:
     // Constructor
     highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev,
-                  const wcstring &wd, bool can_do_io)
+                  wcstring wd, bool can_do_io)
         : buff(str),
           cursor_pos(pos),
           vars(ev),
           io_ok(can_do_io),
-          working_directory(wd),
+          working_directory(std::move(wd)),
           color_array(str.size()) {
         // Parse the tree.
         parse_tree_from_string(buff, parse_flag_continue_after_error | parse_flag_include_comments,

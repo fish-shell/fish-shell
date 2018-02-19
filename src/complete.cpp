@@ -153,8 +153,8 @@ class completion_entry_t {
     void add_option(const complete_entry_opt_t &opt);
     bool remove_option(const wcstring &option, complete_option_type_t type);
 
-    completion_entry_t(const wcstring &c, bool type)
-        : cmd(c), cmd_is_path(type), order(++kCompleteOrder) {}
+    completion_entry_t(wcstring c, bool type)
+        : cmd(std::move(c)), cmd_is_path(type), order(++kCompleteOrder) {}
 };
 
 /// Set of all completion entries.
@@ -212,7 +212,7 @@ completion_t::completion_t(wcstring comp, wcstring desc, string_fuzzy_match_t ma
                            complete_flags_t flags_val)
     : completion(std::move(comp)),
       description(std::move(desc)),
-      match(mat),
+      match(std::move(mat)),
       flags(resolve_auto_space(completion, flags_val)) {}
 
 completion_t::completion_t(const completion_t &him) = default;
@@ -310,7 +310,7 @@ class completer_t {
     }
 
    public:
-    completer_t(const wcstring &c, completion_request_flags_t f) : flags(f), initial_cmd(c) {}
+    completer_t(wcstring c, completion_request_flags_t f) : flags(f), initial_cmd(std::move(c)) {}
 
     bool empty() const { return completions.empty(); }
     const std::vector<completion_t> &get_completions() { return completions; }

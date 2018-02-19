@@ -2,7 +2,7 @@
 
 function __fish_apt_no_subcommand -d 'Test if apt has yet to be given the subcommand'
 	for i in (commandline -opc)
-		if contains -- $i update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove
+		if contains -- $i update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove depends rdepends
 			return 1
 		end
 	end
@@ -11,7 +11,7 @@ end
 
 function __fish_apt_use_package -d 'Test if apt command should have packages as potential completion'
 	for i in (commandline -opc)
-		if contains -- $i install remove upgrade full-upgrade show search purge changelog policy
+		if contains -- $i install remove upgrade full-upgrade show search purge changelog policy depends rdepends
 			return 0
 		end
 	end
@@ -91,3 +91,9 @@ __fish_apt_subcommand autoremove       -d 'Remove packages no longer needed as d
 
 # Policy
 __fish_apt_subcommand policy -x        -d 'Display source or package priorities'
+
+# Depends
+__fish_apt_subcommand depends -r       -d 'List package dependencies'
+
+# Rdepends
+__fish_apt_subcommand rdepends -r      -d 'List package reverse dependencies'

@@ -178,8 +178,8 @@ function __fish_print_packages
             end
         end
         # Remove trailing whitespace and pipe into cache file
-        port echo all | awk '{$1=$1};1' >$cache_file
-        echo "all current active inactive installed uninstalled outdated" >>$cache_file
+        printf "all\ncurrent\nactive\ninactive\ninstalled\nuninstalled\noutdated" >$cache_file
+        port echo all | awk '{$1=$1};1' >>$cache_file &
         cat $cache_file
         return
     end

@@ -58,6 +58,19 @@ FUNCTION(FISH_CREATE_DIRS)
   ENDFOREACH(dir)
 ENDFUNCTION(FISH_CREATE_DIRS)
 
+FUNCTION(FISH_TRY_CREATE_DIRS)
+  FOREACH(dir ${ARGV})
+    IF(NOT IS_ABSOLUTE ${dir})
+      SET(abs_dir "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${dir}")
+    ELSE()
+      SET(abs_dir "\$ENV{DESTDIR}${dir}")
+    ENDIF()
+    INSTALL(SCRIPT CODE "EXECUTE_PROCESS(COMMAND mkdir -p ${abs_dir} OUTPUT_QUIET ERROR_QUIET)
+                         EXECUTE_PROCESS(COMMAND chmod 755 ${abs_dir} OUTPUT_QUIET ERROR_QUIET)
+                        ")
+  ENDFOREACH()
+ENDFUNCTION(FISH_TRY_CREATE_DIRS)
+
 # $v $(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 # $v for i in $(PROGRAMS); do\
 #   $(INSTALL) -m 755 $$i $(DESTDIR)$(bindir);\
@@ -106,8 +119,10 @@ INSTALL(FILES share/config.fish
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir)
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir)
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir)
-FISH_CREATE_DIRS(${rel_datadir}/pkgconfig ${extra_completionsdir}
-                 ${extra_functionsdir} ${extra_confdir})
+FISH_CREATE_DIRS(${rel_datadir}/pkgconfig)
+# Don't try too hard to create these directories as they may be outside our writeable area
+# https://github.com/Homebrew/homebrew-core/pull/2813
+FISH_TRY_CREATE_DIRS(${extra_completionsdir} ${extra_functionsdir} ${extra_confdir})
 
 # @echo "Installing pkgconfig file"
 # $v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig

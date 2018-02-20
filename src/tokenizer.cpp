@@ -16,12 +16,6 @@
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-// Wow what a hack.
-#define TOK_CALL_ERROR(t, e, x, where)                               \
-    do {                                                             \
-        (t)->call_error((e), where, (t)->squash_errors ? L"" : (x)); \
-    } while (0)
-
 /// Error string for unexpected end of string.
 #define QUOTE_ERROR _(L"Unexpected end of string, quotes are not balanced")
 
@@ -41,13 +35,38 @@
 #define PIPE_ERROR _(L"Cannot use stdin (fd 0) as pipe output")
 
 /// Set the latest tokens string to be the specified error message.
-void tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *where,
-                             const wchar_t *error_message) {
+void tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *where) {
+    assert(error_type != TOK_ERROR_NONE && "TOK_ERROR_NONE passed to call_error");
     this->last_type = TOK_ERROR;
     this->error = error_type;
-    this->global_error_offset = where ? where - this->start : 0;
-    this->last_token = error_message;
     this->has_next = false;
+    this->global_error_offset = where ? where - this->start : 0;
+    if (this->squash_errors) {
+        this->last_token.clear();
+    } else {
+        switch (error_type) {
+            case TOK_UNTERMINATED_QUOTE:
+                this->last_token = QUOTE_ERROR;
+                break;
+            case TOK_UNTERMINATED_SUBSHELL:
+                this->last_token = PARAN_ERROR;
+                break;
+            case TOK_UNTERMINATED_SLICE:
+                this->last_token = SQUARE_BRACKET_ERROR;
+                break;
+            case TOK_UNTERMINATED_ESCAPE:
+                this->last_token = UNTERMINATED_ESCAPE_ERROR;
+                break;
+            case TOK_INVALID_REDIRECT:
+                this->last_token = REDIRECT_ERROR;
+                break;
+            case TOK_INVALID_PIPE:
+                this->last_token = PIPE_ERROR;
+                break;
+            default:
+                assert(0 && "Unknown error type");
+        }
+    }
 }
 
 tokenizer_t::tokenizer_t(const wchar_t *start, tok_flags_t flags) : buff(start), start(start) {
@@ -151,8 +170,7 @@ void tokenizer_t::read_string() {
                 this->buff++;
                 if (*this->buff == L'\0') {
                     if ((!this->accept_unfinished)) {
-                        TOK_CALL_ERROR(this, TOK_UNTERMINATED_ESCAPE, UNTERMINATED_ESCAPE_ERROR,
-                                       error_location);
+                        this->call_error(TOK_UNTERMINATED_ESCAPE, error_location);
                         return;
                     }
                     // Since we are about to increment tok->buff, decrement it first so the
@@ -191,8 +209,7 @@ void tokenizer_t::read_string() {
                                 this->buff += wcslen(this->buff);
 
                                 if (!this->accept_unfinished) {
-                                    TOK_CALL_ERROR(this, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR,
-                                                   error_loc);
+                                    this->call_error(TOK_UNTERMINATED_QUOTE, error_loc);
                                     return;
                                 }
                                 do_loop = 0;
@@ -221,8 +238,7 @@ void tokenizer_t::read_string() {
                                 const wchar_t *error_loc = this->buff;
                                 this->buff += wcslen(this->buff);
                                 if ((!this->accept_unfinished)) {
-                                    TOK_CALL_ERROR(this, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR,
-                                                   error_loc);
+                                    this->call_error(TOK_UNTERMINATED_QUOTE, error_loc);
                                     return;
                                 }
                                 do_loop = 0;
@@ -298,14 +314,12 @@ void tokenizer_t::read_string() {
                     offset_of_open_paran = paran_offsets[paran_count - 1];
                 }
 
-                TOK_CALL_ERROR(this, TOK_UNTERMINATED_SUBSHELL, PARAN_ERROR,
-                               this->start + offset_of_open_paran);
+                this->call_error(TOK_UNTERMINATED_SUBSHELL, this->start + offset_of_open_paran);
                 break;
             }
             case mode_array_brackets:
             case mode_array_brackets_and_subshell: {
-                TOK_CALL_ERROR(this, TOK_UNTERMINATED_SLICE, SQUARE_BRACKET_ERROR,
-                               this->start + offset_of_bracket);
+                this->call_error(TOK_UNTERMINATED_SLICE, this->start + offset_of_bracket);
                 break;
             }
             default: {
@@ -551,7 +565,7 @@ bool tokenizer_t::tok_next() {
             int fd = -1;
             size_t consumed = read_redirection_or_fd_pipe(this->buff, &mode, &fd);
             if (consumed == 0 || fd < 0) {
-                TOK_CALL_ERROR(this, TOK_OTHER, REDIRECT_ERROR, this->buff);
+                this->call_error(TOK_INVALID_REDIRECT, this->buff);
             } else {
                 this->buff += consumed;
                 this->last_type = mode;
@@ -574,7 +588,7 @@ bool tokenizer_t::tok_next() {
                 // that fd 0 may be -1, indicating overflow; but we don't treat that as a tokenizer
                 // error.
                 if (mode == TOK_PIPE && fd == 0) {
-                    TOK_CALL_ERROR(this, TOK_OTHER, PIPE_ERROR, error_location);
+                    this->call_error(TOK_INVALID_PIPE, error_location);
                 } else {
                     this->buff += consumed;
                     this->last_type = mode;

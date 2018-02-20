@@ -30,7 +30,8 @@ enum tokenizer_error {
     TOK_UNTERMINATED_SUBSHELL,
     TOK_UNTERMINATED_SLICE,
     TOK_UNTERMINATED_ESCAPE,
-    TOK_OTHER
+    TOK_INVALID_REDIRECT,
+    TOK_INVALID_PIPE
 };
 
 /// Flag telling the tokenizer to accept incomplete parameters, i.e. parameters with mismatching
@@ -101,8 +102,7 @@ class tokenizer_t {
     /// Whether to continue the previous line after the comment.
     bool continue_line_after_comment{false};
 
-    void call_error(enum tokenizer_error error_type, const wchar_t *where,
-                    const wchar_t *error_message);
+    void call_error(enum tokenizer_error error_type, const wchar_t *where);
     void read_string();
     bool tok_next();
 

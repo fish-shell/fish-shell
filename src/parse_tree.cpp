@@ -730,7 +730,8 @@ void parse_ll_t::report_tokenizer_error(const tok_t &tok) {
             parse_error_code = parse_error_tokenizer_unterminated_escape;
             break;
         }
-        case TOK_OTHER:
+        case TOK_INVALID_REDIRECT:
+        case TOK_INVALID_PIPE:
         default: {
             parse_error_code = parse_error_tokenizer_other;
             break;

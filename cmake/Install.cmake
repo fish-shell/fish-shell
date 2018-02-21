@@ -112,12 +112,13 @@ FISH_CREATE_DIRS(${rel_datadir}/pkgconfig ${extra_completionsdir}
 # @echo "Installing pkgconfig file"
 # $v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
 CONFIGURE_FILE(fish.pc.in fish.pc.noversion)
+
 ADD_CUSTOM_COMMAND(OUTPUT fish.pc
-  COMMAND sed '/Version/d' fish.pc.noversion > fish.pc
-  COMMAND echo -n "Version: " >> fish.pc
-  COMMAND sed 's/FISH_BUILD_VERSION=//\;s/\"//g' ${FBVF} >> fish.pc
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS ${FBVF} ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
+    COMMAND sed '/Version/d' fish.pc.noversion > fish.pc
+    COMMAND echo -n "Version: " >> fish.pc
+    COMMAND sed 's/FISH_BUILD_VERSION=//\;s/\"//g' ${FBVF} >> fish.pc
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FBVF} ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
 
 ADD_CUSTOM_TARGET(build_fish_pc ALL DEPENDS fish.pc)
 

@@ -871,8 +871,7 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
     while (auto redirect_node = node.next_in_list<g::redirection>()) {
         int source_fd = -1;  // source fd
         wcstring target;     // file path or target fd
-        enum token_type redirect_type =
-            redirection_type(redirect_node, pstree->src, &source_fd, &target);
+        auto redirect_type = redirection_type(redirect_node, pstree->src, &source_fd, &target);
 
         // PCA: I can't justify this EXPAND_SKIP_VARIABLES flag. It was like this when I got here.
         bool target_expanded = expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0, NULL);
@@ -884,9 +883,9 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
 
         // Generate the actual IO redirection.
         shared_ptr<io_data_t> new_io;
-        assert(redirect_type != TOK_NONE);
-        switch (redirect_type) {
-            case TOK_REDIRECT_FD: {
+        assert(redirect_type && "expected to have a valid redirection");
+        switch (*redirect_type) {
+            case redirection_type_t::fd: {
                 if (target == L"-") {
                     new_io.reset(new io_close_t(source_fd));
                 } else {
@@ -902,19 +901,10 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
                 }
                 break;
             }
-            case TOK_REDIRECT_OUT:
-            case TOK_REDIRECT_APPEND:
-            case TOK_REDIRECT_IN:
-            case TOK_REDIRECT_NOCLOB: {
-                int oflags = oflags_for_redirection_type(redirect_type);
+            default: {
+                int oflags = oflags_for_redirection_type(*redirect_type);
                 io_file_t *new_io_file = new io_file_t(source_fd, target, oflags);
                 new_io.reset(new_io_file);
-                break;
-            }
-            default: {
-                // Should be unreachable.
-                debug(0, "Unexpected redirection type %ld.", (long)redirect_type);
-                PARSER_DIE();
                 break;
             }
         }

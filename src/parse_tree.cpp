@@ -231,11 +231,7 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
             result = parse_token_type_background;
             break;
         }
-        case TOK_REDIRECT_OUT:
-        case TOK_REDIRECT_APPEND:
-        case TOK_REDIRECT_IN:
-        case TOK_REDIRECT_FD:
-        case TOK_REDIRECT_NOCLOB: {
+        case TOK_REDIRECT: {
             result = parse_token_type_redirection;
             break;
         }

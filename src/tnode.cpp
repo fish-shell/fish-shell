@@ -50,10 +50,11 @@ enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_st
     return static_cast<parse_bool_statement_type_t>(stmt.tag());
 }
 
-enum token_type redirection_type(tnode_t<grammar::redirection> redirection, const wcstring &src,
-                                 int *out_fd, wcstring *out_target) {
+maybe_t<redirection_type_t> redirection_type(tnode_t<grammar::redirection> redirection,
+                                             const wcstring &src, int *out_fd,
+                                             wcstring *out_target) {
     assert(redirection && "redirection is missing");
-    enum token_type result = TOK_NONE;
+    maybe_t<redirection_type_t> result{};
     tnode_t<grammar::tok_redirection> prim = redirection.child<0>();  // like 2>
     assert(prim && "expected to have primitive");
 

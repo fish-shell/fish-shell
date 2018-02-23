@@ -323,15 +323,25 @@ tok_t tokenizer_t::read_string() {
     return result;
 }
 
-/// Reads a redirection or an "fd pipe" (like 2>|) from a string. Returns how many characters were
-/// consumed. If zero, then this string was not a redirection. Also returns by reference the
-/// redirection mode, and the fd to redirection. If there is overflow, *out_fd is set to -1.
-static size_t read_redirection_or_fd_pipe(const wchar_t *buff,
-                                          enum token_type *out_redirection_mode, int *out_fd) {
-    bool errored = false;
-    int fd = 0;
-    enum token_type redirection_mode = TOK_NONE;
+// Reads a redirection or an "fd pipe" (like 2>|) from a string.
+// Returns the parsed pipe or redirection, or none() on error.
+struct parsed_redir_or_pipe_t {
+    // Number of characters consumed.
+    size_t consumed{0};
 
+    // The token type, always either TOK_PIPE or TOK_REDIRECT.
+    token_type type{TOK_REDIRECT};
+
+    // The redirection mode if the type is TOK_REDIRECT.
+    redirection_type_t redirection_mode{redirection_type_t::overwrite};
+
+    // The redirected fd, or -1 on overflow.
+    int fd{0};
+};
+
+static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t *buff) {
+    bool errored = false;
+    parsed_redir_or_pipe_t result;
     size_t idx = 0;
 
     // Determine the fd. This may be specified as a prefix like '2>...' or it may be implicit like
@@ -343,21 +353,21 @@ static size_t read_redirection_or_fd_pipe(const wchar_t *buff,
         if (big_fd <= INT_MAX) big_fd = big_fd * 10 + (buff[idx] - L'0');
     }
 
-    fd = (big_fd > INT_MAX ? -1 : static_cast<int>(big_fd));
+    result.fd = (big_fd > INT_MAX ? -1 : static_cast<int>(big_fd));
 
     if (idx == 0) {
         // We did not find a leading digit, so there's no explicit fd. Infer it from the type.
         switch (buff[idx]) {
             case L'>': {
-                fd = STDOUT_FILENO;
+                result.fd = STDOUT_FILENO;
                 break;
             }
             case L'<': {
-                fd = STDIN_FILENO;
+                result.fd = STDIN_FILENO;
                 break;
             }
             case L'^': {
-                fd = STDERR_FILENO;
+                result.fd = STDERR_FILENO;
                 break;
             }
             default: {
@@ -371,55 +381,49 @@ static size_t read_redirection_or_fd_pipe(const wchar_t *buff,
     // Don't allow an fd with a caret redirection - see #1873
     wchar_t redirect_char = buff[idx++];  // note increment of idx
     if (redirect_char == L'>' || (redirect_char == L'^' && idx == 1)) {
-        redirection_mode = TOK_REDIRECT_OUT;
+        result.redirection_mode = redirection_type_t::overwrite;
         if (buff[idx] == redirect_char) {
             // Doubled up like ^^ or >>. That means append.
-            redirection_mode = TOK_REDIRECT_APPEND;
+            result.redirection_mode = redirection_type_t::append;
             idx++;
         }
     } else if (redirect_char == L'<') {
-        redirection_mode = TOK_REDIRECT_IN;
+        result.redirection_mode = redirection_type_t::input;
     } else {
         // Something else.
         errored = true;
     }
 
-    // Don't return valid-looking stuff on error.
+    // Bail on error.
     if (errored) {
-        idx = 0;
-        redirection_mode = TOK_NONE;
-    } else {
-        // Optional characters like & or ?, or the pipe char |.
-        wchar_t opt_char = buff[idx];
-        if (opt_char == L'&') {
-            redirection_mode = TOK_REDIRECT_FD;
-            idx++;
-        } else if (opt_char == L'?') {
-            redirection_mode = TOK_REDIRECT_NOCLOB;
-            idx++;
-        } else if (opt_char == L'|') {
-            // So the string looked like '2>|'. This is not a redirection - it's a pipe! That gets
-            // handled elsewhere.
-            redirection_mode = TOK_PIPE;
-            idx++;
-        }
+        return none();
     }
 
-    // Return stuff.
-    if (out_redirection_mode != NULL) *out_redirection_mode = redirection_mode;
-    if (out_fd != NULL) *out_fd = fd;
+    // Optional characters like & or ?, or the pipe char |.
+    wchar_t opt_char = buff[idx];
+    if (opt_char == L'&') {
+        result.redirection_mode = redirection_type_t::fd;
+        idx++;
+    } else if (opt_char == L'?') {
+        result.redirection_mode = redirection_type_t::noclob;
+        idx++;
+    } else if (opt_char == L'|') {
+        // So the string looked like '2>|'. This is not a redirection - it's a pipe! That gets
+        // handled elsewhere.
+        result.type = TOK_PIPE;
+        idx++;
+    }
 
-    return idx;
+    result.consumed = idx;
+    return result;
 }
 
-enum token_type redirection_type_for_string(const wcstring &str, int *out_fd) {
-    enum token_type mode = TOK_NONE;
-    int fd = 0;
-    read_redirection_or_fd_pipe(str.c_str(), &mode, &fd);
+maybe_t<redirection_type_t> redirection_type_for_string(const wcstring &str, int *out_fd) {
+    auto v = read_redirection_or_fd_pipe(str.c_str());
     // Redirections only, no pipes.
-    if (mode == TOK_PIPE || fd < 0) mode = TOK_NONE;
-    if (out_fd != NULL) *out_fd = fd;
-    return mode;
+    if (!v || v->type != TOK_REDIRECT || v->fd < 0) return none();
+    if (out_fd) *out_fd = v->fd;
+    return v->redirection_mode;
 }
 
 int fd_redirected_by_pipe(const wcstring &str) {
@@ -427,27 +431,22 @@ int fd_redirected_by_pipe(const wcstring &str) {
     if (str == L"|") {
         return STDOUT_FILENO;
     }
-
-    enum token_type mode = TOK_NONE;
-    int fd = 0;
-    read_redirection_or_fd_pipe(str.c_str(), &mode, &fd);
-    // Pipes only.
-    if (mode != TOK_PIPE || fd < 0) fd = -1;
-    return fd;
+    auto v = read_redirection_or_fd_pipe(str.c_str());
+    return (v && v->type == TOK_PIPE) ? v->fd : -1;
 }
 
-int oflags_for_redirection_type(enum token_type type) {
+int oflags_for_redirection_type(redirection_type_t type) {
     switch (type) {
-        case TOK_REDIRECT_APPEND: {
+        case redirection_type_t::append: {
             return O_CREAT | O_APPEND | O_WRONLY;
         }
-        case TOK_REDIRECT_OUT: {
+        case redirection_type_t::overwrite: {
             return O_CREAT | O_WRONLY | O_TRUNC;
         }
-        case TOK_REDIRECT_NOCLOB: {
+        case redirection_type_t::noclob: {
             return O_CREAT | O_EXCL | O_WRONLY;
         }
-        case TOK_REDIRECT_IN: {
+        case redirection_type_t::input: {
             return O_RDONLY;
         }
         default: { return -1; }
@@ -551,39 +550,35 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
         case L'^': {
             // There's some duplication with the code in the default case below. The key difference
             // here is that we must never parse these as a string; a failed redirection is an error!
-            enum token_type mode = TOK_NONE;
-            int fd = -1;
-            size_t consumed = read_redirection_or_fd_pipe(this->buff, &mode, &fd);
-            if (consumed == 0 || fd < 0) {
+            auto redir_or_pipe = read_redirection_or_fd_pipe(this->buff);
+            if (!redir_or_pipe || redir_or_pipe->fd < 0) {
                 return this->call_error(TOK_INVALID_REDIRECT, this->buff, this->buff);
             }
-            result.type = mode;
-            result.redirected_fd = fd;
-            result.length = consumed;
-            this->buff += consumed;
+            result.type = redir_or_pipe->type;
+            result.redirected_fd = redir_or_pipe->fd;
+            result.length = redir_or_pipe->consumed;
+            this->buff += redir_or_pipe->consumed;
             break;
         }
         default: {
             // Maybe a redirection like '2>&1', maybe a pipe like 2>|, maybe just a string.
             const wchar_t *error_location = this->buff;
-            size_t consumed = 0;
-            enum token_type mode = TOK_NONE;
-            int fd = -1;
+            maybe_t<parsed_redir_or_pipe_t> redir_or_pipe;
             if (iswdigit(*this->buff)) {
-                consumed = read_redirection_or_fd_pipe(this->buff, &mode, &fd);
+                redir_or_pipe = read_redirection_or_fd_pipe(this->buff);
             }
 
-            if (consumed > 0) {
+            if (redir_or_pipe && redir_or_pipe->consumed > 0) {
                 // It looks like a redirection or a pipe. But we don't support piping fd 0. Note
                 // that fd 0 may be -1, indicating overflow; but we don't treat that as a tokenizer
                 // error.
-                if (mode == TOK_PIPE && fd == 0) {
+                if (redir_or_pipe->type == TOK_PIPE && redir_or_pipe->fd == 0) {
                     return this->call_error(TOK_INVALID_PIPE, error_location, error_location);
                 }
-                result.type = mode;
-                result.redirected_fd = fd;
-                result.length = consumed;
-                this->buff += consumed;
+                result.type = redir_or_pipe->type;
+                result.redirected_fd = redir_or_pipe->fd;
+                result.length = redir_or_pipe->consumed;
+                this->buff += redir_or_pipe->consumed;
             } else {
                 // Not a redirection or pipe, so just a string.
                 result = this->read_string();

@@ -234,9 +234,10 @@ parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> st
 /// Return the type for a boolean statement.
 enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_statement> stmt);
 
-/// Given a redirection, get the redirection type (or TOK_NONE) and target (file path, or fd).
-enum token_type redirection_type(tnode_t<grammar::redirection> redirection, const wcstring &src,
-                                 int *out_fd, wcstring *out_target);
+/// Given a redirection, get the redirection type (or none) and target (file path, or fd).
+maybe_t<redirection_type_t> redirection_type(tnode_t<grammar::redirection> redirection,
+                                             const wcstring &src, int *out_fd,
+                                             wcstring *out_target);
 
 /// Return the arguments under an arguments_list or arguments_or_redirection_list
 /// Do not return more than max.

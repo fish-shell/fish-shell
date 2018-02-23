@@ -536,10 +536,9 @@ static void test_tokenizer() {
         L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells "
         L"){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect "
         L"Compress_Newlines\n  \n\t\n   \nInto_Just_One";
-    const int types[] = {TOK_STRING,          TOK_REDIRECT_IN, TOK_STRING, TOK_REDIRECT_FD,
-                         TOK_STRING,          TOK_STRING,      TOK_STRING, TOK_REDIRECT_OUT,
-                         TOK_REDIRECT_APPEND, TOK_STRING,      TOK_STRING, TOK_END,
-                         TOK_STRING};
+    const int types[] = {TOK_STRING, TOK_REDIRECT, TOK_STRING,   TOK_REDIRECT, TOK_STRING,
+                         TOK_STRING, TOK_STRING,   TOK_REDIRECT, TOK_REDIRECT, TOK_STRING,
+                         TOK_STRING, TOK_END,      TOK_STRING};
 
     say(L"Test correct tokenization");
 
@@ -594,25 +593,25 @@ static void test_tokenizer() {
     }
 
     // Test redirection_type_for_string.
-    if (redirection_type_for_string(L"<") != TOK_REDIRECT_IN)
+    if (redirection_type_for_string(L"<") != redirection_type_t::input)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"^") != TOK_REDIRECT_OUT)
+    if (redirection_type_for_string(L"^") != redirection_type_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L">") != TOK_REDIRECT_OUT)
+    if (redirection_type_for_string(L">") != redirection_type_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>") != TOK_REDIRECT_OUT)
+    if (redirection_type_for_string(L"2>") != redirection_type_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L">>") != TOK_REDIRECT_APPEND)
+    if (redirection_type_for_string(L">>") != redirection_type_t::append)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>>") != TOK_REDIRECT_APPEND)
+    if (redirection_type_for_string(L"2>>") != redirection_type_t::append)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>?") != TOK_REDIRECT_NOCLOB)
+    if (redirection_type_for_string(L"2>?") != redirection_type_t::noclob)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"9999999999999999>?") != TOK_NONE)
+    if (redirection_type_for_string(L"9999999999999999>?"))
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>&3") != TOK_REDIRECT_FD)
+    if (redirection_type_for_string(L"2>&3") != redirection_type_t::fd)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>|") != TOK_NONE)
+    if (redirection_type_for_string(L"2>|"))
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
 }
 

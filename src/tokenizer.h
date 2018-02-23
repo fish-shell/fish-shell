@@ -122,6 +122,12 @@ class tokenizer_t {
 
     /// Returns the text of a token, as a string.
     wcstring text_of(const tok_t &tok) const { return wcstring(start + tok.offset, tok.length); }
+
+    /// Copies a token's text into a string. This is useful for reusing storage.
+    /// Returns a reference to the string.
+    const wcstring &copy_text_of(const tok_t &tok, wcstring *result) {
+        return result->assign(start + tok.offset, tok.length);
+    }
 };
 
 /// Returns only the first token from the specified string. This is a convenience function, used to

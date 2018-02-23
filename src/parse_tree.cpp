@@ -1050,7 +1050,7 @@ static inline bool is_help_argument(const wcstring &txt) {
 }
 
 /// Return a new parse token, advancing the tokenizer.
-static inline parse_token_t next_parse_token(tokenizer_t *tok, tok_t *token) {
+static inline parse_token_t next_parse_token(tokenizer_t *tok, tok_t *token, wcstring *storage) {
     if (!tok->next(token)) {
         return kTerminalToken;
     }
@@ -1063,7 +1063,7 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok, tok_t *token) {
     // this writing (10/12/13) nobody seems to have noticed this. Squint at it really hard and it
     // even starts to look like a feature.
     result.type = parse_token_type_from_tokenizer_token(token->type);
-    wcstring text = tok->text_of(*token);
+    const wcstring &text = tok->copy_text_of(*token, storage);
     result.keyword = keyword_for_token(token->type, text);
     result.has_dash_prefix = !text.empty() && text.at(0) == L'-';
     result.is_help_argument = result.has_dash_prefix && is_help_argument(text);
@@ -1087,6 +1087,9 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
     parse_ll_t parser(goal);
     parser.set_should_generate_error_messages(errors != NULL);
 
+    // A string whose storage we reuse.
+    wcstring storage;
+
     // Construct the tokenizer.
     tok_flags_t tok_options = 0;
     if (parse_flags & parse_flag_include_comments) tok_options |= TOK_SHOW_COMMENTS;
@@ -1108,7 +1111,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
     for (size_t token_count = 0; queue[0].type != parse_token_type_terminate; token_count++) {
         // Push a new token onto the queue.
         queue[0] = queue[1];
-        queue[1] = next_parse_token(&tok, &tokenizer_token);
+        queue[1] = next_parse_token(&tok, &tokenizer_token, &storage);
 
         // If we are leaving things unterminated, then don't pass parse_token_type_terminate.
         if (queue[0].type == parse_token_type_terminate &&

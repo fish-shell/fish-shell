@@ -34,39 +34,46 @@
 /// Error string for when trying to pipe from fd 0.
 #define PIPE_ERROR _(L"Cannot use stdin (fd 0) as pipe output")
 
-/// Set the latest tokens string to be the specified error message.
-void tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *where) {
+/// Return an error token and mark that we no longer have a next token.
+tok_t tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *token_start,
+                              const wchar_t *error_loc) {
     assert(error_type != TOK_ERROR_NONE && "TOK_ERROR_NONE passed to call_error");
-    this->last_type = TOK_ERROR;
-    this->error = error_type;
+    assert(error_loc >= token_start && "Invalid error location");
+    assert(this->buff >= token_start && "Invalid buff location");
+
     this->has_next = false;
-    this->global_error_offset = where ? where - this->start : 0;
-    if (this->squash_errors) {
-        this->last_token.clear();
-    } else {
+
+    tok_t result;
+    result.type = TOK_ERROR;
+    result.error = error_type;
+    result.offset = token_start - this->start;
+    result.length = this->buff - token_start;
+    result.error_offset = error_loc - token_start;
+    if (!this->squash_errors) {
         switch (error_type) {
             case TOK_UNTERMINATED_QUOTE:
-                this->last_token = QUOTE_ERROR;
+                result.error_text = QUOTE_ERROR;
                 break;
             case TOK_UNTERMINATED_SUBSHELL:
-                this->last_token = PARAN_ERROR;
+                result.error_text = PARAN_ERROR;
                 break;
             case TOK_UNTERMINATED_SLICE:
-                this->last_token = SQUARE_BRACKET_ERROR;
+                result.error_text = SQUARE_BRACKET_ERROR;
                 break;
             case TOK_UNTERMINATED_ESCAPE:
-                this->last_token = UNTERMINATED_ESCAPE_ERROR;
+                result.error_text = UNTERMINATED_ESCAPE_ERROR;
                 break;
             case TOK_INVALID_REDIRECT:
-                this->last_token = REDIRECT_ERROR;
+                result.error_text = REDIRECT_ERROR;
                 break;
             case TOK_INVALID_PIPE:
-                this->last_token = PIPE_ERROR;
+                result.error_text = PIPE_ERROR;
                 break;
             default:
                 assert(0 && "Unknown error type");
         }
     }
+    return result;
 }
 
 tokenizer_t::tokenizer_t(const wchar_t *start, tok_flags_t flags) : buff(start), start(start) {
@@ -80,34 +87,11 @@ tokenizer_t::tokenizer_t(const wchar_t *start, tok_flags_t flags) : buff(start),
 
 bool tokenizer_t::next(struct tok_t *result) {
     assert(result != NULL);
-    if (!this->tok_next()) {
+    maybe_t<tok_t> tok = this->tok_next();
+    if (!tok) {
         return false;
     }
-
-    const size_t current_pos = this->buff - this->start;
-
-    // We want to copy our last_token into result->text. If we just do this naively via =, we are
-    // liable to trigger std::string's CoW implementation: result->text's storage will be
-    // deallocated and instead will acquire a reference to last_token's storage. But last_token will
-    // be overwritten soon, which will trigger a new allocation and a copy. So our attempt to re-use
-    // result->text's storage will have failed. To ensure that doesn't happen, use assign() with
-    // wchar_t.
-    result->text.assign(this->last_token.data(), this->last_token.size());
-
-    result->type = this->last_type;
-    result->offset = this->last_pos;
-    result->error = this->last_type == TOK_ERROR ? this->error : TOK_ERROR_NONE;
-    assert(this->buff >= this->start);
-
-    // Compute error offset.
-    result->error_offset = 0;
-    if (this->last_type == TOK_ERROR && this->global_error_offset >= this->last_pos &&
-        this->global_error_offset < current_pos) {
-        result->error_offset = this->global_error_offset - this->last_pos;
-    }
-
-    assert(this->buff >= this->start);
-    result->length = current_pos >= this->last_pos ? current_pos - this->last_pos : 0;
+    *result = std::move(*tok);
     return true;
 }
 
@@ -143,9 +127,8 @@ static bool tok_is_string_character(wchar_t c, bool is_first) {
 static int myal(wchar_t c) { return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z'); }
 
 /// Read the next token as a string.
-void tokenizer_t::read_string() {
-    long len;
-    int do_loop = 1;
+tok_t tokenizer_t::read_string() {
+    bool do_loop = true;
     size_t paran_count = 0;
     // Up to 96 open parens, before we give up on good error reporting.
     const size_t paran_offsets_max = 96;
@@ -170,8 +153,8 @@ void tokenizer_t::read_string() {
                 this->buff++;
                 if (*this->buff == L'\0') {
                     if ((!this->accept_unfinished)) {
-                        this->call_error(TOK_UNTERMINATED_ESCAPE, error_location);
-                        return;
+                        return this->call_error(TOK_UNTERMINATED_ESCAPE, buff_start,
+                                                error_location);
                     }
                     // Since we are about to increment tok->buff, decrement it first so the
                     // increment doesn't go past the end of the buffer. See issue #389.
@@ -209,8 +192,8 @@ void tokenizer_t::read_string() {
                                 this->buff += wcslen(this->buff);
 
                                 if (!this->accept_unfinished) {
-                                    this->call_error(TOK_UNTERMINATED_QUOTE, error_loc);
-                                    return;
+                                    return this->call_error(TOK_UNTERMINATED_QUOTE, buff_start,
+                                                            error_loc);
                                 }
                                 do_loop = 0;
                             }
@@ -238,8 +221,8 @@ void tokenizer_t::read_string() {
                                 const wchar_t *error_loc = this->buff;
                                 this->buff += wcslen(this->buff);
                                 if ((!this->accept_unfinished)) {
-                                    this->call_error(TOK_UNTERMINATED_QUOTE, error_loc);
-                                    return;
+                                    return this->call_error(TOK_UNTERMINATED_QUOTE, buff_start,
+                                                            error_loc);
                                 }
                                 do_loop = 0;
                             }
@@ -305,6 +288,7 @@ void tokenizer_t::read_string() {
     }
 
     if ((!this->accept_unfinished) && (mode != mode_regular_text)) {
+        tok_t error;
         switch (mode) {
             case mode_subshell: {
                 // Determine the innermost opening paran offset by interrogating paran_offsets.
@@ -314,12 +298,14 @@ void tokenizer_t::read_string() {
                     offset_of_open_paran = paran_offsets[paran_count - 1];
                 }
 
-                this->call_error(TOK_UNTERMINATED_SUBSHELL, this->start + offset_of_open_paran);
+                error = this->call_error(TOK_UNTERMINATED_SUBSHELL, buff_start,
+                                         this->start + offset_of_open_paran);
                 break;
             }
             case mode_array_brackets:
             case mode_array_brackets_and_subshell: {
-                this->call_error(TOK_UNTERMINATED_SLICE, this->start + offset_of_bracket);
+                error = this->call_error(TOK_UNTERMINATED_SLICE, buff_start,
+                                         this->start + offset_of_bracket);
                 break;
             }
             default: {
@@ -327,13 +313,14 @@ void tokenizer_t::read_string() {
                 break;
             }
         }
-        return;
+        return error;
     }
 
-    len = this->buff - buff_start;
-
-    this->last_token.assign(buff_start, len);
-    this->last_type = TOK_STRING;
+    tok_t result;
+    result.type = TOK_STRING;
+    result.offset = buff_start - this->start;
+    result.length = this->buff - buff_start;
+    return result;
 }
 
 /// Reads a redirection or an "fd pipe" (like 2>|) from a string. Returns how many characters were
@@ -482,9 +469,9 @@ static bool iswspace_not_nl(wchar_t c) {
     }
 }
 
-bool tokenizer_t::tok_next() {
+maybe_t<tok_t> tokenizer_t::tok_next() {
     if (!this->has_next) {
-        return false;
+        return none();
     }
 
     // Consume non-newline whitespace. If we get an escaped newline, mark it and continue past it.
@@ -510,30 +497,31 @@ bool tokenizer_t::tok_next() {
 
         // Maybe return the comment.
         if (this->show_comments) {
-            this->last_pos = comment_start - this->start;
-            this->last_token.assign(comment_start, comment_len);
-            this->last_type = TOK_COMMENT;
-            return true;
+            tok_t result;
+            result.type = TOK_COMMENT;
+            result.offset = comment_start - this->start;
+            result.length = comment_len;
+            return result;
         }
         while (iswspace_not_nl(this->buff[0])) this->buff++;
     }
 
     // We made it past the comments and ate any trailing newlines we wanted to ignore.
     this->continue_line_after_comment = false;
-    this->last_pos = this->buff - this->start;
+    size_t start_pos = this->buff - this->start;
 
+    tok_t result;
+    result.offset = start_pos;
     switch (*this->buff) {
         case L'\0': {
-            this->last_type = TOK_END;
             this->has_next = false;
-            this->last_token.clear();
-            return false;
+            return none();
         }
         case L'\r':  // carriage-return
         case L'\n':  // newline
         case L';': {
-            this->last_type = TOK_END;
-            this->last_token.assign(1, *this->buff);
+            result.type = TOK_END;
+            result.length = 1;
             this->buff++;
             // Hack: when we get a newline, swallow as many as we can. This compresses multiple
             // subsequent newlines into a single one.
@@ -546,13 +534,15 @@ bool tokenizer_t::tok_next() {
             break;
         }
         case L'&': {
-            this->last_type = TOK_BACKGROUND;
+            result.type = TOK_BACKGROUND;
+            result.length = 1;
             this->buff++;
             break;
         }
         case L'|': {
-            this->last_token = L"1";
-            this->last_type = TOK_PIPE;
+            result.type = TOK_PIPE;
+            result.redirected_fd = 1;
+            result.length = 1;
             this->buff++;
             break;
         }
@@ -565,12 +555,12 @@ bool tokenizer_t::tok_next() {
             int fd = -1;
             size_t consumed = read_redirection_or_fd_pipe(this->buff, &mode, &fd);
             if (consumed == 0 || fd < 0) {
-                this->call_error(TOK_INVALID_REDIRECT, this->buff);
-            } else {
-                this->buff += consumed;
-                this->last_type = mode;
-                this->last_token = to_string(fd);
+                return this->call_error(TOK_INVALID_REDIRECT, this->buff, this->buff);
             }
+            result.type = mode;
+            result.redirected_fd = fd;
+            result.length = consumed;
+            this->buff += consumed;
             break;
         }
         default: {
@@ -588,30 +578,29 @@ bool tokenizer_t::tok_next() {
                 // that fd 0 may be -1, indicating overflow; but we don't treat that as a tokenizer
                 // error.
                 if (mode == TOK_PIPE && fd == 0) {
-                    this->call_error(TOK_INVALID_PIPE, error_location);
-                } else {
-                    this->buff += consumed;
-                    this->last_type = mode;
-                    this->last_token = to_string(fd);
+                    return this->call_error(TOK_INVALID_PIPE, error_location, error_location);
                 }
+                result.type = mode;
+                result.redirected_fd = fd;
+                result.length = consumed;
+                this->buff += consumed;
             } else {
                 // Not a redirection or pipe, so just a string.
-                this->read_string();
+                result = this->read_string();
             }
             break;
         }
     }
-    return true;
+    return result;
 }
 
 wcstring tok_first(const wcstring &str) {
-    wcstring result;
-    tokenizer_t t(str.data(), TOK_SQUASH_ERRORS);
+    tokenizer_t t(str.c_str(), TOK_SQUASH_ERRORS);
     tok_t token;
     if (t.next(&token) && token.type == TOK_STRING) {
-        result = std::move(token.text);
+        return t.text_of(token);
     }
-    return result;
+    return {};
 }
 
 bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {

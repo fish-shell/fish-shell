@@ -477,7 +477,7 @@ class parse_ll_t {
     void accept_tokens(parse_token_t token1, parse_token_t token2);
 
     /// Report tokenizer errors.
-    void report_tokenizer_error(const tok_t &tok);
+    void report_tokenizer_error(const tokenizer_t &tokenizer, const tok_t &tok);
 
     /// Indicate if we hit a fatal error.
     bool has_fatal_error() const { return this->fatal_errored; }
@@ -711,7 +711,7 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
     }
 }
 
-void parse_ll_t::report_tokenizer_error(const tok_t &tok) {
+void parse_ll_t::report_tokenizer_error(const tokenizer_t &tokenizer, const tok_t &tok) {
     parse_error_code_t parse_error_code;
     switch (tok.error) {
         case TOK_UNTERMINATED_QUOTE: {
@@ -738,7 +738,7 @@ void parse_ll_t::report_tokenizer_error(const tok_t &tok) {
         }
     }
     this->parse_error_at_location(tok.offset + tok.error_offset, parse_error_code, L"%ls",
-                                  tok.text.c_str());
+                                  tokenizer.text_of(tok).c_str());
 }
 
 void parse_ll_t::parse_error_unexpected_token(const wchar_t *expected, parse_token_t token) {
@@ -1067,10 +1067,11 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok, tok_t *token) {
     // this writing (10/12/13) nobody seems to have noticed this. Squint at it really hard and it
     // even starts to look like a feature.
     result.type = parse_token_type_from_tokenizer_token(token->type);
-    result.keyword = keyword_for_token(token->type, token->text);
-    result.has_dash_prefix = !token->text.empty() && token->text.at(0) == L'-';
-    result.is_help_argument = result.has_dash_prefix && is_help_argument(token->text);
-    result.is_newline = (result.type == parse_token_type_end && token->text == L"\n");
+    wcstring text = tok->text_of(*token);
+    result.keyword = keyword_for_token(token->type, text);
+    result.has_dash_prefix = !text.empty() && text.at(0) == L'-';
+    result.is_help_argument = result.has_dash_prefix && is_help_argument(text);
+    result.is_newline = (result.type == parse_token_type_end && text == L"\n");
 
     // These assertions are totally bogus. Basically our tokenizer works in size_t but we work in
     // uint32_t to save some space. If we have a source file larger than 4 GB, we'll probably just
@@ -1128,7 +1129,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
         // Handle tokenizer errors. This is a hack because really the parser should report this for
         // itself; but it has no way of getting the tokenizer message.
         if (queue[1].type == parse_special_type_tokenizer_error) {
-            parser.report_tokenizer_error(tokenizer_token);
+            parser.report_tokenizer_error(tok, tokenizer_token);
         }
 
         if (!parser.has_fatal_error()) {

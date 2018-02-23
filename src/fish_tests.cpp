@@ -519,14 +519,14 @@ static void test_tokenizer() {
         do_test(token.type == TOK_STRING);
         do_test(token.offset == 0);
         do_test(token.length == 5);
-        do_test(token.text == L"alpha");
+        do_test(t.text_of(token) == L"alpha");
 
         got = t.next(&token);  // beta
         do_test(got);
         do_test(token.type == TOK_STRING);
         do_test(token.offset == 6);
         do_test(token.length == 4);
-        do_test(token.text == L"beta");
+        do_test(t.text_of(token) == L"beta");
 
         got = t.next(&token);
         do_test(!got);

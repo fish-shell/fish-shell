@@ -379,7 +379,7 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
 
         // Calculate end of token.
         if (token.type == TOK_STRING) {
-            tok_end += token.text.size();
+            tok_end += token.length;
         }
 
         // Cursor was before beginning of this token, means that the cursor is between two tokens,
@@ -393,14 +393,14 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
         // and break.
         if (token.type == TOK_STRING && tok_end >= offset_within_cmdsubst) {
             a = cmdsubst_begin + token.offset;
-            b = a + token.text.size();
+            b = a + token.length;
             break;
         }
 
         // Remember previous string token.
         if (token.type == TOK_STRING) {
             pa = cmdsubst_begin + token.offset;
-            pb = pa + token.text.size();
+            pb = pa + token.length;
         }
     }
 
@@ -479,7 +479,8 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     while (tok.next(&token)) {
         if (token.offset > pos) break;
 
-        if (token.type == TOK_STRING) last_quote = get_quote(token.text, pos - token.offset);
+        if (token.type == TOK_STRING)
+            last_quote = get_quote(tok.text_of(token), pos - token.offset);
 
         if (out_type != NULL) *out_type = token.type;
 

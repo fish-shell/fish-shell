@@ -1744,13 +1744,14 @@ static void handle_token_history(history_search_direction_t dir, bool reset = fa
             tok_t token;
             while (tok.next(&token)) {
                 if (token.type != TOK_STRING) continue;
-                if (token.text.find(data->search_buff) == wcstring::npos) continue;
+                wcstring text = tok.text_of(token);
+                if (text.find(data->search_buff) == wcstring::npos) continue;
                 if (token.offset >= current_pos) continue;
 
-                auto found = find(data->search_prev.begin(), data->search_prev.end(), token.text);
+                auto found = find(data->search_prev.begin(), data->search_prev.end(), text);
                 if (found == data->search_prev.end()) {
                     data->token_history_pos = token.offset;
-                    str = token.text;
+                    str = text;
                 }
             }
         }

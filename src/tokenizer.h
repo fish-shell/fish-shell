@@ -6,6 +6,7 @@
 #include <stddef.h>
 
 #include "common.h"
+#include "maybe.h"
 
 /// Token types.
 enum token_type {
@@ -52,21 +53,26 @@ enum tokenizer_error {
 typedef unsigned int tok_flags_t;
 
 struct tok_t {
-    // The text of the token, or an error message for type error.
-    wcstring text;
     // The type of the token.
-    token_type type;
+    token_type type{TOK_NONE};
+
+    // Offset of the token.
+    size_t offset{0};
+    // Length of the token.
+    size_t length{0};
+
+    // If the token represents a redirection, the redirected fd.
+    maybe_t<int> redirected_fd{};
+
     // If an error, this is the error code.
-    enum tokenizer_error error;
+    enum tokenizer_error error { TOK_ERROR_NONE };
     // If an error, this is the offset of the error within the token. A value of 0 means it occurred
     // at 'offset'.
-    size_t error_offset;
-    // Offset of the token.
-    size_t offset;
-    // Length of the token.
-    size_t length;
+    size_t error_offset{size_t(-1)};
+    // If there is an error, the text of the error; otherwise empty.
+    wcstring error_text{};
 
-    tok_t() : type(TOK_NONE), error(TOK_ERROR_NONE), error_offset(-1), offset(-1), length(-1) {}
+    tok_t() = default;
 };
 
 /// The tokenizer struct.
@@ -79,13 +85,7 @@ class tokenizer_t {
     const wchar_t *buff;
     /// The start of the original string.
     const wchar_t *const start;
-    /// The last token.
-    wcstring last_token;
-    /// Type of last token.
-    enum token_type last_type { TOK_NONE };
-    /// Offset of last token.
-    size_t last_pos{0};
-    /// Whether there are more tokens.
+    /// Whether we have additional tokens.
     bool has_next{true};
     /// Whether incomplete tokens are accepted.
     bool accept_unfinished{false};
@@ -93,18 +93,15 @@ class tokenizer_t {
     bool show_comments{false};
     /// Whether all blank lines are returned.
     bool show_blank_lines{false};
-    /// Last error.
-    tokenizer_error error{TOK_ERROR_NONE};
-    /// Last error offset, in "global" coordinates (relative to orig_buff).
-    size_t global_error_offset{size_t(-1)};
     /// Whether we are squashing errors.
     bool squash_errors{false};
     /// Whether to continue the previous line after the comment.
     bool continue_line_after_comment{false};
 
-    void call_error(enum tokenizer_error error_type, const wchar_t *where);
-    void read_string();
-    bool tok_next();
+    tok_t call_error(enum tokenizer_error error_type, const wchar_t *token_start,
+                     const wchar_t *error_loc);
+    tok_t read_string();
+    maybe_t<tok_t> tok_next();
 
    public:
     /// Constructor for a tokenizer. b is the string that is to be tokenized. It is not copied, and
@@ -118,6 +115,9 @@ class tokenizer_t {
 
     /// Returns the next token by reference. Returns true if we got one, false if we're at the end.
     bool next(struct tok_t *result);
+
+    /// Returns the text of a token, as a string.
+    wcstring text_of(const tok_t &tok) const { return wcstring(start + tok.offset, tok.length); }
 };
 
 /// Returns only the first token from the specified string. This is a convenience function, used to

@@ -371,7 +371,7 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
 
     const wcstring buffcpy = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
 
-    tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
+    tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED);
     tok_t token;
     while (tok.next(&token)) {
         size_t tok_begin = token.offset;
@@ -474,7 +474,7 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     size_t prev_pos = 0;
     wchar_t last_quote = L'\0';
 
-    tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
+    tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED);
     tok_t token;
     while (tok.next(&token)) {
         if (token.offset > pos) break;

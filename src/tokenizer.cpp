@@ -34,6 +34,26 @@
 /// Error string for when trying to pipe from fd 0.
 #define PIPE_ERROR _(L"Cannot use stdin (fd 0) as pipe output")
 
+wcstring error_message_for_code(tokenizer_error err) {
+    switch (err) {
+        case TOK_UNTERMINATED_QUOTE:
+            return QUOTE_ERROR;
+        case TOK_UNTERMINATED_SUBSHELL:
+            return PARAN_ERROR;
+        case TOK_UNTERMINATED_SLICE:
+            return SQUARE_BRACKET_ERROR;
+        case TOK_UNTERMINATED_ESCAPE:
+            return UNTERMINATED_ESCAPE_ERROR;
+        case TOK_INVALID_REDIRECT:
+            return REDIRECT_ERROR;
+        case TOK_INVALID_PIPE:
+            return PIPE_ERROR;
+        default:
+            assert(0 && "Unknown error type");
+            return {};
+    }
+}
+
 /// Return an error token and mark that we no longer have a next token.
 tok_t tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *token_start,
                               const wchar_t *error_loc) {
@@ -49,30 +69,6 @@ tok_t tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *to
     result.offset = token_start - this->start;
     result.length = this->buff - token_start;
     result.error_offset = error_loc - token_start;
-    if (!this->squash_errors) {
-        switch (error_type) {
-            case TOK_UNTERMINATED_QUOTE:
-                result.error_text = QUOTE_ERROR;
-                break;
-            case TOK_UNTERMINATED_SUBSHELL:
-                result.error_text = PARAN_ERROR;
-                break;
-            case TOK_UNTERMINATED_SLICE:
-                result.error_text = SQUARE_BRACKET_ERROR;
-                break;
-            case TOK_UNTERMINATED_ESCAPE:
-                result.error_text = UNTERMINATED_ESCAPE_ERROR;
-                break;
-            case TOK_INVALID_REDIRECT:
-                result.error_text = REDIRECT_ERROR;
-                break;
-            case TOK_INVALID_PIPE:
-                result.error_text = PIPE_ERROR;
-                break;
-            default:
-                assert(0 && "Unknown error type");
-        }
-    }
     return result;
 }
 
@@ -81,7 +77,6 @@ tokenizer_t::tokenizer_t(const wchar_t *start, tok_flags_t flags) : buff(start),
 
     this->accept_unfinished = static_cast<bool>(flags & TOK_ACCEPT_UNFINISHED);
     this->show_comments = static_cast<bool>(flags & TOK_SHOW_COMMENTS);
-    this->squash_errors = static_cast<bool>(flags & TOK_SQUASH_ERRORS);
     this->show_blank_lines = static_cast<bool>(flags & TOK_SHOW_BLANK_LINES);
 }
 
@@ -590,7 +585,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
 }
 
 wcstring tok_first(const wcstring &str) {
-    tokenizer_t t(str.c_str(), TOK_SQUASH_ERRORS);
+    tokenizer_t t(str.c_str(), 0);
     tok_t token;
     if (t.next(&token) && token.type == TOK_STRING) {
         return t.text_of(token);

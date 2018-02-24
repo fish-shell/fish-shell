@@ -2316,7 +2316,7 @@ static wchar_t unescaped_quote(const wcstring &str, size_t pos) {
 
 /// Returns true if the last token is a comment.
 static bool text_ends_in_comment(const wcstring &text) {
-    tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS | TOK_SQUASH_ERRORS);
+    tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS);
     tok_t token;
     while (tok.next(&token)) {
         ;  // pass

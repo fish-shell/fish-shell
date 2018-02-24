@@ -374,8 +374,8 @@ class parse_ll_t {
 
     void parse_error_unexpected_token(const wchar_t *expected, parse_token_t token);
     void parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *format, ...);
-    void parse_error_at_location(size_t location, parse_error_code_t code, const wchar_t *format,
-                                 ...);
+    void parse_error_at_location(size_t source_start, size_t source_length, size_t error_location,
+                                 parse_error_code_t code, const wchar_t *format, ...);
     void parse_error_failed_production(struct parse_stack_element_t &elem, parse_token_t token);
     void parse_error_unbalancing_token(parse_token_t token);
 
@@ -608,7 +608,8 @@ void parse_ll_t::parse_error(parse_token_t token, parse_error_code_t code, const
     }
 }
 
-void parse_ll_t::parse_error_at_location(size_t source_location, parse_error_code_t code,
+void parse_ll_t::parse_error_at_location(size_t source_start, size_t source_length,
+                                         size_t error_location, parse_error_code_t code,
                                          const wchar_t *fmt, ...) {
     this->fatal_errored = true;
     if (this->should_generate_error_messages) {
@@ -621,8 +622,8 @@ void parse_ll_t::parse_error_at_location(size_t source_location, parse_error_cod
         err.code = code;
         va_end(va);
 
-        err.source_start = source_location;
-        err.source_length = 0;
+        err.source_start = source_start;
+        err.source_length = source_length;
         this->errors.push_back(err);
     }
 }
@@ -733,8 +734,10 @@ void parse_ll_t::report_tokenizer_error(const tokenizer_t &tokenizer, const tok_
             break;
         }
     }
-    this->parse_error_at_location(tok.offset + tok.error_offset, parse_error_code, L"%ls",
-                                  tokenizer.text_of(tok).c_str());
+
+    this->parse_error_at_location(tok.offset, tok.length, tok.offset + tok.error_offset,
+                                  parse_error_code, L"%ls",
+                                  error_message_for_code(tok.error).c_str());
 }
 
 void parse_ll_t::parse_error_unexpected_token(const wchar_t *expected, parse_token_t token) {
@@ -811,8 +814,9 @@ bool parse_ll_t::report_error_for_unclosed_block() {
     }
     if (cursor->source_start != NODE_OFFSET_INVALID) {
         const wcstring node_desc = block_type_user_presentable_description(block_node->type);
-        this->parse_error_at_location(cursor->source_start, parse_error_generic,
-                                      L"Missing end to balance this %ls", node_desc.c_str());
+        this->parse_error_at_location(cursor->source_start, 0, cursor->source_start,
+                                      parse_error_generic, L"Missing end to balance this %ls",
+                                      node_desc.c_str());
         reported_error = true;
     }
     return reported_error;
@@ -1097,8 +1101,6 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
     if (parse_flags & parse_flag_accept_incomplete_tokens) tok_options |= TOK_ACCEPT_UNFINISHED;
 
     if (parse_flags & parse_flag_show_blank_lines) tok_options |= TOK_SHOW_BLANK_LINES;
-
-    if (errors == NULL) tok_options |= TOK_SQUASH_ERRORS;
 
     tokenizer_t tok(str.c_str(), tok_options);
 

@@ -46,13 +46,9 @@ enum class redirection_type_t {
 /// Flag telling the tokenizer not to remove comments. Useful for syntax highlighting.
 #define TOK_SHOW_COMMENTS 2
 
-/// Flag telling the tokenizer to not generate error messages, which we need to do when tokenizing
-/// off of the main thread (since wgettext is not thread safe).
-#define TOK_SQUASH_ERRORS 4
-
 /// Ordinarily, the tokenizer ignores newlines following a newline, or a semicolon. This flag tells
 /// the tokenizer to return each of them as a separate END.
-#define TOK_SHOW_BLANK_LINES 8
+#define TOK_SHOW_BLANK_LINES 4
 
 typedef unsigned int tok_flags_t;
 
@@ -70,11 +66,10 @@ struct tok_t {
 
     // If an error, this is the error code.
     enum tokenizer_error error { TOK_ERROR_NONE };
+
     // If an error, this is the offset of the error within the token. A value of 0 means it occurred
     // at 'offset'.
     size_t error_offset{size_t(-1)};
-    // If there is an error, the text of the error; otherwise empty.
-    wcstring error_text{};
 
     tok_t() = default;
 };
@@ -97,8 +92,6 @@ class tokenizer_t {
     bool show_comments{false};
     /// Whether all blank lines are returned.
     bool show_blank_lines{false};
-    /// Whether we are squashing errors.
-    bool squash_errors{false};
     /// Whether to continue the previous line after the comment.
     bool continue_line_after_comment{false};
 
@@ -144,6 +137,9 @@ int fd_redirected_by_pipe(const wcstring &str);
 
 /// Helper function to return oflags (as in open(2)) for a redirection type.
 int oflags_for_redirection_type(redirection_type_t type);
+
+/// Returns an error message for an error code.
+wcstring error_message_for_code(tokenizer_error err);
 
 enum move_word_style_t {
     move_word_style_punctuation,      // stop at punctuation

@@ -1,0 +1,93 @@
+#completion for port
+
+set -l subcommands activate archive build cat cd checksum clean configure \
+		contents deactivate dependents deps destroot dir distcheck dmg echo \
+		edit extract fetch file gohome info install installed lint list \
+		livecheck location load log logfile mirror mdmg mpkg notes outdated \
+		patch pkg provides rdependents rdeps reload rev search select \
+		selfupdate setrequested setunrequested sync test unarchive uninstall \
+		unload unsetrequested upgrade url usage variants version work
+
+complete -c port -n "__fish_seen_subcommand_from $subcommands" -a '(__fish_print_packages)' --description 'Package'
+
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'activate'  --description 'Set  version of a port to active'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'archive'  --description "Create image for port without installing"
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'build'  --description 'Run build phase of a port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'cat'  --description 'Print the Portfile of the given port(s)'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'cd'  --description 'Change directory to that containing portname'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'checksum'  --description 'Compute checksums of distribution files'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'clean'  --description 'Remove temporary files used to build a port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'configure'  --description 'Run configure phase of a port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'contents'  --description 'List the files installed by a given port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'deactivate'  --description 'Set the status of a port to inactive'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'dependents'  --description 'List ports that depend on a given port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'deps'  --description 'Display a dependency listing for given port(s)'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'destroot'  --description 'Run destroot phase of a port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'dir'  --description 'print directory with Portfile for port expression'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'distcheck'  --description 'Check if port can be fetched from all mirrors'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'dmg'  --description 'Create binary archives of a port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'echo'  --description 'Print the list of ports the argument expands to'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'edit'  --description 'Open the Portfile in an editor'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'extract'  --description 'Run extract phase of a port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'fetch'  --description 'Run fetch phase of a port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'file'  --description 'Display the path to the Portfile for portname'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'help'  --description 'Get help on MacPorts commands'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'gohome'  --description 'Load home page for given portname in web browser'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'info'  --description 'Return information about the given ports'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'install'  --description 'Install a new port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'installed'  --description 'List installed versions (of port)'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'lint'  --description 'Verifies Portfile for portname'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'list'  --description 'List latest available version for given ports'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'livecheck'  --description 'Check if new version of software is available'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'location'  --description 'Print location of archive used for (de)activation'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'load'  --description "load a port's daemon"
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'log'  --description 'Parse and show log files for portname'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'logfile'  --description 'Display the path to the log file for portname'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'mirror'  --description 'Create/update local mirror of distfiles'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'mdmg'  --description 'Create disk image of portname and dependencies'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'mpkg'  --description 'Create binary archives of a port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'notes'  --description 'Displays notes for portname'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'outdated'  --description 'List outdated ports'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'patch'  --description 'Run patch phase of a port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'pkg'  --description 'Create binary archives of a port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'provides'  --description 'Find the port that installed a file'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'rdependents'  --description 'Recursively list ports depending on given port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'rdeps'  --description 'Display a recursive dependency listing of port(s)'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'reload'  --description "reload a port's daemon"
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'rev-upgrade'  --description 'Rebuild ports containing broken binaries'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'search'  --description 'Search for a port using keywords'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'select'  --description 'Selects a version to be the default'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'selfupdate'  --description 'Upgrade MacPorts and update list of ports'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'setrequested'  --description 'Mark portname as requested'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'setunrequested'  --description 'Mark portname as unrequested'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'sync'  --description 'Update the port definition files'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'test'  --description 'Run test phase of a port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'unarchive'  --description 'Extract destroot of given ports from archive'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'uninstall'  --description 'Remove a previously installed port'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'unload'  --description "Unload a port's daemon"
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'unsetrequested'  --description 'Mark portname as unrequested'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'upgrade'  --description 'Upgrade a port to the latest version'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'url'  --description 'Display URL for path of given portname'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'usage'  --description 'Displays a condensed usage summary'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'variants'  --description 'Print list of variants with descriptions'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'version'  --description 'Print the MacPorts version'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'work'  --description 'Displays path to work directory for portname'
+
+complete -c port -s v --description 'Verbose mode, generates verbose messages'
+complete -c port -s d --description 'Debug mode, implies -v'
+complete -c port -s q --description 'Quiet mode, implies -N'
+complete -c port -s N --description 'Non-interactive mode'
+complete -c port -s n --description "Don't follow dependencies in upgrade"
+complete -c port -s R --description 'Also upgrade dependents (only for upgrade)'
+complete -c port -s u --description 'Uninstall inactive ports'
+complete -c port -s y --description 'Perform a dry run'
+complete -c port -s s --description 'Source-only mode'
+complete -c port -s b --description 'Binary-only mode, abort if no archive available'
+complete -c port -s c --description 'Autoclean mode, execute clean after install'
+complete -c port -s k --description 'Keep mode, do not autoclean after install'
+complete -c port -s p --description 'Proceed to process despite any errors'
+complete -c port -s o --description 'Honor state files even if Portfile was modified'
+complete -c port -s t --description 'Enable trace mode debug facilities'
+complete -c port -s f --description 'Force mode, ignore state file'
+complete -c port -s D --description 'Specfiy portdir'
+complete -c port -s F --description 'Read and process file of commands'

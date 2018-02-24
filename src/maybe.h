@@ -39,6 +39,13 @@ class maybe_t {
     // Construct a maybe_t from a value T.
     /* implicit */ maybe_t(const T &v) : filled(true) { new (storage) T(v); }
 
+    // Copy constructor.
+    maybe_t(const maybe_t &v) {
+        if (v.filled) {
+            new (storage) T(v.value());
+        }
+    }
+
     // Move constructor.
     /* implicit */ maybe_t(maybe_t &&v) {
         if (v.filled) {

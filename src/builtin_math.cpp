@@ -124,7 +124,7 @@ wcstring math_describe_error(te_error_t& error) {
         case TE_ERROR_TOO_FEW_ARGS: return _(L"Too few arguments");
         case TE_ERROR_TOO_MANY_ARGS: return _(L"Too many arguments");
         case TE_ERROR_MISSING_OPERATOR: return _(L"Missing operator");
-        case TE_ERROR_BOGUS: return _(L"Expression is bogus");
+        case TE_ERROR_UNKNOWN: return _(L"Expression is bogus");
         default: return L"";
     }
 }

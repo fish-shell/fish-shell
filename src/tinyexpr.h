@@ -41,7 +41,7 @@ extern "C" {
         TE_ERROR_TOO_FEW_ARGS = 4,
         TE_ERROR_TOO_MANY_ARGS = 5,
         TE_ERROR_MISSING_OPERATOR = 6,
-        TE_ERROR_BOGUS = 7
+        TE_ERROR_UNKNOWN = 7
     };
     typedef int te_error_type_t;
 

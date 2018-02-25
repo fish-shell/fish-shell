@@ -199,7 +199,6 @@ static double sub(double a, double b) {return a - b;}
 static double mul(double a, double b) {return a * b;}
 static double divide(double a, double b) {return a / b;}
 static double negate(double a) {return -a;}
-static double comma(double a, double b) {(void)a; return b;}
 
 
 void next_token(state *s) {

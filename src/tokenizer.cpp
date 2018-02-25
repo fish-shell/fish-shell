@@ -594,7 +594,7 @@ wcstring tok_first(const wcstring &str) {
 }
 
 bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {
-    enum { s_always_one = 0, s_whitespace, s_alphanumeric, s_end };
+    enum { s_always_one = 0, s_rest, s_whitespace_rest, s_whitespace, s_alphanumeric, s_end };
 
     bool consumed = false;
     while (state != s_end && !consumed) {
@@ -602,15 +602,36 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {
             case s_always_one: {
                 // Always consume the first character.
                 consumed = true;
-                state = s_whitespace;
+                if (iswspace(c)) {
+                    state = s_whitespace;
+                } else {
+                    // Don't allow switching type (ws->nonws) after non-whitespace.
+                    state = s_rest;
+                }
                 break;
             }
+            case s_rest: {
+                if (iswspace(c)) {
+                    // Consume only trailing whitespace.
+                    state = s_whitespace_rest;
+                } else if (iswalnum(c)) {
+                    // Consume only alnums.
+                    state = s_alphanumeric;
+                } else {
+                    consumed = false;
+                    state = s_end;
+                }
+                break;
+            }
+            case s_whitespace_rest:
             case s_whitespace: {
+                // "whitespace" consumes whitespace and switches to alnums,
+                // "whitespace_rest" only consumes whitespace.
                 if (iswspace(c)) {
                     // Consumed whitespace.
                     consumed = true;
                 } else {
-                    state = s_alphanumeric;
+                    state = state == s_whitespace ? s_alphanumeric : s_end;
                 }
                 break;
             }

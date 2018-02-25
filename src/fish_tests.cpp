@@ -1993,6 +1993,7 @@ static void test_word_motion() {
 
     test_1_word_motion(word_motion_left, move_word_style_path_components,
                        L"^echo /^foo/^bar{^aaa,^bbb,^ccc}^bak/");
+    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"a ^bcd^");
 }
 
 /// Test is_potential_path.

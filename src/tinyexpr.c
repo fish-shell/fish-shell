@@ -240,8 +240,9 @@ void next_token(state *s) {
                             s->function = var->address;
                             break;
                     }
-                } else if (s->type != TOK_ERROR) {
-                    // TODO: Better error - "Not a variable"?
+                } else if (s->type != TOK_ERROR
+                           || s->error == TE_ERROR_UNKNOWN) {
+                    // Our error is more specific, so it takes precedence.
                     s->type = TOK_ERROR;
                     s->error = TE_ERROR_UNKNOWN_VARIABLE;
                 }
@@ -296,8 +297,8 @@ static te_expr *base(state *s) {
                 next_token(s);
                 if (s->type == TOK_CLOSE) {
                     next_token(s);
-                } else if (s->type != TOK_ERROR) {
-                    // TODO: Better error - "Missing closing parenthesis"?
+                } else if (s->type != TOK_ERROR
+                           || s->error == TE_ERROR_UNKNOWN) {
                     s->type = TOK_ERROR;
                     s->error = TE_ERROR_MISSING_CLOSING_PAREN;
                 }
@@ -324,15 +325,14 @@ static te_expr *base(state *s) {
                 }
                 if(s->type == TOK_CLOSE && i == arity - 1) {
                     next_token(s);
-                } else if (s->type != TOK_ERROR) {
-                    // TODO: Either a closing paren was needed,
-                    // or too few arguments were given?
+                } else if (s->type != TOK_ERROR
+                           || s->error == TE_ERROR_UNKNOWN) {
                     s->type = TOK_ERROR;
                     s->error = i < arity ? TE_ERROR_TOO_FEW_ARGS
                         : TE_ERROR_TOO_MANY_ARGS;
                 }
-            } else if (s->type != TOK_ERROR) {
-                // TODO: Better error - "Expected opening parenthesis"?
+            } else if (s->type != TOK_ERROR
+                       || s->error == TE_ERROR_UNKNOWN) {
                 s->type = TOK_ERROR;
                 s->error = TE_ERROR_MISSING_OPENING_PAREN;
             }
@@ -344,8 +344,8 @@ static te_expr *base(state *s) {
             ret = expr(s);
             if (s->type == TOK_CLOSE) {
                 next_token(s);
-            } else if (s->type != TOK_ERROR) {
-                // TODO: Error - missing closing paren?
+            } else if (s->type != TOK_ERROR
+                       || s->error == TE_ERROR_UNKNOWN) {
                 s->type = TOK_ERROR;
                 s->error = TE_ERROR_MISSING_CLOSING_PAREN;
             }
@@ -353,9 +353,8 @@ static te_expr *base(state *s) {
 
         default:
             ret = new_expr(0, 0);
-            // TODO: Error - expression is bogus?
             s->type = TOK_ERROR;
-            s->error = TE_ERROR_BOGUS;
+            s->error = TE_ERROR_UNKNOWN;
             ret->value = NAN;
             break;
     }

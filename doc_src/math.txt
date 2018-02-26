@@ -27,7 +27,7 @@ If the expression is successfully evaluated the return `status` is zero (success
 
 `math` knows some operators, constants, functions and can (obviously) read numbers.
 
-For numbers, `.` is always the radix character regardless of locale - `2.5`, not `2,5`. 
+For numbers, `.` is always the radix character regardless of locale - `2.5`, not `2,5`. Scientific notation (`10e5`) is also available.
 
 \subsection math-operators
 

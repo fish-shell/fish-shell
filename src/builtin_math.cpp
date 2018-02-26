@@ -114,7 +114,7 @@ static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storag
 }
 
 wcstring math_describe_error(te_error_t& error) {
-    if (error.position == 0) return L"";
+    if (error.position == 0) return L"NO ERROR?!?";
     assert(error.type != TE_ERROR_NONE && L"Error has no position");
 
     switch(error.type) {
@@ -125,7 +125,7 @@ wcstring math_describe_error(te_error_t& error) {
         case TE_ERROR_TOO_MANY_ARGS: return _(L"Too many arguments");
         case TE_ERROR_MISSING_OPERATOR: return _(L"Missing operator");
         case TE_ERROR_UNKNOWN: return _(L"Expression is bogus");
-        default: return L"";
+        default: return L"Unknown error";
     }
 }
 

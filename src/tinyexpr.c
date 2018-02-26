@@ -50,7 +50,7 @@ typedef struct state {
 
     const te_variable *lookup;
     int lookup_len;
-    int error;
+    te_error_type_t error;
 } state;
 
 
@@ -502,6 +502,7 @@ te_expr *te_compile(const char *expression, const te_variable *variables, int va
     s.start = s.next = expression;
     s.lookup = variables;
     s.lookup_len = var_count;
+    s.error = TE_ERROR_NONE;
 
     next_token(&s);
     te_expr *root = expr(&s);

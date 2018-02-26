@@ -134,6 +134,7 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
                                math_cmd_opts_t &opts, wcstring &expression) {
     UNUSED(parser);
 
+    int retval = STATUS_CMD_OK;
     te_error_t error;
     char *narrow_str = wcs2str(expression);
     // Switch locale while computing stuff.
@@ -155,10 +156,11 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
         streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error).c_str());
         streams.err.append_format(L"'%ls'\n", expression.c_str());
         streams.err.append_format(L"%*lc^\n", error.position - 1, L' ');
+        retval = STATUS_CMD_ERROR;
     }
     free(narrow_str);
     free(saved_locale);
-    return STATUS_CMD_OK;
+    return retval;
 }
 
 /// The math builtin evaluates math expressions.

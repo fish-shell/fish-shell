@@ -33,7 +33,7 @@ extern "C" {
 #endif
 
 
-    enum {
+    typedef enum {
         TE_ERROR_NONE = 0,
         TE_ERROR_UNKNOWN_VARIABLE = 1,
         TE_ERROR_MISSING_CLOSING_PAREN = 2,
@@ -42,9 +42,7 @@ extern "C" {
         TE_ERROR_TOO_MANY_ARGS = 5,
         TE_ERROR_MISSING_OPERATOR = 6,
         TE_ERROR_UNKNOWN = 7
-    };
-    typedef int te_error_type_t;
-
+    } te_error_type_t;
 
 
     typedef struct te_error_t {

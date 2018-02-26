@@ -143,7 +143,6 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
     char *saved_locale = strdup(setlocale(LC_NUMERIC, NULL));
     setlocale(LC_NUMERIC, "C");
     double v = te_interp(narrow_str, &error);
-    setlocale(LC_NUMERIC, saved_locale);
 
     if (error.position == 0) {
         if (opts.scale == 0) {
@@ -152,13 +151,13 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
             streams.out.append_format(L"%.*lf\n", opts.scale, v);
         }
     } else {
-        // TODO: Better error reporting!
         streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error).c_str());
         streams.err.append_format(L"'%ls'\n", expression.c_str());
         streams.err.append_format(L"%*lc^\n", error.position - 1, L' ');
         retval = STATUS_CMD_ERROR;
     }
     free(narrow_str);
+    setlocale(LC_NUMERIC, saved_locale);
     free(saved_locale);
     return retval;
 }

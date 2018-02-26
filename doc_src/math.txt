@@ -7,9 +7,13 @@ math [-sN | --scale=N] [--] EXPRESSION
 
 \subsection math-description Description
 
-`math` is used to perform mathematical calculations. It supports all the usual operations such as addition, subtraction, etc. As well as functions like `abs()`, `sqrt()` and `log2()`. Internally all calculations are performed using floating point representation. Integer values are first converted to floating point before being used. The default output format is integer which causes floating point results to be rounded down to the nearest integer. The `--scale` option can be used to get floating point output.
+`math` is used to perform mathematical calculations. It supports all the usual operations such as addition, subtraction, etc. As well as functions like `abs()`, `sqrt()` and `log2()` (see below).
 
-Keep in mind that parameter expansion takes before expressions are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis and the asterisk glob character have to be escaped or quoted.
+Internally all calculations are performed using floating point representation. Integer values are first converted to floating point before being used. By default the final result will be rounded down to the nearest integer. The `--scale` option can be used to get floating point output.
+
+Keep in mind that parameter expansion takes before expressions are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that e.g. parenthesis (`(`, `)`) and the asterisk glob character (`*`) have to be escaped or quoted. Most likely you'll want to pass the expression as one argument in single-quotes.
+
+Multiple expression arguments are joined as if they were passed as one argument with spaces. `math` only computes one expression - to do more, call `math` more than once.
 
 The following options are available:
 
@@ -18,6 +22,28 @@ The following options are available:
 \subsection return-values Return Values
 
 If the expression is successfully evaluated the return `status` is zero (success) else one.
+
+\subsection math-syntax
+
+`math` knows some operators, constants, functions and can (obviously) read numbers.
+
+For numbers, `.` is always the radix character regardless of locale - `2.5`, not `2,5`. 
+
+\subsection math-operators
+
+`math` knows the following operators:
+
+- `+` for addition and `-` for subtraction.
+
+- `*` for multiplication, `/` for division.
+
+- `^` for exponentiation.
+
+- `%` for modulo.
+
+- `(` and `)` for grouping.
+
+They are all used in an infix manner - `5 + 2`, not `+ 5 2`.
 
 \subsection math-constants
 
@@ -45,8 +71,8 @@ Use them without a leading `$`.
 - `floor`
 - `ln`
 - `log` or `log10` - the base-10 logarithm
-- `ncr`
-- `npr`
+- `ncr` - the "from n things, choose r" combinatorics function
+- `npr` - ncr * r!
 - `pow(x,y)` returns x to the y (and can be written as `x ^ y`)
 - `sin`
 - `sinh`
@@ -70,10 +96,12 @@ All of the trigonometric functions use radians.
 
 `math "sin(pi)"` outputs `0`.
 
+`math -s 1 '2.5 % 1'` outputs `0.5`.
+
 \subsection math-notes Compatibility notes
 
 Fish 1.x and 2.x releases relied on the `bc` command for handling `math` expressions. Starting with fish 3.0.0 fish uses the tinyexpr library and evaluates the expression without the involvement of any external commands.
 
 You don't need to use `--` before the expression even if it begins with a minus sign which might otherwise be interpreted as an invalid option. If you do insert `--` before the expression it will cause option scanning to stop just like for every other command and it won't be part of the expression.
 
-Note that the modulo operator (`x % y`) is not well defined for floating point arithmetic. Fish rounds down all floating point values to the nearest integer before performing the modulo operation. So `10.5 % 6.1` is `4`, regardless of what `--scale` value is in effect.
+Note that the modulo operator (`x % y`) is not well defined for floating point arithmetic. In `math`, the result is that of subtracting "y" until the remainder is smaller than y, which means `10.5 % 6.1` results in 4.4.

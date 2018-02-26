@@ -350,6 +350,17 @@ static te_expr *base(state *s) {
             }
             break;
 
+        case TOK_END:
+            // The expression ended before we expected it.
+            // e.g. `2 - `.
+            // This means we have too few things.
+            // Instead of introducing another error, just call it
+            // "too few args".
+            ret = new_expr(0, 0);
+            s->type = TOK_ERROR;
+            s->error = TE_ERROR_TOO_FEW_ARGS;
+            ret->value = NAN;
+            break;
         default:
             ret = new_expr(0, 0);
             s->type = TOK_ERROR;

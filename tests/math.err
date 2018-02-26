@@ -7,7 +7,7 @@
 
 ####################
 # Validate math error reporting
-math: Error: Expression is bogus
+math: Error: Too few arguments
 '2 - '
     ^
 math: Error: Too few arguments

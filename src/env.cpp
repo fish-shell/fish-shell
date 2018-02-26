@@ -571,6 +571,30 @@ static void init_path_vars() {
     }
 }
 
+/// Update the value of g_guessed_fish_emoji_width
+static void guess_emoji_width() {
+    wcstring term;
+    if (auto term_var = env_get(L"TERM_PROGRAM")) {
+        term = term_var->as_string();
+    }
+
+    double version = 0;
+    if (auto version_var = env_get(L"TERM_PROGRAM_VERSION")) {
+        std::string narrow_version = wcs2string(version_var->as_string());
+        version = strtod(narrow_version.c_str(), NULL);
+    }
+
+    // iTerm2 defaults to Unicode 8 sizes.
+    // See https://gitlab.com/gnachman/iterm2/wikis/unicodeversionswitching
+
+    if (term == L"Apple_Terminal" && version >= 400) {
+        // Apple Terminal on High Sierra
+        g_guessed_fish_emoji_width = 2;
+    } else {
+        g_guessed_fish_emoji_width = 1;
+    }
+}
+
 /// Initialize the curses subsystem.
 static void init_curses() {
     for (const auto &var_name : curses_variables) {
@@ -798,6 +822,14 @@ static void handle_escape_delay_change(const wcstring &op, const wcstring &var_n
     update_wait_on_escape_ms();
 }
 
+static void handle_change_emoji_width(const wcstring &op, const wcstring &var_name) {
+    int new_width = 0;
+    if (auto width_str = env_get(L"fish_emoji_width")) {
+        new_width = fish_wcstol(width_str->as_string().c_str());
+    }
+    g_fish_emoji_width = std::max(0, new_width);
+}
+
 static void handle_term_size_change(const wcstring &op, const wcstring &var_name) {
     UNUSED(op);
     UNUSED(var_name);
@@ -847,6 +879,7 @@ static void handle_locale_change(const wcstring &op, const wcstring &var_name) {
 static void handle_curses_change(const wcstring &op, const wcstring &var_name) {
     UNUSED(op);
     UNUSED(var_name);
+    guess_emoji_width();
     init_curses();
 }
 
@@ -868,6 +901,7 @@ static void setup_var_dispatch_table() {
     var_dispatch_table.emplace(L"fish_term256", handle_fish_term_change);
     var_dispatch_table.emplace(L"fish_term24bit", handle_fish_term_change);
     var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
+    var_dispatch_table.emplace(L"fish_emoji_width", handle_change_emoji_width);
     var_dispatch_table.emplace(L"LINES", handle_term_size_change);
     var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
     var_dispatch_table.emplace(L"fish_complete_path", handle_complete_path_change);
@@ -925,6 +959,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     init_curses();
     init_input();
     init_path_vars();
+    guess_emoji_width();
 
     // Set up the USER and PATH variables
     setup_path();

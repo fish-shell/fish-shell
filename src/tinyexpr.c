@@ -510,7 +510,13 @@ te_expr *te_compile(const char *expression, const te_variable *variables, int va
         te_free(root);
         if (error) {
             error->position = (s.next - s.start) + 1;
-            error->type = s.error;
+            // If we're not at the end but there's no error, then that means we have a superfluous
+            // token that we have no idea what to do with.
+            // This occurs in e.g. `2 + 2 4` - the "4" is just not part of the expression.
+            // We can report either "too many arguments" or "expected operator", but the operator
+            // should be reported between the "2" and the "4".
+            // So we report TOO_MANY_ARGS on the "4".
+            error->type = s.error != TE_ERROR_NONE ? s.error : TE_ERROR_TOO_MANY_ARGS;
         }
         return 0;
     } else {

@@ -19,3 +19,6 @@ math: Error: Expression is bogus
 math: Error: Too few arguments
 'sin()'
      ^
+math: Error: Too many arguments
+'2 + 2 4'
+       ^

@@ -19,6 +19,28 @@ The following options are available:
 
 If the expression is successfully evaluated the return `status` is zero (success) else one.
 
+\subsection math-syntax
+
+`math` knows some operators, constants, functions and can (obviously) read numbers.
+
+For numbers, `.` is always the radix character regardless of locale - `2.5`, not `2,5`. Scientific notation (`10e5`) is also available.
+
+\subsection math-operators
+
+`math` knows the following operators:
+
+- `+` for addition and `-` for subtraction.
+
+- `*` for multiplication, `/` for division.
+
+- `^` for exponentiation.
+
+- `%` for modulo.
+
+- `(` and `)` for grouping.
+
+They are all used in an infix manner - `5 + 2`, not `+ 5 2`.
+
 \subsection math-constants
 
 `math` knows the following constants:

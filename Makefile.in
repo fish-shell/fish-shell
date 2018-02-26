@@ -42,6 +42,7 @@ SHELL := @SHELL@
 # Programs
 #
 CXX := @CXX@
+CC := @CC@
 INSTALL := @INSTALL@
 LN_S := @LN_S@
 SED := @SED@
@@ -80,6 +81,7 @@ EXTRA_PCRE2 = @EXTRA_PCRE2@
 # Various flags
 #
 CXXFLAGS = @CXXFLAGS@ $(EXTRA_CXXFLAGS)
+CFLAGS = @CFLAGS@
 CPPFLAGS = -D_UNICODE=1 -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\" -DDOCDIR=L\"$(docdir)\" -iquote. -iquote./src/
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -115,7 +117,7 @@ FISH_OBJS := obj/autoload.o obj/builtin.o obj/builtin_bg.o obj/builtin_bind.o ob
 	obj/iothread.o obj/kill.o obj/output.o obj/pager.o obj/parse_execution.o \
 	obj/parse_productions.o obj/parse_tree.o obj/parse_util.o obj/parser.o \
 	obj/parser_keywords.o obj/path.o obj/postfork.o obj/proc.o obj/reader.o \
-	obj/sanity.o obj/screen.o obj/signal.o obj/tokenizer.o obj/tnode.o obj/utf8.o \
+	obj/sanity.o obj/screen.o obj/signal.o obj/tinyexpr.o obj/tokenizer.o obj/tnode.o obj/utf8.o \
 	obj/util.o obj/wcstringutil.o obj/wgetopt.o obj/wildcard.o obj/wutil.o
 
 FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS)
@@ -739,6 +741,10 @@ obj/%.o: src/%.cpp | show-CXX show-CXXFLAGS show-CPPFLAGS obj
 	@echo "  CXX      $(em)$@$(sgr0)"
 	$v $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
+obj/tinyexpr.o: src/tinyexpr.c
+	@echo "  CC       $(em)$@$(sqr0)"
+	$v $(CC) $(CFLAGS) -c $< -o $@
+
 #
 # obj directory
 #
@@ -988,7 +994,7 @@ obj/builtin_jobs.o: src/parse_tree.h src/parse_constants.h src/tokenizer.h
 obj/builtin_jobs.o: src/wgetopt.h src/wutil.h
 obj/builtin_math.o: config.h src/builtin.h src/common.h src/fallback.h
 obj/builtin_math.o: src/signal.h src/builtin_math.h src/io.h src/env.h
-obj/builtin_math.o: src/wgetopt.h src/wutil.h
+obj/builtin_math.o: src/tinyexpr.h src/wgetopt.h src/wutil.h
 obj/builtin_printf.o: config.h src/builtin.h src/common.h src/fallback.h
 obj/builtin_printf.o: src/signal.h src/io.h src/env.h src/wutil.h
 obj/builtin_pwd.o: config.h src/builtin.h src/common.h src/fallback.h

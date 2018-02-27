@@ -50,7 +50,7 @@ function alias --description 'Creates a function wrapping a command'
     set -l tmp (string replace -ra "([^\\\ ])((\\\\\\\)*) " '$1\n' $body)
     set first_word (string trim $tmp[1])
     # If the user does something like `alias x 'foo; bar'` we need to strip the semicolon.
-    set wrapped_cmd (string trim -c ';' $first_word)
+    set base_command (string trim -c ';' $first_word)
     if set -q tmp[2]
         set body $tmp[2..-1]
     else
@@ -59,7 +59,7 @@ function alias --description 'Creates a function wrapping a command'
 
     # Prevent the alias from immediately running into an infinite recursion if
     # $body starts with the same command as $name.
-    if test $wrapped_cmd = $name
+    if test $base_command = $name
         if contains $name (builtin --names)
             set prefix builtin
         else
@@ -67,7 +67,7 @@ function alias --description 'Creates a function wrapping a command'
         end
     end
     set -l cmd_string (string escape "alias $argv")
-    set wrapped_cmd (string escape $wrapped_cmd)
+    set wrapped_cmd (string join ' ' $first_word $body | string escape)
     echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end" | source
     #echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end"
 end

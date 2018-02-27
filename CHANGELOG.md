@@ -41,7 +41,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Tildes in file names are now properly escaped in completions (#2274)
 - A pipe at the end of a line now allows the job to continue on the next line (#1285)
 - The names `argparse`, `read`, `set`, `status`, `test` and `[` are now reserved and not allowed as function names. This prevents users unintentionally breaking stuff (#3000).
-- Wrapping completions (from `complete -w` or `function -w`) can now inject arguments. For example, `complete gco -w 'git checkout'` now works properly (#1976).
+- Wrapping completions (from `complete -w` or `function -w`) can now inject arguments. For example, `complete gco -w 'git checkout'` now works properly (#1976). The `alias` function has been updated to respect this behavior.
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

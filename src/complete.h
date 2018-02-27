@@ -186,12 +186,12 @@ void append_completion(std::vector<completion_t> *completions, wcstring comp,
 /// Function used for testing.
 void complete_set_variable_names(const wcstring_list_t *names);
 
-/// Support for "wrap targets." A wrap target is a command that completes liek another command. The
-/// target chain is the sequence of wraps (A wraps B wraps C...). Any loops in the chain are
-/// silently ignored.
+/// Support for "wrap targets." A wrap target is a command that completes like another command.
 bool complete_add_wrapper(const wcstring &command, const wcstring &wrap_target);
 bool complete_remove_wrapper(const wcstring &command, const wcstring &wrap_target);
-wcstring_list_t complete_get_wrap_chain(const wcstring &command);
+
+/// Returns a list of wrap targets for a given command.
+wcstring_list_t complete_get_wrap_targets(const wcstring &command);
 
 // Wonky interface: returns all wraps. Even-values are the commands, odd values are the targets.
 wcstring_list_t complete_get_wrap_pairs();

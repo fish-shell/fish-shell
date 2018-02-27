@@ -2348,16 +2348,20 @@ static void test_complete() {
     complete_set_variable_names(NULL);
 
     // Test wraps.
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"");
     complete_add_wrapper(L"wrapper1", L"wrapper2");
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1,wrapper2");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"wrapper2");
     complete_add_wrapper(L"wrapper2", L"wrapper3");
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1,wrapper2,wrapper3");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"wrapper2");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper2")) == L"wrapper3");
     complete_add_wrapper(L"wrapper3", L"wrapper1");  // loop!
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1,wrapper2,wrapper3");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"wrapper2");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper2")) == L"wrapper3");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper3")) == L"wrapper1");
     complete_remove_wrapper(L"wrapper1", L"wrapper2");
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1");
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper2")) == L"wrapper2,wrapper3,wrapper1");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper2")) == L"wrapper3");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper3")) == L"wrapper1");
 }
 
 static void test_1_completion(wcstring line, const wcstring &completion, complete_flags_t flags,

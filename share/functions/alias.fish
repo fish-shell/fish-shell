@@ -19,7 +19,7 @@ function alias --description 'Creates a function wrapping a command'
         for func in (functions -n)
             set -l output (functions $func | string match -r -- "^function .* --description 'alias (.*)'")
             if set -q output[2]
-                set output (string replace -r '^'$func'[= ]' '' -- $output[2])
+                set output (string replace -r -- '^'$func'[= ]' '' $output[2])
                 echo alias $func (string escape -- $output[1])
             end
         end
@@ -47,10 +47,10 @@ function alias --description 'Creates a function wrapping a command'
     # Extract the first command from the body. This is supposed to replace all non-escaped (i.e.
     # preceded by an odd number of `\`) spaces with a newline so it splits on them. See issue #2220
     # for why the following borderline incomprehensible code exists.
-    set -l tmp (string replace -ra "([^\\\ ])((\\\\\\\)*) " '$1\n' $body)
-    set first_word (string trim $tmp[1])
+    set -l tmp (string replace -ra -- "([^\\\ ])((\\\\\\\)*) " '$1\n' $body)
+    set first_word (string trim -- $tmp[1])
     # If the user does something like `alias x 'foo; bar'` we need to strip the semicolon.
-    set base_command (string trim -c ';' $first_word)
+    set base_command (string trim -c ';' -- $first_word)
     if set -q tmp[2]
         set body $tmp[2..-1]
     else
@@ -66,8 +66,8 @@ function alias --description 'Creates a function wrapping a command'
             set prefix command
         end
     end
-    set -l cmd_string (string escape "alias $argv")
-    set wrapped_cmd (string join ' ' $first_word $body | string escape)
+    set -l cmd_string (string escape -- "alias $argv")
+    set wrapped_cmd (string join ' ' -- $first_word $body | string escape)
     echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end" | source
     #echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end"
 end

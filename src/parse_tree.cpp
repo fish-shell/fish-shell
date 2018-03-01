@@ -213,43 +213,32 @@ wcstring parse_token_t::user_presentable_description() const {
 /// Convert from tokenizer_t's token type to a parse_token_t type.
 static inline parse_token_type_t parse_token_type_from_tokenizer_token(
     enum token_type tokenizer_token_type) {
-    parse_token_type_t result = token_type_invalid;
     switch (tokenizer_token_type) {
-        case TOK_STRING: {
-            result = parse_token_type_string;
-            break;
-        }
-        case TOK_PIPE: {
-            result = parse_token_type_pipe;
-            break;
-        }
-        case TOK_END: {
-            result = parse_token_type_end;
-            break;
-        }
-        case TOK_BACKGROUND: {
-            result = parse_token_type_background;
-            break;
-        }
-        case TOK_REDIRECT: {
-            result = parse_token_type_redirection;
-            break;
-        }
-        case TOK_ERROR: {
-            result = parse_special_type_tokenizer_error;
-            break;
-        }
-        case TOK_COMMENT: {
-            result = parse_special_type_comment;
-            break;
-        }
-        default: {
-            debug(0, "Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
-            DIE("bad token type");
-            break;
-        }
+        case TOK_NONE:
+            DIE("TOK_NONE passed to parse_token_type_from_tokenizer_token");
+            return token_type_invalid;
+        case TOK_STRING:
+            return parse_token_type_string;
+        case TOK_PIPE:
+            return parse_token_type_pipe;
+        case TOK_ANDAND:
+        case TOK_OROR:
+            // Temporary while && and || support is brought up.
+            return parse_special_type_comment;
+        case TOK_END:
+            return parse_token_type_end;
+        case TOK_BACKGROUND:
+            return parse_token_type_background;
+        case TOK_REDIRECT:
+            return parse_token_type_redirection;
+        case TOK_ERROR:
+            return parse_special_type_tokenizer_error;
+        case TOK_COMMENT:
+            return parse_special_type_comment;
     }
-    return result;
+    debug(0, "Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
+    DIE("bad token type");
+    return token_type_invalid;
 }
 
 /// Helper function for parse_dump_tree().

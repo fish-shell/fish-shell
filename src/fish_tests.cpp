@@ -535,10 +535,14 @@ static void test_tokenizer() {
     const wchar_t *str =
         L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells "
         L"){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect "
+        L"&&& ||| "
+        L"&& || & |"
         L"Compress_Newlines\n  \n\t\n   \nInto_Just_One";
-    const int types[] = {TOK_STRING, TOK_REDIRECT, TOK_STRING,   TOK_REDIRECT, TOK_STRING,
-                         TOK_STRING, TOK_STRING,   TOK_REDIRECT, TOK_REDIRECT, TOK_STRING,
-                         TOK_STRING, TOK_END,      TOK_STRING};
+    const int types[] = {TOK_STRING, TOK_REDIRECT,   TOK_STRING,   TOK_REDIRECT, TOK_STRING,
+                         TOK_STRING, TOK_STRING,     TOK_REDIRECT, TOK_REDIRECT, TOK_STRING,
+                         TOK_ANDAND, TOK_BACKGROUND, TOK_OROR,     TOK_PIPE,     TOK_ANDAND,
+                         TOK_OROR,   TOK_BACKGROUND, TOK_PIPE,     TOK_STRING,   TOK_END,
+                         TOK_STRING};
 
     say(L"Test correct tokenization");
 

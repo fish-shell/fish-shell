@@ -183,10 +183,7 @@ enum parse_error_code_t {
 
     parse_error_unbalancing_end,   // end outside of block
     parse_error_unbalancing_else,  // else outside of if
-    parse_error_unbalancing_case,  // case outside of switch
-
-    parse_error_double_pipe,       // foo || bar, has special error message
-    parse_error_double_background  // foo && bar, has special error message
+    parse_error_unbalancing_case   // case outside of switch
 };
 
 enum { PARSER_TEST_ERROR = 1, PARSER_TEST_INCOMPLETE = 2 };
@@ -288,12 +285,6 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 
 /// Error issued on $.
 #define ERROR_NO_VAR_NAME _(L"Expected a variable name after this $.")
-
-/// Error on ||.
-#define ERROR_BAD_OR _(L"Unsupported use of '||'. In fish, please use 'COMMAND; or COMMAND'.")
-
-/// Error on &&.
-#define ERROR_BAD_AND _(L"Unsupported use of '&&'. In fish, please use 'COMMAND; and COMMAND'.")
 
 /// Error on foo=bar.
 #define ERROR_BAD_EQUALS_IN_COMMAND5                                                        \

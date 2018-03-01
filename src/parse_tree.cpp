@@ -674,37 +674,8 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
                                                parse_token_t token) {
     fatal_errored = true;
     if (this->should_generate_error_messages) {
-        bool done = false;
-
-        // Check for ||.
-        if (token.type == parse_token_type_pipe && token.source_start > 0) {
-            // Here we wanted a statement and instead got a pipe. See if this is a double pipe: foo
-            // || bar. If so, we have a special error message.
-            const parse_node_t *prev_pipe = nodes.find_node_matching_source_location(
-                parse_token_type_pipe, token.source_start - 1, NULL);
-            if (prev_pipe != NULL) {
-                // The pipe of the previous job abuts our current token. So we have ||.
-                this->parse_error(token, parse_error_double_pipe, ERROR_BAD_OR);
-                done = true;
-            }
-        }
-
-        // Check for &&.
-        if (!done && token.type == parse_token_type_background && token.source_start > 0) {
-            // Check to see if there was a previous token_background.
-            const parse_node_t *prev_background = nodes.find_node_matching_source_location(
-                parse_token_type_background, token.source_start - 1, NULL);
-            if (prev_background != NULL) {
-                // We have &&.
-                this->parse_error(token, parse_error_double_background, ERROR_BAD_AND);
-                done = true;
-            }
-        }
-
-        if (!done) {
-            const wcstring expected = stack_elem.user_presentable_description();
-            this->parse_error_unexpected_token(expected.c_str(), token);
-        }
+        const wcstring expected = stack_elem.user_presentable_description();
+        this->parse_error_unexpected_token(expected.c_str(), token);
     }
 }
 

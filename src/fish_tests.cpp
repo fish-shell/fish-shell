@@ -3624,9 +3624,6 @@ static void test_new_parser_errors() {
 
         {L"case", parse_error_unbalancing_case},
         {L"if true ; case ; end", parse_error_unbalancing_case},
-
-        {L"foo || bar", parse_error_double_pipe},
-        {L"foo && bar", parse_error_double_background},
     };
 
     for (size_t i = 0; i < sizeof tests / sizeof *tests; i++) {
@@ -3742,9 +3739,7 @@ static void test_error_messages() {
                        {L"echo \"foo\"$\"bar\"", ERROR_NO_VAR_NAME},
                        {L"echo foo $ bar", ERROR_NO_VAR_NAME},
                        {L"echo foo$(foo)bar", ERROR_BAD_VAR_SUBCOMMAND1},
-                       {L"echo \"foo$(foo)bar\"", ERROR_BAD_VAR_SUBCOMMAND1},
-                       {L"echo foo || echo bar", ERROR_BAD_OR},
-                       {L"echo foo && echo bar", ERROR_BAD_AND}};
+                       {L"echo \"foo$(foo)bar\"", ERROR_BAD_VAR_SUBCOMMAND1}};
 
     parse_error_list_t errors;
     for (size_t i = 0; i < sizeof error_tests / sizeof *error_tests; i++) {

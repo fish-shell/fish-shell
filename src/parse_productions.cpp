@@ -61,6 +61,19 @@ RESOLVE(job_list) {
     }
 }
 
+RESOLVE(job_conjunction) {
+    UNUSED(token2);
+    UNUSED(out_tag);
+    switch (token1.type) {
+        case parse_token_type_andand:
+            return production_for<andands>();
+        case parse_token_type_oror:
+            return production_for<orors>();
+        default:
+            return production_for<empty>();
+    }
+}
+
 RESOLVE(job_continuation) {
     UNUSED(token2);
     UNUSED(out_tag);
@@ -106,6 +119,10 @@ RESOLVE(statement) {
     }
 
     switch (token1.type) {
+        case parse_token_type_andand:
+        case parse_token_type_oror:
+            return production_for<boolean>();
+
         case parse_token_type_string: {
             switch (token1.keyword) {
                 case parse_keyword_and:
@@ -356,6 +373,8 @@ const production_element_t *parse_productions::production_for_token(parse_token_
         case parse_token_type_pipe:
         case parse_token_type_redirection:
         case parse_token_type_background:
+        case parse_token_type_andand:
+        case parse_token_type_oror:
         case parse_token_type_end:
         case parse_token_type_terminate: {
             debug(0, "Terminal token type %ls passed to %s", token_type_description(node_type),

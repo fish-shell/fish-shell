@@ -35,6 +35,8 @@ using tok_string = primitive<parse_token_type_string>;
 using tok_pipe = primitive<parse_token_type_pipe>;
 using tok_background = primitive<parse_token_type_background>;
 using tok_redirection = primitive<parse_token_type_redirection>;
+using tok_andand = primitive<parse_token_type_andand>;
+using tok_oror = primitive<parse_token_type_oror>;
 
 // Define keyword types.
 template <parse_keyword_t Keyword>
@@ -197,10 +199,18 @@ struct alternative {};
 
 // A job_list is a list of jobs, separated by semicolons or newlines
 DEF_ALT(job_list) {
-    using normal = seq<job, job_list>;
+    using normal = seq<job, job_conjunction, job_list>;
     using empty_line = seq<tok_end, job_list>;
     using empty = grammar::empty;
     ALT_BODY(job_list, normal, empty_line, empty);
+};
+
+// A job_conjunction is a || or && continuation of a job
+DEF_ALT(job_conjunction) {
+    using andands = seq<tok_andand, optional_newlines, job, job_conjunction>;
+    using orors = seq<tok_oror, optional_newlines, job, job_conjunction>;
+    using empty = grammar::empty;
+    ALT_BODY(job_conjunction, andands, orors, empty);
 };
 
 // A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
@@ -291,9 +301,9 @@ produces_sequence<keyword<parse_keyword_function>, argument, argument_list, tok_
 
 //  A boolean statement is AND or OR or NOT
 DEF_ALT(boolean_statement) {
-    using ands = seq<keyword<parse_keyword_and>, statement>;
-    using ors = seq<keyword<parse_keyword_or>, statement>;
-    using nots = seq<keyword<parse_keyword_not>, statement>;
+    using ands = seq<keyword<parse_keyword_and>, statement>;  // foo ; and bar
+    using ors = seq<keyword<parse_keyword_or>, statement>;    // foo ; or bar
+    using nots = seq<keyword<parse_keyword_not>, statement>;  // not foo
     ALT_BODY(boolean_statement, ands, ors, nots);
 };
 

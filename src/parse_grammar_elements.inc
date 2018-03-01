@@ -1,6 +1,7 @@
 // Define ELEM before including this file.
 ELEM(job_list)
 ELEM(job)
+ELEM(job_conjunction)
 ELEM(job_continuation)
 ELEM(statement)
 ELEM(if_statement)

@@ -17,6 +17,7 @@ enum parse_token_type_t {
     token_type_invalid = 1,
     // Non-terminal tokens
     symbol_job_list,
+    symbol_job_conjunction,
     symbol_job,
     symbol_job_continuation,
     symbol_statement,
@@ -52,6 +53,8 @@ enum parse_token_type_t {
     parse_token_type_pipe,
     parse_token_type_redirection,
     parse_token_type_background,
+    parse_token_type_andand,
+    parse_token_type_oror,
     parse_token_type_end,
     // Special terminal type that means no more tokens forthcoming.
     parse_token_type_terminate,
@@ -77,6 +80,8 @@ const enum_map<parse_token_type_t> token_enum_map[] = {
     {parse_token_type_pipe, L"parse_token_type_pipe"},
     {parse_token_type_redirection, L"parse_token_type_redirection"},
     {parse_token_type_string, L"parse_token_type_string"},
+    {parse_token_type_andand, L"parse_token_type_andand"},
+    {parse_token_type_oror, L"parse_token_type_oror"},
     {parse_token_type_terminate, L"parse_token_type_terminate"},
     {symbol_andor_job_list, L"symbol_andor_job_list"},
     {symbol_argument, L"symbol_argument"},
@@ -98,6 +103,7 @@ const enum_map<parse_token_type_t> token_enum_map[] = {
     {symbol_if_clause, L"symbol_if_clause"},
     {symbol_if_statement, L"symbol_if_statement"},
     {symbol_job, L"symbol_job"},
+    {symbol_job_conjunction, L"symbol_job_conjunction"},
     {symbol_job_continuation, L"symbol_job_continuation"},
     {symbol_job_list, L"symbol_job_list"},
     {symbol_optional_newlines, L"symbol_optional_newlines"},

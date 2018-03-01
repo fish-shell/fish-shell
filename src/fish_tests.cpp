@@ -838,6 +838,38 @@ static void test_parser() {
         err(L"backgrounded 'while' conditional not reported as error");
     }
 
+    if (!parse_util_detect_errors(L"true | || false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"|| false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"&& false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"true ; && false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"true ; || false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"true || && false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"true && || false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"true && && false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
     say(L"Testing basic evaluation");
 
     // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
@@ -3414,6 +3446,11 @@ static void test_new_parser_correctness() {
         {L"begin; end", true},
         {L"begin if true; end; end;", true},
         {L"begin if true ; echo hi ; end; end", true},
+        {L"true && false || false", true},
+        {L"true || false; and true", true},
+        {L"true || ||", false},
+        {L"|| true", false},
+        {L"true || \n\n false", true},
     };
 
     for (size_t i = 0; i < sizeof parser_tests / sizeof *parser_tests; i++) {

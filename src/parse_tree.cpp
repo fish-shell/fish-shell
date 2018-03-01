@@ -138,30 +138,29 @@ static wcstring token_type_user_presentable_description(
 
     switch (type) {
         // Hackish. We only support the following types.
-        case symbol_statement: {
+        case symbol_statement:
             return L"a command";
-        }
-        case symbol_argument: {
+        case symbol_argument:
             return L"an argument";
-        }
-        case parse_token_type_string: {
+        case symbol_job:
+        case symbol_job_list:
+            return L"a job";
+        case parse_token_type_string:
             return L"a string";
-        }
-        case parse_token_type_pipe: {
+        case parse_token_type_pipe:
             return L"a pipe";
-        }
-        case parse_token_type_redirection: {
+        case parse_token_type_redirection:
             return L"a redirection";
-        }
-        case parse_token_type_background: {
+        case parse_token_type_background:
             return L"a '&'";
-        }
-        case parse_token_type_end: {
+        case parse_token_type_andand:
+            return L"'&&'";
+        case parse_token_type_oror:
+            return L"'||'";
+        case parse_token_type_end:
             return L"end of the statement";
-        }
-        case parse_token_type_terminate: {
+        case parse_token_type_terminate:
             return L"end of the input";
-        }
         default: { return format_string(L"a %ls", token_type_description(type)); }
     }
 }
@@ -222,9 +221,9 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
         case TOK_PIPE:
             return parse_token_type_pipe;
         case TOK_ANDAND:
+            return parse_token_type_andand;
         case TOK_OROR:
-            // Temporary while && and || support is brought up.
-            return parse_special_type_comment;
+            return parse_token_type_oror;
         case TOK_END:
             return parse_token_type_end;
         case TOK_BACKGROUND:
@@ -731,6 +730,8 @@ static bool type_is_terminal_type(parse_token_type_t type) {
         case parse_token_type_redirection:
         case parse_token_type_background:
         case parse_token_type_end:
+        case parse_token_type_andand:
+        case parse_token_type_oror:
         case parse_token_type_terminate: {
             return true;
         }

@@ -186,5 +186,9 @@ int builtin_math(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         expression.append(arg);
     }
 
+    if (expression.empty()) {
+        streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, L"math", 1, 0);
+        return STATUS_CMD_ERROR;
+    }
     return evaluate_expression(cmd, parser, streams, opts, expression);
 }

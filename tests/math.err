@@ -22,3 +22,5 @@ math: Error: Too few arguments
 math: Error: Too many arguments
 '2 + 2 4'
        ^
+math: Expected at least 1 args, got only 0
+math: Expected at least 1 args, got only 0

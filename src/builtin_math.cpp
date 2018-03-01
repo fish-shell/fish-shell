@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <string>
 
+#include "tinyexpr.h"
+
 #include "builtin.h"
 #include "builtin_math.h"
 #include "common.h"
@@ -14,10 +16,6 @@
 #include "io.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-#include "muParser.h"
-#include "muParserBase.h"
-#include "muParserDef.h"
 
 struct math_cmd_opts_t {
     bool print_help = false;
@@ -115,44 +113,53 @@ static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storag
     return math_get_arg_argv(argidx, argv);
 }
 
-/// Implement integer modulo math operator.
-static mu::ValueOrError moduloOperator(double v, double w) { return (int)v % std::max(1, (int)w); };
+wcstring math_describe_error(te_error_t& error) {
+    if (error.position == 0) return L"NO ERROR?!?";
+    assert(error.type != TE_ERROR_NONE && L"Error has no position");
+
+    switch(error.type) {
+        case TE_ERROR_UNKNOWN_VARIABLE: return _(L"Unknown variable");
+        case TE_ERROR_MISSING_CLOSING_PAREN: return _(L"Missing closing parenthesis");
+        case TE_ERROR_MISSING_OPENING_PAREN: return _(L"Missing opening parenthesis");
+        case TE_ERROR_TOO_FEW_ARGS: return _(L"Too few arguments");
+        case TE_ERROR_TOO_MANY_ARGS: return _(L"Too many arguments");
+        case TE_ERROR_MISSING_OPERATOR: return _(L"Missing operator");
+        case TE_ERROR_UNKNOWN: return _(L"Expression is bogus");
+        default: return L"Unknown error";
+    }
+}
 
 /// Evaluate math expressions.
 static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_t &streams,
                                math_cmd_opts_t &opts, wcstring &expression) {
     UNUSED(parser);
 
-    // Helper to print an error and return an error code.
-    auto printError = [&streams, cmd](const mu::ParserError &err) {
-        streams.err.append_format(_(L"%ls: Invalid expression: %ls\n"), cmd, err.GetMsg().c_str());
-        return STATUS_CMD_ERROR;
-    };
+    int retval = STATUS_CMD_OK;
+    te_error_t error;
+    char *narrow_str = wcs2str(expression);
+    // Switch locale while computing stuff.
+    // This means that the "." is always the radix character,
+    // so numbers work the same across locales.
+    char *saved_locale = strdup(setlocale(LC_NUMERIC, NULL));
+    setlocale(LC_NUMERIC, "C");
+    double v = te_interp(narrow_str, &error);
 
-    mu::Parser p;
-    // MuParser doesn't implement the modulo operator so we add it ourselves since there are
-    // likely users of our old math wrapper around bc that expect it to be available.
-    p.DefineOprtChars(L"%");
-    mu::OptionalError oerr = p.DefineOprt(L"%", moduloOperator, mu::prINFIX);
-    assert(!oerr.has_error() && "Unexpected error defining modulo operator");
-    (void)oerr;
-
-    oerr = p.SetExpr(expression);
-    if (oerr.has_error()) return printError(oerr.error());
-
-    std::vector<mu::ValueOrError> vs;
-    p.Eval(&vs);
-    for (const mu::ValueOrError &v : vs) {
-        if (v.has_error()) return printError(v.error());
-    }
-    for (const mu::ValueOrError &v : vs) {
+    if (error.position == 0) {
         if (opts.scale == 0) {
-            streams.out.append_format(L"%ld\n", static_cast<long>(*v));
+            streams.out.append_format(L"%ld\n", static_cast<long>(v));
         } else {
-            streams.out.append_format(L"%.*lf\n", opts.scale, *v);
+            streams.out.append_format(L"%.*lf\n", opts.scale, v);
         }
+    } else {
+        streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error).c_str());
+        streams.err.append_format(L"'%ls'\n", expression.c_str());
+        streams.err.append_format(L"%*lc^\n", error.position - 1, L' ');
+        retval = STATUS_CMD_ERROR;
     }
-    return STATUS_CMD_OK;
+    free(narrow_str);
+    setlocale(LC_NUMERIC, saved_locale);
+    free(saved_locale);
+    return retval;
 }
 
 /// The math builtin evaluates math expressions.

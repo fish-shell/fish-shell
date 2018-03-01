@@ -113,7 +113,7 @@ static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storag
     return math_get_arg_argv(argidx, argv);
 }
 
-wcstring math_describe_error(te_error_t& error) {
+static wcstring math_describe_error(te_error_t& error) {
     if (error.position == 0) return L"NO ERROR?!?";
     assert(error.type != TE_ERROR_NONE && L"Error has no position");
 
@@ -136,13 +136,13 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
 
     int retval = STATUS_CMD_OK;
     te_error_t error;
-    char *narrow_str = wcs2str(expression);
+    std::string narrow_str = wcs2string(expression);
     // Switch locale while computing stuff.
     // This means that the "." is always the radix character,
     // so numbers work the same across locales.
     char *saved_locale = strdup(setlocale(LC_NUMERIC, NULL));
     setlocale(LC_NUMERIC, "C");
-    double v = te_interp(narrow_str, &error);
+    double v = te_interp(narrow_str.c_str(), &error);
 
     if (error.position == 0) {
         if (opts.scale == 0) {
@@ -156,7 +156,6 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
         streams.err.append_format(L"%*lc^\n", error.position - 1, L' ');
         retval = STATUS_CMD_ERROR;
     }
-    free(narrow_str);
     setlocale(LC_NUMERIC, saved_locale);
     free(saved_locale);
     return retval;

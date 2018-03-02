@@ -378,6 +378,8 @@ int main(int argc, char **argv) {
     proc_init();
     builtin_init();
     misc_init();
+    // reader_init() calls getwindowsize(), so initscr() must be called first
+    initscr();
     reader_init();
 
     parser_t &parser = parser_t::principal_parser();
@@ -450,6 +452,7 @@ int main(int argc, char **argv) {
     }
 
     history_save_all();
+    endwin();
     proc_destroy();
     exit_without_destructors(exit_status);
     return EXIT_FAILURE;  // above line should always exit

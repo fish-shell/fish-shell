@@ -17,6 +17,19 @@
 #include <sys/ioctl.h>  // IWYU pragma: keep
 #endif
 
+#if HAVE_CURSES_H
+#include <curses.h>
+#elif HAVE_NCURSES_H
+#include <ncurses.h>
+#elif HAVE_NCURSES_CURSES_H
+#include <ncurses/curses.h>
+#endif
+// #if HAVE_TERM_H
+// #include <term.h>
+// #elif HAVE_NCURSES_TERM_H
+// #include <ncurses/term.h>
+// #endif
+
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -825,6 +838,12 @@ static const wchar_t *enum_to_str(T enum_val, const enum_map<T> map[]) {
 
 void redirect_tty_output();
 
+// Member names mimic those of TIOCGWINSZ's `struct winsize`
+struct termsize {
+    int ws_row;
+    int ws_col;
+};
+
 // Minimum allowed terminal size and default size if the detected size is not reasonable.
 #define MIN_TERM_COL 20
 #define MIN_TERM_ROW 2
@@ -833,7 +852,7 @@ void redirect_tty_output();
 #define DFLT_TERM_COL_STR L"80"
 #define DFLT_TERM_ROW_STR L"24"
 void invalidate_termsize(bool invalidate_vars = false);
-struct winsize get_current_winsize();
+struct termsize get_current_termsize();
 
 bool valid_var_name_char(wchar_t chr);
 bool valid_var_name(const wchar_t *str);

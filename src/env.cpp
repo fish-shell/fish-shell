@@ -690,17 +690,17 @@ static void setup_path() {
         env_set(L"PATH", ENV_GLOBAL | ENV_EXPORT, value);
     }
 }
-
-/// If they don't already exist initialize the `COLUMNS` and `LINES` env vars to reasonable
-/// defaults. They will be updated later by the `get_current_winsize()` function if they need to be
-/// adjusted.
-static void env_set_termsize() {
-    auto cols = env_get(L"COLUMNS");
-    if (cols.missing_or_empty()) env_set_one(L"COLUMNS", ENV_GLOBAL, DFLT_TERM_COL_STR);
-
-    auto rows = env_get(L"LINES");
-    if (rows.missing_or_empty()) env_set_one(L"LINES", ENV_GLOBAL, DFLT_TERM_ROW_STR);
-}
+//
+// /// If they don't already exist initialize the `COLUMNS` and `LINES` env vars to reasonable
+// /// defaults. They will be updated later by the `get_current_winsize()` function if they need to be
+// /// adjusted.
+// static void env_set_termsize() {
+//     auto cols = env_get(L"COLUMNS");
+//     if (cols.missing_or_empty()) env_set_one(L"COLUMNS", ENV_GLOBAL, DFLT_TERM_COL_STR);
+//
+//     auto rows = env_get(L"LINES");
+//     if (rows.missing_or_empty()) env_set_one(L"LINES", ENV_GLOBAL, DFLT_TERM_ROW_STR);
+// }
 
 bool env_set_pwd() {
     wcstring cwd = wgetcwd();
@@ -902,8 +902,8 @@ static void setup_var_dispatch_table() {
     var_dispatch_table.emplace(L"fish_term24bit", handle_fish_term_change);
     var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
     var_dispatch_table.emplace(L"fish_emoji_width", handle_change_emoji_width);
-    var_dispatch_table.emplace(L"LINES", handle_term_size_change);
-    var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
+    // var_dispatch_table.emplace(L"LINES", handle_term_size_change);
+    // var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
     var_dispatch_table.emplace(L"fish_complete_path", handle_complete_path_change);
     var_dispatch_table.emplace(L"fish_function_path", handle_function_path_change);
     var_dispatch_table.emplace(L"fish_read_limit", handle_read_limit_change);
@@ -1027,7 +1027,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     }
 
     env_set_pwd();         // initialize the PWD variable
-    env_set_termsize();    // initialize the terminal size variables
+    // env_set_termsize();    // initialize the terminal size variables
     env_set_read_limit();  // initialize the read_byte_limit
 
     // Set g_use_posix_spawn. Default to true.

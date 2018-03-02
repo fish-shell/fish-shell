@@ -67,8 +67,9 @@ static pid_t initial_fg_process_group = -1;
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
 /// common_get_width()/common_get_height().
-static fish_mutex_t termsize_lock;
-static struct winsize termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
+// static fish_mutex_t termsize_lock;
+// static struct winsize termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
+// Must use volatile bool and not std::atomic<bool> because we interact with this in a signal handler
 static volatile bool termsize_valid = false;
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
@@ -1527,9 +1528,9 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
 /// the tty since it is possible the terminal size changed while an external command was running.
 void invalidate_termsize(bool invalidate_vars) {
     termsize_valid = false;
-    if (invalidate_vars) {
-        termsize.ws_col = termsize.ws_row = USHRT_MAX;
-    }
+    // if (invalidate_vars) {
+    //     termsize.ws_col = termsize.ws_row = USHRT_MAX;
+    // }
 }
 
 /// Handle SIGWINCH. This is also invoked when the shell regains control of the tty since it is
@@ -1543,88 +1544,73 @@ void common_handle_winch(int signal) {
 
 /// Validate the new terminal size. Fallback to the env vars if necessary. Ensure the values are
 /// sane and if not fallback to a default of 80x24.
-static void validate_new_termsize(struct winsize *new_termsize) {
-    if (new_termsize->ws_col == 0 || new_termsize->ws_row == 0) {
-#ifdef HAVE_WINSIZE
-        if (shell_is_interactive()) {
-            debug(1, _(L"Current terminal parameters have rows and/or columns set to zero."));
-            debug(1, _(L"The stty command can be used to correct this "
-                       L"(e.g., stty rows 80 columns 24)."));
-        }
-#endif
-        // Fallback to the environment vars.
-        maybe_t<env_var_t> col_var = env_get(L"COLUMNS");
-        maybe_t<env_var_t> row_var = env_get(L"LINES");
-        if (!col_var.missing_or_empty() && !row_var.missing_or_empty()) {
-            // Both vars have to have valid values.
-            int col = fish_wcstoi(col_var->as_string().c_str());
-            bool col_ok = errno == 0 && col > 0 && col <= USHRT_MAX;
-            int row = fish_wcstoi(row_var->as_string().c_str());
-            bool row_ok = errno == 0 && row > 0 && row <= USHRT_MAX;
-            if (col_ok && row_ok) {
-                new_termsize->ws_col = col;
-                new_termsize->ws_row = row;
-            }
-        }
-    }
-
-    if (new_termsize->ws_col < MIN_TERM_COL || new_termsize->ws_row < MIN_TERM_ROW) {
-        if (shell_is_interactive()) {
-            debug(1, _(L"Current terminal parameters set terminal size to unreasonable value."));
-            debug(1, _(L"Defaulting terminal size to 80x24."));
-        }
-        new_termsize->ws_col = DFLT_TERM_COL;
-        new_termsize->ws_row = DFLT_TERM_ROW;
-    }
-}
+// static void validate_new_termsize(struct termsize &new_termsize) {
+//     if (new_termsize.ws_col == 0 || new_termsize.ws_row == 0) {
+// #ifdef HAVE_WINSIZE
+//         if (shell_is_interactive()) {
+//             debug(1, _(L"Current terminal parameters have rows and/or columns set to zero."));
+//             debug(1, _(L"The stty command can be used to correct this "
+//                        L"(e.g., stty rows 80 columns 24)."));
+//         }
+// #endif
+//         // Fallback to the environment vars.
+//         maybe_t<env_var_t> col_var = env_get(L"COLUMNS");
+//         maybe_t<env_var_t> row_var = env_get(L"LINES");
+//         if (!col_var.missing_or_empty() && !row_var.missing_or_empty()) {
+//             // Both vars have to have valid values.
+//             int col = fish_wcstoi(col_var->as_string().c_str());
+//             bool col_ok = errno == 0 && col > 0 && col <= USHRT_MAX;
+//             int row = fish_wcstoi(row_var->as_string().c_str());
+//             bool row_ok = errno == 0 && row > 0 && row <= USHRT_MAX;
+//             if (col_ok && row_ok) {
+//                 new_termsize.ws_col = col;
+//                 new_termsize.ws_row = row;
+//             }
+//         }
+//     }
+//
+//     if (new_termsize.ws_col < MIN_TERM_COL || new_termsize.ws_row < MIN_TERM_ROW) {
+//         if (shell_is_interactive()) {
+//             debug(1, _(L"Current terminal parameters set terminal size to unreasonable value."));
+//             debug(1, _(L"Defaulting terminal size to 80x24."));
+//         }
+//         new_termsize.ws_col = DFLT_TERM_COL;
+//         new_termsize.ws_row = DFLT_TERM_ROW;
+//     }
+// }
 
 /// Export the new terminal size as env vars and to the kernel if possible.
-static void export_new_termsize(struct winsize *new_termsize) {
-    wchar_t buf[64];
-
-    auto cols = env_get(L"COLUMNS", ENV_EXPORT);
-    swprintf(buf, 64, L"%d", (int)new_termsize->ws_col);
-    env_set_one(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
-
-    auto lines = env_get(L"LINES", ENV_EXPORT);
-    swprintf(buf, 64, L"%d", (int)new_termsize->ws_row);
-    env_set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
-
-#ifdef HAVE_WINSIZE
-    // Only write the new terminal size if we are in the foreground (#4477)
-    if (tcgetpgrp(STDOUT_FILENO) == getpgrp()) {
-        ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);
-    }
-#endif
-}
+// static void export_new_termsize(const struct termsize new_termsize) {
+//     // Only write the new terminal size if we are in the foreground (#4477)
+//     if (tcgetpgrp(STDOUT_FILENO) == getpgrp()) {
+//         // ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);
+//         // if (resizeterm(new_termsize.ws_row, new_termsize.ws_col) != OK) {
+//         if (wresize(curscr, new_termsize.ws_row, new_termsize.ws_col) != OK) {
+//             debug(0, "Failed to set terminal size!\n");
+//         }
+//     }
+// }
 
 /// Updates termsize as needed, and returns a copy of the winsize.
-struct winsize get_current_winsize() {
-    scoped_lock guard(termsize_lock);
-
-    if (termsize_valid) return termsize;
-
-    struct winsize new_termsize = {0, 0, 0, 0};
-#ifdef HAVE_WINSIZE
-    errno = 0;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_termsize) != -1 &&
-        new_termsize.ws_col == termsize.ws_col && new_termsize.ws_row == termsize.ws_row) {
+struct termsize get_current_termsize() {
+    if (!termsize_valid) {
+        endwin();
+        refresh();
         termsize_valid = true;
-        return termsize;
     }
-#endif
+    struct termsize new_termsize;
+    getmaxyx(curscr, new_termsize.ws_row, new_termsize.ws_col);
+    // comment this out to have your entire terminal spammed with termsize dumps to test resize handling
+    // debug(0, L"curscr: 0x%p, getmaxyx: cols: %d, rows: %d", curscr, new_termsize.ws_col, new_termsize.ws_row);
+    // validate_new_termsize(new_termsize);
+    // export_new_termsize(new_termsize);
 
-    validate_new_termsize(&new_termsize);
-    export_new_termsize(&new_termsize);
-    termsize.ws_col = new_termsize.ws_col;
-    termsize.ws_row = new_termsize.ws_row;
-    termsize_valid = true;
-    return termsize;
+    return new_termsize;
 }
 
-int common_get_width() { return get_current_winsize().ws_col; }
+int common_get_width() { return get_current_termsize().ws_col; }
 
-int common_get_height() { return get_current_winsize().ws_row; }
+int common_get_height() { return get_current_termsize().ws_row; }
 
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value) {
     size_t prefix_size = wcslen(proposed_prefix);

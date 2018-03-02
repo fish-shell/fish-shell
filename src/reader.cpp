@@ -801,7 +801,7 @@ void reader_init() {
 
     // We do this not because we actually need the window size but for its side-effect of correctly
     // setting the COLUMNS and LINES env vars.
-    get_current_winsize();
+    get_current_termsize();
 }
 
 /// Restore the term mode if we own the terminal. It's important we do this before

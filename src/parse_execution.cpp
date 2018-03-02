@@ -244,12 +244,12 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
         }
 
         // An if condition has a job and a "tail" of andor jobs, e.g. "foo ; and bar; or baz".
-        tnode_t<g::job> condition_head = if_clause.child<1>();
+        tnode_t<g::job_conjunction> condition_head = if_clause.child<1>();
         tnode_t<g::andor_job_list> condition_boolean_tail = if_clause.child<3>();
 
         // Check the condition and the tail. We treat parse_execution_errored here as failure, in
         // accordance with historic behavior.
-        parse_execution_result_t cond_ret = run_1_job(condition_head, ib);
+        parse_execution_result_t cond_ret = run_job_conjunction(condition_head, ib);
         if (cond_ret == parse_execution_success) {
             cond_ret = run_job_list(condition_boolean_tail, ib);
         }
@@ -527,13 +527,13 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     parse_execution_result_t ret = parse_execution_success;
 
     // The conditions of the while loop.
-    tnode_t<g::job> condition_head = header.child<1>();
+    tnode_t<g::job_conjunction> condition_head = header.child<1>();
     tnode_t<g::andor_job_list> condition_boolean_tail = header.child<3>();
 
     // Run while the condition is true.
     for (;;) {
         // Check the condition.
-        parse_execution_result_t cond_ret = this->run_1_job(condition_head, wb);
+        parse_execution_result_t cond_ret = this->run_job_conjunction(condition_head, wb);
         if (cond_ret == parse_execution_success) {
             cond_ret = run_job_list(condition_boolean_tail, wb);
         }

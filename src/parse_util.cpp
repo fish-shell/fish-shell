@@ -1057,14 +1057,14 @@ static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
     // foo & ; or bar
     // if foo & ; end
     // while foo & ; end
-    if (job.try_get_parent<g::if_clause>()) {
+    auto job_conj = job.try_get_parent<g::job_conjunction>();
+    if (job_conj.try_get_parent<g::if_clause>()) {
         errored = append_syntax_error(parse_errors, source_range->start,
                                       BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-    } else if (job.try_get_parent<g::while_header>()) {
+    } else if (job_conj.try_get_parent<g::while_header>()) {
         errored = append_syntax_error(parse_errors, source_range->start,
                                       BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-    } else if (auto jlist =
-                   job.try_get_parent<g::job_conjunction>().try_get_parent<g::job_list>()) {
+    } else if (auto jlist = job_conj.try_get_parent<g::job_list>()) {
         // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
         // Fetch the job list and then advance it by one.
         auto first_jconj = jlist.next_in_list<g::job_conjunction>();

@@ -245,7 +245,7 @@ produces_sequence<if_clause, else_clause, end_command, arguments_or_redirections
     BODY(if_statement)};
 
 DEF(if_clause)
-produces_sequence<keyword<parse_keyword_if>, job, tok_end, andor_job_list, job_list>{
+produces_sequence<keyword<parse_keyword_if>, job_conjunction, tok_end, andor_job_list, job_list>{
     BODY(if_clause)};
 
 DEF_ALT(else_clause) {
@@ -294,7 +294,8 @@ produces_sequence<keyword<parse_keyword_for>, tok_string, keyword<parse_keyword_
 };
 
 DEF(while_header)
-produces_sequence<keyword<parse_keyword_while>, job, tok_end, andor_job_list>{BODY(while_header)};
+produces_sequence<keyword<parse_keyword_while>, job_conjunction, tok_end, andor_job_list>{
+    BODY(while_header)};
 
 DEF(begin_header) produces_single<keyword<parse_keyword_begin>>{BODY(begin_header)};
 

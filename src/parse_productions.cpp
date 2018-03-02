@@ -61,13 +61,15 @@ RESOLVE(job_list) {
     }
 }
 
-RESOLVE(job_conjunction) {
+RESOLVE(job_conjunction_continuation) {
     UNUSED(token2);
     UNUSED(out_tag);
     switch (token1.type) {
         case parse_token_type_andand:
+            *out_tag = parse_bool_and;
             return production_for<andands>();
         case parse_token_type_oror:
+            *out_tag = parse_bool_or;
             return production_for<orors>();
         default:
             return production_for<empty>();
@@ -119,10 +121,6 @@ RESOLVE(statement) {
     }
 
     switch (token1.type) {
-        case parse_token_type_andand:
-        case parse_token_type_oror:
-            return production_for<boolean>();
-
         case parse_token_type_string: {
             switch (token1.keyword) {
                 case parse_keyword_and:

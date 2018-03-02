@@ -1047,6 +1047,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::a
 /// Given that the job given by node should be backgrounded, return true if we detect any errors.
 static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
                                               parse_error_list_t *parse_errors) {
+    namespace g = grammar;
     auto source_range = job.source_range();
     if (!source_range) return false;
 
@@ -1056,22 +1057,25 @@ static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
     // foo & ; or bar
     // if foo & ; end
     // while foo & ; end
-    if (job.try_get_parent<grammar::if_clause>()) {
+    if (job.try_get_parent<g::if_clause>()) {
         errored = append_syntax_error(parse_errors, source_range->start,
                                       BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-    } else if (job.try_get_parent<grammar::while_header>()) {
+    } else if (job.try_get_parent<g::while_header>()) {
         errored = append_syntax_error(parse_errors, source_range->start,
                                       BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-    } else if (auto job_list = job.try_get_parent<grammar::job_list>()) {
+    } else if (auto jlist =
+                   job.try_get_parent<g::job_conjunction>().try_get_parent<g::job_list>()) {
         // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
-        // Build the job list and then advance it by one.
-        auto first_job = job_list.next_in_list<grammar::job>();
-        assert(first_job == job && "Expected first job to be the node we found");
-        (void)first_job;
+        // Fetch the job list and then advance it by one.
+        auto first_jconj = jlist.next_in_list<g::job_conjunction>();
+        assert(first_jconj == job.try_get_parent<g::job_conjunction>() &&
+               "Expected first job to be the node we found");
+        (void)first_jconj;
+
         // Try getting the next job as a boolean statement.
-        auto next_job = job_list.next_in_list<grammar::job>();
-        tnode_t<grammar::statement> next_stmt = next_job.child<0>();
-        if (auto bool_stmt = next_stmt.try_get_child<grammar::boolean_statement, 0>()) {
+        tnode_t<g::job> next_job = jlist.next_in_list<g::job_conjunction>().child<0>();
+        tnode_t<g::statement> next_stmt = next_job.child<0>();
+        if (auto bool_stmt = next_stmt.try_get_child<g::boolean_statement, 0>()) {
             // The next job is indeed a boolean statement.
             parse_bool_statement_type_t bool_type = bool_statement_type(bool_stmt);
             if (bool_type == parse_bool_and) {  // this is not allowed

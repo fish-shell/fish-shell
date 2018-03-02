@@ -2,6 +2,7 @@
 ELEM(job_list)
 ELEM(job)
 ELEM(job_conjunction)
+ELEM(job_conjunction_continuation)
 ELEM(job_continuation)
 ELEM(statement)
 ELEM(if_statement)

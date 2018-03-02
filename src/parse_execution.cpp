@@ -107,7 +107,7 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
     const wcstring &forbidden_function_name = parser->forbidden_function.back();
 
     // Get the first job in the job list.
-    auto first_job = job_list.next_in_list<g::job>();
+    tnode_t<g::job> first_job = job_list.try_get_child<g::job_conjunction, 0>().child<0>();
     if (!first_job) {
         return {};
     }
@@ -1220,6 +1220,35 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     return parse_execution_success;
 }
 
+parse_execution_result_t parse_execution_context_t::run_job_conjunction(
+    tnode_t<grammar::job_conjunction> job_expr, const block_t *associated_block) {
+    parse_execution_result_t result = parse_execution_success;
+    tnode_t<g::job_conjunction> cursor = job_expr;
+    tnode_t<g::job_conjunction_continuation> continuation;
+    while (cursor) {
+        if (should_cancel_execution(associated_block)) break;
+        bool skip = false;
+        if (continuation) {
+            // Check the conjunction type.
+            parse_bool_statement_type_t conj = bool_statement_type(continuation);
+            assert((conj == parse_bool_and || conj == parse_bool_or) && "Unexpected conjunction");
+            if (conj == parse_bool_and) {
+                // Skip if last job failed.
+                skip = (proc_get_last_status() != 0);
+            } else if (conj == parse_bool_or) {
+                // Skip if last job succeeded.
+                skip = (proc_get_last_status() == 0);
+            }
+        }
+        if (! skip) {
+            result = run_1_job(cursor.child<0>(), associated_block);
+        }
+        continuation = cursor.child<1>();
+        cursor = continuation.try_get_child<g::job_conjunction, 2>();
+    }
+    return result;
+}
+
 template <typename Type>
 parse_execution_result_t parse_execution_context_t::run_job_list(tnode_t<Type> job_list,
                                                                  const block_t *associated_block) {
@@ -1227,9 +1256,10 @@ parse_execution_result_t parse_execution_context_t::run_job_list(tnode_t<Type> j
                   "Not a job list");
 
     parse_execution_result_t result = parse_execution_success;
-    while (tnode_t<g::job> job = job_list.template next_in_list<g::job>()) {
+    while (tnode_t<g::job_conjunction> job_expr =
+               job_list.template next_in_list<g::job_conjunction>()) {
         if (should_cancel_execution(associated_block)) break;
-        result = this->run_1_job(job, associated_block);
+        result = this->run_job_conjunction(job_expr, associated_block);
     }
 
     // Returns the last job executed.

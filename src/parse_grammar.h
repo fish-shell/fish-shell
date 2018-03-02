@@ -197,20 +197,24 @@ struct alternative {};
     static const production_element_t *resolve(const parse_token_t &, const parse_token_t &, \
                                                parse_node_tag_t *);
 
-// A job_list is a list of jobs, separated by semicolons or newlines
+// A job_list is a list of job_conjunctions, separated by semicolons or newlines
 DEF_ALT(job_list) {
-    using normal = seq<job, job_conjunction, job_list>;
+    using normal = seq<job_conjunction, job_list>;
     using empty_line = seq<tok_end, job_list>;
     using empty = grammar::empty;
     ALT_BODY(job_list, normal, empty_line, empty);
 };
 
-// A job_conjunction is a || or && continuation of a job
-DEF_ALT(job_conjunction) {
-    using andands = seq<tok_andand, optional_newlines, job, job_conjunction>;
-    using orors = seq<tok_oror, optional_newlines, job, job_conjunction>;
+// A job_conjunction is a job followed by a continuation.
+DEF(job_conjunction) produces_sequence<job, job_conjunction_continuation> {
+    BODY(job_conjunction);
+};
+
+DEF_ALT(job_conjunction_continuation) {
+    using andands = seq<tok_andand, optional_newlines, job_conjunction>;
+    using orors = seq<tok_oror, optional_newlines, job_conjunction>;
     using empty = grammar::empty;
-    ALT_BODY(job_conjunction, andands, orors, empty);
+    ALT_BODY(job_conjunction_continuation, andands, orors, empty);
 };
 
 // A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
@@ -311,7 +315,7 @@ DEF_ALT(boolean_statement) {
 // statement.
 DEF_ALT(andor_job_list) {
     using empty = grammar::empty;
-    using andor_job = seq<job, andor_job_list>;
+    using andor_job = seq<job_conjunction, andor_job_list>;
     using empty_line = seq<tok_end, andor_job_list>;
     ALT_BODY(andor_job_list, empty, andor_job, empty_line);
 };

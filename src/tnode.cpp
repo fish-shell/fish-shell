@@ -50,6 +50,10 @@ enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_st
     return static_cast<parse_bool_statement_type_t>(stmt.tag());
 }
 
+enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_conjunction_continuation> cont) {
+    return static_cast<parse_bool_statement_type_t>(cont.tag());
+}
+
 maybe_t<redirection_type_t> redirection_type(tnode_t<grammar::redirection> redirection,
                                              const wcstring &src, int *out_fd,
                                              wcstring *out_target) {

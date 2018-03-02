@@ -1,0 +1,6 @@
+first
+second
+third
+true && false: 1
+true || false: 0
+true && false || true: 0

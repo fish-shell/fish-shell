@@ -18,6 +18,7 @@ enum parse_token_type_t {
     // Non-terminal tokens
     symbol_job_list,
     symbol_job_conjunction,
+    symbol_job_conjunction_continuation,
     symbol_job,
     symbol_job_continuation,
     symbol_statement,

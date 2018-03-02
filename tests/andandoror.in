@@ -1,0 +1,7 @@
+# Test && and || support
+
+echo first && echo second
+echo third || echo fourth
+true && false ; echo "true && false: $status"
+true || false ; echo "true || false: $status"
+true && false || true ; echo "true && false || true: $status"

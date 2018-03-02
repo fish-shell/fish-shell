@@ -91,6 +91,8 @@ class tnode_t {
     // Helper to return whether the given tree is the same as ours.
     bool matches_node_tree(const parse_node_tree_t &t) const { return &t == tree; }
 
+    const parse_node_tree_t *get_tree() const { return tree; }
+
     bool has_source() const { return nodeptr && nodeptr->has_source(); }
 
     // return the tag, or 0 if missing.
@@ -147,7 +149,7 @@ class tnode_t {
         const parse_node_t *child = nullptr;
         if (nodeptr) child = tree->get_child(*nodeptr, Index);
         if (child && child->type == ChildType::token) return {tree, child};
-        return {};
+        return {tree, nullptr};
     }
 
     /// assert that this is not empty and that the child at index Index has the given type, then
@@ -206,7 +208,7 @@ class tnode_t {
         // We require that we can contain ourselves, and ItemType as well.
         static_assert(child_type_possible<Type, Type>(), "Is not a list");
         static_assert(child_type_possible<Type, ItemType>(), "Is not a list of that type");
-        if (!nodeptr) return {};
+        if (!nodeptr) return {tree, nullptr};
         const parse_node_t *next =
             tree->next_node_in_node_list(*nodeptr, ItemType::token, &nodeptr);
         return {tree, next};
@@ -233,6 +235,8 @@ parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> st
 
 /// Return the type for a boolean statement.
 enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_statement> stmt);
+
+enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_conjunction_continuation> stmt);
 
 /// Given a redirection, get the redirection type (or none) and target (file path, or fd).
 maybe_t<redirection_type_t> redirection_type(tnode_t<grammar::redirection> redirection,

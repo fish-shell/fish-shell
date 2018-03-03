@@ -234,7 +234,7 @@ maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> 
 parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> stmt);
 
 /// Return the type for a boolean statement.
-enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_statement> stmt);
+enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_decorator> stmt);
 
 enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_conjunction_continuation> stmt);
 
@@ -253,9 +253,19 @@ arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirecti
 /// Return whether the given job is background because it has a & symbol.
 bool job_node_is_background(tnode_t<grammar::job>);
 
-/// Return whether the statement is part of a pipeline. If include_first is set, the first command
-/// in a pipeline is considered part of it; otherwise only the second or additional commands are.
-bool statement_is_in_pipeline(tnode_t<grammar::statement> st, bool include_first);
+/// If the conjunction is has a decorator (and/or), return it; otherwise return none. This only
+/// considers the leading conjunction, e.g. in `and true || false` only the 'true' conjunction will
+/// return 'and'.
+parse_bool_statement_type_t get_decorator(tnode_t<grammar::job_conjunction>);
+
+/// Return whether the statement is part of a pipeline.
+/// This doesn't detect e.g. pipelines involving our parent's block statements.
+enum class pipeline_position_t {
+    none,       // not part of a pipeline
+    first,      // first command in a pipeline
+    subsequent  // second or further command in a pipeline
+};
+pipeline_position_t get_pipeline_position(tnode_t<grammar::statement> st);
 
 /// Check whether an argument_list is a root list.
 inline bool argument_list_is_root(tnode_t<grammar::argument_list> list) {

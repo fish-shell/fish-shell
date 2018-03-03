@@ -61,6 +61,26 @@ RESOLVE(job_list) {
     }
 }
 
+// A job decorator is AND or OR
+RESOLVE(job_decorator) {
+    UNUSED(token2);
+
+    switch (token1.keyword) {
+        case parse_keyword_and: {
+            *out_tag = parse_bool_and;
+            return production_for<ands>();
+        }
+        case parse_keyword_or: {
+            *out_tag = parse_bool_or;
+            return production_for<ors>();
+        }
+        default: {
+            *out_tag = parse_bool_none;
+            return production_for<empty>();
+        }
+    }
+}
+
 RESOLVE(job_conjunction_continuation) {
     UNUSED(token2);
     UNUSED(out_tag);
@@ -123,10 +143,8 @@ RESOLVE(statement) {
     switch (token1.type) {
         case parse_token_type_string: {
             switch (token1.keyword) {
-                case parse_keyword_and:
-                case parse_keyword_or:
                 case parse_keyword_not: {
-                    return production_for<boolean>();
+                    return production_for<nots>();
                 }
                 case parse_keyword_for:
                 case parse_keyword_while:
@@ -255,27 +273,6 @@ RESOLVE(block_header) {
         }
         case parse_keyword_begin: {
             return production_for<beginh>();
-        }
-        default: { return NO_PRODUCTION; }
-    }
-}
-
-// A boolean statement is AND or OR or NOT.
-RESOLVE(boolean_statement) {
-    UNUSED(token2);
-
-    switch (token1.keyword) {
-        case parse_keyword_and: {
-            *out_tag = parse_bool_and;
-            return production_for<ands>();
-        }
-        case parse_keyword_or: {
-            *out_tag = parse_bool_or;
-            return production_for<ors>();
-        }
-        case parse_keyword_not: {
-            *out_tag = parse_bool_not;
-            return production_for<nots>();
         }
         default: { return NO_PRODUCTION; }
     }

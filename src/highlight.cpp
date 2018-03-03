@@ -1033,7 +1033,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
             case symbol_if_clause:
             case symbol_else_clause:
             case symbol_case_item:
-            case symbol_boolean_statement:
+            case symbol_not_statement:
             case symbol_decorated_statement:
             case symbol_if_statement: {
                 this->color_children(node, parse_token_type_string, highlight_spec_command);

@@ -20,7 +20,7 @@ set beta 0
 set gamma 0
 set delta 0
 while [ $alpha -lt 2 ] && [ $beta -lt 3 ]
-      and [ $gamma -lt 4 ] || [ $delta -lt 5 ]
+      or [ $gamma -lt 4 ] || [ $delta -lt 5 ]
     echo $alpha $beta $gamma
     set alpha ( math $alpha + 1 )
     set beta ( math $beta + 1 )
@@ -31,3 +31,8 @@ end
 logmsg "Complex scenarios"
 
 begin; echo 1 ; false ; end || begin ; echo 2 && echo 3 ; end
+
+if false && true
+   or not false
+   echo 4
+end

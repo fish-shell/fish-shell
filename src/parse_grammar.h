@@ -199,10 +199,18 @@ struct alternative {};
 
 // A job_list is a list of job_conjunctions, separated by semicolons or newlines
 DEF_ALT(job_list) {
-    using normal = seq<job_conjunction, job_list>;
+    using normal = seq<job_decorator, job_conjunction, job_list>;
     using empty_line = seq<tok_end, job_list>;
     using empty = grammar::empty;
     ALT_BODY(job_list, normal, empty_line, empty);
+};
+
+// Job decorators are 'and' and 'or'. These apply to the whole job.
+DEF_ALT(job_decorator) {
+    using ands = single<keyword<parse_keyword_and>>;
+    using ors = single<keyword<parse_keyword_or>>;
+    using empty = grammar::empty;
+    ALT_BODY(job_decorator, ands, ors, empty);
 };
 
 // A job_conjunction is a job followed by a continuation.
@@ -231,12 +239,12 @@ DEF_ALT(job_continuation) {
 
 // A statement is a normal command, or an if / while / and etc
 DEF_ALT(statement) {
-    using boolean = single<boolean_statement>;
+    using nots = single<not_statement>;
     using block = single<block_statement>;
     using ifs = single<if_statement>;
     using switchs = single<switch_statement>;
     using decorated = single<decorated_statement>;
-    ALT_BODY(statement, boolean, block, ifs, switchs, decorated);
+    ALT_BODY(statement, nots, block, ifs, switchs, decorated);
 };
 
 // A block is a conditional, loop, or begin/end
@@ -304,19 +312,15 @@ DEF(function_header)
 produces_sequence<keyword<parse_keyword_function>, argument, argument_list, tok_end>{
     BODY(function_header)};
 
-//  A boolean statement is AND or OR or NOT
-DEF_ALT(boolean_statement) {
-    using ands = seq<keyword<parse_keyword_and>, statement>;  // foo ; and bar
-    using ors = seq<keyword<parse_keyword_or>, statement>;    // foo ; or bar
-    using nots = seq<keyword<parse_keyword_not>, statement>;  // not foo
-    ALT_BODY(boolean_statement, ands, ors, nots);
+DEF(not_statement) produces_sequence<keyword<parse_keyword_not>, statement> {
+    BODY(not_statement);
 };
 
 // An andor_job_list is zero or more job lists, where each starts with an `and` or `or` boolean
 // statement.
 DEF_ALT(andor_job_list) {
     using empty = grammar::empty;
-    using andor_job = seq<job_conjunction, andor_job_list>;
+    using andor_job = seq<job_decorator, job_conjunction, andor_job_list>;
     using empty_line = seq<tok_end, andor_job_list>;
     ALT_BODY(andor_job_list, empty, andor_job, empty_line);
 };

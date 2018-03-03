@@ -19,6 +19,7 @@ enum parse_token_type_t {
     symbol_job_list,
     symbol_job_conjunction,
     symbol_job_conjunction_continuation,
+    symbol_job_decorator,
     symbol_job,
     symbol_job_continuation,
     symbol_statement,
@@ -35,7 +36,7 @@ enum parse_token_type_t {
     symbol_switch_statement,
     symbol_case_item_list,
     symbol_case_item,
-    symbol_boolean_statement,
+    symbol_not_statement,
     symbol_decorated_statement,
     symbol_plain_statement,
     symbol_arguments_or_redirections_list,
@@ -84,36 +85,9 @@ const enum_map<parse_token_type_t> token_enum_map[] = {
     {parse_token_type_andand, L"parse_token_type_andand"},
     {parse_token_type_oror, L"parse_token_type_oror"},
     {parse_token_type_terminate, L"parse_token_type_terminate"},
-    {symbol_andor_job_list, L"symbol_andor_job_list"},
-    {symbol_argument, L"symbol_argument"},
-    {symbol_argument_list, L"symbol_argument_list"},
-    {symbol_arguments_or_redirections_list, L"symbol_arguments_or_redirections_list"},
-    {symbol_begin_header, L"symbol_begin_header"},
-    {symbol_block_header, L"symbol_block_header"},
-    {symbol_block_statement, L"symbol_block_statement"},
-    {symbol_boolean_statement, L"symbol_boolean_statement"},
-    {symbol_case_item, L"symbol_case_item"},
-    {symbol_case_item_list, L"symbol_case_item_list"},
-    {symbol_decorated_statement, L"symbol_decorated_statement"},
-    {symbol_else_clause, L"symbol_else_clause"},
-    {symbol_else_continuation, L"symbol_else_continuation"},
-    {symbol_end_command, L"symbol_end_command"},
-    {symbol_for_header, L"symbol_for_header"},
-    {symbol_freestanding_argument_list, L"symbol_freestanding_argument_list"},
-    {symbol_function_header, L"symbol_function_header"},
-    {symbol_if_clause, L"symbol_if_clause"},
-    {symbol_if_statement, L"symbol_if_statement"},
-    {symbol_job, L"symbol_job"},
-    {symbol_job_conjunction, L"symbol_job_conjunction"},
-    {symbol_job_continuation, L"symbol_job_continuation"},
-    {symbol_job_list, L"symbol_job_list"},
-    {symbol_optional_newlines, L"symbol_optional_newlines"},
-    {symbol_optional_background, L"symbol_optional_background"},
-    {symbol_plain_statement, L"symbol_plain_statement"},
-    {symbol_redirection, L"symbol_redirection"},
-    {symbol_statement, L"symbol_statement"},
-    {symbol_switch_statement, L"symbol_switch_statement"},
-    {symbol_while_header, L"symbol_while_header"},
+// Define all symbols
+#define ELEM(sym) {symbol_##sym, L"symbol_" #sym},
+#include "parse_grammar_elements.inc"
     {token_type_invalid, L"token_type_invalid"},
     {token_type_invalid, NULL}};
 #define token_enum_map_len (sizeof token_enum_map / sizeof *token_enum_map)
@@ -165,7 +139,7 @@ enum parse_statement_decoration_t {
 };
 
 // Boolean statement types, stored in node tag.
-enum parse_bool_statement_type_t { parse_bool_and, parse_bool_or, parse_bool_not };
+enum parse_bool_statement_type_t { parse_bool_none, parse_bool_and, parse_bool_or };
 
 // Whether a statement is backgrounded.
 enum parse_optional_background_t { parse_no_background, parse_background };

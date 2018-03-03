@@ -107,7 +107,7 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
     const wcstring &forbidden_function_name = parser->forbidden_function.back();
 
     // Get the first job in the job list.
-    tnode_t<g::job> first_job = job_list.try_get_child<g::job_conjunction, 0>().child<0>();
+    tnode_t<g::job> first_job = job_list.try_get_child<g::job_conjunction, 1>().child<0>();
     if (!first_job) {
         return {};
     }
@@ -215,7 +215,7 @@ bool parse_execution_context_t::job_is_simple_block(tnode_t<g::job> job_node) co
             return is_empty(statement.require_get_child<g::switch_statement, 0>().child<5>());
         case symbol_if_statement:
             return is_empty(statement.require_get_child<g::if_statement, 0>().child<3>());
-        case symbol_boolean_statement:
+        case symbol_not_statement:
         case symbol_decorated_statement:
             // not block statements
             return false;
@@ -921,33 +921,10 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
     return !errored;
 }
 
-parse_execution_result_t parse_execution_context_t::populate_boolean_process(
-    job_t *job, process_t *proc, tnode_t<g::boolean_statement> bool_statement) {
-    // Handle a boolean statement.
-    bool skip_job = false;
-    switch (bool_statement_type(bool_statement)) {
-        case parse_bool_and: {
-            // AND. Skip if the last job failed.
-            skip_job = (proc_get_last_status() != 0);
-            break;
-        }
-        case parse_bool_or: {
-            // OR. Skip if the last job succeeded.
-            skip_job = (proc_get_last_status() == 0);
-            break;
-        }
-        case parse_bool_not: {
-            // NOT. Negate it.
-            job->set_flag(JOB_NEGATE, !job->get_flag(JOB_NEGATE));
-            break;
-        }
-    }
-
-    if (skip_job) {
-        return parse_execution_skipped;
-    }
-    return this->populate_job_process(job, proc,
-                                      bool_statement.require_get_child<g::statement, 1>());
+parse_execution_result_t parse_execution_context_t::populate_not_process(
+    job_t *job, process_t *proc, tnode_t<g::not_statement> not_statement) {
+    job->set_flag(JOB_NEGATE, !job->get_flag(JOB_NEGATE));
+    return this->populate_job_process(job, proc, not_statement.child<1>());
 }
 
 template <typename Type>
@@ -985,8 +962,8 @@ parse_execution_result_t parse_execution_context_t::populate_job_process(
     parse_execution_result_t result = parse_execution_success;
 
     switch (specific_statement.type) {
-        case symbol_boolean_statement: {
-            result = this->populate_boolean_process(job, proc, {&tree(), &specific_statement});
+        case symbol_not_statement: {
+            result = this->populate_not_process(job, proc, {&tree(), &specific_statement});
             break;
         }
         case symbol_block_statement:
@@ -1224,6 +1201,7 @@ parse_execution_result_t parse_execution_context_t::run_job_conjunction(
     tnode_t<grammar::job_conjunction> job_expr, const block_t *associated_block) {
     parse_execution_result_t result = parse_execution_success;
     tnode_t<g::job_conjunction> cursor = job_expr;
+    // continuation is the parent of the cursor
     tnode_t<g::job_conjunction_continuation> continuation;
     while (cursor) {
         if (should_cancel_execution(associated_block)) break;
@@ -1232,13 +1210,7 @@ parse_execution_result_t parse_execution_context_t::run_job_conjunction(
             // Check the conjunction type.
             parse_bool_statement_type_t conj = bool_statement_type(continuation);
             assert((conj == parse_bool_and || conj == parse_bool_or) && "Unexpected conjunction");
-            if (conj == parse_bool_and) {
-                // Skip if last job failed.
-                skip = (proc_get_last_status() != 0);
-            } else if (conj == parse_bool_or) {
-                // Skip if last job succeeded.
-                skip = (proc_get_last_status() == 0);
-            }
+            skip = should_skip(conj);
         }
         if (! skip) {
             result = run_1_job(cursor.child<0>(), associated_block);
@@ -1249,20 +1221,40 @@ parse_execution_result_t parse_execution_context_t::run_job_conjunction(
     return result;
 }
 
+bool parse_execution_context_t::should_skip(parse_bool_statement_type_t type) const {
+    switch (type) {
+        case parse_bool_and:
+            // AND. Skip if the last job failed.
+            return proc_get_last_status() != 0;
+        case parse_bool_or:
+            // OR. Skip if the last job succeeded.
+            return proc_get_last_status() == 0;
+        default:
+            return false;
+    }
+}
+
 template <typename Type>
 parse_execution_result_t parse_execution_context_t::run_job_list(tnode_t<Type> job_list,
                                                                  const block_t *associated_block) {
+    // We handle both job_list and andor_job_list uniformly.
     static_assert(Type::token == symbol_job_list || Type::token == symbol_andor_job_list,
                   "Not a job list");
 
     parse_execution_result_t result = parse_execution_success;
-    while (tnode_t<g::job_conjunction> job_expr =
-               job_list.template next_in_list<g::job_conjunction>()) {
+    while (auto job_conj = job_list.template next_in_list<g::job_conjunction>()) {
         if (should_cancel_execution(associated_block)) break;
-        result = this->run_job_conjunction(job_expr, associated_block);
+
+        // Maybe skip the job if it has a leading and/or.
+        // Skipping is treated as success.
+        if (should_skip(get_decorator(job_conj))) {
+            result = parse_execution_success;
+        } else {
+            result = this->run_job_conjunction(job_conj, associated_block);
+        }
     }
 
-    // Returns the last job executed.
+    // Returns the result of the last job executed or skipped.
     return result;
 }
 

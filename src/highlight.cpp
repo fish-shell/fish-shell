@@ -1059,6 +1059,16 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                 this->color_argument(fhead.child<1>());
                 break;
             }
+
+            case parse_token_type_andand:
+            case parse_token_type_oror:
+                this->color_node(node, highlight_spec_operator);
+                break;
+
+            case symbol_job_decorator:
+                this->color_node(node, highlight_spec_operator);
+                break;
+
             case parse_token_type_pipe:
             case parse_token_type_background:
             case parse_token_type_end:

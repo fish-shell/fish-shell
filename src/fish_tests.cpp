@@ -3951,10 +3951,23 @@ static void test_highlighting() {
                                                   {L"2>", highlight_spec_redirection},
                                                   {NULL, -1}};
 
+    const highlight_component_t components15[] = {{L"if", highlight_spec_command},
+                                                  {L"true", highlight_spec_command},
+                                                  {L"&&", highlight_spec_operator},
+                                                  {L"false", highlight_spec_command},
+                                                  {L";", highlight_spec_statement_terminator},
+                                                  {L"or", highlight_spec_operator},
+                                                  {L"false", highlight_spec_command},
+                                                  {L"||", highlight_spec_operator},
+                                                  {L"true", highlight_spec_command},
+                                                  {L";", highlight_spec_statement_terminator},
+                                                  {L"end", highlight_spec_command},
+                                                  {NULL, -1}};
+
     const highlight_component_t *tests[] = {components1,  components2,  components3,  components4,
                                             components5,  components6,  components7,  components8,
                                             components9,  components10, components11, components12,
-                                            components13, components14};
+                                            components13, components14, components15};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++) {
         const highlight_component_t *components = tests[which];
         // Count how many we have.
@@ -3990,8 +4003,10 @@ static void test_highlighting() {
 
             if (expected_colors.at(i) != colors.at(i)) {
                 const wcstring spaces(i, L' ');
-                err(L"Wrong color at index %lu in text (expected %#x, actual %#x):\n%ls\n%ls^", i,
-                    expected_colors.at(i), colors.at(i), text.c_str(), spaces.c_str());
+                err(L"Wrong color in test %lu at index %lu in text (expected %#x, actual "
+                    L"%#x):\n%ls\n%ls^",
+                    which + 1, i, expected_colors.at(i), colors.at(i), text.c_str(),
+                    spaces.c_str());
             }
         }
     }

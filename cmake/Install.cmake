@@ -54,7 +54,9 @@ ENDIF()
 # Define a function to help us create directories.
 FUNCTION(FISH_CREATE_DIRS)
   FOREACH(dir ${ARGV})
-    INSTALL(DIRECTORY DESTINATION ${dir})
+      IF(NOT EXISTS ${CMAKE_INSTALL_PREFIX}/${dir})
+        INSTALL(DIRECTORY DESTINATION ${dir})
+      ENDIF()
   ENDFOREACH(dir)
 ENDFUNCTION(FISH_CREATE_DIRS)
 

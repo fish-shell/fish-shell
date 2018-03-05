@@ -98,7 +98,7 @@ done
 # Make some extra stuff to pass to doxygen
 # Input is kept as . because we cd to the input directory beforehand
 # This prevents doxygen from generating "documentation" for intermediate directories
-PROJECT_NUMBER=$(echo "$FISH_BUILD_VERSION" | env sed "s/-.*//")
+PROJECT_NUMBER=$(echo "$FISH_BUILD_VERSION" | env sed "s/-[a-z0-9-]*//")
 echo "PROJECT_NUMBER: $FISH_BUILD_VERSION"
 DOXYPARAMS=$(cat <<EOF
 PROJECT_NUMBER=${PROJECT_NUMBER}

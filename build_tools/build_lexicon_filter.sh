@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Builds the lexicon filter
-# Usage: build_lexicon_filter.sh FUNCTIONS_DIR COMPLETIONS_DIR [SED_BINARY] < lexicon_filter.in > lexicon_filter
+# Usage: build_lexicon_filter.sh FUNCTIONS_DIR COMPLETIONS_DIR lexicon_filter.in [SED_BINARY] > lexicon_filter
 
 set -e
 
@@ -14,11 +14,12 @@ set -e
 # used in a 'cli' style context.
 rm -f lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt lexicon.txt
 
-
+FUNCTIONS_DIR=${1}
 FUNCTIONS_DIR_FILES=${1}/*.fish
 COMPLETIONS_DIR_FILES=${2}/*.fish
+LEXICON_FILTER_IN=${3}
 
-SED=${3:-$(command -v sed)}
+SED=${4:-$(command -v sed)}
 
 # Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
 $SED <command_list_toc.txt >>lexicon.tmp -n \
@@ -32,14 +33,14 @@ printf "%s\n" ${FUNCTIONS_DIR_FILES} | $SED -n \
 	-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | grep -F -vx -f lexicon_catalog.txt | $SED >>lexicon.tmp -n \
 	-e 'w lexicon_catalog.tmp' \
 	-e "s|'\(.*\)'|func \1|p";
-$SED <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n  \
+$SED < ${FUNCTIONS_DIR}/__fish_config_interactive.fish >>lexicon.tmp -n  \
 	-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p'; \
-$SED <lexicon_filter.in >>lexicon.tmp -n \
+$SED < ${LEXICON_FILTER_IN} >>lexicon.tmp -n \
 	-e '/^#.!#/s/^#.!# \(.... [a-z][a-z_]*\)/\1/p';
 mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
 
 # Copy the filter to stdout. We're going to append sed commands to it after.
-$SED -e 's|@sed@|'$SED'|'
+$SED -e 's|@sed@|'$SED'|' < ${LEXICON_FILTER_IN}
 
 # Scan through the lexicon, transforming each line to something useful to Doxygen.
 if echo x | $SED "/[[:<:]]x/d" 2>/dev/null; then

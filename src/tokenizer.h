@@ -14,6 +14,8 @@ enum token_type {
     TOK_ERROR,       /// Error reading token
     TOK_STRING,      /// String token
     TOK_PIPE,        /// Pipe token
+    TOK_ANDAND,      /// && token
+    TOK_OROR,        /// || token
     TOK_END,         /// End token (semicolon or newline, not literal end)
     TOK_REDIRECT,    /// redirection token
     TOK_BACKGROUND,  /// send job to bg token

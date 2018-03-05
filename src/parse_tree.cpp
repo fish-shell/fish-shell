@@ -138,30 +138,29 @@ static wcstring token_type_user_presentable_description(
 
     switch (type) {
         // Hackish. We only support the following types.
-        case symbol_statement: {
+        case symbol_statement:
             return L"a command";
-        }
-        case symbol_argument: {
+        case symbol_argument:
             return L"an argument";
-        }
-        case parse_token_type_string: {
+        case symbol_job:
+        case symbol_job_list:
+            return L"a job";
+        case parse_token_type_string:
             return L"a string";
-        }
-        case parse_token_type_pipe: {
+        case parse_token_type_pipe:
             return L"a pipe";
-        }
-        case parse_token_type_redirection: {
+        case parse_token_type_redirection:
             return L"a redirection";
-        }
-        case parse_token_type_background: {
+        case parse_token_type_background:
             return L"a '&'";
-        }
-        case parse_token_type_end: {
+        case parse_token_type_andand:
+            return L"'&&'";
+        case parse_token_type_oror:
+            return L"'||'";
+        case parse_token_type_end:
             return L"end of the statement";
-        }
-        case parse_token_type_terminate: {
+        case parse_token_type_terminate:
             return L"end of the input";
-        }
         default: { return format_string(L"a %ls", token_type_description(type)); }
     }
 }
@@ -213,43 +212,32 @@ wcstring parse_token_t::user_presentable_description() const {
 /// Convert from tokenizer_t's token type to a parse_token_t type.
 static inline parse_token_type_t parse_token_type_from_tokenizer_token(
     enum token_type tokenizer_token_type) {
-    parse_token_type_t result = token_type_invalid;
     switch (tokenizer_token_type) {
-        case TOK_STRING: {
-            result = parse_token_type_string;
-            break;
-        }
-        case TOK_PIPE: {
-            result = parse_token_type_pipe;
-            break;
-        }
-        case TOK_END: {
-            result = parse_token_type_end;
-            break;
-        }
-        case TOK_BACKGROUND: {
-            result = parse_token_type_background;
-            break;
-        }
-        case TOK_REDIRECT: {
-            result = parse_token_type_redirection;
-            break;
-        }
-        case TOK_ERROR: {
-            result = parse_special_type_tokenizer_error;
-            break;
-        }
-        case TOK_COMMENT: {
-            result = parse_special_type_comment;
-            break;
-        }
-        default: {
-            debug(0, "Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
-            DIE("bad token type");
-            break;
-        }
+        case TOK_NONE:
+            DIE("TOK_NONE passed to parse_token_type_from_tokenizer_token");
+            return token_type_invalid;
+        case TOK_STRING:
+            return parse_token_type_string;
+        case TOK_PIPE:
+            return parse_token_type_pipe;
+        case TOK_ANDAND:
+            return parse_token_type_andand;
+        case TOK_OROR:
+            return parse_token_type_oror;
+        case TOK_END:
+            return parse_token_type_end;
+        case TOK_BACKGROUND:
+            return parse_token_type_background;
+        case TOK_REDIRECT:
+            return parse_token_type_redirection;
+        case TOK_ERROR:
+            return parse_special_type_tokenizer_error;
+        case TOK_COMMENT:
+            return parse_special_type_comment;
     }
-    return result;
+    debug(0, "Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
+    DIE("bad token type");
+    return token_type_invalid;
 }
 
 /// Helper function for parse_dump_tree().
@@ -674,37 +662,8 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
                                                parse_token_t token) {
     fatal_errored = true;
     if (this->should_generate_error_messages) {
-        bool done = false;
-
-        // Check for ||.
-        if (token.type == parse_token_type_pipe && token.source_start > 0) {
-            // Here we wanted a statement and instead got a pipe. See if this is a double pipe: foo
-            // || bar. If so, we have a special error message.
-            const parse_node_t *prev_pipe = nodes.find_node_matching_source_location(
-                parse_token_type_pipe, token.source_start - 1, NULL);
-            if (prev_pipe != NULL) {
-                // The pipe of the previous job abuts our current token. So we have ||.
-                this->parse_error(token, parse_error_double_pipe, ERROR_BAD_OR);
-                done = true;
-            }
-        }
-
-        // Check for &&.
-        if (!done && token.type == parse_token_type_background && token.source_start > 0) {
-            // Check to see if there was a previous token_background.
-            const parse_node_t *prev_background = nodes.find_node_matching_source_location(
-                parse_token_type_background, token.source_start - 1, NULL);
-            if (prev_background != NULL) {
-                // We have &&.
-                this->parse_error(token, parse_error_double_background, ERROR_BAD_AND);
-                done = true;
-            }
-        }
-
-        if (!done) {
-            const wcstring expected = stack_elem.user_presentable_description();
-            this->parse_error_unexpected_token(expected.c_str(), token);
-        }
+        const wcstring expected = stack_elem.user_presentable_description();
+        this->parse_error_unexpected_token(expected.c_str(), token);
     }
 }
 
@@ -771,6 +730,8 @@ static bool type_is_terminal_type(parse_token_type_t type) {
         case parse_token_type_redirection:
         case parse_token_type_background:
         case parse_token_type_end:
+        case parse_token_type_andand:
+        case parse_token_type_oror:
         case parse_token_type_terminate: {
             return true;
         }
@@ -999,7 +960,7 @@ static inline parse_keyword_t keyword_with_name(const wchar_t *name) {
 
 static bool is_keyword_char(wchar_t c) {
     return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9') ||
-           c == L'\'' || c == L'"' || c == L'\\' || c == '\n';
+           c == L'\'' || c == L'"' || c == L'\\' || c == '\n' || c == L'!';
 }
 
 /// Given a token, returns the keyword it matches, or parse_keyword_none.

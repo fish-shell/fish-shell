@@ -95,7 +95,7 @@ class parse_node_t {
     // This is used to store e.g. the statement decoration.
     parse_node_tag_t tag : 4;
     // Description
-    wcstring describe(void) const;
+    wcstring describe() const;
 
     // Constructor
     explicit parse_node_t(parse_token_type_t ty)

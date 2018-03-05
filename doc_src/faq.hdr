@@ -281,7 +281,7 @@ The fish user community extends fish in unique and useful ways via scripts that 
 - <a href="https://github.com/oh-my-fish/oh-my-fish">Oh My Fish</a>
 - <a href="https://github.com/justinmayer/tacklebox">Tacklebox</a>
 
-This is not an exhaustive list and the fish project has no opinion regarding the merits of the repositories listed above or the scripts found therein. We mention these only because you may find within them a solution to a need you have such as supporting the `&&` and `||` operators or improved integration with other tools that you use.
+This is not an exhaustive list and the fish project has no opinion regarding the merits of the repositories listed above or the scripts found therein.
 
 \htmlonly[block]
 </div>

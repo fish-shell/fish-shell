@@ -91,6 +91,8 @@ class tnode_t {
     // Helper to return whether the given tree is the same as ours.
     bool matches_node_tree(const parse_node_tree_t &t) const { return &t == tree; }
 
+    const parse_node_tree_t *get_tree() const { return tree; }
+
     bool has_source() const { return nodeptr && nodeptr->has_source(); }
 
     // return the tag, or 0 if missing.
@@ -147,7 +149,7 @@ class tnode_t {
         const parse_node_t *child = nullptr;
         if (nodeptr) child = tree->get_child(*nodeptr, Index);
         if (child && child->type == ChildType::token) return {tree, child};
-        return {};
+        return {tree, nullptr};
     }
 
     /// assert that this is not empty and that the child at index Index has the given type, then
@@ -206,7 +208,7 @@ class tnode_t {
         // We require that we can contain ourselves, and ItemType as well.
         static_assert(child_type_possible<Type, Type>(), "Is not a list");
         static_assert(child_type_possible<Type, ItemType>(), "Is not a list of that type");
-        if (!nodeptr) return {};
+        if (!nodeptr) return {tree, nullptr};
         const parse_node_t *next =
             tree->next_node_in_node_list(*nodeptr, ItemType::token, &nodeptr);
         return {tree, next};
@@ -232,7 +234,9 @@ maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> 
 parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> stmt);
 
 /// Return the type for a boolean statement.
-enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_statement> stmt);
+enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_decorator> stmt);
+
+enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_conjunction_continuation> stmt);
 
 /// Given a redirection, get the redirection type (or none) and target (file path, or fd).
 maybe_t<redirection_type_t> redirection_type(tnode_t<grammar::redirection> redirection,
@@ -249,9 +253,19 @@ arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirecti
 /// Return whether the given job is background because it has a & symbol.
 bool job_node_is_background(tnode_t<grammar::job>);
 
-/// Return whether the statement is part of a pipeline. If include_first is set, the first command
-/// in a pipeline is considered part of it; otherwise only the second or additional commands are.
-bool statement_is_in_pipeline(tnode_t<grammar::statement> st, bool include_first);
+/// If the conjunction is has a decorator (and/or), return it; otherwise return none. This only
+/// considers the leading conjunction, e.g. in `and true || false` only the 'true' conjunction will
+/// return 'and'.
+parse_bool_statement_type_t get_decorator(tnode_t<grammar::job_conjunction>);
+
+/// Return whether the statement is part of a pipeline.
+/// This doesn't detect e.g. pipelines involving our parent's block statements.
+enum class pipeline_position_t {
+    none,       // not part of a pipeline
+    first,      // first command in a pipeline
+    subsequent  // second or further command in a pipeline
+};
+pipeline_position_t get_pipeline_position(tnode_t<grammar::statement> st);
 
 /// Check whether an argument_list is a root list.
 inline bool argument_list_is_root(tnode_t<grammar::argument_list> list) {

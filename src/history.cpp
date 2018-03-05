@@ -1773,6 +1773,10 @@ static bool should_import_bash_history_line(const std::string &line) {
     if (line.find("((") != std::string::npos) return false;
     if (line.find("))") != std::string::npos) return false;
 
+    // Temporarily skip lines with && and ||
+    if (line.find("&&") != std::string::npos) return false;
+    if (line.find("||") != std::string::npos) return false;
+
     // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
     if (line.back() == '\\') return false;
 

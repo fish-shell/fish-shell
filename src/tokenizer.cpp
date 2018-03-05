@@ -528,16 +528,28 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             break;
         }
         case L'&': {
-            result.type = TOK_BACKGROUND;
-            result.length = 1;
-            this->buff++;
+            if (this->buff[1] == L'&') {
+                result.type = TOK_ANDAND;
+                result.length = 2;
+                this->buff += 2;
+            } else {
+                result.type = TOK_BACKGROUND;
+                result.length = 1;
+                this->buff++;
+            }
             break;
         }
         case L'|': {
-            result.type = TOK_PIPE;
-            result.redirected_fd = 1;
-            result.length = 1;
-            this->buff++;
+            if (this->buff[1] == L'|') {
+                result.type = TOK_OROR;
+                result.length = 2;
+                this->buff += 2;
+            } else {
+                result.type = TOK_PIPE;
+                result.redirected_fd = 1;
+                result.length = 1;
+                this->buff++;
+            }
             break;
         }
         case L'>':

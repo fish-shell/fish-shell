@@ -46,8 +46,12 @@ enum parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statemen
     return decoration;
 }
 
-enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::boolean_statement> stmt) {
+enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_decorator> stmt) {
     return static_cast<parse_bool_statement_type_t>(stmt.tag());
+}
+
+enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_conjunction_continuation> cont) {
+    return static_cast<parse_bool_statement_type_t>(cont.tag());
 }
 
 maybe_t<redirection_type_t> redirection_type(tnode_t<grammar::redirection> redirection,
@@ -107,24 +111,35 @@ bool job_node_is_background(tnode_t<grammar::job> job) {
     return bg.tag() == parse_background;
 }
 
-bool statement_is_in_pipeline(tnode_t<grammar::statement> st, bool include_first) {
+parse_bool_statement_type_t get_decorator(tnode_t<grammar::job_conjunction> conj) {
+    using namespace grammar;
+    tnode_t<job_decorator> dec;
+    // We have two possible parents: job_list and andor_job_list.
+    if (auto p = conj.try_get_parent<job_list>()) {
+        dec = p.require_get_child<job_decorator, 0>();
+    } else if (auto p = conj.try_get_parent<andor_job_list>()) {
+        dec = p.require_get_child<job_decorator, 0>();
+    }
+    // note this returns 0 (none) if dec is empty.
+    return bool_statement_type(dec);
+}
+
+pipeline_position_t get_pipeline_position(tnode_t<grammar::statement> st) {
     using namespace grammar;
     if (!st) {
-        return false;
+        return pipeline_position_t::none;
     }
 
     // If we're part of a job continuation, we're definitely in a pipeline.
     if (st.try_get_parent<job_continuation>()) {
-        return true;
+        return pipeline_position_t::subsequent;
     }
 
-    // If include_first is set, check if we're the beginning of a job, and if so, whether that job
+    // Check if we're the beginning of a job, and if so, whether that job
     // has a non-empty continuation.
-    if (include_first) {
-        tnode_t<job_continuation> jc = st.try_get_parent<job>().child<1>();
-        if (jc.try_get_child<statement, 2>()) {
-            return true;
-        }
+    tnode_t<job_continuation> jc = st.try_get_parent<job>().child<1>();
+    if (jc.try_get_child<statement, 2>()) {
+        return pipeline_position_t::first;
     }
-    return false;
+    return pipeline_position_t::none;
 }

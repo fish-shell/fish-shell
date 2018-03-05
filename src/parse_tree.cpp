@@ -960,7 +960,7 @@ static inline parse_keyword_t keyword_with_name(const wchar_t *name) {
 
 static bool is_keyword_char(wchar_t c) {
     return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9') ||
-           c == L'\'' || c == L'"' || c == L'\\' || c == '\n';
+           c == L'\'' || c == L'"' || c == L'\\' || c == '\n' || c == L'!';
 }
 
 /// Given a token, returns the keyword it matches, or parse_keyword_none.

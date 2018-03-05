@@ -143,7 +143,8 @@ RESOLVE(statement) {
     switch (token1.type) {
         case parse_token_type_string: {
             switch (token1.keyword) {
-                case parse_keyword_not: {
+                case parse_keyword_not:
+                case parse_keyword_exclam: {
                     return production_for<nots>();
                 }
                 case parse_keyword_for:
@@ -213,6 +214,19 @@ RESOLVE(case_item_list) {
         return production_for<blank_line>();
     else
         return production_for<empty>();
+}
+
+RESOLVE(not_statement) {
+    UNUSED(token2);
+    UNUSED(out_tag);
+    switch (token1.keyword) {
+        case parse_keyword_not:
+            return production_for<nots>();
+        case parse_keyword_exclam:
+            return production_for<exclams>();
+        default:
+            return NO_PRODUCTION;
+    }
 }
 
 RESOLVE(andor_job_list) {

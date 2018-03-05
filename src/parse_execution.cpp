@@ -924,7 +924,8 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
 parse_execution_result_t parse_execution_context_t::populate_not_process(
     job_t *job, process_t *proc, tnode_t<g::not_statement> not_statement) {
     job->set_flag(JOB_NEGATE, !job->get_flag(JOB_NEGATE));
-    return this->populate_job_process(job, proc, not_statement.child<1>());
+    return this->populate_job_process(job, proc,
+                                      not_statement.require_get_child<g::statement, 1>());
 }
 
 template <typename Type>

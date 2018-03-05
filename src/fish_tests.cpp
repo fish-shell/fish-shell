@@ -3961,6 +3961,11 @@ static void test_highlighting() {
                                                   {L"||", highlight_spec_operator},
                                                   {L"true", highlight_spec_command},
                                                   {L";", highlight_spec_statement_terminator},
+                                                  {L"and", highlight_spec_operator},
+                                                  {L"not", highlight_spec_operator},
+                                                  {L"!", highlight_spec_operator},
+                                                  {L"true", highlight_spec_command},
+                                                  {L";", highlight_spec_statement_terminator},
                                                   {L"end", highlight_spec_command},
                                                   {NULL, -1}};
 

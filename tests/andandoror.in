@@ -28,6 +28,14 @@ while [ $alpha -lt 2 ] && [ $beta -lt 3 ]
     set delta ( math $delta + 1 )
 end
 
+logmsg "Nots"
+
+true && ! false ; echo $status
+not true && ! false ; echo $status
+not not not true ; echo $status
+not ! ! not true ; echo $status
+not ! echo not ! ; echo $status
+
 logmsg "Complex scenarios"
 
 begin; echo 1 ; false ; end || begin ; echo 2 && echo 3 ; end

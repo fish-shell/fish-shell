@@ -312,8 +312,10 @@ DEF(function_header)
 produces_sequence<keyword<parse_keyword_function>, argument, argument_list, tok_end>{
     BODY(function_header)};
 
-DEF(not_statement) produces_sequence<keyword<parse_keyword_not>, statement> {
-    BODY(not_statement);
+DEF_ALT(not_statement) {
+    using nots = seq<keyword<parse_keyword_not>, statement>;
+    using exclams = seq<keyword<parse_keyword_exclam>, statement>;
+    ALT_BODY(not_statement, nots, exclams);
 };
 
 // An andor_job_list is zero or more job lists, where each starts with an `and` or `or` boolean

@@ -1033,7 +1033,6 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
             case symbol_if_clause:
             case symbol_else_clause:
             case symbol_case_item:
-            case symbol_not_statement:
             case symbol_decorated_statement:
             case symbol_if_statement: {
                 this->color_children(node, parse_token_type_string, highlight_spec_command);
@@ -1063,6 +1062,10 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
             case parse_token_type_andand:
             case parse_token_type_oror:
                 this->color_node(node, highlight_spec_operator);
+                break;
+
+            case symbol_not_statement:
+                this->color_children(node, parse_token_type_string, highlight_spec_operator);
                 break;
 
             case symbol_job_decorator:

@@ -42,6 +42,7 @@
 #include <memory>
 #include <stack>
 
+#include "builtin.h"
 #include "color.h"
 #include "common.h"
 #include "complete.h"
@@ -64,6 +65,7 @@
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"
+#include "path.h"
 #include "proc.h"
 #include "reader.h"
 #include "sanity.h"
@@ -1165,6 +1167,14 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         // Maybe cancel here.
         if (reader_thread_job_is_stale()) return nothing;
 
+        // Remaining autosuggestions don't apply to whitespace-only text
+        size_t first_real_char_index = search_string.find_first_not_of(L" \t\r\n\v");
+        if (first_real_char_index == wcstring::npos) {
+            return nothing;
+        }
+
+        const wchar_t *first_char = search_string.c_str() + first_real_char_index;
+
         // Here we do something a little funny. If the line ends with a space, and the cursor is not
         // at the end, don't use completion autosuggestions. It ends up being pretty weird seeing
         // stuff get spammed on the right while you go back to edit a line
@@ -1173,9 +1183,24 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         if (!cursor_at_end && iswspace(last_char)) return nothing;
 
         // On the other hand, if the line ends with a quote, don't go dumping stuff after the quote.
-        if (wcschr(L"'\"", last_char) && cursor_at_end) return nothing;
+        if ((last_char == L'"' || last_char == L'\'') && cursor_at_end) return nothing;
 
-        // Try normal completions.
+        // Try normal completions last
+        // But not unless the head has been fully typed out and exists/is valid.
+        const wchar_t *first_space = wcschr(first_char, L' ');
+        if (first_space == nullptr) {
+            return nothing; //the head has not been typed out yet
+        }
+        wcstring head(first_char, first_space);
+
+        // Ideally, we should use function_exists and not function_exists_no_autoload here,
+        // but we're not running on the main thread, so....?
+        if (!function_exists_no_autoload(head.c_str(), vars) && !builtin_exists(head)
+                && !path_get_path(head, nullptr)) {
+            debug(0, L"Skipping autosuggestions to prevent error output without even typing in <TAB>");
+            return nothing;
+        }
+
         std::vector<completion_t> completions;
         complete(search_string, &completions, COMPLETION_REQUEST_AUTOSUGGESTION);
         completions_sort_and_prioritize(&completions);

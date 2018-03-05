@@ -1078,10 +1078,28 @@ void exec_job(parser_t &parser, job_t *j) {
                         break;
                     }
 
-                    // these are all things do_fork() takes care of normally:
+                    // these are all things do_fork() takes care of normally (for forked processes):
                     p->pid = pid;
                     child_spawned = true;
                     on_process_created(j, p->pid);
+
+                    //We explicitly don't call set_child_group() for spawned processes because that
+                    //a) isn't necessary, and b) causes issues like fish-shell/fish-shell#4715
+
+                    //However, on WSL `posix_spawn` does not correctly set the pgroup for the child process
+                    //See fish-shell/fish-shell#4778, blocked by Microsoft/WSL#2997
+                    if (is_windows_subsystem_for_linux()) {
+                        set_child_group(j, p->pid);
+                    }
+                    else {
+                        //in do_fork, the pid of the child process is used as the group leader if j->pgid == 2
+                        //above, posix_spawn assigned the new group a pgid equal to its own id if j->pgid == 2
+                        //so this is what we do instead of calling set_child_group:
+                        if (j->pgid == -2) {
+                            j->pgid = pid;
+                        }
+                    }
+
                     maybe_assign_terminal(j);
                 } else
 #endif

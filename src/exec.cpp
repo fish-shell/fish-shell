@@ -577,14 +577,16 @@ void exec_job(parser_t &parser, job_t *j) {
                 needs_keepalive = true;
                 break;
             }
+            // When running under WSL, create a keepalive process unconditionally if our first process is external.
+            // This is because WSL does not permit joining the pgrp of an exited process.
+            // (see https://github.com/Microsoft/WSL/issues/2786), also fish PR #4676
+            if (is_windows_subsystem_for_linux() && j->processes.front()->type == EXTERNAL
+                    && !p->is_first_in_job) { //but not if it's the only process
+                needs_keepalive = true;
+                break;
+            }
         }
     }
-
-    // When running under WSL, create a keepalive process unconditionally if our first process is external.
-    // This is because WSL does not permit joining the pgrp of an exited process.
-    // (see https://github.com/Microsoft/WSL/issues/2786), also fish PR #4676
-    if (j->processes.front()->type == EXTERNAL && is_windows_subsystem_for_linux())
-        needs_keepalive = true;
 
     if (needs_keepalive) {
         // Call fork. No need to wait for threads since our use is confined and simple.

@@ -1,4 +1,9 @@
 # pkg-config
+
+# magic completion safety check (do not remove this comment)
+if not type -q pkg-config
+    exit
+end
 complete -f -c pkg-config -l modversion -d 'Print versions of the specified libraries'
 complete -f -c pkg-config -l version -d 'Display the version of pkg-config and quit'
 complete -f -c pkg-config -l help -d 'Displays a help message and quit'

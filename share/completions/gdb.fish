@@ -5,6 +5,11 @@
 # have been hand edited since.
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q gdb
+    exit
+end
+
 complete -c gdb -o help -s h -d 'List all options, with brief explanations'
 complete -c gdb -o symbols -s s -d 'Read symbol table from file file' -r
 complete -c gdb -o write -d 'Enable writing into executable and core files'

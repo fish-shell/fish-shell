@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lsusb
+    exit
+end
 complete -c lsusb -s v -l verbose -d "Increase verbosity (show descriptors)"
 complete -x -c lsusb -s s -a '(__fish_complete_lsusb)' -d "Show only devices with specified device and/or bus numbers (in decimal)"
 complete -c lsusb -s d -d "Show only devices with the specified vendor and product ID numbers (in hexadecimal)"

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ansible
+    exit
+end
 complete -c ansible -s a -l args -r -f -d "Module arguments"
 complete -c ansible -l ask-vault-pass -f -d "Ask for vault password"
 complete -c ansible -s B -l background -r -f -d "Run asynchronously, failing after X seconds"

@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q commandline
+    exit
+end
+
 complete -c commandline -s h -l help -d "Display help and exit"
 complete -c commandline -s a -l append -d "Add text to the end of the selected area"
 complete -c commandline -s i -l insert -d "Add text at cursor"

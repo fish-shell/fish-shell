@@ -1,6 +1,11 @@
 # NetCat completions for fish
 # By James Stanley
 
+# magic completion safety check (do not remove this comment)
+if not type -q netcat
+    exit
+end
+
 complete -r -c nc -d "Remote hostname" -a "(__fish_print_hostnames)"
 complete -r -c nc -s c -d "Same as -e, but use /bin/sh"
 complete -r -c nc -s e -d "Program to execute after connection"

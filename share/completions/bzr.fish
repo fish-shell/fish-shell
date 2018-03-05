@@ -2,6 +2,11 @@
 # see https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_seen_subcommand_from.fish
 # and https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_use_subcommand.fish
 
+# magic completion safety check (do not remove this comment)
+if not type -q bzr
+    exit
+end
+
 
 # help commands
 complete -f -c bzr -n '__fish_use_subcommand' -a help -d 'Show help'

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ruby-build
+    exit
+end
 function __fish_ruby-build_needs_command
   set cmd (commandline -opc)
   if [ (count $cmd) -eq 1 ]

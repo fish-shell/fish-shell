@@ -1,4 +1,9 @@
 # Tab completion for cargo (https://github.com/rust-lang/cargo).
+
+# magic completion safety check (do not remove this comment)
+if not type -q cargo
+    exit
+end
 complete -e -c cargo
 
 complete -c cargo -s h -l help

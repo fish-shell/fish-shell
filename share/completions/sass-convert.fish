@@ -1,5 +1,10 @@
 # Usage: sass-convert [options] [INPUT] [OUTPUT]
 
+# magic completion safety check (do not remove this comment)
+if not type -q sass-convert
+    exit
+end
+
 # Description:
 #   Converts between CSS, indented syntax, and SCSS files. For example,
 #   this can convert from the indented syntax to SCSS, or from CSS to

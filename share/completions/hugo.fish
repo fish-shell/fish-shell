@@ -1,5 +1,10 @@
 # Completions for Hugo (https://gohugo.io)
 
+# magic completion safety check (do not remove this comment)
+if not type -q hugo
+    exit
+end
+
 # Functions
 
 function __fish_hugo_command

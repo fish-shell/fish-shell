@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lsblk
+    exit
+end
 complete -c lsblk -s a -l all         -d "print all devices"
 complete -c lsblk -s b -l bytes       -d "print SIZE in bytes rather than in human readable format"
 complete -c lsblk -s d -l nodeps      -d "don't print slaves or holders"

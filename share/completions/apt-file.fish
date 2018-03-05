@@ -1,4 +1,9 @@
 #apt-file
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-file
+    exit
+end
 complete -c apt-file -s h -l help -d "Display help and exit"
 complete -x -c apt-file -a update -d "Resync package contents from source"
 complete -r -c apt-file -a search -d "Search package containing pattern"

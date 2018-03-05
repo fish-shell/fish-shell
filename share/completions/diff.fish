@@ -1,4 +1,9 @@
 # Completions for diff
+
+# magic completion safety check (do not remove this comment)
+if not type -q diff
+    exit
+end
 complete -c diff -s i -l ignore-case -d "Ignore case differences"
 complete -c diff -l ignore-file-name-case -d "Ignore case when comparing file names"
 complete -c diff -l no-ignore-file-name-case -d "Consider case when comparing file names"

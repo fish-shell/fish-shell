@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q apropos
+    exit
+end
+
 function __fish_complete_apropos
 	if test (commandline -ct)
 		set str (commandline -ct)

@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q bind
+    exit
+end
+
 complete -c bind -s a -l all -d 'Show unavailable key bindings/erase all bindings'
 complete -c bind -s e -l erase -d 'Erase mode'
 complete -c bind -s f -l function-names -d 'Print names of available functions'

@@ -1,5 +1,10 @@
 # Completions for the `dpkg-reconfigure` command
 
+# magic completion safety check (do not remove this comment)
+if not type -q dpkg-reconfigure
+    exit
+end
+
 complete -f -c dpkg-reconfigure -a '(__fish_print_packages)' -d 'Package'
 
 # Support flags

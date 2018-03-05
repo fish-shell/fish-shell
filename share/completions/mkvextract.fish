@@ -7,6 +7,11 @@
 # Attachment ID 1: type 'application/x-truetype-font', size 53532 bytes, file name 'some_font.ttf'
 # Chapters: 7 entires
 
+# magic completion safety check (do not remove this comment)
+if not type -q mkvextract
+    exit
+end
+
 function __fish_mkvextract_find_matroska_in_args
     set -l cmd (commandline -opc)
     if not set -q cmd[3]

@@ -1,4 +1,9 @@
 #Completions for rmdir
+
+# magic completion safety check (do not remove this comment)
+if not type -q rmdir
+    exit
+end
 complete -x -c rmdir -a "(__fish_complete_directories (commandline -ct))"
 complete -c rmdir -l ignore-fail-on-non-empty -d "Ignore errors from non-empty directories"
 complete -c rmdir -s p -l parents -d "Remove each component of path"

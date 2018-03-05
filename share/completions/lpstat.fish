@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lpstat
+    exit
+end
 __fish_complete_lpr lpstat
 complete -c lpstat -s H -d 'Show the server hostname and port'
 complete -c lpstat -s R -d 'Shows the ranking of print jobs'

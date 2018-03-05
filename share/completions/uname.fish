@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q uname
+    exit
+end
 if test (uname) = Darwin
   complete -c uname -s a -d 'Behave as though all of the options mnrsv were specified.'
   complete -c uname -s m -d 'print the machine hardware name.'

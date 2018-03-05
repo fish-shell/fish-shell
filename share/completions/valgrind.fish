@@ -1,5 +1,10 @@
 # Don't go invoking valgrind unless it is installed
 
+# magic completion safety check (do not remove this comment)
+if not type -q valgrind
+    exit
+end
+
 set -l skin tool
 if type -q valgrind; and valgrind --version ^/dev/null | string match -qr -- '-2\.[012]\.'
 	# In older versions of Valgrind, the skin selection option was

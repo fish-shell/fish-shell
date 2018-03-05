@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q time
+    exit
+end
+
 complete -c time -a "(__fish_complete_subcommand -- -o --output -f --format)" -d "Command"
 
 complete -c time -s f -l format -n "__fish_no_arguments" -d "Specify output format" -x

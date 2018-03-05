@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q block
+    exit
+end
+
 complete -c block -s h -l help -d 'Display help and exit'
 complete -c block -s e -l erase -d 'Remove the topmost global event block'
 complete -c block -s l -l local -d 'Create a local (automatically erased) event block'

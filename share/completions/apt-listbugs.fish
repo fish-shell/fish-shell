@@ -1,4 +1,9 @@
 #apt-listbugs
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-listbugs
+    exit
+end
 complete -c apt-listbugs -s h -l help -d "Display help and exit"
 complete -f -c apt-listbugs -s s -l severity -a "critical grave"  -d "Set severity"
 complete -f -c apt-listbugs -s T -l tag -d "Tags you want to see"

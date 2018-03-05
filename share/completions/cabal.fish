@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q cabal
+    exit
+end
 function __fish_complete_cabal
         if type -q -f cabal
                 set cmd (commandline -poc)

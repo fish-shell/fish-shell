@@ -1,4 +1,9 @@
 #apt-config
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-config
+    exit
+end
 complete -c apt-config -s h -l help -d "Display help and exit"
 complete -c apt-config -a shell -d "Access config file from shell"
 complete -f -c apt-config -a dump -d "Dump contents of config file"

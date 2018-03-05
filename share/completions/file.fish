@@ -1,5 +1,10 @@
 #completion for file
 
+# magic completion safety check (do not remove this comment)
+if not type -q file
+    exit
+end
+
 complete -c file -s b -l brief -d 'Do not prepend filenames to output lines'
 complete -c file -s c -l checking-printout -d 'Print the parsed form of the magic file'
 complete -c file -s C -l compile -d 'Write an output file containing a pre-parsed version of file'

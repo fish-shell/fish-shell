@@ -1,6 +1,11 @@
 #
 # Completions for oggenc
 #
+
+# magic completion safety check (do not remove this comment)
+if not type -q oggenc
+    exit
+end
 complete -c oggenc -s Q -l quiet -f -d "Produce no output to stderr"
 complete -c oggenc -s h -l help  -f -d "Print this help text"
 complete -c oggenc -s v -l version -f -d "Print the version number"

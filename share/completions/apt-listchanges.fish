@@ -1,4 +1,9 @@
 #apt-listchanges
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-listchanges
+    exit
+end
 complete -c apt-listchanges -l help -d "Display help and exit"
 complete -c apt-listchanges -l apt -d "Read filenames from pipe"
 complete -f -c apt-listchanges -s v -l verbose -d "Verbose mode"

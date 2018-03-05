@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q atool
+    exit
+end
 complete -c atool -r -d 'Manage file archives of various types'
 
 # Commands:

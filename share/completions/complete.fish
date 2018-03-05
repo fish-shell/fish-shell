@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q complete
+    exit
+end
 complete -c complete -s c -l command -d "Command to add completion to" -r
 complete -c complete -s p -l path -d "Path to add completion to"
 complete -c complete -s s -l short-option -d "Posix-style option to complete"

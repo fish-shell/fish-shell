@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q compare
+    exit
+end
 complete -c compare -o alpha                       -d 'On, activate, off, deactivate, set, opaque, copy transparent, extract, background, or shape [option]' -xa '(compare -list alpha)'
 complete -c compare -o authenticate                -d 'Decipher image with this password [password]'
 complete -c compare -o channel                     -d 'Apply option to select image channels [type]' -xa '(compare -list channel)'

@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q wpa_cli
+    exit
+end
+
 #completions for wpa_cli
 complete -x -c wpa_cli -a status -d 'get current WPA/EAPOL/EAP status'
 complete -x -c wpa_cli -a mib -d 'get MIB variables (dot1x, dot11)'

@@ -1,6 +1,11 @@
 # Caddy is a general-purpose HTTP/2 web server that serves HTTPS by default.
 # https://caddyserver.com
 
+# magic completion safety check (do not remove this comment)
+if not type -q caddy
+    exit
+end
+
 complete -c caddy    -o agree                     -d "Agree to the CA's Subscriber Agreement"
 complete -c caddy -x -o ca                        -d "URL to certificate authority's ACME server directory"
 complete -c caddy -x -o catimeout                 -d "Default ACME CA HTTP timeout"

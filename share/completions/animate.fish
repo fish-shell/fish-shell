@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q animate
+    exit
+end
 complete -c animate -o alpha                       -d 'On, activate, off, deactivate, set, opaque, copy transparent, extract, background, or shape [option]' -xa '(animate -list alpha)'
 complete -c animate -o authenticate                -d 'Decipher image with this password [password]'
 complete -c animate -o backdrop                    -d 'Display image centered on a backdrop'

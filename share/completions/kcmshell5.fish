@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q kcmshell5
+    exit
+end
 complete -c kcmshell5 -f -l list -d "List available modules"
 complete -c kcmshell5 -f -l author -d "Show author information"
 complete -c kcmshell5 -f -l license -d "Show license information"

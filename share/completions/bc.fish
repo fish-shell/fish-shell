@@ -1,5 +1,10 @@
 # Completions for the binary calculator
 
+# magic completion safety check (do not remove this comment)
+if not type -q bc
+    exit
+end
+
 complete -c bc -s i -l interactive -d "Force interactive mode"
 complete -c bc -s l -l mathlib -d "Define math library"
 complete -c bc -s w -l warn -d "Give warnings for extensions to POSIX bc"

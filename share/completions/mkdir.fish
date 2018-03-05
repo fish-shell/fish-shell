@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q mkdir
+    exit
+end
+
 # Checks if we are using GNU tools
 if mkdir --version > /dev/null ^ /dev/null
     complete -c mkdir -l version -d 'Output version'

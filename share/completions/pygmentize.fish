@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q pygmentize
+    exit
+end
 function __fish_print_pygmentize
     set -l lines (pygmentize -L $argv[1] | string match -r '^(?:\* |    ).*(?:)$' | string replace -r '\* (.*):$' '$1' | string replace -r '^(.*)\.$' '$1' | string trim)
 

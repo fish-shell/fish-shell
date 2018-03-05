@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ansible-playbook
+    exit
+end
 complete -c ansible-playbook -l ask-vault-pass -f -d "Ask for vault password"
 complete -c ansible-playbook -s C -l check -f -d "Just check, don't make any changes"
 complete -c ansible-playbook -s D -l diff -f -d "Show the differences in files and templates; works great with --check"

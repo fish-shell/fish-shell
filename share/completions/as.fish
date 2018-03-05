@@ -1,6 +1,11 @@
 # AS - the portable GNU assembler
 # See: https://www.gnu.org/software/binutils
 
+# magic completion safety check (do not remove this comment)
+if not type -q as
+    exit
+end
+
 complete -c as -o ac -d 'Omit false conditionals'
 complete -c as -o ad -d 'Omit debugging directives'
 complete -c as -o ag -d 'Include general information'

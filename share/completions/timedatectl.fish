@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q timedatectl
+    exit
+end
 set -l commands status set-time{,zone} list-timezones set-local-rtc set-ntp
 
 complete -c timedatectl -f

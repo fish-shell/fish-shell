@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q mutt
+    exit
+end
 if command -sq abook
     complete -c mutt -f -a '(__fish_print_abook_emails)'
     complete -c mutt -s c -x -d 'Specify a carbon-copy (CC) recipient' -a '(__fish_print_abook_emails)'

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q magento
+    exit
+end
 function __fish_print_magento_url_protocols -d "Shows all available URL protocols"
   echo http://
   echo https://

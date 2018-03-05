@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q md5sum
+    exit
+end
 complete -c md5sum -d "Compute and check message digest" -r
 complete -c md5sum -s b -l binary -d 'Read in binary mode'
 complete -c md5sum -s c -l check  -d "Read sums from files and check them"

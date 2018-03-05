@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q nmcli
+    exit
+end
 set -l nmcli_commands general networking radio connection device agent monitor help
 set -l nmcli_general status hostname permissions logging help
 set -l nmcli_networking on off connectivity help

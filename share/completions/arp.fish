@@ -1,4 +1,9 @@
 #completion for arp
+
+# magic completion safety check (do not remove this comment)
+if not type -q arp
+    exit
+end
 complete -c arp -s v -l verbose -d "Verbose mode"
 complete -c arp -s n -l numeric -d "Numerical address"
 complete -x -c arp -s H -l tw-type -a "ether arcnet pronet ax25 netrom" -d "Class of hw type"

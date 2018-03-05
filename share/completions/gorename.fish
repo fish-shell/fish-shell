@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q gorename
+    exit
+end
 complete -c gorename -s d -d "Display diffs instead of rewriting files"
 complete -c gorename -l diffcmd -o diffcmd -d "Diff command invoked when using -d" -r
 complete -c gorename -l force -o force -d "Proceed, even if conflicts were reported"

@@ -4,6 +4,11 @@
 # - for eligible commands, with arguments of different types, only propose second type completions after the first have been selected; for instance, only propose pool members for offline command
 # - this has been written mainly from manpages, which are known to be out-of-sync with the real feature set; some discrepancies have been addressed, but it is highly likely that others still lie
 
+# magic completion safety check (do not remove this comment)
+if not type -q zpool
+    exit
+end
+
 set OS ""
 switch (uname)
     case Linux

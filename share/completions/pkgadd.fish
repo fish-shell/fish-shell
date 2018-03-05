@@ -1,5 +1,10 @@
 #completion for pkgadd
 
+# magic completion safety check (do not remove this comment)
+if not type -q pkgadd
+    exit
+end
+
 complete -c pkgadd -o u -l upgrade -d 'Upgrade'
 complete -c pkgadd -o f -l force -d 'Force installation, overwriting'
 complete -c pkgadd -o r -l root -d 'Alternative installation root'

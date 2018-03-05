@@ -1,5 +1,10 @@
 # Fish completions for gnome's "dconf" configuration tool
 
+# magic completion safety check (do not remove this comment)
+if not type -q dconf
+    exit
+end
+
 function __fish_dconf_keys
     set -l dir
     set -l key

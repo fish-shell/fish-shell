@@ -1,4 +1,9 @@
 #Completions for rm
+
+# magic completion safety check (do not remove this comment)
+if not type -q rm
+    exit
+end
 if rm --version >/dev/null ^/dev/null # GNU
 	complete -c rm -s d -l directory -d "Unlink directory (Only by superuser)"
 	complete -c rm -s f -l force -d "Never prompt before removal"

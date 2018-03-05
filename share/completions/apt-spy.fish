@@ -1,4 +1,9 @@
 #apt-spy
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-spy
+    exit
+end
 complete -c apt-spy -s h -d "Display help and exit"
 complete -f -c apt-spy -s d -a "stable testing unstable" -d "Debian distribution"
 complete -f -c apt-spy -s a -a "Africa Asia Europe North-America Oceania South-America" -d "Servers in the areas"

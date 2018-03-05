@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q fab
+    exit
+end
 function __fish_complete_fab_tasks
     for task in (fab -l)
         set -l _matched (string match -r "^ +([^ ]*) *([^ ]?.*)" $task)

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q who
+    exit
+end
 complete -c who -s a -l all -d "Same as -b -d --login -p -r -t -T -u"
 complete -c who -s b -l boot -d "Print time of last boot"
 complete -c who -s d -l dead -d "Print dead processes"

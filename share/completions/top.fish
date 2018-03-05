@@ -1,4 +1,9 @@
 # Completions for top
+
+# magic completion safety check (do not remove this comment)
+if not type -q top
+    exit
+end
 complete -c top -s b -d "Batch mode"
 complete -c top -s c -d "Toggle command line/program name"
 complete -c top -s d -d "Update interval" -x

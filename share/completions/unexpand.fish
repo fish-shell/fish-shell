@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q unexpand
+    exit
+end
 complete -c unexpand -s a -l all        -d 'convert all blanks, instead of just initial blanks'
 complete -c unexpand -l first-only      -d 'convert only leading sequences of blanks (overrides -a)'
 complete -c unexpand -s t -l tabs -x    -d 'have tabs N characters apart instead of 8 (enables -a)'

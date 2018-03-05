@@ -1,6 +1,11 @@
 # jq is a lightweight and flexible command-line JSON processor.
 # See: https://stedolan.github.io/jq
 
+# magic completion safety check (do not remove this comment)
+if not type -q jq
+    exit
+end
+
 complete -c jq -l version -d 'Output version and exit'
 complete -c jq -l seq -d 'Use application/json-seq MIME type scheme'
 complete -c jq -l stream -d 'Parse input in streaming fasion'

@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q ulimit
+    exit
+end
+
 complete -c ulimit -s S -l soft -d "Set or get soft limit"
 complete -c ulimit -s H -l hard -d "Set or get hard limit"
 

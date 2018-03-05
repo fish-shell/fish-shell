@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q VBoxSDL
+    exit
+end
 complete -c VBoxSDL -l startvm -x -d "Set virtual machine to start" -a "(__fish_print_VBox_vms)"
 
 complete -c VBoxSDL -l seperate -d "Run separate VM process or attach to a running VM"

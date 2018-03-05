@@ -5,6 +5,11 @@
 # have been hand edited since.
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q m4
+    exit
+end
+
 complete -c m4 -l help -d 'Display this help and exit'
 complete -c m4 -l version -d 'Output version information and exit'
 complete -c m4 -s E -l fatal-warnings -d 'Once: warnings become errors, twice: stop execution at first error'

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q VBoxHeadless
+    exit
+end
 complete -c VBoxHeadless -l startvm -o startvm -s s -x -d "Start given VM" -a "(__fish_print_VBox_vms)"
 
 complete -c VBoxHeadless -l vrde -o vrde -s v -d "Enable or disamble VRDE server or don't change setting" -a "on off config"

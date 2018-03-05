@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q networkctl
+    exit
+end
 set -l cmds status list lldp
 
 complete -c networkctl -f -n '__fish_seen_subcommand_from status' -a '(networkctl list --no-pager --no-legend -a | string trim \

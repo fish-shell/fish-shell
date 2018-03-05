@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q which
+    exit
+end
 if which -v > /dev/null ^ /dev/null # GNU
     complete -c which -s a -l all -d "Print all matching executables in PATH, not just the first"
     complete -c which -s i -l read-alias -d "Read aliases from stdin, reporting matching ones on stdout"

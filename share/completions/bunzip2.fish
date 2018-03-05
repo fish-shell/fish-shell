@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q bunzip2
+    exit
+end
 complete -c bunzip2 -x -a "(
 	__fish_complete_suffix .tbz
 	__fish_complete_suffix .tbz2

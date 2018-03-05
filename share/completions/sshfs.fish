@@ -1,6 +1,11 @@
 #
 # Completions for sshfs
 #
+
+# magic completion safety check (do not remove this comment)
+if not type -q sshfs
+    exit
+end
 complete -x -c sshfs -d Hostname -a "(__fish_complete_user_at_hosts):"
 #
 # Mount Points

@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q cowthink
+    exit
+end
+
 
 complete -c cowthink -s e -d "Specify eye string" -r
 complete -c cowthink -s f -d "Specify cow file" -x -a '(cowthink -l|tail -n +2|tr \  \n)'

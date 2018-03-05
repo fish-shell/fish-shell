@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lp
+    exit
+end
 __fish_complete_lpr lp
 complete -c lpr -xa "(__fish_complete_suffix .pdf)"
 complete -c lpr -xa "(__fish_complete_suffix .ps)"

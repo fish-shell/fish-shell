@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q abook
+    exit
+end
+
 complete -c abook -s h -d 'Show usage'
 complete -c abook -s C -l config -d 'Use an alternative configuration file' -r
 complete -c abook      -l datafile -d 'Use an alternative addressbook file' -r

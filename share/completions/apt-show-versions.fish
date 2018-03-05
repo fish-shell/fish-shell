@@ -1,4 +1,9 @@
 #apt-show-versions
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-show-versions
+    exit
+end
 complete -c apt-show-source -s h -l help -d 'Display help and exit'
 complete -r -c apt-show-versions -s p -l packages -a '(apt-cache pkgnames)' -d 'Print PKG versions'
 complete -f -c apt-show-versions -s r -l regex -d 'Using regex'

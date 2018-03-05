@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q gunzip
+    exit
+end
 complete -c gunzip -s c -l stdout -d "Compress to stdout"
 complete -c gunzip -x -a "(
 	__fish_complete_suffix .gz

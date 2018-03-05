@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q kdeconnect-cli
+    exit
+end
 complete -c 'kdeconnect-cli' -s l -l list-devices -d "List all devices"
 complete -c 'kdeconnect-cli' -s a -l list-available -d "List available (paired and reachable) devices"
 complete -c 'kdeconnect-cli' -l id-only -d "Make --list-devices or --list-available print the devices id, to ease scripting"

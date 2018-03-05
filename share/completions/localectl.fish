@@ -1,4 +1,9 @@
 # Completion for systemd's localectl
+
+# magic completion safety check (do not remove this comment)
+if not type -q localectl
+    exit
+end
 set -l commands status set-locale list-locales set-keymap list-keymaps set-x11-keymap list-x11-keymap-{models,layouts,variants,options}
 
 complete -c localectl -f

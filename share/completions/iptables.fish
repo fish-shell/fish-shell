@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q iptables
+    exit
+end
 set -l __fish_iptables_tables filter nat mangle raw security
 
 function __fish_iptables_current_table

@@ -1,6 +1,11 @@
 # go is a tool for managing Go source code.
 # See: https://golang.org
 
+# magic completion safety check (do not remove this comment)
+if not type -q go
+    exit
+end
+
 function __fish__go_buildflags_completions -d 'Complete go build commands' --argument-names cmd
         complete -c go -n "__fish_seen_subcommand_from $cmd" -s a -d 'force rebuild'
         complete -c go -n "__fish_seen_subcommand_from $cmd" -s n -d 'print the commands but do not run them'

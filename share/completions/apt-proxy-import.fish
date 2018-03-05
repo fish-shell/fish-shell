@@ -1,4 +1,9 @@
 #apt-proxy-import
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-proxy-import
+    exit
+end
 complete -c apt-proxy-import -s h -l help -d 'Display help and exit'
 complete -f -c apt-proxy-import -s V -l version -d 'Display version and exit'
 complete -f -c apt-proxy-import -s v -l verbose -d 'Verbose mode'

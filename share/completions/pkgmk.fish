@@ -1,5 +1,10 @@
 #completion for pkgmk
 
+# magic completion safety check (do not remove this comment)
+if not type -q pkgmk
+    exit
+end
+
 complete -f -c pkgmk -o i -l install -d 'Install with pkgadd after build'
 complete -f -c pkgmk -o u -l upgrade -d 'Upgrade with pkgadd after build'
 complete -f -c pkgmk -o r -l recursive -d 'Search and build packages recursively'

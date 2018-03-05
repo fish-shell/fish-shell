@@ -3,6 +3,11 @@
 # Vikas Gorur <vikas@80x25.org>
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q xmms
+    exit
+end
+
 complete -c xmms -s h -l help -d "Show summary of options"
 complete -c xmms -s n -l session -d "Select XMMS session (Default: 0)"
 complete -c xmms -s r -l rew -d "Skip backwards in playlist"

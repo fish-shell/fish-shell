@@ -2,6 +2,11 @@
 # data through a pipeline.
 # See: http://www.ivarch.com/programs/pv.shtml
 
+# magic completion safety check (do not remove this comment)
+if not type -q pv
+    exit
+end
+
 complete -c pv -l progress -s p -d 'Turn progress bar on'
 complete -c pv -l timer -s t -d 'Show timer'
 complete -c pv -l eta -s e -d 'Show estimated time left'

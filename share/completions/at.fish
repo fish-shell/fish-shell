@@ -1,4 +1,9 @@
 #at
+
+# magic completion safety check (do not remove this comment)
+if not type -q at
+    exit
+end
 complete -f -c at -s V -d "Display version and exit"
 complete -f -c at -s q -d "Use specified queue"
 complete -f -c at -s m -d "Send mail to user"

@@ -1,5 +1,10 @@
 # Completions for yaourt
 
+# magic completion safety check (do not remove this comment)
+if not type -q yaourt
+    exit
+end
+
 set -l progname yaourt
 complete -e -c $progname
 complete -c $progname -f

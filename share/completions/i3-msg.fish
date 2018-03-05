@@ -1,6 +1,11 @@
 # i3-msg is a tool to send messages to the i3 window manager.
 # See: https://i3wm.org
 
+# magic completion safety check (do not remove this comment)
+if not type -q i3-msg
+    exit
+end
+
 complete -c i3-msg -l quiet -s q -d 'Only send ipc message and suppress output'
 complete -c i3-msg -l version -s v -d 'Display version number and exit'
 complete -c i3-msg -l help -s h -d 'Display help and exit'

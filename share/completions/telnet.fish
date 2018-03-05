@@ -4,6 +4,11 @@
 # Written by:  Sean C. Higgins
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q telnet
+    exit
+end
+
 complete -x -c telnet -d Hostname -a "(__fish_print_hostnames)"
 
 complete -c telnet -s 8 -d (_ "Specifies an 8-bit data path")

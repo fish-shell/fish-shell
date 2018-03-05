@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ifdata
+    exit
+end
 complete -c ifdata -xa '(__fish_print_interfaces)'
 complete -c ifdata -o e   -d 'Reports interface existence via return code'
 complete -c ifdata -o p   -d 'Print out the whole config of iface'

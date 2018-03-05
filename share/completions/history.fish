@@ -1,4 +1,9 @@
 # Note that when a completion file is sourced a new block scope is created so `set -l` works.
+
+# magic completion safety check (do not remove this comment)
+if not type -q history
+    exit
+end
 set -l __fish_history_all_commands search delete save merge clear
 
 # Note that these options are only valid with the "search" and "delete" subcommands.

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q pactree
+    exit
+end
 complete -c pactree -xa "(pacman -Sl | cut --delim ' ' --fields 2- | tr ' ' \t | sort)"
 complete -c pactree -s b -l dbpath       -d 'Set an alternate database location' -xa '(__fish_complete_directories)'
 complete -c pactree -s c -l color        -d 'Colorize output'

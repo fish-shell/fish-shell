@@ -1,5 +1,10 @@
 #completion for prt-get
 
+# magic completion safety check (do not remove this comment)
+if not type -q prt-get
+    exit
+end
+
 complete -f -c prt-get -n '__fish_prt_use_package' -a '(__fish_prt_packages)' -d 'Package'
 complete -f -c prt-get -n '__fish_prt_use_port' -a '(__fish_prt_ports)' -d 'Port'
 

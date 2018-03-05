@@ -1,5 +1,10 @@
 # Completions for pkgng package manager
 
+# magic completion safety check (do not remove this comment)
+if not type -q pkg
+    exit
+end
+
 function __fish_pkg_is
 	for option in $argv
 		if contains $option (commandline -poc)

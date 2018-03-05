@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q man
+    exit
+end
+
 complete -xc man -a "(__fish_complete_man)"
 
 complete -xc man -n 'not __fish_complete_man' -a 1 -d 'Program section'

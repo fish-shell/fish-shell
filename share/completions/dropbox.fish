@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q dropbox
+    exit
+end
+
 function __dropbox_needs_argument
     set -l cmd (commandline -opc)
     if set -q cmd[2]

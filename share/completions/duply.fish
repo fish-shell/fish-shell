@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q duply
+    exit
+end
+
 # First parameter is the profile name, or 'usage'
 complete --command duply --no-files --condition '__fish_is_first_token' --arguments '(/bin/ls /etc/duply ^/dev/null) (/bin/ls ~/.duply ^/dev/null)' -d 'Profile'
 complete --command duply --no-files --arguments 'usage' -d 'Get usage help text'

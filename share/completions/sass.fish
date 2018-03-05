@@ -1,5 +1,10 @@
 # Usage: sass [options] [INPUT] [OUTPUT]
 
+# magic completion safety check (do not remove this comment)
+if not type -q sass
+    exit
+end
+
 # Description:
 #   Converts SCSS or Sass files to CSS.
 

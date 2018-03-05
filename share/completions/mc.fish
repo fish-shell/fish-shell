@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q mc
+    exit
+end
+
 complete -c mc -s a -l stickchars        -d 'No graphic chars for line drawing'
 complete -c mc -s b -l nocolor           -d 'Force black and white display'
 complete -c mc -s c -l color             -d 'Force color mode'

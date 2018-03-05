@@ -1,5 +1,10 @@
 #completion for apt-get
 
+# magic completion safety check (do not remove this comment)
+if not type -q apt-get
+    exit
+end
+
 function __fish_apt_no_subcommand -d 'Test if apt has yet to be given the subcommand'
 	for i in (commandline -opc)
 		if contains -- $i update upgrade dselect-upgrade dist-upgrade install remove purge source build-dep check clean autoclean changelog

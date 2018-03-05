@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q termite
+    exit
+end
 complete -c termite -s h -l help -d "Display help message"
 complete -c termite -s v -l version -d "Display version information"
 complete -r -c termite -s e -l exec -d "Tell termite start <cmd> instead of the shell"

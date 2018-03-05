@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q ncdu
+    exit
+end
+
 complete -c ncdu -s h -d 'Print help'
 complete -c ncdu -s q -d 'Quiet mode. Refresh interval 2 seconds'
 complete -c ncdu -s v -d 'Print version'

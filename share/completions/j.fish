@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q j
+    exit
+end
 function __history_completions --argument limit
 	if echo $limit | string match -q ""
 	    set limit 25

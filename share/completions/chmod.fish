@@ -5,6 +5,11 @@
 # have been hand edited since.
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q chmod
+    exit
+end
+
 complete -c chmod -s c -l changes -d 'Like verbose but report only when a change is made'
 complete -c chmod -l no-preserve-root -d 'Do not treat / specially (the default)'
 complete -c chmod -l preserve-root -d 'Fail to operate recursively on /'

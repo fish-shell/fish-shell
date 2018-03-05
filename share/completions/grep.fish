@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q grep
+    exit
+end
 complete -c grep -s A -l after-context -d "Print NUM lines of trailing context"
 complete -c grep -s a -l text -d "Process binary file as text"
 complete -c grep -s B -l before-context -d "Print NUM lines of leading context"

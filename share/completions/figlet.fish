@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q figlet
+    exit
+end
 function __fish_print_figlet_fonts
     set -l dir (figlet -I 2)
     set -l files $dir/*.flf $dir/*.tlf

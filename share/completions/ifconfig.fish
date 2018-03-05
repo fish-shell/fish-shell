@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ifconfig
+    exit
+end
 complete -x -c ifconfig -a down -d "Stop interface"
 complete -x -c ifconfig -a up -d "Start interface"
 complete -x -c ifconfig -a "

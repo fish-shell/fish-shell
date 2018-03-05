@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q cp
+    exit
+end
 if cp --version ^ /dev/null > /dev/null # GNU
 	complete -c cp -s a -l archive -d "Same as -dpR"
 	complete -c cp -s b -l backup -d "Make backup of each existing destination file" -a "none off numbered t existing nil simple never"

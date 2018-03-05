@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q wc
+    exit
+end
 complete -c wc -s c -l bytes -d "Print byte counts"
 complete -c wc -s m -l chars -d "Print character counts"
 complete -c wc -s l -l lines -d "Print newline counts"

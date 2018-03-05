@@ -1,6 +1,11 @@
 # Command specific completions for the wesnoth command from The Battle For Wesnoth (a strategy game)
 # http://www.wesnoth.org/
 
+# magic completion safety check (do not remove this comment)
+if not type -q wesnoth
+    exit
+end
+
 complete -c wesnoth -l bpp -d 'Number sets BitsPerPixel value'
 complete -c wesnoth -l compress -d '<infile> <outfile> compresses a savefile (infile) that is in text WML format into binary WML format (outfile)'
 complete -c wesnoth -s d -l debug -d 'Shows extra debugging information and enables additional command mode options in-game'

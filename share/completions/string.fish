@@ -1,5 +1,10 @@
 # Completion for builtin string
 # This follows a strict command-then-options approach, so we can just test the number of tokens
+
+# magic completion safety check (do not remove this comment)
+if not type -q string
+    exit
+end
 complete -f -c string
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and not contains -- (commandline -opc)[2] escape" -s q -l quiet -d "Do not print output"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a "length"

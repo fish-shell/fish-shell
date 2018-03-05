@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q tree
+    exit
+end
+
 
 ## Listing options
 complete -c tree -s a            -d 'All files are listed'

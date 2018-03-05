@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q id
+    exit
+end
 complete -c id -s g -l group -d "Print effective group id"
 complete -c id -s G -l groups -d "Print all group ids"
 complete -c id -s n -l name -d "Print name, not number"

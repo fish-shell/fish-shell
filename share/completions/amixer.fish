@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q amixer
+    exit
+end
 set -l cmds 'scontrols scontents controls contents sget sset cset cget set get'
 complete -c amixer -xa "$cmds" -n "not __fish_seen_subcommand_from $cmds"
 complete -c amixer -n '__fish_seen_subcommand_from sset sget get set' -xa "(amixer scontrols | cut --delimiter \' --fields 2)"

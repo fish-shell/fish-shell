@@ -1,5 +1,10 @@
 # JHipster 4.9.0
 
+# magic completion safety check (do not remove this comment)
+if not type -q jhipster
+    exit
+end
+
 # Check if command already given
 function __fish_prog_needs_command
     set cmd (commandline -opc)

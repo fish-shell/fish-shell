@@ -1,5 +1,10 @@
 #completion for totem
 
+# magic completion safety check (do not remove this comment)
+if not type -q totem
+    exit
+end
+
 complete -c totem -l usage -d 'Output a brief synopsis of command options then quit'
 complete -c totem -s '?' -l help -d 'Output  a longer help message then quit'
 complete -c totem -l version -d 'Output version information then quit'

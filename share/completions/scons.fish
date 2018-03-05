@@ -5,6 +5,11 @@
 # have been hand edited since.
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q scons
+    exit
+end
+
 complete -c scons -s c -l clean -l remove -d 'Clean up by removing all target files for which a construction command is specified'
 complete -c scons -l cache-debug -d 'Print debug information about the CacheDir() derived-file caching to the specified file'
 complete -c scons -l cache-disable -l no-cache -d 'Disable the derived-file caching specified by CacheDir()'

@@ -1,6 +1,11 @@
 # fish completion for git
 # Use 'command git' to avoid interactions for aliases from git to (e.g.) hub
 
+# magic completion safety check (do not remove this comment)
+if not type -q git
+    exit
+end
+
 function __fish_git_commits
     # Complete commits with their subject line as the description
     # This allows filtering by subject with the new pager!

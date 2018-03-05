@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q eselect
+    exit
+end
 function __fish_eselect_cmd
     eselect --brief --colour=no $argv
 end

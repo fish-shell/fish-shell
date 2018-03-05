@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lunchy
+    exit
+end
 function __fish_lunchy_needs_command
   set cmd (commandline -opc)
 

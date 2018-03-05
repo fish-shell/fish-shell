@@ -1,4 +1,9 @@
 # general options
+
+# magic completion safety check (do not remove this comment)
+if not type -q terraform
+    exit
+end
 complete -f -c terraform -l version -d 'Print version information'
 complete -f -c terraform -l help -d 'Show help'
 

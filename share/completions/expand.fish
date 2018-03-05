@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q expand
+    exit
+end
 complete -c expand -s i -l initial       -d 'do not convert tabs after non blanks'
 complete -c expand -s t -l tabs -x       -d 'have tabs NUMBER characters apart, not 8'
 complete -c expand -s t -l tabs -x       -d 'use comma separated list of explicit tab positions'

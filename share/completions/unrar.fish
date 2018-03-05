@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q unrar
+    exit
+end
+
 # Peek inside of archives and list all files
 complete -c unrar -a "(__fish_complete_unrar)"
 

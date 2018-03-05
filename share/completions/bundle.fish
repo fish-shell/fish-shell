@@ -1,5 +1,10 @@
 # Completion for bundler
 
+# magic completion safety check (do not remove this comment)
+if not type -q bundle
+    exit
+end
+
 function __fish_bundle_no_command -d 'Test if bundle has been given no subcommand'
   set cmd (commandline -opc)
   if [ (count $cmd) -eq 1 ]

@@ -1,4 +1,9 @@
 # xinput, a tool for managing X11 input devices
+
+# magic completion safety check (do not remove this comment)
+if not type -q xinput
+    exit
+end
 set -l cmds version list get-feedbacks set-pointer set-mode set-ptr-feedback set-integer-feedback set-button-map query-state list-props set-int-prop set-float-prop set-prop watch-props delete-prop test test-xi2 create-master remove-master reattach float set-cp map-to-output enable disable
 
 function __fish_xinput_devices

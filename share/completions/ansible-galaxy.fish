@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ansible-galaxy
+    exit
+end
 complete -c ansible-galaxy -a "delete import info init install list login remove search setup"
 complete -c ansible-galaxy -s h -l help -d "Show this help message and exit"
 complete -c ansible-galaxy -s v -l verbose -d "Verbose mode (-vvv for more, -vvvv to enable connection debugging)"

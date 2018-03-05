@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q makedepend
+    exit
+end
 complete -c makedepend -s D -r -d "Define"
 complete -c makedepend -s I -r -d "Include directory"
 complete -c makedepend -s Y -r -d "Replace include directories"

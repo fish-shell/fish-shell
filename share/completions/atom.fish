@@ -1,5 +1,10 @@
 # Atom Editor v1.0.2
 
+# magic completion safety check (do not remove this comment)
+if not type -q atom
+    exit
+end
+
 # Usage: atom [options] [path ...]
 
 # One or more paths to files or folders may be specified. If there is an

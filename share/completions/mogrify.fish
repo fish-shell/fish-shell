@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q mogrify
+    exit
+end
 complete -c mogrify -o adjoin                       -d 'Join images into a single multi-image file'
 complete -c mogrify -o affine                       -d 'Affine transform matrix [matrix]'
 complete -c mogrify -o antialias                    -d 'Remove pixel-aliasing '

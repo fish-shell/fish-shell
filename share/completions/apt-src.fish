@@ -1,4 +1,9 @@
 #apt-src
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-src
+    exit
+end
 complete -c apt-src -s h -l help -d "Display help and exit"
 complete -f -c apt-src -a "update" -d "Update list of source packages"
 complete -f -c apt-src -a "install" -d "Install source packages"

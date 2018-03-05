@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q fish_indent
+    exit
+end
 complete -c fish_indent -s h -l help -d 'Display help and exit'
 complete -c fish_indent -s v -l version -d 'Display version and exit'
 complete -c fish_indent -s i -l no-indent -d 'Do not indent output, only reformat into one job per line'

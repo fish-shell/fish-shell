@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q gv
+    exit
+end
 complete -c gv -xa "(__fish_complete_suffix .ps)"
 complete -c gv -xa "(__fish_complete_suffix .ps.gz)"
 complete -c gv -xa "(__fish_complete_suffix .eps)"

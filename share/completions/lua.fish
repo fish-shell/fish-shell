@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q lua
+    exit
+end
+
 complete -c lua -s e -d 'Execute string' -x
 # Try the most common lib directories, silencing errors in case they don't exist.
 complete -c lua -s l -d 'Require library' -xa "(find /usr/lib{,32,64}/lua/ -name \*.so -printf '%f\n' ^/dev/null | string replace -r '.so\$' '')"

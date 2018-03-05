@@ -1,5 +1,10 @@
 # Completions for the `apt` command
 
+# magic completion safety check (do not remove this comment)
+if not type -q apt
+    exit
+end
+
 function __fish_apt_no_subcommand -d 'Test if apt has yet to be given the subcommand'
 	for i in (commandline -opc)
 		if contains -- $i update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove depends rdepends

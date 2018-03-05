@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lppasswd
+    exit
+end
 complete -c lppasswd -d 'Change CUPS digest password' -xa '(__fish_complete_users)'
 complete -c lppasswd -s a -d 'Add password'
 complete -c lppasswd -s x -d 'Remove password'

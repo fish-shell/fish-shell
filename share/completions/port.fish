@@ -1,5 +1,10 @@
 #completion for port
 
+# magic completion safety check (do not remove this comment)
+if not type -q port
+    exit
+end
+
 set -l subcommands activate archive build cat cd checksum clean configure \
 		contents deactivate dependents deps destroot dir distcheck dmg echo \
 		edit extract fetch file gohome info install installed lint list \

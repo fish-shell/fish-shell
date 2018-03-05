@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q a2dissite
+    exit
+end
 complete -c a2dissite -s q -l quiet -d "Don't show informative messages"
 complete -c a2dissite -s p -l purge -d "Purge all traces of module"
 

@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q transmission-remote
+    exit
+end
+
 complete -c transmission-remote -s a -l add -d 'Add torrents to transmission'
 complete -c transmission-remote -s b -l debug -d 'Enable debugging mode'
 complete -c transmission-remote -o as -l alt-speed -d 'Use the alternate Limits'

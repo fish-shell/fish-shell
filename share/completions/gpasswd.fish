@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q gpasswd
+    exit
+end
+
 complete -c gpasswd -xa '(__fish_complete_groups)'
 complete -c gpasswd -s a -l add -d 'Add user to group' -xa '(__fish_complete_users)'
 complete -c gpasswd -s d -l delete -d 'Remove user from group' -xa '(__fish_complete_users)'

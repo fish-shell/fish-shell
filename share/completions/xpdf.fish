@@ -2,6 +2,11 @@
 # Completions for the xpdf command
 # Vikas Gorur <vikas@80x25.org>
 #
+
+# magic completion safety check (do not remove this comment)
+if not type -q xpdf
+    exit
+end
 complete -c xpdf -x -a "(__fish_complete_suffix .pdf)"
 
 complete -c xpdf -s g -d "Set the initial window geometry"

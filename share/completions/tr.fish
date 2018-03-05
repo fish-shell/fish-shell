@@ -2,6 +2,11 @@
 # Completions for tr
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q tr
+    exit
+end
+
 # Test if we are using GNU tr
 if command tr --version >/dev/null ^/dev/null
   complete -c tr -x

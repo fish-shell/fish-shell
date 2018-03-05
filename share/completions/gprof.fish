@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q gprof
+    exit
+end
 complete -c gprof -s A -l annoted-source -d "Print annotated source"
 complete -c gprof -s b -l brief -d "Do not print explanations"
 complete -c gprof -s C -l exec-counts -d "Print tally"

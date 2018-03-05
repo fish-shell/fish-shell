@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q gzip
+    exit
+end
 complete -c gzip -s c -l stdout -d "Compress to stdout"
 complete -c gzip -s d -l decompress -x -a "
 (

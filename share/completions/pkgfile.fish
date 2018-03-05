@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q pkgfile
+    exit
+end
 complete -c pkgfile -l version         -d 'show program\'s version number and exit'
 complete -c pkgfile -s h -l help       -d 'show this help message and exit'
 complete -c pkgfile -s b -l binaries   -d 'only show files in a {s}bin/ directory. Works with -s, -l'

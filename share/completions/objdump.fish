@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q objdump
+    exit
+end
 complete -c objdump -l archive-headers -s a -d "Display archive header information"
 complete -c objdump -l file-headers -s f -d "Display contents of the overall file header"
 complete -c objdump -l private-headers -s p -d "Display object format specific file header contents"

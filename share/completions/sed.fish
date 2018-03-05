@@ -2,6 +2,11 @@
 # Completions for sed
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q sed
+    exit
+end
+
 # Test if we are using GNU sed
 
 set -l is_gnu

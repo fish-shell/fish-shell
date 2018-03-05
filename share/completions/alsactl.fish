@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q alsactl
+    exit
+end
 set -l commands store restore nrestore init daemon rdaemon kill monitor
 
 complete -c alsactl -n "not __fish_seen_subcommand_from $commands" -a "store" -d "Save current driver state" -f

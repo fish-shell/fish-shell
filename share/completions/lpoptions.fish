@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lpoptions
+    exit
+end
 __fish_complete_lpr lpoptions
 
 complete -c lpoptions -s d -d 'Sets the user default printer' -xa '(__fish_print_lpr_printers)'

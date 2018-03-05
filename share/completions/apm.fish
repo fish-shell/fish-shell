@@ -1,4 +1,9 @@
 # Returns exit code of 0 if apm hasn't received a command yet, e.g. `config`
+
+# magic completion safety check (do not remove this comment)
+if not type -q apm
+    exit
+end
 function __fish_apm_needs_command
     set cmd (commandline -opc)
     if test (count $cmd) -eq 1

@@ -1,4 +1,9 @@
 #apt-show-source
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-show-source
+    exit
+end
 complete -c apt-show-source -s h -l help -d 'Display help and exit'
 complete -r -c apt-show-source -l status-file -d 'Read package from file' -f
 complete -r -c apt-show-source -o stf -d 'Read package from file' -f

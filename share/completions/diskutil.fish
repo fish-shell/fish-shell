@@ -1,5 +1,10 @@
 # completion for diskutil (macOS)
 
+# magic completion safety check (do not remove this comment)
+if not type -q diskutil
+    exit
+end
+
 #############
 # Functions #
 #############

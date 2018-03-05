@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q rc-update
+    exit
+end
 function __fish_complete_rc-update_actions
     set -l actions add \
         'Add the service to the runlevel or the current one if non given'

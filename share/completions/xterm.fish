@@ -1,5 +1,10 @@
 # completion for xterm
 
+# magic completion safety check (do not remove this comment)
+if not type -q xterm
+    exit
+end
+
 
 complete -c xterm -n '__fish_test_arg "+*"' -a +ah -d 'Never highlight the text cursor'
 complete -c xterm -n '__fish_test_arg "+*"' -a +ai -d 'Enable active icon support'

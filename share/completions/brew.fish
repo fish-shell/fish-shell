@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q brew
+    exit
+end
 function __fish_brew_get_cmd
   for c in (commandline -opc)
     if not string match -q -- '-*' $c

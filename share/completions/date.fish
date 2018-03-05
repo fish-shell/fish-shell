@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q date
+    exit
+end
 if date --version > /dev/null ^ /dev/null
 	complete -c date -s d -l date -d "Display date described by string" -x
 	complete -c date -s f -l file -d "Display date for each line in file" -r

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q mv
+    exit
+end
 complete -c mv -s b -l backup -d "Make backup of each existing destination file"
 complete -c mv -s f -l force -d "Do not prompt before overwriting"
 complete -c mv -s i -l interactive -d "Prompt before overwrite"

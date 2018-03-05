@@ -3,6 +3,11 @@
 #
 # Find mount points, borrowed from umount.fish
 #
+
+# magic completion safety check (do not remove this comment)
+if not type -q fusermount
+    exit
+end
 complete -c fusermount -d "Mount point" -x -a '(__fish_print_mounted)'
 complete -c fusermount -s h -d "Display help and exit"
 complete -c fusermount -s v -d "Display version and exit"

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ninja
+    exit
+end
 complete -c ninja -f -a '(__fish_print_ninja_targets)' -d target
 complete -x -c ninja -s t -x -a "(__fish_print_ninja_tools)" -d subtool
 complete -x -c ninja -s C -x -a "(__fish_complete_directories (commandline -ct))" -d "change to specified directory"

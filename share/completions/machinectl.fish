@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q machinectl
+    exit
+end
 complete -f -e -c machinectl
 
 set -l commands list status show start login enable disable poweroff reboot \

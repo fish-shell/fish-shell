@@ -1,5 +1,10 @@
 # completion for mdfind (macOS)
 
+# magic completion safety check (do not remove this comment)
+if not type -q mdfind
+    exit
+end
+
 complete -c mdfind -o attr -x -d 'Fetches the value of the specified attribute'
 complete -c mdfind -o count -f -d 'Query only reports matching items count'
 complete -c mdfind -o onlyin -x -a '(__fish_complete_directories (commandline -ct))' -d 'Search only within given directory'

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q mktemp
+    exit
+end
 if mktemp --version >/dev/null ^/dev/null # GNU
 	complete -c mktemp -s d -l directory    -d 'create a directory, not a file'
 	complete -c mktemp -s u -l dry-run      -d 'do not create anything; merely print a name (unsafe)'

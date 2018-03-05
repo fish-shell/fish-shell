@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q makepkg
+    exit
+end
 complete -c makepkg -s A -l 'ignorearch'    -d 'Ignore missing or incomplete arch field'
 complete -c makepkg -s c -l 'clean'         -d 'Clean up work files after build'
 complete -c makepkg      -l 'config'        -d 'Use alternate config <file>'

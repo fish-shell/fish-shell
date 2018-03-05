@@ -1,4 +1,9 @@
 #apt-cache
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-cache
+    exit
+end
 complete -c apt-cache -s h -l help -d "Display help and exit"
 complete -f -c apt-cache -a gencaches -d "Build apt cache"
 complete -x -c apt-cache -a showpkg -d "Show package info"

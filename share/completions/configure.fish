@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q configure
+    exit
+end
 complete -c configure -s h -l help -x -a "short recursive" -d "Display help and exit"
 complete -c configure -s V -l version -d "Display version and exit"
 complete -c configure -s q -l quiet -d "Quiet mode"

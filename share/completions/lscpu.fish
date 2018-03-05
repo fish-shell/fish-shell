@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lscpu
+    exit
+end
 set __fish_lscpu_columns CPU\tLogical\ CPU\ number\ of\ a\ CPU\nCORE\tLogical\ core\ number\nSOCKET\tLogical\ socket\ number\nBOOK\tLogical\ book\ number\nNODE\tLogical\ NUMA\ node\ number\nCACHE\tInformation\ about\ how\ caches\ are\ shared\nPOLARIZATION\tCPU\ dispatching\ mode\ on\ virtual\ hardware\nADDRESS\tPhysical\ address\nCONFIGURED\tShows\ if\ the\ hypervisor\ has\ allocated\ the\ CPU\nONLINE\tShows\ if\ Linux\ currently\ use\ the\ CPU\nMAXMHZ\tShows\ the\ maximum\ MHz\nMINMHZ\tShows\ the\ minimum\ MHz
 
 complete -c lscpu -l all -s a -d "Print both online and offline CPUs"

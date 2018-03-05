@@ -2,6 +2,11 @@
 # Completions for the yum command
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q yum
+    exit
+end
+
 # All yum commands
 
 # Test if completing using package names is appropriate

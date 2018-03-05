@@ -1,4 +1,9 @@
 #apt-cdrom
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-cdrom
+    exit
+end
 complete -c apt-cdrom -s h -l help -d "Display help and exit"
 complete -r -c apt-cdrom -a add -d "Add new disc to source list"
 complete -x -c apt-cdrom -a ident -d "Report identity of disc"

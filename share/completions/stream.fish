@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q stream
+    exit
+end
 complete -c stream -o authenticate                  -d 'Decipher image with this password [password]'
 complete -c stream -o channel                       -d 'Apply option to select image channels [type]' -xa '(stream -list channel)'
 complete -c stream -o colorspace                    -d 'Alternate image colorspace [type]' -xa '(stream -list colorspace)'

@@ -22,6 +22,11 @@
 # mvn jboss:start ejb:ejb
 # Attention: Multiple plugins can be given
 
+# magic completion safety check (do not remove this comment)
+if not type -q mvn
+    exit
+end
+
 
 # Default lifecycles
 complete -c mvn -f -a 'pre-clean clean post-clean validate initialize generate-sources process-sources generate-resources process-resources compile process-classes generate-test-sources process-test-sources generate-test-resources process-test-resources test-compile process-test-classes testprepare-package package pre-integration-test integration-test post-integration-test verify install deploy pre-site site post-site site-deploy'

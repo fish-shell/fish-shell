@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q mocp
+    exit
+end
 complete -c mocp -s V -l version            -d "Print program version and exit"
 complete -c mocp -s h -l help               -d "Print usage and exit"
 complete -c mocp -s D -l debug              -d "Turn on logging to a file"

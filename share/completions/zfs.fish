@@ -10,6 +10,11 @@
 # - for the program command, complete the script to be executed
 # - for commands accepting several arguments of different types, propose arguments in the right order: for get, once the ZFS parameters have been given, only propose datasets
 
+# magic completion safety check (do not remove this comment)
+if not type -q zfs
+    exit
+end
+
 set OS ""
 switch (uname)
     case Linux

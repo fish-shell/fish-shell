@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q functions
+    exit
+end
 complete -c functions -s e -l erase -d "Erase function" -x -a "(functions -n)"
 complete -c functions -xa "(functions -na)" -d "Function"
 complete -c functions -s a -l all -d "Show hidden functions"

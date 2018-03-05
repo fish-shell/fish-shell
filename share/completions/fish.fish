@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q fish
+    exit
+end
 complete -c fish -s c -l "command" -d "Run fish with this command"
 complete -c fish -s h -l help -d "Display help and exit"
 complete -c fish -s v -l version -d "Display version and exit"

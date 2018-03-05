@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q head
+    exit
+end
 if head --version >/dev/null ^/dev/null
 	complete -c head -s c -l bytes -d 'Print the first N bytes; Leading '-', truncate the last N bytes' -r
 	complete -c head -s n -l lines -d 'Print the first N lines; Leading '-', truncate the last N lines' -r

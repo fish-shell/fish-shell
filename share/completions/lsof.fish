@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lsof
+    exit
+end
 complete -c lsof -s '?' -s h -d 'Print help and exit'
 complete -c lsof -s a -d 'Causes list selections to be ANDed'
 complete -c lsof -s A -r -d 'Use alternative name list file'

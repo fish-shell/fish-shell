@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q setfacl
+    exit
+end
 set __fish_facl_spec_keywords default user group mask other
 
 function __fish_facl_list_spec_keyword

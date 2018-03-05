@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q python
+    exit
+end
 complete -c python -s B -d 'Don\'t write .py[co] files on import'
 complete -c python -s c -x -d "Execute argument as command"
 complete -c python -s d -d "Debug on"

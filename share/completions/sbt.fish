@@ -2,6 +2,11 @@
 # COMMANDS #
 ############
 
+# magic completion safety check (do not remove this comment)
+if not type -q sbt
+    exit
+end
+
 # 1. In general it's not recommended to run commands one by one, because sbt startup is quite slow
 # 2. Only commands without arguments are completed, because any commands with args have to be quoted: `sbt "show key"`
 # 3. Only those commands are completed that could be useful to run as one off, like `sbt new ...`, the rest should be run in an interactive sbt shell

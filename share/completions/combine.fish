@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q combine
+    exit
+end
 complete -c combine -d 'Combine sets of lines from two files using boolean operations'
 complete -c combine -a and -d 'Output lines that are in both files'
 complete -c combine -a not -d 'Output lines that are inf file1 but not in file2'

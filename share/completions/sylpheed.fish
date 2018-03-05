@@ -1,5 +1,10 @@
 #completion for sylpheed
 
+# magic completion safety check (do not remove this comment)
+if not type -q sylpheed
+    exit
+end
+
 complete -c sylpheed -l exit -d 'Exit sylpheed'
 complete -c sylpheed -l debug -d 'Debug mode'
 complete -c sylpheed -l help -d 'Display help and exit'

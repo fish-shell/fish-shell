@@ -1,4 +1,9 @@
 # Commands
+
+# magic completion safety check (do not remove this comment)
+if not type -q ngrok
+    exit
+end
 complete -c ngrok -f -a "authtoken" -d "Save authtoken to configuration file"
 complete -c ngrok -f -a "credits"   -d "Prints author and licensing information"
 complete -c ngrok -f -a "http"      -d "Start an HTTP tunnel"

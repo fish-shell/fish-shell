@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q test
+    exit
+end
+
 complete -c test -l help -d "Display help and exit"
 #complete -c test -l version -d "Display version and exit"
 complete -c test -a ! -d "Negate expression"

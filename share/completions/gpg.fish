@@ -7,6 +7,11 @@
 # specified in the environment or to specify an alternative home
 # directory.
 
+# magic completion safety check (do not remove this comment)
+if not type -q gpg
+    exit
+end
+
 # Switches related to debugging, switches whose use is not
 # recommended, switches whose behaviour is as of yet undefined,
 # switches for experimental features, switches to make gpg compliant

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q fuser
+    exit
+end
 __fish_make_completion_signals
 for i in $__kill_signals
 	set number (echo $i | cut -d " " -f 1)

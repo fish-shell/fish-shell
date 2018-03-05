@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q pinky
+    exit
+end
 complete -c pinky -s l              -d "produce long format output for the specified USERs"
 complete -c pinky -s b              -d "omit the user's home directory and shell in long format"
 complete -c pinky -s h              -d "omit the user's project file in long format"

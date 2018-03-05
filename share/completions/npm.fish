@@ -4,6 +4,11 @@
 # see also Fish's large set of completions for examples:
 # https://github.com/fish-shell/fish-shell/tree/master/share/completions
 
+# magic completion safety check (do not remove this comment)
+if not type -q npm
+    exit
+end
+
 function __fish_npm_needs_command
     set cmd (commandline -opc)
 

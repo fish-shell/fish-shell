@@ -1,5 +1,10 @@
 #completion for ports
 
+# magic completion safety check (do not remove this comment)
+if not type -q ports
+    exit
+end
+
 complete -f -c ports -s u -l update -a '(__fish_ports_dirs)' -d 'Update ports'
 complete -f -c ports -s l -l list -d 'List ports'
 complete -f -c ports -s d -l diff -d 'List version diffs between local and installed ports'

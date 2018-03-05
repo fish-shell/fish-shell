@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q bzip2
+    exit
+end
 complete -c bzip2 -s c -l stdout -d "Compress to stdout"
 complete -c bzip2 -s d -l decompress -x -a "(
 	__fish_complete_suffix .tbz

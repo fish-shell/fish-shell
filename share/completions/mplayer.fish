@@ -1,6 +1,11 @@
 # Completions for mplayer (Incomplete, there are too many options and
 # I am too lazy. Please send in suggested additions)
 
+# magic completion safety check (do not remove this comment)
+if not type -q mplayer
+    exit
+end
+
 #
 # List of two letter language codes for dvd audio, etc. Very
 # incomplete. Please send in additions.

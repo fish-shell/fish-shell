@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q launchctl
+    exit
+end
 complete --command launchctl -n '__fish_use_subcommand' -xa 'bootstrap\t"'(_ "Bootstraps a domain or a service into a domain")'"'
 complete --command launchctl -n '__fish_use_subcommand' -xa 'bootout\t"'(_ "Tears down a domain or removes a service from a domain")'"'
 complete --command launchctl -n '__fish_use_subcommand' -xa 'enable\t"'(_ "Enables an existing service")'"'

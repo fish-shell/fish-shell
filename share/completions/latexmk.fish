@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q latexmk
+    exit
+end
 complete -c latexmk -x -a "(__fish_complete_suffix (commandline -ct) .tex '(La)TeX file')"
 complete -c latexmk -o bibtex      -d 'use bibtex when needed (default)'
 complete -c latexmk -o bibtex-     -d 'never use bibtex'

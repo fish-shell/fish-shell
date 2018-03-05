@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ipset
+    exit
+end
 function __fish_ipset_nosubcommand
 	if __fish_seen_subcommand_from create add del test destroy list save restore flush rename swap help version
 		return 1

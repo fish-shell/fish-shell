@@ -1,5 +1,10 @@
 # This can't currently be wrapped as the pacman completions rely on variables whose value this needs to change
 # complete -c aura -w pacman
+
+# magic completion safety check (do not remove this comment)
+if not type -q aura
+    exit
+end
 set -l listinstalled "(pacman -Q | tr ' ' \t)"
 set -l listall "(__fish_print_packages)"
 set -l listrepos "(__fish_print_pacman_repos)"

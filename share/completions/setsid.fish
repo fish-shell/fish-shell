@@ -2,6 +2,11 @@
 # It is part of the util-linux package.
 # See: https://www.kernel.org/pub/linux/utils/util-linux
 
+# magic completion safety check (do not remove this comment)
+if not type -q setsid
+    exit
+end
+
 complete -c setsid -x -d 'Command to run' -a '(__fish_complete_subcommand)'
 complete -c setsid -n '__fish_no_arguments' -l ctty -s c -d 'Set controlling terminal to current one'
 complete -c setsid -n '__fish_no_arguments' -l wait -s w -d 'Wait until program ends and return its exit value'

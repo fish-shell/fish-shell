@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q modinfo
+    exit
+end
 if command -s uname > /dev/null ^/dev/null
     if test (uname) = "Linux"
         complete -c modinfo -a "(__fish_print_modules)"

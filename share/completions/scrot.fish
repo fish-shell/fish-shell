@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q scrot
+    exit
+end
+
 complete -c scrot -s h -l help -d 'Display help and exit'
 complete -c scrot -s v -l version -d 'Display version information and exit'
 complete -c scrot -s b -l border -d 'When selecting a window, grab wm border too'

@@ -56,6 +56,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `git` (#4395, #4396, #4592)
   - `brew`
   - `diskutil`
+  - `yarn`
 
 --
 

@@ -2,6 +2,54 @@
 # see https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_seen_subcommand_from.fish
 # and https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_use_subcommand.fish
 
+function __yarn_find_package_json
+    set parents (__fish_parent_directories (pwd))
+
+    for p in $parents
+        if test -f "$p/package.json"
+            echo "$p/package.json"
+            return 0
+        end
+    end
+
+    return 1
+end
+
+function __yarn_list_packages
+    set -l package_json (__yarn_find_package_json)
+    if not test $status -eq 0
+        # no package.json in tree
+        return 1
+    end
+
+    set -l depsFound 0
+    for line in (cat $package_json)
+        # echo "evaluating $line"
+        if test $depsFound -eq 0
+            # echo "mode: noDeps"
+            if string match -qr '(devD|d)ependencies"' -- $line
+                # echo "switching to mode: deps"
+                set depsFound 1
+                continue
+            end
+            continue
+        end
+
+        if string match -qr '\}' -- $line
+            # echo "switching to mode: noDeps"
+            set depsFound 0
+            continue
+        end
+
+        # echo "mode: deps"
+
+        string replace -r '^\s*"([^"]+)".*' '$1' -- $line
+    end
+end
+
+
+complete -f -c yarn -n '__fish_seen_subcommand_from remove' -a (set -l packages (__yarn_list_packages); echo $packages)
+
 complete -f -c yarn -n '__fish_use_subcommand' -a help
 
 complete -f -c yarn -n '__fish_use_subcommand' -a access

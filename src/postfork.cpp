@@ -106,6 +106,8 @@ bool child_set_group(job_t *j, process_t *p) {
 /// if it's to run in the foreground.
 bool set_child_group(job_t *j, pid_t child_pid) {
     if (j->get_flag(JOB_CONTROL)) {
+        assert (j->pgid != -2 && "set_child_group called with JOB_CONTROL before job pgid determined!");
+
         // The parent sets the child's group. This incurs the well-known unavoidable race with the
         // child exiting, so ignore ESRCH and EPERM (in case the pid was recycled).
         if (setpgid(child_pid, j->pgid) < 0) {
@@ -122,6 +124,8 @@ bool set_child_group(job_t *j, pid_t child_pid) {
 }
 
 bool maybe_assign_terminal(job_t *j) {
+    assert(j->pgid > 1 && "maybe_assign_terminal() called on job with invalid pgid!");
+
     if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {  //!OCLINT(early exit)
         if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
             // We've already assigned the process group control of the terminal when the first

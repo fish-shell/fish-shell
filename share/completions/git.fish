@@ -19,12 +19,11 @@ function __fish_git_recent_commits
 end
 
 function __fish_git_branches
-    command git branch --no-color -a --format='%(refname)' $argv ^/dev/null \
-    # Filter out anything that's not in "refs/" notation -
-    # this happens mostly with a detached head ("(HEAD detached at SOMESHA)", localized).
-    | string replace -rf '^refs/' '' \
+    command git branch --no-color -a $argv ^/dev/null \
+    # Filter out detached heads and such ("(HEAD detached at SOMESHA)", localized).
+    | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " \
     # We assume anything that's not remote is a local branch.
-    | string replace -r '^(?!remotes/)[^/]+/(.*)' '$1\tLocal Branch' \
+    | string replace -r '^(?!remotes/)(.*)' '$1\tLocal Branch' \
     | string replace -r "^remotes/(.*)" '$1\tRemote Branch'
 end
 

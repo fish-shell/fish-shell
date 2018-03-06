@@ -28,6 +28,7 @@
 #include "builtin.h"
 #include "common.h"
 #include "complete.h"
+#include "env.h"
 #include "exec.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -842,13 +843,24 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, path, cmd);
 
-    if (this->type() == COMPLETE_DEFAULT) {
+    env_vars_snapshot_t vars; //does not need to be populated for our needs
+    // this has to be called before complete_load
+    if (!function_exists_no_autoload(cmd.c_str(), vars) && !builtin_exists(cmd)
+            && !path_get_path(cmd, nullptr)) {
+        //Do not load custom completions if the head does not exist
+        //This prevents errors caused during the execution of completion providers for
+        //tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
+        //and automatic completions ("gi" autosuggestion provider -> git)
+    }
+    else if (this->type() == COMPLETE_DEFAULT) {
         ASSERT_IS_MAIN_THREAD();
         complete_load(cmd, true);
     } else if (this->type() == COMPLETE_AUTOSUGGEST &&
                !completion_autoloader.has_tried_loading(cmd)) {
         // Load this command (on the main thread)
-        iothread_perform_on_main([&]() { complete_load(cmd, false); });
+        iothread_perform_on_main([&]() {
+            complete_load(cmd, false);
+        });
     }
 
     // Make a list of lists of all options that we care about.

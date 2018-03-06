@@ -111,29 +111,26 @@ static void init_curses();
 
 /// This is used to convert a serialized env_var_t back into a list. It is used when reading legacy
 /// (fish 2.x) encoded vars stored in the universal variable file and the environment.
-static void tokenize_variable_array(const wcstring &val, wcstring_list_t &out) {
-    out.clear();  // ensure the output var is empty -- this will normally be a no-op
-
+static wcstring_list_t tokenize_variable_array(const wcstring &val) {
     // Zero element arrays are externally encoded as this placeholder string.
-    if (val == ENV_NULL) return;
+    if (val == ENV_NULL) return {};
 
+    wcstring_list_t out;
     size_t pos = 0, end = val.size();
     while (pos <= end) {
         size_t next_pos = val.find(ARRAY_SEP, pos);
         if (next_pos == wcstring::npos) {
             next_pos = end;
         }
-        out.resize(out.size() + 1);
-        out.back().assign(val, pos, next_pos - pos);
+        out.emplace_back(val, pos, next_pos - pos);
         pos = next_pos + 1;  // skip the separator, or skip past the end
     }
+    return out;
 }
 
 /// This is used to convert a serialized env_var_t back into a list.
 wcstring_list_t decode_serialized(const wcstring &s) {
-    wcstring_list_t values;
-    tokenize_variable_array(s, values);
-    return values;
+    return tokenize_variable_array(s);
 }
 
 // Struct representing one level in the function variable stack.

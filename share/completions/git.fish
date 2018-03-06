@@ -28,7 +28,7 @@ function __fish_git_branches
 end
 
 function __fish_git_tags
-    command git tag ^/dev/null
+    command git tag --sort=-creatordate ^/dev/null
 end
 
 function __fish_git_dir

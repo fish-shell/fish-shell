@@ -1193,11 +1193,9 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         }
         wcstring head(first_char, first_space);
 
-        // Ideally, we should use function_exists and not function_exists_no_autoload here,
-        // but we're not running on the main thread, so....?
         if (!function_exists_no_autoload(head.c_str(), vars) && !builtin_exists(head)
                 && !path_get_path(head, nullptr)) {
-            debug(0, L"Skipping autosuggestions to prevent error output without even typing in <TAB>");
+            // debug(0, L"Skipping autosuggestions to prevent error output without even typing in <TAB>");
             return nothing;
         }
 

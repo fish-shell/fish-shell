@@ -203,6 +203,13 @@ extern const wchar_t *program_name;
 /// the tty.
 extern bool has_working_tty_timestamps;
 
+/// A list of all whitespace characters
+extern const wchar_t *whitespace;
+extern const char *whitespace_narrow;
+
+bool is_whitespace(const wcstring &input);
+inline bool is_whitespace(const wchar_t *input) { return is_whitespace(wcstring(input)); }
+
 /// This macro is used to check that an argument is true. It is a bit like a non-fatal form of
 /// assert. Instead of exiting on failure, the current function is ended at once. The second
 /// parameter is the return value of the current function on failure.

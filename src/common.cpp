@@ -74,6 +74,13 @@ static volatile bool termsize_valid = false;
 static char *wcs2str_internal(const wchar_t *in, char *out);
 static void debug_shared(const wchar_t msg_level, const wcstring &msg);
 
+const wchar_t *whitespace = L" \t\r\n\v";
+const char *whitespace_narrow = " \t\r\n\v";
+
+bool is_whitespace(const wcstring &input) {
+    return input.find_first_not_of(whitespace);
+}
+
 bool has_working_tty_timestamps = true;
 
 /// Convert a character to its integer equivalent if it is a valid character for the requested base.

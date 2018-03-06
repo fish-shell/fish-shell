@@ -22,6 +22,7 @@ function __yarn_list_packages
         return 1
     end
 
+    # todo: if jq exists, use it instead and use what's below as a fallback only
     set -l depsFound 0
     for line in (cat $package_json)
         # echo "evaluating $line"

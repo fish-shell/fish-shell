@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q mdbook
+    exit
+end
 set -l cmds build help init serve test watch
 
 complete -c mdbook -f

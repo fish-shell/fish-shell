@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q iex
+    exit
+end
 complete -f -c iex -s v        -d "Prints version and exit"
 complete -f -c iex -s e        -d "Evaluates the given command"
 complete    -c iex -s r        -d "Requires the given files/patterns"

@@ -2,6 +2,11 @@
 # Completions for the umount command
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q umount
+    exit
+end
+
 #
 # Find all mountpoints
 #

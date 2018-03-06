@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q display
+    exit
+end
 complete -c display -o alpha                        -d 'On, activate, off, deactivate, set, opaque, copy transparent, extract, background, or shape [option]' -xa '(display -list alpha)'
 complete -c display -o antialias                    -d 'Remove pixel-aliasing '
 complete -c display -o authenticate                 -d 'Decipher image with this password [password]'

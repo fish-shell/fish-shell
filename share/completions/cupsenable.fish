@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q cupsenable
+    exit
+end
 __fish_complete_lpr cupsenable
 
 complete -c cupsenable -s c -d 'Cancels all jobs on the named destination'

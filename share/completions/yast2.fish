@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q yast2
+    exit
+end
 complete -f -c yast2 -a '(yast2 -l)' -d 'Module'
 
 complete -f -c yast2 -s h -l help           -d 'Show help'

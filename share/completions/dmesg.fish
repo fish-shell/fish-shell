@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q dmesg
+    exit
+end
 set -l levels '( __fish_complete_list , "echo emerg\nalert\ncrit\nerr\nwarn\nnotice\ninfo\ndebug" )'
 complete -c dmesg -s C -l clear               -d 'Clear the kernel ring buffer'
 complete -c dmesg -s c -l read-clear          -d 'Read and clear all messages'

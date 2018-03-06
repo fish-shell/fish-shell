@@ -1,5 +1,10 @@
 # Completions for `snap` command
 
+# magic completion safety check (do not remove this comment)
+if not type -q snap
+    exit
+end
+
 function __fish_snap_no_subcommand -d 'Test if snap has yet to be given the subcommand'
 	for i in (commandline -opc)
 		if contains -- $i abort ack alias aliases buy changes connect disable disconnect download\

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lein
+    exit
+end
 function __fish_lein_needs_command
   set cmd (commandline -opc)
   if [ (count $cmd) -eq 1 ]

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q udisksctl
+    exit
+end
 set -l cmds help info dump status monitor mount unmount unlock lock loop-setup loop-delete power-off smart-simulate
 
 function __fish_print_mounted_blockdevice

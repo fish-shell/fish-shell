@@ -5,6 +5,11 @@
 # https://github.com/0rax/fish-bd
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q bd
+    exit
+end
+
 complete -c bd -A -f
 
 complete -c bd -s c    -d "Classic mode: goes back to the first directory named as the string"

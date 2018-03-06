@@ -1,5 +1,10 @@
 # Completions for ps
 
+# magic completion safety check (do not remove this comment)
+if not type -q ps
+    exit
+end
+
 complete -c ps -s A -d "Select all"
 complete -c ps -s N -d "Invert selection"
 complete -c ps -s a -d "Select all processes except session leaders and terminal-less"

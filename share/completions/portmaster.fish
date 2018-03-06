@@ -1,5 +1,10 @@
 #completion for portmaster
 
+# magic completion safety check (do not remove this comment)
+if not type -q portmaster
+    exit
+end
+
 # These completions are generated from the man page
 complete -c portmaster -l force-config -d 'run \'make config\' for all ports (overrides -G).'
 complete -c portmaster -s C -d 'prevents \'make clean\' from being run before building.'

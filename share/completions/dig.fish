@@ -1,5 +1,10 @@
 # completion for dig
 
+# magic completion safety check (do not remove this comment)
+if not type -q dig
+    exit
+end
+
 function __fish_complete_dig
     set -l token (commandline -ct)
     switch $token

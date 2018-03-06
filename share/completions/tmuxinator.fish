@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q tmuxinator
+    exit
+end
 function __fish_tmuxinator_using_command
   set cmd (commandline -opc)
   if [ (count $cmd) -gt 1  ]

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q sysctl
+    exit
+end
 if type -q -f sysctl
 	# Only GNU and BSD sysctl seem to know "-h", so others should exit non-zero
 	if sysctl -h >/dev/null ^/dev/null

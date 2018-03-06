@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q psql
+    exit
+end
+
 function __fish_complete_pg_database
     psql -AtqwlF \t ^/dev/null | awk 'NF > 1 { print $1 }'
 end

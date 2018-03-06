@@ -1,6 +1,11 @@
 # Heroku toolbelt completions
 # By Jason Brokaw (github.com/jbbrokaw)
 
+# magic completion safety check (do not remove this comment)
+if not type -q heroku
+    exit
+end
+
 function __fish_list_available_addons
     heroku addons:list | awk -F":" '/^[a-z]/ {print $1}'
 end

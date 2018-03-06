@@ -2,6 +2,11 @@
 # Completion for sudo
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q sudo
+    exit
+end
+
 # All these options should be valid for GNU and OSX sudo
 complete -c sudo -s A -d "Ask for password via the askpass or \$SSH_ASKPASS program"
 complete -c sudo -s C -d "Close all file descriptors greater or equal to the given number" -a "(seq 0 255)"

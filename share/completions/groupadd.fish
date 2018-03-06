@@ -5,6 +5,11 @@
 # have been hand edited since.
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q groupadd
+    exit
+end
+
 complete -c groupadd -s f -d 'Exit with success status if the specified group already exists'
 complete -c groupadd -s g -d 'The numerical value of the group\'s ID'
 complete -c groupadd -s h -l help -d 'Display help message and exit'

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lxc
+    exit
+end
 function __fish_lxc_no_subcommand -d 'Test if lxc has yet to be given the command'
     for i in (commandline --tokenize --cut-at-cursor --current-process)
         if contains -- $i config copy delete exec file help image launch list move network profile publish remote restore restart snapshot start stop

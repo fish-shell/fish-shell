@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q cat
+    exit
+end
 if cat --version ^ /dev/null > /dev/null # GNU
 	complete -c cat -s A -l show-all -d "Escape all non-printing characters"
 	complete -c cat -s b -l number-nonblank -d "Number nonblank lines"

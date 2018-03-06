@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q invoke-rc.d
+    exit
+end
+
 function __fish_invoke_rcd_has_service
   set tokens (commandline -opc)
   if [ (count $tokens) -eq 2 ]

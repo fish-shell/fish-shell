@@ -9,6 +9,11 @@
 # -n tests have been simplified when __fish_contains_opt …; or _fish_not_contain_opt …: the options in the first test were removed from the second one,
 #     as their absence has already been checked, because this absence caused evaluation of __fish_not_contain_opt
 
+# magic completion safety check (do not remove this comment)
+if not type -q mdadm
+    exit
+end
+
 function __fish_mdadm_metadata_options
 	echo -e "0\t"(_ "Use original 0.90 format superblock")
 	echo -e "0.90\t"(_ "Use original 0.90 format superblock")

@@ -1,5 +1,10 @@
 # grub-file - check file type
 
+# magic completion safety check (do not remove this comment)
+if not type -q grub-file
+    exit
+end
+
 complete -c grub-file -l is-i386-xen-pae-domu -d 'Check if FILE can be booted as i386 PAE Xen unprivileged guest kernel'
 complete -c grub-file -l is-x86 -d 'Check if given file can be booted as x86_64 Xen unprivileged guest kernel'
 complete -c grub-file -l is-x86-xen-dom0 -d 'Check if given file can be used as Xen x86 privileged guest kernel'

@@ -1,5 +1,10 @@
 # Completions for the Elixir build tool mix
 
+# magic completion safety check (do not remove this comment)
+if not type -q mix
+    exit
+end
+
 function __fish_mix_needs_command
   set cmd (commandline -opc)
   if [ (count $cmd) -eq 1 ]

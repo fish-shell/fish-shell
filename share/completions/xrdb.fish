@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q xrdb
+    exit
+end
 complete -c xrdb -o display          -d 'display to use'
 complete -c xrdb -o all              -d 'do all resources [default]'
 complete -c xrdb -o global           -d 'do screen-independent resources'

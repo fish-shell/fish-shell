@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lxpanel
+    exit
+end
 complete -c lxpanel -s h -l help         -d 'print this help and exit'
 complete -c lxpanel -s v -l version      -d 'print version and exit'
 complete -c lxpanel -s p -l profile      -d 'use specified profile' -xa '(find ~/.config/lxpanel/ -maxdepth 1 -mindepth 1  -type d -printf "%f\n")'

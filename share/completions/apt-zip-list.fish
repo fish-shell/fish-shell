@@ -1,4 +1,9 @@
 #apt-zip-list
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-zip-list
+    exit
+end
 complete -c apt-zip-list -s h -l help -d "Display help and exit"
 complete -f -c apt-zip-list -s V -l version -d "Display version and exit"
 complete -c apt-zip-list -s m -l medium -d "Removable medium"

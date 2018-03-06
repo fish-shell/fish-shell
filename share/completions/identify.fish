@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q identify
+    exit
+end
 complete -c identify -o antialias                   -d 'Remove pixel-aliasing '
 complete -c identify -o authenticate                -d 'Decrypt image with this password [value]'
 complete -c identify -o channel                     -d 'Apply option to select image channels [type]' -xa '(identify -list channel)'

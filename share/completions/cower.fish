@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q cower
+    exit
+end
 complete -c cower -f -s b -l 'brief'            -d 'Show output in a more script friendly format'
 complete -c cower -f -s d -l 'download'         -d 'Download [twice to fetch dependencies]'
 complete -c cower -f -s i -l 'info'             -d 'Show info for target [twice for more details]'

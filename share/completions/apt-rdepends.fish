@@ -1,4 +1,9 @@
 #apt-rdepends
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-rdepends
+    exit
+end
 complete -c apt-rdepends -l help -d "Display help and exit"
 complete -f -c apt-rdepends -s b -l build-depends -d "Show build dependencies"
 complete -f -c apt-rdepends -s d -l dotty -d "Generate a dotty graph"

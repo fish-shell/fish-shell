@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q cut
+    exit
+end
 complete -c cut -x
 complete -c cut -s b -l bytes -x -d "Output byte range"
 complete -c cut -s c -l characters -x -d "Output character range"

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q pfctl
+    exit
+end
 complete -c pfctl -s s --description 'Show a filter parameter by modifier' -xa \
 	'queue\t"Show loaded queue definitions" \
 	rules\t"Show loaded filter rules" \

@@ -2,6 +2,11 @@
 # Author: Giorgio Lando <patroclo7@gmail.com>
 # Updated by maxfl, SanskritFritz, faho, f1u77y
 
+# magic completion safety check (do not remove this comment)
+if not type -q pacman
+    exit
+end
+
 set -l progname pacman
 
 set -l listinstalled "(pacman -Q | string replace ' ' \t)"

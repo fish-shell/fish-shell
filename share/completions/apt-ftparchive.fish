@@ -1,4 +1,9 @@
 #apt-ftparchive
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-ftparchive
+    exit
+end
 complete -c apt-ftparchive -s h -l help -d "Display help and exit"
 complete -f -c apt-ftparchive -a packages -d "Generate package from source"
 complete -f -c apt-ftparchive -a sources -d "Generate source index file"

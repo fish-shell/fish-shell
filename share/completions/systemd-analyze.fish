@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q systemd-analyze
+    exit
+end
 complete -c systemd-analyze -x
 complete -f -c systemd-analzye -s H -l host -d 'Execute the operation on a remote host' -a "(__fish_print_hostnames)"
 complete -x -c systemd-analzye -s M -l machine -d 'Execute operation on a VM or container' -a "(__fish_systemd_machines)"

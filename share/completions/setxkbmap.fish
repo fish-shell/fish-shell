@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q setxkbmap
+    exit
+end
+
 set -l filter '"s/\S+\s\S+\s(.+)\((.+)\)/\1\t\2/;"'
 
 complete -c setxkbmap -o '?' -o help -d 'Print this message'

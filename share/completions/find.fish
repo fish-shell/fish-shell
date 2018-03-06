@@ -1,5 +1,10 @@
 # Completions for the 'find' command
 
+# magic completion safety check (do not remove this comment)
+if not type -q find
+    exit
+end
+
 # There are quite a few of them...
 
 # Switches for how to handle symlinks

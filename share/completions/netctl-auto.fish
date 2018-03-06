@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q netctl-auto
+    exit
+end
 set -l cmds list start stop switch-to enable disable enable-all disable-all is-active is-enabled
 
 # Helper function that prints network profiles managed by netctl-auto.

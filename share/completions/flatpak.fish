@@ -1,5 +1,10 @@
 # Completions for flatpak, an "Application deployment framework for desktop apps"
 # (http://flatpak.org)
+
+# magic completion safety check (do not remove this comment)
+if not type -q flatpak
+    exit
+end
 set -l commands install update uninstall list info run override make-current enter document-{export,unexport,info,list} \
 remote-{add,modify,delete,list,ls} build build-{init,finish,export,bundle,import-bundle,sign,update-repo}
 

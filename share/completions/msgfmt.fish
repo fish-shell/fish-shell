@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q msgfmt
+    exit
+end
+
 complete -c msgfmt -s D -l directory -d "Add specified directory to list for input files search" -x -a "(__fish_complete_directories (commandline -ct))"
 
 set -l cond "not __fish_contains_opt -s j java java2 csharp csharp-resource tcl qt"

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q help
+    exit
+end
 if test -d "$__fish_datadir/man/man1/"
 	complete -c help -x -a '(__fish_print_commands)' -d 'Help for this command'
 end

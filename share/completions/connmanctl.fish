@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q connmanctl
+    exit
+end
 function __fish_print_connman_services
     # connmanctl services follows this pattern (to be interpreted as a regex):
     # "[\* ][A ][ORacd ] service_name +identification_string"

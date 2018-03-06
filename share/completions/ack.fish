@@ -1,4 +1,9 @@
 # Searching
+
+# magic completion safety check (do not remove this comment)
+if not type -q ack
+    exit
+end
 complete -c ack -s i -l ignore-case -d 'Ignore case'
 complete -c ack -l smart-case -d 'Ignore case when pattern contains no uppercase'
 complete -c ack -l nosmart-case -l no-smart-case -d 'Don\'t ignore case'

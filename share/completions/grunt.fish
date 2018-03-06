@@ -1,5 +1,10 @@
 # Completion for grunt
 
+# magic completion safety check (do not remove this comment)
+if not type -q grunt
+    exit
+end
+
 # grunt-cli
 # http://gruntjs.com/
 #

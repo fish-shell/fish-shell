@@ -5,6 +5,11 @@
 # have been hand edited since.
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q xgettext
+    exit
+end
+
 complete -c xgettext -s f -l files-from -d 'Get list of input files from FILE'
 complete -c xgettext -s D -l directory -d 'Add DIRECTORY to list for input files search'
 complete -c xgettext -s d -l default-domain -d 'Use NAME'

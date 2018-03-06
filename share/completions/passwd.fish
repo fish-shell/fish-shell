@@ -1,5 +1,10 @@
 # Completions for passwd
 
+# magic completion safety check (do not remove this comment)
+if not type -q passwd
+    exit
+end
+
 function __fish_passwd_darwin_infosystem
 	echo -e "PAM\tPluggable Authentication Module"
 	echo -e "opendirectory\tOpen Directory-compatible system"

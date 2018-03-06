@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q tail
+    exit
+end
 if tail --version > /dev/null ^ /dev/null
     complete -c tail -s c -l bytes -x -d 'output the last K bytes; alternatively, use -c +K to output bytes starting with the Kth of each file'
     complete -c tail -s f -l follow -a 'name descriptor' -d 'output appended data as the file grows; -f -l follow, and --follow=descriptor are equivalent'

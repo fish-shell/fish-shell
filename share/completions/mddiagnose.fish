@@ -1,5 +1,10 @@
 # completion for mddiagnose (macOS)
 
+# magic completion safety check (do not remove this comment)
+if not type -q mddiagnose
+    exit
+end
+
 complete -c mddiagnose -s h -f -d 'Display help'
 complete -c mddiagnose -s d -f -d 'Ignore unknown options'
 complete -c mddiagnose -s n -f -d 'Do not reveal the resulting package in the Finder'

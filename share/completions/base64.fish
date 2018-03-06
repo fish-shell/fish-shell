@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q base64
+    exit
+end
 complete -c base64 -l decode -s d -d "Decode data"
 complete -c base64 -l ignore-garbage -s i -d "When decoding, ignore non-alphabet characters"
 complete -c base64 -l wrap -s w -x -d "Wrap encoded line after given number of caracters (default 76)"

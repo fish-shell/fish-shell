@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ln
+    exit
+end
 complete -c ln -s s -l symbolic            -d 'Make symbolic links instead of hard links'
 complete -c ln      -l backup              -d 'Make a backup of each existing destination file' -a "none off numbered t existing nil simple never"
 complete -c ln -s b                        -d 'Make a backup of each existing destination file'

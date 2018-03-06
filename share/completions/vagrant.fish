@@ -1,5 +1,10 @@
 # vagrant autocompletion
 
+# magic completion safety check (do not remove this comment)
+if not type -q vagrant
+    exit
+end
+
 function __fish_vagrant_no_command -d 'Test if vagrant has yet to be given the main command'
     set -l cmd (commandline -opc)
     test (count $cmd) -eq 1

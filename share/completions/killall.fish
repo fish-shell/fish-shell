@@ -1,5 +1,10 @@
 # On Solaris, `killall` kills all processes. So we don't want to bother providing completion
 # support on that OS.
+
+# magic completion safety check (do not remove this comment)
+if not type -q killall
+    exit
+end
 set -l OS (uname)
 if test "$OS" = 'SunOS'
     exit 0

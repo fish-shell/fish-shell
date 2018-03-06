@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q nice
+    exit
+end
+
 
 complete -c nice -a "(__fish_complete_subcommand -- -n --adjustment)" -d "Command"
 

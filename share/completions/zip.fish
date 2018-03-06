@@ -1,4 +1,9 @@
 # Completions for zip
+
+# magic completion safety check (do not remove this comment)
+if not type -q zip
+    exit
+end
 complete -c zip -s f -d "Freshen: only changed files"
 complete -c zip -s d -d "Delete entries in zipfile"
 complete -c zip -s u -d "Update: only changed or newer files"

@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q pbget
+    exit
+end
+
 complete -c pbget -l abs -d 'Use the ABS tree'
 complete -c pbget -l arch -d 'Set the desired package architecture'
 complete -c pbget -l aur -d 'Search the AUR'

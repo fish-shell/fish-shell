@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q mosh
+    exit
+end
+
 complete -x -c mosh -d Hostname -a "(__fish_complete_user_at_hosts)"
 
 complete -x -c mosh -d User -a "

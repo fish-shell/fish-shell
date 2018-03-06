@@ -1,5 +1,10 @@
 # fish completion for arc
 
+# magic completion safety check (do not remove this comment)
+if not type -q arc
+    exit
+end
+
 function __fish_arc_needs_command
     set cmd (commandline -opc)
     if not set -q cmd[2]

@@ -1,5 +1,10 @@
 # Completions for emerge
 
+# magic completion safety check (do not remove this comment)
+if not type -q emerge
+    exit
+end
+
 # Author: Tassilo Horn <tassilo@member.fsf.org>
 
 function __fish_emerge_print_installed_pkgs -d 'Prints completions for installed packages on the system from /var/db/pkg'

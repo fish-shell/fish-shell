@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q logkeys
+    exit
+end
+
 complete -c logkeys -s s -l start -d 'Starts the keylogging daemon'
 complete -c logkeys -s k -l kill -d 'Terminates the logkeys daemon'
 complete -c logkeys -s o -l output -d 'Set ouput LOGFILE'

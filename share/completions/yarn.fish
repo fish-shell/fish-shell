@@ -2,6 +2,11 @@
 # see https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_seen_subcommand_from.fish
 # and https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_use_subcommand.fish
 
+# magic completion safety check (do not remove this comment)
+if not type -q yarn
+    exit
+end
+
 function __yarn_find_package_json
     set parents (__fish_parent_directories (pwd))
 

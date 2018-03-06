@@ -1,6 +1,11 @@
 # htop is an interactive process viewer.
 # See: http://hisham.hm/htop
 
+# magic completion safety check (do not remove this comment)
+if not type -q htop
+    exit
+end
+
 complete -c htop -l delay -s d -d 'Update interval' -x
 complete -c htop -l no-color -s C -d 'Start htop in monochrome mode'
 complete -c htop -l no-colour -d 'Start htop in monochrome mode'

@@ -1,6 +1,11 @@
 # mkdosfs is a tool to create MS-DOS filesystems.
 # See: https://github.com/dosfstools/dosfstools
 
+# magic completion safety check (do not remove this comment)
+if not type -q mkdosfs
+    exit
+end
+
 complete -c mkdosfs -s a -d 'Disable alignment'
 complete -c mkdosfs -s A -d 'Use Atari variation'
 complete -c mkdosfs -s b -x -d 'Select location of backup sector'

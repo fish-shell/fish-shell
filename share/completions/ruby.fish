@@ -1,4 +1,9 @@
 #Completions for ruby
+
+# magic completion safety check (do not remove this comment)
+if not type -q ruby
+    exit
+end
 complete -c ruby -s 0 -d 'Specify record separator'
 complete -c ruby -s a -d 'Turn on autosplit mode'
 complete -c ruby -s c -d 'Check syntax'

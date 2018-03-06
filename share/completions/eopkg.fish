@@ -2,6 +2,11 @@
 # Completions for the eopkg command
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q eopkg
+    exit
+end
+
 # Frequently used eopkg commands
 
 # Eopkg subcommand

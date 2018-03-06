@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q stack
+    exit
+end
 complete -c stack -f
 
 # Completion for 'stack' haskell build tool (http://haskellstack.org)

@@ -1,6 +1,11 @@
 # fish completion for fossil
 # http://www.fossil-scm.org/
 
+# magic completion safety check (do not remove this comment)
+if not type -q fossil
+    exit
+end
+
 function __fish_fossil
     command fossil $argv ^/dev/null
 end

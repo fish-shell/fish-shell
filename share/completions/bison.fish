@@ -5,6 +5,11 @@
 # have been hand edited since.
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q bison
+    exit
+end
+
 complete -c bison -s b -l file-prefix -d 'Specify a prefix to use for all bison output file names' -r
 
 complete -c bison -s d -d 'Write an extra output file containing macro definitions for the token type names defined in the grammar and the semantic value type YYSTYPE, as well as a few extern variable declarations'

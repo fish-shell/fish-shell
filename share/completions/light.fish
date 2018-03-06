@@ -1,6 +1,11 @@
 # Light is a program to control backlight controllers under GNU/Linux.
 # See: https://github.com/haikarainen/light
 
+# magic completion safety check (do not remove this comment)
+if not type -q light
+    exit
+end
+
 function __fish_print_light_controllers
   command light -L
 end

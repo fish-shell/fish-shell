@@ -2,6 +2,11 @@
 # of pre-configured Kubernetes resources.
 # See: https://github.com/kubernetes/helm
 
+# magic completion safety check (do not remove this comment)
+if not type -q helm
+    exit
+end
+
 function __helm_using_command
     set -l cmd (commandline -poc)
     set -l found

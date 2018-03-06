@@ -1,6 +1,11 @@
 # Castnow is a utility that can be used to play back media files on Chromecast devices.
 # See: https://github.com/xat/castnow
 
+# magic completion safety check (do not remove this comment)
+if not type -q castnow
+    exit
+end
+
 set -l __fish_castnow_keys "space\tToggle\ between\ play\ and\ pause m\tToggle\ mute t\tToggle\ subtitles up\tVolume\ up down\tVolume\ down left\tSeek\ backward right\tSeek\ forward n\tNext\ in\ playlist s\tStop\ playback quit\tQuit"
 
 complete -c castnow -l tomp4 -d "Convert file to mp4 during playback"

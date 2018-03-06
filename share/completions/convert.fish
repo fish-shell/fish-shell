@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q convert
+    exit
+end
 complete -c convert -o adjoin                                      -d 'Join images into a single multi-image file'
 complete -c convert -o affine                                      -d 'Affine transform matrix [matrix]'
 complete -c convert -o alpha                                       -d 'Activate, deactivate, reset, or set the alpha channel [option]' -xa '(convert -list alpha)'

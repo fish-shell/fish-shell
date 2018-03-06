@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q chgrp
+    exit
+end
+
 complete -c chgrp -s c -l changes -d "Output diagnostic for changed files"
 complete -c chgrp -l dereference -d "Dereference symbolic links"
 complete -c chgrp -s h -l no-dereference -d "Do not dereference symbolic links"

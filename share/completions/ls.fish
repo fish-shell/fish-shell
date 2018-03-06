@@ -2,6 +2,11 @@
 # Completions for the ls command and its aliases
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q ls
+    exit
+end
+
 # Shared ls switches
 complete -c ls -s C -d "List by columns"
 complete -c ls -s S -d "Sort by size"

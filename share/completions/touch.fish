@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q touch
+    exit
+end
 if touch --version ^ /dev/null > /dev/null # GNU
 	complete -c touch -s a -d "Change access time"
 	complete -c touch -s B -l backward -x -d "Set date back"

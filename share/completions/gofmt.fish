@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q gofmt
+    exit
+end
 complete -c gofmt -l cpuprofile -o cpuprofile -d "Write cpu profile to this file"
 complete -c gofmt -s d -d "Display diffs instead of rewriting files"
 complete -c gofmt -s e -d "Report all errors (not just the first 10 on different lines)"

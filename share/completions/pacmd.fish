@@ -1,5 +1,10 @@
 # Pulseaudio's pacmd
 # This covers the most useful commands
+
+# magic completion safety check (do not remove this comment)
+if not type -q pacmd
+    exit
+end
 set -l commands (pacmd help | string match -r '^ +[-\w]+' | string trim)
 complete -f -e -c pacmd
 complete -f -c pacmd -w pactl

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q dd
+    exit
+end
 complete -c dd -xa '(__fish_complete_dd)'
 complete -c dd -d 'display help and exit' -xa '--help'
 complete -c dd -d 'output version information and exit' -xa '--version'

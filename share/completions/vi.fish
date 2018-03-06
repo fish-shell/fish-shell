@@ -3,6 +3,11 @@
 # -wn : Set the default window size to n
 # +command : same as -c command
 
+# magic completion safety check (do not remove this comment)
+if not type -q vi
+    exit
+end
+
 # Check if vi exists at all ( needed for vi --version )
 if type -q vi
     # Check if vi is really vim

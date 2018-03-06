@@ -1,5 +1,10 @@
 # Archlinux's mkinitcpio (https://projects.archlinux.org/mkinitcpio.git/)
 
+# magic completion safety check (do not remove this comment)
+if not type -q mkinitcpio
+    exit
+end
+
 function __fish_mkinitcpio_complete_hooks
     mkinitcpio -L | string match -r '^[a-z].*$' | string split \t | string match -r '.+' | string replace -ra '[¹²³]' '\tdeprecated'
 end

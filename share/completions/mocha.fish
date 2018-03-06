@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q mocha
+    exit
+end
 complete -c mocha -l help -o help -s h -d "Show help"
 complete -c mocha -s V -l version          -d "output the version number"
 complete -c mocha -s A -l async-only       -d "force all tests to take a callback (async) or return a promise"

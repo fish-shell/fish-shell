@@ -1,5 +1,10 @@
 ### Auto-complete for sysbench (cross-platform and multi-threaded benchmark tool) ###
 
+# magic completion safety check (do not remove this comment)
+if not type -q sysbench
+    exit
+end
+
 ### sub commands specification ###
 complete -c sysbench -f -a "run\t'Run the test'"
 complete -c sysbench -n "__fish_contains_opt test=fileio" -a "

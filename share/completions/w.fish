@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q w
+    exit
+end
 complete -c w -s h -d "Dont print header"
 complete -c w -s u -d "Ignore username for time calculations"
 complete -c w -s s -d "Short format"

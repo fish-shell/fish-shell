@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q tex
+    exit
+end
 complete -c tex -o help -d "Display help and exit"
 complete -c tex -o version -d "Display version and exit"
 complete -c tex -x -a "(

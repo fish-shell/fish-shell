@@ -1,4 +1,9 @@
 # Completions for make
+
+# magic completion safety check (do not remove this comment)
+if not type -q make
+    exit
+end
 function __fish_complete_make_targets
     set directory (string replace -r '^make .*(-C ?|--directory[= ]?)([^ ]*) .*$' '$2' -- $argv)
     if test $status -eq 0 -a -d $directory

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q du
+    exit
+end
 complete -c du -s a -l all -d "Write size for all files"
 complete -c du -l apparent-size -d "Print file size, not disk usage"
 complete -c du -s B -l block-size -d "Block size"

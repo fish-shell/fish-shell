@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q jobs
+    exit
+end
+
 
 complete -c jobs -s h -l help -d 'Display help and exit'
 complete -c jobs -s p -l pid -d "Show the process id of each process in the job"

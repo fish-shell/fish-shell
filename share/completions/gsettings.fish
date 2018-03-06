@@ -1,5 +1,10 @@
 # Fish completions for glibs's "gsettings" configuration tool
 
+# magic completion safety check (do not remove this comment)
+if not type -q gsettings
+    exit
+end
+
 function __fish_complete_gsettings_args
     set -l schema_commands get monitor writable range describe set reset reset-recursively list-keys list-children list-recursively
     set -l key_commands get monitor writable range describe set reset

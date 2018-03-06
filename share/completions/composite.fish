@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q composite
+    exit
+end
 complete -c composite -o affine                     -d 'Affine transform matrix [matrix]'
 complete -c composite -o alpha                      -d 'On, activate, off, deactivate, set, opaque, copy transparent, extract, background, or shape [option]' -xa '(convert -list alpha)'
 complete -c composite -o authenticate               -d 'Decipher image with this password [password]'

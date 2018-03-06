@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q exercism
+    exit
+end
 function __fish_exercism_no_subcommand -d 'Test if exercism has yet to be given the subcommand'
         for i in (commandline -opc)
                 if contains -- $i demo debug configure fetch restore submit unsubmit tracks download help

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q uniq
+    exit
+end
 if uniq --version > /dev/null ^ /dev/null
 	complete -c uniq -s c -l count -d "Print number of occurences"
 	complete -c uniq -s d -l repeated -d "Only print duplicates"

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q entr
+    exit
+end
 complete -c entr  -s r                     -d 'Launches the utility at startup and reloads it if one of the source files change'
 complete -c entr  -s c                     -d 'Clears the screen before running the utility'
 complete -c entr  -s h -l help             -d 'Display help and exit'

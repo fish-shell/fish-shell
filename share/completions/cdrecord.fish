@@ -2,6 +2,11 @@
 # Completions for Cdrecord
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q cdrecord
+    exit
+end
+
 complete -c cdrecord -o version -d "Display version and exit"
 complete -c cdrecord -s v -d "Increment the level of general verbosity by one"
 complete -c cdrecord -s V -d "Increment the verbose level in respect of SCSI command transport by one"

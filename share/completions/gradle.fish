@@ -1,6 +1,11 @@
 # gradle is a build system.
 # See: https://gradle.org
 
+# magic completion safety check (do not remove this comment)
+if not type -q gradle
+    exit
+end
+
 complete -c gradle -l help -s h -d 'Show help'
 complete -c gradle -l no-rebuild -s a -d 'Don\'t rebuild dependencies'
 complete -c gradle -l build-file -s b -r -d 'Specify build file'

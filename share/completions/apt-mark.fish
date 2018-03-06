@@ -1,5 +1,10 @@
 #completion for apt-mark
 
+# magic completion safety check (do not remove this comment)
+if not type -q apt-mark
+    exit
+end
+
 function __fish_apt_no_subcommand -d 'Test if apt has yet to be given the subcommand'
 	for i in (commandline -opc)
 		if contains -- $i auto manual hold unhold showauto showmanual showhold

@@ -4,6 +4,11 @@
 # day-to-day.
 # See: https://github.com/kubernetes/minikube
 
+# magic completion safety check (do not remove this comment)
+if not type -q minikube
+    exit
+end
+
 function __minikube_no_command
     set -l cmd (commandline -poc)
     if not set -q cmd[2]

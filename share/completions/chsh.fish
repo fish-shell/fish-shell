@@ -2,6 +2,11 @@
 # Completions for the chsh command
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q chsh
+    exit
+end
+
 # This grep tries to match nonempty lines that do not start with hash
 complete -c chsh -s s -l shell -x -a "(string match -r '^[^#].*' < /etc/shells)" -d "Specify your login shell"
 complete -c chsh -s u -l help -d "Display help and exit	"

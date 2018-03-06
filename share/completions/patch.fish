@@ -2,6 +2,11 @@
 # Completions for patch
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q patch
+    exit
+end
+
 complete -c patch -s b -l backup -d "Make backup files, when patching a file, rename or copy the original instead of removing it"
 complete -c patch -l backup-if-mismatch -d "Back up a file if the patch does not match the file exactly"
 complete -c patch -l no-backup-if-mismatch -d "Do not back up a file if the patch does not match the file exactly"

@@ -2,6 +2,11 @@
 # Completions for the wget command
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q wget
+    exit
+end
+
 complete -c wget -s V -l version -d "Display version and exit"
 complete -c wget -s h -l help -d "Display help and exit"
 complete -c wget -s b -l background -d "Go to background immediately after startup"

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ranger
+    exit
+end
 complete -c ranger -s d -l debug -d "Activate debug mode"
 complete -c ranger -s c -l clean -d "Activate clean mode"
 complete -c ranger -s r -l confdir -d "Change configuration directory"

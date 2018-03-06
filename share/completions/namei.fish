@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q namei
+    exit
+end
 complete -c namei -s h -l help         -d 'displays this help text'
 complete -c namei -s V -l version      -d 'output version information and exit'
 complete -c namei -s x -l mountpoints  -d 'show mount point directories with a \'D\''

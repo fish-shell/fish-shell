@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q xprop
+    exit
+end
 function __fish_xprop_list_properties
     # TODO search commandline for a target window ("-root" or "-name foo")
     xprop -root | cut -d'(' -f 1

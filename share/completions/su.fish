@@ -1,5 +1,10 @@
 # Completions for su
 
+# magic completion safety check (do not remove this comment)
+if not type -q su
+    exit
+end
+
 complete -x -c su -a "(__fish_complete_users)"
 complete -c su -s l -l login -d "Make login shell"
 complete -r -c su -s c -l command -d "Pass command to shell" -xa "(complete -C(commandline -ct))"

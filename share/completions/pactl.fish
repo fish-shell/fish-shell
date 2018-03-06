@@ -2,6 +2,11 @@
 # See not just pactl(1) but also pulse-cli-syntax(1)
 # Note: Streams are called "sink-input" (for playback) and "source-output" (for recording)
 
+# magic completion safety check (do not remove this comment)
+if not type -q pactl
+    exit
+end
+
 # TODO: Moar commands
 # set-port-latency-offset set-sink-formats
 

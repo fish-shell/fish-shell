@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ping
+    exit
+end
 complete -c ping -a "(__fish_print_hostnames)" -x
 complete -c ping -s a -d "Audible ping"
 complete -c ping -s A -d "Adaptive ping"

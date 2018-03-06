@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q pine
+    exit
+end
 complete -c pine -s f -d "Open folder" -a "(cd ~/.Mail; ls -d *)"
 complete -c pine -s F -d "Open file" -r
 complete -c pine -s h -d "Display help and exit"

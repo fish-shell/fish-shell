@@ -3,6 +3,11 @@
 # https://www.perforce.com/perforce/r16.1/manuals/cmdref/
 # Author: Boris Aranovich https://github.com/nomaed
 
+# magic completion safety check (do not remove this comment)
+if not type -q p4
+    exit
+end
+
 #########################################################
 ### p4 command parsing
 #########################################################

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q poweroff
+    exit
+end
 complete -c poweroff -l help -d "Show help"
 complete -c poweroff -l halt -d "Halt the machine"
 complete -c poweroff -l poweroff -s p -d "Switch off the machine"

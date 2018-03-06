@@ -1,6 +1,11 @@
 #
 # Completions for flac
 #
+
+# magic completion safety check (do not remove this comment)
+if not type -q flac
+    exit
+end
 complete -c flac -s v -l version               -d "Show the flac version number"
 complete -c flac -s h -l help                  -d "Show this screen"
 complete -c flac -s H -l explain               -d "Show detailed explanation of usage and options"

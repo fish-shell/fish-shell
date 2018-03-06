@@ -5,6 +5,11 @@
 # been hand edited since.
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q node
+    exit
+end
+
 # the four main options, each with a short & long flag
 complete -x -c node -s v -n '__fish_not_contain_opt -s p -s i -s e eval print interactive' -l version -d "Print node's version"
 complete -c node -n '__fish_not_contain_opt -s v -s p -s i version print interactive' -r -s e -l eval -d 'Evaluate script'

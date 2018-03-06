@@ -2,6 +2,11 @@
 # Completions for the 'set' builtin
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q set
+    exit
+end
+
 #
 # All locale variables used by set completions
 #

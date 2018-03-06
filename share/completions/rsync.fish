@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q rsync
+    exit
+end
 function __rsync_remote_target
     commandline -ct | string match -r '.*::?(?:.*/)?'
 end

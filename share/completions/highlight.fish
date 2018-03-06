@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q highlight
+    exit
+end
+
 complete -c highlight -s O -l out-format -d 'Output file in given format' -xa 'xterm256 latex tex rtf html xhtml ansi bbcode svg'
 complete -c highlight -s t -l tab        -d 'Specify tab length' -x
 complete -c highlight -s i -l input      -d 'Name of the input file' -r

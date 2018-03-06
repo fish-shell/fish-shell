@@ -2,6 +2,11 @@
 # Completions for df
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q df
+    exit
+end
+
 #
 # Test if we are using GNU sed
 #

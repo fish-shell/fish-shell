@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q zcat
+    exit
+end
 complete -c zcat -x -a "(
 	__fish_complete_suffix .gz
 	__fish_complete_suffix .tgz

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q open
+    exit
+end
 if test (uname) = 'Darwin' # OS X
 	complete -c open -s a -d 'Open APP, or open FILE(s), if supplied, with APP' -x -a "(mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /Developer/Applications 'kMDItemKind==Application' | sed -E 's/.+\/(.+)\.app/\1/g')"
 	complete -c open -s b -d 'Bundle Identifier of APP to open, or to be used to open FILE' -x -a "(mdls (mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /Developer/Applications 'kMDItemKind==Application') -name kMDItemCFBundleIdentifier | sed -E 's/kMDItemCFBundleIdentifier = \"(.+)\"/\1/g')"

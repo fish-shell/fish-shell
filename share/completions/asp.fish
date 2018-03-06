@@ -1,4 +1,9 @@
 # Completions for the archlinux package information and build tool `asp` (https://github.com/falconindy/asp)
+
+# magic completion safety check (do not remove this comment)
+if not type -q asp
+    exit
+end
 set -l commands checkout difflog export gc disk-usage help list-{all,arches,local,repos} {short,}log show update untrack
 
 complete -c asp -n "not __fish_seen_subcommand_from $commands" -a checkout -d "Checkout package" -f

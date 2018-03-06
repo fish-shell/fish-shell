@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q journalctl
+    exit
+end
 function __fish_journalctl_fields
     # This would be nicer to get programatically, but this is how the official
     # bash completion does it

@@ -1,5 +1,10 @@
 # completion for caffeinate (macOS)
 
+# magic completion safety check (do not remove this comment)
+if not type -q caffeinate
+    exit
+end
+
 complete -c caffeinate -s d -f -d 'Create an assertion to prevent the display from sleeping'
 complete -c caffeinate -s i -f -d 'Create an assertion to prevent the system from idle sleeping'
 complete -c caffeinate -s m -f -d 'Create an assertion to prevent the disk from idle sleeping'

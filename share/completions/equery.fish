@@ -1,5 +1,10 @@
 # Completions for Gentoo's equery tool
 
+# magic completion safety check (do not remove this comment)
+if not type -q equery
+    exit
+end
+
 # Author: Tassilo Horn <tassilo@member.fsf.org>
 
 function __fish_equery_print_installed_pkgs -d 'Prints completions for installed packages on the system from /var/db/pkg'

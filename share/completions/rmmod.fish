@@ -1,4 +1,9 @@
 # rmmod completion
+
+# magic completion safety check (do not remove this comment)
+if not type -q rmmod
+    exit
+end
 complete -c rmmod -x -a "(/sbin/lsmod | awk 'NR > 1 {print \$1}')"
 
 complete -c rmmod -s h -l help    -d "Prints the help text."

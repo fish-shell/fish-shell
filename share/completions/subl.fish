@@ -1,5 +1,10 @@
 # Sublime Text build 3142
 
+# magic completion safety check (do not remove this comment)
+if not type -q subl
+    exit
+end
+
 # Usage: subl [arguments] [files]         edit the given files
 #    or: subl [arguments] [directories]   open the given directories
 #    or: subl [arguments] -               edit stdin

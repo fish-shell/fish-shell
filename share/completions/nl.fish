@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q nl
+    exit
+end
 set -l style 'a\t"number all lines"
 t\t"number only nonempty lines"
 n\t"number no lines"

@@ -1,4 +1,9 @@
 # Initialization options
+
+# magic completion safety check (do not remove this comment)
+if not type -q emacs
+    exit
+end
 complete -c emacs -l batch -d "do not do interactive display; implies -q"
 complete -c emacs -l chdir -d "change to directory DIR"
 complete -c emacs -l daemon -d "start a server in the background"

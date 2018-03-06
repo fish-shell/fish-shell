@@ -1,5 +1,10 @@
 # fish completion for hg
 
+# magic completion safety check (do not remove this comment)
+if not type -q hg
+    exit
+end
+
 # Mercurial has a global switch to specify the path to the repository on which
 # to run the hg command (-R or --repository).  If that is on the commandline,
 # this function echoes the given path and returns 0.  Otherwise, it returns 1.

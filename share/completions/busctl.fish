@@ -5,6 +5,11 @@
 # but this can't be predicted via the user that owns that name, e.g. `org.freedesktop.login1`
 # is usually owned by a root-owned process, yet accessible (at least in part) by normal users
 
+# magic completion safety check (do not remove this comment)
+if not type -q busctl
+    exit
+end
+
 # A simple wrapper to call busctl with the correct mode and output
 function __fish_busctl
 	# TODO: If there's a "--address" argument we need to pass that

@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q env
+    exit
+end
+
 complete -c env -a "(set -n)=" -x -d "Redefine variable"
 
 complete -c env -a "(__fish_complete_subcommand -- -u --unset)" -d "Command"

@@ -5,6 +5,11 @@
 # TODO: Whether the expensive operations
 # done by the module detection really needs to be done every time the completion is invoked is
 # unclear. See issue #3856.
+
+# magic completion safety check (do not remove this comment)
+if not type -q perl
+    exit
+end
 begin
     set -l unicode 'commandline | string match -qr -- "-[a-zA-Z]*C[a-zA-Z]*\$"'
     set -l noopt 'commandline | not string match -qr -- "-[a-zA-Z]*C[a-zA-Z]*\$"'

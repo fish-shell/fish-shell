@@ -5,6 +5,11 @@
 # have been hand edited since.
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q adduser
+    exit
+end
+
 complete -x -c adduser -a "(__fish_complete_users; __fish_complete_groups)"
 complete -c adduser -l conf -d 'Specify config file' -r
 complete -c adduser -l disabled-login -d 'Do not run passwd to set the password'

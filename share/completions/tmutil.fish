@@ -1,5 +1,10 @@
 # completion for tmutil (macOS)
 
+# magic completion safety check (do not remove this comment)
+if not type -q tmutil
+    exit
+end
+
 complete -f -c tmutil -n '__fish_use_subcommand' -a addexclusion -d 'Add an exclusion not to back up a file'
 complete -f -c tmutil -n '__fish_seen_subcommand_from addexclusion' -s v -d 'Volume exclusion'
 complete -f -c tmutil -n '__fish_seen_subcommand_from addexclusion' -s p -d 'Path exclusion'

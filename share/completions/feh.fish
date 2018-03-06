@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q feh
+    exit
+end
 complete -c feh -l action -s A -x -d "Specify a shell command as action to perform on the image"
 
 for i in (seq 1 9)

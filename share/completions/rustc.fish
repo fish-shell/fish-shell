@@ -1,5 +1,10 @@
 # Tab completion for rustc (https://github.com/rust-lang/rust).
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
+
+# magic completion safety check (do not remove this comment)
+if not type -q rustc
+    exit
+end
 complete -e -c rustc
 
 complete -c rustc -s h -l help

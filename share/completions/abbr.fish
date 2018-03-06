@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q abbr
+    exit
+end
 complete -c abbr -f -s a -l add -d 'Add abbreviation'
 # Abbr keys can't contain spaces, so we can safely replace the first space with a tab
 # `abbr -s` won't work here because that already escapes

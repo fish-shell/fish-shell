@@ -1,4 +1,9 @@
 #apt-move
+
+# magic completion safety check (do not remove this comment)
+if not type -q apt-move
+    exit
+end
 complete -c apt-move -a get -d "Generate master file"
 complete -c apt-move -a getlocal -d "Alias for 'get'"
 complete -f -c apt-move -a move -d "Move packages to local tree"

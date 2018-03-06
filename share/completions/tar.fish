@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q tar
+    exit
+end
+
 # Peek inside of archives and list all files
 complete -c tar -a "(__fish_complete_tar)"
 

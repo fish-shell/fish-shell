@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q gphoto2
+    exit
+end
+
 #Common options
 complete -c gphoto2   -s '?' -l 'help'                             -d 'Print complete help message on program usage'
 complete -c gphoto2          -l 'usage'                            -d 'Print short message on program usage'

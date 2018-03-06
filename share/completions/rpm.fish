@@ -1,6 +1,11 @@
 # Completions for the rpm command. Insanely complicated,
 # since rpm has multiple operation modes, and a perverse number of switches.
 
+# magic completion safety check (do not remove this comment)
+if not type -q rpm
+    exit
+end
+
 complete -c rpm -s "?" -l help -d "Display help and exit"
 complete -c rpm -l version -d "Display version and exit"
 complete -c rpm -l quiet -d "Quiet mode"

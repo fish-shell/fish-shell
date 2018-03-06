@@ -1,5 +1,10 @@
 # completion for mdimport (macOS)
 
+# magic completion safety check (do not remove this comment)
+if not type -q mdimport
+    exit
+end
+
 complete -c mdimport -s g -r -d 'Import files using the listed plugin'
 complete -c mdimport -s V -f -d 'Print timing information for this run'
 complete -c mdimport -s A -f -d 'Print out the list of all of the attributes and exit'

@@ -2,6 +2,11 @@
 #Completions for xargs
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q xargs
+    exit
+end
+
 complete -c xargs -s 0 -l null -d "Input filenames are terminated by a null character instead of by whitespace, and the quotes and backslash are not special"
 complete -c xargs -s e -l eof -d "Set the end of file string to eof-str"
 complete -c xargs -s E -r -f -d "Set the end of file string to eof-str"

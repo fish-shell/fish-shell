@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q seq
+    exit
+end
 if seq --version ^ /dev/null > /dev/null #GNU
 	complete -c seq -s f -l format -d 'Use printf style floating-point FORMAT'
 	complete -c seq -s s -l separator -d 'Use STRING to separate numbers'

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q scanimage
+    exit
+end
 complete -c scanimage -s l -r -d 'Top-left x position of scan area [0..480pel]/[0..218mm]'
 complete -c scanimage -s t -r -d 'Top-left y position of scan area [0..360pel]'
 complete -c scanimage -s x -r -d 'Width of scan area [160..640pel]'

@@ -1,5 +1,10 @@
 # completion for mdutil (macOS)
 
+# magic completion safety check (do not remove this comment)
+if not type -q mdutil
+    exit
+end
+
 function __fish_mdutil_volumes
     command mdutil -a -s | while read -l line
         if string match -q \t"*" -- $line

@@ -1,5 +1,10 @@
 #completion for aptitude
 
+# magic completion safety check (do not remove this comment)
+if not type -q aptitude
+    exit
+end
+
 function __fish_apt_no_subcommand  -d 'Test if aptitude has yet to be given the subcommand'
 	for i in (commandline -opc)
 		if contains -- $i autoclean clean forget-new keep-all update safe-upgrade changelog full-upgrade download forbid-version hold install keep markauto purge reinstall remove show unhold unmarkauto search help

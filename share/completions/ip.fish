@@ -1,5 +1,10 @@
 # ip(8) completion for fish
 
+# magic completion safety check (do not remove this comment)
+if not type -q ip
+    exit
+end
+
 # The difficulty here is that ip allows abbreviating options, so we need to complete "ip a" like "ip address", but not "ip m" like "ip mroute"
 # Also the manpage and even the grammar it accepts is utter shite (options can only be before commands, some things are only in the BNF, others only in the text)
 # It also quite likes the word "dev", even though it needs it less than the BNF specifies

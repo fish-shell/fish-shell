@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ansible-vault
+    exit
+end
 complete -c ansible-vault -l ask-vault-pass -f -d "Ask for vault password"
 complete -c ansible-vault -s h -l help -f -d "Show this help message and exit"
 complete -c ansible-vault -l new-vault-password-file -r -d "New vault password file for rekey"

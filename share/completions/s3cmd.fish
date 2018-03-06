@@ -1,5 +1,10 @@
 # s3cmd
 
+# magic completion safety check (do not remove this comment)
+if not type -q s3cmd
+    exit
+end
+
 function __s3cmd_is_remote_path
 	commandline -pct | string match -q -r -- "^s3://.*"
 end

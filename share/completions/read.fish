@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q read
+    exit
+end
 complete -c read -s h -l help -d "Display help and exit"
 complete -c read -s p -l prompt -d "Set prompt command" -x
 complete -c read -s x -l export -d "Export variable to subprocess"

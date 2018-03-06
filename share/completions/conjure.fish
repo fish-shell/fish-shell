@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q conjure
+    exit
+end
 complete -c conjure -o monitor                      -d 'Monitor progress '
 complete -c conjure -o quiet                        -d 'Suppress all warning messages'
 complete -c conjure -o regard-warnings              -d 'Pay attention to warning messages'

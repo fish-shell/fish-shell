@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q chown
+    exit
+end
 complete -c chown -s c -l changes -d "Output diagnostic for changed files"
 complete -c chown -l dereference -d "Dereference symbolic links"
 complete -c chown -s h -l no-dereference -d "Do not dereference symbolic links"

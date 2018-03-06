@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q lpinfo
+    exit
+end
 __fish_complete_lpr lpinfo
 complete -c lpinfo -s l -d 'Shows a "long" listing of devices or drivers'
 complete -c lpinfo -l device-id -x -d 'Specifies the IEEE-1284 device ID to match when listing drivers with the -m option'

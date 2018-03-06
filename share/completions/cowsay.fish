@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q cowsay
+    exit
+end
+
 
 complete -c cowsay -s e -d "Specify eye string" -r
 complete -c cowsay -s f -d "Specify cow file" -x -a '(cowsay -l|tail -n +2|tr \  \n)'

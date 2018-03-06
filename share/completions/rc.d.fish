@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q rc.d
+    exit
+end
+
 complete -c rc.d -xa 'list start stop restart help' -n 'not __fish_seen_subcommand_from list start stop restart'
 complete -c rc.d -s s -l started -n '__fish_seen_subcommand_from list start stop restart' -d 'Filter started daemons'
 complete -c rc.d -s S -l stopped -n '__fish_seen_subcommand_from list start stop restart' -d 'Filter stopped daemons'

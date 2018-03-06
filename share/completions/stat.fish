@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q stat
+    exit
+end
 if stat --version ^ /dev/null > /dev/null # GNU
 	complete -c stat -s L -l dereference     -d 'follow links'
 	complete -c stat -s f -l file-system     -d 'display file system status instead of file status'

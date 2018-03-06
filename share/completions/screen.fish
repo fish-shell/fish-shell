@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q screen
+    exit
+end
 function __fish_detect_screen_socket_dir -d "Detect which folder screen uses"
     set screen_bin screen
     if not set -q __fish_screen_socket_dir

@@ -1,6 +1,11 @@
 # Completions for the eix tool's update-eix-remote command
 # http://dev.croup.de/proj/eix and http://sourceforge.net/projects/eix/
 
+# magic completion safety check (do not remove this comment)
+if not type -q update-eix-remote
+    exit
+end
+
 # Author: Tassilo Horn <tassilo@member.fsf.org>
 
 ##########

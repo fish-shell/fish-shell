@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q netctl
+    exit
+end
 set -l cmds list store restore stop-all start stop restart switch-to status enable disable reenable is-enabled edit
 
 function __fish_netctl_get_profiles

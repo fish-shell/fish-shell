@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q composer
+    exit
+end
 function __fish_composer_needs_command
   set cmd (commandline -opc)
 

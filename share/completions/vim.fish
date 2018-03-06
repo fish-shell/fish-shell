@@ -1,6 +1,11 @@
 # these don't work
 #complete vim -a - -d 'The file to edit is read from stdin. Commands are read from stderr, which should be a tty'
 
+# magic completion safety check (do not remove this comment)
+if not type -q vim
+    exit
+end
+
 # todo
 # +[num]        : Position the cursor on line number
 # +/{pat}       : Position the cursor on the first occurence of {pat}

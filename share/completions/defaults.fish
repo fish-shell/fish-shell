@@ -1,5 +1,10 @@
 # completion for defaults (macOS)
 
+# magic completion safety check (do not remove this comment)
+if not type -q defaults
+    exit
+end
+
 function __fish_defaults_domains
     defaults domains | string split ", "
 end

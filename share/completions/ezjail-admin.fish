@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q ezjail-admin
+    exit
+end
 function __fish_complete_jails
     ezjail-admin list | tail +3 | awk '{ print $4 }'
 end

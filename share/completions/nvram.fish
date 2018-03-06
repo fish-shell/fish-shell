@@ -1,5 +1,10 @@
 # completion for nvram (macOS)
 
+# magic completion safety check (do not remove this comment)
+if not type -q nvram
+    exit
+end
+
 function __fish_nvram_variables
     command nvram -p
 end

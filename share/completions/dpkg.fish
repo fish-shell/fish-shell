@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q dpkg
+    exit
+end
+
 complete -c dpkg -s i -l install -d 'Install .deb package'     -xa '(__fish_complete_suffix .deb)'
 complete -c dpkg      -l unpack  -d 'Unpack .deb package'      -xa '(__fish_complete_suffix .deb)'
 complete -c dpkg      -l configure -d 'Configure package'      -xa '(dpkg-query -W -f \'${Package}\n\')'

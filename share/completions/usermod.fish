@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q usermod
+    exit
+end
 complete -c usermod -a "(__fish_complete_users)" -f
 complete -c usermod -s a -l append -d 'Append groups (use with -G)' -f -a "(__fish_complete_groups)"
 complete -c usermod -s c -l comment -d "Change user's password file comment" -f

@@ -1,6 +1,11 @@
 # dhcpcd is a DHCP client
 # See: https://roy.marples.name/projects/dhcpcd/index
 
+# magic completion safety check (do not remove this comment)
+if not type -q dhcpcd
+    exit
+end
+
 complete -c dhcpcd -l background -s b -d 'Background immediately'
 complete -c dhcpcd -l script -s c -d 'Use given script'
 complete -c dhcpcd -l duid -s D -d 'Generate an RFC 4361 compliant clientid'

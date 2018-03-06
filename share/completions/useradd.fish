@@ -5,6 +5,11 @@
 # have been hand edited since.
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q useradd
+    exit
+end
+
 complete -c useradd -s c -l comment -d 'A comment about this user' -r
 complete -c useradd -s d -l home -d 'Home directory for the new user' -x -a '(__fish_complete_directories)'
 complete -c useradd -s G -l groups -d 'Supplementary groups' -xa '(__fish_append , (cut -d : -f 1 /etc/group))'

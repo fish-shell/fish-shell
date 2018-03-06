@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q montage
+    exit
+end
 complete -c montage -o adjoin                       -d 'Join images into a single multi-image file'
 complete -c montage -o affine                       -d 'Affine transform matrix [matrix]'
 complete -c montage -o alpha                        -d 'On, activate, off, deactivate, set, opaque, copy transparent, extract, background, or shape [option]' -xa '(montage -list alpha)'

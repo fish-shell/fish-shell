@@ -1,5 +1,10 @@
 # grub-install - install GRUB to a device
 
+# magic completion safety check (do not remove this comment)
+if not type -q grub-install
+    exit
+end
+
 complete -c grub-install -l compress -d 'Compress GRUB files' -x -a 'no xz gz lzo'
 complete -c grub-install -l directory -s d -d 'Use image and modules under given directory' -r
 complete -c grub-install -l fonts -d 'Install given fonts' -r

@@ -1,5 +1,10 @@
 # Completions for Android adb command
 
+# magic completion safety check (do not remove this comment)
+if not type -q adb
+    exit
+end
+
 function __fish_adb_no_subcommand -d 'Test if adb has yet to be given the subcommand'
     for i in (commandline -opc)
         if contains -- $i connect disconnect devices push pull sync shell emu logcat install uninstall jdwp forward bugreport backup restore version help wait-for-device start-server kill-server remount reboot get-state get-serialno get-devpath status-window root usb tcpip ppp sideload reconnect

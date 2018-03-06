@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q pip2
+    exit
+end
 if command -sq pip2
     # pip[2|3] emits (or emitted) completions with the wrong command name
     # See discussion at https://github.com/fish-shell/fish-shell/pull/4448

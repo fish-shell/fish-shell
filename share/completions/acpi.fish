@@ -5,6 +5,11 @@
 # have been hand edited since.
 #
 
+# magic completion safety check (do not remove this comment)
+if not type -q acpi
+    exit
+end
+
 complete -c acpi -s b -l battery -d 'Show battery information'
 complete -c acpi -s B -l without-battery -d 'Suppress battery information'
 complete -c acpi -s t -l thermal -d 'Show thermal information'

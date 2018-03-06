@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q xrandr
+    exit
+end
 complete -c xrandr -l verbose -d 'Be more verbose'
 complete -c xrandr -l dryrun  -d 'Make no changes'
 complete -c xrandr -l nograb  -d 'Apply modifications without grabbing the screen'

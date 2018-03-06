@@ -2,6 +2,11 @@
 # but complex combination of Linux commands.
 # The tool can be found at https://github.com/adtac/climate
 
+# magic completion safety check (do not remove this comment)
+if not type -q climate
+    exit
+end
+
 function __fish_climate_has_no_argument
     set -l cmd (commandline -opc)
     not set -q cmd[2]

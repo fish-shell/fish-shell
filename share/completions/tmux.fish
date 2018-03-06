@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q tmux
+    exit
+end
 function __fish_tmux_sessions -d 'available sessions'
         tmux list-sessions -F "#S	#{session_windows} windows created: #{session_created_string} [#{session_width}x#{session_height}]#{session_attached}" | sed 's/0$//;s/1$/ (attached)/' ^/dev/null
 end

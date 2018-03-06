@@ -1,4 +1,9 @@
 # Note that when a completion file is sourced a new block scope is created so `set -l` works.
+
+# magic completion safety check (do not remove this comment)
+if not type -q status
+    exit
+end
 set -l __fish_status_all_commands is-login is-interactive is-block is-breakpoint is-command-substitution is-no-job-control is-interactive-job-control is-full-job-control current-filename current-line-number print-stack-trace job-control
 
 # These are the recognized flags.

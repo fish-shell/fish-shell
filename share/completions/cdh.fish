@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q cdh
+    exit
+end
 function __fish_cdh_args
     set -l all_dirs $dirprev $dirnext
     set -l uniq_dirs

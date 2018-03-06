@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q elixir
+    exit
+end
 complete -f -c elixir -s v        -d "Prints version and exit"
 complete -f -c elixir -s e        -d "Evaluates the given command"
 complete    -c elixir -s r        -d "Requires the given files/patterns"

@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q svn
+    exit
+end
 function _svn_cmpl_ -d 'Make a completion for a subcommand' --no-scope-shadowing --argument-names subcommand
     set -e argv[1]
     complete -c svn -n "__fish_seen_subcommand_from $subcommand" $argv

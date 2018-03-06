@@ -1,5 +1,10 @@
 # Completions for rubygem's `gem' command
 
+# magic completion safety check (do not remove this comment)
+if not type -q gem
+    exit
+end
+
 # Author: Tassilo Horn <tassilo@member.fsf.org>
 
 #####

@@ -1,4 +1,9 @@
 
+# magic completion safety check (do not remove this comment)
+if not type -q xdg-mime
+    exit
+end
+
 # main completion
 complete -c xdg-mime -n 'not __fish_seen_subcommand_from query default install uninstall' -xa 'query default install uninstall'
 

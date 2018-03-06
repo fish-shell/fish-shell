@@ -1,4 +1,9 @@
 # First argument is the names of the service, i.e. a file in /etc/init.d
+
+# magic completion safety check (do not remove this comment)
+if not type -q rc-service
+    exit
+end
 complete -c rc-service -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \
     -xa "(__fish_print_service_names)" -d "Service name"
 

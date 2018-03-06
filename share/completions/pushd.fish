@@ -1,3 +1,8 @@
+
+# magic completion safety check (do not remove this comment)
+if not type -q pushd
+    exit
+end
 function __fish_complete_pushd_plus
     if count $dirstack > /dev/null
         # print each member of the stack, replace $HOME with ~

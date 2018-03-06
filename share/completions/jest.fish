@@ -1,5 +1,10 @@
 # fish for Jest
 
+# magic completion safety check (do not remove this comment)
+if not type -q jest
+    exit
+end
+
 complete -f -c jest -l help -s h -d 'Show help'
 complete -f -c jest -l automock -d 'Automock all files by default'
 complete -f -c jest -l bail -s b -d 'Exit the test suite immediately upon the first failing test'

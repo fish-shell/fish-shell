@@ -1922,9 +1922,9 @@ __attribute__((noinline)) void debug_thread_error(void) {
 
 void set_main_thread() { main_thread_id = pthread_self(); }
 
-void configure_thread_assertions_for_testing(void) { thread_asserts_cfg_for_testing = true; }
+void configure_thread_assertions_for_testing() { thread_asserts_cfg_for_testing = true; }
 
-bool is_forked_child(void) {
+bool is_forked_child() {
     // Just bail if nobody's called setup_fork_guards, e.g. some of our tools.
     if (!initial_pid) return false;
 
@@ -1936,16 +1936,16 @@ bool is_forked_child(void) {
     return is_child_of_fork;
 }
 
-void setup_fork_guards(void) {
+void setup_fork_guards() {
     // Notice when we fork by stashing our pid. This seems simpler than pthread_atfork().
     initial_pid = getpid();
 }
 
-void save_term_foreground_process_group(void) {
+void save_term_foreground_process_group() {
     initial_fg_process_group = tcgetpgrp(STDIN_FILENO);
 }
 
-void restore_term_foreground_process_group(void) {
+void restore_term_foreground_process_group() {
     if (initial_fg_process_group == -1) return;
     // This is called during shutdown and from a signal handler. We don't bother to complain on
     // failure because doing so is unlikely to be noticed.
@@ -1989,25 +1989,6 @@ void fish_mutex_t::assert_is_locked(const char *who, const char *caller) const {
         debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
     }
-}
-
-/// Detect if we are Windows Subsystem for Linux by inspecting /proc/sys/kernel/osrelease
-/// and checking if "Microsoft" is in the first line.
-/// See https://github.com/Microsoft/WSL/issues/423
-bool is_windows_subsystem_for_linux() {
-    ASSERT_IS_NOT_FORKED_CHILD();
-    static bool s_is_wsl = false;
-    static std::once_flag oflag;
-    std::call_once(oflag, []() {
-        // 'e' sets CLOEXEC if possible.
-        FILE *fp = fopen("/proc/sys/kernel/osrelease", "re");
-        if (fp) {
-            char buff[256];
-            if (fgets(buff, sizeof buff, fp)) s_is_wsl = (strstr(buff, "Microsoft") != NULL);
-            fclose(fp);
-        }
-    });
-    return s_is_wsl;
 }
 
 template <typename CharType_t>

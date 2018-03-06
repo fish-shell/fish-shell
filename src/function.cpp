@@ -339,6 +339,8 @@ int function_get_definition_lineno(const wcstring &name) {
     return 1 + std::count(source.begin(), source.begin() + func_start, L'\n');
 }
 
+void function_invalidate_path() { function_autoloader.invalidate(); }
+
 // Setup the environment for the function. There are three components of the environment:
 // 1. argv
 // 2. named arguments

@@ -39,3 +39,20 @@ expect_prompt -re {echo .history.*} {} unmatched {
 send_line "echo -n #comment\\"
 expect_prompt
 
+# a pipe at the end of the line (#1285)
+send_line "echo hoge |\n cat"
+expect_prompt "hoge" {} unmatched {
+    puts stderr "Error with a pipe at the end of the line"
+}
+send_line "echo hoge |    \n cat"
+expect_prompt "hoge" {} unmatched {
+    puts stderr "Error with a pipe at the end of the line with whitespaces"
+}
+send_line "echo hoge 2>|  \n cat"
+expect_prompt "hoge" {} unmatched {
+    puts stderr "Error with a pipe with redirection at the end of the line"
+}
+send_line "echo hoge >|  \n cat"
+expect_prompt "hoge" {} unmatched {
+    puts stderr "Error with a pipe with redirection at the end of the line"
+}

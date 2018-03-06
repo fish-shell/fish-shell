@@ -420,17 +420,23 @@ echo chips
 
 \section tut_combiners Combiners (And, Or, Not)
 
-Unlike other shells, `fish` does not have special syntax like &amp;&amp; or || to combine commands. Instead it has commands `and`, `or`, and `not`.
+fish supports the familiar `&amp;&amp;` and `||` to combine commands, and `!` to negate them:
 
 \fish{cli-dark}
->_ cp file1.txt file1_bak.txt; and echo "Backup successful"; or echo "Backup failed"
+>_ ./configure && make && sudo make install
+\endfish
+
+fish also supports `and`, `or`, and `not`. The first two are job modifiers and have lower precedence. Example usage:
+
+\fish{cli-dark}
+>_ cp file1.txt file1_bak.txt && cp file2.txt file2_bak.txt ; and echo "Backup successful"; or echo "Backup failed"
 <outp>Backup failed</outp>
 \endfish
 
 As mentioned in <a href="#tut_semicolon">the section on the semicolon</a>, this can also be written in multiple lines, like so:
 
 \fish
-cp file1.txt file1_bak.txt
+cp file1.txt file1_bak.txt && cp file2.txt file2_bak.txt
 and echo "Backup successful"
 or echo "Backup failed"
 \endfish

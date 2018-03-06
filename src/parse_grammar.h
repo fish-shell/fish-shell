@@ -35,6 +35,8 @@ using tok_string = primitive<parse_token_type_string>;
 using tok_pipe = primitive<parse_token_type_pipe>;
 using tok_background = primitive<parse_token_type_background>;
 using tok_redirection = primitive<parse_token_type_redirection>;
+using tok_andand = primitive<parse_token_type_andand>;
+using tok_oror = primitive<parse_token_type_oror>;
 
 // Define keyword types.
 template <parse_keyword_t Keyword>
@@ -195,12 +197,32 @@ struct alternative {};
     static const production_element_t *resolve(const parse_token_t &, const parse_token_t &, \
                                                parse_node_tag_t *);
 
-// A job_list is a list of jobs, separated by semicolons or newlines
+// A job_list is a list of job_conjunctions, separated by semicolons or newlines
 DEF_ALT(job_list) {
-    using normal = seq<job, job_list>;
+    using normal = seq<job_decorator, job_conjunction, job_list>;
     using empty_line = seq<tok_end, job_list>;
     using empty = grammar::empty;
     ALT_BODY(job_list, normal, empty_line, empty);
+};
+
+// Job decorators are 'and' and 'or'. These apply to the whole job.
+DEF_ALT(job_decorator) {
+    using ands = single<keyword<parse_keyword_and>>;
+    using ors = single<keyword<parse_keyword_or>>;
+    using empty = grammar::empty;
+    ALT_BODY(job_decorator, ands, ors, empty);
+};
+
+// A job_conjunction is a job followed by a continuation.
+DEF(job_conjunction) produces_sequence<job, job_conjunction_continuation> {
+    BODY(job_conjunction);
+};
+
+DEF_ALT(job_conjunction_continuation) {
+    using andands = seq<tok_andand, optional_newlines, job_conjunction>;
+    using orors = seq<tok_oror, optional_newlines, job_conjunction>;
+    using empty = grammar::empty;
+    ALT_BODY(job_conjunction_continuation, andands, orors, empty);
 };
 
 // A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
@@ -210,19 +232,19 @@ DEF_ALT(job_list) {
 DEF(job) produces_sequence<statement, job_continuation, optional_background>{BODY(job)};
 
 DEF_ALT(job_continuation) {
-    using piped = seq<tok_pipe, statement, job_continuation>;
+    using piped = seq<tok_pipe, optional_newlines, statement, job_continuation>;
     using empty = grammar::empty;
     ALT_BODY(job_continuation, piped, empty);
 };
 
 // A statement is a normal command, or an if / while / and etc
 DEF_ALT(statement) {
-    using boolean = single<boolean_statement>;
+    using nots = single<not_statement>;
     using block = single<block_statement>;
     using ifs = single<if_statement>;
     using switchs = single<switch_statement>;
     using decorated = single<decorated_statement>;
-    ALT_BODY(statement, boolean, block, ifs, switchs, decorated);
+    ALT_BODY(statement, nots, block, ifs, switchs, decorated);
 };
 
 // A block is a conditional, loop, or begin/end
@@ -231,7 +253,7 @@ produces_sequence<if_clause, else_clause, end_command, arguments_or_redirections
     BODY(if_statement)};
 
 DEF(if_clause)
-produces_sequence<keyword<parse_keyword_if>, job, tok_end, andor_job_list, job_list>{
+produces_sequence<keyword<parse_keyword_if>, job_conjunction, tok_end, andor_job_list, job_list>{
     BODY(if_clause)};
 
 DEF_ALT(else_clause) {
@@ -280,7 +302,8 @@ produces_sequence<keyword<parse_keyword_for>, tok_string, keyword<parse_keyword_
 };
 
 DEF(while_header)
-produces_sequence<keyword<parse_keyword_while>, job, tok_end, andor_job_list>{BODY(while_header)};
+produces_sequence<keyword<parse_keyword_while>, job_conjunction, tok_end, andor_job_list>{
+    BODY(while_header)};
 
 DEF(begin_header) produces_single<keyword<parse_keyword_begin>>{BODY(begin_header)};
 
@@ -289,19 +312,17 @@ DEF(function_header)
 produces_sequence<keyword<parse_keyword_function>, argument, argument_list, tok_end>{
     BODY(function_header)};
 
-//  A boolean statement is AND or OR or NOT
-DEF_ALT(boolean_statement) {
-    using ands = seq<keyword<parse_keyword_and>, statement>;
-    using ors = seq<keyword<parse_keyword_or>, statement>;
+DEF_ALT(not_statement) {
     using nots = seq<keyword<parse_keyword_not>, statement>;
-    ALT_BODY(boolean_statement, ands, ors, nots);
+    using exclams = seq<keyword<parse_keyword_exclam>, statement>;
+    ALT_BODY(not_statement, nots, exclams);
 };
 
 // An andor_job_list is zero or more job lists, where each starts with an `and` or `or` boolean
 // statement.
 DEF_ALT(andor_job_list) {
     using empty = grammar::empty;
-    using andor_job = seq<job, andor_job_list>;
+    using andor_job = seq<job_decorator, job_conjunction, andor_job_list>;
     using empty_line = seq<tok_end, andor_job_list>;
     ALT_BODY(andor_job_list, empty, andor_job, empty_line);
 };
@@ -342,6 +363,13 @@ DEF_ALT(optional_background) {
 };
 
 DEF(end_command) produces_single<keyword<parse_keyword_end>>{BODY(end_command)};
+
+// Note optional_newlines only allows newline-style tok_end, not semicolons.
+DEF_ALT(optional_newlines) {
+    using empty = grammar::empty;
+    using newlines = seq<tok_end, optional_newlines>;
+    ALT_BODY(optional_newlines, empty, newlines);
+};
 
 // A freestanding_argument_list is equivalent to a normal argument list, except it may contain
 // TOK_END (newlines, and even semicolons, for historical reasons)

@@ -177,7 +177,7 @@ class job_t {
     void operator=(const job_t &) = delete;
 
    public:
-    job_t(job_id_t jobid, const io_chain_t &bio);
+    job_t(job_id_t jobid, io_chain_t bio);
     ~job_t();
 
     /// Returns whether the command is empty.

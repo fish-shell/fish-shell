@@ -14,6 +14,11 @@ IF(APPLE)
   SET(CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS} "-Werror=unguarded-availability")
 ENDIF()
 
+# Detect WSL. Does not match against native Windows/WIN32.
+if (CMAKE_HOST_SYSTEM_VERSION MATCHES ".*-Microsoft")
+  SET(WSL 1)
+endif()
+
 # Set up the config.h file.
 SET(PACKAGE_NAME "fish")
 SET(PACKAGE_TARNAME "fish")

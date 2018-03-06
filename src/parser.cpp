@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <utility>
 
 #include "common.h"
 #include "env.h"
@@ -102,11 +103,11 @@ static wcstring user_presentable_path(const wcstring &path) {
 parser_t::parser_t() : cancellation_requested(false), is_within_fish_initialization(false) {}
 
 // Out of line destructor to enable forward declaration of parse_execution_context_t
-parser_t::~parser_t() {}
+parser_t::~parser_t() = default;
 
 static parser_t s_principal_parser;
 
-parser_t &parser_t::principal_parser(void) {
+parser_t &parser_t::principal_parser() {
     ASSERT_IS_NOT_FORKED_CHILD();
     ASSERT_IS_MAIN_THREAD();
     return s_principal_parser;
@@ -116,7 +117,7 @@ void parser_t::set_is_within_fish_initialization(bool flag) {
     is_within_fish_initialization = flag;
 }
 
-void parser_t::skip_all_blocks(void) {
+void parser_t::skip_all_blocks() {
     // Tell all blocks to skip.
     // This may be called from a signal handler!
     s_principal_parser.cancellation_requested = true;
@@ -787,7 +788,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
 
 block_t::block_t(block_type_t t) : block_type(t) {}
 
-block_t::~block_t() {}
+block_t::~block_t() = default;
 
 wcstring block_t::description() const {
     wcstring result;
@@ -857,8 +858,8 @@ if_block_t::if_block_t() : block_t(IF) {}
 
 event_block_t::event_block_t(const event_t &evt) : block_t(EVENT), event(evt) {}
 
-function_block_t::function_block_t(const process_t *p, const wcstring &n, bool shadows)
-    : block_t(shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW), process(p), name(n) {}
+function_block_t::function_block_t(const process_t *p, wcstring n, bool shadows)
+    : block_t(shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW), process(p), name(std::move(n)) {}
 
 source_block_t::source_block_t(const wchar_t *src) : block_t(SOURCE), source_file(src) {}
 

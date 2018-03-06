@@ -8,7 +8,7 @@ end
 function __trap_switch
     switch $argv[1]
         case EXIT exit
-            echo --on-process-exit %self
+            echo --on-event fish_exit
 
         case '*'
             echo --on-signal $argv[1]

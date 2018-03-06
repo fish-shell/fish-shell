@@ -121,7 +121,7 @@ static void prettify_node_recursive(const wcstring &source, const parse_node_tre
     const bool is_root_case_list =
         node_type == symbol_case_item_list && parent_type != symbol_case_item_list;
     const bool is_if_while_header =
-        (node_type == symbol_job || node_type == symbol_andor_job_list) &&
+        (node_type == symbol_job_conjunction || node_type == symbol_andor_job_list) &&
         (parent_type == symbol_if_clause || parent_type == symbol_while_header);
 
     if (is_root_job_list || is_root_case_list || is_if_while_header) {

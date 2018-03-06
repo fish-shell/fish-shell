@@ -437,7 +437,10 @@ int main(int argc, char **argv) {
 
     int exit_status = res ? STATUS_CMD_UNKNOWN : proc_get_last_status();
 
+    // TODO: The generic process-exit event is useless and unused.
+    // Remove this in future.
     proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), exit_status);
+    event_fire_generic(L"fish_exit");
 
     restore_term_mode();
     restore_term_foreground_process_group();

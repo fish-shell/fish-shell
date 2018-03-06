@@ -3,6 +3,7 @@ This section is for changes merged to the `major` branch that are not also merge
 
 ## Deprecations
 - The `IFS` variable is deprecated and will be removed in fish 4.0 (#4156).
+- The `function --on-process-exit` event will be removed in future (#4700). Use the "fish_exit" event instead.
 
 ## Notable non-backward compatible changes
 - `.` command no longer exists -- use `source` (#4294).
@@ -37,6 +38,12 @@ This section is for changes merged to the `major` branch that are not also merge
 - A new input binding `pager-toggle-search` toggles the search field in the completions pager on and off. By default this is bound to control-s.
 - Slicing $history (in particular, `$history[1]` for the last executed command) is much faster.
 - The pager will now show the full command instead of just its last line if the number of completions is large (#4702).
+- Tildes in file names are now properly escaped in completions (#2274)
+- A pipe at the end of a line now allows the job to continue on the next line (#1285)
+- The names `argparse`, `read`, `set`, `status`, `test` and `[` are now reserved and not allowed as function names. This prevents users unintentionally breaking stuff (#3000).
+- Wrapping completions (from `complete -w` or `function -w`) can now inject arguments. For example, `complete gco -w 'git checkout'` now works properly (#1976). The `alias` function has been updated to respect this behavior.
+- The `jobs` builtin now has a `-q` and `--quiet` option to silence the output.
+- fish now supports `&&`, `||`, and `!` (#4620).
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).
@@ -45,10 +52,12 @@ This section is for changes merged to the `major` branch that are not also merge
   - `bd` (#4472)
   - `jhipster` (#4472)
   - `ngrok` (#4642)
+  - `port`
 - Improved completions for
   - `git` (#4395, #4396, #4592)
   - `brew`
   - `diskutil`
+  - `yarn`
 
 --
 

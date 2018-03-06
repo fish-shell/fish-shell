@@ -611,8 +611,8 @@ class wildcard_expander_t {
     }
 
    public:
-    wildcard_expander_t(const wcstring &wd, expand_flags_t f, std::vector<completion_t> *r)
-        : working_directory(wd),
+    wildcard_expander_t(wcstring wd, expand_flags_t f, std::vector<completion_t> *r)
+        : working_directory(std::move(wd)),
           flags(f),
           resolved_completions(r),
           did_interrupt(false),

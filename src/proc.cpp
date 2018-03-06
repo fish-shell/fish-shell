@@ -32,6 +32,7 @@
 
 #include <algorithm>  // IWYU pragma: keep
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "common.h"
@@ -54,7 +55,7 @@
 /// Status of last process to exit.
 static int last_status = 0;
 
-bool job_list_is_empty(void) {
+bool job_list_is_empty() {
     ASSERT_IS_MAIN_THREAD();
     return parser_t::principal_parser().job_list().empty();
 }
@@ -103,7 +104,7 @@ static int is_interactive = -1;
 
 static bool proc_had_barrier = false;
 
-bool shell_is_interactive(void) {
+bool shell_is_interactive() {
     ASSERT_IS_MAIN_THREAD();
     // is_interactive is statically initialized to -1. Ensure it has been dynamically set
     // before we're called.
@@ -161,7 +162,7 @@ int proc_get_last_status() { return last_status; }
 // corresponding to that slot is in use. The job ID corresponding to slot 0 is 1.
 static owning_lock<std::vector<bool>> locked_consumed_job_ids;
 
-job_id_t acquire_job_id(void) {
+job_id_t acquire_job_id() {
     auto &&locker = locked_consumed_job_ids.acquire();
     std::vector<bool> &consumed_job_ids = locker.value;
 
@@ -351,8 +352,8 @@ process_t::process_t() {}
 ///   the Linux kernel will use it for kernel processes.
 /// -1 should not be used; it is a possible return value of the getpgid()
 ///   function
-job_t::job_t(job_id_t jobid, const io_chain_t &bio)
-    : block_io(bio), pgid(-2), tmodes(), job_id(jobid), flags(0) {}
+job_t::job_t(job_id_t jobid, io_chain_t bio)
+    : block_io(std::move(bio)), pgid(-2), tmodes(), job_id(jobid), flags(0) {}
 
 job_t::~job_t() { release_job_id(job_id); }
 
@@ -536,6 +537,8 @@ static int process_clean_after_marking(bool allow_interactive) {
 
             s = p->status;
 
+            // TODO: The generic process-exit event is useless and unused.
+            // Remove this in future.
             proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, p->pid,
                             (WIFSIGNALED(s) ? -1 : WEXITSTATUS(s)));
 
@@ -600,6 +603,8 @@ static int process_clean_after_marking(bool allow_interactive) {
                 format_job_info(j, JOB_ENDED);
                 found = 1;
             }
+            // TODO: The generic process-exit event is useless and unused.
+            // Remove this in future.
             // Don't fire the exit-event for jobs with pgid -2.
             // That's our "sentinel" pgid, for jobs that don't (yet) have a pgid,
             // or jobs that consist entirely of builtins (and hence don't have a process).
@@ -801,7 +806,7 @@ bool terminal_give_to_job(job_t *j, int cont) {
     // to hand over control of the terminal to this process group, which is a no-op if it's already
     // been done.
     if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
-        debug(2, L"Process group %d already has control of terminal\n", j->pgid);
+        debug(4, L"Process group %d already has control of terminal\n", j->pgid);
     } else {
         debug(4,
               L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d\n",

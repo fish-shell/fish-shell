@@ -267,7 +267,7 @@ brew install clang-format
 Debian-based:
 
 ```
-apt-cache install clang-format
+apt-cache search clang-format
 ```
 
 Above will list all the versions available. Pick the newest one available (3.9 for Ubuntu 16.10 as I write this) and install it:

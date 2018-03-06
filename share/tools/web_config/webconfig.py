@@ -739,7 +739,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_delete_history_item(self, history_item_text):
         # It's really lame that we always return success here
-        cmd = ('builtin history delete --exact -- %s; builtin history save' %
+        cmd = ('builtin history delete --case-sensitive --exact -- %s; builtin history save' %
                escape_fish_cmd(history_item_text))
         out, err = run_fish_cmd(cmd)
         return True

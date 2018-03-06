@@ -137,16 +137,16 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
     size_t pos = get_cursor_pos() - (begin - get_buffer());
 
     if (tokenize) {
-        wchar_t *buff = wcsndup(begin, end - begin);
         // fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
         wcstring out;
-        tokenizer_t tok(buff, TOK_ACCEPT_UNFINISHED);
+        wcstring buff(begin, end - begin);
+        tokenizer_t tok(buff.c_str(), TOK_ACCEPT_UNFINISHED);
         tok_t token;
         while (tok.next(&token)) {
-            if ((cut_at_cursor) && (token.offset + token.text.size() >= pos)) break;
+            if ((cut_at_cursor) && (token.offset + token.length >= pos)) break;
 
             if (token.type == TOK_STRING) {
-                wcstring tmp = token.text;
+                wcstring tmp = tok.text_of(token);
                 unescape_string_in_place(&tmp, UNESCAPE_INCOMPLETE);
                 out.append(tmp);
                 out.push_back(L'\n');
@@ -154,7 +154,6 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
         }
 
         streams.out.append(out);
-        free(buff);
     } else {
         if (cut_at_cursor) {
             streams.out.append(begin, pos);

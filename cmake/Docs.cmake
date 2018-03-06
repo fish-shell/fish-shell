@@ -57,14 +57,14 @@ IF(BUILD_DOCS)
 
     # Build lexicon_filter.
     ADD_CUSTOM_COMMAND(OUTPUT lexicon_filter
-                       COMMAND build_tools/build_lexicon_filter.sh
+                       COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_lexicon_filter.sh
                                   ${CMAKE_CURRENT_SOURCE_DIR}/share/functions/
                                   ${CMAKE_CURRENT_SOURCE_DIR}/share/completions/
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/lexicon_filter.in
                                   ${SED}
-                                  < ${CMAKE_CURRENT_SOURCE_DIR}/lexicon_filter.in
                                   > ${CMAKE_CURRENT_BINARY_DIR}/lexicon_filter
                                     && chmod a+x ${CMAKE_CURRENT_BINARY_DIR}/lexicon_filter
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                       DEPENDS ${FUNCTIONS_DIR_FILES} ${COMPLETIONS_DIR_FILES}
                               doc_src/commands.hdr ${CMAKE_CURRENT_SOURCE_DIR}/lexicon_filter.in
                               share/functions/__fish_config_interactive.fish
@@ -77,9 +77,9 @@ IF(BUILD_DOCS)
     # builtins
     #
     FILE(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc_src)
-    ADD_CUSTOM_COMMAND(OUTPUT doc_src/commands.hdr
-                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                       COMMAND build_tools/build_commands_hdr.sh ${HELP_SRC}
+    ADD_CUSTOM_COMMAND(OUTPUT doc_src/commands.hdr command_list_toc.txt
+                       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                       COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_commands_hdr.sh ${HELP_SRC}
                                    < doc_src/commands.hdr.in
                                    > ${CMAKE_CURRENT_BINARY_DIR}/doc_src/commands.hdr
                        DEPENDS ${HELP_SRC}
@@ -103,7 +103,7 @@ IF(BUILD_DOCS)
                        COMMAND env `cat ${FBVF} | tr -d '\"'` ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_toc_txt.sh
                                doc_src/index.hdr.in ${HDR_FILES_NO_INDEX}
                                > ${CMAKE_CURRENT_BINARY_DIR}/toc.txt
-                       DEPENDS ${FBVF} ${HDR_FILES_NO_INDEX})
+                       DEPENDS ${CFBVF} ${HDR_FILES_NO_INDEX})
 
     # doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
     # @echo "  AWK CAT  $(em)$@$(sgr0)"
@@ -122,12 +122,12 @@ IF(BUILD_DOCS)
                       COMMAND env `cat ${FBVF}`
                               ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_user_doc.sh
                               ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.user ./lexicon_filter
-                      DEPENDS ${FBVF} Doxyfile.user ${DOC_SRC_FILES} doc.h ${HDR_FILES} lexicon_filter)
+                      DEPENDS ${CFBVF} Doxyfile.user ${DOC_SRC_FILES} doc.h ${HDR_FILES} build_lexicon_filter command_list_toc.txt)
 
     ADD_CUSTOM_COMMAND(OUTPUT share/man/
                        COMMAND env `cat ${FBVF} | tr -d '\"' `
                                INPUT_FILTER=lexicon_filter ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_documentation.sh ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.help doc_src ./share
-                       DEPENDS ${FBVF} ${HELP_SRC} ${CMAKE_CURRENT_BINARY_DIR}/lexicon_filter)
+                       DEPENDS ${CFBVF} ${HELP_SRC} ${CMAKE_CURRENT_BINARY_DIR}/lexicon_filter)
 
     ADD_CUSTOM_TARGET(BUILD_MANUALS ALL DEPENDS share/man/)
 

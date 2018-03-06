@@ -358,7 +358,39 @@ static void test_escape_crazy() {
     }
 }
 
-static void test_format(void) {
+static void test_escape_quotes() {
+    say(L"Testing escaping with quotes");
+    // These are "raw string literals"
+    do_test(parse_util_escape_string_with_quote(L"abc", L'\0') == L"abc");
+    do_test(parse_util_escape_string_with_quote(L"abc~def", L'\0') == L"abc\\~def");
+    do_test(parse_util_escape_string_with_quote(L"abc~def", L'\0', true) == L"abc~def");
+    do_test(parse_util_escape_string_with_quote(L"abc\\~def", L'\0') == L"abc\\\\\\~def");
+    do_test(parse_util_escape_string_with_quote(L"abc\\~def", L'\0', true) == L"abc\\\\~def");
+    do_test(parse_util_escape_string_with_quote(L"~abc", L'\0') == L"\\~abc");
+    do_test(parse_util_escape_string_with_quote(L"~abc", L'\0', true) == L"~abc");
+    do_test(parse_util_escape_string_with_quote(L"~abc|def", L'\0') == L"\\~abc\\|def");
+    do_test(parse_util_escape_string_with_quote(L"|abc~def", L'\0') == L"\\|abc\\~def");
+    do_test(parse_util_escape_string_with_quote(L"|abc~def", L'\0', true) == L"\\|abc~def");
+    do_test(parse_util_escape_string_with_quote(L"foo\nbar", L'\0') == L"foo\\nbar");
+
+    // Note tildes are not expanded inside quotes, so no_tilde is ignored with a quote.
+    do_test(parse_util_escape_string_with_quote(L"abc", L'\'') == L"abc");
+    do_test(parse_util_escape_string_with_quote(L"abc\\def", L'\'') == L"abc\\\\def");
+    do_test(parse_util_escape_string_with_quote(L"abc'def", L'\'') == L"abc\\'def");
+    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'\'') == L"~abc\\'def");
+    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'\'', true) == L"~abc\\'def");
+    do_test(parse_util_escape_string_with_quote(L"foo\nba'r", L'\'') == L"foo'\\n'ba\\'r");
+    do_test(parse_util_escape_string_with_quote(L"foo\\\\bar", L'\'') == L"foo\\\\\\\\bar");
+
+    do_test(parse_util_escape_string_with_quote(L"abc", L'"') == L"abc");
+    do_test(parse_util_escape_string_with_quote(L"abc\\def", L'"') == L"abc\\\\def");
+    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'"') == L"~abc'def");
+    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'"', true) == L"~abc'def");
+    do_test(parse_util_escape_string_with_quote(L"foo\nba'r", L'"') == L"foo\"\\n\"ba'r");
+    do_test(parse_util_escape_string_with_quote(L"foo\\\\bar", L'"') == L"foo\\\\\\\\bar");
+}
+
+static void test_format() {
     say(L"Testing formatting functions");
     struct {
         unsigned long long val;
@@ -446,7 +478,7 @@ static void test_convert() {
 }
 
 /// Verify correct behavior with embedded nulls.
-static void test_convert_nulls(void) {
+static void test_convert_nulls() {
     say(L"Testing convert_nulls");
     const wchar_t in[] = L"AAA\0BBB";
     const size_t in_len = (sizeof in / sizeof *in) - 1;
@@ -477,13 +509,39 @@ static void test_tokenizer() {
     say(L"Testing tokenizer");
     tok_t token;
 
+    {
+        bool got = false;
+        const wchar_t *str = L"alpha beta";
+        tokenizer_t t(str, 0);
+
+        got = t.next(&token);  // alpha
+        do_test(got);
+        do_test(token.type == TOK_STRING);
+        do_test(token.offset == 0);
+        do_test(token.length == 5);
+        do_test(t.text_of(token) == L"alpha");
+
+        got = t.next(&token);  // beta
+        do_test(got);
+        do_test(token.type == TOK_STRING);
+        do_test(token.offset == 6);
+        do_test(token.length == 4);
+        do_test(t.text_of(token) == L"beta");
+
+        got = t.next(&token);
+        do_test(!got);
+    }
+
     const wchar_t *str =
         L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells "
         L"){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect "
+        L"&&& ||| "
+        L"&& || & |"
         L"Compress_Newlines\n  \n\t\n   \nInto_Just_One";
-    const int types[] = {TOK_STRING,          TOK_REDIRECT_IN, TOK_STRING, TOK_REDIRECT_FD,
-                         TOK_STRING,          TOK_STRING,      TOK_STRING, TOK_REDIRECT_OUT,
-                         TOK_REDIRECT_APPEND, TOK_STRING,      TOK_STRING, TOK_END,
+    const int types[] = {TOK_STRING, TOK_REDIRECT,   TOK_STRING,   TOK_REDIRECT, TOK_STRING,
+                         TOK_STRING, TOK_STRING,     TOK_REDIRECT, TOK_REDIRECT, TOK_STRING,
+                         TOK_ANDAND, TOK_BACKGROUND, TOK_OROR,     TOK_PIPE,     TOK_ANDAND,
+                         TOK_OROR,   TOK_BACKGROUND, TOK_PIPE,     TOK_STRING,   TOK_END,
                          TOK_STRING};
 
     say(L"Test correct tokenization");
@@ -492,14 +550,17 @@ static void test_tokenizer() {
         tokenizer_t t(str, 0);
         size_t i = 0;
         while (t.next(&token)) {
-            if (i > sizeof types / sizeof *types) {
+            if (i >= sizeof types / sizeof *types) {
                 err(L"Too many tokens returned from tokenizer");
+                fwprintf(stdout, L"Got excess token type %ld\n", (long)token.type);
                 break;
             }
             if (types[i] != token.type) {
                 err(L"Tokenization error:");
-                fwprintf(stdout, L"Token number %zu of string \n'%ls'\n, got token type %ld\n",
-                         i + 1, str, (long)token.type);
+                fwprintf(stdout,
+                         L"Token number %zu of string \n'%ls'\n, expected type %ld, got token type "
+                         L"%ld\n",
+                         i + 1, str, (long)types[i], (long)token.type);
             }
             i++;
         }
@@ -536,25 +597,25 @@ static void test_tokenizer() {
     }
 
     // Test redirection_type_for_string.
-    if (redirection_type_for_string(L"<") != TOK_REDIRECT_IN)
+    if (redirection_type_for_string(L"<") != redirection_type_t::input)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"^") != TOK_REDIRECT_OUT)
+    if (redirection_type_for_string(L"^") != redirection_type_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L">") != TOK_REDIRECT_OUT)
+    if (redirection_type_for_string(L">") != redirection_type_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>") != TOK_REDIRECT_OUT)
+    if (redirection_type_for_string(L"2>") != redirection_type_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L">>") != TOK_REDIRECT_APPEND)
+    if (redirection_type_for_string(L">>") != redirection_type_t::append)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>>") != TOK_REDIRECT_APPEND)
+    if (redirection_type_for_string(L"2>>") != redirection_type_t::append)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>?") != TOK_REDIRECT_NOCLOB)
+    if (redirection_type_for_string(L"2>?") != redirection_type_t::noclob)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"9999999999999999>?") != TOK_NONE)
+    if (redirection_type_for_string(L"9999999999999999>?"))
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>&3") != TOK_REDIRECT_FD)
+    if (redirection_type_for_string(L"2>&3") != redirection_type_t::fd)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>|") != TOK_NONE)
+    if (redirection_type_for_string(L"2>|"))
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
 }
 
@@ -571,7 +632,7 @@ static int test_iothread_thread_call(std::atomic<int> *addr) {
     return after;
 }
 
-static void test_iothread(void) {
+static void test_iothread() {
     say(L"Testing iothreads");
     std::unique_ptr<std::atomic<int>> int_ptr = make_unique<std::atomic<int>>(0);
     int iterations = 50000;
@@ -695,6 +756,30 @@ static void test_parser() {
         err(L"redirection after 'end' wrongly reported as error");
     }
 
+    if (parse_util_detect_errors(L"true | ") != PARSER_TEST_INCOMPLETE) {
+        err(L"unterminated pipe not reported properly");
+    }
+
+    if (parse_util_detect_errors(L"begin ; true ; end | ") != PARSER_TEST_INCOMPLETE) {
+        err(L"unterminated pipe not reported properly");
+    }
+
+    if (parse_util_detect_errors(L" | true ") != PARSER_TEST_ERROR) {
+        err(L"leading pipe not reported properly");
+    }
+
+    if (parse_util_detect_errors(L"true | # comment") != PARSER_TEST_INCOMPLETE) {
+        err(L"comment after pipe not reported as incomplete");
+    }
+
+    if (parse_util_detect_errors(L"true | # comment \n false ")) {
+        err(L"comment and newline after pipe wrongly reported as error");
+    }
+
+    if (parse_util_detect_errors(L"true | ; false ") != PARSER_TEST_ERROR) {
+        err(L"semicolon after pipe not detected as error");
+    }
+
     if (detect_argument_errors(L"foo")) {
         err(L"simple argument reported as error");
     }
@@ -751,6 +836,38 @@ static void test_parser() {
 
     if (!parse_util_detect_errors(L"while true & ; end")) {
         err(L"backgrounded 'while' conditional not reported as error");
+    }
+
+    if (!parse_util_detect_errors(L"true | || false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"|| false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"&& false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"true ; && false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"true ; || false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"true || && false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"true && || false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
+    }
+
+    if (!parse_util_detect_errors(L"true && && false")) {
+        err(L"bogus boolean statement error not detected on line %d", __LINE__);
     }
 
     say(L"Testing basic evaluation");
@@ -1228,7 +1345,7 @@ static void test_utf8() {
 #endif
 }
 
-static void test_escape_sequences(void) {
+static void test_escape_sequences() {
     say(L"Testing escape_sequences");
     if (escape_code_length(L"") != 0) err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"abcd") != 0)
@@ -1283,7 +1400,7 @@ class test_lru_t : public lru_cache_t<test_lru_t, int> {
     }
 };
 
-static void test_lru(void) {
+static void test_lru() {
     say(L"Testing LRU cache");
 
     test_lru_t cache;
@@ -1545,7 +1662,7 @@ static void test_expand() {
     popd();
 }
 
-static void test_fuzzy_match(void) {
+static void test_fuzzy_match() {
     say(L"Testing fuzzy string matching");
 
     if (string_fuzzy_match_string(L"", L"").type != fuzzy_match_exact)
@@ -1566,7 +1683,7 @@ static void test_fuzzy_match(void) {
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
 }
 
-static void test_abbreviations(void) {
+static void test_abbreviations() {
     say(L"Testing abbreviations");
     env_push(true);
 
@@ -1912,6 +2029,7 @@ static void test_word_motion() {
 
     test_1_word_motion(word_motion_left, move_word_style_path_components,
                        L"^echo /^foo/^bar{^aaa,^bbb,^ccc}^bak/");
+    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"a ^bcd^");
 }
 
 /// Test is_potential_path.
@@ -2099,7 +2217,7 @@ static void test_colors() {
     do_test(rgb_color_t(L"mooganta").is_none());
 }
 
-static void test_complete(void) {
+static void test_complete() {
     say(L"Testing complete");
 
     const wchar_t *name_strs[] = {L"Foo1", L"Foo2", L"Foo3", L"Bar1", L"Bar2", L"Bar3"};
@@ -2266,16 +2384,20 @@ static void test_complete(void) {
     complete_set_variable_names(NULL);
 
     // Test wraps.
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"");
     complete_add_wrapper(L"wrapper1", L"wrapper2");
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1,wrapper2");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"wrapper2");
     complete_add_wrapper(L"wrapper2", L"wrapper3");
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1,wrapper2,wrapper3");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"wrapper2");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper2")) == L"wrapper3");
     complete_add_wrapper(L"wrapper3", L"wrapper1");  // loop!
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1,wrapper2,wrapper3");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"wrapper2");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper2")) == L"wrapper3");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper3")) == L"wrapper1");
     complete_remove_wrapper(L"wrapper1", L"wrapper2");
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1");
-    do_test(comma_join(complete_get_wrap_chain(L"wrapper2")) == L"wrapper2,wrapper3,wrapper1");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper2")) == L"wrapper3");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper3")) == L"wrapper1");
 }
 
 static void test_1_completion(wcstring line, const wcstring &completion, complete_flags_t flags,
@@ -2813,15 +2935,15 @@ static void test_universal_notifiers() {
 
 class history_tests_t {
    public:
-    static void test_history(void);
-    static void test_history_merge(void);
-    static void test_history_formats(void);
+    static void test_history();
+    static void test_history_merge();
+    static void test_history_formats();
     // static void test_history_speed(void);
-    static void test_history_races(void);
+    static void test_history_races();
     static void test_history_races_pound_on_history(size_t item_count);
 };
 
-static wcstring random_string(void) {
+static wcstring random_string() {
     wcstring result;
     size_t max = 1 + rand() % 32;
     while (max--) {
@@ -2831,7 +2953,7 @@ static wcstring random_string(void) {
     return result;
 }
 
-void history_tests_t::test_history(void) {
+void history_tests_t::test_history() {
     history_search_t searcher;
     say(L"Testing history");
 
@@ -2936,7 +3058,7 @@ void history_tests_t::test_history(void) {
 }
 
 // Wait until the next second.
-static void time_barrier(void) {
+static void time_barrier() {
     time_t start = time(NULL);
     do {
         usleep(1000);
@@ -2963,7 +3085,7 @@ void history_tests_t::test_history_races_pound_on_history(size_t item_count) {
     }
 }
 
-void history_tests_t::test_history_races(void) {
+void history_tests_t::test_history_races() {
     say(L"Testing history race conditions");
 
     // Test concurrent history writing.
@@ -3058,7 +3180,7 @@ void history_tests_t::test_history_races(void) {
     hist.clear();
 }
 
-void history_tests_t::test_history_merge(void) {
+void history_tests_t::test_history_merge() {
     // In a single fish process, only one history is allowed to exist with the given name But it's
     // common to have multiple history instances with the same name active in different processes,
     // e.g. when you have multiple shells open. We try to get that right and merge all their history
@@ -3202,7 +3324,7 @@ static bool history_equals(history_t &hist, const wchar_t *const *strings) {
     return true;
 }
 
-void history_tests_t::test_history_formats(void) {
+void history_tests_t::test_history_formats() {
     const wchar_t *name;
 
     // Test inferring and reading legacy and bash history formats.
@@ -3305,7 +3427,7 @@ void history_tests_t::test_history_speed(void)
 }
 #endif
 
-static void test_new_parser_correctness(void) {
+static void test_new_parser_correctness() {
     say(L"Testing new parser!");
     const struct parser_test_t {
         const wchar_t *src;
@@ -3324,6 +3446,11 @@ static void test_new_parser_correctness(void) {
         {L"begin; end", true},
         {L"begin if true; end; end;", true},
         {L"begin if true ; echo hi ; end; end", true},
+        {L"true && false || false", true},
+        {L"true || false; and true", true},
+        {L"true || ||", false},
+        {L"|| true", false},
+        {L"true || \n\n false", true},
     };
 
     for (size_t i = 0; i < sizeof parser_tests / sizeof *parser_tests; i++) {
@@ -3360,7 +3487,7 @@ static inline bool string_for_permutation(const wcstring *fuzzes, size_t fuzz_co
     return remaining_permutation == 0;
 }
 
-static void test_new_parser_fuzzing(void) {
+static void test_new_parser_fuzzing() {
     say(L"Fuzzing parser (node size: %lu)", sizeof(parse_node_t));
     const wcstring fuzzes[] = {
         L"if",      L"else", L"for", L"in",  L"while", L"begin", L"function",
@@ -3453,7 +3580,7 @@ static void check_function_help(const wchar_t *src) {
 // command handling. In particular, 'command foo' should be a decorated statement 'foo' but 'command
 // -help' should be an undecorated statement 'command' with argument '--help', and NOT attempt to
 // run a command called '--help'.
-static void test_new_parser_ll2(void) {
+static void test_new_parser_ll2() {
     say(L"Testing parser two-token lookahead");
 
     const struct {
@@ -3520,7 +3647,7 @@ static void test_new_parser_ad_hoc() {
     }
 }
 
-static void test_new_parser_errors(void) {
+static void test_new_parser_errors() {
     say(L"Testing new parser error reporting");
     const struct {
         const wchar_t *src;
@@ -3538,9 +3665,6 @@ static void test_new_parser_errors(void) {
 
         {L"case", parse_error_unbalancing_case},
         {L"if true ; case ; end", parse_error_unbalancing_case},
-
-        {L"foo || bar", parse_error_double_pipe},
-        {L"foo && bar", parse_error_double_background},
     };
 
     for (size_t i = 0; i < sizeof tests / sizeof *tests; i++) {
@@ -3656,9 +3780,7 @@ static void test_error_messages() {
                        {L"echo \"foo\"$\"bar\"", ERROR_NO_VAR_NAME},
                        {L"echo foo $ bar", ERROR_NO_VAR_NAME},
                        {L"echo foo$(foo)bar", ERROR_BAD_VAR_SUBCOMMAND1},
-                       {L"echo \"foo$(foo)bar\"", ERROR_BAD_VAR_SUBCOMMAND1},
-                       {L"echo foo || echo bar", ERROR_BAD_OR},
-                       {L"echo foo && echo bar", ERROR_BAD_AND}};
+                       {L"echo \"foo$(foo)bar\"", ERROR_BAD_VAR_SUBCOMMAND1}};
 
     parse_error_list_t errors;
     for (size_t i = 0; i < sizeof error_tests / sizeof *error_tests; i++) {
@@ -3672,7 +3794,7 @@ static void test_error_messages() {
     }
 }
 
-static void test_highlighting(void) {
+static void test_highlighting() {
     say(L"Testing syntax highlighting");
     if (system("mkdir -p test/fish_highlight_test/")) err(L"mkdir failed");
     if (system("touch test/fish_highlight_test/foo")) err(L"touch failed");
@@ -3829,10 +3951,28 @@ static void test_highlighting(void) {
                                                   {L"2>", highlight_spec_redirection},
                                                   {NULL, -1}};
 
+    const highlight_component_t components15[] = {{L"if", highlight_spec_command},
+                                                  {L"true", highlight_spec_command},
+                                                  {L"&&", highlight_spec_operator},
+                                                  {L"false", highlight_spec_command},
+                                                  {L";", highlight_spec_statement_terminator},
+                                                  {L"or", highlight_spec_operator},
+                                                  {L"false", highlight_spec_command},
+                                                  {L"||", highlight_spec_operator},
+                                                  {L"true", highlight_spec_command},
+                                                  {L";", highlight_spec_statement_terminator},
+                                                  {L"and", highlight_spec_operator},
+                                                  {L"not", highlight_spec_operator},
+                                                  {L"!", highlight_spec_operator},
+                                                  {L"true", highlight_spec_command},
+                                                  {L";", highlight_spec_statement_terminator},
+                                                  {L"end", highlight_spec_command},
+                                                  {NULL, -1}};
+
     const highlight_component_t *tests[] = {components1,  components2,  components3,  components4,
                                             components5,  components6,  components7,  components8,
                                             components9,  components10, components11, components12,
-                                            components13, components14};
+                                            components13, components14, components15};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++) {
         const highlight_component_t *components = tests[which];
         // Count how many we have.
@@ -3868,14 +4008,16 @@ static void test_highlighting(void) {
 
             if (expected_colors.at(i) != colors.at(i)) {
                 const wcstring spaces(i, L' ');
-                err(L"Wrong color at index %lu in text (expected %#x, actual %#x):\n%ls\n%ls^", i,
-                    expected_colors.at(i), colors.at(i), text.c_str(), spaces.c_str());
+                err(L"Wrong color in test %lu at index %lu in text (expected %#x, actual "
+                    L"%#x):\n%ls\n%ls^",
+                    which + 1, i, expected_colors.at(i), colors.at(i), text.c_str(),
+                    spaces.c_str());
             }
         }
     }
 }
 
-static void test_wcstring_tok(void) {
+static void test_wcstring_tok() {
     say(L"Testing wcstring_tok");
     wcstring buff = L"hello world";
     wcstring needle = L" \t\n";
@@ -3924,7 +4066,7 @@ static void run_one_string_test(const wchar_t **argv, int expected_rc,
     }
 }
 
-static void test_string(void) {
+static void test_string() {
     static struct string_test {
         const wchar_t *argv[15];
         int expected_rc;
@@ -4245,7 +4387,7 @@ long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
 }
 
 /// Verify that setting special env vars have the expected effect on the current shell process.
-static void test_timezone_env_vars(void) {
+static void test_timezone_env_vars() {
     // Confirm changing the timezone affects fish's idea of the local time.
     time_t tstamp = time(NULL);
 
@@ -4258,12 +4400,12 @@ static void test_timezone_env_vars(void) {
 }
 
 /// Verify that setting special env vars have the expected effect on the current shell process.
-static void test_env_vars(void) {
+static void test_env_vars() {
     test_timezone_env_vars();
     // TODO: Add tests for the locale and ncurses vars.
 }
 
-static void test_illegal_command_exit_code(void) {
+static void test_illegal_command_exit_code() {
     say(L"Testing illegal command exit code");
 
     // We need to be in an empty directory so that none of the wildcards match a file that might be
@@ -4435,6 +4577,7 @@ int main(int argc, char **argv) {
     if (should_test_function("error_messages")) test_error_messages();
     if (should_test_function("escape")) test_unescape_sane();
     if (should_test_function("escape")) test_escape_crazy();
+    if (should_test_function("escape")) test_escape_quotes();
     if (should_test_function("format")) test_format();
     if (should_test_function("convert")) test_convert();
     if (should_test_function("convert_nulls")) test_convert_nulls();

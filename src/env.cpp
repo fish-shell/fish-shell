@@ -40,12 +40,14 @@
 
 #include "builtin_bind.h"
 #include "common.h"
+#include "complete.h"
 #include "env.h"
 #include "env_universal_common.h"
 #include "event.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fish_version.h"
+#include "function.h"
 #include "history.h"
 #include "input.h"
 #include "input_common.h"
@@ -569,6 +571,30 @@ static void init_path_vars() {
     }
 }
 
+/// Update the value of g_guessed_fish_emoji_width
+static void guess_emoji_width() {
+    wcstring term;
+    if (auto term_var = env_get(L"TERM_PROGRAM")) {
+        term = term_var->as_string();
+    }
+
+    double version = 0;
+    if (auto version_var = env_get(L"TERM_PROGRAM_VERSION")) {
+        std::string narrow_version = wcs2string(version_var->as_string());
+        version = strtod(narrow_version.c_str(), NULL);
+    }
+
+    // iTerm2 defaults to Unicode 8 sizes.
+    // See https://gitlab.com/gnachman/iterm2/wikis/unicodeversionswitching
+
+    if (term == L"Apple_Terminal" && version >= 400) {
+        // Apple Terminal on High Sierra
+        g_guessed_fish_emoji_width = 2;
+    } else {
+        g_guessed_fish_emoji_width = 1;
+    }
+}
+
 /// Initialize the curses subsystem.
 static void init_curses() {
     for (const auto &var_name : curses_variables) {
@@ -701,7 +727,7 @@ void env_set_read_limit() {
     }
 }
 
-wcstring env_get_pwd_slash(void) {
+wcstring env_get_pwd_slash() {
     auto pwd_var = env_get(L"PWD");
     if (pwd_var.missing_or_empty()) {
         return L"";
@@ -796,6 +822,14 @@ static void handle_escape_delay_change(const wcstring &op, const wcstring &var_n
     update_wait_on_escape_ms();
 }
 
+static void handle_change_emoji_width(const wcstring &op, const wcstring &var_name) {
+    int new_width = 0;
+    if (auto width_str = env_get(L"fish_emoji_width")) {
+        new_width = fish_wcstol(width_str->as_string().c_str());
+    }
+    g_fish_emoji_width = std::max(0, new_width);
+}
+
 static void handle_term_size_change(const wcstring &op, const wcstring &var_name) {
     UNUSED(op);
     UNUSED(var_name);
@@ -812,6 +846,18 @@ static void handle_fish_history_change(const wcstring &op, const wcstring &var_n
     UNUSED(op);
     UNUSED(var_name);
     reader_change_history(history_session_id().c_str());
+}
+
+static void handle_function_path_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    UNUSED(var_name);
+    function_invalidate_path();
+}
+
+static void handle_complete_path_change(const wcstring &op, const wcstring &var_name) {
+    UNUSED(op);
+    UNUSED(var_name);
+    complete_invalidate_path();
 }
 
 static void handle_tz_change(const wcstring &op, const wcstring &var_name) {
@@ -833,6 +879,7 @@ static void handle_locale_change(const wcstring &op, const wcstring &var_name) {
 static void handle_curses_change(const wcstring &op, const wcstring &var_name) {
     UNUSED(op);
     UNUSED(var_name);
+    guess_emoji_width();
     init_curses();
 }
 
@@ -854,8 +901,11 @@ static void setup_var_dispatch_table() {
     var_dispatch_table.emplace(L"fish_term256", handle_fish_term_change);
     var_dispatch_table.emplace(L"fish_term24bit", handle_fish_term_change);
     var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
+    var_dispatch_table.emplace(L"fish_emoji_width", handle_change_emoji_width);
     var_dispatch_table.emplace(L"LINES", handle_term_size_change);
     var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
+    var_dispatch_table.emplace(L"fish_complete_path", handle_complete_path_change);
+    var_dispatch_table.emplace(L"fish_function_path", handle_function_path_change);
     var_dispatch_table.emplace(L"fish_read_limit", handle_read_limit_change);
     var_dispatch_table.emplace(L"fish_history", handle_fish_history_change);
     var_dispatch_table.emplace(L"TZ", handle_tz_change);
@@ -909,6 +959,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     init_curses();
     init_input();
     init_path_vars();
+    guess_emoji_width();
 
     // Set up the USER and PATH variables
     setup_path();
@@ -1282,7 +1333,7 @@ const wcstring_list_t &env_var_t::as_list() const { return vals; }
 
 /// Return a string representation of the var. At the present time this uses the legacy 2.x
 /// encoding.
-wcstring env_var_t::as_string(void) const {
+wcstring env_var_t::as_string() const {
     if (this->vals.empty()) return wcstring(ENV_NULL);
 
     wchar_t sep = (flags & flag_colon_delimit) ? L':' : ARRAY_SEP;

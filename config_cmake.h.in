@@ -1,6 +1,9 @@
 /* Define to 1 if you have the `backtrace_symbols' function. */
 #cmakedefine HAVE_BACKTRACE_SYMBOLS 1
 
+/* Define to 1 if compiled on WSL */
+#cmakedefine WSL 1
+
 /* Define to 1 if you have the `clock_gettime' function. */
 #cmakedefine HAVE_CLOCK_GETTIME 1
 

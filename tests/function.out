@@ -70,3 +70,6 @@ Function name4 not found as expected
 < function name3 --argument arg1 arg2
 ---
 > function name3a --argument arg1 arg2
+
+####################
+# Checking reserved names

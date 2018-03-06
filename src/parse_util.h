@@ -114,8 +114,9 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
 
 /// Attempts to escape the string 'cmd' using the given quote type, as determined by the quote
 /// character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and
-/// thus escaping should be with backslashes).
-wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote);
+/// thus escaping should be with backslashes). Optionally do not escape tildes.
+wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
+                                             bool no_tilde = false);
 
 /// Given a string, parse it as fish code and then return the indents. The return value has the same
 /// size as the string.

@@ -374,9 +374,9 @@ class process_iterator_t {
     bool next_process(wcstring *out_str, pid_t *out_pid);
 };
 
-process_iterator_t::process_iterator_t(void) { dir = opendir("/proc"); }
+process_iterator_t::process_iterator_t() { dir = opendir("/proc"); }
 
-process_iterator_t::~process_iterator_t(void) {
+process_iterator_t::~process_iterator_t() {
     if (dir) closedir(dir);
 }
 
@@ -1028,8 +1028,7 @@ static bool expand_cmdsubst(const wcstring &input, std::vector<completion_t> *ou
 
     const wchar_t *const in = input.c_str();
 
-    int parse_ret;
-    switch (parse_ret = parse_util_locate_cmdsubst(in, &paren_begin, &paren_end, false)) {
+    switch (parse_util_locate_cmdsubst(in, &paren_begin, &paren_end, false)) {
         case -1: {
             append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, L"Mismatched parenthesis");
             return false;
@@ -1419,7 +1418,7 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
                     paths = env_var_t(name, for_cd ? L"." : L"");
                 }
 
-                for (auto next_path : paths->as_list()) {
+                for (const wcstring &next_path : paths->as_list()) {
                     effective_working_dirs.push_back(
                         path_apply_working_directory(next_path, working_dir));
                 }
@@ -1442,7 +1441,7 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
         }
 
         std::sort(expanded.begin(), expanded.end(), completion_t::is_naturally_less_than);
-        out->insert(out->end(), expanded.begin(), expanded.end());
+        std::move(expanded.begin(), expanded.end(), std::back_inserter(*out));
     } else {
         // Can't fully justify this check. I think it's that SKIP_WILDCARDS is used when completing
         // to mean don't do file expansions, so if we're not doing file expansions, just drop this

@@ -678,7 +678,8 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
         fish_title_command = L"fish_title";
         if (!cmd.empty()) {
             fish_title_command.append(L" ");
-            fish_title_command.append(parse_util_escape_string_with_quote(cmd, L'\0'));
+            fish_title_command.append(
+                escape_string(cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE));
         }
     }
 
@@ -1018,9 +1019,10 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
                                           const wcstring &command_line, size_t *inout_cursor_pos,
                                           bool append_only) {
     const wchar_t *val = val_str.c_str();
-    bool add_space = !static_cast<bool>(flags & COMPLETE_NO_SPACE);
-    bool do_replace = static_cast<bool>(flags & COMPLETE_REPLACES_TOKEN);
-    bool do_escape = !static_cast<bool>(flags & COMPLETE_DONT_ESCAPE);
+    bool add_space = !bool(flags & COMPLETE_NO_SPACE);
+    bool do_replace = bool(flags & COMPLETE_REPLACES_TOKEN);
+    bool do_escape = !bool(flags & COMPLETE_DONT_ESCAPE);
+    bool no_tilde = bool(flags & COMPLETE_DONT_ESCAPE_TILDES);
 
     const size_t cursor_pos = *inout_cursor_pos;
     bool back_into_trailing_quote = false;
@@ -1036,8 +1038,6 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
         wcstring sb(buff, begin - buff);
 
         if (do_escape) {
-            // Respect COMPLETE_DONT_ESCAPE_TILDES.
-            bool no_tilde = static_cast<bool>(flags & COMPLETE_DONT_ESCAPE_TILDES);
             wcstring escaped = escape_string(
                 val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
             sb.append(escaped);
@@ -1061,9 +1061,6 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
     wchar_t quote = L'\0';
     wcstring replaced;
     if (do_escape) {
-        // Note that we ignore COMPLETE_DONT_ESCAPE_TILDES here. We get away with this because
-        // unexpand_tildes only operates on completions that have COMPLETE_REPLACES_TOKEN set,
-        // but we ought to respect them.
         parse_util_get_parameter_info(command_line, cursor_pos, &quote, NULL, NULL);
 
         // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can
@@ -1079,7 +1076,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
             }
         }
 
-        replaced = parse_util_escape_string_with_quote(val_str, quote);
+        replaced = parse_util_escape_string_with_quote(val_str, quote, no_tilde);
     } else {
         replaced = val;
     }
@@ -1194,7 +1191,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
     };
 }
 
-static bool can_autosuggest(void) {
+static bool can_autosuggest() {
     // We autosuggest if suppress_autosuggestion is not set, if we're not doing a history search,
     // and our command line contains a non-whitespace character.
     const editable_line_t *el = data->active_edit_line();
@@ -1215,7 +1212,7 @@ static void autosuggest_completed(autosuggestion_result_t result) {
     }
 }
 
-static void update_autosuggestion(void) {
+static void update_autosuggestion() {
     // Updates autosuggestion. We look for an autosuggestion if the command line is non-empty and if
     // we're not doing a history search.
     data->autosuggestion.clear();
@@ -1391,8 +1388,7 @@ static bool handle_completions(const std::vector<completion_t> &comp,
     // Determine whether we are going to replace the token or not. If any commands of the best
     // type do not require replacement, then ignore all those that want to use replacement.
     bool will_replace_token = true;
-    for (size_t i = 0; i < comp.size(); i++) {
-        const completion_t &el = comp.at(i);
+    for (const completion_t &el : comp) {
         if (el.match.type <= best_match_type && !(el.flags & COMPLETE_REPLACES_TOKEN)) {
             will_replace_token = false;
             break;
@@ -1402,8 +1398,7 @@ static bool handle_completions(const std::vector<completion_t> &comp,
     // Decide which completions survived. There may be a lot of them; it would be nice if we could
     // figure out how to avoid copying them here.
     std::vector<completion_t> surviving_completions;
-    for (size_t i = 0; i < comp.size(); i++) {
-        const completion_t &el = comp.at(i);
+    for (const completion_t &el : comp) {
         // Ignore completions with a less suitable match type than the best.
         if (el.match.type > best_match_type) continue;
 
@@ -1424,12 +1419,13 @@ static bool handle_completions(const std::vector<completion_t> &comp,
         wcstring common_prefix;
         complete_flags_t flags = 0;
         bool prefix_is_partial_completion = false;
-        for (size_t i = 0; i < surviving_completions.size(); i++) {
-            const completion_t &el = surviving_completions.at(i);
-            if (i == 0) {
+        bool first = true;
+        for (const completion_t &el : surviving_completions) {
+            if (first) {
                 // First entry, use the whole string.
                 common_prefix = el.completion;
                 flags = el.flags;
+                first = false;
             } else {
                 // Determine the shared prefix length.
                 size_t idx, max = mini(common_prefix.size(), el.completion.size());
@@ -1748,13 +1744,14 @@ static void handle_token_history(history_search_direction_t dir, bool reset = fa
             tok_t token;
             while (tok.next(&token)) {
                 if (token.type != TOK_STRING) continue;
-                if (token.text.find(data->search_buff) == wcstring::npos) continue;
+                wcstring text = tok.text_of(token);
+                if (text.find(data->search_buff) == wcstring::npos) continue;
                 if (token.offset >= current_pos) continue;
 
-                auto found = find(data->search_prev.begin(), data->search_prev.end(), token.text);
+                auto found = find(data->search_prev.begin(), data->search_prev.end(), text);
                 if (found == data->search_prev.end()) {
                     data->token_history_pos = token.offset;
-                    str = token.text;
+                    str = text;
                 }
             }
         }
@@ -1821,12 +1818,12 @@ static void move_word(editable_line_t *el, bool move_right, bool erase,
     }
 }
 
-const wchar_t *reader_get_buffer(void) {
+const wchar_t *reader_get_buffer() {
     ASSERT_IS_MAIN_THREAD();
     return data ? data->command_line.text.c_str() : NULL;
 }
 
-history_t *reader_get_history(void) {
+history_t *reader_get_history() {
     ASSERT_IS_MAIN_THREAD();
     return data ? data->history : NULL;
 }
@@ -2026,7 +2023,7 @@ void reader_set_exit_on_interrupt(bool i) { data->exit_on_interrupt = i; }
 
 void reader_set_silent_status(bool flag) { data->silent = flag; }
 
-void reader_import_history_if_necessary(void) {
+void reader_import_history_if_necessary() {
     // Import history from older location (config path) if our current history is empty.
     if (data->history && data->history->is_empty()) {
         data->history->populate_from_config_path();
@@ -2049,7 +2046,7 @@ void reader_import_history_if_necessary(void) {
 }
 
 /// Called to set the highlight flag for search results.
-static void highlight_search(void) {
+static void highlight_search() {
     if (!data->search_buff.empty() && !data->history_search.is_at_end()) {
         const editable_line_t *el = &data->command_line;
         const wcstring &needle = data->search_buff;
@@ -2220,7 +2217,7 @@ static bool selection_is_at_top() {
 }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
-static int read_i(void) {
+static int read_i() {
     reader_push(history_session_id().c_str());
     reader_set_complete_function(&complete);
     reader_set_highlight_function(&highlight_shell);
@@ -2319,7 +2316,7 @@ static wchar_t unescaped_quote(const wcstring &str, size_t pos) {
 
 /// Returns true if the last token is a comment.
 static bool text_ends_in_comment(const wcstring &text) {
-    tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS | TOK_SQUASH_ERRORS);
+    tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS);
     tok_t token;
     while (tok.next(&token)) {
         ;  // pass

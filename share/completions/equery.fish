@@ -1,18 +1,18 @@
 # TODO unused
 function __fish_equery_print_format
 	printf "%s\t%s\n" \
-		'$cp'           "Contains the category and the package name only (e.g 'app-portage/gentoolkit')." \
-		'$cpv'          "Contains the category, the package name and the full version (e.g. 'app-portage/gentoolkit-0.3.0_rc10-r1')." \
-		'$category'     "Contains just the category (e.g. 'app-portage')." \
-		'$name'         "Contains just the package name (e.g. 'gentoolkit')." \
-		'$version'      "Contains the package version (without the revision) (e.g. '0.3.0_rc10')." \
-		'$revision'     "Contains the package revision (e.g. 'r1')." \
-		'$fullversion'  "Contains the package version including its revision (e.g. '0.3.0_rc10-r1')." \
-		'$slot'         "Contains the package's slot." \
-		'$repo'         "Contains the name of the package's repository (e.g. 'gentoo')." \
-		'$mask'         "The Mask-status field (~M-??)." \
-		'$mask2'        "Contains a verbose description of the packages masking status." \
-		'$location'     "The Location field (IPO-)."
+		'$cp'           "Contains the category and the package name only (e.g 'app-portage/gentoolkit')" \
+		'$cpv'          "Contains the category, the package name and the full version (e.g. 'app-portage/gentoolkit-0.3.0_rc10-r1')" \
+		'$category'     "Contains just the category (e.g. 'app-portage')" \
+		'$name'         "Contains just the package name (e.g. 'gentoolkit')" \
+		'$version'      "Contains the package version (without the revision) (e.g. '0.3.0_rc10')" \
+		'$revision'     "Contains the package revision (e.g. 'r1')" \
+		'$fullversion'  "Contains the package version including its revision (e.g. '0.3.0_rc10-r1')" \
+		'$slot'         "Contains the package's slot" \
+		'$repo'         "Contains the name of the package's repository (e.g. 'gentoo')" \
+		'$mask'         "The Mask-status field (~M-??)" \
+		'$mask2'        "Contains a verbose description of the packages masking status" \
+		'$location'     "The Location field (IPO-)"
 end
 
 ## Global Opts

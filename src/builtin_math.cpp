@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 
 #include "tinyexpr.h"
@@ -145,7 +146,28 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
     double v = te_interp(narrow_str.c_str(), &error);
 
     if (error.position == 0) {
-        if (opts.scale == 0) {
+        // Check some runtime errors after the fact.
+        // TODO: Really, this should be done in tinyexpr
+        // (e.g. infinite is the result of "x / 0"),
+        // but that's much more work.
+        if (std::isinfinite(v)) {
+            streams.err.append_format(L"%ls: Error: Result is infinite\n", cmd);
+            streams.err.append_format(L"'%ls'\n", expression.c_str());
+            retval = STATUS_CMD_ERROR;
+        } else if (std::isnan(v)) {
+            streams.err.append_format(L"%ls: Error: Result is not a number\n", cmd);
+            streams.err.append_format(L"'%ls'\n", expression.c_str());
+            retval = STATUS_CMD_ERROR;
+        } else if (v >= LONG_MAX) {
+            streams.err.append_format(L"%ls: Error: Result is too large\n", cmd);
+            streams.err.append_format(L"'%ls'\n", expression.c_str());
+            retval = STATUS_CMD_ERROR;
+        } else if (v <= LONG_MIN) {
+            streams.err.append_format(L"%ls: Error: Result is too small\n", cmd);
+            streams.err.append_format(L"'%ls'\n", expression.c_str());
+            retval = STATUS_CMD_ERROR;
+        } else if (opts.scale == 0) {
+            // Normal results
             streams.out.append_format(L"%ld\n", static_cast<long>(v));
         } else {
             streams.out.append_format(L"%.*lf\n", opts.scale, v);

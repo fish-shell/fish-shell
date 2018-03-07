@@ -17,7 +17,7 @@ The following options are available:
 
 \subsection return-values Return Values
 
-If the expression is successfully evaluated the return `status` is zero (success) else one.
+If the expression is successfully evaluated and doesn't over/underflow or return NaN the return `status` is zero (success) else one.
 
 \subsection math-syntax
 

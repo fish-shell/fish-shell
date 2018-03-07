@@ -96,7 +96,7 @@ complete -c emerge -s U -l changed-use
 complete -c emerge -s l -l changelog    -d "show changelog of package. Use with --pretend"
 complete -c emerge      -l color        -d "colorized output" \
 	-xa "y n"
-complete -c emerge      -l colums       -d "Align output. Use with --pretend"
+complete -c emerge      -l columns      -d "Align output. Use with --pretend"
 complete -c emerge      -l complete-graph
 # complete-graph-if-new-use <yn>
 # complete-graph-if-new-ver <yn>

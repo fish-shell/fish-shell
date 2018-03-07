@@ -335,7 +335,7 @@ function __fish_git_possible_commithash
 end
 
 function __fish_git_reflog
-    command git reflog ^/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
+    command git reflog --no-decorate ^/dev/null | string replace -r '[0-9a-f]* [(.+@\{[0-9]+\}): (.*)$' '$1\t$2'
 end
 
 # general options

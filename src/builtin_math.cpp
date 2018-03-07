@@ -150,7 +150,7 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
         // TODO: Really, this should be done in tinyexpr
         // (e.g. infinite is the result of "x / 0"),
         // but that's much more work.
-        if (std::isinfinite(v)) {
+        if (std::isinf(v)) {
             streams.err.append_format(L"%ls: Error: Result is infinite\n", cmd);
             streams.err.append_format(L"'%ls'\n", expression.c_str());
             retval = STATUS_CMD_ERROR;

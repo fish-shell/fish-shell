@@ -24,3 +24,7 @@ math: Error: Too many arguments
        ^
 math: Expected at least 1 args, got only 0
 math: Expected at least 1 args, got only 0
+math: Error: Result is too large
+'2^650'
+math: Error: Result is infinite
+'1 / 0'

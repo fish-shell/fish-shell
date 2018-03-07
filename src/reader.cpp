@@ -711,6 +711,10 @@ static void exec_prompt() {
     // Do not allow the exit status of the prompts to leak through.
     const bool apply_exit_status = false;
 
+    // HACK: Query winsize again because it might have changed.
+    // This allows prompts to react to $COLUMNS.
+    (void) get_current_winsize();
+
     // If we have any prompts, they must be run non-interactively.
     if (data->left_prompt.size() || data->right_prompt.size()) {
         proc_push_interactive(0);

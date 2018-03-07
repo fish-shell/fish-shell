@@ -18,9 +18,9 @@ function __fish_emerge_print_sets
 		case @profile
 			printf '%s\t%s\n' $s 'set of packages deemed necessary for your system to run properly'
 		case @selected-packages
-			printf '%s\t%s\n' $s 'contains the user-selected "world" packages that are listed in /var/lib/portage/world'
+			printf '%s\t%s\n' $s 'packages listed in /var/lib/portage/world'
 		case @selected-sets
-			printf '%s\t%s\n' $s 'contains the nested sets that may be listed in /var/lib/portage/world_sets'
+			printf '%s\t%s\n' $s 'sets listed in /var/lib/portage/world_sets'
 		case @selected
 			printf '%s\t%s\n' $s 'encompasses both the selected-packages and selected-sets sets'
 		case @system

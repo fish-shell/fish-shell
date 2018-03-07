@@ -3,7 +3,7 @@ complete -c emaint -s h -l help         -d "show this help message and exit"
 complete -c emaint -s c -l check        -d "Check for problems (a default option for most modules)"
 complete -c emaint      -l version      -d "show program's version number and exit"
 complete -c emaint -s f -l fix          -d "Attempt to fix problems (a default option for most modules)"
-complete -c emaint -s P -l purge        -d "Removes the list of previously failed merges. WARNING: Only use this option if you plan on manually fixing them or do not want them re-installed"
+complete -c emaint -s P -l purge        -d "Remove the list of previously failed merges"
 
 ## Subcommands
 complete -c emaint -n '__fish_use_subcommand' -xa 'all'         -d 'Perform all supported commands'

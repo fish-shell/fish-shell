@@ -234,6 +234,20 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __fish_enable_bracketed_paste
     end
 
+    # Similarly, enable TMUX's focus reporting when in tmux.
+    # This will be handled by
+    # - The keybindings (reading the sequence and triggering an event)
+    # - Any listeners (like the vi-cursor)
+    if set -q TMUX
+        function __fish_enable_focus --on-event fish_postexec
+            echo \e\[\?1004h
+        end
+        function __fish_disable_focus --on-event fish_preexec
+            echo \e\[\?1004l
+        end
+        __fish_enable_focus
+    end
+
     function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"
         commandline -f repaint >/dev/null 2>/dev/null
     end

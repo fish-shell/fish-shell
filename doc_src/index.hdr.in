@@ -550,7 +550,13 @@ echo The plural of $WORD is {$WORD}s
 
 Note that without the quotes or braces, fish will try to expand a variable called `$WORDs`, which may not exist.
 
-The latter syntax `{$WORD}` works by exploiting <a href="#expand-brace">brace expansion</a>; care should be taken with zero-element array variables and undefined variables, as these expand as a <a href="#cartesian-product">cartesian product</a>, so they eliminate the string.
+The latter syntax `{$WORD}` works by exploiting <a href="#expand-brace">brace expansion</a>.
+
+When two expansions directly follow each other, you need to watch out for expansions that expand to nothing. This includes undefined variables and empty lists, but also command substitutions with no output.
+
+In these cases, the expansion eliminates the string, as a result of the implicit <a href="#cartesian-product">cartesian product</a>.
+
+If, in the example above, $WORD is undefined or an empty list, the "s" is not printed. However, it is printed, if $WORD is the empty string.
 
 Variable expansion is the only type of expansion performed on double quoted strings. There is, however, an important difference in how variables are expanded when quoted and when unquoted. An unquoted variable expansion will result in a variable number of arguments. For example, if the variable `$foo` has zero elements or is undefined, the argument `$foo` will expand to zero elements. If the variable $foo is an array of five elements, the argument `$foo` will expand to five elements. When quoted, like `"$foo"`, a variable expansion will always result in exactly one argument. Undefined variables will expand to the empty string, and array variables will be concatenated using the space character.
 
@@ -595,10 +601,32 @@ Examples:
 
 >_ echo {$b}word
 <outp>1word 2word 3word</outp>
+
+>_ echo {$c}word
+<outp># Output is an empty line</outp>
 \endfish
 
-Be careful when you try to use braces to separate variable names from text. The dangers noted in the last example above can be avoided by wrapping the variable in double quotes instead of braces (`echo "$b"word`).
+Be careful when you try to use braces to separate variable names from text. The problem shown in the last example above can be avoided by wrapping the variable in double quotes instead of braces (`echo "$c"word`).
 
+Please note, that the expansion as cartesian product also happens after <a href="#expand-command-substitution">command substitution</a>. Therefore strings might be eliminated. This can be avoided by returning the empty string.
+
+Examples:
+\fish{cli-dark}
+>_ set b 1 2 3
+>_ echo (echo x)$b
+<outp>x1 x2 x3</outp>
+
+function void
+end
+>_ echo (void)word
+<outp># Output is an empty line</outp>
+
+function empty
+    echo
+end
+>_ echo (empty)word
+<outp>word</outp>
+\endfish
 
 \subsection expand-index-range Index range expansion
 

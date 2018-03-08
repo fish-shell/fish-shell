@@ -552,7 +552,11 @@ Note that without the quotes or braces, fish will try to expand a variable calle
 
 The latter syntax `{$WORD}` works by exploiting <a href="#expand-brace">brace expansion</a>.
 
-In cases as in the latter two examples where a string and an expansion directly follow each other, care should be taken with zero-element array variables and undefined variables. The expansion eliminates the string, as it expands as a <a href="#cartesian-product">cartesian product</a> as described in the next chapter. Therefore the "s" is not printed in the examples above, if $WORD is undefined or a zero-element array. However, it is printed, if $WORD is the empty string.
+When two expansions directly follow each other, you need to watch out for expansions that expand to nothing. This includes undefined variables and empty lists, but also command substitutions with no output.
+
+In these cases, the expansion eliminates the string, as a result of the implicit <a href="#cartesian-product">cartesian product</a>.
+
+If, in the example above, $WORD is undefined or an empty list, the "s" is not printed. However, it is printed, if $WORD is the empty string.
 
 Variable expansion is the only type of expansion performed on double quoted strings. There is, however, an important difference in how variables are expanded when quoted and when unquoted. An unquoted variable expansion will result in a variable number of arguments. For example, if the variable `$foo` has zero elements or is undefined, the argument `$foo` will expand to zero elements. If the variable $foo is an array of five elements, the argument `$foo` will expand to five elements. When quoted, like `"$foo"`, a variable expansion will always result in exactly one argument. Undefined variables will expand to the empty string, and array variables will be concatenated using the space character.
 
@@ -604,7 +608,7 @@ Examples:
 
 Be careful when you try to use braces to separate variable names from text. The problem shown in the last example above can be avoided by wrapping the variable in double quotes instead of braces (`echo "$c"word`).
 
-Please note, that the expansion as cartesian products also happens after function expansion. Therefore strings might be elided. This can be avoided by returning the empty string.
+Please note, that the expansion as cartesian product also happens after <a href="#expand-command-substitution">command substitution</a>. Therefore strings might be eliminated. This can be avoided by returning the empty string.
 
 Examples:
 \fish{cli-dark}
@@ -618,7 +622,7 @@ end
 <outp># Output is an empty line</outp>
 
 function empty
-    echo ""
+    echo
 end
 >_ echo (empty)word
 <outp>word</outp>

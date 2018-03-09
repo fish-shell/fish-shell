@@ -61,7 +61,7 @@ function funced --description 'Edit function definition'
         end
 
         set -l prompt 'printf "%s%s%s> " (set_color green) '$funcname' (set_color normal)'
-        if read -p $prompt -c "$init" -s cmd
+        if read -p $prompt -c "$init" --shell cmd
             echo -n $cmd | fish_indent | read -lz cmd
             eval "$cmd"
         end

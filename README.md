@@ -76,7 +76,6 @@ Running fish requires:
     * `awk`
     * `find`
     * `grep`
-    * `hostname`
     * `kill`
     * `ps`
     * `sed`

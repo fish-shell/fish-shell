@@ -365,36 +365,32 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 
 /// Try reading the specified function mapping.
 static bool input_mapping_is_match(const input_mapping_t &m) {
-    wchar_t c = 0;
-    int j;
+    const wcstring &str = m.seq;
 
+    assert(str.size() > 0 && "zero-length input string passed to input_mapping_is_match!");
     debug(4, L"trying to match mapping %ls", escape_string(m.seq.c_str(), ESCAPE_ALL).c_str());
-    const wchar_t *str = m.seq.c_str();
-    for (j = 0; str[j] != L'\0'; j++) {
-        bool timed = (j > 0 && iswcntrl(str[0]));
 
-        c = input_common_readch(timed);
-        if (str[j] != c) {
-            break;
+    bool timed_first_char = iswcntrl(str[0]);
+    // i must be signed because we reverse direction below
+    for (ssize_t i = 0; i < str.size(); ++i) {
+        // Treat all strings beginning with control codes (0x00-0x1F) as timed characters, meaning they are assumed to be
+        // their literal representation if not followed up with another character within the defined timeout. Obviously
+        // we never time out on the first character in the sequence.
+        bool timed = i && timed_first_char;
+        wchar_t read = input_common_readch(timed);
+
+        if (read != str[i]) {
+            // We didn't match the bind sequence/input mapping, (it timed out or they entered something else)
+            // Undo consumption of the read characters since we didn't match the bind sequence and abort.
+            input_common_next_ch(read);
+            while (--i >= 0) {
+                input_common_next_ch(str[i]);
+            }
+            return false;
         }
     }
 
-    if (str[j] == L'\0') {
-        // debug(0, L"matched mapping %ls (%ls)\n", escape_string(m.seq.c_str(),
-        // ESCAPE_ALL).c_str(),
-        // m.command.c_str());
-        // We matched the entire sequence.
-        return true;
-    }
-
-    // Reinsert the chars we read to be read again since we didn't match the bind sequence (i.e.,
-    // the input mapping).
-    input_common_next_ch(c);
-    for (int k = j - 1; k >= 0; k--) {
-        input_common_next_ch(m.seq[k]);
-    }
-
-    return false;
+    return true;
 }
 
 void input_queue_ch(wint_t ch) { input_common_queue_ch(ch); }

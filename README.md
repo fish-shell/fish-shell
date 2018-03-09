@@ -44,18 +44,14 @@ Instructions for other distributions may be found at [fishshell.com](https://fis
 
 ### Windows
 
-fish can be installed using [Cygwin](https://cygwin.com/) Setup (under the **Shells** category).
-
-fish can be installed into Windows Subsystem for Linux using the instructions under *Packages for
-Linux* for the appropriate image (eg Ubuntu).
+- On Windows 10, fish can be installed under the WSL Windows Subsystem for Linux with `sudo apt install fish` or from source with the instructions below.
+- Fish can also be installed on all versions of Windows using [Cygwin](https://cygwin.com/) (from the **Shells** category).
 
 ### Building from source
 
 If packages are not available for your platform, GPG-signed tarballs are available from
 [fishshell.com](https://fishshell.com/) and [fish-shell on
-GitHub](https://github.com/fish-shell/fish-shell/releases).
-
-See the *Building* section for instructions.
+GitHub](https://github.com/fish-shell/fish-shell/releases).  See the *Building* section for instructions.
 
 ## Running fish
 
@@ -65,32 +61,18 @@ Once installed, run `fish` from your current shell to try fish out!
 
 Running fish requires:
 
-* a curses implementation such as ncurses (libraries and the `tput` command)
-* PCRE2 library - a copy is included with fish
-* MuParser library - a copy is included with fish
+* curses or ncurses (preinstalled on most **nix systems)
+* some common **nix system utilities (currently `mktemp` and `seq`), in addition to the basic posix utilities
 * gettext (library and `gettext` command), if compiled with translation support
-* basic system utilities including `basename`, `cat`, `cut`, `date`, `dircolors`, `dirname`, `ls`,
-  `mkdir`, `mkfifo`, `mktemp`, `rm`, `seq`, `sort`, `stat`, `stty`, `tail`, `tr`, `tty`, `uname`,
-  `uniq`, `wc`, and `whoami`
-* a number of common UNIX utilities:
-    * `awk`
-    * `find`
-    * `grep`
-    * `kill`
-    * `ps`
-    * `sed`
 
 The following optional features also have specific requirements:
 
-* builtin commands that have the `--help` option or print usage messages require `nroff` and
-  `ul` (manual page formatters) to do so
-* completion generation from manual pages requires Python 2.7, 3.3 or greater, and possibly the
+* builtin commands that have the `--help` option or print usage messages require `nroff` and `ul`
+* automated completion generation from manual pages requires Python (2.7+ or 3.3+) and possibly the
   `backports.lzma` module for Python 2.7
-* the `fish_config` Web configuration tool requires Python 2.7, 3.3 or greater, and a web browser
+* the `fish_config` web configuration tool requires Python (2.7+ or 3.3 +) and a web browser
 * system clipboard integration (with the default Ctrl-V and Ctrl-X bindings) require either the
   `xsel` or `pbcopy`/`pbpaste` utilities
-* prompts which support showing VCS information (Git, Mercurial or Subversion) require these
-  utilities
 
 ### Switching to fish
 
@@ -98,19 +80,13 @@ If you wish to use fish as your default shell, use the following command:
 
 	chsh -s /usr/local/bin/fish
 
-chsh will prompt you for your password, and change your default shell. Substitute `/usr/local/bin/fish` with whatever path to fish is in your `/etc/shells` file.
+`chsh` will prompt you for your password and change your default shell. (Substitute `/usr/local/bin/fish` with whatever path fish was installed to, if it differs.)
 
-Use the following command if you didn't already add your fish path to `/etc/shells`.
+Use the following command if fish isn't already added to `/etc/shells` to permit fish to be your login shell:
 
     echo /usr/local/bin/fish | sudo tee -a /etc/shells
 
-To switch your default shell back, you can run:
-
-	chsh -s /bin/bash
-
-Substitute `/bin/bash` with `/bin/tcsh` or `/bin/zsh` as appropriate.
-
-You may need to logout/login for the change (chsh) to take effect.
+To switch your default shell back, you can run `chsh -s /bin/bash` (substituting `/bin/bash` with `/bin/tcsh` or `/bin/zsh` as appropriate).
 
 ## Building
 
@@ -119,27 +95,22 @@ You may need to logout/login for the change (chsh) to take effect.
 Compiling fish requires:
 
 * a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
-* CMake, or GNU Make (all platforms), or Xcode (macOS only)
+* any of CMake, GNU Make, or (on macOS only) Xcode
 * a curses implementation such as ncurses (headers and libraries)
 * PCRE2 (headers and libraries) - a copy is included with fish
-* MuParser (headers and libraries) - a copy is included with fish
 * gettext (headers and libraries) - optional, for translation support
 
-Compiling from git (that is, not a released tarball) also requires:
+Additionally, if compiling fish with GNU Make from git (that is, not from an officially released tarball), `autoconf` 2.60+ and `automake` 1.13+ are required. Doxygen (1.8.7 or later) is also optionally required to build the documentation from a cloned git repository.
 
-* either Xcode (macOS only) or the following Autotools utilities (all platforms):
-    * autoconf 2.60 or later
-    * automake 1.13 or later
-* Doxygen (1.8.7 or later) - optional, for documentation
+### Building from source (all platforms)
 
-### Building from source
-
-#### Using CMake
+#### Using CMake (preferred)
 
 ```bash
 mkdir build; cd build
 cmake .. #  add -DCMAKE_BUILD_TYPE=Release for release build
-make install
+make
+sudo make install
 ```
 
 #### Using autotools
@@ -151,16 +122,18 @@ make
 sudo make install
 ```
 
-### Xcode Development Build
+### Building from source (macOS only)
 
 * Build the `base` target in Xcode
 * Run the fish executable, for example, in `DerivedData/fish/Build/Products/Debug/base/bin/fish`
 
-### Xcode Build and Install
+To build and install fish with Xcode on macOS, execute the following in a terminal:
 
-    xcodebuild install
-    sudo ditto /tmp/fish.dst /
-    sudo make install-doc
+```bash
+xcodebuild install
+sudo ditto /tmp/fish.dst /
+sudo make install-doc
+```
 
 ### Help, it didn't build!
 

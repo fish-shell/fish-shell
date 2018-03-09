@@ -44,6 +44,7 @@
 #include "utf8.h"
 #include "util.h"  // IWYU pragma: keep
 #include "wutil.h"
+#include "wcstringutil.h"
 
 #if __APPLE__
 #define FISH_NOTIFYD_AVAILABLE 1
@@ -76,7 +77,6 @@
     "changes will be overwritten.\n"
 
 static wcstring get_machine_identifier();
-static bool get_hostname_identifier(wcstring *result);
 
 static wcstring vars_filename_in_directory(const wcstring &wdir) {
     if (wdir.empty()) return L"";
@@ -495,7 +495,7 @@ bool env_universal_t::load(callback_data_list_t &callbacks) {
         // Silently "upgraded."
         tried_renaming = true;
         wcstring hostname_id;
-        if (get_hostname_identifier(&hostname_id)) {
+        if (get_hostname_identifier(hostname_id)) {
             const wcstring hostname_path = wdirname(vars_path) + L'/' + hostname_id;
             if (0 == wrename(hostname_path, vars_path)) {
                 // We renamed - try again.
@@ -911,11 +911,14 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN]) { return
 #endif
 
 /// Function to get an identifier based on the hostname.
-static bool get_hostname_identifier(wcstring *result) {
+bool get_hostname_identifier(wcstring &result) {
+    //The behavior of gethostname if the buffer size is insufficient differs by implementation and libc version
+    //Work around this by using a "guaranteed" sufficient buffer size then truncating the result.
     bool success = false;
-    char hostname[HOSTNAME_LEN + 1] = {};
-    if (gethostname(hostname, HOSTNAME_LEN) == 0) {
-        result->assign(str2wcstring(hostname));
+    char hostname[256] = {};
+    if (gethostname(hostname, sizeof(hostname)) == 0) {
+        result.assign(str2wcstring(hostname));
+        result.assign(truncate(result, HOSTNAME_LEN));
         success = true;
     }
     return success;
@@ -931,7 +934,7 @@ wcstring get_machine_identifier() {
         for (size_t i = 0; i < MAC_ADDRESS_MAX_LEN; i++) {
             append_format(result, L"%02x", mac_addr[i]);
         }
-    } else if (!get_hostname_identifier(&result)) {
+    } else if (!get_hostname_identifier(result)) {
         result.assign(L"nohost");  // fallback to a dummy value
     }
     return result;

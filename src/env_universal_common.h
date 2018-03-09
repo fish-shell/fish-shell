@@ -28,6 +28,7 @@ struct callback_data_t {
 
 typedef std::vector<struct callback_data_t> callback_data_list_t;
 
+bool get_hostname_identifier(wcstring &result);
 /// Class representing universal variables.
 class env_universal_t {
     var_table_t vars;  // current values

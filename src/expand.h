@@ -60,8 +60,6 @@ class completion_t;
 enum {
     /// Character representing a home directory.
     HOME_DIRECTORY = EXPAND_RESERVED_BASE,
-    /// Character representing process expansion.
-    PROCESS_EXPAND,
     /// Character representing variable expansion.
     VARIABLE_EXPAND,
     /// Character representing variable expansion into a single element.

@@ -7,8 +7,7 @@ This section is for changes merged to the `major` branch that are not also merge
 
 ## Notable non-backward compatible changes
 - `.` command no longer exists -- use `source` (#4294).
-- `read` now requires at least one var name (#4220).
-- `read` now uses `-s` as short for `--silent` (à la `bash`); `--shell`'s abbreviation (formerly `-i`) is now `-S` instead (#4490).
+- `read` now uses `-s` as short for `--silent` (à la `bash`); `--shell`'s abbreviation (formerly `-s`) is now `-S` instead (#4490).
 - `set x[1] x[2] a b` is no longer valid syntax (#4236).
 - For loop control variables are no longer local to the for block (#1935).
 - A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier. (#1109, #4632)
@@ -18,6 +17,7 @@ This section is for changes merged to the `major` branch that are not also merge
 ## Notable fixes and improvements
 - `wait` builtin is added for waiting on processes (#4498).
 - `read` has a new `--delimiter` option as a better alternative to the `IFS` variable (#4256).
+- `read` writes directly to stdout if called without arguments (#4407)
 - `set` has a new `--append` and `--prepend` option (#1326).
 - `set` has a new `--show` option to show lots of information about variables (#4265).
 - `complete` now has a `-k` and `--keep-order` option to keep the order of the `OPTION_ARGUMENTS` (#361).
@@ -28,7 +28,6 @@ This section is for changes merged to the `major` branch that are not also merge
 - `math` is now a builtin rather than a wrapper around `bc` (#3157).
 - `history search` supports globs for wildcard searching (#3136).
 - `bind` has a new `--silent` option to ignore bind requests for named keys not available under the current `$TERMINAL` (#4188, #4431)
-- `read` writes directly to stdout if called without arguments (#4407)
 - Globs are faster (#4579)
 - `string` reads from stdin faster (#4610)
 - `cd` tab completions no longer descend into the deepest unambiguous path (#4649)

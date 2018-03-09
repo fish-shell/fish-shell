@@ -49,4 +49,15 @@ void split_about(ITER haystack_start, ITER haystack_end, ITER needle_start, ITER
     // Trailing component, possibly empty.
     output->push_back(wcstring(haystack_cursor, haystack_end));
 }
+
+enum class ellipsis_type {
+    None,
+    //Prefer niceness over minimalness
+    Prettiest,
+    //Make every character count ($ instead of ...)
+    Shortest,
+};
+
+wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype = ellipsis_type::Prettiest);
+
 #endif

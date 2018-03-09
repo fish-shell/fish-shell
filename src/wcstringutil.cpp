@@ -29,3 +29,19 @@ wcstring_range wcstring_tok(wcstring& str, const wcstring& needle, wcstring_rang
     str[next_pos] = L'\0';
     return std::make_pair(pos, next_pos - pos);
 }
+
+wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype) {
+    if (input.size() <= max_len) {
+        return input;
+    }
+
+    if (etype == ellipsis_type::None) {
+        return input.substr(0, max_len);
+    }
+    if (etype == ellipsis_type::Prettiest) {
+        return input.substr(0, max_len - wcslen(ellipsis_str)).append(ellipsis_str);
+    }
+    wcstring output = input.substr(0, max_len - 1);
+    output.push_back(ellipsis_char);
+    return output;
+}

@@ -44,6 +44,7 @@
 #include "utf8.h"
 #include "util.h"  // IWYU pragma: keep
 #include "wutil.h"
+#include "wcstringutil.h"
 
 #if __APPLE__
 #define FISH_NOTIFYD_AVAILABLE 1
@@ -912,10 +913,13 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN]) { return
 
 /// Function to get an identifier based on the hostname.
 static bool get_hostname_identifier(wcstring *result) {
+    //The behavior of gethostname if the buffer size is insufficient differs by implementation and libc version
+    //Work around this by using a "guaranteed" sufficient buffer size then truncating the result.
     bool success = false;
-    char hostname[HOSTNAME_LEN + 1] = {};
-    if (gethostname(hostname, HOSTNAME_LEN) == 0) {
+    char hostname[256] = {};
+    if (gethostname(hostname, sizeof(hostname)) == 0) {
         result->assign(str2wcstring(hostname));
+        result->assign(truncate(*result, HOSTNAME_LEN));
         success = true;
     }
     return success;

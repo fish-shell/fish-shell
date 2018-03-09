@@ -147,6 +147,11 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 opts.delimiter = w.woptarg;
                 break;
             }
+            case 'i': {
+                streams.err.append_format(_(L"%ls: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n"),
+                        cmd);
+                return STATUS_INVALID_ARGS;
+            }
             case 's': {
                 opts.silent = true;
                 break;

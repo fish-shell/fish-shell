@@ -17,7 +17,7 @@ The following options are available:
 
 - `-g` or `--global` makes the variables global.
 
-- `-i` or `--silent` makes the characters typed obfuscated. This is useful for reading things like passwords or other sensitive information. Note that in bash the short flag is `-s`. We can't use that due to the existing use as an alias for `--shell`.
+- `-s` or `--silent` masks characters written to the terminal, replacing them with asterisks. This is useful for reading things like passwords or other sensitive information.
 
 - `-l` or `--local` makes the variables local.
 
@@ -30,7 +30,7 @@ The following options are available:
 
 - `-R RIGHT_PROMPT_CMD` or `--right-prompt=RIGHT_PROMPT_CMD` uses the output of the shell command `RIGHT_PROMPT_CMD` as the right prompt for the interactive mode. There is no default right prompt command.
 
-- `-s` or `--shell` enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode.
+- `-S` or `--shell` enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode. NOTE: Prior to fish 3.0, the short opt for `--shell` was `-s`, but it has been changed for compatibility with bash's `-s` short opt for `--silent`.
 
 - `-u` or `--unexport` prevents the variables from being exported to child processes (default behaviour).
 

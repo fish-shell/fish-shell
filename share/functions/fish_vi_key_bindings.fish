@@ -19,7 +19,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     # Silence warnings about unavailable keys. See #4431, 4188
     if not contains -- -s $argv
-        set argv "-s" $argv
+        set argv "-s" "-M" $argv
     end
 
     # Allow just calling this function to correctly set the bindings.
@@ -61,23 +61,23 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         __fish_shared_key_bindings -M $mode
     end
 
-    bind -M insert \r execute
-    bind -M insert \n execute
+    bind $argv insert \r execute
+    bind $argv insert \n execute
 
-    bind -M insert "" self-insert
+    bind $argv insert "" self-insert
 
     # Add way to kill current command line while in insert mode.
-    bind -M insert \cc __fish_cancel_commandline
+    bind $argv insert \cc __fish_cancel_commandline
     # Add a way to switch from insert to normal (command) mode.
     # Note if we are paging, we want to stay in insert mode
     # See #2871
-    bind -M insert \e "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char force-repaint; end"
+    bind $argv insert \e "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char force-repaint; end"
 
     # Default (command) mode
     bind :q exit
     bind -m insert \cc __fish_cancel_commandline
-    bind -M default h backward-char
-    bind -M default l forward-char
+    bind $argv default h backward-char
+    bind $argv default l forward-char
     bind -m insert \n execute
     bind -m insert \r execute
     bind -m insert i force-repaint
@@ -118,28 +118,28 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     # OS X SnowLeopard doesn't have these keys. Don't show an annoying error message.
     # Vi/Vim doesn't support these keys in insert mode but that seems silly so we do so anyway.
-    bind -M insert -k home beginning-of-line 2>/dev/null
-    bind -M default -k home beginning-of-line 2>/dev/null
-    bind -M insert -k end end-of-line 2>/dev/null
-    bind -M default -k end end-of-line 2>/dev/null
+    bind $argv insert -k home beginning-of-line 2>/dev/null
+    bind $argv default -k home beginning-of-line 2>/dev/null
+    bind $argv insert -k end end-of-line 2>/dev/null
+    bind $argv default -k end end-of-line 2>/dev/null
 
     # Vi moves the cursor back if, after deleting, it is at EOL.
     # To emulate that, move forward, then backward, which will be a NOP
     # if there is something to move forward to.
-    bind -M default x delete-char forward-char backward-char
-    bind -M default X backward-delete-char
-    bind -M insert -k dc delete-char forward-char backward-char
-    bind -M default -k dc delete-char forward-char backward-char
+    bind $argv default x delete-char forward-char backward-char
+    bind $argv default X backward-delete-char
+    bind $argv insert -k dc delete-char forward-char backward-char
+    bind $argv default -k dc delete-char forward-char backward-char
 
     # Backspace deletes a char in insert mode, but not in normal/default mode.
-    bind -M insert -k backspace backward-delete-char
-    bind -M default -k backspace backward-char
-    bind -M insert \ch backward-delete-char
-    bind -M default \ch backward-char
-    bind -M insert \x7f backward-delete-char
-    bind -M default \x7f backward-char
-    bind -M insert \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-ctrl-delete
-    bind -M default \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-ctrl-delete
+    bind $argv insert -k backspace backward-delete-char
+    bind $argv default -k backspace backward-char
+    bind $argv insert \ch backward-delete-char
+    bind $argv default \ch backward-char
+    bind $argv insert \x7f backward-delete-char
+    bind $argv default \x7f backward-char
+    bind $argv insert \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-ctrl-delete
+    bind $argv default \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-ctrl-delete
 
     bind dd kill-whole-line
     bind D kill-line
@@ -222,54 +222,54 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Lowercase r, enters replace_one mode
     #
     bind -m replace_one r force-repaint
-    bind -M replace_one -m default '' delete-char self-insert backward-char force-repaint
-    bind -M replace_one -m default \e cancel force-repaint
+    bind $argv replace_one -m default '' delete-char self-insert backward-char force-repaint
+    bind $argv replace_one -m default \e cancel force-repaint
 
     #
     # visual mode
     #
-    bind -M visual h backward-char
-    bind -M visual l forward-char
+    bind $argv visual h backward-char
+    bind $argv visual l forward-char
 
-    bind -M visual k up-line
-    bind -M visual j down-line
+    bind $argv visual k up-line
+    bind $argv visual j down-line
 
-    bind -M visual b backward-word
-    bind -M visual B backward-bigword
-    bind -M visual ge backward-word
-    bind -M visual gE backward-bigword
-    bind -M visual w forward-word
-    bind -M visual W forward-bigword
-    bind -M visual e forward-word
-    bind -M visual E forward-bigword
-    bind -M visual o swap-selection-start-stop force-repaint
+    bind $argv visual b backward-word
+    bind $argv visual B backward-bigword
+    bind $argv visual ge backward-word
+    bind $argv visual gE backward-bigword
+    bind $argv visual w forward-word
+    bind $argv visual W forward-bigword
+    bind $argv visual e forward-word
+    bind $argv visual E forward-bigword
+    bind $argv visual o swap-selection-start-stop force-repaint
 
-    bind -M visual f forward-jump
-    bind -M visual t forward-jump backward-char
-    bind -M visual F backward-jump
-    bind -M visual T backward-jump forward-char
+    bind $argv visual f forward-jump
+    bind $argv visual t forward-jump backward-char
+    bind $argv visual F backward-jump
+    bind $argv visual T backward-jump forward-char
 
     for key in $eol_keys
-        bind -M visual $key end-of-line
+        bind $argv visual $key end-of-line
     end
     for key in $bol_keys
-        bind -M visual $key beginning-of-line
+        bind $argv visual $key beginning-of-line
     end
 
-    bind -M visual -m insert c kill-selection end-selection force-repaint
-    bind -M visual -m default d kill-selection end-selection force-repaint
-    bind -M visual -m default x kill-selection end-selection force-repaint
-    bind -M visual -m default X kill-whole-line end-selection force-repaint
-    bind -M visual -m default y kill-selection yank end-selection force-repaint
-    bind -M visual -m default '"*y' "commandline -s | xsel -p" end-selection force-repaint
+    bind $argv visual -m insert c kill-selection end-selection force-repaint
+    bind $argv visual -m default d kill-selection end-selection force-repaint
+    bind $argv visual -m default x kill-selection end-selection force-repaint
+    bind $argv visual -m default X kill-whole-line end-selection force-repaint
+    bind $argv visual -m default y kill-selection yank end-selection force-repaint
+    bind $argv visual -m default '"*y' "commandline -s | xsel -p" end-selection force-repaint
 
-    bind -M visual -m default \cc end-selection force-repaint
-    bind -M visual -m default \e end-selection force-repaint
+    bind $argv visual -m default \cc end-selection force-repaint
+    bind $argv visual -m default \e end-selection force-repaint
 
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also, remove
     # the commenting chars so the command can be further edited then executed.
-    bind -M default \# __fish_toggle_comment_commandline
-    bind -M visual \# __fish_toggle_comment_commandline
+    bind $argv default \# __fish_toggle_comment_commandline
+    bind $argv visual \# __fish_toggle_comment_commandline
 
     # Set the cursor shape
     # After executing once, this will have defined functions listening for the variable.

@@ -62,10 +62,10 @@ static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'
                                               {L"right-prompt", required_argument, NULL, 'R'},
                                               {L"command", required_argument, NULL, 'c'},
                                               {L"mode-name", required_argument, NULL, 'm'},
-                                              {L"silent", no_argument, NULL, 'i'},
+                                              {L"silent", no_argument, NULL, 's'},
                                               {L"nchars", required_argument, NULL, 'n'},
                                               {L"delimiter", required_argument, NULL, 'd'},
-                                              {L"shell", no_argument, NULL, 's'},
+                                              {L"shell", no_argument, NULL, 'S'},
                                               {L"array", no_argument, NULL, 'a'},
                                               {L"null", no_argument, NULL, 'z'},
                                               {L"help", no_argument, NULL, 'h'},
@@ -148,15 +148,15 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 break;
             }
             case 's': {
-                opts.shell = true;
+                opts.silent = true;
                 break;
             }
             case 'a': {
                 opts.array = true;
                 break;
             }
-            case L'i': {
-                opts.silent = true;
+            case L'S': {
+                opts.shell = true;
                 break;
             }
             case L'z': {

@@ -322,7 +322,7 @@ bool string_set_contains(const T &set, const wchar_t *val) {
 
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wchar_t *val) {
-    const string_set_t env_read_only = {L"PWD", L"SHLVL", L"_", L"history", L"status", L"version", L"pid"};
+    const string_set_t env_read_only = {L"PWD", L"SHLVL", L"_", L"history", L"status", L"version", L"pid", L"hostname"};
     return string_set_contains(env_read_only, val);
 }
 
@@ -971,6 +971,11 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 
     // Set the $pid variable (%self replacement)
     env_set_one(L"pid", ENV_GLOBAL, to_string<long>(getpid()));
+
+    // Set the $hostname variable
+    wcstring hostname = L"fish";
+    get_hostname_identifier(hostname);
+    env_set_one(L"hostname", ENV_GLOBAL, hostname);
 
     // Set up SHLVL variable. Not we can't use env_get because SHLVL is read-only, and therefore was
     // not inherited from the environment.

@@ -183,6 +183,8 @@ extern struct termios shell_modes;
 /// The character to use where the text has been truncated. Is an ellipsis on unicode system and a $
 /// on other systems.
 extern wchar_t ellipsis_char;
+/// The character or string to use where text has been truncated (ellipsis if possible, otherwise ...)
+extern const wchar_t *ellipsis_str;
 
 /// Character representing an omitted newline at the end of text.
 extern wchar_t omitted_newline_char;
@@ -766,7 +768,7 @@ void assert_is_not_forked_child(const char *who);
 
 /// Detect if we are Windows Subsystem for Linux by inspecting /proc/sys/kernel/osrelease
 /// and checking if "Microsoft" is in the first line.
-/// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997 
+/// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
 constexpr bool is_windows_subsystem_for_linux() {
 #ifdef WSL
     return true;

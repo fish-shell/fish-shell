@@ -51,6 +51,7 @@ static pthread_t main_thread_id = 0;
 static bool thread_asserts_cfg_for_testing = false;
 
 wchar_t ellipsis_char;
+const wchar_t *ellipsis_str = nullptr;
 wchar_t omitted_newline_char;
 wchar_t obfuscation_read_char;
 bool g_profiling_active = false;
@@ -507,7 +508,14 @@ void fish_setlocale() {
     // true/false value since the code points are in the BMP but we're going to be paranoid. This
     // is also technically wrong if we're not in a Unicode locale but we expect (or hope)
     // can_be_encoded() will return false in that case.
-    ellipsis_char = can_be_encoded(L'\u2026') ? L'\u2026' : L'$';          // "horizontal ellipsis"
+    if (can_be_encoded(L'\u2026')) {
+        ellipsis_char = L'\u2026';
+        ellipsis_str = L"\u2026";
+    }
+    else {
+        ellipsis_char = L'$'; // "horizontal ellipsis"
+        ellipsis_str = L"...";
+    }
     omitted_newline_char = can_be_encoded(L'\u23CE') ? L'\u23CE' : L'~';   // "return"
     obfuscation_read_char = can_be_encoded(L'\u25CF') ? L'\u25CF' : L'#';  // "black circle"
 }

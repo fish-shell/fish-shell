@@ -452,8 +452,7 @@ static wcstring truncate_command(const wcstring &cmd) {
     }
 
     // Truncation required.
-    const bool ellipsis_is_unicode = (ellipsis_char == L'\x2026');
-    const size_t ellipsis_length = ellipsis_is_unicode ? 1 : 3;
+    const size_t ellipsis_length = wcslen(ellipsis_str); //no need for wcwidth
     size_t trunc_length = max_len - ellipsis_length;
     // Eat trailing whitespace.
     while (trunc_length > 0 && iswspace(cmd.at(trunc_length - 1))) {
@@ -461,11 +460,7 @@ static wcstring truncate_command(const wcstring &cmd) {
     }
     wcstring result = wcstring(cmd, 0, trunc_length);
     // Append ellipsis.
-    if (ellipsis_is_unicode) {
-        result.push_back(ellipsis_char);
-    } else {
-        result.append(L"...");
-    }
+    result.append(ellipsis_str);
     return result;
 }
 

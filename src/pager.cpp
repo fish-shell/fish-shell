@@ -481,16 +481,13 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     assert(stop_row - start_row <= term_height);
     completion_print(cols, width_by_column, start_row, stop_row, prefix, lst, rendering);
 
-    // Ellipsis helper string. Either empty or containing the ellipsis char.
-    const wchar_t ellipsis_string[] = {ellipsis_char == L'\x2026' ? L'\x2026' : L'\0', L'\0'};
-
     // Add the progress line. It's a "more to disclose" line if necessary, or a row listing if
     // it's scrollable; otherwise ignore it.
     // We should never have one row remaining to disclose (else we would have just disclosed it)
     wcstring progress_text;
     assert(rendering->remaining_to_disclose != 1);
     if (rendering->remaining_to_disclose > 1) {
-        progress_text = format_string(_(L"%lsand %lu more rows"), ellipsis_string,
+        progress_text = format_string(_(L"%lsand %lu more rows"), ellipsis_str,
                                       (unsigned long)rendering->remaining_to_disclose);
     } else if (start_row > 0 || stop_row < row_count) {
         // We have a scrollable interface. The +1 here is because we are zero indexed, but want

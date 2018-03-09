@@ -664,13 +664,10 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
         if (!args.empty()) {
             const wcstring argument = get_source(args.at(0));
 
-            wcstring ellipsis_str = wcstring(1, ellipsis_char);
-            if (ellipsis_str == L"$") ellipsis_str = L"...";
-
             // Looks like a command.
             this->report_error(statement, ERROR_BAD_EQUALS_IN_COMMAND5, argument.c_str(),
                                name_str.c_str(), val_str.c_str(), argument.c_str(),
-                               ellipsis_str.c_str());
+                               ellipsis_str);
         } else {
             wcstring assigned_val = reconstruct_orig_str(val_str);
             this->report_error(statement, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, name_str.c_str(),

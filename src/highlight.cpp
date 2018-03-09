@@ -120,7 +120,6 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
     for (size_t i = 0; i < path_with_magic.size(); i++) {
         wchar_t c = path_with_magic.at(i);
         switch (c) {
-            case PROCESS_EXPAND:
             case VARIABLE_EXPAND:
             case VARIABLE_EXPAND_SINGLE:
             case BRACKET_BEGIN:
@@ -535,8 +534,7 @@ static void color_argument_internal(const wcstring &buffstr,
                 } else {
                     // Not a backslash.
                     switch (c) {
-                        case L'~':
-                        case L'%': {
+                        case L'~': {
                             if (in_pos == 0) {
                                 colors[in_pos] = highlight_spec_operator;
                             }

@@ -564,67 +564,6 @@ static void find_process(const wchar_t *proc, expand_flags_t flags,
     }
 }
 
-/// Process id expansion.
-static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags,
-                       std::vector<completion_t> *out, parse_error_list_t *errors) {
-    // Hack. If there's no INTERNAL_SEP and no PROCESS_EXPAND, then there's nothing to do. Check out
-    // this "null terminated string."
-    const wchar_t some_chars[] = {INTERNAL_SEPARATOR, PROCESS_EXPAND, L'\0'};
-    if (instr_with_sep.find_first_of(some_chars) == wcstring::npos) {
-        // Nothing to do.
-        append_completion(out, instr_with_sep);
-        return true;
-    }
-
-    // expand_string calls us with internal separators in instr...sigh.
-    wcstring instr = instr_with_sep;
-    remove_internal_separator(&instr, false);
-
-    if (instr.empty() || instr.at(0) != PROCESS_EXPAND) {
-        // Not a process expansion.
-        append_completion(out, instr);
-        return true;
-    }
-
-    const wchar_t *const in = instr.c_str();
-
-    // We know we are a process expansion now.
-    assert(in[0] == PROCESS_EXPAND);
-
-    if (flags & EXPAND_FOR_COMPLETIONS) {
-        if (wcsncmp(in + 1, SELF_STR, wcslen(in + 1)) == 0) {
-            append_completion(out, &SELF_STR[wcslen(in + 1)], COMPLETE_SELF_DESC, 0);
-        } else if (wcsncmp(in + 1, LAST_STR, wcslen(in + 1)) == 0) {
-            append_completion(out, &LAST_STR[wcslen(in + 1)], COMPLETE_LAST_DESC, 0);
-        }
-    } else {
-        if (wcscmp((in + 1), SELF_STR) == 0) {
-            append_completion(out, to_string<long>(getpid()));
-            return true;
-        }
-        if (wcscmp((in + 1), LAST_STR) == 0) {
-            if (proc_last_bg_pid > 0) {
-                append_completion(out, to_string<long>(proc_last_bg_pid));
-            }
-            return true;
-        }
-    }
-
-    // This is sort of crummy - find_process doesn't return any indication of success, so instead we
-    // check to see if it inserted any completions.
-    const size_t prev_count = out->size();
-    find_process(in + 1, flags, out);
-
-    if (prev_count == out->size() && !(flags & EXPAND_FOR_COMPLETIONS)) {
-        // We failed to find anything.
-        append_syntax_error(errors, 1, FAILED_EXPANSION_PROCESS_ERR_MSG,
-                            escape_string(in + 1, ESCAPE_NO_QUOTED).c_str());
-        return false;
-    }
-
-    return true;
-}
-
 /// Parse an array slicing specification Returns 0 on success. If a parse error occurs, returns the
 /// index of the bad token. Note that 0 can never be a bad index because the string always starts
 /// with [.
@@ -1340,7 +1279,7 @@ static expand_error_t expand_stage_brackets(const wcstring &input, std::vector<c
     return expand_brackets(input, flags, out, errors);
 }
 
-static expand_error_t expand_stage_home_and_pid(const wcstring &input,
+static expand_error_t expand_stage_home(const wcstring &input,
                                                 std::vector<completion_t> *out,
                                                 expand_flags_t flags, parse_error_list_t *errors) {
     wcstring next = input;
@@ -1348,16 +1287,7 @@ static expand_error_t expand_stage_home_and_pid(const wcstring &input,
     if (!(EXPAND_SKIP_HOME_DIRECTORIES & flags)) {
         expand_home_directory(next);
     }
-
-    if (flags & EXPAND_FOR_COMPLETIONS) {
-        if (!next.empty() && next.at(0) == PROCESS_EXPAND) {
-            expand_pid(next, flags, out, NULL);
-            return EXPAND_OK;
-        }
-        append_completion(out, next);
-    } else if (!expand_pid(next, flags, out, errors)) {
-        return EXPAND_ERROR;
-    }
+    append_completion(out, next);
     return EXPAND_OK;
 }
 
@@ -1463,7 +1393,7 @@ expand_error_t expand_string(const wcstring &input, std::vector<completion_t> *o
 
     // Our expansion stages.
     const expand_stage_t stages[] = {expand_stage_cmdsubst, expand_stage_variables,
-                                     expand_stage_brackets, expand_stage_home_and_pid,
+                                     expand_stage_brackets, expand_stage_home,
                                      expand_stage_wildcards};
 
     // Load up our single initial completion.

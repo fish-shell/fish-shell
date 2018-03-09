@@ -2185,8 +2185,8 @@ msgstr "$? n’est pas le code de retour. Dans fish, veuillez utiliser $status."
 
 #: src/parse_constants.h:275
 #, c-format
-msgid "$$ is not the pid. In fish, please use %%self."
-msgstr "$$ n’est pas le PID. Dans fish, veuillez utiliser %%self."
+msgid "$$ is not the pid. In fish, please use $pid."
+msgstr "$$ n’est pas le PID. Dans fish, veuillez utiliser $pid."
 
 #: src/parse_constants.h:278
 msgid "$# is not supported. In fish, please use 'count $argv'."

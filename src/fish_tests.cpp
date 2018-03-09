@@ -4422,7 +4422,6 @@ static void test_illegal_command_exit_code() {
         {L"echo -n", STATUS_CMD_OK}, {L"pwd", STATUS_CMD_OK},
         {L")", STATUS_ILLEGAL_CMD},  {L") ", STATUS_ILLEGAL_CMD},
         {L"*", STATUS_ILLEGAL_CMD},  {L"**", STATUS_ILLEGAL_CMD},
-        {L"%", STATUS_ILLEGAL_CMD},  {L"%test", STATUS_ILLEGAL_CMD},
         {L"?", STATUS_ILLEGAL_CMD},  {L"abc?def", STATUS_ILLEGAL_CMD},
         {L") ", STATUS_ILLEGAL_CMD}};
 

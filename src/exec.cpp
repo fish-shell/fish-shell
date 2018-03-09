@@ -1149,6 +1149,7 @@ void exec_job(parser_t &parser, job_t *j) {
     j->set_flag(JOB_CONSTRUCTED, true);
     if (!j->get_flag(JOB_FOREGROUND)) {
         proc_last_bg_pid = j->pgid;
+        env_set(L"last_pid", ENV_GLOBAL, { to_string(proc_last_bg_pid) });
     }
 
     if (!exec_error) {

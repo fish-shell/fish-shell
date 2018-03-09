@@ -590,6 +590,7 @@ static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags,
 
     // We know we are a process expansion now.
     assert(in[0] == PROCESS_EXPAND);
+    return true;
 
     if (flags & EXPAND_FOR_COMPLETIONS) {
         if (wcsncmp(in + 1, SELF_STR, wcslen(in + 1)) == 0) {

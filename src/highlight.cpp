@@ -122,9 +122,9 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
         switch (c) {
             case VARIABLE_EXPAND:
             case VARIABLE_EXPAND_SINGLE:
-            case BRACKET_BEGIN:
-            case BRACKET_END:
-            case BRACKET_SEP:
+            case BRACE_BEGIN:
+            case BRACE_END:
+            case BRACE_SEP:
             case ANY_CHAR:
             case ANY_STRING:
             case ANY_STRING_RECURSIVE: {

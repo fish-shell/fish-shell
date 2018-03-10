@@ -65,11 +65,11 @@ enum {
     /// Character representing variable expansion into a single element.
     VARIABLE_EXPAND_SINGLE,
     /// Character representing the start of a bracket expansion.
-    BRACKET_BEGIN,
+    BRACE_BEGIN,
     /// Character representing the end of a bracket expansion.
-    BRACKET_END,
+    BRACE_END,
     /// Character representing separation between two bracket elements.
-    BRACKET_SEP,
+    BRACE_SEP,
     /// Separate subtokens in a token with this character.
     INTERNAL_SEPARATOR,
     /// Character representing an empty variable expansion. Only used transitively while expanding

@@ -25,13 +25,13 @@ complete -c atom -s r -l resource-path -r -d 'Set the path to the Atom source di
 #   --safe                     Do not load packages from ~/.atom/packages or ~/.atom/dev/packages.  [boolean]
 complete -c atom -l safe -d 'Run in safe mode'
 #   --benchmark                Open a new window that runs the specified benchmarks.  [boolean]
-complete -c atom -l benchmark -d 'Open a new window that runs the specified benchmarks'
+complete -c atom -l benchmark -d 'Run the specified benchmarks in a new window'
 #   --benchmark--test          Run a faster version of the benchmarks in headless mode.
 complete -c atom -l benchmark-test -d 'Run a faster version of the benchmarks in headless mode'
 #   -t, --test                 Run the specified specs and exit with error code on failures.  [boolean]
 complete -c atom -s t -l test -d 'Run the specified specs and exit with error code on failures'
 #   -m, --main-process         Run the specified specs in the main process.  [boolean]
-complete -c atom -s m -l main-proces -d 'Run the specified specs in the main process'
+complete -c atom -s m -l main-process -d 'Run the specified specs in the main process'
 #   --timeout                  When in test mode, waits until the specified time (in minutes) and kills the process (exit code: 130).  [string]
 complete -c atom -l timeout -r -d 'When in test mode, waits until the specified time (in minutes) and kills the process'
 #   -v, --version              Print the version information.  [boolean]

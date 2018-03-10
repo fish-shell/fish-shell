@@ -606,7 +606,7 @@ Examples:
 <outp># Output is an empty line</outp>
 \endfish
 
-Be careful when you try to use braces to separate variable names from text. The problem shown in the last example above can be avoided by wrapping the variable in double quotes instead of braces (`echo "$c"word`).
+Be careful when you try to use braces to separate variable names from text. The problem shown above can be avoided by wrapping the variable in double quotes instead of braces (`echo "$c"word`).
 
 Please note, that the expansion as cartesian product also happens after <a href="#expand-command-substitution">command substitution</a>. Therefore strings might be eliminated. This can be avoided by returning the empty string.
 

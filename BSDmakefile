@@ -13,15 +13,13 @@ PREFIX?=/usr/local
 
 .if $(GENERATOR) == "Ninja"
 BUILDFILE=build/build.ninja
-BUILDCMD=ninja
 .else
 BUILDFILE=build/Makefile
-BUILDCMD=make
 .endif
 
 .DEFAULT: build/fish
 build/fish: build/$(BUILDFILE)
-	cd build; $(BUILDCMD)
+	cmake --build build
 
 build:
 	mkdir -p build
@@ -31,7 +29,7 @@ build/$(BUILDFILE): build
 
 .PHONY: install
 install: build/fish
-	cd build; $(BUILDCMD) install
+	cmake --build build --target install
 
 .PHONY: clean
 clean:

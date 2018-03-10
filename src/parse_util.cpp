@@ -834,14 +834,14 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
     wchar_t char_after_dollar = dollar_pos + 1 >= token.size() ? 0 : token.at(dollar_pos + 1);
 
     switch (char_after_dollar) {
-        case BRACKET_BEGIN:
+        case BRACE_BEGIN:
         case L'{': {
-            // The BRACKET_BEGIN is for unquoted, the { is for quoted. Anyways we have (possible
+            // The BRACE_BEGIN is for unquoted, the { is for quoted. Anyways we have (possible
             // quoted) ${. See if we have a }, and the stuff in between is variable material. If so,
             // report a bracket error. Otherwise just complain about the ${.
             bool looks_like_variable = false;
             size_t closing_bracket =
-                token.find(char_after_dollar == L'{' ? L'}' : wchar_t(BRACKET_END), dollar_pos + 2);
+                token.find(char_after_dollar == L'{' ? L'}' : wchar_t(BRACE_END), dollar_pos + 2);
             wcstring var_name;
             if (closing_bracket != wcstring::npos) {
                 size_t var_start = dollar_pos + 2, var_end = closing_bracket;

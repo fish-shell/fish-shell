@@ -1353,20 +1353,20 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 case L'{': {
                     if (unescape_special) {
                         bracket_count++;
-                        to_append_or_none = BRACKET_BEGIN;
+                        to_append_or_none = BRACE_BEGIN;
                     }
                     break;
                 }
                 case L'}': {
                     if (unescape_special) {
                         bracket_count--;
-                        to_append_or_none = BRACKET_END;
+                        to_append_or_none = BRACE_END;
                     }
                     break;
                 }
                 case L',': {
                     if (unescape_special && bracket_count > 0) {
-                        to_append_or_none = BRACKET_SEP;
+                        to_append_or_none = BRACE_SEP;
                     }
                     break;
                 }

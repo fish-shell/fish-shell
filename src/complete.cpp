@@ -262,12 +262,9 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps) {
     }
 
     // Throw out completions whose match types are less suitable than the best.
-    size_t i = comps->size();
-    while (i--) {
-        if (comps->at(i).match.type > best_type) {
-            comps->erase(comps->begin() + i);
-        }
-    }
+    comps->erase(std::remove_if(comps->begin(), comps->end(), [&] (const completion_t &comp) {
+        return comp.match.type > best_type;
+    }), comps->end());
 
     // Sort, provided COMPLETION_DONT_SORT isn't set
     stable_sort(comps->begin(), comps->end(), completion_t::is_naturally_less_than);

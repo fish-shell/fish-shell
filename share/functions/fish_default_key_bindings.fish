@@ -80,12 +80,12 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     bind $argv \e\< beginning-of-buffer
     bind $argv \e\> end-of-buffer
 
-    bind \ed kill-word
+    bind $argv \ed kill-word
 
     # Ignore some known-bad control sequences
     # https://github.com/fish-shell/fish-shell/issues/1917
-    bind \e\[I 'begin;end'
-    bind \e\[O 'begin;end'
+    bind $argv \e\[I 'begin;end'
+    bind $argv \e\[O 'begin;end'
 
     # term-specific special bindings
     switch "$TERM"

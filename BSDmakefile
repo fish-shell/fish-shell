@@ -34,3 +34,11 @@ install: build/fish
 .PHONY: clean
 clean:
 	rm -rf build
+
+.PHONY: test
+test: build/fish
+	cmake --build build --target test
+
+.PHONY: run
+run: build/fish
+	build/fish

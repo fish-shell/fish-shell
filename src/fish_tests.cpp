@@ -4472,6 +4472,13 @@ void test_maybe() {
     do_test(m2.missing_or_empty());
     m2 = none();
     do_test(m2.missing_or_empty());
+
+    maybe_t<std::string> m0 = none();
+    maybe_t<std::string> m3("hi");
+    maybe_t<std::string> m4 = m3;
+    do_test(m4 && *m4 == "hi");
+    maybe_t<std::string> m5 = m0;
+    do_test(!m5);
 }
 
 void test_layout_cache() {

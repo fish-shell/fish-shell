@@ -40,16 +40,16 @@ class maybe_t {
     /* implicit */ maybe_t(const T &v) : filled(true) { new (storage) T(v); }
 
     // Copy constructor.
-    maybe_t(const maybe_t &v) {
+    maybe_t(const maybe_t &v) : filled(v.filled) {
         if (v.filled) {
             new (storage) T(v.value());
         }
     }
 
     // Move constructor.
-    /* implicit */ maybe_t(maybe_t &&v) {
+    /* implicit */ maybe_t(maybe_t &&v) : filled(v.filled) {
         if (v.filled) {
-            *this = std::move(v.value());
+            new (storage) T(std::move(v.value()));
         }
     }
 

@@ -13,6 +13,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier. (#1109, #4632)
 - Successive commas in brace expansions are handled in less surprising manner (`{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again). (#3002, #4632).
 - `%` is no longer used for process and job expansion. `$pid` and `$last_pid` have taken the place of `%self` and `%last` respectively. (#4230, #1202)
+- The new `math` builtin (see below) does not support logical expressions; `test` should be used instead (#4777).
 
 ## Notable fixes and improvements
 - `wait` builtin is added for waiting on processes (#4498).

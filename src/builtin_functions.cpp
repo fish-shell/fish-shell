@@ -324,16 +324,16 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (opts.handlers) {
-        int type = -1;
+        maybe_t<event_type_t> type_filter;
         if (opts.handlers_type) {
-            type = wcs2event(opts.handlers_type);
-            if (type == -1) {
-                streams.err.append_format(_(L"%ls: Expected generic | variable | signal | exit | job-id for --handlers_type\n"),
+            type_filter = event_type_for_name(opts.handlers_type);
+            if (! type_filter) {
+                streams.err.append_format(_(L"%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"),
                         cmd);
                 return STATUS_INVALID_ARGS;
             }
         }
-        event_print(streams, type);
+        event_print(streams, type_filter);
         return STATUS_CMD_OK;
     }
 

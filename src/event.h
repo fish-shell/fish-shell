@@ -22,7 +22,7 @@
 #define EVENT_ANY_PID 0
 
 /// Enumeration of event types.
-enum {
+enum event_type_t {
     /// Matches any event type (Not always any event, as the function name may limit the choice as
     /// well.
     EVENT_ANY,
@@ -127,20 +127,16 @@ void event_fire(const event_t *event);
 /// May be called from signal handlers
 void event_fire_signal(int signal);
 
-/// Convert a string to the corresponding type
-int wcs2event(wcstring const &event);
-
-/// Convert a type to the corresponding string
-wcstring event2wcs(int type);
-
-/// Called by builtin functions
-/// Dumped all events
-void event_print(io_streams_t &streams, int event_type);
+/// Print all events. If type_filter is not none(), only output events with that type.
+void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter);
 
 /// Returns a string describing the specified event.
 wcstring event_get_desc(const event_t &e);
 
 /// Fire a generic event with the specified name.
 void event_fire_generic(const wchar_t *name, wcstring_list_t *args = NULL);
+
+/// Return the event type for a given name, or none.
+maybe_t<event_type_t> event_type_for_name(const wcstring &name);
 
 #endif

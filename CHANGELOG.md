@@ -47,6 +47,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - The `jobs` builtin now has a `-q` and `--quiet` option to silence the output.
 - fish now supports `&&`, `||`, and `!` (#4620).
 - The machine hostname, where available, is now exposed as `$hostname` which is now a reserved variable. This drops the dependency on the `hostname` executable (#4422).
+- `functions --handlers` can be used to show event handlers (#4694).
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

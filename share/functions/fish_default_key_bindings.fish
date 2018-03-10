@@ -93,5 +93,9 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
             bind $argv \e\[8~ end-of-line
             bind $argv \eOc forward-word
             bind $argv \eOd backward-word
+        case 'xterm-256color'
+            # Microsoft's conemu uses xterm-256color plus
+            # the following to tell a console to paste:
+            bind $argv \e\x20ep fish_clipboard_paste
     end
 end

@@ -61,8 +61,8 @@ Once installed, run `fish` from your current shell to try fish out!
 
 Running fish requires:
 
-* curses or ncurses (preinstalled on most **nix systems)
-* some common **nix system utilities (currently `mktemp` and `seq`), in addition to the basic posix utilities
+* curses or ncurses (preinstalled on most \*nix systems)
+* some common \*nix system utilities (currently `mktemp` and `seq`), in addition to the basic posix utilities
 * gettext (library and `gettext` command), if compiled with translation support
 
 The following optional features also have specific requirements:

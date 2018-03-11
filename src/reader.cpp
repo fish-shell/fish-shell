@@ -1620,7 +1620,7 @@ static void reader_interactive_init() {
 
     invalidate_termsize();
 
-    env_set_one(L"_", ENV_GLOBAL, L"fish");
+    env_set_one(L"fish_title", ENV_GLOBAL, L"fish");
 }
 
 /// Destroy data for interactive use.
@@ -1897,7 +1897,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     wcstring ft = tok_first(cmd);
 
-    if (!ft.empty()) env_set_one(L"_", ENV_GLOBAL, ft);
+    if (!ft.empty()) env_set_one(L"fish_title", ENV_GLOBAL, ft);
 
     reader_write_title(cmd);
 
@@ -1913,7 +1913,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     term_steal();
 
-    env_set_one(L"_", ENV_GLOBAL, program_name);
+    env_set_one(L"fish_title", ENV_GLOBAL, program_name);
 
 #ifdef HAVE__PROC_SELF_STAT
     proc_update_jiffies();

@@ -154,6 +154,10 @@ tok_t tokenizer_t::read_string() {
         tok_mode mode_begin = mode;
 #endif
 
+        if (c == L'\0') {
+            break;
+        }
+
         // Make sure this character isn't being escaped before anything else
         if ((mode & tok_mode::char_escape) == tok_mode::char_escape) {
             mode &= ~(tok_mode::char_escape);
@@ -163,69 +167,65 @@ tok_t tokenizer_t::read_string() {
             // Early exit optimization in case the character is just a letter,
             // which has no special meaning to the tokenizer, i.e. the same mode continues.
         }
-        // This check has to be after the char_escape check above
-        else if (c == L'\0') {
-            break;
-        }
 
         // Now proceed with the evaluation of the token, first checking to see if the token
         // has been explicitly ignored (escaped).
         else if (c == L'\\') {
-                mode |= tok_mode::char_escape;
+            mode |= tok_mode::char_escape;
+        }
+        else if (c == L'(') {
+            paran_offsets.push_back(this->buff - this->start);
+            mode |= tok_mode::subshell;
+        }
+        else if (c == L')') {
+            switch (paran_offsets.size()) {
+                case 0:
+                    return this->call_error(TOK_CLOSING_UNOPENED_SUBSHELL, buff_start, this->buff);
+                case 1:
+                    mode &= ~(tok_mode::subshell);
+                default:
+                    paran_offsets.pop_back();
             }
-            else if (c == L'(') {
-                paran_offsets.push_back(this->buff - this->start);
-                mode |= tok_mode::subshell;
-            }
-            else if (c == L')') {
-                switch (paran_offsets.size()) {
-                    case 0:
-                        return this->call_error(TOK_CLOSING_UNOPENED_SUBSHELL, buff_start, this->buff);
-                    case 1:
-                        mode &= ~(tok_mode::subshell);
-                    default:
-                        paran_offsets.pop_back();
+        }
+        else if (c == L'[') {
+            if (this->buff != buff_start) {
+                if ((mode & tok_mode::array_brackets) == tok_mode::array_brackets) {
+                    // Nested brackets should not overwrite the existing slice_offset
+                    //mqudsi: TOK_ILLEGAL_SLICE is the right error here, but the shell
+                    //prints an error message with the caret pointing at token_start,
+                    //not err_loc, making the TOK_ILLEGAL_SLICE message misleading.
+                    // return call_error(TOK_ILLEGAL_SLICE, buff_start, this->buff);
+                    return call_error(TOK_UNTERMINATED_SLICE, buff_start, this->buff);
                 }
+                slice_offset = this->buff - this->start;
+                mode |= tok_mode::array_brackets;
             }
-            else if (c == L'[') {
-                if (this->buff != buff_start) {
-                    if ((mode & tok_mode::array_brackets) == tok_mode::array_brackets) {
-                        // Nested brackets should not overwrite the existing slice_offset
-                        //mqudsi: TOK_ILLEGAL_SLICE is the right error here, but the shell
-                        //prints an error message with the caret pointing at token_start,
-                        //not err_loc, making the TOK_ILLEGAL_SLICE message misleading.
-                        // return call_error(TOK_ILLEGAL_SLICE, buff_start, this->buff);
-                        return call_error(TOK_UNTERMINATED_SLICE, buff_start, this->buff);
-                    }
-                    slice_offset = this->buff - this->start;
-                    mode |= tok_mode::array_brackets;
+            else {
+                // This is actually allowed so the test operator `[` can be used as the head of a command
+            }
+        }
+        // Only exit bracket mode if we are in bracket mode.
+        // Reason: `]` can be a parameter, e.g. last parameter to `[` test alias.
+        // e.g. echo $argv[([ $x -eq $y ])] # must not end bracket mode on first bracket
+        else if (c == L']' && ((mode & tok_mode::array_brackets) == tok_mode::array_brackets)) {
+            mode &= ~(tok_mode::array_brackets);
+        }
+        else if (c == L'\'' || c == L'"') {
+            const wchar_t *end = quote_end(this->buff);
+            if (end) {
+                this->buff = end;
+            } else {
+                const wchar_t *error_loc = this->buff;
+                this->buff += wcslen(this->buff);
+                if ((!this->accept_unfinished)) {
+                    return this->call_error(TOK_UNTERMINATED_QUOTE, buff_start, error_loc);
                 }
-                else {
-                    // This is actually allowed so the test operator `[` can be used as the head of a command
-                }
-            }
-            // Only exit bracket mode if we are in bracket mode.
-            // Reason: `]` can be a parameter, e.g. last parameter to `[` test alias.
-            // e.g. echo $argv[([ $x -eq $y ])] # must not end bracket mode on first bracket
-            else if (c == L']' && ((mode & tok_mode::array_brackets) == tok_mode::array_brackets)) {
-                mode &= ~(tok_mode::array_brackets);
-            }
-            else if (c == L'\'' || c == L'"') {
-                const wchar_t *end = quote_end(this->buff);
-                if (end) {
-                    this->buff = end;
-                } else {
-                    const wchar_t *error_loc = this->buff;
-                    this->buff += wcslen(this->buff);
-                    if ((!this->accept_unfinished)) {
-                        return this->call_error(TOK_UNTERMINATED_QUOTE, buff_start, error_loc);
-                    }
-                    break;
-                }
-            }
-            else if (mode == tok_mode::regular_text && !tok_is_string_character(c, is_first)) {
                 break;
             }
+        }
+        else if (mode == tok_mode::regular_text && !tok_is_string_character(c, is_first)) {
+            break;
+        }
 
 #if false
         if (mode != mode_begin) {
@@ -244,7 +244,7 @@ tok_t tokenizer_t::read_string() {
         tok_t error;
         if ((mode & tok_mode::char_escape) == tok_mode::char_escape) {
             error = this->call_error(TOK_UNTERMINATED_ESCAPE, buff_start,
-                    this->buff);
+                    this->buff - 1);
         }
         else if ((mode & tok_mode::array_brackets) == tok_mode::array_brackets) {
             error = this->call_error(TOK_UNTERMINATED_SLICE, buff_start,

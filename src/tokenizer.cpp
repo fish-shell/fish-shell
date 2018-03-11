@@ -37,6 +37,9 @@
 /// Error for when ) is encountered with no matching (
 #define ERROR_CLOSING_UNOPENED_PARENTHESIS _(L"Unexpected ')' for unopened parenthesis")
 
+/// Error for when [ is encountered while already in bracket mode
+#define ERROR_UNEXPECTED_BRACKET _(L"Unexpected '[' at this location")
+
 wcstring error_message_for_code(tokenizer_error err) {
     switch (err) {
         case TOK_UNTERMINATED_QUOTE:
@@ -53,6 +56,8 @@ wcstring error_message_for_code(tokenizer_error err) {
             return PIPE_ERROR;
         case TOK_CLOSING_UNOPENED_SUBSHELL:
             return ERROR_CLOSING_UNOPENED_PARENTHESIS;
+        case TOK_ILLEGAL_SLICE:
+            return ERROR_UNEXPECTED_BRACKET;
         default:
             assert(0 && "Unknown error type");
             return {};
@@ -132,10 +137,11 @@ ENUM_FLAGS(tok_mode) {
     array_brackets = 1 << 1,  // inside of array brackets
     curly_braces = 1 << 2,
     char_escape = 1 << 3,
-} mode = tok_mode::regular_text;
+};
 
 /// Read the next token as a string.
 tok_t tokenizer_t::read_string() {
+    tok_mode mode { tok_mode::regular_text };
     std::vector<int> paran_offsets;
     int slice_offset = 0;
     const wchar_t *const buff_start = this->buff;
@@ -153,11 +159,18 @@ tok_t tokenizer_t::read_string() {
             mode &= ~(tok_mode::char_escape);
             // and do nothing more
         }
-        else if (!myal(c)) {
-            if (c == L'\0') {
-                break;
-            }
-            else if (c == L'\\') {
+        else if (myal(c)) {
+            // Early exit optimization in case the character is just a letter,
+            // which has no special meaning to the tokenizer, i.e. the same mode continues.
+        }
+        // This check has to be after the char_escape check above
+        else if (c == L'\0') {
+            break;
+        }
+
+        // Now proceed with the evaluation of the token, first checking to see if the token
+        // has been explicitly ignored (escaped).
+        else if (c == L'\\') {
                 mode |= tok_mode::char_escape;
             }
             else if (c == L'(') {
@@ -176,13 +189,24 @@ tok_t tokenizer_t::read_string() {
             }
             else if (c == L'[') {
                 if (this->buff != buff_start) {
-                    mode |= tok_mode::array_brackets;
+                    if ((mode & tok_mode::array_brackets) == tok_mode::array_brackets) {
+                        // Nested brackets should not overwrite the existing slice_offset
+                        //mqudsi: TOK_ILLEGAL_SLICE is the right error here, but the shell
+                        //prints an error message with the caret pointing at token_start,
+                        //not err_loc, making the TOK_ILLEGAL_SLICE message misleading.
+                        // return call_error(TOK_ILLEGAL_SLICE, buff_start, this->buff);
+                        return call_error(TOK_UNTERMINATED_SLICE, buff_start, this->buff);
+                    }
                     slice_offset = this->buff - this->start;
+                    mode |= tok_mode::array_brackets;
                 }
                 else {
                     // This is actually allowed so the test operator `[` can be used as the head of a command
                 }
             }
+            // Only exit bracket mode if we are in bracket mode.
+            // Reason: `]` can be a parameter, e.g. last parameter to `[` test alias.
+            // e.g. echo $argv[([ $x -eq $y ])] # must not end bracket mode on first bracket
             else if (c == L']' && ((mode & tok_mode::array_brackets) == tok_mode::array_brackets)) {
                 mode &= ~(tok_mode::array_brackets);
             }
@@ -202,7 +226,6 @@ tok_t tokenizer_t::read_string() {
             else if (mode == tok_mode::regular_text && !tok_is_string_character(c, is_first)) {
                 break;
             }
-        }
 
 #if false
         if (mode != mode_begin) {

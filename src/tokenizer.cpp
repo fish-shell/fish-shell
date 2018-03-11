@@ -180,7 +180,7 @@ tok_t tokenizer_t::read_string() {
         else if (c == L')') {
             switch (paran_offsets.size()) {
                 case 0:
-                    return this->call_error(TOK_CLOSING_UNOPENED_SUBSHELL, buff_start, this->buff);
+                    return this->call_error(TOK_CLOSING_UNOPENED_SUBSHELL, this->start, this->buff);
                 case 1:
                     mode &= ~(tok_mode::subshell);
                 default:
@@ -195,7 +195,7 @@ tok_t tokenizer_t::read_string() {
                     //prints an error message with the caret pointing at token_start,
                     //not err_loc, making the TOK_ILLEGAL_SLICE message misleading.
                     // return call_error(TOK_ILLEGAL_SLICE, buff_start, this->buff);
-                    return call_error(TOK_UNTERMINATED_SLICE, buff_start, this->buff);
+                    return this->call_error(TOK_UNTERMINATED_SLICE, this->start, this->buff);
                 }
                 slice_offset = this->buff - this->start;
                 mode |= tok_mode::array_brackets;

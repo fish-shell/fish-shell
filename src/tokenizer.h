@@ -30,7 +30,8 @@ enum tokenizer_error {
     TOK_UNTERMINATED_SLICE,
     TOK_UNTERMINATED_ESCAPE,
     TOK_INVALID_REDIRECT,
-    TOK_INVALID_PIPE
+    TOK_INVALID_PIPE,
+    TOK_CLOSING_UNOPENED_SUBSHELL,
 };
 
 enum class redirection_type_t {

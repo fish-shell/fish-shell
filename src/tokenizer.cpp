@@ -34,6 +34,9 @@
 /// Error string for when trying to pipe from fd 0.
 #define PIPE_ERROR _(L"Cannot use stdin (fd 0) as pipe output")
 
+/// Error for when ) is encountered with no matching (
+#define ERROR_CLOSING_UNOPENED_PARENTHESIS _(L"Unexpected ')' for unopened parenthesis")
+
 wcstring error_message_for_code(tokenizer_error err) {
     switch (err) {
         case TOK_UNTERMINATED_QUOTE:
@@ -48,6 +51,8 @@ wcstring error_message_for_code(tokenizer_error err) {
             return REDIRECT_ERROR;
         case TOK_INVALID_PIPE:
             return PIPE_ERROR;
+        case TOK_CLOSING_UNOPENED_SUBSHELL:
+            return ERROR_CLOSING_UNOPENED_PARENTHESIS;
         default:
             assert(0 && "Unknown error type");
             return {};
@@ -119,194 +124,115 @@ static bool tok_is_string_character(wchar_t c, bool is_first) {
 /// Quick test to catch the most common 'non-magical' characters, makes read_string slightly faster
 /// by adding a fast path for the most common characters. This is obviously not a suitable
 /// replacement for iswalpha.
-static int myal(wchar_t c) { return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z'); }
+static inline int myal(wchar_t c) { return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z'); }
+
+ENUM_FLAGS(tok_mode) {
+    regular_text = 0,    // regular text
+    subshell = 1 << 0,        // inside of subshell parentheses
+    array_brackets = 1 << 1,  // inside of array brackets
+    curly_braces = 1 << 2,
+    char_escape = 1 << 3,
+} mode = tok_mode::regular_text;
 
 /// Read the next token as a string.
 tok_t tokenizer_t::read_string() {
-    bool do_loop = true;
-    size_t paran_count = 0;
-    // Up to 96 open parens, before we give up on good error reporting.
-    const size_t paran_offsets_max = 96;
-    size_t paran_offsets[paran_offsets_max];
-    // Where the open bracket is.
-    size_t offset_of_bracket = 0;
+    std::vector<int> paran_offsets;
+    int slice_offset = 0;
     const wchar_t *const buff_start = this->buff;
     bool is_first = true;
 
-    enum tok_mode_t {
-        mode_regular_text = 0,    // regular text
-        mode_subshell = 1,        // inside of subshell
-        mode_array_brackets = 2,  // inside of array brackets
-        mode_array_brackets_and_subshell =
-            3  // inside of array brackets and subshell, like in '$foo[(ech'
-    } mode = mode_regular_text;
+    while (true) {
+        wchar_t c = *this->buff;
+#if false
+        wcstring msg = L"Handling 0x%x (%lc)";
+        tok_mode mode_begin = mode;
+#endif
 
-    while (1) {
-        if (!myal(*this->buff)) {
-            if (*this->buff == L'\\') {
-                const wchar_t *error_location = this->buff;
-                this->buff++;
-                if (*this->buff == L'\0') {
-                    if ((!this->accept_unfinished)) {
-                        return this->call_error(TOK_UNTERMINATED_ESCAPE, buff_start,
-                                                error_location);
-                    }
-                    // Since we are about to increment tok->buff, decrement it first so the
-                    // increment doesn't go past the end of the buffer. See issue #389.
-                    this->buff--;
-                    do_loop = 0;
-                }
-
-                this->buff++;
-                continue;
+        // Make sure this character isn't being escaped before anything else
+        if ((mode & tok_mode::char_escape) == tok_mode::char_escape) {
+            mode &= ~(tok_mode::char_escape);
+            // and do nothing more
+        }
+        else if (!myal(c)) {
+            if (c == L'\0') {
+                break;
             }
-
-            switch (mode) {
-                case mode_regular_text: {
-                    switch (*this->buff) {
-                        case L'(': {
-                            paran_count = 1;
-                            paran_offsets[0] = this->buff - this->start;
-                            mode = mode_subshell;
-                            break;
-                        }
-                        case L'[': {
-                            if (this->buff != buff_start) {
-                                mode = mode_array_brackets;
-                                offset_of_bracket = this->buff - this->start;
-                            }
-                            break;
-                        }
-                        case L'\'':
-                        case L'"': {
-                            const wchar_t *end = quote_end(this->buff);
-                            if (end) {
-                                this->buff = end;
-                            } else {
-                                const wchar_t *error_loc = this->buff;
-                                this->buff += wcslen(this->buff);
-
-                                if (!this->accept_unfinished) {
-                                    return this->call_error(TOK_UNTERMINATED_QUOTE, buff_start,
-                                                            error_loc);
-                                }
-                                do_loop = 0;
-                            }
-                            break;
-                        }
-                        default: {
-                            if (!tok_is_string_character(*(this->buff), is_first)) {
-                                do_loop = 0;
-                            }
-                            break;
-                        }
+            else if (c == L'\\') {
+                mode |= tok_mode::char_escape;
+            }
+            else if (c == L'(') {
+                paran_offsets.push_back(this->buff - this->start);
+                mode |= tok_mode::subshell;
+            }
+            else if (c == L')') {
+                switch (paran_offsets.size()) {
+                    case 0:
+                        return this->call_error(TOK_CLOSING_UNOPENED_SUBSHELL, buff_start, this->buff);
+                    case 1:
+                        mode &= ~(tok_mode::subshell);
+                    default:
+                        paran_offsets.pop_back();
+                }
+            }
+            else if (c == L'[') {
+                if (this->buff != buff_start) {
+                    mode |= tok_mode::array_brackets;
+                    slice_offset = this->buff - this->start;
+                }
+                else {
+                    // This is actually allowed so the test operator `[` can be used as the head of a command
+                }
+            }
+            else if (c == L']' && ((mode & tok_mode::array_brackets) == tok_mode::array_brackets)) {
+                mode &= ~(tok_mode::array_brackets);
+            }
+            else if (c == L'\'' || c == L'"') {
+                const wchar_t *end = quote_end(this->buff);
+                if (end) {
+                    this->buff = end;
+                } else {
+                    const wchar_t *error_loc = this->buff;
+                    this->buff += wcslen(this->buff);
+                    if ((!this->accept_unfinished)) {
+                        return this->call_error(TOK_UNTERMINATED_QUOTE, buff_start, error_loc);
                     }
                     break;
                 }
-
-                case mode_array_brackets_and_subshell:
-                case mode_subshell: {
-                    switch (*this->buff) {
-                        case L'\'':
-                        case L'\"': {
-                            const wchar_t *end = quote_end(this->buff);
-                            if (end) {
-                                this->buff = end;
-                            } else {
-                                const wchar_t *error_loc = this->buff;
-                                this->buff += wcslen(this->buff);
-                                if ((!this->accept_unfinished)) {
-                                    return this->call_error(TOK_UNTERMINATED_QUOTE, buff_start,
-                                                            error_loc);
-                                }
-                                do_loop = 0;
-                            }
-                            break;
-                        }
-                        case L'(': {
-                            if (paran_count < paran_offsets_max) {
-                                paran_offsets[paran_count] = this->buff - this->start;
-                            }
-                            paran_count++;
-                            break;
-                        }
-                        case L')': {
-                            assert(paran_count > 0);
-                            paran_count--;
-                            if (paran_count == 0) {
-                                mode =
-                                    (mode == mode_array_brackets_and_subshell ? mode_array_brackets
-                                                                              : mode_regular_text);
-                            }
-                            break;
-                        }
-                        case L'\0': {
-                            do_loop = 0;
-                            break;
-                        }
-                        default: {
-                            break;  // ignore other chars
-                        }
-                    }
-                    break;
-                }
-
-                case mode_array_brackets: {
-                    switch (*this->buff) {
-                        case L'(': {
-                            paran_count = 1;
-                            paran_offsets[0] = this->buff - this->start;
-                            mode = mode_array_brackets_and_subshell;
-                            break;
-                        }
-                        case L']': {
-                            mode = mode_regular_text;
-                            break;
-                        }
-                        case L'\0': {
-                            do_loop = 0;
-                            break;
-                        }
-                        default: {
-                            break;  // ignore other chars
-                        }
-                    }
-                    break;
-                }
+            }
+            else if (mode == tok_mode::regular_text && !tok_is_string_character(c, is_first)) {
+                break;
             }
         }
 
-        if (!do_loop) break;
+#if false
+        if (mode != mode_begin) {
+            msg.append(L": mode 0x%x -> 0x%x\n");
+        } else {
+            msg.push_back(L'\n');
+        }
+        debug(0, msg.c_str(), c, c, int(mode_begin), int(mode));
+#endif
 
         this->buff++;
         is_first = false;
     }
 
-    if ((!this->accept_unfinished) && (mode != mode_regular_text)) {
+    if ((!this->accept_unfinished) && (mode != tok_mode::regular_text)) {
         tok_t error;
-        switch (mode) {
-            case mode_subshell: {
-                // Determine the innermost opening paran offset by interrogating paran_offsets.
-                assert(paran_count > 0);
-                size_t offset_of_open_paran = 0;
-                if (paran_count <= paran_offsets_max) {
-                    offset_of_open_paran = paran_offsets[paran_count - 1];
-                }
+        if ((mode & tok_mode::char_escape) == tok_mode::char_escape) {
+            error = this->call_error(TOK_UNTERMINATED_ESCAPE, buff_start,
+                    this->buff);
+        }
+        else if ((mode & tok_mode::array_brackets) == tok_mode::array_brackets) {
+            error = this->call_error(TOK_UNTERMINATED_SLICE, buff_start,
+                    this->start + slice_offset);
+        }
+        else if ((mode & tok_mode::subshell) == tok_mode::subshell) {
+            assert(paran_offsets.size() > 0);
+            size_t offset_of_open_paran = paran_offsets.back();
 
-                error = this->call_error(TOK_UNTERMINATED_SUBSHELL, buff_start,
-                                         this->start + offset_of_open_paran);
-                break;
-            }
-            case mode_array_brackets:
-            case mode_array_brackets_and_subshell: {
-                error = this->call_error(TOK_UNTERMINATED_SLICE, buff_start,
-                                         this->start + offset_of_bracket);
-                break;
-            }
-            default: {
-                DIE("unexpected mode in read_string");
-                break;
-            }
+            error = this->call_error(TOK_UNTERMINATED_SUBSHELL, buff_start,
+                    this->start + offset_of_open_paran);
         }
         return error;
     }

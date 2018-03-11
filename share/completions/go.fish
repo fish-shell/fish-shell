@@ -89,8 +89,9 @@ __fish_complete_go_files test
 
 # tool
 complete -c go -n '__fish_use_subcommand' -a tool -d 'run specified go tool'
-complete -c go -f -n '__fish_seen_subcommand_from tool' -a '5a 5c 5g 5l 6a 6c 6g 6l addr2line api cgo cov dist fix nm objdump pack pprof prof vet yacc' -d "target tool"
+complete -c go -n '__fish_seen_subcommand_from tool' -a 'addr2line api asm cgo compile dist fix link nm objdump pack pprof prof vet yacc' -d "target tool"
 complete -c go -n '__fish_seen_subcommand_from tool' -s n -d "print the command that would be executed but not execute it"
+__fish_complete_go_files compile
 
 # version
 complete -c go -f -n '__fish_use_subcommand' -a version -d 'print Go version'

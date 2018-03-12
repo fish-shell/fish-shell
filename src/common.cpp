@@ -75,11 +75,20 @@ static volatile bool termsize_valid = false;
 static char *wcs2str_internal(const wchar_t *in, char *out);
 static void debug_shared(const wchar_t msg_level, const wcstring &msg);
 
-const wchar_t *whitespace = L" \t\r\n\v";
+const wcstring whitespace = L" \t\r\n\v";
 const char *whitespace_narrow = " \t\r\n\v";
 
+bool is_whitespace(const wchar_t input) {
+    for (auto c : whitespace) {
+        if (c == input) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool is_whitespace(const wcstring &input) {
-    return input.find_first_not_of(whitespace);
+    return input.find_first_not_of(whitespace) == wcstring::npos;
 }
 
 bool has_working_tty_timestamps = true;

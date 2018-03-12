@@ -206,9 +206,10 @@ extern const wchar_t *program_name;
 extern bool has_working_tty_timestamps;
 
 /// A list of all whitespace characters
-extern const wchar_t *whitespace;
+extern const wcstring whitespace;
 extern const char *whitespace_narrow;
 
+bool is_whitespace(const wchar_t input);
 bool is_whitespace(const wcstring &input);
 inline bool is_whitespace(const wchar_t *input) { return is_whitespace(wcstring(input)); }
 

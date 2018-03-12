@@ -1288,6 +1288,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
     const bool unescape_special = static_cast<bool>(flags & UNESCAPE_SPECIAL);
     const bool allow_incomplete = static_cast<bool>(flags & UNESCAPE_INCOMPLETE);
 
+    bool brace_text_start = false;
     int brace_count = 0;
 
     bool errored = false;
@@ -1359,7 +1360,9 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 }
                 case L'}': {
                     if (unescape_special) {
+                        assert(brace_count > 0 && "imbalanced brackets are a tokenizer error, we shouldn't be able to get here");
                         brace_count--;
+                        brace_text_start = brace_text_start && brace_count > 0;
                         to_append_or_none = BRACE_END;
                     }
                     break;
@@ -1367,14 +1370,16 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 case L',': {
                     if (unescape_special && brace_count > 0) {
                         to_append_or_none = BRACE_SEP;
+                        brace_text_start = false;
                     }
                     break;
                 }
+                case L'\n':
+                case L'\t':
                 case L' ': {
-                    //spaces, unless quoted or escaped, are ignored within braces
-                    // if (unescape_special && brace_count > 0) {
-                    //     input_position++; //skip the space
-                    // }
+                    if (unescape_special && brace_count > 0) {
+                        to_append_or_none = brace_text_start ? BRACE_SPACE : NOT_A_WCHAR;
+                    }
                     break;
                 }
                 case L'\'': {
@@ -1387,7 +1392,12 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
                     break;
                 }
-                default: { break; }
+                default: {
+                    if (unescape_special && brace_count > 0) {
+                        brace_text_start = true;
+                    }
+                    break;
+                }
             }
         } else if (mode == mode_single_quotes) {
             if (c == L'\\') {

@@ -936,12 +936,20 @@ static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
         if (brace_count == 0 && ((*pos == BRACE_SEP) || (pos == brace_end))) {
             assert(pos >= item_begin);
             size_t item_len = pos - item_begin;
+            wcstring item = wcstring(item_begin, item_len);
+            item = trim(item, (const wchar_t[]) { BRACE_SPACE });
+            for (auto &c : item) {
+                if (c == BRACE_SPACE) {
+                    c = ' ';
+                }
+            }
 
             wcstring whole_item;
             whole_item.reserve(tot_len + item_len + 2);
             whole_item.append(in, length_preceding_braces);
-            whole_item.append(item_begin, item_len);
+            whole_item.append(item.begin(), item.end());
             whole_item.append(brace_end + 1);
+            whole_item = trim(whole_item, (const wchar_t[]) { BRACE_SPACE });
             expand_braces(whole_item, flags, out, errors);
 
             item_begin = pos + 1;

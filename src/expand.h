@@ -70,6 +70,8 @@ enum {
     BRACE_END,
     /// Character representing separation between two bracket elements.
     BRACE_SEP,
+    /// Character that takes the place of any whitespace within non-quoted text in braces
+    BRACE_SPACE,
     /// Separate subtokens in a token with this character.
     INTERNAL_SEPARATOR,
     /// Character representing an empty variable expansion. Only used transitively while expanding

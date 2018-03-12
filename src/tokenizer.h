@@ -7,6 +7,7 @@
 
 #include "common.h"
 #include "maybe.h"
+#include "parse_constants.h"
 
 /// Token types.
 enum token_type {
@@ -22,18 +23,25 @@ enum token_type {
     TOK_COMMENT      /// comment token
 };
 
-/// Tokenizer error types.
-enum tokenizer_error {
-    TOK_ERROR_NONE,
-    TOK_UNTERMINATED_QUOTE,
-    TOK_UNTERMINATED_SUBSHELL,
-    TOK_UNTERMINATED_SLICE,
-    TOK_UNTERMINATED_ESCAPE,
-    TOK_INVALID_REDIRECT,
-    TOK_INVALID_PIPE,
-    TOK_CLOSING_UNOPENED_SUBSHELL,
-    TOK_ILLEGAL_SLICE,
+struct tokenizer_error {
+    const wchar_t *Message;
+    enum parse_error_code_t parser_error; //the parser error associated with this tokenizer error
+    tokenizer_error(const wchar_t *msg, enum parse_error_code_t perr = parse_error_tokenizer_other)
+        : Message(msg), parser_error(perr) {}
+    tokenizer_error(const tokenizer_error&) = delete;
 };
+
+extern tokenizer_error *TOK_ERROR_NONE;
+extern tokenizer_error *TOK_UNTERMINATED_QUOTE;
+extern tokenizer_error *TOK_UNTERMINATED_SUBSHELL;
+extern tokenizer_error *TOK_UNTERMINATED_SLICE;
+extern tokenizer_error *TOK_UNTERMINATED_ESCAPE;
+extern tokenizer_error *TOK_UNTERMINATED_BRACE;
+extern tokenizer_error *TOK_INVALID_REDIRECT;
+extern tokenizer_error *TOK_INVALID_PIPE;
+extern tokenizer_error *TOK_CLOSING_UNOPENED_SUBSHELL;
+extern tokenizer_error *TOK_CLOSING_UNOPENED_BRACE;
+extern tokenizer_error *TOK_ILLEGAL_SLICE;
 
 enum class redirection_type_t {
     overwrite,  // normal redirection: > file.txt
@@ -69,7 +77,7 @@ struct tok_t {
     maybe_t<int> redirected_fd{};
 
     // If an error, this is the error code.
-    enum tokenizer_error error { TOK_ERROR_NONE };
+    tokenizer_error *error { TOK_ERROR_NONE };
 
     // If an error, this is the offset of the error within the token. A value of 0 means it occurred
     // at 'offset'.
@@ -99,7 +107,7 @@ class tokenizer_t {
     /// Whether to continue the previous line after the comment.
     bool continue_line_after_comment{false};
 
-    tok_t call_error(enum tokenizer_error error_type, const wchar_t *token_start,
+    tok_t call_error(tokenizer_error *error_type, const wchar_t *token_start,
                      const wchar_t *error_loc);
     tok_t read_string();
     maybe_t<tok_t> tok_next();

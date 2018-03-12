@@ -16,56 +16,22 @@
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// Error string for unexpected end of string.
-#define QUOTE_ERROR _(L"Unexpected end of string, quotes are not balanced")
-
-/// Error string for mismatched parenthesis.
-#define PARAN_ERROR _(L"Unexpected end of string, parenthesis do not match")
-
-/// Error string for mismatched square brackets.
-#define SQUARE_BRACKET_ERROR _(L"Unexpected end of string, square brackets do not match")
-
-/// Error string for unterminated escape (backslash without continuation).
-#define UNTERMINATED_ESCAPE_ERROR _(L"Unexpected end of string, incomplete escape sequence")
-
-/// Error string for invalid redirections.
-#define REDIRECT_ERROR _(L"Invalid input/output redirection")
-
-/// Error string for when trying to pipe from fd 0.
-#define PIPE_ERROR _(L"Cannot use stdin (fd 0) as pipe output")
-
-/// Error for when ) is encountered with no matching (
-#define ERROR_CLOSING_UNOPENED_PARENTHESIS _(L"Unexpected ')' for unopened parenthesis")
-
-/// Error for when [ is encountered while already in bracket mode
-#define ERROR_UNEXPECTED_BRACKET _(L"Unexpected '[' at this location")
-
-wcstring error_message_for_code(tokenizer_error err) {
-    switch (err) {
-        case TOK_UNTERMINATED_QUOTE:
-            return QUOTE_ERROR;
-        case TOK_UNTERMINATED_SUBSHELL:
-            return PARAN_ERROR;
-        case TOK_UNTERMINATED_SLICE:
-            return SQUARE_BRACKET_ERROR;
-        case TOK_UNTERMINATED_ESCAPE:
-            return UNTERMINATED_ESCAPE_ERROR;
-        case TOK_INVALID_REDIRECT:
-            return REDIRECT_ERROR;
-        case TOK_INVALID_PIPE:
-            return PIPE_ERROR;
-        case TOK_CLOSING_UNOPENED_SUBSHELL:
-            return ERROR_CLOSING_UNOPENED_PARENTHESIS;
-        case TOK_ILLEGAL_SLICE:
-            return ERROR_UNEXPECTED_BRACKET;
-        default:
-            assert(0 && "Unknown error type");
-            return {};
-    }
-}
+tokenizer_error *TOK_ERROR_NONE = new tokenizer_error(L"");
+tokenizer_error *TOK_UNTERMINATED_QUOTE = new tokenizer_error((L"Unexpected end of string, quotes are not balanced"), parse_error_tokenizer_unterminated_quote);
+tokenizer_error *TOK_UNTERMINATED_SUBSHELL = new tokenizer_error((L"Unexpected end of string, expecting ')'"), parse_error_tokenizer_unterminated_subshell);
+tokenizer_error *TOK_UNTERMINATED_SLICE = new tokenizer_error((L"Unexpected end of string, square brackets do not match"), parse_error_tokenizer_unterminated_slice);
+tokenizer_error *TOK_UNTERMINATED_ESCAPE = new tokenizer_error((L"Unexpected end of string, incomplete escape sequence"), parse_error_tokenizer_unterminated_escape);
+tokenizer_error *TOK_INVALID_REDIRECT = new tokenizer_error((L"Invalid input/output redirection"));
+tokenizer_error *TOK_INVALID_PIPE = new tokenizer_error((L"Cannot use stdin (fd 0) as pipe output"));
+tokenizer_error *TOK_CLOSING_UNOPENED_SUBSHELL = new tokenizer_error((L"Unexpected ')' for unopened parenthesis"));
+tokenizer_error *TOK_ILLEGAL_SLICE = new tokenizer_error((L"Unexpected '[' at this location"));
+tokenizer_error *TOK_CLOSING_UNOPENED_BRACE = new tokenizer_error((L"Unexpected '}' for unopened brace expansion"));
+tokenizer_error *TOK_UNTERMINATED_BRACE = new tokenizer_error((L"Unexpected end of string, incomplete parameter expansion"));
+tokenizer_error *TOK_EXPECTED_PCLOSE_FOUND_BCLOSE = new tokenizer_error((L"Unexpected '}' found, expecting ')'"));
+tokenizer_error *TOK_EXPECTED_BCLOSE_FOUND_PCLOSE = new tokenizer_error((L"Unexpected ')' found, expecting '}'"));
 
 /// Return an error token and mark that we no longer have a next token.
-tok_t tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *token_start,
+tok_t tokenizer_t::call_error(tokenizer_error *error_type, const wchar_t *token_start,
                               const wchar_t *error_loc) {
     assert(error_type != TOK_ERROR_NONE && "TOK_ERROR_NONE passed to call_error");
     assert(error_loc >= token_start && "Invalid error location");
@@ -143,6 +109,7 @@ ENUM_FLAGS(tok_mode) {
 tok_t tokenizer_t::read_string() {
     tok_mode mode { tok_mode::regular_text };
     std::vector<int> paran_offsets;
+    std::vector<char> expecting;
     int slice_offset = 0;
     const wchar_t *const buff_start = this->buff;
     bool is_first = true;
@@ -175,14 +142,36 @@ tok_t tokenizer_t::read_string() {
         }
         else if (c == L'(') {
             paran_offsets.push_back(this->buff - this->start);
+            expecting.push_back(L')');
             mode |= tok_mode::subshell;
         }
+        else if (c == L'{') {
+            paran_offsets.push_back(this->buff - this->start);
+            expecting.push_back(L'}');
+            mode |= tok_mode::curly_braces;
+        }
         else if (c == L')') {
+            if (expecting.size() > 0 && expecting.back() == L'}') {
+                return this->call_error(TOK_EXPECTED_BCLOSE_FOUND_PCLOSE, this->start, this->buff);
+            }
             switch (paran_offsets.size()) {
                 case 0:
                     return this->call_error(TOK_CLOSING_UNOPENED_SUBSHELL, this->start, this->buff);
                 case 1:
                     mode &= ~(tok_mode::subshell);
+                default:
+                    paran_offsets.pop_back();
+            }
+        }
+        else if (c == L'}') {
+            if (expecting.size() > 0 && expecting.back() == L')') {
+                return this->call_error(TOK_EXPECTED_PCLOSE_FOUND_BCLOSE, this->start, this->buff);
+            }
+            switch (paran_offsets.size()) {
+                case 0:
+                    return this->call_error(TOK_CLOSING_UNOPENED_BRACE, this->start, this->buff);
+                case 1:
+                    mode &= ~(tok_mode::curly_braces);
                 default:
                     paran_offsets.pop_back();
             }
@@ -256,6 +245,13 @@ tok_t tokenizer_t::read_string() {
 
             error = this->call_error(TOK_UNTERMINATED_SUBSHELL, buff_start,
                     this->start + offset_of_open_paran);
+        }
+        else if ((mode & tok_mode::curly_braces) == tok_mode::curly_braces) {
+            assert(paran_offsets.size() > 0);
+            size_t offset_of_open_brace = paran_offsets.back();
+
+            error = this->call_error(TOK_UNTERMINATED_BRACE, buff_start,
+                    this->start + offset_of_open_brace);
         }
         return error;
     }

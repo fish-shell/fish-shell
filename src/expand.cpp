@@ -47,6 +47,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "wildcard.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 #ifdef KERN_PROCARGS2
 #else
@@ -941,7 +942,8 @@ static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
             whole_item.append(in, length_preceding_braces);
             whole_item.append(item_begin, item_len);
             whole_item.append(brace_end + 1);
-            debug(0, L"Found brace item: %ls\n", whole_item.c_str());
+            auto whole_item2 = trim(whole_item);
+            debug(0, L"Found brace item: %ls\n", whole_item2.c_str());
             expand_braces(whole_item, flags, out, errors);
 
             item_begin = pos + 1;

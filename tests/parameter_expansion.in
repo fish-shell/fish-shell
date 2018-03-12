@@ -21,7 +21,7 @@ world }
 end
 
 # dual expansion cartesian product
-echo { alpha, beta }\ {lambda, gamma }, | sed -r 's/(.*),/\1/'
+echo { alpha, beta }\ {lambda, gamma }, |  string replace -r ',$' ''
 
 # expansion with subshells
 for name in { (echo Meg), (echo Jo) }

@@ -42,7 +42,7 @@ SET(MANUALS ${CMAKE_CURRENT_BINARY_DIR}/share/man/man1/fish.1
             ${CMAKE_CURRENT_BINARY_DIR}/share/man/man1/fish_key_reader.1)
 
 # These are the manpages that go in fish-specific manpath.
-FILE(GLOB HELP_MANPAGES share/man/man1/*.1)
+FILE(GLOB HELP_MANPAGES ${CMAKE_CURRENT_BINARY_DIR}/share/man/man1/*.1)
 
 # Determine which man pages we don't want to install.
 # On OS X, don't install a man page for open, since we defeat fish's open
@@ -186,14 +186,10 @@ INSTALL(DIRECTORY share/tools/web_config
         PATTERN "*.js"
         PATTERN "*.fish")
 
-# @echo "Installing more man pages";
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;
-# $v for i in $(MANUALS); do \
-#   $(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
-#   true; \
-# done;
 # Building the man pages is optional: if doxygen isn't installed, they're not built
-INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
+IF(INSTALL_DOCS)
+    INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/)
+ENDIF()
 
 #install-doc: $(user_doc)
 #    @echo "Installing online user documentation";
@@ -204,9 +200,11 @@ INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
 #        fi; \
 #    done;
 # Building the manual is optional
-INSTALL(DIRECTORY user_doc/html/ # Trailing slash is important!
-        DESTINATION ${docdir} OPTIONAL)
-INSTALL(FILES CHANGELOG.md DESTINATION ${docdir})
+IF(INSTALL_DOCS)
+    INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/html/ # Trailing slash is important!
+            DESTINATION ${docdir})
+    INSTALL(FILES CHANGELOG.md DESTINATION ${docdir})
+ENDIF()
 
 # $v $(INSTALL) -m 644 share/lynx.lss $(DESTDIR)$(datadir)/fish/
 INSTALL(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)

@@ -942,8 +942,6 @@ static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
             whole_item.append(in, length_preceding_braces);
             whole_item.append(item_begin, item_len);
             whole_item.append(brace_end + 1);
-            whole_item = trim(whole_item);
-            // debug(0, L"Found brace item: '%ls'\n", whole_item.c_str());
             expand_braces(whole_item, flags, out, errors);
 
             item_begin = pos + 1;

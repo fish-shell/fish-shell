@@ -937,7 +937,7 @@ static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
             assert(pos >= item_begin);
             size_t item_len = pos - item_begin;
             wcstring item = wcstring(item_begin, item_len);
-            item = trim(item, (const wchar_t[]) { BRACE_SPACE, nullptr });
+            item = trim(item, (const wchar_t[]) { BRACE_SPACE, L'\0' });
             for (auto &c : item) {
                 if (c == BRACE_SPACE) {
                     c = ' ';

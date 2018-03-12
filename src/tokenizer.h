@@ -104,6 +104,8 @@ class tokenizer_t {
     bool show_comments{false};
     /// Whether all blank lines are returned.
     bool show_blank_lines{false};
+    /// Whether to continue the previous line after the comment.
+    bool continue_line_after_comment{false};
 
     tok_t call_error(tokenizer_error *error_type, const wchar_t *token_start,
                      const wchar_t *error_loc);

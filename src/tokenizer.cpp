@@ -416,12 +416,11 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
         return none();
     }
 
-    bool line_continued = false;
     // Consume non-newline whitespace. If we get an escaped newline, mark it and continue past it.
     for (;;) {
         if (this->buff[0] == L'\\' && this->buff[1] == L'\n') {
-            line_continued = true;
             this->buff += 2;
+            this->continue_line_after_comment = true;
         } else if (iswspace_not_nl(this->buff[0])) {
             this->buff++;
         } else {
@@ -429,11 +428,14 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
         }
     }
 
-    if (*this->buff == L'#') {
+    while (*this->buff == L'#') {
         // We have a comment, walk over the comment.
         const wchar_t *comment_start = this->buff;
         while (this->buff[0] != L'\n' && this->buff[0] != L'\0') this->buff++;
         size_t comment_len = this->buff - comment_start;
+
+        // If we are going to continue after the comment, skip any trailing newline.
+        if (this->buff[0] == L'\n' && this->continue_line_after_comment) this->buff++;
 
         // Maybe return the comment.
         if (this->show_comments) {
@@ -443,12 +445,11 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             result.length = comment_len;
             return result;
         }
-        if (line_continued) {
-            return none();
-        }
         while (iswspace_not_nl(this->buff[0])) this->buff++;
     }
 
+    // We made it past the comments and ate any trailing newlines we wanted to ignore.
+    this->continue_line_after_comment = false;
     size_t start_pos = this->buff - this->start;
 
     tok_t result;
@@ -467,7 +468,8 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             // Hack: when we get a newline, swallow as many as we can. This compresses multiple
             // subsequent newlines into a single one.
             if (!this->show_blank_lines) {
-                while (is_whitespace(*this->buff)) {
+                while (*this->buff == L'\n' || *this->buff == 13 /* CR */ || *this->buff == ' ' ||
+                       *this->buff == '\t') {
                     this->buff++;
                 }
             }

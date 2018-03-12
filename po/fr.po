@@ -1746,7 +1746,7 @@ msgstr "Une seconde tentative d’arrêt les terminera.\n"
 msgid ""
 "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr ""
-"Utilisez 'disown PID' pour retirer des tâches de la liste sans les abréger"
+"Utilisez 'disown PID' pour retirer des tâches de la liste sans les abréger\n"
 
 #: src/reader.cpp:3205
 #, c-format

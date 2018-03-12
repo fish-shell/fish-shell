@@ -44,6 +44,7 @@
 #include "utf8.h"
 #include "util.h"  // IWYU pragma: keep
 #include "wutil.h"
+#include "wcstringutil.h"
 
 #if __APPLE__
 #define FISH_NOTIFYD_AVAILABLE 1
@@ -76,7 +77,6 @@
     "changes will be overwritten.\n"
 
 static wcstring get_machine_identifier();
-static bool get_hostname_identifier(wcstring *result);
 
 static wcstring vars_filename_in_directory(const wcstring &wdir) {
     if (wdir.empty()) return L"";
@@ -255,8 +255,8 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
     return success;
 }
 
-env_universal_t::env_universal_t(const wcstring &path)
-    : explicit_vars_path(path), tried_renaming(false), last_read_file(kInvalidFileID) {}
+env_universal_t::env_universal_t(wcstring path)
+    : explicit_vars_path(std::move(path)), tried_renaming(false), last_read_file(kInvalidFileID) {}
 
 maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     var_table_t::const_iterator where = vars.find(name);
@@ -268,7 +268,7 @@ bool env_universal_t::get_export(const wcstring &name) const {
     bool result = false;
     var_table_t::const_iterator where = vars.find(name);
     if (where != vars.end()) {
-        result = where->second.exportv;
+        result = where->second.exports();
     }
     return result;
 }
@@ -282,9 +282,9 @@ void env_universal_t::set_internal(const wcstring &key, wcstring_list_t vals, bo
     }
 
     env_var_t &entry = vars[key];
-    if (entry.exportv != exportv || entry.as_list() != vals) {
+    if (entry.exports() != exportv || entry.as_list() != vals) {
         entry.set_vals(std::move(vals));
-        entry.exportv = exportv;
+        entry.set_exports(exportv);
 
         // If we are overwriting, then this is now modified.
         if (overwrite) {
@@ -319,7 +319,7 @@ wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexpor
     for (iter = vars.begin(); iter != vars.end(); ++iter) {
         const wcstring &key = iter->first;
         const env_var_t &var = iter->second;
-        if ((var.exportv && show_exported) || (!var.exportv && show_unexported)) {
+        if ((var.exports() && show_exported) || (!var.exports() && show_unexported)) {
             result.push_back(key);
         }
     }
@@ -357,11 +357,11 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
         // See if the value has changed.
         const env_var_t &new_entry = iter->second;
         var_table_t::const_iterator existing = this->vars.find(key);
-        if (existing == this->vars.end() || existing->second.exportv != new_entry.exportv ||
+        if (existing == this->vars.end() || existing->second.exports() != new_entry.exports() ||
             existing->second != new_entry) {
             // Value has changed.
-            callbacks.push_back(
-                callback_data_t(new_entry.exportv ? SET_EXPORT : SET, key, new_entry.as_string()));
+            callbacks.push_back(callback_data_t(new_entry.exports() ? SET_EXPORT : SET, key,
+                                                new_entry.as_string()));
         }
     }
 }
@@ -448,7 +448,7 @@ bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
         // variable; soldier on.
         const wcstring &key = iter->first;
         const env_var_t &var = iter->second;
-        append_file_entry(var.exportv ? SET_EXPORT : SET, key, var.as_string(), &contents,
+        append_file_entry(var.exports() ? SET_EXPORT : SET, key, var.as_string(), &contents,
                           &storage);
 
         // Go to next.
@@ -495,7 +495,7 @@ bool env_universal_t::load(callback_data_list_t &callbacks) {
         // Silently "upgraded."
         tried_renaming = true;
         wcstring hostname_id;
-        if (get_hostname_identifier(&hostname_id)) {
+        if (get_hostname_identifier(hostname_id)) {
             const wcstring hostname_path = wdirname(vars_path) + L'/' + hostname_id;
             if (0 == wrename(hostname_path, vars_path)) {
                 // We renamed - try again.
@@ -830,7 +830,7 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t
             wcstring val;
             if (unescape_string(tmp + 1, &val, 0)) {
                 env_var_t &entry = (*vars)[key];
-                entry.exportv = exportv;
+                entry.set_exports(exportv);
                 entry.set_vals(decode_serialized(val));
             }
         } else {
@@ -911,11 +911,14 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN]) { return
 #endif
 
 /// Function to get an identifier based on the hostname.
-static bool get_hostname_identifier(wcstring *result) {
+bool get_hostname_identifier(wcstring &result) {
+    //The behavior of gethostname if the buffer size is insufficient differs by implementation and libc version
+    //Work around this by using a "guaranteed" sufficient buffer size then truncating the result.
     bool success = false;
-    char hostname[HOSTNAME_LEN + 1] = {};
-    if (gethostname(hostname, HOSTNAME_LEN) == 0) {
-        result->assign(str2wcstring(hostname));
+    char hostname[256] = {};
+    if (gethostname(hostname, sizeof(hostname)) == 0) {
+        result.assign(str2wcstring(hostname));
+        result.assign(truncate(result, HOSTNAME_LEN));
         success = true;
     }
     return success;
@@ -931,7 +934,7 @@ wcstring get_machine_identifier() {
         for (size_t i = 0; i < MAC_ADDRESS_MAX_LEN; i++) {
             append_format(result, L"%02x", mac_addr[i]);
         }
-    } else if (!get_hostname_identifier(&result)) {
+    } else if (!get_hostname_identifier(result)) {
         result.assign(L"nohost");  // fallback to a dummy value
     }
     return result;
@@ -1207,13 +1210,13 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         make_pipe(test_path);
     }
 
-    ~universal_notifier_named_pipe_t() {
+    ~universal_notifier_named_pipe_t() override {
         if (pipe_fd >= 0) {
             close(pipe_fd);
         }
     }
 
-    int notification_fd() {
+    int notification_fd() override {
         if (polling_due_to_readable_fd) {
             // We are in polling mode because we think our fd is readable. This means that, if we
             // return it to be select()'d on, we'll be called back immediately. So don't return it.
@@ -1223,7 +1226,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         return pipe_fd;
     }
 
-    bool notification_fd_became_readable(int fd) {
+    bool notification_fd_became_readable(int fd) override {
         // Our fd is readable. We deliberately do not read anything out of it: if we did, other
         // sessions may miss the notification. Instead, we go into "polling mode:" we do not
         // select() on our fd for a while, and sync periodically until the fd is no longer readable.
@@ -1240,7 +1243,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         return should_sync;
     }
 
-    void post_notification() {
+    void post_notification() override {
         if (pipe_fd >= 0) {
             // We need to write some data (any data) to the pipe, then wait for a while, then read
             // it back. Nobody is expected to read it except us.
@@ -1257,7 +1260,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         }
     }
 
-    unsigned long usec_delay_between_polls() const {
+    unsigned long usec_delay_between_polls() const override {
         unsigned long readback_delay = ULONG_MAX;
         if (this->readback_time_usec > 0) {
             // How long until the readback?
@@ -1285,7 +1288,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         return result;
     }
 
-    bool poll() {
+    bool poll() override {
         // Check if we are past the readback time.
         if (this->readback_time_usec > 0 && get_time() >= this->readback_time_usec) {
             // Read back what we wrote. We do nothing with the value.
@@ -1367,9 +1370,9 @@ std::unique_ptr<universal_notifier_t> universal_notifier_t::new_notifier_for_str
 }
 
 // Default implementations.
-universal_notifier_t::universal_notifier_t() {}
+universal_notifier_t::universal_notifier_t() = default;
 
-universal_notifier_t::~universal_notifier_t() {}
+universal_notifier_t::~universal_notifier_t() = default;
 
 int universal_notifier_t::notification_fd() { return -1; }
 

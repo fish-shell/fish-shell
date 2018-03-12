@@ -1,8 +1,19 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
-PROJECT(fish-shell CXX)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.2)
+
+IF(POLICY CMP0066)
+  CMAKE_POLICY(SET CMP0066 OLD)
+ENDIF()
+IF(POLICY CMP0067)
+  CMAKE_POLICY(SET CMP0067 OLD)
+ENDIF()
+
+PROJECT(fish)
 
 # We are C++11.
 SET(CMAKE_CXX_STANDARD 11)
+
+# Disable exception handling.
+ADD_COMPILE_OPTIONS(-fno-exceptions)
 
 # Hide the CMake Rules directories in Xcode projects.
 SOURCE_GROUP("CMake Rules" REGULAR_EXPRESSION "^$")
@@ -16,6 +27,12 @@ SOURCE_GROUP("Builtins" REGULAR_EXPRESSION "builtin_.*")
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
+IF(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
+  SET(FISH_IN_TREE_BUILD TRUE)
+ELSE()
+  SET(FISH_IN_TREE_BUILD FALSE)
+ENDIF()
 
 # All objects that the system needs to build fish, except fish.cpp
 SET(FISH_SRCS
@@ -39,23 +56,12 @@ SET(FISH_SRCS
     src/parse_execution.cpp src/parse_productions.cpp src/parse_tree.cpp
     src/parse_util.cpp src/parser.cpp src/parser_keywords.cpp src/path.cpp
     src/postfork.cpp src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp
-    src/signal.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
+    src/signal.cpp src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
 )
 
 # Header files are just globbed.
 FILE(GLOB FISH_HEADERS src/*.h)
-
-# Set up the version target.
-# This creates the file FISH-BUILD-VERSION-FILE which is only modified if necessary.
-ADD_CUSTOM_COMMAND(OUTPUT "FISH-BUILD-VERSION-FILE"
-                   DEPENDS CHECK-FISH-BUILD-VERSION-FILE)
-
-ADD_CUSTOM_TARGET("CHECK-FISH-BUILD-VERSION-FILE"
-                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh)
-
-SET(FBVF "FISH-BUILD-VERSION-FILE")
-
 
 # Set up config.h
 INCLUDE(cmake/ConfigureChecks.cmake)
@@ -67,7 +73,6 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 # Set up standard directories.
 INCLUDE(GNUInstallDirs)
 ADD_DEFINITIONS(-D_UNICODE=1
-                -DFISH_BUILD_VERSION="${FISH_BUILD_VERSION}"
                 -DLOCALEDIR="${CMAKE_INSTALL_FULL_LOCALEDIR}"
                 -DPREFIX=L"${CMAKE_INSTALL_PREFIX}"
                 -DDATADIR=L"${CMAKE_INSTALL_FULL_DATADIR}"
@@ -75,26 +80,35 @@ ADD_DEFINITIONS(-D_UNICODE=1
                 -DBINDIR=L"${CMAKE_INSTALL_FULL_BINDIR}"
                 -DDOCDIR=L"${CMAKE_INSTALL_FULL_DOCDIR}")
 
+# Set up the machinery around FISH-BUILD-VERSION-FILE
+# This defines the FBVF variable.
+INCLUDE(Version)
+
+# Teach fish_version.o to rebuild when FBVF changes.
+# The standard C++ include detection machinery misses this.
+SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp
+                            PROPERTIES OBJECT_DEPENDS
+                            ${CMAKE_CURRENT_BINARY_DIR}/${FBVF})
+
 # Set up PCRE2
 INCLUDE(cmake/PCRE2.cmake)
-
-# Set up muparser.
-INCLUDE(muparser-2.2.5/CMakeLists.txt)
 
 # Set up the docs.
 INCLUDE(cmake/Docs.cmake)
 
 # Define a function to link dependencies.
 FUNCTION(FISH_LINK_DEPS target)
-  TARGET_LINK_LIBRARIES(${target} fishlib)
+  TARGET_LINK_LIBRARIES(${target} fishlib tinyexpr)
 ENDFUNCTION(FISH_LINK_DEPS)
+
+ADD_LIBRARY(tinyexpr STATIC src/tinyexpr.c src/tinyexpr.h)
 
 # Define libfish.a.
 ADD_LIBRARY(fishlib STATIC ${FISH_SRCS})
 TARGET_SOURCES(fishlib PRIVATE ${FISH_HEADERS})
 TARGET_LINK_LIBRARIES(fishlib
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}
-  ${PCRE2_LIB} muparser)
+  ${PCRE2_LIB} ${Intl_LIBRARIES})
 
 # Define fish.
 ADD_EXECUTABLE(fish src/fish.cpp)

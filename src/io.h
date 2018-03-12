@@ -49,7 +49,7 @@ class io_close_t : public io_data_t {
    public:
     explicit io_close_t(int f) : io_data_t(IO_CLOSE, f) {}
 
-    virtual void print() const;
+    void print() const override;
 };
 
 class io_fd_t : public io_data_t {
@@ -62,7 +62,7 @@ class io_fd_t : public io_data_t {
     /// would not.
     const bool user_supplied;
 
-    virtual void print() const;
+    void print() const override;
 
     io_fd_t(int f, int old, bool us) : io_data_t(IO_FD, f), old_fd(old), user_supplied(us) {}
 };
@@ -74,12 +74,12 @@ class io_file_t : public io_data_t {
     /// file creation flags to send to open.
     const int flags;
 
-    virtual void print() const;
+    void print() const override;
 
     io_file_t(int f, const wcstring &fname, int fl = 0)
         : io_data_t(IO_FILE, f), filename_cstr(wcs2str(fname)), flags(fl) {}
 
-    virtual ~io_file_t() { free((void *)filename_cstr); }
+    ~io_file_t() override { free((void *)filename_cstr); }
 };
 
 class io_pipe_t : public io_data_t {
@@ -92,7 +92,7 @@ class io_pipe_t : public io_data_t {
     int pipe_fd[2];
     const bool is_input;
 
-    virtual void print() const;
+    void print() const override;
 
     io_pipe_t(int f, bool i) : io_data_t(IO_PIPE, f), is_input(i) { pipe_fd[0] = pipe_fd[1] = -1; }
 };
@@ -114,9 +114,9 @@ class io_buffer_t : public io_pipe_t {
           out_buffer() {}
 
    public:
-    virtual void print() const;
+    void print() const override;
 
-    virtual ~io_buffer_t();
+    ~io_buffer_t() override;
 
     /// Function to append to the buffer.
     void out_buffer_append(const char *ptr, size_t count) {

@@ -10,7 +10,9 @@
 #include <vector>
 
 #include "common.h"
+#include "maybe.h"
 #include "parse_constants.h"
+#include "parse_grammar.h"
 #include "tokenizer.h"
 
 class parse_node_tree_t;
@@ -29,6 +31,7 @@ struct parse_token_t {
     enum parse_keyword_t keyword;  // Any keyword represented by this token
     bool has_dash_prefix;          // Hackish: whether the source contains a dash prefix
     bool is_help_argument;         // Hackish: whether the source looks like '-h' or '--help'
+    bool is_newline;               // Hackish: if TOK_END, whether the source is a newline.
     source_offset_t source_start;
     source_offset_t source_length;
 
@@ -92,7 +95,7 @@ class parse_node_t {
     // This is used to store e.g. the statement decoration.
     parse_node_tag_t tag : 4;
     // Description
-    wcstring describe(void) const;
+    wcstring describe() const;
 
     // Constructor
     explicit parse_node_t(parse_token_type_t ty)
@@ -137,6 +140,9 @@ class parse_node_t {
     }
 };
 
+template <typename Type>
+class tnode_t;
+
 /// The parse tree itself.
 class parse_node_tree_t : public std::vector<parse_node_t> {
    public:
@@ -154,6 +160,9 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     // Find the first direct child of the given node of the given type. asserts on failure.
     const parse_node_t &find_child(const parse_node_t &parent, parse_token_type_t type) const;
 
+    template <typename Type>
+    tnode_t<Type> find_child(const parse_node_t &parent) const;
+
     // Get the node corresponding to the parent of the given node, or NULL if there is no such
     // child. If expected_type is provided, only returns the parent if it is of that type. Note the
     // asymmetry: get_child asserts since the children are known, but get_parent does not, since the
@@ -161,51 +170,24 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     const parse_node_t *get_parent(const parse_node_t &node,
                                    parse_token_type_t expected_type = token_type_invalid) const;
 
-    // Find all the nodes of a given type underneath a given node, up to max_count of them.
-    typedef std::vector<const parse_node_t *> parse_node_list_t;
-    parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type,
-                                 size_t max_count = (size_t)(-1)) const;
-
-    // Finds the last node of a given type underneath a given node, or NULL if it could not be
-    // found. If parent is NULL, this finds the last node in the tree of that type.
-    const parse_node_t *find_last_node_of_type(parse_token_type_t type,
-                                               const parse_node_t *parent = NULL) const;
+    // Finds the last node of a given type, or empty if it could not be found. If parent is NULL,
+    // this finds the last node in the tree of that type.
+    template <typename Type>
+    tnode_t<Type> find_last_node(const parse_node_t *parent = NULL) const;
 
     // Finds a node containing the given source location. If 'parent' is not NULL, it must be an
     // ancestor.
     const parse_node_t *find_node_matching_source_location(parse_token_type_t type,
                                                            size_t source_loc,
                                                            const parse_node_t *parent) const;
-
-    // Indicate if the given argument_list or arguments_or_redirections_list is a root list, or has
-    // a parent.
-    bool argument_list_is_root(const parse_node_t &node) const;
-
     // Utilities
 
-    /// Given a plain statement, get the decoration (from the parent node), or none if there is no
-    /// decoration.
-    enum parse_statement_decoration_t decoration_for_plain_statement(
-        const parse_node_t &node) const;
+    /// Given a node, return all of its comment nodes.
+    std::vector<tnode_t<grammar::comment>> comment_nodes_for_node(const parse_node_t &node) const;
 
-    /// Given a plain statement, get the command by reference (from the child node). Returns true if
-    /// successful. Clears the command on failure.
-    bool command_for_plain_statement(const parse_node_t &node, const wcstring &src,
-                                     wcstring *out_cmd) const;
-
-    /// Given a plain statement, return true if the statement is part of a pipeline. If
-    /// include_first is set, the first command in a pipeline is considered part of it; otherwise
-    /// only the second or additional commands are.
-    bool statement_is_in_pipeline(const parse_node_t &node, bool include_first) const;
-
-    /// Given a redirection, get the redirection type (or TOK_NONE) and target (file path, or fd).
-    enum token_type type_for_redirection(const parse_node_t &node, const wcstring &src, int *out_fd,
-                                         wcstring *out_target) const;
-
-    /// If the given node is a block statement, returns the header node (for_header, while_header,
-    /// begin_header, or function_header). Otherwise returns NULL.
-    const parse_node_t *header_node_for_block_statement(const parse_node_t &node) const;
-
+   private:
+    template <typename Type>
+    friend class tnode_t;
     /// Given a node list (e.g. of type symbol_job_list) and a node type (e.g. symbol_job), return
     /// the next element of the given type in that list, and the tail (by reference). Returns NULL
     /// if we've exhausted the list.
@@ -213,18 +195,10 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
                                                parse_token_type_t item_type,
                                                const parse_node_t **list_tail) const;
 
-    /// Given a job, return all of its statements. These are 'specific statements' (e.g.
-    /// symbol_decorated_statement, not symbol_statement).
-    parse_node_list_t specific_statements_for_job(const parse_node_t &job) const;
-
-    /// Given a node, return all of its comment nodes.
-    parse_node_list_t comment_nodes_for_node(const parse_node_t &node) const;
-
-    /// Returns the boolean type for a boolean node.
-    static enum parse_bool_statement_type_t statement_boolean_type(const parse_node_t &node);
-
-    /// Given a job, return whether it should be backgrounded, because it has a & specifier.
-    bool job_should_be_backgrounded(const parse_node_t &job) const;
+    // Finds the last node of a given type underneath a given node, or NULL if it could not be
+    // found. If parent is NULL, this finds the last node in the tree of that type.
+    const parse_node_t *find_last_node_of_type(parse_token_type_t type,
+                                               const parse_node_t *parent) const;
 };
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.
@@ -232,90 +206,21 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags,
                             parse_node_tree_t *output, parse_error_list_t *errors,
                             parse_token_type_t goal = symbol_job_list);
 
-// Fish grammar:
-//
-// # A job_list is a list of jobs, separated by semicolons or newlines
-//
-//     job_list = <empty> |
-//                 job job_list |
-//                 <TOK_END> job_list
-//
-// # A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
-// like if statements, where we require a command). To represent "non-empty", we require a
-// statement, followed by a possibly empty job_continuation, and then optionally a background
-// specifier '&'
-//
-//     job = statement job_continuation optional_background
-//     job_continuation = <empty> |
-//                        <TOK_PIPE> statement job_continuation
-//
-// # A statement is a normal command, or an if / while / and etc
-//
-//     statement = boolean_statement | block_statement | if_statement | switch_statement |
-//     decorated_statement
-//
-// # A block is a conditional, loop, or begin/end
-//
-//     if_statement = if_clause else_clause end_command arguments_or_redirections_list
-//     if_clause = <IF> job <TOK_END> andor_job_list job_list
-//     else_clause = <empty> |
-//                  <ELSE> else_continuation
-//     else_continuation = if_clause else_clause |
-//                         <TOK_END> job_list
-//
-//     switch_statement = SWITCH argument <TOK_END> case_item_list end_command
-// arguments_or_redirections_list
-//     case_item_list = <empty> |
-//                     case_item case_item_list |
-//                     <TOK_END> case_item_list
-//
-//     case_item = CASE argument_list <TOK_END> job_list
-//
-//     block_statement = block_header  job_list end_command arguments_or_redirections_list
-//     block_header = for_header | while_header  | function_header | begin_header
-//     for_header = FOR var_name IN argument_list <TOK_END>
-//     while_header = WHILE job <TOK_END> andor_job_list
-//     begin_header = BEGIN
-//
-// # Functions take arguments, and require at least one (the name). No redirections allowed.
-//     function_header = FUNCTION argument argument_list <TOK_END>
-//
-// # A boolean statement is AND or OR or NOT
-//     boolean_statement = AND statement | OR statement | NOT statement
-//
-// # An andor_job_list is zero or more job lists, where each starts with an `and` or `or` boolean
-// statement
-//     andor_job_list = <empty> |
-//                      job andor_job_list |
-//                      <TOK_END> andor_job_list
-//
-// # A decorated_statement is a command with a list of arguments_or_redirections, possibly with
-// "builtin" or "command" or "exec"
-//
-//     decorated_statement = plain_statement | COMMAND plain_statement | BUILTIN plain_statement |
-//     EXEC
-//
-// plain_statement
-//     plain_statement = <TOK_STRING> arguments_or_redirections_list
-//
-//     argument_list = <empty> | argument argument_list
-//
-//     arguments_or_redirections_list = <empty> |
-//                                      argument_or_redirection arguments_or_redirections_list
-//     argument_or_redirection = argument | redirection
-//     argument = <TOK_STRING>
-//
-//     redirection = <TOK_REDIRECTION> <TOK_STRING>
-//
-//     optional_background = <empty> | <TOK_BACKGROUND>
-//
-//     end_command = END
-//
-// # A freestanding_argument_list is equivalent to a normal argument list, except it may contain
-// TOK_END (newlines, and even semicolons, for historical reasons
-//
-//      freestanding_argument_list = <empty> |
-//                                   argument freestanding_argument_list |
-//                                   <TOK_END> freestanding_argument_list
+/// A type wrapping up a parse tree and the original source behind it.
+struct parsed_source_t {
+    wcstring src;
+    parse_node_tree_t tree;
+
+    parsed_source_t(wcstring s, parse_node_tree_t t) : src(std::move(s)), tree(std::move(t)) {}
+
+    parsed_source_t(const parsed_source_t &) = delete;
+    void operator=(const parsed_source_t &) = delete;
+    parsed_source_t(parsed_source_t &&) = default;
+    parsed_source_t &operator=(parsed_source_t &&) = default;
+};
+/// Return a shared pointer to parsed_source_t, or null on failure.
+using parsed_source_ref_t = std::shared_ptr<const parsed_source_t>;
+parsed_source_ref_t parse_source(wcstring src, parse_tree_flags_t flags, parse_error_list_t *errors,
+                                 parse_token_type_t goal = symbol_job_list);
 
 #endif

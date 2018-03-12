@@ -23,6 +23,7 @@ enum {
     JOBS_PRINT_PID,      // print pid of each process in job
     JOBS_PRINT_COMMAND,  // print command name of each process in job
     JOBS_PRINT_GROUP,    // print group id of job
+    JOBS_PRINT_NOTHING,    // print nothing (exit status only)
 };
 
 #ifdef HAVE__PROC_SELF_STAT
@@ -49,6 +50,9 @@ static int cpu_use(const job_t *j) {
 /// Print information about the specified job.
 static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_t &streams) {
     switch (mode) {
+        case JOBS_PRINT_NOTHING: {
+            break;
+        }
         case JOBS_DEFAULT: {
             if (header) {
                 // Print table header before first job.
@@ -115,11 +119,15 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int mode = JOBS_DEFAULT;
     int print_last = 0;
 
-    static const wchar_t *short_options = L":cghlp";
+    static const wchar_t *short_options = L":cghlpq";
     static const struct woption long_options[] = {
-        {L"pid", no_argument, NULL, 'p'},   {L"command", no_argument, NULL, 'c'},
-        {L"group", no_argument, NULL, 'g'}, {L"last", no_argument, NULL, 'l'},
-        {L"help", no_argument, NULL, 'h'},  {NULL, 0, NULL, 0}};
+        {L"command", no_argument, NULL, 'c'},
+        {L"group", no_argument, NULL, 'g'},
+        {L"help", no_argument, NULL, 'h'},
+        {L"last", no_argument, NULL, 'l'},
+        {L"pid", no_argument, NULL, 'p'},
+        {L"quiet", no_argument, NULL, 'q'},
+        {nullptr, 0, NULL, 0}};
 
     int opt;
     wgetopter_t w;
@@ -127,6 +135,10 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         switch (opt) {
             case 'p': {
                 mode = JOBS_PRINT_PID;
+                break;
+            }
+            case 'q': {
+                mode = JOBS_PRINT_NOTHING;
                 break;
             }
             case 'c': {
@@ -207,7 +219,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (!found) {
         // Do not babble if not interactive.
-        if (!streams.out_is_redirected) {
+        if (!streams.out_is_redirected && mode != JOBS_PRINT_NOTHING) {
             streams.out.append_format(_(L"%ls: There are no jobs\n"), argv[0]);
         }
         return STATUS_CMD_ERROR;

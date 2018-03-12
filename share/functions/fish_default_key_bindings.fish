@@ -80,12 +80,12 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     bind $argv \e\< beginning-of-buffer
     bind $argv \e\> end-of-buffer
 
-    bind \ed kill-word
+    bind $argv \ed kill-word
 
     # Ignore some known-bad control sequences
     # https://github.com/fish-shell/fish-shell/issues/1917
-    bind \e\[I 'begin;end'
-    bind \e\[O 'begin;end'
+    bind $argv \e\[I 'begin;end'
+    bind $argv \e\[O 'begin;end'
 
     # term-specific special bindings
     switch "$TERM"
@@ -93,5 +93,9 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
             bind $argv \e\[8~ end-of-line
             bind $argv \eOc forward-word
             bind $argv \eOd backward-word
+        case 'xterm-256color'
+            # Microsoft's conemu uses xterm-256color plus
+            # the following to tell a console to paste:
+            bind $argv \e\x20ep fish_clipboard_paste
     end
 end

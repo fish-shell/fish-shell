@@ -41,11 +41,11 @@ expect_prompt
 expect_marker 2
 print_var_contents foo
 
-# read -i
+# read -s
 
-send_line "read -i foo"
+send_line "read -s foo"
 expect_read_prompt
-send_line -h "read_i\r_marker 3"
+send_line -h "read_s\r_marker 3"
 expect_prompt
 expect_marker 3
 print_var_contents foo

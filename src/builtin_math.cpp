@@ -5,7 +5,10 @@
 #include <stddef.h>
 
 #include <algorithm>
+#include <cmath>
 #include <string>
+
+#include "tinyexpr.h"
 
 #include "builtin.h"
 #include "builtin_math.h"
@@ -14,10 +17,6 @@
 #include "io.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-#include "muParser.h"
-#include "muParserBase.h"
-#include "muParserDef.h"
 
 struct math_cmd_opts_t {
     bool print_help = false;
@@ -115,85 +114,73 @@ static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storag
     return math_get_arg_argv(argidx, argv);
 }
 
-// The MuParser mechanism for dynamic lookup of variables requires that we return a unique address
-// for each variable. The following limit is arbitrary but anyone writing a math expression in fish
-// that references more than one hundred unique variables is abusing fish.
-#define MAX_RESULTS 100
-static double double_results[MAX_RESULTS];
-static int next_result = 0;
+static wcstring math_describe_error(te_error_t& error) {
+    if (error.position == 0) return L"NO ERROR?!?";
+    assert(error.type != TE_ERROR_NONE && L"Error has no position");
 
-/// Return a fish var converted to a double. This allows the user to use a bar var name in the
-/// expression. That is `math a + 1` rather than `math $a + 1`.
-static double *retrieve_var(const wchar_t *var_name, void *user_data) {
-    UNUSED(user_data);
-    static double zero_result = 0.0;
-
-    auto var = env_get(var_name, ENV_DEFAULT);
-    if (!var) {
-        // We could report an error but we normally don't treat missing vars as a fatal error.
-        // throw mu::ParserError(L"Var '%ls' does not exist.");
-        return &zero_result;
+    switch(error.type) {
+        case TE_ERROR_UNKNOWN_VARIABLE: return _(L"Unknown variable");
+        case TE_ERROR_MISSING_CLOSING_PAREN: return _(L"Missing closing parenthesis");
+        case TE_ERROR_MISSING_OPENING_PAREN: return _(L"Missing opening parenthesis");
+        case TE_ERROR_TOO_FEW_ARGS: return _(L"Too few arguments");
+        case TE_ERROR_TOO_MANY_ARGS: return _(L"Too many arguments");
+        case TE_ERROR_MISSING_OPERATOR: return _(L"Missing operator");
+        case TE_ERROR_UNKNOWN: return _(L"Expression is bogus");
+        default: return L"Unknown error";
     }
-    if (var->empty()) {
-        return &zero_result;
-    }
-
-    const wchar_t *first_val = var->as_list()[0].c_str();
-    wchar_t *endptr;
-    errno = 0;
-    double result = wcstod(first_val, &endptr);
-    if (*endptr != L'\0' || errno) {
-        wchar_t errmsg[500];
-        swprintf(errmsg, sizeof(errmsg) / sizeof(wchar_t),
-                 _(L"Var '%ls' not a valid floating point number: '%ls'."), var_name, first_val);
-        throw mu::ParserError(errmsg);
-    }
-
-    // We need to return a unique address for the var. If we used a `static double` var and returned
-    // it's address then multiple vars in the expression would all refer to the same value.
-    if (next_result == MAX_RESULTS - 1) {
-        wchar_t errmsg[500];
-        swprintf(errmsg, sizeof(errmsg) / sizeof(wchar_t),
-                 _(L"More than %d var names in math expression."), MAX_RESULTS);
-        throw mu::ParserError(errmsg);
-    }
-    double_results[next_result++] = result;
-    return double_results + next_result - 1;
 }
 
-/// Implement integer modulo math operator.
-static double moduloOperator(double v, double w) { return (int)v % std::max(1, (int)w); };
-
 /// Evaluate math expressions.
-static int evaluate_expression(wchar_t *cmd, parser_t &parser, io_streams_t &streams,
+static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_t &streams,
                                math_cmd_opts_t &opts, wcstring &expression) {
     UNUSED(parser);
-    next_result = 0;
 
-    try {
-        mu::Parser p;
-        // Setup callback so variables can be retrieved dynamically.
-        p.SetVarFactory(retrieve_var, nullptr);
-        // MuParser doesn't implement the modulo operator so we add it ourselves since there are
-        // likely users of our old math wrapper around bc that expect it to be available.
-        p.DefineOprtChars(L"%");
-        p.DefineOprt(L"%", moduloOperator, mu::prINFIX);
+    int retval = STATUS_CMD_OK;
+    te_error_t error;
+    std::string narrow_str = wcs2string(expression);
+    // Switch locale while computing stuff.
+    // This means that the "." is always the radix character,
+    // so numbers work the same across locales.
+    char *saved_locale = strdup(setlocale(LC_NUMERIC, NULL));
+    setlocale(LC_NUMERIC, "C");
+    double v = te_interp(narrow_str.c_str(), &error);
 
-        p.SetExpr(expression);
-        int nNum;
-        mu::value_type *v = p.Eval(nNum);
-        for (int i = 0; i < nNum; ++i) {
-            if (opts.scale == 0) {
-                streams.out.append_format(L"%ld\n", static_cast<long>(v[i]));
-            } else {
-                streams.out.append_format(L"%.*lf\n", opts.scale, v[i]);
-            }
+    if (error.position == 0) {
+        // Check some runtime errors after the fact.
+        // TODO: Really, this should be done in tinyexpr
+        // (e.g. infinite is the result of "x / 0"),
+        // but that's much more work.
+        if (std::isinf(v)) {
+            streams.err.append_format(L"%ls: Error: Result is infinite\n", cmd);
+            streams.err.append_format(L"'%ls'\n", expression.c_str());
+            retval = STATUS_CMD_ERROR;
+        } else if (std::isnan(v)) {
+            streams.err.append_format(L"%ls: Error: Result is not a number\n", cmd);
+            streams.err.append_format(L"'%ls'\n", expression.c_str());
+            retval = STATUS_CMD_ERROR;
+        } else if (v >= LONG_MAX) {
+            streams.err.append_format(L"%ls: Error: Result is too large\n", cmd);
+            streams.err.append_format(L"'%ls'\n", expression.c_str());
+            retval = STATUS_CMD_ERROR;
+        } else if (v <= LONG_MIN) {
+            streams.err.append_format(L"%ls: Error: Result is too small\n", cmd);
+            streams.err.append_format(L"'%ls'\n", expression.c_str());
+            retval = STATUS_CMD_ERROR;
+        } else if (opts.scale == 0) {
+            // Normal results
+            streams.out.append_format(L"%ld\n", static_cast<long>(v));
+        } else {
+            streams.out.append_format(L"%.*lf\n", opts.scale, v);
         }
-        return STATUS_CMD_OK;
-    } catch (mu::Parser::exception_type &e) {
-        streams.err.append_format(_(L"%ls: Invalid expression: %ls\n"), cmd, e.GetMsg().c_str());
-        return STATUS_CMD_ERROR;
+    } else {
+        streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error).c_str());
+        streams.err.append_format(L"'%ls'\n", expression.c_str());
+        streams.err.append_format(L"%*lc^\n", error.position - 1, L' ');
+        retval = STATUS_CMD_ERROR;
     }
+    setlocale(LC_NUMERIC, saved_locale);
+    free(saved_locale);
+    return retval;
 }
 
 /// The math builtin evaluates math expressions.
@@ -221,5 +208,9 @@ int builtin_math(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         expression.append(arg);
     }
 
+    if (expression.empty()) {
+        streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, L"math", 1, 0);
+        return STATUS_CMD_ERROR;
+    }
     return evaluate_expression(cmd, parser, streams, opts, expression);
 }

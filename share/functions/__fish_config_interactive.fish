@@ -131,7 +131,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
             # We don't want to call `fish -c` since that is unnecessary and sources config.fish again.
             # Hence we'll call python directly.
             # c_m_p.py should work with any python version.
-            set -l update_args -B $__fish_datadir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
+            set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
             if command -qs python3
                 python3 $update_args >/dev/null ^/dev/null &
             else if command -qs python2
@@ -252,7 +252,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         end
 
         # Disable BP before every command because that might not support it.
-        function __fish_disable_bracketed_paste --on-event fish_preexec --on-process-exit %self
+        function __fish_disable_bracketed_paste --on-event fish_preexec --on-event fish_exit
             printf "\e[?2004l"
         end
 
@@ -271,7 +271,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     or set -l VTE_VERSION 0
     set -q TERM_PROGRAM
     or set -l TERM_PROGRAM
-    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal" -o "$TERM_PROGRAM" = "iTerm.app"
+    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             if status --is-command-substitution
                 or set -q INSIDE_EMACS

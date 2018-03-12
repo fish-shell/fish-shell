@@ -46,9 +46,9 @@ file_access_attempt_t access_file(const wcstring &path, int mode) {
     return result;
 }
 
-autoload_t::autoload_t(const wcstring &env_var_name_var,
+autoload_t::autoload_t(wcstring env_var_name_var,
                        command_removed_function_t cmd_removed_callback)
-    : lock(), env_var_name(env_var_name_var), command_removed(cmd_removed_callback) {}
+    : env_var_name(std::move(env_var_name_var)), command_removed(cmd_removed_callback) {}
 
 void autoload_t::entry_was_evicted(wcstring key, autoload_function_t node) {
     // This should only ever happen on the main thread.
@@ -65,20 +65,10 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
     CHECK_BLOCK(0);
     ASSERT_IS_MAIN_THREAD();
 
-    auto path_var = env_get(env_var_name);
-
-    // Do we know where to look?
-    if (path_var.missing_or_empty()) return 0;
-
-    // Check if the lookup path has changed. If so, drop all loaded files. path_var may only be
-    // inspected on the main thread.
-    if (*path_var != this->last_path) {
-        this->last_path = *path_var;
-        this->last_path_tokenized.clear();
-        this->last_path.to_list(this->last_path_tokenized);
-
-        scoped_lock locker(lock);
-        this->evict_all_nodes();
+    if (!this->paths) {
+        auto path_var = env_get(env_var_name);
+        if (path_var.missing_or_empty()) return 0;
+        this->paths = path_var->as_list();
     }
 
     // Mark that we're loading this. Hang onto the iterator for fast erasing later. Note that
@@ -99,7 +89,8 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
         return 1;
     }
     // Try loading it.
-    res = this->locate_file_and_maybe_load_it(cmd, true, reload, this->last_path_tokenized);
+    assert(paths && "Should have paths");
+    res = this->locate_file_and_maybe_load_it(cmd, true, reload, *this->paths);
     // Clean up.
     is_loading_set.erase(where);
     return res;
@@ -112,6 +103,13 @@ bool autoload_t::can_load(const wcstring &cmd, const env_vars_snapshot_t &vars) 
     std::vector<wcstring> path_list;
     path_var->to_list(path_list);
     return this->locate_file_and_maybe_load_it(cmd, false, false, path_list);
+}
+
+void autoload_t::invalidate() {
+    ASSERT_IS_MAIN_THREAD();
+    scoped_lock locker(lock);
+    paths.reset();
+    this->evict_all_nodes();
 }
 
 /// Check whether the given command is loaded.

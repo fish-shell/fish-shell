@@ -22,7 +22,7 @@ static const wcstring_list_t block_keywords({L"for", L"while", L"if", L"function
 bool parser_keywords_is_block(const wcstring &word) { return contains(block_keywords, word); }
 
 static const wcstring_list_t reserved_keywords({L"end", L"case", L"else", L"return", L"continue",
-                                                L"break"});
+                                                L"break", L"argparse", L"read", L"set", L"status", L"test", L"["});
 bool parser_keywords_is_reserved(const wcstring &word) {
     return parser_keywords_is_block(word) || parser_keywords_is_subcommand(word) ||
            contains(reserved_keywords, word);

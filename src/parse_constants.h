@@ -17,6 +17,9 @@ enum parse_token_type_t {
     token_type_invalid = 1,
     // Non-terminal tokens
     symbol_job_list,
+    symbol_job_conjunction,
+    symbol_job_conjunction_continuation,
+    symbol_job_decorator,
     symbol_job,
     symbol_job_continuation,
     symbol_statement,
@@ -33,11 +36,10 @@ enum parse_token_type_t {
     symbol_switch_statement,
     symbol_case_item_list,
     symbol_case_item,
-    symbol_boolean_statement,
+    symbol_not_statement,
     symbol_decorated_statement,
     symbol_plain_statement,
     symbol_arguments_or_redirections_list,
-    symbol_argument_or_redirection,
     symbol_andor_job_list,
     symbol_argument_list,
     // Freestanding argument lists are parsed from the argument list supplied to 'complete -a'.
@@ -46,12 +48,15 @@ enum parse_token_type_t {
     symbol_argument,
     symbol_redirection,
     symbol_optional_background,
+    symbol_optional_newlines,
     symbol_end_command,
     // Terminal types.
     parse_token_type_string,
     parse_token_type_pipe,
     parse_token_type_redirection,
     parse_token_type_background,
+    parse_token_type_andand,
+    parse_token_type_oror,
     parse_token_type_end,
     // Special terminal type that means no more tokens forthcoming.
     parse_token_type_terminate,
@@ -77,36 +82,12 @@ const enum_map<parse_token_type_t> token_enum_map[] = {
     {parse_token_type_pipe, L"parse_token_type_pipe"},
     {parse_token_type_redirection, L"parse_token_type_redirection"},
     {parse_token_type_string, L"parse_token_type_string"},
+    {parse_token_type_andand, L"parse_token_type_andand"},
+    {parse_token_type_oror, L"parse_token_type_oror"},
     {parse_token_type_terminate, L"parse_token_type_terminate"},
-    {symbol_andor_job_list, L"symbol_andor_job_list"},
-    {symbol_argument, L"symbol_argument"},
-    {symbol_argument_list, L"symbol_argument_list"},
-    {symbol_argument_or_redirection, L"symbol_argument_or_redirection"},
-    {symbol_arguments_or_redirections_list, L"symbol_arguments_or_redirections_list"},
-    {symbol_begin_header, L"symbol_begin_header"},
-    {symbol_block_header, L"symbol_block_header"},
-    {symbol_block_statement, L"symbol_block_statement"},
-    {symbol_boolean_statement, L"symbol_boolean_statement"},
-    {symbol_case_item, L"symbol_case_item"},
-    {symbol_case_item_list, L"symbol_case_item_list"},
-    {symbol_decorated_statement, L"symbol_decorated_statement"},
-    {symbol_else_clause, L"symbol_else_clause"},
-    {symbol_else_continuation, L"symbol_else_continuation"},
-    {symbol_end_command, L"symbol_end_command"},
-    {symbol_for_header, L"symbol_for_header"},
-    {symbol_freestanding_argument_list, L"symbol_freestanding_argument_list"},
-    {symbol_function_header, L"symbol_function_header"},
-    {symbol_if_clause, L"symbol_if_clause"},
-    {symbol_if_statement, L"symbol_if_statement"},
-    {symbol_job, L"symbol_job"},
-    {symbol_job_continuation, L"symbol_job_continuation"},
-    {symbol_job_list, L"symbol_job_list"},
-    {symbol_optional_background, L"symbol_optional_background"},
-    {symbol_plain_statement, L"symbol_plain_statement"},
-    {symbol_redirection, L"symbol_redirection"},
-    {symbol_statement, L"symbol_statement"},
-    {symbol_switch_statement, L"symbol_switch_statement"},
-    {symbol_while_header, L"symbol_while_header"},
+// Define all symbols
+#define ELEM(sym) {symbol_##sym, L"symbol_" #sym},
+#include "parse_grammar_elements.inc"
     {token_type_invalid, L"token_type_invalid"},
     {token_type_invalid, NULL}};
 #define token_enum_map_len (sizeof token_enum_map / sizeof *token_enum_map)
@@ -130,21 +111,30 @@ enum parse_keyword_t {
     parse_keyword_if,
     parse_keyword_in,
     parse_keyword_not,
+    parse_keyword_exclam,
     parse_keyword_or,
     parse_keyword_switch,
     parse_keyword_while,
 } __packed;
 
-const enum_map<parse_keyword_t> keyword_enum_map[] = {
-    {parse_keyword_and, L"and"},         {parse_keyword_begin, L"begin"},
-    {parse_keyword_builtin, L"builtin"}, {parse_keyword_case, L"case"},
-    {parse_keyword_command, L"command"}, {parse_keyword_else, L"else"},
-    {parse_keyword_end, L"end"},         {parse_keyword_exec, L"exec"},
-    {parse_keyword_for, L"for"},         {parse_keyword_function, L"function"},
-    {parse_keyword_if, L"if"},           {parse_keyword_in, L"in"},
-    {parse_keyword_not, L"not"},         {parse_keyword_or, L"or"},
-    {parse_keyword_switch, L"switch"},   {parse_keyword_while, L"while"},
-    {parse_keyword_none, NULL}};
+const enum_map<parse_keyword_t> keyword_enum_map[] = {{parse_keyword_exclam, L"!"},
+                                                      {parse_keyword_and, L"and"},
+                                                      {parse_keyword_begin, L"begin"},
+                                                      {parse_keyword_builtin, L"builtin"},
+                                                      {parse_keyword_case, L"case"},
+                                                      {parse_keyword_command, L"command"},
+                                                      {parse_keyword_else, L"else"},
+                                                      {parse_keyword_end, L"end"},
+                                                      {parse_keyword_exec, L"exec"},
+                                                      {parse_keyword_for, L"for"},
+                                                      {parse_keyword_function, L"function"},
+                                                      {parse_keyword_if, L"if"},
+                                                      {parse_keyword_in, L"in"},
+                                                      {parse_keyword_not, L"not"},
+                                                      {parse_keyword_or, L"or"},
+                                                      {parse_keyword_switch, L"switch"},
+                                                      {parse_keyword_while, L"while"},
+                                                      {parse_keyword_none, NULL}};
 #define keyword_enum_map_len (sizeof keyword_enum_map / sizeof *keyword_enum_map)
 
 // Node tag values.
@@ -158,7 +148,7 @@ enum parse_statement_decoration_t {
 };
 
 // Boolean statement types, stored in node tag.
-enum parse_bool_statement_type_t { parse_bool_and, parse_bool_or, parse_bool_not };
+enum parse_bool_statement_type_t { parse_bool_none, parse_bool_and, parse_bool_or };
 
 // Whether a statement is backgrounded.
 enum parse_optional_background_t { parse_no_background, parse_background };
@@ -179,14 +169,12 @@ enum parse_error_code_t {
     parse_error_tokenizer_unterminated_subshell,
     parse_error_tokenizer_unterminated_slice,
     parse_error_tokenizer_unterminated_escape,
+    parse_error_tokenizer_nested_slice,
     parse_error_tokenizer_other,
 
     parse_error_unbalancing_end,   // end outside of block
     parse_error_unbalancing_else,  // else outside of if
-    parse_error_unbalancing_case,  // case outside of switch
-
-    parse_error_double_pipe,       // foo || bar, has special error message
-    parse_error_double_background  // foo && bar, has special error message
+    parse_error_unbalancing_case   // case outside of switch
 };
 
 enum { PARSER_TEST_ERROR = 1, PARSER_TEST_INCOMPLETE = 2 };
@@ -272,7 +260,7 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 #define ERROR_NOT_STATUS _(L"$? is not the exit status. In fish, please use $status.")
 
 /// Error issued on $$.
-#define ERROR_NOT_PID _(L"$$ is not the pid. In fish, please use %%self.")
+#define ERROR_NOT_PID _(L"$$ is not the pid. In fish, please use $pid.")
 
 /// Error issued on $#.
 #define ERROR_NOT_ARGV_COUNT _(L"$# is not supported. In fish, please use 'count $argv'.")
@@ -288,12 +276,6 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 
 /// Error issued on $.
 #define ERROR_NO_VAR_NAME _(L"Expected a variable name after this $.")
-
-/// Error on ||.
-#define ERROR_BAD_OR _(L"Unsupported use of '||'. In fish, please use 'COMMAND; or COMMAND'.")
-
-/// Error on &&.
-#define ERROR_BAD_AND _(L"Unsupported use of '&&'. In fish, please use 'COMMAND; and COMMAND'.")
 
 /// Error on foo=bar.
 #define ERROR_BAD_EQUALS_IN_COMMAND5                                                        \

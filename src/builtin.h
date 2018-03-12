@@ -76,7 +76,6 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 #define FG_MSG _(L"Send job %d, '%ls' to foreground\n")
 
 void builtin_init();
-void builtin_destroy();
 bool builtin_exists(const wcstring &cmd);
 
 int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &streams);

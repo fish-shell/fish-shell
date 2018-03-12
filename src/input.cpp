@@ -2,14 +2,15 @@
 #include "config.h"
 
 #include <errno.h>
-#include <termios.h>
 #include <wchar.h>
 #include <wctype.h>
 #if HAVE_TERM_H
+#include <curses.h>
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
+#include <termios.h>
 
 #include <algorithm>
 #include <memory>
@@ -44,9 +45,9 @@ struct input_mapping_t {
     /// New mode that should be switched to after command evaluation.
     wcstring sets_mode;
 
-    input_mapping_t(const wcstring &s, const std::vector<wcstring> &c, const wcstring &m,
-                    const wcstring &sm)
-        : seq(s), commands(c), mode(m), sets_mode(sm) {
+    input_mapping_t(wcstring s, std::vector<wcstring> c, wcstring m,
+                    wcstring sm)
+        : seq(std::move(s)), commands(std::move(c)), mode(std::move(m)), sets_mode(std::move(sm)) {
         static unsigned int s_last_input_map_spec_order = 0;
         specification_order = ++s_last_input_map_spec_order;
     }
@@ -58,124 +59,82 @@ struct terminfo_mapping_t {
     const char *seq;      // character sequence generated on keypress
 };
 
-/// Names of all the input functions supported.
-static const wchar_t *const name_arr[] = {L"beginning-of-line",
-                                          L"end-of-line",
-                                          L"forward-char",
-                                          L"backward-char",
-                                          L"forward-word",
-                                          L"backward-word",
-                                          L"forward-bigword",
-                                          L"backward-bigword",
-                                          L"history-search-backward",
-                                          L"history-search-forward",
-                                          L"delete-char",
-                                          L"backward-delete-char",
-                                          L"kill-line",
-                                          L"yank",
-                                          L"yank-pop",
-                                          L"complete",
-                                          L"complete-and-search",
-                                          L"beginning-of-history",
-                                          L"end-of-history",
-                                          L"backward-kill-line",
-                                          L"kill-whole-line",
-                                          L"kill-word",
-                                          L"kill-bigword",
-                                          L"backward-kill-word",
-                                          L"backward-kill-path-component",
-                                          L"backward-kill-bigword",
-                                          L"history-token-search-backward",
-                                          L"history-token-search-forward",
-                                          L"self-insert",
-                                          L"transpose-chars",
-                                          L"transpose-words",
-                                          L"upcase-word",
-                                          L"downcase-word",
-                                          L"capitalize-word",
-                                          L"vi-arg-digit",
-                                          L"vi-delete-to",
-                                          L"execute",
-                                          L"beginning-of-buffer",
-                                          L"end-of-buffer",
-                                          L"repaint",
-                                          L"force-repaint",
-                                          L"up-line",
-                                          L"down-line",
-                                          L"suppress-autosuggestion",
-                                          L"accept-autosuggestion",
-                                          L"begin-selection",
-                                          L"swap-selection-start-stop",
-                                          L"end-selection",
-                                          L"kill-selection",
-                                          L"forward-jump",
-                                          L"backward-jump",
-                                          L"and",
-                                          L"cancel"};
+static constexpr size_t input_function_count = R_END_INPUT_FUNCTIONS - R_BEGIN_INPUT_FUNCTIONS;
+
+/// Input function metadata. This list should be kept in sync with the key code list in
+/// input_common.h.
+struct input_function_metadata_t {
+    wchar_t code;
+    const wchar_t *name;
+};
+static const input_function_metadata_t input_function_metadata[] = {
+    {R_BEGINNING_OF_LINE, L"beginning-of-line"},
+    {R_END_OF_LINE, L"end-of-line"},
+    {R_FORWARD_CHAR, L"forward-char"},
+    {R_BACKWARD_CHAR, L"backward-char"},
+    {R_FORWARD_WORD, L"forward-word"},
+    {R_BACKWARD_WORD, L"backward-word"},
+    {R_FORWARD_BIGWORD, L"forward-bigword"},
+    {R_BACKWARD_BIGWORD, L"backward-bigword"},
+    {R_HISTORY_SEARCH_BACKWARD, L"history-search-backward"},
+    {R_HISTORY_SEARCH_FORWARD, L"history-search-forward"},
+    {R_DELETE_CHAR, L"delete-char"},
+    {R_BACKWARD_DELETE_CHAR, L"backward-delete-char"},
+    {R_KILL_LINE, L"kill-line"},
+    {R_YANK, L"yank"},
+    {R_YANK_POP, L"yank-pop"},
+    {R_COMPLETE, L"complete"},
+    {R_COMPLETE_AND_SEARCH, L"complete-and-search"},
+    {R_PAGER_TOGGLE_SEARCH, L"pager-toggle-search"},
+    {R_BEGINNING_OF_HISTORY, L"beginning-of-history"},
+    {R_END_OF_HISTORY, L"end-of-history"},
+    {R_BACKWARD_KILL_LINE, L"backward-kill-line"},
+    {R_KILL_WHOLE_LINE, L"kill-whole-line"},
+    {R_KILL_WORD, L"kill-word"},
+    {R_KILL_BIGWORD, L"kill-bigword"},
+    {R_BACKWARD_KILL_WORD, L"backward-kill-word"},
+    {R_BACKWARD_KILL_PATH_COMPONENT, L"backward-kill-path-component"},
+    {R_BACKWARD_KILL_BIGWORD, L"backward-kill-bigword"},
+    {R_HISTORY_TOKEN_SEARCH_BACKWARD, L"history-token-search-backward"},
+    {R_HISTORY_TOKEN_SEARCH_FORWARD, L"history-token-search-forward"},
+    {R_SELF_INSERT, L"self-insert"},
+    {R_TRANSPOSE_CHARS, L"transpose-chars"},
+    {R_TRANSPOSE_WORDS, L"transpose-words"},
+    {R_UPCASE_WORD, L"upcase-word"},
+    {R_DOWNCASE_WORD, L"downcase-word"},
+    {R_CAPITALIZE_WORD, L"capitalize-word"},
+    {R_VI_ARG_DIGIT, L"vi-arg-digit"},
+    {R_VI_DELETE_TO, L"vi-delete-to"},
+    {R_EXECUTE, L"execute"},
+    {R_BEGINNING_OF_BUFFER, L"beginning-of-buffer"},
+    {R_END_OF_BUFFER, L"end-of-buffer"},
+    {R_REPAINT, L"repaint"},
+    {R_FORCE_REPAINT, L"force-repaint"},
+    {R_UP_LINE, L"up-line"},
+    {R_DOWN_LINE, L"down-line"},
+    {R_SUPPRESS_AUTOSUGGESTION, L"suppress-autosuggestion"},
+    {R_ACCEPT_AUTOSUGGESTION, L"accept-autosuggestion"},
+    {R_BEGIN_SELECTION, L"begin-selection"},
+    {R_SWAP_SELECTION_START_STOP, L"swap-selection-start-stop"},
+    {R_END_SELECTION, L"end-selection"},
+    {R_KILL_SELECTION, L"kill-selection"},
+    {R_FORWARD_JUMP, L"forward-jump"},
+    {R_BACKWARD_JUMP, L"backward-jump"},
+    {R_AND, L"and"},
+    {R_CANCEL, L"cancel"}};
+
+static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==
+                  input_function_count,
+              "input_function_metadata size mismatch with input_common. Did you forget to update "
+              "input_function_metadata?");
 
 wcstring describe_char(wint_t c) {
-    wint_t initial_cmd_char = R_BEGINNING_OF_LINE;
-    long name_count = sizeof(name_arr) / sizeof(*name_arr);
-    if (c >= initial_cmd_char && c < initial_cmd_char + name_count) {
-        return format_string(L"%02x (%ls)", c, name_arr[c - initial_cmd_char]);
+    if (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
+        size_t idx = c - R_BEGIN_INPUT_FUNCTIONS;
+        return format_string(L"%02x (%ls)", c, input_function_metadata[idx].name);
     }
     return format_string(L"%02x", c);
 }
-
-/// Internal code for each supported input function.
-static const wchar_t code_arr[] = {R_BEGINNING_OF_LINE,
-                                   R_END_OF_LINE,
-                                   R_FORWARD_CHAR,
-                                   R_BACKWARD_CHAR,
-                                   R_FORWARD_WORD,
-                                   R_BACKWARD_WORD,
-                                   R_FORWARD_BIGWORD,
-                                   R_BACKWARD_BIGWORD,
-                                   R_HISTORY_SEARCH_BACKWARD,
-                                   R_HISTORY_SEARCH_FORWARD,
-                                   R_DELETE_CHAR,
-                                   R_BACKWARD_DELETE_CHAR,
-                                   R_KILL_LINE,
-                                   R_YANK,
-                                   R_YANK_POP,
-                                   R_COMPLETE,
-                                   R_COMPLETE_AND_SEARCH,
-                                   R_BEGINNING_OF_HISTORY,
-                                   R_END_OF_HISTORY,
-                                   R_BACKWARD_KILL_LINE,
-                                   R_KILL_WHOLE_LINE,
-                                   R_KILL_WORD,
-                                   R_KILL_BIGWORD,
-                                   R_BACKWARD_KILL_WORD,
-                                   R_BACKWARD_KILL_PATH_COMPONENT,
-                                   R_BACKWARD_KILL_BIGWORD,
-                                   R_HISTORY_TOKEN_SEARCH_BACKWARD,
-                                   R_HISTORY_TOKEN_SEARCH_FORWARD,
-                                   R_SELF_INSERT,
-                                   R_TRANSPOSE_CHARS,
-                                   R_TRANSPOSE_WORDS,
-                                   R_UPCASE_WORD,
-                                   R_DOWNCASE_WORD,
-                                   R_CAPITALIZE_WORD,
-                                   R_VI_ARG_DIGIT,
-                                   R_VI_DELETE_TO,
-                                   R_EXECUTE,
-                                   R_BEGINNING_OF_BUFFER,
-                                   R_END_OF_BUFFER,
-                                   R_REPAINT,
-                                   R_FORCE_REPAINT,
-                                   R_UP_LINE,
-                                   R_DOWN_LINE,
-                                   R_SUPPRESS_AUTOSUGGESTION,
-                                   R_ACCEPT_AUTOSUGGESTION,
-                                   R_BEGIN_SELECTION,
-                                   R_SWAP_SELECTION_START_STOP,
-                                   R_END_SELECTION,
-                                   R_KILL_SELECTION,
-                                   R_FORWARD_JUMP,
-                                   R_BACKWARD_JUMP,
-                                   R_AND,
-                                   R_CANCEL};
 
 /// Mappings for the current input mode.
 static std::vector<input_mapping_t> mapping_list;
@@ -329,7 +288,8 @@ void input_function_push_args(int code) {
         wchar_t arg;
 
         // Skip and queue up any function codes. See issue #2357.
-        while ((arg = input_common_readch(0)) >= R_MIN && arg <= R_MAX) {
+        while ((arg = input_common_readch(0)) >= R_BEGIN_INPUT_FUNCTIONS &&
+               arg < R_END_INPUT_FUNCTIONS) {
             skipped.push_back(arg);
         }
 
@@ -405,36 +365,32 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 
 /// Try reading the specified function mapping.
 static bool input_mapping_is_match(const input_mapping_t &m) {
-    wchar_t c = 0;
-    int j;
+    const wcstring &str = m.seq;
 
+    assert(str.size() > 0 && "zero-length input string passed to input_mapping_is_match!");
     debug(4, L"trying to match mapping %ls", escape_string(m.seq.c_str(), ESCAPE_ALL).c_str());
-    const wchar_t *str = m.seq.c_str();
-    for (j = 0; str[j] != L'\0'; j++) {
-        bool timed = (j > 0 && iswcntrl(str[0]));
 
-        c = input_common_readch(timed);
-        if (str[j] != c) {
-            break;
+    bool timed_first_char = iswcntrl(str[0]);
+    // i must be signed because we reverse direction below
+    for (ssize_t i = 0; i < str.size(); ++i) {
+        // Treat all strings beginning with control codes (0x00-0x1F) as timed characters, meaning they are assumed to be
+        // their literal representation if not followed up with another character within the defined timeout. Obviously
+        // we never time out on the first character in the sequence.
+        bool timed = i && timed_first_char;
+        wchar_t read = input_common_readch(timed);
+
+        if (read != str[i]) {
+            // We didn't match the bind sequence/input mapping, (it timed out or they entered something else)
+            // Undo consumption of the read characters since we didn't match the bind sequence and abort.
+            input_common_next_ch(read);
+            while (--i >= 0) {
+                input_common_next_ch(str[i]);
+            }
+            return false;
         }
     }
 
-    if (str[j] == L'\0') {
-        // debug(0, L"matched mapping %ls (%ls)\n", escape_string(m.seq.c_str(),
-        // ESCAPE_ALL).c_str(),
-        // m.command.c_str());
-        // We matched the entire sequence.
-        return true;
-    }
-
-    // Reinsert the chars we read to be read again since we didn't match the bind sequence (i.e.,
-    // the input mapping).
-    input_common_next_ch(c);
-    for (int k = j - 1; k >= 0; k--) {
-        input_common_next_ch(m.seq[k]);
-    }
-
-    return false;
+    return true;
 }
 
 void input_queue_ch(wint_t ch) { input_common_queue_ch(ch); }
@@ -483,7 +439,8 @@ static wchar_t input_read_characters_only() {
     wchar_t char_to_return;
     for (;;) {
         char_to_return = input_common_readch(0);
-        bool is_readline_function = (char_to_return >= R_MIN && char_to_return <= R_MAX);
+        bool is_readline_function =
+            (char_to_return >= R_BEGIN_INPUT_FUNCTIONS && char_to_return < R_END_INPUT_FUNCTIONS);
         // R_NULL and R_EOF are more control characters than readline functions, so check specially
         // for those.
         if (!is_readline_function || char_to_return == R_NULL || char_to_return == R_EOF) {
@@ -509,7 +466,7 @@ wint_t input_readch(bool allow_commands) {
     while (1) {
         wchar_t c = input_common_readch(0);
 
-        if (c >= R_MIN && c <= R_MAX) {
+        if (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
             switch (c) {
                 case R_EOF:  // if it's closed, then just return
                 {
@@ -525,7 +482,7 @@ wint_t input_readch(bool allow_commands) {
                         return input_readch();
                     }
                     c = input_common_readch(0);
-                    while (c >= R_MIN && c <= R_MAX) {
+                    while (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
                         c = input_common_readch(0);
                     }
                     input_common_next_ch(c);
@@ -816,15 +773,19 @@ wcstring_list_t input_terminfo_get_names(bool skip_null) {
     return result;
 }
 
-wcstring_list_t input_function_get_names(void) {
-    size_t count = sizeof name_arr / sizeof *name_arr;
-    return wcstring_list_t(name_arr, name_arr + count);
+wcstring_list_t input_function_get_names() {
+    wcstring_list_t result;
+    result.reserve(input_function_count);
+    for (const auto &md : input_function_metadata) {
+        result.push_back(md.name);
+    }
+    return result;
 }
 
 wchar_t input_function_get_code(const wcstring &name) {
-    for (size_t i = 0; i < sizeof code_arr / sizeof *code_arr; i++) {
-        if (name == name_arr[i]) {
-            return code_arr[i];
+    for (const auto &md : input_function_metadata) {
+        if (name == md.name) {
+            return md.code;
         }
     }
     return INPUT_CODE_NONE;

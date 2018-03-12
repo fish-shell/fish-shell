@@ -376,11 +376,9 @@ int main(int argc, char **argv) {
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
     env_init(&paths);
     proc_init();
-    event_init();
     builtin_init();
     misc_init();
     reader_init();
-    history_init();
 
     parser_t &parser = parser_t::principal_parser();
 
@@ -439,7 +437,10 @@ int main(int argc, char **argv) {
 
     int exit_status = res ? STATUS_CMD_UNKNOWN : proc_get_last_status();
 
+    // TODO: The generic process-exit event is useless and unused.
+    // Remove this in future.
     proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), exit_status);
+    event_fire_generic(L"fish_exit");
 
     restore_term_mode();
     restore_term_foreground_process_group();
@@ -448,11 +449,8 @@ int main(int argc, char **argv) {
         parser.emit_profiling(s_profiling_output_filename);
     }
 
-    history_destroy();
+    history_save_all();
     proc_destroy();
-    builtin_destroy();
-    reader_destroy();
-    event_destroy();
     exit_without_destructors(exit_status);
     return EXIT_FAILURE;  // above line should always exit
 }

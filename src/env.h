@@ -70,64 +70,55 @@ void misc_init();
 
 class env_var_t {
    private:
-    wcstring name;         // name of the var
+    using env_var_flags_t = uint8_t;
     wcstring_list_t vals;  // list of values assigned to the var
+    env_var_flags_t flags;
 
    public:
-    bool exportv;  // whether the variable should be exported
+    enum {
+        flag_export = 1 << 0,         // whether the variable is exported
+        flag_colon_delimit = 1 << 1,  // whether the variable is colon delimited
+        flag_read_only = 1 << 2       // whether the variable is read only
+    };
 
     // Constructors.
-    env_var_t(const env_var_t &v) : name(v.name), vals(v.vals), exportv(v.exportv) {}
-    env_var_t(const wcstring &our_name, const wcstring_list_t &l)
-        : name(our_name), vals(l), exportv(false) {}
-    env_var_t(const wcstring &our_name, const wcstring &s)
-        : name(our_name),
-          vals({
-              s,
-          }),
-          exportv(false) {}
-    env_var_t(const wcstring &our_name, const wchar_t *s)
-        : name(our_name),
-          vals({
-              wcstring(s),
-          }),
-          exportv(false) {}
-    env_var_t() : name(), vals(), exportv(false) {}
+    env_var_t(const env_var_t &) = default;
+    env_var_t(env_var_t &&) = default;
+    env_var_t(wcstring_list_t vals, env_var_flags_t flags) : vals(std::move(vals)), flags(flags) {}
+    env_var_t(wcstring val, env_var_flags_t flags)
+        : env_var_t(wcstring_list_t{std::move(val)}, flags) {}
 
-    bool empty(void) const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
-    bool read_only(void) const;
+    // Constructors that infer the flags from a name.
+    env_var_t(const wchar_t *name, wcstring_list_t vals)
+        : env_var_t(std::move(vals), flags_for(name)) {}
+    env_var_t(const wchar_t *name, wcstring val) : env_var_t(std::move(val), flags_for(name)) {}
 
-    bool matches_string(const wcstring &str) {
-        if (vals.size() > 1) return false;
-        return vals[0] == str;
-    }
+    env_var_t() = default;
+
+    bool empty() const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
+    bool read_only() const { return flags & flag_read_only; }
+    bool exports() const { return flags & flag_export; }
 
     wcstring as_string() const;
     void to_list(wcstring_list_t &out) const;
     const wcstring_list_t &as_list() const;
 
-    const wcstring get_name() const { return name; }
-
     void set_vals(wcstring_list_t v) { vals = std::move(v); }
 
-    env_var_t &operator=(const env_var_t &var) {
-        this->name = var.name;
-        this->vals = var.vals;
-        this->exportv = var.exportv;
-        return *this;
+    void set_exports(bool exportv) {
+        if (exportv) {
+            flags |= flag_export;
+        } else {
+            flags &= ~flag_export;
+        }
     }
 
-    /// Compare a simple string to the var. Returns true iff the var has a single
-    /// value and that value matches the string being compared to.
-    bool operator==(const wcstring &str) const {
-        if (vals.size() > 1) return false;
-        return vals[0] == str;
-    }
+    static env_var_flags_t flags_for(const wchar_t *name);
+
+    env_var_t &operator=(const env_var_t &var) = default;
+    env_var_t &operator=(env_var_t &&) = default;
 
     bool operator==(const env_var_t &var) const { return vals == var.vals; }
-
-    bool operator==(const wcstring_list_t &values) const { return vals == values; }
-
     bool operator!=(const env_var_t &var) const { return vals != var.vals; }
 };
 

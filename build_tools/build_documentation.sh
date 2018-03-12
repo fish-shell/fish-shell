@@ -88,16 +88,17 @@ TMPLOC=`mktemp -d -t fish_doc_build_XXXXXX` || { echo >&2 "Could not build docum
 
 # Copy stuff to the temp directory
 for i in "$INPUTDIR"/*.txt; do
-	INPUTFILE=$TMPLOC/`basename $i .txt`.doxygen
-	echo  "/** \page" `basename $i .txt` > $INPUTFILE
-	cat $i >>$INPUTFILE
-	echo "*/" >>$INPUTFILE
+	BASENAME=`basename $i .txt`
+	INPUTFILE=$TMPLOC/$BASENAME.doxygen
+	echo "/** \\page" $BASENAME > $INPUTFILE
+	cat $i | sed "s/\\\section $BASENAME $BASENAME/\\\section $BASENAME-man $BASENAME/" >> $INPUTFILE
+	echo "*/" >> $INPUTFILE
 done
 
 # Make some extra stuff to pass to doxygen
 # Input is kept as . because we cd to the input directory beforehand
 # This prevents doxygen from generating "documentation" for intermediate directories
-PROJECT_NUMBER=$(echo "$FISH_BUILD_VERSION" | env sed "s/-.*//")
+PROJECT_NUMBER=$(echo "$FISH_BUILD_VERSION" | env sed "s/-[a-z0-9-]*//")
 echo "PROJECT_NUMBER: $FISH_BUILD_VERSION"
 DOXYPARAMS=$(cat <<EOF
 PROJECT_NUMBER=${PROJECT_NUMBER}
@@ -125,11 +126,18 @@ if test "$RESULT" = 0 ; then
 
 	# Postprocess the files
 	for i in "$INPUTDIR"/*.txt; do
+		# This command turns the following weirdness from Doxygen:
+		# abbr \-
+		# .SH "abbr - manage fish abbreviations"
+		# into
+		# \fBabbr\fP - manage fish abbreviations
 		# It would be nice to use -i here for edit in place, but that is not portable
 		CMD_NAME=`basename "$i" .txt`;
-		sed < ${CMD_NAME}.1 > ${CMD_NAME}.1.tmp \
-            -e "/.SH \"$CMD_NAME/d" \
-            -e "s/^$CMD_NAME * \\\- \([^ ]*\) /\\\fB\1\\\fP -/"
+		sed -E < ${CMD_NAME}.1 > ${CMD_NAME}.1.tmp \
+			-e "/^.SH NAME/{
+											N; N
+											s/${CMD_NAME} \\\\- \n.SH \"${CMD_NAME} (- .*)\"/\\\fB${CMD_NAME}\\\fP \1/g
+											}"
 		mv "${CMD_NAME}.1.tmp" "${CMD_NAME}.1"
 	done
 

@@ -13,6 +13,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 
 #include "builtin.h"
 #include "common.h"
@@ -155,7 +156,7 @@ class test_parser {
     const wcstring &arg(unsigned int idx) { return strings.at(idx); }
 
    public:
-    explicit test_parser(const wcstring_list_t &val) : strings(val) {}
+    explicit test_parser(wcstring_list_t val) : strings(std::move(val)) {}
 
     unique_ptr<expression> parse_expression(unsigned int start, unsigned int end);
     unique_ptr<expression> parse_3_arg_expression(unsigned int start, unsigned int end);
@@ -183,13 +184,13 @@ struct range_t {
 /// Base class for expressions.
 class expression {
    protected:
-    expression(token_t what, range_t where) : token(what), range(where) {}
+    expression(token_t what, range_t where) : token(what), range(std::move(where)) {}
 
    public:
     const token_t token;
     range_t range;
 
-    virtual ~expression() {}
+    virtual ~expression() = default;
 
     /// Evaluate returns true if the expression is true (i.e. STATUS_CMD_OK).
     virtual bool evaluate(wcstring_list_t &errors) = 0;
@@ -199,9 +200,9 @@ class expression {
 class unary_primary : public expression {
    public:
     wcstring arg;
-    unary_primary(token_t tok, range_t where, const wcstring &what)
-        : expression(tok, where), arg(what) {}
-    bool evaluate(wcstring_list_t &errors);
+    unary_primary(token_t tok, range_t where, wcstring what)
+        : expression(tok, where), arg(std::move(what)) {}
+    bool evaluate(wcstring_list_t &errors) override;
 };
 
 /// Two argument primary like foo != bar.
@@ -210,9 +211,9 @@ class binary_primary : public expression {
     wcstring arg_left;
     wcstring arg_right;
 
-    binary_primary(token_t tok, range_t where, const wcstring &left, const wcstring &right)
-        : expression(tok, where), arg_left(left), arg_right(right) {}
-    bool evaluate(wcstring_list_t &errors);
+    binary_primary(token_t tok, range_t where, wcstring left, wcstring right)
+        : expression(tok, where), arg_left(std::move(left)), arg_right(std::move(right)) {}
+    bool evaluate(wcstring_list_t &errors) override;
 };
 
 /// Unary operator like bang.
@@ -221,7 +222,7 @@ class unary_operator : public expression {
     unique_ptr<expression> subject;
     unary_operator(token_t tok, range_t where, unique_ptr<expression> exp)
         : expression(tok, where), subject(move(exp)) {}
-    bool evaluate(wcstring_list_t &errors);
+    bool evaluate(wcstring_list_t &errors) override;
 };
 
 /// Combining expression. Contains a list of AND or OR expressions. It takes more than two so that
@@ -238,9 +239,9 @@ class combining_expression : public expression {
         assert(subjects.size() == combiners.size() + 1);
     }
 
-    virtual ~combining_expression() {}
+    ~combining_expression() override = default;
 
-    bool evaluate(wcstring_list_t &errors);
+    bool evaluate(wcstring_list_t &errors) override;
 };
 
 /// Parenthetical expression.
@@ -250,7 +251,7 @@ class parenthetical_expression : public expression {
     parenthetical_expression(token_t tok, range_t where, unique_ptr<expression> expr)
         : expression(tok, where), contents(move(expr)) {}
 
-    virtual bool evaluate(wcstring_list_t &errors);
+    bool evaluate(wcstring_list_t &errors) override;
 };
 
 void test_parser::add_error(const wchar_t *fmt, ...) {

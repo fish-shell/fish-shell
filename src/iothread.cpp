@@ -30,7 +30,7 @@
 #define IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE 99
 #define IO_SERVICE_RESULT_QUEUE 100
 
-static void iothread_service_main_thread_requests(void);
+static void iothread_service_main_thread_requests();
 static void iothread_service_result_queue();
 
 typedef std::function<void(void)> void_function_t;
@@ -72,15 +72,15 @@ static owning_lock<thread_data_t> s_spawn_requests;
 static owning_lock<std::queue<spawn_request_t>> s_result_queue;
 
 // "Do on main thread" support.
-static std::mutex s_main_thread_performer_lock;               // protects the main thread requests
+static fish_mutex_t s_main_thread_performer_lock;             // protects the main thread requests
 static std::condition_variable s_main_thread_performer_cond;  // protects the main thread requests
-static std::mutex s_main_thread_request_q_lock;               // protects the queue
+static fish_mutex_t s_main_thread_request_q_lock;             // protects the queue
 static std::queue<main_thread_request_t *> s_main_thread_request_queue;
 
 // Notifying pipes.
 static int s_read_pipe, s_write_pipe;
 
-static void iothread_init(void) {
+static void iothread_init() {
     static bool inited = false;
     if (!inited) {
         inited = true;
@@ -197,12 +197,12 @@ int iothread_perform_impl(void_function_t &&func, void_function_t &&completion) 
     return local_thread_count;
 }
 
-int iothread_port(void) {
+int iothread_port() {
     iothread_init();
     return s_read_pipe;
 }
 
-void iothread_service_completion(void) {
+void iothread_service_completion() {
     ASSERT_IS_MAIN_THREAD();
     char wakeup_byte;
 
@@ -238,7 +238,7 @@ static bool iothread_wait_for_pending_completions(long timeout_usec) {
 /// At the moment, this function is only used in the test suite and in a
 /// drain-all-threads-before-fork compatibility mode that no architecture requires, so it's OK that
 /// it's terrible.
-void iothread_drain_all(void) {
+void iothread_drain_all() {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
 
@@ -262,7 +262,7 @@ void iothread_drain_all(void) {
 }
 
 /// "Do on main thread" support.
-static void iothread_service_main_thread_requests(void) {
+static void iothread_service_main_thread_requests() {
     ASSERT_IS_MAIN_THREAD();
 
     // Move the queue to a local variable.
@@ -334,7 +334,7 @@ void iothread_perform_on_main(void_function_t &&func) {
     assert_with_errno(write_loop(s_write_pipe, &wakeup_byte, sizeof wakeup_byte) != -1);
 
     // Wait on the condition, until we're done.
-    std::unique_lock<std::mutex> perform_lock(s_main_thread_performer_lock);
+    std::unique_lock<std::mutex> perform_lock(s_main_thread_performer_lock.get_mutex());
     while (!req.done) {
         // It would be nice to support checking for cancellation here, but the clients need a
         // deterministic way to clean up to avoid leaks

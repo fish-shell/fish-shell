@@ -4,12 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if HAVE_NCURSES_H
+#if HAVE_CURSES_H
+#include <curses.h>
+#elif HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
 #include <ncurses/curses.h>
-#else
-#include <curses.h>
 #endif
 #if HAVE_TERM_H
 #include <term.h>
@@ -52,7 +52,7 @@ int (*output_get_writer())(char) { return out; }
 /// Returns true if we think tparm can handle outputting a color index
 static bool term_supports_color_natively(unsigned int c) { return (unsigned)max_colors >= c + 1; }
 
-color_support_t output_get_color_support(void) { return color_support; }
+color_support_t output_get_color_support() { return color_support; }
 
 void output_set_color_support(color_support_t val) { color_support = val; }
 

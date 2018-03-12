@@ -3,7 +3,7 @@ Section: shells
 Priority: extra
 Maintainer: ridiculous_fish <corydoras@ridiculousfish.com>
 Uploaders: David Adam <zanchey@ucc.gu.uwa.edu.au>
-Build-Depends: debhelper (>= 9.0.0), libncurses5-dev, autoconf, autotools-dev, dh-autoreconf, gettext
+Build-Depends: debhelper (>= 9.0.0), libncurses5-dev, cmake3 (>= 3.2.0) | cmake (>= 3.2.0), gettext
 # When libpcre2-dev is available on all supported Debian versions, add a dependency on that.
 Standards-Version: 3.9.4
 Homepage: https://fishshell.com/

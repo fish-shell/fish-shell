@@ -18,6 +18,7 @@
 #include "common.h"
 #include "io.h"
 #include "parse_tree.h"
+#include "tnode.h"
 
 /// Types of processes.
 enum process_type_t {
@@ -73,15 +74,17 @@ class process_t {
     process_t();
 
     // Note whether we are the first and/or last in the job
-    bool is_first_in_job;
-    bool is_last_in_job;
+    bool is_first_in_job{false};
+    bool is_last_in_job{false};
 
     /// Type of process. Can be one of \c EXTERNAL, \c INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c
     /// INTERNAL_EXEC.
-    enum process_type_t type;
+    enum process_type_t type { EXTERNAL };
 
-    /// For internal block processes only, the node offset of the block.
-    node_offset_t internal_block_node;
+    /// For internal block processes only, the node offset of the statement.
+    /// This is always either block, ifs, or switchs, never boolean or decorated.
+    parsed_source_ref_t block_node_source{};
+    tnode_t<grammar::statement> internal_block_node{};
 
     /// Sets argv.
     void set_argv(const wcstring_list_t &argv) { argv_array.set(argv); }
@@ -111,24 +114,24 @@ class process_t {
     /// Actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC.
     wcstring actual_cmd;
     /// Process ID
-    pid_t pid;
+    pid_t pid{0};
     /// File descriptor that pipe output should bind to.
-    int pipe_write_fd;
+    int pipe_write_fd{0};
     /// File descriptor that the _next_ process pipe input should bind to.
-    int pipe_read_fd;
+    int pipe_read_fd{0};
     /// True if process has completed.
-    volatile int completed;
+    volatile int completed{false};
     /// True if process has stopped.
-    volatile int stopped;
+    volatile int stopped{false};
     /// Reported status value.
-    volatile int status;
+    volatile int status{0};
     /// Special flag to tell the evaluation function for count to print the help information.
-    int count_help_magic;
+    int count_help_magic{0};
 #ifdef HAVE__PROC_SELF_STAT
     /// Last time of cpu time check.
-    struct timeval last_time;
+    struct timeval last_time {};
     /// Number of jiffies spent in process at last cpu time check.
-    unsigned long last_jiffies;
+    unsigned long last_jiffies{0};
 #endif
 };
 
@@ -174,7 +177,7 @@ class job_t {
     void operator=(const job_t &) = delete;
 
    public:
-    job_t(job_id_t jobid, const io_chain_t &bio);
+    job_t(job_id_t jobid, io_chain_t bio);
     ~job_t();
 
     /// Returns whether the command is empty.

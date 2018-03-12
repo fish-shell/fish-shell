@@ -584,10 +584,11 @@ x
 # A special case. Tidy up after performing command substitution.
 # Redirectors
 s/\([^{|] *\)|/\1@redr{|}/g
-s/\&@EOL$/@redr{@amp}@EOL/g
-s/@amp@EOL$/@redr{@amp}@EOL/g
-s/\([<>]\)@amp\([0-9]\)/@redr{\1@amp\2}/g
-s/\([^{&] *\)&[^@a-z]/\1@redr{\&amp;}/g
+#s/\&@EOL$/@redr{@amp}@EOL/g
+#s/@amp@EOL$/@redr{@amp}@EOL/g
+#s/\([<>]\)@amp\([0-9]\)/@redr{\1@amp\2}/g
+s/@amp&/@optr{@amp@amp}/g
+#s/\([^{&] *\)&[^@a-z]/\1@redr{\&amp;}/g
 s/\([^{<>^] *\)\([0-9]* *[<>^][<>^]*[^@][a-zA-Z0-9./_-]*\)/\1@redr{\2}/g
 s/\\}/}\\/g
 #.

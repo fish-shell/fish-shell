@@ -22,12 +22,13 @@ struct callback_data_t {
     wcstring key;
     wcstring val;
 
-    callback_data_t(fish_message_type_t t, const wcstring &k, const wcstring &v)
-        : type(t), key(k), val(v) {}
+    callback_data_t(fish_message_type_t t, wcstring k, wcstring v)
+        : type(t), key(std::move(k)), val(std::move(v)) {}
 };
 
 typedef std::vector<struct callback_data_t> callback_data_list_t;
 
+bool get_hostname_identifier(wcstring &result);
 /// Class representing universal variables.
 class env_universal_t {
     var_table_t vars;  // current values
@@ -39,7 +40,7 @@ class env_universal_t {
     // Path that we save to. If empty, use the default.
     const wcstring explicit_vars_path;
 
-    mutable std::mutex lock;
+    mutable fish_mutex_t lock;
     bool tried_renaming;
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
@@ -68,7 +69,7 @@ class env_universal_t {
     static var_table_t read_message_internal(int fd);
 
    public:
-    explicit env_universal_t(const wcstring &path);
+    explicit env_universal_t(wcstring path);
 
     // Get the value of the variable with the specified name.
     maybe_t<env_var_t> get(const wcstring &name) const;

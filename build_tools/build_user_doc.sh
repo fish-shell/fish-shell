@@ -7,7 +7,7 @@ LEXICON_FILTER=$2
 (cat "${DOXYFILE}" ;\
  echo INPUT_FILTER="${LEXICON_FILTER}"; \
  echo PROJECT_NUMBER=${FISH_BUILD_VERSION} \
- | /usr/bin/env sed "s/-.*//") \
+ | /usr/bin/env sed "s/-[a-z0-9-]*//") \
    | doxygen - && touch user_doc
 
 (cd ./user_doc/html/ && \

@@ -1,0 +1,13 @@
+
+####################
+# Completion Wrappers
+complete_test_alpha1 arg1 
+complete_test_alpha1 extra1 arg2 
+complete_test_alpha1 extra1 extra2 arg3 
+
+####################
+# Alias Completions
+arg1 call1
+arg2 call2
+complete_test_alpha1 arg1 call3 
+complete_test_alpha1 arg2 call3 

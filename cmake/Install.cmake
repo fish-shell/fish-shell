@@ -17,6 +17,8 @@ SET(mandir ${CMAKE_INSTALL_MANDIR})
 SET(rel_datadir ${CMAKE_INSTALL_DATADIR})
 SET(datadir ${CMAKE_INSTALL_FULL_DATADIR})
 
+SET(docdir ${CMAKE_INSTALL_DOCDIR})
+
 # Comment at the top of some .in files
 SET(configure_input
 "This file was generated from a corresponding .in file.\
@@ -52,9 +54,24 @@ ENDIF()
 # Define a function to help us create directories.
 FUNCTION(FISH_CREATE_DIRS)
   FOREACH(dir ${ARGV})
-    INSTALL(DIRECTORY DESTINATION ${dir})
+      IF(NOT EXISTS ${CMAKE_INSTALL_PREFIX}/${dir})
+        INSTALL(DIRECTORY DESTINATION ${dir})
+      ENDIF()
   ENDFOREACH(dir)
 ENDFUNCTION(FISH_CREATE_DIRS)
+
+FUNCTION(FISH_TRY_CREATE_DIRS)
+  FOREACH(dir ${ARGV})
+    IF(NOT IS_ABSOLUTE ${dir})
+      SET(abs_dir "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${dir}")
+    ELSE()
+      SET(abs_dir "\$ENV{DESTDIR}${dir}")
+    ENDIF()
+    INSTALL(SCRIPT CODE "EXECUTE_PROCESS(COMMAND mkdir -p ${abs_dir} OUTPUT_QUIET ERROR_QUIET)
+                         EXECUTE_PROCESS(COMMAND chmod 755 ${abs_dir} OUTPUT_QUIET ERROR_QUIET)
+                        ")
+  ENDFOREACH()
+ENDFUNCTION(FISH_TRY_CREATE_DIRS)
 
 # $v $(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 # $v for i in $(PROGRAMS); do\
@@ -104,16 +121,21 @@ INSTALL(FILES share/config.fish
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir)
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir)
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir)
-FISH_CREATE_DIRS(${rel_datadir}/pkgconfig ${extra_completionsdir}
-                 ${extra_functionsdir} ${extra_confdir})
+FISH_CREATE_DIRS(${rel_datadir}/pkgconfig)
+# Don't try too hard to create these directories as they may be outside our writeable area
+# https://github.com/Homebrew/homebrew-core/pull/2813
+FISH_TRY_CREATE_DIRS(${extra_completionsdir} ${extra_functionsdir} ${extra_confdir})
 
 # @echo "Installing pkgconfig file"
 # $v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
 CONFIGURE_FILE(fish.pc.in fish.pc.noversion)
+
 ADD_CUSTOM_COMMAND(OUTPUT fish.pc
-  COMMAND awk -v `cat ${FBVF}` '/^Version:/ {$$0=$$0 FISH_BUILD_VERSION} 1' fish.pc.noversion  > fish.pc
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS ${FBVF} ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
+    COMMAND sed '/Version/d' fish.pc.noversion > fish.pc
+    COMMAND echo -n "Version: " >> fish.pc
+    COMMAND sed 's/FISH_BUILD_VERSION=//\;s/\"//g' ${FBVF} >> fish.pc
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FBVF} ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
 
 ADD_CUSTOM_TARGET(build_fish_pc ALL DEPENDS fish.pc)
 
@@ -138,6 +160,8 @@ INSTALL(DIRECTORY share/groff
         DESTINATION ${rel_datadir}/fish)
 
 # $v test -z "$(wildcard share/man/man1/*.1)" || $(INSTALL) -m 644 $(filter-out $(addprefix share/man/man1/, $(CONDEMNED_PAGES)), $(wildcard share/man/man1/*.1)) $(DESTDIR)$(datadir)/fish/man/man1/
+# CONDEMNED_PAGES is managed by the LIST() function after the glob
+# Building the man pages is optional: if doxygen isn't installed, they're not built
 INSTALL(FILES ${HELP_MANPAGES}
         DESTINATION ${rel_datadir}/fish/man/man1)
 
@@ -162,27 +186,45 @@ INSTALL(DIRECTORY share/tools/web_config
         PATTERN "*.js"
         PATTERN "*.fish")
 
-#$v test -z "$(wildcard share/man/man1/*.1)" || $(INSTALL) -m 644 $(filter-out $(addprefix share/man/man1/, $(CONDEMNED_PAGES)), $(wildcard share/man/man1/*.1)) #$(DESTDIR)$(datadir)/fish/man/man1/
-#TODO: CONDEMNED_PAGES
-INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share/man/
-        DESTINATION ${rel_datadir}/fish/man/)
-
 # @echo "Installing more man pages";
 # $v $(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;
 # $v for i in $(MANUALS); do \
 #   $(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
 #   true; \
 # done;
-INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/)
+# Building the man pages is optional: if doxygen isn't installed, they're not built
+INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
+
+#install-doc: $(user_doc)
+#    @echo "Installing online user documentation";
+#    $v $(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
+#    $v for i in user_doc/html/* CHANGELOG.md; do \
+#        if test -f $$i; then \
+#            $(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
+#        fi; \
+#    done;
+# Building the manual is optional
+INSTALL(DIRECTORY user_doc/html/ # Trailing slash is important!
+        DESTINATION ${docdir} OPTIONAL)
+INSTALL(FILES CHANGELOG.md DESTINATION ${docdir})
 
 # $v $(INSTALL) -m 644 share/lynx.lss $(DESTDIR)$(datadir)/fish/
 INSTALL(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)
 
+# These files are built by cmake/gettext.cmake, but using GETTEXT_PROCESS_PO_FILES's
+# INSTALL_DESTINATION leads to them being installed as ${lang}.gmo, not fish.mo
+# The ${languages} array comes from cmake/gettext.cmake
+IF(GETTEXT_FOUND)
+  FOREACH(lang ${languages})
+    INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/${lang}.gmo DESTINATION
+            ${CMAKE_INSTALL_LOCALEDIR}/${lang}/LC_MESSAGES/ RENAME fish.mo)
+  ENDFOREACH()
+ENDIF()
+
 # Group install targets into a InstallTargets folder
-SET_PROPERTY(TARGET CHECK-FISH-BUILD-VERSION-FILE build_fish_pc
+SET_PROPERTY(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
                     test_invocation test_fishscript
                     test_prep tests_buildroot_target
-                    build_lexicon_filter
              PROPERTY FOLDER cmake/InstallTargets)
 
 # Make a target build_root that installs into the buildroot directory, for testing.

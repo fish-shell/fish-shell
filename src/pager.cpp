@@ -481,16 +481,13 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     assert(stop_row - start_row <= term_height);
     completion_print(cols, width_by_column, start_row, stop_row, prefix, lst, rendering);
 
-    // Ellipsis helper string. Either empty or containing the ellipsis char.
-    const wchar_t ellipsis_string[] = {ellipsis_char == L'\x2026' ? L'\x2026' : L'\0', L'\0'};
-
     // Add the progress line. It's a "more to disclose" line if necessary, or a row listing if
     // it's scrollable; otherwise ignore it.
     // We should never have one row remaining to disclose (else we would have just disclosed it)
     wcstring progress_text;
     assert(rendering->remaining_to_disclose != 1);
     if (rendering->remaining_to_disclose > 1) {
-        progress_text = format_string(_(L"%lsand %lu more rows"), ellipsis_string,
+        progress_text = format_string(_(L"%lsand %lu more rows"), ellipsis_str,
                                       (unsigned long)rendering->remaining_to_disclose);
     } else if (start_row > 0 || stop_row < row_count) {
         // We have a scrollable interface. The +1 here is because we are zero indexed, but want
@@ -608,16 +605,17 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
             case direction_south:
             case direction_page_south:
             case direction_next:
+            case direction_north:
             case direction_prev: {
                 // These directions do something sane.
-                if (direction == direction_prev) {
+                if (direction == direction_prev
+                    || direction == direction_north) {
                     selected_completion_idx = completion_infos.size() - 1;
                 } else {
                     selected_completion_idx = 0;
                 }
                 return true;
             }
-            case direction_north:
             case direction_page_north:
             case direction_east:
             case direction_west:
@@ -669,7 +667,11 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                     current_row--;
                 } else {
                     current_row = rendering.rows - 1;
-                    if (current_col > 0) current_col--;
+                    if (current_col > 0) {
+                        current_col--;
+                    } else {
+                        current_col = rendering.cols - 1;
+                    }
                 }
                 break;
             }
@@ -685,14 +687,14 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 break;
             }
             case direction_south: {
-                // Go down, unless we are in the last row. Note that this means that we may set
-                // selected_completion_idx to an out-of-bounds value if the last row is incomplete;
-                // this is a feature (it allows "last column memory").
-                if (current_row + 1 < rendering.rows) {
+                // Go down, unless we are in the last row.
+                // If we go over the last element, wrap to the first.
+                if (current_row + 1 < rendering.rows &&
+                    current_col * rendering.rows + current_row + 1 < completion_infos.size()) {
                     current_row++;
                 } else {
                     current_row = 0;
-                    if (current_col + 1 < rendering.cols) current_col++;
+                    current_col = (current_col + 1) % rendering.cols;
                 }
                 break;
             }
@@ -704,7 +706,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                     current_col++;
                 } else {
                     current_col = 0;
-                    if (current_row + 1 < rendering.rows) current_row++;
+                    current_row = (current_row + 1) % rendering.rows;
                 }
                 break;
             }
@@ -714,7 +716,11 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                     current_col--;
                 } else {
                     current_col = rendering.cols - 1;
-                    if (current_row > 0) current_row--;
+                    if (current_row > 0) {
+                        current_row--;
+                    } else {
+                        current_row = rendering.rows - 1;
+                    }
                 }
                 break;
             }

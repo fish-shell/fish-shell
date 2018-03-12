@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "common.h"
-#include "parse_constants.h"
+#include "parse_tree.h"
 #include "tokenizer.h"
 
 /// Find the beginning and end of the first subshell in the specified string.
@@ -114,8 +114,9 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
 
 /// Attempts to escape the string 'cmd' using the given quote type, as determined by the quote
 /// character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and
-/// thus escaping should be with backslashes).
-wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote);
+/// thus escaping should be with backslashes). Optionally do not escape tildes.
+wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
+                                             bool no_tilde = false);
 
 /// Given a string, parse it as fish code and then return the indents. The return value has the same
 /// size as the string.
@@ -124,19 +125,20 @@ std::vector<int> parse_util_compute_indents(const wcstring &src);
 /// Given a string, detect parse errors in it. If allow_incomplete is set, then if the string is
 /// incomplete (e.g. an unclosed quote), an error is not returned and the PARSER_TEST_INCOMPLETE bit
 /// is set in the return value. If allow_incomplete is not set, then incomplete strings result in an
-/// error. If out_tree is not NULL, the resulting tree is returned by reference.
+/// error. If out_pstree is not NULL, the resulting tree is returned by reference.
 class parse_node_tree_t;
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors = NULL,
                                                   bool allow_incomplete = true,
-                                                  parse_node_tree_t *out_tree = NULL);
+                                                  parsed_source_ref_t *out_pstree = NULL);
 
 /// Test if this argument contains any errors. Detected errors include syntax errors in command
 /// substitutions, improperly escaped characters and improper use of the variable expansion
 /// operator. This does NOT currently detect unterminated quotes.
 class parse_node_t;
 parser_test_error_bits_t parse_util_detect_errors_in_argument(
-    const parse_node_t &node, const wcstring &arg_src, parse_error_list_t *out_errors = NULL);
+    tnode_t<grammar::argument> node, const wcstring &arg_src,
+    parse_error_list_t *out_errors = NULL);
 
 /// Given a string containing a variable expansion error, append an appropriate error to the errors
 /// list. The global_token_pos is the offset of the token in the larger source, and the dollar_pos

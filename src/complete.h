@@ -69,12 +69,15 @@ class completion_t {
     /// signal that this completion is case insensitive.
     complete_flags_t flags;
 
-    // Construction. Note: defining these so that they are not inlined reduces the executable size.
-    explicit completion_t(const wcstring &comp, const wcstring &desc = wcstring(),
+    // Construction.
+    explicit completion_t(wcstring comp, wcstring desc = wcstring(),
                           string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact),
                           complete_flags_t flags_val = 0);
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
+
+    completion_t(completion_t &&);
+    completion_t &operator=(completion_t &&);
 
     // Compare two completions. No operating overlaoding to make this always explicit (there's
     // potentially multiple ways to compare completions).
@@ -176,21 +179,24 @@ bool complete_is_valid_argument(const wcstring &str, const wcstring &opt, const 
 /// \param comp The completion string
 /// \param desc The description of the completion
 /// \param flags completion flags
-void append_completion(std::vector<completion_t> *completions, const wcstring &comp,
-                       const wcstring &desc = wcstring(), int flags = 0,
+void append_completion(std::vector<completion_t> *completions, wcstring comp,
+                       wcstring desc = wcstring(), int flags = 0,
                        string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact));
 
 /// Function used for testing.
 void complete_set_variable_names(const wcstring_list_t *names);
 
-/// Support for "wrap targets." A wrap target is a command that completes liek another command. The
-/// target chain is the sequence of wraps (A wraps B wraps C...). Any loops in the chain are
-/// silently ignored.
+/// Support for "wrap targets." A wrap target is a command that completes like another command.
 bool complete_add_wrapper(const wcstring &command, const wcstring &wrap_target);
 bool complete_remove_wrapper(const wcstring &command, const wcstring &wrap_target);
-wcstring_list_t complete_get_wrap_chain(const wcstring &command);
+
+/// Returns a list of wrap targets for a given command.
+wcstring_list_t complete_get_wrap_targets(const wcstring &command);
 
 // Wonky interface: returns all wraps. Even-values are the commands, odd values are the targets.
 wcstring_list_t complete_get_wrap_pairs();
+
+// Observes that fish_complete_path has changed.
+void complete_invalidate_path();
 
 #endif

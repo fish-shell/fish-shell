@@ -10,16 +10,17 @@
 #include <signal.h>
 #include <stdio.h>
 #include <sys/wait.h>
-#include <termios.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
 
 #if HAVE_TERM_H
+#include <curses.h>
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
+#include <termios.h>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
@@ -31,6 +32,7 @@
 
 #include <algorithm>  // IWYU pragma: keep
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "common.h"
@@ -53,7 +55,7 @@
 /// Status of last process to exit.
 static int last_status = 0;
 
-bool job_list_is_empty(void) {
+bool job_list_is_empty() {
     ASSERT_IS_MAIN_THREAD();
     return parser_t::principal_parser().job_list().empty();
 }
@@ -102,7 +104,7 @@ static int is_interactive = -1;
 
 static bool proc_had_barrier = false;
 
-bool shell_is_interactive(void) {
+bool shell_is_interactive() {
     ASSERT_IS_MAIN_THREAD();
     // is_interactive is statically initialized to -1. Ensure it has been dynamically set
     // before we're called.
@@ -160,7 +162,7 @@ int proc_get_last_status() { return last_status; }
 // corresponding to that slot is in use. The job ID corresponding to slot 0 is 1.
 static owning_lock<std::vector<bool>> locked_consumed_job_ids;
 
-job_id_t acquire_job_id(void) {
+job_id_t acquire_job_id() {
     auto &&locker = locked_consumed_job_ids.acquire();
     std::vector<bool> &consumed_job_ids = locker.value;
 
@@ -343,33 +345,15 @@ static void handle_child_status(pid_t pid, int status) {
     return;
 }
 
-process_t::process_t()
-    : is_first_in_job(),
-      is_last_in_job(),
-      type(),  // gets set later
-      internal_block_node(NODE_OFFSET_INVALID),
-      pid(0),
-      pipe_write_fd(0),
-      pipe_read_fd(0),
-      completed(0),
-      stopped(0),
-      status(0),
-      count_help_magic(0)
-#ifdef HAVE__PROC_SELF_STAT
-      ,
-      last_time(),
-      last_jiffies(0)
-#endif
-{
-}
+process_t::process_t() {}
 
 /// The constructor sets the pgid to -2 as a sentinel value
 /// 0 should not be used; although it is not a valid PGID in userspace,
 ///   the Linux kernel will use it for kernel processes.
 /// -1 should not be used; it is a possible return value of the getpgid()
 ///   function
-job_t::job_t(job_id_t jobid, const io_chain_t &bio)
-    : block_io(bio), pgid(-2), tmodes(), job_id(jobid), flags(0) {}
+job_t::job_t(job_id_t jobid, io_chain_t bio)
+    : block_io(std::move(bio)), pgid(-2), tmodes(), job_id(jobid), flags(0) {}
 
 job_t::~job_t() { release_job_id(job_id); }
 
@@ -468,8 +452,7 @@ static wcstring truncate_command(const wcstring &cmd) {
     }
 
     // Truncation required.
-    const bool ellipsis_is_unicode = (ellipsis_char == L'\x2026');
-    const size_t ellipsis_length = ellipsis_is_unicode ? 1 : 3;
+    const size_t ellipsis_length = wcslen(ellipsis_str); //no need for wcwidth
     size_t trunc_length = max_len - ellipsis_length;
     // Eat trailing whitespace.
     while (trunc_length > 0 && iswspace(cmd.at(trunc_length - 1))) {
@@ -477,11 +460,7 @@ static wcstring truncate_command(const wcstring &cmd) {
     }
     wcstring result = wcstring(cmd, 0, trunc_length);
     // Append ellipsis.
-    if (ellipsis_is_unicode) {
-        result.push_back(ellipsis_char);
-    } else {
-        result.append(L"...");
-    }
+    result.append(ellipsis_str);
     return result;
 }
 
@@ -553,6 +532,8 @@ static int process_clean_after_marking(bool allow_interactive) {
 
             s = p->status;
 
+            // TODO: The generic process-exit event is useless and unused.
+            // Remove this in future.
             proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, p->pid,
                             (WIFSIGNALED(s) ? -1 : WEXITSTATUS(s)));
 
@@ -617,7 +598,15 @@ static int process_clean_after_marking(bool allow_interactive) {
                 format_job_info(j, JOB_ENDED);
                 found = 1;
             }
-            proc_fire_event(L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0);
+            // TODO: The generic process-exit event is useless and unused.
+            // Remove this in future.
+            // Don't fire the exit-event for jobs with pgid -2.
+            // That's our "sentinel" pgid, for jobs that don't (yet) have a pgid,
+            // or jobs that consist entirely of builtins (and hence don't have a process).
+            // This causes issues if fish is PID 2, which is quite common on WSL. See #4582.
+            if (j->pgid != -2) {
+                proc_fire_event(L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0);
+            }
             proc_fire_event(L"JOB_EXIT", EVENT_JOB_ID, j->job_id, 0);
 
             job_remove(j);
@@ -812,7 +801,7 @@ bool terminal_give_to_job(job_t *j, int cont) {
     // to hand over control of the terminal to this process group, which is a no-op if it's already
     // been done.
     if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
-        debug(2, L"Process group %d already has control of terminal\n", j->pgid);
+        debug(4, L"Process group %d already has control of terminal\n", j->pgid);
     } else {
         debug(4,
               L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d\n",

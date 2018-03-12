@@ -46,9 +46,12 @@ enum {
     /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
     /// working directories.
     EXPAND_SPECIAL_FOR_CD = 1 << 11,
+    /// Do expansions specifically for cd autosuggestion. This is to differentiate between cd
+    /// completions and cd autosuggestions.
+    EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST = 1 << 12,
     /// Do expansions specifically to support external command completions. This means using PATH as
     /// a list of potential working directories.
-    EXPAND_SPECIAL_FOR_COMMAND = 1 << 12
+    EXPAND_SPECIAL_FOR_COMMAND = 1 << 13
 };
 typedef int expand_flags_t;
 
@@ -57,18 +60,18 @@ class completion_t;
 enum {
     /// Character representing a home directory.
     HOME_DIRECTORY = EXPAND_RESERVED_BASE,
-    /// Character representing process expansion.
-    PROCESS_EXPAND,
     /// Character representing variable expansion.
     VARIABLE_EXPAND,
     /// Character representing variable expansion into a single element.
     VARIABLE_EXPAND_SINGLE,
     /// Character representing the start of a bracket expansion.
-    BRACKET_BEGIN,
+    BRACE_BEGIN,
     /// Character representing the end of a bracket expansion.
-    BRACKET_END,
+    BRACE_END,
     /// Character representing separation between two bracket elements.
-    BRACKET_SEP,
+    BRACE_SEP,
+    /// Character that takes the place of any whitespace within non-quoted text in braces
+    BRACE_SPACE,
     /// Separate subtokens in a token with this character.
     INTERNAL_SEPARATOR,
     /// Character representing an empty variable expansion. Only used transitively while expanding

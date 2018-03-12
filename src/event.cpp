@@ -448,9 +448,92 @@ void event_fire(const event_t *event) {
     }
 }
 
-void event_init() {}
+/// Mapping between event type to name.
+/// Note we don't bother to sort this.
+struct event_type_name_t {
+    event_type_t type;
+    const wchar_t *name;
+};
 
-void event_destroy() { s_event_handlers.clear(); }
+static const event_type_name_t events_mapping[] = {
+    {EVENT_SIGNAL, L"signal"},
+    {EVENT_VARIABLE, L"variable"},
+    {EVENT_EXIT, L"exit"},
+    {EVENT_JOB_ID, L"job-id"},
+    {EVENT_GENERIC, L"generic"}
+};
+
+maybe_t<event_type_t> event_type_for_name(const wcstring &name) {
+    for (const auto &em : events_mapping) {
+        if (name == em.name) {
+            return em.type;
+        }
+    }
+    return none();
+}
+
+static const wchar_t *event_name_for_type(event_type_t type) {
+    for (const auto &em : events_mapping) {
+        if (type == em.type) {
+            return em.name;
+        }
+    }
+    return L"";
+}
+
+
+void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
+    std::vector<shared_ptr<event_t>> tmp = s_event_handlers;
+    std::sort(tmp.begin(), tmp.end(),
+            [](const shared_ptr<event_t> &e1, const shared_ptr<event_t> &e2) {
+                if (e1->type == e2->type) {
+                    switch (e1->type) {
+                        case EVENT_SIGNAL:
+                            return e1->param1.signal < e2->param1.signal;
+                        case EVENT_JOB_ID:
+                            return e1->param1.job_id < e2->param1.job_id;
+                        case EVENT_VARIABLE:
+                        case EVENT_ANY:
+                        case EVENT_GENERIC:
+                            return e1->str_param1 < e2->str_param1;
+                    }
+                }
+                return e1->type < e2->type;
+            });
+
+    maybe_t<event_type_t> last_type{};
+    for (const shared_ptr<event_t> &evt : tmp) {
+        // If we have a filter, skip events that don't match.
+        if (type_filter && *type_filter != evt->type) {
+            continue;
+        }
+
+        if (!last_type || *last_type != evt->type) {
+            if (last_type)
+                streams.out.append(L"\n");
+            last_type = static_cast<event_type_t>(evt->type);
+            streams.out.append_format(L"Event %ls\n", event_name_for_type(*last_type));
+        }
+        switch (evt->type) {
+            case EVENT_SIGNAL:
+                streams.out.append_format(L"%ls %ls\n", sig2wcs(evt->param1.signal),
+                        evt->function_name.c_str());
+                break;
+            case EVENT_JOB_ID:
+                streams.out.append_format(L"%d %ls\n", evt->param1,
+                        evt->function_name.c_str());
+                break;
+            case EVENT_VARIABLE:
+            case EVENT_GENERIC:
+                streams.out.append_format(L"%ls %ls\n", evt->str_param1.c_str(),
+                        evt->function_name.c_str());
+                break;
+            default:
+                streams.out.append_format(L"%ls\n", evt->function_name.c_str());
+                break;
+        }
+    }
+}
 
 void event_fire_generic(const wchar_t *name, wcstring_list_t *args) {
     CHECK(name, );
@@ -463,7 +546,7 @@ void event_fire_generic(const wchar_t *name, wcstring_list_t *args) {
 
 event_t::event_t(int t) : type(t), param1(), str_param1(), function_name(), arguments() {}
 
-event_t::~event_t() {}
+event_t::~event_t() = default;
 
 event_t event_t::signal_event(int sig) {
     event_t event(EVENT_SIGNAL);

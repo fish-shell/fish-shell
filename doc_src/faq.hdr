@@ -24,7 +24,6 @@
 - <a href='#faq-titlebar'>I'm seeing weird output before each prompt when using screen. What's wrong?</a>
 - <a href='#faq-greeting'>How do I change the greeting message?</a>
 - <a href='#faq-history'>Why doesn't history substitution ("!$" etc.) work?</a>
-- <a href='#faq-find-braces'>Why do I get a missing argument error with `find ... {}`?</a>
 - <a href='#faq-cd-minus'>How can I use `-` as a shortcut for `cd -`?</a>
 - <a href='#faq-uninstalling'>How do I uninstall fish?</a>
 - <a href='#faq-third-party'>Where can I find extra tools for fish?</a>
@@ -245,21 +244,6 @@ Fish history recall is very simple yet effective:
 See <a href='index.html#editor'>documentation</a> for more details about line editing in fish.
 
 <hr>
-\section faq-find-braces Why do I get a missing argument error with `find ... {}`?
-
-Running `find ... -exec ... {}` produces an error:
-
-    find: missing argument to '-exec'
-
-The problem is caused by the empty braces, which are subject to <a href="index.html#expand-brace">brace expansion</a>.
-
-Quote the empty braces to achieve the desired effect:
-
-\fish{cli-dark}
-find ... -exec ... '{{}}'
-\endfish
-
-<hr>
 \section faq-cd-minus How can I use `-` as a shortcut for `cd -`?
 
 In fish versions prior to 2.5.0 it was possible to create a function named `-` that would do `cd -`. Changes in the 2.5.0 release included several bug fixes that enforce the rule that a bare hyphen is not a valid function (or variable) name. However, you can achieve the same effect via an abbreviation:
@@ -297,7 +281,7 @@ The fish user community extends fish in unique and useful ways via scripts that 
 - <a href="https://github.com/oh-my-fish/oh-my-fish">Oh My Fish</a>
 - <a href="https://github.com/justinmayer/tacklebox">Tacklebox</a>
 
-This is not an exhaustive list and the fish project has no opinion regarding the merits of the repositories listed above or the scripts found therein. We mention these only because you may find within them a solution to a need you have such as supporting the `&&` and `||` operators or improved integration with other tools that you use.
+This is not an exhaustive list and the fish project has no opinion regarding the merits of the repositories listed above or the scripts found therein.
 
 \htmlonly[block]
 </div>

@@ -102,7 +102,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     const wcstring ft = tok_first(j->command());
-    if (!ft.empty()) env_set_one(L"_", ENV_EXPORT, ft);
+    if (!ft.empty()) env_set_one(L"current_cmd", ENV_EXPORT, ft);
     reader_write_title(j->command());
 
     job_promote(j);

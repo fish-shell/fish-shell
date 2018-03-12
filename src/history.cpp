@@ -36,12 +36,12 @@
 #include "iothread.h"
 #include "lru.h"
 #include "parse_constants.h"
-#include "parse_tree.h"
 #include "parse_util.h"
 #include "path.h"
 #include "reader.h"
+#include "tnode.h"
 #include "wildcard.h"  // IWYU pragma: keep
-#include "wutil.h"  // IWYU pragma: keep
+#include "wutil.h"     // IWYU pragma: keep
 
 // Our history format is intended to be valid YAML. Here it is:
 //
@@ -482,12 +482,6 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
             if (wcpattern2.back() != ANY_STRING) wcpattern2.push_back(ANY_STRING);
             return wildcard_match(content_to_match, wcpattern2);
         }
-        case HISTORY_SEARCH_TYPE_CONTAINS_PCRE: {
-            abort();
-        }
-        case HISTORY_SEARCH_TYPE_PREFIX_PCRE: {
-            abort();
-        }
     }
     DIE("unexpected history_search_type_t value");
 }
@@ -727,8 +721,8 @@ history_t &history_t::history_with_name(const wcstring &name) {
     return histories.get_creating(name);
 }
 
-history_t::history_t(const wcstring &pname)
-    : name(pname),
+history_t::history_t(wcstring pname)
+    : name(std::move(pname)),
       first_unwritten_new_item_index(0),
       has_pending_item(false),
       disable_automatic_save_counter(0),
@@ -890,8 +884,8 @@ size_t history_t::size() {
     return new_item_count + old_item_count;
 }
 
-history_item_t history_t::item_at_index(size_t idx) {
-    scoped_lock locker(lock);
+history_item_t history_t::item_at_index_assume_locked(size_t idx) {
+    ASSERT_IS_LOCKED(lock);
 
     // 0 is considered an invalid index.
     assert(idx > 0);
@@ -923,7 +917,32 @@ history_item_t history_t::item_at_index(size_t idx) {
     return history_item_t(wcstring(), 0);
 }
 
-void history_t::populate_from_mmap(void) {
+history_item_t history_t::item_at_index(size_t idx) {
+    scoped_lock locker(lock);
+    return item_at_index_assume_locked(idx);
+}
+
+std::unordered_map<long, wcstring> history_t::items_at_indexes(const std::vector<long> &idxs) {
+    scoped_lock locker(lock);
+    std::unordered_map<long, wcstring> result;
+    for (long idx : idxs) {
+        if (idx <= 0) {
+            // Skip non-positive entries.
+            continue;
+        }
+        // Insert an empty string to see if this is the first time the index is encountered. If so,
+        // we have to go fetch the item.
+        auto iter_inserted = result.emplace(idx, wcstring{});
+        if (iter_inserted.second) {
+            // New key.
+            auto item = item_at_index_assume_locked(size_t(idx));
+            iter_inserted.first->second = std::move(item.contents);
+        }
+    }
+    return result;
+}
+
+void history_t::populate_from_mmap() {
     mmap_type = infer_file_type(mmap_start, mmap_length);
     size_t cursor = 0;
     for (;;) {
@@ -992,7 +1011,7 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
     return result;
 }
 
-bool history_t::load_old_if_needed(void) {
+bool history_t::load_old_if_needed() {
     if (loaded_old) return true;
     loaded_old = true;
 
@@ -1059,13 +1078,13 @@ bool history_search_t::go_backwards() {
 }
 
 /// Goes to the end (forwards).
-void history_search_t::go_to_end(void) { prev_matches.clear(); }
+void history_search_t::go_to_end() { prev_matches.clear(); }
 
 /// Returns if we are at the end, which is where we start.
-bool history_search_t::is_at_end(void) const { return prev_matches.empty(); }
+bool history_search_t::is_at_end() const { return prev_matches.empty(); }
 
 /// Goes to the beginning (backwards).
-void history_search_t::go_to_beginning(void) {
+void history_search_t::go_to_beginning() {
     // Go backwards as far as we can.
     while (go_backwards()) {  //!OCLINT(empty while statement)
         // Do nothing.
@@ -1528,7 +1547,7 @@ void history_t::save_internal(bool vacuum) {
     }
 }
 
-void history_t::save(void) {
+void history_t::save() {
     scoped_lock locker(lock);
     this->save_internal(false);
 }
@@ -1648,7 +1667,7 @@ void history_t::enable_automatic_saving() {
     save_internal_unless_disabled();
 }
 
-void history_t::clear(void) {
+void history_t::clear() {
     scoped_lock locker(lock);
     new_items.clear();
     deleted_items.clear();
@@ -1659,7 +1678,7 @@ void history_t::clear(void) {
     this->clear_file_state();
 }
 
-bool history_t::is_empty(void) {
+bool history_t::is_empty() {
     scoped_lock locker(lock);
 
     // If we have new items, we're not empty.
@@ -1754,6 +1773,10 @@ static bool should_import_bash_history_line(const std::string &line) {
     if (line.find("((") != std::string::npos) return false;
     if (line.find("))") != std::string::npos) return false;
 
+    // Temporarily skip lines with && and ||
+    if (line.find("&&") != std::string::npos) return false;
+    if (line.find("||") != std::string::npos) return false;
+
     // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
     if (line.back() == '\\') return false;
 
@@ -1817,8 +1840,6 @@ void history_t::incorporate_external_changes() {
     }
 }
 
-void history_init() {}
-
 void history_collection_t::save() {
     // Save all histories
     auto &&h = histories.acquire();
@@ -1827,11 +1848,7 @@ void history_collection_t::save() {
     }
 }
 
-void history_destroy() { histories.save(); }
-
-void history_sanity_check() {
-    // No sanity checking implemented yet...
-}
+void history_save_all() { histories.save(); }
 
 /// Return the prefix for the files to be used for command and read history.
 wcstring history_session_id() {
@@ -1892,11 +1909,9 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
     bool impending_exit = false;
     parse_node_tree_t tree;
     parse_tree_from_string(str, parse_flag_none, &tree, NULL);
-    size_t count = tree.size();
 
     path_list_t potential_paths;
-    for (size_t i = 0; i < count; i++) {
-        const parse_node_t &node = tree.at(i);
+    for (const parse_node_t &node : tree) {
         if (!node.has_source()) {
             continue;
         }
@@ -1911,15 +1926,15 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
             // Hack hack hack - if the command is likely to trigger an exit, then don't do
             // background file detection, because we won't be able to write it to our history file
             // before we exit.
-            if (tree.decoration_for_plain_statement(node) == parse_statement_decoration_exec) {
+            if (get_decoration({&tree, &node}) == parse_statement_decoration_exec) {
                 impending_exit = true;
             }
 
-            wcstring command;
-            tree.command_for_plain_statement(node, str, &command);
-            unescape_string_in_place(&command, UNESCAPE_DEFAULT);
-            if (command == L"exit" || command == L"reboot") {
-                impending_exit = true;
+            if (maybe_t<wcstring> command = command_for_plain_statement({&tree, &node}, str)) {
+                unescape_string_in_place(&*command, UNESCAPE_DEFAULT);
+                if (*command == L"exit" || *command == L"reboot") {
+                    impending_exit = true;
+                }
             }
         }
     }

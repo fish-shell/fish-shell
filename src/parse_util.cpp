@@ -17,8 +17,8 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "parse_constants.h"
-#include "parse_tree.h"
 #include "parse_util.h"
+#include "tnode.h"
 #include "tokenizer.h"
 #include "util.h"
 #include "wildcard.h"
@@ -34,6 +34,9 @@
 /// Error message for backgrounded commands as conditionals.
 #define BACKGROUND_IN_CONDITIONAL_ERROR_MSG \
     _(L"Backgrounded commands can not be used as conditionals")
+
+/// Error message for arguments to 'end'
+#define END_ARG_ERR_MSG _(L"'end' does not take arguments. Did you forget a ';'?")
 
 int parse_util_lineno(const wchar_t *str, size_t offset) {
     if (!str) return 0;
@@ -368,7 +371,7 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
 
     const wcstring buffcpy = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
 
-    tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
+    tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED);
     tok_t token;
     while (tok.next(&token)) {
         size_t tok_begin = token.offset;
@@ -376,7 +379,7 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
 
         // Calculate end of token.
         if (token.type == TOK_STRING) {
-            tok_end += token.text.size();
+            tok_end += token.length;
         }
 
         // Cursor was before beginning of this token, means that the cursor is between two tokens,
@@ -390,14 +393,14 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
         // and break.
         if (token.type == TOK_STRING && tok_end >= offset_within_cmdsubst) {
             a = cmdsubst_begin + token.offset;
-            b = a + token.text.size();
+            b = a + token.length;
             break;
         }
 
         // Remember previous string token.
         if (token.type == TOK_STRING) {
             pa = cmdsubst_begin + token.offset;
-            pb = pa + token.text.size();
+            pb = pa + token.length;
         }
     }
 
@@ -471,12 +474,13 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     size_t prev_pos = 0;
     wchar_t last_quote = L'\0';
 
-    tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
+    tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED);
     tok_t token;
     while (tok.next(&token)) {
         if (token.offset > pos) break;
 
-        if (token.type == TOK_STRING) last_quote = get_quote(token.text, pos - token.offset);
+        if (token.type == TOK_STRING)
+            last_quote = get_quote(tok.text_of(token), pos - token.offset);
 
         if (out_type != NULL) *out_type = token.type;
 
@@ -508,33 +512,38 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     free(cmd_tmp);
 }
 
-wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote) {
+wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote, bool no_tilde) {
     wcstring result;
     if (quote == L'\0') {
-        result = escape_string(cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE);
+        escape_flags_t flags = ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0);
+        result = escape_string(cmd, flags);
     } else {
-        bool unescapable = false;
-        for (size_t i = 0; i < cmd.size(); i++) {
-            wchar_t c = cmd.at(i);
+        // Here we are going to escape a string with quotes.
+        // A few characters cannot be represented inside quotes, e.g. newlines. In that case,
+        // terminate the quote and then re-enter it.
+        result.reserve(cmd.size());
+        for (wchar_t c : cmd) {
             switch (c) {
                 case L'\n':
-                case L'\t':
-                case L'\b':
-                case L'\r': {
-                    unescapable = true;
+                    result.append({quote, L'\\', L'n', quote});
                     break;
-                }
-                default: {
+                case L'\t':
+                    result.append({quote, L'\\', L't', quote});
+                    break;
+                case L'\b':
+                    result.append({quote, L'\\', L'b', quote});
+                    break;
+                case L'\r':
+                    result.append({quote, L'\\', L'r', quote});
+                    break;
+                case L'\\':
+                    result.append({L'\\', L'\\'});
+                    break;
+                default:
                     if (c == quote) result.push_back(L'\\');
                     result.push_back(c);
                     break;
-                }
             }
-        }
-
-        if (unescapable) {
-            result = escape_string(cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED);
-            result.insert(0, &quote, 1);
         }
     }
     return result;
@@ -657,9 +666,8 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
     // were a case item list.
     parse_node_tree_t tree;
-    parse_tree_from_string(src,
-                           parse_flag_continue_after_error | parse_flag_include_comments |
-                               parse_flag_accept_incomplete_tokens,
+    parse_tree_from_string(src, parse_flag_continue_after_error | parse_flag_include_comments |
+                                    parse_flag_accept_incomplete_tokens,
                            &tree, NULL /* errors */);
 
     // Start indenting at the first node. If we have a parse error, we'll have to start indenting
@@ -760,15 +768,13 @@ bool parse_util_argument_is_help(const wchar_t *s) {
 }
 
 /// Check if the first argument under the given node is --help.
-static bool first_argument_is_help(const parse_node_tree_t &node_tree, const parse_node_t &node,
+static bool first_argument_is_help(tnode_t<grammar::plain_statement> statement,
                                    const wcstring &src) {
     bool is_help = false;
-    const parse_node_tree_t::parse_node_list_t arg_nodes =
-        node_tree.find_nodes(node, symbol_argument, 1);
+    auto arg_nodes = get_argument_nodes(statement.child<1>());
     if (!arg_nodes.empty()) {
         // Check the first argument only.
-        const parse_node_t &arg = *arg_nodes.at(0);
-        const wcstring first_arg_src = arg.get_source(src);
+        wcstring first_arg_src = arg_nodes.front().get_source(src);
         is_help = parse_util_argument_is_help(first_arg_src.c_str());
     }
     return is_help;
@@ -828,14 +834,14 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
     wchar_t char_after_dollar = dollar_pos + 1 >= token.size() ? 0 : token.at(dollar_pos + 1);
 
     switch (char_after_dollar) {
-        case BRACKET_BEGIN:
+        case BRACE_BEGIN:
         case L'{': {
-            // The BRACKET_BEGIN is for unquoted, the { is for quoted. Anyways we have (possible
+            // The BRACE_BEGIN is for unquoted, the { is for quoted. Anyways we have (possible
             // quoted) ${. See if we have a }, and the stuff in between is variable material. If so,
             // report a bracket error. Otherwise just complain about the ${.
             bool looks_like_variable = false;
             size_t closing_bracket =
-                token.find(char_after_dollar == L'{' ? L'}' : wchar_t(BRACKET_END), dollar_pos + 2);
+                token.find(char_after_dollar == L'{' ? L'}' : wchar_t(BRACE_END), dollar_pos + 2);
             wcstring var_name;
             if (closing_bracket != wcstring::npos) {
                 size_t var_start = dollar_pos + 2, var_end = closing_bracket;
@@ -940,11 +946,11 @@ static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offse
 /// Test if this argument contains any errors. Detected errors include syntax errors in command
 /// substitutions, improperly escaped characters and improper use of the variable expansion
 /// operator.
-parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t &node,
+parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::argument> node,
                                                               const wcstring &arg_src,
                                                               parse_error_list_t *out_errors) {
-    assert(node.type == symbol_argument);
-
+    assert(node.has_source() && "argument has no source");
+    auto source_start = node.source_range()->start;
     int err = 0;
     wchar_t *paran_begin, *paran_end;
     int do_loop = 1;
@@ -956,7 +962,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
             case -1: {
                 err = 1;
                 if (out_errors) {
-                    append_syntax_error(out_errors, node.source_start, L"Mismatched parenthesis");
+                    append_syntax_error(out_errors, source_start, L"Mismatched parenthesis");
                 }
                 return err;
             }
@@ -979,7 +985,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 // Our command substitution produced error offsets relative to its source. Tweak the
                 // offsets of the errors in the command substitution to account for both its offset
                 // within the string, and the offset of the node.
-                size_t error_offset = cmd_sub_start + 1 + node.source_start;
+                size_t error_offset = cmd_sub_start + 1 + source_start;
                 parse_error_offset_source_start(&subst_errors, error_offset);
 
                 if (out_errors != NULL) {
@@ -990,9 +996,8 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                     // "" and (), and also we no longer have the source of the command substitution.
                     // As an optimization, this is only necessary if the last character is a $.
                     if (cmd_sub_start > 0 && working_copy.at(cmd_sub_start - 1) == L'$') {
-                        err |= detect_dollar_cmdsub_errors(node.source_start,
-                                                           working_copy.substr(0, cmd_sub_start),
-                                                           subst, out_errors);
+                        err |= detect_dollar_cmdsub_errors(
+                            source_start, working_copy.substr(0, cmd_sub_start), subst, out_errors);
                     }
                 }
                 break;
@@ -1007,7 +1012,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
     wcstring unesc;
     if (!unescape_string(working_copy, &unesc, UNESCAPE_SPECIAL)) {
         if (out_errors) {
-            append_syntax_error(out_errors, node.source_start, L"Invalid token '%ls'",
+            append_syntax_error(out_errors, source_start, L"Invalid token '%ls'",
                                 working_copy.c_str());
         }
         return 1;
@@ -1031,8 +1036,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                                             unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
                     first_dollar--;
                 }
-                parse_util_expand_variable_error(unesc, node.source_start, first_dollar,
-                                                 out_errors);
+                parse_util_expand_variable_error(unesc, source_start, first_dollar, out_errors);
             }
         }
     }
@@ -1040,10 +1044,165 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
     return err;
 }
 
+/// Given that the job given by node should be backgrounded, return true if we detect any errors.
+static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
+                                              parse_error_list_t *parse_errors) {
+    namespace g = grammar;
+    auto source_range = job.source_range();
+    if (!source_range) return false;
+
+    bool errored = false;
+    // Disallow background in the following cases:
+    // foo & ; and bar
+    // foo & ; or bar
+    // if foo & ; end
+    // while foo & ; end
+    auto job_conj = job.try_get_parent<g::job_conjunction>();
+    if (job_conj.try_get_parent<g::if_clause>()) {
+        errored = append_syntax_error(parse_errors, source_range->start,
+                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+    } else if (job_conj.try_get_parent<g::while_header>()) {
+        errored = append_syntax_error(parse_errors, source_range->start,
+                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+    } else if (auto jlist = job_conj.try_get_parent<g::job_list>()) {
+        // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
+        // Fetch the job list and then advance it by one.
+        auto first_jconj = jlist.next_in_list<g::job_conjunction>();
+        assert(first_jconj == job.try_get_parent<g::job_conjunction>() &&
+               "Expected first job to be the node we found");
+        (void)first_jconj;
+
+        // Try getting the next job's decorator.
+        if (auto next_job_dec = jlist.next_in_list<g::job_decorator>()) {
+            // The next job is indeed a boolean statement.
+            parse_bool_statement_type_t bool_type = bool_statement_type(next_job_dec);
+            if (bool_type == parse_bool_and) {
+                errored = append_syntax_error(parse_errors, next_job_dec.source_range()->start,
+                                              BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
+            } else if (bool_type == parse_bool_or) {
+                errored = append_syntax_error(parse_errors, next_job_dec.source_range()->start,
+                                              BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
+            }
+        }
+    }
+    return errored;
+}
+
+static bool detect_errors_in_plain_statement(const wcstring &buff_src,
+                                             const parse_node_tree_t &node_tree,
+                                             tnode_t<grammar::plain_statement> pst,
+                                             parse_error_list_t *parse_errors) {
+    using namespace grammar;
+    bool errored = false;
+    auto source_start = pst.source_range()->start;
+
+    // In a few places below, we want to know if we are in a pipeline.
+    tnode_t<statement> st = pst.try_get_parent<decorated_statement>().try_get_parent<statement>();
+    pipeline_position_t pipe_pos = get_pipeline_position(st);
+    bool is_in_pipeline = (pipe_pos != pipeline_position_t::none);
+
+    // We need to know the decoration.
+    const enum parse_statement_decoration_t decoration = get_decoration(pst);
+
+    // Check that we don't try to pipe through exec.
+    if (is_in_pipeline && decoration == parse_statement_decoration_exec) {
+        errored = append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, L"exec");
+    }
+
+    // This is a somewhat stale check that 'and' and 'or' are not in pipelines, except at the
+    // beginning. We can't disallow them as commands entirely because we need to support 'and
+    // --help', etc.
+    if (pipe_pos == pipeline_position_t::subsequent) {
+        // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
+        // commands.
+        wcstring command = pst.child<0>().get_source(buff_src);
+        if (command == L"and" || command == L"or") {
+            errored =
+                append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, command.c_str());
+        }
+    }
+
+    if (maybe_t<wcstring> mcommand = command_for_plain_statement(pst, buff_src)) {
+        wcstring command = std::move(*mcommand);
+        // Check that we can expand the command.
+        if (!expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS,
+                        NULL)) {
+            // TODO: leverage the resulting errors.
+            errored = append_syntax_error(parse_errors, source_start, ILLEGAL_CMD_ERR_MSG,
+                                          command.c_str());
+        }
+
+        // Check that pipes are sound.
+        if (!errored && parser_is_pipe_forbidden(command) && is_in_pipeline) {
+            errored =
+                append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, command.c_str());
+        }
+
+        // Check that we don't return from outside a function. But we allow it if it's
+        // 'return --help'.
+        if (!errored && command == L"return") {
+            bool found_function = false;
+            for (const parse_node_t *ancestor = pst.node(); ancestor != nullptr;
+                 ancestor = node_tree.get_parent(*ancestor)) {
+                auto fh = tnode_t<block_statement>::try_create(&node_tree, ancestor)
+                              .child<0>()
+                              .try_get_child<function_header, 0>();
+                if (fh) {
+                    found_function = true;
+                    break;
+                }
+            }
+            if (!found_function && !first_argument_is_help(pst, buff_src)) {
+                errored = append_syntax_error(parse_errors, source_start, INVALID_RETURN_ERR_MSG);
+            }
+        }
+
+        // Check that we don't break or continue from outside a loop.
+        if (!errored && (command == L"break" || command == L"continue")) {
+            // Walk up until we hit a 'for' or 'while' loop. If we hit a function first,
+            // stop the search; we can't break an outer loop from inside a function.
+            // This is a little funny because we can't tell if it's a 'for' or 'while'
+            // loop from the ancestor alone; we need the header. That is, we hit a
+            // block_statement, and have to check its header.
+            bool found_loop = false;
+            for (const parse_node_t *ancestor = pst.node(); ancestor != nullptr;
+                 ancestor = node_tree.get_parent(*ancestor)) {
+                tnode_t<block_header> bh =
+                    tnode_t<block_statement>::try_create(&node_tree, ancestor).child<0>();
+                if (bh.try_get_child<while_header, 0>() || bh.try_get_child<for_header, 0>()) {
+                    // This is a loop header, so we can break or continue.
+                    found_loop = true;
+                    break;
+                } else if (bh.try_get_child<function_header, 0>()) {
+                    // This is a function header, so we cannot break or
+                    // continue. We stop our search here.
+                    found_loop = false;
+                    break;
+                }
+            }
+
+            if (!found_loop && !first_argument_is_help(pst, buff_src)) {
+                errored = append_syntax_error(
+                    parse_errors, source_start,
+                    (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
+            }
+        }
+
+        // Check that we don't do an invalid builtin (issue #1252).
+        if (!errored && decoration == parse_statement_decoration_builtin &&
+            !builtin_exists(command)) {
+            errored = append_syntax_error(parse_errors, source_start, UNKNOWN_BUILTIN_ERR_MSG,
+                                          command.c_str());
+        }
+    }
+    return errored;
+}
+
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors,
                                                   bool allow_incomplete,
-                                                  parse_node_tree_t *out_tree) {
+                                                  parsed_source_ref_t *out_pstree) {
+    namespace g = grammar;
     parse_node_tree_t node_tree;
     parse_error_list_t parse_errors;
 
@@ -1056,6 +1215,10 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // source.
     bool has_unclosed_block = false;
 
+    // Whether we encounter a missing statement, i.e. a newline after a pipe. This is found by
+    // detecting job_continuations that have source for pipes but not the statement.
+    bool has_unclosed_pipe = false;
+
     // Whether there's an unclosed quote, and therefore unfinished. This is only set if
     // allow_incomplete is set.
     bool has_unclosed_quote = false;
@@ -1066,12 +1229,12 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         &parse_errors);
 
     if (allow_incomplete) {
-        for (size_t i = 0; i < parse_errors.size(); i++) {
-            if (parse_errors.at(i).code == parse_error_tokenizer_unterminated_quote) {
+        size_t idx = parse_errors.size();
+        while (idx--) {
+            if (parse_errors.at(idx).code == parse_error_tokenizer_unterminated_quote) {
                 // Remove this error, since we don't consider it a real error.
                 has_unclosed_quote = true;
-                parse_errors.erase(parse_errors.begin() + i);
-                i--;
+                parse_errors.erase(parse_errors.begin() + idx);
             }
         }
     }
@@ -1097,202 +1260,62 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // Verify no variable expansions.
 
     if (!errored) {
-        const size_t node_tree_size = node_tree.size();
-        for (size_t i = 0; i < node_tree_size; i++) {
-            const parse_node_t &node = node_tree.at(i);
+        for (const parse_node_t &node : node_tree) {
             if (node.type == symbol_end_command && !node.has_source()) {
                 // An 'end' without source is an unclosed block.
                 has_unclosed_block = true;
-            } else if (node.type == symbol_boolean_statement) {
-                // 'or' and 'and' can be in a pipeline, as long as they're first.
-                parse_bool_statement_type_t type = parse_node_tree_t::statement_boolean_type(node);
-                if ((type == parse_bool_and || type == parse_bool_or) &&
-                    node_tree.statement_is_in_pipeline(node, false /* don't count first */)) {
-                    errored = append_syntax_error(&parse_errors, node.source_start, EXEC_ERR_MSG,
-                                                  (type == parse_bool_and) ? L"and" : L"or");
+            } else if (node.type == symbol_statement && !node.has_source()) {
+                // Check for a statement without source in a pipeline, i.e. unterminated pipeline.
+                auto pipe_pos = get_pipeline_position({&node_tree, &node});
+                if (pipe_pos != pipeline_position_t::none) {
+                    has_unclosed_pipe = true;
                 }
             } else if (node.type == symbol_argument) {
+                tnode_t<g::argument> arg{&node_tree, &node};
                 const wcstring arg_src = node.get_source(buff_src);
-                res |= parse_util_detect_errors_in_argument(node, arg_src, &parse_errors);
+                res |= parse_util_detect_errors_in_argument(arg, arg_src, &parse_errors);
             } else if (node.type == symbol_job) {
-                if (node_tree.job_should_be_backgrounded(node)) {
-                    // Disallow background in the following cases:
-                    //
-                    // foo & ; and bar
-                    // foo & ; or bar
-                    // if foo & ; end
-                    // while foo & ; end
-                    const parse_node_t *job_parent = node_tree.get_parent(node);
-                    assert(job_parent != NULL);
-                    switch (job_parent->type) {
-                        case symbol_if_clause:
-                        case symbol_while_header: {
-                            assert(node_tree.get_child(*job_parent, 1) == &node);
-                            errored = append_syntax_error(&parse_errors, node.source_start,
-                                                          BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-                            break;
-                        }
-                        case symbol_job_list: {
-                            // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
-                            assert(node_tree.get_child(*job_parent, 0) == &node);
-                            const parse_node_t *next_job_list =
-                                node_tree.get_child(*job_parent, 1, symbol_job_list);
-                            assert(next_job_list != NULL);
-                            const parse_node_t *next_job =
-                                node_tree.next_node_in_node_list(*next_job_list, symbol_job, NULL);
-                            if (next_job == NULL) {
-                                break;
-                            }
-
-                            const parse_node_t *next_statement =
-                                node_tree.get_child(*next_job, 0, symbol_statement);
-                            if (next_statement == NULL) {
-                                break;
-                            }
-
-                            const parse_node_t *spec_statement =
-                                node_tree.get_child(*next_statement, 0);
-                            if (!spec_statement ||
-                                spec_statement->type != symbol_boolean_statement) {
-                                break;
-                            }
-
-                            parse_bool_statement_type_t bool_type =
-                                parse_node_tree_t::statement_boolean_type(*spec_statement);
-                            if (bool_type == parse_bool_and) {  // this is not allowed
-                                errored =
-                                    append_syntax_error(&parse_errors, spec_statement->source_start,
-                                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
-                            } else if (bool_type == parse_bool_or) {  // this is not allowed
-                                errored =
-                                    append_syntax_error(&parse_errors, spec_statement->source_start,
-                                                        BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
-                            }
-                            break;
-                        }
-                        default: { break; }
+                // Disallow background in the following cases:
+                //
+                // foo & ; and bar
+                // foo & ; or bar
+                // if foo & ; end
+                // while foo & ; end
+                // If it's not a background job, nothing to do.
+                auto job = tnode_t<g::job>{&node_tree, &node};
+                if (job_node_is_background(job)) {
+                    errored |= detect_errors_in_backgrounded_job(job, &parse_errors);
+                }
+            } else if (node.type == symbol_arguments_or_redirections_list) {
+                // verify no arguments to the end command of if, switch, begin (#986).
+                auto list = tnode_t<g::arguments_or_redirections_list>{&node_tree, &node};
+                if (list.try_get_parent<g::if_statement>() ||
+                    list.try_get_parent<g::switch_statement>() ||
+                    list.try_get_parent<g::block_statement>()) {
+                    if (auto arg = list.next_in_list<g::argument>()) {
+                        errored = append_syntax_error(&parse_errors, arg.source_range()->start,
+                                                      END_ARG_ERR_MSG);
                     }
                 }
             } else if (node.type == symbol_plain_statement) {
-                // In a few places below, we want to know if we are in a pipeline.
-                const bool is_in_pipeline =
-                    node_tree.statement_is_in_pipeline(node, true /* count first */);
-
-                // We need to know the decoration.
-                const enum parse_statement_decoration_t decoration =
-                    node_tree.decoration_for_plain_statement(node);
-
-                // Check that we don't try to pipe through exec.
-                if (is_in_pipeline && decoration == parse_statement_decoration_exec) {
-                    errored = append_syntax_error(&parse_errors, node.source_start, EXEC_ERR_MSG,
-                                                  L"exec");
-                }
-
-                wcstring command;
-                if (node_tree.command_for_plain_statement(node, buff_src, &command)) {
-                    // Check that we can expand the command.
-                    if (!expand_one(command,
-                                    EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS,
-                                    NULL)) {
-                        // TODO: leverage the resulting errors.
-                        errored = append_syntax_error(&parse_errors, node.source_start,
-                                                      ILLEGAL_CMD_ERR_MSG, command.c_str());
-                    }
-
-                    // Check that pipes are sound.
-                    if (!errored && parser_is_pipe_forbidden(command) && is_in_pipeline) {
-                        errored = append_syntax_error(&parse_errors, node.source_start,
-                                                      EXEC_ERR_MSG, command.c_str());
-                    }
-
-                    // Check that we don't return from outside a function. But we allow it if it's
-                    // 'return --help'.
-                    if (!errored && command == L"return") {
-                        const parse_node_t *ancestor = &node;
-                        bool found_function = false;
-                        while (ancestor != NULL) {
-                            const parse_node_t *possible_function_header =
-                                node_tree.header_node_for_block_statement(*ancestor);
-                            if (possible_function_header != NULL &&
-                                possible_function_header->type == symbol_function_header) {
-                                found_function = true;
-                                break;
-                            }
-                            ancestor = node_tree.get_parent(*ancestor);
-                        }
-                        if (!found_function && !first_argument_is_help(node_tree, node, buff_src)) {
-                            errored = append_syntax_error(&parse_errors, node.source_start,
-                                                          INVALID_RETURN_ERR_MSG);
-                        }
-                    }
-
-                    // Check that we don't break or continue from outside a loop.
-                    if (!errored && (command == L"break" || command == L"continue")) {
-                        // Walk up until we hit a 'for' or 'while' loop. If we hit a function first,
-                        // stop the search; we can't break an outer loop from inside a function.
-                        // This is a little funny because we can't tell if it's a 'for' or 'while'
-                        // loop from the ancestor alone; we need the header. That is, we hit a
-                        // block_statement, and have to check its header.
-                        bool found_loop = false, end_search = false;
-                        const parse_node_t *ancestor = &node;
-                        while (ancestor != NULL && !end_search) {
-                            const parse_node_t *loop_or_function_header =
-                                node_tree.header_node_for_block_statement(*ancestor);
-                            if (loop_or_function_header != NULL) {
-                                switch (loop_or_function_header->type) {
-                                    case symbol_while_header:
-                                    case symbol_for_header: {
-                                        // This is a loop header, so we can break or continue.
-                                        found_loop = true;
-                                        end_search = true;
-                                        break;
-                                    }
-                                    case symbol_function_header: {
-                                        // This is a function header, so we cannot break or
-                                        // continue. We stop our search here.
-                                        found_loop = false;
-                                        end_search = true;
-                                        break;
-                                    }
-                                    default: {
-                                        // Most likely begin / end style block, which makes no
-                                        // difference.
-                                        break;
-                                    }
-                                }
-                            }
-                            ancestor = node_tree.get_parent(*ancestor);
-                        }
-
-                        if (!found_loop && !first_argument_is_help(node_tree, node, buff_src)) {
-                            errored = append_syntax_error(
-                                &parse_errors, node.source_start,
-                                (command == L"break" ? INVALID_BREAK_ERR_MSG
-                                                     : INVALID_CONTINUE_ERR_MSG));
-                        }
-                    }
-
-                    // Check that we don't do an invalid builtin (issue #1252).
-                    if (!errored && decoration == parse_statement_decoration_builtin &&
-                        !builtin_exists(command)) {
-                        errored = append_syntax_error(&parse_errors, node.source_start,
-                                                      UNKNOWN_BUILTIN_ERR_MSG, command.c_str());
-                    }
-                }
+                tnode_t<grammar::plain_statement> pst{&node_tree, &node};
+                errored |=
+                    detect_errors_in_plain_statement(buff_src, node_tree, pst, &parse_errors);
             }
         }
     }
 
     if (errored) res |= PARSER_TEST_ERROR;
 
-    if (has_unclosed_block || has_unclosed_quote) res |= PARSER_TEST_INCOMPLETE;
+    if (has_unclosed_block || has_unclosed_quote || has_unclosed_pipe)
+        res |= PARSER_TEST_INCOMPLETE;
 
     if (out_errors != NULL) {
         *out_errors = std::move(parse_errors);
     }
 
-    if (out_tree != NULL) {
-        *out_tree = std::move(node_tree);
+    if (out_pstree != NULL) {
+        *out_pstree = std::make_shared<parsed_source_t>(buff_src, std::move(node_tree));
     }
 
     return res;

@@ -8,3 +8,5 @@ complete -c functions -s n -l names -d "List the names of the functions, but not
 complete -c functions -s c -l copy -d "Copy the specified function to the specified new name"
 complete -c functions -s D -l details -d "Display information about the function"
 complete -c functions -s v -l verbose -d "Print more output"
+complete -c functions -s H -l handlers -d "Show event handlers"
+complete -c functions -s t -l handlers-type -d "Show event handlers matching the given type" -x -a "signal variable exit job-id generic"

@@ -3,6 +3,11 @@ function __fish_print_interfaces --description "Print a list of known network in
         set -l interfaces /sys/class/net/*
         string replace /sys/class/net/ '' $interfaces
     else # OSX/BSD
-        command ifconfig -l | string split ' '
+        set -l os (uname)
+        if string match -e -q "BSD" -- $os
+            command ifconfig | string match -e -r '^[a-z]' | string replace -r ':.*' '' | string split ' '
+        else
+            command ifconfig -l | string split ' '
+        end
     end
 end

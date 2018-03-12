@@ -3,4 +3,28 @@
 # Validate basic expressions
 
 ####################
-# Validate how bare variables in an epxression are handled
+# Validate how variables in an expression are handled
+
+####################
+# Validate math error reporting
+math: Error: Too few arguments
+'2 - '
+    ^
+math: Error: Too few arguments
+'ncr(1)'
+      ^
+math: Error: Expression is bogus
+'max()'
+   ^
+math: Error: Too few arguments
+'sin()'
+     ^
+math: Error: Too many arguments
+'2 + 2 4'
+       ^
+math: Expected at least 1 args, got only 0
+math: Expected at least 1 args, got only 0
+math: Error: Result is too large
+'2^650'
+math: Error: Result is infinite
+'1 / 0'

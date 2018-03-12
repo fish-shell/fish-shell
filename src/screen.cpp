@@ -15,12 +15,12 @@
 #include <unistd.h>
 #include <wchar.h>
 
-#if HAVE_NCURSES_H
+#if HAVE_CURSES_H
+#include <curses.h>
+#elif HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
 #include <ncurses/curses.h>
-#else
-#include <curses.h>
 #endif
 #if HAVE_TERM_H
 #include <term.h>
@@ -49,8 +49,6 @@
 
 /// A helper value for an invalid location.
 #define INVALID_LOCATION (screen_data_t::cursor_t(-1, -1))
-
-enum prompt_type_t { UNKNOWN_PROMPT, LEFT_PROMPT, RIGHT_PROMPT };
 
 static void invalidate_soft_wrap(screen_t *scr);
 
@@ -81,7 +79,7 @@ class scoped_buffer_t {
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.
 // Note this is deliberately exported so that init_curses can clear it.
-cached_esc_sequences_t cached_esc_sequences;
+layout_cache_t cached_layouts;
 
 /// Tests if the specified narrow character sequence is present at the specified position of the
 /// specified wide character string. All of \c seq must match, but str may be longer than seq.
@@ -107,7 +105,7 @@ static int fish_wcwidth_min_0(wchar_t widechar) { return maxi(0, fish_wcwidth(wi
 
 /// Whether we permit soft wrapping. If so, in some cases we don't explicitly move to the second
 /// physical line on a wrapped logical line; instead we just output it.
-static bool allow_soft_wrap(void) {
+static bool allow_soft_wrap() {
     // Should we be looking at eat_newline_glitch as well?
     return auto_right_margin;
 }
@@ -269,7 +267,7 @@ size_t escape_code_length(const wchar_t *code) {
     assert(code != NULL);
     if (*code != L'\e') return 0;
 
-    size_t esc_seq_len = cached_esc_sequences.find_entry(code);
+    size_t esc_seq_len = cached_layouts.find_escape_code(code);
     if (esc_seq_len) return esc_seq_len;
 
     bool found = is_color_escape_seq(code, &esc_seq_len);
@@ -279,31 +277,36 @@ size_t escape_code_length(const wchar_t *code) {
     if (!found) found = is_single_byte_escape_seq(code, &esc_seq_len);
     if (!found) found = is_csi_style_escape_seq(code, &esc_seq_len);
     if (!found) found = is_two_byte_escape_seq(code, &esc_seq_len);
-    if (found) cached_esc_sequences.add_entry(wcstring(code, esc_seq_len));
+    if (found) cached_layouts.add_escape_code(wcstring(code, esc_seq_len));
     return esc_seq_len;
 }
 
-// Information about the layout of a prompt.
-struct prompt_layout_t {
-    size_t line_count;       // how many lines the prompt consumes
-    size_t max_line_width;   // width of the longest line
-    size_t last_line_width;  // width of the last line
-};
+maybe_t<prompt_layout_t> layout_cache_t::find_prompt_layout(const wcstring &input) {
+    auto start = prompt_cache_.begin();
+    auto end = prompt_cache_.end();
+    for (auto iter = start; iter != end; ++iter) {
+        if (iter->first == input) {
+            // Found it. Move it to the front if not already there.
+            if (iter != start) prompt_cache_.splice(start, prompt_cache_, iter);
+            return iter->second;
+        }
+    }
+    return none();
+}
 
-// These are used by `calc_prompt_layout()` to avoid redundant calculations.
-static const wchar_t *cached_left_prompt = wcsdup(L"");
-static const wchar_t *cached_right_prompt = wcsdup(L"");
-static prompt_layout_t cached_left_prompt_layout = {1, 0, 0};
-static prompt_layout_t cached_right_prompt_layout = {1, 0, 0};
+void layout_cache_t::add_prompt_layout(wcstring input, prompt_layout_t layout) {
+    assert(!find_prompt_layout(input) && "Should not have a prompt layout for this input");
+    prompt_cache_.emplace_front(std::move(input), std::move(layout));
+    if (prompt_cache_.size() > prompt_cache_max_size) {
+        prompt_cache_.pop_back();
+    }
+}
 
 /// Calculate layout information for the given prompt. Does some clever magic to detect common
 /// escape sequences that may be embeded in a prompt, such as those to set visual attributes.
-static prompt_layout_t calc_prompt_layout(const wchar_t *prompt, prompt_type_t which_prompt) {
-    if (which_prompt == LEFT_PROMPT && wcscmp(cached_left_prompt, prompt) == 0) {
-        return cached_left_prompt_layout;
-    }
-    if (which_prompt == RIGHT_PROMPT && wcscmp(cached_right_prompt, prompt) == 0) {
-        return cached_right_prompt_layout;
+static prompt_layout_t calc_prompt_layout(const wcstring &prompt, layout_cache_t &cache) {
+    if (auto cached_layout = cache.find_prompt_layout(prompt)) {
+        return *cached_layout;
     }
 
     prompt_layout_t prompt_layout = {1, 0, 0};
@@ -331,18 +334,8 @@ static prompt_layout_t calc_prompt_layout(const wchar_t *prompt, prompt_type_t w
             }
         }
     }
-
     prompt_layout.last_line_width = current_line_width;
-    if (which_prompt == LEFT_PROMPT) {
-        free((void *)cached_left_prompt);
-        cached_left_prompt = wcsdup(prompt);
-        cached_left_prompt_layout = prompt_layout;
-    }
-    if (which_prompt == RIGHT_PROMPT) {
-        free((void *)cached_right_prompt);
-        cached_right_prompt = wcsdup(prompt);
-        cached_right_prompt_layout = prompt_layout;
-    }
+    cache.add_prompt_layout(prompt, prompt_layout);
     return prompt_layout;
 }
 
@@ -352,7 +345,7 @@ static size_t calc_prompt_lines(const wcstring &prompt) {
     // calc_prompt_width_and_lines.
     size_t result = 1;
     if (prompt.find(L'\n') != wcstring::npos || prompt.find(L'\f') != wcstring::npos) {
-        result = calc_prompt_layout(prompt.c_str(), UNKNOWN_PROMPT).line_count;
+        result = calc_prompt_layout(prompt, cached_layouts).line_count;
     }
     return result;
 }
@@ -360,23 +353,6 @@ static size_t calc_prompt_lines(const wcstring &prompt) {
 /// Stat stdout and stderr and save result. This should be done before calling a function that may
 /// cause output.
 static void s_save_status(screen_t *s) {
-// PCA Let's not do this futimes stuff, because sudo dumbly uses the tty's ctime as part of its
-// tty_tickets feature. Disabling this should fix issue #122.
-#if 0
-    // This futimes call tries to trick the system into using st_mtime as a tampering flag. This of
-    // course only works on systems where futimes is defined, but it should make the status saving
-    // stuff failsafe.
-    struct timeval t[] = {
-        { time(0)-1, 0 },
-        { time(0)-1, 0 }
-    };
-
-    // Don't check return value on these. We don't care if they fail, really.  This is all just to
-    // make the prompt look ok, which is impossible to do 100% reliably. We try, at least.
-    futimes(1, t);
-    futimes(2, t);
-#endif
-
     fstat(1, &s->prev_buff_1);
     fstat(2, &s->prev_buff_2);
 }
@@ -508,11 +484,6 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
     int x_steps, y_steps;
 
     char *str;
-    /*
-      debug( 0, L"move from %d %d to %d %d",
-      s->screen_cursor[0], s->screen_cursor[1],
-      new_x, new_y );
-    */
     scoped_buffer_t scoped_buffer(b);
 
     y_steps = new_y - s->actual.cursor.y;
@@ -645,70 +616,13 @@ static bool perform_any_impending_soft_wrap(screen_t *scr, int x, int y) {
 /// Make sure we don't soft wrap.
 static void invalidate_soft_wrap(screen_t *scr) { scr->soft_wrap_location = INVALID_LOCATION; }
 
-#if 0
-/// Various code for testing term behavior.
-static bool test_stuff(screen_t *scr)
-{
-    data_buffer_t output;
-    scoped_buffer_t scoped_buffer(&output);
-
-    s_move(scr, &output, 0, 0);
-    int screen_width = common_get_width();
-
-    const wchar_t *left = L"left";
-    const wchar_t *right = L"right";
-
-    for (size_t idx = 0; idx < 80; idx++)
-    {
-        output.push_back('A');
-    }
-
-    if (! output.empty())
-    {
-        write_loop(STDOUT_FILENO, &output.at(0), output.size());
-        output.clear();
-    }
-
-    sleep(5);
-
-    for (size_t i=0; i < 1; i++)
-    {
-        writembs(cursor_left);
-    }
-
-    if (! output.empty())
-    {
-        write_loop(1, &output.at(0), output.size());
-        output.clear();
-    }
-
-
-
-    while (1)
-    {
-        int c = getchar();
-        if (c != EOF) break;
-    }
-
-
-    while (1)
-    {
-        int c = getchar();
-        if (c != EOF) break;
-    }
-    fwprintf(stdout, L"Bye\n");
-    exit(0);
-    while (1) sleep(10000);
-    return true;
-}
-#endif
-
 /// Update the screen to match the desired output.
-static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *right_prompt) {
+static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring &right_prompt) {
     // if (test_stuff(scr)) return;
-    const size_t left_prompt_width = calc_prompt_layout(left_prompt, LEFT_PROMPT).last_line_width;
+    const size_t left_prompt_width =
+        calc_prompt_layout(left_prompt, cached_layouts).last_line_width;
     const size_t right_prompt_width =
-        calc_prompt_layout(right_prompt, RIGHT_PROMPT).last_line_width;
+        calc_prompt_layout(right_prompt, cached_layouts).last_line_width;
 
     int screen_width = common_get_width();
 
@@ -741,16 +655,10 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
     // Determine how many lines have stuff on them; we need to clear lines with stuff that we don't
     // want.
     const size_t lines_with_stuff = maxi(actual_lines_before_reset, scr->actual.line_count());
-#if 0
-    if (lines_with_stuff > scr->desired.line_count()) {
-        // There are lines that we output to previously that will need to be cleared.
-        need_clear_lines = true;
-    }
-#endif
 
-    if (wcscmp(left_prompt, scr->actual_left_prompt.c_str())) {
+    if (left_prompt != scr->actual_left_prompt) {
         s_move(scr, &output, 0, 0);
-        s_write_str(&output, left_prompt);
+        s_write_str(&output, left_prompt.c_str());
         scr->actual_left_prompt = left_prompt;
         scr->actual.cursor.x = (int)left_prompt_width;
     }
@@ -861,7 +769,7 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
         if (i == 0 && right_prompt_width > 0) {  //!OCLINT(Use early exit/continue)
             s_move(scr, &output, (int)(screen_width - right_prompt_width), (int)i);
             s_set_color(scr, &output, 0xffffffff);
-            s_write_str(&output, right_prompt);
+            s_write_str(&output, right_prompt.c_str());
             scr->actual.cursor.x += right_prompt_width;
 
             // We output in the last column. Some terms (Linux) push the cursor further right, past
@@ -902,7 +810,7 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
 }
 
 /// Returns true if we are using a dumb terminal.
-static bool is_dumb(void) {
+static bool is_dumb() {
     if (!cur_term) return true;
     return !cursor_up || !cursor_down || !cursor_left || !cursor_right;
 }
@@ -947,8 +855,8 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     const wchar_t *right_prompt = right_prompt_str.c_str();
     const wchar_t *autosuggestion = autosuggestion_str.c_str();
 
-    prompt_layout_t left_prompt_layout = calc_prompt_layout(left_prompt, LEFT_PROMPT);
-    prompt_layout_t right_prompt_layout = calc_prompt_layout(right_prompt, RIGHT_PROMPT);
+    prompt_layout_t left_prompt_layout = calc_prompt_layout(left_prompt_str, cached_layouts);
+    prompt_layout_t right_prompt_layout = calc_prompt_layout(right_prompt_str, cached_layouts);
 
     size_t left_prompt_width = left_prompt_layout.last_line_width;
     size_t right_prompt_width = right_prompt_layout.last_line_width;
@@ -1174,7 +1082,7 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
     // Append pager_data (none if empty).
     s->desired.append_lines(pager.screen_data);
 
-    s_update(s, layout.left_prompt.c_str(), layout.right_prompt.c_str());
+    s_update(s, layout.left_prompt, layout.right_prompt);
     s_save_status(s);
 }
 void s_reset(screen_t *s, screen_reset_mode_t mode) {

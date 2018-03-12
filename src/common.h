@@ -159,9 +159,20 @@ enum selection_direction_t {
 ///
 /// will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that
 /// program_name is 'fish'.
-void __attribute__((noinline)) debug(int level, const char *msg, ...)
+void __attribute__((noinline)) debug_impl(int level, const char *msg, ...)
     __attribute__((format(printf, 2, 3)));
-void __attribute__((noinline)) debug(int level, const wchar_t *msg, ...);
+void __attribute__((noinline)) debug_impl(int level, const wchar_t *msg, ...);
+
+/// The verbosity level of fish. If a call to debug has a severity level higher than \c debug_level,
+/// it will not be printed.
+extern int debug_level;
+
+inline bool should_debug(int level) { return level <= debug_level; }
+
+#define debug(level, ...)                                            \
+    do {                                                             \
+        if (should_debug((level))) debug_impl((level), __VA_ARGS__); \
+    } while (0)
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 [[noreturn]] void exit_without_destructors(int code);
@@ -172,16 +183,14 @@ extern struct termios shell_modes;
 /// The character to use where the text has been truncated. Is an ellipsis on unicode system and a $
 /// on other systems.
 extern wchar_t ellipsis_char;
+/// The character or string to use where text has been truncated (ellipsis if possible, otherwise ...)
+extern const wchar_t *ellipsis_str;
 
 /// Character representing an omitted newline at the end of text.
 extern wchar_t omitted_newline_char;
 
 /// Character used for the silent mode of the read command
 extern wchar_t obfuscation_read_char;
-
-/// The verbosity level of fish. If a call to debug has a severity level higher than \c debug_level,
-/// it will not be printed.
-extern int debug_level;
 
 /// How many stack frames to show when a debug() call is made.
 extern int debug_stack_frames;
@@ -195,6 +204,14 @@ extern const wchar_t *program_name;
 /// Set to false at run-time if it's been determined we can't trust the last modified timestamp on
 /// the tty.
 extern bool has_working_tty_timestamps;
+
+/// A list of all whitespace characters
+extern const wcstring whitespace;
+extern const char *whitespace_narrow;
+
+bool is_whitespace(const wchar_t input);
+bool is_whitespace(const wcstring &input);
+inline bool is_whitespace(const wchar_t *input) { return is_whitespace(wcstring(input)); }
 
 /// This macro is used to check that an argument is true. It is a bit like a non-fatal form of
 /// assert. Instead of exiting on failure, the current function is ended at once. The second
@@ -285,6 +302,7 @@ int fgetws2(wcstring *s, FILE *f);
 wcstring str2wcstring(const char *in);
 wcstring str2wcstring(const char *in, size_t len);
 wcstring str2wcstring(const std::string &in);
+wcstring str2wcstring(const std::string &in, size_t len);
 
 /// Returns a newly allocated multibyte character string equivalent of the specified wide character
 /// string.
@@ -389,10 +407,39 @@ void assert_is_background_thread(const char *who);
 #define ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(x) assert_is_background_thread(x)
 #define ASSERT_IS_BACKGROUND_THREAD() ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(__FUNCTION__)
 
+// fish_mutex is a wrapper around std::mutex that tracks whether it is locked, allowing for checking
+// if the mutex is locked. It owns a boolean guarded by the lock that records whether the lock is
+// currently locked; this is only used by assertions for correctness.
+class fish_mutex_t {
+    std::mutex lock_{};
+    bool is_locked_{false};
+
+   public:
+    constexpr fish_mutex_t() = default;
+    ~fish_mutex_t() = default;
+
+    void lock() {
+        lock_.lock();
+        is_locked_ = true;
+    }
+
+    void unlock() {
+        is_locked_ = false;
+        lock_.unlock();
+    }
+
+    // assert that this lock (identified as 'who') is locked in the function 'caller'.
+    void assert_is_locked(const char *who, const char *caller) const;
+
+    // return the underlying std::mutex. Note the fish_mutex_t cannot track locks to the underlying
+    // mutex; do not use assert_is_locked() with this.
+    std::mutex &get_mutex() { return lock_; }
+};
+
 /// Useful macro for asserting that a lock is locked. This doesn't check whether this thread locked
 /// it, which it would be nice if it did, but here it is anyways.
-void assert_is_locked(void *mutex, const char *who, const char *caller);
-#define ASSERT_IS_LOCKED(x) assert_is_locked((void *)(&x), #x, __FUNCTION__)
+void assert_is_locked(const fish_mutex_t &m, const char *who, const char *caller);
+#define ASSERT_IS_LOCKED(x) (x).assert_is_locked(#x, __FUNCTION__)
 
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 wcstring format_size(long long sz);
@@ -511,7 +558,7 @@ class null_terminated_array_t {
 // null_terminated_array_t<char_t>.
 void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr,
                                   null_terminated_array_t<char> *output);
-typedef std::lock_guard<std::mutex> scoped_lock;
+typedef std::lock_guard<fish_mutex_t> scoped_lock;
 typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 
 // An object wrapping a scoped lock and a value
@@ -527,7 +574,7 @@ typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 template <typename DATA>
 class acquired_lock {
     scoped_lock lock;
-    acquired_lock(std::mutex &lk, DATA *v) : lock(lk), value(*v) {}
+    acquired_lock(fish_mutex_t &lk, DATA *v) : lock(lk), value(*v) {}
 
     template <typename T>
     friend class owning_lock;
@@ -552,7 +599,7 @@ class owning_lock {
     owning_lock(owning_lock &&) = default;
     owning_lock &operator=(owning_lock &&) = default;
 
-    std::mutex lock;
+    fish_mutex_t lock;
     DATA data;
 
    public:
@@ -598,7 +645,7 @@ wcstring vformat_string(const wchar_t *format, va_list va_orig);
 void append_format(wcstring &str, const wchar_t *format, ...);
 void append_formatv(wcstring &str, const wchar_t *format, va_list ap);
 
-#ifdef __cpp_lib_make_unique
+#ifdef HAVE_STD__MAKE_UNIQUE
 using std::make_unique;
 #else
 /// make_unique implementation
@@ -720,6 +767,17 @@ void assert_is_not_forked_child(const char *who);
 #define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
 #define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
 
+/// Detect if we are Windows Subsystem for Linux by inspecting /proc/sys/kernel/osrelease
+/// and checking if "Microsoft" is in the first line.
+/// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
+constexpr bool is_windows_subsystem_for_linux() {
+#ifdef WSL
+    return true;
+#else
+    return false;
+#endif
+}
+
 extern "C" {
 __attribute__((noinline)) void debug_thread_error(void);
 }
@@ -749,6 +807,19 @@ struct enum_map {
     T val;
     const wchar_t *const str;
 };
+
+
+/// Use for scoped enums (i.e. `enum class`) with bitwise operations
+#define ENUM_FLAG_OPERATOR(T,X,Y) \
+inline T operator X (T lhs, T rhs) { return (T) (static_cast<std::underlying_type<T>::type>(lhs) X static_cast<std::underlying_type<T>::type>(rhs)); } \
+inline T operator Y (T &lhs, T rhs) { return lhs = (T) (static_cast<std::underlying_type<T>::type>(lhs) X static_cast<std::underlying_type<T>::type>(rhs)); }
+#define ENUM_FLAGS(T) \
+enum class T; \
+inline T operator ~ (T t) { return (T) (~static_cast<std::underlying_type<T>::type>(t)); } \
+ENUM_FLAG_OPERATOR(T,|,|=) \
+ENUM_FLAG_OPERATOR(T,^,^=) \
+ENUM_FLAG_OPERATOR(T,&,&=) \
+enum class T
 
 /// Given a string return the matching enum. Return the sentinal enum if no match is made. The map
 /// must be sorted by the `str` member. A binary search is twice as fast as a linear search with 16

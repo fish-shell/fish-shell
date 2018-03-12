@@ -355,8 +355,8 @@ You can iterate over a list (or a slice) with a for loop:
 Lists adjacent to other lists or strings are expanded as <a href="index.html#cartesian-product">cartesian products</a> unless quoted (see <a href="index.html#expand-variable">Variable expansion</a>):
 
 \fish{cli-dark}
->_ set -l a 1 2 3
->_ set -l 1 a b c
+>_ set a 1 2 3
+>_ set 1 a b c
 >_ echo $a$1
 <outp>1a 2a 3a 1b 2b 3b 1c 2c 3c</outp>
 >_ echo $a" banana"
@@ -420,17 +420,23 @@ echo chips
 
 \section tut_combiners Combiners (And, Or, Not)
 
-Unlike other shells, `fish` does not have special syntax like &amp;&amp; or || to combine commands. Instead it has commands `and`, `or`, and `not`.
+fish supports the familiar `&amp;&amp;` and `||` to combine commands, and `!` to negate them:
 
 \fish{cli-dark}
->_ cp file1.txt file1_bak.txt; and echo "Backup successful"; or echo "Backup failed"
+>_ ./configure && make && sudo make install
+\endfish
+
+fish also supports `and`, `or`, and `not`. The first two are job modifiers and have lower precedence. Example usage:
+
+\fish{cli-dark}
+>_ cp file1.txt file1_bak.txt && cp file2.txt file2_bak.txt ; and echo "Backup successful"; or echo "Backup failed"
 <outp>Backup failed</outp>
 \endfish
 
 As mentioned in <a href="#tut_semicolon">the section on the semicolon</a>, this can also be written in multiple lines, like so:
 
 \fish
-cp file1.txt file1_bak.txt
+cp file1.txt file1_bak.txt && cp file2.txt file2_bak.txt
 and echo "Backup successful"
 or echo "Backup failed"
 \endfish
@@ -447,6 +453,22 @@ else if grep bash /etc/shells
     echo Found bash
 else
     echo Got nothing
+end
+\endfish
+
+To compare strings or numbers or check file properties (whether a file exists or is writeable and such), use <a href="commands.html#test">test</a>, like
+
+\fish{cli-dark}
+if test "$fish" = "flounder"
+    echo FLOUNDER
+end
+
+# or
+
+if test "$number" -gt 5
+    echo $number is greater than five
+else
+    echo $number is five or less
 end
 \endfish
 
@@ -585,7 +607,7 @@ To remove /usr/local/bin from `$PATH`, you can write:
 
 \fish{cli-dark}
 >_ set PATH (string match -v /usr/local/bin $PATH)
-\end{fish}
+\endfish
 
 You can do so directly in `config.fish`, like you might do in other shells with `.profile`. See [this example](#path_example).
 

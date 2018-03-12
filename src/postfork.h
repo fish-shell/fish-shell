@@ -20,6 +20,7 @@ class process_t;
 
 bool set_child_group(job_t *j, pid_t child_pid);  // called by parent
 bool child_set_group(job_t *j, process_t *p);     // called by child
+bool maybe_assign_terminal(job_t *j);
 
 /// Initialize a new child process. This should be called right away after forking in the child
 /// process. If job control is enabled for this job, the process is put in the process group of the
@@ -46,6 +47,9 @@ bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errle
 /// Report an error from failing to exec or posix_spawn a command.
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
                             const char *const *envv);
+
+/// Runs the process as a keepalive, until the parent process given by parent_pid exits.
+void run_as_keepalive(pid_t parent_pid);
 
 #if FISH_USE_POSIX_SPAWN
 /// Initializes and fills in a posix_spawnattr_t; on success, the caller should destroy it via

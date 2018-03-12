@@ -6,31 +6,49 @@
 #include <stddef.h>
 
 #include "common.h"
+#include "maybe.h"
+#include "parse_constants.h"
 
 /// Token types.
 enum token_type {
-    TOK_NONE,             /// Tokenizer not yet constructed
-    TOK_ERROR,            /// Error reading token
-    TOK_STRING,           /// String token
-    TOK_PIPE,             /// Pipe token
-    TOK_END,              /// End token (semicolon or newline, not literal end)
-    TOK_REDIRECT_OUT,     /// redirection token
-    TOK_REDIRECT_APPEND,  /// redirection append token
-    TOK_REDIRECT_IN,      /// input redirection token
-    TOK_REDIRECT_FD,      /// redirection to new fd token
-    TOK_REDIRECT_NOCLOB,  /// redirection token
-    TOK_BACKGROUND,       /// send job to bg token
-    TOK_COMMENT           /// comment token
+    TOK_NONE,        /// Tokenizer not yet constructed
+    TOK_ERROR,       /// Error reading token
+    TOK_STRING,      /// String token
+    TOK_PIPE,        /// Pipe token
+    TOK_ANDAND,      /// && token
+    TOK_OROR,        /// || token
+    TOK_END,         /// End token (semicolon or newline, not literal end)
+    TOK_REDIRECT,    /// redirection token
+    TOK_BACKGROUND,  /// send job to bg token
+    TOK_COMMENT      /// comment token
 };
 
-/// Tokenizer error types.
-enum tokenizer_error {
-    TOK_ERROR_NONE,
-    TOK_UNTERMINATED_QUOTE,
-    TOK_UNTERMINATED_SUBSHELL,
-    TOK_UNTERMINATED_SLICE,
-    TOK_UNTERMINATED_ESCAPE,
-    TOK_OTHER
+struct tokenizer_error {
+    const wchar_t *Message;
+    enum parse_error_code_t parser_error; //the parser error associated with this tokenizer error
+    tokenizer_error(const wchar_t *msg, enum parse_error_code_t perr = parse_error_tokenizer_other)
+        : Message(msg), parser_error(perr) {}
+    tokenizer_error(const tokenizer_error&) = delete;
+};
+
+extern tokenizer_error *TOK_ERROR_NONE;
+extern tokenizer_error *TOK_UNTERMINATED_QUOTE;
+extern tokenizer_error *TOK_UNTERMINATED_SUBSHELL;
+extern tokenizer_error *TOK_UNTERMINATED_SLICE;
+extern tokenizer_error *TOK_UNTERMINATED_ESCAPE;
+extern tokenizer_error *TOK_UNTERMINATED_BRACE;
+extern tokenizer_error *TOK_INVALID_REDIRECT;
+extern tokenizer_error *TOK_INVALID_PIPE;
+extern tokenizer_error *TOK_CLOSING_UNOPENED_SUBSHELL;
+extern tokenizer_error *TOK_CLOSING_UNOPENED_BRACE;
+extern tokenizer_error *TOK_ILLEGAL_SLICE;
+
+enum class redirection_type_t {
+    overwrite,  // normal redirection: > file.txt
+    append,     // appending redirection: >> file.txt
+    input,      // input redirection: < file.txt
+    fd,         // fd redirection: 2>&1
+    noclob      // noclobber redirection: >? file.txt
 };
 
 /// Flag telling the tokenizer to accept incomplete parameters, i.e. parameters with mismatching
@@ -40,72 +58,59 @@ enum tokenizer_error {
 /// Flag telling the tokenizer not to remove comments. Useful for syntax highlighting.
 #define TOK_SHOW_COMMENTS 2
 
-/// Flag telling the tokenizer to not generate error messages, which we need to do when tokenizing
-/// off of the main thread (since wgettext is not thread safe).
-#define TOK_SQUASH_ERRORS 4
-
 /// Ordinarily, the tokenizer ignores newlines following a newline, or a semicolon. This flag tells
 /// the tokenizer to return each of them as a separate END.
-#define TOK_SHOW_BLANK_LINES 8
+#define TOK_SHOW_BLANK_LINES 4
 
 typedef unsigned int tok_flags_t;
 
 struct tok_t {
-    // The text of the token, or an error message for type error.
-    wcstring text;
     // The type of the token.
-    token_type type;
+    token_type type{TOK_NONE};
+
+    // Offset of the token.
+    size_t offset{0};
+    // Length of the token.
+    size_t length{0};
+
+    // If the token represents a redirection, the redirected fd.
+    maybe_t<int> redirected_fd{};
+
     // If an error, this is the error code.
-    enum tokenizer_error error;
+    tokenizer_error *error { TOK_ERROR_NONE };
+
     // If an error, this is the offset of the error within the token. A value of 0 means it occurred
     // at 'offset'.
-    size_t error_offset;
-    // Offset of the token.
-    size_t offset;
-    // Length of the token.
-    size_t length;
+    size_t error_offset{size_t(-1)};
 
-    tok_t() : type(TOK_NONE), error(TOK_ERROR_NONE), error_offset(-1), offset(-1), length(-1) {}
+    tok_t() = default;
 };
 
 /// The tokenizer struct.
 class tokenizer_t {
     // No copying, etc.
-    tokenizer_t(const tokenizer_t &);
-    void operator=(const tokenizer_t &);
+    tokenizer_t(const tokenizer_t &) = delete;
+    void operator=(const tokenizer_t &) = delete;
 
     /// A pointer into the original string, showing where the next token begins.
     const wchar_t *buff;
-    /// A copy of the original string.
-    const wchar_t *orig_buff;
-    /// The last token.
-    wcstring last_token;
-    /// Type of last token.
-    enum token_type last_type;
-    /// Offset of last token.
-    size_t last_pos;
-    /// Whether there are more tokens.
-    bool has_next;
+    /// The start of the original string.
+    const wchar_t *const start;
+    /// Whether we have additional tokens.
+    bool has_next{true};
     /// Whether incomplete tokens are accepted.
-    bool accept_unfinished;
+    bool accept_unfinished{false};
     /// Whether comments should be returned.
-    bool show_comments;
+    bool show_comments{false};
     /// Whether all blank lines are returned.
-    bool show_blank_lines;
-    /// Last error.
-    tokenizer_error error;
-    /// Last error offset, in "global" coordinates (relative to orig_buff).
-    size_t global_error_offset;
-    /// Whether we are squashing errors.
-    bool squash_errors;
+    bool show_blank_lines{false};
     /// Whether to continue the previous line after the comment.
-    bool continue_line_after_comment;
+    bool continue_line_after_comment{false};
 
-    void call_error(enum tokenizer_error error_type, const wchar_t *where,
-                    const wchar_t *error_message);
-    void read_string();
-    void read_comment();
-    void tok_next();
+    tok_t call_error(tokenizer_error *error_type, const wchar_t *token_start,
+                     const wchar_t *error_loc);
+    tok_t read_string();
+    maybe_t<tok_t> tok_next();
 
    public:
     /// Constructor for a tokenizer. b is the string that is to be tokenized. It is not copied, and
@@ -119,6 +124,15 @@ class tokenizer_t {
 
     /// Returns the next token by reference. Returns true if we got one, false if we're at the end.
     bool next(struct tok_t *result);
+
+    /// Returns the text of a token, as a string.
+    wcstring text_of(const tok_t &tok) const { return wcstring(start + tok.offset, tok.length); }
+
+    /// Copies a token's text into a string. This is useful for reusing storage.
+    /// Returns a reference to the string.
+    const wcstring &copy_text_of(const tok_t &tok, wcstring *result) {
+        return result->assign(start + tok.offset, tok.length);
+    }
 };
 
 /// Returns only the first token from the specified string. This is a convenience function, used to
@@ -128,13 +142,16 @@ wcstring tok_first(const wcstring &str);
 
 /// Helper function to determine redirection type from a string, or TOK_NONE if the redirection is
 /// invalid. Also returns the fd by reference.
-enum token_type redirection_type_for_string(const wcstring &str, int *out_fd = NULL);
+maybe_t<redirection_type_t> redirection_type_for_string(const wcstring &str, int *out_fd = NULL);
 
 /// Helper function to determine which fd is redirected by a pipe.
 int fd_redirected_by_pipe(const wcstring &str);
 
 /// Helper function to return oflags (as in open(2)) for a redirection type.
-int oflags_for_redirection_type(enum token_type type);
+int oflags_for_redirection_type(redirection_type_t type);
+
+/// Returns an error message for an error code.
+wcstring error_message_for_code(tokenizer_error err);
 
 enum move_word_style_t {
     move_word_style_punctuation,      // stop at punctuation

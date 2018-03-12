@@ -28,7 +28,7 @@ class maybe_t {
     explicit operator bool() const { return filled; }
 
     // The default constructor constructs a maybe with no value.
-    maybe_t() {}
+    maybe_t() = default;
 
     // Construct a maybe_t from a none_t
     /* implicit */ maybe_t(none_t n) { (void)n; }
@@ -39,10 +39,17 @@ class maybe_t {
     // Construct a maybe_t from a value T.
     /* implicit */ maybe_t(const T &v) : filled(true) { new (storage) T(v); }
 
-    // Move constructor.
-    /* implicit */ maybe_t(maybe_t &&v) {
+    // Copy constructor.
+    maybe_t(const maybe_t &v) : filled(v.filled) {
         if (v.filled) {
-            *this = std::move(v.value());
+            new (storage) T(v.value());
+        }
+    }
+
+    // Move constructor.
+    /* implicit */ maybe_t(maybe_t &&v) : filled(v.filled) {
+        if (v.filled) {
+            new (storage) T(std::move(v.value()));
         }
     }
 

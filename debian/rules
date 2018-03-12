@@ -5,7 +5,11 @@
 export DH_VERBOSE=1
 
 %:
-	dh $@ --with autotools-dev,autoreconf
+	dh $@
+
+override_dh_auto_configure:
+	# Until all platforms have debhelper 9.20151004, Debian bug 719148 needs to be worked around
+	dh_auto_configure --buildsystem=cmake --parallel -- -DCMAKE_INSTALL_SYSCONFDIR=/etc
 
 override_dh_installdocs:
 	dh_installdocs --link-doc=fish

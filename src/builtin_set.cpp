@@ -58,9 +58,8 @@ static const struct woption long_options[] = {
     {L"append", no_argument, NULL, 'a'},    {L"prepend", no_argument, NULL, 'p'},
     {L"help", no_argument, NULL, 'h'},      {NULL, 0, NULL, 0}};
 
-// Error message for invalid path operations.
-#define BUILTIN_SET_PATH_ERROR _(L"%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n")
 // Hint for invalid path operation with a colon.
+#define BUILTIN_SET_PATH_ERROR _(L"%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n")
 #define BUILTIN_SET_PATH_HINT _(L"%ls: Did you mean 'set %ls $%ls %ls'?\n")
 #define BUILTIN_SET_MISMATCHED_ARGS _(L"%ls: You provided %d indexes but %d values\n")
 #define BUILTIN_SET_ERASE_NO_VAR _(L"%ls: Erase needs a variable name\n")
@@ -223,10 +222,14 @@ static int check_global_scope_exists(const wchar_t *cmd, set_cmd_opts_t &opts, c
     return STATUS_CMD_OK;
 }
 
-// Fix for https://github.com/fish-shell/fish-shell/issues/199 . Return success if any path setting
-// succeeds.
-static int my_env_path_setup(const wchar_t *cmd, const wchar_t *key,  //!OCLINT(npath complexity)
-                             const wcstring_list_t &list, io_streams_t &streams) {
+// Validate the given path `list`. If there are any entries referring to invalid directories which
+// contain a colon, then complain. Return true if any path element was valid, false if not.
+static bool validate_path_warning_on_colons(const wchar_t *cmd,
+                                            const wchar_t *key,  //!OCLINT(npath complexity)
+                                            const wcstring_list_t &list, io_streams_t &streams) {
+    // Always allow setting an empty value.
+    if (list.empty()) return true;
+
     bool any_success = false;
 
     // Don't bother validating (or complaining about) values that are already present. When
@@ -242,58 +245,49 @@ static int my_env_path_setup(const wchar_t *cmd, const wchar_t *key,  //!OCLINT(
     const auto existing_variable = env_get(key, ENV_DEFAULT);
     if (!existing_variable.missing_or_empty()) existing_variable->to_list(existing_values);
 
-    for (size_t i = 0; i < list.size(); i++) {
-        const wcstring &dir = list.at(i);
+    for (const wcstring &dir : list) {
         if (!string_prefixes_string(L"/", dir) || contains(existing_values, dir)) {
             any_success = true;
             continue;
         }
 
-        bool show_hint = false;
-        bool error = false;
-        struct stat buff;
-        if (wstat(dir, &buff) == -1) {
-            error = true;
-        } else if (!S_ISDIR(buff.st_mode)) {
-            error = true;
-            errno = ENOTDIR;
-        } else if (waccess(dir, X_OK) == -1) {
-            error = true;
+        const wchar_t *colon = wcschr(dir.c_str(), L':');
+        bool looks_like_colon_sep = colon && colon[1];
+        if (!looks_like_colon_sep && any_success) {
+            // Once we have one valid entry, skip the remaining ones unless we might warn.
+            continue;
         }
-
-        if (!error) {
+        struct stat buff;
+        bool valid = true;
+        if (wstat(dir, &buff) == -1) {
+            valid = false;
+        } else if (!S_ISDIR(buff.st_mode)) {
+            errno = ENOTDIR;
+            valid = false;
+        } else if (waccess(dir, X_OK) == -1) {
+            valid = false;
+        }
+        if (valid) {
             any_success = true;
-        } else {
+        } else if (looks_like_colon_sep) {
             streams.err.append_format(BUILTIN_SET_PATH_ERROR, cmd, key, dir.c_str(),
                                       strerror(errno));
-            const wchar_t *colon = wcschr(dir.c_str(), L':');
-            if (colon && *(colon + 1)) show_hint = true;
-        }
-
-        if (show_hint) {
             streams.err.append_format(BUILTIN_SET_PATH_HINT, cmd, key, key,
                                       wcschr(dir.c_str(), L':') + 1);
         }
     }
-
-    // Fail at setting the path if we tried to set it to something non-empty, but it wound up
-    // empty.
-    if (!list.empty() && !any_success) return STATUS_CMD_ERROR;
-    return STATUS_CMD_OK;
+    return any_success;
 }
 
 /// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
 static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstring_list_t &list,
                       io_streams_t &streams) {
-    int retval;
-
-    if (is_path_variable(key)) {
-        retval = my_env_path_setup(cmd, key, list, streams);
-        if (retval != STATUS_CMD_OK) return retval;
+    if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams)) {
+        return STATUS_CMD_ERROR;
     }
 
-    retval = env_set(key, scope | ENV_USER, list);
+    int retval = env_set(key, scope | ENV_USER, list);
     switch (retval) {
         case ENV_OK: {
             retval = STATUS_CMD_OK;
@@ -538,8 +532,7 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
         return;
     }
 
-
-    const wchar_t *exportv = var->exportv ? _(L"exported") : _(L"unexported");
+    const wchar_t *exportv = var->exports() ? _(L"exported") : _(L"unexported");
     wcstring_list_t vals = var->as_list();
     streams.out.append_format(_(L"$%ls: set in %ls scope, %ls, with %d elements\n"), var_name,
                               scope_name, exportv, vals.size());

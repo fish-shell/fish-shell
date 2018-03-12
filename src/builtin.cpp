@@ -489,9 +489,6 @@ void builtin_init() {
     }
 }
 
-/// Destroy builtin data.
-void builtin_destroy() {}
-
 /// Is there a builtin command with the given name?
 bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_lookup(cmd)); }
 
@@ -530,7 +527,7 @@ int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &stre
 }
 
 /// Returns a list of all builtin names.
-wcstring_list_t builtin_get_names(void) {
+wcstring_list_t builtin_get_names() {
     wcstring_list_t result;
     result.reserve(BUILTIN_COUNT);
     for (size_t i = 0; i < BUILTIN_COUNT; i++) {

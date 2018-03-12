@@ -16,9 +16,10 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <list>
 #include <memory>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "common.h"
@@ -199,45 +200,68 @@ bool screen_force_clear_to_end();
 /// Returns the length of an escape code. Exposed for testing purposes only.
 size_t escape_code_length(const wchar_t *code);
 
+// Information about the layout of a prompt.
+struct prompt_layout_t {
+    size_t line_count;       // how many lines the prompt consumes
+    size_t max_line_width;   // width of the longest line
+    size_t last_line_width;  // width of the last line
+};
+
 // Maintain a mapping of escape sequences to their length for fast lookup.
-class cached_esc_sequences_t {
+class layout_cache_t {
    private:
     // Cached escape sequences we've already detected in the prompt and similar strings, ordered
     // lexicographically.
-    std::vector<wcstring> cache_;
+    std::vector<wcstring> esc_cache_;
+
+    // LRU-list of prompts and their layouts.
+    // Use a list so we can promote to the front on a cache hit.
+    using prompt_layout_pair_t = std::pair<wcstring, prompt_layout_t>;
+    std::list<prompt_layout_pair_t> prompt_cache_;
 
    public:
-    /// \return the size of the cache.
-    size_t size() const { return cache_.size(); }
+    static constexpr size_t prompt_cache_max_size = 8;
+
+    /// \return the size of the escape code cache.
+    size_t esc_cache_size() const { return esc_cache_.size(); }
 
     /// Insert the entry \p str in its sorted position, if it is not already present in the cache.
-    void add_entry(wcstring str) {
-        auto where = std::upper_bound(cache_.begin(), cache_.end(), str);
-        if (where == cache_.begin() || where[-1] != str) {
-            cache_.emplace(where, std::move(str));
+    void add_escape_code(wcstring str) {
+        auto where = std::upper_bound(esc_cache_.begin(), esc_cache_.end(), str);
+        if (where == esc_cache_.begin() || where[-1] != str) {
+            esc_cache_.emplace(where, std::move(str));
         }
     }
 
     /// \return the length of a string that matches a prefix of \p entry.
-    size_t find_entry(const wchar_t *entry) const {
+    size_t find_escape_code(const wchar_t *entry) const {
         // Do a binary search and see if the escape code right before our entry is a prefix of our
         // entry. Note this assumes that escape codes are prefix-free: no escape code is a prefix of
         // another one. This seems like a safe assumption.
-        auto where = std::upper_bound(cache_.begin(), cache_.end(), entry);
+        auto where = std::upper_bound(esc_cache_.begin(), esc_cache_.end(), entry);
         // 'where' is now the first element that is greater than entry. Thus where-1 is the last
         // element that is less than or equal to entry.
-        if (where != cache_.begin()) {
+        if (where != esc_cache_.begin()) {
             const wcstring &candidate = where[-1];
             if (string_prefixes_string(candidate.c_str(), entry)) return candidate.size();
         }
         return 0;
     }
 
-    void clear() { cache_.clear(); }
+    // Finds the layout for a prompt, promoting it to the front. Returns none() if not found.
+    maybe_t<prompt_layout_t> find_prompt_layout(const wcstring &input);
+
+    // Adds a prompt layout for a given string.
+    void add_prompt_layout(wcstring input, prompt_layout_t layout);
+
+    void clear() {
+        esc_cache_.clear();
+        prompt_cache_.clear();
+    }
 };
 
 // Singleton that is exposed so that the cache can be invalidated when terminal related variables
 // change by calling `cached_esc_sequences.clear()`.
-extern cached_esc_sequences_t cached_esc_sequences;
+extern layout_cache_t cached_layouts;
 
 #endif

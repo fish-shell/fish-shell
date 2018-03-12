@@ -47,13 +47,6 @@ wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype) {
 }
 
 wcstring trim(const wcstring &input) {
-    debug(0, "trimming '%ls'", input.c_str());
-
-    // auto begin = input.cbegin();
-    // for (begin; *begin == L' '; ++begin);
-    // auto end = input.cbegin() + input.size();
-    // for (end; end > begin && *end == L' '; ++end);
-
     auto begin_offset = input.find_first_not_of(whitespace);
     if (begin_offset == wcstring::npos) {
         return wcstring{};

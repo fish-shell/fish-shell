@@ -1288,10 +1288,10 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
     const bool unescape_special = static_cast<bool>(flags & UNESCAPE_SPECIAL);
     const bool allow_incomplete = static_cast<bool>(flags & UNESCAPE_INCOMPLETE);
 
-    int bracket_count = 0;
+    int brace_count = 0;
 
     bool errored = false;
-    enum { mode_unquoted, mode_single_quotes, mode_double_quotes } mode = mode_unquoted;
+    enum { mode_unquoted, mode_single_quotes, mode_double_quotes, mode_braces } mode = mode_unquoted;
 
     for (size_t input_position = 0; input_position < input_len && !errored; input_position++) {
         const wchar_t c = input[input_position];
@@ -1352,22 +1352,29 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 }
                 case L'{': {
                     if (unescape_special) {
-                        bracket_count++;
+                        brace_count++;
                         to_append_or_none = BRACE_BEGIN;
                     }
                     break;
                 }
                 case L'}': {
                     if (unescape_special) {
-                        bracket_count--;
+                        brace_count--;
                         to_append_or_none = BRACE_END;
                     }
                     break;
                 }
                 case L',': {
-                    if (unescape_special && bracket_count > 0) {
+                    if (unescape_special && brace_count > 0) {
                         to_append_or_none = BRACE_SEP;
                     }
+                    break;
+                }
+                case L' ': {
+                    //spaces, unless quoted or escaped, are ignored within braces
+                    // if (unescape_special && brace_count > 0) {
+                    //     input_position++; //skip the space
+                    // }
                     break;
                 }
                 case L'\'': {

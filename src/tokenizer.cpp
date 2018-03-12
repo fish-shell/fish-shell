@@ -109,6 +109,7 @@ ENUM_FLAGS(tok_mode) {
 tok_t tokenizer_t::read_string() {
     tok_mode mode { tok_mode::regular_text };
     std::vector<int> paran_offsets;
+    std::vector<int> brace_offsets;
     std::vector<char> expecting;
     int slice_offset = 0;
     const wchar_t *const buff_start = this->buff;
@@ -146,7 +147,7 @@ tok_t tokenizer_t::read_string() {
             mode |= tok_mode::subshell;
         }
         else if (c == L'{') {
-            paran_offsets.push_back(this->buff - this->start);
+            brace_offsets.push_back(this->buff - this->start);
             expecting.push_back(L'}');
             mode |= tok_mode::curly_braces;
         }
@@ -162,19 +163,21 @@ tok_t tokenizer_t::read_string() {
                 default:
                     paran_offsets.pop_back();
             }
+            expecting.pop_back();
         }
         else if (c == L'}') {
             if (expecting.size() > 0 && expecting.back() == L')') {
                 return this->call_error(TOK_EXPECTED_PCLOSE_FOUND_BCLOSE, this->start, this->buff);
             }
-            switch (paran_offsets.size()) {
+            switch (brace_offsets.size()) {
                 case 0:
                     return this->call_error(TOK_CLOSING_UNOPENED_BRACE, this->start, this->buff);
                 case 1:
                     mode &= ~(tok_mode::curly_braces);
                 default:
-                    paran_offsets.pop_back();
+                    brace_offsets.pop_back();
             }
+            expecting.pop_back();
         }
         else if (c == L'[') {
             if (this->buff != buff_start) {
@@ -247,8 +250,8 @@ tok_t tokenizer_t::read_string() {
                     this->start + offset_of_open_paran);
         }
         else if ((mode & tok_mode::curly_braces) == tok_mode::curly_braces) {
-            assert(paran_offsets.size() > 0);
-            size_t offset_of_open_brace = paran_offsets.back();
+            assert(brace_offsets.size() > 0);
+            size_t offset_of_open_brace = brace_offsets.back();
 
             error = this->call_error(TOK_UNTERMINATED_BRACE, buff_start,
                     this->start + offset_of_open_brace);

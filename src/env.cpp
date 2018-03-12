@@ -63,8 +63,8 @@
 #define DEFAULT_TERM2 "dumb"
 
 /// Some configuration path environment variables.
-#define FISH_DATADIR_VAR L"__fish_datadir"
-#define FISH_SYSCONFDIR_VAR L"__fish_sysconfdir"
+#define FISH_DATADIR_VAR L"__fish_data_dir"
+#define FISH_SYSCONFDIR_VAR L"__fish_sysconf_dir"
 #define FISH_HELPDIR_VAR L"__fish_help_dir"
 #define FISH_BIN_DIR L"__fish_bin_dir"
 

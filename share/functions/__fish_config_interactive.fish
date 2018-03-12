@@ -131,7 +131,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
             # We don't want to call `fish -c` since that is unnecessary and sources config.fish again.
             # Hence we'll call python directly.
             # c_m_p.py should work with any python version.
-            set -l update_args -B $__fish_datadir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
+            set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
             if command -qs python3
                 python3 $update_args >/dev/null ^/dev/null &
             else if command -qs python2

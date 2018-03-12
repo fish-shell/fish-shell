@@ -110,7 +110,7 @@ function help --description 'Show help for the fish shell'
                 # Prefer to use fish's man pages, to avoid
                 # the annoying useless "builtin" man page bash
                 # installs on OS X
-                set -l man_arg "$__fish_datadir/man/man1/$fish_help_item.1"
+                set -l man_arg "$__fish_data_dir/man/man1/$fish_help_item.1"
                 if test -f "$man_arg"
                     man $man_arg
                     return
@@ -164,7 +164,7 @@ function help --description 'Show help for the fish shell'
         # by using a custom style sheet. See https://github.com/fish-shell/fish-shell/issues/4170
         set -l local_file 0
         if eval $fish_browser --version 2>/dev/null | string match -qr Lynx
-            set fish_browser $fish_browser -lss={$__fish_datadir}/lynx.lss
+            set fish_browser $fish_browser -lss={$__fish_data_dir}/lynx.lss
         end
         eval $fish_browser $page_url
     end

@@ -90,6 +90,13 @@ SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp
                             PROPERTIES OBJECT_DEPENDS
                             ${CMAKE_CURRENT_BINARY_DIR}/${FBVF})
 
+OPTION(BROKEN_WCWIDTH "use fallback wcwidth" ON)
+IF(BROKEN_WCWIDTH)
+    add_definitions(-DHAVE_BROKEN_WCWIDTH=1)
+ELSE()
+    add_definitions(-DHAVE_BROKEN_WCWIDTH=0)
+ENDIF()
+
 # Set up PCRE2
 INCLUDE(cmake/PCRE2.cmake)
 

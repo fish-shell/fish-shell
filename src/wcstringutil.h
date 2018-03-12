@@ -59,5 +59,6 @@ enum class ellipsis_type {
 };
 
 wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype = ellipsis_type::Prettiest);
+wcstring trim(const wcstring &input, const wchar_t *any_of);
 
 #endif

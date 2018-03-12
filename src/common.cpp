@@ -1288,10 +1288,11 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
     const bool unescape_special = static_cast<bool>(flags & UNESCAPE_SPECIAL);
     const bool allow_incomplete = static_cast<bool>(flags & UNESCAPE_INCOMPLETE);
 
-    int bracket_count = 0;
+    bool brace_text_start = false;
+    int brace_count = 0;
 
     bool errored = false;
-    enum { mode_unquoted, mode_single_quotes, mode_double_quotes } mode = mode_unquoted;
+    enum { mode_unquoted, mode_single_quotes, mode_double_quotes, mode_braces } mode = mode_unquoted;
 
     for (size_t input_position = 0; input_position < input_len && !errored; input_position++) {
         const wchar_t c = input[input_position];
@@ -1352,21 +1353,32 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 }
                 case L'{': {
                     if (unescape_special) {
-                        bracket_count++;
-                        to_append_or_none = BRACKET_BEGIN;
+                        brace_count++;
+                        to_append_or_none = BRACE_BEGIN;
                     }
                     break;
                 }
                 case L'}': {
                     if (unescape_special) {
-                        bracket_count--;
-                        to_append_or_none = BRACKET_END;
+                        assert(brace_count > 0 && "imbalanced brackets are a tokenizer error, we shouldn't be able to get here");
+                        brace_count--;
+                        brace_text_start = brace_text_start && brace_count > 0;
+                        to_append_or_none = BRACE_END;
                     }
                     break;
                 }
                 case L',': {
-                    if (unescape_special && bracket_count > 0) {
-                        to_append_or_none = BRACKET_SEP;
+                    if (unescape_special && brace_count > 0) {
+                        to_append_or_none = BRACE_SEP;
+                        brace_text_start = false;
+                    }
+                    break;
+                }
+                case L'\n':
+                case L'\t':
+                case L' ': {
+                    if (unescape_special && brace_count > 0) {
+                        to_append_or_none = brace_text_start ? BRACE_SPACE : NOT_A_WCHAR;
                     }
                     break;
                 }
@@ -1380,7 +1392,12 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
                     break;
                 }
-                default: { break; }
+                default: {
+                    if (unescape_special && brace_count > 0) {
+                        brace_text_start = true;
+                    }
+                    break;
+                }
             }
         } else if (mode == mode_single_quotes) {
             if (c == L'\\') {

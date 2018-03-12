@@ -579,6 +579,15 @@ static void test_tokenizer() {
     }
 
     {
+        tokenizer_t t(L"abc )defg(hij", 0);
+        do_test(t.next(&token));
+        do_test(t.next(&token));
+        do_test(token.type == TOK_ERROR);
+        do_test(token.error == TOK_CLOSING_UNOPENED_SUBSHELL);
+        do_test(token.error_offset == 4);
+    }
+
+    {
         tokenizer_t t(L"abc defg(hij (klm)", 0);
         do_test(t.next(&token));
         do_test(t.next(&token));
@@ -4420,10 +4429,11 @@ static void test_illegal_command_exit_code() {
 
     const command_result_tuple_t tests[] = {
         {L"echo -n", STATUS_CMD_OK}, {L"pwd", STATUS_CMD_OK},
-        {L")", STATUS_ILLEGAL_CMD},  {L") ", STATUS_ILLEGAL_CMD},
+        // a `)` without a matching `(` is now a tokenizer error, and cannot be executed even as an illegal command
+        // {L")", STATUS_ILLEGAL_CMD},  {L") ", STATUS_ILLEGAL_CMD}, {L") ", STATUS_ILLEGAL_CMD}
         {L"*", STATUS_ILLEGAL_CMD},  {L"**", STATUS_ILLEGAL_CMD},
         {L"?", STATUS_ILLEGAL_CMD},  {L"abc?def", STATUS_ILLEGAL_CMD},
-        {L") ", STATUS_ILLEGAL_CMD}};
+    };
 
     int res = 0;
     const io_chain_t empty_ios;

@@ -45,3 +45,14 @@ wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype) {
     output.push_back(ellipsis_char);
     return output;
 }
+
+wcstring trim(const wcstring &input, const wchar_t *any_of) {
+    auto begin_offset = input.find_first_not_of(any_of);
+    if (begin_offset == wcstring::npos) {
+        return wcstring{};
+    }
+    auto end = input.cbegin() + input.find_last_not_of(any_of);
+
+    wcstring result(input.begin() + begin_offset, end + 1);
+    return result;
+}

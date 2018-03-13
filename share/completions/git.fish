@@ -171,7 +171,7 @@ function __fish_git_ranges
         return 0
     end
 
-    set -l to (set -q both[2]; and echo $both[2])
+    set -l to $both[2]
     # Remove description from the from-ref, not the to-ref.
     for from_ref in (__fish_git_refs | string match "$from" | string replace -r \t'.*$' '')
         for to_ref in (__fish_git_refs | string match "*$to*") # if $to is empty, this correctly matches everything
@@ -182,38 +182,34 @@ end
 
 function __fish_git_needs_command
     set cmd (commandline -opc)
-    if [ (count $cmd) -eq 1 ]
-        return 0
-    else
-        set -l skip_next 1
-        # Skip first word because it's "git" or a wrapper
-        for c in $cmd[2..-1]
-            test $skip_next -eq 0
-            and set skip_next 1
-            and continue
-            # git can only take a few options before a command, these are the ones mentioned in the "git" man page
-            # e.g. `git --follow log` is wrong, `git --help log` is okay (and `git --help log $branch` is superfluous but works)
-            # In case any other option is used before a command, we'll fail, but that's okay since it's invalid anyway
-            switch $c
-                # General options that can still take a command
-                case "--help" "-p" "--paginate" "--no-pager" "--bare" "--no-replace-objects" --{literal,glob,noglob,icase}-pathspecs --{exec-path,git-dir,work-tree,namespace}"=*"
-                    continue
-                    # General options with an argument we need to skip. The option=value versions have already been handled above
-                case --{exec-path,git-dir,work-tree,namespace}
-                    set skip_next 0
-                    continue
-                    # General options that cause git to do something and exit - these behave like commands and everything after them is ignored
-                case "--version" --{html,man,info}-path
-                    return 1
-                    # We assume that any other token that's not an argument to a general option is a command
-                case "*"
-                    echo $c
-                    return 1
-            end
+    set -l skip_next 1
+    set -q cmd[2]; or return 0
+    # Skip first word because it's "git" or a wrapper
+    for c in $cmd[2..-1]
+        test $skip_next -eq 0
+        and set skip_next 1
+        and continue
+        # git can only take a few options before a command, these are the ones mentioned in the "git" man page
+        # e.g. `git --follow log` is wrong, `git --help log` is okay (and `git --help log $branch` is superfluous but works)
+        # In case any other option is used before a command, we'll fail, but that's okay since it's invalid anyway
+        switch $c
+            # General options that can still take a command
+            case "--help" "-p" "--paginate" "--no-pager" "--bare" "--no-replace-objects" --{literal,glob,noglob,icase}-pathspecs --{exec-path,git-dir,work-tree,namespace}"=*"
+                continue
+                # General options with an argument we need to skip. The option=value versions have already been handled above
+            case --{exec-path,git-dir,work-tree,namespace}
+                set skip_next 0
+                continue
+                # General options that cause git to do something and exit - these behave like commands and everything after them is ignored
+            case "--version" --{html,man,info}-path
+                return 1
+                # We assume that any other token that's not an argument to a general option is a command
+            case "*"
+                echo $c
+                return 1
         end
-        return 0
     end
-    return 1
+    return 0
 end
 
 
@@ -906,8 +902,7 @@ complete -f -c git -n '__fish_git_using_command tag' -s v -l verify -d 'Verify s
 complete -f -c git -n '__fish_git_using_command tag' -s f -l force -d 'Force overwriting exising tag'
 complete -f -c git -n '__fish_git_using_command tag' -s l -l list -d 'List tags'
 complete -f -c git -n '__fish_git_using_command tag' -l contains -xa '(__fish_git_commits)' -d 'List tags that contain a commit'
-complete -f -c git -n '__fish_git_using_command tag; and __fish_contains_opt -s d' -a '(__fish_git_tags)' -d 'Tag'
-complete -f -c git -n '__fish_git_using_command tag; and __fish_contains_opt -s v' -a '(__fish_git_tags)' -d 'Tag'
+complete -f -c git -n '__fish_git_using_command tag; and __fish_contains_opt -s d delete -s v verify' -a '(__fish_git_tags)' -d 'Tag'
 # TODO options
 
 ### stash

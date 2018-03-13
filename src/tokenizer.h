@@ -24,10 +24,13 @@ enum token_type {
 };
 
 struct tokenizer_error {
-    const wchar_t *Message;
+private:
+    const wchar_t *_message;
+public:
+    const wchar_t *Message() const;
     enum parse_error_code_t parser_error; //the parser error associated with this tokenizer error
     tokenizer_error(const wchar_t *msg, enum parse_error_code_t perr = parse_error_tokenizer_other)
-        : Message(msg), parser_error(perr) {}
+        : _message(msg), parser_error(perr) {}
     tokenizer_error(const tokenizer_error&) = delete;
 };
 

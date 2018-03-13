@@ -30,6 +30,10 @@ tokenizer_error *TOK_UNTERMINATED_BRACE = new tokenizer_error((L"Unexpected end 
 tokenizer_error *TOK_EXPECTED_PCLOSE_FOUND_BCLOSE = new tokenizer_error((L"Unexpected '}' found, expecting ')'"));
 tokenizer_error *TOK_EXPECTED_BCLOSE_FOUND_PCLOSE = new tokenizer_error((L"Unexpected ')' found, expecting '}'"));
 
+const wchar_t *tokenizer_error::Message() const {
+    return _(_message);
+}
+
 /// Return an error token and mark that we no longer have a next token.
 tok_t tokenizer_t::call_error(tokenizer_error *error_type, const wchar_t *token_start,
                               const wchar_t *error_loc) {

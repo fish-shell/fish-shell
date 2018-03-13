@@ -671,7 +671,7 @@ void parse_ll_t::report_tokenizer_error(const tokenizer_t &tokenizer, const tok_
     parse_error_code_t parse_error_code = tok.error->parser_error;
     this->parse_error_at_location(tok.offset, tok.length, tok.offset + tok.error_offset,
                                   parse_error_code, L"%ls",
-                                  tok.error->Message);
+                                  tok.error->Message());
 }
 
 void parse_ll_t::parse_error_unexpected_token(const wchar_t *expected, parse_token_t token) {

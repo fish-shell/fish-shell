@@ -17,18 +17,22 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 tokenizer_error *TOK_ERROR_NONE = new tokenizer_error(L"");
-tokenizer_error *TOK_UNTERMINATED_QUOTE = new tokenizer_error(_(L"Unexpected end of string, quotes are not balanced"), parse_error_tokenizer_unterminated_quote);
-tokenizer_error *TOK_UNTERMINATED_SUBSHELL = new tokenizer_error(_(L"Unexpected end of string, expecting ')'"), parse_error_tokenizer_unterminated_subshell);
-tokenizer_error *TOK_UNTERMINATED_SLICE = new tokenizer_error(_(L"Unexpected end of string, square brackets do not match"), parse_error_tokenizer_unterminated_slice);
-tokenizer_error *TOK_UNTERMINATED_ESCAPE = new tokenizer_error(_(L"Unexpected end of string, incomplete escape sequence"), parse_error_tokenizer_unterminated_escape);
-tokenizer_error *TOK_INVALID_REDIRECT = new tokenizer_error(_(L"Invalid input/output redirection"));
-tokenizer_error *TOK_INVALID_PIPE = new tokenizer_error(_(L"Cannot use stdin (fd 0) as pipe output"));
-tokenizer_error *TOK_CLOSING_UNOPENED_SUBSHELL = new tokenizer_error(_(L"Unexpected ')' for unopened parenthesis"));
-tokenizer_error *TOK_ILLEGAL_SLICE = new tokenizer_error(_(L"Unexpected '[' at this location"));
-tokenizer_error *TOK_CLOSING_UNOPENED_BRACE = new tokenizer_error(_(L"Unexpected '}' for unopened brace expansion"));
-tokenizer_error *TOK_UNTERMINATED_BRACE = new tokenizer_error(_(L"Unexpected end of string, incomplete parameter expansion"));
-tokenizer_error *TOK_EXPECTED_PCLOSE_FOUND_BCLOSE = new tokenizer_error(_(L"Unexpected '}' found, expecting ')'"));
-tokenizer_error *TOK_EXPECTED_BCLOSE_FOUND_PCLOSE = new tokenizer_error(_(L"Unexpected ')' found, expecting '}'"));
+tokenizer_error *TOK_UNTERMINATED_QUOTE = new tokenizer_error((L"Unexpected end of string, quotes are not balanced"), parse_error_tokenizer_unterminated_quote);
+tokenizer_error *TOK_UNTERMINATED_SUBSHELL = new tokenizer_error((L"Unexpected end of string, expecting ')'"), parse_error_tokenizer_unterminated_subshell);
+tokenizer_error *TOK_UNTERMINATED_SLICE = new tokenizer_error((L"Unexpected end of string, square brackets do not match"), parse_error_tokenizer_unterminated_slice);
+tokenizer_error *TOK_UNTERMINATED_ESCAPE = new tokenizer_error((L"Unexpected end of string, incomplete escape sequence"), parse_error_tokenizer_unterminated_escape);
+tokenizer_error *TOK_INVALID_REDIRECT = new tokenizer_error((L"Invalid input/output redirection"));
+tokenizer_error *TOK_INVALID_PIPE = new tokenizer_error((L"Cannot use stdin (fd 0) as pipe output"));
+tokenizer_error *TOK_CLOSING_UNOPENED_SUBSHELL = new tokenizer_error((L"Unexpected ')' for unopened parenthesis"));
+tokenizer_error *TOK_ILLEGAL_SLICE = new tokenizer_error((L"Unexpected '[' at this location"));
+tokenizer_error *TOK_CLOSING_UNOPENED_BRACE = new tokenizer_error((L"Unexpected '}' for unopened brace expansion"));
+tokenizer_error *TOK_UNTERMINATED_BRACE = new tokenizer_error((L"Unexpected end of string, incomplete parameter expansion"));
+tokenizer_error *TOK_EXPECTED_PCLOSE_FOUND_BCLOSE = new tokenizer_error((L"Unexpected '}' found, expecting ')'"));
+tokenizer_error *TOK_EXPECTED_BCLOSE_FOUND_PCLOSE = new tokenizer_error((L"Unexpected ')' found, expecting '}'"));
+
+const wchar_t *tokenizer_error::Message() const {
+    return _(_message);
+}
 
 /// Return an error token and mark that we no longer have a next token.
 tok_t tokenizer_t::call_error(tokenizer_error *error_type, const wchar_t *token_start,

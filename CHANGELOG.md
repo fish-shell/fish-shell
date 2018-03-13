@@ -9,7 +9,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `.` command no longer exists -- use `source` (#4294).
 - `read` now uses `-s` as short for `--silent` (à la `bash`); `--shell`'s abbreviation (formerly `-s`) is now `-S` instead (#4490).
 - `set x[1] x[2] a b` is no longer valid syntax (#4236).
-- For loop control variables are no longer local to the for block (#1935).
+- `for` loop control variables are no longer local to the `for` block (#1935).
 - A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier. (#1109, #4632)
 - Successive commas in brace expansions are handled in less surprising manner (`{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again). (#3002, #4632).
 - `%` is no longer used for process and job expansion. `$pid` and `$last_pid` have taken the place of `%self` and `%last` respectively. (#4230, #1202)

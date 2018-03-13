@@ -876,9 +876,9 @@ complete -f -c git -n '__fish_git_using_command revert' -a '(__fish_git_commits)
 # TODO options
 
 ### rm
-complete -c git -n '__fish_git_needs_command' -a rm -d 'Remove files from the working tree and from the index'
-complete -c git -n '__fish_git_using_command rm' -l cached -d 'Keep local copies'
-complete -c git -n '__fish_git_using_command rm; and __fish_contains_opt -s _ cached' -f -a '(git ls-files)'
+complete -c git -n '__fish_git_needs_command' -a rm -d 'Remove files from the working tree and the index'
+complete -c git -n '__fish_git_using_command rm' -l cached -d 'Unstage files from the index'
+complete -c git -n '__fish_git_using_command rm; and __fish_contains_opt cached' -f -a '(__fish_git_files all-staged)'
 complete -c git -n '__fish_git_using_command rm' -l ignore-unmatch -d 'Exit with a zero status even if no files matched'
 complete -c git -n '__fish_git_using_command rm' -s r -d 'Allow recursive removal'
 complete -c git -n '__fish_git_using_command rm' -s q -l quiet -d 'Be quiet'

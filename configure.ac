@@ -604,7 +604,7 @@ HAVE_BROKEN_WCWIDTH=
 AC_ARG_ENABLE(
     [wcwidth],
     AS_HELP_STRING(
-        [--disable-wcwidth],
+        [--disable-internal-wcwidth],
         [use system wcwidth instead of the bundled version]
         ))
 

@@ -74,6 +74,18 @@ function __fish_git_files
     # Save the repo root to remove it from the path later.
     set -l root (command git rev-parse --show-toplevel ^/dev/null)
 
+    # Cache the translated descriptions so we don't have to get it
+    # once per file.
+    # This is slightly slower for < 8 files, but that is fast enough anyway.
+    set -l unmerged_desc (_ "Unmerged File")
+    set -l added_desc (_ "Added file")
+    set -l modified_desc (_ "Modified file")
+    set -l staged_modified_desc (_ "Staged modified file")
+    set -l deleted_desc (_ "Deleted file")
+    set -l staged_deleted_desc (_ "Staged deleted file")
+    set -l untracked_desc (_ "Untracked file")
+    set -l ignored_desc (_ "Ignored file")
+
     # git status --porcelain gives us all the info we need, in a format we don't.
     # The v2 format has better documentation and doesn't use " " to denote anything,
     # but it's only been added in git 2.11.0, which was released November 2016.
@@ -88,8 +100,10 @@ function __fish_git_files
     | while read -lz -d '' line
         # The entire line is the "from" from a rename.
         if set -q use_next[1]
-            contains -- $use_next $argv
-            and string replace -- "$PWD/" "" "$root/$line" | string replace "$root/" ":/"
+            if contains -- $use_next $argv
+                string replace -- "$PWD/" "" "$root/$line"
+                or string replace "$root/" ":/" "$root/$line"
+            end
             set -e use_next[1]
             continue
         end
@@ -102,18 +116,22 @@ function __fish_git_files
         set -l stat (string sub -l 2 -- $line)
         set -l file (string sub -s 4 -- $line)
         # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
-        # This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
-        set file (string replace -- "$PWD/" "" "$root/$file" | string replace "$root/" ":/")
+        # This is a bit simplistic but finding the lowest common directory
+        # and then replacing everything else in $PWD with ".." is a bit annoying
+        set file (string replace -- "$PWD/" "" "$root/$file"; or string replace -- "$root/" ":/" "$root/$file")
         set -e IFS
 
         # The basic status format is "XY", where X is "our" state (meaning the staging area),
         # and "Y" is "their" state (meaning the work tree).
         # A " " means it's unmodified.
+        #
+        # Be careful about the ordering here!
         switch "$stat"
             case DD AU UD UA DU AA UU
                 # Unmerged
+                # TODO: It might be useful to split this up.
                 contains -- unmerged $argv
-                and printf '%s\t%s\n' "$file" (_ "Unmerged file")
+                and printf '%s\t%s\n' "$file" $unmerged_desc
             case 'R ' RM RD
                 # Renamed/Copied
                 # These have the "from" name as the next batch.
@@ -127,36 +145,36 @@ function __fish_git_files
                 # Additions are only shown here if they are staged.
                 # Otherwise it's an untracked file.
                 contains -- added $argv; or contains -- all-staged $argv
-                and printf '%s\t%s\n' "$file" (_ "Added file")
+                and printf '%s\t%s\n' "$file" $added_desc
             case '?M'
                 # Modified
                 contains -- modified $argv
-                and printf '%s\t%s\n' "$file" (_ "Modified file")
+                and printf '%s\t%s\n' "$file" $modified_desc
             case 'M?'
                 # If the character is first ("M "), then that means it's "our" change,
                 # which means it is staged.
                 # This is useless for many commands - e.g. `checkout` won't do anything with this.
                 # So it needs to be requested explicitly.
                 contains -- modified-staged $argv; or contains -- all-staged $argv
-                and printf '%s\t%s\n' "$file" (_ "Staged modified file")
+                and printf '%s\t%s\n' "$file" $staged_modified_desc
             case '?D'
                 contains -- deleted $argv
-                and printf '%s\t%s\n' "$file" (_ "Deleted file")
+                and printf '%s\t%s\n' "$file" $deleted_desc
             case 'D?'
                 # TODO: The docs are unclear on this.
                 # There is both X unmodified and Y either M or D ("not updated")
                 # and Y is D and X is unmodified or [MARC] ("deleted in work tree").
                 # For our purposes, we assume this is a staged deletion.
                 contains -- deleted-staged $argv; or contains -- all-staged $argv
-                and printf '%s\t%s\n' "$file" (_ "Staged deleted file")
+                and printf '%s\t%s\n' "$file" $staged_deleted_desc
             case '\?\?'
                 # Untracked
                 contains -- untracked $argv
-                and printf '%s\t%s\n' "$file" (_ "Untracked file")
+                and printf '%s\t%s\n' "$file" $untracked_desc
             case '!!'
                 # Ignored
                 contains -- ignored $argv
-                and printf '%s\t%s\n' "$file" (_ "Ignored file")
+                and printf '%s\t%s\n' "$file" $ignored_desc
         end
     end
 end

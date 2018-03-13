@@ -335,7 +335,7 @@ function __fish_git_possible_commithash
 end
 
 function __fish_git_reflog
-    command git reflog --no-decorate ^/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
+    command git reflog --no-decorate ^/dev/null | string replace -r '[0-9a-f]* [(.+@\{[0-9]+\}): (.*)$' '$1\t$2'
 end
 
 # general options
@@ -877,8 +877,8 @@ complete -f -c git -n '__fish_git_using_command revert' -a '(__fish_git_commits)
 
 ### rm
 complete -c git -n '__fish_git_needs_command' -a rm -d 'Remove files from the working tree and from the index'
-complete -c git -n '__fish_git_using_command rm'
 complete -c git -n '__fish_git_using_command rm' -l cached -d 'Keep local copies'
+complete -c git -n '__fish_git_using_command rm; and __fish_contains_opt -s _ cached' -f -a '(git ls-files)'
 complete -c git -n '__fish_git_using_command rm' -l ignore-unmatch -d 'Exit with a zero status even if no files matched'
 complete -c git -n '__fish_git_using_command rm' -s r -d 'Allow recursive removal'
 complete -c git -n '__fish_git_using_command rm' -s q -l quiet -d 'Be quiet'

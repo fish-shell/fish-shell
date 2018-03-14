@@ -122,7 +122,8 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
     debug(3, L"path_get_paths('%ls')", cmd.c_str());
     wcstring_list_t paths;
 
-    // Don't bother looking for a matching command if it is an absolute or relative path, or has a dot-dot.
+    // Don't bother looking for a matching command if it is an absolute or relative path,
+    // or has a dot-dot.
     if (string_prefixes_string(L"/", cmd) ||
         string_prefixes_string(L"./", cmd) ||
         string_prefixes_string(L"../", cmd) ||

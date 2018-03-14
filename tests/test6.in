@@ -147,5 +147,5 @@ begin
     echo "Command completion with dot-dot suffix test failed: should output nothing, instead got $completed" >&2
   end
 
-  #rm -rf $parened_path
+  rm -rf $parened_path
 end

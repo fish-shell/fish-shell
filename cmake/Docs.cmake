@@ -118,7 +118,7 @@ IF(BUILD_DOCS)
     #   @echo "  doxygen  $(em)user_doc$(sgr0)"
     #   $v (cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | doxygen - && touch user_doc
     #   $v rm -f $(wildcard $(addprefix ./user_doc/html/,arrow*.png bc_s.png bdwn.png closed.png doc.png folder*.png ftv2*.png nav*.png open.png splitbar.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html))
-    ADD_CUSTOM_TARGET(doc
+    ADD_CUSTOM_TARGET(doc ALL
                       COMMAND env `cat ${FBVF}`
                               ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_user_doc.sh
                               ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.user ./lexicon_filter

@@ -35,9 +35,13 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                                const maybe_t<env_var_t> &bin_path_var) {
     debug(3, L"path_get_path( '%ls' )", cmd.c_str());
 
-    // If the command has a slash, it must be an absolute or relative path and thus we don't bother
-    // looking for a matching command.
-    if (cmd.find(L'/') != wcstring::npos) {
+    // Don't bother looking for a matching command if it is an absolute or relative path,
+    // or has a dot-dot.
+    if (string_prefixes_string(L"/", cmd) ||
+        string_prefixes_string(L"./", cmd) ||
+        string_prefixes_string(L"../", cmd) ||
+        string_suffixes_string(L"/..", cmd) ||
+        cmd.find(L"/../") != wcstring::npos) {
         if (waccess(cmd, X_OK) != 0) {
             return false;
         }
@@ -118,9 +122,12 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
     debug(3, L"path_get_paths('%ls')", cmd.c_str());
     wcstring_list_t paths;
 
-    // If the command has a slash, it must be an absolute or relative path and thus we don't bother
-    // looking for matching commands in the PATH var.
-    if (cmd.find(L'/') != wcstring::npos) {
+    // Don't bother looking for a matching command if it is an absolute or relative path, or has a dot-dot.
+    if (string_prefixes_string(L"/", cmd) ||
+        string_prefixes_string(L"./", cmd) ||
+        string_prefixes_string(L"../", cmd) ||
+        string_suffixes_string(L"/..", cmd) ||
+        cmd.find(L"/../") != wcstring::npos) {
         struct stat buff;
         if (wstat(cmd, &buff)) return paths;
         if (!S_ISREG(buff.st_mode)) return paths;

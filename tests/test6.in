@@ -82,18 +82,18 @@ if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end
         echo "no implicit cd complete"
     end
     if complete -C"command $dir" | grep "^$dir/.*Directory" >/dev/null
-        echo "implicit cd complete incorrect after 'command'"
+        echo "dir completion works after 'command'"
     else
-        echo "no implicit cd complete after 'command'"
+        echo "no dir completion after 'command'"
     end
     popd
     if begin
             set -l PATH $PWD/test6.tmp.dir $PATH ^/dev/null
             complete -C$dir | grep "^$dir/.*Directory" >/dev/null
         end
-        echo "incorrect implicit cd from PATH"
+        echo "dir completion works from PATH"
     else
-        echo "PATH does not cause incorrect implicit cd"
+        echo "PATH does not cause dir completion"
     end
     rm -rf test6.tmp.dir
 else
@@ -106,14 +106,14 @@ begin
   set -l parened_subpath $parened_path/subdir
   if not begin
         rm -rf $parened_path
-	    and mkdir $parened_path
-		and mkdir $parened_subpath
-	    and ln -s /bin/ls $parened_path/'__test6_(paren)_command'
-	    and ln -s /bin/ls $parened_subpath/'__test6_subdir_(paren)_command'
+        and mkdir $parened_path
+        and mkdir $parened_subpath
+        and ln -s /bin/ls $parened_path/'__test6_(paren)_command'
+        and ln -s /bin/ls $parened_subpath/'__test6_subdir_(paren)_command'
       end
     echo "error: could not create command expansion temp environment" >&2
   end
-  
+
   # Verify that we can expand commands when PATH has parens
   set -l PATH $parened_path $PATH
   set -l completed (complete -C__test6_ | cut -f 1 -d \t)
@@ -122,14 +122,30 @@ begin
   else
     echo "Command completion with parened PATHs test failed. Expected __test6_(paren)_command, got $completed" >&2
   end
-  
-  # Verify that commands with intermediate slashes do NOT expand with respect to PATH
-  set -l completed (complete -Csubdir/__test6_subdir)
-  if test -z "$completed"
-    echo "Command completion with intermediate slashes passed"
+
+  # Verify that commands with intermediate slashes expand with respect to PATH
+  set -l completed (complete -Csubdir/__test6_subdir | cut -f 1 -d \t)
+  if test "$completed" = 'subdir/__test6_subdir_(paren)_command'
+    echo "Command completion with intermediate slashes test passed"
   else
-    echo "Command completion with intermediate slashes: should output nothing, instead got $completed" >&2
+    echo "Command completion with intermediate slashes test failed. Expected 'subdir/__test6_subdir_(paren)_command', got $completed" >&2
   end
-  
-  rm -rf $parened_path
+
+  # Verify that commands with intermediate dot-dot do NOT expand with respect to PATH
+  set -l completed (complete -Csubdir/../subdir/__test6_subdir)
+  if test -z "$completed"
+    echo "Command completion with intermediate dot-dot test passed"
+  else
+    echo "Command completion with intermediate dot-dot test failed: should output nothing, instead got $completed" >&2
+  end
+
+  # Verify that commands with dot-dot suffix do NOT expand with respect to PATH
+  set -l completed (complete -Csubdir/..)
+  if test -z "$completed"
+    echo "Command completion with dot-dot suffix test passed"
+  else
+    echo "Command completion with dot-dot suffix test failed: should output nothing, instead got $completed" >&2
+  end
+
+  #rm -rf $parened_path
 end

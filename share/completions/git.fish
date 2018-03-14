@@ -101,8 +101,8 @@ function __fish_git_files
         # The entire line is the "from" from a rename.
         if set -q use_next[1]
             if contains -- $use_next $argv
-                string replace -- "$PWD/" "" "$root/$line"
-                or string replace "$root/" ":/" "$root/$line"
+                string replace -f -- "$PWD/" "" "$root/$line"
+                or string replace -- "$root/" ":/" "$root/$line"
             end
             set -e use_next[1]
             continue
@@ -118,7 +118,7 @@ function __fish_git_files
         # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
         # This is a bit simplistic but finding the lowest common directory
         # and then replacing everything else in $PWD with ".." is a bit annoying
-        set file (string replace -- "$PWD/" "" "$root/$file"; or string replace -- "$root/" ":/" "$root/$file")
+        set file (string replace -f -- "$PWD/" "" "$root/$file"; or string replace -- "$root/" ":/" "$root/$file")
         set -e IFS
 
         # The basic status format is "XY", where X is "our" state (meaning the staging area),

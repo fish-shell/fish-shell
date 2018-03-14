@@ -384,6 +384,9 @@ int main(int argc, char **argv) {
 
     const io_chain_t empty_ios;
     if (read_init(paths)) {
+        // Additional initialization that must occur after paths are loaded
+        misc_init_with_paths();
+
         // Stomp the exit status of any initialization commands (issue #635).
         proc_set_last_status(STATUS_CMD_OK);
 

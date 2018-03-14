@@ -868,7 +868,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     // Only reload environment variables if builtin_exists returned false, as an optimization
     if (head_exists == false) {
         run_on_main_thread([&completion_snapshot] () {
-            completion_snapshot = std::move(env_vars_snapshot_t( (wchar_t const * []) { L"fish_function_path", nullptr } ));
+            completion_snapshot = std::move(env_vars_snapshot_t( (wchar_t const * const []) { L"fish_function_path", nullptr } ));
         });
     }
 

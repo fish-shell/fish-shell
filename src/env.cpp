@@ -746,6 +746,12 @@ static void setup_user(bool force) {
     }
 }
 
+void misc_init_with_paths() {
+    // Since ':' can cause problems in filenames, the : function is saved to colon.fish
+    // But that means it isn't autoloaded since the name doesn't match the function.
+    bool loaded = function_load(L"colon");
+}
+
 /// Various things we need to initialize at run-time that don't really fit any of the other init
 /// routines.
 void misc_init() {
@@ -763,7 +769,7 @@ void misc_init() {
     // MS Windows tty devices do not currently have either a read or write timestamp. Those
     // respective fields of `struct stat` are always the current time. Which means we can't
     // use them. So we assume no external program has written to the terminal behind our
-    // back. This makes multiline promptusable. See issue #2859 and
+    // back. This makes multiline prompt usable. See issue #2859 and
     // https://github.com/Microsoft/BashOnWindows/issues/545
     has_working_tty_timestamps = false;
 #else

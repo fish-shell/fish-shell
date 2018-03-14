@@ -75,9 +75,9 @@ complete -c emerge -s V -l version
 #########################
 # Options               #
 #########################
-complete -c emerge -s A -l alert        -d "add a terminal bell character ('\a') to all interactive prompts"
-#complete -c emerge      -l alphabetical -d "sort flag lists alphabetically"
-complete -c emerge -s a -l ask          -d "prompt the user before peforming the merge"
+complete -c emerge -s A -l alert        -d "Add a terminal bell character ('\a') to all interactive prompts"
+#complete -c emerge      -l alphabetical -d "Sort flag lists alphabetically"
+complete -c emerge -s a -l ask          -d "Prompt the user before peforming the merge"
 # ask-enter-invalid
 # autounmask
 # autounmask-backtrack <yn>
@@ -88,34 +88,34 @@ complete -c emerge -s a -l ask          -d "prompt the user before peforming the
 # autounmask-keep-masks
 # autounmask-write
 complete -c emerge      -l backtrack
-complete -c emerge -s b -l buildpkg     -d "build a binary pkg additionally"
+complete -c emerge -s b -l buildpkg     -d "Build a binary pkg additionally"
 # buildpkg-exclude
-complete -c emerge -s B -l buildpkgonly -d "only build a binary pkg"
+complete -c emerge -s B -l buildpkgonly -d "Only build a binary pkg"
 # changed-deps
 complete -c emerge -s U -l changed-use
-complete -c emerge -s l -l changelog    -d "show changelog of pkg. Use with --pretend"
-complete -c emerge      -l color        -d "colorized output" \
+complete -c emerge -s l -l changelog    -d "Show changelog of pkg. Use with --pretend"
+complete -c emerge      -l color        -d "Colorized output" \
 	-xa "y n"
-complete -c emerge      -l columns      -d "align output. Use with --pretend"
+complete -c emerge      -l columns      -d "Align output. Use with --pretend"
 complete -c emerge      -l complete-graph
 # complete-graph-if-new-use <yn>
 # complete-graph-if-new-ver <yn>
 # config-root DIR
-complete -c emerge -s d -l debug        -d "run in debug mode"
-complete -c emerge -s D -l deep         -d "consider the whole dependency tree"
+complete -c emerge -s d -l debug        -d "Run in debug mode"
+complete -c emerge -s D -l deep         -d "Consider the whole dependency tree"
 # depclean-lib-check
 # digest
 # dynamic-deps <yn>
-complete -c emerge -s e -l emptytree    -d "reinstall all world pkgs"
+complete -c emerge -s e -l emptytree    -d "Reinstall all world pkgs"
 # exclude ATOMS
 complete -c emerge      -l exclude
 # fail-clean
-complete -c emerge -s f -l fetchonly    -d "only download the pkgs but don't install them"
-complete -c emerge -s F -l fetch-all-uri        -d "same as --fetchonly and grab all potential files"
+complete -c emerge -s f -l fetchonly    -d "Only download the pkgs but don't install them"
+complete -c emerge -s F -l fetch-all-uri        -d "Same as --fetchonly and grab all potential files"
 # fuzzy-search
-complete -c emerge -s g -l getbinpkg    -d "download infos from each binary pkg. Implies -k"
-complete -c emerge -s G -l getbinpkgonly        -d "as -g but don't use local infos"
-complete -c emerge      -l ignore-default-opts  -d "ignore EMERGE_DEFAULT_OPTS"
+complete -c emerge -s g -l getbinpkg    -d "Download infos from each binary pkg. Implies -k"
+complete -c emerge -s G -l getbinpkgonly        -d "As -g but don't use local infos"
+complete -c emerge      -l ignore-default-opts  -d "Ignore EMERGE_DEFAULT_OPTS"
 # ignore-build-slot-operator-deps <yn>
 # ignore-soname-deps <yn>
 complete -c emerge      -l jobs
@@ -123,22 +123,22 @@ complete -c emerge      -l keep-going
 # load-average
 # misspell-suggestion
 # newrepo
-complete -c emerge -s N -l newuse       -d "include installed pkgs with changed USE flags"
-complete -c emerge      -l noconfmem    -d "disregard merge records"
-complete -c emerge -s O -l nodeps       -d "don't merge dependencies"
-complete -c emerge -s n -l noreplace    -d "skip already installed pkgs"
-complete -c emerge      -l nospinner    -d "disable the spinner"
+complete -c emerge -s N -l newuse       -d "Include installed pkgs with changed USE flags"
+complete -c emerge      -l noconfmem    -d "Disregard merge records"
+complete -c emerge -s O -l nodeps       -d "Don't merge dependencies"
+complete -c emerge -s n -l noreplace    -d "Skip already installed pkgs"
+complete -c emerge      -l nospinner    -d "Disable the spinner"
 # usepkg-exclude ATOMS
 # rebuild-exclude ATOMS
 # rebuild-ignore ATOMS
-complete -c emerge -s 1 -l oneshot      -d "don't add pkgs to world"
-complete -c emerge -s o -l onlydeps     -d "only merge dependencies"
+complete -c emerge -s 1 -l oneshot      -d "Don't add pkgs to world"
+complete -c emerge -s o -l onlydeps     -d "Only merge dependencies"
 # onlydeps-with-rdeps <yn>
 # package-moves
 # pkg-format
 # prefix DIR
-complete -c emerge -s p -l pretend      -d "display what would be done without doing it"
-complete -c emerge -s q -l quiet        -d "use a condensed output"
+complete -c emerge -s p -l pretend      -d "Display what would be done without doing it"
+complete -c emerge -s q -l quiet        -d "Use a condensed output"
 # quiet-build
 # quiet-fail
 # quiet-repo-display
@@ -158,19 +158,19 @@ complete -c emerge -s q -l quiet        -d "use a condensed output"
 # search-similarity PERCENTAGE
 complete -c emerge -s w -l select
 # selective
-complete -c emerge      -l skipfirst    -d "remove first pkg in resume list. Use with --resume"
+complete -c emerge      -l skipfirst    -d "Remove first pkg in resume list. Use with --resume"
 # sync-module <glsa|news|profiles>
-complete -c emerge -s t -l tree         -d "show the dependency tree"
+complete -c emerge -s t -l tree         -d "Show the dependency tree"
 # unordered-display
 complete -c emerge -s u -l update
 # use-ebuild-visibility
 # useoldpkg-atoms ATOMS
-complete -c emerge -s k -l usepkg       -d "use binary pkg if available"
-complete -c emerge -s K -l usepkgonly   -d "only use binary pkgs"
-complete -c emerge -s v -l verbose      -d "run in verbose mode"
+complete -c emerge -s k -l usepkg       -d "Use binary pkg if available"
+complete -c emerge -s K -l usepkgonly   -d "Only use binary pkgs"
+complete -c emerge -s v -l verbose      -d "Run in verbose mode"
 # verbose-conflicts
 # verbose-slot-rebuilds
-complete -c emerge      -l with-bdeps   -d "pull in build time dependencies" \
+complete -c emerge      -l with-bdeps   -d "Pull in build time dependencies" \
 	-xa "y n"
 # with-bdeps-auto <yn>
 # with-test-bdeps

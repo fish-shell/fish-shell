@@ -765,27 +765,14 @@ void misc_init() {
         setvbuf(stdout, NULL, _IONBF, 0);
     }
 
-#ifdef OS_IS_CYGWIN
+#if defined(OS_IS_CYGWIN) || defined(WSL)
     // MS Windows tty devices do not currently have either a read or write timestamp. Those
     // respective fields of `struct stat` are always the current time. Which means we can't
     // use them. So we assume no external program has written to the terminal behind our
     // back. This makes multiline prompt usable. See issue #2859 and
     // https://github.com/Microsoft/BashOnWindows/issues/545
     has_working_tty_timestamps = false;
-#else
-    // This covers preview builds of Windows Subsystem for Linux (WSL).
-    FILE *procsyskosrel;
-    if ((procsyskosrel = wfopen(L"/proc/sys/kernel/osrelease", "r"))) {
-        wcstring osrelease;
-        fgetws2(&osrelease, procsyskosrel);
-        if (osrelease.find(L"3.4.0-Microsoft") != wcstring::npos) {
-            has_working_tty_timestamps = false;
-        }
-    }
-    if (procsyskosrel) {
-        fclose(procsyskosrel);
-    }
-#endif  // OS_IS_MS_WINDOWS
+#endif
 }
 
 static void env_universal_callbacks(callback_data_list_t &callbacks) {

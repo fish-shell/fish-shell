@@ -882,7 +882,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
         //This prevents errors caused during the execution of completion providers for
         //tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
         //and automatic completions ("gi" autosuggestion provider -> git)
-        debug(0, "Skipping completions for non-existent head\n");
+        // debug(0, "Skipping completions for non-existent head\n");
     }
     else {
         run_on_main_thread([&]() {

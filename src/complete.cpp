@@ -840,23 +840,53 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, path, cmd);
 
-    env_vars_snapshot_t vars; //does not need to be populated for our needs
-    // this has to be called before complete_load
-    if (!function_exists_no_autoload(cmd.c_str(), vars) && !builtin_exists(cmd)
-            && !path_get_path(cmd, nullptr)) {
+    // mqudsi: run_on_main_thread() already just runs `func` if we're on the main thread,
+    // but it makes a kcall to get the current thread id to ascertain that. Perhaps even
+    // that single kcall proved to be a source of slowdown so this test on a local variable
+    // is used to make that determination instead? I don't know.
+    auto run_on_main_thread = [&] (std::function<void(void)> &&func) {
+        if (this->type() == COMPLETE_DEFAULT) {
+            ASSERT_IS_MAIN_THREAD();
+            func();
+        }
+        else if (this->type() == COMPLETE_AUTOSUGGEST) {
+            iothread_perform_on_main([&]() {
+                func();
+            });
+        }
+        else {
+            assert(false && "this->type() is unknown!");
+        }
+    };
+
+    // This was originally written as a static variable protected by a mutex that is updated only if `scmd.size() == 1` to
+    // prevent too many lookups, but it turns out that this is mainly only called when the user explicitly presses <TAB>
+    // after a command, so the overhead of the additional env lookup should be negligible.
+    env_vars_snapshot_t completion_snapshot;
+
+    bool head_exists = builtin_exists(cmd);
+    // Only reload environment variables if builtin_exists returned false, as an optimization
+    if (head_exists == false) {
+        run_on_main_thread([&completion_snapshot] () {
+            completion_snapshot = std::move(env_vars_snapshot_t( (wchar_t const * []) { L"fish_function_path", nullptr } ));
+        });
+    }
+
+    head_exists = function_exists_no_autoload(cmd.c_str(), completion_snapshot);
+    // While it may seem like first testing `path_get_path` before resorting to an env lookup may be faster, path_get_path can potentially
+    // do a lot of FS/IO access, so env.get() + function_exists() should still be faster.
+    head_exists = head_exists || path_get_path(cmd, nullptr);
+
+    if (!head_exists) {
         //Do not load custom completions if the head does not exist
         //This prevents errors caused during the execution of completion providers for
         //tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
         //and automatic completions ("gi" autosuggestion provider -> git)
+        debug(0, "Skipping completions for non-existent head\n");
     }
-    else if (this->type() == COMPLETE_DEFAULT) {
-        ASSERT_IS_MAIN_THREAD();
-        complete_load(cmd, true);
-    } else if (this->type() == COMPLETE_AUTOSUGGEST &&
-               !completion_autoloader.has_tried_loading(cmd)) {
-        // Load this command (on the main thread)
-        iothread_perform_on_main([&]() {
-            complete_load(cmd, false);
+    else {
+        run_on_main_thread([&]() {
+            complete_load(cmd, true);
         });
     }
 

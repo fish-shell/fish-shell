@@ -16,11 +16,11 @@ function __fish_equery_print_format
 end
 
 ## Global Opts
-complete -c equery -s h -l help -d "displays a help message"
-complete -c equery -s q -l quiet -d "minimal output"
-complete -c equery -s C -l no-color -d "turns off colors"
-complete -c equery -s N -l no-pipe -d "turns off pipe detection"
-complete -c equery -s V -l version -d "display version information"
+complete -c equery -s h -l help         -d "displays a help message"
+complete -c equery -s q -l quiet        -d "minimal output"
+complete -c equery -s C -l no-color     -d "turns off colors"
+complete -c equery -s N -l no-pipe      -d "turns off pipe detection"
+complete -c equery -s V -l version      -d "display version information"
 
 ## Subcommands
 complete -c equery -n '__fish_use_subcommand' -xa 'belongs'     -d "list all packages owning file(s)"

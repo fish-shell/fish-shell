@@ -1345,6 +1345,10 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
                 (for_command && path_to_expand.find(L"/../") != wcstring::npos)) {
                 effective_working_dirs.push_back(working_dir);
             } else {
+                // At this point we know that path does not contain dot-dot
+                if (for_command && path_to_expand.find(L"/") != wcstring::npos)
+                    effective_working_dirs.push_back(working_dir);
+
                 // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
                 // implies just the current directory, while an empty PATH is left empty.
                 const wchar_t *name = for_cd ? L"CDPATH" : L"PATH";

@@ -67,8 +67,6 @@ void env_init(const struct config_paths_t *paths = NULL);
 /// Various things we need to initialize at run-time that don't really fit any of the other init
 /// routines.
 void misc_init();
-/// Same as misc_init() but after configuration paths have been loaded
-void misc_init_with_paths();
 
 class env_var_t {
    private:

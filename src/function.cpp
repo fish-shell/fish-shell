@@ -194,13 +194,11 @@ int function_exists(const wcstring &cmd) {
     return loaded_functions.find(cmd) != loaded_functions.end();
 }
 
-bool function_load(const wcstring &cmd) {
+void function_load(const wcstring &cmd) {
     if (!parser_keywords_is_reserved(cmd)) {
         scoped_rlock locker(functions_lock);
-        return load(cmd) == 0;
+        load(cmd);
     }
-
-    return false; //not loaded
 }
 
 int function_exists_no_autoload(const wcstring &cmd, const env_vars_snapshot_t &vars) {

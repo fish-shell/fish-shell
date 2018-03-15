@@ -47,3 +47,4 @@ Command completion with parened PATHs test passed
 Command completion with intermediate slashes test passed
 Command completion with intermediate dot-dot test passed
 Command completion with dot-dot suffix test passed
+Relative path instead of searching in PATH test passed

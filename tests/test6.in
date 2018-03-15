@@ -103,13 +103,15 @@ end
 # Test command expansion with parened PATHs (#952)
 begin
   set -l parened_path $PWD/'test6.tmp2.(paren).dir'
-  set -l parened_subpath $parened_path/subdir
   if not begin
         rm -rf $parened_path
         and mkdir $parened_path
-        and mkdir $parened_subpath
+        and mkdir $parened_path/subdir
+        and mkdir $parened_path/subdir/subdir
         and ln -s /bin/ls $parened_path/'__test6_(paren)_command'
-        and ln -s /bin/ls $parened_subpath/'__test6_subdir_(paren)_command'
+        and ln -s /bin/ls $parened_path/subdir/'__test6_subdir_(paren)_command'
+        and ln -s /bin/echo $parened_path/subdir/executable
+        and ln -s /bin/ls $parened_path/subdir/subdir/executable
       end
     echo "error: could not create command expansion temp environment" >&2
   end
@@ -146,6 +148,19 @@ begin
   else
     echo "Command completion with dot-dot suffix test failed: should output nothing, instead got $completed" >&2
   end
+
+  # Verify that relative path is used instead of searching in PATH
+  # subdir/executable -> /bin/echo
+  # subdir/subdir/executable -> /bin/echo
+  set -l PATH $parened_path/subdir $PATH
+  pushd $parened_path
+  set -l echo_output (subdir/executable "passed")
+  if test "$echo_output" = "passed"
+    echo "Relative path instead of searching in PATH test passed"
+  else
+    echo "Executable from PATH was used, test failed"
+  end
+  popd
 
   rm -rf $parened_path
 end

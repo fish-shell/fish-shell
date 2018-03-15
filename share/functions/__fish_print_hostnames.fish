@@ -60,9 +60,9 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
                 if test -r "$config"
                     set paths $paths (
                     # Keep only Include lines and remove Include syntax
-                    string replace -rfi '^\s*Include\s+' '' <$config \
+                    string replace -rfi '^\s*Include\s+' '' <$config  |
                     # Normalize whitespace
-                    | string trim | string replace -r -a '\s+' ' ')
+                    string trim | string replace -r -a '\s+' ' ')
                 end
             end
 

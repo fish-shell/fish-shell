@@ -38,7 +38,7 @@ send "exit\r"
 catch {expect default exp_continue} output
 wait
 
-# Verify all child processes have been killed. We don't use `-p $pid` because
+# Verify all child processes have been killed. We don't use `-p $fish_pid` because
 # if the shell has a bug the child processes might have been reparented to pid
 # 1 rather than killed.
 set status [catch {exec pgrep -l -f "sleep 11"} output]

@@ -41,8 +41,8 @@ Expect no output 2:
 Expect --backup --backup=: --backup --backup=
 Expect --backup=all  --backup=none  --backup=simple: --backup=all --backup=none --backup=simple
 implicit cd complete works
-dir completion works after 'command'
-dir completion works from PATH
+no implicit cd complete after 'command'
+PATH causes dir completion
 Command completion with parened PATHs test passed
 Command completion with intermediate slashes test passed
 Command completion with intermediate dot-dot test passed

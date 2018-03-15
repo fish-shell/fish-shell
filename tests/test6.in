@@ -82,16 +82,16 @@ if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end
         echo "no implicit cd complete"
     end
     if complete -C"command $dir" | grep "^$dir/.*Directory" >/dev/null
-        echo "dir completion works after 'command'"
+        echo "implicit cd complete incorrect after 'command'"
     else
-        echo "no dir completion after 'command'"
+        echo "no implicit cd complete after 'command'"
     end
     popd
     if begin
             set -l PATH $PWD/test6.tmp.dir $PATH ^/dev/null
             complete -C$dir | grep "^$dir/.*Directory" >/dev/null
         end
-        echo "dir completion works from PATH"
+        echo "PATH causes dir completion"
     else
         echo "PATH does not cause dir completion"
     end

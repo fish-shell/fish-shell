@@ -963,8 +963,10 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
     // Determine which types we check, based on the decoration.
     bool builtin_ok = true, function_ok = true, abbreviation_ok = true, command_ok = true,
          implicit_cd_ok = true;
-    if (decoration == parse_statement_decoration_command ||
-        decoration == parse_statement_decoration_exec) {
+    if (
+            decoration == parse_statement_decoration_exec ||
+            decoration == parse_statement_decoration_command )
+    {
         builtin_ok = false;
         function_ok = false;
         abbreviation_ok = false;

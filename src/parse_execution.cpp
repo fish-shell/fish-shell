@@ -150,10 +150,7 @@ enum process_type_t parse_execution_context_t::process_type_for_command(
     // etc).
     enum parse_statement_decoration_t decoration = get_decoration(statement);
 
-    if (decoration == parse_statement_decoration_exec) {
-        // Always exec.
-        process_type = INTERNAL_EXEC;
-    } else if (decoration == parse_statement_decoration_command) {
+    if (decoration == parse_statement_decoration_command) {
         // Always a command.
         process_type = EXTERNAL;
     } else if (decoration == parse_statement_decoration_builtin) {
@@ -163,6 +160,8 @@ enum process_type_t parse_execution_context_t::process_type_for_command(
         process_type = INTERNAL_FUNCTION;
     } else if (builtin_exists(cmd)) {
         process_type = INTERNAL_BUILTIN;
+    } else if (decoration == parse_statement_decoration_exec) {
+        process_type = INTERNAL_EXEC;
     } else {
         process_type = EXTERNAL;
     }

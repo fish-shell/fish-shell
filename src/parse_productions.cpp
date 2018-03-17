@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "common.h"
+#include "function.h"
 #include "parse_constants.h"
 #include "parse_grammar.h"
 #include "parse_productions.h"
@@ -311,6 +312,12 @@ RESOLVE(decorated_statement) {
             return production_for<builtins>();
         }
         case parse_keyword_exec: {
+            // Safety check: allow `exec` to be overridden if this is a tty to warn about running
+            // background jobs that will be lost.
+            if (isatty(STDIN_FILENO) && function_exists_no_autoload(L"exec", env_vars_snapshot_t{})) {
+                *out_tag = parse_statement_decoration_none;
+                return production_for<plains>();
+            }
             *out_tag = parse_statement_decoration_exec;
             return production_for<execs>();
         }

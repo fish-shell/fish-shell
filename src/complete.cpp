@@ -1402,8 +1402,8 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
                     use_implicit_cd = true;
                     break;
                 }
-                case parse_statement_decoration_command:
-                case parse_statement_decoration_exec: {
+                case parse_statement_decoration_exec:
+                case parse_statement_decoration_command: {
                     use_command = true;
                     use_function = false;
                     use_builtin = false;

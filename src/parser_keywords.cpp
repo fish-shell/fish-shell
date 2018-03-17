@@ -11,7 +11,7 @@ bool parser_keywords_skip_arguments(const wcstring &cmd) {
     return cmd == L"else" || cmd == L"begin";
 }
 
-static const wcstring_list_t subcommand_keywords({L"command", L"builtin", L"while", L"exec", L"if",
+static const wcstring_list_t subcommand_keywords({L"command", L"builtin", L"while", L"if",
                                                   L"and", L"or", L"not"});
 bool parser_keywords_is_subcommand(const wcstring &cmd) {
     return parser_keywords_skip_arguments(cmd) || contains(subcommand_keywords, cmd);

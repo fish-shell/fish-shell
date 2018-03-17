@@ -10,7 +10,15 @@ if not set -gq __fish_exec_count
 end
 
 function __fish_really_exec
-	# echo "actually `exec`ing"
+	# We actually have to kill the background jobs ourselves, that cleanup behavior
+	# is circumvented in the `exec` code.
+	if jobs -q
+		kill (jobs -g) 1>/dev/null 2>/dev/null
+	end
+	if jobs -q
+		kill -9 (jobs -g) 1>/dev/null 2>/dev/null
+	end
+
 	# Actually exec, or at least, try to
 	functions --erase exec
 	exec /proc/self/exe -c $argv

@@ -42,7 +42,7 @@ ehthumbs.db
 # or build system artifacts.
 autom4te.cache
 aclocal.m4
-Makefile
+GNUmakefile
 config.h
 config.cache
 config.h.in

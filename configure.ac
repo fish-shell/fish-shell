@@ -704,7 +704,7 @@ AC_ARG_WITH([extra-confdir],
             [extra_confdir='${datadir}/fish/vendor_conf.d'])
 
 # Tell the world what we know.
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([GNUmakefile])
 AC_OUTPUT
 
 echo "fish is now configured."

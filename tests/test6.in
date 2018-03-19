@@ -118,49 +118,73 @@ begin
 
   # Verify that we can expand commands when PATH has parens
   set -l PATH $parened_path $PATH
-  set -l completed (complete -C__test6_ | cut -f 1 -d \t)
-  if test "$completed" = '__test6_(paren)_command'
-    echo "Command completion with parened PATHs test passed"
-  else
-    echo "Command completion with parened PATHs test failed. Expected __test6_(paren)_command, got $completed" >&2
+  begin
+    set -l completed (complete -C__test6_ | cut -f 1 -d \t)
+    set -l expected '__test6_(paren)_command'
+    if test "$completed" = "$expected"
+      echo "Command completion with parened PATHs test passed"
+    else
+      echo "Command completion with parened PATHs test failed." \
+           "Expected '$expected', got '$completed'" >&2
+    end
   end
 
   # Verify that commands with intermediate slashes expand with respect to PATH
-  set -l completed (complete -Csubdir/__test6_subdir | cut -f 1 -d \t)
-  if test "$completed" = 'subdir/__test6_subdir_(paren)_command'
-    echo "Command completion with intermediate slashes test passed"
-  else
-    echo "Command completion with intermediate slashes test failed. Expected 'subdir/__test6_subdir_(paren)_command', got $completed" >&2
+  begin
+    set -l completed (complete -Csubdir/__test6_subdir | cut -f 1 -d \t)
+    set -l expected 'subdir/__test6_subdir_(paren)_command'
+    if test "$completed" = "$expected"
+      echo "Command completion with intermediate slashes test passed"
+    else
+      echo "Command completion with intermediate slashes test failed:" \
+           "expected '$expected', got '$completed'" >&2
+    end
   end
 
   # Verify that commands with intermediate dot-dot do NOT expand with respect to PATH
-  set -l completed (complete -Csubdir/../subdir/__test6_subdir)
-  if test -z "$completed"
-    echo "Command completion with intermediate dot-dot test passed"
-  else
-    echo "Command completion with intermediate dot-dot test failed: should output nothing, instead got $completed" >&2
+  # Note that in real world subdir may be a simlink
+  begin
+    set -l completed (complete -Csubdir/../subdir/__test6_subdir | \
+                      cut -f 1 -d \t | cut -f 1,4 -d /)
+    set -l expected (complete -Csubdir/__test6_subdir | cut -f 1 -d \t)
+    if test "$completed" = "$expected"
+      echo "Command completion with intermediate dot-dot test passed"
+    else
+      echo "Command completion with intermediate dot-dot test failed:" \
+           "expected '$expected', got '$completed'" >&2
+    end
   end
 
-  # Verify that commands with dot-dot suffix do NOT expand with respect to PATH
-  set -l completed (complete -Csubdir/..)
-  if test -z "$completed"
-    echo "Command completion with dot-dot suffix test passed"
-  else
-    echo "Command completion with dot-dot suffix test failed: should output nothing, instead got $completed" >&2
+  # Verify that commands with dot-dot suffix expand with respect to PATH
+  begin
+    set -l completed (complete -Csubdir/subdir/.. | cut -f 1 -d \t)
+    set -l expected "subdir/subdir/../"
+    if test "$completed" = "$expected"
+      echo "Command completion with dot-dot suffix test passed"
+    else
+      echo "Command completion with dot-dot suffix test failed:" \
+           "expected '$expected', got '$completed'" >&2
+    end
   end
 
   # Verify that relative path is used instead of searching in PATH
   # subdir/executable -> /bin/echo
   # subdir/subdir/executable -> /bin/echo
-  set -l PATH $parened_path/subdir $PATH
-  pushd $parened_path
-  set -l echo_output (subdir/executable "passed")
-  if test "$echo_output" = "passed"
-    echo "Relative path instead of searching in PATH test passed"
-  else
-    echo "Executable from PATH was used, test failed"
+  begin
+    set -l PATH $parened_path/subdir
+    pushd $parened_path
+
+    set -l wanted subdir/executable
+    set -l found (command -s $wanted)
+    if test $found = $wanted
+      and test (subdir/executable "passed") = "passed"
+      echo "Relative path instead of searching in PATH test passed"
+    else
+      echo "Executable from PATH was used, test failed:" \
+           "wanted '$wanted', instead found '$found'" >&2
+    end
+    popd
   end
-  popd
 
   rm -rf $parened_path
 end

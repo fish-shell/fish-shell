@@ -1336,16 +1336,13 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
             // `munge_colon_delimited_array()` for these special env vars. Thus we do not
             // special-case them here.
             //
-            // We ignore the path if we start with ./ or /. Also ignore it if we are doing command
-            // completion and we contain a dot-dot.
+            // We ignore the path if we start with / or ./
             if (string_prefixes_string(L"/", path_to_expand) ||
                 string_prefixes_string(L"./", path_to_expand) ||
-                string_prefixes_string(L"../", path_to_expand) ||
-                (for_command && string_suffixes_string(L"/..", path_to_expand)) ||
-                (for_command && path_to_expand.find(L"/../") != wcstring::npos)) {
+                string_prefixes_string(L"../", path_to_expand)) {
                 effective_working_dirs.push_back(working_dir);
             } else {
-                // At this point we know that path does not contain dot-dot
+                // Also search working directory if we are expanding command with slashes.
                 if (for_command && path_to_expand.find(L"/") != wcstring::npos)
                     effective_working_dirs.push_back(working_dir);
 

@@ -51,9 +51,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
 
         if (string_prefixes_string(L"/", cmd) ||
             string_prefixes_string(L"./", cmd) ||
-            string_prefixes_string(L"../", cmd) ||
-            string_suffixes_string(L"/..", cmd) ||
-            cmd.find(L"/../") != wcstring::npos) {
+            string_prefixes_string(L"../", cmd)) {
             return false;
         }
     }
@@ -138,9 +136,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
 
         if (string_prefixes_string(L"/", cmd) ||
             string_prefixes_string(L"./", cmd) ||
-            string_prefixes_string(L"../", cmd) ||
-            string_suffixes_string(L"/..", cmd) ||
-            cmd.find(L"/../") != wcstring::npos) {
+            string_prefixes_string(L"../", cmd)) {
             return paths;
         }
     }

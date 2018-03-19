@@ -286,8 +286,8 @@ __ remove -l features -d "Remove features (instead of packages)"
 __ search -s i -l info -d "Provide detailed information about each package"
 
 # Option platform
-set -l platforms {osx,linux,win}-{32,64}
-__ search -l platform -x -a "$platforms" -d "Search the given platform"
+set -l __fish_conda_platforms {osx,linux,win}-{32,64}
+__ search -l platform -x -a "$__fish_conda_platforms" -d "Search the given platform"
 
 # Option reverse-dependency
 __ search -l reverse-dependency -d "Perform a reverse dependency search"

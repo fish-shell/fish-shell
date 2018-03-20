@@ -24,7 +24,8 @@ function __fish_print_make_targets --argument-names directory file
     end
 
     if test "$bsd_make" = 0
-        make -C "$directory" -f "$file" -prRn | awk -v RS= -F: '/^# Files/,/^# Finished Make data base/ {if ($1 !~ "^[#.]") {print $1}}' ^/dev/null
+        # https://stackoverflow.com/a/26339924
+        make -C "$directory" -f "$file" -pRrq : ^/dev/null | awk -v RS= -F: '/^# Files/,/^# Finished Make data base/ {if ($1 !~ "^[#.]") {print $1}}' ^/dev/null
     else
         make -C "$directory" -f "$file" -d g1 -rn >/dev/null ^| awk -F, '/^#\*\*\* Input graph:/,/^$/ {if ($1 !~ "^#... ") {gsub(/# /,"",$1); print $1}}' ^/dev/null
     end

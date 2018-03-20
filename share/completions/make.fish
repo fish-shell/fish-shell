@@ -1,11 +1,14 @@
 # Completions for make
 function __fish_complete_make_targets
-    set directory (string replace -r '^make .*(-C ?|--directory[= ]?)([^ ]*) .*$' '$2' -- $argv)
-    if test $status -eq 0 -a -d $directory
-        __fish_print_make_targets $directory
-    else
-        __fish_print_make_targets
+    set directory (string replace -r '^make .*(-C ?|--directory(=| +))([^ ]*) .*$' '$3' -- $argv)
+    if not test $status -eq 0 -a -d $directory
+        set directory ''
     end
+    set file (string replace -r '^make .*(-f ?|--file=(=| +))([^ ]*) .*$' '$3' -- $argv)
+    if not test $status -eq 0 -a -f $file
+        set file ''
+    end
+    __fish_print_make_targets "$directory" "$file"
 end
 
 # This completion reenables file completion on

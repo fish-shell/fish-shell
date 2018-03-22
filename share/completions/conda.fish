@@ -56,6 +56,12 @@ __ conda -a search    -d "Search for packages and display associated information
 __ conda -a update    -d "Updates conda packages to the latest compatible version"
 __ conda -a upgrade   -d "Alias for conda update"
 
+# command added by sourcing ~/miniconda3/etc/fish/conf.d/conda.fish,
+# which is the recommended way to use conda with fish
+__ conda -a activate   -d "Activate the given environment"
+__ activate -x -a "(__fish_conda_environments)"
+__ conda -a deactivate -d "Deactivate current environment, reactivating the previous one"
+
 # common to all top-level commands
 
 set -l __fish_conda_commands clean config create help info install list package remove uninstall search update upgrade

@@ -90,8 +90,8 @@ SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp
                             PROPERTIES OBJECT_DEPENDS
                             ${CMAKE_CURRENT_BINARY_DIR}/${FBVF})
 
-OPTION(ENABLE_INTERNAL_WCWIDTH "use fallback wcwidth" ON)
-IF(ENABLE_INTERNAL_WCWIDTH)
+OPTION(INTERNAL_WCWIDTH "use fallback wcwidth" ON)
+IF(INTERNAL_WCWIDTH)
     add_definitions(-DHAVE_BROKEN_WCWIDTH=1)
 ELSE()
     add_definitions(-DHAVE_BROKEN_WCWIDTH=0)

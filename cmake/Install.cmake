@@ -206,7 +206,7 @@ INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
 #        fi; \
 #    done;
 # Building the manual is optional
-INSTALL(DIRECTORY user_doc/html/ # Trailing slash is important!
+INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/html/ # Trailing slash is important!
         DESTINATION ${docdir} OPTIONAL)
 INSTALL(FILES CHANGELOG.md DESTINATION ${docdir})
 

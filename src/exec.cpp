@@ -360,10 +360,8 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
 
 void internal_exec(job_t *j, const io_chain_t &&all_ios) {
     // Do a regular launch -  but without forking first...
-    signal_block();
 
-    // setup_child_process makes sure signals are properly set up. It will also call
-    // signal_unblock.
+    // setup_child_process makes sure signals are properly set up.
 
     // PCA This is for handling exec. Passing all_ios here matches what fish 2.0.0 and 1.x did.
     // It's known to be wrong - for example, it means that redirections bound for subsequent

@@ -35,6 +35,11 @@ end
 function path_helper -d "helper for constructing PATH environment variable"
     set -l path (__construct_path "PATH" "/etc/paths" "/etc/paths.d")
     set -l quoted_path (__quote $path)
-
     echo "set -xg PATH $quoted_path"
+
+    if [ $MANPATH ]
+        set -l manpath (__construct_path "MANPATH" "/etc/manpaths" "/etc/manpaths.d")
+        set -l quoted_manpath (__quote $manpath)
+        echo "set -xg MANPATH $quoted_manpath"
+    end
 end

@@ -136,4 +136,15 @@ IF(BUILD_DOCS)
     # Group docs targets into a DocsTargets folder
     SET_PROPERTY(TARGET doc BUILD_MANUALS build_lexicon_filter
                  PROPERTY FOLDER cmake/DocTargets)
+ELSEIF(HAVE_PREBUILT_DOCS)
+    IF(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
+        # Out of tree build - link the prebuilt documentation to the build tree
+        ADD_CUSTOM_TARGET(link_doc ALL)
+        ADD_CUSTOM_COMMAND(TARGET link_doc
+            COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/share/man ${CMAKE_CURRENT_BINARY_DIR}/share/man
+            POST_BUILD)
+        ADD_CUSTOM_COMMAND(TARGET link_doc
+            COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/user_doc ${CMAKE_CURRENT_BINARY_DIR}/user_doc
+            POST_BUILD)
+    ENDIF()
 ENDIF(BUILD_DOCS)

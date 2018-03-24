@@ -1,7 +1,7 @@
 # Reimplement the macOS /usr/libexec/path_helper executable for fish; see
 # https://opensource.apple.com/source/shell_cmds/shell_cmds-203/path_helper/path_helper.c.auto.html .
 
-function __construct_path -d "construct a path variable"
+function __construct_path -d "construct a path variable for path_helper"
     set -l result
 
     for path_file in $argv[2] $argv[3]/*

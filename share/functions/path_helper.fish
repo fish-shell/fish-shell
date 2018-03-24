@@ -6,9 +6,9 @@ function __construct_path -d "construct a path variable"
 
     for path_file in $argv[2] $argv[3]/*
         if test -f $path_file
-            while read -la line
-                if not contains $line $result
-                    set result $result $line
+            while read -la entry
+                if not contains $entry $result
+                    set result $result $entry
                 end
             end <$path_file
         end

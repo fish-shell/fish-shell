@@ -25,6 +25,7 @@ enum status_cmd_t {
     STATUS_IS_FULL_JOB_CTRL,
     STATUS_IS_INTERACTIVE_JOB_CTRL,
     STATUS_IS_NO_JOB_CTRL,
+    STATUS_CURRENT_CMD,
     STATUS_FILENAME,
     STATUS_FUNCTION,
     STATUS_LINE_NUMBER,
@@ -35,6 +36,7 @@ enum status_cmd_t {
 
 // Must be sorted by string, not enum or random.
 const enum_map<status_cmd_t> status_enum_map[] = {
+    {STATUS_CURRENT_CMD, L"current-command"},
     {STATUS_FILENAME, L"current-filename"},
     {STATUS_FUNCTION, L"current-function"},
     {STATUS_LINE_NUMBER, L"current-line-number"},
@@ -374,6 +376,12 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.out.append(parser.stack_trace());
             break;
         }
+        case STATUS_CURRENT_CMD: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
+            streams.out.append(program_name);
+            streams.out.push_back(L'\n');
+            break;
+         }
     }
 
     return retval;

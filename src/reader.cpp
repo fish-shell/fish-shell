@@ -99,7 +99,7 @@
 #define MODE_PROMPT_FUNCTION_NAME L"fish_mode_prompt"
 
 /// The default title for the reader. This is used by reader_readline.
-#define DEFAULT_TITLE L"echo $_ \" \"; __fish_pwd"
+#define DEFAULT_TITLE L"echo (status current-command) \" \"; __fish_pwd"
 
 /// The maximum number of characters to read from the keyboard without repainting. Note that this
 /// readahead will only occur if new characters are available for reading, fish will never block for
@@ -1620,7 +1620,8 @@ static void reader_interactive_init() {
 
     invalidate_termsize();
 
-    env_set_one(L"current_cmd", ENV_GLOBAL, L"fish");
+    //For compatibility with fish 2.0's $_, now replaced with `status current-command`
+    env_set_one(L"_", ENV_GLOBAL, L"fish");
 }
 
 /// Destroy data for interactive use.
@@ -1897,7 +1898,8 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     wcstring ft = tok_first(cmd);
 
-    if (!ft.empty()) env_set_one(L"current_cmd", ENV_GLOBAL, ft);
+    //For compatibility with fish 2.0's $_, now replaced with `status current-command`
+    if (!ft.empty()) env_set_one(L"_", ENV_GLOBAL, ft);
 
     reader_write_title(cmd);
 
@@ -1913,7 +1915,8 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     term_steal();
 
-    env_set_one(L"current_cmd", ENV_GLOBAL, program_name);
+    //For compatibility with fish 2.0's $_, now replaced with `status current-command`
+    env_set_one(L"_", ENV_GLOBAL, program_name);
 
 #ifdef HAVE__PROC_SELF_STAT
     proc_update_jiffies();

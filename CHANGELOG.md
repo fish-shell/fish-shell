@@ -4,6 +4,7 @@ This section is for changes merged to the `major` branch that are not also merge
 ## Deprecations
 - The `IFS` variable is deprecated and will be removed in fish 4.0 (#4156).
 - The `function --on-process-exit` event will be removed in future (#4700). Use the `fish_exit` event instead.
+- `$_` is deprecated and will removed in the future (#813). Use `status current-command` in a subshell instead.
 
 ## Notable non-backward compatible changes
 - `.` command no longer exists -- use `source` (#4294).

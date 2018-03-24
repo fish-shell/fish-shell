@@ -205,50 +205,39 @@ end
 # This used to be in etc/config.fish - keep it here to keep the semantics
 #
 
-if status --is-login
-    # OS X-ism: Call path_helper and set its output to $PATH and $MANPATH.
-    if command -sq /usr/libexec/path_helper
-        set -l lines (/usr/libexec/path_helper -c)
-        for line in $lines
-            # Match lines of the form:
-            #
-            #   setenv KEY value
-            #
-            # ignoring whitespace before and after value, and an
-            # optional trailing semicolon.
-            #
-            # Some examples of lines that successfully match to "FOO" and "bar baz":
-            #
-            #   "setenv FOO bar baz"
-            #   "setenv FOO bar baz;"
-            #   "setenv FOO bar baz; "
-            #   "  setenv   FOO   bar baz;"
-            #
-            # and some examples that fail to match:
-            #
-            #   "SetEnv FOO bar"
-            #   "setenv foo bar"
-            #   "setenv FOO1 bar"
-            #   "setenv FOO_BAR bar"
-            #   "setenv FOO-BAR bar"
-            if set -l match (string match -r '^\s*setenv\s+([A-Z]+)\s+(.*?)\s*;?\s*$' -- $line)
-                set -l key $match[2]
-                # Only set PATH and MANPATH, the two environment
-                # variables that path_helper is documented to emit.
-                if contains -- $key PATH MANPATH
-                    set -l value $match[3]
-                    # Strip any surrounding quotes from $value. Note
-                    # that we don't actually want to worry about
-                    # unescaping escaped quotes in $value, as
-                    # path_helper (buggily) doesn't bother escaping
-                    # quotes.
-                    if string match -qr '^([\'"]).*\1$' -- $value
-                        set value (string match -r '^.(.*).$' $value)[2]
-                    end
+# Adapt construct_path from the macOS /usr/libexec/path_helper
+# executable for fish; see
+# https://opensource.apple.com/source/shell_cmds/shell_cmds-203/path_helper/path_helper.c.auto.html .
+function __fish_construct_path -d "construct a path variable for path_helper"
+    set -l result
 
-                    set -xg $key (string split ':' $value)
+    for path_file in $argv[2] $argv[3]/*
+        if test -f $path_file
+            while read -la entry
+                if not contains $entry $result
+                    set result $result $entry
                 end
-            end
+            end <$path_file
+        end
+    end
+
+    for entry in $$argv[1]
+        if not contains $entry $result
+            set result $result $entry
+        end
+    end
+
+    for x in $result
+        echo $x
+    end
+end
+
+if status --is-login
+    # macOS-ism: Emulate calling path_helper.
+    if command -sq /usr/libexec/path_helper
+        set -xg PATH (__fish_construct_path 'PATH' '/etc/paths' '/etc/paths.d')
+        if [ $MANPATH ]
+            set -xg MANPATH (__fish_construct_path 'MANPATH' '/etc/manpaths' '/etc/manpaths.d')
         end
     end
 

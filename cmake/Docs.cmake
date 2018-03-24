@@ -68,8 +68,10 @@ IF(BUILD_DOCS)
                       DEPENDS ${FUNCTIONS_DIR_FILES} ${COMPLETIONS_DIR_FILES}
                               doc_src/commands.hdr ${CMAKE_CURRENT_SOURCE_DIR}/lexicon_filter.in
                               share/functions/__fish_config_interactive.fish
-                              build_tools/build_lexicon_filter.sh)
+                              build_tools/build_lexicon_filter.sh command_list_toc.txt)
 
+    # Other targets should depend on this target, otherwise the lexicon
+    # filter can be built twice.
     ADD_CUSTOM_TARGET(build_lexicon_filter DEPENDS lexicon_filter)
 
     #
@@ -127,7 +129,7 @@ IF(BUILD_DOCS)
     ADD_CUSTOM_COMMAND(OUTPUT share/man/
                        COMMAND env `cat ${FBVF} | tr -d '\"' `
                                INPUT_FILTER=lexicon_filter ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/build_documentation.sh ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.help doc_src ./share
-                       DEPENDS ${CFBVF} ${HELP_SRC} ${CMAKE_CURRENT_BINARY_DIR}/lexicon_filter)
+                       DEPENDS ${CFBVF} ${HELP_SRC} build_lexicon_filter)
 
     ADD_CUSTOM_TARGET(BUILD_MANUALS ALL DEPENDS share/man/)
 

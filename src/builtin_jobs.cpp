@@ -125,7 +125,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         {L"group", no_argument, NULL, 'g'},
         {L"help", no_argument, NULL, 'h'},
         {L"last", no_argument, NULL, 'l'},
-        {L"fish_pid", no_argument, NULL, 'p'},
+        {L"pid", no_argument, NULL, 'p'},
         {L"quiet", no_argument, NULL, 'q'},
         {nullptr, 0, NULL, 0}};
 

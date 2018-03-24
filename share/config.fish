@@ -236,7 +236,7 @@ if status --is-login
     # macOS-ism: Emulate calling path_helper.
     if command -sq /usr/libexec/path_helper
         set -xg PATH (__fish_construct_path 'PATH' '/etc/paths' '/etc/paths.d')
-        if [ $MANPATH ]
+        if [ -n "$MANPATH" ]
             set -xg MANPATH (__fish_construct_path 'MANPATH' '/etc/manpaths' '/etc/manpaths.d')
         end
     end

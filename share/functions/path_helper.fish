@@ -14,7 +14,7 @@ function path_helper -d "helper for constructing PATH environment variable"
     set -l quoted_path (__quote $path)
     echo "set -xg PATH $quoted_path"
 
-    if [ $MANPATH ]
+    if [ -n "$MANPATH" ]
         set -l manpath (__fish_construct_path "MANPATH" "/etc/manpaths" "/etc/manpaths.d")
         set -l quoted_manpath (__quote $manpath)
         echo "set -xg MANPATH $quoted_manpath"

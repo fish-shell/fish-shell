@@ -10,19 +10,16 @@
 # and it is by nature far too tricky to tweak to get the desired richness.
 # Hence this effort.
 
-# Filter for `complete -n` selecting a command line
-# with the given conda subcommand
-function __fish_conda_needs_command -a cmd
-    # We need to filter out -x and --xx options so as to complete
-    # the arguments of said options
-    test (string match -r '^\w+' -- (commandline -opc))[-1] = $cmd
-end
-
 # Complete using -n to select the given conda subcommand
 # and passing the rest of the arguments to `complete`
 # The goal here is to reduce clutter in the definitions below
 function __fish_conda -a cmd
-    complete -c conda -n "__fish_conda_needs_command $cmd" $argv[2..-1]
+    complete -c conda -n "__fish_seen_subcommand_from $cmd" $argv[2..-1]
+end
+
+# Complete for the first argument only
+function __fish_conda_top
+    complete -c conda -n "test (count (commandline -opc)) -eq 1" $argv
 end
 
 function __fish_conda_config_keys
@@ -38,28 +35,28 @@ complete -c conda -f
 complete -c conda -s h -l help -d "Show help and exit"
 
 # top-level options
-__fish_conda conda -s V -l version -d "Show the conda version number and exit"
+__fish_conda_top -s V -l version -d "Show the conda version number and exit"
 
 # top-level commands
-__fish_conda conda -a clean     -d "Remove unused packages and caches"
-__fish_conda conda -a config    -d "Modify configuration values in .condarc"
-__fish_conda conda -a create    -d "Create a new conda environment from a list of specified packages"
-__fish_conda conda -a help      -d "Displays a list of available conda commands and their help strings"
-__fish_conda conda -a info      -d "Display information about current conda install"
-__fish_conda conda -a install   -d "Installs a list of packages into a specified conda environment"
-__fish_conda conda -a list      -d "List linked packages in a conda environment"
-__fish_conda conda -a package   -d "Low-level conda package utility (EXPERIMENTAL)"
-__fish_conda conda -a remove    -d "Remove a list of packages from a specified conda environment"
-__fish_conda conda -a uninstall -d "Alias for conda remove"
-__fish_conda conda -a search    -d "Search for packages and display associated information"
-__fish_conda conda -a update    -d "Updates conda packages to the latest compatible version"
-__fish_conda conda -a upgrade   -d "Alias for conda update"
+__fish_conda_top -a clean     -d "Remove unused packages and caches"
+__fish_conda_top -a config    -d "Modify configuration values in .condarc"
+__fish_conda_top -a create    -d "Create a new conda environment from a list of specified packages"
+__fish_conda_top -a help      -d "Displays a list of available conda commands and their help strings"
+__fish_conda_top -a info      -d "Display information about current conda install"
+__fish_conda_top -a install   -d "Installs a list of packages into a specified conda environment"
+__fish_conda_top -a list      -d "List linked packages in a conda environment"
+__fish_conda_top -a package   -d "Low-level conda package utility (EXPERIMENTAL)"
+__fish_conda_top -a remove    -d "Remove a list of packages from a specified conda environment"
+__fish_conda_top -a uninstall -d "Alias for conda remove"
+__fish_conda_top -a search    -d "Search for packages and display associated information"
+__fish_conda_top -a update    -d "Updates conda packages to the latest compatible version"
+__fish_conda_top -a upgrade   -d "Alias for conda update"
 
 # command added by sourcing ~/miniconda3/etc/fish/conf.d/conda.fish,
 # which is the recommended way to use conda with fish
-__fish_conda conda -a activate   -d "Activate the given environment"
+__fish_conda_top -a activate   -d "Activate the given environment"
 __fish_conda activate -x -a "(__fish_conda_environments)"
-__fish_conda conda -a deactivate -d "Deactivate current environment, reactivating the previous one"
+__fish_conda_top -a deactivate -d "Deactivate current environment, reactivating the previous one"
 
 # common to all top-level commands
 

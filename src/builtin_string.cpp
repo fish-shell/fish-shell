@@ -147,6 +147,7 @@ typedef struct {  //!OCLINT(too many fields)
     bool right_valid = false;
     bool start_valid = false;
     bool style_valid = false;
+    bool keep_empty_valid = false;
 
     bool all = false;
     bool entire = false;
@@ -160,6 +161,7 @@ typedef struct {  //!OCLINT(too many fields)
     bool quiet = false;
     bool regex = false;
     bool right = false;
+    bool keep_empty = false;
 
     long count = 0;
     long length = 0;
@@ -189,6 +191,20 @@ static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams
             string_error(streams, _(L"%ls: Invalid escape style '%ls'\n"), cmd, w.woptarg);
             return STATUS_INVALID_ARGS;
         }
+        return STATUS_CMD_OK;
+    }
+
+    string_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+/// This handles the --keep-empty flag to `string split`
+static int handle_flag_k(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+                        options_t *opts) {
+    const wchar_t *cmd = argv[0];
+
+    if (opts->keep_empty_valid) {
+        opts->keep_empty = true;
         return STATUS_CMD_OK;
     }
 
@@ -391,6 +407,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->regex_valid) short_opts.append(L"r");
     if (opts->right_valid) short_opts.append(L"r");
     if (opts->start_valid) short_opts.append(L"s:");
+    if (opts->keep_empty_valid) short_opts.append(L"k");
     return short_opts;
 }
 
@@ -414,13 +431,14 @@ static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
                                               {L"right", no_argument, NULL, 'r'},
                                               {L"start", required_argument, NULL, 's'},
                                               {L"style", required_argument, NULL, 1},
+                                              {L"keep-empty", no_argument, NULL, 'k'},
                                               {NULL, 0, NULL, 0}};
 
 static std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
     {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
     {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
-    {'v', handle_flag_v}, {1, handle_flag_1}};
+    {'v', handle_flag_v}, {1, handle_flag_1}, {'k', handle_flag_k}};
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
 static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wchar_t **argv,
@@ -1129,6 +1147,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     opts.right_valid = true;
     opts.max_valid = true;
     opts.max = LONG_MAX;
+    opts.keep_empty_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
@@ -1144,9 +1163,9 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
         if (opts.right) {
             typedef std::reverse_iterator<const wchar_t *> reverser;
             split_about(reverser(arg_end), reverser(arg), reverser(sep_end), reverser(sep), &splits,
-                        opts.max);
+                        opts.max, opts.keep_empty);
         } else {
-            split_about(arg, arg_end, sep, sep_end, &splits, opts.max);
+            split_about(arg, arg_end, sep, sep_end, &splits, opts.max, opts.keep_empty);
         }
         arg_count++;
     }

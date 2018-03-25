@@ -28,7 +28,7 @@ wcstring_range wcstring_tok(wcstring& str, const wcstring& needle,
 /// If the needle is empty, split on individual elements (characters).
 template <typename ITER>
 void split_about(ITER haystack_start, ITER haystack_end, ITER needle_start, ITER needle_end,
-                 wcstring_list_t* output, long max) {
+                 wcstring_list_t* output, long max, bool keep_empty = false) {
     long remaining = max;
     ITER haystack_cursor = haystack_start;
     while (remaining > 0 && haystack_cursor != haystack_end) {
@@ -41,7 +41,10 @@ void split_about(ITER haystack_start, ITER haystack_end, ITER needle_start, ITER
         if (split_point == haystack_end) {  // not found
             break;
         }
-        output->push_back(wcstring(haystack_cursor, split_point));
+        wcstring result = wcstring(haystack_cursor, split_point);
+        if (keep_empty || result.size() > 0) {
+            output->push_back(std::move(result));
+        }
         remaining--;
         // Need to skip over the needle for the next search note that the needle may be empty.
         haystack_cursor = split_point + std::distance(needle_start, needle_end);

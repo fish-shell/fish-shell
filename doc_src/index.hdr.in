@@ -94,7 +94,6 @@ Some characters can not be written directly on the command line. For these chara
 - '<code>\\*</code>' escapes the star character
 - '<code>\\?</code>' escapes the question mark character
 - '<code>\\~</code>' escapes the tilde character
-- '<code>\\%</code>' escapes the percent character
 - '<code>\\#</code>' escapes the hash character
 - '<code>\\(</code>' escapes the left parenthesis character
 - '<code>\\)</code>' escapes the right parenthesis character
@@ -332,8 +331,6 @@ These are the general purpose tab completions that `fish` provides:
 - Completion of usernames for tilde expansion.
 
 - Completion of filenames, even on strings with wildcards such as '`*`', '`**`' and '`?`'.
-
-- Completion of job ID, job name and process names for <a href="#expand-process">process expansion</a>.
 
 `fish` provides a large number of program specific completions. Most of these completions are simple options like the `-l` option for `ls`, but some are more advanced. The latter include:
 
@@ -671,31 +668,6 @@ Note that variables can be used as indices for expansion of variables, but not c
 \subsection expand-home Home directory expansion
 
 The `~` (tilde) character at the beginning of a parameter, followed by a username, is expanded into the home directory of the specified user. A lone `~`, or a `~` followed by a slash, is expanded into the home directory of the process owner.
-
-
-\subsection expand-process Process expansion
-
-The `%` (percent) character at the beginning of a parameter followed by a string is expanded into a process ID (PID). The following expansions are performed:
-
-- If the string is the entire word `self`, the shell's PID is the result.
-
-- Otherwise, if the string is the entire word `last`, the last job's PID is the result.
-
-- Otherwise, if the string is the ID of a job, the result is the process group ID of the job.
-
-- Otherwise, if any child processes match the specified string, their PIDs are the result of the expansion.
-
-- Otherwise, if any processes owned by the user match the specified string, their PIDs are the result of the expansion.
-
-- If none of these matches apply, an error is produced.
-
-This form of expansion is useful for commands like kill and fg, which take process IDs as arguments.
-
-Example:
-
-`fg %%ema` will search for a process whose command line begins with the letters 'ema', such as emacs, and if found, put it in the foreground.
-
-`kill -s SIGINT %3` will send the SIGINT signal to the job with job ID 3.
 
 
 \subsection  combine Combining different expansions
@@ -1270,7 +1242,7 @@ end
 If you want to run a set of commands when `fish` exits, use an <a href='#event'>event handler</a> that is triggered by the exit of the shell:
 
 \fish
-function on_exit --on-process %self
+function on_exit --on-process $fish_pid
     echo fish is now exiting
 end
 \endfish

@@ -167,12 +167,9 @@ for cmd in create install update
 end
 
 # Option name
-for cmd in create install list remove search update
-    if test $cmd = create
-        __fish_conda $cmd -s n -l name -d "Name of new environment"
-    else
-        __fish_conda $cmd -s n -l name -x -a "(__fish_conda_environments)" -d "Name of existing environment"
-    end
+__fish_conda create -s n -l name -d "Name of new environment"
+for cmd in install list remove search update
+    __fish_conda $cmd -s n -l name -x -a "(__fish_conda_environments)" -d "Name of existing environment"
 end
 
 # Option no-channel-priority

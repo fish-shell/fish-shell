@@ -10,7 +10,7 @@ function man --description "Format and display the on-line manual pages"
         set manpath (command manpath)
     end
     # Notice local exported copy of the variable.
-    set -lx MANPATH $manpath
+    set -lx MANPATH "$manpath"
 
     set -l fish_manpath (dirname $__fish_data_dir)/fish/man
     if test -d "$fish_manpath" -a -n "$MANPATH"

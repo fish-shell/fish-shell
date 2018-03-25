@@ -161,7 +161,7 @@ send_line "jobs | wc -l"
 expect "3" {} timeout { puts stderr $error_msg }
 expect_prompt
 send_line "wait"
-expect_prompt "Job 4, 'sleep 3 | cat &' has ended" {} unmatched { puts stderr $error_msg }
+expect_prompt
 send_line "jobs"
 expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
 

@@ -13,25 +13,25 @@
 
 static int retval;
 
-/// Return the job to which the process with pid belongs.
+/// Return the job id to which the process with pid belongs.
 /// If a specified process has already finished but the job hasn't, parser_t::job_get_from_pid()
 /// doesn't work properly, so use this function in wait command.
-static job_t *get_job_from_pid(pid_t pid) {
+static job_id_t get_job_id_from_pid(pid_t pid) {
     job_t *j;
     job_iterator_t jobs;
 
     while (j = jobs.next()) {
         if (j->pgid == pid) {
-            return j;
+            return j->job_id;
         }
         // Check if the specified pid is a child process of the job.
         for (const process_ptr_t &p : j->processes) {
             if (p->pid == pid) {
-                return j;
+                return j->job_id;
             }
         }
     }
-    return NULL;
+    return 0;
 }
 
 static bool all_jobs_finished() {
@@ -83,9 +83,9 @@ static void wait_for_backgrounds(bool any_flag) {
     }
 }
 
-static bool all_specified_jobs_finished(const std::vector<pid_t> &wjobs_pid) {
-    for (auto pid : wjobs_pid) {
-        if (job_t *j = get_job_from_pid(pid)) {
+static bool all_specified_jobs_finished(const std::vector<job_id_t> &ids) {
+    for (auto id : ids) {
+        if (job_t *j = job_get(id)) {
             // If any specified job is not completed, return false.
             // If there are stopped jobs, they are ignored.
             if ((j->flags & JOB_CONSTRUCTED) && !job_is_completed(j) && !job_is_stopped(j)) {
@@ -96,9 +96,9 @@ static bool all_specified_jobs_finished(const std::vector<pid_t> &wjobs_pid) {
     return true;
 }
 
-static bool any_specified_jobs_finished(const std::vector<pid_t> &wjobs_pid) {
-    for (auto pid : wjobs_pid) {
-        if (job_t *j = get_job_from_pid(pid)) {
+static bool any_specified_jobs_finished(const std::vector<job_id_t> &ids) {
+    for (auto id : ids) {
+        if (job_t *j = job_get(id)) {
             // If any specified job is completed, return true.
             if ((j->flags & JOB_CONSTRUCTED) && (job_is_completed(j) || job_is_stopped(j))) {
                 return true;
@@ -111,9 +111,9 @@ static bool any_specified_jobs_finished(const std::vector<pid_t> &wjobs_pid) {
     return false;
 }
 
-static void wait_for_backgrounds_specified(const std::vector<pid_t> &wjobs_pid, bool any_flag) {
-    while ((!any_flag && !all_specified_jobs_finished(wjobs_pid)) ||
-           (any_flag && !any_specified_jobs_finished(wjobs_pid))) {
+static void wait_for_backgrounds_specified(const std::vector<job_id_t> &ids, bool any_flag) {
+    while ((!any_flag && !all_specified_jobs_finished(ids)) ||
+           (any_flag && !any_specified_jobs_finished(ids))) {
         pid_t pid = proc_wait_any();
         if (pid == -1 && errno == EINTR) {
             retval = 128 + SIGINT;
@@ -143,7 +143,7 @@ static bool match_pid(const wcstring &cmd, const wchar_t *proc) {
 }
 
 /// It should search the job list for something matching the given proc.
-static bool find_job_by_name(const wchar_t *proc, std::vector<pid_t> &pids) {
+static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids) {
     job_iterator_t jobs;
     bool found = false;
 
@@ -151,9 +151,9 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<pid_t> &pids) {
         if (j->command_is_empty()) continue;
 
         if (match_pid(j->command(), proc)) {
-            if (std::find(pids.begin(), pids.end(), j->pgid) == pids.end()) {
+            if (std::find(ids.begin(), ids.end(), j->job_id) == ids.end()) {
                 // If pids doesn't already have the pgid, add it.
-                pids.push_back(j->pgid);
+                ids.push_back(j->job_id);
             }
             found = true;
         }
@@ -163,9 +163,9 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<pid_t> &pids) {
             if (p->actual_cmd.empty()) continue;
 
             if (match_pid(p->actual_cmd, proc)) {
-                if (std::find(pids.begin(), pids.end(), j->pgid) == pids.end()) {
+                if (std::find(ids.begin(), ids.end(), j->job_id) == ids.end()) {
                     // If pids doesn't already have the pgid, add it.
-                    pids.push_back(j->pgid);
+                    ids.push_back(j->job_id);
                 }
                 found = true;
             }
@@ -216,7 +216,7 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         wait_for_backgrounds(any_flag);
     } else {
         // jobs specified
-        std::vector<pid_t> waited_jobs_pid;
+        std::vector<job_id_t> waited_job_ids;
 
         for (int i = w.woptind; i < argc; i++) {
             if (iswnumeric(argv[i])) {
@@ -227,15 +227,15 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                               argv[i]);
                     continue;
                 }
-                if (job_t *j = get_job_from_pid(pid)) {
-                    waited_jobs_pid.push_back(j->pgid);
+                if (job_id_t id = get_job_id_from_pid(pid)) {
+                    waited_job_ids.push_back(id);
                 } else {
                     streams.err.append_format(
                         _(L"%ls: Could not find a job with process id '%d'\n"), cmd, pid);
                 }
             } else {
                 // argument is process name
-                if (!find_job_by_name(argv[i], waited_jobs_pid)) {
+                if (!find_job_by_name(argv[i], waited_job_ids)) {
                     streams.err.append_format(
                         _(L"%ls: Could not find child processes with the name '%ls'\n"), cmd,
                         argv[i]);
@@ -243,9 +243,9 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
         }
 
-        if (waited_jobs_pid.empty()) return STATUS_INVALID_ARGS;
+        if (waited_job_ids.empty()) return STATUS_INVALID_ARGS;
 
-        wait_for_backgrounds_specified(waited_jobs_pid, any_flag);
+        wait_for_backgrounds_specified(waited_job_ids, any_flag);
     }
 
     return retval;

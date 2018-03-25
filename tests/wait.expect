@@ -175,6 +175,14 @@ expect_prompt "wait: Could not find child processes with the name 'wait'" {} unm
 send_line "jobs"
 expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
 
+# test with fish script
+send_line "fish -c 'sleep 2 &; sleep 1 &; wait \$last_pid; jobs | wc -l'"
+expect "1" {} timeout { puts stderr $error_msg }
+expect_prompt
+send_line "fish -c 'sleep 2 &; sleep 3 &; sleep 1 &; wait -n sleep; jobs | wc -l'"
+expect "1" {} timeout { puts stderr $error_msg }
+expect_prompt
+
 # test error messages
 set error_msg "test error messages: Fail"
 

@@ -100,3 +100,9 @@ $var6[1]: length=3 value=|ghi|
 $var6[2]: length=3 value=|jkl|
 $var6: not set in universal scope
 
+
+####################
+# Exporting works
+TESTVAR0=
+TESTVAR1=a
+TESTVAR2=a^^b

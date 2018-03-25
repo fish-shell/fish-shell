@@ -109,30 +109,6 @@ static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_
 static void init_locale();
 static void init_curses();
 
-/// This is used to convert a serialized env_var_t back into a list. It is used when reading legacy
-/// (fish 2.x) encoded vars stored in the universal variable file and the environment.
-static wcstring_list_t tokenize_variable_array(const wcstring &val) {
-    // Zero element arrays are externally encoded as this placeholder string.
-    if (val == ENV_NULL) return {};
-
-    wcstring_list_t out;
-    size_t pos = 0, end = val.size();
-    while (pos <= end) {
-        size_t next_pos = val.find(ARRAY_SEP, pos);
-        if (next_pos == wcstring::npos) {
-            next_pos = end;
-        }
-        out.emplace_back(val, pos, next_pos - pos);
-        pos = next_pos + 1;  // skip the separator, or skip past the end
-    }
-    return out;
-}
-
-/// This is used to convert a serialized env_var_t back into a list.
-wcstring_list_t decode_serialized(const wcstring &s) {
-    return tokenize_variable_array(s);
-}
-
 // Struct representing one level in the function variable stack.
 // Only our variable stack should create and destroy these
 class env_node_t {
@@ -916,14 +892,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
             key.assign(key_and_val, 0, eql);
             if (is_read_only(key) || is_electric(key)) continue;
             val.assign(key_and_val, eql + 1, wcstring::npos);
-            if (variable_is_colon_delimited_var(key)) {
-                std::replace(val.begin(), val.end(), L':', ARRAY_SEP);
-                wcstring_list_t values = decode_serialized(val);
-                env_set(key, ENV_EXPORT | ENV_GLOBAL, values);
-            } else {
-                wcstring_list_t values = decode_serialized(val);
-                env_set(key, ENV_EXPORT | ENV_GLOBAL, values);
-            }
+            wchar_t sep = variable_is_colon_delimited_var(key) ? L':' : ARRAY_SEP;
+            env_set(key, ENV_EXPORT | ENV_GLOBAL, split_string(val, sep));
         }
     }
 
@@ -1322,16 +1292,8 @@ const wcstring_list_t &env_var_t::as_list() const { return vals; }
 /// Return a string representation of the var. At the present time this uses the legacy 2.x
 /// encoding.
 wcstring env_var_t::as_string() const {
-    if (this->vals.empty()) return wcstring(ENV_NULL);
-
     wchar_t sep = (flags & flag_colon_delimit) ? L':' : ARRAY_SEP;
-    auto it = this->vals.cbegin();
-    wcstring result(*it);
-    while (++it != vals.end()) {
-        result.push_back(sep);
-        result.append(*it);
-    }
-    return result;
+    return join_strings(vals, sep);
 }
 
 void env_var_t::to_list(wcstring_list_t &out) const {
@@ -1539,16 +1501,13 @@ static void export_func(const var_table_t &envs, std::vector<std::string> &out) 
             // Replace ARRAY_SEP with colon.
             std::replace(vs.begin(), vs.end(), (char)ARRAY_SEP, ':');
         }
-
-        // Put a string on the vector.
-        out.push_back(std::string());
-        std::string &str = out.back();
+        // Create and append a string of the form ks=vs
+        std::string str;
         str.reserve(ks.size() + 1 + vs.size());
-
-        // Append our environment variable data to it.
         str.append(ks);
         str.append("=");
         str.append(vs);
+        out.push_back(std::move(str));
     }
 }
 

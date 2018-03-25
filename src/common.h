@@ -326,6 +326,12 @@ bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &valu
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
                                              const wcstring &value);
 
+/// Split a string by a separator character.
+wcstring_list_t split_string(const wcstring &val, wchar_t sep);
+
+/// Join a list of strings by a separator character.
+wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
+
 enum fuzzy_match_type_t {
     // We match the string exactly: FOOBAR matches FOOBAR.
     fuzzy_match_exact = 0,

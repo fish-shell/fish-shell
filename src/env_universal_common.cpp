@@ -255,6 +255,21 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
     return success;
 }
 
+/// Encoding of a null string.
+static const wchar_t *ENV_NULL = L"\x1d";
+
+/// Decode a serialized universal variable value into a list.
+static wcstring_list_t decode_serialized(const wcstring &val) {
+    if (val == ENV_NULL) return {};
+    return split_string(val, ARRAY_SEP);
+}
+
+/// Decode a a list into a serialized universal variable value.
+static wcstring encode_serialized(const wcstring_list_t &vals) {
+    if (vals.empty()) return ENV_NULL;
+    return join_strings(vals, ARRAY_SEP);
+}
+
 env_universal_t::env_universal_t(wcstring path)
     : explicit_vars_path(std::move(path)), tried_renaming(false), last_read_file(kInvalidFileID) {}
 
@@ -448,8 +463,8 @@ bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
         // variable; soldier on.
         const wcstring &key = iter->first;
         const env_var_t &var = iter->second;
-        append_file_entry(var.exports() ? SET_EXPORT : SET, key, var.as_string(), &contents,
-                          &storage);
+        append_file_entry(var.exports() ? SET_EXPORT : SET, key, encode_serialized(var.as_list()),
+                          &contents, &storage);
 
         // Go to next.
         ++iter;

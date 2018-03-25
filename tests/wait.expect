@@ -176,6 +176,8 @@ send_line "jobs"
 expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
 
 # test with fish script
+set error_msg "test with fish script: Fail"
+
 send_line "fish -c 'sleep 2 &; sleep 1 &; wait \$last_pid; jobs | wc -l'"
 expect "1" {} timeout { puts stderr $error_msg }
 expect_prompt

@@ -368,7 +368,7 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
     const wcstring &str = m.seq;
 
     assert(str.size() > 0 && "zero-length input string passed to input_mapping_is_match!");
-    debug(4, L"trying to match mapping %ls", escape_string(m.seq.c_str(), ESCAPE_ALL).c_str());
+    debug(5, L"trying to match mapping %ls", escape_string(m.seq.c_str(), ESCAPE_ALL).c_str());
 
     bool timed_first_char = iswcntrl(str[0]);
     // i must be signed because we reverse direction below

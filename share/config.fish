@@ -271,3 +271,15 @@ if status --is-login
         end
     end
 end
+
+
+# Reset the exec counter after a non-`exec` command is executed. Allows two `exec` commands
+# in a row to ignore the warnings about running jobs.
+function __fish_reset_exec_count --on-event fish_postexec
+    # echo "fish_postexec called"
+    set -l cmdline $argv
+    if not string match -qr "^\s*exec\b" -- $cmdline
+        # echo "Resetting __fish_exec_count"
+        set -g __fish_exec_count 0 # defined and used in functions/exec.fish
+    end
+end

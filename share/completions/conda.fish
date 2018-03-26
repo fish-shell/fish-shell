@@ -10,6 +10,10 @@
 # and it is by nature far too tricky to tweak to get the desired richness.
 # Hence this effort.
 
+# First, as part of conda's configuration, some complete would have been defined
+# Let's erase them, so that we start from a blank state
+complete -c conda -e
+
 # Complete using -n to select the given conda subcommand
 # and passing the rest of the arguments to `complete`
 # The goal here is to reduce clutter in the definitions below

@@ -103,7 +103,7 @@ __fish_conda "help" -x -a "$__fish_conda_commands"
 
 # 'info' command
 __fish_conda info -l offline         -d "Offline mode, don't connect to the Internet."
-__fish_conda info -s a -l all        -d "Show all information, (environments, license, and system information"
+__fish_conda info -s a -l all        -d "Show all information, (environments, license, and system information)"
 __fish_conda info -s e -l envs       -d "List all known conda environments"
 __fish_conda info -s l -l license    -d "Display information about the local conda licenses list"
 __fish_conda info -s s -l system     -d "List environment variables"

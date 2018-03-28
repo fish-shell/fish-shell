@@ -208,7 +208,7 @@ end
 # Adapt construct_path from the macOS /usr/libexec/path_helper
 # executable for fish; see
 # https://opensource.apple.com/source/shell_cmds/shell_cmds-203/path_helper/path_helper.c.auto.html .
-function __fish_construct_path -d "construct a path variable for path_helper"
+function __fish_macos_set_env -d "set an environment variable like path_helper does (macOS only)"
     set -l result
 
     for path_file in $argv[2] $argv[3]/*
@@ -227,17 +227,15 @@ function __fish_construct_path -d "construct a path variable for path_helper"
         end
     end
 
-    for x in $result
-        echo $x
-    end
+    set -xg $argv[1] $result
 end
 
 if status --is-login
     # macOS-ism: Emulate calling path_helper.
     if command -sq /usr/libexec/path_helper
-        set -xg PATH (__fish_construct_path 'PATH' '/etc/paths' '/etc/paths.d')
+        __fish_macos_set_env 'PATH' '/etc/paths' '/etc/paths.d'
         if [ -n "$MANPATH" ]
-            set -xg MANPATH (__fish_construct_path 'MANPATH' '/etc/manpaths' '/etc/manpaths.d')
+            __fish_macos_set_env 'MANPATH' '/etc/manpaths' '/etc/manpaths.d'
         end
     end
 

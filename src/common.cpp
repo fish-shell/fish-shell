@@ -525,8 +525,16 @@ void fish_setlocale() {
         ellipsis_char = L'$'; // "horizontal ellipsis"
         ellipsis_str = L"...";
     }
-    omitted_newline_char = can_be_encoded(L'\u23CE') ? L'\u23CE' : L'~';   // "return"
-    obfuscation_read_char = can_be_encoded(L'\u25CF') ? L'\u25CF' : L'#';  // "black circle"
+    if (is_windows_subsystem_for_linux()) {
+        //neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
+        //they can be *encoded* just fine. Use alternative glyphs.
+        omitted_newline_char = can_be_encoded(L'\u00b6') ? L'\u00b6' : L'~';   // "pilcrow"
+        obfuscation_read_char = can_be_encoded(L'\u2022') ? L'\u2022' : L'*';  // "bullet"
+    }
+    else {
+        omitted_newline_char = can_be_encoded(L'\u23CE') ? L'\u23CE' : L'~';   // "return"
+        obfuscation_read_char = can_be_encoded(L'\u25CF') ? L'\u25CF' : L'#';  // "black circle"
+    }
 }
 
 long read_blocked(int fd, void *buf, size_t count) {

@@ -147,6 +147,7 @@ typedef struct {  //!OCLINT(too many fields)
     bool right_valid = false;
     bool start_valid = false;
     bool style_valid = false;
+    bool no_empty_valid = false;
 
     bool all = false;
     bool entire = false;
@@ -160,6 +161,7 @@ typedef struct {  //!OCLINT(too many fields)
     bool quiet = false;
     bool regex = false;
     bool right = false;
+    bool no_empty = false;
 
     long count = 0;
     long length = 0;
@@ -314,6 +316,9 @@ static int handle_flag_n(wchar_t **argv, parser_t &parser, io_streams_t &streams
     } else if (opts->no_quoted_valid) {
         opts->no_quoted = true;
         return STATUS_CMD_OK;
+    } else if (opts->no_empty_valid) {
+        opts->no_empty = true;
+        return STATUS_CMD_OK;
     }
     string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
     return STATUS_INVALID_ARGS;
@@ -391,6 +396,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->regex_valid) short_opts.append(L"r");
     if (opts->right_valid) short_opts.append(L"r");
     if (opts->start_valid) short_opts.append(L"s:");
+    if (opts->no_empty_valid) short_opts.append(L"n");
     return short_opts;
 }
 
@@ -407,6 +413,7 @@ static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
                                               {L"left", no_argument, NULL, 'l'},
                                               {L"length", required_argument, NULL, 'l'},
                                               {L"max", required_argument, NULL, 'm'},
+                                              {L"no-empty", no_argument, NULL, 'n'},
                                               {L"no-newline", no_argument, NULL, 'N'},
                                               {L"no-quoted", no_argument, NULL, 'n'},
                                               {L"quiet", no_argument, NULL, 'q'},
@@ -420,7 +427,7 @@ static std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
     {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
     {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
-    {'v', handle_flag_v}, {1, handle_flag_1}};
+    {'v', handle_flag_v}, {1, handle_flag_1} };
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
 static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wchar_t **argv,
@@ -1129,6 +1136,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     opts.right_valid = true;
     opts.max_valid = true;
     opts.max = LONG_MAX;
+    opts.no_empty_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
@@ -1144,9 +1152,9 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
         if (opts.right) {
             typedef std::reverse_iterator<const wchar_t *> reverser;
             split_about(reverser(arg_end), reverser(arg), reverser(sep_end), reverser(sep), &splits,
-                        opts.max);
+                        opts.max, opts.no_empty);
         } else {
-            split_about(arg, arg_end, sep, sep_end, &splits, opts.max);
+            split_about(arg, arg_end, sep, sep_end, &splits, opts.max, opts.no_empty);
         }
         arg_count++;
     }

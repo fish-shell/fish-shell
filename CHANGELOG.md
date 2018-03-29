@@ -32,6 +32,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `bind` has a new `--silent` option to ignore bind requests for named keys not available under the current `$TERMINAL` (#4188, #4431)
 - Globs are faster (#4579)
 - `string` reads from stdin faster (#4610)
+- `string split` supports `-n/--no-empty` to exclude empty strings from the result (#4779)
 - `cd` tab completions no longer descend into the deepest unambiguous path (#4649)
 - Setting `$PATH` no longer warns on non-existent directories, allowing for a single $PATH to be shared across machines (e.g. via dotfiles).
 - `funced` now has a `-s` and `--save` option to automatically save the edited function after successfully editing (#4668).

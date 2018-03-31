@@ -95,13 +95,16 @@ class parse_execution_context_t {
                                                     tnode_t<Type> specific_statement);
 
     // These encapsulate the actual logic of various (block) statements.
-    parse_execution_result_t run_block_statement(tnode_t<grammar::block_statement> statement);
+    parse_execution_result_t run_block_statement(tnode_t<grammar::block_statement> statement,
+                                                 const block_t *associated_block);
     parse_execution_result_t run_for_statement(tnode_t<grammar::for_header> header,
                                                tnode_t<grammar::job_list> contents);
-    parse_execution_result_t run_if_statement(tnode_t<grammar::if_statement> statement);
+    parse_execution_result_t run_if_statement(tnode_t<grammar::if_statement> statement,
+                                              const block_t *associated_block);
     parse_execution_result_t run_switch_statement(tnode_t<grammar::switch_statement> statement);
     parse_execution_result_t run_while_statement(tnode_t<grammar::while_header> statement,
-                                                 tnode_t<grammar::job_list> contents);
+                                                 tnode_t<grammar::job_list> contents,
+                                                 const block_t *associated_block);
     parse_execution_result_t run_function_statement(tnode_t<grammar::function_header> header,
                                                     tnode_t<grammar::job_list> body);
     parse_execution_result_t run_begin_statement(tnode_t<grammar::job_list> contents);

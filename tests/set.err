@@ -20,3 +20,6 @@ $argle bargle: invalid var name
 
 ####################
 # Exporting works
+
+####################
+# if/for/while scope

@@ -39,3 +39,13 @@ if false ; or true | false ; echo "failure5" ; end
 
 logmsg Catch this corner case, which should produce an error
 if false ; or --help ; end
+
+logmsg Loop control in conditions
+for i in 1 2 3
+   while break; end
+   echo $i
+end
+for i in 1 2 3
+   while continue; end
+   echo $i
+end

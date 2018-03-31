@@ -51,7 +51,7 @@
 /// Finds an internal (ANY_STRING, etc.) style wildcard, or wcstring::npos.
 static size_t wildcard_find(const wchar_t *wc) {
     for (size_t i = 0; wc[i] != L'\0'; i++) {
-        if (wc[i] == ANY_CHAR || wc[i] == ANY_STRING || wc[i] == ANY_STRING_RECURSIVE) {
+        if (wc[i] == ANY_STRING || wc[i] == ANY_STRING_RECURSIVE) {
             return i;
         }
     }
@@ -64,13 +64,12 @@ static bool wildcard_has_impl(const wchar_t *str, size_t len, bool internal) {
     const wchar_t *end = str + len;
     if (internal) {
         for (; str < end; str++) {
-            if ((*str == ANY_CHAR) || (*str == ANY_STRING) || (*str == ANY_STRING_RECURSIVE))
-                return true;
+            if (*str == ANY_STRING || *str == ANY_STRING_RECURSIVE) return true;
         }
     } else {
         wchar_t prev = 0;
         for (; str < end; str++) {
-            if (((*str == L'*') || (*str == L'?')) && (prev != L'\\')) return true;
+            if (*str == L'*' && prev != L'\\') return true;
             prev = *str;
         }
     }
@@ -127,13 +126,6 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
                 restart_str_x = str_x + 1;
                 restart_is_out_of_str = (*str_x == 0);
                 wc_x++;
-                continue;
-            } else if (*wc_x == ANY_CHAR && *str_x != 0) {
-                if (is_first && *str_x == L'.') {
-                    return fuzzy_match_none;
-                }
-                wc_x++;
-                str_x++;
                 continue;
             } else if (*str_x != 0 && *str_x == *wc_x) { // ordinary character
                 wc_x++;
@@ -212,7 +204,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
         return false;
     }
 
-    // Locate the next wildcard character position, e.g. ANY_CHAR or ANY_STRING.
+    // Locate the next wildcard character position, e.g. ANY_STRING.
     const size_t next_wc_char_pos = wildcard_find(wc);
 
     // Maybe we have no more wildcards at all. This includes the empty string.
@@ -265,12 +257,6 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
     // Our first character is a wildcard.
     assert(next_wc_char_pos == 0);
     switch (wc[0]) {
-        case ANY_CHAR: {
-            if (str[0] == L'\0') {
-                return false;
-            }
-            return wildcard_complete_internal(str + 1, wc + 1, params, flags, out);
-        }
         case ANY_STRING: {
             // Hackish. If this is the last character of the wildcard, then just complete with
             // the empty string. This fixes cases like "f*<tab>" -> "f*o".
@@ -789,7 +775,7 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
 ///
 /// Args:
 /// base_dir: the "working directory" against which the wildcard is to be resolved
-/// wc: the wildcard string itself, e.g. foo*bar/baz (where * is acutally ANY_CHAR)
+/// wc: the wildcard string itself, e.g. foo*bar/baz (where * is acutally ANY_STRING)
 /// prefix: the string that should be prepended for completions that replace their token.
 //    This is usually the same thing as the original wildcard, but for fuzzy matching, we
 //    expand intermediate segments. effective_prefix is always either empty, or ends with a slash
@@ -810,7 +796,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
     const size_t wc_segment_len = next_slash ? next_slash - wc : wc_len;
     const wcstring wc_segment = wcstring(wc, wc_segment_len);
     const bool segment_has_wildcards =
-        wildcard_has(wc_segment, true /* internal, i.e. look for ANY_CHAR instead of ? */);
+        wildcard_has(wc_segment, true /* internal, i.e. look for ANY_STRING instead of * */);
     const wchar_t *const wc_remainder = next_slash ? next_slash + 1 : NULL;
 
     if (wc_segment.empty()) {

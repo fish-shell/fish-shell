@@ -423,9 +423,7 @@ wcstring parse_util_unescape_wildcards(const wcstring &str) {
     for (size_t i = 0; cs[i] != L'\0'; i++) {
         if (cs[i] == L'*') {
             result.push_back(ANY_STRING);
-        } else if (cs[i] == L'?') {
-            result.push_back(ANY_CHAR);
-        } else if (cs[i] == L'\\' && (cs[i + 1] == L'*' || cs[i + 1] == L'?')) {
+        } else if (cs[i] == L'\\' && cs[i + 1] == L'*') {
             result.push_back(cs[i + 1]);
             i += 1;
         } else if (cs[i] == L'\\' && cs[i + 1] == L'\\') {
@@ -892,9 +890,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
         default: {
             wchar_t token_stop_char = char_after_dollar;
             // Unescape (see issue #50).
-            if (token_stop_char == ANY_CHAR)
-                token_stop_char = L'?';
-            else if (token_stop_char == ANY_STRING || token_stop_char == ANY_STRING_RECURSIVE)
+            if (token_stop_char == ANY_STRING || token_stop_char == ANY_STRING_RECURSIVE)
                 token_stop_char = L'*';
 
             // Determine which error message to use. The format string may not consume all the

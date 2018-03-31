@@ -92,7 +92,6 @@ Some characters can not be written directly on the command line. For these chara
 - '<code>\\$</code>' escapes the dollar character
 - '<code>\\\\</code>' escapes the backslash character
 - '<code>\\*</code>' escapes the star character
-- '<code>\\?</code>' escapes the question mark character
 - '<code>\\~</code>' escapes the tilde character
 - '<code>\\#</code>' escapes the hash character
 - '<code>\\(</code>' escapes the left parenthesis character
@@ -330,7 +329,7 @@ These are the general purpose tab completions that `fish` provides:
 
 - Completion of usernames for tilde expansion.
 
-- Completion of filenames, even on strings with wildcards such as '`*`', '`**`' and '`?`'.
+- Completion of filenames, even on strings with wildcards such as '`*`' and '`**`'.
 
 `fish` provides a large number of program specific completions. Most of these completions are simple options like the `-l` option for `ls`, but some are more advanced. The latter include:
 
@@ -418,9 +417,7 @@ When an argument for a program is given on the commandline, it undergoes the pro
 
 \subsection expand-wildcard Wildcards
 
-If a star (`*`) or a question mark (`?`) is present in the parameter, `fish` attempts to match the given parameter to any files in such a way that:
-
-- `?` can match any single character except '/'.
+If a star (`*`) is present in the parameter, `fish` attempts to match the given parameter to any files in such a way that:
 
 - `*` can match any string of characters not containing '/'. This includes matching an empty string.
 
@@ -445,8 +442,6 @@ File names beginning with a dot are not considered when wildcarding unless a dot
 Examples:
 
 - `a*` matches any files beginning with an 'a' in the current directory.
-
-- `???` matches any file in the current directory whose name is exactly three characters long.
 
 - `**` matches any files and directories in the current directory and all of its subdirectories.
 

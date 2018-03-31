@@ -6,25 +6,18 @@ function __fish_git_commits
     # This allows filtering by subject with the new pager!
     # Because even subject lines can be quite long,
     # trim them (abbrev'd hash+tab+subject) to 73 characters
-    command git log --pretty=tformat:"%h"\t"%s" --all --max-count=1000 ^/dev/null \
-    | string replace -r '(.{73}).+' '$1…'
+    command git log --pretty=tformat:"%h"\t"%s" --all --max-count=1000 ^/dev/null | string replace -r '(.{73}).+' '$1…'
 end
 
 function __fish_git_recent_commits
     # Like __fish_git_commits, but not on all branches and limited to
     # the last 50 commits. Used for fixup, where only the current branch
     # and the latest commits make sense.
-    command git log --pretty=tformat:"%h"\t"%s" --max-count=50 ^/dev/null \
-    | string replace -r '(.{73}).+' '$1…'
+    command git log --pretty=tformat:"%h"\t"%s" --max-count=50 ^/dev/null | string replace -r '(.{73}).+' '$1…'
 end
 
 function __fish_git_branches
-    command git branch --no-color -a $argv ^/dev/null \
-    # Filter out detached heads and such ("(HEAD detached at SOMESHA)", localized).
-    | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " \
-    # We assume anything that's not remote is a local branch.
-    | string replace -r '^(?!remotes/)(.*)' '$1\tLocal Branch' \
-    | string replace -r "^remotes/(.*)" '$1\tRemote Branch'
+    command git branch --no-color -a $argv ^/dev/null # Filter out detached heads and such ("(HEAD detached at SOMESHA)", localized). | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " # We assume anything that's not remote is a local branch. | string replace -r '^(?!remotes/)(.*)' '$1\tLocal Branch' | string replace -r "^remotes/(.*)" '$1\tRemote Branch'
 end
 
 function __fish_git_tags
@@ -96,8 +89,7 @@ function __fish_git_files
     # E.g. `git reset $submodule` won't do anything (not even print an error).
     # --ignore-submodules=all was added in git 1.7.2, released July 2010.
     set -l use_next
-    command git status --porcelain -z --ignore-submodules=all \
-    | while read -lz -d '' line
+    command git status --porcelain -z --ignore-submodules=all | while read -lz -d '' line
         # The entire line is the "from" from a rename.
         if set -q use_next[1]
             if contains -- $use_next $argv
@@ -144,28 +136,31 @@ function __fish_git_files
             case 'A ' AM AD
                 # Additions are only shown here if they are staged.
                 # Otherwise it's an untracked file.
-                contains -- added $argv; or contains -- all-staged $argv
+                contains -- added $argv
+                or contains -- all-staged $argv
                 and printf '%s\t%s\n' "$file" $added_desc
-            case '?M'
+            case '*M'
                 # Modified
                 contains -- modified $argv
                 and printf '%s\t%s\n' "$file" $modified_desc
-            case 'M?'
+            case 'M*'
                 # If the character is first ("M "), then that means it's "our" change,
                 # which means it is staged.
                 # This is useless for many commands - e.g. `checkout` won't do anything with this.
                 # So it needs to be requested explicitly.
-                contains -- modified-staged $argv; or contains -- all-staged $argv
+                contains -- modified-staged $argv
+                or contains -- all-staged $argv
                 and printf '%s\t%s\n' "$file" $staged_modified_desc
-            case '?D'
+            case '*D'
                 contains -- deleted $argv
                 and printf '%s\t%s\n' "$file" $deleted_desc
-            case 'D?'
+            case 'D*'
                 # TODO: The docs are unclear on this.
                 # There is both X unmodified and Y either M or D ("not updated")
                 # and Y is D and X is unmodified or [MARC] ("deleted in work tree").
                 # For our purposes, we assume this is a staged deletion.
-                contains -- deleted-staged $argv; or contains -- all-staged $argv
+                contains -- deleted-staged $argv
+                or contains -- all-staged $argv
                 and printf '%s\t%s\n' "$file" $staged_deleted_desc
             case '\?\?'
                 # Untracked
@@ -201,7 +196,8 @@ end
 function __fish_git_needs_command
     set cmd (commandline -opc)
     set -l skip_next 1
-    set -q cmd[2]; or return 0
+    set -q cmd[2]
+    or return 0
     # Skip first word because it's "git" or a wrapper
     for c in $cmd[2..-1]
         test $skip_next -eq 0
@@ -555,7 +551,7 @@ complete -f -c git -n '__fish_git_needs_command' -a init -d 'Create an empty git
 # TODO options
 
 ### log
-complete -c git -n '__fish_git_needs_command'    -a shortlog -d 'Show commit shortlog'
+complete -c git -n '__fish_git_needs_command' -a shortlog -d 'Show commit shortlog'
 complete -c git -n '__fish_git_needs_command' -a log -d 'Show commit logs'
 complete -c git -n '__fish_git_using_command log; and not contains -- -- (commandline -op)' -a '(__fish_git_refs) (__fish_git_ranges)'
 
@@ -721,8 +717,8 @@ complete -c git -n '__fish_git_using_command log' -l irreversible-delete -s D
 complete -f -c git -n '__fish_git_using_command log' -s l
 
 function __fish__git_append_letters_nosep
-  set -l token (commandline -tc)
-  printf "%s\n" $token$argv
+    set -l token (commandline -tc)
+    printf "%s\n" $token$argv
 end
 
 complete -x -c git -n '__fish_git_using_command log' -l diff-filter -a '(__fish__git_append_letters_nosep a\tExclude\ added c\tExclude\ copied d\tExclude\ deleted m\tExclude\ modified r\tExclude\ renamed t\tExclude\ type\ changed u\tExclude\ unmerged x\tExclude\ unknown b\tExclude\ broken A\tAdded C\tCopied D\tDeleted M\tModified R\tRenamed T\tType\ Changed U\tUnmerged X\tUnknown B\tBroken)'

@@ -20,7 +20,7 @@ end
 switch $smurf
 	case cyan magenta yellow
 		echo Test 3 fail
-	case "?????"
+	case "*"
 		echo Test 3 pass
 end
 

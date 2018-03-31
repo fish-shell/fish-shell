@@ -125,7 +125,6 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
             case BRACE_BEGIN:
             case BRACE_END:
             case BRACE_SEP:
-            case ANY_CHAR:
             case ANY_STRING:
             case ANY_STRING_RECURSIVE: {
                 has_magic = 1;
@@ -549,7 +548,6 @@ static void color_argument_internal(const wcstring &buffstr,
                             break;
                         }
                         case L'*':
-                        case L'?':
                         case L'(':
                         case L')': {
                             colors[in_pos] = highlight_spec_operator;

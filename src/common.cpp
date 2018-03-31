@@ -995,12 +995,6 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                     out += *in;
                     break;
                 }
-                case ANY_CHAR: {
-                    // Experimental fix for #1614. The hope is that any time these appear in a
-                    // string, they came from wildcard expansion.
-                    out += L'?';
-                    break;
-                }
                 case ANY_STRING: {
                     out += L'*';
                     break;
@@ -1022,7 +1016,6 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 case L']':
                 case L'{':
                 case L'}':
-                case L'?':
                 case L'*':
                 case L'|':
                 case L';':
@@ -1353,12 +1346,6 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         } else {
                             to_append_or_none = ANY_STRING;
                         }
-                    }
-                    break;
-                }
-                case L'?': {
-                    if (unescape_special) {
-                        to_append_or_none = ANY_CHAR;
                     }
                     break;
                 }

@@ -124,17 +124,17 @@ string unescape --style=var -- (string escape --style=var -- -)
 
 # The following tests verify that we can correctly match strings.
 
-logmsg 'string match "?" a'
-string match "?" a
+logmsg 'string match "*" a'
+string match "*" a
 
 logmsg 'string match "a*b" axxb'
 string match "a*b" axxb
 
-logmsg 'string match -i "a??B" Axxb'
-string match -i "a??B" Axxb
+logmsg 'string match -i "a**B" Axxb'
+string match -i "a**B" Axxb
 
-logmsg 'echo "ok?" | string match "*\?"'
-echo "ok?" | string match "*\?"
+logmsg 'echo "ok?" | string match "*?"'
+echo "ok?" | string match "*?"
 
 logmsg 'string match -r "cat|dog|fish" "nice dog"'
 string match -r "cat|dog|fish" "nice dog"
@@ -199,8 +199,8 @@ string length; or echo "missing argument returns 1"
 logmsg 'string match -r -v "[dcantg].*" dog can cat diz'
 string match -r -v "[dcantg].*" dog can cat diz; or echo "no regexp invert match"
 
-logmsg 'string match -v "???" dog can cat diz'
-string match -v "???" dog can cat diz; or echo "no glob invert match"
+logmsg 'string match -v "*" dog can cat diz'
+string match -v "*" dog can cat diz; or echo "no glob invert match"
 
 logmsg 'string match -rvn a bbb'
 string match -rvn a bbb; or echo "exit 1"

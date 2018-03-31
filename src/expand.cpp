@@ -823,15 +823,11 @@ static void remove_internal_separator(wcstring *str, bool conv) {
     // Remove all instances of INTERNAL_SEPARATOR.
     str->erase(std::remove(str->begin(), str->end(), (wchar_t)INTERNAL_SEPARATOR), str->end());
 
-    // If conv is true, replace all instances of ANY_CHAR with '?', ANY_STRING with '*',
+    // If conv is true, replace all instances of ANY_STRING with '*',
     // ANY_STRING_RECURSIVE with '*'.
     if (conv) {
         for (size_t idx = 0; idx < str->size(); idx++) {
             switch (str->at(idx)) {
-                case ANY_CHAR: {
-                    str->at(idx) = L'?';
-                    break;
-                }
                 case ANY_STRING:
                 case ANY_STRING_RECURSIVE: {
                     str->at(idx) = L'*';
@@ -918,7 +914,7 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
     wcstring path_to_expand = input;
 
     remove_internal_separator(&path_to_expand, flags & EXPAND_SKIP_WILDCARDS);
-    const bool has_wildcard = wildcard_has(path_to_expand, true /* internal, i.e. ANY_CHAR */);
+    const bool has_wildcard = wildcard_has(path_to_expand, true /* internal, i.e. ANY_STRING */);
 
     if (has_wildcard && (flags & EXECUTABLES_ONLY)) {
         ;  // don't do wildcard expansion for executables, see issue #785

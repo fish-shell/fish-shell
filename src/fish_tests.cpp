@@ -4120,15 +4120,16 @@ static void test_string() {
         {{L"string", L"match", 0}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"match", L"", 0}, STATUS_CMD_ERROR, L""},
         {{L"string", L"match", L"", L"", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"match", L"?", L"a", 0}, STATUS_CMD_OK, L"a\n"},
+        {{L"string", L"match", L"?", L"a", 0}, STATUS_CMD_ERROR, L""},
         {{L"string", L"match", L"*", L"", 0}, STATUS_CMD_OK, L"\n"},
         {{L"string", L"match", L"**", L"", 0}, STATUS_CMD_OK, L"\n"},
         {{L"string", L"match", L"*", L"xyzzy", 0}, STATUS_CMD_OK, L"xyzzy\n"},
         {{L"string", L"match", L"**", L"plugh", 0}, STATUS_CMD_OK, L"plugh\n"},
         {{L"string", L"match", L"a*b", L"axxb", 0}, STATUS_CMD_OK, L"axxb\n"},
-        {{L"string", L"match", L"a??b", L"axxb", 0}, STATUS_CMD_OK, L"axxb\n"},
-        {{L"string", L"match", L"-i", L"a??B", L"axxb", 0}, STATUS_CMD_OK, L"axxb\n"},
-        {{L"string", L"match", L"-i", L"a??b", L"Axxb", 0}, STATUS_CMD_OK, L"Axxb\n"},
+        {{L"string", L"match", L"a??b", L"axxb", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"a??b", L"a??b", 0}, STATUS_CMD_OK, L"a??b\n"},
+        {{L"string", L"match", L"-i", L"a??B", L"axxb", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"-i", L"a??b", L"Axxb", 0}, STATUS_CMD_ERROR, L""},
         {{L"string", L"match", L"a*", L"axxb", 0}, STATUS_CMD_OK, L"axxb\n"},
         {{L"string", L"match", L"*a", L"xxa", 0}, STATUS_CMD_OK, L"xxa\n"},
         {{L"string", L"match", L"*a*", L"axa", 0}, STATUS_CMD_OK, L"axa\n"},
@@ -4137,14 +4138,14 @@ static void test_string() {
         {{L"string", L"match", L"*a", L"a", 0}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"match", L"a*", L"a", 0}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"match", L"a*b*c", L"axxbyyc", 0}, STATUS_CMD_OK, L"axxbyyc\n"},
-        {{L"string", L"match", L"a*b?c", L"axxbyc", 0}, STATUS_CMD_OK, L"axxbyc\n"},
-        {{L"string", L"match", L"*?", L"a", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"match", L"*?", L"ab", 0}, STATUS_CMD_OK, L"ab\n"},
-        {{L"string", L"match", L"?*", L"a", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"match", L"?*", L"ab", 0}, STATUS_CMD_OK, L"ab\n"},
+        {{L"string", L"match", L"a*b?c", L"axxb?c", 0}, STATUS_CMD_OK, L"axxb?c\n"},
+        {{L"string", L"match", L"*?", L"a", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"*?", L"ab", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"?*", L"a", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"?*", L"ab", 0}, STATUS_CMD_ERROR, L""},
         {{L"string", L"match", L"\\*", L"*", 0}, STATUS_CMD_OK, L"*\n"},
         {{L"string", L"match", L"a*\\", L"abc\\", 0}, STATUS_CMD_OK, L"abc\\\n"},
-        {{L"string", L"match", L"a*\\?", L"abc?", 0}, STATUS_CMD_OK, L"abc?\n"},
+        {{L"string", L"match", L"a*\\?", L"abc?", 0}, STATUS_CMD_ERROR, L""},
 
         {{L"string", L"match", L"?", L"", 0}, STATUS_CMD_ERROR, L""},
         {{L"string", L"match", L"?", L"ab", 0}, STATUS_CMD_ERROR, L""},
@@ -4428,24 +4429,27 @@ static void test_illegal_command_exit_code() {
     };
 
     const command_result_tuple_t tests[] = {
-        {L"echo -n", STATUS_CMD_OK}, {L"pwd", STATUS_CMD_OK},
-        // a `)` without a matching `(` is now a tokenizer error, and cannot be executed even as an illegal command
+        {L"echo -n", STATUS_CMD_OK},
+        {L"pwd", STATUS_CMD_OK},
+        // a `)` without a matching `(` is now a tokenizer error, and cannot be executed even as an
+        // illegal command
         // {L")", STATUS_ILLEGAL_CMD},  {L") ", STATUS_ILLEGAL_CMD}, {L") ", STATUS_ILLEGAL_CMD}
-        {L"*", STATUS_ILLEGAL_CMD},  {L"**", STATUS_ILLEGAL_CMD},
-        {L"?", STATUS_ILLEGAL_CMD},  {L"abc?def", STATUS_ILLEGAL_CMD},
+        {L"*", STATUS_ILLEGAL_CMD},
+        {L"**", STATUS_ILLEGAL_CMD},
+        {L"?", STATUS_CMD_UNKNOWN},
+        {L"abc?def", STATUS_CMD_UNKNOWN},
     };
 
     int res = 0;
     const io_chain_t empty_ios;
     parser_t &parser = parser_t::principal_parser();
 
-    size_t i = 0;
-    for (i = 0; i < sizeof tests / sizeof *tests; i++) {
-        res = parser.eval(tests[i].txt, empty_ios, TOP);
+    for (const auto &test : tests) {
+        res = parser.eval(test.txt, empty_ios, TOP);
 
         int exit_status = res ? STATUS_CMD_UNKNOWN : proc_get_last_status();
-        if (exit_status != tests[i].result) {
-            err(L"command '%ls': expected exit code %d , got %d", tests[i].txt, tests[i].result,
+        if (exit_status != test.result) {
+            err(L"command '%ls': expected exit code %d , got %d", test.txt, test.result,
                 exit_status);
         }
     }

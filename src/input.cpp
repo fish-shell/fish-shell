@@ -371,8 +371,7 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
     debug(4, L"trying to match mapping %ls", escape_string(m.seq.c_str(), ESCAPE_ALL).c_str());
 
     bool timed_first_char = iswcntrl(str[0]);
-    // i must be signed because we reverse direction below
-    for (ssize_t i = 0; i < str.size(); ++i) {
+    for (size_t i = 0; i < str.size(); ++i) {
         // Treat all strings beginning with control codes (0x00-0x1F) as timed characters, meaning they are assumed to be
         // their literal representation if not followed up with another character within the defined timeout. Obviously
         // we never time out on the first character in the sequence.
@@ -383,7 +382,7 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
             // We didn't match the bind sequence/input mapping, (it timed out or they entered something else)
             // Undo consumption of the read characters since we didn't match the bind sequence and abort.
             input_common_next_ch(read);
-            while (--i >= 0) {
+            while (i--) {
                 input_common_next_ch(str[i]);
             }
             return false;

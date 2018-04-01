@@ -779,6 +779,8 @@ static void handle_escape_delay_change(const wcstring &op, const wcstring &var_n
 }
 
 static void handle_change_emoji_width(const wcstring &op, const wcstring &var_name) {
+    (void)op;
+    (void)var_name;
     int new_width = 0;
     if (auto width_str = env_get(L"fish_emoji_width")) {
         new_width = fish_wcstol(width_str->as_string().c_str());

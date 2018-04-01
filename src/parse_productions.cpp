@@ -337,6 +337,7 @@ RESOLVE(arguments_or_redirections_list) {
 
 RESOLVE(optional_newlines) {
     UNUSED(token2);
+    UNUSED(out_tag);
     if (token1.is_newline) return production_for<newlines>();
     return production_for<empty>();
 }

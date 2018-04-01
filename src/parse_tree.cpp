@@ -461,7 +461,7 @@ class parse_ll_t {
     void accept_tokens(parse_token_t token1, parse_token_t token2);
 
     /// Report tokenizer errors.
-    void report_tokenizer_error(const tokenizer_t &tokenizer, const tok_t &tok);
+    void report_tokenizer_error(const tok_t &tok);
 
     /// Indicate if we hit a fatal error.
     bool has_fatal_error() const { return this->fatal_errored; }
@@ -599,6 +599,7 @@ void parse_ll_t::parse_error(parse_token_t token, parse_error_code_t code, const
 void parse_ll_t::parse_error_at_location(size_t source_start, size_t source_length,
                                          size_t error_location, parse_error_code_t code,
                                          const wchar_t *fmt, ...) {
+    (void)error_location;
     this->fatal_errored = true;
     if (this->should_generate_error_messages) {
         // this->dump_stack();
@@ -667,7 +668,7 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
     }
 }
 
-void parse_ll_t::report_tokenizer_error(const tokenizer_t &tokenizer, const tok_t &tok) {
+void parse_ll_t::report_tokenizer_error(const tok_t &tok) {
     parse_error_code_t parse_error_code = tok.error->parser_error;
     this->parse_error_at_location(tok.offset, tok.length, tok.offset + tok.error_offset,
                                   parse_error_code, L"%ls",
@@ -1066,7 +1067,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
         // Handle tokenizer errors. This is a hack because really the parser should report this for
         // itself; but it has no way of getting the tokenizer message.
         if (queue[1].type == parse_special_type_tokenizer_error) {
-            parser.report_tokenizer_error(tok, tokenizer_token);
+            parser.report_tokenizer_error(tokenizer_token);
         }
 
         if (!parser.has_fatal_error()) {

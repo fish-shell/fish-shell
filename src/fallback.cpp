@@ -270,6 +270,7 @@ int g_fish_emoji_width = 0;
 int g_guessed_fish_emoji_width = 1;
 
 int fish_get_emoji_width(wchar_t c) {
+    (void)c;
     // Respect an explicit value. If we don't have one, use the guessed value. Do not try to fall
     // back to wcwidth(), it's hopeless.
     if (g_fish_emoji_width > 0) return g_fish_emoji_width;

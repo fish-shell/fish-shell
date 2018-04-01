@@ -898,6 +898,7 @@ static expand_error_t expand_stage_braces(const wcstring &input, std::vector<com
 static expand_error_t expand_stage_home(const wcstring &input,
                                                 std::vector<completion_t> *out,
                                                 expand_flags_t flags, parse_error_list_t *errors) {
+    (void)errors;
     wcstring next = input;
 
     if (!(EXPAND_SKIP_HOME_DIRECTORIES & flags)) {

@@ -188,13 +188,14 @@ function __fish_config_interactive -d "Initializations that should be performed 
         complete -x -p "/etc/init.d/*" -a reload --description 'Reload service configuration'
     end
 
-    # Make sure some key bindings are set
-    if not set -q fish_key_bindings
-        set -U fish_key_bindings fish_default_key_bindings
-    end
 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
+        # Make sure some key bindings are set
+        if not set -q fish_key_bindings
+            set -U fish_key_bindings fish_default_key_bindings
+        end
+
         # Do nothing if the key bindings didn't actually change.
         # This could be because the variable was set to the existing value
         # or because it was a local variable.
@@ -297,7 +298,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
         # First check if we are on OpenSUSE since SUSE's handler has no options
         # but the same name and path as Ubuntu's.
-        if contains -- suse $os; or contains -- sles $os
+        if contains -- suse $os
+            or contains -- sles $os
             and type -q command-not-found
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 /usr/bin/command-not-found $argv[1]

@@ -1286,7 +1286,7 @@ int env_remove(const wcstring &key, int var_mode) {
 
     react_to_variable_change(L"ERASE", key);
 
-    return !erased;
+    return erased ? ENV_OK : ENV_NOT_FOUND;
 }
 
 const wcstring_list_t &env_var_t::as_list() const { return vals; }

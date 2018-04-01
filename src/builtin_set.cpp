@@ -305,6 +305,12 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key
             retval = STATUS_CMD_ERROR;
             break;
         }
+        case ENV_NOT_FOUND: {
+            streams.err.append_format(
+                _(L"%ls: The variable '%ls' does not exist\n"), cmd, key);
+            retval = STATUS_CMD_ERROR;
+            break;
+        }
         default: {
             DIE("unexpected env_set() ret val");
             break;
@@ -622,6 +628,11 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 
     if (idx_count == 0) {  // unset the var
         retval = env_remove(dest, scope);
+        // Temporarily swallowing ENV_NOT_FOUND errors to prevent
+        // breaking all tests that unset variables that aren't set.
+        if (retval != ENV_NOT_FOUND) {
+            handle_env_return(retval, cmd, dest, streams);
+        }
     } else {  // remove just the specified indexes of the var
         const auto dest_var = env_get(dest, scope);
         if (!dest_var) return STATUS_CMD_ERROR;
@@ -630,8 +641,6 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
         erase_values(result, indexes);
         retval = my_env_set(cmd, dest, scope, result, streams);
     }
-
-    handle_env_return(retval, cmd, dest, streams);
 
     if (retval != STATUS_CMD_OK) return retval;
     return check_global_scope_exists(cmd, opts, dest, streams);

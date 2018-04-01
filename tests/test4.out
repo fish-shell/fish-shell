@@ -36,7 +36,8 @@ Test 22 pass
 4 0
 5 0
 6 0
-7 1
+# exit code 4 is ENV_NOT_FOUND, as foo has already been unset
+7 4
 8 0
 9 121
 10 0 A

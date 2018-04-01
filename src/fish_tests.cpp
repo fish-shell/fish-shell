@@ -4491,6 +4491,12 @@ void test_maybe() {
     do_test(m4 && *m4 == "hi");
     maybe_t<std::string> m5 = m0;
     do_test(!m5);
+
+    maybe_t<std::string> acquire_test("def");
+    do_test(acquire_test);
+    std::string res = acquire_test.acquire();
+    do_test(!acquire_test);
+    do_test(res == "def");
 }
 
 void test_layout_cache() {

@@ -49,7 +49,7 @@ function __fish_adb_run_command -d 'Runs adb with any -s parameters already give
 end
 
 function __fish_adb_list_packages
-    __fish_adb_run_command pm list packages ^/dev/null | string replace 'package:' ''
+    __fish_adb_run_command pm list packages 2>/dev/null | string replace 'package:' ''
 end
 
 

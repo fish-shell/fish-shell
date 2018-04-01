@@ -1,4 +1,4 @@
-if cp --version ^ /dev/null > /dev/null # GNU
+if cp --version 2>/dev/null > /dev/null # GNU
 	complete -c cp -s a -l archive -d "Same as -dpR"
 	complete -c cp -s b -l backup -d "Make backup of each existing destination file" -a "none off numbered t existing nil simple never"
 	complete -c cp -l copy-contents -d "Copy contents of special files when recursive"

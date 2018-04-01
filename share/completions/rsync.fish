@@ -130,6 +130,6 @@ complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" 
         __rsync_remote_target
 )(
 	# Get the list of remote files from the specified rsync server.
-        rsync --list-only (__rsync_remote_target) ^/dev/null | string replace -r '^d.*' '\$0/' | tr -s ' ' | cut -d' ' -f 5-
+        rsync --list-only (__rsync_remote_target) 2>/dev/null | string replace -r '^d.*' '\$0/' | tr -s ' ' | cut -d' ' -f 5-
 )
 "

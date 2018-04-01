@@ -133,11 +133,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
             # c_m_p.py should work with any python version.
             set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
             if command -qs python3
-                python3 $update_args >/dev/null ^/dev/null &
+                python3 $update_args >/dev/null 2>/dev/null &
             else if command -qs python2
-                python2 $update_args >/dev/null ^/dev/null &
+                python2 $update_args >/dev/null 2>/dev/null &
             else if command -qs python
-                python $update_args >/dev/null ^/dev/null &
+                python $update_args >/dev/null 2>/dev/null &
             end
         end
     end
@@ -165,14 +165,14 @@ function __fish_config_interactive -d "Initializations that should be performed 
     function __fish_repaint --on-variable fish_color_cwd --description "Event handler, repaints the prompt when fish_color_cwd changes"
         if status --is-interactive
             set -e __fish_prompt_cwd
-            commandline -f repaint ^/dev/null
+            commandline -f repaint 2>/dev/null
         end
     end
 
     function __fish_repaint_root --on-variable fish_color_cwd_root --description "Event handler, repaints the prompt when fish_color_cwd_root changes"
         if status --is-interactive
             set -e __fish_prompt_cwd
-            commandline -f repaint ^/dev/null
+            commandline -f repaint 2>/dev/null
         end
     end
 
@@ -231,13 +231,13 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -g fish_bind_mode default
         if test "$fish_key_bindings" = fish_default_key_bindings
             # Redirect stderr per #1155
-            fish_default_key_bindings ^/dev/null
+            fish_default_key_bindings 2>/dev/null
         else
-            eval $fish_key_bindings ^/dev/null
+            eval $fish_key_bindings 2>/dev/null
         end
         # Load user key bindings if they are defined
         if functions --query fish_user_key_bindings >/dev/null
-            fish_user_key_bindings ^/dev/null
+            fish_user_key_bindings 2>/dev/null
         end
     end
 
@@ -326,7 +326,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
             # it ships with example handlers for bash and zsh, so we'll follow that format
         else if type -p -q pkgfile
             function __fish_command_not_found_handler --on-event fish_command_not_found
-                set -l __packages (pkgfile --binaries --verbose -- $argv[1] ^/dev/null)
+                set -l __packages (pkgfile --binaries --verbose -- $argv[1] 2>/dev/null)
                 if test $status -eq 0
                     printf "%s may be found in the following packages:\n" "$argv[1]"
                     printf "  %s\n" $__packages

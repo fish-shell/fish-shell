@@ -15,7 +15,7 @@ function __fish_busctl
 	else
 		set mode "--system"
 	end
-    command busctl $mode $argv --no-legend --no-pager ^/dev/null
+    command busctl $mode $argv --no-legend --no-pager 2>/dev/null
 end
 
 # Only get the arguments to the actual command, skipping all options and arguments to options

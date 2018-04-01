@@ -3,7 +3,7 @@
 #
 
 # Test if we are using GNU tr
-if command tr --version >/dev/null ^/dev/null
+if command tr --version >/dev/null 2>/dev/null
   complete -c tr -x
   complete -c tr -s c -s C -l complement -d 'use the complement of SET1'
   complete -c tr -s d -l delete          -d 'delete characters in SET1, do not translate'

@@ -19,7 +19,7 @@ function __fish_complete_eselect_action_options
 
     # Alter further php completion
     if [ (__fish_print_cmd_args_without_options)[2] = 'php' ]
-        eselect php list-modules ^/dev/null | string split " "
+        eselect php list-modules 2>/dev/null | string split " "
         return
     end
 
@@ -38,7 +38,7 @@ function __fish_complete_eselect_php_actions
     set -l sedregexp 's/^\s*\[([0-9]+)\]\s+([A-Za-z0-9\.]+).*/\1\t\2/'
 
     if test (__fish_print_cmd_args_without_options)[3] = 'set'
-        eselect php list (__fish_print_cmd_args_without_options)[-1] ^/dev/null | sed -r $sedregexp
+        eselect php list (__fish_print_cmd_args_without_options)[-1] 2>/dev/null | sed -r $sedregexp
     end
 end
 

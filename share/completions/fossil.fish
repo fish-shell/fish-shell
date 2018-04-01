@@ -2,7 +2,7 @@
 # http://www.fossil-scm.org/
 
 function __fish_fossil
-    command fossil $argv ^/dev/null
+    command fossil $argv 2>/dev/null
 end
 
 function __fish_fossil_needs_command

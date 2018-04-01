@@ -1,5 +1,5 @@
 #Completions for rm
-if rm --version >/dev/null ^/dev/null # GNU
+if rm --version >/dev/null 2>/dev/null # GNU
 	complete -c rm -s d -l directory -d "Unlink directory (Only by superuser)"
 	complete -c rm -s f -l force -d "Never prompt before removal"
 	complete -c rm -s i -l interactive -d "Prompt before removal"

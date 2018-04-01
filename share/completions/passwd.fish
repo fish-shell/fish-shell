@@ -7,7 +7,7 @@ function __fish_passwd_darwin_infosystem
 	echo -e "nis\tRemote NIS server"
 end
 
-if passwd --help >/dev/null ^&1
+if passwd --help >/dev/null 2>&1
 	complete -c passwd -n '__fish_contains_opt -s S status' -s a -l all -f -d "Display password state for all users"
 	complete -c passwd -s d -l delete -f -d "Delete user password"
 	complete -c passwd -s e -l expire -f -d "Immediately obsolete user password"

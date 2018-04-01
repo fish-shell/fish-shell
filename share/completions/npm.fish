@@ -59,7 +59,7 @@ function __fish_complete_npm -d "Complete the commandline using npm's 'completio
             set COMP_CWORD (math $COMP_CWORD + 1)
             set COMP_LINE $COMP_LINE ""
         end
-        command npm completion -- $COMP_LINE ^/dev/null
+        command npm completion -- $COMP_LINE 2>/dev/null
     end
 end
 

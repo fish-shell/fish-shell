@@ -1,4 +1,4 @@
-if date --version > /dev/null ^ /dev/null
+if date --version > /dev/null 2>/dev/null
 	complete -c date -s d -l date -d "Display date described by string" -x
 	complete -c date -s f -l file -d "Display date for each line in file" -r
 	complete -c date -s I -l iso-8601 -d "Output in ISO 8601 format" -x -a "date hours minutes seconds"

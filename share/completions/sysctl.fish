@@ -1,9 +1,9 @@
 if type -q -f sysctl
 	# Only GNU and BSD sysctl seem to know "-h", so others should exit non-zero
-	if sysctl -h >/dev/null ^/dev/null
+	if sysctl -h >/dev/null 2>/dev/null
 		# Print sysctl keys and values, separated by a tab
 		function __fish_sysctl_values
-			sysctl -a ^/dev/null | string replace -a " = " \t
+			sysctl -a 2>/dev/null | string replace -a " = " \t
 		end
 
 		complete -c sysctl -a '(__fish_sysctl_values)' -f
@@ -32,7 +32,7 @@ if type -q -f sysctl
 	else
 		# OSX sysctl
 		function __fish_sysctl_values
-			sysctl -a ^/dev/null | string replace -a ":" \t
+			sysctl -a 2>/dev/null | string replace -a ":" \t
 		end
 
 		complete -c sysctl -a '(__fish_sysctl_values)' -f

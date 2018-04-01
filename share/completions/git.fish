@@ -6,26 +6,26 @@ function __fish_git_commits
     # This allows filtering by subject with the new pager!
     # Because even subject lines can be quite long,
     # trim them (abbrev'd hash+tab+subject) to 73 characters
-    command git log --pretty=tformat:"%h"\t"%s" --all --max-count=1000 ^/dev/null | string replace -r '(.{73}).+' '$1…'
+    command git log --pretty=tformat:"%h"\t"%s" --all --max-count=1000 2>/dev/null | string replace -r '(.{73}).+' '$1…'
 end
 
 function __fish_git_recent_commits
     # Like __fish_git_commits, but not on all branches and limited to
     # the last 50 commits. Used for fixup, where only the current branch
     # and the latest commits make sense.
-    command git log --pretty=tformat:"%h"\t"%s" --max-count=50 ^/dev/null | string replace -r '(.{73}).+' '$1…'
+    command git log --pretty=tformat:"%h"\t"%s" --max-count=50 2>/dev/null | string replace -r '(.{73}).+' '$1…'
 end
 
 function __fish_git_branches
-    command git branch --no-color -a $argv ^/dev/null # Filter out detached heads and such ("(HEAD detached at SOMESHA)", localized). | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " # We assume anything that's not remote is a local branch. | string replace -r '^(?!remotes/)(.*)' '$1\tLocal Branch' | string replace -r "^remotes/(.*)" '$1\tRemote Branch'
+    command git branch --no-color -a $argv 2>/dev/null # Filter out detached heads and such ("(HEAD detached at SOMESHA)", localized). | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " # We assume anything that's not remote is a local branch. | string replace -r '^(?!remotes/)(.*)' '$1\tLocal Branch' | string replace -r "^remotes/(.*)" '$1\tRemote Branch'
 end
 
 function __fish_git_tags
-    command git tag --sort=-creatordate ^/dev/null
+    command git tag --sort=-creatordate 2>/dev/null
 end
 
 function __fish_git_dir
-    command git rev-parse --git-dir ^/dev/null
+    command git rev-parse --git-dir 2>/dev/null
 end
 
 function __fish_git_heads
@@ -44,7 +44,7 @@ function __fish_git_refs
 end
 
 function __fish_git_remotes
-    command git remote ^/dev/null
+    command git remote 2>/dev/null
 end
 
 function __fish_git_files
@@ -65,7 +65,7 @@ function __fish_git_files
     # to get _all_ kinds of staged files.
 
     # Save the repo root to remove it from the path later.
-    set -l root (command git rev-parse --show-toplevel ^/dev/null)
+    set -l root (command git rev-parse --show-toplevel 2>/dev/null)
 
     # Cache the translated descriptions so we don't have to get it
     # once per file.
@@ -288,11 +288,11 @@ function __fish_git_stash_not_using_subcommand
 end
 
 function __fish_git_complete_stashes
-    command git stash list --format=%gd:%gs ^/dev/null | string replace ":" \t
+    command git stash list --format=%gd:%gs 2>/dev/null | string replace ":" \t
 end
 
 function __fish_git_aliases
-    command git config -z --get-regexp '^alias\.' ^/dev/null | while read -lz key value
+    command git config -z --get-regexp '^alias\.' 2>/dev/null | while read -lz key value
         begin
             set -l name (string replace -r '^.*\.' '' -- $key)
             printf "%s\t%s\n" $name "Alias for $value"
@@ -345,14 +345,14 @@ function __fish_git_possible_commithash
 end
 
 function __fish_git_reflog
-    command git reflog --no-decorate ^/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
+    command git reflog --no-decorate 2>/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
 end
 
 # general options
 complete -f -c git -l help -d 'Display the manual of a git command'
 complete -f -c git -n '__fish_git_needs_command' -l version -d 'Display version'
 complete -x -c git -n '__fish_git_needs_command' -s C -a '(__fish_complete_directories)' -d 'Run as if git was started in this directory'
-complete -x -c git -n '__fish_git_needs_command' -s c -a '(command git config -l ^/dev/null | string replace = \t)' -d 'Set a configuration option'
+complete -x -c git -n '__fish_git_needs_command' -s c -a '(command git config -l 2>/dev/null | string replace = \t)' -d 'Set a configuration option'
 complete -x -c git -n '__fish_git_needs_command' -l exec-path -a '(__fish_git_complete_directories)' -d 'Get or set the path to the git programs'
 complete -f -c git -n '__fish_git_needs_command' -l html-path -d 'Print the path to the html documentation'
 complete -f -c git -n '__fish_git_needs_command' -l man-path -d 'Print the path to the man documentation'

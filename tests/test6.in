@@ -88,7 +88,7 @@ if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end
     end
     popd
     if begin
-            set -l PATH $PWD/test6.tmp.dir $PATH ^/dev/null
+            set -l PATH $PWD/test6.tmp.dir $PATH 2>/dev/null
             complete -C$dir | grep "^$dir/.*Directory" >/dev/null
         end
         echo "incorrect implicit cd from PATH"

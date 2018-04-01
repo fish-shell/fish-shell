@@ -70,10 +70,8 @@ bool tokenizer_t::next(struct tok_t *result) {
     return true;
 }
 
-/// Tests if this character can be a part of a string. The redirect ^ is allowed unless it's the
-/// first character. Hash (#) starts a comment if it's the first character in a token; otherwise it
-/// is considered a string character. See issue #953.
-static bool tok_is_string_character(wchar_t c, bool is_first) {
+/// Tests if this character can be a part of a string.
+static bool tok_is_string_character(wchar_t c) {
     switch (c) {
         case L'\0':
         case L' ':
@@ -84,15 +82,9 @@ static bool tok_is_string_character(wchar_t c, bool is_first) {
         case L'\r':
         case L'<':
         case L'>':
-        case L'&': {
-            // Unconditional separators.
+        case L'&':
             return false;
-        }
-        case L'^': {
-            // Conditional separator.
-            return !is_first;
-        }
-        default: { return true; }
+        default: return true;
     }
 }
 
@@ -117,7 +109,6 @@ tok_t tokenizer_t::read_string() {
     std::vector<char> expecting;
     int slice_offset = 0;
     const wchar_t *const buff_start = this->buff;
-    bool is_first = true;
 
     while (true) {
         wchar_t c = *this->buff;
@@ -219,7 +210,7 @@ tok_t tokenizer_t::read_string() {
                 break;
             }
         }
-        else if (mode == tok_mode::regular_text && !tok_is_string_character(c, is_first)) {
+        else if (mode == tok_mode::regular_text && !tok_is_string_character(c)) {
             break;
         }
 
@@ -233,7 +224,6 @@ tok_t tokenizer_t::read_string() {
 #endif
 
         this->buff++;
-        is_first = false;
     }
 
     if ((!this->accept_unfinished) && (mode != tok_mode::regular_text)) {
@@ -292,7 +282,7 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
     size_t idx = 0;
 
     // Determine the fd. This may be specified as a prefix like '2>...' or it may be implicit like
-    // '>' or '^'. Try parsing out a number; if we did not get any digits then infer it from the
+    // '>'. Try parsing out a number; if we did not get any digits then infer it from the
     // first character. Watch out for overflow.
     long long big_fd = 0;
     for (; iswdigit(buff[idx]); idx++) {
@@ -313,10 +303,6 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
                 result.fd = STDIN_FILENO;
                 break;
             }
-            case L'^': {
-                result.fd = STDERR_FILENO;
-                break;
-            }
             default: {
                 errored = true;
                 break;
@@ -325,12 +311,11 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
     }
 
     // Either way we should have ended on the redirection character itself like '>'.
-    // Don't allow an fd with a caret redirection - see #1873
     wchar_t redirect_char = buff[idx++];  // note increment of idx
-    if (redirect_char == L'>' || (redirect_char == L'^' && idx == 1)) {
+    if (redirect_char == L'>') {
         result.redirection_mode = redirection_type_t::overwrite;
         if (buff[idx] == redirect_char) {
-            // Doubled up like ^^ or >>. That means append.
+            // Doubled up like >>. That means append.
             result.redirection_mode = redirection_type_t::append;
             idx++;
         }
@@ -505,8 +490,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             break;
         }
         case L'>':
-        case L'<':
-        case L'^': {
+        case L'<': {
             // There's some duplication with the code in the default case below. The key difference
             // here is that we must never parse these as a string; a failed redirection is an error!
             auto redir_or_pipe = read_redirection_or_fd_pipe(this->buff);
@@ -615,9 +599,7 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {
 }
 
 bool move_word_state_machine_t::is_path_component_character(wchar_t c) {
-    // Always treat separators as first. All this does is ensure that we treat ^ as a string
-    // character instead of as stderr redirection, which I hypothesize is usually what is desired.
-    return tok_is_string_character(c, true) && !wcschr(L"/={,}'\"", c);
+    return tok_is_string_character(c) && !wcschr(L"/={,}'\"", c);
 }
 
 bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {

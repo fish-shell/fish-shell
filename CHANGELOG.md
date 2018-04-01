@@ -15,6 +15,8 @@ This section is for changes merged to the `major` branch that are not also merge
 - Successive commas in brace expansions are handled in less surprising manner (`{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again). (#3002, #4632).
 - `%` is no longer used for process and job expansion. `$fish_pid` and `$last_pid` have taken the place of `%self` and `%last` respectively. (#4230, #1202)
 - The new `math` builtin (see below) does not support logical expressions; `test` should be used instead (#4777).
+- The `?` wildcard has been removed (#4520).
+- The `^` caret redirection for stderr has been removed (#4394). To redirect stderr, `2>/some/path` may be used, or `2>|` as a pipe.
 
 ## Notable fixes and improvements
 - `wait` builtin is added for waiting on processes (#4498).
@@ -51,7 +53,6 @@ This section is for changes merged to the `major` branch that are not also merge
 - The machine hostname, where available, is now exposed as `$hostname` which is now a reserved variable. This drops the dependency on the `hostname` executable (#4422).
 - `functions --handlers` can be used to show event handlers (#4694).
 - Variables set in `if` and `while` conditions are available outside the block (#4820).
-- The `?` wildcard has been removed (#4520).
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

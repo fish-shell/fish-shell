@@ -1007,7 +1007,6 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 case L'$':
                 case L' ':
                 case L'#':
-                case L'^':
                 case L'<':
                 case L'>':
                 case L'(':

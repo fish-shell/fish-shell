@@ -28,7 +28,7 @@ printf 'a\cb'
 echo
 
 # Bogus printf specifier, should produce no stdout
-printf "%5" 10 ^/dev/null
+printf "%5" 10 2>/dev/null
 
 # Octal escapes produce literal bytes, not characters
 # \376 is 0xFE

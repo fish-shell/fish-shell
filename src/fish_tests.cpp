@@ -534,7 +534,7 @@ static void test_tokenizer() {
 
     const wchar_t *str =
         L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells "
-        L"){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect "
+        L"){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ 2> 2>^is_a_redirect "
         L"&&& ||| "
         L"&& || & |"
         L"Compress_Newlines\n  \n\t\n   \nInto_Just_One";
@@ -607,8 +607,6 @@ static void test_tokenizer() {
 
     // Test redirection_type_for_string.
     if (redirection_type_for_string(L"<") != redirection_type_t::input)
-        err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"^") != redirection_type_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
     if (redirection_type_for_string(L">") != redirection_type_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);

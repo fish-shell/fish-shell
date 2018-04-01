@@ -1248,7 +1248,7 @@ int env_remove(const wcstring &key, int var_mode) {
     int erased = 0;
 
     if ((var_mode & ENV_USER) && is_read_only(key)) {
-        return 2;
+        return ENV_SCOPE;
     }
 
     first_node = vars_stack().top.get();

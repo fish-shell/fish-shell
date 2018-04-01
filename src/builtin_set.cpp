@@ -279,15 +279,8 @@ static bool validate_path_warning_on_colons(const wchar_t *cmd,
     return any_success;
 }
 
-/// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
-/// description of the problem to stderr.
-static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstring_list_t &list,
-                      io_streams_t &streams) {
-    if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams)) {
-        return STATUS_CMD_ERROR;
-    }
-
-    int retval = env_set(key, scope | ENV_USER, list);
+static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key, io_streams_t &streams)
+{
     switch (retval) {
         case ENV_OK: {
             retval = STATUS_CMD_OK;
@@ -301,14 +294,14 @@ static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstrin
         }
         case ENV_SCOPE: {
             streams.err.append_format(
-                _(L"%ls: Tried to set the special variable '%ls' with the wrong scope\n"), cmd,
+                _(L"%ls: Tried to modify the special variable '%ls' with the wrong scope\n"), cmd,
                 key);
             retval = STATUS_CMD_ERROR;
             break;
         }
         case ENV_INVALID: {
             streams.err.append_format(
-                _(L"%ls: Tried to set the special variable '%ls' to an invalid value\n"), cmd, key);
+                _(L"%ls: Tried to modify the special variable '%ls' to an invalid value\n"), cmd, key);
             retval = STATUS_CMD_ERROR;
             break;
         }
@@ -317,6 +310,18 @@ static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstrin
             break;
         }
     }
+}
+
+/// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
+/// description of the problem to stderr.
+static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstring_list_t &list,
+                      io_streams_t &streams) {
+    if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams)) {
+        return STATUS_CMD_ERROR;
+    }
+
+    int retval = env_set(key, scope | ENV_USER, list);
+    handle_env_return(retval, cmd, key, streams);
 
     return retval;
 }
@@ -625,6 +630,8 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
         erase_values(result, indexes);
         retval = my_env_set(cmd, dest, scope, result, streams);
     }
+
+    handle_env_return(retval, cmd, dest, streams);
 
     if (retval != STATUS_CMD_OK) return retval;
     return check_global_scope_exists(cmd, opts, dest, streams);

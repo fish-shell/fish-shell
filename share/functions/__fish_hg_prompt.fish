@@ -37,7 +37,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
             break
         end
         # Go up one directory
-        set -l dir (string replace -r '[^/]*/?$' '' $dir)
+        set dir (string replace -r '[^/]*/?$' '' $dir)
     end
 
     if test -z "$root"

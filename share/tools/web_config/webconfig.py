@@ -35,6 +35,14 @@ def isMacOS10_12_5_OrLater():
     version = platform.mac_ver()[0]
     return version and LooseVersion(version) >= LooseVersion('10.12.5')
 
+def is_wsl():
+    """ Return whether we are running under the Windows Subsystem for Linux """
+    if 'linux' in platform.system().lower():
+        with open('/proc/version', 'r') as f:
+            if 'Microsoft' in f.read():
+                return True
+    return False
+
 
 # Disable CLI web browsers
 term = os.environ.pop('TERM', None)
@@ -1139,6 +1147,8 @@ fileurl = 'file://' + filename
 print("Web config started at '%s'. Hit enter to stop." % fileurl)
 if isMacOS10_12_5_OrLater():
     subprocess.check_call(['open', fileurl])
+elif is_wsl():
+    subprocess.call(['cmd.exe', '/c', "start %s" % url])
 else:
     webbrowser.open(fileurl)
 

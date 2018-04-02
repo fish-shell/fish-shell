@@ -78,19 +78,29 @@
 
 static wcstring get_machine_identifier();
 
-static wcstring vars_filename_in_directory(const wcstring &wdir) {
-    if (wdir.empty()) return L"";
-
-    wcstring result = wdir;
-    result.append(L"/fishd.");
-    result.append(get_machine_identifier());
+/// return a list of paths where the uvars file has been historically stored.
+static wcstring_list_t get_legacy_paths(const wcstring &wdir) {
+    wcstring_list_t result;
+    result.push_back(wdir + L"/fishd." + get_machine_identifier());
+    wcstring hostname_id;
+    if (get_hostname_identifier(hostname_id)) {
+        result.push_back(wdir + L'/' + hostname_id);
+    }
     return result;
 }
 
-static const wcstring default_vars_path() {
+static maybe_t<wcstring> default_vars_path_directory() {
     wcstring path;
-    path_get_config(path);
-    return vars_filename_in_directory(path);
+    if (!path_get_config(path)) return none();
+    return path;
+}
+
+static maybe_t<wcstring> default_vars_path() {
+    if (auto path = default_vars_path_directory()) {
+        path->append(L"/fish_universal_variables");
+        return path;
+    }
+    return none();
 }
 
 #if !defined(__APPLE__) && !defined(__CYGWIN__)
@@ -270,8 +280,7 @@ static wcstring encode_serialized(const wcstring_list_t &vals) {
     return join_strings(vals, ARRAY_SEP);
 }
 
-env_universal_t::env_universal_t(wcstring path)
-    : explicit_vars_path(std::move(path)), tried_renaming(false), last_read_file(kInvalidFileID) {}
+env_universal_t::env_universal_t(wcstring path) : explicit_vars_path(std::move(path)) {}
 
 maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     var_table_t::const_iterator where = vars.find(name);
@@ -499,26 +508,35 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
     return ret == 0;
 }
 
-bool env_universal_t::load(callback_data_list_t &callbacks) {
-    const wcstring vars_path =
-        explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
+bool env_universal_t::initialize(callback_data_list_t &callbacks) {
     scoped_lock locker(lock);
-    bool success = load_from_path(vars_path, callbacks);
-    if (!success && !tried_renaming && errno == ENOENT) {
-        // We failed to load, because the file was not found. Older fish used the hostname only. Try
-        // moving the filename based on the hostname into place; if that succeeds try again.
-        // Silently "upgraded."
-        tried_renaming = true;
-        wcstring hostname_id;
-        if (get_hostname_identifier(hostname_id)) {
-            const wcstring hostname_path = wdirname(vars_path) + L'/' + hostname_id;
-            if (0 == wrename(hostname_path, vars_path)) {
-                // We renamed - try again.
-                success = this->load(callbacks);
+    if (!explicit_vars_path.empty()) {
+        return load_from_path(explicit_vars_path, callbacks);
+    }
+
+    // Get the variables path; if there is none (e.g. HOME is bogus) it's hopeless.
+    auto vars_path = default_vars_path();
+    if (!vars_path) return false;
+
+    bool success = load_from_path(*vars_path, callbacks);
+    if (!success && errno == ENOENT) {
+        // We failed to load, because the file was not found. Attempt to load from our legacy paths.
+        if (auto dir = default_vars_path_directory()) {
+            for (const wcstring &path : get_legacy_paths(*dir)) {
+                if (load_from_path(path, callbacks)) {
+                    // Mark every variable as modified.
+                    // This tells the uvars to write out the values loaded from the legacy path;
+                    // otherwise it will conclude that the values have been deleted since they
+                    // aren't present.
+                    for (const auto &kv : vars) {
+                        modified.insert(kv.first);
+                    }
+                    success = true;
+                    break;
+                }
             }
         }
     }
-
     return success;
 }
 
@@ -669,9 +687,12 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     // instances of fish will not be able to obtain it. This seems to be a greater risk than that of
     // data loss on lockless NFS. Users who put their home directory on lockless NFS are playing
     // with fire anyways.
-    const wcstring vars_path =
-        explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
-
+    wcstring vars_path = explicit_vars_path;
+    if (vars_path.empty()) {
+        if (auto default_path = default_vars_path()) {
+            vars_path = default_path.acquire();
+        }
+    }
     if (vars_path.empty()) {
         debug(2, L"No universal variable path available");
         return false;
@@ -941,7 +962,7 @@ bool get_hostname_identifier(wcstring &result) {
 
 /// Get a sort of unique machine identifier. Prefer the MAC address; if that fails, fall back to the
 /// hostname; if that fails, pick something.
-wcstring get_machine_identifier() {
+static wcstring get_machine_identifier() {
     wcstring result;
     unsigned char mac_addr[MAC_ADDRESS_MAX_LEN] = {};
     if (get_mac_address(mac_addr)) {

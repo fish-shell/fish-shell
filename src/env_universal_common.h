@@ -31,7 +31,9 @@ typedef std::vector<struct callback_data_t> callback_data_list_t;
 bool get_hostname_identifier(wcstring &result);
 /// Class representing universal variables.
 class env_universal_t {
-    var_table_t vars;  // current values
+    // The table of variables. Note this is sorted; this ensures that the output file is in sorted
+    // order.
+    var_table_t vars;
 
     // Keys that have been modified, and need to be written. A value here that is not present in
     // vars indicates a deleted value.
@@ -41,7 +43,6 @@ class env_universal_t {
     const wcstring explicit_vars_path;
 
     mutable fish_mutex_t lock;
-    bool tried_renaming;
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
 
@@ -55,7 +56,7 @@ class env_universal_t {
     bool move_new_vars_file_into_place(const wcstring &src, const wcstring &dst);
 
     // File id from which we last read.
-    file_id_t last_read_file;
+    file_id_t last_read_file = kInvalidFileID;
 
     // Given a variable table, generate callbacks representing the difference between our vars and
     // the new vars.
@@ -86,8 +87,8 @@ class env_universal_t {
     // Gets variable names.
     wcstring_list_t get_names(bool show_exported, bool show_unexported) const;
 
-    /// Loads variables at the correct path.
-    bool load(callback_data_list_t &callbacks);
+    /// Loads variables at the correct path, optionally migrating from a legacy path.
+    bool initialize(callback_data_list_t &callbacks);
 
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.

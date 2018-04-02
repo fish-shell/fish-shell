@@ -1008,7 +1008,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     assert(s_universal_variables == NULL);
     s_universal_variables = new env_universal_t(L"");
     callback_data_list_t callbacks;
-    s_universal_variables->load(callbacks);
+    s_universal_variables->initialize(callbacks);
     env_universal_callbacks(callbacks);
 
     // Now that the global scope is fully initialized, add a toplevel local scope. This same local

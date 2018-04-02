@@ -2753,7 +2753,7 @@ static void test_universal() {
 
     env_universal_t uvars(UVARS_TEST_PATH);
     callback_data_list_t callbacks;
-    bool loaded = uvars.load(callbacks);
+    bool loaded = uvars.initialize(callbacks);
     if (!loaded) {
         err(L"Failed to load universal variables");
     }

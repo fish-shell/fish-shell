@@ -162,8 +162,11 @@ static wcstring get_runtime_path() {
 /// Returns a "variables" file in the appropriate runtime directory. This is called infrequently and
 /// so does not need to be cached.
 static wcstring default_named_pipe_path() {
-    // Note that vars_filename_in_directory returns empty string when passed the empty string.
-    return vars_filename_in_directory(get_runtime_path());
+    wcstring result = get_runtime_path();
+    if (!result.empty()) {
+        result.append(L"/fish_universal_variables");
+    }
+    return result;
 }
 #endif
 

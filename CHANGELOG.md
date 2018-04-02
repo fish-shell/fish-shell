@@ -53,7 +53,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - The machine hostname, where available, is now exposed as `$hostname` which is now a reserved variable. This drops the dependency on the `hostname` executable (#4422).
 - `functions --handlers` can be used to show event handlers (#4694).
 - Variables set in `if` and `while` conditions are available outside the block (#4820).
-- The universal variables file no longer contains the MAC address. It is now at the fixed location `.config/fish/fish_universal_variables`.
+- The universal variables file no longer contains the MAC address. It is now at the fixed location `.config/fish/fish_universal_variables` (#1912).
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

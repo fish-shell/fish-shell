@@ -17,7 +17,6 @@ import socket
 import string
 import subprocess
 import sys
-import webbrowser
 
 FISH_BIN_PATH = False  # will be set later
 IS_PY2 = sys.version_info[0] == 2
@@ -39,6 +38,9 @@ def isMacOS10_12_5_OrLater():
 
 # Disable CLI web browsers
 term = os.environ.pop('TERM', None)
+# This import must be done with an empty $TERM, otherwise a command-line browser may be started
+# which will block the whole process - see https://docs.python.org/3/library/webbrowser.html
+import webbrowser
 if term:
     os.environ['TERM'] = term
 

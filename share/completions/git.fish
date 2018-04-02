@@ -6,16 +6,14 @@ function __fish_git_commits
     # This allows filtering by subject with the new pager!
     # Because even subject lines can be quite long,
     # trim them (abbrev'd hash+tab+subject) to 73 characters
-    command git log --pretty=tformat:"%h"\t"%s" --all --max-count=1000 2>/dev/null \
-    | string replace -r '(.{73}).+' '$1…'
+    command git log --pretty=tformat:"%h"\t"%<(64,trunc)%s" --all --max-count=1000 2>/dev/null
 end
 
 function __fish_git_recent_commits
     # Like __fish_git_commits, but not on all branches and limited to
     # the last 50 commits. Used for fixup, where only the current branch
     # and the latest commits make sense.
-    command git log --pretty=tformat:"%h"\t"%s" --max-count=50 2>/dev/null \
-    | string replace -r '(.{73}).+' '$1…'
+    command git log --pretty=tformat:"%h"\t"%<(64,trunc)%s" --max-count=50 2>/dev/null
 end
 
 function __fish_git_branches

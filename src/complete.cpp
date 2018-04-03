@@ -870,12 +870,12 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
         run_on_main_thread([&completion_snapshot] () {
             completion_snapshot = std::move(env_vars_snapshot_t( (wchar_t const * const []) { L"fish_function_path", nullptr } ));
         });
-    }
 
-    head_exists = function_exists_no_autoload(cmd.c_str(), completion_snapshot);
-    // While it may seem like first testing `path_get_path` before resorting to an env lookup may be faster, path_get_path can potentially
-    // do a lot of FS/IO access, so env.get() + function_exists() should still be faster.
-    head_exists = head_exists || path_get_path(cmd, nullptr);
+        head_exists = function_exists_no_autoload(cmd.c_str(), completion_snapshot);
+        // While it may seem like first testing `path_get_path` before resorting to an env lookup may be faster, path_get_path can potentially
+        // do a lot of FS/IO access, so env.get() + function_exists() should still be faster.
+        head_exists = head_exists || path_get_path(cmd, nullptr);
+    }
 
     if (!head_exists) {
         //Do not load custom completions if the head does not exist

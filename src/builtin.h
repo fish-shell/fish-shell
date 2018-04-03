@@ -16,15 +16,25 @@ struct io_streams_t;
 /// Data structure to describe a builtin.
 struct builtin_data_t {
     // Name of the builtin.
-    const wchar_t *name;
-    // Function pointer tothe builtin implementation.
+    const wcstring name;
+    // Function pointer to the builtin implementation.
     int (*func)(parser_t &parser, io_streams_t &streams, wchar_t **argv);
     // Description of what the builtin does.
-    const wchar_t *desc;
+    const wcstring desc;
 
-    bool operator<(const wcstring &) const;
-    bool operator<(const builtin_data_t *) const;
+    bool operator == (const builtin_data_t &other) const {
+        return name == other.name;
+    }
 };
+
+namespace std {
+    template<>
+    struct hash<builtin_data_t> {
+        std::size_t operator()(const builtin_data_t &data) const {
+            return std::hash<wcstring>()(data.name);
+        }
+    };
+}
 
 /// The default prompt for the read command.
 #define DEFAULT_READ_PROMPT L"set_color green; echo -n read; set_color normal; echo -n \"> \""

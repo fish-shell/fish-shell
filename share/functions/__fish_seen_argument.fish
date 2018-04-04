@@ -11,7 +11,7 @@ function __fish_seen_argument
 		end
 
 		for l in $_flag_l
-			if string match -q "--$l" -- $t
+			if string match -q -- "--$l" $t
 				return 0
 			end
 		end

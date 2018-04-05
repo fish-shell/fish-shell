@@ -387,9 +387,7 @@ function __fish_git_prompt --description "Prompt function for Git"
             if set -q __fish_git_prompt_showuntrackedfiles
                 set -l config (command git config --bool bash.showUntrackedFiles)
                 if test "$config" != false
-                    if command git ls-files --others --exclude-standard --directory --no-empty-directory --error-unmatch -- :/ >/dev/null 2>/dev/null
-                        set u $___fish_git_prompt_char_untrackedfiles
-                    end
+                    set u (__fish_git_prompt_untracked)
                 end
             end
         end
@@ -469,6 +467,14 @@ function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells
         set staged $___fish_git_prompt_char_invalidstate
     end
     echo $staged
+end
+
+function __fish_git_prompt_untracked --description "__fish_git_prompt helper, tells whether or not the current repository has untracked files"
+    set -l untracked
+    if command git ls-files --others --exclude-standard --directory --no-empty-directory --error-unmatch -- :/ >/dev/null 2>&1
+        set untracked $___fish_git_prompt_char_untrackedfiles
+    end
+    echo $untracked
 end
 
 function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells whether or not the current branch has tracked, modified files"

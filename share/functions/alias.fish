@@ -1,5 +1,5 @@
 function alias --description 'Creates a function wrapping a command'
-    set -l options 'h/help'
+    set -l options 'h/help' 's/save'
     argparse -n alias --max-args=2 $options -- $argv
     or return
 
@@ -69,5 +69,8 @@ function alias --description 'Creates a function wrapping a command'
     set -l cmd_string (string escape -- "alias $argv")
     set wrapped_cmd (string join ' ' -- $first_word $body | string escape)
     echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end" | source
+    if set -q _flag_save
+        funcsave $name
+    end
     #echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end"
 end

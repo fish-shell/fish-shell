@@ -689,6 +689,7 @@ static int set_var_slices(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_
 
     if (indexes.size() != static_cast<size_t>(argc)) {
         streams.err.append_format(BUILTIN_SET_MISMATCHED_ARGS, cmd, indexes.size(), argc);
+        return STATUS_INVALID_ARGS;
     }
 
     int scope = compute_scope(opts);  // calculate the variable scope based on the provided options

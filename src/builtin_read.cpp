@@ -394,11 +394,6 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     return STATUS_CMD_OK;
 }
 
-void write_stdout(wcstring val) {
-    const std::string &out = wcs2string(val);
-    write_loop(STDOUT_FILENO, out.c_str(), out.size());
-}
-
 /// The read builtin. Reads from stdin and stores the values in environment variables.
 int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
@@ -446,7 +441,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (opts.to_stdout) {
-        write_stdout(buff);
+        streams.out.append(buff);
         return exit_res;
     }
 

@@ -247,3 +247,7 @@ begin
     echo a...b...c | read -l a b c
     echo $a; echo $b; echo $c
 end
+echo
+
+# At one point, whatever was read was printed _before_ banana
+echo banana (echo sausage | read)

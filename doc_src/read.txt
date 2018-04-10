@@ -7,13 +7,13 @@ read [OPTIONS] VARIABLES...
 
 \subsection read-description Description
 
-`read` reads from standard input and either writes the result back to the terminal for use in command substitution or stores the result in one or more shell variables. By default, one line (terminated by a newline) is read into each variable. Alternatively, a null character or a maximum number of characters can be used to terminate the input. Unlike other shells, there is no default variable (such as `REPLY`) for storing the result.
+`read` reads from standard input and either writes the result back to the terminal for use in command substitution or stores the result in one or more shell variables. By default, `read` reads up to the next newline and splits it into the given variables on space, tab and newline. Alternatively, a null character or a maximum number of characters can be used to terminate the input, and other delimiters can be given. Unlike other shells, there is no default variable (such as `REPLY`) for storing the result. Instead, it is printed on stdout.
 
 The following options are available:
 
 - `-c CMD` or `--command=CMD` sets the initial string in the interactive mode command buffer to `CMD`.
 
-- `-d DELIMITER` or `--delimiter=DELIMITER` splits on DELIMITER.
+- `-d DELIMITER` or `--delimiter=DELIMITER` splits on DELIMITER. DELIMITER will be used as an entire string to split on, not a set of characters.
 
 - `-g` or `--global` makes the variables global.
 

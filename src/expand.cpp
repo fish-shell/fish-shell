@@ -937,26 +937,24 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
             effective_working_dirs.push_back(working_dir);
         } else {
             // Either EXPAND_SPECIAL_FOR_COMMAND or EXPAND_SPECIAL_FOR_CD. We can handle these
-            // mostly the same. There's the following differences:
+            // mostly the same.
             //
-            // 1. An empty CDPATH should be treated as '.', but an empty PATH should be left empty
+            // An empty CDPATH should be treated as '.', but an empty PATH should be left empty
             // (no commands can be found). Also, an empty element in either is treated as '.' for
             // consistency with POSIX shells. Note that we rely on the latter by having called
             // `munge_colon_delimited_array()` for these special env vars. Thus we do not
             // special-case them here.
             //
-            // 2. PATH is only "one level," while CDPATH is multiple levels. That is, input like
-            // 'foo/bar' should resolve against CDPATH, but not PATH.
-            //
-            // In either case, we ignore the path if we start with ./ or /. Also ignore it if we are
-            // doing command completion and we contain a slash, per IEEE 1003.1, chapter 8 under
-            // PATH.
+            // We ignore the path if we start with / or ./
             if (string_prefixes_string(L"/", path_to_expand) ||
                 string_prefixes_string(L"./", path_to_expand) ||
-                string_prefixes_string(L"../", path_to_expand) ||
-                (for_command && path_to_expand.find(L'/') != wcstring::npos)) {
+                string_prefixes_string(L"../", path_to_expand)) {
                 effective_working_dirs.push_back(working_dir);
             } else {
+                // Also search working directory if we are expanding command with slashes.
+                if (for_command && path_to_expand.find(L"/") != wcstring::npos)
+                    effective_working_dirs.push_back(working_dir);
+
                 // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
                 // implies just the current directory, while an empty PATH is left empty.
                 const wchar_t *name = for_cd ? L"CDPATH" : L"PATH";

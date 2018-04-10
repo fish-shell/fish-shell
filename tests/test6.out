@@ -42,6 +42,9 @@ Expect --backup --backup=: --backup --backup=
 Expect --backup=all  --backup=none  --backup=simple: --backup=all --backup=none --backup=simple
 implicit cd complete works
 no implicit cd complete after 'command'
-PATH does not cause incorrect implicit cd
+PATH causes dir completion
 Command completion with parened PATHs test passed
-Command completion with intermediate slashes passed
+Command completion with intermediate slashes test passed
+Command completion with intermediate dot-dot test passed
+Command completion with dot-dot suffix test passed
+Relative path instead of searching in PATH test passed

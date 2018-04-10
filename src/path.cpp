@@ -35,23 +35,25 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                                const maybe_t<env_var_t> &bin_path_var) {
     debug(3, L"path_get_path( '%ls' )", cmd.c_str());
 
-    // If the command has a slash, it must be an absolute or relative path and thus we don't bother
-    // looking for a matching command.
+    // If command contains slash, it may be an absolute or relative path, so we check
+    // this case before searching in PATH.
     if (cmd.find(L'/') != wcstring::npos) {
-        if (waccess(cmd, X_OK) != 0) {
-            return false;
+        if (waccess(cmd, X_OK) == 0) {
+            struct stat buff;
+            if (wstat(cmd, &buff) == 0) {
+                if (S_ISREG(buff.st_mode)) {
+                    if (out_path) out_path->assign(cmd);
+                    return true;
+                }
+                errno = EACCES;
+            }
         }
 
-        struct stat buff;
-        if (wstat(cmd, &buff)) {
+        if (string_prefixes_string(L"/", cmd) ||
+            string_prefixes_string(L"./", cmd) ||
+            string_prefixes_string(L"../", cmd)) {
             return false;
         }
-        if (S_ISREG(buff.st_mode)) {
-            if (out_path) out_path->assign(cmd);
-            return true;
-        }
-        errno = EACCES;
-        return false;
     }
 
     const wcstring_list_t *pathsv;
@@ -118,15 +120,25 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
     debug(3, L"path_get_paths('%ls')", cmd.c_str());
     wcstring_list_t paths;
 
-    // If the command has a slash, it must be an absolute or relative path and thus we don't bother
-    // looking for matching commands in the PATH var.
+
+    // If command contains slash, it may be an absolute or relative path, so we check
+    // this case before searching in PATH.
     if (cmd.find(L'/') != wcstring::npos) {
-        struct stat buff;
-        if (wstat(cmd, &buff)) return paths;
-        if (!S_ISREG(buff.st_mode)) return paths;
-        if (waccess(cmd, X_OK)) return paths;
-        paths.push_back(cmd);
-        return paths;
+        if (waccess(cmd, X_OK) == 0) {
+            struct stat buff;
+            if (wstat(cmd, &buff) == 0) {
+                if (S_ISREG(buff.st_mode)) {
+                    paths.push_back(cmd);
+                    return paths;
+                }
+            }
+        }
+
+        if (string_prefixes_string(L"/", cmd) ||
+            string_prefixes_string(L"./", cmd) ||
+            string_prefixes_string(L"../", cmd)) {
+            return paths;
+        }
     }
 
     auto path_var = env_get(L"PATH");

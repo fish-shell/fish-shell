@@ -467,7 +467,7 @@ doc.h: $(HDR_FILES)
 #
 %.gmo:
 	@echo "  msgfmt   $(em)$@$(sgr0)"
-	$v msgfmt --use-fuzzy -o $@ $*.po
+	$v msgfmt -o $@ $*.po
 
 #
 # Update existing po file or copy messages.pot

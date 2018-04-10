@@ -73,11 +73,6 @@ static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'
 
 static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    if (argc == 1) {
-        opts.to_stdout = true;
-        return STATUS_CMD_OK;
-    }
-
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -372,13 +367,18 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
         return STATUS_INVALID_ARGS;
     }
 
-    if (!opts.array && argc < 1) {
+    if (!opts.array && argc < 1 && !opts.to_stdout) {
         streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc);
         return STATUS_INVALID_ARGS;
     }
 
     if (opts.array && argc != 1) {
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (opts.to_stdout && argc > 0) {
+        streams.err.append_format(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, 0, argc);
         return STATUS_INVALID_ARGS;
     }
 
@@ -408,6 +408,10 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (!opts.to_stdout) {
         argc -= optind;
         argv += optind;
+    }
+
+    if (argc == 0) {
+        opts.to_stdout = true;
     }
 
     if (opts.print_help) {

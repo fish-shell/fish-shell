@@ -69,6 +69,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `brew`
   - `diskutil`
   - `yarn`
+  - `ssh` (#4344)
 
 --
 

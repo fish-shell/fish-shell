@@ -256,3 +256,35 @@ end
 # Invoke this here to apply the current value of fish_user_path after
 # PATH is possibly set above.
 __fish_reconstruct_path
+
+# Allow %n job expansion to be used with fg/bg/wait
+# `jobs` is the only one that natively supports job expansion
+function __fish_expand_pid_args
+    for arg in $argv
+        if string match -qr '^%\d+$' -- $arg
+            # set newargv $newargv (jobs -p $arg)
+            jobs -p $arg
+            if not test $status -eq 0
+                return 1
+            end
+        else
+            echo $arg
+        end
+    end
+end
+
+function __fish_expand_fg
+    builtin fg (__fish_expand_pid_args $argv)
+end
+
+function __fish_expand_bg
+    builtin bg (__fish_expand_pid_args $argv)
+end
+
+function __fish_expand_wait
+    builtin wait (__fish_expand_pid_args $argv)
+end
+
+alias fg __fish_expand_fg
+alias bg __fish_expand_bg
+alias wait __fish_expand_wait

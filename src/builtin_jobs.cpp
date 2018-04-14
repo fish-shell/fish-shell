@@ -188,19 +188,31 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             int i;
 
             for (i = w.woptind; i < argc; i++) {
-                int pid = fish_wcstoi(argv[i]);
-                if (errno || pid < 0) {
-                    streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), cmd, argv[i]);
-                    return STATUS_INVALID_ARGS;
+                const job_t *j = nullptr;
+
+                if (argv[i][0] == L'%') {
+                    int jobId = -1;
+                    jobId = fish_wcstoi(argv[i] + 1);
+                    if (errno || jobId < -1) {
+                        streams.err.append_format(_(L"%ls: '%ls' is not a valid job id"), cmd, argv[i]);
+                        return STATUS_INVALID_ARGS;
+                    }
+                    j = job_get(jobId);
+                }
+                else {
+                    int pid = fish_wcstoi(argv[i]);
+                    if (errno || pid < 0) {
+                        streams.err.append_format(_(L"%ls: '%ls' is not a valid process id\n"), cmd, argv[i]);
+                        return STATUS_INVALID_ARGS;
+                    }
+                    j = job_get_from_pid(pid);
                 }
 
-                const job_t *j = job_get_from_pid(pid);
-
-                if (j && !job_is_completed(j)) {
+                if (j && !job_is_completed(j) && (j->flags & JOB_CONSTRUCTED)) {
                     builtin_jobs_print(j, mode, false, streams);
                     found = 1;
                 } else {
-                    streams.err.append_format(_(L"%ls: No suitable job: %d\n"), cmd, pid);
+                    streams.err.append_format(_(L"%ls: No suitable job: %ls\n"), cmd, argv[i]);
                     return STATUS_CMD_ERROR;
                 }
             }

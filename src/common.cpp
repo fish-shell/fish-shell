@@ -1693,6 +1693,12 @@ bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &valu
            value.compare(value.size() - suffix_size, suffix_size, proposed_suffix) == 0;
 }
 
+bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix, const wcstring &value) {
+    size_t suffix_size = proposed_suffix.size();
+    return suffix_size <= value.size() &&
+           wcsncasecmp(value.c_str() + (value.size() - suffix_size), proposed_suffix.c_str(), suffix_size) == 0;
+}
+
 /// Returns true if seq, represented as a subsequence, is contained within string.
 static bool subsequence_in_string(const wcstring &seq, const wcstring &str) {
     // Impossible if seq is larger than string.

@@ -100,7 +100,7 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
         // The string is '.' or '..'. Return true if the wildcard exactly matches.
         return wcscmp(str, wc) ? fuzzy_match_none : fuzzy_match_exact;
     }
-    
+
     // Near Linear implementation as proposed here https://research.swtch.com/glob.
     const wchar_t *wc_x = wc;
     const wchar_t *str_x = str;
@@ -408,6 +408,10 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
 
     const bool executables_only = expand_flags & EXECUTABLES_ONLY;
     if (executables_only && (!is_executable || waccess(filepath, X_OK) != 0)) {
+        return false;
+    }
+
+    if (is_windows_subsystem_for_linux() && string_suffixes_string_case_insensitive(L".dll", filename)) {
         return false;
     }
 

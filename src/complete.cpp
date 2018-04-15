@@ -642,6 +642,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     std::vector<completion_t> possible_comp;
 
     if (use_command) {
+        // Append all possible executables
         expand_error_t result = expand_string(str_cmd, &this->completions,
                                               EXPAND_SPECIAL_FOR_COMMAND | EXPAND_FOR_COMPLETIONS |
                                                   EXECUTABLES_ONLY | this->expand_flags(),
@@ -655,6 +656,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         // We don't really care if this succeeds or fails. If it succeeds this->completions will be
         // updated with choices for the user.
         expand_error_t ignore =
+            // Append all matching directories
             expand_string(str_cmd, &this->completions,
                           EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(), NULL);
         UNUSED(ignore);
@@ -664,6 +666,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         if (use_function) {
             wcstring_list_t names = function_get_names(str_cmd.at(0) == L'_');
             for (size_t i = 0; i < names.size(); i++) {
+                // Append all known matching functions
                 append_completion(&possible_comp, names.at(i));
             }
 
@@ -673,6 +676,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         possible_comp.clear();
 
         if (use_builtin) {
+            // Append all matching builtins
             builtin_get_names(&possible_comp);
             this->complete_strings(str_cmd, 0, &builtin_get_desc, possible_comp, 0);
         }
@@ -990,6 +994,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
             if (short_ok(str, o, options)) {
                 // It's a match.
                 const wcstring desc = o->localized_desc();
+                // Append a short-style option
                 append_completion(&this->completions, o->option, desc, 0);
             }
 
@@ -1031,9 +1036,11 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                 // switch-arg', since it is more commonly supported by homebrew getopt-like
                 // functions.
                 wcstring completion = format_string(L"%ls=", whole_opt.c_str() + offset);
+                // Append a long-style option with a mandatory trailing equal sign
                 append_completion(&this->completions, completion, C_(o->desc), flags);
             }
 
+            // Append a long-style option
             append_completion(&this->completions, whole_opt.c_str() + offset, C_(o->desc), flags);
         }
     }
@@ -1138,6 +1145,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
             }
         }
 
+        // Append matching environment variables
         append_completion(&this->completions, comp, desc, flags, match);
 
         res = true;
@@ -1240,11 +1248,13 @@ bool completer_t::try_complete_user(const wcstring &str) {
         const wchar_t *pw_name = pw_name_str.c_str();
         if (wcsncmp(user_name, pw_name, name_len) == 0) {
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
+            // Append a user name
             append_completion(&this->completions, &pw_name[name_len], desc, COMPLETE_NO_SPACE);
             result = true;
         } else if (wcsncasecmp(user_name, pw_name, name_len) == 0) {
             wcstring name = format_string(L"~%ls", pw_name);
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
+            // Append a user name
             append_completion(&this->completions, name, desc,
                               COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
             result = true;

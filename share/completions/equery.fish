@@ -39,9 +39,9 @@ complete -c equery -n '__fish_use_subcommand' -xa 'uses'        -d "Display pkg'
 complete -c equery -n '__fish_use_subcommand' -xa 'which'       -d "Print full path to ebuild for pkg"
 
 ## Arguments
-complete -c equery -n '__fish_seen_subcommand_from c changes d depends g depgraph m meta w which' \
+complete -c equery -n '__fish_seen_subcommand_from c changes d depends g depgraph m meta u uses w which' \
 	-xa '(__fish_portage_print_available_pkgs)'
-complete -c equery -n '__fish_seen_subcommand_from k check f files u uses s size' \
+complete -c equery -n '__fish_seen_subcommand_from k check f files s size' \
 	-xa '(__fish_portage_print_installed_pkgs)'
 
 ## Local opts

@@ -77,13 +77,15 @@ complete -c equery -n '__fish_seen_subcommand_from g depgraph'      -l depth    
 	-xa "(seq 9)"
 
 # files
+function __fish_equery_files_filter_args
+	printf "%s\n" dir obj sym dev fifo path conf cmd doc man info
+end
 complete -c equery -n '__fish_seen_subcommand_from f files' -s m -l md5sum            -d "Include MD5 sum in output"
 complete -c equery -n '__fish_seen_subcommand_from f files' -s s -l timestamp         -d "Include timestamp in output"
 complete -c equery -n '__fish_seen_subcommand_from f files' -s t -l type              -d "Include file type in output"
 complete -c equery -n '__fish_seen_subcommand_from f files'      -l tree              -d "Display results in a tree"
-# TODO comma separated list
-complete -c equery -n '__fish_seen_subcommand_from f files' -s f -l filter            -d "Filter output by file type (comma separated list)" \
-	-xa "dir obj sym dev fifo path conf cmd doc man info"
+complete -c equery -n '__fish_seen_subcommand_from f files' -s f -l filter            -d "Filter output by file type" \
+	-xa "(__fish_complete_list , __fish_equery_files_filter_args)"
 
 # has + hasuse
 complete -c equery -n '__fish_seen_subcommand_from a has h hasuse' -s I -l exclude-installed -d "Exclude installed pkgs from search path"

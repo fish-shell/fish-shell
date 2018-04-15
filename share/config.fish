@@ -268,7 +268,7 @@ function __fish_expand_pid_args
                 return 1
             end
         else
-            echo $arg
+            printf "%s\n" $arg
         end
     end
 end

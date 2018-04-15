@@ -1,13 +1,11 @@
 function __fish_print_xrandr_modes --description 'Print xrandr modes'
-    set -l out
-    xrandr | sed '/^Screen/d; s/^ \+/mode: /' | while read -l output mode misc
-        switch $output
-            case mode:
-                echo $mode\t(echo $misc | sed 's/\(^ \+\)\|\( *$\)//') [$out]
-            case '*'
-                set out $output
-        end
-    end
-
-
+	set -l output
+	xrandr | string match -v -r '^(Screen|\s{4,})' | while read line
+		switch $line
+		case '  *'
+			string trim $line | string replace -r '^(\S+)\s+(.*)$' "\$1\t\$2 [$output]"
+		case '*'
+			set output (string match -r '^\S+' $line)
+		end
+	end
 end

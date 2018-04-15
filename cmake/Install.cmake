@@ -59,6 +59,14 @@ FUNCTION(FISH_CREATE_DIRS)
   ENDFOREACH(dir)
 ENDFUNCTION(FISH_CREATE_DIRS)
 
+FUNCTION(FISH_TRY_REMOVE)
+    FOREACH(dir ${ARGV})
+        IF(EXISTS ${CMAKE_INSTALL_PREFIX}/${dir})
+            FILE(REMOVE_RECURSE ${CMAKE_INSTALL_PREFIX}/${dir})
+        ENDIF()
+    ENDFOREACH()
+ENDFUNCTION(FISH_TRY_REMOVE)
+
 FUNCTION(FISH_TRY_CREATE_DIRS)
   FOREACH(dir ${ARGV})
     IF(NOT IS_ABSOLUTE ${dir})
@@ -90,16 +98,8 @@ INSTALL(TARGETS ${PROGRAMS}
 FISH_CREATE_DIRS(${sysconfdir}/fish/conf.d)
 INSTALL(FILES etc/config.fish DESTINATION ${sysconfdir}/fish/)
 
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/groff
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/js
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/partials
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts
+FISH_TRY_REMOVE(${rel_datadir}/fish)
+
 FISH_CREATE_DIRS(${rel_datadir}/fish ${rel_datadir}/fish/completions
                  ${rel_datadir}/fish/functions ${rel_datadir}/fish/groff
                  ${rel_datadir}/fish/man/man1 ${rel_datadir}/fish/tools

@@ -759,25 +759,34 @@ complete -f -c git -n '__fish_git_needs_command' -a merge -d 'Join two or more d
 complete -f -c git -n '__fish_git_using_command merge' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command merge' -l commit -d "Autocommit the merge"
 complete -f -c git -n '__fish_git_using_command merge' -l no-commit -d "Don't autocommit the merge"
-complete -f -c git -n '__fish_git_using_command merge' -l edit -d 'Edit auto-generated merge message'
+complete -f -c git -n '__fish_git_using_command merge' -s e -l edit -d 'Edit auto-generated merge message'
 complete -f -c git -n '__fish_git_using_command merge' -l no-edit -d "Don't edit auto-generated merge message"
 complete -f -c git -n '__fish_git_using_command merge' -l ff -d "Don't generate a merge commit if merge is fast-forward"
 complete -f -c git -n '__fish_git_using_command merge' -l no-ff -d "Generate a merge commit even if merge is fast-forward"
 complete -f -c git -n '__fish_git_using_command merge' -l ff-only -d 'Refuse to merge unless fast-forward possible'
+complete -f -c git -n '__fish_git_using_command merge' -s S -l gpg-sign -d 'GPG-sign the merge commit'
 complete -f -c git -n '__fish_git_using_command merge' -l log -d 'Populate the log message with one-line descriptions'
 complete -f -c git -n '__fish_git_using_command merge' -l no-log -d "Don't populate the log message with one-line descriptions"
+complete -f -c git -n '__fish_git_using_command merge' -l signoff -d 'Add Signed-off-by line at the end of the merge commit message'
+complete -f -c git -n '__fish_git_using_command merge' -l no-signoff -d 'Do not add a Signed-off-by line at the end of the merge commit message'
 complete -f -c git -n '__fish_git_using_command merge' -l stat -d "Show diffstat of the merge"
 complete -f -c git -n '__fish_git_using_command merge' -s n -l no-stat -d "Don't show diffstat of the merge"
 complete -f -c git -n '__fish_git_using_command merge' -l squash -d "Squash changes from other branch as a single commit"
 complete -f -c git -n '__fish_git_using_command merge' -l no-squash -d "Don't squash changes"
+complete -x -c git -n '__fish_git_using_command merge' -s s -l strategy -d 'Use the given merge strategy'
+complete -r -c git -n '__fish_git_using_command merge' -s X -l strategy-option -d 'Pass given option to the merge strategy'
+complete -f -c git -n '__fish_git_using_command merge' -l verify-signatures -d 'Abort merge if other branch tip commit is not signed with a valid key'
+complete -f -c git -n '__fish_git_using_command merge' -l no-verify-signatures -d 'Do not abort merge if other branch tip commit is not signed with a valid key'
 complete -f -c git -n '__fish_git_using_command merge' -s q -l quiet -d 'Be quiet'
 complete -f -c git -n '__fish_git_using_command merge' -s v -l verbose -d 'Be verbose'
 complete -f -c git -n '__fish_git_using_command merge' -l progress -d 'Force progress status'
 complete -f -c git -n '__fish_git_using_command merge' -l no-progress -d 'Force no progress status'
-complete -f -c git -n '__fish_git_using_command merge' -s m -d 'Set the commit message'
+complete -f -c git -n '__fish_git_using_command merge' -l allow-unrelated-histories -d 'Allow merging even when branches do not share a common history'
+complete -x -c git -n '__fish_git_using_command merge' -s m -d 'Set the commit message'
+complete -f -c git -n '__fish_git_using_command merge' -s rerere-autoupdate -d 'If possible, use previous conflict resolutions'
+complete -f -c git -n '__fish_git_using_command merge' -s no-rerere-autoupdate -d 'Do not use previous conflict resolutions'
 complete -f -c git -n '__fish_git_using_command merge' -l abort -d 'Abort the current conflict resolution process'
-
-# TODO options
+complete -f -c git -n '__fish_git_using_command merge' -l continue -d 'Conclude current conflict resolution process'
 
 ### mergetool
 
@@ -817,6 +826,32 @@ complete -f -c git -n '__fish_git_using_command pull' -l no-tags -d 'Disable aut
 complete -f -c git -n '__fish_git_using_command pull' -l progress -d 'Force progress status'
 complete -f -c git -n '__fish_git_using_command pull; and not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'
 complete -f -c git -n '__fish_git_using_command pull; and __fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)'
+# Options related to merging
+complete -f -c git -n '__fish_git_using_command pull' -l commit -d "Autocommit the merge"
+complete -f -c git -n '__fish_git_using_command pull' -l no-commit -d "Don't autocommit the merge"
+complete -f -c git -n '__fish_git_using_command pull' -s e -l edit -d 'Edit auto-generated merge message'
+complete -f -c git -n '__fish_git_using_command pull' -l no-edit -d "Don't edit auto-generated merge message"
+complete -f -c git -n '__fish_git_using_command pull' -l ff -d "Don't generate a merge commit if merge is fast-forward"
+complete -f -c git -n '__fish_git_using_command pull' -l no-ff -d "Generate a merge commit even if merge is fast-forward"
+complete -f -c git -n '__fish_git_using_command pull' -l ff-only -d 'Refuse to merge unless fast-forward possible'
+complete -f -c git -n '__fish_git_using_command pull' -s S -l gpg-sign -d 'GPG-sign the merge commit'
+complete -f -c git -n '__fish_git_using_command pull' -l log -d 'Populate the log message with one-line descriptions'
+complete -f -c git -n '__fish_git_using_command pull' -l no-log -d "Don't populate the log message with one-line descriptions"
+complete -f -c git -n '__fish_git_using_command pull' -l signoff -d 'Add Signed-off-by line at the end of the merge commit message'
+complete -f -c git -n '__fish_git_using_command pull' -l no-signoff -d 'Do not add a Signed-off-by line at the end of the merge commit message'
+complete -f -c git -n '__fish_git_using_command pull' -l stat -d "Show diffstat of the merge"
+complete -f -c git -n '__fish_git_using_command pull' -s n -l no-stat -d "Don't show diffstat of the merge"
+complete -f -c git -n '__fish_git_using_command pull' -l squash -d "Squash changes from upstream branch as a single commit"
+complete -f -c git -n '__fish_git_using_command pull' -l no-squash -d "Don't squash changes"
+complete -x -c git -n '__fish_git_using_command pull' -s s -l strategy -d 'Use the given merge strategy'
+complete -r -c git -n '__fish_git_using_command pull' -s X -l strategy-option -d 'Pass given option to the merge strategy'
+complete -f -c git -n '__fish_git_using_command pull' -l verify-signatures -d 'Abort merge if upstream branch tip commit is not signed with a valid key'
+complete -f -c git -n '__fish_git_using_command pull' -l no-verify-signatures -d 'Do not abort merge if upstream branch tip commit is not signed with a valid key'
+complete -f -c git -n '__fish_git_using_command pull' -l allow-unrelated-histories -d 'Allow merging even when branches do not share a common history'
+complete -f -c git -n '__fish_git_using_command pull' -s r -l rebase -d 'Rebase the current branch on top of the upstream branch'
+complete -f -c git -n '__fish_git_using_command pull' -l no-rebase -d 'Do not rebase the current branch on top of the upstream branch'
+complete -f -c git -n '__fish_git_using_command pull' -l autostash -d 'Before starting rebase, stash local changes, and apply stash when done'
+complete -f -c git -n '__fish_git_using_command pull' -l no-autostash -d 'Do not stash local changes before starting rebase'
 # TODO other options
 
 ### push

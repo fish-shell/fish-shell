@@ -288,3 +288,8 @@ end
 function wait --wraps wait
     builtin wait (__fish_expand_pid_args $argv)
 end
+
+function disown --wraps disown
+    builtin disown (__fish_expand_pid_args $argv)
+end
+

@@ -350,6 +350,54 @@ function __fish_git_reflog
     command git reflog --no-decorate 2>/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
 end
 
+function __fish_git_diff_opt -a option
+    switch $option
+        case diff-algorithm
+            printf "%b" "
+default\tBasic greedy diff algorithm
+myers\tBasic greedy diff algorithm
+minimal\tMake smallest diff possible
+patience\tPatience diff algorithm
+histogram\tPatience algorithm with low-occurrence common elements"
+        case diff-filter
+            printf "%b" "
+A\tAdded files
+C\tCopied files
+D\tDeleted files
+M\tModified files
+R\tRenamed files
+T\tType changed files
+U\tUnmerged files
+X\tUnknown files
+B\tBroken pairing files"
+        case dirstat
+            printf "%b" "
+changes\tCount lines that have been removed from the source / added to the destination
+lines\tRegular line-based diff analysis
+files\tCount the number of files changed
+cumulative\tCount changes in a child directory for the parent directory as well"
+        case ignore-submodules
+            printf "%b" "
+none\tUntracked/modified files
+untracked\tNot considered dirty when they only contain untracked content
+dirty\tIgnore all changes to the work tree of submodules
+all\tHide all changes to submodules (default)"
+        case submodule
+            printf "%b" "
+short\tShow the name of the commits at the beginning and end of the range
+log\tList the commits in the range
+diff\tShow an inline diff of the changes"
+        case ws-error-highlight
+            printf "%b" "
+context\tcontext lines of the diff
+old\told lines of the diff
+new\tnew lines of the diff
+none\treset previous values
+default\treset the list to 'new'
+all\tShorthand for 'old,new,context'"
+    end
+end
+
 # general options
 complete -f -c git -l help -d 'Display the manual of a git command'
 complete -f -c git -n '__fish_git_needs_command' -l version -d 'Display version'
@@ -374,6 +422,71 @@ complete -f -c git -n '__fish_git_needs_command' -l icase-pathspecs -d 'Match pa
 # Options shared between multiple commands
 complete -f -c git -n '__fish_git_using_command log show diff-tree rev-list' -l pretty -a 'oneline short medium full fuller email raw format:'
 
+complete -c git -n '__fish_git_using_command diff show' -l abbrev -d 'Show only a partial prefix instead of the full 40-byte hexadecimal object name'
+complete -c git -n '__fish_git_using_command diff show' -l binary -d 'Output a binary diff that can be applied with "git-apply"'
+complete -c git -n '__fish_git_using_command diff show' -l check -d 'Warn if changes introduce conflict markers or whitespace errors'
+complete -c git -n '__fish_git_using_command diff show' -l color -d 'Show colored diff'
+complete -c git -n '__fish_git_using_command diff show' -l color-moved -d 'Moved lines of code are colored differently'
+complete -c git -n '__fish_git_using_command diff show' -l color-words -d 'Equivalent to --word-diff=color plus --word-diff-regex=<regex>'
+complete -c git -n '__fish_git_using_command diff show' -l compact-summary -d 'Output a condensed summary of extended header information'
+complete -c git -n '__fish_git_using_command diff show' -l dst-prefix -d 'Show the given destination prefix instead of "b/"'
+complete -c git -n '__fish_git_using_command diff show' -l ext-diff -d 'Allow an external diff helper to be executed'
+complete -c git -n '__fish_git_using_command diff show' -l find-copies-harder -d 'Inspect unmodified files as candidates for the source of copy'
+complete -c git -n '__fish_git_using_command diff show' -l find-object -d 'Look for differences that change the number of occurrences of the specified object'
+complete -c git -n '__fish_git_using_command diff show' -l full-index -d 'Show the full pre- and post-image blob object names on the "index" line'
+complete -c git -n '__fish_git_using_command diff show' -l histogram -d 'Generate a diff using the "histogram diff" algorithm'
+complete -c git -n '__fish_git_using_command diff show' -l ignore-blank-lines -d 'Ignore changes whose lines are all blank'
+complete -c git -n '__fish_git_using_command diff show' -l ignore-cr-at-eol -d 'Ignore carrige-return at the end of line when doing a comparison'
+complete -c git -n '__fish_git_using_command diff show' -l ignore-space-at-eol -d 'Ignore changes in whitespace at EOL'
+complete -c git -n '__fish_git_using_command diff show' -l indent-heuristic -d 'Enable the heuristic that shift diff hunk boundaries'
+complete -c git -n '__fish_git_using_command diff show' -l inter-hunk-context -d 'Show the context between diff hunks, up to the specified number of lines'
+complete -c git -n '__fish_git_using_command diff show' -l ita-invisible-in-index -d 'Make the entry appear as a new file in "git diff" and non-existent in "git diff -l cached"'
+complete -c git -n '__fish_git_using_command diff show' -l line-prefix -d 'Prepend an additional prefix to every line of output'
+complete -c git -n '__fish_git_using_command diff show' -l minimal -d 'Spend extra time to make sure the smallest possible diff is produced'
+complete -c git -n '__fish_git_using_command diff show' -l name-only -d 'Show only names of changed files'
+complete -c git -n '__fish_git_using_command diff show' -l name-status -d 'Show only names and status of changed files'
+complete -c git -n '__fish_git_using_command diff show' -l no-color -d 'Turn off colored diff'
+complete -c git -n '__fish_git_using_command diff show' -l no-ext-diff -d 'Disallow external diff drivers'
+complete -c git -n '__fish_git_using_command diff show' -l no-indent-heuristic -d 'Disable the indent heuristic'
+complete -c git -n '__fish_git_using_command diff show' -l no-prefix -d 'Do not show any source or destination prefix'
+complete -c git -n '__fish_git_using_command diff show' -l no-renames -d 'Turn off rename detection'
+complete -c git -n '__fish_git_using_command diff show' -l no-textconv -d 'Disallow external text conversion filters to be run when comparing binary files'
+complete -c git -n '__fish_git_using_command diff show' -l numstat -d 'Shows number of added/deleted lines in decimal notation'
+complete -c git -n '__fish_git_using_command diff show' -l patch-with-raw -d 'Synonym for -p --raw'
+complete -c git -n '__fish_git_using_command diff show' -l patch-with-stat -d 'Synonym for -p --stat'
+complete -c git -n '__fish_git_using_command diff show' -l patience -d 'Generate a diff using the "patience diff" algorithm'
+complete -c git -n '__fish_git_using_command diff show' -l pickaxe-all -d 'When -S or -G finds a change, show all the changes in that changeset'
+complete -c git -n '__fish_git_using_command diff show' -l pickaxe-regex -d 'Treat the <string> given to -S as an extended POSIX regular expression to match'
+complete -c git -n '__fish_git_using_command diff show' -l relative -d 'Exclude changes outside the directory and show relative pathnames'
+complete -c git -n '__fish_git_using_command diff show' -l shortstat -d 'Output only the last line of the --stat format containing total number of modified files'
+complete -c git -n '__fish_git_using_command diff show' -l src-prefix -d 'Show the given source prefix instead of "a/"'
+complete -c git -n '__fish_git_using_command diff show' -l stat -d 'Generate a diffstat'
+complete -c git -n '__fish_git_using_command diff show' -l summary -d 'Output a condensed summary of extended header information'
+complete -c git -n '__fish_git_using_command diff show' -l textconv -d 'Allow external text conversion filters to be run when comparing binary files'
+complete -c git -n '__fish_git_using_command diff show' -l word-diff -d 'Show a word diff'
+complete -c git -n '__fish_git_using_command diff show' -l word-diff-regex  -d 'Use <regex> to decide what a word is'
+complete -c git -n '__fish_git_using_command diff show' -s a -l text -d 'Treat all files as text'
+complete -c git -n '__fish_git_using_command diff show' -s B -l break-rewrites -d 'Break complete rewrite changes into pairs of delete and create'
+complete -c git -n '__fish_git_using_command diff show' -s b -l ignore-space-change -d 'Ignore changes in amount of whitespace'
+complete -c git -n '__fish_git_using_command diff show' -s C -l find-copies -d 'Detect copies as well as renames'
+complete -c git -n '__fish_git_using_command diff show' -s D -l irreversible-delete -d 'Omit the preimage for deletes'
+complete -c git -n '__fish_git_using_command diff show' -s G -d 'Look for differences whose patch text contains added/removed lines that match <regex>'
+complete -c git -n '__fish_git_using_command diff show' -s M -l find-renames -d 'Detect and report renames'
+complete -c git -n '__fish_git_using_command diff show' -s R -d 'Show differences from index or on-disk file to tree contents'
+complete -c git -n '__fish_git_using_command diff show' -s S -d 'Look for differences that change the number of occurrences of the specified string'
+complete -c git -n '__fish_git_using_command diff show' -s W -l function-context -d 'Show whole surrounding functions of changes'
+complete -c git -n '__fish_git_using_command diff show' -s w -l ignore-all-space -d 'Ignore whitespace when comparing lines'
+complete -c git -n '__fish_git_using_command diff show' -s z -d 'Use NULs as output field/commit terminators'
+complete -r -c git -n '__fish_git_using_command diff show' -s O -d 'Control the order in which files appear in the output'
+complete -f -c git -n '__fish_git_using_command diff show' -l anchored -d 'Generate a diff using the "anchored diff" algorithm'
+complete -x -c git -n '__fish_git_using_command diff show' -s l -d 'Prevents rename/copy detection if the number of rename/copy targets exceeds the specified number'
+complete -x -c git -n '__fish_git_using_command diff show' -l diff-filter -a '(__fish_git_diff_opt diff-filter)' -d 'Choose diff filters'
+complete -x -c git -n '__fish_git_using_command diff log show' -l diff-algorithm -a '(__fish_git_diff_opt diff-algorithm)' -d 'Choose a diff algorithm'
+complete -x -c git -n '__fish_git_using_command diff log show' -l dirstat -a '(__fish_git_diff_opt dirstat)' -d 'Output the distribution of relative amount of changes for each sub-directory'
+complete -x -c git -n '__fish_git_using_command diff log show' -l ignore-submodules -a '(__fish_git_diff_opt ignore-submodules)' -d 'Ignore changes to submodules in the diff generation'
+complete -x -c git -n '__fish_git_using_command diff log show' -l submodule -a '(__fish_git_diff_opt submodule)' -d 'Specify how differences in submodules are shown'
+complete -x -c git -n '__fish_git_using_command diff log show' -l ws-error-highlight -a '(__fish_git_diff_opt ws-error-highlight)' -d 'Highlight whitespace errors in lines of the diff'
+
 #### fetch
 complete -f -c git -n '__fish_git_needs_command' -a fetch -d 'Download objects and refs from another repository'
 # Suggest "repository", then "refspec" - this also applies to e.g. push/pull
@@ -389,13 +502,13 @@ complete -f -c git -n '__fish_git_using_command fetch' -s f -l force -d 'Force u
 #### filter-branch
 complete -f -c git -n '__fish_git_needs_command' -a filter-branch -d 'Rewrite branches'
 complete -f -c git -n '__fish_git_using_command filter-branch' -l env-filter -d 'This filter may be used if you only need to modify the environment'
-complete -f -c git -n '__fish_git_using_command filter-branch' -l tree-filter -d 'This is the filter for rewriting the tree and its contents.'
-complete -f -c git -n '__fish_git_using_command filter-branch' -l index-filter -d 'This is the filter for rewriting the index.'
-complete -f -c git -n '__fish_git_using_command filter-branch' -l parent-filter -d 'This is the filter for rewriting the commit\\(cqs parent list.'
-complete -f -c git -n '__fish_git_using_command filter-branch' -l msg-filter -d 'This is the filter for rewriting the commit messages.'
-complete -f -c git -n '__fish_git_using_command filter-branch' -l commit-filter -d 'This is the filter for performing the commit.'
-complete -f -c git -n '__fish_git_using_command filter-branch' -l tag-name-filter -d 'This is the filter for rewriting tag names.'
-complete -f -c git -n '__fish_git_using_command filter-branch' -l subdirectory-filter -d 'Only look at the history which touches the given subdirectory.'
+complete -f -c git -n '__fish_git_using_command filter-branch' -l tree-filter -d 'This is the filter for rewriting the tree and its contents'
+complete -f -c git -n '__fish_git_using_command filter-branch' -l index-filter -d 'This is the filter for rewriting the index'
+complete -f -c git -n '__fish_git_using_command filter-branch' -l parent-filter -d 'This is the filter for rewriting the commit'
+complete -f -c git -n '__fish_git_using_command filter-branch' -l msg-filter -d 'This is the filter for rewriting the commit messages'
+complete -f -c git -n '__fish_git_using_command filter-branch' -l commit-filter -d 'This is the filter for performing the commit'
+complete -f -c git -n '__fish_git_using_command filter-branch' -l tag-name-filter -d 'This is the filter for rewriting tag names'
+complete -f -c git -n '__fish_git_using_command filter-branch' -l subdirectory-filter -d 'Only look at the history which touches the given subdirectory'
 complete -f -c git -n '__fish_git_using_command filter-branch' -l prune-empty -d 'Ignore empty commits generated by filters'
 complete -f -c git -n '__fish_git_using_command filter-branch' -l original -d 'Use this option to set the namespace where the original commits will be stored'
 complete -r -c git -n '__fish_git_using_command filter-branch' -s d -d 'Use this option to set the path to the temporary directory used for rewriting'
@@ -679,23 +792,14 @@ complete -c git -n '__fish_git_using_command log' -l no-compaction-heuristic
 complete -c git -n '__fish_git_using_command log' -l minimal
 complete -c git -n '__fish_git_using_command log' -l patience
 complete -c git -n '__fish_git_using_command log' -l histogram
-complete -x -c git -n '__fish_git_using_command log' -l diff-algorithm -a '
-  default\tBasic\ greedy\ diff\ algorithm
-  myers\tBasic\ greedy\ diff\ algorithm
-  minimal\tMake\ smallest\ diff\ possible
-  patience\tPatience\ diff\ algorithm
-  histogram\tPatience\ algorithm\ with\ low-occurrence\ common\ elements
-'
 complete -f -x -c git -n '__fish_git_using_command log' -l stat
 complete -c git -n '__fish_git_using_command log' -l numstat
 complete -c git -n '__fish_git_using_command log' -l shortstat
-complete -f -c git -n '__fish_git_using_command log' -l dirstat -a '(__fish_append , changes lines files cumulative)'
 complete -c git -n '__fish_git_using_command log' -l summary
 complete -c git -n '__fish_git_using_command log' -l patch-with-stat
 complete -c git -n '__fish_git_using_command log' -s z
 complete -c git -n '__fish_git_using_command log' -l name-only
 complete -c git -n '__fish_git_using_command log' -l name-status
-complete -f -c git -n '__fish_git_using_command log' -l submodule -a 'short diff log'
 complete -f -c git -n '__fish_git_using_command log' -l color -a 'always never auto'
 complete -c git -n '__fish_git_using_command log' -l no-color
 complete -f -c git -n '__fish_git_using_command log' -l word-diff -a '
@@ -707,7 +811,6 @@ complete -f -c git -n '__fish_git_using_command log' -l word-diff -a '
 complete -f -c git -n '__fish_git_using_command log' -l color-words
 complete -c git -n '__fish_git_using_command log' -l no-renames
 complete -c git -n '__fish_git_using_command log' -l check
-complete -f -c git -n '__fish_git_using_command log' -l ws-error-highlight -a '(__fish_append , old new context)'
 complete -c git -n '__fish_git_using_command log' -l full-index
 complete -c git -n '__fish_git_using_command log' -l binary
 complete -f -c git -n '__fish_git_using_command log' -l abbrev
@@ -742,12 +845,6 @@ complete -c git -n '__fish_git_using_command log' -l ext-diff
 complete -c git -n '__fish_git_using_command log' -l no-ext-diff
 complete -c git -n '__fish_git_using_command log' -l textconv
 complete -c git -n '__fish_git_using_command log' -l no-textconv
-complete -f -c git -n '__fish_git_using_command log' -l ignore-submodules -a '
-  none
-  untracked
-  dirty
-  all
-'
 complete -x -c git -n '__fish_git_using_command log' -l src-prefix
 complete -x -c git -n '__fish_git_using_command log' -l dst-prefix
 complete -c git -n '__fish_git_using_command log' -l no-prefix

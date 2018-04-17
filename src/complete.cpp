@@ -868,6 +868,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     // after a command, so the overhead of the additional env lookup should be negligible.
     env_vars_snapshot_t completion_snapshot;
 
+    // debug(0, L"\nThinking about looking up completions for %ls\n", cmd.c_str());
     bool head_exists = builtin_exists(cmd);
     // Only reload environment variables if builtin_exists returned false, as an optimization
     if (head_exists == false) {
@@ -878,7 +879,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
         head_exists = function_exists_no_autoload(cmd.c_str(), completion_snapshot);
         // While it may seem like first testing `path_get_path` before resorting to an env lookup may be faster, path_get_path can potentially
         // do a lot of FS/IO access, so env.get() + function_exists() should still be faster.
-        head_exists = head_exists || path_get_path(cmd, nullptr);
+        head_exists = head_exists || path_get_path(cmd_orig, nullptr); //use cmd_orig here as it is potentially pathed
     }
 
     if (!head_exists) {
@@ -886,7 +887,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
         //This prevents errors caused during the execution of completion providers for
         //tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
         //and automatic completions ("gi" autosuggestion provider -> git)
-        // debug(0, "Skipping completions for non-existent head\n");
+        debug(4, "Skipping completions for non-existent head\n");
     }
     else {
         run_on_main_thread([&]() {

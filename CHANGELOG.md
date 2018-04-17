@@ -59,17 +59,18 @@ This section is for changes merged to the `major` branch that are not also merge
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).
 - Added completions for
-  - `j` (autojump #4344)
   - `bd` (#4472)
+  - `configure`
+  - `j` (autojump #4344)
   - `jhipster` (#4472)
   - `ngrok` (#4642)
   - `port`
 - Improved completions for
-  - `git` (#4395, #4396, #4592)
   - `brew`
   - `diskutil`
-  - `yarn`
+  - `git` (#4395, #4396, #4592)
   - `ssh` (#4344)
+  - `yarn`
 
 --
 

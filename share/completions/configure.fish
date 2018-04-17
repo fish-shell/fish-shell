@@ -10,3 +10,7 @@ complete -c configure -l exec-prefix -d "Architecture-dependent install director
 complete -c configure -l build -d "Configure for building on BUILD" -x
 complete -c configure -l host -d "Cross-compile to build programs to run on HOST" -x
 complete -c configure -l target -d "Configure for building compilers for TARGET" -x
+
+# use autoconf's --help to generate completions:
+echo "sourcing configure completions"
+complete -c 'configure' -a '(__fish_parse_configure (commandline | string replace -r "(.*configure) .*" "\$1"))'

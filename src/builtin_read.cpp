@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -461,137 +462,140 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         opts.shell = false;
     }
     else if (opts.one_line) {
-        // --line is the same as read -d \n
+        // --line is the same as read -d \n repeated N times
         opts.have_delimiter = true;
         opts.delimiter = L"\n";
         opts.split_null = false;
         opts.shell = false;
     }
 
-    // TODO: Determine if the original set of conditions for interactive reads should be reinstated:
-    // if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
-    int stream_stdin_is_a_tty = isatty(streams.stdin_fd);
-    if (stream_stdin_is_a_tty && !opts.split_null) {
-        // We should read interactively using reader_readline(). This does not support splitting on
-        // null.
-        exit_res = read_interactive(buff, opts.nchars, opts.shell, opts.silent, opts.prompt,
-                                    opts.right_prompt, opts.commandline);
-    } else if (!opts.nchars && !stream_stdin_is_a_tty &&
-               lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
-        exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null);
-    } else {
-        exit_res = read_one_char_at_a_time(streams.stdin_fd, buff, opts.nchars, opts.split_null);
-    }
+    wchar_t * const *var_ptr = argv;
+    auto vars_left = [&] () { return argv + argc - var_ptr; };
+    auto clear_remaining_vars = [&] () {
+        while (vars_left()) {
+            env_set_empty(*var_ptr, opts.place);
+            // env_set_one(*var_ptr, opts.place, L"");
+            ++var_ptr;
+        }
+    };
 
-    if (exit_res != STATUS_CMD_OK) {
-        // Define the var(s) without any data. We do this because when this happens we want the user
-        // to be able to use the var but have it expand to nothing.
-        for (int i = 0; i < argc; i++) env_set_empty(argv[i], opts.place);
-        return exit_res;
-    }
+    // Normally, we either consume a line of input or all available input. But if we are reading a line at
+    // a time, we need a middle ground where we only consume as many lines as we need to fill the given vars.
+    do {
+        buff.clear();
 
-    if (opts.to_stdout) {
-        streams.out.append(buff);
-        return exit_res;
-    }
-
-    if (!opts.have_delimiter) {
-        auto ifs = env_get(L"IFS");
-        if (!ifs.missing_or_empty()) opts.delimiter = ifs->as_string();
-    }
-
-    if (opts.delimiter.empty()) {
-        // Every character is a separate token with one wrinkle involving non-array mode where the
-        // final var gets the remaining characters as a single string.
-        size_t x = std::max(static_cast<size_t>(1), buff.size());
-        size_t n_splits = (opts.array || static_cast<size_t>(argc) > x) ? x : argc;
-        wcstring_list_t chars;
-        chars.reserve(n_splits);
-        x = x - n_splits + 1;
-        int i = 0;
-        for (auto it = buff.begin(), end = buff.end(); it != end; ++i, ++it) {
-            if (opts.array || i < argc) {
-                chars.emplace_back(wcstring(1, *it));
-            } else {
-                if (x) {
-                    chars.back().reserve(x);
-                    x = 0;
-                }
-                chars.back().push_back(*it);
-            }
+        // TODO: Determine if the original set of conditions for interactive reads should be reinstated:
+        // if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
+        int stream_stdin_is_a_tty = isatty(streams.stdin_fd);
+        if (stream_stdin_is_a_tty && !opts.split_null) {
+            // Read interactively using reader_readline(). This does not support splitting on null.
+            exit_res = read_interactive(buff, opts.nchars, opts.shell, opts.silent, opts.prompt,
+                                        opts.right_prompt, opts.commandline);
+        } else if (!opts.nchars && !stream_stdin_is_a_tty &&
+                   lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
+            exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null);
+        } else {
+            exit_res = read_one_char_at_a_time(streams.stdin_fd, buff, opts.nchars, opts.split_null);
         }
 
-        if (opts.array) {
-            // Array mode: assign each char as a separate element of the sole var.
-            env_set(argv[0], opts.place, chars);
-        } else {
-            // Not array mode: assign each char to a separate var with the remainder being assigned
-            // to the last var.
+        if (exit_res != STATUS_CMD_OK) {
+            clear_remaining_vars();
+            return exit_res;
+        }
+
+        if (opts.to_stdout) {
+            streams.out.append(buff);
+            return exit_res;
+        }
+
+        if (!opts.have_delimiter) {
+            auto ifs = env_get(L"IFS");
+            if (!ifs.missing_or_empty()) opts.delimiter = ifs->as_string();
+        }
+
+        if (opts.delimiter.empty()) {
+            // Every character is a separate token with one wrinkle involving non-array mode where the
+            // final var gets the remaining characters as a single string.
+            size_t x = std::max(static_cast<size_t>(1), buff.size());
+            size_t n_splits = (opts.array || static_cast<size_t>(vars_left()) > x) ? x : vars_left();
+            wcstring_list_t chars;
+            chars.reserve(n_splits);
+            x = x - n_splits + 1;
             int i = 0;
-            size_t j = 0;
-            for (; i + 1 < argc; ++i) {
-                if (j < chars.size()) {
-                    env_set_one(argv[i], opts.place, chars[j]);
-                    j++;
+            for (auto it = buff.begin(), end = buff.end(); it != end; ++i, ++it) {
+                if (opts.array || i + 1 < vars_left()) {
+                    chars.emplace_back(1, *it);
                 } else {
-                    env_set_one(argv[i], opts.place, L"");
+                    chars.emplace_back(it, buff.end());
+                    break;
                 }
             }
 
-            if (i < argc) {
-                wcstring val = chars.size() == static_cast<size_t>(argc) ? chars[i] : L"";
-                env_set_one(argv[i], opts.place, val);
+            if (opts.array) {
+                // Array mode: assign each char as a separate element of the sole var.
+                env_set(*var_ptr++, opts.place, chars);
             } else {
-                env_set_empty(argv[i], opts.place);
-            }
-        }
-    } else if (opts.array) {
-        // The user has requested the input be split into a sequence of tokens and all the tokens
-        // assigned to a single var. How we do the tokenizing depends on whether the user specified
-        // the delimiter string or we're using IFS.
-        if (!opts.have_delimiter) {
-            // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
-            // compatibility with old versions of fish.
-            wcstring_list_t tokens;
-
-            for (wcstring_range loc = wcstring_tok(buff, opts.delimiter);
-                 loc.first != wcstring::npos; loc = wcstring_tok(buff, opts.delimiter, loc)) {
-                tokens.emplace_back(wcstring(buff, loc.first, loc.second));
-            }
-            env_set(argv[0], opts.place, tokens);
-        } else {
-            // We're using a delimiter provided by the user so use the `string split` behavior.
-            wcstring_list_t splits;
-            split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
-                        &splits);
-
-            env_set(argv[0], opts.place, splits);
-        }
-    } else {
-        // Not array mode. Split the input into tokens and assign each to the vars in sequence.
-        if (!opts.have_delimiter) {
-            // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
-            // compatibility with old versions of fish.
-            wcstring_range loc = wcstring_range(0, 0);
-            for (int i = 0; i < argc; i++) {
-                wcstring substr;
-                loc = wcstring_tok(buff, (i + 1 < argc) ? opts.delimiter : wcstring(), loc);
-                if (loc.first != wcstring::npos) {
-                    substr = wcstring(buff, loc.first, loc.second);
+                // Not array mode: assign each char to a separate var with the remainder being assigned
+                // to the last var.
+                auto c = chars.begin();
+                for (; c != chars.end() && vars_left(); ++c) {
+                    env_set_one(*var_ptr++, opts.place, *c);
                 }
-                env_set_one(argv[i], opts.place, substr);
+            }
+        } else if (opts.array) {
+            // The user has requested the input be split into a sequence of tokens and all the tokens
+            // assigned to a single var. How we do the tokenizing depends on whether the user specified
+            // the delimiter string or we're using IFS.
+            if (!opts.have_delimiter) {
+                // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
+                // compatibility with old versions of fish.
+                wcstring_list_t tokens;
+
+                for (wcstring_range loc = wcstring_tok(buff, opts.delimiter);
+                     loc.first != wcstring::npos; loc = wcstring_tok(buff, opts.delimiter, loc)) {
+                    tokens.emplace_back(wcstring(buff, loc.first, loc.second));
+                }
+                env_set(*var_ptr++, opts.place, tokens);
+            } else {
+                // We're using a delimiter provided by the user so use the `string split` behavior.
+                wcstring_list_t splits;
+                split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
+                            &splits);
+
+                env_set(*var_ptr++, opts.place, splits);
             }
         } else {
-            // We're using a delimiter provided by the user so use the `string split` behavior.
-            wcstring_list_t splits;
-            // We're making at most argc - 1 splits so the last variable
-            // is set to the remaining string.
-            split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
-                        &splits, argc - 1);
-            for (size_t i = 0; i < (size_t)argc && i < splits.size(); i++) {
-                env_set_one(argv[i], opts.place, splits[i]);
+            // Not array mode. Split the input into tokens and assign each to the vars in sequence.
+            if (!opts.have_delimiter) {
+                // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
+                // compatibility with old versions of fish.
+                wcstring_range loc = wcstring_range(0, 0);
+                while (vars_left()) {
+                    wcstring substr;
+                    loc = wcstring_tok(buff, (vars_left() > 1) ? opts.delimiter : wcstring(), loc);
+                    if (loc.first != wcstring::npos) {
+                        substr = wcstring(buff, loc.first, loc.second);
+                    }
+                    env_set_one(*var_ptr++, opts.place, substr);
+                }
+            } else {
+                // We're using a delimiter provided by the user so use the `string split` behavior.
+                wcstring_list_t splits;
+                // We're making at most argc - 1 splits so the last variable
+                // is set to the remaining string.
+                split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
+                            &splits, argc - 1);
+                assert(splits.size() <= (size_t) vars_left());
+                for (const auto &split : splits) {
+                    env_set_one(*var_ptr++, opts.place, split);
+                }
             }
         }
+    } while (opts.one_line && vars_left());
+
+    if (!opts.array) {
+        // In case there were more args than splits
+        clear_remaining_vars();
     }
 
     return exit_res;

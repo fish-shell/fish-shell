@@ -41,16 +41,17 @@ void split_about(ITER haystack_start, ITER haystack_end, ITER needle_start, ITER
         if (split_point == haystack_end) {  // not found
             break;
         }
-        wcstring result = wcstring(haystack_cursor, split_point);
-        if (!no_empty || result.size() > 0) {
-            output->push_back(std::move(result));
+        if (!no_empty || haystack_cursor != split_point) {
+            output->emplace_back(haystack_cursor, split_point);
         }
         remaining--;
         // Need to skip over the needle for the next search note that the needle may be empty.
         haystack_cursor = split_point + std::distance(needle_start, needle_end);
     }
     // Trailing component, possibly empty.
-    output->push_back(wcstring(haystack_cursor, haystack_end));
+    if (!no_empty || haystack_cursor != haystack_end) {
+        output->emplace_back(haystack_cursor, haystack_end);
+    }
 }
 
 enum class ellipsis_type {

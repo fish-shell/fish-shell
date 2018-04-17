@@ -49,27 +49,33 @@ struct read_cmd_opts_t {
     bool split_null = false;
     bool to_stdout = false;
     int nchars = 0;
+    bool all_lines = false;
+    bool one_line = false;
 };
 
-static const wchar_t *short_options = L":ac:ghilm:n:p:d:suxzP:UR:";
-static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
-                                              {L"global", no_argument, NULL, 'g'},
-                                              {L"local", no_argument, NULL, 'l'},
-                                              {L"universal", no_argument, NULL, 'U'},
-                                              {L"unexport", no_argument, NULL, 'u'},
-                                              {L"prompt", required_argument, NULL, 'p'},
-                                              {L"prompt-str", required_argument, NULL, 'P'},
-                                              {L"right-prompt", required_argument, NULL, 'R'},
-                                              {L"command", required_argument, NULL, 'c'},
-                                              {L"mode-name", required_argument, NULL, 'm'},
-                                              {L"silent", no_argument, NULL, 's'},
-                                              {L"nchars", required_argument, NULL, 'n'},
-                                              {L"delimiter", required_argument, NULL, 'd'},
-                                              {L"shell", no_argument, NULL, 'S'},
-                                              {L"array", no_argument, NULL, 'a'},
-                                              {L"null", no_argument, NULL, 'z'},
-                                              {L"help", no_argument, NULL, 'h'},
-                                              {NULL, 0, NULL, 0}};
+static const wchar_t *short_options = L":Aac:d:ghiLlm:n:p:suxzP:UR:LB";
+static const struct woption long_options[] = {
+    {L"array", no_argument, NULL, 'a'},
+    {L"all-lines", no_argument, NULL, 'A'},
+    {L"command", required_argument, NULL, 'c'},
+    {L"delimiter", required_argument, NULL, 'd'},
+    {L"export", no_argument, NULL, 'x'},
+    {L"global", no_argument, NULL, 'g'},
+    {L"help", no_argument, NULL, 'h'},
+    {L"line", no_argument, NULL, 'L'},
+    {L"local", no_argument, NULL, 'l'},
+    {L"mode-name", required_argument, NULL, 'm'},
+    {L"nchars", required_argument, NULL, 'n'},
+    {L"null", no_argument, NULL, 'z'},
+    {L"prompt", required_argument, NULL, 'p'},
+    {L"prompt-str", required_argument, NULL, 'P'},
+    {L"right-prompt", required_argument, NULL, 'R'},
+    {L"shell", no_argument, NULL, 'S'},
+    {L"silent", no_argument, NULL, 's'},
+    {L"unexport", no_argument, NULL, 'u'},
+    {L"universal", no_argument, NULL, 'U'},
+    {NULL, 0, NULL, 0}
+};
 
 static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
@@ -78,40 +84,42 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case L'x': {
-                opts.place |= ENV_EXPORT;
+            case 'a': {
+                opts.array = true;
                 break;
+            }
+            case L'A': {
+                opts.all_lines = true;
+                break;
+            }
+            case L'c': {
+                opts.commandline = w.woptarg;
+                break;
+            }
+            case 'd': {
+                opts.have_delimiter = true;
+                opts.delimiter = w.woptarg;
+                break;
+            }
+            case 'i': {
+                streams.err.append_format(_(L"%ls: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n"),
+                        cmd);
+                return STATUS_INVALID_ARGS;
             }
             case L'g': {
                 opts.place |= ENV_GLOBAL;
                 break;
             }
+            case 'h': {
+                opts.print_help = true;
+                break;
+            }
+            case L'L': {
+                opts.one_line = true;
+                break;
+            }
             case L'l': {
                 opts.place |= ENV_LOCAL;
-                break;
-            }
-            case L'U': {
-                opts.place |= ENV_UNIVERSAL;
-                break;
-            }
-            case L'u': {
-                opts.place |= ENV_UNEXPORT;
-                break;
-            }
-            case L'p': {
-                opts.prompt = w.woptarg;
-                break;
-            }
-            case L'P': {
-                opts.prompt_str = w.woptarg;
-                break;
-            }
-            case L'R': {
-                opts.right_prompt = w.woptarg;
-                break;
-            }
-            case L'c': {
-                opts.commandline = w.woptarg;
                 break;
             }
             case L'm': {
@@ -137,34 +145,40 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 }
                 break;
             }
-            case 'd': {
-                opts.have_delimiter = true;
-                opts.delimiter = w.woptarg;
+            case L'P': {
+                opts.prompt_str = w.woptarg;
                 break;
             }
-            case 'i': {
-                streams.err.append_format(_(L"%ls: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n"),
-                        cmd);
-                return STATUS_INVALID_ARGS;
+            case L'p': {
+                opts.prompt = w.woptarg;
+                break;
+            }
+            case L'R': {
+                opts.right_prompt = w.woptarg;
+                break;
             }
             case 's': {
                 opts.silent = true;
-                break;
-            }
-            case 'a': {
-                opts.array = true;
                 break;
             }
             case L'S': {
                 opts.shell = true;
                 break;
             }
-            case L'z': {
-                opts.split_null = true;
+            case L'U': {
+                opts.place |= ENV_UNIVERSAL;
                 break;
             }
-            case 'h': {
-                opts.print_help = true;
+            case L'u': {
+                opts.place |= ENV_UNEXPORT;
+                break;
+            }
+            case L'x': {
+                opts.place |= ENV_EXPORT;
+                break;
+            }
+            case L'z': {
+                opts.split_null = true;
                 break;
             }
             case ':': {
@@ -341,8 +355,25 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
 static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int argc,
                               const wchar_t *const *argv, parser_t &parser, io_streams_t &streams) {
     if (opts.prompt && opts.prompt_str) {
-        streams.err.append_format(_(L"%ls: You can't specify both -p and -P\n"), cmd);
+        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"-p", L"-P");
         builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (opts.have_delimiter && opts.all_lines) {
+        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"--delimiter", L"--all-lines");
+        return STATUS_INVALID_ARGS;
+    }
+    if (opts.have_delimiter && opts.one_line) {
+        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"--delimiter", L"--line");
+        return STATUS_INVALID_ARGS;
+    }
+    if (opts.one_line && opts.all_lines) {
+        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"--all-lines", L"--line");
+        return STATUS_INVALID_ARGS;
+    }
+    if (opts.one_line && opts.split_null) {
+        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"-z", L"--line");
         return STATUS_INVALID_ARGS;
     }
 
@@ -421,6 +452,21 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     retval = validate_read_args(cmd, opts, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
+
+    if (opts.all_lines) {
+        // --all-lines is the same as read -d \n -z
+        opts.have_delimiter = true;
+        opts.delimiter = L"\n";
+        opts.split_null = true;
+        opts.shell = false;
+    }
+    else if (opts.one_line) {
+        // --line is the same as read -d \n
+        opts.have_delimiter = true;
+        opts.delimiter = L"\n";
+        opts.split_null = false;
+        opts.shell = false;
+    }
 
     // TODO: Determine if the original set of conditions for interactive reads should be reinstated:
     // if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
@@ -517,7 +563,8 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             // We're using a delimiter provided by the user so use the `string split` behavior.
             wcstring_list_t splits;
             split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
-                        &splits, LONG_MAX);
+                        &splits);
+
             env_set(argv[0], opts.place, splits);
         }
     } else {

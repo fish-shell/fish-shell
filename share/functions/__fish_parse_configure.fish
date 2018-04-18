@@ -20,11 +20,15 @@ function __fish_parse_configure
 	set -l next_line
 	set -l line
 	set -l buffer
-	eval $argv[1] --help 2>/dev/null | while test (string length -- "$next_line") -gt 0 || read -lL next_line
+	# eval $argv[1] --help 2>/dev/null |
+	# Just fish's `./configure --help` takes ~350ms to run, before parsing
+	# The following chain attempts to extract the help message:
+	cat $argv[1] | tr \n \u0e | sed -n 's/.*Report the --help message\(.*\?\)ac_status.*/\1/; s/ac_status.*//p' | tr \u0e \n |
+	while test "$next_line" != "" || read -lL next_line
 		# In autoconfigure scripts, the first column wraps at 26 chars
 		# echo next_line: $next_line
 		# echo old_line: $line
-		if test (string length -- "$line") -eq 0
+		if test "$line" = ""
 			set line $next_line
 			set next_line "" # mark it as consumed
 			continue

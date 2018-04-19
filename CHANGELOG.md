@@ -69,8 +69,11 @@ This section is for changes merged to the `major` branch that are not also merge
   - `brew`
   - `diskutil`
   - `git` (#4395, #4396, #4592)
+  - `npm`<sup>†</sup>
   - `ssh` (#4344)
-  - `yarn`
+  - `yarn`<sup>†</sup>
+
+_† for autocompletion of available packages for installation via `npm` or `yarn`, make sure `all-the-package-names` is installed (typically: `sudo npm install -g all-the-package-names`)._
 
 --
 

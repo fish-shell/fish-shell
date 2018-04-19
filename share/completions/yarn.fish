@@ -2,6 +2,22 @@
 # see https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_seen_subcommand_from.fish
 # and https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_use_subcommand.fish
 
+# If all-the-package-names is installed, it will be used to generate npm completions.
+# Install globally with `sudo npm install -g all-the-package-names`. Keep it up to date.
+function __yarn_list_packages
+    if not type -q all-the-package-names
+        return
+    end
+
+    all-the-package-names
+end
+
+# Entire list of packages is too long to be used in a `complete` subcommand
+# Search it for matches instead
+function __yarn_filtered_list_packages
+    __yarn_list_packages | grep (commandline -ct) | head -n 50
+end
+
 function __yarn_find_package_json
     set parents (__fish_parent_directories (pwd))
 
@@ -15,7 +31,7 @@ function __yarn_find_package_json
     return 1
 end
 
-function __yarn_list_packages
+function __yarn_installed_packages
     set -l package_json (__yarn_find_package_json)
     if not test $status -eq 0
         # no package.json in tree
@@ -49,7 +65,8 @@ function __yarn_list_packages
 end
 
 
-complete -f -c yarn -n '__fish_seen_subcommand_from remove' -a '(__yarn_list_packages)'
+complete -f -c yarn -n '__fish_seen_subcommand_from remove' -a '(__yarn_installed_packages)'
+complete -f -c yarn -n '__fish_seen_subcommand_from add' -a '(__yarn_filtered_list_packages)'
 
 complete -f -c yarn -n '__fish_use_subcommand' -a help
 

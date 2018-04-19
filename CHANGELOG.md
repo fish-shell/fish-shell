@@ -22,6 +22,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - `wait` builtin is added for waiting on processes (#4498).
 - `read` has a new `--delimiter` option as a better alternative to the `IFS` variable (#4256).
 - `read` writes directly to stdout if called without arguments (#4407)
+- `read` can now read one or more individual lines from the input stream without consuming the input in its entirety via `read -L/--line`. Refer to the `read` documentation for more info.
 - `set` has a new `--append` and `--prepend` option (#1326).
 - `set` has a new `--show` option to show lots of information about variables (#4265).
 - `complete` now has a `-k` and `--keep-order` option to keep the order of the `OPTION_ARGUMENTS` (#361).

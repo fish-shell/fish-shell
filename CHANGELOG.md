@@ -2,76 +2,76 @@
 This section is for changes merged to the `major` branch that are not also merged to 2.7.
 
 ## Deprecations
-- The `IFS` variable is deprecated and will be removed in fish 4.0 (#4156).
-- The `function --on-process-exit` event will be removed in future (#4700). Use the `fish_exit` event instead.
-- `$_` is deprecated and will removed in the future (#813). Use `status current-command` in a subshell instead.
+- The `IFS` variable is deprecated and will be removed in fish 4.0 ([#4156](https://github.com/fish-shell/fish-shell/issues/4156)).
+- The `function --on-process-exit` event will be removed in future ([#4700](https://github.com/fish-shell/fish-shell/issues/4700)). Use the `fish_exit` event instead.
+- `$_` is deprecated and will removed in the future ([#813](https://github.com/fish-shell/fish-shell/issues/813)). Use `status current-command` in a subshell instead.
 
 ## Notable non-backward compatible changes
-- `.` command no longer exists -- use `source` (#4294).
-- `read` now uses `-s` as short for `--silent` (à la `bash`); `--shell`'s abbreviation (formerly `-s`) is now `-S` instead (#4490).
-- `set x[1] x[2] a b` is no longer valid syntax (#4236).
-- `for` loop control variables are no longer local to the `for` block (#1935).
-- A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier. (#1109, #4632)
-- Successive commas in brace expansions are handled in less surprising manner (`{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again). (#3002, #4632).
-- `%` is no longer used for process and job expansion. `$fish_pid` and `$last_pid` have taken the place of `%self` and `%last` respectively. (#4230, #1202)
-- The new `math` builtin (see below) does not support logical expressions; `test` should be used instead (#4777).
-- The `?` wildcard has been removed (#4520).
-- The `^` caret redirection for stderr has been removed (#4394). To redirect stderr, `2>/some/path` may be used, or `2>|` as a pipe.
+- `.` command no longer exists -- use `source` ([#4294](https://github.com/fish-shell/fish-shell/issues/4294)).
+- `read` now uses `-s` as short for `--silent` (à la `bash`); `--shell`'s abbreviation (formerly `-s`) is now `-S` instead ([#4490](https://github.com/fish-shell/fish-shell/issues/4490)).
+- `set x[1] x[2] a b` is no longer valid syntax ([#4236](https://github.com/fish-shell/fish-shell/issues/4236)).
+- `for` loop control variables are no longer local to the `for` block ([#1935](https://github.com/fish-shell/fish-shell/issues/1935)).
+- A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier. ([#1109](https://github.com/fish-shell/fish-shell/issues/1109), [#4632](https://github.com/fish-shell/fish-shell/issues/4632))
+- Successive commas in brace expansions are handled in less surprising manner (`{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again). ([#3002](https://github.com/fish-shell/fish-shell/issues/3002), [#4632](https://github.com/fish-shell/fish-shell/issues/4632)).
+- `%` is no longer used for process and job expansion. `$fish_pid` and `$last_pid` have taken the place of `%self` and `%last` respectively. ([#4230](https://github.com/fish-shell/fish-shell/issues/4230), [#1202](https://github.com/fish-shell/fish-shell/issues/1202))
+- The new `math` builtin (see below) does not support logical expressions; `test` should be used instead ([#4777](https://github.com/fish-shell/fish-shell/issues/4777)).
+- The `?` wildcard has been removed ([#4520](https://github.com/fish-shell/fish-shell/issues/4520)).
+- The `^` caret redirection for stderr has been removed ([#4394](https://github.com/fish-shell/fish-shell/issues/4394)). To redirect stderr, `2>/some/path` may be used, or `2>|` as a pipe.
 
 ## Notable fixes and improvements
-- `wait` builtin is added for waiting on processes (#4498).
-- `read` has a new `--delimiter` option as a better alternative to the `IFS` variable (#4256).
-- `read` writes directly to stdout if called without arguments (#4407)
+- `wait` builtin is added for waiting on processes ([#4498](https://github.com/fish-shell/fish-shell/issues/4498)).
+- `read` has a new `--delimiter` option as a better alternative to the `IFS` variable ([#4256](https://github.com/fish-shell/fish-shell/issues/4256)).
+- `read` writes directly to stdout if called without arguments ([#4407](https://github.com/fish-shell/fish-shell/issues/4407))
 - `read` can now read one or more individual lines from the input stream without consuming the input in its entirety via `read -L/--line`. Refer to the `read` documentation for more info.
-- `set` has a new `--append` and `--prepend` option (#1326).
-- `set` has a new `--show` option to show lots of information about variables (#4265).
-- `complete` now has a `-k` and `--keep-order` option to keep the order of the `OPTION_ARGUMENTS` (#361).
-- Local exported (`set -lx`) vars are now visible to functions (#1091).
-- `abbr` has been reimplemented to be faster. This means the old `fish_user_abbreviations` variable is ignored (#4048).
-- Setting variables is much faster (#4200, #4341).
-- Using a read-only variable in a for loop is now an error. Note that this never worked. It simply failed to set the for loop var and thus silently produced incorrect results (#4342).
-- `math` is now a builtin rather than a wrapper around `bc` (#3157).
-- `history search` supports globs for wildcard searching (#3136).
-- `bind` has a new `--silent` option to ignore bind requests for named keys not available under the current `$TERMINAL` (#4188, #4431)
-- Globs are faster (#4579)
-- `string` reads from stdin faster (#4610)
-- `string split` supports `-n/--no-empty` to exclude empty strings from the result (#4779)
-- `cd` tab completions no longer descend into the deepest unambiguous path (#4649)
+- `set` has a new `--append` and `--prepend` option ([#1326](https://github.com/fish-shell/fish-shell/issues/1326)).
+- `set` has a new `--show` option to show lots of information about variables ([#4265](https://github.com/fish-shell/fish-shell/issues/4265)).
+- `complete` now has a `-k` and `--keep-order` option to keep the order of the `OPTION_ARGUMENTS` ([#361](https://github.com/fish-shell/fish-shell/issues/361)).
+- Local exported (`set -lx`) vars are now visible to functions ([#1091](https://github.com/fish-shell/fish-shell/issues/1091)).
+- `abbr` has been reimplemented to be faster. This means the old `fish_user_abbreviations` variable is ignored ([#4048](https://github.com/fish-shell/fish-shell/issues/4048)).
+- Setting variables is much faster ([#4200](https://github.com/fish-shell/fish-shell/issues/4200), [#4341](https://github.com/fish-shell/fish-shell/issues/4341)).
+- Using a read-only variable in a for loop is now an error. Note that this never worked. It simply failed to set the for loop var and thus silently produced incorrect results ([#4342](https://github.com/fish-shell/fish-shell/issues/4342)).
+- `math` is now a builtin rather than a wrapper around `bc` ([#3157](https://github.com/fish-shell/fish-shell/issues/3157)).
+- `history search` supports globs for wildcard searching ([#3136](https://github.com/fish-shell/fish-shell/issues/3136)).
+- `bind` has a new `--silent` option to ignore bind requests for named keys not available under the current `$TERMINAL` ([#4188](https://github.com/fish-shell/fish-shell/issues/4188), [#4431](https://github.com/fish-shell/fish-shell/issues/4431))
+- Globs are faster ([#4579](https://github.com/fish-shell/fish-shell/issues/4579))
+- `string` reads from stdin faster ([#4610](https://github.com/fish-shell/fish-shell/issues/4610))
+- `string split` supports `-n/--no-empty` to exclude empty strings from the result ([#4779](https://github.com/fish-shell/fish-shell/issues/4779))
+- `cd` tab completions no longer descend into the deepest unambiguous path ([#4649](https://github.com/fish-shell/fish-shell/issues/4649))
 - Setting `$PATH` no longer warns on non-existent directories, allowing for a single $PATH to be shared across machines (e.g. via dotfiles).
-- `funced` now has a `-s` and `--save` option to automatically save the edited function after successfully editing (#4668).
+- `funced` now has a `-s` and `--save` option to automatically save the edited function after successfully editing ([#4668](https://github.com/fish-shell/fish-shell/issues/4668)).
 - Arguments to `end` are now errors, instead of being silently ignored.
-- Pager navigation has been improved. Most notably, moving down now wraps around, moving up from the commandline now jumps to the last element and moving right and left now reverse each other even when wrapping around (#4680).
-- Typing normal characters while the completion pager is active no longer shows the search field. Instead it enters them into the command line, and ends paging (#2249).
+- Pager navigation has been improved. Most notably, moving down now wraps around, moving up from the commandline now jumps to the last element and moving right and left now reverse each other even when wrapping around ([#4680](https://github.com/fish-shell/fish-shell/issues/4680)).
+- Typing normal characters while the completion pager is active no longer shows the search field. Instead it enters them into the command line, and ends paging ([#2249](https://github.com/fish-shell/fish-shell/issues/2249)).
 - A new input binding `pager-toggle-search` toggles the search field in the completions pager on and off. By default this is bound to control-s.
 - Slicing $history (in particular, `$history[1]` for the last executed command) is much faster.
-- The pager will now show the full command instead of just its last line if the number of completions is large (#4702).
-- Tildes in file names are now properly escaped in completions (#2274)
-- A pipe at the end of a line now allows the job to continue on the next line (#1285)
-- The names `argparse`, `read`, `set`, `status`, `test` and `[` are now reserved and not allowed as function names. This prevents users unintentionally breaking stuff (#3000).
-- Wrapping completions (from `complete -w` or `function -w`) can now inject arguments. For example, `complete gco -w 'git checkout'` now works properly (#1976). The `alias` function has been updated to respect this behavior.
+- The pager will now show the full command instead of just its last line if the number of completions is large ([#4702](https://github.com/fish-shell/fish-shell/issues/4702)).
+- Tildes in file names are now properly escaped in completions ([#2274](https://github.com/fish-shell/fish-shell/issues/2274))
+- A pipe at the end of a line now allows the job to continue on the next line ([#1285](https://github.com/fish-shell/fish-shell/issues/1285))
+- The names `argparse`, `read`, `set`, `status`, `test` and `[` are now reserved and not allowed as function names. This prevents users unintentionally breaking stuff ([#3000](https://github.com/fish-shell/fish-shell/issues/3000)).
+- Wrapping completions (from `complete -w` or `function -w`) can now inject arguments. For example, `complete gco -w 'git checkout'` now works properly ([#1976](https://github.com/fish-shell/fish-shell/issues/1976)). The `alias` function has been updated to respect this behavior.
 - The `jobs` builtin now has a `-q` and `--quiet` option to silence the output.
-- fish now supports `&&`, `||`, and `!` (#4620).
-- The machine hostname, where available, is now exposed as `$hostname` which is now a reserved variable. This drops the dependency on the `hostname` executable (#4422).
-- `functions --handlers` can be used to show event handlers (#4694).
-- Variables set in `if` and `while` conditions are available outside the block (#4820).
-- The universal variables file no longer contains the MAC address. It is now at the fixed location `.config/fish/fish_universal_variables` (#1912).
-- `alias` now has a `-s` and `--save` option to save the function generated by the alias using `funcsave` (#4878).
+- fish now supports `&&`, `||`, and `!` ([#4620](https://github.com/fish-shell/fish-shell/issues/4620)).
+- The machine hostname, where available, is now exposed as `$hostname` which is now a reserved variable. This drops the dependency on the `hostname` executable ([#4422](https://github.com/fish-shell/fish-shell/issues/4422)).
+- `functions --handlers` can be used to show event handlers ([#4694](https://github.com/fish-shell/fish-shell/issues/4694)).
+- Variables set in `if` and `while` conditions are available outside the block ([#4820](https://github.com/fish-shell/fish-shell/issues/4820)).
+- The universal variables file no longer contains the MAC address. It is now at the fixed location `.config/fish/fish_universal_variables` ([#1912](https://github.com/fish-shell/fish-shell/issues/1912)).
+- `alias` now has a `-s` and `--save` option to save the function generated by the alias using `funcsave` ([#4878](https://github.com/fish-shell/fish-shell/issues/4878)).
 
 ## Other significant changes
-- Command substitution output is now limited to 10 MB by default (#3822).
+- Command substitution output is now limited to 10 MB by default ([#3822](https://github.com/fish-shell/fish-shell/issues/3822)).
 - Added completions for
-  - `bd` (#4472)
+  - `bd` ([#4472](https://github.com/fish-shell/fish-shell/issues/4472))
   - `configure`
-  - `j` (autojump #4344)
-  - `jhipster` (#4472)
-  - `ngrok` (#4642)
+  - `j` (autojump [#4344](https://github.com/fish-shell/fish-shell/issues/4344))
+  - `jhipster` ([#4472](https://github.com/fish-shell/fish-shell/issues/4472))
+  - `ngrok` ([#4642](https://github.com/fish-shell/fish-shell/issues/4642))
   - `port`
 - Improved completions for
   - `brew`
   - `diskutil`
-  - `git` (#4395, #4396, #4592)
+  - `git` ([#4395](https://github.com/fish-shell/fish-shell/issues/4395), [#4396](https://github.com/fish-shell/fish-shell/issues/4396), [#4592](https://github.com/fish-shell/fish-shell/issues/4592))
   - `npm`<sup>†</sup>
-  - `ssh` (#4344)
+  - `ssh` ([#4344](https://github.com/fish-shell/fish-shell/issues/4344))
   - `yarn`<sup>†</sup>
 
 _† for autocompletion of available packages for installation via `npm` or `yarn`, make sure `all-the-package-names` is installed (typically: `sudo npm install -g all-the-package-names`)._
@@ -80,7 +80,7 @@ _† for autocompletion of available packages for installation via `npm` or `yar
 
 # fish 2.7.1 (released December 23, 2017)
 
-This release of fish fixes an issue where iTerm 2 on macOS would display a warning about paste bracketing being left on when starting a new fish session (#4521).
+This release of fish fixes an issue where iTerm 2 on macOS would display a warning about paste bracketing being left on when starting a new fish session ([#4521](https://github.com/fish-shell/fish-shell/issues/4521)).
 
 If you are upgrading from version 2.6.0 or before, please also review the release notes for 2.7.0 and 2.7b1 (included below).
 
@@ -97,68 +97,68 @@ Xcode builds and macOS packages could not be produced with 2.7b1, but this is fi
 # fish 2.7b1 (released October 31, 2017)
 
 ## Notable improvements
-- A new `cdh` (change directory using recent history) command provides a more friendly alternative to prevd/nextd and pushd/popd (#2847).
-- A new `argparse` command is available to allow fish script to parse arguments with the same behavior as builtin commands. This also includes the `fish_opt` helper command. (#4190).
-- Invalid array indexes are now silently ignored (#826, #4127).
-- Improvements to the debugging facility, including a prompt specific to the debugger (`fish_breakpoint_prompt`) and a `status is-breakpoint` subcommand (#1310).
-- `string` supports new `lower` and `upper` subcommands, for altering the case of strings (#4080). The case changing is not locale-aware yet.- `string escape` has a new `--style=xxx` flag where `xxx` can be `script`, `var`, or `url` (#4150), and can be reversed with `string unescape` (#3543).
-- History can now be split into sessions with the `fish_history` variable, or not saved to disk at all (#102).
-- Read history is now controlled by the `fish_history` variable rather than the `--mode-name` flag (#1504).
-- `command` now supports an `--all` flag to report all directories with the command. `which` is no longer a runtime dependency (#2778).
-- fish can run commands before starting an interactive session using the new `--init-command`/`-C` options (#4164).
-- `set` has a new `--show` option to show lots of information about variables (#4265).
+- A new `cdh` (change directory using recent history) command provides a more friendly alternative to prevd/nextd and pushd/popd ([#2847](https://github.com/fish-shell/fish-shell/issues/2847)).
+- A new `argparse` command is available to allow fish script to parse arguments with the same behavior as builtin commands. This also includes the `fish_opt` helper command. ([#4190](https://github.com/fish-shell/fish-shell/issues/4190)).
+- Invalid array indexes are now silently ignored ([#826](https://github.com/fish-shell/fish-shell/issues/826), [#4127](https://github.com/fish-shell/fish-shell/issues/4127)).
+- Improvements to the debugging facility, including a prompt specific to the debugger (`fish_breakpoint_prompt`) and a `status is-breakpoint` subcommand ([#1310](https://github.com/fish-shell/fish-shell/issues/1310)).
+- `string` supports new `lower` and `upper` subcommands, for altering the case of strings ([#4080](https://github.com/fish-shell/fish-shell/issues/4080)). The case changing is not locale-aware yet.- `string escape` has a new `--style=xxx` flag where `xxx` can be `script`, `var`, or `url` ([#4150](https://github.com/fish-shell/fish-shell/issues/4150)), and can be reversed with `string unescape` ([#3543](https://github.com/fish-shell/fish-shell/issues/3543)).
+- History can now be split into sessions with the `fish_history` variable, or not saved to disk at all ([#102](https://github.com/fish-shell/fish-shell/issues/102)).
+- Read history is now controlled by the `fish_history` variable rather than the `--mode-name` flag ([#1504](https://github.com/fish-shell/fish-shell/issues/1504)).
+- `command` now supports an `--all` flag to report all directories with the command. `which` is no longer a runtime dependency ([#2778](https://github.com/fish-shell/fish-shell/issues/2778)).
+- fish can run commands before starting an interactive session using the new `--init-command`/`-C` options ([#4164](https://github.com/fish-shell/fish-shell/issues/4164)).
+- `set` has a new `--show` option to show lots of information about variables ([#4265](https://github.com/fish-shell/fish-shell/issues/4265)).
 
 ## Other significant changes
-- The `COLUMNS` and `LINES` environment variables are now correctly set the first time `fish_prompt` is run (#4141).
-- `complete`'s `--no-files` option works as intended (#112).
-- `echo -h` now correctly echoes `-h` in line with other shells (#4120).
-- The `export` compatibility function now returns zero on success, rather than always returning 1 (#4435).
-- Stop converting empty elements in MANPATH to "." (#4158). The behavior being changed was introduced in fish 2.6.0.
-- `count -h` and `count --help` now return 1 rather than produce command help output (#4189).
-- An attempt to `read` which stops because too much data is available still defines the variables given as parameters (#4180).
-- A regression in fish 2.4.0 which prevented `pushd +1` from working has been fixed (#4091).
-- A regression in fish 2.6.0 where multiple `read` commands in non-interactive scripts were broken has been fixed (#4206).
-- A regression in fish 2.6.0 involving universal variables with side-effects at startup such as `set -U fish_escape_delay_ms 10` has been fixed (#4196).
+- The `COLUMNS` and `LINES` environment variables are now correctly set the first time `fish_prompt` is run ([#4141](https://github.com/fish-shell/fish-shell/issues/4141)).
+- `complete`'s `--no-files` option works as intended ([#112](https://github.com/fish-shell/fish-shell/issues/112)).
+- `echo -h` now correctly echoes `-h` in line with other shells ([#4120](https://github.com/fish-shell/fish-shell/issues/4120)).
+- The `export` compatibility function now returns zero on success, rather than always returning 1 ([#4435](https://github.com/fish-shell/fish-shell/issues/4435)).
+- Stop converting empty elements in MANPATH to "." ([#4158](https://github.com/fish-shell/fish-shell/issues/4158)). The behavior being changed was introduced in fish 2.6.0.
+- `count -h` and `count --help` now return 1 rather than produce command help output ([#4189](https://github.com/fish-shell/fish-shell/issues/4189)).
+- An attempt to `read` which stops because too much data is available still defines the variables given as parameters ([#4180](https://github.com/fish-shell/fish-shell/issues/4180)).
+- A regression in fish 2.4.0 which prevented `pushd +1` from working has been fixed ([#4091](https://github.com/fish-shell/fish-shell/issues/4091)).
+- A regression in fish 2.6.0 where multiple `read` commands in non-interactive scripts were broken has been fixed ([#4206](https://github.com/fish-shell/fish-shell/issues/4206)).
+- A regression in fish 2.6.0 involving universal variables with side-effects at startup such as `set -U fish_escape_delay_ms 10` has been fixed ([#4196](https://github.com/fish-shell/fish-shell/issues/4196)).
 - Added completions for:
-  - `as` (#4130)
-  - `cdh` (#2847)
-  - `dhcpd` (#4115)
-  - `ezjail-admin` (#4324)
-  - Fabric's `fab` (#4153)
-  - `grub-file` (#4119)
-  - `grub-install` (#4119)
-  - `jest` (#4142)
+  - `as` ([#4130](https://github.com/fish-shell/fish-shell/issues/4130))
+  - `cdh` ([#2847](https://github.com/fish-shell/fish-shell/issues/2847))
+  - `dhcpd` ([#4115](https://github.com/fish-shell/fish-shell/issues/4115))
+  - `ezjail-admin` ([#4324](https://github.com/fish-shell/fish-shell/issues/4324))
+  - Fabric's `fab` ([#4153](https://github.com/fish-shell/fish-shell/issues/4153))
+  - `grub-file` ([#4119](https://github.com/fish-shell/fish-shell/issues/4119))
+  - `grub-install` ([#4119](https://github.com/fish-shell/fish-shell/issues/4119))
+  - `jest` ([#4142](https://github.com/fish-shell/fish-shell/issues/4142))
   - `kdeconnect-cli`
-  - `magneto` (#4043, #4108)
-  - `mdadm` (#4198)
-  - `passwd` (#4209)
-  - `pip` and `pipenv` (#4448)
-  - `s3cmd` (#4332)
-  - `sbt` (#4347)
-  - `snap` (#4215)
-  - Sublime Text 3's `subl` (#4277)
+  - `magneto` ([#4043](https://github.com/fish-shell/fish-shell/issues/4043), [#4108](https://github.com/fish-shell/fish-shell/issues/4108))
+  - `mdadm` ([#4198](https://github.com/fish-shell/fish-shell/issues/4198))
+  - `passwd` ([#4209](https://github.com/fish-shell/fish-shell/issues/4209))
+  - `pip` and `pipenv` ([#4448](https://github.com/fish-shell/fish-shell/issues/4448))
+  - `s3cmd` ([#4332](https://github.com/fish-shell/fish-shell/issues/4332))
+  - `sbt` ([#4347](https://github.com/fish-shell/fish-shell/issues/4347))
+  - `snap` ([#4215](https://github.com/fish-shell/fish-shell/issues/4215))
+  - Sublime Text 3's `subl` ([#4277](https://github.com/fish-shell/fish-shell/issues/4277))
 - Lots of improvements to completions.
 - Updated Chinese and French translations.
 
 - Improved completions for:
   - `apt`
-  - `cd` (#4061)
-  - `composer` (#4295)
-  - `flatpak` (#4456)
-  - `git` (#4117, #4147, #4329, #4368)
+  - `cd` ([#4061](https://github.com/fish-shell/fish-shell/issues/4061))
+  - `composer` ([#4295](https://github.com/fish-shell/fish-shell/issues/4295))
+  - `flatpak` ([#4456](https://github.com/fish-shell/fish-shell/issues/4456))
+  - `git` ([#4117](https://github.com/fish-shell/fish-shell/issues/4117), [#4147](https://github.com/fish-shell/fish-shell/issues/4147), [#4329](https://github.com/fish-shell/fish-shell/issues/4329), [#4368](https://github.com/fish-shell/fish-shell/issues/4368))
   - `gphoto2`
-  - `killall` (#4052)
+  - `killall` ([#4052](https://github.com/fish-shell/fish-shell/issues/4052))
   - `ln`
-  - `npm` (#4241)
-  - `ssh` (#4377)
+  - `npm` ([#4241](https://github.com/fish-shell/fish-shell/issues/4241))
+  - `ssh` ([#4377](https://github.com/fish-shell/fish-shell/issues/4377))
   - `tail`
-  - `xdg-mime` (#4333)
-  - `zypper` (#4325)
+  - `xdg-mime` ([#4333](https://github.com/fish-shell/fish-shell/issues/4333))
+  - `zypper` ([#4325](https://github.com/fish-shell/fish-shell/issues/4325))
 ---
 
 # fish 2.6.0 (released June 3, 2017)
 
-Since the beta release of fish 2.6b1, fish version 2.6.0 contains a number of minor fixes, new completions for `magneto` (#4043), and improvements to the documentation.
+Since the beta release of fish 2.6b1, fish version 2.6.0 contains a number of minor fixes, new completions for `magneto` ([#4043](https://github.com/fish-shell/fish-shell/issues/4043)), and improvements to the documentation.
 
 ## Known issues
 
@@ -172,59 +172,59 @@ If you are upgrading from version 2.5.0 or before, please also review the releas
 
 ## Notable fixes and improvements
 
-- Jobs running in the background can now be removed from the list of jobs with the new `disown` builtin, which behaves like the same command in other shells (#2810).
-- Command substitutions now have access to the terminal, like in other shells. This allows tools like `fzf` to work properly (#1362, #3922).
+- Jobs running in the background can now be removed from the list of jobs with the new `disown` builtin, which behaves like the same command in other shells ([#2810](https://github.com/fish-shell/fish-shell/issues/2810)).
+- Command substitutions now have access to the terminal, like in other shells. This allows tools like `fzf` to work properly ([#1362](https://github.com/fish-shell/fish-shell/issues/1362), [#3922](https://github.com/fish-shell/fish-shell/issues/3922)).
 - In cases where the operating system does not report the size of the terminal, the `COLUMNS` and `LINES` environment variables are used; if they are unset, a default of 80x24 is assumed.
-- New French (#3772 & #3788) and improved German (#3834) translations.
+- New French ([#3772](https://github.com/fish-shell/fish-shell/issues/3772) & [#3788](https://github.com/fish-shell/fish-shell/issues/3788)) and improved German ([#3834](https://github.com/fish-shell/fish-shell/issues/3834)) translations.
 - fish no longer depends on the `which` external command.
 
 ## Other significant changes
 
-- Performance improvements in launching processes, including major reductions in signal blocking. Although this has been heavily tested, it may cause problems in some circumstances; set the `FISH_NO_SIGNAL_BLOCK` variable to 0 in your fish configuration file to return to the old behaviour (#2007).
-- Performance improvements in prompts and functions that set lots of colours (#3793).
+- Performance improvements in launching processes, including major reductions in signal blocking. Although this has been heavily tested, it may cause problems in some circumstances; set the `FISH_NO_SIGNAL_BLOCK` variable to 0 in your fish configuration file to return to the old behaviour ([#2007](https://github.com/fish-shell/fish-shell/issues/2007)).
+- Performance improvements in prompts and functions that set lots of colours ([#3793](https://github.com/fish-shell/fish-shell/issues/3793)).
 - The Delete key no longer deletes backwards (a regression in 2.5.0).
-- `functions` supports a new `--details` option, which identifies where the function was loaded from (#3295), and a `--details --verbose` option which includes the function description (#597).
+- `functions` supports a new `--details` option, which identifies where the function was loaded from ([#3295](https://github.com/fish-shell/fish-shell/issues/3295)), and a `--details --verbose` option which includes the function description ([#597](https://github.com/fish-shell/fish-shell/issues/597)).
 - `read` will read up to 10 MiB by default, leaving the target variable empty and exiting with status 122 if the line is too long. You can set a different limit with the `FISH_READ_BYTE_LIMIT` variable.
-- `read` supports a new `--silent` option to hide the characters typed (#838), for when reading sensitive data from the terminal. `read` also now accepts simple strings for the prompt (rather than scripts) with the new `-P` and `--prompt-str` options (#802).
+- `read` supports a new `--silent` option to hide the characters typed ([#838](https://github.com/fish-shell/fish-shell/issues/838)), for when reading sensitive data from the terminal. `read` also now accepts simple strings for the prompt (rather than scripts) with the new `-P` and `--prompt-str` options ([#802](https://github.com/fish-shell/fish-shell/issues/802)).
 - `export` and `setenv` now understand colon-separated `PATH`, `CDPATH` and `MANPATH` variables.
-- `setenv` is no longer a simple alias for `set -gx` and will complain, just like the csh version, if given more than one value (#4103).
-- `bind` supports a new `--list-modes` option (#3872).
-- `bg` will check all of its arguments before backgrounding any jobs; any invalid arguments will cause a failure, but non-existent (eg recently exited) jobs are ignored (#3909).
-- `funced` warns if the function being edited has not been modified (#3961).
-- `printf` correctly outputs "long long" integers (#3352).
-- `status` supports a new `current-function` subcommand to print the current function name (#1743).
-- `string` supports a new `repeat` subcommand (#3864). `string match` supports a new `--entire` option to emit the entire line matched by a pattern (#3957). `string replace` supports a new `--filter` option to only emit lines which underwent a replacement (#3348).
-- `test` supports the `-k` option to test for sticky bits (#733).
-- `umask` understands symbolic modes (#738).
-- Empty components in the `CDPATH`, `MANPATH` and `PATH` variables are now converted to "." (#2106, #3914).
-- New versions of ncurses (6.0 and up) wipe terminal scrollback buffers with certain commands; the `C-l` binding tries to avoid this (#2855).
-- Some systems' `su` implementations do not set the `USER` environment variable; it is now reset for root users (#3916).
-- Under terminals which support it, bracketed paste is enabled, escaping problematic characters for security and convience (#3871). Inside single quotes (`'`), single quotes and backslashes in pasted text are escaped (#967). The `fish_clipboard_paste` function (bound to `C-v` by default) is still the recommended pasting method where possible as it includes this functionality and more.
-- Processes in pipelines are no longer signalled as soon as one command in the pipeline has completed (#1926). This behaviour matches other shells mre closely.
-- All functions requiring Python work with whichever version of Python is installed (#3970). Python 3 is preferred, but Python 2.6 remains the minimum version required.
-- The color of the cancellation character can be controlled by the `fish_color_cancel` variable (#3963).
+- `setenv` is no longer a simple alias for `set -gx` and will complain, just like the csh version, if given more than one value ([#4103](https://github.com/fish-shell/fish-shell/issues/4103)).
+- `bind` supports a new `--list-modes` option ([#3872](https://github.com/fish-shell/fish-shell/issues/3872)).
+- `bg` will check all of its arguments before backgrounding any jobs; any invalid arguments will cause a failure, but non-existent (eg recently exited) jobs are ignored ([#3909](https://github.com/fish-shell/fish-shell/issues/3909)).
+- `funced` warns if the function being edited has not been modified ([#3961](https://github.com/fish-shell/fish-shell/issues/3961)).
+- `printf` correctly outputs "long long" integers ([#3352](https://github.com/fish-shell/fish-shell/issues/3352)).
+- `status` supports a new `current-function` subcommand to print the current function name ([#1743](https://github.com/fish-shell/fish-shell/issues/1743)).
+- `string` supports a new `repeat` subcommand ([#3864](https://github.com/fish-shell/fish-shell/issues/3864)). `string match` supports a new `--entire` option to emit the entire line matched by a pattern ([#3957](https://github.com/fish-shell/fish-shell/issues/3957)). `string replace` supports a new `--filter` option to only emit lines which underwent a replacement ([#3348](https://github.com/fish-shell/fish-shell/issues/3348)).
+- `test` supports the `-k` option to test for sticky bits ([#733](https://github.com/fish-shell/fish-shell/issues/733)).
+- `umask` understands symbolic modes ([#738](https://github.com/fish-shell/fish-shell/issues/738)).
+- Empty components in the `CDPATH`, `MANPATH` and `PATH` variables are now converted to "." ([#2106](https://github.com/fish-shell/fish-shell/issues/2106), [#3914](https://github.com/fish-shell/fish-shell/issues/3914)).
+- New versions of ncurses (6.0 and up) wipe terminal scrollback buffers with certain commands; the `C-l` binding tries to avoid this ([#2855](https://github.com/fish-shell/fish-shell/issues/2855)).
+- Some systems' `su` implementations do not set the `USER` environment variable; it is now reset for root users ([#3916](https://github.com/fish-shell/fish-shell/issues/3916)).
+- Under terminals which support it, bracketed paste is enabled, escaping problematic characters for security and convience ([#3871](https://github.com/fish-shell/fish-shell/issues/3871)). Inside single quotes (`'`), single quotes and backslashes in pasted text are escaped ([#967](https://github.com/fish-shell/fish-shell/issues/967)). The `fish_clipboard_paste` function (bound to `C-v` by default) is still the recommended pasting method where possible as it includes this functionality and more.
+- Processes in pipelines are no longer signalled as soon as one command in the pipeline has completed ([#1926](https://github.com/fish-shell/fish-shell/issues/1926)). This behaviour matches other shells mre closely.
+- All functions requiring Python work with whichever version of Python is installed ([#3970](https://github.com/fish-shell/fish-shell/issues/3970)). Python 3 is preferred, but Python 2.6 remains the minimum version required.
+- The color of the cancellation character can be controlled by the `fish_color_cancel` variable ([#3963](https://github.com/fish-shell/fish-shell/issues/3963)).
 - Added completions for:
- - `caddy` (#4008)
- - `castnow` (#3744)
- - `climate` (#3760)
+ - `caddy` ([#4008](https://github.com/fish-shell/fish-shell/issues/4008))
+ - `castnow` ([#3744](https://github.com/fish-shell/fish-shell/issues/3744))
+ - `climate` ([#3760](https://github.com/fish-shell/fish-shell/issues/3760))
  - `flatpak`
- - `gradle` (#3859)
- - `gsettings` (#4001)
- - `helm` (#3829)
- - `i3-msg` (#3787)
- - `ipset` (#3924)
- - `jq` (#3804)
- - `light` (#3752)
- - `minikube` (#3778)
- - `mocha` (#3828)
- - `mkdosfs` (#4017)
- - `pv` (#3773)
- - `setsid` (#3791)
- - `terraform` (#3960)
- - `usermod` (#3775)
+ - `gradle` ([#3859](https://github.com/fish-shell/fish-shell/issues/3859))
+ - `gsettings` ([#4001](https://github.com/fish-shell/fish-shell/issues/4001))
+ - `helm` ([#3829](https://github.com/fish-shell/fish-shell/issues/3829))
+ - `i3-msg` ([#3787](https://github.com/fish-shell/fish-shell/issues/3787))
+ - `ipset` ([#3924](https://github.com/fish-shell/fish-shell/issues/3924))
+ - `jq` ([#3804](https://github.com/fish-shell/fish-shell/issues/3804))
+ - `light` ([#3752](https://github.com/fish-shell/fish-shell/issues/3752))
+ - `minikube` ([#3778](https://github.com/fish-shell/fish-shell/issues/3778))
+ - `mocha` ([#3828](https://github.com/fish-shell/fish-shell/issues/3828))
+ - `mkdosfs` ([#4017](https://github.com/fish-shell/fish-shell/issues/4017))
+ - `pv` ([#3773](https://github.com/fish-shell/fish-shell/issues/3773))
+ - `setsid` ([#3791](https://github.com/fish-shell/fish-shell/issues/3791))
+ - `terraform` ([#3960](https://github.com/fish-shell/fish-shell/issues/3960))
+ - `usermod` ([#3775](https://github.com/fish-shell/fish-shell/issues/3775))
  - `xinput`
- - `yarn` (#3816)
-- Improved completions for `adb` (#3853), `apt` (#3771), `bzr` (#3769), `dconf`, `git` (including #3743), `grep` (#3789), `go` (#3789), `help` (#3789), `hg` (#3975), `htop` (#3789), `killall` (#3996), `lua`, `man` (#3762), `mount` (#3764 & #3841), `obnam` (#3924), `perl` (#3856), `portmaster` (#3950), `python` (#3840), `ssh` (#3781), `scp` (#3781), `systemctl` (#3757) and `udisks` (#3764).
+ - `yarn` ([#3816](https://github.com/fish-shell/fish-shell/issues/3816))
+- Improved completions for `adb` ([#3853](https://github.com/fish-shell/fish-shell/issues/3853)), `apt` ([#3771](https://github.com/fish-shell/fish-shell/issues/3771)), `bzr` ([#3769](https://github.com/fish-shell/fish-shell/issues/3769)), `dconf`, `git` (including [#3743](https://github.com/fish-shell/fish-shell/issues/3743)), `grep` ([#3789](https://github.com/fish-shell/fish-shell/issues/3789)), `go` ([#3789](https://github.com/fish-shell/fish-shell/issues/3789)), `help` ([#3789](https://github.com/fish-shell/fish-shell/issues/3789)), `hg` ([#3975](https://github.com/fish-shell/fish-shell/issues/3975)), `htop` ([#3789](https://github.com/fish-shell/fish-shell/issues/3789)), `killall` ([#3996](https://github.com/fish-shell/fish-shell/issues/3996)), `lua`, `man` ([#3762](https://github.com/fish-shell/fish-shell/issues/3762)), `mount` ([#3764](https://github.com/fish-shell/fish-shell/issues/3764) & [#3841](https://github.com/fish-shell/fish-shell/issues/3841)), `obnam` ([#3924](https://github.com/fish-shell/fish-shell/issues/3924)), `perl` ([#3856](https://github.com/fish-shell/fish-shell/issues/3856)), `portmaster` ([#3950](https://github.com/fish-shell/fish-shell/issues/3950)), `python` ([#3840](https://github.com/fish-shell/fish-shell/issues/3840)), `ssh` ([#3781](https://github.com/fish-shell/fish-shell/issues/3781)), `scp` ([#3781](https://github.com/fish-shell/fish-shell/issues/3781)), `systemctl` ([#3757](https://github.com/fish-shell/fish-shell/issues/3757)) and `udisks` ([#3764](https://github.com/fish-shell/fish-shell/issues/3764)).
 
 ---
 
@@ -234,7 +234,7 @@ There are no major changes between 2.5b1 and 2.5.0. If you are upgrading from ve
 
 ## Notable fixes and improvements
 
-- The Home, End, Insert, Delete, Page Up and Page Down keys work in Vi-style key bindings (#3731).
+- The Home, End, Insert, Delete, Page Up and Page Down keys work in Vi-style key bindings ([#3731](https://github.com/fish-shell/fish-shell/issues/3731)).
 
 ---
 
@@ -272,56 +272,56 @@ This is only necessary on 10.6. OS X 10.7 and later include the required library
 
 ## Other significant changes
 
-- Attempting to exit with running processes in the background produces a warning, then signals them to terminate if a second attempt to exit is made. This brings the behaviour for running background processes into line with stopped processes. (#3497)
-- `random` can now have start, stop and step values specified, or the new `choice` subcommand can be used to pick an argument from a list (#3619).
-- A new key bindings preset, `fish_hybrid_key_bindings`, including all the Emacs-style and Vi-style bindings, which behaves like `fish_vi_key_bindings` in fish 2.3.0 (#3556).
-- `function` now returns an error when called with invalid options, rather than defining the function anyway (#3574). This was a regression present in fish 2.3 and 2.4.0.
+- Attempting to exit with running processes in the background produces a warning, then signals them to terminate if a second attempt to exit is made. This brings the behaviour for running background processes into line with stopped processes. ([#3497](https://github.com/fish-shell/fish-shell/issues/3497))
+- `random` can now have start, stop and step values specified, or the new `choice` subcommand can be used to pick an argument from a list ([#3619](https://github.com/fish-shell/fish-shell/issues/3619)).
+- A new key bindings preset, `fish_hybrid_key_bindings`, including all the Emacs-style and Vi-style bindings, which behaves like `fish_vi_key_bindings` in fish 2.3.0 ([#3556](https://github.com/fish-shell/fish-shell/issues/3556)).
+- `function` now returns an error when called with invalid options, rather than defining the function anyway ([#3574](https://github.com/fish-shell/fish-shell/issues/3574)). This was a regression present in fish 2.3 and 2.4.0.
 - fish no longer prints a warning when it identifies a running instance of an old version (2.1.0 and earlier). Changes to universal variables may not propagate between these old versions and 2.5b1.
-- Improved compatiblity with Android (#3585), MSYS/mingw (#2360), and Solaris (#3456, #3340).
-- Like other shells, the `test` builting now returns an error for numeric operations on invalid integers (#3346, #3581).
+- Improved compatiblity with Android ([#3585](https://github.com/fish-shell/fish-shell/issues/3585)), MSYS/mingw ([#2360](https://github.com/fish-shell/fish-shell/issues/2360)), and Solaris ([#3456](https://github.com/fish-shell/fish-shell/issues/3456), [#3340](https://github.com/fish-shell/fish-shell/issues/3340)).
+- Like other shells, the `test` builting now returns an error for numeric operations on invalid integers ([#3346](https://github.com/fish-shell/fish-shell/issues/3346), [#3581](https://github.com/fish-shell/fish-shell/issues/3581)).
 - `complete` no longer recognises `--authoritative` and `--unauthoritative` options, and they are marked as obsolete.
-- `status` accepts subcommands, and should be used like `status is-interactive`. The old options continue to be supported for the foreseeable future (#3526), although only one subcommand or option can be specified at a time.
-- Selection mode (used with "begin-selection") no longer selects a character the cursor does not move over (#3684).
-- List indexes are handled better, and a bit more liberally in some cases (`echo $PATH[1 .. 3]` is now valid) (#3579).
-- The `fish_mode_prompt` function is now simply a stub around `fish_default_mode_prompt`, which allows the mode prompt to be included more easily in customised prompt functions (#3641).
+- `status` accepts subcommands, and should be used like `status is-interactive`. The old options continue to be supported for the foreseeable future ([#3526](https://github.com/fish-shell/fish-shell/issues/3526)), although only one subcommand or option can be specified at a time.
+- Selection mode (used with "begin-selection") no longer selects a character the cursor does not move over ([#3684](https://github.com/fish-shell/fish-shell/issues/3684)).
+- List indexes are handled better, and a bit more liberally in some cases (`echo $PATH[1 .. 3]` is now valid) ([#3579](https://github.com/fish-shell/fish-shell/issues/3579)).
+- The `fish_mode_prompt` function is now simply a stub around `fish_default_mode_prompt`, which allows the mode prompt to be included more easily in customised prompt functions ([#3641](https://github.com/fish-shell/fish-shell/issues/3641)).
 
 ## Notable fixes and improvements
 - `alias`, run without options or arguments, lists all defined aliases, and aliases now include a description in the function signature that identifies them.
-- `complete` accepts empty strings as descriptions (#3557).
-- `command` accepts `-q`/`--quiet` in combination with `--search` (#3591), providing a simple way of checking whether a command exists in scripts.
-- Abbreviations can now be renamed with `abbr --rename OLD_KEY NEW_KEY` (#3610).
-- The command synopses printed by `--help` options work better with copying and pasting (#2673).
-- `help` launches the browser specified by the `$fish_help_browser variable` if it is set (#3131).
-- History merging could lose items under certain circumstances and is now fixed (#3496).
-- The `$status` variable is now set to 123 when a syntactically invalid command is entered (#3616).
-- Exiting fish now signals all background processes to terminate, not just stopped jobs (#3497).
-- A new `prompt_hostname` function which prints a hostname suitable for use in prompts (#3482).
-- The `__fish_man_page` function (bound to Alt-h by default) now tries to recognize subcommands (e.g. `git add` will now open the "git-add" man page) (#3678).
-- A new function `edit_command_buffer` (bound to Alt-e & Alt-v by default) to edit the command buffer in an external editor (#1215, #3627).
-- `set_color` now supports italics (`--italics`), dim (`--dim`) and reverse (`--reverse`) modes (#3650).
-- Filesystems with very slow locking (eg incorrectly-configured NFS) will no longer slow fish down (#685).
-- Improved completions for `apt` (#3695), `fusermount` (#3642), `make` (#3628), `netctl-auto` (#3378), `nmcli` (#3648), `pygmentize` (#3378), and `tar` (#3719).
+- `complete` accepts empty strings as descriptions ([#3557](https://github.com/fish-shell/fish-shell/issues/3557)).
+- `command` accepts `-q`/`--quiet` in combination with `--search` ([#3591](https://github.com/fish-shell/fish-shell/issues/3591)), providing a simple way of checking whether a command exists in scripts.
+- Abbreviations can now be renamed with `abbr --rename OLD_KEY NEW_KEY` ([#3610](https://github.com/fish-shell/fish-shell/issues/3610)).
+- The command synopses printed by `--help` options work better with copying and pasting ([#2673](https://github.com/fish-shell/fish-shell/issues/2673)).
+- `help` launches the browser specified by the `$fish_help_browser variable` if it is set ([#3131](https://github.com/fish-shell/fish-shell/issues/3131)).
+- History merging could lose items under certain circumstances and is now fixed ([#3496](https://github.com/fish-shell/fish-shell/issues/3496)).
+- The `$status` variable is now set to 123 when a syntactically invalid command is entered ([#3616](https://github.com/fish-shell/fish-shell/issues/3616)).
+- Exiting fish now signals all background processes to terminate, not just stopped jobs ([#3497](https://github.com/fish-shell/fish-shell/issues/3497)).
+- A new `prompt_hostname` function which prints a hostname suitable for use in prompts ([#3482](https://github.com/fish-shell/fish-shell/issues/3482)).
+- The `__fish_man_page` function (bound to Alt-h by default) now tries to recognize subcommands (e.g. `git add` will now open the "git-add" man page) ([#3678](https://github.com/fish-shell/fish-shell/issues/3678)).
+- A new function `edit_command_buffer` (bound to Alt-e & Alt-v by default) to edit the command buffer in an external editor ([#1215](https://github.com/fish-shell/fish-shell/issues/1215), [#3627](https://github.com/fish-shell/fish-shell/issues/3627)).
+- `set_color` now supports italics (`--italics`), dim (`--dim`) and reverse (`--reverse`) modes ([#3650](https://github.com/fish-shell/fish-shell/issues/3650)).
+- Filesystems with very slow locking (eg incorrectly-configured NFS) will no longer slow fish down ([#685](https://github.com/fish-shell/fish-shell/issues/685)).
+- Improved completions for `apt` ([#3695](https://github.com/fish-shell/fish-shell/issues/3695)), `fusermount` ([#3642](https://github.com/fish-shell/fish-shell/issues/3642)), `make` ([#3628](https://github.com/fish-shell/fish-shell/issues/3628)), `netctl-auto` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378)), `nmcli` ([#3648](https://github.com/fish-shell/fish-shell/issues/3648)), `pygmentize` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378)), and `tar` ([#3719](https://github.com/fish-shell/fish-shell/issues/3719)).
 - Added completions for:
- - `VBoxHeadless` (#3378)
- - `VBoxSDL` (#3378)
- - `base64` (#3378)
- - `caffeinate` (#3524)
- - `dconf` (#3638)
- - `dig` (#3495)
- - `dpkg-reconfigure` (#3521 & #3522)
- - `feh` (#3378)
- - `launchctl` (#3682)
- - `lxc` (#3554 & #3564),
- - `mddiagnose` (#3524)
- - `mdfind` (#3524)
- - `mdimport`  (#3524)
- - `mdls` (#3524)
- - `mdutil` (#3524)
- - `mkvextract` (#3492)
- - `nvram` (#3524)
- - `objdump` (#3378)
- - `sysbench` (#3491)
- - `tmutil` (#3524)
+ - `VBoxHeadless` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378))
+ - `VBoxSDL` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378))
+ - `base64` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378))
+ - `caffeinate` ([#3524](https://github.com/fish-shell/fish-shell/issues/3524))
+ - `dconf` ([#3638](https://github.com/fish-shell/fish-shell/issues/3638))
+ - `dig` ([#3495](https://github.com/fish-shell/fish-shell/issues/3495))
+ - `dpkg-reconfigure` ([#3521](https://github.com/fish-shell/fish-shell/issues/3521) & [#3522](https://github.com/fish-shell/fish-shell/issues/3522))
+ - `feh` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378))
+ - `launchctl` ([#3682](https://github.com/fish-shell/fish-shell/issues/3682))
+ - `lxc` ([#3554](https://github.com/fish-shell/fish-shell/issues/3554) & [#3564](https://github.com/fish-shell/fish-shell/issues/3564)),
+ - `mddiagnose` ([#3524](https://github.com/fish-shell/fish-shell/issues/3524))
+ - `mdfind` ([#3524](https://github.com/fish-shell/fish-shell/issues/3524))
+ - `mdimport`  ([#3524](https://github.com/fish-shell/fish-shell/issues/3524))
+ - `mdls` ([#3524](https://github.com/fish-shell/fish-shell/issues/3524))
+ - `mdutil` ([#3524](https://github.com/fish-shell/fish-shell/issues/3524))
+ - `mkvextract` ([#3492](https://github.com/fish-shell/fish-shell/issues/3492))
+ - `nvram` ([#3524](https://github.com/fish-shell/fish-shell/issues/3524))
+ - `objdump` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378))
+ - `sysbench` ([#3491](https://github.com/fish-shell/fish-shell/issues/3491))
+ - `tmutil` ([#3524](https://github.com/fish-shell/fish-shell/issues/3524))
 
 ---
 
@@ -331,54 +331,54 @@ There are no major changes between 2.4b1 and 2.4.0.
 
 ## Notable fixes and improvements
 - The documentation is now generated properly and with the correct version identifier.
-- Automatic cursor changes are now only enabled on the subset of XTerm versions known to support them, resolving a problem where older versions printed garbage to the terminal before and after every prompt (#3499).
+- Automatic cursor changes are now only enabled on the subset of XTerm versions known to support them, resolving a problem where older versions printed garbage to the terminal before and after every prompt ([#3499](https://github.com/fish-shell/fish-shell/issues/3499)).
 - Improved the title set in Apple Terminal.app.
-- Added completions for `defaults` and improved completions for `diskutil` (#3478).
+- Added completions for `defaults` and improved completions for `diskutil` ([#3478](https://github.com/fish-shell/fish-shell/issues/3478)).
 
 ---
 
 # fish 2.4b1 (released October 18, 2016)
 
 ## Significant changes
-- The clipboard integration has been revamped with explicit bindings. The killring commands no longer copy from, or paste to, the X11 clipboard - use the new copy (`C-x`) and paste (`C-v`) bindings instead. The clipboard is now available on OS X as well as systems using X11 (e.g. Linux). (#3061)
-- `history` uses subcommands (`history delete`) rather than options (`history --delete`) for its actions (#3367). You can no longer specify multiple actions via flags (e.g., `history --delete --save something`).
-- New `history` options have been added, including `--max=n` to limit the number of history entries, `--show-time` option to show timestamps (#3175, #3244), and `--null` to null terminate history entries in the search output.
-- `history search` is now case-insensitive by default (which also affects `history delete`) (#3236).
-- `history delete` now correctly handles multiline commands (#31).
-- Vi-style bindings no longer include all of the default emacs-style bindings; instead, they share some definitions (#3068).
-- If there is no locale set in the environment, various known system configuration files will be checked for a default. If no locale can be found, `en_US-UTF.8` will be used (#277).
-- A number followed by a caret (e.g. `5^`) is no longer treated as a redirection (#1873).
+- The clipboard integration has been revamped with explicit bindings. The killring commands no longer copy from, or paste to, the X11 clipboard - use the new copy (`C-x`) and paste (`C-v`) bindings instead. The clipboard is now available on OS X as well as systems using X11 (e.g. Linux). ([#3061](https://github.com/fish-shell/fish-shell/issues/3061))
+- `history` uses subcommands (`history delete`) rather than options (`history --delete`) for its actions ([#3367](https://github.com/fish-shell/fish-shell/issues/3367)). You can no longer specify multiple actions via flags (e.g., `history --delete --save something`).
+- New `history` options have been added, including `--max=n` to limit the number of history entries, `--show-time` option to show timestamps ([#3175](https://github.com/fish-shell/fish-shell/issues/3175), [#3244](https://github.com/fish-shell/fish-shell/issues/3244)), and `--null` to null terminate history entries in the search output.
+- `history search` is now case-insensitive by default (which also affects `history delete`) ([#3236](https://github.com/fish-shell/fish-shell/issues/3236)).
+- `history delete` now correctly handles multiline commands ([#31](https://github.com/fish-shell/fish-shell/issues/31)).
+- Vi-style bindings no longer include all of the default emacs-style bindings; instead, they share some definitions ([#3068](https://github.com/fish-shell/fish-shell/issues/3068)).
+- If there is no locale set in the environment, various known system configuration files will be checked for a default. If no locale can be found, `en_US-UTF.8` will be used ([#277](https://github.com/fish-shell/fish-shell/issues/277)).
+- A number followed by a caret (e.g. `5^`) is no longer treated as a redirection ([#1873](https://github.com/fish-shell/fish-shell/issues/1873)).
 - The `$version` special variable can be overwritten, so that it can be used for other purposes if required.
 
 ## Notable fixes and improvements
-- The `fish_realpath` builtin has been renamed to `realpath` and made compatible with GNU `realpath` when run without arguments (#3400). It is used only for systems without a `realpath` or `grealpath` utility (#3374).
-- Improved color handling on terminals/consoles with 8-16 colors, particularly the use of bright named color (#3176, #3260).
-- `fish_indent` can now read from files given as arguments, rather than just standard input (#3037).
-- Fuzzy tab completions behave in a less surprising manner (#3090, #3211).
-- `jobs` should only print its header line once (#3127).
-- Wildcards in redirections are highlighted appropriately (#2789).
-- Suggestions will be offered more often, like after removing characters (#3069).
-- `history --merge` now correctly interleaves items in chronological order (#2312).
-- Options for `fish_indent` have been aligned with the other binaries - in particular, `-d` now means `--debug`. The `--dump` option has been renamed to `--dump-parse-tree` (#3191).
-- The display of bindings in the Web-based configuration has been greatly improved (#3325), as has the rendering of prompts (#2924).
-- fish should no longer hang using 100% CPU in the C locale (#3214).
-- A bug in FreeBSD 11 & 12, Dragonfly BSD & illumos prevented fish from working correctly on these platforms under UTF-8 locales; fish now avoids the buggy behaviour (#3050).
-- Prompts which show git repository information (via `__fish_git_prompt`) are faster in large repositories (#3294) and slow filesystems (#3083).
-- fish 2.3.0 reintroduced a problem where the greeting was printed even when using `read`; this has been corrected again (#3261).
-- Vi mode changes the cursor depending on the current mode (#3215).
-- Command lines with escaped space characters at the end tab-complete correctly (#2447).
+- The `fish_realpath` builtin has been renamed to `realpath` and made compatible with GNU `realpath` when run without arguments ([#3400](https://github.com/fish-shell/fish-shell/issues/3400)). It is used only for systems without a `realpath` or `grealpath` utility ([#3374](https://github.com/fish-shell/fish-shell/issues/3374)).
+- Improved color handling on terminals/consoles with 8-16 colors, particularly the use of bright named color ([#3176](https://github.com/fish-shell/fish-shell/issues/3176), [#3260](https://github.com/fish-shell/fish-shell/issues/3260)).
+- `fish_indent` can now read from files given as arguments, rather than just standard input ([#3037](https://github.com/fish-shell/fish-shell/issues/3037)).
+- Fuzzy tab completions behave in a less surprising manner ([#3090](https://github.com/fish-shell/fish-shell/issues/3090), [#3211](https://github.com/fish-shell/fish-shell/issues/3211)).
+- `jobs` should only print its header line once ([#3127](https://github.com/fish-shell/fish-shell/issues/3127)).
+- Wildcards in redirections are highlighted appropriately ([#2789](https://github.com/fish-shell/fish-shell/issues/2789)).
+- Suggestions will be offered more often, like after removing characters ([#3069](https://github.com/fish-shell/fish-shell/issues/3069)).
+- `history --merge` now correctly interleaves items in chronological order ([#2312](https://github.com/fish-shell/fish-shell/issues/2312)).
+- Options for `fish_indent` have been aligned with the other binaries - in particular, `-d` now means `--debug`. The `--dump` option has been renamed to `--dump-parse-tree` ([#3191](https://github.com/fish-shell/fish-shell/issues/3191)).
+- The display of bindings in the Web-based configuration has been greatly improved ([#3325](https://github.com/fish-shell/fish-shell/issues/3325)), as has the rendering of prompts ([#2924](https://github.com/fish-shell/fish-shell/issues/2924)).
+- fish should no longer hang using 100% CPU in the C locale ([#3214](https://github.com/fish-shell/fish-shell/issues/3214)).
+- A bug in FreeBSD 11 & 12, Dragonfly BSD & illumos prevented fish from working correctly on these platforms under UTF-8 locales; fish now avoids the buggy behaviour ([#3050](https://github.com/fish-shell/fish-shell/issues/3050)).
+- Prompts which show git repository information (via `__fish_git_prompt`) are faster in large repositories ([#3294](https://github.com/fish-shell/fish-shell/issues/3294)) and slow filesystems ([#3083](https://github.com/fish-shell/fish-shell/issues/3083)).
+- fish 2.3.0 reintroduced a problem where the greeting was printed even when using `read`; this has been corrected again ([#3261](https://github.com/fish-shell/fish-shell/issues/3261)).
+- Vi mode changes the cursor depending on the current mode ([#3215](https://github.com/fish-shell/fish-shell/issues/3215)).
+- Command lines with escaped space characters at the end tab-complete correctly ([#2447](https://github.com/fish-shell/fish-shell/issues/2447)).
 - Added completions for:
-  - `arcanist` (#3256)
-  - `connmanctl` (#3419)
-  - `figlet` (#3378)
-  - `mdbook` (#3378)
-  -  `ninja` (#3415)
-  -  `p4`, the Perforce client (#3314)
-  -  `pygmentize` (#3378)
-  -  `ranger` (#3378)
-- Improved completions for `aura` (#3297), `abbr` (#3267), `brew` (#3309), `chown` (#3380, #3383),`cygport` (#3392), `git` (#3274, #3226, #3225, #3094, #3087, #3035, #3021, #2982, #3230), `kill` & `pkill` (#3200), `screen` (#3271), `wget` (#3470), and `xz` (#3378).
-- Distributors, packagers and developers will notice that the build process produces more succinct output by default; use `make V=1` to get verbose output (#3248).
-- Improved compatibility with minor platforms including musl (#2988), Cygwin (#2993), Android (#3441, #3442), Haiku (#3322) and Solaris .
+  - `arcanist` ([#3256](https://github.com/fish-shell/fish-shell/issues/3256))
+  - `connmanctl` ([#3419](https://github.com/fish-shell/fish-shell/issues/3419))
+  - `figlet` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378))
+  - `mdbook` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378))
+  -  `ninja` ([#3415](https://github.com/fish-shell/fish-shell/issues/3415))
+  -  `p4`, the Perforce client ([#3314](https://github.com/fish-shell/fish-shell/issues/3314))
+  -  `pygmentize` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378))
+  -  `ranger` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378))
+- Improved completions for `aura` ([#3297](https://github.com/fish-shell/fish-shell/issues/3297)), `abbr` ([#3267](https://github.com/fish-shell/fish-shell/issues/3267)), `brew` ([#3309](https://github.com/fish-shell/fish-shell/issues/3309)), `chown` ([#3380](https://github.com/fish-shell/fish-shell/issues/3380), [#3383](https://github.com/fish-shell/fish-shell/issues/3383)),`cygport` ([#3392](https://github.com/fish-shell/fish-shell/issues/3392)), `git` ([#3274](https://github.com/fish-shell/fish-shell/issues/3274), [#3226](https://github.com/fish-shell/fish-shell/issues/3226), [#3225](https://github.com/fish-shell/fish-shell/issues/3225), [#3094](https://github.com/fish-shell/fish-shell/issues/3094), [#3087](https://github.com/fish-shell/fish-shell/issues/3087), [#3035](https://github.com/fish-shell/fish-shell/issues/3035), [#3021](https://github.com/fish-shell/fish-shell/issues/3021), [#2982](https://github.com/fish-shell/fish-shell/issues/2982), [#3230](https://github.com/fish-shell/fish-shell/issues/3230)), `kill` & `pkill` ([#3200](https://github.com/fish-shell/fish-shell/issues/3200)), `screen` ([#3271](https://github.com/fish-shell/fish-shell/issues/3271)), `wget` ([#3470](https://github.com/fish-shell/fish-shell/issues/3470)), and `xz` ([#3378](https://github.com/fish-shell/fish-shell/issues/3378)).
+- Distributors, packagers and developers will notice that the build process produces more succinct output by default; use `make V=1` to get verbose output ([#3248](https://github.com/fish-shell/fish-shell/issues/3248)).
+- Improved compatibility with minor platforms including musl ([#2988](https://github.com/fish-shell/fish-shell/issues/2988)), Cygwin ([#2993](https://github.com/fish-shell/fish-shell/issues/2993)), Android ([#3441](https://github.com/fish-shell/fish-shell/issues/3441), [#3442](https://github.com/fish-shell/fish-shell/issues/3442)), Haiku ([#3322](https://github.com/fish-shell/fish-shell/issues/3322)) and Solaris .
 
 ---
 
@@ -387,20 +387,20 @@ There are no major changes between 2.4b1 and 2.4.0.
 This is a functionality and bugfix release. This release does not contain all the changes to fish since the last release, but fixes a number of issues directly affecting users at present and includes a small number of new features.
 
 ## Significant changes
-- A new `fish_key_reader` binary for decoding interactive keypresses (#2991).
-- `fish_mode_prompt` has been updated to reflect the changes in the way the Vi input mode is set up (#3067), making this more reliable.
-- `fish_config` can now properly be launched from the OS X app bundle (#3140).
+- A new `fish_key_reader` binary for decoding interactive keypresses ([#2991](https://github.com/fish-shell/fish-shell/issues/2991)).
+- `fish_mode_prompt` has been updated to reflect the changes in the way the Vi input mode is set up ([#3067](https://github.com/fish-shell/fish-shell/issues/3067)), making this more reliable.
+- `fish_config` can now properly be launched from the OS X app bundle ([#3140](https://github.com/fish-shell/fish-shell/issues/3140)).
 
 ## Notable fixes and improvements
 
-- Extra lines were sometimes inserted into the output under Windows (Cygwin and Microsoft Windows Subsystem for Linux) due to TTY timestamps not being updated (#2859).
-- The `string` builtin's `match` mode now handles the combination of `-rnv` (match, invert and count) correctly (#3098).
-- Improvements to TTY special character handling (#3064), locale handling (#3124) and terminal environment variable handling (#3060).
-- Work towards handling the terminal modes for external commands launched from initialisation files (#2980).
-- Ease the upgrade path from fish 2.2.0 and before by warning users to restart fish if the `string` builtin is not available (#3057).
+- Extra lines were sometimes inserted into the output under Windows (Cygwin and Microsoft Windows Subsystem for Linux) due to TTY timestamps not being updated ([#2859](https://github.com/fish-shell/fish-shell/issues/2859)).
+- The `string` builtin's `match` mode now handles the combination of `-rnv` (match, invert and count) correctly ([#3098](https://github.com/fish-shell/fish-shell/issues/3098)).
+- Improvements to TTY special character handling ([#3064](https://github.com/fish-shell/fish-shell/issues/3064)), locale handling ([#3124](https://github.com/fish-shell/fish-shell/issues/3124)) and terminal environment variable handling ([#3060](https://github.com/fish-shell/fish-shell/issues/3060)).
+- Work towards handling the terminal modes for external commands launched from initialisation files ([#2980](https://github.com/fish-shell/fish-shell/issues/2980)).
+- Ease the upgrade path from fish 2.2.0 and before by warning users to restart fish if the `string` builtin is not available ([#3057](https://github.com/fish-shell/fish-shell/issues/3057)).
 - `type -a` now syntax-colorizes function source output.
-- Added completions for `alsamixer`, `godoc`, `gofmt`, `goimports`, `gorename`, `lscpu`, `mkdir`, `modinfo`, `netctl-auto`, `poweroff`, `termite`, `udisksctl` and `xz` (#3123).
-- Improved completions for `apt` (#3097), `aura` (#3102),`git` (#3114), `npm` (#3158), `string` and `suspend` (#3154).
+- Added completions for `alsamixer`, `godoc`, `gofmt`, `goimports`, `gorename`, `lscpu`, `mkdir`, `modinfo`, `netctl-auto`, `poweroff`, `termite`, `udisksctl` and `xz` ([#3123](https://github.com/fish-shell/fish-shell/issues/3123)).
+- Improved completions for `apt` ([#3097](https://github.com/fish-shell/fish-shell/issues/3097)), `aura` ([#3102](https://github.com/fish-shell/fish-shell/issues/3102)),`git` ([#3114](https://github.com/fish-shell/fish-shell/issues/3114)), `npm` ([#3158](https://github.com/fish-shell/fish-shell/issues/3158)), `string` and `suspend` ([#3154](https://github.com/fish-shell/fish-shell/issues/3154)).
 
 ---
 
@@ -410,15 +410,15 @@ There are no significant changes between 2.3.0 and 2.3b2.
 
 ## Other notable fixes and improvements
 
-- `abbr` now allows non-letter keys (#2996).
-- Define a few extra colours on first start (#2987).
+- `abbr` now allows non-letter keys ([#2996](https://github.com/fish-shell/fish-shell/issues/2996)).
+- Define a few extra colours on first start ([#2987](https://github.com/fish-shell/fish-shell/issues/2987)).
 - Multiple documentation updates.
-- Added completions for rmmod (#3007).
-- Improved completions for git (#2998).
+- Added completions for rmmod ([#3007](https://github.com/fish-shell/fish-shell/issues/3007)).
+- Improved completions for git ([#2998](https://github.com/fish-shell/fish-shell/issues/2998)).
 
 ## Known issues
 
-- Interactive commands started from fish configuration files or from the `-c` option may, under certain circumstances, be started with incorrect terminal modes and fail to behave as expected. A fix is planned but requires further testing (#2619).
+- Interactive commands started from fish configuration files or from the `-c` option may, under certain circumstances, be started with incorrect terminal modes and fail to behave as expected. A fix is planned but requires further testing ([#2619](https://github.com/fish-shell/fish-shell/issues/2619)).
 
 ---
 
@@ -426,15 +426,15 @@ There are no significant changes between 2.3.0 and 2.3b2.
 
 ## Significant changes
 
-- A new `fish_realpath` builtin and associated function to allow the use of `realpath` even on those platforms that don't ship an appropriate command (#2932).
+- A new `fish_realpath` builtin and associated function to allow the use of `realpath` even on those platforms that don't ship an appropriate command ([#2932](https://github.com/fish-shell/fish-shell/issues/2932)).
 - Alt-# toggles the current command line between commented and uncommented states, making it easy to save a command in history without executing it.
 - The `fish_vi_mode` function is now deprecated in favour of `fish_vi_key_bindings`.
 
 ## Other notable fixes and improvements
 
-- Fix the build on Cygwin (#2952) and RedHat Enterprise Linux/CentOS 5 (#2955).
-- Avoid confusing the terminal line driver with non-printing characters in `fish_title` (#2453).
-- Improved completions for busctl, git (#2585, #2879, #2984), and netctl.
+- Fix the build on Cygwin ([#2952](https://github.com/fish-shell/fish-shell/issues/2952)) and RedHat Enterprise Linux/CentOS 5 ([#2955](https://github.com/fish-shell/fish-shell/issues/2955)).
+- Avoid confusing the terminal line driver with non-printing characters in `fish_title` ([#2453](https://github.com/fish-shell/fish-shell/issues/2453)).
+- Improved completions for busctl, git ([#2585](https://github.com/fish-shell/fish-shell/issues/2585), [#2879](https://github.com/fish-shell/fish-shell/issues/2879), [#2984](https://github.com/fish-shell/fish-shell/issues/2984)), and netctl.
 
 ---
 
@@ -442,56 +442,56 @@ There are no significant changes between 2.3.0 and 2.3b2.
 
 ## Significant Changes
 
-- A new `string` builtin to handle... strings! This builtin will measure, split, search and replace text strings, including using regular expressions. It can also be used to turn lists into plain strings using `join`. `string` can be used in place of `sed`, `grep`, `tr`, `cut`, and `awk` in many situations. (#2296)
-- Allow using escape as the Meta modifier key, by waiting after seeing an escape character wait up to 300ms for an additional character. This is consistent with readline (e.g. bash) and can be configured via the `fish_escape_delay_ms variable`. This allows using escape as the Meta modifier. (#1356)
-- Add new directories for vendor functions and configuration snippets (#2500)
+- A new `string` builtin to handle... strings! This builtin will measure, split, search and replace text strings, including using regular expressions. It can also be used to turn lists into plain strings using `join`. `string` can be used in place of `sed`, `grep`, `tr`, `cut`, and `awk` in many situations. ([#2296](https://github.com/fish-shell/fish-shell/issues/2296))
+- Allow using escape as the Meta modifier key, by waiting after seeing an escape character wait up to 300ms for an additional character. This is consistent with readline (e.g. bash) and can be configured via the `fish_escape_delay_ms variable`. This allows using escape as the Meta modifier. ([#1356](https://github.com/fish-shell/fish-shell/issues/1356))
+- Add new directories for vendor functions and configuration snippets ([#2500](https://github.com/fish-shell/fish-shell/issues/2500))
 - A new `fish_realpath` builtin and associated `realpath` function should allow scripts to resolve path names via `realpath` regardless of whether there is an external command of that name; albeit with some limitations. See the associated documentation.
 
 ## Backward-incompatible changes
 
-- Unmatched globs will now cause an error, except when used with `for`, `set` or `count` (#2719)
-- `and` and `or` will now bind to the closest `if` or `while`, allowing compound conditions without `begin` and `end` (#1428)
-- `set -ql` now searches up to function scope for variables (#2502)
-- `status -f` will now behave the same when run as the main script or using `source` (#2643)
-- `source` no longer puts the file name in `$argv` if no arguments are given (#139)
-- History files are stored under the `XDG_DATA_HOME` hierarchy (by default, in `~/.local/share`), and existing history will be moved on first use (#744)
+- Unmatched globs will now cause an error, except when used with `for`, `set` or `count` ([#2719](https://github.com/fish-shell/fish-shell/issues/2719))
+- `and` and `or` will now bind to the closest `if` or `while`, allowing compound conditions without `begin` and `end` ([#1428](https://github.com/fish-shell/fish-shell/issues/1428))
+- `set -ql` now searches up to function scope for variables ([#2502](https://github.com/fish-shell/fish-shell/issues/2502))
+- `status -f` will now behave the same when run as the main script or using `source` ([#2643](https://github.com/fish-shell/fish-shell/issues/2643))
+- `source` no longer puts the file name in `$argv` if no arguments are given ([#139](https://github.com/fish-shell/fish-shell/issues/139))
+- History files are stored under the `XDG_DATA_HOME` hierarchy (by default, in `~/.local/share`), and existing history will be moved on first use ([#744](https://github.com/fish-shell/fish-shell/issues/744))
 
 ## Other notable fixes and improvements
 
-- Fish no longer silences errors in config.fish (#2702)
-- Directory autosuggestions will now descend as far as possible if there is only one child directory (#2531)
-- Add support for bright colors (#1464)
-- Allow Ctrl-J (\cj) to be bound separately from Ctrl-M (\cm) (#217)
+- Fish no longer silences errors in config.fish ([#2702](https://github.com/fish-shell/fish-shell/issues/2702))
+- Directory autosuggestions will now descend as far as possible if there is only one child directory ([#2531](https://github.com/fish-shell/fish-shell/issues/2531))
+- Add support for bright colors ([#1464](https://github.com/fish-shell/fish-shell/issues/1464))
+- Allow Ctrl-J (\cj) to be bound separately from Ctrl-M (\cm) ([#217](https://github.com/fish-shell/fish-shell/issues/217))
 - psub now has a "-s"/"&#x2013;suffix" option to name the temporary file with that suffix
-- Enable 24-bit colors on select terminals (#2495)
-- Support for SVN status in the prompt (#2582)
-- Mercurial and SVN support have been added to the Classic + Git (now Classic + VCS) prompt (via the new \__fish_vcs_prompt function) (#2592)
-- export now handles variables with a "=" in the value (#2403)
+- Enable 24-bit colors on select terminals ([#2495](https://github.com/fish-shell/fish-shell/issues/2495))
+- Support for SVN status in the prompt ([#2582](https://github.com/fish-shell/fish-shell/issues/2582))
+- Mercurial and SVN support have been added to the Classic + Git (now Classic + VCS) prompt (via the new \__fish_vcs_prompt function) ([#2592](https://github.com/fish-shell/fish-shell/issues/2592))
+- export now handles variables with a "=" in the value ([#2403](https://github.com/fish-shell/fish-shell/issues/2403))
 - New completions for:
     -   alsactl
     -   Archlinux's asp, makepkg
-    -   Atom's apm (#2390)
-    -   entr - the "Event Notify Test Runner" (#2265)
-    -   Fedora's dnf (#2638)
-    -   OSX diskutil (#2738)
-    -   pkgng (#2395)
+    -   Atom's apm ([#2390](https://github.com/fish-shell/fish-shell/issues/2390))
+    -   entr - the "Event Notify Test Runner" ([#2265](https://github.com/fish-shell/fish-shell/issues/2265))
+    -   Fedora's dnf ([#2638](https://github.com/fish-shell/fish-shell/issues/2638))
+    -   OSX diskutil ([#2738](https://github.com/fish-shell/fish-shell/issues/2738))
+    -   pkgng ([#2395](https://github.com/fish-shell/fish-shell/issues/2395))
     -   pulseaudio's pacmd and pactl
-    -   rust's rustc and cargo (#2409)
-    -   sysctl (#2214)
-    -   systemd's machinectl (#2158), busctl (#2144), systemd-nspawn, systemd-analyze, localectl, timedatectl
+    -   rust's rustc and cargo ([#2409](https://github.com/fish-shell/fish-shell/issues/2409))
+    -   sysctl ([#2214](https://github.com/fish-shell/fish-shell/issues/2214))
+    -   systemd's machinectl ([#2158](https://github.com/fish-shell/fish-shell/issues/2158)), busctl ([#2144](https://github.com/fish-shell/fish-shell/issues/2144)), systemd-nspawn, systemd-analyze, localectl, timedatectl
     -   and more
-- Fish no longer has a function called sgrep, freeing it for user customization (#2245)
-- A rewrite of the completions for cd, fixing a few bugs (#2299, #2300, #562)
-- Linux VTs now run in a simplified mode to avoid issues (#2311)
+- Fish no longer has a function called sgrep, freeing it for user customization ([#2245](https://github.com/fish-shell/fish-shell/issues/2245))
+- A rewrite of the completions for cd, fixing a few bugs ([#2299](https://github.com/fish-shell/fish-shell/issues/2299), [#2300](https://github.com/fish-shell/fish-shell/issues/2300), [#562](https://github.com/fish-shell/fish-shell/issues/562))
+- Linux VTs now run in a simplified mode to avoid issues ([#2311](https://github.com/fish-shell/fish-shell/issues/2311))
 - The vi-bindings now inherit from the emacs bindings
 - Fish will also execute `fish_user_key_bindings` when in vi-mode
-- `funced` will now also check $VISUAL (#2268)
-- A new `suspend` function (#2269)
-- Subcommand completion now works better with split /usr (#2141)
-- The command-not-found-handler can now be overridden by defining a function called `__fish_command_not_found_handler` in config.fish (#2332)
+- `funced` will now also check $VISUAL ([#2268](https://github.com/fish-shell/fish-shell/issues/2268))
+- A new `suspend` function ([#2269](https://github.com/fish-shell/fish-shell/issues/2269))
+- Subcommand completion now works better with split /usr ([#2141](https://github.com/fish-shell/fish-shell/issues/2141))
+- The command-not-found-handler can now be overridden by defining a function called `__fish_command_not_found_handler` in config.fish ([#2332](https://github.com/fish-shell/fish-shell/issues/2332))
 - A few fixes to the Sorin theme
-- PWD shortening in the prompt can now be configured via the `fish_prompt_pwd_dir_length` variable, set to the length per path component (#2473)
-- fish no longer requires `/etc/fish/config.fish` to correctly start, and now ships a skeleton file that only contains some documentation (#2799)
+- PWD shortening in the prompt can now be configured via the `fish_prompt_pwd_dir_length` variable, set to the length per path component ([#2473](https://github.com/fish-shell/fish-shell/issues/2473))
+- fish no longer requires `/etc/fish/config.fish` to correctly start, and now ships a skeleton file that only contains some documentation ([#2799](https://github.com/fish-shell/fish-shell/issues/2799))
 
 ---
 
@@ -499,9 +499,9 @@ There are no significant changes between 2.3.0 and 2.3b2.
 
 ### Significant changes ###
 
- * Abbreviations: the new `abbr` command allows for interactively-expanded abbreviations, allowing quick access to frequently-used commands (#731).
- * Vi mode: run `fish_vi_mode` to switch fish into the key bindings and prompt familiar to users of the Vi editor (#65).
- * New inline and interactive pager, which will be familiar to users of zsh (#291).
+ * Abbreviations: the new `abbr` command allows for interactively-expanded abbreviations, allowing quick access to frequently-used commands ([#731](https://github.com/fish-shell/fish-shell/issues/731)).
+ * Vi mode: run `fish_vi_mode` to switch fish into the key bindings and prompt familiar to users of the Vi editor ([#65](https://github.com/fish-shell/fish-shell/issues/65)).
+ * New inline and interactive pager, which will be familiar to users of zsh ([#291](https://github.com/fish-shell/fish-shell/issues/291)).
  * Underlying architectural changes: the `fishd` universal variable server has been removed as it was a source of many bugs and security problems. Notably, old fish sessions will not be able to communicate universal variable changes with new fish sessions. For best results, restart all running instances of `fish`.
  * The web-based configuration tool has been redesigned, featuring a prompt theme chooser and other improvements.
  * New German, Brazilian Portuguese, and Chinese translations.
@@ -510,48 +510,48 @@ There are no significant changes between 2.3.0 and 2.3b2.
 
 These are kept to a minimum, but either change undocumented features or are too hard to use in their existing forms. These changes may break existing scripts.
 
- * `commandline` no longer interprets functions "in reverse", instead behaving as expected (#1567).
- * The previously-undocumented `CMD_DURATION` variable is now set for all commands and contains the execution time of the last command in milliseconds (#1585). It is no longer exported to other commands (#1896).
- * `if` / `else` conditional statements now return values consistent with the Single Unix Specification, like other shells (#1443).
- * A new "top-level" local scope has been added, allowing local variables declared on the commandline to be visible to subsequent commands. (#1908)
+ * `commandline` no longer interprets functions "in reverse", instead behaving as expected ([#1567](https://github.com/fish-shell/fish-shell/issues/1567)).
+ * The previously-undocumented `CMD_DURATION` variable is now set for all commands and contains the execution time of the last command in milliseconds ([#1585](https://github.com/fish-shell/fish-shell/issues/1585)). It is no longer exported to other commands ([#1896](https://github.com/fish-shell/fish-shell/issues/1896)).
+ * `if` / `else` conditional statements now return values consistent with the Single Unix Specification, like other shells ([#1443](https://github.com/fish-shell/fish-shell/issues/1443)).
+ * A new "top-level" local scope has been added, allowing local variables declared on the commandline to be visible to subsequent commands. ([#1908](https://github.com/fish-shell/fish-shell/issues/1908))
 
 ### Other notable fixes and improvements ###
 
- * New documentation design (#1662), which requires a Doxygen version 1.8.7 or newer to build.
+ * New documentation design ([#1662](https://github.com/fish-shell/fish-shell/issues/1662)), which requires a Doxygen version 1.8.7 or newer to build.
  * Fish now defines a default directory for other packages to provide completions. By default this is `/usr/share/fish/vendor-completions.d`; on systems with `pkgconfig` installed this path is discoverable with `pkg-config --variable completionsdir fish`.
  * A new parser removes many bugs; all existing syntax should keep working.
- * New `fish_preexec` and `fish_postexec` events are fired before and after job execution respectively (#1549).
- * Unmatched wildcards no longer prevent a job from running. Wildcards used interactively will still print an error, but the job will proceed and the wildcard will expand to zero arguments (#1482).
- * The `.` command is deprecated and the `source` command is preferred (#310).
+ * New `fish_preexec` and `fish_postexec` events are fired before and after job execution respectively ([#1549](https://github.com/fish-shell/fish-shell/issues/1549)).
+ * Unmatched wildcards no longer prevent a job from running. Wildcards used interactively will still print an error, but the job will proceed and the wildcard will expand to zero arguments ([#1482](https://github.com/fish-shell/fish-shell/issues/1482)).
+ * The `.` command is deprecated and the `source` command is preferred ([#310](https://github.com/fish-shell/fish-shell/issues/310)).
  * `bind` supports "bind modes", which allows bindings to be set for a particular named mode, to support the implementation of Vi mode.
- * A new `export` alias, which behaves like other shells (#1833).
- * `command` has a new `--search` option to print the name of the disk file that would be executed, like other shells' `command -v` (#1540).
+ * A new `export` alias, which behaves like other shells ([#1833](https://github.com/fish-shell/fish-shell/issues/1833)).
+ * `command` has a new `--search` option to print the name of the disk file that would be executed, like other shells' `command -v` ([#1540](https://github.com/fish-shell/fish-shell/issues/1540)).
  * `commandline` has a new `--paging-mode` option to support the new pager.
- * `complete` has a new `--wraps` option, which allows a command to (recursively) inherit the completions of a wrapped command (#393), and `complete -e` now correctly erases completions (#380).
- * Completions are now generated from manual pages by default on the first run of fish (#997).
- * `fish_indent` can now produce colorized (`--ansi`) and HTML (`--html`) output (#1827).
+ * `complete` has a new `--wraps` option, which allows a command to (recursively) inherit the completions of a wrapped command ([#393](https://github.com/fish-shell/fish-shell/issues/393)), and `complete -e` now correctly erases completions ([#380](https://github.com/fish-shell/fish-shell/issues/380)).
+ * Completions are now generated from manual pages by default on the first run of fish ([#997](https://github.com/fish-shell/fish-shell/issues/997)).
+ * `fish_indent` can now produce colorized (`--ansi`) and HTML (`--html`) output ([#1827](https://github.com/fish-shell/fish-shell/issues/1827)).
  * `functions --erase` now prevents autoloaded functions from being reloaded in the current session.
- * `history` has a new `--merge` option, to incorporate history from other sessions into the current session (#825).
- * `jobs` returns 1 if there are no active jobs (#1484).
+ * `history` has a new `--merge` option, to incorporate history from other sessions into the current session ([#825](https://github.com/fish-shell/fish-shell/issues/825)).
+ * `jobs` returns 1 if there are no active jobs ([#1484](https://github.com/fish-shell/fish-shell/issues/1484)).
  * `read` has several new options:
-  * `--array` to break input into an array (#1540)
-  * `--null` to break lines on NUL characters rather than newlines (#1694)
-  * `--nchars` to read a specific number of characters (#1616)
-  * `--right-prompt` to display a right-hand-side prompt during interactive read (#1698).
- * `type` has a new `-q` option to suppress output (#1540 and, like other shells, `type -a` now prints all matches for a command (#261).
- * Pressing F1 now shows the manual page for the current command (#1063).
- * `fish_title` functions have access to the arguments of the currently running argument as `$argv[1]` (#1542).
- * The OS command-not-found handler is used on Arch Linux (#1925), nixOS (#1852), openSUSE and Fedora (#1280).
- * `Alt`+`.` searches backwards in the token history, mapping to the same behavior as inserting the last argument of the previous command, like other shells (#89).
- * The `SHLVL` environment variable is incremented correctly (#1634 & #1693).
- * Added completions for `adb` (#1165 & #1211), `apt` (#2018), `aura` (#1292), `composer` (#1607), `cygport` (#1841), `dropbox` (#1533), `elixir` (#1167), `fossil`, `heroku` (#1790), `iex` (#1167), `kitchen` (#2000), `nix` (#1167), `node`/`npm` (#1566), `opam` (#1615), `setfacl` (#1752), `tmuxinator` (#1863), and `yast2` (#1739).
- * Improved completions for `brew` (#1090 & #1810), `bundler` (#1779), `cd` (#1135), `emerge` (#1840),`git` (#1680, #1834 & #1951), `man` (#960), `modprobe` (#1124), `pacman` (#1292), `rpm` (#1236), `rsync` (#1872), `scp` (#1145), `ssh` (#1234), `sshfs` (#1268), `systemctl` (#1462, #1950 & #1972), `tmux` (#1853), `vagrant` (#1748), `yum` (#1269), and `zypper` (#1787).
+  * `--array` to break input into an array ([#1540](https://github.com/fish-shell/fish-shell/issues/1540))
+  * `--null` to break lines on NUL characters rather than newlines ([#1694](https://github.com/fish-shell/fish-shell/issues/1694))
+  * `--nchars` to read a specific number of characters ([#1616](https://github.com/fish-shell/fish-shell/issues/1616))
+  * `--right-prompt` to display a right-hand-side prompt during interactive read ([#1698](https://github.com/fish-shell/fish-shell/issues/1698)).
+ * `type` has a new `-q` option to suppress output ([#1540](https://github.com/fish-shell/fish-shell/issues/1540) and, like other shells, `type -a` now prints all matches for a command ([#261](https://github.com/fish-shell/fish-shell/issues/261)).
+ * Pressing F1 now shows the manual page for the current command ([#1063](https://github.com/fish-shell/fish-shell/issues/1063)).
+ * `fish_title` functions have access to the arguments of the currently running argument as `$argv[1]` ([#1542](https://github.com/fish-shell/fish-shell/issues/1542)).
+ * The OS command-not-found handler is used on Arch Linux ([#1925](https://github.com/fish-shell/fish-shell/issues/1925)), nixOS ([#1852](https://github.com/fish-shell/fish-shell/issues/1852)), openSUSE and Fedora ([#1280](https://github.com/fish-shell/fish-shell/issues/1280)).
+ * `Alt`+`.` searches backwards in the token history, mapping to the same behavior as inserting the last argument of the previous command, like other shells ([#89](https://github.com/fish-shell/fish-shell/issues/89)).
+ * The `SHLVL` environment variable is incremented correctly ([#1634](https://github.com/fish-shell/fish-shell/issues/1634) & [#1693](https://github.com/fish-shell/fish-shell/issues/1693)).
+ * Added completions for `adb` ([#1165](https://github.com/fish-shell/fish-shell/issues/1165) & [#1211](https://github.com/fish-shell/fish-shell/issues/1211)), `apt` ([#2018](https://github.com/fish-shell/fish-shell/issues/2018)), `aura` ([#1292](https://github.com/fish-shell/fish-shell/issues/1292)), `composer` ([#1607](https://github.com/fish-shell/fish-shell/issues/1607)), `cygport` ([#1841](https://github.com/fish-shell/fish-shell/issues/1841)), `dropbox` ([#1533](https://github.com/fish-shell/fish-shell/issues/1533)), `elixir` ([#1167](https://github.com/fish-shell/fish-shell/issues/1167)), `fossil`, `heroku` ([#1790](https://github.com/fish-shell/fish-shell/issues/1790)), `iex` ([#1167](https://github.com/fish-shell/fish-shell/issues/1167)), `kitchen` ([#2000](https://github.com/fish-shell/fish-shell/issues/2000)), `nix` ([#1167](https://github.com/fish-shell/fish-shell/issues/1167)), `node`/`npm` ([#1566](https://github.com/fish-shell/fish-shell/issues/1566)), `opam` ([#1615](https://github.com/fish-shell/fish-shell/issues/1615)), `setfacl` ([#1752](https://github.com/fish-shell/fish-shell/issues/1752)), `tmuxinator` ([#1863](https://github.com/fish-shell/fish-shell/issues/1863)), and `yast2` ([#1739](https://github.com/fish-shell/fish-shell/issues/1739)).
+ * Improved completions for `brew` ([#1090](https://github.com/fish-shell/fish-shell/issues/1090) & [#1810](https://github.com/fish-shell/fish-shell/issues/1810)), `bundler` ([#1779](https://github.com/fish-shell/fish-shell/issues/1779)), `cd` ([#1135](https://github.com/fish-shell/fish-shell/issues/1135)), `emerge` ([#1840](https://github.com/fish-shell/fish-shell/issues/1840)),`git` ([#1680](https://github.com/fish-shell/fish-shell/issues/1680), [#1834](https://github.com/fish-shell/fish-shell/issues/1834) & [#1951](https://github.com/fish-shell/fish-shell/issues/1951)), `man` ([#960](https://github.com/fish-shell/fish-shell/issues/960)), `modprobe` ([#1124](https://github.com/fish-shell/fish-shell/issues/1124)), `pacman` ([#1292](https://github.com/fish-shell/fish-shell/issues/1292)), `rpm` ([#1236](https://github.com/fish-shell/fish-shell/issues/1236)), `rsync` ([#1872](https://github.com/fish-shell/fish-shell/issues/1872)), `scp` ([#1145](https://github.com/fish-shell/fish-shell/issues/1145)), `ssh` ([#1234](https://github.com/fish-shell/fish-shell/issues/1234)), `sshfs` ([#1268](https://github.com/fish-shell/fish-shell/issues/1268)), `systemctl` ([#1462](https://github.com/fish-shell/fish-shell/issues/1462), [#1950](https://github.com/fish-shell/fish-shell/issues/1950) & [#1972](https://github.com/fish-shell/fish-shell/issues/1972)), `tmux` ([#1853](https://github.com/fish-shell/fish-shell/issues/1853)), `vagrant` ([#1748](https://github.com/fish-shell/fish-shell/issues/1748)), `yum` ([#1269](https://github.com/fish-shell/fish-shell/issues/1269)), and `zypper` ([#1787](https://github.com/fish-shell/fish-shell/issues/1787)).
 
 ---
 
 # fish 2.1.2  (released Feb 24, 2015)
 
-fish 2.1.2 contains a workaround for a filesystem bug in Mac OS X Yosemite. #1859
+fish 2.1.2 contains a workaround for a filesystem bug in Mac OS X Yosemite. [#185](https://github.com/fish-shell/fish-shell/issues/185)9
 
 Specifically, after installing fish 2.1.1 and then rebooting, "Verify Disk" in Disk Utility will report "Invalid number of hard links." We don't have any reports of data loss or other adverse consequences. fish 2.1.2 avoids triggering the bug, but does not repair an already affected filesystem. To repair the filesystem, you can boot into Recovery Mode and use Repair Disk from Disk Utility. Linux and versions of OS X prior to Yosemite are believed to be unaffected.
 
@@ -566,13 +566,13 @@ __Important:__ if you are upgrading, stop all running instances of `fishd` as so
 Distributors are highly encouraged to call `killall fishd`, `pkill fishd` or similar in installation scripts, or to warn their users to do so.
 
 ### Security fixes
- * The fish_config web interface now uses an authentication token to protect requests and only responds to requests from the local machine with this token, preventing a remote code execution attack. (closing CVE-2014-2914). #1438
- * `psub` and `funced` are no longer vulnerable to attacks which allow local privilege escalation and data tampering (closing CVE-2014-2906 and CVE-2014-3856). #1437
- * `fishd` uses a secure path for its socket, preventing a local privilege escalation attack (closing CVE-2014-2905). #1436
- * `__fish_print_packages` is no longer vulnerable to attacks which would allow local privilege escalation and data tampering (closing CVE-2014-3219). #1440
+ * The fish_config web interface now uses an authentication token to protect requests and only responds to requests from the local machine with this token, preventing a remote code execution attack. (closing CVE-2014-2914). [#143](https://github.com/fish-shell/fish-shell/issues/143)8
+ * `psub` and `funced` are no longer vulnerable to attacks which allow local privilege escalation and data tampering (closing CVE-2014-2906 and CVE-2014-3856). [#143](https://github.com/fish-shell/fish-shell/issues/143)7
+ * `fishd` uses a secure path for its socket, preventing a local privilege escalation attack (closing CVE-2014-2905). [#143](https://github.com/fish-shell/fish-shell/issues/143)6
+ * `__fish_print_packages` is no longer vulnerable to attacks which would allow local privilege escalation and data tampering (closing CVE-2014-3219). [#144](https://github.com/fish-shell/fish-shell/issues/144)0
 
 ### Other fixes
- * `fishd` now ignores SIGPIPE, fixing crashes using tools like GNU Parallel and which occurred more often as a result of the other `fishd` changes. #1084 & #1690
+ * `fishd` now ignores SIGPIPE, fixing crashes using tools like GNU Parallel and which occurred more often as a result of the other `fishd` changes. [#1084](https://github.com/fish-shell/fish-shell/issues/1084) & [#169](https://github.com/fish-shell/fish-shell/issues/169)0
 
 ---
 
@@ -581,71 +581,71 @@ Distributors are highly encouraged to call `killall fishd`, `pkill fishd` or sim
 Significant Changes
 -------------------
 
-* **Tab completions will fuzzy-match files.** #568
+* **Tab completions will fuzzy-match files.** [#56](https://github.com/fish-shell/fish-shell/issues/56)8
 
   When tab-completing a file, fish will first attempt prefix matches (`foo` matches `foobar`), then substring matches (`ooba` matches `foobar`), and lastly subsequence matches (`fbr` matches `foobar`). For example, in a directory with files foo1.txt, foo2.txt, foo3.txt…, you can type only the numeric part and hit tab to fill in the rest.
 
   This feature is implemented for files and executables. It is not yet implemented for options (like `--foobar`), and not yet implemented across path components (like `/u/l/b` to match `/usr/local/bin`).
 
-* **Redirections now work better across pipelines.** #110, #877
+* **Redirections now work better across pipelines.** [#110](https://github.com/fish-shell/fish-shell/issues/110), [#87](https://github.com/fish-shell/fish-shell/issues/87)7
 
   In particular, you can pipe stderr and stdout together, for example, with `cmd ^&1 | tee log.txt`, or the more familiar `cmd 2>&1 | tee log.txt`.
 
-* **A single `%` now expands to the last job backgrounded.** #1008
+* **A single `%` now expands to the last job backgrounded.** [#100](https://github.com/fish-shell/fish-shell/issues/100)8
 
   Previously, a single `%` would pid-expand to either all backgrounded jobs, or all jobs owned by your user. Now it expands to the last job backgrounded. If no job is in the background, it will fail to expand. In particular, `fg %` can be used to put the most recent background job in the foreground.
 
 Other Notable Fixes
 -------------------
 
-* alt-U and alt+C now uppercase and capitalize words, respectively. #995
+* alt-U and alt+C now uppercase and capitalize words, respectively. [#99](https://github.com/fish-shell/fish-shell/issues/99)5
 
-* VTE based terminals should now know the working directory. #906
+* VTE based terminals should now know the working directory. [#90](https://github.com/fish-shell/fish-shell/issues/90)6
 
-* The autotools build now works on Mavericks. #968
+* The autotools build now works on Mavericks. [#96](https://github.com/fish-shell/fish-shell/issues/96)8
 
-* The end-of-line binding (ctrl+E) now accepts autosuggestions. #932
+* The end-of-line binding (ctrl+E) now accepts autosuggestions. [#93](https://github.com/fish-shell/fish-shell/issues/93)2
 
-* Directories in `/etc/paths` (used on OS X) are now prepended instead of appended, similar to other shells. #927
+* Directories in `/etc/paths` (used on OS X) are now prepended instead of appended, similar to other shells. [#92](https://github.com/fish-shell/fish-shell/issues/92)7
 
-* Option-right-arrow (used for partial autosuggestion completion) now works on iTerm2. #920
+* Option-right-arrow (used for partial autosuggestion completion) now works on iTerm2. [#92](https://github.com/fish-shell/fish-shell/issues/92)0
 
-* Tab completions now work properly within nested subcommands. #913
+* Tab completions now work properly within nested subcommands. [#91](https://github.com/fish-shell/fish-shell/issues/91)3
 
-* `printf` supports \e, the escape character. #910
+* `printf` supports \e, the escape character. [#91](https://github.com/fish-shell/fish-shell/issues/91)0
 
-* `fish_config history` no longer shows duplicate items. #900
+* `fish_config history` no longer shows duplicate items. [#90](https://github.com/fish-shell/fish-shell/issues/90)0
 
-* `$fish_user_paths` is now prepended to $PATH instead of appended. #888
+* `$fish_user_paths` is now prepended to $PATH instead of appended. [#88](https://github.com/fish-shell/fish-shell/issues/88)8
 
-* Jobs complete when all processes complete. #876
+* Jobs complete when all processes complete. [#87](https://github.com/fish-shell/fish-shell/issues/87)6
 
 
   For example, in previous versions of fish, `sleep 10 | echo Done` returns control immediately, because echo does not read from stdin. Now it does not complete until sleep exits (presumably after 10 seconds).
 
-* Better error reporting for square brackets. #875
+* Better error reporting for square brackets. [#87](https://github.com/fish-shell/fish-shell/issues/87)5
 
-* fish no longer tries to add `/bin` to `$PATH` unless PATH is totally empty. #852
+* fish no longer tries to add `/bin` to `$PATH` unless PATH is totally empty. [#85](https://github.com/fish-shell/fish-shell/issues/85)2
 
-* History token substitution (alt-up) now works correctly inside subshells. #833
+* History token substitution (alt-up) now works correctly inside subshells. [#83](https://github.com/fish-shell/fish-shell/issues/83)3
 
-* Flow control is now disabled, freeing up ctrl-S and ctrl-Q for other uses. #814
+* Flow control is now disabled, freeing up ctrl-S and ctrl-Q for other uses. [#81](https://github.com/fish-shell/fish-shell/issues/81)4
 
-* sh-style variable setting like `foo=bar` now produces better error messages. #809
+* sh-style variable setting like `foo=bar` now produces better error messages. [#80](https://github.com/fish-shell/fish-shell/issues/80)9
 
-* Commands with wildcards no longer produce autosuggestions. #785
+* Commands with wildcards no longer produce autosuggestions. [#78](https://github.com/fish-shell/fish-shell/issues/78)5
 
-* funced no longer freaks out when supplied with no arguments. #780
+* funced no longer freaks out when supplied with no arguments. [#78](https://github.com/fish-shell/fish-shell/issues/78)0
 
-* fish.app now works correctly in a directory containing spaces. #774
+* fish.app now works correctly in a directory containing spaces. [#77](https://github.com/fish-shell/fish-shell/issues/77)4
 
-* Tab completion cycling no longer occasionally fails to repaint. #765
+* Tab completion cycling no longer occasionally fails to repaint. [#76](https://github.com/fish-shell/fish-shell/issues/76)5
 
-* Comments now work in eval'd strings. #684
+* Comments now work in eval'd strings. [#68](https://github.com/fish-shell/fish-shell/issues/68)4
 
-* History search (up-arrow) now shows the item matching the autosuggestion, if that autosuggestion was truncated. #650
+* History search (up-arrow) now shows the item matching the autosuggestion, if that autosuggestion was truncated. [#65](https://github.com/fish-shell/fish-shell/issues/65)0
 
-* Ctrl-T now transposes characters, as in other shells. #128
+* Ctrl-T now transposes characters, as in other shells. [#12](https://github.com/fish-shell/fish-shell/issues/12)8
 
 ---
 
@@ -654,7 +654,7 @@ Other Notable Fixes
 Significant Changes
 -------------------
 
-* **Command substitutions now modify `$status` #547.**
+* **Command substitutions now modify `$status` [#547](https://github.com/fish-shell/fish-shell/issues/547).**
   Previously the exit status of command substitutions (like `(pwd)`) was ignored; however now it modifies $status. Furthermore, the `set` command now only sets $status on failure; it is untouched on success. This allows for the following pattern:
 
   ```sh
@@ -664,73 +664,73 @@ Significant Changes
   ```
   Because set does not modify $status on success, the if branch effectively tests whether `which` succeeded, and if so, whether the `set` also succeeded.
 * **Improvements to $PATH handling.**
-    * There is a new variable, `$fish_user_paths`, which can be set universally, and whose contents are appended to $PATH #527
+    * There is a new variable, `$fish_user_paths`, which can be set universally, and whose contents are appended to $PATH [#52](https://github.com/fish-shell/fish-shell/issues/52)7
     * /etc/paths and /etc/paths.d are now respected on OS X
     * fish no longer modifies $PATH to find its own binaries
 * **Long lines no longer use ellipsis for line breaks**, and copy and paste
-  should no longer include a newline even if the line was broken #300
-* **New syntax for index ranges** (sometimes known as "slices") #212
-* **fish now supports an `else if` statement** #134
-* **Process and pid completion now works on OS X** #129
-* **fish is now relocatable**, and no longer depends on compiled-in paths #125
-* **fish now supports a right prompt (RPROMPT)** through the fish_right_prompt function #80
-* **fish now uses posix_spawn instead of fork when possible**, which is much faster on BSD and OS X #11
+  should no longer include a newline even if the line was broken [#30](https://github.com/fish-shell/fish-shell/issues/30)0
+* **New syntax for index ranges** (sometimes known as "slices") [#21](https://github.com/fish-shell/fish-shell/issues/21)2
+* **fish now supports an `else if` statement** [#13](https://github.com/fish-shell/fish-shell/issues/13)4
+* **Process and pid completion now works on OS X** [#12](https://github.com/fish-shell/fish-shell/issues/12)9
+* **fish is now relocatable**, and no longer depends on compiled-in paths [#12](https://github.com/fish-shell/fish-shell/issues/12)5
+* **fish now supports a right prompt (RPROMPT)** through the fish_right_prompt function [#8](https://github.com/fish-shell/fish-shell/issues/8)0
+* **fish now uses posix_spawn instead of fork when possible**, which is much faster on BSD and OS X [#1](https://github.com/fish-shell/fish-shell/issues/1)1
 
 Other Notable Fixes
 -------------------
 
 * Updated VCS completions (darcs, cvs, svn, etc.)
-* Avoid calling getcwd on the main thread, as it can hang #696
-* Control-D (forward delete) no longer stops at a period #667
+* Avoid calling getcwd on the main thread, as it can hang [#69](https://github.com/fish-shell/fish-shell/issues/69)6
+* Control-D (forward delete) no longer stops at a period [#66](https://github.com/fish-shell/fish-shell/issues/66)7
 * Completions for many new commands
-* fish now respects rxvt's unique keybindings #657
-* xsel is no longer built as part of fish. It will still be invoked if installed separately #633
-* __fish_filter_mime no longer spews #628
-* The --no-execute option to fish no longer falls over when reaching the end of a block #624
-* fish_config knows how to find fish even if it's not in the $PATH #621
-* A leading space now prevents writing to history, as is done in bash and zsh #615
-* Hitting enter after a backslash only goes to a new line if it is followed by whitespace or the end of the line #613
-* printf is now a builtin #611
-* Event handlers should no longer fire if signals are blocked #608
-* set_color is now a builtin #578
-* man page completions are now located in a new generated_completions directory, instead of your completions directory #576
-* tab now clears autosuggestions #561
-* tab completion from within a pair of quotes now attempts to "appropriate" the closing quote #552
-* $EDITOR can now be a list: for example, `set EDITOR gvim -f`) #541
-* `case` bodies are now indented #530
-* The profile switch `-p` no longer crashes #517
-* You can now control-C out of `read` #516
-* `umask` is now functional on OS X #515
-* Avoid calling getpwnam on the main thread, as it can hang #512
-* Alt-F or Alt-right-arrow (Option-F or option-right-arrow) now accepts one word of an autosuggestion #435
-* Setting fish as your login shell no longer kills OpenSUSE #367
-* Backslashes now join lines, instead of creating multiple commands #347
-* echo now implements the -e flag to interpret escapes #337
-* When the last token in the user's input contains capital letters, use its case in preference to that of the autosuggestion #335
-* Descriptions now have their own muted color #279
-* Wildcards beginning with a . (for example, `ls .*`) no longer match . and .. #270
-* Recursive wildcards now handle symlink loops #268
-* You can now delete history items from the fish_config web interface #250
-* The OS X build now weak links `wcsdup` and `wcscasecmp` #240
-* fish now saves and restores the process group, which prevents certain processes from being erroneously reported as stopped #197
-* funced now takes an editor option #187
-* Alternating row colors are available in fish pager through `fish_pager_color_secondary` #186
-* Universal variable values are now stored based on your MAC address, not your hostname #183
-* The caret ^ now only does a stderr redirection if it is the first character of a token, making git users happy #168
-* Autosuggestions will no longer cause line wrapping #167
-* Better handling of Unicode combining characters #155
-* fish SIGHUPs processes more often #138
+* fish now respects rxvt's unique keybindings [#65](https://github.com/fish-shell/fish-shell/issues/65)7
+* xsel is no longer built as part of fish. It will still be invoked if installed separately [#63](https://github.com/fish-shell/fish-shell/issues/63)3
+* __fish_filter_mime no longer spews [#62](https://github.com/fish-shell/fish-shell/issues/62)8
+* The --no-execute option to fish no longer falls over when reaching the end of a block [#62](https://github.com/fish-shell/fish-shell/issues/62)4
+* fish_config knows how to find fish even if it's not in the $PATH [#62](https://github.com/fish-shell/fish-shell/issues/62)1
+* A leading space now prevents writing to history, as is done in bash and zsh [#61](https://github.com/fish-shell/fish-shell/issues/61)5
+* Hitting enter after a backslash only goes to a new line if it is followed by whitespace or the end of the line [#61](https://github.com/fish-shell/fish-shell/issues/61)3
+* printf is now a builtin [#61](https://github.com/fish-shell/fish-shell/issues/61)1
+* Event handlers should no longer fire if signals are blocked [#60](https://github.com/fish-shell/fish-shell/issues/60)8
+* set_color is now a builtin [#57](https://github.com/fish-shell/fish-shell/issues/57)8
+* man page completions are now located in a new generated_completions directory, instead of your completions directory [#57](https://github.com/fish-shell/fish-shell/issues/57)6
+* tab now clears autosuggestions [#56](https://github.com/fish-shell/fish-shell/issues/56)1
+* tab completion from within a pair of quotes now attempts to "appropriate" the closing quote [#55](https://github.com/fish-shell/fish-shell/issues/55)2
+* $EDITOR can now be a list: for example, `set EDITOR gvim -f`) [#54](https://github.com/fish-shell/fish-shell/issues/54)1
+* `case` bodies are now indented [#53](https://github.com/fish-shell/fish-shell/issues/53)0
+* The profile switch `-p` no longer crashes [#51](https://github.com/fish-shell/fish-shell/issues/51)7
+* You can now control-C out of `read` [#51](https://github.com/fish-shell/fish-shell/issues/51)6
+* `umask` is now functional on OS X [#51](https://github.com/fish-shell/fish-shell/issues/51)5
+* Avoid calling getpwnam on the main thread, as it can hang [#51](https://github.com/fish-shell/fish-shell/issues/51)2
+* Alt-F or Alt-right-arrow (Option-F or option-right-arrow) now accepts one word of an autosuggestion [#43](https://github.com/fish-shell/fish-shell/issues/43)5
+* Setting fish as your login shell no longer kills OpenSUSE [#36](https://github.com/fish-shell/fish-shell/issues/36)7
+* Backslashes now join lines, instead of creating multiple commands [#34](https://github.com/fish-shell/fish-shell/issues/34)7
+* echo now implements the -e flag to interpret escapes [#33](https://github.com/fish-shell/fish-shell/issues/33)7
+* When the last token in the user's input contains capital letters, use its case in preference to that of the autosuggestion [#33](https://github.com/fish-shell/fish-shell/issues/33)5
+* Descriptions now have their own muted color [#27](https://github.com/fish-shell/fish-shell/issues/27)9
+* Wildcards beginning with a . (for example, `ls .*`) no longer match . and .. [#27](https://github.com/fish-shell/fish-shell/issues/27)0
+* Recursive wildcards now handle symlink loops [#26](https://github.com/fish-shell/fish-shell/issues/26)8
+* You can now delete history items from the fish_config web interface [#25](https://github.com/fish-shell/fish-shell/issues/25)0
+* The OS X build now weak links `wcsdup` and `wcscasecmp` [#24](https://github.com/fish-shell/fish-shell/issues/24)0
+* fish now saves and restores the process group, which prevents certain processes from being erroneously reported as stopped [#19](https://github.com/fish-shell/fish-shell/issues/19)7
+* funced now takes an editor option [#18](https://github.com/fish-shell/fish-shell/issues/18)7
+* Alternating row colors are available in fish pager through `fish_pager_color_secondary` [#18](https://github.com/fish-shell/fish-shell/issues/18)6
+* Universal variable values are now stored based on your MAC address, not your hostname [#18](https://github.com/fish-shell/fish-shell/issues/18)3
+* The caret ^ now only does a stderr redirection if it is the first character of a token, making git users happy [#16](https://github.com/fish-shell/fish-shell/issues/16)8
+* Autosuggestions will no longer cause line wrapping [#16](https://github.com/fish-shell/fish-shell/issues/16)7
+* Better handling of Unicode combining characters [#15](https://github.com/fish-shell/fish-shell/issues/15)5
+* fish SIGHUPs processes more often [#13](https://github.com/fish-shell/fish-shell/issues/13)8
 * fish no longer causes `sudo` to ask for a password every time
-* fish behaves better under Midnight Commander #121
-* `set -e` no longer crashes #100
-* fish now will automatically import history from bash, if there is no fish history #66
-* Backslashed-newlines inside quoted strings now behave more intuitively #52
-* Tab titles should be shown correctly in iTerm2 #47
-* scp remote path completion now sometimes works #42
-* The `read` builtin no longer shows autosuggestions #29
-* Custom key bindings can now be set via the `fish_user_key_bindings` function #21
-* All Python scripts now run correctly under both Python 2 and Python 3 #14
-* The "accept autosuggestion" key can now be configured #19
+* fish behaves better under Midnight Commander [#12](https://github.com/fish-shell/fish-shell/issues/12)1
+* `set -e` no longer crashes [#10](https://github.com/fish-shell/fish-shell/issues/10)0
+* fish now will automatically import history from bash, if there is no fish history [#6](https://github.com/fish-shell/fish-shell/issues/6)6
+* Backslashed-newlines inside quoted strings now behave more intuitively [#5](https://github.com/fish-shell/fish-shell/issues/5)2
+* Tab titles should be shown correctly in iTerm2 [#4](https://github.com/fish-shell/fish-shell/issues/4)7
+* scp remote path completion now sometimes works [#4](https://github.com/fish-shell/fish-shell/issues/4)2
+* The `read` builtin no longer shows autosuggestions [#2](https://github.com/fish-shell/fish-shell/issues/2)9
+* Custom key bindings can now be set via the `fish_user_key_bindings` function [#2](https://github.com/fish-shell/fish-shell/issues/2)1
+* All Python scripts now run correctly under both Python 2 and Python 3 [#1](https://github.com/fish-shell/fish-shell/issues/1)4
+* The "accept autosuggestion" key can now be configured [#1](https://github.com/fish-shell/fish-shell/issues/1)9
 * Autosuggestions will no longer suggest invalid commands #6
 
 ---
@@ -744,7 +744,7 @@ Bug Fixes
 * **Overrides of default functions should be fixed.** The "internalized scripts" feature is disabled for now.
 * **Disabled delayed suspend.** This is a strange job-control feature of BSD systems, including OS X. Disabling it frees up Control Y for other purposes; in particular, for yank, which now works on OS X.
 * **fish_indent is fixed.** In particular, the `funced` and `funcsave` functions work again.
-* A SIGTERM now ends the whole execution stack again (resolving #13).
+* A SIGTERM now ends the whole execution stack again (resolving [#13](https://github.com/fish-shell/fish-shell/issues/13)).
 * Bumped the __fish_config_interactive version number so the default fish_color_autosuggestion kicks in.
 * fish_config better handles combined term256 and classic colors like "555 yellow".
 

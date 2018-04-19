@@ -49,7 +49,7 @@ function __yarn_list_packages
 end
 
 
-complete -f -c yarn -n '__fish_seen_subcommand_from remove' -a (set -l packages (__yarn_list_packages); echo $packages)
+complete -f -c yarn -n '__fish_seen_subcommand_from remove' -a '(__yarn_list_packages)'
 
 complete -f -c yarn -n '__fish_use_subcommand' -a help
 

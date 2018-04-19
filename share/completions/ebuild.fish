@@ -1,13 +1,5 @@
 function __fish_seen_ebuild_arg -d "Test if an ebuild-argument has been given in the current commandline"
-	set -l cmd (commandline -poc)
-	set -e cmd[1]
-	for i in $cmd
-		switch $i
-		case '*.ebuild'
-			return 0
-		end
-	end
-	return 1
+	commandline -opc | string match -q '*.ebuild'
 end
 
 ## Opts

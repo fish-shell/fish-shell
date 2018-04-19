@@ -61,6 +61,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Command substitution output is now limited to 10 MB by default (#3822).
 - Added completions for
   - `bd` (#4472)
+  - `bower`<sup>&#x2217;</sup>
   - `configure`
   - `j` (autojump #4344)
   - `jhipster` (#4472)
@@ -72,9 +73,10 @@ This section is for changes merged to the `major` branch that are not also merge
   - `git` (#4395, #4396, #4592)
   - `npm`<sup>†</sup>
   - `ssh` (#4344)
-  - `yarn`<sup>†</sup>
+  - `yarn`<sup>&#x2217;</sup><sup>†</sup>
 
-_† for autocompletion of available packages for installation via `npm` or `yarn`, make sure `all-the-package-names` is installed (typically: `sudo npm install -g all-the-package-names`)._
+&#x2217; _`jq` must be installed to complete the list of currently installed `bower` or `yarn` packages_. <br/>
+† _to autocomplete the list of packages available for installation with `npm` or `yarn`, `all-the-package-names` must be installed (typically: `sudo npm install -g all-the-package-names`)._
 
 --
 

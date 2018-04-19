@@ -38,34 +38,37 @@ function __yarn_installed_packages
         return 1
     end
 
-    # todo: if jq exists, use it instead and use what's below as a fallback only
-    set -l depsFound 0
-    for line in (cat $package_json)
-        # echo "evaluating $line"
-        if test $depsFound -eq 0
-            # echo "mode: noDeps"
-            if string match -qr '(devD|d)ependencies"' -- $line
-                # echo "switching to mode: deps"
-                set depsFound 1
+    if type -q jq
+        jq -r '.dependencies | to_entries[] | .key' bower.json
+    else
+        set -l depsFound 0
+        for line in (cat $package_json)
+            # echo "evaluating $line"
+            if test $depsFound -eq 0
+                # echo "mode: noDeps"
+                if string match -qr '(devD|d)ependencies"' -- $line
+                    # echo "switching to mode: deps"
+                    set depsFound 1
+                    continue
+                end
                 continue
             end
-            continue
+
+            if string match -qr '\}' -- $line
+                # echo "switching to mode: noDeps"
+                set depsFound 0
+                continue
+            end
+
+            # echo "mode: deps"
+
+            string replace -r '^\s*"([^"]+)".*' '$1' -- $line
         end
-
-        if string match -qr '\}' -- $line
-            # echo "switching to mode: noDeps"
-            set depsFound 0
-            continue
-        end
-
-        # echo "mode: deps"
-
-        string replace -r '^\s*"([^"]+)".*' '$1' -- $line
     end
 end
 
 
-complete -f -c yarn -n '__fish_seen_subcommand_from remove' -a '(__yarn_installed_packages)'
+complete -f -c yarn -n '__fish_seen_subcommand_from remove' -xa '(__yarn_installed_packages)'
 complete -f -c yarn -n '__fish_seen_subcommand_from add' -a '(__yarn_filtered_list_packages)'
 
 complete -f -c yarn -n '__fish_use_subcommand' -a help

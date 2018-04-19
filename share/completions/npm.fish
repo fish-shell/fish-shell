@@ -4,6 +4,39 @@
 # see also Fish's large set of completions for examples:
 # https://github.com/fish-shell/fish-shell/tree/master/share/completions
 
+set -g __fish_atpm_cache $HOME/.cache/fish/npm_completions
+
+function __install_atpm
+    if not test -d $__fish_atpm_cache
+        mkdir -p $__fish_atpm_cache
+        fish -c "cd $HOME/.cache/fish/npm_completions; npm init -y >/dev/null; npm install all-the-package-names >/dev/null; touch .last_update" >/dev/null 2>/dev/null
+    end
+end
+
+function __update_atpm
+    if test \"(find $__fish_atpm_cache/ -name .last_update -mtime +1 -print)\"
+        # all-the-package-names is out of date
+        fish -c "cd $__fish_atpm_cache; npm update; touch .last_update" >/dev/null 2>/dev/null
+    end
+end
+
+function __npm_list_packages
+    if not test -x $__fish_atpm_cache/node_modules/.bin/all-the-package-names
+        if not __install_atpm >/dev/null
+            return
+        end
+    end
+
+    __update_atpm >/dev/null
+    eval $__fish_atpm_cache/node_modules/.bin/all-the-package-names
+end
+
+# Entire list of packages is too long to be used in a `complete` subcommand
+# Search it for matches instead
+function __npm_filtered_list_packages
+    __npm_list_packages | grep (commandline -ct) | head -n 50
+end
+
 function __fish_npm_needs_command
     set cmd (commandline -opc)
 
@@ -192,3 +225,4 @@ complete -f -c npm -n '__fish_npm_needs_command' -a 'unpublish' -d 'Remove a pac
 complete -f -c npm -n '__fish_npm_needs_command' -a 'unstar' -d 'Remove star from a package'
 complete -f -c npm -n '__fish_npm_needs_command' -a 'version' -d 'Bump a package version'
 complete -f -c npm -n '__fish_npm_needs_command' -a 'whoami' -d 'Display npm username'
+complete -f -c npm -n '__fish_seen_subcommand_from install' -a '(__npm_filtered_list_packages)'

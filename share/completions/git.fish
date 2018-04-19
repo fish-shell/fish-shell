@@ -71,6 +71,8 @@ function __fish_git_files
 
     # Save the repo root to remove it from the path later.
     set -l root (command git rev-parse --show-toplevel 2>/dev/null)
+    # Do not continue if not inside a Git repository
+    or return
 
     # Cache the translated descriptions so we don't have to get it
     # once per file.

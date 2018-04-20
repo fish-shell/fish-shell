@@ -39,7 +39,7 @@ function __yarn_installed_packages
     end
 
     if type -q jq
-        jq -r '.dependencies | to_entries[] | .key' bower.json
+        jq -r '.dependencies | to_entries[] | .key' $package_json
     else
         set -l depsFound 0
         for line in (cat $package_json)

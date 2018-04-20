@@ -58,6 +58,6 @@ function __bower_list_installed
 end
 
 complete -c bower -n "__fish_is_first_token" -x -a '(__bower_cmds)'
-complete -c bower -n "__fish_should_complete_args" -x -a '(__bower_args)'
+complete -c bower -n "__fish_should_complete_switches" -x -a '(__bower_args)'
 complete -c bower -n "__fish_seen_subcommand_from install" -x -a '(__bower_matching_pkgs)'
 complete -c bower -n "__fish_seen_subcommand_from uninstall" -x -a '(__bower_list_installed)'

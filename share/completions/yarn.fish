@@ -39,7 +39,7 @@ function __yarn_installed_packages
     end
 
     if type -q jq
-        jq -r '.dependencies | to_entries[] | .key' $package_json
+        jq -r '.dependencies as $a1 | .devDependencies as $a2 | ($a1 + $a2) | to_entries[] | .key' $package_json
     else
         set -l depsFound 0
         for line in (cat $package_json)

@@ -400,6 +400,21 @@ all\tShorthand for 'old,new,context'"
     end
 end
 
+function __fish_git_show_opt -a option
+    switch $option
+        case format pretty
+            printf "%b" "
+oneline\t<sha1> <title line>
+short\t<sha1> / <author> / <title line>
+medium\t<sha1> / <author> / <author date> / <title> / <commit msg>
+full\t<sha1> / <author> / <committer> / <title> / <commit msg>
+fuller\t<sha1> / <author> / <author date> / <committer> / <committer date> / <title> / <commit msg>
+email\t<sha1> <date> / <author> / <author date> / <title> / <commit msg>
+raw\tShow the entire commit exactly as stored in the commit object
+format:\tSpecify which information to show"
+    end
+end
+
 # general options
 complete -f -c git -l help -d 'Display the manual of a git command'
 complete -f -c git -n '__fish_git_needs_command' -l version -d 'Display version'
@@ -422,7 +437,7 @@ complete -f -c git -n '__fish_git_needs_command' -l noglob-pathspecs -d "Don't t
 complete -f -c git -n '__fish_git_needs_command' -l icase-pathspecs -d 'Match pathspecs case-insensitively'
 
 # Options shared between multiple commands
-complete -f -c git -n '__fish_git_using_command log show diff-tree rev-list' -l pretty -a 'oneline short medium full fuller email raw format:'
+complete -f -c git -n '__fish_git_using_command log show diff-tree rev-list' -l pretty -a '(__fish_git_show_opt pretty)'
 
 complete -c git -n '__fish_git_using_command diff show' -l abbrev -d 'Show only a partial prefix instead of the full 40-byte hexadecimal object name'
 complete -c git -n '__fish_git_using_command diff show' -l binary -d 'Output a binary diff that can be applied with "git-apply"'
@@ -546,8 +561,17 @@ complete -f -c git -n '__fish_git_needs_command' -a show -d 'Shows the last comm
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_tags)' -d 'Tag'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_commits)'
-complete -f -c git -n '__fish_git_using_command show' -l stat -d 'Generate a diffstat, showing the number of changed lines of each file'
-# TODO options
+complete -f -c git -n '__fish_git_using_command show' -l format -d 'Pretty-print the contents of the commit logs in a given format' -a '(__fish_git_show_opt format)'
+complete -f -c git -n '__fish_git_using_command show' -l abbrev-commit -d 'Show only a partial hexadecimal commit object name'
+complete -f -c git -n '__fish_git_using_command show' -l no-abbrev-commit -d 'Show the full 40-byte hexadecimal commit object name'
+complete -f -c git -n '__fish_git_using_command show' -l oneline -d 'Shorthand for "--pretty=oneline --abbrev-commit"'
+complete -f -c git -n '__fish_git_using_command show' -l encoding -d 'Re-code the commit log message in the encoding'
+complete -f -c git -n '__fish_git_using_command show' -l expand-tabs -d 'Perform a tab expansion in the log message'
+complete -f -c git -n '__fish_git_using_command show' -l no-expand-tabs -d 'Do not perform a tab expansion in the log message'
+complete -f -c git -n '__fish_git_using_command show' -l notes -a '(__fish_git_refs)' -d 'Show the notes that annotate the commit'
+complete -f -c git -n '__fish_git_using_command show' -l no-notes -d 'Do not show notes'
+complete -f -c git -n '__fish_git_using_command show' -l show-signature -d 'Check the validity of a signed commit object'
+
 
 ### show-branch
 complete -f -c git -n '__fish_git_needs_command' -a show-branch -d 'Shows the commits on branches'
@@ -648,8 +672,13 @@ complete -c git -n '__fish_git_needs_command' -a diff -d 'Show changes between c
 complete -c git -n '__fish_git_using_command diff' -a '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
+complete -c git -n '__fish_git_using_command diff' -l exit-code -d 'Exit with 1 if there were differences or 0 if no differences'
+complete -c git -n '__fish_git_using_command diff' -s q -l quiet -d 'Disable all output of the program, implies --exit-code'
+complete -c git -n '__fish_git_using_command diff' -s 1 -l base -d 'Compare the working tree with the "base" version'
+complete -c git -n '__fish_git_using_command diff' -s 2 -l ours -d 'Compare the working tree with the "our branch"'
+complete -c git -n '__fish_git_using_command diff' -s 3 -l theirs -d 'Compare the working tree with the "their branch"'
+complete -c git -n '__fish_git_using_command diff' -s 0 -d 'Omit diff output for unmerged entries and just show "Unmerged"'
 complete -f -c git -n '__fish_git_using_command diff' -a '(__fish_git_files modified deleted)'
-# TODO options
 
 ### difftool
 complete -c git -n '__fish_git_needs_command' -a difftool -d 'Open diffs in a visual tool'

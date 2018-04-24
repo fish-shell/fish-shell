@@ -45,6 +45,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
+#include "future_feature_flags.h"
 #include "highlight.h"
 #include "history.h"
 #include "input.h"
@@ -1350,6 +1351,29 @@ static void test_utf8() {
     test_utf82wchar(ub1, sizeof(ub1), NULL, 0, UTF8_IGNORE_ERROR, sizeof(wb1) / sizeof(*wb1),
                     "ub1 calculate length, ignore bad chars");
 #endif
+}
+
+static void test_feature_flags() {
+    say(L"Testing future feature flags");
+    using ft = features_t;
+    ft f;
+    do_test(!f.test(ft::stderr_nocaret));
+    f.set(ft::stderr_nocaret, true);
+    do_test(f.test(ft::stderr_nocaret));
+    f.set(ft::stderr_nocaret, false);
+    do_test(!f.test(ft::stderr_nocaret));
+
+    // Ensure every metadata is represented once.
+    size_t counts[ft::flag_count] = {};
+    for (const auto &md : ft::metadata) {
+        counts[md.flag]++;
+    }
+    for (size_t c : counts) {
+        do_test(c == 1);
+    }
+    do_test(ft::metadata[ft::stderr_nocaret].name == wcstring(L"stderr-nocaret"));
+    do_test(ft::metadata_for(L"stderr-nocaret") == &ft::metadata[ft::stderr_nocaret]);
+    do_test(ft::metadata_for(L"not-a-flag") == nullptr);
 }
 
 static void test_escape_sequences() {
@@ -4611,6 +4635,7 @@ int main(int argc, char **argv) {
     if (should_test_function("cancellation")) test_cancellation();
     if (should_test_function("indents")) test_indents();
     if (should_test_function("utf8")) test_utf8();
+    if (should_test_function("feature_flags")) test_feature_flags();
     if (should_test_function("escape_sequences")) test_escape_sequences();
     if (should_test_function("lru")) test_lru();
     if (should_test_function("expand")) test_expand();

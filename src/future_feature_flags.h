@@ -3,6 +3,9 @@
 #define FISH_FUTURE_FEATURE_FLAGS_H
 
 #include <assert.h>
+#include <unordered_map>
+
+#include "common.h"
 
 class features_t {
 public:
@@ -26,6 +29,12 @@ public:
         assert(f >= 0 && f < flag_count && "Invalid flag");
         values[f] = value;
     }
+
+    /// Parses a comma-separated feature-flag string, updating ourselves with the values.
+    /// Feature names or group names may be prefixed with "no-" to disable them.
+    /// The special group name "all" may be used for those who like to live on the edge.
+    /// Unknown features are silently ignored.
+    void set_from_string(const wcstring &str);
 
     /// Metadata about feature flags.
     struct metadata_t {

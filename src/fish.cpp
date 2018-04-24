@@ -384,6 +384,13 @@ int main(int argc, char **argv) {
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
     env_init(&paths);
     // Set features early in case other initialization depends on them.
+    // Start with the ones set in the environment, then those set on the command line (so the
+    // command line takes precedence).
+    if (auto features_var = env_get(L"fish_features")) {
+        for (const wcstring &s : features_var->as_list()) {
+            mutable_fish_features().set_from_string(s);
+        }
+    }
     mutable_fish_features().set_from_string(opts.features);
     proc_init();
     builtin_init();

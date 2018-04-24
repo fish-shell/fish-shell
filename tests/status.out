@@ -1,3 +1,9 @@
 Not a function
 test_function
 test_function
+
+####################
+# Future Feature Flags
+stderr-nocaret	off	3.0	^ no longer redirects stderr
+1
+2

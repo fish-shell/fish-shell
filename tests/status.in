@@ -49,3 +49,8 @@ end
 
 test_function
 eval test_function
+
+logmsg Future Feature Flags
+status features
+status test-feature stderr-nocaret ; echo $status
+status test-feature not-a-feature ; echo $status

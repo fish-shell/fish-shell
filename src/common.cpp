@@ -38,6 +38,7 @@
 #include "env.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "future_feature_flags.h"
 #include "proc.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -928,9 +929,10 @@ static bool unescape_string_var(const wchar_t *in, wcstring *out) {
 static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring &out,
                                  escape_flags_t flags) {
     const wchar_t *in = orig_in;
-    bool escape_all = static_cast<bool>(flags & ESCAPE_ALL);
-    bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
-    bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
+    const bool escape_all = static_cast<bool>(flags & ESCAPE_ALL);
+    const bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
+    const bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
+    const bool no_caret = fish_features().test(features_t::stderr_nocaret);
 
     int need_escape = 0;
     int need_complex_escape = 0;
@@ -1003,10 +1005,12 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                     out += L"**";
                     break;
                 }
+
                 case L'&':
                 case L'$':
                 case L' ':
                 case L'#':
+                case L'^':
                 case L'<':
                 case L'>':
                 case L'(':
@@ -1020,7 +1024,8 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 case L';':
                 case L'"':
                 case L'~': {
-                    if (!no_tilde || c != L'~') {
+                    bool char_is_normal = (c == L'~' && no_tilde) || (c == L'^' && no_caret);
+                    if (!char_is_normal) {
                         need_escape = 1;
                         if (escape_all) out += L'\\';
                     }

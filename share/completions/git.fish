@@ -17,12 +17,11 @@ function __fish_git_recent_commits
 end
 
 function __fish_git_branches
-    command git branch --no-color -a $argv 2>/dev/null \
-    # Filter out detached heads and such ("(HEAD detached at SOMESHA)", localized).
-    | string match -v '\* (*)' | string match -r -v ' -> ' | string trim -c "* " \
-    # We assume anything that's not remote is a local branch.
-    | string replace -r '^(?!remotes/)(.*)' '$1\tLocal Branch' \
-    | string replace -r "^remotes/(.*)" '$1\tRemote Branch'
+    # This is much faster than using `git branch`,
+    # and avoids having to deal with localized "detached HEAD" messages.
+    command git for-each-ref --format='%(refname)' refs/heads/ refs/remotes/ \
+    | string replace -r '^refs/heads/(.*)$' '$1\tLocal Branch' \
+    | string replace -r '^refs/remotes/(.*)$' '$1\tRemote Branch'
 end
 
 function __fish_git_tags

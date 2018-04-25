@@ -50,6 +50,8 @@ function __terlar_git_prompt --description 'Write out the git prompt'
             set staged 1
         end
 
+        # HACK: To allow matching a literal `??` both with and without `?` globs.
+        set -l dq '??'
         switch $i
             case 'A '
                 set -a gs added
@@ -61,7 +63,7 @@ function __terlar_git_prompt --description 'Write out the git prompt'
                 set -a gs copied
             case 'D ' ' D'
                 set -a gs deleted
-            case '\?\?'
+            case "$dq"
                 set -a gs untracked
             case 'U*' '*U' 'DD' 'AA'
                 set -a gs unmerged

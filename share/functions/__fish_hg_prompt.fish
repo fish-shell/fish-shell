@@ -68,6 +68,8 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
         for line in $repo_status
 
             # Add a character for each file status if we have one
+            # HACK: To allow this to work both with and without '?' globs
+            set -l q '?'
             switch $line
                 case 'A '
                     set -a hg_statuses added
@@ -77,7 +79,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
                     set -a hg_statuses copied
                 case 'D ' ' D'
                     set -a hg_statuses deleted
-                case '\? '
+                case "$dq "
                     set -a hg_statuses untracked
                 case 'U*' '*U' 'DD' 'AA'
                     set -a hg_statuses unmerged

@@ -125,6 +125,9 @@ function __fish_git_files
         # A " " means it's unmodified.
         #
         # Be careful about the ordering here!
+        #
+        # HACK: To allow this to work both with and without '?' globs
+        set -l dq '??'
         switch "$stat"
             case DD AU UD UA DU AA UU
                 # Unmerged
@@ -166,7 +169,7 @@ function __fish_git_files
                 # For our purposes, we assume this is a staged deletion.
                 contains -- deleted-staged $argv; or contains -- all-staged $argv
                 and printf '%s\t%s\n' "$file" $staged_deleted_desc
-            case '\?\?'
+            case "$dq" # a literal '??'
                 # Untracked
                 contains -- untracked $argv
                 and printf '%s\t%s\n' "$file" $untracked_desc

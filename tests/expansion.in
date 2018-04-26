@@ -65,7 +65,7 @@ expansion "$$foo"
 expansion $$foo
 expansion "prefix$$foo"
 expansion prefix$$foo
-expansion $foo[-5..2]
+expansion $foo[-5..2] # No result, because the starting index is invalid and we force-reverse.
 expansion $foo[-2..-1]
 expansion $foo[-10..-5]
 expansion (printf '%s\n' $foo)[-5..2]
@@ -87,6 +87,7 @@ set -l foo a b c
 expansion $foo[17]
 expansion $foo[-17]
 expansion $foo[17..18]
+expansion $foo[4..-2]
 
 echo "$foo[d]"
 echo $foo[d]

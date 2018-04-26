@@ -228,6 +228,12 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             i2 = i2 < size ? i2 : size;
             // debug( 0, L"Push range idx %d %d", i1, i2 );
             short direction = i2 < i1 ? -1 : 1;
+            // If only the beginning is negative, always go reverse.
+            // If only the end, always go forward.
+            // Prevents `[x..-1]` from going reverse if less than x elements are there.
+            if (tmp1 > -1 != tmp > -1) {
+                direction = tmp1 > -1 ? -1 : 1;
+            }
             for (long jjj = i1; jjj * direction <= i2 * direction; jjj += direction) {
                 // debug(0, L"Expand range [subst]: %i\n", jjj);
                 idx.push_back(jjj);

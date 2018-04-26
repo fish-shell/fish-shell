@@ -631,6 +631,8 @@ Examples:
 
 Both command substitution and shell variable expansion support accessing only specific items by providing a set of indices in square brackets. It's often needed to access a sequence of elements. To do this, use the range operator '`..`' for this. A range '`a..b`', where range limits 'a' and 'b' are integer numbers, is expanded into a sequence of indices '`a a+1 a+2 ... b`' or '`a a-1 a-2 ... b`' depending on which of 'a' or 'b' is higher. The negative range limits are calculated from the end of the array or command substitution. Note that invalid indexes for either end are silently clamped to one or the size of the array as appropriate.
 
+Range expansion will go in reverse if the end element is earlier in the list than the start, unless exactly one of the given indices is negative. This is to enable clamping without changing direction if the list has fewer elements than expected.
+
 Some examples:
 
 \fish
@@ -649,6 +651,11 @@ echo (seq 10)[-1..1]
 # Uses elements from the last output line to
 # the first one in reverse direction
 # Output is: 10 9 8 7 6 5 4 3 2 1
+
+# The command substitution has only one line,
+# so these will result in empty output:
+echo (echo one)[2..-1]
+echo (echo one)[-3..1]
 \endfish
 
 The same works when setting or expanding variables:

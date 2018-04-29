@@ -25,7 +25,10 @@ The following options are available:
 
 - `-j PGID` or `--on-job-exit PGID` tells fish to run this function when the job with group ID PGID exits. Instead of PGID, the string 'caller' can be specified. This is only legal when in a command substitution, and will result in the handler being triggered by the exit of the job which created this command substitution.
 
-- `-p PID` or `--on-process-exit PID` tells fish to run this function when the fish child process with process ID PID exits.
+- `-p PID` or `--on-process-exit PID` tells fish to run this function when the fish child process
+  with process ID PID exits. Instead of a PID, for backward compatibility,
+  "`%self`" can be specified as an alias for `$fish_pid`, and the function will be run when the
+  current fish instance exits.
 
 - `-s` or `--on-signal SIGSPEC` tells fish to run this function when the signal SIGSPEC is delivered. SIGSPEC can be a signal number, or the signal name, such as SIGHUP (or just HUP).
 

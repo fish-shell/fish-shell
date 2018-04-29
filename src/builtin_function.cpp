@@ -115,6 +115,10 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     }
                     e.type = EVENT_JOB_ID;
                     e.param1.job_id = job_id;
+                } else if ((opt == 'p') && (wcscasecmp(w.woptarg, L"%self") == 0)) {
+                    pid = getpid();
+                    e.type = EVENT_EXIT;
+                    e.param1.pid = pid;
                 } else {
                     pid = fish_wcstoi(w.woptarg);
                     if (errno || pid < 0) {

@@ -10,18 +10,21 @@
 class features_t {
 public:
     /// The list of flags.
-    enum flag_t {
-        /// Whether ^ is supported for stderr redirection.
-        stderr_nocaret,
+ enum flag_t {
+     /// Whether ^ is supported for stderr redirection.
+     stderr_nocaret,
 
-        /// The number of flags.
-        flag_count
-    };
+     /// Whether ? is supported as a glob.
+     qmark_noglob,
 
-    /// Return whether a flag is set.
-    bool test(flag_t f) const {
-        assert(f >= 0 && f < flag_count && "Invalid flag");
-        return values[f];
+     /// The number of flags.
+     flag_count
+ };
+
+ /// Return whether a flag is set.
+ bool test(flag_t f) const {
+     assert(f >= 0 && f < flag_count && "Invalid flag");
+     return values[f];
     }
 
     /// Set a flag.

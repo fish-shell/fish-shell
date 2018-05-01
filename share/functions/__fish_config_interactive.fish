@@ -293,7 +293,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -l os
         if test -r /etc/os-release
             set os (string match -r '^ID(?:_LIKE)?\s*=.*' < /etc/os-release | \
-            string replace -r '^ID(?:_LIKE)?\s*=(.*)' '$1' | string trim -c '\'"')
+            string replace -r '^ID(?:_LIKE)?\s*=(.*)' '$1' | string trim -c '\'"' | string split " ")
         end
 
         # First check if we are on OpenSUSE since SUSE's handler has no options

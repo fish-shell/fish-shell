@@ -1078,6 +1078,9 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
     bool complete_from_start = !complete_from_separator || !string_prefixes_string(L"-", str);
 
     if (complete_from_separator) {
+        // FIXME: This just cuts the token,
+        // so any quoting or braces gets lost.
+        // See #4954.
         const wcstring sep_string = wcstring(str, sep_index + 1);
         std::vector<completion_t> local_completions;
         if (expand_string(sep_string, &local_completions, flags, NULL) == EXPAND_ERROR) {

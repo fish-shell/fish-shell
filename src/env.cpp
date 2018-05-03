@@ -924,6 +924,9 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     uid_t uid = getuid();
     setup_user(uid == 0);
 
+    // Set up $IFS - this used to be in share/config.fish, but really breaks if it isn't done.
+    env_set_one(L"IFS", ENV_GLOBAL, L"\n \t");
+
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
     env_set_one(L"version", ENV_GLOBAL, version);

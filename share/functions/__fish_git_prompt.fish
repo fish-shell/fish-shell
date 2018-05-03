@@ -362,8 +362,13 @@ function __fish_git_prompt --description "Prompt function for Git"
     set -l p #upstream
     set -l informative_status
 
-    __fish_git_prompt_validate_chars
-    __fish_git_prompt_validate_colors
+    if not set -q ___fish_git_prompt_init
+        # This takes a while, so it only needs to be done once,
+        # and then whenever the configuration changes.
+        __fish_git_prompt_validate_chars
+        __fish_git_prompt_validate_colors
+        set -g ___fish_git_prompt_init
+    end
 
     set -l space "$___fish_git_prompt_color$___fish_git_prompt_char_stateseparator$___fish_git_prompt_color_done"
 
@@ -767,6 +772,7 @@ end
 set -a varargs --on-variable __fish_git_prompt_showcolorhints
 function __fish_git_prompt_repaint_color $varargs --description "Event handler, repaints prompt when any color changes"
     if status --is-interactive
+        set -e ___fish_git_prompt_init
         set -l var $argv[3]
         set -e _$var
         set -e _{$var}_done
@@ -787,6 +793,7 @@ for var in cleanstate dirtystate invalidstate stagedstate stashstate statesepara
 end
 function __fish_git_prompt_repaint_char $varargs --description "Event handler, repaints prompt when any char changes"
     if status --is-interactive
+        set -e ___fish_git_prompt_init
         set -e _$argv[3]
         commandline -f repaint 2>/dev/null
     end

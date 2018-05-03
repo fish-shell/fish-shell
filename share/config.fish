@@ -105,12 +105,12 @@ if not contains -- $__fish_data_dir/completions $fish_complete_path
     set fish_complete_path $fish_complete_path $__fish_data_dir/completions
 end
 
-# : is a sh/bash-compatibility function, but because its name can cause problems on many
-# systems, it is saved as colon.fish and not :.fish, which means that it's never autoloaded
-# since the name of the file and the name of the function differ. Force evaluation of colon.fish
-# as a function by simply trying to  load the non-existent function colon, which will pull in
-# colon.fish and lead to `:` being recognized. Sourced up here so it can be used later safely.
-type -q colon; or true # just to reset $status
+# This cannot be in an autoload-file because `:.fish` is an invalid filename on windows.
+function :
+    # no-op function for compatibility with sh, bash, and others.
+    # Often used to insert a comment into a chain of commands without having
+	# it eat up the remainder of the line, handy in Makefiles.
+end
 
 #
 # This is a Solaris-specific test to modify the PATH so that

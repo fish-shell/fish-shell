@@ -72,7 +72,9 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     # This clashes with __fish_list_current_token
     # bind $argv \el downcase-word
     bind $argv \ec capitalize-word
+    # One of these is alt+backspace.
     bind $argv \e\x7f backward-kill-word
+    bind $argv \e\b backward-kill-word
     bind $argv \eb backward-word
     bind $argv \ef forward-word
     bind $argv \e\[1\;5C forward-word

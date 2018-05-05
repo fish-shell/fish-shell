@@ -35,7 +35,9 @@ The following options change what part of the commandline is printed or updated:
 
 - `-p` or `--current-process` select the current process
 
-- `-t` or `--current-token` select the current token.
+- `-s` or `--current-selection` selects the current selection
+
+- `-t` or `--current-token` select the current token
 
 The following options change the way `commandline` prints the current commandline buffer:
 

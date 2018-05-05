@@ -213,10 +213,11 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     static const struct woption long_options[] = {{L"append", no_argument, NULL, 'a'},
                                                   {L"insert", no_argument, NULL, 'i'},
                                                   {L"replace", no_argument, NULL, 'r'},
+                                                  {L"current-buffer", no_argument, NULL, 'b'},
                                                   {L"current-job", no_argument, NULL, 'j'},
                                                   {L"current-process", no_argument, NULL, 'p'},
+                                                  {L"current-selection", no_argument, NULL, 's'},
                                                   {L"current-token", no_argument, NULL, 't'},
-                                                  {L"current-buffer", no_argument, NULL, 'b'},
                                                   {L"cut-at-cursor", no_argument, NULL, 'c'},
                                                   {L"function", no_argument, NULL, 'f'},
                                                   {L"tokenize", no_argument, NULL, 'o'},
@@ -225,7 +226,6 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                                                   {L"cursor", no_argument, NULL, 'C'},
                                                   {L"line", no_argument, NULL, 'L'},
                                                   {L"search-mode", no_argument, NULL, 'S'},
-                                                  {L"selection", no_argument, NULL, 's'},
                                                   {L"paging-mode", no_argument, NULL, 'P'},
                                                   {NULL, 0, NULL, 0}};
 

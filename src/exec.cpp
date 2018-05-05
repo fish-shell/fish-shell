@@ -571,9 +571,17 @@ void exec_job(parser_t &parser, job_t *j) {
     // program to exit before continuing in the pipeline, causing the group leader to exit.
     if (j->get_flag(JOB_CONTROL) && !exec_error) {
         for (const process_ptr_t &p : j->processes) {
-            if (p->type != EXTERNAL && (!p->is_last_in_job || !p->is_first_in_job)) {
-                needs_keepalive = true;
-                break;
+            if (p->type != EXTERNAL) {
+                // But if a(nother) builtin is first or last, then we are the pgroup leader.
+                if (p->is_last_in_job || p->is_first_in_job) {
+                    needs_keepalive = false;
+                    j->pgid = getpgrp();
+                    break;
+                } else {
+                    // We need to keep checking until we get the last process,
+                    // so no break here.
+                    needs_keepalive = true;
+                }
             }
             // When running under WSL, create a keepalive process unconditionally if our first process is external.
             // This is because WSL does not permit joining the pgrp of an exited process.

@@ -5,6 +5,8 @@ This section is for changes merged to the `major` branch that are not also merge
 - The `IFS` variable is deprecated and will be removed in fish 4.0 (#4156).
 - The `function --on-process-exit` event will be removed in future (#4700). Use the `fish_exit` event instead.
 - `$_` is deprecated and will removed in the future (#813). Use `status current-command` in a subshell instead.
+- `^` as a redirection deprecated and will be removed in the future. (#4394). Use `2>` to redirect stderr. This is controlled by the `stderr-nocaret` feature flag.
+- `?` as a glob is deprecated and will be removed in the future. (#4520). This is controlled by the `qmark-noglob` feature flag.
 
 ## Notable non-backward compatible changes
 - `.` command no longer exists -- use `source` (#4294).
@@ -15,10 +17,9 @@ This section is for changes merged to the `major` branch that are not also merge
 - Successive commas in brace expansions are handled in less surprising manner (`{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again). (#3002, #4632).
 - `%` is no longer used for process and job expansion. `$fish_pid` and `$last_pid` have taken the place of `%self` and `%last` respectively. (#4230, #1202)
 - The new `math` builtin (see below) does not support logical expressions; `test` should be used instead (#4777).
-- The `?` wildcard has been removed (#4520).
-- The `^` caret redirection for stderr has been removed (#4394). To redirect stderr, `2>/some/path` may be used, or `2>|` as a pipe.
 
 ## Notable fixes and improvements
+- A new feature flags mechanism is added for staging deprecations and breaking changes. (#4940) 
 - `wait` builtin is added for waiting on processes (#4498).
 - `read` has a new `--delimiter` option as a better alternative to the `IFS` variable (#4256).
 - `read` writes directly to stdout if called without arguments (#4407)

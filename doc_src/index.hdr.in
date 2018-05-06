@@ -92,6 +92,7 @@ Some characters can not be written directly on the command line. For these chara
 - '<code>\\$</code>' escapes the dollar character
 - '<code>\\\\</code>' escapes the backslash character
 - '<code>\\*</code>' escapes the star character
+- '<code>\\?</code>' escapes the question mark character
 - '<code>\\~</code>' escapes the tilde character
 - '<code>\\#</code>' escapes the hash character
 - '<code>\\(</code>' escapes the left parenthesis character
@@ -141,11 +142,11 @@ An example of a file redirection is `echo hello > output.txt`, which directs the
 
 - To read standard input from a file, write `<SOURCE_FILE`
 - To write standard output to a file, write `>DESTINATION`
-- To write standard error to a file, write `^DESTINATION`
+- To write standard error to a file, write `2>DESTINATION`
 - To append standard output to a file, write `>>DESTINATION_FILE`
-- To append standard error to a file, write `^^DESTINATION_FILE`
+- To append standard error to a file, write `2>>DESTINATION_FILE`
 
-- To not overwrite ("clobber") an existing file, write '>?DESTINATION' or '^?DESTINATION'
+- To not overwrite ("clobber") an existing file, write '>?DESTINATION' or '2>?DESTINATION'
 
 `DESTINATION` can be one of the following:
 
@@ -157,7 +158,7 @@ An example of a file redirection is `echo hello > output.txt`, which directs the
 
 Example:
 
-To redirect both standard output and standard error to the file 'all_output.txt', you can write `echo Hello > all_output.txt ^&1`.
+To redirect both standard output and standard error to the file 'all_output.txt', you can write `echo Hello > all_output.txt 2>&1`.
 
 Any file descriptor can be redirected in an arbitrary way by prefixing the redirection with the file descriptor.
 
@@ -165,7 +166,7 @@ Any file descriptor can be redirected in an arbitrary way by prefixing the redir
 - To redirect output of FD N, write `N>DESTINATION`
 - To append the output of FD N to a file, write `N>>DESTINATION_FILE`
 
-Example: `echo Hello 2>output.stderr` and `echo Hello ^output.stderr` are equivalent, and write the standard error (file descriptor 2) of the target program to `output.stderr`.
+Example: `echo Hello 2>output.stderr` and `echo Hello 2>output.stderr` are equivalent, and write the standard error (file descriptor 2) of the target program to `output.stderr`.
 
 \subsection piping Piping
 
@@ -329,7 +330,7 @@ These are the general purpose tab completions that `fish` provides:
 
 - Completion of usernames for tilde expansion.
 
-- Completion of filenames, even on strings with wildcards such as '`*`' and '`**`'.
+- Completion of filenames, even on strings with wildcards such as '`*`', '`**`' and '`?`'.
 
 `fish` provides a large number of program specific completions. Most of these completions are simple options like the `-l` option for `ls`, but some are more advanced. The latter include:
 
@@ -417,7 +418,9 @@ When an argument for a program is given on the commandline, it undergoes the pro
 
 \subsection expand-wildcard Wildcards
 
-If a star (`*`) is present in the parameter, `fish` attempts to match the given parameter to any files in such a way that:
+If a star (`*`) or a question mark (`?`) is present in the parameter, `fish` attempts to match the given parameter to any files in such a way that:
+
+- `?` can match any single character except '/'.
 
 - `*` can match any string of characters not containing '/'. This includes matching an empty string.
 
@@ -442,6 +445,8 @@ File names beginning with a dot are not considered when wildcarding unless a dot
 Examples:
 
 - `a*` matches any files beginning with an 'a' in the current directory.
+
+- `???` matches any file in the current directory whose name is exactly three characters long.
 
 - `**` matches any files and directories in the current directory and all of its subdirectories.
 
@@ -1242,6 +1247,29 @@ function on_exit --on-process $fish_pid
 end
 \endfish
 
+\section featureflags Future feature flags
+
+Feature flags are how fish stages changes that might break scripts. Breaking changes are introduced as opt-in, in a few releases they become opt-out, and eventually the old behavior is removed.
+
+You can see the current list of features via `status features`:
+
+\fish
+> status features
+stderr-nocaret  on     3.0      ^ no longer redirects stderr
+qmark-noglob    off    3.0      ? no longer globs
+\endfish
+
+There are two breaking changes in fish 3.0: caret `^` no longer redirects stderr, and question mark `?` is no longer a glob. These changes are off by default. They can be enabled on a per session basis:
+
+\fish
+> fish --features qmark-noglob,stderr-nocaret
+\endfish
+
+or opted into globally for a user:
+
+\fish
+> set -U fish_features stderr-nocaret qmark-noglob
+\endfish
 
 \section other Other features
 

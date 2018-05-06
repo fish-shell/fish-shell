@@ -13,6 +13,7 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "future_feature_flags.h"
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -33,6 +34,9 @@ tokenizer_error *TOK_EXPECTED_BCLOSE_FOUND_PCLOSE = new tokenizer_error((L"Unexp
 const wchar_t *tokenizer_error::Message() const {
     return _(_message);
 }
+
+// Whether carets redirect stderr.
+static bool caret_redirs() { return !feature_test(features_t::stderr_nocaret); }
 
 /// Return an error token and mark that we no longer have a next token.
 tok_t tokenizer_t::call_error(tokenizer_error *error_type, const wchar_t *token_start,
@@ -70,8 +74,10 @@ bool tokenizer_t::next(struct tok_t *result) {
     return true;
 }
 
-/// Tests if this character can be a part of a string.
-static bool tok_is_string_character(wchar_t c) {
+/// Tests if this character can be a part of a string. The redirect ^ is allowed unless it's the
+/// first character. Hash (#) starts a comment if it's the first character in a token; otherwise it
+/// is considered a string character. See issue #953.
+static bool tok_is_string_character(wchar_t c, bool is_first) {
     switch (c) {
         case L'\0':
         case L' ':
@@ -82,9 +88,15 @@ static bool tok_is_string_character(wchar_t c) {
         case L'\r':
         case L'<':
         case L'>':
-        case L'&':
+        case L'&': {
+            // Unconditional separators.
             return false;
-        default: return true;
+        }
+        case L'^': {
+            // Conditional separator.
+            return !caret_redirs() || !is_first;
+        }
+        default: { return true; }
     }
 }
 
@@ -109,6 +121,7 @@ tok_t tokenizer_t::read_string() {
     std::vector<char> expecting;
     int slice_offset = 0;
     const wchar_t *const buff_start = this->buff;
+    bool is_first = true;
 
     while (true) {
         wchar_t c = *this->buff;
@@ -209,8 +222,7 @@ tok_t tokenizer_t::read_string() {
                 }
                 break;
             }
-        }
-        else if (mode == tok_mode::regular_text && !tok_is_string_character(c)) {
+        } else if (mode == tok_mode::regular_text && !tok_is_string_character(c, is_first)) {
             break;
         }
 
@@ -224,6 +236,7 @@ tok_t tokenizer_t::read_string() {
 #endif
 
         this->buff++;
+        is_first = false;
     }
 
     if ((!this->accept_unfinished) && (mode != tok_mode::regular_text)) {
@@ -282,7 +295,7 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
     size_t idx = 0;
 
     // Determine the fd. This may be specified as a prefix like '2>...' or it may be implicit like
-    // '>'. Try parsing out a number; if we did not get any digits then infer it from the
+    // '>' or '^'. Try parsing out a number; if we did not get any digits then infer it from the
     // first character. Watch out for overflow.
     long long big_fd = 0;
     for (; iswdigit(buff[idx]); idx++) {
@@ -303,6 +316,14 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
                 result.fd = STDIN_FILENO;
                 break;
             }
+            case L'^': {
+                if (caret_redirs()) {
+                    result.fd = STDERR_FILENO;
+                } else {
+                    errored = true;
+                }
+                break;
+            }
             default: {
                 errored = true;
                 break;
@@ -311,11 +332,12 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
     }
 
     // Either way we should have ended on the redirection character itself like '>'.
+    // Don't allow an fd with a caret redirection - see #1873
     wchar_t redirect_char = buff[idx++];  // note increment of idx
-    if (redirect_char == L'>') {
+    if (redirect_char == L'>' || (redirect_char == L'^' && idx == 1 && caret_redirs())) {
         result.redirection_mode = redirection_type_t::overwrite;
         if (buff[idx] == redirect_char) {
-            // Doubled up like >>. That means append.
+            // Doubled up like ^^ or >>. That means append.
             result.redirection_mode = redirection_type_t::append;
             idx++;
         }
@@ -507,7 +529,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             // Maybe a redirection like '2>&1', maybe a pipe like 2>|, maybe just a string.
             const wchar_t *error_location = this->buff;
             maybe_t<parsed_redir_or_pipe_t> redir_or_pipe;
-            if (iswdigit(*this->buff)) {
+            if (iswdigit(*this->buff) || (*this->buff == L'^' && caret_redirs())) {
                 redir_or_pipe = read_redirection_or_fd_pipe(this->buff);
             }
 
@@ -599,7 +621,9 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {
 }
 
 bool move_word_state_machine_t::is_path_component_character(wchar_t c) {
-    return tok_is_string_character(c) && !wcschr(L"/={,}'\"", c);
+    // Always treat separators as first. All this does is ensure that we treat ^ as a string
+    // character instead of as stderr redirection, which I hypothesize is usually what is desired.
+    return tok_is_string_character(c, true) && !wcschr(L"/={,}'\"", c);
 }
 
 bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {

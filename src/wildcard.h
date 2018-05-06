@@ -11,8 +11,10 @@
 
 // Enumeration of all wildcard types.
 enum {
+    /// Character representing any character except '/' (slash).
+    ANY_CHAR = WILDCARD_RESERVED_BASE,
     /// Character representing any character string not containing '/' (slash).
-    ANY_STRING = WILDCARD_RESERVED_BASE,
+    ANY_STRING,
     /// Character representing any character string.
     ANY_STRING_RECURSIVE,
     /// This is a special psuedo-char that is not used other than to mark the

@@ -44,6 +44,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "fallback.h"  // IWYU pragma: keep
 #include "fish_version.h"
 #include "function.h"
+#include "future_feature_flags.h"
 #include "history.h"
 #include "io.h"
 #include "parser.h"
@@ -61,6 +62,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 // container to hold the options specified within the command line
 class fish_cmd_opts_t {
    public:
+    // Future feature flags values string
+    wcstring features;
     // Commands to be executed in place of interactive shell.
     std::vector<std::string> batch_cmds;
     // Commands to execute after the shell's config has been read.
@@ -238,9 +241,10 @@ int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
 
 /// Parse the argument list, return the index of the first non-flag arguments.
 static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
-    static const char *short_opts = "+hilnvc:C:p:d:D:";
+    static const char *short_opts = "+hilnvc:C:p:d:f:D:";
     static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
                                               {"init-command", required_argument, NULL, 'C'},
+                                              {"features", required_argument, NULL, 'f'},
                                               {"debug-level", required_argument, NULL, 'd'},
                                               {"debug-stack-frames", required_argument, NULL, 'D'},
                                               {"interactive", no_argument, NULL, 'i'},
@@ -275,6 +279,10 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                     fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
                     exit(1);
                 }
+                break;
+            }
+            case 'f': {
+                opts->features = str2wcstring(optarg);
                 break;
             }
             case 'h': {
@@ -375,6 +383,15 @@ int main(int argc, char **argv) {
 
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
     env_init(&paths);
+    // Set features early in case other initialization depends on them.
+    // Start with the ones set in the environment, then those set on the command line (so the
+    // command line takes precedence).
+    if (auto features_var = env_get(L"fish_features")) {
+        for (const wcstring &s : features_var->as_list()) {
+            mutable_fish_features().set_from_string(s);
+        }
+    }
+    mutable_fish_features().set_from_string(opts.features);
     proc_init();
     builtin_init();
     misc_init();

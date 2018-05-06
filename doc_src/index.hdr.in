@@ -142,11 +142,11 @@ An example of a file redirection is `echo hello > output.txt`, which directs the
 
 - To read standard input from a file, write `<SOURCE_FILE`
 - To write standard output to a file, write `>DESTINATION`
-- To write standard error to a file, write `^DESTINATION`
+- To write standard error to a file, write `2>DESTINATION`
 - To append standard output to a file, write `>>DESTINATION_FILE`
-- To append standard error to a file, write `^^DESTINATION_FILE`
+- To append standard error to a file, write `2>>DESTINATION_FILE`
 
-- To not overwrite ("clobber") an existing file, write '>?DESTINATION' or '^?DESTINATION'
+- To not overwrite ("clobber") an existing file, write '>?DESTINATION' or '2>?DESTINATION'
 
 `DESTINATION` can be one of the following:
 
@@ -158,7 +158,7 @@ An example of a file redirection is `echo hello > output.txt`, which directs the
 
 Example:
 
-To redirect both standard output and standard error to the file 'all_output.txt', you can write `echo Hello > all_output.txt ^&1`.
+To redirect both standard output and standard error to the file 'all_output.txt', you can write `echo Hello > all_output.txt 2>&1`.
 
 Any file descriptor can be redirected in an arbitrary way by prefixing the redirection with the file descriptor.
 
@@ -166,7 +166,7 @@ Any file descriptor can be redirected in an arbitrary way by prefixing the redir
 - To redirect output of FD N, write `N>DESTINATION`
 - To append the output of FD N to a file, write `N>>DESTINATION_FILE`
 
-Example: `echo Hello 2>output.stderr` and `echo Hello ^output.stderr` are equivalent, and write the standard error (file descriptor 2) of the target program to `output.stderr`.
+Example: `echo Hello 2>output.stderr` and `echo Hello 2>output.stderr` are equivalent, and write the standard error (file descriptor 2) of the target program to `output.stderr`.
 
 \subsection piping Piping
 

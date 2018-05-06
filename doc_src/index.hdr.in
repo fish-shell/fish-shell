@@ -1247,6 +1247,29 @@ function on_exit --on-process $fish_pid
 end
 \endfish
 
+\section featureflags Future feature flags
+
+Feature flags are how fish stages changes that might break scripts. Breaking changes are introduced as opt-in, in a few releases they become opt-out, and eventually the old behavior is removed.
+
+You can see the current list of features via `status features`:
+
+\fish
+> status features
+stderr-nocaret  on     3.0      ^ no longer redirects stderr
+qmark-noglob    off    3.0      ? no longer globs
+\endfish
+
+There are two breaking changes in fish 3.0: caret `^` no longer redirects stderr, and question mark `?` is no longer a glob. These changes are off by default. They can be enabled on a per session basis:
+
+\fish
+> fish --features qmark-noglob,stderr-nocaret
+\endfish
+
+or opted into globally for a user:
+
+\fish
+> set -U fish_features stderr-nocaret qmark-noglob
+\endfish
 
 \section other Other features
 

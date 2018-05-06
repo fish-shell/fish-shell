@@ -1327,11 +1327,6 @@ To start a debug session simply run the builtin command `breakpoint` at the poin
 Note: At the moment the debug prompt is identical to your normal fish prompt. This can make it hard to recognize that you've entered a debug session. <a hread="https://github.com/fish-shell/fish-shell/issues/1310">Issue 1310</a> is open to improve this.
 
 
-\section issues Common issues with fish
-
-If you install fish in your home directory, fish will not work correctly for any other user than yourself. This is because fish needs its initialization files to function properly. To solve this problem, either copy the initialization files to each fish users home directory, or install them in `/etc`.
-
-
 \section more-help Further help and development
 
 If you have a question not answered by this documentation, there are several avenues for help:

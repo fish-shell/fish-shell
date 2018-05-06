@@ -62,7 +62,7 @@ static size_t wildcard_find(const wchar_t *wc) {
 /// Implementation of wildcard_has. Needs to take the length to handle embedded nulls (issue #1631).
 static bool wildcard_has_impl(const wchar_t *str, size_t len, bool internal) {
     assert(str != NULL);
-    bool qmark_is_wild = !fish_features().test(features_t::qmark_noglob);
+    bool qmark_is_wild = !feature_test(features_t::qmark_noglob);
     const wchar_t *end = str + len;
     if (internal) {
         for (; str < end; str++) {

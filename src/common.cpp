@@ -932,8 +932,8 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
     const bool escape_all = static_cast<bool>(flags & ESCAPE_ALL);
     const bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
     const bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
-    const bool no_caret = fish_features().test(features_t::stderr_nocaret);
-    const bool no_qmark = fish_features().test(features_t::qmark_noglob);
+    const bool no_caret = feature_test(features_t::stderr_nocaret);
+    const bool no_qmark = feature_test(features_t::qmark_noglob);
 
     int need_escape = 0;
     int need_complex_escape = 0;
@@ -1361,7 +1361,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     break;
                 }
                 case L'?': {
-                    if (unescape_special && !fish_features().test(features_t::qmark_noglob)) {
+                    if (unescape_special && !feature_test(features_t::qmark_noglob)) {
                         to_append_or_none = ANY_CHAR;
                     }
                     break;

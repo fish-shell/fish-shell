@@ -550,7 +550,7 @@ static void color_argument_internal(const wcstring &buffstr,
                             break;
                         }
                         case L'?': {
-                            if (!fish_features().test(features_t::qmark_noglob)) {
+                            if (!feature_test(features_t::qmark_noglob)) {
                                 colors[in_pos] = highlight_spec_operator;
                             }
                             break;

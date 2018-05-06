@@ -36,7 +36,7 @@ const wchar_t *tokenizer_error::Message() const {
 }
 
 // Whether carets redirect stderr.
-static bool caret_redirs() { return !fish_features().test(features_t::stderr_nocaret); }
+static bool caret_redirs() { return !feature_test(features_t::stderr_nocaret); }
 
 /// Return an error token and mark that we no longer have a next token.
 tok_t tokenizer_t::call_error(tokenizer_error *error_type, const wchar_t *token_start,

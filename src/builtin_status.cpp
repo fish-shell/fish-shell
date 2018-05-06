@@ -138,7 +138,7 @@ static bool set_status_cmd(wchar_t *const cmd, status_cmd_opts_t &opts, status_c
 /// Print the features and their values.
 static void print_features(io_streams_t &streams) {
     for (const auto &md : features_t::metadata) {
-        int set = fish_features().test(md.flag);
+        int set = feature_test(md.flag);
         streams.out.append_format(L"%ls\t%s\t%ls\t%ls\n", md.name, set ? "on" : "off", md.groups,
                                   md.description);
     }
@@ -339,7 +339,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             if (!metadata) {
                 retval = TEST_FEATURE_NOT_RECOGNIZED;
             } else {
-                retval = fish_features().test(metadata->flag) ? TEST_FEATURE_ON : TEST_FEATURE_OFF;
+                retval = feature_test(metadata->flag) ? TEST_FEATURE_ON : TEST_FEATURE_OFF;
             }
             break;
         }

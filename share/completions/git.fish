@@ -682,6 +682,17 @@ complete -c git -n '__fish_git_using_command diff' -s 3 -l theirs -d 'Compare th
 complete -c git -n '__fish_git_using_command diff' -s 0 -d 'Omit diff output for unmerged entries and just show "Unmerged"'
 complete -f -c git -n '__fish_git_using_command diff' -a '(__fish_git_files modified deleted)'
 
+### Function to list available tools for git difftool and mergetool
+
+function __fish_git_diffmerge_tools -a cmd
+    git $cmd --tool-help | \
+    while read -l line
+        string match -q 'The following tools are valid, but not currently available:' -- $line
+        and break
+        string replace -f -r '^\t\t(\w+).*$' '$1' -- $line
+    end
+end
+
 ### difftool
 complete -c git -n '__fish_git_needs_command' -a difftool -d 'Open diffs in a visual tool'
 complete -c git -n '__fish_git_using_command difftool' -a '(__fish_git_ranges)'
@@ -692,7 +703,7 @@ complete -f -c git -n '__fish_git_using_command difftool' -s d -l dir-diff -d 'P
 complete -c git -n '__fish_git_using_command difftool' -l prompt -d 'Prompt before each invocation of the diff tool'
 complete -f -c git -n '__fish_git_using_command difftool' -s y -l no-prompt -d 'Do not prompt before launching a diff tool'
 complete -f -c git -n '__fish_git_using_command difftool' -l symlinks -d 'Use symlinks in dir-diff mode'
-complete -f -c git -n '__fish_git_using_command difftool' -s t -l tool -d 'Use the specified diff tool'
+complete -f -c git -n '__fish_git_using_command difftool' -s t -l tool -d 'Use the specified diff tool' -a "(__fish_git_diffmerge_tools difftool)"
 complete -f -c git -n '__fish_git_using_command difftool' -l tool-help -d 'Print a list of diff tools that may be used with `--tool`'
 complete -f -c git -n '__fish_git_using_command difftool' -l trust-exit-code -d 'Exit when an invoked diff tool returns a non-zero exit code'
 complete -f -c git -n '__fish_git_using_command difftool' -s x -l extcmd -d 'Specify a custom command for viewing diffs'
@@ -929,17 +940,8 @@ complete -f -c git -n '__fish_git_using_command merge' -l continue -d 'Conclude 
 
 ### mergetool
 
-function __fish_git_mergetools
-    set -l tools diffuse diffmerge ecmerge emerge kdiff3 meld opendiff tkdiff vimdiff gvimdiff xxdiff araxis p4merge bc codecompare
-    for tool in $tools
-        if command -sq $tool
-            echo "$tool"
-        end
-    end
-end
-
 complete -f -c git -n '__fish_git_needs_command' -a mergetool -d 'Run merge conflict resolution tools to resolve merge conflicts'
-complete -f -c git -n '__fish_git_using_command mergetool' -s t -l tool -d "Use specific merge resolution program" -a "(__fish_git_mergetools)"
+complete -f -c git -n '__fish_git_using_command mergetool' -s t -l tool -d "Use specific merge resolution program" -a "(__fish_git_diffmerge_tools mergetool)"
 complete -f -c git -n '__fish_git_using_command mergetool' -l tool-help -d 'Print a list of merge tools that may be used with `--tool`'
 complete -f -c git -n '__fish_git_using_command mergetool' -a "(__fish_git_files unmerged)"
 complete -f -c git -n '__fish_git_using_command mergetool' -s y -l no-prompt -d 'Do not prompt before launching a diff tool'

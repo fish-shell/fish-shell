@@ -127,7 +127,11 @@ function __fish_git_files
         # Be careful about the ordering here!
         #
         # HACK: To allow this to work both with and without '?' globs
-        set -l dq '??'
+        set -l dq '\\?\\?'
+        if status test-feature qmark-noglob
+            # ? is not a glob
+            set dq '??'
+        end
         switch "$stat"
             case DD AU UD UA DU AA UU
                 # Unmerged

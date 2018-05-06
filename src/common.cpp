@@ -933,6 +933,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
     const bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
     const bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
     const bool no_caret = fish_features().test(features_t::stderr_nocaret);
+    const bool no_qmark = fish_features().test(features_t::qmark_noglob);
 
     int need_escape = 0;
     int need_complex_escape = 0;
@@ -997,6 +998,11 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                     out += *in;
                     break;
                 }
+                case ANY_CHAR: {
+                    // See #1614
+                    out += L'?';
+                    break;
+                }
                 case ANY_STRING: {
                     out += L'*';
                     break;
@@ -1019,12 +1025,13 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 case L']':
                 case L'{':
                 case L'}':
+                case L'?':
                 case L'*':
                 case L'|':
                 case L';':
                 case L'"':
                 case L'~': {
-                    bool char_is_normal = (c == L'~' && no_tilde) || (c == L'^' && no_caret);
+                    bool char_is_normal = (c == L'~' && no_tilde) || (c == L'^' && no_caret) || (c == L'?' && no_qmark);
                     if (!char_is_normal) {
                         need_escape = 1;
                         if (escape_all) out += L'\\';
@@ -1350,6 +1357,12 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         } else {
                             to_append_or_none = ANY_STRING;
                         }
+                    }
+                    break;
+                }
+                case L'?': {
+                    if (unescape_special && !fish_features().test(features_t::qmark_noglob)) {
+                        to_append_or_none = ANY_CHAR;
                     }
                     break;
                 }

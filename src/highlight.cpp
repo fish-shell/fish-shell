@@ -23,6 +23,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
+#include "future_feature_flags.h"
 #include "highlight.h"
 #include "history.h"
 #include "output.h"
@@ -125,6 +126,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
             case BRACE_BEGIN:
             case BRACE_END:
             case BRACE_SEP:
+            case ANY_CHAR:
             case ANY_STRING:
             case ANY_STRING_RECURSIVE: {
                 has_magic = 1;
@@ -545,6 +547,12 @@ static void color_argument_internal(const wcstring &buffstr,
                                                      colors + in_pos);
                             // Subtract one to account for the upcoming loop increment.
                             in_pos -= 1;
+                            break;
+                        }
+                        case L'?': {
+                            if (!fish_features().test(features_t::qmark_noglob)) {
+                                colors[in_pos] = highlight_spec_operator;
+                            }
                             break;
                         }
                         case L'*':

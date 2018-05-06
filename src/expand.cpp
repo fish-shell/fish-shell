@@ -828,6 +828,10 @@ static void remove_internal_separator(wcstring *str, bool conv) {
     if (conv) {
         for (size_t idx = 0; idx < str->size(); idx++) {
             switch (str->at(idx)) {
+                case ANY_CHAR: {
+                    str->at(idx) = L'?';
+                    break;
+                }
                 case ANY_STRING:
                 case ANY_STRING_RECURSIVE: {
                     str->at(idx) = L'*';

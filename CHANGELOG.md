@@ -67,6 +67,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `j` (autojump #4344)
   - `jhipster` (#4472)
   - `ngrok` (#4642)
+  - `optipng`
   - `port`
 - Improved completions for
   - `brew`

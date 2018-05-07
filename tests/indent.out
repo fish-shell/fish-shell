@@ -105,3 +105,23 @@ end
 while true
     builtin yes
 end
+
+alpha | \
+    beta
+
+gamma | \
+    # comment3
+    delta
+
+if true
+    echo abc
+end
+
+if false # comment4
+    and true && false
+    echo abc
+end
+
+echo hi |
+
+echo bye

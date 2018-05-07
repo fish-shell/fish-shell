@@ -284,8 +284,7 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
             append_format(*result, L"  [%ld, %ld]", (long)node.source_start,
                           (long)node.source_length);
         } else {
-            append_format(*result, L"  [no src]", (long)node.source_start,
-                          (long)node.source_length);
+            append_format(*result, L"  [%ld, no src]", (long)node.source_start);
         }
     }
 

@@ -842,13 +842,7 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token) {
 }
 
 void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
-    bool logit = false;
-    if (logit) {
-        fwprintf(stderr, L"Accept token %ls\n", token1.describe().c_str());
-    }
     PARSE_ASSERT(token1.type >= FIRST_PARSE_TOKEN_TYPE);
-
-    bool consumed = false;
 
     // Handle special types specially. Note that these are the only types that can be pushed if the
     // symbol stack is empty.
@@ -865,7 +859,6 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
         special_node.source_start = token1.source_start;
         special_node.source_length = token1.source_length;
         nodes.push_back(special_node);
-        consumed = true;
 
         // Mark special flags.
         if (token1.type == parse_special_type_comment) {
@@ -874,16 +867,14 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
 
         // Tokenizer errors are fatal.
         if (token1.type == parse_special_type_tokenizer_error) this->fatal_errored = true;
+        return;
     }
 
-    while (!consumed && !this->fatal_errored) {
+    // It's not a special type.
+    while (!this->fatal_errored) {
         PARSE_ASSERT(!symbol_stack.empty());  //!OCLINT(multiple unary operator)
 
         if (top_node_handle_terminal_types(token1)) {
-            if (logit) {
-                fwprintf(stderr, L"Consumed token %ls\n", token1.describe().c_str());
-            }
-            // consumed = true;
             break;
         }
 

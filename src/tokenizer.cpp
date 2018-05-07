@@ -428,10 +428,12 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
     }
 
     // Consume non-newline whitespace. If we get an escaped newline, mark it and continue past it.
+    bool preceding_escaped_nl = false;
     for (;;) {
         if (this->buff[0] == L'\\' && this->buff[1] == L'\n') {
             this->buff += 2;
             this->continue_line_after_comment = true;
+            preceding_escaped_nl = true;
         } else if (iswspace_not_nl(this->buff[0])) {
             this->buff++;
         } else {
@@ -454,6 +456,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             result.type = TOK_COMMENT;
             result.offset = comment_start - this->start;
             result.length = comment_len;
+            result.preceding_escaped_nl = preceding_escaped_nl;
             return result;
         }
         while (iswspace_not_nl(this->buff[0])) this->buff++;
@@ -551,6 +554,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             break;
         }
     }
+    result.preceding_escaped_nl = preceding_escaped_nl;
     return result;
 }
 

@@ -32,6 +32,17 @@ function __fish_git_branches
     | string replace -r '^refs/remotes/(.*)$' '$1\tRemote Branch'
 end
 
+function __fish_git_unique_remote_branches
+    # `git checkout` accepts remote branches without the remote part
+    # if they are unambiguous.
+    # E.g. if only alice has a "frobulate" branch
+    # `git checkout frobulate` is equivalent to `git checkout -b frobulate --track alice/frobulate`.
+    command git for-each-ref --format="%(refname:strip=3)" \
+	--sort="refname:strip=3" \
+	"refs/remotes/*/$match*" "refs/remotes/*/*/**" | \
+	uniq -u
+end
+
 function __fish_git_tags
     command git tag --sort=-creatordate 2>/dev/null
 end
@@ -613,9 +624,10 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_files modif
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command' -a checkout -d 'Checkout and switch to a branch'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_branches)'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_heads)' -d 'Head'
-complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_tags)' -d 'Tag'
+complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -op)' -a '(__fish_git_branches)'
+complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -op)' -a '(__fish_git_heads)' -d 'Head'
+complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -op)' -a '(__fish_git_tags)' -d 'Tag'
+complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -op)' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_files modified deleted)'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'

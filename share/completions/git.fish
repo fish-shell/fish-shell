@@ -1080,9 +1080,10 @@ complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files i
 complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)'
 # reset can either undo changes to versioned modified files,
 # or remove files from the staging area.
-# TODO: Deleted files seem to need a "--" separator.
-complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_files all-staged modified)'
-complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_reflog)' -d 'Reflog'
+# Deleted files seem to need a "--" separator.
+complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -op)' -a '(__fish_git_files all-staged modified)'
+complete -f -c git -n '__fish_git_using_command reset; and contains -- -- (commandline -op)' -a '(__fish_git_files all-staged deleted modified)'
+complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -op)' -a '(__fish_git_reflog)' -d 'Reflog'
 # TODO options
 
 ### revert

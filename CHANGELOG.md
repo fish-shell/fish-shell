@@ -9,7 +9,6 @@ This section is for changes merged to the `major` branch that are not also merge
 - `?` as a glob is deprecated and will be removed in the future. (#4520). This is controlled by the `qmark-noglob` feature flag.
 
 ## Notable non-backward compatible changes
-- `.` command no longer exists -- use `source` (#4294).
 - `read` now uses `-s` as short for `--silent` (à la `bash`); `--shell`'s abbreviation (formerly `-s`) is now `-S` instead (#4490).
 - `set x[1] x[2] a b` is no longer valid syntax (#4236).
 - `for` loop control variables are no longer local to the `for` block (#1935).

@@ -72,31 +72,21 @@ end
 
 function __fish_git_files
     # A function to show various kinds of files git knows about,
-    # by parsing `git status --porcelain`.
+    # now supporting relative paths.
     #
     # This accepts arguments to denote the kind of files:
-    # - added: Staged added files (unstaged adds are untracked)
-    # - copied
     # - deleted
-    # - deleted-staged
     # - ignored
-    # - modified: Files that have been modified (but aren't staged)
-    # - modified-staged: Staged modified files
-    # - renamed
-    # - untracked
-    # and as a convenience "all-staged"
+    # - staged (changes staged but not committed)
+    # - modified: Files that have been modified (but aren't yet staged)
+    # - untracked (not in index)
+    # - staged (all changes pending commit)
     # to get _all_ kinds of staged files.
-
-    # Save the repo root to remove it from the path later.
-    set -l root (command git rev-parse --show-toplevel 2>/dev/null)
-    # Do not continue if not inside a Git repository
-    or return
 
     # Cache the translated descriptions so we don't have to get it
     # once per file.
     # This is slightly slower for < 8 files, but that is fast enough anyway.
     set -l unmerged_desc (_ "Unmerged File")
-    set -l added_desc (_ "Added file")
     set -l modified_desc (_ "Modified file")
     set -l staged_modified_desc (_ "Staged modified file")
     set -l deleted_desc (_ "Deleted file")
@@ -104,103 +94,50 @@ function __fish_git_files
     set -l untracked_desc (_ "Untracked file")
     set -l ignored_desc (_ "Ignored file")
 
-    # git status --porcelain gives us all the info we need, in a format we don't.
-    # The v2 format has better documentation and doesn't use " " to denote anything,
-    # but it's only been added in git 2.11.0, which was released November 2016.
-    # Instead, we use the v1 format, without explicitly specifying it (since that errors out as well).
-    #
-    # Also, we ignore submodules because they aren't useful as arguments (generally),
-    # and they slow things down quite significantly.
-    # E.g. `git reset $submodule` won't do anything (not even print an error).
-    # --ignore-submodules=all was added in git 1.7.2, released July 2010.
-    set -l use_next
-    command git status --porcelain -z --ignore-submodules=all \
-    | while read -lz -d '' line
-        # The entire line is the "from" from a rename.
-        if set -q use_next[1]
-            if contains -- $use_next $argv
-                string replace -f -- "$PWD/" "" "$root/$line"
-                or string replace -- "$root/" ":/" "$root/$line"
-            end
-            set -e use_next[1]
-            continue
-        end
+    # arguments to be passed to all `git ls-files` calls
+    set -l ls_args --directory --no-empty-directory --exclude-standard
 
-        # The format is two characters for status, then a space and then
-        # up to a NUL for the filename.
-        #
-        # Use IFS to handle newlines in filenames.
-        set -l IFS
-        set -l stat (string sub -l 2 -- $line)
-        set -l file (string sub -s 4 -- $line)
-        # Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
-        # This is a bit simplistic but finding the lowest common directory
-        # and then replacing everything else in $PWD with ".." is a bit annoying
-        set file (string replace -f -- "$PWD/" "" "$root/$file"; or string replace -- "$root/" ":/" "$root/$file")
-        set -e IFS
 
-        # The basic status format is "XY", where X is "our" state (meaning the staging area),
-        # and "Y" is "their" state (meaning the work tree).
-        # A " " means it's unmodified.
-        #
-        # Be careful about the ordering here!
-        #
-        # HACK: To allow this to work both with and without '?' globs
-        set -l dq '\\?\\?'
-        if status test-feature qmark-noglob
-            # ? is not a glob
-            set dq '??'
-        end
-        switch "$stat"
-            case DD AU UD UA DU AA UU
-                # Unmerged
-                # TODO: It might be useful to split this up.
-                contains -- unmerged $argv
-                and printf '%s\t%s\n' "$file" $unmerged_desc
-            case 'R ' RM RD
-                # Renamed/Copied
-                # These have the "from" name as the next batch.
-                # TODO: Do we care about the new name?
-                set use_next renamed
-                continue
-            case 'C ' CM CD
-                set use_next copied
-                continue
-            case 'A ' AM AD
-                # Additions are only shown here if they are staged.
-                # Otherwise it's an untracked file.
-                contains -- added $argv; or contains -- all-staged $argv
-                and printf '%s\t%s\n' "$file" $added_desc
-            case '*M'
-                # Modified
-                contains -- modified $argv
-                and printf '%s\t%s\n' "$file" $modified_desc
-            case 'M*'
-                # If the character is first ("M "), then that means it's "our" change,
-                # which means it is staged.
-                # This is useless for many commands - e.g. `checkout` won't do anything with this.
-                # So it needs to be requested explicitly.
-                contains -- modified-staged $argv; or contains -- all-staged $argv
-                and printf '%s\t%s\n' "$file" $staged_modified_desc
-            case '*D'
-                contains -- deleted $argv
-                and printf '%s\t%s\n' "$file" $deleted_desc
-            case 'D*'
-                # TODO: The docs are unclear on this.
-                # There is both X unmodified and Y either M or D ("not updated")
-                # and Y is D and X is unmodified or [MARC] ("deleted in work tree").
-                # For our purposes, we assume this is a staged deletion.
-                contains -- deleted-staged $argv; or contains -- all-staged $argv
-                and printf '%s\t%s\n' "$file" $staged_deleted_desc
-            case "$dq" # a literal '??'
-                # Untracked
-                contains -- untracked $argv
-                and printf '%s\t%s\n' "$file" $untracked_desc
-            case '!!'
-                # Ignored
-                contains -- ignored $argv
-                and printf '%s\t%s\n' "$file" $ignored_desc
-        end
+    # `git ls-files` does not take a general "filter" as an argument, but rather
+    # a list of files or paths. i.e. if user wants to complete ../foo and has typed
+    # in ../f<TAB>, `git ls-files ../f` won't return any results because that isn't
+    # a path in the index. So we need to parse the final token (if any) into a
+    # directory and a file fragment, pass in the directory to `git ls-files`, and then
+    # filter (literally) the results based on the file fragment.
+
+    set dst (commandline -ct | string match -r '^(..$|.*/)')[1]
+    set -l filter (string replace -- "$dst" "" (commandline -ct))
+
+    # target to `git ls-files` when no token is passed before <TAB>
+    if string match -qr -- '^[-.]?$' "$dst"
+        # search top-level directory files by default
+        set dst ":/"
+    end
+
+    # printf "\ndst: \"$dst\"\n" > /dev/tty
+    # printf "filter: \"$filter\"\n" > /dev/tty
+
+    if contains "delete" $argv
+        set ls_args $ls_args -d
+    end
+    if contains "modified" $argv
+        set ls_args $ls_args -m
+    end
+    if contains "unmerged" $argv
+        set ls_args $ls_args -o
+    end
+    if contains "ignored" $argv
+        set ls_args $ls_args -i
+    end
+    if contains "staged" $argv
+        set ls_args $ls_args -s
+    end
+
+    # Needed until #4971 is figured out
+    if string match -- "" $filter
+        git ls-files $ls_args $dst
+    else
+        git ls-files $ls_args $dst | string match -e -- "$filter"
     end
 end
 
@@ -275,6 +212,11 @@ git config -z --get-regexp 'alias\..*' | while read -lz alias command _
 end
 
 function __fish_git_using_command
+    # speed up simple (common) case
+    set -l tokens (commandline -co)
+    if string match -q -- $tokens[1] $argv[1]
+        return 0
+    end
     set -l cmd (__fish_git_needs_command)
     test -z "$cmd"
     and return 1
@@ -1078,8 +1020,8 @@ complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)'
 # reset can either undo changes to versioned modified files,
 # or remove files from the staging area.
 # Deleted files seem to need a "--" separator.
-complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -op)' -a '(__fish_git_files all-staged modified)'
-complete -f -c git -n '__fish_git_using_command reset; and contains -- -- (commandline -op)' -a '(__fish_git_files all-staged deleted modified)'
+complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -op)' -a '(__fish_git_files staged)'
+complete -f -c git -n '__fish_git_using_command reset; and contains -- -- (commandline -op)' -a '(__fish_git_files staged)'
 complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -op)' -a '(__fish_git_reflog)' -d 'Reflog'
 # TODO options
 
@@ -1091,7 +1033,7 @@ complete -f -c git -n '__fish_git_using_command revert' -a '(__fish_git_commits)
 ### rm
 complete -c git -n '__fish_git_needs_command' -a rm -d 'Remove files from the working tree and the index'
 complete -c git -n '__fish_git_using_command rm' -l cached -d 'Unstage files from the index'
-complete -c git -n '__fish_git_using_command rm; and __fish_contains_opt cached' -f -a '(__fish_git_files all-staged)'
+complete -c git -n '__fish_git_using_command rm; and __fish_contains_opt cached' -f -a '(__fish_git_files staged)'
 complete -c git -n '__fish_git_using_command rm' -l ignore-unmatch -d 'Exit with a zero status even if no files matched'
 complete -c git -n '__fish_git_using_command rm' -s r -d 'Allow recursive removal'
 complete -c git -n '__fish_git_using_command rm' -s q -l quiet -d 'Be quiet'

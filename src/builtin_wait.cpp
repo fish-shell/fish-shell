@@ -20,7 +20,7 @@ static job_id_t get_job_id_from_pid(pid_t pid) {
     job_t *j;
     job_iterator_t jobs;
 
-    while (j = jobs.next()) {
+    while ((j = jobs.next()) != nullptr) {
         if (j->pgid == pid) {
             return j->job_id;
         }

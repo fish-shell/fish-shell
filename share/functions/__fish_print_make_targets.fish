@@ -17,7 +17,7 @@ function __fish_print_make_targets --argument-names directory file
     end
 
     set -l bsd_make
-    if make -C $directory -pn >/dev/null 2>/dev/null
+    if make --version 2>/dev/null | string match -q 'GNU*'
         set bsd_make 0
     else
         set bsd_make 1

@@ -56,9 +56,10 @@ set error_msg "wait with -n option: Fail"
 send_line "sleep 3 &; sleep 1 &; sleep 2 &"
 expect_prompt
 send_line "wait -n"
-expect_prompt "Job 3, 'sleep 1 &' has ended" {} unmatched { puts stderr $error_msg }
+expect_prompt "Job 2, 'sleep 1 &' has ended" {} unmatched { puts stderr $error_msg }
 send_line "wait --any"
-expect_prompt "Job 4, 'sleep 2 &' has ended" {} unmatched { puts stderr $error_msg }
+expect_prompt "Job 3, 'sleep 2 &' has ended" {} unmatched { puts stderr $error_msg }
+send_line "wait -n"
 expect_prompt "Job 1, 'sleep 3 &' has ended" {} unmatched { puts stderr $error_msg }
 send_line "jobs"
 expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }

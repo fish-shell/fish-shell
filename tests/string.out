@@ -170,7 +170,7 @@ _a_b_c_
 -
 
 ####################
-# string match "?" a
+# string match "*" a
 a
 
 ####################
@@ -178,11 +178,11 @@ a
 axxb
 
 ####################
-# string match -i "a??B" Axxb
+# string match -i "a**B" Axxb
 Axxb
 
 ####################
-# echo "ok?" | string match "*\?"
+# echo "ok?" | string match "*?"
 ok?
 
 ####################
@@ -272,7 +272,7 @@ missing argument returns 1
 no regexp invert match
 
 ####################
-# string match -v "???" dog can cat diz
+# string match -v "*" dog can cat diz
 no glob invert match
 
 ####################

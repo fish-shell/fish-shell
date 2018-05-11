@@ -26,14 +26,14 @@ function __terlar_git_prompt --description 'Write out the git prompt'
     if not command -sq git
         return 1
     end
-    set -l branch (git rev-parse --abbrev-ref HEAD ^/dev/null)
+    set -l branch (git rev-parse --abbrev-ref HEAD 2>/dev/null)
     if test -z $branch
         return
     end
 
     echo -n '|'
 
-    set -l index (git status --porcelain ^/dev/null|cut -c 1-2|sort -u)
+    set -l index (git status --porcelain 2>/dev/null|cut -c 1-2|sort -u)
 
     if test -z "$index"
         set_color $fish_color_git_clean
@@ -50,6 +50,8 @@ function __terlar_git_prompt --description 'Write out the git prompt'
             set staged 1
         end
 
+        # HACK: To allow matching a literal `??` both with and without `?` globs.
+        set -l dq '??'
         switch $i
             case 'A '
                 set -a gs added
@@ -61,7 +63,7 @@ function __terlar_git_prompt --description 'Write out the git prompt'
                 set -a gs copied
             case 'D ' ' D'
                 set -a gs deleted
-            case '\?\?'
+            case "$dq"
                 set -a gs untracked
             case 'U*' '*U' 'DD' 'AA'
                 set -a gs unmerged

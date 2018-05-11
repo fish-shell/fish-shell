@@ -13,6 +13,10 @@ fish generally works like other shells, like bash or zsh. A few important differ
 
 Detailed user documentation is available by running `help` within fish, and also at <https://fishshell.com/docs/current/index.html>
 
+You can quickly play with fish right in your browser by clicking the button below:
+
+[![Try in browser](https://cdn.rawgit.com/rootnroll/library/assets/try.svg)](https://rootnroll.com/d/fish-shell/)
+
 ## Getting fish
 
 ### macOS

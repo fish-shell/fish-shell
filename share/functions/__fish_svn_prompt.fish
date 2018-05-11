@@ -96,7 +96,7 @@ function __fish_svn_prompt --description "Prompt function for svn"
     end
 
     # make sure that this is a svn repo
-    set -l checkout_info (command svn info ^/dev/null)
+    set -l checkout_info (command svn info 2>/dev/null)
     if [ $status -ne 0 ]
 
         return

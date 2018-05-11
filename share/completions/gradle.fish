@@ -48,7 +48,7 @@ function __cache_or_get_gradle_completion
   set -l hashed_pwd (fish_md5 -s $PWD)
   set -l gradle_cache_file $XDG_CACHE_HOME/gradle-completions/$hashed_pwd
   if not test -f $gradle_cache_file; or command test build.gradle -nt $gradle_cache_file
-    command gradle -q tasks ^/dev/null | string match -r '^[[:alnum:]]+ - .*' | string replace ' - ' \t > $gradle_cache_file
+    command gradle -q tasks 2>/dev/null | string match -r '^[[:alnum:]]+ - .*' | string replace ' - ' \t > $gradle_cache_file
   end
   cat $gradle_cache_file
 end

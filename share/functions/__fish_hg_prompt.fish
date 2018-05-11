@@ -37,7 +37,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
             break
         end
         # Go up one directory
-        set -l dir (string replace -r '[^/]*/?$' '' $dir)
+        set dir (string replace -r '[^/]*/?$' '' $dir)
     end
 
     if test -z "$root"
@@ -45,14 +45,16 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
     end
 
     # Read branch and bookmark
-    set -l branch (cat $root/branch ^/dev/null; or echo default)
-    if set -l bookmark (cat $root/bookmarks.current ^/dev/null)
+    set -l branch (cat $root/branch 2>/dev/null; or echo default)
+    if set -l bookmark (cat $root/bookmarks.current 2>/dev/null)
         set branch "$branch|$bookmark"
     end
 
     echo -n '|'
 
-    set -l repo_status (hg status | string sub -l 2 | sort -u)
+    # For some reason, "-q" still prints the same output, but ~20% faster.
+    # Disabling color and pager is always a good idea.
+    set -l repo_status (hg status -q --color never --pager never | string sub -l 2 | sort -u)
 
     # Show nice color for a clean repo
     if test -z "$repo_status"
@@ -68,6 +70,8 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
         for line in $repo_status
 
             # Add a character for each file status if we have one
+            # HACK: To allow this to work both with and without '?' globs
+            set -l q '?'
             switch $line
                 case 'A '
                     set -a hg_statuses added
@@ -77,7 +81,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
                     set -a hg_statuses copied
                 case 'D ' ' D'
                     set -a hg_statuses deleted
-                case '\? '
+                case "$dq "
                     set -a hg_statuses untracked
                 case 'U*' '*U' 'DD' 'AA'
                     set -a hg_statuses unmerged

@@ -186,7 +186,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind gU upcase-word
 
     bind J end-of-line delete-char
-    bind K 'man (commandline -t) ^/dev/null; or echo -n \a'
+    bind K 'man (commandline -t) 2>/dev/null; or echo -n \a'
 
     bind yy kill-whole-line yank
     bind Y kill-whole-line yank

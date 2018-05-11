@@ -119,6 +119,11 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "index.html"
     end
 
+    set -l wsl 0
+    if uname -a | string match -qr Microsoft
+        set wsl 1
+    end
+
     set -l page_url
     if test -f $__fish_help_dir/index.html
         # Help is installed, use it
@@ -150,8 +155,10 @@ function help --description 'Show help for the fish shell'
         end
     end
 
+    if test $wsl -eq 1
+        cmd.exe /c "start $page_url"
     # If browser is known to be graphical, put into background
-    if contains -- $fish_browser[1] $graphical_browsers
+    else if contains -- $fish_browser[1] $graphical_browsers
         switch $fish_browser[1]
             case 'htmlview' 'x-www-browser'
                 printf (_ 'help: Help is being displayed in your default browser.\n')

@@ -25,6 +25,7 @@ AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
 AC_SUBST(WCHAR_T_BITS)
 AC_SUBST(EXTRA_PCRE2)
+AC_SUBST(HAVE_BROKEN_WCWIDTH)
 
 #
 # If needed, run autoconf to regenerate the configure file
@@ -598,6 +599,20 @@ AC_ARG_WITH(
   [included_pcre2=$withval],
   [included_pcre2=auto]
 )
+
+HAVE_BROKEN_WCWIDTH=
+AC_ARG_ENABLE(
+    [wcwidth],
+    AS_HELP_STRING(
+        [--disable-internal-wcwidth],
+        [use system wcwidth instead of the bundled version]
+        ))
+
+if test "x$enable_wcwidth" != "xno"; then
+      AC_DEFINE([HAVE_BROKEN_WCWIDTH], [1], [banana])
+else
+      AC_DEFINE([HAVE_BROKEN_WCWIDTH], [0], [banana])
+fi
 
 if test "x$included_pcre2" != "xyes"; then
 

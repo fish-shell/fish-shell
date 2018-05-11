@@ -94,7 +94,6 @@ Some characters can not be written directly on the command line. For these chara
 - '<code>\\*</code>' escapes the star character
 - '<code>\\?</code>' escapes the question mark character
 - '<code>\\~</code>' escapes the tilde character
-- '<code>\\%</code>' escapes the percent character
 - '<code>\\#</code>' escapes the hash character
 - '<code>\\(</code>' escapes the left parenthesis character
 - '<code>\\)</code>' escapes the right parenthesis character
@@ -143,11 +142,11 @@ An example of a file redirection is `echo hello > output.txt`, which directs the
 
 - To read standard input from a file, write `<SOURCE_FILE`
 - To write standard output to a file, write `>DESTINATION`
-- To write standard error to a file, write `^DESTINATION`
+- To write standard error to a file, write `2>DESTINATION`
 - To append standard output to a file, write `>>DESTINATION_FILE`
-- To append standard error to a file, write `^^DESTINATION_FILE`
+- To append standard error to a file, write `2>>DESTINATION_FILE`
 
-- To not overwrite ("clobber") an existing file, write '>?DESTINATION' or '^?DESTINATION'
+- To not overwrite ("clobber") an existing file, write '>?DESTINATION' or '2>?DESTINATION'
 
 `DESTINATION` can be one of the following:
 
@@ -159,7 +158,7 @@ An example of a file redirection is `echo hello > output.txt`, which directs the
 
 Example:
 
-To redirect both standard output and standard error to the file 'all_output.txt', you can write `echo Hello > all_output.txt ^&1`.
+To redirect both standard output and standard error to the file 'all_output.txt', you can write `echo Hello > all_output.txt 2>&1`.
 
 Any file descriptor can be redirected in an arbitrary way by prefixing the redirection with the file descriptor.
 
@@ -167,7 +166,7 @@ Any file descriptor can be redirected in an arbitrary way by prefixing the redir
 - To redirect output of FD N, write `N>DESTINATION`
 - To append the output of FD N to a file, write `N>>DESTINATION_FILE`
 
-Example: `echo Hello 2>output.stderr` and `echo Hello ^output.stderr` are equivalent, and write the standard error (file descriptor 2) of the target program to `output.stderr`.
+Example: `echo Hello 2>output.stderr` and `echo Hello 2>output.stderr` are equivalent, and write the standard error (file descriptor 2) of the target program to `output.stderr`.
 
 \subsection piping Piping
 
@@ -332,8 +331,6 @@ These are the general purpose tab completions that `fish` provides:
 - Completion of usernames for tilde expansion.
 
 - Completion of filenames, even on strings with wildcards such as '`*`', '`**`' and '`?`'.
-
-- Completion of job ID, job name and process names for <a href="#expand-process">process expansion</a>.
 
 `fish` provides a large number of program specific completions. Most of these completions are simple options like the `-l` option for `ls`, but some are more advanced. The latter include:
 
@@ -671,31 +668,6 @@ Note that variables can be used as indices for expansion of variables, but not c
 \subsection expand-home Home directory expansion
 
 The `~` (tilde) character at the beginning of a parameter, followed by a username, is expanded into the home directory of the specified user. A lone `~`, or a `~` followed by a slash, is expanded into the home directory of the process owner.
-
-
-\subsection expand-process Process expansion
-
-The `%` (percent) character at the beginning of a parameter followed by a string is expanded into a process ID (PID). The following expansions are performed:
-
-- If the string is the entire word `self`, the shell's PID is the result.
-
-- Otherwise, if the string is the entire word `last`, the last job's PID is the result.
-
-- Otherwise, if the string is the ID of a job, the result is the process group ID of the job.
-
-- Otherwise, if any child processes match the specified string, their PIDs are the result of the expansion.
-
-- Otherwise, if any processes owned by the user match the specified string, their PIDs are the result of the expansion.
-
-- If none of these matches apply, an error is produced.
-
-This form of expansion is useful for commands like kill and fg, which take process IDs as arguments.
-
-Example:
-
-`fg %%ema` will search for a process whose command line begins with the letters 'ema', such as emacs, and if found, put it in the foreground.
-
-`kill -s SIGINT %3` will send the SIGINT signal to the job with job ID 3.
 
 
 \subsection  combine Combining different expansions
@@ -1270,11 +1242,34 @@ end
 If you want to run a set of commands when `fish` exits, use an <a href='#event'>event handler</a> that is triggered by the exit of the shell:
 
 \fish
-function on_exit --on-process %self
+function on_exit --on-process $fish_pid
     echo fish is now exiting
 end
 \endfish
 
+\section featureflags Future feature flags
+
+Feature flags are how fish stages changes that might break scripts. Breaking changes are introduced as opt-in, in a few releases they become opt-out, and eventually the old behavior is removed.
+
+You can see the current list of features via `status features`:
+
+\fish
+> status features
+stderr-nocaret  on     3.0      ^ no longer redirects stderr
+qmark-noglob    off    3.0      ? no longer globs
+\endfish
+
+There are two breaking changes in fish 3.0: caret `^` no longer redirects stderr, and question mark `?` is no longer a glob. These changes are off by default. They can be enabled on a per session basis:
+
+\fish
+> fish --features qmark-noglob,stderr-nocaret
+\endfish
+
+or opted into globally for a user:
+
+\fish
+> set -U fish_features stderr-nocaret qmark-noglob
+\endfish
 
 \section other Other features
 
@@ -1297,14 +1292,14 @@ To customize the syntax highlighting, you can set the environment variables list
 
 \subsection title Programmable title
 
-When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the `fish_title` function. The `fish_title` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The $_ environment variable will always contain the name of the job to be put into the foreground (Or 'fish' if control is returning to the shell) when the `fish_prompt` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
+When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the `fish_title` function. The `fish_title` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The `status current-command` builtin will always return the name of the job to be put into the foreground (or 'fish' if control is returning to the shell) when the `fish_prompt` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
 
 Examples:
 The default `fish` title is
 
 \fish
 function fish_title
-    echo $_ ' '
+    echo (status current-command) ' '
     pwd
 end
 \endfish
@@ -1358,11 +1353,6 @@ Fish includes a built in debugging facility. The debugger allows you to stop exe
 To start a debug session simply run the builtin command `breakpoint` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the `kill` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.
 
 Note: At the moment the debug prompt is identical to your normal fish prompt. This can make it hard to recognize that you've entered a debug session. <a hread="https://github.com/fish-shell/fish-shell/issues/1310">Issue 1310</a> is open to improve this.
-
-
-\section issues Common issues with fish
-
-If you install fish in your home directory, fish will not work correctly for any other user than yourself. This is because fish needs its initialization files to function properly. To solve this problem, either copy the initialization files to each fish users home directory, or install them in `/etc`.
 
 
 \section more-help Further help and development

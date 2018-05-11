@@ -4,10 +4,9 @@ function fish_clipboard_paste
         set data (pbpaste)
     else if type -q xsel
         # Return if `xsel` failed.
-        # That way any xsel error is printed (to show e.g. a non-functioning X connection),
-        # but we don't print the redundant (and overly verbose for this) commandline error.
+        # That way we don't print the redundant (and overly verbose for this) commandline error.
         # Also require non-empty contents to not clear the buffer.
-        if not set data (xsel --clipboard)
+        if not set data (xsel --clipboard 2>/dev/null)
             return 1
         end
     end

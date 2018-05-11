@@ -17,7 +17,7 @@ function __fish_print_make_targets --argument-names directory file
     end
 
     set -l bsd_make
-    if make -C $directory -pn >/dev/null ^/dev/null
+    if make -C $directory -pn >/dev/null 2>/dev/null
         set bsd_make 0
     else
         set bsd_make 1
@@ -25,9 +25,9 @@ function __fish_print_make_targets --argument-names directory file
 
     if test "$bsd_make" = 0
         # https://stackoverflow.com/a/26339924
-        make -C "$directory" -f "$file" -pRrq : ^/dev/null | awk -v RS= -F: '/^# Files/,/^# Finished Make data base/ {if ($1 !~ "^[#.]") {print $1}}' ^/dev/null
+        make -C "$directory" -f "$file" -pRrq : 2>/dev/null | awk -v RS= -F: '/^# Files/,/^# Finished Make data base/ {if ($1 !~ "^[#.]") {print $1}}' 2>/dev/null
     else
-        make -C "$directory" -f "$file" -d g1 -rn >/dev/null ^| awk -F, '/^#\*\*\* Input graph:/,/^$/ {if ($1 !~ "^#... ") {gsub(/# /,"",$1); print $1}}' ^/dev/null
+        make -C "$directory" -f "$file" -d g1 -rn >/dev/null 2>| awk -F, '/^#\*\*\* Input graph:/,/^$/ {if ($1 !~ "^#... ") {gsub(/# /,"",$1); print $1}}' 2>/dev/null
     end
 end
 

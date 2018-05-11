@@ -17,3 +17,9 @@ $argle bargle: invalid var name
 
 ####################
 # Setting local scope when no local scope of the var uses the closest scope
+
+####################
+# Exporting works
+
+####################
+# if/for/while scope

@@ -21,7 +21,7 @@ function __fish_print_packages
     if type -q -f apt-cache
         # Do not generate the cache as apparently sometimes this is slow.
         # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
-        apt-cache --no-generate pkgnames (commandline -ct) ^/dev/null | sed -e 's/$/'\t$package'/'
+        apt-cache --no-generate pkgnames (commandline -ct) 2>/dev/null | sed -e 's/$/'\t$package'/'
         return
     end
 

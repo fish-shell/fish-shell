@@ -3,7 +3,7 @@ sleep 5 &
 sleep 5 &
 jobs -c
 jobs -q; echo $status
-bg -23 1 ^/dev/null
+bg -23 1 2>/dev/null
 or echo bg: invalid option -23 >&2
 fg 3
 bg 3

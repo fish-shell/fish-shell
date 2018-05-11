@@ -19,13 +19,13 @@ The following options are available:
 
 If the expression is successfully evaluated and doesn't over/underflow or return NaN the return `status` is zero (success) else one.
 
-\subsection math-syntax
+\subsection math-syntax Syntax
 
 `math` knows some operators, constants, functions and can (obviously) read numbers.
 
 For numbers, `.` is always the radix character regardless of locale - `2.5`, not `2,5`. Scientific notation (`10e5`) is also available.
 
-\subsection math-operators
+\subsection math-operators Operators
 
 `math` knows the following operators:
 
@@ -41,7 +41,7 @@ For numbers, `.` is always the radix character regardless of locale - `2.5`, not
 
 They are all used in an infix manner - `5 + 2`, not `+ 5 2`.
 
-\subsection math-constants
+\subsection math-constants Constants
 
 `math` knows the following constants:
 
@@ -50,7 +50,7 @@ They are all used in an infix manner - `5 + 2`, not `+ 5 2`.
 
 Use them without a leading `$`.
 
-\subsection math-functions
+\subsection math-functions Functions
 
 `math` supports the following functions:
 

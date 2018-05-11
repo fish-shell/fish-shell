@@ -20,12 +20,6 @@ extern bool curses_initialized;
 /// that seems logical.
 #define ARRAY_SEP (wchar_t)0x1e
 
-/// String containing the character for separating two array elements.
-#define ARRAY_SEP_STR L"\x1e"
-
-/// Value denoting a null string.
-#define ENV_NULL L"\x1d"
-
 // Flags that may be passed as the 'mode' in env_set / env_get.
 enum {
     /// Default mode. Used with `env_get()` to indicate the caller doesn't care what scope the var
@@ -50,7 +44,7 @@ enum {
 typedef uint32_t env_mode_flags_t;
 
 /// Return values for `env_set()`.
-enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID };
+enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID, ENV_NOT_FOUND };
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
@@ -121,9 +115,6 @@ class env_var_t {
     bool operator==(const env_var_t &var) const { return vals == var.vals; }
     bool operator!=(const env_var_t &var) const { return vals != var.vals; }
 };
-
-/// This is used to convert a serialized env_var_t back into a list.
-wcstring_list_t decode_serialized(const wcstring &s);
 
 /// Gets the variable with the specified name, or none() if it does not exist.
 maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);

@@ -1,3 +1,3 @@
 if command -sq pipenv
-    pipenv --completion | source
+    pipenv --completion 2>/dev/null | source
 end

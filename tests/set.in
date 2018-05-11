@@ -54,3 +54,19 @@ begin
     set -l -a var6 mno
     set --show var6
 end
+
+logmsg Exporting works
+set -x TESTVAR0
+set -x TESTVAR1 a
+set -x TESTVAR2 a b
+env | grep TESTVAR | cat -v
+
+logmsg if/for/while scope
+function test_ifforwhile_scope
+    if set -l ifvar1 (true && echo val1) ; end
+    if set -l ifvar2 (echo val2 && false) ; end
+    if false ; else if set -l ifvar3 (echo val3 && false) ; end
+    while set -l whilevar1 (echo val3 ; false) ; end
+    set --show ifvar1 ifvar2 ifvar3 whilevar1
+end
+test_ifforwhile_scope

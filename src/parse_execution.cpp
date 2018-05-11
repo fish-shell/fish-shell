@@ -226,10 +226,7 @@ bool parse_execution_context_t::job_is_simple_block(tnode_t<g::job> job_node) co
 }
 
 parse_execution_result_t parse_execution_context_t::run_if_statement(
-    tnode_t<g::if_statement> statement) {
-    // Push an if block.
-    if_block_t *ib = parser->push_block<if_block_t>();
-
+    tnode_t<g::if_statement> statement, const block_t *associated_block) {
     parse_execution_result_t result = parse_execution_success;
 
     // We have a sequence of if clauses, with a final else, resulting in a single job list that we
@@ -238,7 +235,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
     tnode_t<g::if_clause> if_clause = statement.child<0>();
     tnode_t<g::else_clause> else_clause = statement.child<1>();
     for (;;) {
-        if (should_cancel_execution(ib)) {
+        if (should_cancel_execution(associated_block)) {
             result = parse_execution_cancelled;
             break;
         }
@@ -249,9 +246,9 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
 
         // Check the condition and the tail. We treat parse_execution_errored here as failure, in
         // accordance with historic behavior.
-        parse_execution_result_t cond_ret = run_job_conjunction(condition_head, ib);
+        parse_execution_result_t cond_ret = run_job_conjunction(condition_head, associated_block);
         if (cond_ret == parse_execution_success) {
-            cond_ret = run_job_list(condition_boolean_tail, ib);
+            cond_ret = run_job_list(condition_boolean_tail, associated_block);
         }
         const bool take_branch =
             (cond_ret == parse_execution_success) && proc_get_last_status() == EXIT_SUCCESS;
@@ -284,19 +281,21 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
 
     // Execute any job list we got.
     if (job_list_to_execute) {
+        if_block_t *ib = parser->push_block<if_block_t>();
         run_job_list(job_list_to_execute, ib);
+        if (should_cancel_execution(ib)) {
+            result = parse_execution_cancelled;
+        }
+        parser->pop_block(ib);
     } else {
         // No job list means no sucessful conditions, so return 0 (issue #1443).
         proc_set_last_status(STATUS_CMD_OK);
     }
 
     // It's possible there's a last-minute cancellation (issue #1297).
-    if (should_cancel_execution(ib)) {
+    if (should_cancel_execution(associated_block)) {
         result = parse_execution_cancelled;
     }
-
-    // Done
-    parser->pop_block(ib);
 
     // Otherwise, take the exit status of the job list. Reversal of issue #1061.
     return result;
@@ -337,7 +336,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
 }
 
 parse_execution_result_t parse_execution_context_t::run_block_statement(
-    tnode_t<g::block_statement> statement) {
+    tnode_t<g::block_statement> statement, const block_t *associated_block) {
     tnode_t<g::block_header> bheader = statement.child<0>();
     tnode_t<g::job_list> contents = statement.child<1>();
 
@@ -345,7 +344,7 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(
     if (auto header = bheader.try_get_child<g::for_header, 0>()) {
         ret = run_for_statement(header, contents);
     } else if (auto header = bheader.try_get_child<g::while_header, 0>()) {
-        ret = run_while_statement(header, contents);
+        ret = run_while_statement(header, contents, associated_block);
     } else if (auto header = bheader.try_get_child<g::function_header, 0>()) {
         ret = run_function_statement(header, contents);
     } else if (auto header = bheader.try_get_child<g::begin_header, 0>()) {
@@ -520,10 +519,8 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
 }
 
 parse_execution_result_t parse_execution_context_t::run_while_statement(
-    tnode_t<grammar::while_header> header, tnode_t<grammar::job_list> contents) {
-    // Push a while block.
-    while_block_t *wb = parser->push_block<while_block_t>();
-
+    tnode_t<grammar::while_header> header, tnode_t<grammar::job_list> contents,
+    const block_t *associated_block) {
     parse_execution_result_t ret = parse_execution_success;
 
     // The conditions of the while loop.
@@ -533,9 +530,10 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     // Run while the condition is true.
     for (;;) {
         // Check the condition.
-        parse_execution_result_t cond_ret = this->run_job_conjunction(condition_head, wb);
+        parse_execution_result_t cond_ret =
+            this->run_job_conjunction(condition_head, associated_block);
         if (cond_ret == parse_execution_success) {
-            cond_ret = run_job_list(condition_boolean_tail, wb);
+            cond_ret = run_job_list(condition_boolean_tail, associated_block);
         }
 
         // We only continue on successful execution and EXIT_SUCCESS.
@@ -544,21 +542,23 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         }
 
         // Check cancellation.
-        if (this->should_cancel_execution(wb)) {
+        if (this->should_cancel_execution(associated_block)) {
             ret = parse_execution_cancelled;
             break;
         }
 
-        // The block ought to go inside the loop (see issue #1212).
+        // Push a while block and then check its cancellation reason.
+        while_block_t *wb = parser->push_block<while_block_t>();
         this->run_job_list(contents, wb);
+        auto loop_status = wb->loop_status;
+        auto cancel_reason = this->cancellation_reason(wb);
+        parser->pop_block(wb);
 
-        if (this->cancellation_reason(wb) == execution_cancellation_loop_control) {
+        if (cancel_reason == execution_cancellation_loop_control) {
             // Handle break or continue.
-            if (wb->loop_status == LOOP_CONTINUE) {
-                // Reset the loop state.
-                wb->loop_status = LOOP_NORMAL;
+            if (loop_status == LOOP_CONTINUE) {
                 continue;
-            } else if (wb->loop_status == LOOP_BREAK) {
+            } else if (loop_status == LOOP_BREAK) {
                 break;
             }
         }
@@ -569,9 +569,6 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             break;
         }
     }
-
-    // Done
-    parser->pop_block(wb);
     return ret;
 }
 
@@ -1092,11 +1089,12 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         assert(specific_statement_type_is_redirectable_block(specific_statement));
         switch (specific_statement.type) {
             case symbol_block_statement: {
-                result = this->run_block_statement({&tree(), &specific_statement});
+                result =
+                    this->run_block_statement({&tree(), &specific_statement}, associated_block);
                 break;
             }
             case symbol_if_statement: {
-                result = this->run_if_statement({&tree(), &specific_statement});
+                result = this->run_if_statement({&tree(), &specific_statement}, associated_block);
                 break;
             }
             case symbol_switch_statement: {
@@ -1265,9 +1263,9 @@ parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::stateme
     scoped_push<io_chain_t> block_io_push(&block_io, io);
     enum parse_execution_result_t status = parse_execution_success;
     if (auto block = statement.try_get_child<g::block_statement, 0>()) {
-        status = this->run_block_statement(block);
+        status = this->run_block_statement(block, associated_block);
     } else if (auto ifstat = statement.try_get_child<g::if_statement, 0>()) {
-        status = this->run_if_statement(ifstat);
+        status = this->run_if_statement(ifstat, associated_block);
     } else if (auto switchstat = statement.try_get_child<g::switch_statement, 0>()) {
         status = this->run_switch_statement(switchstat);
     } else {

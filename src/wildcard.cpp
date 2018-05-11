@@ -19,6 +19,7 @@
 #include "complete.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "future_feature_flags.h"
 #include "reader.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -61,6 +62,7 @@ static size_t wildcard_find(const wchar_t *wc) {
 /// Implementation of wildcard_has. Needs to take the length to handle embedded nulls (issue #1631).
 static bool wildcard_has_impl(const wchar_t *str, size_t len, bool internal) {
     assert(str != NULL);
+    bool qmark_is_wild = !feature_test(features_t::qmark_noglob);
     const wchar_t *end = str + len;
     if (internal) {
         for (; str < end; str++) {
@@ -70,7 +72,7 @@ static bool wildcard_has_impl(const wchar_t *str, size_t len, bool internal) {
     } else {
         wchar_t prev = 0;
         for (; str < end; str++) {
-            if (((*str == L'*') || (*str == L'?')) && (prev != L'\\')) return true;
+            if (((*str == L'*') || (*str == L'?' && qmark_is_wild)) && (prev != L'\\')) return true;
             prev = *str;
         }
     }
@@ -101,7 +103,7 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
         // The string is '.' or '..'. Return true if the wildcard exactly matches.
         return wcscmp(str, wc) ? fuzzy_match_none : fuzzy_match_exact;
     }
-    
+
     // Near Linear implementation as proposed here https://research.swtch.com/glob.
     const wchar_t *wc_x = wc;
     const wchar_t *str_x = str;
@@ -422,6 +424,10 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
 
     const bool executables_only = expand_flags & EXECUTABLES_ONLY;
     if (executables_only && (!is_executable || waccess(filepath, X_OK) != 0)) {
+        return false;
+    }
+
+    if (is_windows_subsystem_for_linux() && string_suffixes_string_case_insensitive(L".dll", filename)) {
         return false;
     }
 

@@ -7,7 +7,7 @@ function __fish_dconf_keys
     # because it allows us to complete non-incrementally
     # i.e. to get the keys directly, without going through
     # `dconf list /`, `dconf list /org/` and so on.
-    dconf dump / ^/dev/null | while read -l line
+    dconf dump / 2>/dev/null | while read -l line
         if string match -q "[*]" -- $line
             # New directory - just save it for the keys
             set dir /(string trim -c "[]" -- $line)

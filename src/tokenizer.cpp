@@ -13,6 +13,7 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "future_feature_flags.h"
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -33,6 +34,9 @@ tokenizer_error *TOK_EXPECTED_BCLOSE_FOUND_PCLOSE = new tokenizer_error((L"Unexp
 const wchar_t *tokenizer_error::Message() const {
     return _(_message);
 }
+
+// Whether carets redirect stderr.
+static bool caret_redirs() { return !feature_test(features_t::stderr_nocaret); }
 
 /// Return an error token and mark that we no longer have a next token.
 tok_t tokenizer_t::call_error(tokenizer_error *error_type, const wchar_t *token_start,
@@ -90,7 +94,7 @@ static bool tok_is_string_character(wchar_t c, bool is_first) {
         }
         case L'^': {
             // Conditional separator.
-            return !is_first;
+            return !caret_redirs() || !is_first;
         }
         default: { return true; }
     }
@@ -218,8 +222,7 @@ tok_t tokenizer_t::read_string() {
                 }
                 break;
             }
-        }
-        else if (mode == tok_mode::regular_text && !tok_is_string_character(c, is_first)) {
+        } else if (mode == tok_mode::regular_text && !tok_is_string_character(c, is_first)) {
             break;
         }
 
@@ -314,7 +317,11 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
                 break;
             }
             case L'^': {
-                result.fd = STDERR_FILENO;
+                if (caret_redirs()) {
+                    result.fd = STDERR_FILENO;
+                } else {
+                    errored = true;
+                }
                 break;
             }
             default: {
@@ -327,7 +334,7 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
     // Either way we should have ended on the redirection character itself like '>'.
     // Don't allow an fd with a caret redirection - see #1873
     wchar_t redirect_char = buff[idx++];  // note increment of idx
-    if (redirect_char == L'>' || (redirect_char == L'^' && idx == 1)) {
+    if (redirect_char == L'>' || (redirect_char == L'^' && idx == 1 && caret_redirs())) {
         result.redirection_mode = redirection_type_t::overwrite;
         if (buff[idx] == redirect_char) {
             // Doubled up like ^^ or >>. That means append.
@@ -421,10 +428,12 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
     }
 
     // Consume non-newline whitespace. If we get an escaped newline, mark it and continue past it.
+    bool preceding_escaped_nl = false;
     for (;;) {
         if (this->buff[0] == L'\\' && this->buff[1] == L'\n') {
             this->buff += 2;
             this->continue_line_after_comment = true;
+            preceding_escaped_nl = true;
         } else if (iswspace_not_nl(this->buff[0])) {
             this->buff++;
         } else {
@@ -447,6 +456,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             result.type = TOK_COMMENT;
             result.offset = comment_start - this->start;
             result.length = comment_len;
+            result.preceding_escaped_nl = preceding_escaped_nl;
             return result;
         }
         while (iswspace_not_nl(this->buff[0])) this->buff++;
@@ -505,8 +515,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             break;
         }
         case L'>':
-        case L'<':
-        case L'^': {
+        case L'<': {
             // There's some duplication with the code in the default case below. The key difference
             // here is that we must never parse these as a string; a failed redirection is an error!
             auto redir_or_pipe = read_redirection_or_fd_pipe(this->buff);
@@ -523,7 +532,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             // Maybe a redirection like '2>&1', maybe a pipe like 2>|, maybe just a string.
             const wchar_t *error_location = this->buff;
             maybe_t<parsed_redir_or_pipe_t> redir_or_pipe;
-            if (iswdigit(*this->buff)) {
+            if (iswdigit(*this->buff) || (*this->buff == L'^' && caret_redirs())) {
                 redir_or_pipe = read_redirection_or_fd_pipe(this->buff);
             }
 
@@ -545,6 +554,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             break;
         }
     }
+    result.preceding_escaped_nl = preceding_escaped_nl;
     return result;
 }
 

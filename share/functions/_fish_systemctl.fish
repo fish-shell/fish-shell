@@ -15,7 +15,7 @@ function _fish_systemctl --description 'Call systemctl with some options from th
     set -l args $argv
     set -l cmdline (commandline -opc) (commandline -ct)
     set -e cmdline[1]
-    argparse $opts -- $cmdline ^/dev/null
+    argparse $opts -- $cmdline 2>/dev/null
     or return
 
     # If no subcommand has been given, return so this can be used as a condition.

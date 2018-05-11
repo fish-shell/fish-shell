@@ -15,6 +15,8 @@ Each option that is seen in the ARG list will result in a var name of the form `
 
 For example `_flag_h` and `_flag_help` if `-h` or `--help` is seen. The var will be set with local scope (i.e., as if the script had done `set -l _flag_X`). If the flag is a boolean (that is, does not have an associated value) the values are the short and long flags seen. If the option is not a boolean flag the values will be zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag var will not be set.
 
+\subsection argparse-options Options
+
 The following `argparse` options are available. They must appear before all OPTION_SPECs:
 
 - `-n` or `--name` is the command name to insert into any error messages. If you don't provide this value `argparse` will be used.
@@ -40,7 +42,7 @@ or return
 
 If `$argv` is empty then there is nothing to parse and `argparse` returns zero to indicate success. If `$argv` is not empty then it is checked for flags `-h`, `--help`, `-n` and `--name`. If they are found they are removed from the arguments and local variables (more on this <a href="argparse-local-variables">below</a>) are set so the script can determine which options were seen. Assuming `$argv` doesn't have any errors, such as a missing mandatory value for an option, then `argparse` exits with status zero. Otherwise it writes appropriate error messages to stderr and exits with a status of one.
 
-Not including a `--` argument is an error condition. You do not have to include any arguments after the `--` but you must include the `--`. For example, this is acceptable:
+The `--` argument is required. You do not have to include any arguments after the `--` but you must include the `--`. For example, this is acceptable:
 
 \fish
 set -l argv
@@ -72,7 +74,7 @@ Each option specification is a string composed of
 
 - `=?` it takes an optional value and only the last instance of the flag is saved, else
 
-- `=+` if it requires a value each instance of the flag is saved.
+- `=+` if it requires a value and each instance of the flag is saved.
 
 - Optionally a `!` followed by fish script to validate the value. Typically this will be a function to run. If the return status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on <a href="#arparse-validation">Flag Value Validation</a> for more information.
 
@@ -114,7 +116,7 @@ Some OPTION_SPEC examples:
 
 - `x=`, `x=?`, and `x=+` are similar to the n/name examples above but there is no long flag alternative to the short flag `-x`.
 
-- `x-` is not valid since there is no long flag name and therefore the short flag, `-x`, has to be usable. This is obviously true whether or not the specification also includes one of `:`, `::`, `+`.
+- `x-` is not valid since there is no long flag name and therefore the short flag, `-x`, has to be usable.
 
 - `#-max` means that flags matching the regex "^--?\d+$" are valid. When seen they are assigned to the variable `_flag_max`. This allows any valid positive or negative integer to be specified by prefixing it with a single "-". Many commands support this idiom. For example `head -3 /a/file` to emit only the first three lines of /a/file.
 
@@ -122,7 +124,7 @@ Some OPTION_SPEC examples:
 
 After parsing the arguments the `argv` var is set with local scope to any values not already consumed during flag processing. If there are not unbound values the var is set but `count $argv` will be zero.
 
-If an error occurs during argparse processing it will exit with a non-zero status and appropriate error messages are written to stderr.
+If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.
 
 \subsection argparse-notes Notes
 

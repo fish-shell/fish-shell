@@ -105,12 +105,12 @@ if not contains -- $__fish_data_dir/completions $fish_complete_path
     set fish_complete_path $fish_complete_path $__fish_data_dir/completions
 end
 
-# : is a sh/bash-compatibility function, but because its name can cause problems on many
-# systems, it is saved as colon.fish and not :.fish, which means that it's never autoloaded
-# since the name of the file and the name of the function differ. Force evaluation of colon.fish
-# as a function by simply trying to  load the non-existent function colon, which will pull in
-# colon.fish and lead to `:` being recognized. Sourced up here so it can be used later safely.
-type -q colon; or true # just to reset $status
+# This cannot be in an autoload-file because `:.fish` is an invalid filename on windows.
+function :
+    # no-op function for compatibility with sh, bash, and others.
+    # Often used to insert a comment into a chain of commands without having
+	# it eat up the remainder of the line, handy in Makefiles.
+end
 
 #
 # This is a Solaris-specific test to modify the PATH so that
@@ -126,59 +126,7 @@ if test -d /usr/xpg4/bin
     end
 end
 
-# OS X-ism: Load the path files out of /etc/paths and /etc/paths.d/*
-set -g __fish_tmp_path $PATH
-function __fish_load_path_helper_paths
-    # We want to rearrange the path to reflect this order. Delete that path component if it exists and then prepend it.
-    # Since we are prepending but want to preserve the order of the input file, we reverse the array, append, and then reverse it again
-    set __fish_tmp_path $__fish_tmp_path[-1..1]
-    while read -l new_path_comp
-        if test -d $new_path_comp
-            set -l where (contains -i -- $new_path_comp $__fish_tmp_path)
-            and set -e __fish_tmp_path[$where]
-            set __fish_tmp_path $new_path_comp $__fish_tmp_path
-        end
-    end
-    set __fish_tmp_path $__fish_tmp_path[-1..1]
-end
-test -r /etc/paths
-and __fish_load_path_helper_paths </etc/paths
-for pathfile in /etc/paths.d/*
-    __fish_load_path_helper_paths <$pathfile
-end
-set -xg PATH $__fish_tmp_path
-set -e __fish_tmp_path
-functions -e __fish_load_path_helper_paths
-
-# OS X-ism: Load the manpath files out of /etc/manpaths and /etc/manpaths.d/*
-if set -q MANPATH
-    set -g __fish_tmp_manpath $MANPATH
-    function __fish_load_manpath_helper_manpaths
-        # We want to rearrange the manpath to reflect this order. Delete that manpath component if it exists and then prepend it.
-        # Since we are prepending but want to preserve the order of the input file, we reverse the array, append, and then reverse it again
-        set __fish_tmp_manpath $__fish_tmp_manpath[-1..1]
-        while read -l new_manpath_comp
-            if test -d $new_manpath_comp
-                set -l where (contains -i -- $new_manpath_comp $__fish_tmp_manpath)
-                and set -e __fish_tmp_manpath[$where]
-                set __fish_tmp_manpath $new_manpath_comp $__fish_tmp_manpath
-            end
-        end
-        set __fish_tmp_manpath $__fish_tmp_manpath[-1..1]
-    end
-    test -r /etc/manpaths
-    and __fish_load_manpath_helper_manpaths </etc/manpaths
-    for manpathfile in /etc/manpaths.d/*
-        __fish_load_manpath_helper_manpaths <$manpathfile
-    end
-    set -xg MANPATH $__fish_tmp_manpath
-    set -e __fish_tmp_manpath
-    functions -e __fish_load_manpath_helper_manpaths
-end
-
-
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
-# Invoke it immediately to apply the current value of fish_user_path
 function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
     set -l local_path $PATH
 
@@ -202,8 +150,6 @@ function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" -
     set -xg PATH $local_path
 end
 
-__fish_reconstruct_path
-
 #
 # Launch debugger on SIGTRAP
 #
@@ -225,6 +171,18 @@ end
 # C/POSIX locale causes too many problems. Do this before reading the snippets because they might be
 # in UTF-8 (with non-ASCII characters).
 __fish_set_locale
+
+# "." command for compatibility with old fish versions.
+function . --description 'Evaluate contents of file (deprecated, see "source")' --no-scope-shadowing
+    if test (count $argv) -eq 0
+        # Uses tty directly, as isatty depends on "."
+        and tty 0>&0 >/dev/null
+        echo "source: '.' command is deprecated, and doesn't work with STDIN anymore. Did you mean 'source' or './'?" >&2
+        return 1
+    else
+        source $argv
+    end
+end
 
 # As last part of initialization, source the conf directories.
 # Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename".
@@ -254,6 +212,41 @@ if not set -q __fish_init_2_3_0
     set -U __fish_init_2_3_0
 end
 
+# macOS-ism: Emulate calling path_helper.
+if command -sq /usr/libexec/path_helper
+    # Adapt construct_path from the macOS /usr/libexec/path_helper
+    # executable for fish; see
+    # https://opensource.apple.com/source/shell_cmds/shell_cmds-203/path_helper/path_helper.c.auto.html .
+    function __fish_macos_set_env -d "set an environment variable like path_helper does (macOS only)"
+        set -l result
+
+        for path_file in $argv[2] $argv[3]/*
+            if test -f $path_file
+                while read -la entry
+                    if not contains $entry $result
+                        set result $result $entry
+                    end
+                end <$path_file
+            end
+        end
+
+        for entry in $$argv[1]
+            if not contains $entry $result
+                set result $result $entry
+            end
+        end
+
+        set -xg $argv[1] $result
+    end
+
+    __fish_macos_set_env 'PATH' '/etc/paths' '/etc/paths.d'
+    if [ -n "$MANPATH" ]
+        __fish_macos_set_env 'MANPATH' '/etc/manpaths' '/etc/manpaths.d'
+    end
+    functions -e __fish_macos_set_env
+end
+
+
 #
 # Some things should only be done for login terminals
 # This used to be in etc/config.fish - keep it here to keep the semantics
@@ -271,3 +264,44 @@ if status --is-login
         end
     end
 end
+
+# Invoke this here to apply the current value of fish_user_path after
+# PATH is possibly set above.
+__fish_reconstruct_path
+
+# Allow %n job expansion to be used with fg/bg/wait
+# `jobs` is the only one that natively supports job expansion
+function __fish_expand_pid_args
+    for arg in $argv
+        if string match -qr '^%\d+$' -- $arg
+            # set newargv $newargv (jobs -p $arg)
+            jobs -p $arg
+            if not test $status -eq 0
+                return 1
+            end
+        else
+            printf "%s\n" $arg
+        end
+    end
+end
+
+function bg --wraps bg
+    builtin bg (__fish_expand_pid_args $argv)
+end
+
+function fg --wraps fg
+    builtin fg (__fish_expand_pid_args $argv)
+end
+
+function kill --wraps kill
+    command kill (__fish_expand_pid_args $argv)
+end
+
+function wait --wraps wait
+    builtin wait (__fish_expand_pid_args $argv)
+end
+
+function disown --wraps disown
+    builtin disown (__fish_expand_pid_args $argv)
+end
+

@@ -68,7 +68,7 @@ function __helm_subcommands -a cmd
 end
 
 function __helm_kube_contexts
-    kubectl config get-contexts -o name ^/dev/null
+    kubectl config get-contexts -o name 2>/dev/null
 end
 
 function __helm_kube_namespaces
@@ -76,11 +76,11 @@ function __helm_kube_namespaces
 end
 
 function __helm_releases
-    helm ls --short ^/dev/null
+    helm ls --short 2>/dev/null
 end
 
 function __helm_release_completions
-    helm ls ^/dev/null | awk 'NR >= 2 { print $1"\tRelease of "$NF  }'
+    helm ls 2>/dev/null | awk 'NR >= 2 { print $1"\tRelease of "$NF  }'
 end
 
 function __helm_release_revisions

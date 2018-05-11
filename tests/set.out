@@ -100,3 +100,32 @@ $var6[1]: length=3 value=|ghi|
 $var6[2]: length=3 value=|jkl|
 $var6: not set in universal scope
 
+
+####################
+# Exporting works
+TESTVAR0=
+TESTVAR1=a
+TESTVAR2=a^^b
+
+####################
+# if/for/while scope
+$ifvar1: set in local scope, unexported, with 1 elements
+$ifvar1[1]: length=4 value=|val1|
+$ifvar1: not set in global scope
+$ifvar1: not set in universal scope
+
+$ifvar2: set in local scope, unexported, with 1 elements
+$ifvar2[1]: length=4 value=|val2|
+$ifvar2: not set in global scope
+$ifvar2: not set in universal scope
+
+$ifvar3: set in local scope, unexported, with 1 elements
+$ifvar3[1]: length=4 value=|val3|
+$ifvar3: not set in global scope
+$ifvar3: not set in universal scope
+
+$whilevar1: set in local scope, unexported, with 1 elements
+$whilevar1[1]: length=4 value=|val3|
+$whilevar1: not set in global scope
+$whilevar1: not set in universal scope
+

@@ -264,7 +264,7 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             if (!opts.case_sensitive) {
                 streams.err.append_format(
-                    _(L"builtin history delete only supports --case-sensitive\n"));
+                    _(L"builtin history delete --exact requires --case-sensitive\n"));
                 status = STATUS_INVALID_ARGS;
                 break;
             }

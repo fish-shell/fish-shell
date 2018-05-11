@@ -64,6 +64,14 @@ class maybe_t {
         return *reinterpret_cast<const T *>(storage);
     }
 
+    // Transfer the value to the caller.
+    T acquire() {
+        assert(filled && "maybe_t does not have a value");
+        T res = std::move(value());
+        reset();
+        return res;
+    }
+
     // Clear the value.
     void reset() {
         if (filled) {

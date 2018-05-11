@@ -642,6 +642,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     std::vector<completion_t> possible_comp;
 
     if (use_command) {
+        // Append all possible executables
         expand_error_t result = expand_string(str_cmd, &this->completions,
                                               EXPAND_SPECIAL_FOR_COMMAND | EXPAND_FOR_COMPLETIONS |
                                                   EXECUTABLES_ONLY | this->expand_flags(),
@@ -655,6 +656,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         // We don't really care if this succeeds or fails. If it succeeds this->completions will be
         // updated with choices for the user.
         expand_error_t ignore =
+            // Append all matching directories
             expand_string(str_cmd, &this->completions,
                           EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(), NULL);
         UNUSED(ignore);
@@ -664,6 +666,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         if (use_function) {
             wcstring_list_t names = function_get_names(str_cmd.at(0) == L'_');
             for (size_t i = 0; i < names.size(); i++) {
+                // Append all known matching functions
                 append_completion(&possible_comp, names.at(i));
             }
 
@@ -673,6 +676,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         possible_comp.clear();
 
         if (use_builtin) {
+            // Append all matching builtins
             builtin_get_names(&possible_comp);
             this->complete_strings(str_cmd, 0, &builtin_get_desc, possible_comp, 0);
         }
@@ -864,25 +868,26 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     // after a command, so the overhead of the additional env lookup should be negligible.
     env_vars_snapshot_t completion_snapshot;
 
+    // debug(0, L"\nThinking about looking up completions for %ls\n", cmd.c_str());
     bool head_exists = builtin_exists(cmd);
     // Only reload environment variables if builtin_exists returned false, as an optimization
     if (head_exists == false) {
         run_on_main_thread([&completion_snapshot] () {
             completion_snapshot = std::move(env_vars_snapshot_t( (wchar_t const * const []) { L"fish_function_path", nullptr } ));
         });
-    }
 
-    head_exists = function_exists_no_autoload(cmd.c_str(), completion_snapshot);
-    // While it may seem like first testing `path_get_path` before resorting to an env lookup may be faster, path_get_path can potentially
-    // do a lot of FS/IO access, so env.get() + function_exists() should still be faster.
-    head_exists = head_exists || path_get_path(cmd, nullptr);
+        head_exists = function_exists_no_autoload(cmd.c_str(), completion_snapshot);
+        // While it may seem like first testing `path_get_path` before resorting to an env lookup may be faster, path_get_path can potentially
+        // do a lot of FS/IO access, so env.get() + function_exists() should still be faster.
+        head_exists = head_exists || path_get_path(cmd_orig, nullptr); //use cmd_orig here as it is potentially pathed
+    }
 
     if (!head_exists) {
         //Do not load custom completions if the head does not exist
         //This prevents errors caused during the execution of completion providers for
         //tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
         //and automatic completions ("gi" autosuggestion provider -> git)
-        // debug(0, "Skipping completions for non-existent head\n");
+        debug(4, "Skipping completions for non-existent head\n");
     }
     else {
         run_on_main_thread([&]() {
@@ -990,6 +995,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
             if (short_ok(str, o, options)) {
                 // It's a match.
                 const wcstring desc = o->localized_desc();
+                // Append a short-style option
                 append_completion(&this->completions, o->option, desc, 0);
             }
 
@@ -1031,9 +1037,11 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                 // switch-arg', since it is more commonly supported by homebrew getopt-like
                 // functions.
                 wcstring completion = format_string(L"%ls=", whole_opt.c_str() + offset);
+                // Append a long-style option with a mandatory trailing equal sign
                 append_completion(&this->completions, completion, C_(o->desc), flags);
             }
 
+            // Append a long-style option
             append_completion(&this->completions, whole_opt.c_str() + offset, C_(o->desc), flags);
         }
     }
@@ -1070,6 +1078,9 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
     bool complete_from_start = !complete_from_separator || !string_prefixes_string(L"-", str);
 
     if (complete_from_separator) {
+        // FIXME: This just cuts the token,
+        // so any quoting or braces gets lost.
+        // See #4954.
         const wcstring sep_string = wcstring(str, sep_index + 1);
         std::vector<completion_t> local_completions;
         if (expand_string(sep_string, &local_completions, flags, NULL) == EXPAND_ERROR) {
@@ -1138,6 +1149,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
             }
         }
 
+        // Append matching environment variables
         append_completion(&this->completions, comp, desc, flags, match);
 
         res = true;
@@ -1240,11 +1252,13 @@ bool completer_t::try_complete_user(const wcstring &str) {
         const wchar_t *pw_name = pw_name_str.c_str();
         if (wcsncmp(user_name, pw_name, name_len) == 0) {
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
+            // Append a user name
             append_completion(&this->completions, &pw_name[name_len], desc, COMPLETE_NO_SPACE);
             result = true;
         } else if (wcsncasecmp(user_name, pw_name, name_len) == 0) {
             wcstring name = format_string(L"~%ls", pw_name);
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
+            // Append a user name
             append_completion(&this->completions, name, desc,
                               COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
             result = true;

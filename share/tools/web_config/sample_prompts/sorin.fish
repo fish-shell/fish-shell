@@ -16,7 +16,7 @@ function fish_right_prompt
     test $status != 0
     and printf (set_color red)"⏎ "
 
-    if git rev-parse ^/dev/null
+    if git rev-parse 2>/dev/null
         # Magenta if branch detached else green
         git branch -qv | grep "\*" | string match -rq detached
         and set_color brmagenta
@@ -26,7 +26,7 @@ function fish_right_prompt
         git name-rev --name-only HEAD
 
         # Merging state
-        git merge -q ^/dev/null
+        git merge -q 2>/dev/null
         or printf ':'(set_color red)'merge'
         printf ' '
 

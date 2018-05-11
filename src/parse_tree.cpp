@@ -270,7 +270,10 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
         append_format(*result, L" <%lu children>", node.child_count);
     }
     if (node.has_comments()) {
-        append_format(*result, L" <has_comments>", node.child_count);
+        append_format(*result, L" <has_comments>");
+    }
+    if (node.has_preceding_escaped_newline()) {
+        append_format(*result, L" <preceding_esc_nl>");
     }
 
     if (node.has_source() && node.type == parse_token_type_string) {
@@ -284,8 +287,7 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
             append_format(*result, L"  [%ld, %ld]", (long)node.source_start,
                           (long)node.source_length);
         } else {
-            append_format(*result, L"  [no src]", (long)node.source_start,
-                          (long)node.source_length);
+            append_format(*result, L"  [%ld, no src]", (long)node.source_start);
         }
     }
 
@@ -358,7 +360,7 @@ class parse_ll_t {
     parse_error_list_t errors;
     // The symbol stack can contain terminal types or symbols. Symbols go on to do productions, but
     // terminal types are just matched against input tokens.
-    bool top_node_handle_terminal_types(parse_token_t token);
+    bool top_node_handle_terminal_types(const parse_token_t &token);
 
     void parse_error_unexpected_token(const wchar_t *expected, parse_token_t token);
     void parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *format, ...);
@@ -461,7 +463,7 @@ class parse_ll_t {
     void accept_tokens(parse_token_t token1, parse_token_t token2);
 
     /// Report tokenizer errors.
-    void report_tokenizer_error(const tokenizer_t &tokenizer, const tok_t &tok);
+    void report_tokenizer_error(const tok_t &tok);
 
     /// Indicate if we hit a fatal error.
     bool has_fatal_error() const { return this->fatal_errored; }
@@ -599,6 +601,7 @@ void parse_ll_t::parse_error(parse_token_t token, parse_error_code_t code, const
 void parse_ll_t::parse_error_at_location(size_t source_start, size_t source_length,
                                          size_t error_location, parse_error_code_t code,
                                          const wchar_t *fmt, ...) {
+    (void)error_location;
     this->fatal_errored = true;
     if (this->should_generate_error_messages) {
         // this->dump_stack();
@@ -667,7 +670,7 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
     }
 }
 
-void parse_ll_t::report_tokenizer_error(const tokenizer_t &tokenizer, const tok_t &tok) {
+void parse_ll_t::report_tokenizer_error(const tok_t &tok) {
     parse_error_code_t parse_error_code = tok.error->parser_error;
     this->parse_error_at_location(tok.offset, tok.length, tok.offset + tok.error_offset,
                                   parse_error_code, L"%ls",
@@ -758,7 +761,7 @@ bool parse_ll_t::report_error_for_unclosed_block() {
     return reported_error;
 }
 
-bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token) {
+bool parse_ll_t::top_node_handle_terminal_types(const parse_token_t &token) {
     PARSE_ASSERT(!symbol_stack.empty());  //!OCLINT(multiple unary operator)
     PARSE_ASSERT(token.type >= FIRST_PARSE_TOKEN_TYPE);
     parse_stack_element_t &stack_top = symbol_stack.back();
@@ -791,6 +794,8 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token) {
         node.keyword = token.keyword;
         node.source_start = token.source_start;
         node.source_length = token.source_length;
+        if (token.preceding_escaped_nl)
+            node.flags |= parse_node_flag_preceding_escaped_nl;
     } else {
         // Failure
         if (stack_top.type == parse_token_type_string && token.type == parse_token_type_string) {
@@ -842,13 +847,7 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token) {
 }
 
 void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
-    bool logit = false;
-    if (logit) {
-        fwprintf(stderr, L"Accept token %ls\n", token1.describe().c_str());
-    }
     PARSE_ASSERT(token1.type >= FIRST_PARSE_TOKEN_TYPE);
-
-    bool consumed = false;
 
     // Handle special types specially. Note that these are the only types that can be pushed if the
     // symbol stack is empty.
@@ -864,8 +863,9 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
         special_node.parent = symbol_stack.back().node_idx;
         special_node.source_start = token1.source_start;
         special_node.source_length = token1.source_length;
+        if (token1.preceding_escaped_nl)
+            special_node.flags |= parse_node_flag_preceding_escaped_nl;
         nodes.push_back(special_node);
-        consumed = true;
 
         // Mark special flags.
         if (token1.type == parse_special_type_comment) {
@@ -874,16 +874,14 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
 
         // Tokenizer errors are fatal.
         if (token1.type == parse_special_type_tokenizer_error) this->fatal_errored = true;
+        return;
     }
 
-    while (!consumed && !this->fatal_errored) {
+    // It's not a special type.
+    while (!this->fatal_errored) {
         PARSE_ASSERT(!symbol_stack.empty());  //!OCLINT(multiple unary operator)
 
         if (top_node_handle_terminal_types(token1)) {
-            if (logit) {
-                fwprintf(stderr, L"Consumed token %ls\n", token1.describe().c_str());
-            }
-            // consumed = true;
             break;
         }
 
@@ -978,12 +976,10 @@ static parse_keyword_t keyword_for_token(token_type tok, const wcstring &token) 
 }
 
 /// Placeholder invalid token.
-static constexpr parse_token_t kInvalidToken = {
-    token_type_invalid, parse_keyword_none, false, false, false, SOURCE_OFFSET_INVALID, 0};
+static constexpr parse_token_t kInvalidToken{token_type_invalid};
 
 /// Terminal token.
-static constexpr parse_token_t kTerminalToken = {
-    parse_token_type_terminate, parse_keyword_none, false, false, false, SOURCE_OFFSET_INVALID, 0};
+static constexpr parse_token_t kTerminalToken = {parse_token_type_terminate};
 
 static inline bool is_help_argument(const wcstring &txt) {
     return txt == L"-h" || txt == L"--help";
@@ -995,19 +991,18 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok, tok_t *token, wcs
         return kTerminalToken;
     }
 
-    parse_token_t result;
-
     // Set the type, keyword, and whether there's a dash prefix. Note that this is quite sketchy,
     // because it ignores quotes. This is the historical behavior. For example, `builtin --names`
     // lists builtins, but `builtin "--names"` attempts to run --names as a command. Amazingly as of
     // this writing (10/12/13) nobody seems to have noticed this. Squint at it really hard and it
     // even starts to look like a feature.
-    result.type = parse_token_type_from_tokenizer_token(token->type);
+    parse_token_t result{parse_token_type_from_tokenizer_token(token->type)};
     const wcstring &text = tok->copy_text_of(*token, storage);
     result.keyword = keyword_for_token(token->type, text);
     result.has_dash_prefix = !text.empty() && text.at(0) == L'-';
     result.is_help_argument = result.has_dash_prefix && is_help_argument(text);
     result.is_newline = (result.type == parse_token_type_end && text == L"\n");
+    result.preceding_escaped_nl = token->preceding_escaped_nl;
 
     // These assertions are totally bogus. Basically our tokenizer works in size_t but we work in
     // uint32_t to save some space. If we have a source file larger than 4 GB, we'll probably just
@@ -1066,7 +1061,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
         // Handle tokenizer errors. This is a hack because really the parser should report this for
         // itself; but it has no way of getting the tokenizer message.
         if (queue[1].type == parse_special_type_tokenizer_error) {
-            parser.report_tokenizer_error(tok, tokenizer_token);
+            parser.report_tokenizer_error(tokenizer_token);
         }
 
         if (!parser.has_fatal_error()) {
@@ -1088,13 +1083,9 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
         }
 
         // Mark a special error token, and then keep going.
-        const parse_token_t token = {parse_special_type_parse_error,
-                                     parse_keyword_none,
-                                     false,
-                                     false,
-                                     false,
-                                     queue[error_token_idx].source_start,
-                                     queue[error_token_idx].source_length};
+        parse_token_t token = {parse_special_type_parse_error};
+        token.source_start = queue[error_token_idx].source_start;
+        token.source_length = queue[error_token_idx].source_length;
         parser.accept_tokens(token, kInvalidToken);
         parser.reset_symbols(goal);
     }

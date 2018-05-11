@@ -27,11 +27,11 @@ function __fish_complete_gsettings_args
 
     if not set -q cmd[2]
         # Non-relocatable schemas
-        gsettings $schemadir list-schemas ^/dev/null
+        gsettings $schemadir list-schemas 2>/dev/null
 
         # Relocatable schemas require a dconf path, but there is no universal way of
         # finding the right paths to suggest here. Just default to '/'.
-        gsettings $schemadir list-relocatable-schemas ^/dev/null | string replace -r \$ ':/'
+        gsettings $schemadir list-relocatable-schemas 2>/dev/null | string replace -r \$ ':/'
         return 0
     end
 
@@ -42,7 +42,7 @@ function __fish_complete_gsettings_args
     set -l schema $cmd[2]
 
     if not set -q cmd[3]
-        gsettings $schemadir list-keys $schema ^/dev/null
+        gsettings $schemadir list-keys $schema 2>/dev/null
         return 0
     end
 
@@ -52,7 +52,7 @@ function __fish_complete_gsettings_args
 
     if not set -q cmd[4]
         set -l key $cmd[3]
-        set -l range (gsettings $schemadir range $schema $key ^/dev/null)
+        set -l range (gsettings $schemadir range $schema $key 2>/dev/null)
         set -l key_type $range[1]
         set -e range[1]
         switch $key_type
@@ -64,7 +64,7 @@ function __fish_complete_gsettings_args
         case '*'
             # If no sensible suggestions can be made, just use the current value.
             # It gives a good indication on the expected format and is likely already close to what the user wants.
-            gsettings $schemadir get $schema $key ^/dev/null
+            gsettings $schemadir get $schema $key 2>/dev/null
         end
         return 0
     end

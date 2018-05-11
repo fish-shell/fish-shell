@@ -45,6 +45,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
+#include "future_feature_flags.h"
 #include "highlight.h"
 #include "history.h"
 #include "input.h"
@@ -626,6 +627,16 @@ static void test_tokenizer() {
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
     if (redirection_type_for_string(L"2>|"))
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+
+    // Test ^ with our feature flag on and off.
+    auto saved_flags = fish_features();
+    mutable_fish_features().set(features_t::stderr_nocaret, false);
+    if (redirection_type_for_string(L"^") != redirection_type_t::overwrite)
+        err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    mutable_fish_features().set(features_t::stderr_nocaret, true);
+    if (redirection_type_for_string(L"^") != none())
+        err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    mutable_fish_features() = saved_flags;
 }
 
 // Little function that runs in a background thread, bouncing to the main.
@@ -1352,6 +1363,34 @@ static void test_utf8() {
     test_utf82wchar(ub1, sizeof(ub1), NULL, 0, UTF8_IGNORE_ERROR, sizeof(wb1) / sizeof(*wb1),
                     "ub1 calculate length, ignore bad chars");
 #endif
+}
+
+static void test_feature_flags() {
+    say(L"Testing future feature flags");
+    using ft = features_t;
+    ft f;
+    do_test(!f.test(ft::stderr_nocaret));
+    f.set(ft::stderr_nocaret, true);
+    do_test(f.test(ft::stderr_nocaret));
+    f.set(ft::stderr_nocaret, false);
+    do_test(!f.test(ft::stderr_nocaret));
+
+    f.set_from_string(L"stderr-nocaret,nonsense");
+    do_test(f.test(ft::stderr_nocaret));
+    f.set_from_string(L"stderr-nocaret,no-stderr-nocaret,nonsense");
+    do_test(!f.test(ft::stderr_nocaret));
+
+    // Ensure every metadata is represented once.
+    size_t counts[ft::flag_count] = {};
+    for (const auto &md : ft::metadata) {
+        counts[md.flag]++;
+    }
+    for (size_t c : counts) {
+        do_test(c == 1);
+    }
+    do_test(ft::metadata[ft::stderr_nocaret].name == wcstring(L"stderr-nocaret"));
+    do_test(ft::metadata_for(L"stderr-nocaret") == &ft::metadata[ft::stderr_nocaret]);
+    do_test(ft::metadata_for(L"not-a-flag") == nullptr);
 }
 
 static void test_escape_sequences() {
@@ -2755,7 +2794,7 @@ static void test_universal() {
 
     env_universal_t uvars(UVARS_TEST_PATH);
     callback_data_list_t callbacks;
-    bool loaded = uvars.load(callbacks);
+    bool loaded = uvars.initialize(callbacks);
     if (!loaded) {
         err(L"Failed to load universal variables");
     }
@@ -4054,7 +4093,7 @@ static void test_wcstring_tok() {
 }
 
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv);
-static void run_one_string_test(const wchar_t **argv, int expected_rc,
+static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
                                 const wchar_t *expected_out) {
     parser_t parser;
     io_streams_t streams(0);
@@ -4076,7 +4115,7 @@ static void run_one_string_test(const wchar_t **argv, int expected_rc,
 }
 
 static void test_string() {
-    static struct string_test {
+    const struct string_test {
         const wchar_t *argv[15];
         int expected_rc;
         const wchar_t *expected_out;
@@ -4137,11 +4176,6 @@ static void test_string() {
         {{L"string", L"match", L"*a", L"a", 0}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"match", L"a*", L"a", 0}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"match", L"a*b*c", L"axxbyyc", 0}, STATUS_CMD_OK, L"axxbyyc\n"},
-        {{L"string", L"match", L"a*b?c", L"axxbyc", 0}, STATUS_CMD_OK, L"axxbyc\n"},
-        {{L"string", L"match", L"*?", L"a", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"match", L"*?", L"ab", 0}, STATUS_CMD_OK, L"ab\n"},
-        {{L"string", L"match", L"?*", L"a", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"match", L"?*", L"ab", 0}, STATUS_CMD_OK, L"ab\n"},
         {{L"string", L"match", L"\\*", L"*", 0}, STATUS_CMD_OK, L"*\n"},
         {{L"string", L"match", L"a*\\", L"abc\\", 0}, STATUS_CMD_OK, L"abc\\\n"},
         {{L"string", L"match", L"a*\\?", L"abc?", 0}, STATUS_CMD_OK, L"abc?\n"},
@@ -4363,15 +4397,36 @@ static void test_string() {
         {{L"string", L"trim", L"-c", L"\\/", L"/a\\"}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"trim", L"-c", L"\\/", L"a/"}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"trim", L"-c", L"\\/", L"\\a/"}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"trim", L"-c", L"", L".a."}, STATUS_CMD_ERROR, L".a.\n"},
-
-        {{NULL}, STATUS_CMD_ERROR, NULL}};
-
-    struct string_test *t = string_tests;
-    while (t->argv[0]) {
-        run_one_string_test(t->argv, t->expected_rc, t->expected_out);
-        t++;
+        {{L"string", L"trim", L"-c", L"", L".a."}, STATUS_CMD_ERROR, L".a.\n"}};
+    for (const auto &t : string_tests) {
+        run_one_string_test(t.argv, t.expected_rc, t.expected_out);
     }
+
+    const auto saved_flags = fish_features();
+    const struct string_test qmark_noglob_tests[] = {
+        {{L"string", L"match", L"a*b?c", L"axxb?c", 0}, STATUS_CMD_OK, L"axxb?c\n"},
+        {{L"string", L"match", L"*?", L"a", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"*?", L"ab", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"?*", L"a", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"?*", L"ab", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"a*\\?", L"abc?", 0}, STATUS_CMD_ERROR, L""}};
+    mutable_fish_features().set(features_t::qmark_noglob, true);
+    for (const auto &t : qmark_noglob_tests) {
+        run_one_string_test(t.argv, t.expected_rc, t.expected_out);
+    }
+
+    const struct string_test qmark_glob_tests[] = {
+        {{L"string", L"match", L"a*b?c", L"axxbyc", 0}, STATUS_CMD_OK, L"axxbyc\n"},
+        {{L"string", L"match", L"*?", L"a", 0}, STATUS_CMD_OK, L"a\n"},
+        {{L"string", L"match", L"*?", L"ab", 0}, STATUS_CMD_OK, L"ab\n"},
+        {{L"string", L"match", L"?*", L"a", 0}, STATUS_CMD_OK, L"a\n"},
+        {{L"string", L"match", L"?*", L"ab", 0}, STATUS_CMD_OK, L"ab\n"},
+        {{L"string", L"match", L"a*\\?", L"abc?", 0}, STATUS_CMD_OK, L"abc?\n"}};
+    mutable_fish_features().set(features_t::qmark_noglob, false);
+    for (const auto &t : qmark_glob_tests) {
+        run_one_string_test(t.argv, t.expected_rc, t.expected_out);
+    }
+    mutable_fish_features() = saved_flags;
 }
 
 /// Helper for test_timezone_env_vars().
@@ -4439,13 +4494,12 @@ static void test_illegal_command_exit_code() {
     const io_chain_t empty_ios;
     parser_t &parser = parser_t::principal_parser();
 
-    size_t i = 0;
-    for (i = 0; i < sizeof tests / sizeof *tests; i++) {
-        res = parser.eval(tests[i].txt, empty_ios, TOP);
+    for (const auto &test : tests) {
+        res = parser.eval(test.txt, empty_ios, TOP);
 
         int exit_status = res ? STATUS_CMD_UNKNOWN : proc_get_last_status();
-        if (exit_status != tests[i].result) {
-            err(L"command '%ls': expected exit code %d , got %d", tests[i].txt, tests[i].result,
+        if (exit_status != test.result) {
+            err(L"command '%ls': expected exit code %d , got %d", test.txt, test.result,
                 exit_status);
         }
     }
@@ -4489,6 +4543,12 @@ void test_maybe() {
     do_test(m4 && *m4 == "hi");
     maybe_t<std::string> m5 = m0;
     do_test(!m5);
+
+    maybe_t<std::string> acquire_test("def");
+    do_test(acquire_test);
+    std::string res = acquire_test.acquire();
+    do_test(!acquire_test);
+    do_test(res == "def");
 }
 
 void test_layout_cache() {
@@ -4603,6 +4663,7 @@ int main(int argc, char **argv) {
     if (should_test_function("cancellation")) test_cancellation();
     if (should_test_function("indents")) test_indents();
     if (should_test_function("utf8")) test_utf8();
+    if (should_test_function("feature_flags")) test_feature_flags();
     if (should_test_function("escape_sequences")) test_escape_sequences();
     if (should_test_function("lru")) test_lru();
     if (should_test_function("expand")) test_expand();

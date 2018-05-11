@@ -30,7 +30,7 @@ function __fish_complete_man
 
     if test -n "$token"
         # Do the actual search
-        apropos $token ^/dev/null | awk '
+        apropos $token 2>/dev/null | awk '
                 BEGIN { FS="[\t ]- "; OFS="\t"; }
                 # BSD/Darwin
                 /^[^( \t]+\('$section'\)/ {

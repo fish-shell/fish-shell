@@ -1,6 +1,6 @@
 function __fish_print_addresses --description "Print a list of known network addresses"
     if command -sq ip
-        command ip --oneline address | cut -d" " -f7 | sed "s:\(.*\)/.*:\1:"
+        command ip --oneline address | string replace -r '(\S+\s+){3}(.+)/.*' '$2'
     else if command -sq ifconfig
         # This is for OSX/BSD
         # There's also linux ifconfig but that has at least two different output formats

@@ -34,7 +34,7 @@ function __fish_hg
     if set -l cwd (__fish_hg_get_cwd)
         set argv $argv --cwd $cwd
     end
-    command hg $argv ^ /dev/null
+    command hg $argv 2>/dev/null
 end
 
 function __fish_hg_commands

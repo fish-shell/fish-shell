@@ -321,10 +321,17 @@ bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value
 /// Test if a string is a suffix of another.
 bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value);
 bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &value);
+bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix, const wcstring &value);
 
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
                                              const wcstring &value);
+
+/// Split a string by a separator character.
+wcstring_list_t split_string(const wcstring &val, wchar_t sep);
+
+/// Join a list of strings by a separator character.
+wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
 
 enum fuzzy_match_type_t {
     // We match the string exactly: FOOBAR matches FOOBAR.

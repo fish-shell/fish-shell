@@ -279,15 +279,8 @@ static bool validate_path_warning_on_colons(const wchar_t *cmd,
     return any_success;
 }
 
-/// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
-/// description of the problem to stderr.
-static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstring_list_t &list,
-                      io_streams_t &streams) {
-    if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams)) {
-        return STATUS_CMD_ERROR;
-    }
-
-    int retval = env_set(key, scope | ENV_USER, list);
+static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key, io_streams_t &streams)
+{
     switch (retval) {
         case ENV_OK: {
             retval = STATUS_CMD_OK;
@@ -301,14 +294,20 @@ static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstrin
         }
         case ENV_SCOPE: {
             streams.err.append_format(
-                _(L"%ls: Tried to set the special variable '%ls' with the wrong scope\n"), cmd,
+                _(L"%ls: Tried to modify the special variable '%ls' with the wrong scope\n"), cmd,
                 key);
             retval = STATUS_CMD_ERROR;
             break;
         }
         case ENV_INVALID: {
             streams.err.append_format(
-                _(L"%ls: Tried to set the special variable '%ls' to an invalid value\n"), cmd, key);
+                _(L"%ls: Tried to modify the special variable '%ls' to an invalid value\n"), cmd, key);
+            retval = STATUS_CMD_ERROR;
+            break;
+        }
+        case ENV_NOT_FOUND: {
+            streams.err.append_format(
+                _(L"%ls: The variable '%ls' does not exist\n"), cmd, key);
             retval = STATUS_CMD_ERROR;
             break;
         }
@@ -317,6 +316,18 @@ static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstrin
             break;
         }
     }
+}
+
+/// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
+/// description of the problem to stderr.
+static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstring_list_t &list,
+                      io_streams_t &streams) {
+    if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams)) {
+        return STATUS_CMD_ERROR;
+    }
+
+    int retval = env_set(key, scope | ENV_USER, list);
+    handle_env_return(retval, cmd, key, streams);
 
     return retval;
 }
@@ -617,6 +628,11 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 
     if (idx_count == 0) {  // unset the var
         retval = env_remove(dest, scope);
+        // Temporarily swallowing ENV_NOT_FOUND errors to prevent
+        // breaking all tests that unset variables that aren't set.
+        if (retval != ENV_NOT_FOUND) {
+            handle_env_return(retval, cmd, dest, streams);
+        }
     } else {  // remove just the specified indexes of the var
         const auto dest_var = env_get(dest, scope);
         if (!dest_var) return STATUS_CMD_ERROR;
@@ -673,6 +689,7 @@ static int set_var_slices(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_
 
     if (indexes.size() != static_cast<size_t>(argc)) {
         streams.err.append_format(BUILTIN_SET_MISMATCHED_ARGS, cmd, indexes.size(), argc);
+        return STATUS_INVALID_ARGS;
     }
 
     int scope = compute_scope(opts);  // calculate the variable scope based on the provided options

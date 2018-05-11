@@ -21,6 +21,7 @@
 *.o
 *.obj
 *.orig
+!tests/*.out
 *.out
 *.pch
 *.slo

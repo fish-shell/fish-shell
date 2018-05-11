@@ -50,7 +50,7 @@ function psub --description "Read from stdin into a file and output the filename
     # Find unique function name
     while true
         set funcname __fish_psub_(random)
-        if not functions $funcname >/dev/null ^/dev/null
+        if not functions $funcname >/dev/null 2>/dev/null
             break
         end
     end

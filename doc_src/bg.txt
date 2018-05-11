@@ -9,16 +9,12 @@ bg [PID...]
 
 `bg` sends <a href="index.html#syntax-job-control">jobs</a> to the background, resuming them if they are stopped. A background job is executed simultaneously with fish, and does not have access to the keyboard. If no job is specified, the last job to be used is put in the background. If PID is specified, the jobs with the specified process group IDs are put in the background.
 
-The PID of the desired process is usually found by using <a href="index.html#expand-process">process expansion</a>.
-
 When at least one of the arguments isn't a valid job specifier (i.e. PID),
 `bg` will print an error without backgrounding anything.
 
 When all arguments are valid job specifiers, bg will background all matching jobs that exist.
 
 \subsection bg-example Example
-
-`bg %1` will put the job with job ID 1 in the background.
 
 `bg 123 456 789` will background 123, 456 and 789.
 

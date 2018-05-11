@@ -203,7 +203,7 @@ function __fish_zfs_list_permissions
         echo -e "casesensitivity\t"(_ "Case sensitivity")" (sensitive, insensitive, mixed)"
     end
     # Permissions set; if none are found, or if permission sets are not supported, no output is expected, even an error
-    for i in (zpool list -o name -H); zfs allow $i; end | grep -o '@[[:alnum:]]*' | sort | uniq
+    for i in (zpool list -o name -H); zfs allow $i; end | grep -o '@[[:alnum:]]*' | sort -u
 end
 
 complete -c zfs -f -n '__fish_zfs_needs_command' -s '?' -a '?' -d 'Display a help message'

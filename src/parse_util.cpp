@@ -16,6 +16,7 @@
 #include "common.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "future_feature_flags.h"
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "tnode.h"
@@ -418,14 +419,18 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
 wcstring parse_util_unescape_wildcards(const wcstring &str) {
     wcstring result;
     result.reserve(str.size());
+    bool unesc_qmark = !feature_test(features_t::qmark_noglob);
 
     const wchar_t *const cs = str.c_str();
     for (size_t i = 0; cs[i] != L'\0'; i++) {
         if (cs[i] == L'*') {
             result.push_back(ANY_STRING);
-        } else if (cs[i] == L'?') {
+        } else if (cs[i] == L'?' && unesc_qmark) {
             result.push_back(ANY_CHAR);
-        } else if (cs[i] == L'\\' && (cs[i + 1] == L'*' || cs[i + 1] == L'?')) {
+        } else if (cs[i] == L'\\' && cs[i + 1] == L'*') {
+            result.push_back(cs[i + 1]);
+            i += 1;
+        } else if (cs[i] == L'\\' && cs[i + 1] == L'?' && unesc_qmark) {
             result.push_back(cs[i + 1]);
             i += 1;
         } else if (cs[i] == L'\\' && cs[i + 1] == L'\\') {

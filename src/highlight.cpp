@@ -23,6 +23,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
+#include "future_feature_flags.h"
 #include "highlight.h"
 #include "history.h"
 #include "output.h"
@@ -548,8 +549,13 @@ static void color_argument_internal(const wcstring &buffstr,
                             in_pos -= 1;
                             break;
                         }
+                        case L'?': {
+                            if (!feature_test(features_t::qmark_noglob)) {
+                                colors[in_pos] = highlight_spec_operator;
+                            }
+                            break;
+                        }
                         case L'*':
-                        case L'?':
                         case L'(':
                         case L')': {
                             colors[in_pos] = highlight_spec_operator;

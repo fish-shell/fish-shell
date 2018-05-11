@@ -33,10 +33,22 @@ function __fish_complete_suffix -d "Complete using files"
 
     end
 
-    # Perform the completion
+    # Strip leading ./ as it confuses the detection of base and suffix
+    # It is conditionally re-added below.
+    set -l base_temp (string replace -r '^\./' '' -- $comp)
 
-    set base (string replace -r '\.[^.]*$' '' -- $comp | string trim -c '\'"') # " make emacs syntax highlighting happy
-    eval "set files $base*$suff"
+    set base (string replace -r '\.[^.]*$' '' -- $base_temp | string trim -c '\'"') # " make emacs syntax highlighting happy
+    # echo "base: $base" > /dev/tty
+    # echo "suffix: $suff" > /dev/tty
+
+    # If $comp is "./ma" and the file is "main.py", we'll catch that case here,
+    # but complete.cpp will not consider it a match, so we have to output the
+    # correct form.
+    if string match -qr '^\./' -- $comp
+        eval "set files ./$base*$suff"
+    else
+        eval "set files $base*$suff"
+    end
 
     if test $files[1]
         printf "%s\t$desc\n" $files

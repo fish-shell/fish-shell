@@ -54,6 +54,7 @@ The following parameters are available:
 
 - `-a` or `--all` See `--erase` and `--key-names`
 
+\subsection bind-functions Special input functions
 The following special input functions are available:
 
 - `accept-autosuggestion`, accept the current autosuggestion completely

@@ -103,4 +103,23 @@ d
 e" true
     "builtin" yes
 en"d"
+
+alpha | \
+  beta
+
+gamma | \
+# comment3
+delta
+
+if true
+echo abc
+end
+
+if false # comment4
+and true && false
+echo abc;end
+
+echo hi |
+
+echo bye
 ' | ../test/root/bin/fish_indent

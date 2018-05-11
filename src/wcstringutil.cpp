@@ -31,7 +31,7 @@ wcstring_range wcstring_tok(wcstring& str, const wcstring& needle, wcstring_rang
 }
 
 wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype) {
-    if (input.size() <= max_len) {
+    if (input.size() <= (size_t) max_len) {
         return input;
     }
 

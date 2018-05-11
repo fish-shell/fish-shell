@@ -82,6 +82,9 @@ struct tok_t {
     // If an error, this is the error code.
     tokenizer_error *error { TOK_ERROR_NONE };
 
+    // Whether the token was preceded by an escaped newline.
+    bool preceding_escaped_nl{false};
+
     // If an error, this is the offset of the error within the token. A value of 0 means it occurred
     // at 'offset'.
     size_t error_offset{size_t(-1)};

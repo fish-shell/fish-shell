@@ -291,3 +291,6 @@ string repeat -l fakearg
 
 ####################
 # string match -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
+
+####################
+# Check NUL

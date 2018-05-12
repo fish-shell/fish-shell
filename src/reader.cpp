@@ -84,7 +84,7 @@
 
 /// A simple prompt for reading shell commands that does not rely on fish specific commands, meaning
 /// it will work even if fish is not installed. This is used by read_i.
-#define DEFAULT_PROMPT L"echo -n \"$USER@\"(hostname|cut -d . -f 1)' '(__fish_pwd)'> '"
+#define DEFAULT_PROMPT L"echo -n \"$USER@$hostname $PWD \"'> '"
 
 /// The name of the function that prints the fish prompt.
 #define LEFT_PROMPT_FUNCTION_NAME L"fish_prompt"
@@ -99,7 +99,7 @@
 #define MODE_PROMPT_FUNCTION_NAME L"fish_mode_prompt"
 
 /// The default title for the reader. This is used by reader_readline.
-#define DEFAULT_TITLE L"echo (status current-command) \" \"; __fish_pwd"
+#define DEFAULT_TITLE L"echo (status current-command) \" \" $PWD"
 
 /// The maximum number of characters to read from the keyboard without repainting. Note that this
 /// readahead will only occur if new characters are available for reading, fish will never block for

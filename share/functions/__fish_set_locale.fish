@@ -22,11 +22,6 @@ function __fish_set_locale
         end
     end
 
-    # Unset all variables - they are empty anyway and this makes merging easier.
-    for locale_var in $LOCALE_VARS
-        set -e $locale_var
-    end
-
     # Try to extract the locale from the kernel boot commandline. The splitting here is a bit weird,
     # but we operate under the assumption that the locale can't include whitespace. Other whitespace
     # shouldn't concern us, but a quoted "locale.LANG=SOMETHING" as a value to something else might.

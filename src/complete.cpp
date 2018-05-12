@@ -17,6 +17,7 @@
 #include <iterator>
 #include <list>
 #include <memory>
+#include <numeric>
 #include <set>
 #include <string>
 #include <type_traits>
@@ -178,9 +179,9 @@ typedef std::unordered_set<completion_entry_t> completion_entry_set_t;
 static completion_entry_set_t completion_set;
 
 /// Comparison function to sort completions by their order field.
-static bool compare_completions_by_order(const completion_entry_t *p1,
-                                         const completion_entry_t *p2) {
-    return p1->order < p2->order;
+static bool compare_completions_by_order(const completion_entry_t &p1,
+                                         const completion_entry_t &p2) {
+    return p1.order < p2.order;
 }
 
 /// The lock that guards the list of completion entries.
@@ -372,12 +373,12 @@ void append_completion(std::vector<completion_t> *completions, wcstring comp, wc
 bool completer_t::condition_test(const wcstring &condition) {
     if (condition.empty()) {
         // fwprintf( stderr, L"No condition specified\n" );
-        return 1;
+        return true;
     }
 
     if (this->type() == COMPLETE_AUTOSUGGEST) {
         // Autosuggestion can't support conditions.
-        return 0;
+        return false;
     }
 
     ASSERT_IS_MAIN_THREAD();
@@ -411,7 +412,7 @@ void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
                   complete_option_type_t option_type, int result_mode, const wchar_t *condition,
                   const wchar_t *comp, const wchar_t *desc, complete_flags_t flags) {
     CHECK(cmd, );
-    // option should be  empty iff the option type is arguments only.
+    // option should be empty iff the option type is arguments only.
     assert(option.empty() == (option_type == option_type_args_only));
 
     // Lock the lock that allows us to edit the completion entry list.
@@ -542,7 +543,6 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     ASSERT_IS_MAIN_THREAD();
 
     const wchar_t *cmd_start;
-    int skip;
     const wchar_t *const cmd = str.c_str();
     cmd_start = wcsrchr(cmd, L'/');
 
@@ -559,13 +559,10 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
         return;
     }
 
-    skip = 1;
-
-    for (size_t i = 0; i < this->completions.size(); i++) {
-        const completion_t &c = this->completions.at(i);
-
+    bool skip = true;
+    for (const auto &c : completions) {
         if (c.completion.empty() || (c.completion[c.completion.size() - 1] != L'/')) {
-            skip = 0;
+            skip = false;
             break;
         }
     }
@@ -577,20 +574,21 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     wcstring lookup_cmd(L"__fish_describe_command ");
     lookup_cmd.append(escape_string(cmd_start, 1));
 
-    std::unordered_map<wcstring, wcstring> lookup;
-
     // First locate a list of possible descriptions using a single call to apropos or a direct
     // search if we know the location of the whatis database. This can take some time on slower
     // systems with a large set of manuals, but it should be ok since apropos is only called once.
     wcstring_list_t list;
     if (exec_subshell(lookup_cmd, list, false /* don't apply exit status */) != -1) {
+        std::unordered_map<wcstring, wcstring> lookup;
+        lookup.reserve(list.size());
+
         // Then discard anything that is not a possible completion and put the result into a
         // hashtable with the completion as key and the description as value.
         //
         // Should be reasonably fast, since no memory allocations are needed.
-        for (size_t i = 0; i < list.size(); i++) {
-            const wcstring &elstr = list.at(i);
-
+        // mqudsi: I don't know if the above were ever true, but it's certainly not any more.
+        // Plenty of allocations below.
+        for (const wcstring &elstr : list) {
             const wcstring fullkey(elstr, wcslen(cmd_start));
 
             size_t tab_idx = fullkey.find(L'\t');
@@ -610,8 +608,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
         //
         // This needs to do a reallocation for every description added, but there shouldn't be that
         // many completions, so it should be ok.
-        for (size_t i = 0; i < this->completions.size(); i++) {
-            completion_t &completion = this->completions.at(i);
+        for (auto &completion : completions) {
             const wcstring &el = completion.completion;
             if (el.empty()) continue;
 
@@ -899,9 +896,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     std::vector<option_list_t> all_options;
     {
         scoped_lock lock(completion_lock);
-        for (completion_entry_set_t::const_iterator iter = completion_set.begin();
-             iter != completion_set.end(); ++iter) {
-            const completion_entry_t &i = *iter;
+        for (const completion_entry_t &i : completion_set) {
             const wcstring &match = i.cmd_is_path ? path : cmd;
             if (wildcard_match(match, i.cmd)) {
                 // Copy all of their options into our list.
@@ -912,22 +907,18 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
 
     // Now release the lock and test each option that we captured above. We have to do this outside
     // the lock because callouts (like the condition) may add or remove completions. See issue 2.
-    for (std::vector<option_list_t>::const_iterator iter = all_options.begin();
-         iter != all_options.end(); ++iter) {
-        const option_list_t &options = *iter;
+    for (const option_list_t &options : all_options) {
         use_common = 1;
         if (use_switches) {
             if (str[0] == L'-') {
                 // Check if we are entering a combined option and argument (like --color=auto or
                 // -I/usr/include).
-                for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end();
-                     ++oiter) {
-                    const complete_entry_opt_t *o = &*oiter;
-                    const wchar_t *arg = param_match2(o, str);
-                    if (arg != NULL && this->condition_test(o->condition)) {
-                        if (o->result_mode & NO_COMMON) use_common = false;
-                        if (o->result_mode & NO_FILES) use_files = false;
-                        complete_from_args(arg, o->comp, o->localized_desc(), o->flags);
+                for (const complete_entry_opt_t &o : options) {
+                    const wchar_t *arg = param_match2(&o, str);
+                    if (arg != NULL && this->condition_test(o.condition)) {
+                        if (o.result_mode & NO_COMMON) use_common = false;
+                        if (o.result_mode & NO_FILES) use_files = false;
+                        complete_from_args(arg, o.comp, o.localized_desc(), o.flags);
                     }
                 }
             } else if (popt[0] == L'-') {
@@ -937,35 +928,31 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                 bool old_style_match = false;
 
                 // If we are using old style long options, check for them first.
-                for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end();
-                     ++oiter) {
-                    const complete_entry_opt_t *o = &*oiter;
-                    if (o->type == option_type_single_long && param_match(o, popt) &&
-                        this->condition_test(o->condition)) {
+                for (const complete_entry_opt_t &o : options) {
+                    if (o.type == option_type_single_long && param_match(&o, popt) &&
+                        this->condition_test(o.condition)) {
                         old_style_match = true;
-                        if (o->result_mode & NO_COMMON) use_common = false;
-                        if (o->result_mode & NO_FILES) use_files = false;
-                        complete_from_args(str, o->comp, o->localized_desc(), o->flags);
+                        if (o.result_mode & NO_COMMON) use_common = false;
+                        if (o.result_mode & NO_FILES) use_files = false;
+                        complete_from_args(str, o.comp, o.localized_desc(), o.flags);
                     }
                 }
 
                 // No old style option matched, or we are not using old style options. We check if
                 // any short (or gnu style options do.
                 if (!old_style_match) {
-                    for (option_list_t::const_iterator oiter = options.begin();
-                         oiter != options.end(); ++oiter) {
-                        const complete_entry_opt_t *o = &*oiter;
+                    for (const complete_entry_opt_t &o : options) {
                         // Gnu-style options with _optional_ arguments must be specified as a single
                         // token, so that it can be differed from a regular argument.
                         // Here we are testing the previous argument for a GNU-style match,
                         // to see how we should complete the current argument
-                        if (o->type == option_type_double_long && !(o->result_mode & NO_COMMON))
+                        if (o.type == option_type_double_long && !(o.result_mode & NO_COMMON))
                             continue;
 
-                        if (param_match(o, popt) && this->condition_test(o->condition)) {
-                            if (o->result_mode & NO_COMMON) use_common = false;
-                            if (o->result_mode & NO_FILES) use_files = false;
-                            complete_from_args(str, o->comp, o->localized_desc(), o->flags);
+                        if (param_match(&o, popt) && this->condition_test(o.condition)) {
+                            if (o.result_mode & NO_COMMON) use_common = false;
+                            if (o.result_mode & NO_FILES) use_files = false;
+                            complete_from_args(str, o.comp, o.localized_desc(), o.flags);
                         }
                     }
                 }
@@ -977,44 +964,41 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
         }
 
         // Now we try to complete an option itself
-        for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end();
-             ++oiter) {
-            const complete_entry_opt_t *o = &*oiter;
+        for (const complete_entry_opt_t &o : options) {
             // If this entry is for the base command, check if any of the arguments match.
-            if (!this->condition_test(o->condition)) continue;
-            if (o->option.empty()) {
-                use_files = use_files && ((o->result_mode & NO_FILES) == 0);
-                complete_from_args(str, o->comp, o->localized_desc(), o->flags);
+            if (!this->condition_test(o.condition)) continue;
+            if (o.option.empty()) {
+                use_files = use_files && ((o.result_mode & NO_FILES) == 0);
+                complete_from_args(str, o.comp, o.localized_desc(), o.flags);
             }
 
-            if (wcslen(str) == 0 || !use_switches) {
+            if (!use_switches || wcslen(str) == 0) {
                 continue;
             }
 
             // Check if the short style option matches.
-            if (short_ok(str, o, options)) {
+            if (short_ok(str, &o, options)) {
                 // It's a match.
-                const wcstring desc = o->localized_desc();
+                const wcstring desc = o.localized_desc();
                 // Append a short-style option
-                append_completion(&this->completions, o->option, desc, 0);
+                append_completion(&this->completions, o.option, desc, 0);
             }
 
             // Check if the long style option matches.
-            if (o->type != option_type_single_long && o->type != option_type_double_long) {
+            if (o.type != option_type_single_long && o.type != option_type_double_long) {
                 continue;
             }
-            int match = 0, match_no_case = 0;
 
-            wcstring whole_opt(o->expected_dash_count(), L'-');
-            whole_opt.append(o->option);
+            wcstring whole_opt(o.expected_dash_count(), L'-');
+            whole_opt.append(o.option);
 
-            match = string_prefixes_string(str, whole_opt);
+            int match = string_prefixes_string(str, whole_opt);
             if (!match) {
-                match_no_case = wcsncasecmp(str, whole_opt.c_str(), wcslen(str)) == 0;
-            }
+                bool match_no_case = wcsncasecmp(str, whole_opt.c_str(), wcslen(str)) == 0;
 
-            if (!match && !match_no_case) {
-                continue;
+                if (!match_no_case) {
+                    continue;
+                }
             }
 
             int has_arg = 0;  // does this switch have any known arguments
@@ -1028,21 +1012,21 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                 flags = COMPLETE_REPLACES_TOKEN;
             }
 
-            has_arg = !o->comp.empty();
-            req_arg = (o->result_mode & NO_COMMON);
+            has_arg = !o.comp.empty();
+            req_arg = (o.result_mode & NO_COMMON);
 
-            if (o->type == option_type_double_long && (has_arg && !req_arg)) {
+            if (o.type == option_type_double_long && (has_arg && !req_arg)) {
                 // Optional arguments to a switch can only be handled using the '=', so we add it as
                 // a completion. By default we avoid using '=' and instead rely on '--switch
                 // switch-arg', since it is more commonly supported by homebrew getopt-like
                 // functions.
                 wcstring completion = format_string(L"%ls=", whole_opt.c_str() + offset);
                 // Append a long-style option with a mandatory trailing equal sign
-                append_completion(&this->completions, completion, C_(o->desc), flags);
+                append_completion(&this->completions, completion, C_(o.desc), flags);
             }
 
             // Append a long-style option
-            append_completion(&this->completions, whole_opt.c_str() + offset, C_(o->desc), flags);
+            append_completion(&this->completions, whole_opt.c_str() + offset, C_(o.desc), flags);
         }
     }
 
@@ -1561,61 +1545,53 @@ wcstring complete_print() {
     scoped_lock locker(completion_lock);
 
     // Get a list of all completions in a vector, then sort it by order.
-    std::vector<const completion_entry_t *> all_completions;
-    for (completion_entry_set_t::const_iterator i = completion_set.begin();
-         i != completion_set.end(); ++i) {
-        all_completions.push_back(&*i);
+    std::vector<std::reference_wrapper<const completion_entry_t>> all_completions;
+    for (const completion_entry_t &i : completion_set) {
+        all_completions.emplace_back(i);
     }
     sort(all_completions.begin(), all_completions.end(), compare_completions_by_order);
 
-    for (std::vector<const completion_entry_t *>::const_iterator iter = all_completions.begin();
-         iter != all_completions.end(); ++iter) {
-        const completion_entry_t *e = *iter;
-        const option_list_t &options = e->get_options();
-        for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end();
-             ++oiter) {
-            const complete_entry_opt_t *o = &*oiter;
+    for (const completion_entry_t &e : all_completions) {
+        const option_list_t &options = e.get_options();
+        for (const complete_entry_opt_t &o : options) {
             const wchar_t *modestr[] = {L"", L" --no-files", L" --require-parameter",
                                         L" --exclusive"};
 
-            append_format(out, L"complete%ls", modestr[o->result_mode]);
+            append_format(out, L"complete%ls", modestr[o.result_mode]);
 
-            append_switch(out, e->cmd_is_path ? L"path" : L"command",
-                          escape_string(e->cmd, ESCAPE_ALL));
+            append_switch(out, e.cmd_is_path ? L"path" : L"command",
+                          escape_string(e.cmd, ESCAPE_ALL));
 
-            switch (o->type) {
+            switch (o.type) {
                 case option_type_args_only: {
                     break;
                 }
                 case option_type_short: {
-                    assert(!o->option.empty());  //!OCLINT(multiple unary operator)
-                    append_format(out, L" --short-option '%lc'", o->option.at(0));
+                    assert(!o.option.empty());  //!OCLINT(multiple unary operator)
+                    append_format(out, L" --short-option '%lc'", o.option.at(0));
                     break;
                 }
                 case option_type_single_long:
                 case option_type_double_long: {
                     append_switch(
-                        out, o->type == option_type_single_long ? L"old-option" : L"long-option",
-                        o->option);
+                        out, o.type == option_type_single_long ? L"old-option" : L"long-option",
+                        o.option);
                     break;
                 }
             }
 
-            append_switch(out, L"description", C_(o->desc));
-            append_switch(out, L"arguments", o->comp);
-            append_switch(out, L"condition", o->condition);
+            append_switch(out, L"description", C_(o.desc));
+            append_switch(out, L"arguments", o.comp);
+            append_switch(out, L"condition", o.condition);
             out.append(L"\n");
         }
     }
 
     // Append wraps. This is a wonky interface where even values are the commands, and odd values
     // are the targets that they wrap.
-    const wcstring_list_t wrap_pairs = complete_get_wrap_pairs();
-    assert(wrap_pairs.size() % 2 == 0);
-    for (size_t i = 0; i < wrap_pairs.size();) {
-        const wcstring &cmd = wrap_pairs.at(i++);
-        const wcstring &target = wrap_pairs.at(i++);
-        append_format(out, L"complete --command %ls --wraps %ls\n", cmd.c_str(), target.c_str());
+    auto wrap_pairs = complete_get_wrap_pairs();
+    for (const auto &entry : wrap_pairs) {
+        append_format(out, L"complete --command %ls --wraps %ls\n", std::get<0>(entry).c_str(), std::get<1>(entry).c_str());
     }
     return out;
 }
@@ -1684,17 +1660,8 @@ wcstring_list_t complete_get_wrap_targets(const wcstring &command) {
     return iter->second;
 }
 
-wcstring_list_t complete_get_wrap_pairs() {
-    wcstring_list_t result;
+tuple_list<wcstring, wcstring> complete_get_wrap_pairs() {
     scoped_lock locker(wrapper_lock);
     const wrapper_map_t &wraps = wrap_map();
-    for (wrapper_map_t::const_iterator outer = wraps.begin(); outer != wraps.end(); ++outer) {
-        const wcstring &cmd = outer->first;
-        const wcstring_list_t &targets = outer->second;
-        for (size_t i = 0; i < targets.size(); i++) {
-            result.push_back(cmd);
-            result.push_back(targets.at(i));
-        }
-    }
-    return result;
+    return flatten(wrap_map());
 }

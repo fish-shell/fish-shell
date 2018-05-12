@@ -2,33 +2,43 @@
 # See: https://golang.org
 
 function __fish__go_buildflags_completions -d 'Complete go build commands' --argument-names cmd
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -s a -d 'force rebuild'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -s n -d 'print the commands but do not run them'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -s p -r -d 'number parallel builds (default=#cpus)'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -o race -d 'enable data race detection'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -s v -d 'print packages being built'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -o work -d 'print and preserve work directory'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -s x -d 'print the commands'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -o ccflags -r -d 'c compiler flags'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -o compiler -x -d 'name of compiler to use, as in runtime' -a 'gccgo gc'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -o gccgoflags -r -d 'gccgo compiler/linker flags'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -o gcflags -r -d 'go compiler flags'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -o installsuffix -r -d 'suffix for installation directory'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -o ldflags -r -d 'linker flags'
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -o tags -r -d 'build tags'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -s a -d 'force rebuild'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -s n -d 'print the commands but do not run them'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -s p -r -d 'number parallel builds (default=#cpus)'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -o race -d 'enable data race detection'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -s v -d 'print packages being built'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -o work -d 'print and preserve work directory'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -s x -d 'print the commands'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -o ccflags -r -d 'c compiler flags'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -o compiler -x -d 'name of compiler to use, as in runtime' -a 'gccgo gc'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -o gccgoflags -r -d 'gccgo compiler/linker flags'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -o gcflags -r -d 'go compiler flags'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -o installsuffix -r -d 'suffix for installation directory'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -o ldflags -r -d 'linker flags'
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -o tags -r -d 'build tags'
 end
 
-function __fish_complete_go_files -d 'Complete go' --argument-names cmd
-        complete -c go -n "__fish_seen_subcommand_from $cmd" -x -a "(
+function __fish_complete_go_files -d 'Complete go files' --argument-names cmd
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -x -a "(
                 __fish_complete_suffix .go
-        )
-        "
+        )" --description 'File'
+end
+
+function __fish_complete_go_packages -d 'Complete go packages' --argument-names cmd
+    complete -c go -n "__fish_seen_subcommand_from $cmd" -x -a "(
+                __fish_print_go_packages (commandline -ct)
+        )" --description 'Package'
+end
+
+function __fish_print_go_packages -d "Go packages"
+    go list -e "$argv..." ^/dev/null
 end
 
 # build
 complete -c go -n '__fish_use_subcommand' -a build -d 'compile packages and dependencies'
 __fish__go_buildflags_completions build
 __fish_complete_go_files build
+__fish_complete_go_packages build
 
 # clean
 complete -c go -n '__fish_use_subcommand' -a clean -d 'remove object files'
@@ -41,17 +51,22 @@ complete -c go -n '__fish_seen_subcommand_from clean' -s x -d "clean to print re
 complete -c go -n '__fish_use_subcommand' -a doc -d 'run godoc on package sources'
 complete -c go -n '__fish_seen_subcommand_from doc' -s n -d "prints commands that would be executed"
 complete -c go -n '__fish_seen_subcommand_from doc' -s x -d "prints commands as they are executed"
+__fish_complete_go_packages doc
 
 # env
 complete -c go -n '__fish_use_subcommand' -a env -d 'print Go environment information'
 
 # fix
 complete -c go -n '__fish_use_subcommand' -a fix -d 'run go tool fix on packages'
+__fish_complete_go_files fix
+__fish_complete_go_packages fix
 
 # fmt
 complete -c go -n '__fish_use_subcommand' -a fmt -d 'run gofmt on package sources'
 complete -c go -n '__fish_seen_subcommand_from fmt' -s n -d "prints commands that would be executed"
 complete -c go -n '__fish_seen_subcommand_from fmt' -s x -d "prints commands as they are executed"
+__fish_complete_go_files fmt
+__fish_complete_go_packages fmt
 
 # get
 complete -c go -n '__fish_use_subcommand' -a get -d 'download and install packages and dependencies'
@@ -67,6 +82,8 @@ complete -c go -n '__fish_seen_subcommand_from help' -xa 'build clean doc env fi
 # install
 complete -c go -n '__fish_use_subcommand' -a install -d 'compile and install packages and dependencies'
 __fish__go_buildflags_completions install
+__fish_complete_go_files install
+__fish_complete_go_packages install
 
 # list
 complete -c go -n '__fish_use_subcommand' -a list -d 'list packages'
@@ -86,6 +103,7 @@ complete -c go -n '__fish_seen_subcommand_from test' -s c -r -d "compile the tes
 complete -c go -n '__fish_seen_subcommand_from test' -s i -d "install dependent packages, but don't run tests"
 __fish__go_buildflags_completions test
 __fish_complete_go_files test
+__fish_complete_go_packages test
 
 # tool
 complete -c go -n '__fish_use_subcommand' -a tool -d 'run specified go tool'
@@ -101,3 +119,5 @@ complete -c go -f -n '__fish_seen_subcommand_from version'
 complete -c go -n '__fish_use_subcommand' -a vet -d 'vet packages'
 complete -c go -n '__fish_seen_subcommand_from vet' -s n -d "print the command that would be executed"
 complete -c go -n '__fish_seen_subcommand_from vet' -s x -d "prints commands as they are executed"
+__fish_complete_go_files vet
+__fish_complete_go_packages vet

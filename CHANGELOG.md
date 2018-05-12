@@ -18,7 +18,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - The new `math` builtin (see below) does not support logical expressions; `test` should be used instead (#4777).
 
 ## Notable fixes and improvements
-- A new feature flags mechanism is added for staging deprecations and breaking changes. (#4940) 
+- A new feature flags mechanism is added for staging deprecations and breaking changes. (#4940)
 - `wait` builtin is added for waiting on processes (#4498).
 - `read` has a new `--delimiter` option as a better alternative to the `IFS` variable (#4256).
 - `read` writes directly to stdout if called without arguments (#4407)
@@ -62,12 +62,13 @@ This section is for changes merged to the `major` branch that are not also merge
 - Added completions for
   - `bd` (#4472)
   - `bower`<sup>&#x2217;</sup>
-  - `configure`
+  - `configure` (autoconf only)
   - `j` (autojump #4344)
   - `jhipster` (#4472)
   - `ngrok` (#4642)
   - `optipng`
   - `port`
+  - `ttx`
 - Improved completions for
   - `brew`
   - `diskutil`
@@ -77,7 +78,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `yarn`<sup>&#x2217;</sup><sup>†</sup>
 
 &#x2217; _`jq` must be installed to complete the list of currently installed `bower` or `yarn` packages_. <br/>
-† _to autocomplete the list of packages available for installation with `npm` or `yarn`, `all-the-package-names` must be installed (typically: `sudo npm install -g all-the-package-names`)._
+† _to autocomplete the list of packages available for installation with `npm` or `yarn`, `all-the-package-names` must be installed globally (typically: `sudo npm install -g all-the-package-names`)._
 
 --
 

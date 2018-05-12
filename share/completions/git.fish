@@ -14,7 +14,7 @@ function __fish_git_commits
     # For fish, at the time of writing, out of 12200 commits, 7 commits need 8 characters.
     # And since this takes about 1/3rd of the time that disambiguating takes...
     command git log --pretty=tformat:"%H"\t"%<(64,trunc)%s" --all --max-count=1000 2>/dev/null \
-    | string replace -r '^([0-9a-f]{10})[0-9a-f]*\t(.*)' '$1\t$2'
+        | string replace -r '^([0-9a-f]{10})[0-9a-f]*\t(.*)' '$1\t$2'
 end
 
 function __fish_git_recent_commits
@@ -28,8 +28,8 @@ function __fish_git_branches
     # This is much faster than using `git branch`,
     # and avoids having to deal with localized "detached HEAD" messages.
     command git for-each-ref --format='%(refname)' refs/heads/ refs/remotes/ \
-    | string replace -r '^refs/heads/(.*)$' '$1\tLocal Branch' \
-    | string replace -r '^refs/remotes/(.*)$' '$1\tRemote Branch'
+        | string replace -r '^refs/heads/(.*)$' '$1\tLocal Branch' \
+        | string replace -r '^refs/remotes/(.*)$' '$1\tRemote Branch'
 end
 
 function __fish_git_unique_remote_branches
@@ -38,9 +38,9 @@ function __fish_git_unique_remote_branches
     # E.g. if only alice has a "frobulate" branch
     # `git checkout frobulate` is equivalent to `git checkout -b frobulate --track alice/frobulate`.
     command git for-each-ref --format="%(refname:strip=3)" \
-	--sort="refname:strip=3" \
-	"refs/remotes/*/$match*" "refs/remotes/*/*/**" | \
-	uniq -u
+        --sort="refname:strip=3" \
+        "refs/remotes/*/$match*" "refs/remotes/*/*/**" | \
+        uniq -u
 end
 
 function __fish_git_tags
@@ -115,7 +115,7 @@ function __fish_git_files
     # --ignore-submodules=all was added in git 1.7.2, released July 2010.
     set -l use_next
     command git status --porcelain -z --ignore-submodules=all \
-    | while read -lz -d '' line
+        | while read -lz -d '' line
         # The entire line is the "from" from a rename.
         if set -q use_next[1]
             if contains -- $use_next $argv
@@ -169,7 +169,8 @@ function __fish_git_files
             case 'A ' AM AD
                 # Additions are only shown here if they are staged.
                 # Otherwise it's an untracked file.
-                contains -- added $argv; or contains -- all-staged $argv
+                contains -- added $argv
+                or contains -- all-staged $argv
                 and printf '%s\t%s\n' "$file" $added_desc
             case '*M'
                 # Modified
@@ -180,7 +181,8 @@ function __fish_git_files
                 # which means it is staged.
                 # This is useless for many commands - e.g. `checkout` won't do anything with this.
                 # So it needs to be requested explicitly.
-                contains -- modified-staged $argv; or contains -- all-staged $argv
+                contains -- modified-staged $argv
+                or contains -- all-staged $argv
                 and printf '%s\t%s\n' "$file" $staged_modified_desc
             case '*D'
                 contains -- deleted $argv
@@ -190,7 +192,8 @@ function __fish_git_files
                 # There is both X unmodified and Y either M or D ("not updated")
                 # and Y is D and X is unmodified or [MARC] ("deleted in work tree").
                 # For our purposes, we assume this is a staged deletion.
-                contains -- deleted-staged $argv; or contains -- all-staged $argv
+                contains -- deleted-staged $argv
+                or contains -- all-staged $argv
                 and printf '%s\t%s\n' "$file" $staged_deleted_desc
             case "$dq" # a literal '??'
                 # Untracked
@@ -226,7 +229,8 @@ end
 function __fish_git_needs_command
     set cmd (commandline -opc)
     set -l skip_next 1
-    set -q cmd[2]; or return 0
+    set -q cmd[2]
+    or return 0
     # Skip first word because it's "git" or a wrapper
     for c in $cmd[2..-1]
         test $skip_next -eq 0
@@ -374,6 +378,12 @@ function __fish_git_reflog
     command git reflog --no-decorate 2>/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
 end
 
+function __fish_git_help_all_concepts
+    git help -g | string match -e -r '^   \w+' | while read -l concept desc
+        printf "%s\tConcept: %s\n" $concept (string trim $desc)
+    end
+end
+
 function __fish_git_diff_opt -a option
     switch $option
         case diff-algorithm
@@ -503,7 +513,7 @@ complete -c git -n '__fish_git_using_command diff show' -l stat -d 'Generate a d
 complete -c git -n '__fish_git_using_command diff show' -l summary -d 'Output a condensed summary of extended header information'
 complete -c git -n '__fish_git_using_command diff show' -l textconv -d 'Allow external text conversion filters to be run when comparing binary files'
 complete -c git -n '__fish_git_using_command diff show' -l word-diff -d 'Show a word diff'
-complete -c git -n '__fish_git_using_command diff show' -l word-diff-regex  -d 'Use <regex> to decide what a word is'
+complete -c git -n '__fish_git_using_command diff show' -l word-diff-regex -d 'Use <regex> to decide what a word is'
 complete -c git -n '__fish_git_using_command diff show' -s a -l text -d 'Treat all files as text'
 complete -c git -n '__fish_git_using_command diff show' -s B -l break-rewrites -d 'Break complete rewrite changes into pairs of delete and create'
 complete -c git -n '__fish_git_using_command diff show' -s b -l ignore-space-change -d 'Ignore changes in amount of whitespace'
@@ -707,7 +717,7 @@ complete -f -c git -n '__fish_git_using_command diff' -a '(__fish_git_files modi
 
 function __fish_git_diffmerge_tools -a cmd
     git $cmd --tool-help | \
-    while read -l line
+        while read -l line
         string match -q 'The following tools are valid, but not currently available:' -- $line
         and break
         string replace -f -r '^\t\t(\w+).*$' '$1' -- $line
@@ -740,7 +750,7 @@ complete -f -c git -n '__fish_git_needs_command' -a init -d 'Create an empty git
 # TODO options
 
 ### log
-complete -c git -n '__fish_git_needs_command'    -a shortlog -d 'Show commit shortlog'
+complete -c git -n '__fish_git_needs_command' -a shortlog -d 'Show commit shortlog'
 complete -c git -n '__fish_git_needs_command' -a log -d 'Show commit logs'
 complete -c git -n '__fish_git_using_command log; and not contains -- -- (commandline -op)' -a '(__fish_git_refs) (__fish_git_ranges)'
 
@@ -1242,6 +1252,46 @@ complete -f -c git -n '__fish_git_using_command blame' -s s -d 'Suppress the aut
 complete -f -c git -n '__fish_git_using_command blame' -s e -l show-email -d 'Show the author email instead of author name'
 complete -f -c git -n '__fish_git_using_command blame' -s w -d 'Ignore whitespace changes'
 
+### help
+complete -f -c git -n '__fish_git_using_command help' -a '(__fish_git_help_all_concepts)'
+complete -f -c git -n '__fish_git_using_command help' -a add -d 'Add file contents to the index'
+complete -f -c git -n '__fish_git_using_command help' -a apply -d 'Apply a patch on a git index file and a working tree'
+complete -f -c git -n '__fish_git_using_command help' -a archive -d 'Create an archive of files from a named tree'
+complete -f -c git -n '__fish_git_using_command help' -a bisect -d 'Find the change that introduced a bug by binary search'
+complete -f -c git -n '__fish_git_using_command help' -a blame -d 'Show what revision and author last modified each line of a file'
+complete -f -c git -n '__fish_git_using_command help' -a branch -d 'List, create, or delete branches'
+complete -f -c git -n '__fish_git_using_command help' -a checkout -d 'Checkout and switch to a branch'
+complete -f -c git -n '__fish_git_using_command help' -a cherry-pick -d 'Apply the change introduced by an existing commit'
+complete -f -c git -n '__fish_git_using_command help' -a clean -d 'Remove untracked files from the working tree'
+complete -f -c git -n '__fish_git_using_command help' -a clone -d 'Clone a repository into a new directory'
+complete -f -c git -n '__fish_git_using_command help' -a commit -d 'Record changes to the repository'
+complete -f -c git -n '__fish_git_using_command help' -a config -d 'Set and read git configuration variables'
+complete -f -c git -n '__fish_git_using_command help' -a diff -d 'Show changes between commits, commit and working tree, etc'
+complete -f -c git -n '__fish_git_using_command help' -a difftool -d 'Open diffs in a visual tool'
+complete -f -c git -n '__fish_git_using_command help' -a fetch -d 'Download objects and refs from another repository'
+complete -f -c git -n '__fish_git_using_command help' -a filter-branch -d 'Rewrite branches'
+complete -f -c git -n '__fish_git_using_command help' -a format-patch -d 'Generate patch series to send upstream'
+complete -f -c git -n '__fish_git_using_command help' -a grep -d 'Print lines matching a pattern'
+complete -f -c git -n '__fish_git_using_command help' -a init -d 'Create an empty git repository or reinitialize an existing one'
+complete -f -c git -n '__fish_git_using_command help' -a log -d 'Show commit logs'
+complete -f -c git -n '__fish_git_using_command help' -a merge -d 'Join two or more development histories together'
+complete -f -c git -n '__fish_git_using_command help' -a mergetool -d 'Run merge conflict resolution tools to resolve merge conflicts'
+complete -f -c git -n '__fish_git_using_command help' -a mv -d 'Move or rename a file, a directory, or a symlink'
+complete -f -c git -n '__fish_git_using_command help' -a prune -d 'Prune all unreachable objects from the object database'
+complete -f -c git -n '__fish_git_using_command help' -a pull -d 'Fetch from and merge with another repository or a local branch'
+complete -f -c git -n '__fish_git_using_command help' -a push -d 'Update remote refs along with associated objects'
+complete -f -c git -n '__fish_git_using_command help' -a rebase -d 'Forward-port local commits to the updated upstream head'
+complete -f -c git -n '__fish_git_using_command help' -a remote -d 'Manage set of tracked repositories'
+complete -f -c git -n '__fish_git_using_command help' -a reset -d 'Reset current HEAD to the specified state'
+complete -f -c git -n '__fish_git_using_command help' -a revert -d 'Revert an existing commit'
+complete -f -c git -n '__fish_git_using_command help' -a rm -d 'Remove files from the working tree and from the index'
+complete -f -c git -n '__fish_git_using_command help' -a show -d 'Shows the last commit of a branch'
+complete -f -c git -n '__fish_git_using_command help' -a show-branch -d 'Shows the commits on branches'
+complete -f -c git -n '__fish_git_using_command help' -a stash -d 'Stash away changes'
+complete -f -c git -n '__fish_git_using_command help' -a status -d 'Show the working tree status'
+complete -f -c git -n '__fish_git_using_command help' -a submodule -d 'Initialize, update or inspect submodules'
+complete -f -c git -n '__fish_git_using_command help' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
+complete -f -c git -n '__fish_git_using_command help' -a whatchanged -d 'Show logs with difference each commit introduces'
 
 ## Custom commands (git-* commands installed in the PATH)
 complete -c git -n '__fish_git_needs_command' -a '(__fish_git_custom_commands)' -d 'Custom command'

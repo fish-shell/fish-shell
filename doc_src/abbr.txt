@@ -11,28 +11,15 @@ abbr --list
 
 \subsection abbr-description Description
 
-Abbreviations are user-defined character sequences or words that are replaced with longer phrases after they are entered. For example, a frequently-run command such as `git checkout` can be abbreviated to `gco`. After entering `gco` and pressing @key{Space} or @key{Enter}, the full text `git checkout` will appear in the command line. The `abbr` command manipulates those abbreviations.
+`abbr` manages abbreviations - user-defined words that are replaced with longer phrases after they are entered.
 
-Each abbreviation is stored in its own global or universal variable. The name consists of the prefix `_fish_abbr_` followed by the WORD after being transformed by `string escape style=var`. The WORD cannot contain a space but all other characters are legal.
-
-Defining an abbreviation with global scope is slightly faster than universal scope (which is the default). But in general you'll only want to use the global scope when defining abbreviations in a startup script like `~/.config/fish/config.fish` like this:
-
-\fish
-if status --is-interactive
-    abbr --add --global first 'echo my first abbreviation'
-    abbr --add --global second 'echo my second abbreviation'
-    abbr --add --global gco git checkout
-    # etcetera
-end
-\endfish
-
-You can create abbreviations interactively and they will be visible to other fish sessions if you use the `-U` or `--universal` flag or don't explicitly specify the scope and the abbreviation isn't already defined with global scope. If you want it to be visible only to the current shell use the `-g` or `--global` flag.
+For example, a frequently-run command like `git checkout` can be abbreviated to `gco`. After entering `gco` and pressing @key{Space} or @key{Enter}, the full text `git checkout` will appear in the command line.
 
 \subsection abbr-options Options
 
 The following options are available:
 
-- `-a WORD EXPANSION` or `--add WORD EXPANSION` Adds a new abbreviation, causing WORD to be expanded to PHRASE. You can optionally specify `-g` or `--global` to avoid the overhead of universal variables at the expense of not having the definition being immediately visible to other fish shells that are already running. If you don't specify global scope it default to universal. For clarity you can also specify `-U` or `--universal`.
+- `-a WORD EXPANSION` or `--add WORD EXPANSION` Adds a new abbreviation, causing WORD to be expanded to PHRASE.
 
 - `-r OLD_WORD NEW_WORD` or `--rename OLD_WORD NEW_WORD` Renames an abbreviation, from OLD_WORD to NEW_WORD.
 
@@ -41,6 +28,13 @@ The following options are available:
 - `-l` or `--list` Lists all abbreviated words.
 
 - `-e WORD` or `--erase WORD` Erase the abbreviation WORD.
+
+In addition, when adding abbreviations:
+
+- `-g` or `--global` to use a global variable.
+- `-U` or `--universal` to use a universal variable (default).
+
+See the "Internals" section for more on them.
 
 \subsection abbr-example Examples
 
@@ -68,3 +62,19 @@ Erase the `gco` abbreviation.
 ssh another_host abbr -s | source
 \endfish
 Import the abbreviations defined on another_host over SSH.
+
+\subsection abbr-internals Internals
+Each abbreviation is stored in its own global or universal variable. The name consists of the prefix `_fish_abbr_` followed by the WORD after being transformed by `string escape style=var`. The WORD cannot contain a space but all other characters are legal.
+
+Defining an abbreviation with global scope is slightly faster than universal scope (which is the default). But in general you'll only want to use the global scope when defining abbreviations in a startup script like `~/.config/fish/config.fish` like this:
+
+\fish
+if status --is-interactive
+    abbr --add --global first 'echo my first abbreviation'
+    abbr --add --global second 'echo my second abbreviation'
+    abbr --add --global gco git checkout
+    # etcetera
+end
+\endfish
+
+You can create abbreviations interactively and they will be visible to other fish sessions if you use the `-U` or `--universal` flag or don't explicitly specify the scope and the abbreviation isn't already defined with global scope. If you want it to be visible only to the current shell use the `-g` or `--global` flag.

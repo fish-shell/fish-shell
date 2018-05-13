@@ -8,6 +8,7 @@ eval [COMMANDS...]
 \subsection eval-description Description
 `eval` evaluates the specified parameters as a command. If more than one parameter is specified, all parameters will be joined using a space character as a separator.
 
+If your command does not need access to stdin, consider using `source` instead.
 
 \subsection eval-example Example
 

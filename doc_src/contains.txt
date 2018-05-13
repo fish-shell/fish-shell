@@ -13,9 +13,19 @@ The following options are available:
 
 - `-i` or `--index` print the word index
 
-Note that, like GNU tools, `contains` interprets all arguments starting with a `-` as options to contains, until it reaches an argument that is `--` (two dashes). See the examples below.
+Note that, like GNU tools and most of fish's builtins, `contains` interprets all arguments starting with a `-` as options to contains, until it reaches an argument that is `--` (two dashes). See the examples below.
 
 \subsection contains-example Example
+
+If $animals is a list of animals, the following will test if it contains a cat:
+
+\fish
+if contains cat $animals
+   echo Your animal list is evil!
+end
+\endfish
+
+This code will add some directories to $PATH if they aren't yet included:
 
 \fish
 for i in ~/bin /usr/local/bin
@@ -25,7 +35,7 @@ for i in ~/bin /usr/local/bin
 end
 \endfish
 
-The above code tests if `~/bin` and `/usr/local/bin` are in the path and adds them if not.
+While this will check if `hasargs` was run with the `-q` option:
 
 \fish
 function hasargs
@@ -35,4 +45,4 @@ function hasargs
 end
 \endfish
 
-The above code checks for `-q` in the argument list, using the `--` argument to demarcate options to `contains` from the key to search for.
+The `--` here stops `contains` from treating `-q` to an option to itself. Instead it treats it as a normal string to check.

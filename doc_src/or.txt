@@ -7,7 +7,7 @@ COMMAND1; or COMMAND2
 
 \subsection or-description Description
 
-`or` is used to execute a command if the current exit status (as set by the previous command) is not 0.
+`or` is used to execute a command if the previous command was not successful (returned a status of something other than 0).
 
 `or` statements may be used as part of the condition in an <a href="#if">`and`</a> or <a href="#while">`while`</a> block. See the documentation
 for <a href="#if">`if`</a> and <a href="#while">`while`</a> for examples.

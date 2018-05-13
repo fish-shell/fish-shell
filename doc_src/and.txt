@@ -7,7 +7,7 @@ COMMAND1; and COMMAND2
 
 \subsection and-description Description
 
-`and` is used to execute a command if the current exit status (as set by the previous command) is 0.
+`and` is used to execute a command if the previous command was successful (returned a status of 0).
 
 `and` statements may be used as part of the condition in an <a href="#if">`if`</a> or <a href="#while">`while`</a> block. See the documentation for <a href="#if">`if`</a> and <a href="#while">`while`</a> for examples.
 

@@ -116,14 +116,6 @@ class arg_iterator_t {
     arg_iterator_t(const wchar_t *const *argv, int argidx, const io_streams_t &streams)
         : argv_(argv), argidx_(argidx), streams_(streams) {}
 
-    /// \return the next argument, or null if the argument list is exhausted.
-    const wchar_t *next() {
-        if (string_args_from_stdin(streams_)) {
-            return get_arg_stdin();
-        }
-        return string_get_arg_argv(&argidx_, argv_);
-    }
-
     const wcstring *nextstr() {
         if (string_args_from_stdin(streams_)) {
             return get_arg_stdin() ? &storage_ : NULL;
@@ -1056,20 +1048,18 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    const wchar_t *sep = opts.arg1;
-    const wchar_t *sep_end = sep + wcslen(sep);
+    const wcstring sep(opts.arg1);
 
     wcstring_list_t splits;
     size_t arg_count = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        const wchar_t *arg_end = arg + wcslen(arg);
+    while (auto arg = aiter.nextstr()) {
         if (opts.right) {
-            typedef std::reverse_iterator<const wchar_t *> reverser;
-            split_about(reverser(arg_end), reverser(arg), reverser(sep_end), reverser(sep), &splits,
-                        opts.max, opts.no_empty);
+            split_about(arg->rbegin(), arg->rend(), sep.rbegin(), sep.rend(), &splits, opts.max, opts.no_empty);
+            // split_about(reverser(arg->end()), reverser(arg->begin()), reverser(sep_end), reverser(sep), &splits,
+            //             opts.max, opts.no_empty);
         } else {
-            split_about(arg, arg_end, sep, sep_end, &splits, opts.max, opts.no_empty);
+            split_about(arg->begin(), arg->end(), sep.begin(), sep.end(), &splits, opts.max, opts.no_empty);
         }
         arg_count++;
     }
@@ -1109,6 +1099,7 @@ static wcstring wcsrepeat(const wcstring &to_repeat, size_t count) {
 // Helper function to abstract the repeat until logic from string_repeat
 // returns the to_repeat string, repeated until max char has been reached.
 static wcstring wcsrepeat_until(const wcstring &to_repeat, size_t max) {
+    if (to_repeat.length() == 0) return wcstring();
     size_t count = max / to_repeat.length();
     size_t mod = max % to_repeat.length();
 
@@ -1129,12 +1120,11 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
     bool is_empty = true;
 
     arg_iterator_t aiter(argv, optind, streams);
-    if ((to_repeat = aiter.next()) != NULL && *to_repeat) {
-        const wcstring word(to_repeat);
+    if (auto word = aiter.nextstr()) {
         const bool limit_repeat =
-            (opts.max > 0 && word.length() * opts.count > (size_t)opts.max) || !opts.count;
+            (opts.max > 0 && word->length() * opts.count > (size_t)opts.max) || !opts.count;
         const wcstring repeated =
-            limit_repeat ? wcsrepeat_until(word, opts.max) : wcsrepeat(word, opts.count);
+            limit_repeat ? wcsrepeat_until(*word, opts.max) : wcsrepeat(*word, opts.count);
         is_empty = repeated.empty();
 
         if (!opts.quiet && !is_empty) {

@@ -1,7 +1,7 @@
 # completions for ttx, xml font export utility
 
 # Retrieved from http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=IWS-AppendixC
-# Not all may be supported by ttx
+# Not all may be supported by ttx; names *are* case-sensitive and correct as they appear.
 set -l table_names name glyf cmap post OS/2 head hmtx hhea kern hdmx LTHS vmtx vhea VDMX loca maxp DSIG PCLT gasp prep fpgm cvt CFF VORG EBDT EBLC EBSC GSUB GPOS GDEF BASE JSTF Silf Glat Gloc Feat mort morx feat acnt bsln just lcar fdsc fmtx prop Zapf opbd trak fvar gvar avar cvar bdat bhed bloc hsty PfEd TeX BDF FFTM
 
 set -l formats raw row bitwise extfile

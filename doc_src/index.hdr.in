@@ -549,15 +549,18 @@ Note that without the quotes or braces, fish will try to expand a variable calle
 
 The latter syntax `{$WORD}` works by exploiting <a href="#expand-brace">brace expansion</a>.
 
-When two expansions directly follow each other, you need to watch out for expansions that expand to nothing. This includes undefined variables and empty lists, but also command substitutions with no output.
 
 In these cases, the expansion eliminates the string, as a result of the implicit <a href="#cartesian-product">cartesian product</a>.
 
 If, in the example above, $WORD is undefined or an empty list, the "s" is not printed. However, it is printed, if $WORD is the empty string.
 
-Variable expansion is the only type of expansion performed on double quoted strings. There is, however, an important difference in how variables are expanded when quoted and when unquoted. An unquoted variable expansion will result in a variable number of arguments. For example, if the variable `$foo` has zero elements or is undefined, the argument `$foo` will expand to zero elements. If the variable $foo is an array of five elements, the argument `$foo` will expand to five elements. When quoted, like `"$foo"`, a variable expansion will always result in exactly one argument. Undefined variables will expand to the empty string, and array variables will be concatenated using the space character.
+Unlike all other expanions, variable expansion also happens in double quoted strings. Inside double quotes (`"these"`), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces.
 
-There is one further notable feature of fish variable expansion. Consider the following code snippet:
+Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
+
+When two unquoted expansions directly follow each other, you need to watch out for expansions that expand to nothing. This includes undefined variables and empty lists, but also command substitutions with no output. See the <a href="#cartesian-product">cartesian product</a> section for more information.
+
+The `$` symbol can also be used multiple times, as a kind of "dereference" operator (the `*` in C or C++), like in the following code:
 
 \fish
 set foo a b c
@@ -572,7 +575,7 @@ end
 # 30
 \endfish
 
-The above code demonstrates how to use multiple '`$`' symbols to expand the value of a variable as a variable name. One can think of the `$` symbol as a variable dereference operator. When using this feature together with array brackets, the brackets will always match the innermost `$` dereference. Thus, `$$foo[5]` will always mean the fifth element of the `foo` variable should be dereferenced, not the fifth element of the doubly dereferenced variable `foo`. The latter can instead be expressed as `$$foo[1][5]`.
+When using this feature together with array brackets, the brackets will always match the innermost `$` dereference. Thus, `$$foo[5]` will always mean the fifth element of the `foo` variable should be dereferenced, not the fifth element of the doubly dereferenced variable `foo`. The latter can instead be expressed as `$$foo[1][5]`.
 
 
 \subsection cartesian-product Cartesian Products
@@ -605,24 +608,23 @@ Examples:
 
 Be careful when you try to use braces to separate variable names from text. The problem shown above can be avoided by wrapping the variable in double quotes instead of braces (`echo "$c"word`).
 
-Please note, that the expansion as cartesian product also happens after <a href="#expand-command-substitution">command substitution</a>. Therefore strings might be eliminated. This can be avoided by returning the empty string.
+This also happens after <a href="#expand-command-substitution">command substitution</a>. Therefore strings might be eliminated. This can be avoided by making the inner command return a trailing newline.
+
+E.g.
+
+\fish{cli-dark}
+>_ echo (printf '%s' '')banana # the printf prints literally nothing
+>_ echo (printf '%s\n' '')banana # the printf prints just a newline, so the command substitution expands to an empty string
+<outp>banana</outp>
+# After command substitution, the previous line looks like:
+>_ echo ""banana
+\endfish
 
 Examples:
 \fish{cli-dark}
 >_ set b 1 2 3
 >_ echo (echo x)$b
 <outp>x1 x2 x3</outp>
-
-function void
-end
->_ echo (void)word
-<outp># Output is an empty line</outp>
-
-function empty
-    echo
-end
->_ echo (empty)word
-<outp>word</outp>
 \endfish
 
 \subsection expand-index-range Index range expansion

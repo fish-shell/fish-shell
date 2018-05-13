@@ -65,6 +65,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `configure` (autoconf only)
   - `j` (autojump #4344)
   - `jhipster` (#4472)
+  - `meson`
   - `ngrok` (#4642)
   - `optipng`
   - `port`
@@ -74,6 +75,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `diskutil`
   - `git` (#4395, #4396, #4592)
   - `npm`<sup>†</sup>
+  - `python`/`python2`/`python3`
   - `ssh` (#4344)
   - `yarn`<sup>&#x2217;</sup><sup>†</sup>
 

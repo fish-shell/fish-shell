@@ -39,14 +39,14 @@ end
 
 complete -c meson -s "D" -d "Set value of an option (-D foo=bar)"
 
-complete -c meson -l buildtype -xa '(string split , plain,debug,debugoptimized,release,minsize)' -d "Set build type [debug]"
-complete -c meson -l layout -xa '(string split , mirror,flat)' -d "Build directory layout [mirror]"
-complete -c meson -l backend -xa '(string split , ninja,vs,vs2010,vs2015,vs2017,xcode)' -d "Compilation backend [ninja]"
-complete -c meson -l default-library -xa '(string split , shared,static,both)' -d "Default library type [shared]"
-complete -c meson -l warning-level -xa '(string split , 1,2,3)' -d "Warning level [1]"
-complete -c meson -l unity -xa '(string split , on,off,subprojects)' -d "Unity build [off]"
+complete -c meson -l buildtype -xa 'plain debug debugoptimized release minsize' -d "Set build type [debug]"
+complete -c meson -l layout -xa 'mirror flat' -d "Build directory layout [mirror]"
+complete -c meson -l backend -xa 'ninja vs vs2010 vs2015 vs2017 xcode' -d "Compilation backend [ninja]"
+complete -c meson -l default-library -xa 'shared static both' -d "Default library type [shared]"
+complete -c meson -l warning-level -xa '1 2 3' -d "Warning level [1]"
+complete -c meson -l unity -xa 'on off subprojects' -d "Unity build [off]"
 complete -c meson -l cross-file -r -d "File describing cross-compilation environment"
-complete -c meson -l wrap-mode -xa '(printf "%s\n" WrapMode.{default,nofallback,nodownload,forcefallback})' -d "Special wrap mode to use"
+complete -c meson -l wrap-mode -xa 'WrapMode.{default,nofallback,nodownload,forcefallback}' -d "Special wrap mode to use"
 
 # final parameter
 complete -c meson -n '__fish_is_first_token' -xa '(__fish_complete_suffix {})'

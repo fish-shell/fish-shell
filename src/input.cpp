@@ -260,9 +260,15 @@ void init_input() {
         input_mapping_add(L"\n", L"execute");
         input_mapping_add(L"\r", L"execute");
         input_mapping_add(L"\t", L"complete");
-        input_mapping_add(L"\x3", L"commandline \"\"");
+        input_mapping_add(L"\x3", L"commandline ''");
         input_mapping_add(L"\x4", L"exit");
         input_mapping_add(L"\x5", L"bind");
+        input_mapping_add(L"\x7f", L"backward-delete-char");
+        // Arrows - can't have functions, so *-or-search isn't available.
+        input_mapping_add(L"\e[A", L"up-line");
+        input_mapping_add(L"\e[B", L"down-line");
+        input_mapping_add(L"\e[C", L"forward-char");
+        input_mapping_add(L"\e[D", L"backward-char");
     }
 
     input_initialized = true;

@@ -24,3 +24,30 @@ complete -c sudo -s u -a "(__fish_complete_users)" -x -d "Run command as user"
 complete -c sudo -s v -n "__fish_no_arguments" -d "Validate the credentials, extending timeout"
 
 complete -c sudo -d "Command to run" -x -a "(__fish_complete_subcommand_root -u -g)"
+
+# Or provide completions
+function __fish_complete_sudo_payload
+	set -l tokens (commandline -co)
+	# at least sudo and cmd
+	if test (count $tokens) -ge 2; \
+		# and second parameter is not a flag
+		and string match -qr '^[^-]' -- $tokens[2] \
+		# and 2nd parameter is a valid cmd
+		and type -q $tokens[2]
+			echo $tokens[2..-1] | complete -C # complete from 2nd parameter onwards
+	# or at least sudo, switch, and cmd
+	else if test (count $tokens) -ge 3; \
+		# and second parameter takes no arguments
+		and string match -qr '^-[AEHKPSbiknsv]\b' -- $tokens[2]
+		# and 3rd parameter is a valid cmd
+		and type -q $tokens[3]
+			echo $tokens[3..-1] | complete -C # complete from 3rd parameter onwards
+	# or sudo, switch, param, and cmd
+	else if test (count $tokens) -ge 4; \
+		# and 4th parameter is a valid cmd
+		and type -q $tokens[4] \
+			echo $tokens[4..-1] | complete -C # complete from 4th parameter onwards
+	end
+end
+
+complete -c sudo -xa '(__fish_complete_sudo_payload)'

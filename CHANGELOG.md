@@ -32,11 +32,12 @@ This section is for changes merged to the `major` branch that are not also merge
 - Using a read-only variable in a for loop is now an error. Note that this never worked. It simply failed to set the for loop var and thus silently produced incorrect results (#4342).
 - `math` is now a builtin rather than a wrapper around `bc` (#3157).
 - `history search` supports globs for wildcard searching (#3136).
-- `bind` has a new `--silent` option to ignore bind requests for named keys not available under the current `$TERMINAL` (#4188, #4431)
-- Globs are faster (#4579)
-- `string` reads from stdin faster (#4610)
-- `string split` supports `-n/--no-empty` to exclude empty strings from the result (#4779)
-- `cd` tab completions no longer descend into the deepest unambiguous path (#4649)
+- `bind` has a new `--silent` option to ignore bind requests for named keys not available under the current `$TERMINAL` (#4188, #4431).
+- Globs are faster (#4579).
+- `string` reads from stdin faster (#4610).
+- `string split` supports `-n/--no-empty` to exclude empty strings from the result (#4779).
+- `cd` tab completions no longer descend into the deepest unambiguous path (#4649).
+- `sudo` completions now provide completions for the target of the sudo command.
 - Setting `$PATH` no longer warns on non-existent directories, allowing for a single $PATH to be shared across machines (e.g. via dotfiles).
 - `funced` now has a `-s` and `--save` option to automatically save the edited function after successfully editing (#4668).
 - Arguments to `end` are now errors, instead of being silently ignored.
@@ -45,8 +46,8 @@ This section is for changes merged to the `major` branch that are not also merge
 - A new input binding `pager-toggle-search` toggles the search field in the completions pager on and off. By default this is bound to control-s.
 - Slicing $history (in particular, `$history[1]` for the last executed command) is much faster.
 - The pager will now show the full command instead of just its last line if the number of completions is large (#4702).
-- Tildes in file names are now properly escaped in completions (#2274)
-- A pipe at the end of a line now allows the job to continue on the next line (#1285)
+- Tildes in file names are now properly escaped in completions (#2274).
+- A pipe at the end of a line now allows the job to continue on the next line (#1285).
 - The names `argparse`, `read`, `set`, `status`, `test` and `[` are now reserved and not allowed as function names. This prevents users unintentionally breaking stuff (#3000).
 - Wrapping completions (from `complete -w` or `function -w`) can now inject arguments. For example, `complete gco -w 'git checkout'` now works properly (#1976). The `alias` function has been updated to respect this behavior.
 - The `jobs` builtin now has a `-q` and `--quiet` option to silence the output.
@@ -77,6 +78,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `npm`<sup>†</sup>
   - `python`/`python2`/`python3`
   - `ssh` (#4344)
+  - `sudo` (see above)
   - `yarn`<sup>&#x2217;</sup><sup>†</sup>
 
 &#x2217; _`jq` must be installed to complete the list of currently installed `bower` or `yarn` packages_. <br/>

@@ -12,12 +12,6 @@ function __fish_print_packages
     #Get the word 'Package' in the current language
     set -l package (_ "Package")
 
-    # Set up cache directory
-    if test -z "$XDG_CACHE_HOME"
-        set XDG_CACHE_HOME $HOME/.cache
-    end
-    mkdir -m 700 -p $XDG_CACHE_HOME
-
     if type -q -f apt-cache
         # Do not generate the cache as apparently sometimes this is slow.
         # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
@@ -41,6 +35,14 @@ function __fish_print_packages
         string replace '/var/db/pkg/' '' -- $files
         return
     end
+
+    ### BEGIN CACHED RESULTS ###
+
+    # Set up cache directory
+    if test -z "$XDG_CACHE_HOME"
+        set XDG_CACHE_HOME $HOME/.cache
+    end
+    mkdir -m 700 -p $XDG_CACHE_HOME
 
     # Caches for 5 minutes
     if type -q -f pacman

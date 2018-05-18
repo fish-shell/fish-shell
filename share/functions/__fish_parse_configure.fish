@@ -45,16 +45,23 @@ function __fish_parse_configure
 		if string replace -fr '^\s+(-.*?)\s+([^\s\-].*)' '$1\n$2' -- $line | read -lL opts description
 			for opt in (string split -n , -- $opts | string trim)
 
-				if string match -qr -- '--.*=\[.*\]' $opt
+				if string match -qr -- '--[a-z_0-9-]+=\[.*\]' $opt
 					# --option=[OPTIONAL_VALUE]
-					string replace -r -- '(--.*)=.*' '$1' $opt | read opt
-				else if string match -qr -- '--.*=[A-Z]+' $opt
+					string replace -r -- '(--[a-z_0-9-]+)=.*' '$1' $opt | read opt
+				else if string match -qr -- '--[a-z_0-9-]+\[=.*\]' $opt
+					# --option[=OPTIONAL_VALUE]
+					string replace -r -- '(--[a-z_0-9-]+)\[=.*' '$1' $opt | read opt
+				else if string match -qr -- '--[a-z_0-9-]+=[A-Z]+' $opt
 					# --option=CLASS_OF_VALUE (eg FILE or DIR)
-					string replace -r -- '(--.*)=.*' '$1' $opt | read opt
-				else if string match -qr -- '--.*=\S+' $opt
+					string replace -r -- '(--[a-z_0-9-]+)=.*' '$1' $opt | read opt
+				else if string match -qr -- '--[a-z_0-9-]+=\S+' $opt
 					# --option=literal_value, leave as-is
-				else if string match -qr -- '-[^-]\b' $opt
+				else if string match -qr -- '--[a-z_0-9-]+$' $opt
+					# long option, leave as-is
+				else if string match -qr -- '-[^-]$' $opt
 					# short option, leave as-is
+				else
+					continue
 				end
 
 				echo "$opt"\t"$description" # parsed by `complete` as value and description

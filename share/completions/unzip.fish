@@ -7,7 +7,7 @@ complete -c unzip -s l  -d "list files (short format)"
 complete -c unzip -s t  -d "test compressed archive datamodifiers:"
 complete -c unzip -s z  -d "display archive comment only"
 complete -c unzip -s T  -d "timestamp archive to latest"
-complete -c unzip -s d  -d "extract files into dir" -xa '(__fish_complete_directories "")'
+complete -c unzip -s d  -d "extract files into dir" -xa '(__fish_complete_directories)'
 complete -c unzip -s n  -d "never overwrite existing files"
 complete -c unzip -s o  -d "overwrite files WITHOUT prompting"
 complete -c unzip -s q  -d "quiet mode"

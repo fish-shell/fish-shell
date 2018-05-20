@@ -35,16 +35,16 @@ function __fish_complete_suffix -d "Complete using files"
 
     # Strip leading ./ as it confuses the detection of base and suffix
     # It is conditionally re-added below.
-    set -l base_temp (string replace -r '^\./' '' -- $comp)
+    set -l base_temp (string replace -r '^\\./' '' -- $comp)
 
-    set base (string replace -r '\.[^.]*$' '' -- $base_temp | string trim -c '\'"') # " make emacs syntax highlighting happy
+    set base (string replace -r '\\.[^.]*$' '' -- $base_temp | string trim -c '\'"') # " make emacs syntax highlighting happy
     # echo "base: $base" > /dev/tty
     # echo "suffix: $suff" > /dev/tty
 
     # If $comp is "./ma" and the file is "main.py", we'll catch that case here,
     # but complete.cpp will not consider it a match, so we have to output the
     # correct form.
-    if string match -qr '^\./' -- $comp
+    if string match -qr '^\\./' -- $comp
         # Also do directory completion, since there might be files
         # with the correct suffix in a subdirectory
         eval "set files ./$base*{$suff,/}"
@@ -60,7 +60,11 @@ function __fish_complete_suffix -d "Complete using files"
     if string match -qr '[${}*~]' $comp
         set -l expanded
         eval "set expanded $comp"
-        set files (string replace -- $expanded $comp $files)
+        # It's very unfortunate to do all this work in-process and have to shell out here,
+        # but unfortunately at this time expressions like "foo{t,te}*" applied against
+        # "footer" will result in "footer" being reported twice. Not sure if this can be
+        # term a "bug" per-se.
+        set files (string replace -- $expanded $comp $files | sort -u)
     end
 
     if test $files[1]

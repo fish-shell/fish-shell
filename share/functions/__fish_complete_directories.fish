@@ -12,7 +12,10 @@ function __fish_complete_directories -d "Complete directory prefixes" --argument
         set comp (commandline -ct)
     end
 
-    set -l dirs $comp*/
+    # Inherit support for completing expansions from __fish_complete_suffix
+    # Supports completing expressions like ~/foo or x$bar, etc.
+    set -l dirs (__fish_complete_suffix $comp /)
+
     if set -q dirs[1]
         printf "%s\t$desc\n" $dirs
     end

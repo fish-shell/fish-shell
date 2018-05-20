@@ -1,5 +1,7 @@
 # Completions for the `apt` command
 
+set -l pkg_subcmds install remove upgrade full-upgrade show search purge changelog policy depends rdepends
+
 function __fish_apt_no_subcommand -d 'Test if apt has yet to be given the subcommand'
 	for i in (commandline -opc)
 		if contains -- $i update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove depends rdepends
@@ -7,15 +9,6 @@ function __fish_apt_no_subcommand -d 'Test if apt has yet to be given the subcom
 		end
 	end
 	return 0
-end
-
-function __fish_apt_use_package -d 'Test if apt command should have packages as potential completion'
-	for i in (commandline -opc)
-		if contains -- $i install remove upgrade full-upgrade show search purge changelog policy depends rdepends
-			return 0
-		end
-	end
-	return 1
 end
 
 function __fish_apt_subcommand
@@ -36,10 +29,10 @@ end
 function __fish_apt_option
     set subcommand $argv[1]
     set -e argv[1]
-    complete -f -c apt -n "__fish_apt_using_subcommand $subcommand" $argv
+    complete -f -c apt -n "__fish_seen_subcommand_from $subcommand" $argv
 end
 
-complete -c apt -n '__fish_apt_use_package' -a '(__fish_print_packages)' -d 'Package'
+complete -c apt -n '__fish_seen_subcommand_from $pkg_subcmds' -a '(__fish_print_packages)' -d 'Package'
 
 # Support flags
 complete -x -f -c apt -s h -l help     -d 'Display help'

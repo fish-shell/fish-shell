@@ -23,8 +23,6 @@ complete -c sudo -s s -d "Run the given command in a shell"
 complete -c sudo -s u -a "(__fish_complete_users)" -x -d "Run command as user"
 complete -c sudo -s v -n "__fish_no_arguments" -d "Validate the credentials, extending timeout"
 
-complete -c sudo -d "Command to run" -x -a "(__fish_complete_subcommand_root -u -g)"
-
 # Or provide completions
 function __fish_complete_sudo_payload
 	set -l tokens (commandline -co)

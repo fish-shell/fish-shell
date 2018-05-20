@@ -1,10 +1,10 @@
 cd ..
-mkdir test/data/abc
-mkdir test/data/abcd
+mkdir -p test/data/abc
+mkdir -p test/data/abcd
 touch test/data/af
 touch test/data/abcdf
-mkdir test/data/xy
-mkdir test/data/xyz
+mkdir -p test/data/xy
+mkdir -p test/data/xyz
 touch test/data/xyf
 touch test/data/xyzf
 echo \# __fish_complete_directories test/z

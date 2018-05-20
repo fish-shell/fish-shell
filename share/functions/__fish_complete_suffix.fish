@@ -69,7 +69,10 @@ function __fish_complete_suffix -d "Complete using files"
     # term a "bug" per-se.
 
     if test $files[1]
-        printf "%s\t$desc\n" $files | sort -u
+        if not string match -q -- "$desc" ""
+           set -l desc "\t$desc"
+        end
+        printf "%s$desc\n" $files | sort -u
     end
 
 end

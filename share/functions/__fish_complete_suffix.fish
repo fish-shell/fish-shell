@@ -45,21 +45,26 @@ function __fish_complete_suffix -d "Complete using files"
     # but complete.cpp will not consider it a match, so we have to output the
     # correct form.
     if string match -qr '^\./' -- $comp
-        eval "set files ./$base*$suff"
+        # Also do directory completion, since there might be files
+        # with the correct suffix in a subdirectory
+        eval "set files ./$base*{$suff,/}"
     else
-        eval "set files $base*$suff"
+        # Also do directory completion, since there might be files
+        # with the correct suffix in a subdirectory
+        eval "set files $base*{$suff,/}"
+    end
+
+    # Another problem is that expanded paths are not matched, either.
+    # So an expression like $HOME/foo*.zip will expand to /home/rdahl/foo-bar.zip
+    # but that no longer matches the expression at the command line.
+    if string match -qr '[${}*~]' $comp
+        set -l expanded
+        eval "set expanded $comp"
+        set files (string replace -- $expanded $comp $files)
     end
 
     if test $files[1]
         printf "%s\t$desc\n" $files
     end
-
-    #
-    # Also do directory completion, since there might be files
-    # with the correct suffix in a subdirectory
-    # No need to describe directories (#279)
-    #
-
-    __fish_complete_directories $comp ""
 
 end

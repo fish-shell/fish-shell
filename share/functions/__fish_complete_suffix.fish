@@ -60,15 +60,16 @@ function __fish_complete_suffix -d "Complete using files"
     if string match -qr '[${}*~]' $comp
         set -l expanded
         eval "set expanded $comp"
-        # It's very unfortunate to do all this work in-process and have to shell out here,
-        # but unfortunately at this time expressions like "foo{t,te}*" applied against
-        # "footer" will result in "footer" being reported twice. Not sure if this can be
-        # term a "bug" per-se.
-        set files (string replace -- $expanded $comp $files | sort -u)
+        set files (string replace -- $expanded $comp $files)
     end
 
+    # It's very unfortunate to do all this work in-process and have to shell out here,
+    # but unfortunately at this time expressions like "foo{t,te}*" applied against
+    # "footer" will result in "footer" being reported twice. Not sure if this can be
+    # term a "bug" per-se.
+
     if test $files[1]
-        printf "%s\t$desc\n" $files
+        printf "%s\t$desc\n" $files | sort -u
     end
 
 end

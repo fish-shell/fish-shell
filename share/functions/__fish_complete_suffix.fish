@@ -57,7 +57,7 @@ function __fish_complete_suffix -d "Complete using files"
     # Another problem is that expanded paths are not matched, either.
     # So an expression like $HOME/foo*.zip will expand to /home/rdahl/foo-bar.zip
     # but that no longer matches the expression at the command line.
-    if string match -qr '[${}*~]' $comp
+    if string match -qr '[${}*~]' -- $comp
         set -l expanded
         eval "set expanded $comp"
         set files (string replace -- $expanded $comp $files)
